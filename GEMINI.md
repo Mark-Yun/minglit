@@ -62,9 +62,12 @@ create table profiles (
 
 1. [x] 프로젝트 네이밍 및 브랜딩 확정
 2. [x] Unified Repo 폴더 구조 세팅
-3. [ ] Supabase CLI 연동 및 로컬 개발 환경 구축
-4. [ ] Supabase Auth 연동 (로그인/가입)
-5. [ ] 메인 랜딩 페이지 개발 (Flutter Web)
-6. [ ] 파티 예약 및 로테이션 미팅 로직 구현
+3. [x] Supabase CLI 연동 및 로컬 개발 환경 구축 (`minglit-local`)
+4. [x] Flutter 프로젝트 초기화 (`app_user`, `app_partner`)
+5. [x] CI/CD 환경 구축 (GitHub Actions + Vercel)
+6. [ ] Supabase Cloud 프로젝트 연동 (Dev/Prod)
+7. [ ] Supabase Auth 연동 (Google Login)
+8. [ ] 메인 랜딩 페이지 개발 (Flutter Web)
+9. [ ] 파티 예약 및 로테이션 미팅 로직 구현
 
 ```
