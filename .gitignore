@@ -1,0 +1,18 @@
+# Root .gitignore
+
+# Flutter (apps/app_flutter)
+apps/app_flutter/.dart_tool/
+apps/app_flutter/.flutter-plugins
+apps/app_flutter/.flutter-plugins-dependencies
+apps/app_flutter/.packages
+apps/app_flutter/build/
+
+# Supabase (backend/supabase)
+backend/supabase/.temp/
+backend/supabase/functions/.well-known/
+
+# OS & IDE
+.DS_Store
+.vscode/
+.idea/
+*.log
