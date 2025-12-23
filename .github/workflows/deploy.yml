@@ -1,0 +1,54 @@
+name: Deploy to Vercel
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy-user:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      
+      - name: Install & Build (User App)
+        working-directory: ./apps/app_user
+        run: |
+          flutter pub get
+          flutter build web --release
+
+      # Vercel 배포 (amondnet/vercel-action 사용)
+      - name: Deploy to Vercel (User App)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_USER }}
+          # Flutter 빌드 결과물인 build/web 폴더를 배포 루트로 설정
+          working-directory: ./apps/app_user
+          vercel-args: '--prod build/web' 
+
+  deploy-partner:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      
+      - name: Install & Build (Partner App)
+        working-directory: ./apps/app_partner
+        run: |
+          flutter pub get
+          flutter build web --release
+
+      - name: Deploy to Vercel (Partner App)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_PARTNER }}
+          working-directory: ./apps/app_partner
+          vercel-args: '--prod build/web'

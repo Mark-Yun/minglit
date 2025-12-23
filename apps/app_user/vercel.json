@@ -1,0 +1,6 @@
+{
+  "framework": null,
+  "buildCommand": "flutter build web --release",
+  "outputDirectory": "build/web",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD ./"
+}
