@@ -5,10 +5,20 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Supabase 초기화 (로컬 환경)
+  // Supabase 초기화
+  // CI/CD 빌드 시 --dart-define 옵션으로 주입된 값을 사용
+  const supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: 'http://127.0.0.1:54321', // 로컬 기본값
+  );
+  const supabasePublishableKey = String.fromEnvironment(
+    'SUPABASE_PUBLISHABLE_KEY',
+    defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH', // 로컬 기본값
+  );
+
   await Supabase.initialize(
-    url: 'http://127.0.0.1:54321', 
-    anonKey: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
+    url: supabaseUrl,
+    anonKey: supabasePublishableKey,
   );
 
   runApp(const MinglitApp());

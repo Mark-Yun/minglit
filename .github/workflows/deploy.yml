@@ -15,9 +15,27 @@ jobs:
       
       - name: Install & Build (User App)
         working-directory: ./apps/app_user
+        env:
+          # Dev Secrets
+          SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_DEV_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+          # Main Secrets
+          SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
+          SUPABASE_MAIN_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
         run: |
           flutter pub get
-          flutter build web --release
+          
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "🏗️ Building for Main (Production)..."
+            flutter build web --release \
+              --dart-define=SUPABASE_URL=$SUPABASE_MAIN_URL \
+              --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_MAIN_KEY
+          else
+            echo "🏗️ Building for Dev (Preview)..."
+            flutter build web --release \
+              --dart-define=SUPABASE_URL=$SUPABASE_DEV_URL \
+              --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_DEV_KEY
+          fi
 
       - name: Copy vercel.json
         run: cp apps/app_user/vercel.json apps/app_user/build/web/vercel.json
@@ -49,9 +67,27 @@ jobs:
       
       - name: Install & Build (Partner App)
         working-directory: ./apps/app_partner
+        env:
+          # Dev Secrets
+          SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_DEV_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+          # Main Secrets
+          SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
+          SUPABASE_MAIN_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
         run: |
           flutter pub get
-          flutter build web --release
+          
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "🏗️ Building for Main (Production)..."
+            flutter build web --release \
+              --dart-define=SUPABASE_URL=$SUPABASE_MAIN_URL \
+              --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_MAIN_KEY
+          else
+            echo "🏗️ Building for Dev (Preview)..."
+            flutter build web --release \
+              --dart-define=SUPABASE_URL=$SUPABASE_DEV_URL \
+              --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_DEV_KEY
+          fi
 
       - name: Copy vercel.json
         run: cp apps/app_partner/vercel.json apps/app_partner/build/web/vercel.json
