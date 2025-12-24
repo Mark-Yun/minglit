@@ -2,7 +2,7 @@ name: Deploy to Vercel
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "dev" ]
 
 jobs:
   deploy-user:
@@ -19,17 +19,25 @@ jobs:
           flutter pub get
           flutter build web --release
 
-      - name: Prepare Vercel Config
+      - name: Copy vercel.json
         run: cp apps/app_user/vercel.json apps/app_user/build/web/vercel.json
 
       - name: Deploy to Vercel (User App)
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_USER }}
-          working-directory: ./apps/app_user/build/web
-          vercel-args: '--prod'
+        working-directory: ./apps/app_user/build/web
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_USER }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          npm install --global vercel@latest
+          
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "🚀 Deploying to Production (Main)..."
+            vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+          else
+            echo "👀 Deploying to Preview (Dev)..."
+            vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes
+          fi
 
   deploy-partner:
     runs-on: ubuntu-latest
@@ -45,14 +53,22 @@ jobs:
           flutter pub get
           flutter build web --release
 
-      - name: Prepare Vercel Config
+      - name: Copy vercel.json
         run: cp apps/app_partner/vercel.json apps/app_partner/build/web/vercel.json
 
       - name: Deploy to Vercel (Partner App)
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_PARTNER }}
-          working-directory: ./apps/app_partner/build/web
-          vercel-args: '--prod'
+        working-directory: ./apps/app_partner/build/web
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_PARTNER }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          npm install --global vercel@latest
+          
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "🚀 Deploying to Production (Main)..."
+            vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+          else
+            echo "👀 Deploying to Preview (Dev)..."
+            vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes
+          fi
