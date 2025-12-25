@@ -17,9 +17,17 @@ class AuthService {
         );
 
   /// 구글 로그인 진행 및 Supabase 세션 생성
-  Future<AuthResponse> signInWithGoogle() async {
+  Future<void> signInWithGoogle() async {
     try {
-      // 1. 구글 로그인 팝업 (Web) 또는 네이티브 창 (Mobile) 띄우기
+      if (kIsWeb) {
+        // 웹에서는 Supabase OAuth 리다이렉트 방식 사용 (디자인 자유도와 안정성 확보)
+        await _supabase.auth.signInWithOAuth(
+          OAuthProvider.google,
+        );
+        return;
+      }
+
+      // 1. 구글 로그인 네이티브 창 (Mobile) 띄우기
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       
       // 사용자가 취소한 경우
@@ -37,13 +45,13 @@ class AuthService {
       }
 
       // 3. Supabase에 로그인 요청 (idToken 전달)
-      return await _supabase.auth.signInWithIdToken(
+      await _supabase.auth.signInWithIdToken(
         provider: OAuthProvider.google,
         idToken: idToken,
         accessToken: accessToken,
       );
     } catch (e) {
-      // 에러 전파 (UI에서 스낵바 등으로 처리)
+      // 에러 전파 (UI에서 처리)
       rethrow;
     }
   }

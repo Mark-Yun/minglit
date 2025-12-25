@@ -23,18 +23,19 @@ Future<void> main() async {
     anonKey: supabasePublishableKey,
   );
 
-  runApp(MinglitApp(googleWebClientId: googleWebClientId));
+  // 서비스 로케이터 초기화 (AuthService 등록)
+  setupLocator(googleWebClientId: googleWebClientId);
+
+  runApp(const MinglitApp());
 }
 
 class MinglitApp extends StatelessWidget {
-  final String? googleWebClientId;
-  
-  const MinglitApp({super.key, this.googleWebClientId});
+  const MinglitApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // AuthService 초기화
-    final authService = AuthService(webClientId: googleWebClientId);
+    // GetIt을 통해 AuthService 인스턴스 가져오기
+    final authService = locator<AuthService>();
 
     return MaterialApp(
       title: 'Minglit',
@@ -56,11 +57,11 @@ class MinglitApp extends StatelessWidget {
           
           // 로그인 되어 있으면 홈 화면
           if (session != null) {
-            return HomePage(authService: authService);
+            return const HomePage();
           }
           
           // 아니면 로그인 화면
-          return LoginPage(authService: authService);
+          return const LoginPage();
         },
       ),
     );
@@ -68,21 +69,32 @@ class MinglitApp extends StatelessWidget {
 }
 
 class LoginPage extends StatelessWidget {
-  final AuthService authService;
-  
-  const LoginPage({super.key, required this.authService});
+  const LoginPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final authService = locator<AuthService>();
+
     return MinglitLoginScreen(
       isPartner: false,
       onGoogleSignIn: () async {
         try {
           await authService.signInWithGoogle();
         } catch (e) {
+          debugPrint('Login Error: $e');
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Login Failed: $e')),
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('로그인 실패'),
+                content: SelectableText('Error: $e'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('확인'),
+                  ),
+                ],
+              ),
             );
           }
         }
@@ -95,13 +107,13 @@ class LoginPage extends StatelessWidget {
 }
 
 class HomePage extends StatelessWidget {
-  final AuthService authService;
-
-  const HomePage({super.key, required this.authService});
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final authService = locator<AuthService>();
     final user = authService.currentUser;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Minglit Home')),
       body: Center(

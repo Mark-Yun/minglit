@@ -1,4 +1,3 @@
-```markdown
 # 🚀 Project Minglit (밍글릿)
 > **Verified Vibe, Spark Your Moment**
 
@@ -23,13 +22,15 @@
 ```text
 minglit/ (Root)
 ├── apps/
-│   └── app_partner/     # Flutter 기반 partner 용 Web 서비스
+│   ├── app_partner/     # Flutter 기반 partner 용 Web 서비스
 │   └── app_user/        # Flutter 기반 user용 Web/App 서비스
 ├── backend/
 │   └── supabase/        # SQL Migration 및 Backend 로직 (PostgreSQL)
 └── shared/
     ├── assets/          # 로고, 이미지, 폰트 공용 자산
-    └── docs/            # 기획서 및 API 명세
+    ├── docs/            # 기획서 및 API 명세
+    └── packages/        # 공용 Dart/Flutter 패키지
+        └── minglit_kit/ # 공용 UI 및 서비스 (Auth 등)
 ```
 
 ---
@@ -39,22 +40,16 @@ minglit/ (Root)
 * **Frontend:** Flutter (Web-First, 이후 iOS/Android 확장)
 * **Backend:** Supabase (Auth, Database, Storage, Real-time)
 * **Database Management:** SQL Migration (Supabase CLI 기반 형상 관리)
-* **State Management:** Provider (예정)
+* **CI/CD:** GitHub Actions + Vercel
+* **State Management:** StreamBuilder / Provider (예정)
 
 ---
 
-## 📝 Initial DB Schema Concept (profiles)
-
-```sql
-create table profiles (
-  id uuid references auth.users not null primary key,
-  username text unique,
-  avatar_url text,
-  is_verified boolean default false, -- 밍글릿의 핵심 가치
-  updated_at timestamp with time zone
-);
-
-```
+## 📝 DB Schema (Initial)
+Organization-Member 모델을 기반으로 설계되었습니다.
+- `user_profiles`: 모든 사용자의 기본 프로필.
+- `partners`: 매장/법인 정보.
+- `partner_members`: 매장 소속 직원 및 권한 관리.
 
 ---
 
@@ -65,9 +60,8 @@ create table profiles (
 3. [x] Supabase CLI 연동 및 로컬 개발 환경 구축 (`minglit-local`)
 4. [x] Flutter 프로젝트 초기화 (`app_user`, `app_partner`)
 5. [x] CI/CD 환경 구축 (GitHub Actions + Vercel)
-6. [ ] Supabase Cloud 프로젝트 연동 (Dev/Prod)
-7. [ ] Supabase Auth 연동 (Google Login)
+6. [x] Supabase 환경별 연동 (Dev/Main) 및 자동 배포 파이프라인
+7. [x] 공용 UI 패키지(`minglit_kit`) 구축 및 Google 로그인 연동
 8. [ ] 메인 랜딩 페이지 개발 (Flutter Web)
 9. [ ] 파티 예약 및 로테이션 미팅 로직 구현
-
-```
+10. [ ] PASS/SMS 본인인증 연동

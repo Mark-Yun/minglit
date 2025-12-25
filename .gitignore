@@ -6,6 +6,9 @@
 *.lock
 *.log
 
+# Local scripts
+**/run_local.sh
+
 # Flutter / Dart
 **/.dart_tool/
 **/.flutter-plugins
