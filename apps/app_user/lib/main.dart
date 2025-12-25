@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -34,11 +35,8 @@ class MinglitApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // GetIt을 통해 AuthService 인스턴스 가져오기
-    final authService = locator<AuthService>();
-
     return MaterialApp(
-      title: 'Minglit',
+      title: 'Minglit User',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -49,21 +47,57 @@ class MinglitApp extends StatelessWidget {
         useMaterial3: true,
         textTheme: GoogleFonts.notoSansKrTextTheme(),
       ),
-      // AuthState 변화에 따라 화면 전환
-      home: StreamBuilder<AuthState>(
-        stream: authService.onAuthStateChange,
-        builder: (context, snapshot) {
-          final session = Supabase.instance.client.auth.currentSession;
-          
-          // 로그인 되어 있으면 홈 화면
-          if (session != null) {
-            return const HomePage();
-          }
-          
-          // 아니면 로그인 화면
-          return const LoginPage();
-        },
-      ),
+      // 디버그 모드에서는 사이트맵(DevMap)을 먼저 띄움
+      home: kDebugMode ? const UserDevMap() : const AuthWrapper(),
+    );
+  }
+}
+
+/// 인증 상태에 따라 화면을 분기하는 래퍼
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final authService = locator<AuthService>();
+    return StreamBuilder<AuthState>(
+      stream: authService.onAuthStateChange,
+      builder: (context, snapshot) {
+        final session = Supabase.instance.client.auth.currentSession;
+        if (session != null) {
+          return const HomePage();
+        }
+        return const LoginPage();
+      },
+    );
+  }
+}
+
+/// User 앱 개발용 화면 목록
+class UserDevMap extends StatelessWidget {
+  const UserDevMap({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return DevScreenList(
+      appName: 'Minglit User',
+      items: [
+        DevScreenItem(
+          title: 'Main App Flow',
+          description: '정상적인 앱 시작 흐름 (인증 체크)',
+          screenBuilder: (_) => const AuthWrapper(),
+        ),
+        DevScreenItem(
+          title: 'Login Page',
+          description: '로그인 및 소셜 가입 화면',
+          screenBuilder: (_) => const LoginPage(),
+        ),
+        DevScreenItem(
+          title: 'Home Page',
+          description: '로그인 후 메인 홈 화면',
+          screenBuilder: (_) => const HomePage(),
+        ),
+      ],
     );
   }
 }
