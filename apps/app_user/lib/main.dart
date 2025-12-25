@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'src/features/verification/verification_page.dart';
+import 'src/features/verification/career_verification_form.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +35,20 @@ Future<void> main() async {
 class MinglitApp extends StatelessWidget {
   const MinglitApp({super.key});
 
+  /// 앱 초기화 프로세스 (Splash 화면에서 수행됨)
+  Future<void> _initialize() async {
+    // 1. 구글 폰트 로딩 대기 (Flickering 방지)
+    await GoogleFonts.pendingFonts([
+      GoogleFonts.poppins(),
+      GoogleFonts.notoSansKr(),
+    ]);
+    
+    // 추가적인 초기화 로직이 필요하면 여기에 작성 (예: 캐시 로딩 등)
+    if (kDebugMode) {
+      await Future.delayed(const Duration(seconds: 1)); // 데브 모드에선 스플래시 감상용(?)으로 살짝 대기
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -47,8 +63,18 @@ class MinglitApp extends StatelessWidget {
         useMaterial3: true,
         textTheme: GoogleFonts.notoSansKrTextTheme(),
       ),
-      // 디버그 모드에서는 사이트맵(DevMap)을 먼저 띄움
-      home: kDebugMode ? const UserDevMap() : const AuthWrapper(),
+      home: FutureBuilder(
+        future: _initialize(),
+        builder: (context, snapshot) {
+          // 초기화 중에는 스플래시 화면 표시
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const MinglitSplashScreen(appName: 'User');
+          }
+          
+          // 초기화 완료 후 메인 로직 (DevMap or AuthWrapper)
+          return kDebugMode ? const UserDevMap() : const AuthWrapper();
+        },
+      ),
     );
   }
 }
@@ -96,6 +122,21 @@ class UserDevMap extends StatelessWidget {
           title: 'Home Page',
           description: '로그인 후 메인 홈 화면',
           screenBuilder: (_) => const HomePage(),
+        ),
+        DevScreenItem(
+          title: 'Career Verification',
+          description: '직장 인증 신청 페이지',
+          screenBuilder: (_) {
+            Map<String, dynamic> careerData = {};
+            return VerificationPage(
+              category: VerificationCategory.career,
+              onGetData: () => careerData,
+              formBuilder: (initialData) => CareerVerificationForm(
+                onChanged: (data) => careerData = data,
+                initialData: initialData,
+              ),
+            );
+          },
         ),
       ],
     );

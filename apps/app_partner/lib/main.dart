@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'src/features/verification/review_verification_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +33,19 @@ Future<void> main() async {
 class MinglitPartnerApp extends StatelessWidget {
   const MinglitPartnerApp({super.key});
 
+  /// 앱 초기화 프로세스
+  Future<void> _initialize() async {
+    // 폰트 로딩 대기
+    await GoogleFonts.pendingFonts([
+      GoogleFonts.poppins(),
+      GoogleFonts.notoSansKr(),
+    ]);
+    
+    if (kDebugMode) {
+      await Future.delayed(const Duration(seconds: 1));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -46,14 +60,22 @@ class MinglitPartnerApp extends StatelessWidget {
         useMaterial3: true,
         textTheme: GoogleFonts.notoSansKrTextTheme(),
       ),
-      // 디버그 모드에서는 사이트맵(DevMap)을 먼저 띄움
-      home: kDebugMode ? const PartnerDevMap() : const AuthWrapper(),
+      home: FutureBuilder(
+        future: _initialize(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const MinglitSplashScreen(appName: 'Partner', isPartner: true);
+          }
+          return kDebugMode ? const PartnerDevMap() : const AuthWrapper();
+        },
+      ),
     );
   }
 }
 
 /// 인증 상태에 따라 화면을 분기하는 래퍼
 class AuthWrapper extends StatelessWidget {
+// ... (나머지 코드 유지)
   const AuthWrapper({super.key});
 
   @override
@@ -95,6 +117,11 @@ class PartnerDevMap extends StatelessWidget {
           title: 'Partner Home',
           description: '파트너 대시보드 메인',
           screenBuilder: (_) => const PartnerHomePage(),
+        ),
+        DevScreenItem(
+          title: 'Verification Review',
+          description: '유저 인증 요청 심사 (승인/반려)',
+          screenBuilder: (_) => const ReviewVerificationPage(),
         ),
       ],
     );

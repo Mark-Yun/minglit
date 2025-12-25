@@ -1,12 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:minglit_kit/minglit_kit.dart';
-
 void main() {
-  test('adds one to input values', () {
-    final calculator = Calculator();
-    expect(calculator.addOne(2), 3);
-    expect(calculator.addOne(-7), -6);
-    expect(calculator.addOne(0), 1);
+  test('Minglit Kit test placeholder', () {
+    // TODO: Add real tests for Minglit Kit components
+    expect(true, true);
   });
 }

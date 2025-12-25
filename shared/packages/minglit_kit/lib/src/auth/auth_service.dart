@@ -1,6 +1,7 @@
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import '../utils/log.dart';
 
 class AuthService {
   final SupabaseClient _supabase;
@@ -18,22 +19,31 @@ class AuthService {
 
   /// 구글 로그인 진행 및 Supabase 세션 생성
   Future<void> signInWithGoogle() async {
+    Log.d('🔐 Google Sign-In started (Web=$kIsWeb)');
     try {
       if (kIsWeb) {
-        // 웹에서는 Supabase OAuth 리다이렉트 방식 사용 (디자인 자유도와 안정성 확보)
+        // 웹에서는 현재 접속한 주소(Origin)를 리다이렉트 URL로 자동 설정
+        final origin = Uri.base.origin;
+        Log.d('🌐 Initiating Supabase OAuth redirect to: $origin');
+        
         await _supabase.auth.signInWithOAuth(
           OAuthProvider.google,
+          redirectTo: origin,
         );
         return;
       }
 
       // 1. 구글 로그인 네이티브 창 (Mobile) 띄우기
+      Log.d('📱 Launching Google Native Sign-In...');
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+// ... (나머지 코드 동일)
       
       // 사용자가 취소한 경우
       if (googleUser == null) {
+        Log.w('⚠️ Google sign-in cancelled by user');
         throw const AuthException('Google sign-in was cancelled.');
       }
+      Log.d('✅ Google Native Sign-In successful: ${googleUser.email}');
 
       // 2. 인증 정보(Token) 가져오기
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
@@ -41,31 +51,36 @@ class AuthService {
       final idToken = googleAuth.idToken;
 
       if (idToken == null) {
+        Log.e('❌ No ID Token found from Google');
         throw const AuthException('No ID Token found from Google.');
       }
+      Log.d('🔑 ID Token retrieved');
 
       // 3. Supabase에 로그인 요청 (idToken 전달)
+      Log.d('🔄 Authenticating with Supabase...');
       await _supabase.auth.signInWithIdToken(
         provider: OAuthProvider.google,
         idToken: idToken,
         accessToken: accessToken,
       );
-    } catch (e) {
-      // 에러 전파 (UI에서 처리)
+      Log.i('🎉 Supabase Sign-In successful!');
+    } catch (e, stackTrace) {
+      Log.e('❌ Sign-In Error', e, stackTrace);
       rethrow;
     }
   }
 
   /// 로그아웃
   Future<void> signOut() async {
+    Log.d('🚪 Sign-Out initiated...');
     try {
       await Future.wait([
         _supabase.auth.signOut(),
         _googleSignIn.signOut(),
       ]);
-    } catch (e) {
-      // 로그아웃 중 에러는 무시하거나 로깅
-      print('Sign out error: $e');
+      Log.i('👋 Sign-Out successful');
+    } catch (e, stackTrace) {
+      Log.e('❌ Sign-Out Error', e, stackTrace);
     }
   }
   
