@@ -14,22 +14,28 @@ Future<void> main() async {
     'SUPABASE_PUBLISHABLE_KEY',
     defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
   );
+  
+  // 구글 웹 클라이언트 ID (GCP Console에서 발급 필요)
+  const googleWebClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
 
   await Supabase.initialize(
     url: supabaseUrl,
     anonKey: supabasePublishableKey,
   );
 
-  runApp(const MinglitApp());
+  runApp(MinglitApp(googleWebClientId: googleWebClientId));
 }
 
-final supabase = Supabase.instance.client;
-
 class MinglitApp extends StatelessWidget {
-  const MinglitApp({super.key});
+  final String? googleWebClientId;
+  
+  const MinglitApp({super.key, this.googleWebClientId});
 
   @override
   Widget build(BuildContext context) {
+    // AuthService 초기화
+    final authService = AuthService(webClientId: googleWebClientId);
+
     return MaterialApp(
       title: 'Minglit',
       debugShowCheckedModeBanner: false,
@@ -42,25 +48,83 @@ class MinglitApp extends StatelessWidget {
         useMaterial3: true,
         textTheme: GoogleFonts.notoSansKrTextTheme(),
       ),
-      home: const LoginPage(),
+      // AuthState 변화에 따라 화면 전환
+      home: StreamBuilder<AuthState>(
+        stream: authService.onAuthStateChange,
+        builder: (context, snapshot) {
+          final session = Supabase.instance.client.auth.currentSession;
+          
+          // 로그인 되어 있으면 홈 화면
+          if (session != null) {
+            return HomePage(authService: authService);
+          }
+          
+          // 아니면 로그인 화면
+          return LoginPage(authService: authService);
+        },
+      ),
     );
   }
 }
 
 class LoginPage extends StatelessWidget {
-  const LoginPage({super.key});
+  final AuthService authService;
+  
+  const LoginPage({super.key, required this.authService});
 
   @override
   Widget build(BuildContext context) {
     return MinglitLoginScreen(
-      isPartner: false, // 유저 앱 모드
+      isPartner: false,
       onGoogleSignIn: () async {
-        debugPrint('User: Google Sign-In Clicked');
-        // TODO: 로그인 로직 추가
+        try {
+          await authService.signInWithGoogle();
+        } catch (e) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Login Failed: $e')),
+            );
+          }
+        }
       },
       onKakaoSignIn: () {
-        debugPrint('User: Kakao Sign-In Clicked');
+        debugPrint('User: Kakao Sign-In Clicked (Not Implemented)');
       },
+    );
+  }
+}
+
+class HomePage extends StatelessWidget {
+  final AuthService authService;
+
+  const HomePage({super.key, required this.authService});
+
+  @override
+  Widget build(BuildContext context) {
+    final user = authService.currentUser;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Minglit Home')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (user?.userMetadata?['avatar_url'] != null)
+              CircleAvatar(
+                backgroundImage: NetworkImage(user!.userMetadata!['avatar_url']),
+                radius: 40,
+              ),
+            const SizedBox(height: 20),
+            Text('안녕하세요, ${user?.userMetadata?['full_name'] ?? user?.email}님!'),
+            const SizedBox(height: 10),
+            Text('UID: ${user?.id}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
+            const SizedBox(height: 40),
+            ElevatedButton(
+              onPressed: () => authService.signOut(),
+              child: const Text('로그아웃'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -40,9 +40,11 @@ jobs:
           # Dev Secrets
           SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
           SUPABASE_DEV_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+          GOOGLE_DEV_ID: ${{ secrets.GOOGLE_DEV_WEB_CLIENT_ID }}
           # Main Secrets
           SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
           SUPABASE_MAIN_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
+          GOOGLE_MAIN_ID: ${{ secrets.GOOGLE_MAIN_WEB_CLIENT_ID }}
         run: |
           flutter pub get
           
@@ -50,12 +52,14 @@ jobs:
             echo "🏗️ Building for Main (Production)..."
             flutter build web --release \
               --dart-define=SUPABASE_URL=$SUPABASE_MAIN_URL \
-              --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_MAIN_KEY
+              --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_MAIN_KEY \
+              --dart-define=GOOGLE_WEB_CLIENT_ID=$GOOGLE_MAIN_ID
           else
             echo "🏗️ Building for Dev (Preview)..."
             flutter build web --release \
               --dart-define=SUPABASE_URL=$SUPABASE_DEV_URL \
-              --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_DEV_KEY
+              --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_DEV_KEY \
+              --dart-define=GOOGLE_WEB_CLIENT_ID=$GOOGLE_DEV_ID
           fi
 
       - name: Copy vercel.json
@@ -94,9 +98,11 @@ jobs:
           # Dev Secrets
           SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
           SUPABASE_DEV_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+          GOOGLE_DEV_ID: ${{ secrets.GOOGLE_DEV_WEB_CLIENT_ID }}
           # Main Secrets
           SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
           SUPABASE_MAIN_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
+          GOOGLE_MAIN_ID: ${{ secrets.GOOGLE_MAIN_WEB_CLIENT_ID }}
         run: |
           flutter pub get
           
@@ -104,12 +110,14 @@ jobs:
             echo "🏗️ Building for Main (Production)..."
             flutter build web --release \
               --dart-define=SUPABASE_URL=$SUPABASE_MAIN_URL \
-              --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_MAIN_KEY
+              --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_MAIN_KEY \
+              --dart-define=GOOGLE_WEB_CLIENT_ID=$GOOGLE_MAIN_ID
           else
             echo "🏗️ Building for Dev (Preview)..."
             flutter build web --release \
               --dart-define=SUPABASE_URL=$SUPABASE_DEV_URL \
-              --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_DEV_KEY
+              --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_DEV_KEY \
+              --dart-define=GOOGLE_WEB_CLIENT_ID=$GOOGLE_DEV_ID
           fi
 
       - name: Copy vercel.json
