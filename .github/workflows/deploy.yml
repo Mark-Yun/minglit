@@ -5,7 +5,28 @@ on:
     branches: [ "main", "dev" ]
 
 jobs:
+  # 변경 사항 감지
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      app_user: ${{ steps.filter.outputs.app_user }}
+      app_partner: ${{ steps.filter.outputs.app_partner }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          app_user:
+            - 'apps/app_user/**'
+            - 'shared/packages/minglit_kit/**'
+          app_partner:
+            - 'apps/app_partner/**'
+            - 'shared/packages/minglit_kit/**'
+
   deploy-user:
+    needs: changes
+    if: ${{ needs.changes.outputs.app_user == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -58,6 +79,8 @@ jobs:
           fi
 
   deploy-partner:
+    needs: changes
+    if: ${{ needs.changes.outputs.app_partner == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

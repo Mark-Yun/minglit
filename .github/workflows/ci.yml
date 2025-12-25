@@ -24,8 +24,10 @@ jobs:
         filters: |
           app_user:
             - 'apps/app_user/**'
+            - 'shared/packages/minglit_kit/**'
           app_partner:
             - 'apps/app_partner/**'
+            - 'shared/packages/minglit_kit/**'
           supabase:
             - 'backend/supabase/**'
 
