@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import '../../main.dart'; // AuthWrapper 등을 위해
+import 'package:app_user/main.dart'; // 패키지 임포트로 변경
 import '../verification/verification_page.dart';
-import '../verification/career_verification_form.dart';
 import '../verification/verification_inbox_page.dart';
 
 class UserDevMap extends StatelessWidget {
@@ -42,6 +41,26 @@ class UserDevMap extends StatelessWidget {
           title: 'Verification Inbox',
           description: '보완 요청 알림 리스트',
           screenBuilder: (_) => const VerificationInboxPage(),
+        ),
+        DevScreenItem(
+          title: 'Partner Detail View',
+          description: '유저가 보는 파트너 상세 프로필',
+          screenBuilder: (_) => Scaffold(
+            appBar: AppBar(title: const Text('Partner Profile')),
+            body: PartnerDetailView(
+              partner: Partner(
+                id: 'dummy-id',
+                name: '밍글릿 강남점',
+                introduction: '강남 최고의 소셜 파티 공간, 밍글릿입니다. \n다양한 사람들과 즐거운 시간을 가져보세요!',
+                address: '서울시 강남구 테헤란로 123',
+                bizName: '(주)밍글릿 컴퍼니',
+                representativeName: '홍길동',
+                bizNumber: '123-45-67890',
+                contactEmail: 'contact@minglit.com',
+                contactPhone: '02-1234-5678',
+              ),
+            ),
+          ),
         ),
       ],
     );

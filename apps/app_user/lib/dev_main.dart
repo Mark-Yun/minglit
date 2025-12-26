@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'main.dart' as main_prod;
 import 'src/features/dev/user_dev_map.dart';
 
 void main() async {

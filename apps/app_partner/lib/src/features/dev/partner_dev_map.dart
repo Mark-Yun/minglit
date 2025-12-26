@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import '../../main.dart'; 
+import 'package:app_partner/main.dart'; 
 import '../verification/review_verification_page.dart';
 
 class PartnerDevMap extends StatelessWidget {
@@ -30,6 +30,24 @@ class PartnerDevMap extends StatelessWidget {
           title: 'Verification Review',
           description: '유저 인증 요청 심사 (승인/반려)',
           screenBuilder: (_) => const ReviewVerificationPage(),
+        ),
+        DevScreenItem(
+          title: 'My Profile Preview',
+          description: '내 파트너 정보 미리보기',
+          screenBuilder: (_) => Scaffold(
+            appBar: AppBar(title: const Text('My Profile')),
+            body: PartnerDetailView(
+              partner: Partner(
+                id: 'my-id',
+                name: '밍글릿 사장님 모드',
+                introduction: '파트너 앱에서 설정한 정보가 유저들에게 이렇게 보입니다.',
+                bizName: '성공하는 파트너',
+                representativeName: '김대표',
+                bizNumber: '987-65-43210',
+                contactEmail: 'partner@minglit.com',
+              ),
+            ),
+          ),
         ),
       ],
     );
