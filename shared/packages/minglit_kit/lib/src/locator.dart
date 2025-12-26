@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'auth/auth_service.dart';
 import 'auth/verification_service.dart';
+import 'auth/partner_service.dart';
 
 final GetIt locator = GetIt.instance;
 
@@ -17,5 +18,10 @@ void setupLocator({String? googleWebClientId, String? defaultRedirectUrl}) {
   // VerificationService를 싱글톤으로 등록
   locator.registerLazySingleton<VerificationService>(
     () => VerificationService(),
+  );
+
+  // PartnerService를 싱글톤으로 등록
+  locator.registerLazySingleton<PartnerService>(
+    () => PartnerService(),
   );
 }
