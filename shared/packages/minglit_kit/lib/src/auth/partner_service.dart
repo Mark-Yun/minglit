@@ -113,4 +113,41 @@ class PartnerService {
       'updated_at': DateTime.now().toIso8601String(),
     }).eq('id', applicationId);
   }
+
+  // --- 멤버 권한 관리 기능 ---
+
+  /// 파트너 소속 멤버 목록 조회
+  Future<List<Map<String, dynamic>>> getPartnerMembers(String partnerId) async {
+    return await _supabase
+        .from('partner_member_permissions')
+        .select('*, user:user_profiles(*)')
+        .eq('partner_id', partnerId)
+        .order('joined_at', ascending: true);
+  }
+
+  /// 멤버 역할(Role) 업데이트 (트리거에 의해 권한 자동 갱신됨)
+  Future<void> updateMemberRole({
+    required String partnerId,
+    required String userId,
+    required String role,
+  }) async {
+    Log.d('🎭 Updating Member Role: Partner=$partnerId, User=$userId, Role=$role');
+    await _supabase
+        .from('partner_member_permissions')
+        .update({'role': role})
+        .match({'partner_id': partnerId, 'user_id': userId});
+  }
+
+  /// 멤버 기능 권한(Permissions) 직접 업데이트 (커스텀 권한 부여 시)
+  Future<void> updateMemberPermissions({
+    required String partnerId,
+    required String userId,
+    required List<String> permissions,
+  }) async {
+    Log.d('⚙️ Updating Custom Permissions: Partner=$partnerId, User=$userId');
+    await _supabase
+        .from('partner_member_permissions')
+        .update({'permissions': permissions})
+        .match({'partner_id': partnerId, 'user_id': userId});
+  }
 }

@@ -1,0 +1,82 @@
+import 'package:flutter/material.dart';
+import 'package:minglit_kit/minglit_kit.dart';
+import 'partner_member_permission_page.dart';
+
+class PartnerMemberListPage extends StatefulWidget {
+  final String partnerId;
+  const PartnerMemberListPage({super.key, required this.partnerId});
+
+  @override
+  State<PartnerMemberListPage> createState() => _PartnerMemberListPageState();
+}
+
+class _PartnerMemberListPageState extends State<PartnerMemberListPage> {
+  List<Map<String, dynamic>> _members = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMembers();
+  }
+
+  Future<void> _loadMembers() async {
+    setState(() => _isLoading = true);
+    try {
+      final service = locator<PartnerService>();
+      final results = await service.getPartnerMembers(widget.partnerId);
+      setState(() => _members = results);
+    } catch (e) {
+      Log.e('Load members error', e);
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('직원 및 권한 관리')),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _members.length,
+              itemBuilder: (context, index) {
+                final member = _members[index];
+                final user = member['user'] as Map<String, dynamic>? ?? {};
+                
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    leading: const CircleAvatar(child: Icon(Icons.person)),
+                    title: Text(user['name'] ?? '이름 없음', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text('역할: ${member['role']}'),
+                    trailing: const Icon(Icons.settings, size: 20),
+                    onTap: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PartnerMemberPermissionPage(
+                            partnerId: widget.partnerId,
+                            memberData: member,
+                          ),
+                        ),
+                      );
+                      if (result == true) _loadMembers();
+                    },
+                  ),
+                );
+              },
+            ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          // TODO: 멤버 초대 로직 (이메일 검색 등)
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('멤버 초대 기능은 준비 중입니다.')));
+        },
+        label: const Text('직원 추가'),
+        icon: const Icon(Icons.add),
+      ),
+    );
+  }
+}

@@ -3,8 +3,9 @@ import 'package:minglit_kit/minglit_kit.dart';
 import 'package:app_partner/main.dart'; 
 import '../verification/review_verification_page.dart';
 import '../auth/partner_application_page.dart';
-import '../admin/partner_application_list_page.dart'; // 수정됨
-import '../admin/partner_application_detail_page.dart'; // 수정됨
+import '../admin/partner_application_list_page.dart';
+import '../admin/partner_application_detail_page.dart';
+import '../member/partner_member_list_page.dart'; // 추가
 
 class PartnerDevMap extends StatelessWidget {
   const PartnerDevMap({super.key});
@@ -30,10 +31,16 @@ class PartnerDevMap extends StatelessWidget {
           screenBuilder: (_) => const PartnerApplicationPage(),
         ),
         DevScreenItem(
-          title: 'Partner Home',
-          description: '파트너 대시보드 메인',
-          screenBuilder: (_) => const PartnerHomePage(),
+          title: 'Manage Members & Permissions',
+          description: '직원 목록 조회 및 세부 권한 설정',
+          screenBuilder: (_) => const PartnerMemberListPage(
+            partnerId: '00000000-0000-0000-0000-000000000000',
+          ),
         ),
+        DevScreenItem(
+          title: 'Partner Home',
+// ... (나머지 동일)
+
         DevScreenItem(
           title: 'Verification Review',
           description: '유저 인증 요청 심사 (승인/반려)',
