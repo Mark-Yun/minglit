@@ -25,7 +25,10 @@ Future<void> main() async {
   );
 
   // 서비스 로케이터 초기화
-  setupLocator(googleWebClientId: googleWebClientId);
+  setupLocator(
+    googleWebClientId: googleWebClientId,
+    defaultRedirectUrl: kDebugMode ? 'http://localhost:3001' : null,
+  );
 
   runApp(const MinglitPartnerApp());
 }

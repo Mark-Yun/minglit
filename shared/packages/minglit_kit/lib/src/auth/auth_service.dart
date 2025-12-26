@@ -6,11 +6,14 @@ import '../utils/log.dart';
 class AuthService {
   final SupabaseClient _supabase;
   final GoogleSignIn _googleSignIn;
+  final String? _defaultRedirectUrl;
 
   AuthService({
     SupabaseClient? supabase,
     String? webClientId, // 웹 구글 로그인용 클라이언트 ID (GCP Console에서 발급)
+    String? defaultRedirectUrl,
   })  : _supabase = supabase ?? Supabase.instance.client,
+        _defaultRedirectUrl = defaultRedirectUrl,
         _googleSignIn = GoogleSignIn(
           // 웹에서는 clientId가 필요합니다.
           clientId: kIsWeb ? webClientId : null,
@@ -22,13 +25,13 @@ class AuthService {
     Log.d('🔐 Google Sign-In started (Web=$kIsWeb)');
     try {
       if (kIsWeb) {
-        // 웹에서는 현재 접속한 주소(Origin)를 리다이렉트 URL로 자동 설정
-        final origin = Uri.base.origin;
-        Log.d('🌐 Initiating Supabase OAuth redirect to: $origin');
+        // 웹에서는 명시적으로 제공된 URL이나 현재 접속한 주소(Origin)를 리다이렉트 URL로 사용
+        final redirectTo = _defaultRedirectUrl ?? Uri.base.origin;
+        Log.d('🌐 Initiating Supabase OAuth redirect to: $redirectTo');
         
         await _supabase.auth.signInWithOAuth(
           OAuthProvider.google,
-          redirectTo: origin,
+          redirectTo: redirectTo,
         );
         return;
       }

@@ -5,10 +5,13 @@ import 'auth/verification_service.dart';
 final GetIt locator = GetIt.instance;
 
 /// 서비스 로케이터 초기화 (앱 시작 시 호출)
-void setupLocator({String? googleWebClientId}) {
+void setupLocator({String? googleWebClientId, String? defaultRedirectUrl}) {
   // AuthService를 싱글톤으로 등록
   locator.registerLazySingleton<AuthService>(
-    () => AuthService(webClientId: googleWebClientId),
+    () => AuthService(
+      webClientId: googleWebClientId,
+      defaultRedirectUrl: defaultRedirectUrl,
+    ),
   );
 
   // VerificationService를 싱글톤으로 등록
