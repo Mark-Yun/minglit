@@ -49,7 +49,7 @@ minglit/ (Root)
 Organization-Member 모델을 기반으로 설계되었습니다.
 - `user_profiles`: 모든 사용자의 기본 프로필.
 - `partners`: 매장/법인 정보.
-- `partner_members`: 매장 소속 직원 및 권한 관리.
+- `partner_member_permissions`: 매장 소속 직원 및 세분화된 기능 권한 관리.
 
 ---
 

@@ -6,7 +6,7 @@ create type public.verification_category as enum ('career', 'asset', 'marriage',
 create type public.partner_application_status as enum ('pending', 'approved', 'rejected', 'needs_correction');
 create type public.business_type as enum ('individual', 'corporate');
 
--- 2. 사용자 프로필 테이블 (기본 정보)
+-- 2. 사용자 프로필 테이블
 create table public.user_profiles (
   id uuid references auth.users on delete cascade primary key,
   username text unique,
@@ -17,68 +17,37 @@ create table public.user_profiles (
   is_verified boolean default false,
   ci text,
   di text unique,
-  is_super_admin boolean default false,
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now()
 );
 
--- 3. 파트너 테이블 (공개 정보)
+-- 3. 시스템 전역 권한 테이블 (슈퍼어드민 등)
+create table public.app_roles (
+  user_id uuid references auth.users on delete cascade primary key,
+  role text not null check (role in ('super_admin', 'moderator')),
+  created_at timestamp with time zone default now()
+);
+
+-- 4. 파트너 테이블 (공개 정보)
 create table public.partners (
   id uuid default gen_random_uuid() primary key,
-  name text not null, -- 브랜드/매장명
-  introduction text, -- 소개글
+  name text not null,
+  introduction text,
   address text,
   contact_phone text,
-  contact_email text, -- 추가: 연락용 이메일
-  representative_name text, -- 추가: 대표자명
-  biz_name text, -- 추가: 사업자명
-  biz_number text, -- 추가: 사업자 번호
+  contact_email text,
+  representative_name text,
+  biz_name text,
+  biz_number text,
   profile_image_url text,
   is_active boolean default true,
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now()
 );
 
--- 4. 파트너 정산 정보 테이블 (비공개/민감 정보)
+-- 5. 파트너 정산 정보 테이블 (민감 정보)
 create table public.partner_settlements (
   partner_id uuid references public.partners(id) on delete cascade primary key,
-  biz_type business_type not null,
-  biz_name text not null, 
-  biz_number text not null, 
-  representative_name text not null, 
-  bank_name text not null,
-  account_number text not null,
-  account_holder text not null,
-  tax_email text, 
-  biz_registration_path text, 
-  bankbook_path text, 
-  updated_at timestamp with time zone default now()
-);
-
--- 5. 파트너 멤버 테이블
-create table public.partner_members (
-  id uuid default gen_random_uuid() primary key,
-  partner_id uuid references public.partners(id) on delete cascade not null,
-  user_id uuid references auth.users(id) on delete cascade not null,
-  role partner_role default 'staff' not null,
-  joined_at timestamp with time zone default now(),
-  unique(partner_id, user_id)
-);
-
--- 6. 파트너 가입 신청 테이블
-create table public.partner_applications (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references auth.users(id) on delete cascade not null,
-  status partner_application_status default 'pending' not null,
-  
-  -- 공개용 데이터
-  brand_name text not null,
-  introduction text,
-  address text,
-  contact_phone text,
-  contact_email text, -- 추가
-  
-  -- 정산 및 인증용 데이터
   biz_type business_type not null,
   biz_name text not null,
   biz_number text not null,
@@ -87,16 +56,48 @@ create table public.partner_applications (
   account_number text not null,
   account_holder text not null,
   tax_email text,
-  
+  biz_registration_path text,
+  bankbook_path text,
+  updated_at timestamp with time zone default now()
+);
+
+-- 6. 파트너 멤버 및 권한 관리 테이블 (이름 변경: partner_members -> partner_member_permissions)
+create table public.partner_member_permissions (
+  id uuid default gen_random_uuid() primary key,
+  partner_id uuid references public.partners(id) on delete cascade not null,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  role partner_role default 'staff' not null,
+  permissions text[] not null default '{}',
+  joined_at timestamp with time zone default now(),
+  unique(partner_id, user_id)
+);
+
+-- 7. 파트너 가입 신청 테이블
+create table public.partner_applications (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  status partner_application_status default 'pending' not null,
+  brand_name text not null,
+  introduction text,
+  address text,
+  contact_phone text,
+  contact_email text,
+  biz_type business_type not null,
+  biz_name text not null,
+  biz_number text not null,
+  representative_name text not null,
+  bank_name text not null,
+  account_number text not null,
+  account_holder text not null,
+  tax_email text,
   biz_registration_path text not null,
   bankbook_path text not null,
-  
   admin_comment text,
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now()
 );
 
--- 7. 인증 항목 마스터 테이블
+-- 8. 인증 항목 마스터 테이블
 create table public.verifications (
   id uuid default gen_random_uuid() primary key,
   category verification_category not null,
@@ -107,7 +108,7 @@ create table public.verifications (
   created_at timestamp with time zone default now()
 );
 
--- 8. 유저별 최신 인증 데이터 (원본)
+-- 9. 유저별 최신 인증 데이터 (원본)
 create table public.user_verifications (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users(id) on delete cascade not null,
@@ -118,7 +119,7 @@ create table public.user_verifications (
   unique(user_id, verification_id)
 );
 
--- 9. 인증 심사 요청 테이블
+-- 10. 인증 심사 요청 테이블
 create table public.verification_requests (
   id uuid default gen_random_uuid() primary key,
   partner_id uuid references public.partners(id) on delete cascade not null,
@@ -131,7 +132,7 @@ create table public.verification_requests (
   updated_at timestamp with time zone default now()
 );
 
--- 10. 심사 코멘트 (소통)
+-- 11. 심사 코멘트
 create table public.verification_comments (
   id uuid default gen_random_uuid() primary key,
   request_id uuid references public.verification_requests(id) on delete cascade not null,
@@ -140,17 +141,17 @@ create table public.verification_comments (
   created_at timestamp with time zone default now()
 );
 
--- 11. 파트너별 최종 승인 결과 테이블
+-- 12. 파트너별 최종 승인 결과 테이블
 create table public.partner_verified_users (
   partner_id uuid references public.partners(id) on delete cascade not null,
   user_id uuid references auth.users(id) on delete cascade not null,
   verification_id uuid references public.verifications(id) on delete cascade not null,
   verified_snapshot jsonb not null,
-  verified_at timestamp with time zone now(),
+  verified_at timestamp with time zone default now(),
   primary key (partner_id, user_id, verification_id)
 );
 
--- 12. 파티 테이블
+-- 13. 파티 테이블
 create table public.parties (
   id uuid default gen_random_uuid() primary key,
   partner_id uuid references public.partners(id) on delete cascade not null,
@@ -160,11 +161,35 @@ create table public.parties (
   updated_at timestamp with time zone default now()
 );
 
--- 13. RLS 비활성화
+-- 14. [보안 함수] --
+
+create or replace function public.is_super_admin()
+returns boolean as $$
+  select exists (
+    select 1 from public.app_roles 
+    where user_id = auth.uid() and role = 'super_admin'
+  );
+$$ language sql security definer;
+
+create or replace function public.has_partner_permission(p_id uuid, p_key text)
+returns boolean as $$
+begin
+  if public.is_super_admin() then return true; end if;
+
+  return exists (
+    select 1 from public.partner_member_permissions
+    where partner_id = p_id 
+    and user_id = auth.uid()
+    and p_key = any(permissions)
+  );
+end;
+$$ language plpgsql security definer;
+
+-- 15. [RLS 비활성화 - 개발 모드]
 alter table public.user_profiles disable row level security;
 alter table public.partners disable row level security;
 alter table public.partner_settlements disable row level security;
-alter table public.partner_members disable row level security;
+alter table public.partner_member_permissions disable row level security;
 alter table public.partner_applications disable row level security;
 alter table public.verifications disable row level security;
 alter table public.user_verifications disable row level security;
@@ -173,7 +198,7 @@ alter table public.verification_comments disable row level security;
 alter table public.partner_verified_users disable row level security;
 alter table public.parties disable row level security;
 
--- 14. 트리거 및 함수 설정 --
+-- 16. [트리거 및 함수] --
 
 create or replace function public.handle_updated_at()
 returns trigger as $$
@@ -190,35 +215,49 @@ create trigger set_partner_applications_updated_at before update on public.partn
 create trigger set_verification_requests_updated_at before update on public.verification_requests for each row execute procedure public.handle_updated_at();
 create trigger set_parties_updated_at before update on public.parties for each row execute procedure public.handle_updated_at();
 
--- [수정] 파트너 가입 승인 시 실제 테이블로 데이터 분산 삽입 함수
+-- 역할 변경 시 권한 자동 동기화
+create or replace function public.sync_partner_member_permissions()
+returns trigger as $$
+begin
+  if (new.role = 'owner') then
+    new.permissions := array[
+      'PARTNER_EDIT', 'SETTLEMENT_VIEW', 'SETTLEMENT_EDIT', 
+      'MEMBER_MANAGE', 'PARTY_MANAGE', 'VERIFY_LIST_VIEW', 
+      'USER_DATA_VIEW', 'VERIFY_REVIEW', 'COMMENT_MANAGE'
+    ];
+  elsif (new.role = 'manager') then
+    new.permissions := array[
+      'PARTNER_EDIT', 'PARTY_MANAGE', 'VERIFY_LIST_VIEW', 
+      'USER_DATA_VIEW', 'VERIFY_REVIEW', 'COMMENT_MANAGE'
+    ];
+  elsif (new.role = 'staff') then
+    new.permissions := array[
+      'VERIFY_LIST_VIEW', 'COMMENT_MANAGE', 'PARTY_MANAGE'
+    ];
+  end if;
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger trigger_sync_permissions
+before insert or update of role on public.partner_member_permissions
+for each row execute procedure public.sync_partner_member_permissions();
+
+-- 가입 승인 시 자동화
 create or replace function public.on_partner_application_approved()
 returns trigger as $$
 declare
   new_partner_id uuid;
 begin
   if (old.status != 'approved' and new.status = 'approved') then
-    -- 1. partners 테이블 생성 (공개 정보 포함)
-    insert into public.partners (
-      name, introduction, address, contact_phone, contact_email, 
-      representative_name, biz_name, biz_number
-    ) values (
-      new.brand_name, new.introduction, new.address, new.contact_phone, new.contact_email,
-      new.representative_name, new.biz_name, new.biz_number
-    ) returning id into new_partner_id;
+    insert into public.partners (name, introduction, address, contact_phone, contact_email, representative_name, biz_name, biz_number)
+    values (new.brand_name, new.introduction, new.address, new.contact_phone, new.contact_email, new.representative_name, new.biz_name, new.biz_number)
+    returning id into new_partner_id;
 
-    -- 2. partner_settlements 테이블 생성 (비공개 정보)
-    insert into public.partner_settlements (
-      partner_id, biz_type, biz_name, biz_number, representative_name,
-      bank_name, account_number, account_holder, tax_email,
-      biz_registration_path, bankbook_path
-    ) values (
-      new_partner_id, new.biz_type, new.biz_name, new.biz_number, new.representative_name,
-      new.bank_name, new.account_number, new.account_holder, new.tax_email,
-      new.biz_registration_path, new.bankbook_path
-    );
+    insert into public.partner_settlements (partner_id, biz_type, biz_name, biz_number, representative_name, bank_name, account_number, account_holder, tax_email, biz_registration_path, bankbook_path)
+    values (new_partner_id, new.biz_type, new.biz_name, new.biz_number, new.representative_name, new.bank_name, new.account_number, new.account_holder, new.tax_email, new.biz_registration_path, new.bankbook_path);
 
-    -- 3. 신청자를 해당 파트너의 'owner'로 등록
-    insert into public.partner_members (partner_id, user_id, role)
+    insert into public.partner_member_permissions (partner_id, user_id, role)
     values (new_partner_id, new.user_id, 'owner');
   end if;
   return new;
@@ -247,7 +286,7 @@ create trigger trigger_verification_approved_snapshot
 after update on public.verification_requests
 for each row execute procedure public.on_verification_approved_snapshot();
 
--- 15. Storage 설정 --
+-- 17. Storage 설정 --
 insert into storage.buckets (id, name, public)
 values ('verification-proofs', 'verification-proofs', false) on conflict (id) do nothing;
 insert into storage.buckets (id, name, public)
