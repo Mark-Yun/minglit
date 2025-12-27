@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +18,35 @@ Future<void> main() async {
 
 class MinglitPartnerApp extends StatelessWidget {
   const MinglitPartnerApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider.value(value: locator<AuthRepository>()),
+        RepositoryProvider.value(value: locator<PartnerRepository>()),
+        RepositoryProvider.value(value: locator<VerificationRepository>()),
+      ],
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (context) => AuthBloc(authRepository: context.read<AuthRepository>()),
+          ),
+          BlocProvider(
+            create: (context) => PartnerBloc(partnerRepository: context.read<PartnerRepository>()),
+          ),
+          BlocProvider(
+            create: (context) => VerificationBloc(verificationRepository: context.read<VerificationRepository>()),
+          ),
+        ],
+        child: const _AppView(),
+      ),
+    );
+  }
+}
+
+class _AppView extends StatelessWidget {
+  const _AppView();
 
   Future<void> _initialize() async {
     await GoogleFonts.pendingFonts([
@@ -58,15 +87,13 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authService = locator<AuthService>();
-    return StreamBuilder<AuthState>(
-      stream: authService.onAuthStateChange,
-      builder: (context, snapshot) {
-        final session = Supabase.instance.client.auth.currentSession;
-        if (session != null) {
-          return const PartnerHomePage();
-        }
-        return const PartnerLoginPage();
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        return state.maybeWhen(
+          authenticated: (_) => const PartnerHomePage(),
+          loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+          orElse: () => const PartnerLoginPage(),
+        );
       },
     );
   }
@@ -77,18 +104,20 @@ class PartnerLoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authService = locator<AuthService>();
-    return MinglitLoginScreen(
-      isPartner: true,
-      onGoogleSignIn: () async {
-        try {
-          await authService.signInWithGoogle();
-        } catch (e) {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Login Failed: $e')));
-          }
-        }
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        state.whenOrNull(
+          failure: (message) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Login Failed: $message')));
+          },
+        );
       },
+      child: MinglitLoginScreen(
+        isPartner: true,
+        onGoogleSignIn: () {
+          context.read<AuthBloc>().add(const AuthEvent.signInWithGoogle());
+        },
+      ),
     );
   }
 }
@@ -98,8 +127,10 @@ class PartnerHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authService = locator<AuthService>();
-    final user = authService.currentUser;
+    final user = context.select((AuthBloc bloc) => 
+      bloc.state.maybeWhen(authenticated: (u) => u, orElse: () => null)
+    );
+
     return Scaffold(
       appBar: AppBar(title: const Text('Partner Dashboard')),
       body: Center(
@@ -108,9 +139,14 @@ class PartnerHomePage extends StatelessWidget {
           children: [
             const Icon(Icons.store, size: 80, color: Color(0xFFFF7043)),
             const SizedBox(height: 20),
-            Text('사장님(${user?.email}) 환영합니다!'),
+            Text('사장님(${user?.email ?? 'Unknown'}) 환영합니다!'),
             const SizedBox(height: 40),
-            ElevatedButton(onPressed: () => authService.signOut(), child: const Text('로그아웃')),
+            ElevatedButton(
+              onPressed: () {
+                context.read<AuthBloc>().add(const AuthEvent.signOut());
+              },
+              child: const Text('로그아웃'),
+            ),
           ],
         ),
       ),

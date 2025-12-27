@@ -10,57 +10,25 @@ class ReviewVerificationPage extends StatefulWidget {
 }
 
 class _ReviewVerificationPageState extends State<ReviewVerificationPage> {
-  List<Map<String, dynamic>> _requests = [];
-  bool _isLoading = true;
-
   @override
   void initState() {
     super.initState();
-    _loadRequests();
+    // BLoC을 통한 초기 로드
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<VerificationBloc>().add(const VerificationEvent.loadPendingRequests());
+    });
   }
 
-  Future<void> _loadRequests() async {
-    setState(() => _isLoading = true);
-    try {
-      final service = locator<VerificationService>();
-      final requests = await service.getPendingRequests();
-      setState(() => _requests = requests);
-    } catch (e) {
-      Log.e('Error loading requests', e);
-    } finally {
-      setState(() => _isLoading = false);
-    }
+  /// 심사 처리
+  void _reviewRequest(String id, VerificationStatus status, {String? reason, String? comment}) {
+    context.read<VerificationBloc>().add(VerificationEvent.reviewRequest(
+      requestId: id,
+      status: status,
+      rejectionReason: reason,
+      comment: comment,
+    ));
   }
 
-  /// 심사 처리 (승인/반려/보완요청)
-  Future<void> _reviewRequest(String id, VerificationStatus status, {String? reason, String? comment}) async {
-    try {
-      final service = locator<VerificationService>();
-      
-      // 1. 상태 업데이트
-      await service.reviewRequest(requestId: id, status: status, rejectionReason: reason);
-      
-      // 2. 코멘트가 있다면 추가
-      if (comment != null && comment.isNotEmpty) {
-        await service.submitComment(requestId: id, content: {'text': comment});
-      }
-      
-      // 목록 새로고침 (간단하게 처리)
-      _loadRequests();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('처리가 완료되었습니다: ${status.value}')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('처리 실패: $e')));
-      }
-    }
-  }
-
-  /// 보완 요청 다이얼로그
   void _showCorrectionDialog(String requestId) {
     final reasonController = TextEditingController();
     final commentController = TextEditingController();
@@ -89,7 +57,7 @@ class _ReviewVerificationPageState extends State<ReviewVerificationPage> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              _reviewRequest(requestId, VerificationStatus.needs_correction, 
+              _reviewRequest(requestId, VerificationStatus.needsCorrection, 
                 reason: reasonController.text, comment: commentController.text);
             },
             child: const Text('보완 요청 전송'),
@@ -99,7 +67,6 @@ class _ReviewVerificationPageState extends State<ReviewVerificationPage> {
     );
   }
 
-  /// 대화 내역 모달 (유저 앱과 동일한 컴포넌트 사용 권장하나 일단 내부에 구현)
   void _showCommentsModal(String requestId) {
     showModalBottomSheet(
       context: context,
@@ -127,20 +94,46 @@ class _ReviewVerificationPageState extends State<ReviewVerificationPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('인증 심사 대기열 (${_requests.length})')),
-      body: RefreshIndicator(
-        onRefresh: _loadRequests,
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _requests.isEmpty
-                ? const Center(child: Text('모든 심사가 완료되었습니다! 🎉'))
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _requests.length,
-                    itemBuilder: (context, index) => _buildRequestCard(_requests[index]),
-                  ),
-      ),
+    return BlocConsumer<VerificationBloc, VerificationState>(
+      listener: (context, state) {
+        state.whenOrNull(
+          success: () {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('처리가 완료되었습니다.')));
+          },
+          failure: (msg) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('처리 실패: $msg')));
+          },
+        );
+      },
+      builder: (context, state) {
+        return Scaffold(
+          appBar: AppBar(
+            title: state.maybeWhen(
+              pendingRequestsLoaded: (reqs) => Text('인증 심사 대기열 (${reqs.length})'),
+              orElse: () => const Text('인증 심사 대기열'),
+            ),
+          ),
+          body: RefreshIndicator(
+            onRefresh: () async {
+              context.read<VerificationBloc>().add(const VerificationEvent.loadPendingRequests());
+            },
+            child: state.maybeWhen(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              pendingRequestsLoaded: (requests) {
+                if (requests.isEmpty) {
+                  return const Center(child: Text('모든 심사가 완료되었습니다! 🎉'));
+                }
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: requests.length,
+                  itemBuilder: (context, index) => _buildRequestCard(requests[index]),
+                );
+              },
+              orElse: () => const Center(child: Text('데이터를 불러오는 중입니다...')),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -179,7 +172,7 @@ class _ReviewVerificationPageState extends State<ReviewVerificationPage> {
                     child: Container(
                       width: 80, margin: const EdgeInsets.only(right: 8),
                       decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8)),
-                      child: const Icon(Icons.image), // 실제론 여기서도 SignedUrl 썸네일 표시 권장
+                      child: const Icon(Icons.image),
                     ),
                   ),
                 ),
@@ -218,14 +211,13 @@ class _ReviewVerificationPageState extends State<ReviewVerificationPage> {
   }
 }
 
-/// 심사 대화 내역 뷰 (모달용)
 class _CommentsView extends StatelessWidget {
   final String requestId;
   const _CommentsView({required this.requestId});
 
   @override
   Widget build(BuildContext context) {
-    final service = locator<VerificationService>();
+    final repository = context.read<VerificationRepository>();
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
       padding: const EdgeInsets.all(20),
@@ -235,7 +227,7 @@ class _CommentsView extends StatelessWidget {
           const Divider(),
           Expanded(
             child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: service.getVerificationComments(requestId),
+              future: repository.getVerificationComments(requestId),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
                 final comments = snapshot.data!;

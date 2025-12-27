@@ -39,7 +39,9 @@ class PartnerDevMap extends StatelessWidget {
         ),
         DevScreenItem(
           title: 'Partner Home',
-// ... (나머지 동일)
+          description: '파트너 메인 홈 (대시보드)',
+          screenBuilder: (_) => const PartnerHomePage(),
+        ),
 
         DevScreenItem(
           title: 'Verification Review',
@@ -75,7 +77,7 @@ class PartnerDevMap extends StatelessWidget {
             },
           ),
         ),
-// ... (나머지 동일)
+
         DevScreenItem(
           title: 'My Profile Preview',
           description: '내 파트너 정보 미리보기',

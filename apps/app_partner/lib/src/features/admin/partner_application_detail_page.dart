@@ -12,47 +12,59 @@ class PartnerApplicationDetailPage extends StatefulWidget {
 
 class _PartnerApplicationDetailPageState extends State<PartnerApplicationDetailPage> {
   bool _isProcessing = false;
+  final _commentController = TextEditingController();
 
-  Future<void> _handleReview(String status) async {
-    final commentController = TextEditingController();
-    final bool? confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(status == 'approved' ? '최종 승인' : '반려/보완 요청'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('처리에 필요한 코멘트를 입력해 주세요.'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: commentController,
-              decoration: const InputDecoration(border: OutlineInputBorder(), hintText: '예: 서류 식별 가능, 승인합니다.'),
-              maxLines: 3,
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _reviewApplication(String status) async {
+    setState(() => _isProcessing = true);
+    try {
+      final repository = locator<PartnerRepository>();
+      await repository.reviewApplication(
+        applicationId: widget.application['id'],
+        status: status,
+        adminComment: _commentController.text,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('처리가 완료되었습니다: $status')));
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  void _handleReview(String status) {
+    if (status == 'needs_correction' || status == 'rejected') {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(status == 'rejected' ? '반려 사유 입력' : '보완 요청 사항'),
+          content: TextField(
+            controller: _commentController,
+            maxLines: 3,
+            decoration: const InputDecoration(hintText: '상세 내용을 적어주세요.'),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _reviewApplication(status);
+              },
+              child: const Text('확인'),
             ),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('취소')),
-          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('확인')),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
-
-    setState(() => _isProcessing = true);
-    try {
-      final service = locator<PartnerService>();
-      await service.reviewApplication(
-        applicationId: widget.application['id'],
-        status: status,
-        adminComment: commentController.text,
       );
-      if (mounted) Navigator.pop(context, true);
-    } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('처리 실패: $e')));
-    } finally {
-      if (mounted) setState(() => _isProcessing = false);
+    } else {
+      _reviewApplication(status);
     }
   }
 

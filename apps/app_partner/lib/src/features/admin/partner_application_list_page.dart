@@ -24,12 +24,12 @@ class _PartnerApplicationListPageState extends State<PartnerApplicationListPage>
   Future<void> _loadApplications() async {
     setState(() => _isLoading = true);
     try {
-      final service = locator<PartnerService>();
-      final results = await service.getAllApplications(
-        status: _selectedStatus == 'all' ? null : _selectedStatus,
-        searchTerm: _searchController.text,
-      );
-      setState(() => _applications = results);
+      final repository = locator<PartnerRepository>();
+      final apps = await repository.getAllApplications(status: _selectedStatus, searchTerm: _searchController.text);
+      setState(() {
+        _applications = apps.map((a) => a.toJson()).toList(); // 기존 Map 기반 코드 호환성을 위해 toJson 사용
+        _isLoading = false;
+      });
     } catch (e) {
       Log.e('Load applications error', e);
     } finally {

@@ -42,18 +42,18 @@ class _PartnerMemberPermissionPageState extends State<PartnerMemberPermissionPag
   Future<void> _save() async {
     setState(() => _isSaving = true);
     try {
-      final service = locator<PartnerService>();
+      final repository = locator<PartnerRepository>();
       final userId = widget.memberData['user_id'];
 
       // 1. 역할 업데이트 (트리거가 권한 자동 동기화)
-      await service.updateMemberRole(
+      await repository.updateMemberRole(
         partnerId: widget.partnerId,
         userId: userId,
         role: _selectedRole,
       );
 
       // 2. 만약 수동으로 권한을 더 만졌다면 직접 업데이트 (선택 사항)
-      await service.updateMemberPermissions(
+      await repository.updateMemberPermissions(
         partnerId: widget.partnerId,
         userId: userId,
         permissions: _currentPermissions,

@@ -29,11 +29,11 @@ class _PartnerApplicationPageState extends State<PartnerApplicationPage> {
 
   Future<void> _checkExistingApplication() async {
     setState(() => _isLoading = true);
-    final service = locator<PartnerService>();
-    final app = await service.getMyApplication();
+    final repository = locator<PartnerRepository>();
+    final app = await repository.getMyApplication();
     if (app != null && mounted) {
       // 이미 신청한 내역이 있다면 안내 화면으로 이동 (혹은 상태 표시)
-      _showStatusDialog(app['status']);
+      _showStatusDialog(app.status);
     }
     setState(() => _isLoading = false);
   }
@@ -73,8 +73,8 @@ class _PartnerApplicationPageState extends State<PartnerApplicationPage> {
     setState(() => _isLoading = true);
 
     try {
-      final service = locator<PartnerService>();
-      await service.submitApplication(
+      final repository = locator<PartnerRepository>();
+      await repository.submitApplication(
         applicationData: _data,
         bizRegistrationFile: _bizRegFile!,
         bankbookFile: _bankbookFile!,

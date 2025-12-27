@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +18,35 @@ Future<void> main() async {
 
 class MinglitApp extends StatelessWidget {
   const MinglitApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider.value(value: locator<AuthRepository>()),
+        RepositoryProvider.value(value: locator<PartnerRepository>()),
+        RepositoryProvider.value(value: locator<VerificationRepository>()),
+      ],
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (context) => AuthBloc(authRepository: context.read<AuthRepository>()),
+          ),
+          BlocProvider(
+            create: (context) => PartnerBloc(partnerRepository: context.read<PartnerRepository>()),
+          ),
+          BlocProvider(
+            create: (context) => VerificationBloc(verificationRepository: context.read<VerificationRepository>()),
+          ),
+        ],
+        child: const _AppView(),
+      ),
+    );
+  }
+}
+
+class _AppView extends StatelessWidget {
+  const _AppView();
 
   Future<void> _initialize() async {
     await GoogleFonts.pendingFonts([
@@ -46,7 +75,7 @@ class MinglitApp extends StatelessWidget {
           if (snapshot.connectionState != ConnectionState.done) {
             return const MinglitSplashScreen(appName: 'User');
           }
-          return const AuthWrapper(); // 프로덕션은 바로 인증 래퍼로
+          return const AuthWrapper();
         },
       ),
     );
@@ -58,15 +87,13 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authService = locator<AuthService>();
-    return StreamBuilder<AuthState>(
-      stream: authService.onAuthStateChange,
-      builder: (context, snapshot) {
-        final session = Supabase.instance.client.auth.currentSession;
-        if (session != null) {
-          return const HomePage();
-        }
-        return const LoginPage();
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        return state.maybeWhen(
+          authenticated: (_) => const HomePage(),
+          loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+          orElse: () => const LoginPage(),
+        );
       },
     );
   }
@@ -77,25 +104,27 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authService = locator<AuthService>();
-    return MinglitLoginScreen(
-      isPartner: false,
-      onGoogleSignIn: () async {
-        try {
-          await authService.signInWithGoogle();
-        } catch (e) {
-          if (context.mounted) {
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        state.whenOrNull(
+          failure: (message) {
             showDialog(
               context: context,
               builder: (context) => AlertDialog(
                 title: const Text('로그인 실패'),
-                content: SelectableText('Error: $e'),
+                content: SelectableText('Error: $message'),
                 actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('확인'))],
               ),
             );
-          }
-        }
+          },
+        );
       },
+      child: MinglitLoginScreen(
+        isPartner: false,
+        onGoogleSignIn: () {
+          context.read<AuthBloc>().add(const AuthEvent.signInWithGoogle());
+        },
+      ),
     );
   }
 }
@@ -105,8 +134,10 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authService = locator<AuthService>();
-    final user = authService.currentUser;
+    final user = context.select((AuthBloc bloc) => 
+      bloc.state.maybeWhen(authenticated: (u) => u, orElse: () => null)
+    );
+    
     return Scaffold(
       appBar: AppBar(title: const Text('Minglit Home')),
       body: Center(
@@ -118,7 +149,10 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 20),
             Text('안녕하세요, ${user?.userMetadata?['full_name'] ?? user?.email}님!'),
             const SizedBox(height: 40),
-            ElevatedButton(onPressed: () => authService.signOut(), child: const Text('로그아웃')),
+            ElevatedButton(
+              onPressed: () => context.read<AuthBloc>().add(const AuthEvent.signOut()), 
+              child: const Text('로그아웃'),
+            ),
           ],
         ),
       ),

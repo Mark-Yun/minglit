@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 import 'career_verification_form.dart';
 
 /// 다중 인증 및 보완 요청 관리 페이지
@@ -21,8 +21,6 @@ class VerificationManagementPage extends StatefulWidget {
 
 class _VerificationManagementPageState extends State<VerificationManagementPage> {
   final ImagePicker _imagePicker = ImagePicker();
-  bool _isLoading = true;
-  List<VerificationRequirementStatus> _requirements = [];
   
   // 각 인증 항목별 현재 입력 데이터 및 파일 관리
   final Map<String, Map<String, dynamic>> _draftData = {};
@@ -34,22 +32,11 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
     _refreshStatus();
   }
 
-  Future<void> _refreshStatus() async {
-    setState(() => _isLoading = true);
-    try {
-      final service = locator<VerificationService>();
-      final status = await service.getPartnerRequirementsStatus(
-        partnerId: widget.partnerId,
-        requiredVerificationIds: widget.requiredVerificationIds,
-      );
-      setState(() {
-        _requirements = status;
-        _isLoading = false;
-      });
-    } catch (e) {
-      Log.e('Refresh requirements error', e);
-      setState(() => _isLoading = false);
-    }
+  void _refreshStatus() {
+    context.read<VerificationBloc>().add(VerificationEvent.loadPartnerRequirements(
+      partnerId: widget.partnerId,
+      requiredIds: widget.requiredVerificationIds,
+    ));
   }
 
   Future<void> _pickImage(String vId) async {
@@ -64,36 +51,20 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
     }
   }
 
-  Future<void> _submitAll() async {
-    setState(() => _isLoading = true);
-    try {
-      final service = locator<VerificationService>();
-      
-      for (var req in _requirements) {
-        final vId = req.master['id'];
-        // 데이터가 수정되었거나 파일이 새로 선택된 경우만 제출
-        if (_draftData.containsKey(vId) || _draftFiles[vId] != null) {
-          final files = _draftFiles[vId] != null ? [_draftFiles[vId]!] : <XFile>[];
-          
-          await service.submitOrUpdateVerification(
-            partnerId: widget.partnerId,
-            verificationId: vId,
-            claimData: _draftData[vId] ?? req.originalData?['claim_data'] ?? {},
-            proofFiles: files,
-            existingRequestId: req.activeRequest?['id'],
-          );
-        }
+  void _submitAll(List<VerificationRequirementStatus> requirements) {
+    for (var req in requirements) {
+      final vId = req.master['id'];
+      if (_draftData.containsKey(vId) || _draftFiles[vId] != null) {
+        final files = _draftFiles[vId] != null ? [_draftFiles[vId]!] : <XFile>[];
+        
+        context.read<VerificationBloc>().add(VerificationEvent.submitVerification(
+          partnerId: widget.partnerId,
+          verificationId: vId,
+          claimData: _draftData[vId] ?? req.originalData?['claim_data'] ?? {},
+          proofFiles: files,
+          existingRequestId: req.activeRequest?['id'],
+        ));
       }
-      
-      await _refreshStatus();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('모든 수정사항이 제출되었습니다.')));
-      }
-    } catch (e) {
-      Log.e('Submit all error', e);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('제출 실패: $e')));
-    } finally {
-      setState(() => _isLoading = false);
     }
   }
 
@@ -108,26 +79,45 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-
-    final completedCount = _requirements.where((r) => r.isApproved).length;
-    final totalCount = _requirements.length;
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('파티 참가 인증')),
-      body: Column(
-        children: [
-          _buildSummaryHeader(completedCount, totalCount),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _requirements.length,
-              itemBuilder: (context, index) => _buildVerificationCard(_requirements[index]),
-            ),
+    return BlocConsumer<VerificationBloc, VerificationState>(
+      listener: (context, state) {
+        state.whenOrNull(
+          success: () {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('모든 수정사항이 제출되었습니다.')));
+            _refreshStatus(); // 제출 성공 후 상태 새로고침
+          },
+          failure: (msg) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('제출 실패: $msg')));
+          },
+        );
+      },
+      builder: (context, state) {
+        return Scaffold(
+          appBar: AppBar(title: const Text('파티 참가 인증')),
+          body: state.maybeWhen(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            requirementsLoaded: (requirements) {
+              final completedCount = requirements.where((r) => r.isApproved).length;
+              final totalCount = requirements.length;
+              
+              return Column(
+                children: [
+                  _buildSummaryHeader(completedCount, totalCount),
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: requirements.length,
+                      itemBuilder: (context, index) => _buildVerificationCard(requirements[index]),
+                    ),
+                  ),
+                  _buildSubmitButton(requirements),
+                ],
+              );
+            },
+            orElse: () => const Center(child: Text('인증 정보를 불러오는 중입니다...')),
           ),
-          _buildSubmitButton(),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -156,7 +146,7 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
   Widget _buildVerificationCard(VerificationRequirementStatus req) {
     final vId = req.master['id'];
     final bool isApproved = req.isApproved;
-    final bool needsCorrection = req.status == VerificationStatus.needs_correction;
+    final bool needsCorrection = req.status == VerificationStatus.needsCorrection;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -169,7 +159,7 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
         ),
       ),
       child: ExpansionTile(
-        initiallyExpanded: needsCorrection, // 보완 필요시 자동 펼침
+        initiallyExpanded: needsCorrection,
         leading: Icon(
           isApproved ? Icons.check_circle : (needsCorrection ? Icons.error : Icons.add_circle_outline),
           color: isApproved ? Colors.green : (needsCorrection ? Colors.red : Colors.grey),
@@ -184,13 +174,8 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
               children: [
                 if (needsCorrection) _buildCorrectionBanner(req),
                 const SizedBox(height: 16),
-                
-                // 1. 카테고리별 입력 폼
                 _buildFormByCategory(req),
-                
                 const SizedBox(height: 24),
-                
-                // 2. 이미지 피커
                 const Text('증빙 서류', style: TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 _buildImagePicker(vId, req),
@@ -226,8 +211,6 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
   Widget _buildFormByCategory(VerificationRequirementStatus req) {
     final vId = req.master['id'];
     final category = VerificationCategory.values.byName(req.master['category']);
-    
-    // 기존 데이터 또는 수정 중인 데이터 사용
     final initialData = req.activeRequest?['claim_snapshot'] ?? req.originalData?['claim_data'];
 
     switch (category) {
@@ -270,7 +253,7 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
     );
   }
 
-  Widget _buildSubmitButton() {
+  Widget _buildSubmitButton(List<VerificationRequirementStatus> requirements) {
     final bool hasChanges = _draftData.isNotEmpty || _draftFiles.isNotEmpty;
     
     return Container(
@@ -284,7 +267,7 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
           width: double.infinity,
           height: 54,
           child: ElevatedButton(
-            onPressed: hasChanges ? _submitAll : null,
+            onPressed: hasChanges ? () => _submitAll(requirements) : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue[900],
               foregroundColor: Colors.white,
@@ -299,14 +282,13 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
   }
 }
 
-/// 코멘트(대화 내역) 모달 위젯
 class _CommentsModal extends StatelessWidget {
   final String requestId;
   const _CommentsModal({required this.requestId});
 
   @override
   Widget build(BuildContext context) {
-    final service = locator<VerificationService>();
+    final repository = context.read<VerificationRepository>();
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.7,
@@ -324,7 +306,7 @@ class _CommentsModal extends StatelessWidget {
           const Divider(),
           Expanded(
             child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: service.getVerificationComments(requestId),
+              future: repository.getVerificationComments(requestId),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
                 final comments = snapshot.data!;

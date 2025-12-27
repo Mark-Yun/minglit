@@ -1,14 +1,37 @@
 library;
 
-export 'src/auth/login_screen.dart';
-export 'src/auth/auth_service.dart';
-export 'src/auth/verification_service.dart'; // 모든 인증 관련 클래스/Enum 노출
-export 'src/auth/partner_service.dart'; // 파트너 서비스 추가
-export 'src/locator.dart'; // 서비스 로케이터
-export 'src/utils/dev_screen_list.dart'; // 개발용 화면 목록
-export 'src/utils/log.dart'; // 로거 유틸리티
-export 'src/utils/splash_screen.dart'; // 스플래시 화면
-export 'src/models/partner.dart'; // 파트너 모델
-export 'src/widgets/partner_detail_view.dart'; // 파트너 상세 뷰 위젯
-export 'package:get_it/get_it.dart'; // 앱에서 GetIt 직접 접근 가능하도록
-export 'package:supabase_flutter/supabase_flutter.dart' show AuthException, AuthState; // 예외 처리 및 AuthState 편의성
+// UI Widgets
+export 'src/widgets/auth/login_screen.dart';
+export 'src/widgets/partner_detail_view.dart'; 
+export 'src/utils/splash_screen.dart'; 
+export 'src/utils/dev_screen_list.dart'; 
+
+// Data Models
+export 'src/data/models/partner.dart';
+export 'src/data/models/partner_application.dart';
+export 'src/data/models/verification.dart';
+
+// Repositories
+export 'src/data/repositories/auth_repository.dart';
+export 'src/data/repositories/partner_repository.dart';
+export 'src/data/repositories/verification_repository.dart';
+
+// Logic (BLoCs)
+export 'src/logic/blocs/auth/auth_bloc.dart';
+export 'src/logic/blocs/auth/auth_event.dart';
+export 'src/logic/blocs/auth/auth_state.dart';
+export 'src/logic/blocs/partner/partner_bloc.dart';
+export 'src/logic/blocs/partner/partner_event.dart';
+export 'src/logic/blocs/partner/partner_state.dart';
+export 'src/logic/blocs/verification/verification_bloc.dart';
+export 'src/logic/blocs/verification/verification_event.dart';
+export 'src/logic/blocs/verification/verification_state.dart';
+
+// Utilities & Infrastructure
+export 'src/locator.dart'; 
+export 'src/utils/log.dart'; 
+
+// External packages (Convenience)
+export 'package:get_it/get_it.dart'; 
+export 'package:supabase_flutter/supabase_flutter.dart' show AuthException, User; 
+export 'package:flutter_bloc/flutter_bloc.dart';

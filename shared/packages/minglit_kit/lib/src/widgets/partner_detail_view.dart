@@ -1,107 +1,89 @@
 import 'package:flutter/material.dart';
-import '../models/partner.dart';
+import '../../minglit_kit.dart';
 
 class PartnerDetailView extends StatelessWidget {
   final Partner partner;
 
-  const PartnerDetailView({super.key, required this.partner});
+  const PartnerDetailView({
+    super.key,
+    required this.partner,
+  });
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. 브랜드 헤더
-          _buildHeader(context),
-          
-          Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 2. 소개글
-                const Text('파트너 소개', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
-                Text(
-                  partner.introduction ?? '등록된 소개글이 없습니다.',
-                  style: const TextStyle(fontSize: 15, color: Colors.black87, height: 1.6),
+          // Header
+          Row(
+            children: [
+              if (partner.profileImageUrl != null)
+                CircleAvatar(
+                  radius: 40,
+                  backgroundImage: NetworkImage(partner.profileImageUrl!),
+                )
+              else
+                CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Colors.grey[200],
+                  child: const Icon(Icons.store, size: 40, color: Colors.grey),
                 ),
-                
-                const SizedBox(height: 40),
-                const Divider(),
-                const SizedBox(height: 24),
-                
-                // 3. 사업자 정보 (신뢰도 향상 섹션)
-                _buildBizInfoSection(),
-                
-                const SizedBox(height: 48),
-              ],
-            ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      partner.name,
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    if (partner.address != null)
+                      Text(
+                        partner.address!,
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
+          const SizedBox(height: 32),
 
-  Widget _buildHeader(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Theme.of(context).primaryColor, Theme.of(context).primaryColor.withAlpha(180)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Column(
-        children: [
-          if (partner.profileImageUrl != null)
-            CircleAvatar(radius: 50, backgroundImage: NetworkImage(partner.profileImageUrl!))
-          else
-            const CircleAvatar(radius: 50, child: Icon(Icons.store, size: 50)),
-          const SizedBox(height: 16),
-          Text(
-            partner.name,
-            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
-          ),
-          if (partner.address != null) ...[
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.location_on, color: Colors.white70, size: 16),
-                const SizedBox(width: 4),
-                Text(partner.address!, style: const TextStyle(color: Colors.white70)),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
+          // Introduction
+          _buildSection('소개', partner.introduction ?? '소개글이 없습니다.'),
+          const Divider(height: 48),
 
-  Widget _buildBizInfoSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('사업자 정보', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.grey)),
-          const SizedBox(height: 16),
-          _buildInfoRow('사업자명', partner.bizName),
+          // Business Info
+          _buildSection('사업자 정보', ''),
+          _buildInfoRow('상호명', partner.bizName),
           _buildInfoRow('대표자', partner.representativeName),
           _buildInfoRow('사업자번호', partner.bizNumber),
-          _buildInfoRow('연락처', partner.contactPhone),
+          const SizedBox(height: 24),
+
+          // Contact Info
+          _buildSection('연락처', ''),
           _buildInfoRow('이메일', partner.contactEmail),
+          _buildInfoRow('전화번호', partner.contactPhone),
         ],
       ),
+    );
+  }
+
+  Widget _buildSection(String title, String content) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        if (content.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Text(content, style: const TextStyle(fontSize: 15, height: 1.5)),
+        ],
+      ],
     );
   }
 
@@ -109,10 +91,14 @@ class PartnerDetailView extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 100, child: Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13))),
-          Expanded(child: Text(value ?? '-', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500))),
+          SizedBox(
+            width: 100,
+            child: Text(label, style: const TextStyle(color: Colors.grey)),
+          ),
+          Expanded(
+            child: Text(value ?? '-', style: const TextStyle(fontWeight: FontWeight.w500)),
+          ),
         ],
       ),
     );

@@ -22,9 +22,9 @@ class _VerificationInboxPageState extends State<VerificationInboxPage> {
   Future<void> _loadRequests() async {
     setState(() => _isLoading = true);
     try {
-      final service = locator<VerificationService>();
+      final repository = context.read<VerificationRepository>();
       // 보완이 필요한 요청들만 가져옴
-      final requests = await service.getRequestsByStatus(VerificationStatus.needs_correction);
+      final requests = await repository.getRequestsByStatus(VerificationStatus.needsCorrection);
       setState(() {
         _correctionRequests = requests;
         _isLoading = false;
@@ -97,14 +97,11 @@ class _VerificationInboxPageState extends State<VerificationInboxPage> {
             isThreeLine: true,
             trailing: const Icon(Icons.arrow_forward_ios, size: 14),
             onTap: () {
-              // 클릭 시 해당 파트너의 통합 관리 페이지로 이동
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => VerificationManagementPage(
                     partnerId: partner['id'],
-                    // 해당 파트너가 요구하는 모든 ID를 넘겨야 하는데, 
-                    // 일단은 해당 건의 ID만 포함하거나 파트너 정보를 더 가져오는 로직 필요
                     requiredVerificationIds: [verification['id']], 
                   ),
                 ),

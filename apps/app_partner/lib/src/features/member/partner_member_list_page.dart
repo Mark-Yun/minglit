@@ -23,12 +23,14 @@ class _PartnerMemberListPageState extends State<PartnerMemberListPage> {
   Future<void> _loadMembers() async {
     setState(() => _isLoading = true);
     try {
-      final service = locator<PartnerService>();
-      final results = await service.getPartnerMembers(widget.partnerId);
-      setState(() => _members = results);
+      final repository = locator<PartnerRepository>();
+      final members = await repository.getPartnerMembers(widget.partnerId);
+      setState(() {
+        _members = members;
+        _isLoading = false;
+      });
     } catch (e) {
-      Log.e('Load members error', e);
-    } finally {
+      Log.e('Error loading members', e);
       setState(() => _isLoading = false);
     }
   }

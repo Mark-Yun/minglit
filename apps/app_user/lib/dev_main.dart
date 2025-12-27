@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 import 'src/features/dev/user_dev_map.dart';
 
 void main() async {
-  // 프로덕션 main의 초기화 로직 공유
   WidgetsFlutterBinding.ensureInitialized();
 
   const supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: 'http://127.0.0.1:54321');
@@ -23,15 +22,35 @@ class MinglitDevApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Minglit User (DEV)',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1A237E)),
-        useMaterial3: true,
-        textTheme: GoogleFonts.notoSansKrTextTheme(),
+    return MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider.value(value: locator<AuthRepository>()),
+        RepositoryProvider.value(value: locator<PartnerRepository>()),
+        RepositoryProvider.value(value: locator<VerificationRepository>()),
+      ],
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (context) => AuthBloc(authRepository: context.read<AuthRepository>()),
+          ),
+          BlocProvider(
+            create: (context) => PartnerBloc(partnerRepository: context.read<PartnerRepository>()),
+          ),
+          BlocProvider(
+            create: (context) => VerificationBloc(verificationRepository: context.read<VerificationRepository>()),
+          ),
+        ],
+        child: MaterialApp(
+          title: 'Minglit User (DEV)',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1A237E)),
+            useMaterial3: true,
+            textTheme: GoogleFonts.notoSansKrTextTheme(),
+          ),
+          home: const UserDevMap(),
+        ),
       ),
-      home: const UserDevMap(), // 개발자 맵으로 바로 진입
     );
   }
 }
