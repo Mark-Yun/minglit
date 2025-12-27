@@ -1,26 +1,47 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../data/repositories/verification_repository.dart';
-import 'verification_event.dart';
-import 'verification_state.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:minglit_kit/src/data/models/verification.dart';
+import 'package:minglit_kit/src/data/repositories/verification_repository.dart';
+import 'package:minglit_kit/src/logic/blocs/verification/verification_event.dart';
+import 'package:minglit_kit/src/logic/blocs/verification/verification_state.dart';
 
 class VerificationBloc extends Bloc<VerificationEvent, VerificationState> {
-  final VerificationRepository _verificationRepository;
-
   VerificationBloc({required VerificationRepository verificationRepository})
-      : _verificationRepository = verificationRepository,
-        super(const VerificationState.initial()) {
+    : _verificationRepository = verificationRepository,
+      super(const VerificationState.initial()) {
     on<VerificationEvent>((event, emit) async {
       await event.when(
-        loadPartnerRequirements: (partnerId, requiredIds) => 
-            _onLoadPartnerRequirements(partnerId, requiredIds, emit),
-        submitVerification: (partnerId, verificationId, claimData, proofFiles, existingRequestId) =>
-            _onSubmitVerification(partnerId, verificationId, claimData, proofFiles, existingRequestId, emit),
+        loadPartnerRequirements:
+            (partnerId, requiredIds) =>
+                _onLoadPartnerRequirements(partnerId, requiredIds, emit),
+        submitVerification:
+            (
+              partnerId,
+              verificationId,
+              claimData,
+              proofFiles,
+              existingRequestId,
+            ) => _onSubmitVerification(
+              partnerId,
+              verificationId,
+              claimData,
+              proofFiles,
+              existingRequestId,
+              emit,
+            ),
         loadPendingRequests: () => _onLoadPendingRequests(emit),
-        reviewRequest: (requestId, status, rejectionReason, comment) =>
-            _onReviewRequest(requestId, status, rejectionReason, comment, emit),
+        reviewRequest:
+            (requestId, status, rejectionReason, comment) => _onReviewRequest(
+              requestId,
+              status,
+              rejectionReason,
+              comment,
+              emit,
+            ),
       );
     });
   }
+  final VerificationRepository _verificationRepository;
 
   Future<void> _onLoadPartnerRequirements(
     String partnerId,
@@ -29,12 +50,13 @@ class VerificationBloc extends Bloc<VerificationEvent, VerificationState> {
   ) async {
     emit(const VerificationState.loading());
     try {
-      final requirements = await _verificationRepository.getPartnerRequirementsStatus(
-        partnerId: partnerId,
-        requiredVerificationIds: requiredIds,
-      );
+      final requirements = await _verificationRepository
+          .getPartnerRequirementsStatus(
+            partnerId: partnerId,
+            requiredVerificationIds: requiredIds,
+          );
       emit(VerificationState.requirementsLoaded(requirements));
-    } catch (e) {
+    } on Exception catch (e) {
       emit(VerificationState.failure(e.toString()));
     }
   }
@@ -43,7 +65,7 @@ class VerificationBloc extends Bloc<VerificationEvent, VerificationState> {
     String partnerId,
     String verificationId,
     Map<String, dynamic> claimData,
-    List<dynamic> proofFiles,
+    List<XFile> proofFiles,
     String? existingRequestId,
     Emitter<VerificationState> emit,
   ) async {
@@ -53,11 +75,11 @@ class VerificationBloc extends Bloc<VerificationEvent, VerificationState> {
         partnerId: partnerId,
         verificationId: verificationId,
         claimData: claimData,
-        proofFiles: proofFiles.cast(),
+        proofFiles: proofFiles,
         existingRequestId: existingRequestId,
       );
       emit(const VerificationState.success());
-    } catch (e) {
+    } on Exception catch (e) {
       emit(VerificationState.failure(e.toString()));
     }
   }
@@ -67,14 +89,14 @@ class VerificationBloc extends Bloc<VerificationEvent, VerificationState> {
     try {
       final requests = await _verificationRepository.getPendingRequests();
       emit(VerificationState.pendingRequestsLoaded(requests));
-    } catch (e) {
+    } on Exception catch (e) {
       emit(VerificationState.failure(e.toString()));
     }
   }
 
   Future<void> _onReviewRequest(
     String requestId,
-    dynamic status,
+    VerificationStatus status,
     String? rejectionReason,
     String? comment,
     Emitter<VerificationState> emit,
@@ -86,17 +108,17 @@ class VerificationBloc extends Bloc<VerificationEvent, VerificationState> {
         status: status,
         rejectionReason: rejectionReason,
       );
-      
+
       if (comment != null && comment.isNotEmpty) {
         await _verificationRepository.submitComment(
           requestId: requestId,
           content: {'text': comment},
         );
       }
-      
+
       emit(const VerificationState.success());
       add(const VerificationEvent.loadPendingRequests());
-    } catch (e) {
+    } on Exception catch (e) {
       emit(VerificationState.failure(e.toString()));
     }
   }

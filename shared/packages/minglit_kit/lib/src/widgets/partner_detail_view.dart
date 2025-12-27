@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
-import '../../minglit_kit.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
+/// A detailed view of a Partner profile.
 class PartnerDetailView extends StatelessWidget {
-  final Partner partner;
-
+  /// Creates a [PartnerDetailView].
   const PartnerDetailView({
-    super.key,
     required this.partner,
+    super.key,
   });
+
+  /// The partner data to display.
+  final Partner partner;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +40,10 @@ class PartnerDetailView extends StatelessWidget {
                   children: [
                     Text(
                       partner.name,
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     if (partner.address != null)
                       Text(
@@ -97,7 +103,10 @@ class PartnerDetailView extends StatelessWidget {
             child: Text(label, style: const TextStyle(color: Colors.grey)),
           ),
           Expanded(
-            child: Text(value ?? '-', style: const TextStyle(fontWeight: FontWeight.w500)),
+            child: Text(
+              value ?? '-',
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
           ),
         ],
       ),

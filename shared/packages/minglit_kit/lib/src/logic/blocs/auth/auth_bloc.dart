@@ -1,34 +1,38 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:minglit_kit/src/data/repositories/auth_repository.dart';
+import 'package:minglit_kit/src/logic/blocs/auth/auth_event.dart';
+import 'package:minglit_kit/src/logic/blocs/auth/auth_state.dart';
+import 'package:minglit_kit/src/utils/log.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
-import '../../../data/repositories/auth_repository.dart';
-import '../../../utils/log.dart';
-import 'auth_event.dart';
-import 'auth_state.dart';
 
+/// BLoC for managing Global Authentication state.
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final AuthRepository _authRepository;
-  StreamSubscription<sb.AuthState>? _authSubscription;
-
+  /// Creates an [AuthBloc] with the given [AuthRepository].
   AuthBloc({required AuthRepository authRepository})
-      : _authRepository = authRepository,
-        super(const AuthState.initial()) {
+    : _authRepository = authRepository,
+      super(const AuthState.initial()) {
     on<AuthEvent>((event, emit) async {
       await event.map(
-        checkAuthStatus: (_) => _checkAuthStatus(emit),
-        signInWithGoogle: (_) => _signInWithGoogle(emit),
-        signOut: (_) => _signOut(emit),
-        authChanged: (e) => _authChanged(e.state, emit),
+        checkAuthStatus: (e) => _onCheckAuthStatus(emit),
+        signInWithGoogle: (e) => _onSignInWithGoogle(emit),
+        signOut: (e) => _onSignOut(emit),
+        authChanged: (e) => _onAuthChanged(e.state, emit),
       );
     });
 
-    // BLoC 생성 시 상태 감지 시작
+    // Start listening to auth changes upon creation.
     _authSubscription = _authRepository.onAuthStateChange.listen((data) {
-      add(AuthEvent.authChanged(data));
+      if (!isClosed) {
+        add(AuthEvent.authChanged(data));
+      }
     });
   }
 
-  Future<void> _checkAuthStatus(Emitter<AuthState> emit) async {
+  final AuthRepository _authRepository;
+  StreamSubscription<sb.AuthState>? _authSubscription;
+
+  Future<void> _onCheckAuthStatus(Emitter<AuthState> emit) async {
     final user = _authRepository.currentUser;
     if (user != null) {
       emit(AuthState.authenticated(user));
@@ -37,30 +41,32 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _signInWithGoogle(Emitter<AuthState> emit) async {
+  Future<void> _onSignInWithGoogle(Emitter<AuthState> emit) async {
     emit(const AuthState.loading());
     try {
       await _authRepository.signInWithGoogle();
-      // 성공하면 _onAuthChanged를 통해 상태가 업데이트될 것임
-    } catch (e) {
+    } on Exception catch (e) {
       emit(AuthState.failure(e.toString()));
       emit(const AuthState.unauthenticated());
     }
   }
 
-  Future<void> _signOut(Emitter<AuthState> emit) async {
+  Future<void> _onSignOut(Emitter<AuthState> emit) async {
     emit(const AuthState.loading());
     try {
       await _authRepository.signOut();
-    } catch (e) {
+    } on Exception catch (e) {
       emit(AuthState.failure(e.toString()));
     }
   }
 
-  Future<void> _authChanged(sb.AuthState state, Emitter<AuthState> emit) async {
+  Future<void> _onAuthChanged(
+    sb.AuthState state,
+    Emitter<AuthState> emit,
+  ) async {
     final session = state.session;
     final user = session?.user;
-    
+
     Log.d('🔄 [AuthBloc] Auth State Changed: ${state.event}');
 
     if (user != null) {
@@ -72,7 +78,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   @override
   Future<void> close() {
-    _authSubscription?.cancel();
+    unawaited(_authSubscription?.cancel());
     return super.close();
   }
 }

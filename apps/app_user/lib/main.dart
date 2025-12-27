@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -6,12 +8,21 @@ import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  const supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: 'http://127.0.0.1:54321');
-  const supabasePublishableKey = String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY', defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH');
+  const supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: 'http://127.0.0.1:54321',
+  );
+  const supabasePublishableKey = String.fromEnvironment(
+    'SUPABASE_PUBLISHABLE_KEY',
+    defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
+  );
   const googleWebClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
 
   await Supabase.initialize(url: supabaseUrl, anonKey: supabasePublishableKey);
-  setupLocator(googleWebClientId: googleWebClientId, defaultRedirectUrl: 'http://localhost:3000');
+  setupLocator(
+    googleWebClientId: googleWebClientId,
+    defaultRedirectUrl: 'http://localhost:3000',
+  );
 
   runApp(const MinglitApp());
 }
@@ -30,13 +41,22 @@ class MinglitApp extends StatelessWidget {
       child: MultiBlocProvider(
         providers: [
           BlocProvider(
-            create: (context) => AuthBloc(authRepository: context.read<AuthRepository>()),
+            create:
+                (context) =>
+                    AuthBloc(authRepository: context.read<AuthRepository>()),
           ),
           BlocProvider(
-            create: (context) => PartnerBloc(partnerRepository: context.read<PartnerRepository>()),
+            create:
+                (context) => PartnerBloc(
+                  partnerRepository: context.read<PartnerRepository>(),
+                ),
           ),
           BlocProvider(
-            create: (context) => VerificationBloc(verificationRepository: context.read<VerificationRepository>()),
+            create:
+                (context) => VerificationBloc(
+                  verificationRepository:
+                      context.read<VerificationRepository>(),
+                ),
           ),
         ],
         child: const _AppView(),
@@ -91,7 +111,10 @@ class AuthWrapper extends StatelessWidget {
       builder: (context, state) {
         return state.maybeWhen(
           authenticated: (_) => const HomePage(),
-          loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+          loading:
+              () => const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              ),
           orElse: () => const LoginPage(),
         );
       },
@@ -108,19 +131,26 @@ class LoginPage extends StatelessWidget {
       listener: (context, state) {
         state.whenOrNull(
           failure: (message) {
-            showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('로그인 실패'),
-                content: SelectableText('Error: $message'),
-                actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('확인'))],
+            unawaited(
+              showDialog<void>(
+                context: context,
+                builder:
+                    (context) => AlertDialog(
+                      title: const Text('로그인 실패'),
+                      content: SelectableText('Error: $message'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('확인'),
+                        ),
+                      ],
+                    ),
               ),
             );
           },
         );
       },
       child: MinglitLoginScreen(
-        isPartner: false,
         onGoogleSignIn: () {
           context.read<AuthBloc>().add(const AuthEvent.signInWithGoogle());
         },
@@ -134,10 +164,11 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = context.select((AuthBloc bloc) => 
-      bloc.state.maybeWhen(authenticated: (u) => u, orElse: () => null)
+    final user = context.select(
+      (AuthBloc bloc) =>
+          bloc.state.maybeWhen(authenticated: (u) => u, orElse: () => null),
     );
-    
+
     return Scaffold(
       appBar: AppBar(title: const Text('Minglit Home')),
       body: Center(
@@ -145,12 +176,18 @@ class HomePage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (user?.userMetadata?['avatar_url'] != null)
-              CircleAvatar(backgroundImage: NetworkImage(user!.userMetadata!['avatar_url']), radius: 40),
+              CircleAvatar(
+                backgroundImage: NetworkImage(
+                  user!.userMetadata!['avatar_url'] as String,
+                ),
+                radius: 40,
+              ),
             const SizedBox(height: 20),
             Text('안녕하세요, ${user?.userMetadata?['full_name'] ?? user?.email}님!'),
             const SizedBox(height: 40),
             ElevatedButton(
-              onPressed: () => context.read<AuthBloc>().add(const AuthEvent.signOut()), 
+              onPressed:
+                  () => context.read<AuthBloc>().add(const AuthEvent.signOut()),
               child: const Text('로그아웃'),
             ),
           ],

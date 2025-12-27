@@ -1,11 +1,12 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:json_annotation/json_annotation.dart';
 
 part 'partner_application.freezed.dart';
 part 'partner_application.g.dart';
 
+/// Data model for a Partner Application submission.
 @freezed
 abstract class PartnerApplication with _$PartnerApplication {
+  /// Creates a [PartnerApplication] instance.
   const factory PartnerApplication({
     required String id,
     @JsonKey(name: 'user_id') required String userId,
@@ -29,5 +30,7 @@ abstract class PartnerApplication with _$PartnerApplication {
     @JsonKey(name: 'updated_at') String? updatedAt,
   }) = _PartnerApplication;
 
-  factory PartnerApplication.fromJson(Map<String, dynamic> json) => _$PartnerApplicationFromJson(json);
+  /// Creates a [PartnerApplication] from a JSON map.
+  factory PartnerApplication.fromJson(Map<String, dynamic> json) =>
+      _$PartnerApplicationFromJson(json);
 }

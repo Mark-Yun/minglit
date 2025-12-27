@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 
 class CareerVerificationForm extends StatefulWidget {
-  final Function(Map<String, dynamic> data) onChanged;
-  final Map<String, dynamic>? initialData; // 초기값 추가
+  // 초기값 추가
 
   const CareerVerificationForm({
-    super.key,
     required this.onChanged,
+    super.key,
     this.initialData,
   });
+  final void Function(Map<String, dynamic> data) onChanged;
+  final Map<String, dynamic>? initialData;
 
   @override
   State<CareerVerificationForm> createState() => _CareerVerificationFormState();
@@ -23,12 +24,12 @@ class _CareerVerificationFormState extends State<CareerVerificationForm> {
     super.initState();
     // 초기값이 있으면 채워줌
     _companyController = TextEditingController(
-      text: widget.initialData?['company_name'] ?? '',
+      text: widget.initialData?['company_name'] as String? ?? '',
     );
     _displayController = TextEditingController(
-      text: widget.initialData?['display_name'] ?? '',
+      text: widget.initialData?['display_name'] as String? ?? '',
     );
-    
+
     // 초기 데이터가 있다면 한번 호출하여 부모 위젯과 동기화
     if (widget.initialData != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _update());
@@ -59,7 +60,7 @@ class _CareerVerificationFormState extends State<CareerVerificationForm> {
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 24),
-        
+
         const Text('실제 직장명', style: TextStyle(fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
         TextField(
@@ -68,12 +69,12 @@ class _CareerVerificationFormState extends State<CareerVerificationForm> {
           decoration: const InputDecoration(
             hintText: '예: 삼성전자 (인증 후 수정 불가)',
             border: OutlineInputBorder(),
-            counterText: "",
+            counterText: '',
           ),
           onChanged: (_) => _update(),
         ),
         const SizedBox(height: 20),
-        
+
         const Text('노출용 직장명', style: TextStyle(fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
         TextField(
@@ -82,7 +83,7 @@ class _CareerVerificationFormState extends State<CareerVerificationForm> {
           decoration: const InputDecoration(
             hintText: '예: IT 대기업, 반도체 제조 등',
             border: OutlineInputBorder(),
-            counterText: "",
+            counterText: '',
           ),
           onChanged: (_) => _update(),
         ),
@@ -95,4 +96,3 @@ class _CareerVerificationFormState extends State<CareerVerificationForm> {
     );
   }
 }
-

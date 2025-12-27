@@ -1,37 +1,39 @@
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import '../../utils/log.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:minglit_kit/src/utils/log.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// Repository for handling Authentication data sources.
 class AuthRepository {
-  final SupabaseClient _supabase;
-  final GoogleSignIn _googleSignIn;
-  final String? _defaultRedirectUrl;
-
+  /// Creates an [AuthRepository] with necessary clients.
   AuthRepository({
     SupabaseClient? supabase,
     String? webClientId,
     String? defaultRedirectUrl,
-  })  : _supabase = supabase ?? Supabase.instance.client,
-        _defaultRedirectUrl = defaultRedirectUrl,
-        _googleSignIn = GoogleSignIn(
-          clientId: kIsWeb ? webClientId : null,
-        );
+  }) : _supabase = supabase ?? Supabase.instance.client,
+       _defaultRedirectUrl = defaultRedirectUrl,
+       _googleSignIn = GoogleSignIn(
+         clientId: kIsWeb ? webClientId : null,
+       );
 
-  /// 현재 로그인된 사용자 반환
+  final SupabaseClient _supabase;
+  final GoogleSignIn _googleSignIn;
+  final String? _defaultRedirectUrl;
+
+  /// Returns the current logged-in user.
   User? get currentUser => _supabase.auth.currentUser;
 
-  /// 인증 상태 변경 스트림
+  /// Stream of authentication state changes.
   Stream<AuthState> get onAuthStateChange => _supabase.auth.onAuthStateChange;
 
-  /// 구글 로그인
+  /// Initiates Google Sign-In process.
   Future<void> signInWithGoogle() async {
     Log.d('🔐 [AuthRepo] Google Sign-In started (Web=$kIsWeb)');
     try {
       if (kIsWeb) {
         final redirectTo = _defaultRedirectUrl ?? Uri.base.origin;
         Log.d('🌐 [AuthRepo] OAuth redirect to: $redirectTo');
-        
+
         await _supabase.auth.signInWithOAuth(
           OAuthProvider.google,
           redirectTo: redirectTo,
@@ -39,13 +41,13 @@ class AuthRepository {
         return;
       }
 
-      // Mobile
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      // Mobile Native Sign-In
+      final googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         throw const AuthException('Google sign-in was cancelled.');
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final googleAuth = await googleUser.authentication;
       final accessToken = googleAuth.accessToken;
       final idToken = googleAuth.idToken;
 
@@ -59,13 +61,13 @@ class AuthRepository {
         accessToken: accessToken,
       );
       Log.i('🎉 [AuthRepo] Supabase Sign-In successful!');
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       Log.e('❌ [AuthRepo] Sign-In Error', e, stackTrace);
       rethrow;
     }
   }
 
-  /// 로그아웃
+  /// Signs out from both Supabase and Google.
   Future<void> signOut() async {
     try {
       await Future.wait([
@@ -73,7 +75,7 @@ class AuthRepository {
         _googleSignIn.signOut(),
       ]);
       Log.i('👋 [AuthRepo] Sign-Out successful');
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       Log.e('❌ [AuthRepo] Sign-Out Error', e, stackTrace);
       rethrow;
     }

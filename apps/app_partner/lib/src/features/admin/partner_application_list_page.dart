@@ -1,15 +1,19 @@
+import 'dart:async';
+
+import 'package:app_partner/src/features/admin/partner_application_detail_page.dart'; // 수정됨
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'partner_application_detail_page.dart'; // 수정됨
 
 class PartnerApplicationListPage extends StatefulWidget {
   const PartnerApplicationListPage({super.key});
 
   @override
-  State<PartnerApplicationListPage> createState() => _PartnerApplicationListPageState();
+  State<PartnerApplicationListPage> createState() =>
+      _PartnerApplicationListPageState();
 }
 
-class _PartnerApplicationListPageState extends State<PartnerApplicationListPage> {
+class _PartnerApplicationListPageState
+    extends State<PartnerApplicationListPage> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedStatus = 'all';
   List<Map<String, dynamic>> _applications = [];
@@ -18,19 +22,25 @@ class _PartnerApplicationListPageState extends State<PartnerApplicationListPage>
   @override
   void initState() {
     super.initState();
-    _loadApplications();
+    unawaited(_loadApplications());
   }
 
   Future<void> _loadApplications() async {
     setState(() => _isLoading = true);
     try {
       final repository = locator<PartnerRepository>();
-      final apps = await repository.getAllApplications(status: _selectedStatus, searchTerm: _searchController.text);
+      final apps = await repository.getAllApplications(
+        status: _selectedStatus,
+        searchTerm: _searchController.text,
+      );
       setState(() {
-        _applications = apps.map((a) => a.toJson()).toList(); // 기존 Map 기반 코드 호환성을 위해 toJson 사용
+        _applications =
+            apps
+                .map((a) => a.toJson())
+                .toList(); // 기존 Map 기반 코드 호환성을 위해 toJson 사용
         _isLoading = false;
       });
-    } catch (e) {
+    } on Exception catch (e) {
       Log.e('Load applications error', e);
     } finally {
       setState(() => _isLoading = false);
@@ -45,18 +55,21 @@ class _PartnerApplicationListPageState extends State<PartnerApplicationListPage>
         children: [
           _buildFilterBar(),
           Expanded(
-            child: _isLoading 
-                ? const Center(child: CircularProgressIndicator())
-                : _applications.isEmpty
+            child:
+                _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _applications.isEmpty
                     ? const Center(child: Text('신청 내역이 없습니다.'))
                     : RefreshIndicator(
-                        onRefresh: _loadApplications,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _applications.length,
-                          itemBuilder: (context, index) => _buildApplicationCard(_applications[index]),
-                        ),
+                      onRefresh: () async => _loadApplications(),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _applications.length,
+                        itemBuilder:
+                            (context, index) =>
+                                _buildApplicationCard(_applications[index]),
                       ),
+                    ),
           ),
         ],
       ),
@@ -74,12 +87,17 @@ class _PartnerApplicationListPageState extends State<PartnerApplicationListPage>
             decoration: InputDecoration(
               hintText: '브랜드명 또는 사업자명 검색',
               prefixIcon: const Icon(Icons.search),
-              suffixIcon: IconButton(icon: const Icon(Icons.send), onPressed: _loadApplications),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.send),
+                onPressed: _loadApplications,
+              ),
               border: const OutlineInputBorder(),
               filled: true,
               fillColor: Colors.white,
             ),
-            onSubmitted: (_) => _loadApplications(),
+            onSubmitted: (_) {
+              unawaited(_loadApplications());
+            },
           ),
           const SizedBox(height: 12),
           Row(
@@ -106,7 +124,7 @@ class _PartnerApplicationListPageState extends State<PartnerApplicationListPage>
       onSelected: (selected) {
         if (selected) {
           setState(() => _selectedStatus = value);
-          _loadApplications();
+          unawaited(_loadApplications());
         }
       },
     );
@@ -116,15 +134,23 @@ class _PartnerApplicationListPageState extends State<PartnerApplicationListPage>
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
-        title: Text(app['brand_name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text('${app['biz_name']} / ${app['representative_name']}'),
-        trailing: _buildStatusBadge(app['status']),
+        title: Text(
+          app['brand_name'] as String,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          '${app['biz_name'] as String} / ${app['representative_name'] as String}',
+        ),
+        trailing: _buildStatusBadge(app['status'] as String),
         onTap: () async {
           final result = await Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => PartnerApplicationDetailPage(application: app)),
+            MaterialPageRoute<bool>(
+              builder:
+                  (context) => PartnerApplicationDetailPage(application: app),
+            ),
           );
-          if (result == true) _loadApplications();
+          if (result ?? false) await _loadApplications();
         },
       ),
     );
@@ -132,17 +158,35 @@ class _PartnerApplicationListPageState extends State<PartnerApplicationListPage>
 
   Widget _buildStatusBadge(String status) {
     Color color = Colors.grey;
-    String label = status;
+    var label = status;
     switch (status) {
-      case 'pending': color = Colors.orange; label = '대기'; break;
-      case 'approved': color = Colors.green; label = '승인'; break;
-      case 'rejected': color = Colors.red; label = '반려'; break;
-      case 'needs_correction': color = Colors.blue; label = '보완'; break;
+      case 'pending':
+        color = Colors.orange;
+        label = '대기';
+      case 'approved':
+        color = Colors.green;
+        label = '승인';
+      case 'rejected':
+        color = Colors.red;
+        label = '반려';
+      case 'needs_correction':
+        color = Colors.blue;
+        label = '보완';
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: color.withAlpha(30), borderRadius: BorderRadius.circular(4)),
-      child: Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
+      decoration: BoxDecoration(
+        color: color.withAlpha(30),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 }

@@ -2,20 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class PartnerMemberPermissionPage extends StatefulWidget {
+  const PartnerMemberPermissionPage({
+    required this.partnerId,
+    required this.memberData,
+    super.key,
+  });
   final String partnerId;
   final Map<String, dynamic> memberData;
 
-  const PartnerMemberPermissionPage({
-    super.key,
-    required this.partnerId,
-    required this.memberData,
-  });
-
   @override
-  State<PartnerMemberPermissionPage> createState() => _PartnerMemberPermissionPageState();
+  State<PartnerMemberPermissionPage> createState() =>
+      _PartnerMemberPermissionPageState();
 }
 
-class _PartnerMemberPermissionPageState extends State<PartnerMemberPermissionPage> {
+class _PartnerMemberPermissionPageState
+    extends State<PartnerMemberPermissionPage> {
   late String _selectedRole;
   late List<String> _currentPermissions;
   bool _isSaving = false;
@@ -35,15 +36,17 @@ class _PartnerMemberPermissionPageState extends State<PartnerMemberPermissionPag
   @override
   void initState() {
     super.initState();
-    _selectedRole = widget.memberData['role'];
-    _currentPermissions = List<String>.from(widget.memberData['permissions'] ?? []);
+    _selectedRole = widget.memberData['role'] as String;
+    _currentPermissions = List<String>.from(
+      widget.memberData['permissions'] as Iterable<dynamic>? ?? [],
+    );
   }
 
   Future<void> _save() async {
     setState(() => _isSaving = true);
     try {
       final repository = locator<PartnerRepository>();
-      final userId = widget.memberData['user_id'];
+      final userId = widget.memberData['user_id'] as String;
 
       // 1. 역할 업데이트 (트리거가 권한 자동 동기화)
       await repository.updateMemberRole(
@@ -60,8 +63,12 @@ class _PartnerMemberPermissionPageState extends State<PartnerMemberPermissionPag
       );
 
       if (mounted) Navigator.pop(context, true);
-    } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('저장 실패: $e')));
+    } on Exception catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('저장 실패: $e')));
+      }
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -73,60 +80,95 @@ class _PartnerMemberPermissionPageState extends State<PartnerMemberPermissionPag
 
     return Scaffold(
       appBar: AppBar(title: const Text('권한 상세 설정')),
-      body: _isSaving 
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(user['name'] ?? '멤버 정보', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  Text(user['email'] ?? '', style: const TextStyle(color: Colors.grey)),
-                  const SizedBox(height: 32),
-                  
-                  const Text('역할(Role) 선택', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
-                  _buildRoleSelector(),
-                  
-                  const SizedBox(height: 32),
-                  const Text('상세 기능 권한(Permissions)', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  const Text('역할을 변경하면 권한 배열이 기본값으로 초기화됩니다.', style: TextStyle(fontSize: 12, color: Colors.blue)),
-                  const SizedBox(height: 16),
-                  
-                  ..._permissionLabels.entries.map((e) => _buildPermissionTile(e.key, e.value)).toList(),
-                  
-                  const SizedBox(height: 48),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 54,
-                    child: ElevatedButton(
-                      onPressed: _save,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange[800],
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      body:
+          _isSaving
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user['name'] as String? ?? '멤버 정보',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                       ),
-                      child: const Text('변경 사항 저장', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
-                  ),
-                ],
+                    Text(
+                      user['email'] as String? ?? '',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 32),
+
+                    const Text(
+                      '역할(Role) 선택',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildRoleSelector(),
+
+                    const SizedBox(height: 32),
+                    const Text(
+                      '상세 기능 권한(Permissions)',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      '역할을 변경하면 권한 배열이 기본값으로 초기화됩니다.',
+                      style: TextStyle(fontSize: 12, color: Colors.blue),
+                    ),
+                    const SizedBox(height: 16),
+
+                    ..._permissionLabels.entries.map(
+                      (e) => _buildPermissionTile(e.key, e.value),
+                    ),
+
+                    const SizedBox(height: 48),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: ElevatedButton(
+                        onPressed: _save,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange[800],
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          '변경 사항 저장',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
     );
   }
 
   Widget _buildRoleSelector() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(border: Border.all(color: Colors.grey[300]!), borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: _selectedRole,
           isExpanded: true,
           items: const [
             DropdownMenuItem(value: 'owner', child: Text('Owner (모든 권한)')),
-            DropdownMenuItem(value: 'manager', child: Text('Manager (운영 및 심사)')),
+            DropdownMenuItem(
+              value: 'manager',
+              child: Text('Manager (운영 및 심사)'),
+            ),
             DropdownMenuItem(value: 'staff', child: Text('Staff (단순 업무)')),
           ],
           onChanged: (v) {
@@ -147,14 +189,25 @@ class _PartnerMemberPermissionPageState extends State<PartnerMemberPermissionPag
     if (role == 'owner') {
       _currentPermissions = _permissionLabels.keys.toList();
     } else if (role == 'manager') {
-      _currentPermissions = ['PARTNER_EDIT', 'PARTY_MANAGE', 'VERIFY_LIST_VIEW', 'USER_DATA_VIEW', 'VERIFY_REVIEW', 'COMMENT_MANAGE'];
+      _currentPermissions = [
+        'PARTNER_EDIT',
+        'PARTY_MANAGE',
+        'VERIFY_LIST_VIEW',
+        'USER_DATA_VIEW',
+        'VERIFY_REVIEW',
+        'COMMENT_MANAGE',
+      ];
     } else {
-      _currentPermissions = ['VERIFY_LIST_VIEW', 'COMMENT_MANAGE', 'PARTY_MANAGE'];
+      _currentPermissions = [
+        'VERIFY_LIST_VIEW',
+        'COMMENT_MANAGE',
+        'PARTY_MANAGE',
+      ];
     }
   }
 
   Widget _buildPermissionTile(String key, String label) {
-    final bool isChecked = _currentPermissions.contains(key);
+    final isChecked = _currentPermissions.contains(key);
     return CheckboxListTile(
       title: Text(label, style: const TextStyle(fontSize: 14)),
       value: isChecked,
@@ -162,8 +215,11 @@ class _PartnerMemberPermissionPageState extends State<PartnerMemberPermissionPag
       contentPadding: EdgeInsets.zero,
       onChanged: (v) {
         setState(() {
-          if (v == true) _currentPermissions.add(key);
-          else _currentPermissions.remove(key);
+          if (v ?? false) {
+            _currentPermissions.add(key);
+          } else {
+            _currentPermissions.remove(key);
+          }
         });
       },
     );

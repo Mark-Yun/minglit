@@ -1,6 +1,6 @@
+import 'package:app_user/src/features/verification/verification_page.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'verification_page.dart';
 
 class VerificationInboxPage extends StatefulWidget {
   const VerificationInboxPage({super.key});
@@ -16,7 +16,7 @@ class _VerificationInboxPageState extends State<VerificationInboxPage> {
   @override
   void initState() {
     super.initState();
-    _loadRequests();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadRequests());
   }
 
   Future<void> _loadRequests() async {
@@ -24,12 +24,14 @@ class _VerificationInboxPageState extends State<VerificationInboxPage> {
     try {
       final repository = context.read<VerificationRepository>();
       // 보완이 필요한 요청들만 가져옴
-      final requests = await repository.getRequestsByStatus(VerificationStatus.needsCorrection);
+      final requests = await repository.getRequestsByStatus(
+        VerificationStatus.needsCorrection,
+      );
       setState(() {
         _correctionRequests = requests;
         _isLoading = false;
       });
-    } catch (e) {
+    } on Exception catch (e) {
       Log.e('Load inbox error', e);
       setState(() => _isLoading = false);
     }
@@ -41,9 +43,10 @@ class _VerificationInboxPageState extends State<VerificationInboxPage> {
       appBar: AppBar(title: const Text('인증 알림함')),
       body: RefreshIndicator(
         onRefresh: _loadRequests,
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _correctionRequests.isEmpty
+        child:
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _correctionRequests.isEmpty
                 ? _buildEmptyView()
                 : _buildListView(),
       ),
@@ -57,7 +60,10 @@ class _VerificationInboxPageState extends State<VerificationInboxPage> {
         children: [
           Icon(Icons.notifications_none, size: 64, color: Colors.grey),
           SizedBox(height: 16),
-          Text('확인할 알림이 없습니다.', style: TextStyle(color: Colors.grey, fontSize: 16)),
+          Text(
+            '확인할 알림이 없습니다.',
+            style: TextStyle(color: Colors.grey, fontSize: 16),
+          ),
         ],
       ),
     );
@@ -96,14 +102,15 @@ class _VerificationInboxPageState extends State<VerificationInboxPage> {
             ),
             isThreeLine: true,
             trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-            onTap: () {
-              Navigator.push(
+            onTap: () async {
+              await Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => VerificationManagementPage(
-                    partnerId: partner['id'],
-                    requiredVerificationIds: [verification['id']], 
-                  ),
+                MaterialPageRoute<void>(
+                  builder:
+                      (context) => VerificationManagementPage(
+                        partnerId: partner['id'] as String,
+                        requiredVerificationIds: [verification['id'] as String],
+                      ),
                 ),
               );
             },

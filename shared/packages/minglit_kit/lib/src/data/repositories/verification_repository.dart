@@ -1,14 +1,18 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart' show XFile;
+import 'package:minglit_kit/minglit_kit.dart' show Partner;
+import 'package:minglit_kit/src/data/models/partner.dart' show Partner;
+import 'package:minglit_kit/src/data/models/verification.dart';
+import 'package:minglit_kit/src/utils/log.dart';
 import 'package:path/path.dart' as p;
-import '../../utils/log.dart';
-import '../models/verification.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// Repository for handling user and partner verification logic.
 class VerificationRepository {
-  final SupabaseClient _supabase;
-
+  /// Creates a [VerificationRepository] with a [SupabaseClient].
   VerificationRepository({SupabaseClient? supabase})
-      : _supabase = supabase ?? Supabase.instance.client;
+    : _supabase = supabase ?? Supabase.instance.client;
+
+  final SupabaseClient _supabase;
 
   /// [User] 특정 파트너가 요구하는 인증들의 상태를 일괄 조회
   Future<List<VerificationRequirementStatus>> getPartnerRequirementsStatus({
@@ -47,13 +51,27 @@ class VerificationRepository {
         .eq('partner_id', partnerId)
         .inFilter('verification_id', requiredVerificationIds);
 
-    return (masters as List).map((m) {
-      final vId = m['id'];
+    return (masters as List).map((dynamic m) {
+      final map = m as Map<String, dynamic>;
+      final vId = map['id'];
+      final original = (originalDatas as List)
+          .cast<Map<String, dynamic>?>()
+          .firstWhere((d) => d?['verification_id'] == vId, orElse: () => null);
+      final request = (activeRequests as List)
+          .cast<Map<String, dynamic>?>()
+          .firstWhere((r) => r?['verification_id'] == vId, orElse: () => null);
+      final result = (verifiedResults as List)
+          .cast<Map<String, dynamic>?>()
+          .firstWhere(
+            (res) => res?['verification_id'] == vId,
+            orElse: () => null,
+          );
+
       return VerificationRequirementStatus(
-        master: m,
-        originalData: (originalDatas as List).cast<Map<String, dynamic>?>().firstWhere((d) => d?['verification_id'] == vId, orElse: () => null),
-        activeRequest: (activeRequests as List).cast<Map<String, dynamic>?>().firstWhere((r) => r?['verification_id'] == vId, orElse: () => null),
-        verifiedResult: (verifiedResults as List).cast<Map<String, dynamic>?>().firstWhere((res) => res?['verification_id'] == vId, orElse: () => null),
+        master: map,
+        originalData: original,
+        activeRequest: request,
+        verifiedResult: result,
       );
     }).toList();
   }
@@ -69,16 +87,18 @@ class VerificationRepository {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) throw const AuthException('User not authenticated');
 
-    List<String> uploadedPaths = [];
+    final uploadedPaths = <String>[];
 
     try {
-      for (var file in proofFiles) {
+      for (final file in proofFiles) {
         final extension = p.extension(file.name);
         final fileName = '${DateTime.now().millisecondsSinceEpoch}$extension';
         final path = '$userId/$fileName';
         final bytes = await file.readAsBytes();
-        
-        await _supabase.storage.from('verification-proofs').uploadBinary(path, bytes);
+
+        await _supabase.storage
+            .from('verification-proofs')
+            .uploadBinary(path, bytes);
         uploadedPaths.add(path);
       }
 
@@ -91,11 +111,14 @@ class VerificationRepository {
       });
 
       if (existingRequestId != null) {
-        await _supabase.from('verification_requests').update({
-          'status': VerificationStatus.resubmitted.name,
-          'claim_snapshot': claimData,
-          'updated_at': DateTime.now().toIso8601String(),
-        }).eq('id', existingRequestId);
+        await _supabase
+            .from('verification_requests')
+            .update({
+              'status': VerificationStatus.resubmitted.name,
+              'claim_snapshot': claimData,
+              'updated_at': DateTime.now().toIso8601String(),
+            })
+            .eq('id', existingRequestId);
       } else {
         await _supabase.from('verification_requests').insert({
           'partner_id': partnerId,
@@ -105,7 +128,7 @@ class VerificationRepository {
           'claim_snapshot': claimData,
         });
       }
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       Log.e('❌ [VerificationRepo] Submission Failed', e, stackTrace);
       rethrow;
     }
@@ -113,11 +136,12 @@ class VerificationRepository {
 
   /// [Partner] 대기 중인 모든 요청 조회
   Future<List<Map<String, dynamic>>> getPendingRequests() async {
-    return await _supabase
+    final data = await _supabase
         .from('verification_requests')
         .select('*, user:user_profiles!verification_requests_user_id_fkey(*)')
         .eq('status', 'pending')
         .order('created_at', ascending: true);
+    return (data as List<dynamic>).cast<Map<String, dynamic>>();
   }
 
   /// [Partner] 요청 심사 처리
@@ -126,36 +150,55 @@ class VerificationRepository {
     required VerificationStatus status,
     String? rejectionReason,
   }) async {
-    await _supabase.from('verification_requests').update({
-      'status': status.name == 'needsCorrection' ? 'needs_correction' : status.name,
-      'rejection_reason': rejectionReason,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', requestId);
+    final statusName =
+        status == VerificationStatus.needsCorrection
+            ? 'needs_correction'
+            : status.name;
+
+    await _supabase
+        .from('verification_requests')
+        .update({
+          'status': statusName,
+          'rejection_reason': rejectionReason,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', requestId);
   }
 
   /// [User] 특정 상태의 모든 요청 조회 (예: 보완 필요 건만 모아보기)
-  Future<List<Map<String, dynamic>>> getRequestsByStatus(VerificationStatus status) async {
+  Future<List<Map<String, dynamic>>> getRequestsByStatus(
+    VerificationStatus status,
+  ) async {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) return [];
 
-    return await _supabase
+    final statusName =
+        status == VerificationStatus.needsCorrection
+            ? 'needs_correction'
+            : status.name;
+
+    final data = await _supabase
         .from('verification_requests')
         .select('*, partner:partners(*), verification:verifications(*)')
         .eq('user_id', userId)
-        .eq('status', status.name == 'needsCorrection' ? 'needs_correction' : status.name)
+        .eq('status', statusName)
         .order('updated_at', ascending: false);
+    return (data as List<dynamic>).cast<Map<String, dynamic>>();
   }
 
-  /// [Common] 인증 요청에 달린 코멘트 내역 조회
-  Future<List<Map<String, dynamic>>> getVerificationComments(String requestId) async {
-    return await _supabase
+  /// Common: 인증 요청에 달린 코멘트 내역 조회
+  Future<List<Map<String, dynamic>>> getVerificationComments(
+    String requestId,
+  ) async {
+    final data = await _supabase
         .from('verification_comments')
         .select()
         .eq('request_id', requestId)
         .order('created_at', ascending: true);
+    return (data as List<dynamic>).cast<Map<String, dynamic>>();
   }
 
-  /// [Common] 코멘트 작성
+  /// Common: 코멘트 작성
   Future<void> submitComment({
     required String requestId,
     required Map<String, dynamic> content,

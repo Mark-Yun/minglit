@@ -1,11 +1,12 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:json_annotation/json_annotation.dart';
 
 part 'partner.freezed.dart';
 part 'partner.g.dart';
 
+/// Data model for a Partner (Store/Venue).
 @freezed
 abstract class Partner with _$Partner {
+  /// Creates a [Partner] instance.
   const factory Partner({
     required String id,
     required String name,
@@ -20,5 +21,7 @@ abstract class Partner with _$Partner {
     @Default(true) @JsonKey(name: 'is_active') bool isActive,
   }) = _Partner;
 
-  factory Partner.fromJson(Map<String, dynamic> json) => _$PartnerFromJson(json);
+  /// Creates a [Partner] from a JSON map.
+  factory Partner.fromJson(Map<String, dynamic> json) =>
+      _$PartnerFromJson(json);
 }

@@ -1,39 +1,24 @@
-import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 
+/// Static utility class for logging throughout the app.
 class Log {
   static final Logger _logger = Logger(
-    filter: DevelopmentFilter(),
-    level: Level.all,
-    printer: kIsWeb 
-        ? SimplePrinter(printTime: true, colors: false) 
-        : PrettyPrinter(
-            methodCount: 0,
-            errorMethodCount: 5,
-            lineLength: 80,
-            colors: true,
-            printEmojis: true,
-            printTime: true,
-          ),
+    printer: PrettyPrinter(
+      lineLength: 80,
+      dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
+    ),
   );
 
-  /// Debug 로그
-  static void d(String message, [dynamic error]) {
-    _logger.d(message, error: error);
-  }
+  /// Debug level log.
+  static void d(String message) => _logger.d(message);
 
-  /// Info 로그
-  static void i(String message, [dynamic error]) {
-    _logger.i(message, error: error);
-  }
+  /// Info level log.
+  static void i(String message) => _logger.i(message);
 
-  /// Warning 로그
-  static void w(String message, [dynamic error]) {
-    _logger.w(message, error: error);
-  }
+  /// Warning level log.
+  static void w(String message) => _logger.w(message);
 
-  /// Error 로그
-  static void e(String message, [dynamic error, StackTrace? stackTrace]) {
-    _logger.e(message, error: error, stackTrace: stackTrace);
-  }
+  /// Error level log.
+  static void e(String message, [dynamic error, StackTrace? stackTrace]) =>
+      _logger.e(message, error: error, stackTrace: stackTrace);
 }

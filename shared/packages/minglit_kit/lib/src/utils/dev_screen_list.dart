@@ -1,26 +1,40 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+/// Item representing a screen in the Dev Map.
 class DevScreenItem {
-  final String title;
-  final WidgetBuilder screenBuilder;
-  final String? description;
-
+  /// Creates a [DevScreenItem].
   DevScreenItem({
     required this.title,
     required this.screenBuilder,
     this.description,
   });
+
+  /// The title of the screen.
+  final String title;
+
+  /// Builder for the screen widget.
+  final WidgetBuilder screenBuilder;
+
+  /// Optional description of the screen.
+  final String? description;
 }
 
+/// A list view for displaying and navigating to development screens.
 class DevScreenList extends StatelessWidget {
-  final String appName;
-  final List<DevScreenItem> items;
-
+  /// Creates a [DevScreenList].
   const DevScreenList({
-    super.key,
     required this.appName,
     required this.items,
+    super.key,
   });
+
+  /// The name of the app.
+  final String appName;
+
+  /// List of items to display.
+  final List<DevScreenItem> items;
 
   @override
   Widget build(BuildContext context) {
@@ -44,9 +58,11 @@ class DevScreenList extends StatelessWidget {
             subtitle: item.description != null ? Text(item.description!) : null,
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: item.screenBuilder),
+              unawaited(
+                Navigator.push<void>(
+                  context,
+                  MaterialPageRoute(builder: item.screenBuilder),
+                ),
               );
             },
           );

@@ -1,30 +1,31 @@
+import 'package:app_user/src/features/verification/career_verification_form.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
-import 'career_verification_form.dart';
 
 /// 다중 인증 및 보완 요청 관리 페이지
 class VerificationManagementPage extends StatefulWidget {
+  const VerificationManagementPage({
+    required this.partnerId,
+    required this.requiredVerificationIds,
+    super.key,
+  });
   final String partnerId;
   final List<String> requiredVerificationIds;
 
-  const VerificationManagementPage({
-    super.key,
-    required this.partnerId,
-    required this.requiredVerificationIds,
-  });
-
   @override
-  State<VerificationManagementPage> createState() => _VerificationManagementPageState();
+  State<VerificationManagementPage> createState() =>
+      _VerificationManagementPageState();
 }
 
-class _VerificationManagementPageState extends State<VerificationManagementPage> {
+class _VerificationManagementPageState
+    extends State<VerificationManagementPage> {
   final ImagePicker _imagePicker = ImagePicker();
-  
+
   // 각 인증 항목별 현재 입력 데이터 및 파일 관리
-  final Map<String, Map<String, dynamic>> _draftData = {};
-  final Map<String, XFile?> _draftFiles = {};
+  final _draftData = <String, Map<String, dynamic>>{};
+  final _draftFiles = <String, XFile?>{};
 
   @override
   void initState() {
@@ -33,14 +34,16 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
   }
 
   void _refreshStatus() {
-    context.read<VerificationBloc>().add(VerificationEvent.loadPartnerRequirements(
-      partnerId: widget.partnerId,
-      requiredIds: widget.requiredVerificationIds,
-    ));
+    context.read<VerificationBloc>().add(
+      VerificationEvent.loadPartnerRequirements(
+        partnerId: widget.partnerId,
+        requiredIds: widget.requiredVerificationIds,
+      ),
+    );
   }
 
   Future<void> _pickImage(String vId) async {
-    final XFile? image = await _imagePicker.pickImage(
+    final image = await _imagePicker.pickImage(
       source: ImageSource.gallery,
       maxWidth: 1024,
       maxHeight: 1024,
@@ -52,27 +55,36 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
   }
 
   void _submitAll(List<VerificationRequirementStatus> requirements) {
-    for (var req in requirements) {
-      final vId = req.master['id'];
+    for (final req in requirements) {
+      final vId = req.master['id'] as String;
       if (_draftData.containsKey(vId) || _draftFiles[vId] != null) {
-        final files = _draftFiles[vId] != null ? [_draftFiles[vId]!] : <XFile>[];
-        
-        context.read<VerificationBloc>().add(VerificationEvent.submitVerification(
-          partnerId: widget.partnerId,
-          verificationId: vId,
-          claimData: _draftData[vId] ?? req.originalData?['claim_data'] ?? {},
-          proofFiles: files,
-          existingRequestId: req.activeRequest?['id'],
-        ));
+        final files =
+            _draftFiles[vId] != null ? [_draftFiles[vId]!] : <XFile>[];
+
+        context.read<VerificationBloc>().add(
+          VerificationEvent.submitVerification(
+            partnerId: widget.partnerId,
+            verificationId: vId,
+            claimData:
+                (_draftData[vId] ??
+                        req.originalData?['claim_data'] ??
+                        <String, dynamic>{})
+                    as Map<String, dynamic>,
+            proofFiles: files,
+            existingRequestId: req.activeRequest?['id'] as String?,
+          ),
+        );
       }
     }
   }
 
-  void _showCommentsModal(String requestId) {
-    showModalBottomSheet(
+  Future<void> _showCommentsModal(String requestId) async {
+    await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) => _CommentsModal(requestId: requestId),
     );
   }
@@ -83,11 +95,15 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
       listener: (context, state) {
         state.whenOrNull(
           success: () {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('모든 수정사항이 제출되었습니다.')));
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('모든 수정사항이 제출되었습니다.')));
             _refreshStatus(); // 제출 성공 후 상태 새로고침
           },
           failure: (msg) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('제출 실패: $msg')));
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('제출 실패: $msg')));
           },
         );
       },
@@ -97,9 +113,10 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
           body: state.maybeWhen(
             loading: () => const Center(child: CircularProgressIndicator()),
             requirementsLoaded: (requirements) {
-              final completedCount = requirements.where((r) => r.isApproved).length;
+              final completedCount =
+                  requirements.where((r) => r.isApproved).length;
               final totalCount = requirements.length;
-              
+
               return Column(
                 children: [
                   _buildSummaryHeader(completedCount, totalCount),
@@ -107,7 +124,9 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
                     child: ListView.builder(
                       padding: const EdgeInsets.all(16),
                       itemCount: requirements.length,
-                      itemBuilder: (context, index) => _buildVerificationCard(requirements[index]),
+                      itemBuilder:
+                          (context, index) =>
+                              _buildVerificationCard(requirements[index]),
                     ),
                   ),
                   _buildSubmitButton(requirements),
@@ -131,11 +150,17 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
         children: [
           Text(
             '인증 현황 ($completed/$total)',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.blue[900]),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              color: Colors.blue[900],
+            ),
           ),
           const SizedBox(height: 4),
           Text(
-            completed == total ? '모든 인증이 완료되었습니다! 파티에 참가하세요.' : '필요한 인증 항목을 작성해 주세요.',
+            completed == total
+                ? '모든 인증이 완료되었습니다! 파티에 참가하세요.'
+                : '필요한 인증 항목을 작성해 주세요.',
             style: TextStyle(color: Colors.blue[700]),
           ),
         ],
@@ -144,9 +169,9 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
   }
 
   Widget _buildVerificationCard(VerificationRequirementStatus req) {
-    final vId = req.master['id'];
-    final bool isApproved = req.isApproved;
-    final bool needsCorrection = req.status == VerificationStatus.needsCorrection;
+    final vId = req.master['id'] as String;
+    final isApproved = req.isApproved;
+    final needsCorrection = req.status == VerificationStatus.needsCorrection;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -154,21 +179,34 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: needsCorrection ? Colors.red : (isApproved ? Colors.green : Colors.grey[300]!),
+          color:
+              needsCorrection
+                  ? Colors.red
+                  : (isApproved ? Colors.green : Colors.grey[300]!),
           width: 2,
         ),
       ),
       child: ExpansionTile(
         initiallyExpanded: needsCorrection,
         leading: Icon(
-          isApproved ? Icons.check_circle : (needsCorrection ? Icons.error : Icons.add_circle_outline),
-          color: isApproved ? Colors.green : (needsCorrection ? Colors.red : Colors.grey),
+          isApproved
+              ? Icons.check_circle
+              : (needsCorrection ? Icons.error : Icons.add_circle_outline),
+          color:
+              isApproved
+                  ? Colors.green
+                  : (needsCorrection ? Colors.red : Colors.grey),
         ),
-        title: Text(req.master['title'], style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(isApproved ? '인증 완료' : (needsCorrection ? '보완 요청됨' : '정보 입력 필요')),
+        title: Text(
+          req.master['title'] as String,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          isApproved ? '인증 완료' : (needsCorrection ? '보완 요청됨' : '정보 입력 필요'),
+        ),
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -176,7 +214,10 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
                 const SizedBox(height: 16),
                 _buildFormByCategory(req),
                 const SizedBox(height: 24),
-                const Text('증빙 서류', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text(
+                  '증빙 서류',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 8),
                 _buildImagePicker(vId, req),
               ],
@@ -191,16 +232,34 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+        color: Colors.red[50],
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('심사관 의견', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 12)),
+          const Text(
+            '심사관 의견',
+            style: TextStyle(
+              color: Colors.red,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(req.activeRequest?['rejection_reason'] ?? '서류를 다시 확인해 주세요.'),
+          Text(
+            req.activeRequest?['rejection_reason'] as String? ??
+                '서류를 다시 확인해 주세요.',
+          ),
           TextButton(
-            onPressed: () => _showCommentsModal(req.activeRequest!['id']),
-            style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 30)),
+            onPressed:
+                () async =>
+                    _showCommentsModal(req.activeRequest!['id'] as String),
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.zero,
+              minimumSize: const Size(0, 30),
+            ),
             child: const Text('대화 내역 보기 >'),
           ),
         ],
@@ -209,9 +268,14 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
   }
 
   Widget _buildFormByCategory(VerificationRequirementStatus req) {
-    final vId = req.master['id'];
-    final category = VerificationCategory.values.byName(req.master['category']);
-    final initialData = req.activeRequest?['claim_snapshot'] ?? req.originalData?['claim_data'];
+    final vId = req.master['id'] as String;
+    final category = VerificationCategory.values.byName(
+      req.master['category'] as String,
+    );
+    final initialData =
+        (req.activeRequest?['claim_snapshot'] ??
+                req.originalData?['claim_data'])
+            as Map<String, dynamic>?;
 
     switch (category) {
       case VerificationCategory.career:
@@ -219,17 +283,22 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
           initialData: initialData,
           onChanged: (data) => _draftData[vId] = data,
         );
-      default:
+      case VerificationCategory.asset:
+      case VerificationCategory.marriage:
+      case VerificationCategory.academic:
+      case VerificationCategory.vehicle:
+      case VerificationCategory.etc:
         return const Text('이 카테고리의 폼은 아직 준비 중입니다.');
     }
   }
 
   Widget _buildImagePicker(String vId, VerificationRequirementStatus req) {
     final hasNewFile = _draftFiles[vId] != null;
-    final hasOriginalFile = (req.originalData?['proof_images'] as List?)?.isNotEmpty ?? false;
+    final hasOriginalFile =
+        (req.originalData?['proof_images'] as List?)?.isNotEmpty ?? false;
 
     return GestureDetector(
-      onTap: () => _pickImage(vId),
+      onTap: () async => _pickImage(vId),
       child: Container(
         width: double.infinity,
         height: 120,
@@ -238,29 +307,44 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Colors.grey[300]!),
         ),
-        child: hasNewFile
-            ? Image.network(_draftFiles[vId]!.path, fit: BoxFit.contain)
-            : hasOriginalFile
-                ? const Center(child: Text('기존 서류 있음 (클릭하여 교체)', style: TextStyle(color: Colors.blue)))
-                : const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.add_a_photo, color: Colors.grey),
-                      Text('사진 선택', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                    ],
+        child:
+            hasNewFile
+                ? Image.network(_draftFiles[vId]!.path, fit: BoxFit.contain)
+                : hasOriginalFile
+                ? const Center(
+                  child: Text(
+                    '기존 서류 있음 (클릭하여 교체)',
+                    style: TextStyle(color: Colors.blue),
                   ),
+                )
+                : const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.add_a_photo, color: Colors.grey),
+                    Text(
+                      '사진 선택',
+                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                  ],
+                ),
       ),
     );
   }
 
   Widget _buildSubmitButton(List<VerificationRequirementStatus> requirements) {
-    final bool hasChanges = _draftData.isNotEmpty || _draftFiles.isNotEmpty;
-    
+    final hasChanges = _draftData.isNotEmpty || _draftFiles.isNotEmpty;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withAlpha(20), blurRadius: 10, offset: const Offset(0, -5))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(20),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
       ),
       child: SafeArea(
         child: SizedBox(
@@ -272,9 +356,14 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
               backgroundColor: Colors.blue[900],
               foregroundColor: Colors.white,
               disabledBackgroundColor: Colors.grey[300],
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-            child: const Text('수정 및 제출하기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            child: const Text(
+              '수정 및 제출하기',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
           ),
         ),
       ),
@@ -283,8 +372,8 @@ class _VerificationManagementPageState extends State<VerificationManagementPage>
 }
 
 class _CommentsModal extends StatelessWidget {
-  final String requestId;
   const _CommentsModal({required this.requestId});
+  final String requestId;
 
   @override
   Widget build(BuildContext context) {
@@ -299,8 +388,14 @@ class _CommentsModal extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('심사 대화 내역', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+              const Text(
+                '심사 대화 내역',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close),
+              ),
             ],
           ),
           const Divider(),
@@ -308,19 +403,26 @@ class _CommentsModal extends StatelessWidget {
             child: FutureBuilder<List<Map<String, dynamic>>>(
               future: repository.getVerificationComments(requestId),
               builder: (context, snapshot) {
-                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
                 final comments = snapshot.data!;
-                if (comments.isEmpty) return const Center(child: Text('대화 내역이 없습니다.'));
+                if (comments.isEmpty) {
+                  return const Center(child: Text('대화 내역이 없습니다.'));
+                }
 
                 return ListView.builder(
                   itemCount: comments.length,
                   itemBuilder: (context, index) {
                     final comment = comments[index];
                     final content = comment['content'] as Map<String, dynamic>;
-                    final bool isMe = comment['author_id'] == Supabase.instance.client.auth.currentUser?.id;
+                    final isMe =
+                        comment['author_id'] ==
+                        Supabase.instance.client.auth.currentUser?.id;
 
                     return Align(
-                      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                      alignment:
+                          isMe ? Alignment.centerRight : Alignment.centerLeft,
                       child: Container(
                         margin: const EdgeInsets.symmetric(vertical: 8),
                         padding: const EdgeInsets.all(12),
@@ -328,7 +430,7 @@ class _CommentsModal extends StatelessWidget {
                           color: isMe ? Colors.blue[100] : Colors.grey[200],
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Text(content['text'] ?? ''),
+                        child: Text(content['text'] as String? ?? ''),
                       ),
                     );
                   },
