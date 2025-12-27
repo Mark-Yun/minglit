@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:minglit_kit/minglit_kit.dart' show AuthBloc;
+import 'package:minglit_kit/minglit_logic.dart' show AuthBloc;
+import 'package:minglit_kit/src/core/error/failures.dart';
 import 'package:minglit_kit/src/logic/blocs/auth/auth_bloc.dart' show AuthBloc;
 import 'package:supabase_flutter/supabase_flutter.dart' show User;
 

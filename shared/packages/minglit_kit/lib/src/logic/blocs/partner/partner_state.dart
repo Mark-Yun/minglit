@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:minglit_kit/minglit_kit.dart' show PartnerBloc;
+import 'package:minglit_kit/src/core/error/failures.dart';
 import 'package:minglit_kit/src/data/models/partner_application.dart';
 import 'package:minglit_kit/src/logic/blocs/partner/partner_bloc.dart'
     show PartnerBloc;

@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:io';
+
+import 'package:minglit_kit/src/core/error/failures.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'failures.dart';
 
 class ErrorHandler {
   static Failure handle(dynamic error) {

@@ -99,7 +99,9 @@ class _PartnerApplicationDetailPageState
           failure: (failure) {
             ScaffoldMessenger.of(
               context,
-            ).showSnackBar(SnackBar(content: Text('Error: ${failure.message}')));
+            ).showSnackBar(
+              SnackBar(content: Text('Error: ${failure.message}')),
+            );
           },
         );
       },

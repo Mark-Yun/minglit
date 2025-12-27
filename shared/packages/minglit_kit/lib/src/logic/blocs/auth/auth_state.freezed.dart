@@ -131,14 +131,14 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( User user)?  authenticated,TResult Function()?  unauthenticated,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( User user)?  authenticated,TResult Function()?  unauthenticated,TResult Function( Failure failure)?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial();case _Loading() when loading != null:
 return loading();case _Authenticated() when authenticated != null:
 return authenticated(_that.user);case _Unauthenticated() when unauthenticated != null:
 return unauthenticated();case _Failure() when failure != null:
-return failure(_that.message);case _:
+return failure(_that.failure);case _:
   return orElse();
 
 }
@@ -156,14 +156,14 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( User user)  authenticated,required TResult Function()  unauthenticated,required TResult Function( String message)  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( User user)  authenticated,required TResult Function()  unauthenticated,required TResult Function( Failure failure)  failure,}) {final _that = this;
 switch (_that) {
 case _Initial():
 return initial();case _Loading():
 return loading();case _Authenticated():
 return authenticated(_that.user);case _Unauthenticated():
 return unauthenticated();case _Failure():
-return failure(_that.message);case _:
+return failure(_that.failure);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -180,14 +180,14 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( User user)?  authenticated,TResult? Function()?  unauthenticated,TResult? Function( String message)?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( User user)?  authenticated,TResult? Function()?  unauthenticated,TResult? Function( Failure failure)?  failure,}) {final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial();case _Loading() when loading != null:
 return loading();case _Authenticated() when authenticated != null:
 return authenticated(_that.user);case _Unauthenticated() when unauthenticated != null:
 return unauthenticated();case _Failure() when failure != null:
-return failure(_that.message);case _:
+return failure(_that.failure);case _:
   return null;
 
 }
@@ -361,10 +361,10 @@ String toString() {
 
 
 class _Failure implements AuthState {
-  const _Failure(this.message);
+  const _Failure(this.failure);
   
 
- final  String message;
+ final  Failure failure;
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
@@ -376,16 +376,16 @@ _$FailureCopyWith<_Failure> get copyWith => __$FailureCopyWithImpl<_Failure>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Failure&&(identical(other.message, message) || other.message == message));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Failure&&(identical(other.failure, failure) || other.failure == failure));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,message);
+int get hashCode => Object.hash(runtimeType,failure);
 
 @override
 String toString() {
-  return 'AuthState.failure(message: $message)';
+  return 'AuthState.failure(failure: $failure)';
 }
 
 
@@ -396,11 +396,11 @@ abstract mixin class _$FailureCopyWith<$Res> implements $AuthStateCopyWith<$Res>
   factory _$FailureCopyWith(_Failure value, $Res Function(_Failure) _then) = __$FailureCopyWithImpl;
 @useResult
 $Res call({
- String message
+ Failure failure
 });
 
 
-
+$FailureCopyWith<$Res> get failure;
 
 }
 /// @nodoc
@@ -413,14 +413,23 @@ class __$FailureCopyWithImpl<$Res>
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? failure = null,}) {
   return _then(_Failure(
-null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
-as String,
+null == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
+as Failure,
   ));
 }
 
-
+/// Create a copy of AuthState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$FailureCopyWith<$Res> get failure {
+  
+  return $FailureCopyWith<$Res>(_self.failure, (value) {
+    return _then(_self.copyWith(failure: value));
+  });
+}
 }
 
 // dart format on

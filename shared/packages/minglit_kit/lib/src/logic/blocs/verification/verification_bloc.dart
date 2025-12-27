@@ -62,7 +62,9 @@ class VerificationBloc extends Bloc<VerificationEvent, VerificationState> {
     }
   }
 
-  Future<void> _onLoadCorrectionRequests(Emitter<VerificationState> emit) async {
+  Future<void> _onLoadCorrectionRequests(
+    Emitter<VerificationState> emit,
+  ) async {
     emit(const VerificationState.loading());
     try {
       final requests = await _verificationRepository.getRequestsByStatus(
@@ -102,7 +104,7 @@ class VerificationBloc extends Bloc<VerificationEvent, VerificationState> {
   ) async {
     emit(const VerificationState.loading());
     try {
-      await _verificationRepository.submitVerification(
+      await _verificationRepository.submitOrUpdateVerification(
         partnerId: partnerId,
         verificationId: verificationId,
         claimData: claimData,

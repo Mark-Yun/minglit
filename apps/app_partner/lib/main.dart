@@ -134,7 +134,9 @@ class PartnerLoginPage extends StatelessWidget {
           failure: (failure) {
             ScaffoldMessenger.of(
               context,
-            ).showSnackBar(SnackBar(content: Text('Login Failed: ${failure.message}')));
+            ).showSnackBar(
+              SnackBar(content: Text('Login Failed: ${failure.message}')),
+            );
           },
         );
       },

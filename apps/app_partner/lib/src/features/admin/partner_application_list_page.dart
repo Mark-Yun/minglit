@@ -1,3 +1,4 @@
+
 import 'package:app_partner/src/features/admin/partner_application_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -21,7 +22,7 @@ class _PartnerApplicationListPageState
     _loadApplications();
   }
 
-  void _loadApplications() {
+  Future<void> _loadApplications() async {
     context.read<PartnerBloc>().add(
       PartnerEvent.loadAllApplications(
         status: _selectedStatus,
@@ -48,9 +49,7 @@ class _PartnerApplicationListPageState
                       return const Center(child: Text('신청 내역이 없습니다.'));
                     }
                     return RefreshIndicator(
-                      onRefresh: () async {
-                        unawaited(_loadApplications());
-                      },
+                      onRefresh: () => _loadApplications(),
                       child: ListView.builder(
                         padding: const EdgeInsets.all(16),
                         itemCount: applications.length,
@@ -61,7 +60,9 @@ class _PartnerApplicationListPageState
                     );
                   },
                   failure:
-                      (failure) => Center(child: Text('Error loading data: ${failure.message}')),
+                      (failure) => Center(
+                        child: Text('Error loading data: ${failure.message}'),
+                      ),
                   orElse: () => const Center(child: Text('데이터를 불러오는 중입니다...')),
                 );
               },
@@ -92,7 +93,7 @@ class _PartnerApplicationListPageState
               fillColor: Colors.white,
             ),
             onSubmitted: (_) {
-              unawaited(_loadApplications());
+              _loadApplications();
             },
           ),
           const SizedBox(height: 12),
@@ -125,7 +126,7 @@ class _PartnerApplicationListPageState
       onSelected: (selected) {
         if (selected) {
           setState(() => _selectedStatus = value);
-          unawaited(_loadApplications());
+          _loadApplications();
         }
       },
     );

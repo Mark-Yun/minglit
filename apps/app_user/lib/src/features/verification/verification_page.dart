@@ -103,7 +103,9 @@ class _VerificationManagementPageState
           failure: (failure) {
             ScaffoldMessenger.of(
               context,
-            ).showSnackBar(SnackBar(content: Text('제출 실패: ${failure.message}')));
+            ).showSnackBar(
+              SnackBar(content: Text('제출 실패: ${failure.message}')),
+            );
           },
         );
       },
@@ -449,7 +451,9 @@ class _CommentsModalState extends State<_CommentsModal> {
                       },
                     );
                   },
-                  failure: (failure) => Center(child: Text('Error: ${failure.message}')),
+                  failure:
+                      (failure) =>
+                          Center(child: Text('Error: ${failure.message}')),
                   orElse: () => const Center(child: Text('불러오는 중...')),
                 );
               },

@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:minglit_kit/minglit_kit.dart' show VerificationBloc;
+import 'package:minglit_kit/src/core/error/failures.dart';
 import 'package:minglit_kit/src/data/models/verification.dart';
 import 'package:minglit_kit/src/logic/blocs/verification/verification_bloc.dart'
     show VerificationBloc;

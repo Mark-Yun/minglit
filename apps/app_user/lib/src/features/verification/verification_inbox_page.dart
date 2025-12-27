@@ -37,7 +37,8 @@ class _VerificationInboxPageState extends State<VerificationInboxPage> {
                 child: _buildListView(requests),
               );
             },
-            failure: (failure) => Center(child: Text('Error: ${failure.message}')),
+            failure:
+                (failure) => Center(child: Text('Error: ${failure.message}')),
             orElse: () => const Center(child: Text('알림을 불러오는 중입니다...')),
           );
         },

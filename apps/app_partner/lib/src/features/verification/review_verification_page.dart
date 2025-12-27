@@ -42,7 +42,8 @@ class _ReviewVerificationPageState extends State<ReviewVerificationPage> {
     final reasonController = TextEditingController();
     final commentController = TextEditingController();
 
-          await showDialog<void>(      context: context,
+    await showDialog<void>(
+      context: context,
       builder:
           (context) => AlertDialog(
             title: const Text('보완 요청'),
