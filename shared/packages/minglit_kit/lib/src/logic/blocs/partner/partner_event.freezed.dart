@@ -55,13 +55,15 @@ extension PartnerEventPatterns on PartnerEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _CheckApplicationStatus value)?  checkApplicationStatus,TResult Function( _SubmitApplication value)?  submitApplication,TResult Function( _LoadMembers value)?  loadMembers,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _CheckApplicationStatus value)?  checkApplicationStatus,TResult Function( _SubmitApplication value)?  submitApplication,TResult Function( _LoadMembers value)?  loadMembers,TResult Function( _LoadAllApplications value)?  loadAllApplications,TResult Function( _ReviewApplication value)?  reviewApplication,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case _CheckApplicationStatus() when checkApplicationStatus != null:
 return checkApplicationStatus(_that);case _SubmitApplication() when submitApplication != null:
 return submitApplication(_that);case _LoadMembers() when loadMembers != null:
-return loadMembers(_that);case _:
+return loadMembers(_that);case _LoadAllApplications() when loadAllApplications != null:
+return loadAllApplications(_that);case _ReviewApplication() when reviewApplication != null:
+return reviewApplication(_that);case _:
   return orElse();
 
 }
@@ -79,13 +81,15 @@ return loadMembers(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _CheckApplicationStatus value)  checkApplicationStatus,required TResult Function( _SubmitApplication value)  submitApplication,required TResult Function( _LoadMembers value)  loadMembers,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _CheckApplicationStatus value)  checkApplicationStatus,required TResult Function( _SubmitApplication value)  submitApplication,required TResult Function( _LoadMembers value)  loadMembers,required TResult Function( _LoadAllApplications value)  loadAllApplications,required TResult Function( _ReviewApplication value)  reviewApplication,}){
 final _that = this;
 switch (_that) {
 case _CheckApplicationStatus():
 return checkApplicationStatus(_that);case _SubmitApplication():
 return submitApplication(_that);case _LoadMembers():
-return loadMembers(_that);case _:
+return loadMembers(_that);case _LoadAllApplications():
+return loadAllApplications(_that);case _ReviewApplication():
+return reviewApplication(_that);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -102,13 +106,15 @@ return loadMembers(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _CheckApplicationStatus value)?  checkApplicationStatus,TResult? Function( _SubmitApplication value)?  submitApplication,TResult? Function( _LoadMembers value)?  loadMembers,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _CheckApplicationStatus value)?  checkApplicationStatus,TResult? Function( _SubmitApplication value)?  submitApplication,TResult? Function( _LoadMembers value)?  loadMembers,TResult? Function( _LoadAllApplications value)?  loadAllApplications,TResult? Function( _ReviewApplication value)?  reviewApplication,}){
 final _that = this;
 switch (_that) {
 case _CheckApplicationStatus() when checkApplicationStatus != null:
 return checkApplicationStatus(_that);case _SubmitApplication() when submitApplication != null:
 return submitApplication(_that);case _LoadMembers() when loadMembers != null:
-return loadMembers(_that);case _:
+return loadMembers(_that);case _LoadAllApplications() when loadAllApplications != null:
+return loadAllApplications(_that);case _ReviewApplication() when reviewApplication != null:
+return reviewApplication(_that);case _:
   return null;
 
 }
@@ -125,12 +131,14 @@ return loadMembers(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  checkApplicationStatus,TResult Function( Map<String, dynamic> data,  XFile bizRegistrationFile,  XFile bankbookFile)?  submitApplication,TResult Function( String partnerId)?  loadMembers,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  checkApplicationStatus,TResult Function( Map<String, dynamic> applicationData,  XFile bizRegistrationFile,  XFile bankbookFile)?  submitApplication,TResult Function( String partnerId)?  loadMembers,TResult Function( String status,  String? searchTerm)?  loadAllApplications,TResult Function( String applicationId,  String status,  String? adminComment)?  reviewApplication,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CheckApplicationStatus() when checkApplicationStatus != null:
 return checkApplicationStatus();case _SubmitApplication() when submitApplication != null:
-return submitApplication(_that.data,_that.bizRegistrationFile,_that.bankbookFile);case _LoadMembers() when loadMembers != null:
-return loadMembers(_that.partnerId);case _:
+return submitApplication(_that.applicationData,_that.bizRegistrationFile,_that.bankbookFile);case _LoadMembers() when loadMembers != null:
+return loadMembers(_that.partnerId);case _LoadAllApplications() when loadAllApplications != null:
+return loadAllApplications(_that.status,_that.searchTerm);case _ReviewApplication() when reviewApplication != null:
+return reviewApplication(_that.applicationId,_that.status,_that.adminComment);case _:
   return orElse();
 
 }
@@ -148,12 +156,14 @@ return loadMembers(_that.partnerId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  checkApplicationStatus,required TResult Function( Map<String, dynamic> data,  XFile bizRegistrationFile,  XFile bankbookFile)  submitApplication,required TResult Function( String partnerId)  loadMembers,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  checkApplicationStatus,required TResult Function( Map<String, dynamic> applicationData,  XFile bizRegistrationFile,  XFile bankbookFile)  submitApplication,required TResult Function( String partnerId)  loadMembers,required TResult Function( String status,  String? searchTerm)  loadAllApplications,required TResult Function( String applicationId,  String status,  String? adminComment)  reviewApplication,}) {final _that = this;
 switch (_that) {
 case _CheckApplicationStatus():
 return checkApplicationStatus();case _SubmitApplication():
-return submitApplication(_that.data,_that.bizRegistrationFile,_that.bankbookFile);case _LoadMembers():
-return loadMembers(_that.partnerId);case _:
+return submitApplication(_that.applicationData,_that.bizRegistrationFile,_that.bankbookFile);case _LoadMembers():
+return loadMembers(_that.partnerId);case _LoadAllApplications():
+return loadAllApplications(_that.status,_that.searchTerm);case _ReviewApplication():
+return reviewApplication(_that.applicationId,_that.status,_that.adminComment);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -170,12 +180,14 @@ return loadMembers(_that.partnerId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  checkApplicationStatus,TResult? Function( Map<String, dynamic> data,  XFile bizRegistrationFile,  XFile bankbookFile)?  submitApplication,TResult? Function( String partnerId)?  loadMembers,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  checkApplicationStatus,TResult? Function( Map<String, dynamic> applicationData,  XFile bizRegistrationFile,  XFile bankbookFile)?  submitApplication,TResult? Function( String partnerId)?  loadMembers,TResult? Function( String status,  String? searchTerm)?  loadAllApplications,TResult? Function( String applicationId,  String status,  String? adminComment)?  reviewApplication,}) {final _that = this;
 switch (_that) {
 case _CheckApplicationStatus() when checkApplicationStatus != null:
 return checkApplicationStatus();case _SubmitApplication() when submitApplication != null:
-return submitApplication(_that.data,_that.bizRegistrationFile,_that.bankbookFile);case _LoadMembers() when loadMembers != null:
-return loadMembers(_that.partnerId);case _:
+return submitApplication(_that.applicationData,_that.bizRegistrationFile,_that.bankbookFile);case _LoadMembers() when loadMembers != null:
+return loadMembers(_that.partnerId);case _LoadAllApplications() when loadAllApplications != null:
+return loadAllApplications(_that.status,_that.searchTerm);case _ReviewApplication() when reviewApplication != null:
+return reviewApplication(_that.applicationId,_that.status,_that.adminComment);case _:
   return null;
 
 }
@@ -219,14 +231,14 @@ String toString() {
 
 
 class _SubmitApplication implements PartnerEvent {
-  const _SubmitApplication({required final  Map<String, dynamic> data, required this.bizRegistrationFile, required this.bankbookFile}): _data = data;
+  const _SubmitApplication({required final  Map<String, dynamic> applicationData, required this.bizRegistrationFile, required this.bankbookFile}): _applicationData = applicationData;
   
 
- final  Map<String, dynamic> _data;
- Map<String, dynamic> get data {
-  if (_data is EqualUnmodifiableMapView) return _data;
+ final  Map<String, dynamic> _applicationData;
+ Map<String, dynamic> get applicationData {
+  if (_applicationData is EqualUnmodifiableMapView) return _applicationData;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(_data);
+  return EqualUnmodifiableMapView(_applicationData);
 }
 
  final  XFile bizRegistrationFile;
@@ -242,16 +254,16 @@ _$SubmitApplicationCopyWith<_SubmitApplication> get copyWith => __$SubmitApplica
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SubmitApplication&&const DeepCollectionEquality().equals(other._data, _data)&&(identical(other.bizRegistrationFile, bizRegistrationFile) || other.bizRegistrationFile == bizRegistrationFile)&&(identical(other.bankbookFile, bankbookFile) || other.bankbookFile == bankbookFile));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SubmitApplication&&const DeepCollectionEquality().equals(other._applicationData, _applicationData)&&(identical(other.bizRegistrationFile, bizRegistrationFile) || other.bizRegistrationFile == bizRegistrationFile)&&(identical(other.bankbookFile, bankbookFile) || other.bankbookFile == bankbookFile));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_data),bizRegistrationFile,bankbookFile);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_applicationData),bizRegistrationFile,bankbookFile);
 
 @override
 String toString() {
-  return 'PartnerEvent.submitApplication(data: $data, bizRegistrationFile: $bizRegistrationFile, bankbookFile: $bankbookFile)';
+  return 'PartnerEvent.submitApplication(applicationData: $applicationData, bizRegistrationFile: $bizRegistrationFile, bankbookFile: $bankbookFile)';
 }
 
 
@@ -262,7 +274,7 @@ abstract mixin class _$SubmitApplicationCopyWith<$Res> implements $PartnerEventC
   factory _$SubmitApplicationCopyWith(_SubmitApplication value, $Res Function(_SubmitApplication) _then) = __$SubmitApplicationCopyWithImpl;
 @useResult
 $Res call({
- Map<String, dynamic> data, XFile bizRegistrationFile, XFile bankbookFile
+ Map<String, dynamic> applicationData, XFile bizRegistrationFile, XFile bankbookFile
 });
 
 
@@ -279,9 +291,9 @@ class __$SubmitApplicationCopyWithImpl<$Res>
 
 /// Create a copy of PartnerEvent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? data = null,Object? bizRegistrationFile = null,Object? bankbookFile = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? applicationData = null,Object? bizRegistrationFile = null,Object? bankbookFile = null,}) {
   return _then(_SubmitApplication(
-data: null == data ? _self._data : data // ignore: cast_nullable_to_non_nullable
+applicationData: null == applicationData ? _self._applicationData : applicationData // ignore: cast_nullable_to_non_nullable
 as Map<String, dynamic>,bizRegistrationFile: null == bizRegistrationFile ? _self.bizRegistrationFile : bizRegistrationFile // ignore: cast_nullable_to_non_nullable
 as XFile,bankbookFile: null == bankbookFile ? _self.bankbookFile : bankbookFile // ignore: cast_nullable_to_non_nullable
 as XFile,
@@ -295,7 +307,7 @@ as XFile,
 
 
 class _LoadMembers implements PartnerEvent {
-  const _LoadMembers(this.partnerId);
+  const _LoadMembers({required this.partnerId});
   
 
  final  String partnerId;
@@ -349,8 +361,146 @@ class __$LoadMembersCopyWithImpl<$Res>
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? partnerId = null,}) {
   return _then(_LoadMembers(
-null == partnerId ? _self.partnerId : partnerId // ignore: cast_nullable_to_non_nullable
+partnerId: null == partnerId ? _self.partnerId : partnerId // ignore: cast_nullable_to_non_nullable
 as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class _LoadAllApplications implements PartnerEvent {
+  const _LoadAllApplications({this.status = 'all', this.searchTerm});
+  
+
+@JsonKey() final  String status;
+ final  String? searchTerm;
+
+/// Create a copy of PartnerEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$LoadAllApplicationsCopyWith<_LoadAllApplications> get copyWith => __$LoadAllApplicationsCopyWithImpl<_LoadAllApplications>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LoadAllApplications&&(identical(other.status, status) || other.status == status)&&(identical(other.searchTerm, searchTerm) || other.searchTerm == searchTerm));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,status,searchTerm);
+
+@override
+String toString() {
+  return 'PartnerEvent.loadAllApplications(status: $status, searchTerm: $searchTerm)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$LoadAllApplicationsCopyWith<$Res> implements $PartnerEventCopyWith<$Res> {
+  factory _$LoadAllApplicationsCopyWith(_LoadAllApplications value, $Res Function(_LoadAllApplications) _then) = __$LoadAllApplicationsCopyWithImpl;
+@useResult
+$Res call({
+ String status, String? searchTerm
+});
+
+
+
+
+}
+/// @nodoc
+class __$LoadAllApplicationsCopyWithImpl<$Res>
+    implements _$LoadAllApplicationsCopyWith<$Res> {
+  __$LoadAllApplicationsCopyWithImpl(this._self, this._then);
+
+  final _LoadAllApplications _self;
+  final $Res Function(_LoadAllApplications) _then;
+
+/// Create a copy of PartnerEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? status = null,Object? searchTerm = freezed,}) {
+  return _then(_LoadAllApplications(
+status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String,searchTerm: freezed == searchTerm ? _self.searchTerm : searchTerm // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class _ReviewApplication implements PartnerEvent {
+  const _ReviewApplication({required this.applicationId, required this.status, this.adminComment});
+  
+
+ final  String applicationId;
+ final  String status;
+ final  String? adminComment;
+
+/// Create a copy of PartnerEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ReviewApplicationCopyWith<_ReviewApplication> get copyWith => __$ReviewApplicationCopyWithImpl<_ReviewApplication>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReviewApplication&&(identical(other.applicationId, applicationId) || other.applicationId == applicationId)&&(identical(other.status, status) || other.status == status)&&(identical(other.adminComment, adminComment) || other.adminComment == adminComment));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,applicationId,status,adminComment);
+
+@override
+String toString() {
+  return 'PartnerEvent.reviewApplication(applicationId: $applicationId, status: $status, adminComment: $adminComment)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ReviewApplicationCopyWith<$Res> implements $PartnerEventCopyWith<$Res> {
+  factory _$ReviewApplicationCopyWith(_ReviewApplication value, $Res Function(_ReviewApplication) _then) = __$ReviewApplicationCopyWithImpl;
+@useResult
+$Res call({
+ String applicationId, String status, String? adminComment
+});
+
+
+
+
+}
+/// @nodoc
+class __$ReviewApplicationCopyWithImpl<$Res>
+    implements _$ReviewApplicationCopyWith<$Res> {
+  __$ReviewApplicationCopyWithImpl(this._self, this._then);
+
+  final _ReviewApplication _self;
+  final $Res Function(_ReviewApplication) _then;
+
+/// Create a copy of PartnerEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? applicationId = null,Object? status = null,Object? adminComment = freezed,}) {
+  return _then(_ReviewApplication(
+applicationId: null == applicationId ? _self.applicationId : applicationId // ignore: cast_nullable_to_non_nullable
+as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String,adminComment: freezed == adminComment ? _self.adminComment : adminComment // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

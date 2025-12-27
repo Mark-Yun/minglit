@@ -1,6 +1,4 @@
-import 'dart:async';
-
-import 'package:app_partner/src/features/admin/partner_application_detail_page.dart'; // 수정됨
+import 'package:app_partner/src/features/admin/partner_application_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -16,35 +14,20 @@ class _PartnerApplicationListPageState
     extends State<PartnerApplicationListPage> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedStatus = 'all';
-  List<Map<String, dynamic>> _applications = [];
-  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    unawaited(_loadApplications());
+    _loadApplications();
   }
 
-  Future<void> _loadApplications() async {
-    setState(() => _isLoading = true);
-    try {
-      final repository = locator<PartnerRepository>();
-      final apps = await repository.getAllApplications(
+  void _loadApplications() {
+    context.read<PartnerBloc>().add(
+      PartnerEvent.loadAllApplications(
         status: _selectedStatus,
         searchTerm: _searchController.text,
-      );
-      setState(() {
-        _applications =
-            apps
-                .map((a) => a.toJson())
-                .toList(); // 기존 Map 기반 코드 호환성을 위해 toJson 사용
-        _isLoading = false;
-      });
-    } on Exception catch (e) {
-      Log.e('Load applications error', e);
-    } finally {
-      setState(() => _isLoading = false);
-    }
+      ),
+    );
   }
 
   @override
@@ -55,21 +38,34 @@ class _PartnerApplicationListPageState
         children: [
           _buildFilterBar(),
           Expanded(
-            child:
-                _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _applications.isEmpty
-                    ? const Center(child: Text('신청 내역이 없습니다.'))
-                    : RefreshIndicator(
-                      onRefresh: () async => _loadApplications(),
+            child: BlocBuilder<PartnerBloc, PartnerState>(
+              builder: (context, state) {
+                return state.maybeWhen(
+                  loading:
+                      () => const Center(child: CircularProgressIndicator()),
+                  applicationsLoaded: (List<PartnerApplication> applications) {
+                    if (applications.isEmpty) {
+                      return const Center(child: Text('신청 내역이 없습니다.'));
+                    }
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        unawaited(_loadApplications());
+                      },
                       child: ListView.builder(
                         padding: const EdgeInsets.all(16),
-                        itemCount: _applications.length,
+                        itemCount: applications.length,
                         itemBuilder:
                             (context, index) =>
-                                _buildApplicationCard(_applications[index]),
+                                _buildApplicationCard(applications[index]),
                       ),
-                    ),
+                    );
+                  },
+                  failure:
+                      (msg) => Center(child: Text('Error loading data: $msg')),
+                  orElse: () => const Center(child: Text('데이터를 불러오는 중입니다...')),
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -88,7 +84,7 @@ class _PartnerApplicationListPageState
               hintText: '브랜드명 또는 사업자명 검색',
               prefixIcon: const Icon(Icons.search),
               suffixIcon: IconButton(
-                icon: const Icon(Icons.send),
+                icon: const Icon(Icons.search),
                 onPressed: _loadApplications,
               ),
               border: const OutlineInputBorder(),
@@ -100,16 +96,21 @@ class _PartnerApplicationListPageState
             },
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              _buildFilterChip('전체', 'all'),
-              const SizedBox(width: 8),
-              _buildFilterChip('대기', 'pending'),
-              const SizedBox(width: 8),
-              _buildFilterChip('승인', 'approved'),
-              const SizedBox(width: 8),
-              _buildFilterChip('반려', 'rejected'),
-            ],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildFilterChip('전체', 'all'),
+                const SizedBox(width: 8),
+                _buildFilterChip('대기', 'pending'),
+                const SizedBox(width: 8),
+                _buildFilterChip('승인', 'approved'),
+                const SizedBox(width: 8),
+                _buildFilterChip('반려', 'rejected'),
+                const SizedBox(width: 8),
+                _buildFilterChip('보완', 'needs_correction'),
+              ],
+            ),
           ),
         ],
       ),
@@ -130,27 +131,24 @@ class _PartnerApplicationListPageState
     );
   }
 
-  Widget _buildApplicationCard(Map<String, dynamic> app) {
+  Widget _buildApplicationCard(PartnerApplication app) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
         title: Text(
-          app['brand_name'] as String,
+          app.brandName,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: Text(
-          '${app['biz_name'] as String} / ${app['representative_name'] as String}',
-        ),
-        trailing: _buildStatusBadge(app['status'] as String),
-        onTap: () async {
-          final result = await Navigator.push(
+        subtitle: Text('${app.bizName} / ${app.representativeName}'),
+        trailing: _buildStatusBadge(app.status),
+        onTap: () {
+          Navigator.push(
             context,
-            MaterialPageRoute<bool>(
+            MaterialPageRoute<void>(
               builder:
                   (context) => PartnerApplicationDetailPage(application: app),
             ),
           );
-          if (result ?? false) await _loadApplications();
         },
       ),
     );

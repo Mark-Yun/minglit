@@ -55,13 +55,15 @@ extension VerificationEventPatterns on VerificationEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _LoadPartnerRequirements value)?  loadPartnerRequirements,TResult Function( _SubmitVerification value)?  submitVerification,TResult Function( _LoadPendingRequests value)?  loadPendingRequests,TResult Function( _ReviewRequest value)?  reviewRequest,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _LoadPartnerRequirements value)?  loadPartnerRequirements,TResult Function( _SubmitVerification value)?  submitVerification,TResult Function( _LoadPendingRequests value)?  loadPendingRequests,TResult Function( _LoadCorrectionRequests value)?  loadCorrectionRequests,TResult Function( _LoadComments value)?  loadComments,TResult Function( _ReviewRequest value)?  reviewRequest,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case _LoadPartnerRequirements() when loadPartnerRequirements != null:
 return loadPartnerRequirements(_that);case _SubmitVerification() when submitVerification != null:
 return submitVerification(_that);case _LoadPendingRequests() when loadPendingRequests != null:
-return loadPendingRequests(_that);case _ReviewRequest() when reviewRequest != null:
+return loadPendingRequests(_that);case _LoadCorrectionRequests() when loadCorrectionRequests != null:
+return loadCorrectionRequests(_that);case _LoadComments() when loadComments != null:
+return loadComments(_that);case _ReviewRequest() when reviewRequest != null:
 return reviewRequest(_that);case _:
   return orElse();
 
@@ -80,13 +82,15 @@ return reviewRequest(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _LoadPartnerRequirements value)  loadPartnerRequirements,required TResult Function( _SubmitVerification value)  submitVerification,required TResult Function( _LoadPendingRequests value)  loadPendingRequests,required TResult Function( _ReviewRequest value)  reviewRequest,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _LoadPartnerRequirements value)  loadPartnerRequirements,required TResult Function( _SubmitVerification value)  submitVerification,required TResult Function( _LoadPendingRequests value)  loadPendingRequests,required TResult Function( _LoadCorrectionRequests value)  loadCorrectionRequests,required TResult Function( _LoadComments value)  loadComments,required TResult Function( _ReviewRequest value)  reviewRequest,}){
 final _that = this;
 switch (_that) {
 case _LoadPartnerRequirements():
 return loadPartnerRequirements(_that);case _SubmitVerification():
 return submitVerification(_that);case _LoadPendingRequests():
-return loadPendingRequests(_that);case _ReviewRequest():
+return loadPendingRequests(_that);case _LoadCorrectionRequests():
+return loadCorrectionRequests(_that);case _LoadComments():
+return loadComments(_that);case _ReviewRequest():
 return reviewRequest(_that);case _:
   throw StateError('Unexpected subclass');
 
@@ -104,13 +108,15 @@ return reviewRequest(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _LoadPartnerRequirements value)?  loadPartnerRequirements,TResult? Function( _SubmitVerification value)?  submitVerification,TResult? Function( _LoadPendingRequests value)?  loadPendingRequests,TResult? Function( _ReviewRequest value)?  reviewRequest,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _LoadPartnerRequirements value)?  loadPartnerRequirements,TResult? Function( _SubmitVerification value)?  submitVerification,TResult? Function( _LoadPendingRequests value)?  loadPendingRequests,TResult? Function( _LoadCorrectionRequests value)?  loadCorrectionRequests,TResult? Function( _LoadComments value)?  loadComments,TResult? Function( _ReviewRequest value)?  reviewRequest,}){
 final _that = this;
 switch (_that) {
 case _LoadPartnerRequirements() when loadPartnerRequirements != null:
 return loadPartnerRequirements(_that);case _SubmitVerification() when submitVerification != null:
 return submitVerification(_that);case _LoadPendingRequests() when loadPendingRequests != null:
-return loadPendingRequests(_that);case _ReviewRequest() when reviewRequest != null:
+return loadPendingRequests(_that);case _LoadCorrectionRequests() when loadCorrectionRequests != null:
+return loadCorrectionRequests(_that);case _LoadComments() when loadComments != null:
+return loadComments(_that);case _ReviewRequest() when reviewRequest != null:
 return reviewRequest(_that);case _:
   return null;
 
@@ -128,12 +134,14 @@ return reviewRequest(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String partnerId,  List<String> requiredIds)?  loadPartnerRequirements,TResult Function( String partnerId,  String verificationId,  Map<String, dynamic> claimData,  List<XFile> proofFiles,  String? existingRequestId)?  submitVerification,TResult Function()?  loadPendingRequests,TResult Function( String requestId,  VerificationStatus status,  String? rejectionReason,  String? comment)?  reviewRequest,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String partnerId,  List<String> requiredIds)?  loadPartnerRequirements,TResult Function( String partnerId,  String verificationId,  Map<String, dynamic> claimData,  List<XFile> proofFiles,  String? existingRequestId)?  submitVerification,TResult Function()?  loadPendingRequests,TResult Function()?  loadCorrectionRequests,TResult Function( String requestId)?  loadComments,TResult Function( String requestId,  VerificationStatus status,  String? rejectionReason,  String? comment)?  reviewRequest,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LoadPartnerRequirements() when loadPartnerRequirements != null:
 return loadPartnerRequirements(_that.partnerId,_that.requiredIds);case _SubmitVerification() when submitVerification != null:
 return submitVerification(_that.partnerId,_that.verificationId,_that.claimData,_that.proofFiles,_that.existingRequestId);case _LoadPendingRequests() when loadPendingRequests != null:
-return loadPendingRequests();case _ReviewRequest() when reviewRequest != null:
+return loadPendingRequests();case _LoadCorrectionRequests() when loadCorrectionRequests != null:
+return loadCorrectionRequests();case _LoadComments() when loadComments != null:
+return loadComments(_that.requestId);case _ReviewRequest() when reviewRequest != null:
 return reviewRequest(_that.requestId,_that.status,_that.rejectionReason,_that.comment);case _:
   return orElse();
 
@@ -152,12 +160,14 @@ return reviewRequest(_that.requestId,_that.status,_that.rejectionReason,_that.co
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String partnerId,  List<String> requiredIds)  loadPartnerRequirements,required TResult Function( String partnerId,  String verificationId,  Map<String, dynamic> claimData,  List<XFile> proofFiles,  String? existingRequestId)  submitVerification,required TResult Function()  loadPendingRequests,required TResult Function( String requestId,  VerificationStatus status,  String? rejectionReason,  String? comment)  reviewRequest,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String partnerId,  List<String> requiredIds)  loadPartnerRequirements,required TResult Function( String partnerId,  String verificationId,  Map<String, dynamic> claimData,  List<XFile> proofFiles,  String? existingRequestId)  submitVerification,required TResult Function()  loadPendingRequests,required TResult Function()  loadCorrectionRequests,required TResult Function( String requestId)  loadComments,required TResult Function( String requestId,  VerificationStatus status,  String? rejectionReason,  String? comment)  reviewRequest,}) {final _that = this;
 switch (_that) {
 case _LoadPartnerRequirements():
 return loadPartnerRequirements(_that.partnerId,_that.requiredIds);case _SubmitVerification():
 return submitVerification(_that.partnerId,_that.verificationId,_that.claimData,_that.proofFiles,_that.existingRequestId);case _LoadPendingRequests():
-return loadPendingRequests();case _ReviewRequest():
+return loadPendingRequests();case _LoadCorrectionRequests():
+return loadCorrectionRequests();case _LoadComments():
+return loadComments(_that.requestId);case _ReviewRequest():
 return reviewRequest(_that.requestId,_that.status,_that.rejectionReason,_that.comment);case _:
   throw StateError('Unexpected subclass');
 
@@ -175,12 +185,14 @@ return reviewRequest(_that.requestId,_that.status,_that.rejectionReason,_that.co
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String partnerId,  List<String> requiredIds)?  loadPartnerRequirements,TResult? Function( String partnerId,  String verificationId,  Map<String, dynamic> claimData,  List<XFile> proofFiles,  String? existingRequestId)?  submitVerification,TResult? Function()?  loadPendingRequests,TResult? Function( String requestId,  VerificationStatus status,  String? rejectionReason,  String? comment)?  reviewRequest,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String partnerId,  List<String> requiredIds)?  loadPartnerRequirements,TResult? Function( String partnerId,  String verificationId,  Map<String, dynamic> claimData,  List<XFile> proofFiles,  String? existingRequestId)?  submitVerification,TResult? Function()?  loadPendingRequests,TResult? Function()?  loadCorrectionRequests,TResult? Function( String requestId)?  loadComments,TResult? Function( String requestId,  VerificationStatus status,  String? rejectionReason,  String? comment)?  reviewRequest,}) {final _that = this;
 switch (_that) {
 case _LoadPartnerRequirements() when loadPartnerRequirements != null:
 return loadPartnerRequirements(_that.partnerId,_that.requiredIds);case _SubmitVerification() when submitVerification != null:
 return submitVerification(_that.partnerId,_that.verificationId,_that.claimData,_that.proofFiles,_that.existingRequestId);case _LoadPendingRequests() when loadPendingRequests != null:
-return loadPendingRequests();case _ReviewRequest() when reviewRequest != null:
+return loadPendingRequests();case _LoadCorrectionRequests() when loadCorrectionRequests != null:
+return loadCorrectionRequests();case _LoadComments() when loadComments != null:
+return loadComments(_that.requestId);case _ReviewRequest() when reviewRequest != null:
 return reviewRequest(_that.requestId,_that.status,_that.rejectionReason,_that.comment);case _:
   return null;
 
@@ -380,6 +392,104 @@ String toString() {
 
 
 
+
+/// @nodoc
+
+
+class _LoadCorrectionRequests implements VerificationEvent {
+  const _LoadCorrectionRequests();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LoadCorrectionRequests);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'VerificationEvent.loadCorrectionRequests()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class _LoadComments implements VerificationEvent {
+  const _LoadComments({required this.requestId});
+  
+
+ final  String requestId;
+
+/// Create a copy of VerificationEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$LoadCommentsCopyWith<_LoadComments> get copyWith => __$LoadCommentsCopyWithImpl<_LoadComments>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LoadComments&&(identical(other.requestId, requestId) || other.requestId == requestId));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,requestId);
+
+@override
+String toString() {
+  return 'VerificationEvent.loadComments(requestId: $requestId)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$LoadCommentsCopyWith<$Res> implements $VerificationEventCopyWith<$Res> {
+  factory _$LoadCommentsCopyWith(_LoadComments value, $Res Function(_LoadComments) _then) = __$LoadCommentsCopyWithImpl;
+@useResult
+$Res call({
+ String requestId
+});
+
+
+
+
+}
+/// @nodoc
+class __$LoadCommentsCopyWithImpl<$Res>
+    implements _$LoadCommentsCopyWith<$Res> {
+  __$LoadCommentsCopyWithImpl(this._self, this._then);
+
+  final _LoadComments _self;
+  final $Res Function(_LoadComments) _then;
+
+/// Create a copy of VerificationEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? requestId = null,}) {
+  return _then(_LoadComments(
+requestId: null == requestId ? _self.requestId : requestId // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
 
 /// @nodoc
 

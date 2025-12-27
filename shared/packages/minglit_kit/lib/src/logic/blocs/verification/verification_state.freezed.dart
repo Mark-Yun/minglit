@@ -55,14 +55,16 @@ extension VerificationStatePatterns on VerificationState {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _Initial value)?  initial,TResult Function( _Loading value)?  loading,TResult Function( _RequirementsLoaded value)?  requirementsLoaded,TResult Function( _PendingRequestsLoaded value)?  pendingRequestsLoaded,TResult Function( _Success value)?  success,TResult Function( _Failure value)?  failure,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _Initial value)?  initial,TResult Function( _Loading value)?  loading,TResult Function( _RequirementsLoaded value)?  requirementsLoaded,TResult Function( _PendingRequestsLoaded value)?  pendingRequestsLoaded,TResult Function( _CorrectionRequestsLoaded value)?  correctionRequestsLoaded,TResult Function( _CommentsLoaded value)?  commentsLoaded,TResult Function( _Success value)?  success,TResult Function( _Failure value)?  failure,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial(_that);case _Loading() when loading != null:
 return loading(_that);case _RequirementsLoaded() when requirementsLoaded != null:
 return requirementsLoaded(_that);case _PendingRequestsLoaded() when pendingRequestsLoaded != null:
-return pendingRequestsLoaded(_that);case _Success() when success != null:
+return pendingRequestsLoaded(_that);case _CorrectionRequestsLoaded() when correctionRequestsLoaded != null:
+return correctionRequestsLoaded(_that);case _CommentsLoaded() when commentsLoaded != null:
+return commentsLoaded(_that);case _Success() when success != null:
 return success(_that);case _Failure() when failure != null:
 return failure(_that);case _:
   return orElse();
@@ -82,14 +84,16 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _Initial value)  initial,required TResult Function( _Loading value)  loading,required TResult Function( _RequirementsLoaded value)  requirementsLoaded,required TResult Function( _PendingRequestsLoaded value)  pendingRequestsLoaded,required TResult Function( _Success value)  success,required TResult Function( _Failure value)  failure,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _Initial value)  initial,required TResult Function( _Loading value)  loading,required TResult Function( _RequirementsLoaded value)  requirementsLoaded,required TResult Function( _PendingRequestsLoaded value)  pendingRequestsLoaded,required TResult Function( _CorrectionRequestsLoaded value)  correctionRequestsLoaded,required TResult Function( _CommentsLoaded value)  commentsLoaded,required TResult Function( _Success value)  success,required TResult Function( _Failure value)  failure,}){
 final _that = this;
 switch (_that) {
 case _Initial():
 return initial(_that);case _Loading():
 return loading(_that);case _RequirementsLoaded():
 return requirementsLoaded(_that);case _PendingRequestsLoaded():
-return pendingRequestsLoaded(_that);case _Success():
+return pendingRequestsLoaded(_that);case _CorrectionRequestsLoaded():
+return correctionRequestsLoaded(_that);case _CommentsLoaded():
+return commentsLoaded(_that);case _Success():
 return success(_that);case _Failure():
 return failure(_that);case _:
   throw StateError('Unexpected subclass');
@@ -108,14 +112,16 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _Initial value)?  initial,TResult? Function( _Loading value)?  loading,TResult? Function( _RequirementsLoaded value)?  requirementsLoaded,TResult? Function( _PendingRequestsLoaded value)?  pendingRequestsLoaded,TResult? Function( _Success value)?  success,TResult? Function( _Failure value)?  failure,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _Initial value)?  initial,TResult? Function( _Loading value)?  loading,TResult? Function( _RequirementsLoaded value)?  requirementsLoaded,TResult? Function( _PendingRequestsLoaded value)?  pendingRequestsLoaded,TResult? Function( _CorrectionRequestsLoaded value)?  correctionRequestsLoaded,TResult? Function( _CommentsLoaded value)?  commentsLoaded,TResult? Function( _Success value)?  success,TResult? Function( _Failure value)?  failure,}){
 final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial(_that);case _Loading() when loading != null:
 return loading(_that);case _RequirementsLoaded() when requirementsLoaded != null:
 return requirementsLoaded(_that);case _PendingRequestsLoaded() when pendingRequestsLoaded != null:
-return pendingRequestsLoaded(_that);case _Success() when success != null:
+return pendingRequestsLoaded(_that);case _CorrectionRequestsLoaded() when correctionRequestsLoaded != null:
+return correctionRequestsLoaded(_that);case _CommentsLoaded() when commentsLoaded != null:
+return commentsLoaded(_that);case _Success() when success != null:
 return success(_that);case _Failure() when failure != null:
 return failure(_that);case _:
   return null;
@@ -134,13 +140,15 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<VerificationRequirementStatus> requirements)?  requirementsLoaded,TResult Function( List<Map<String, dynamic>> requests)?  pendingRequestsLoaded,TResult Function()?  success,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<VerificationRequirementStatus> requirements)?  requirementsLoaded,TResult Function( List<Map<String, dynamic>> requests)?  pendingRequestsLoaded,TResult Function( List<Map<String, dynamic>> requests)?  correctionRequestsLoaded,TResult Function( List<Map<String, dynamic>> comments)?  commentsLoaded,TResult Function()?  success,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial();case _Loading() when loading != null:
 return loading();case _RequirementsLoaded() when requirementsLoaded != null:
 return requirementsLoaded(_that.requirements);case _PendingRequestsLoaded() when pendingRequestsLoaded != null:
-return pendingRequestsLoaded(_that.requests);case _Success() when success != null:
+return pendingRequestsLoaded(_that.requests);case _CorrectionRequestsLoaded() when correctionRequestsLoaded != null:
+return correctionRequestsLoaded(_that.requests);case _CommentsLoaded() when commentsLoaded != null:
+return commentsLoaded(_that.comments);case _Success() when success != null:
 return success();case _Failure() when failure != null:
 return failure(_that.message);case _:
   return orElse();
@@ -160,13 +168,15 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<VerificationRequirementStatus> requirements)  requirementsLoaded,required TResult Function( List<Map<String, dynamic>> requests)  pendingRequestsLoaded,required TResult Function()  success,required TResult Function( String message)  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<VerificationRequirementStatus> requirements)  requirementsLoaded,required TResult Function( List<Map<String, dynamic>> requests)  pendingRequestsLoaded,required TResult Function( List<Map<String, dynamic>> requests)  correctionRequestsLoaded,required TResult Function( List<Map<String, dynamic>> comments)  commentsLoaded,required TResult Function()  success,required TResult Function( String message)  failure,}) {final _that = this;
 switch (_that) {
 case _Initial():
 return initial();case _Loading():
 return loading();case _RequirementsLoaded():
 return requirementsLoaded(_that.requirements);case _PendingRequestsLoaded():
-return pendingRequestsLoaded(_that.requests);case _Success():
+return pendingRequestsLoaded(_that.requests);case _CorrectionRequestsLoaded():
+return correctionRequestsLoaded(_that.requests);case _CommentsLoaded():
+return commentsLoaded(_that.comments);case _Success():
 return success();case _Failure():
 return failure(_that.message);case _:
   throw StateError('Unexpected subclass');
@@ -185,13 +195,15 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<VerificationRequirementStatus> requirements)?  requirementsLoaded,TResult? Function( List<Map<String, dynamic>> requests)?  pendingRequestsLoaded,TResult? Function()?  success,TResult? Function( String message)?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<VerificationRequirementStatus> requirements)?  requirementsLoaded,TResult? Function( List<Map<String, dynamic>> requests)?  pendingRequestsLoaded,TResult? Function( List<Map<String, dynamic>> requests)?  correctionRequestsLoaded,TResult? Function( List<Map<String, dynamic>> comments)?  commentsLoaded,TResult? Function()?  success,TResult? Function( String message)?  failure,}) {final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial();case _Loading() when loading != null:
 return loading();case _RequirementsLoaded() when requirementsLoaded != null:
 return requirementsLoaded(_that.requirements);case _PendingRequestsLoaded() when pendingRequestsLoaded != null:
-return pendingRequestsLoaded(_that.requests);case _Success() when success != null:
+return pendingRequestsLoaded(_that.requests);case _CorrectionRequestsLoaded() when correctionRequestsLoaded != null:
+return correctionRequestsLoaded(_that.requests);case _CommentsLoaded() when commentsLoaded != null:
+return commentsLoaded(_that.comments);case _Success() when success != null:
 return success();case _Failure() when failure != null:
 return failure(_that.message);case _:
   return null;
@@ -402,6 +414,150 @@ class __$PendingRequestsLoadedCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') $Res call({Object? requests = null,}) {
   return _then(_PendingRequestsLoaded(
 null == requests ? _self._requests : requests // ignore: cast_nullable_to_non_nullable
+as List<Map<String, dynamic>>,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class _CorrectionRequestsLoaded implements VerificationState {
+  const _CorrectionRequestsLoaded(final  List<Map<String, dynamic>> requests): _requests = requests;
+  
+
+ final  List<Map<String, dynamic>> _requests;
+ List<Map<String, dynamic>> get requests {
+  if (_requests is EqualUnmodifiableListView) return _requests;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_requests);
+}
+
+
+/// Create a copy of VerificationState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$CorrectionRequestsLoadedCopyWith<_CorrectionRequestsLoaded> get copyWith => __$CorrectionRequestsLoadedCopyWithImpl<_CorrectionRequestsLoaded>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CorrectionRequestsLoaded&&const DeepCollectionEquality().equals(other._requests, _requests));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_requests));
+
+@override
+String toString() {
+  return 'VerificationState.correctionRequestsLoaded(requests: $requests)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$CorrectionRequestsLoadedCopyWith<$Res> implements $VerificationStateCopyWith<$Res> {
+  factory _$CorrectionRequestsLoadedCopyWith(_CorrectionRequestsLoaded value, $Res Function(_CorrectionRequestsLoaded) _then) = __$CorrectionRequestsLoadedCopyWithImpl;
+@useResult
+$Res call({
+ List<Map<String, dynamic>> requests
+});
+
+
+
+
+}
+/// @nodoc
+class __$CorrectionRequestsLoadedCopyWithImpl<$Res>
+    implements _$CorrectionRequestsLoadedCopyWith<$Res> {
+  __$CorrectionRequestsLoadedCopyWithImpl(this._self, this._then);
+
+  final _CorrectionRequestsLoaded _self;
+  final $Res Function(_CorrectionRequestsLoaded) _then;
+
+/// Create a copy of VerificationState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? requests = null,}) {
+  return _then(_CorrectionRequestsLoaded(
+null == requests ? _self._requests : requests // ignore: cast_nullable_to_non_nullable
+as List<Map<String, dynamic>>,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class _CommentsLoaded implements VerificationState {
+  const _CommentsLoaded(final  List<Map<String, dynamic>> comments): _comments = comments;
+  
+
+ final  List<Map<String, dynamic>> _comments;
+ List<Map<String, dynamic>> get comments {
+  if (_comments is EqualUnmodifiableListView) return _comments;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_comments);
+}
+
+
+/// Create a copy of VerificationState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$CommentsLoadedCopyWith<_CommentsLoaded> get copyWith => __$CommentsLoadedCopyWithImpl<_CommentsLoaded>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CommentsLoaded&&const DeepCollectionEquality().equals(other._comments, _comments));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_comments));
+
+@override
+String toString() {
+  return 'VerificationState.commentsLoaded(comments: $comments)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$CommentsLoadedCopyWith<$Res> implements $VerificationStateCopyWith<$Res> {
+  factory _$CommentsLoadedCopyWith(_CommentsLoaded value, $Res Function(_CommentsLoaded) _then) = __$CommentsLoadedCopyWithImpl;
+@useResult
+$Res call({
+ List<Map<String, dynamic>> comments
+});
+
+
+
+
+}
+/// @nodoc
+class __$CommentsLoadedCopyWithImpl<$Res>
+    implements _$CommentsLoadedCopyWith<$Res> {
+  __$CommentsLoadedCopyWithImpl(this._self, this._then);
+
+  final _CommentsLoaded _self;
+  final $Res Function(_CommentsLoaded) _then;
+
+/// Create a copy of VerificationState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? comments = null,}) {
+  return _then(_CommentsLoaded(
+null == comments ? _self._comments : comments // ignore: cast_nullable_to_non_nullable
 as List<Map<String, dynamic>>,
   ));
 }

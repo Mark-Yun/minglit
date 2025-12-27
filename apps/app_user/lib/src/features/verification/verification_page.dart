@@ -371,14 +371,25 @@ class _VerificationManagementPageState
   }
 }
 
-class _CommentsModal extends StatelessWidget {
+class _CommentsModal extends StatefulWidget {
   const _CommentsModal({required this.requestId});
   final String requestId;
 
   @override
-  Widget build(BuildContext context) {
-    final repository = context.read<VerificationRepository>();
+  State<_CommentsModal> createState() => _CommentsModalState();
+}
 
+class _CommentsModalState extends State<_CommentsModal> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<VerificationBloc>().add(
+      VerificationEvent.loadComments(requestId: widget.requestId),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.7,
       padding: const EdgeInsets.all(20),
@@ -400,40 +411,46 @@ class _CommentsModal extends StatelessWidget {
           ),
           const Divider(),
           Expanded(
-            child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: repository.getVerificationComments(requestId),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                final comments = snapshot.data!;
-                if (comments.isEmpty) {
-                  return const Center(child: Text('대화 내역이 없습니다.'));
-                }
+            child: BlocBuilder<VerificationBloc, VerificationState>(
+              builder: (context, state) {
+                return state.maybeWhen(
+                  loading:
+                      () => const Center(child: CircularProgressIndicator()),
+                  commentsLoaded: (List<Map<String, dynamic>> comments) {
+                    if (comments.isEmpty) {
+                      return const Center(child: Text('대화 내역이 없습니다.'));
+                    }
 
-                return ListView.builder(
-                  itemCount: comments.length,
-                  itemBuilder: (context, index) {
-                    final comment = comments[index];
-                    final content = comment['content'] as Map<String, dynamic>;
-                    final isMe =
-                        comment['author_id'] ==
-                        Supabase.instance.client.auth.currentUser?.id;
+                    return ListView.builder(
+                      itemCount: comments.length,
+                      itemBuilder: (context, index) {
+                        final comment = comments[index];
+                        final content =
+                            comment['content'] as Map<String, dynamic>;
+                        final isMe =
+                            comment['author_id'] ==
+                            Supabase.instance.client.auth.currentUser?.id;
 
-                    return Align(
-                      alignment:
-                          isMe ? Alignment.centerRight : Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: isMe ? Colors.blue[100] : Colors.grey[200],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(content['text'] as String? ?? ''),
-                      ),
+                        return Align(
+                          alignment:
+                              isMe
+                                  ? Alignment.centerRight
+                                  : Alignment.centerLeft,
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(vertical: 8),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: isMe ? Colors.blue[100] : Colors.grey[200],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(content['text'] as String? ?? ''),
+                          ),
+                        );
+                      },
                     );
                   },
+                  failure: (msg) => Center(child: Text('Error: $msg')),
+                  orElse: () => const Center(child: Text('불러오는 중...')),
                 );
               },
             ),

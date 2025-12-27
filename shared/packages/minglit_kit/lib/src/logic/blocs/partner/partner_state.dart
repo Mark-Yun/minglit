@@ -25,6 +25,11 @@ class PartnerState with _$PartnerState {
     List<Map<String, dynamic>> members,
   ) = _MembersLoaded;
 
+  /// Admin: List of all partner applications.
+  const factory PartnerState.applicationsLoaded(
+    List<PartnerApplication> applications,
+  ) = _ApplicationsLoaded;
+
   /// Generic success state.
   const factory PartnerState.success() = _Success;
 

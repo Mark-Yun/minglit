@@ -15,10 +15,53 @@ class PartnerBloc extends Bloc<PartnerEvent, PartnerState> {
             (data, bizReg, bankbook) =>
                 _onSubmitApplication(data, bizReg, bankbook, emit),
         loadMembers: (partnerId) => _onLoadMembers(partnerId, emit),
+        loadAllApplications:
+            (status, term) => _onLoadAllApplications(status, term, emit),
+        reviewApplication:
+            (id, status, comment) =>
+                _onReviewApplication(id, status, comment, emit),
       );
     });
   }
   final PartnerRepository _partnerRepository;
+
+  Future<void> _onLoadAllApplications(
+    String status,
+    String? searchTerm,
+    Emitter<PartnerState> emit,
+  ) async {
+    emit(const PartnerState.loading());
+    try {
+      final applications = await _partnerRepository.getAllApplications(
+        status: status,
+        searchTerm: searchTerm,
+      );
+      emit(PartnerState.applicationsLoaded(applications));
+    } on Exception catch (e) {
+      emit(PartnerState.failure(e.toString()));
+    }
+  }
+
+  Future<void> _onReviewApplication(
+    String applicationId,
+    String status,
+    String? adminComment,
+    Emitter<PartnerState> emit,
+  ) async {
+    emit(const PartnerState.loading());
+    try {
+      await _partnerRepository.reviewApplication(
+        applicationId: applicationId,
+        status: status,
+        adminComment: adminComment,
+      );
+      emit(const PartnerState.success());
+      // Reload the list after review to update UI
+      add(const PartnerEvent.loadAllApplications());
+    } on Exception catch (e) {
+      emit(PartnerState.failure(e.toString()));
+    }
+  }
 
   Future<void> _onCheckApplicationStatus(Emitter<PartnerState> emit) async {
     emit(const PartnerState.loading());

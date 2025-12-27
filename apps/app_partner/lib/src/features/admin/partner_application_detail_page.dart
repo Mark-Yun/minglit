@@ -6,7 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PartnerApplicationDetailPage extends StatefulWidget {
   const PartnerApplicationDetailPage({required this.application, super.key});
-  final Map<String, dynamic> application;
+  final PartnerApplication application;
 
   @override
   State<PartnerApplicationDetailPage> createState() =>
@@ -15,7 +15,6 @@ class PartnerApplicationDetailPage extends StatefulWidget {
 
 class _PartnerApplicationDetailPageState
     extends State<PartnerApplicationDetailPage> {
-  bool _isProcessing = false;
   final _commentController = TextEditingController();
 
   @override
@@ -24,30 +23,14 @@ class _PartnerApplicationDetailPageState
     super.dispose();
   }
 
-  Future<void> _reviewApplication(String status) async {
-    setState(() => _isProcessing = true);
-    try {
-      final repository = locator<PartnerRepository>();
-      await repository.reviewApplication(
-        applicationId: widget.application['id'] as String,
+  void _reviewApplication(String status) {
+    context.read<PartnerBloc>().add(
+      PartnerEvent.reviewApplication(
+        applicationId: widget.application.id,
         status: status,
         adminComment: _commentController.text,
-      );
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('처리가 완료되었습니다: $status')));
-        Navigator.pop(context, true);
-      }
-    } on Exception catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
-      }
-    } finally {
-      if (mounted) setState(() => _isProcessing = false);
-    }
+      ),
+    );
   }
 
   Future<void> _handleReview(String status) async {
@@ -70,7 +53,7 @@ class _PartnerApplicationDetailPageState
                 ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context);
-                    unawaited(_reviewApplication(status));
+                    _reviewApplication(status);
                   },
                   child: const Text('확인'),
                 ),
@@ -78,7 +61,7 @@ class _PartnerApplicationDetailPageState
             ),
       );
     } else {
-      await _reviewApplication(status);
+      _reviewApplication(status);
     }
   }
 
@@ -104,85 +87,106 @@ class _PartnerApplicationDetailPageState
   Widget build(BuildContext context) {
     final app = widget.application;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('신청 상세 심사')),
-      body:
-          _isProcessing
-              ? const Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSection('브랜드 정보', {
-                      '브랜드명': app['brand_name'],
-                      '소개': app['introduction'],
-                      '주소': app['address'],
-                      '연락처': app['contact_phone'],
-                      '이메일': app['contact_email'],
-                    }),
-                    _buildSection('사업자 및 계좌 정보', {
-                      '사업자유형': app['biz_type'],
-                      '사업자명': app['biz_name'],
-                      '사업자번호': app['biz_number'],
-                      '대표자': app['representative_name'],
-                      '은행': app['bank_name'],
-                      '계좌번호': app['account_number'],
-                      '예금주': app['account_holder'],
-                    }),
-                    const SizedBox(height: 24),
-                    const Text(
-                      '증빙 서류 확인',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildDocTile(
-                      '사업자등록증',
-                      app['biz_registration_path'] as String,
-                    ),
-                    _buildDocTile('통장 사본', app['bankbook_path'] as String),
-
-                    const SizedBox(height: 48),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => _handleReview('rejected'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.red,
-                            ),
-                            child: const Text('반려'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => _handleReview('needs_correction'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.blue,
-                            ),
-                            child: const Text('보완 요청'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () => _handleReview('approved'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                            ),
-                            child: const Text('최종 승인'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+    return BlocListener<PartnerBloc, PartnerState>(
+      listener: (context, state) {
+        state.whenOrNull(
+          success: () {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('처리가 완료되었습니다.')));
+            Navigator.pop(context);
+          },
+          failure: (msg) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('Error: $msg')));
+          },
+        );
+      },
+      child: Scaffold(
+        appBar: AppBar(title: const Text('신청 상세 심사')),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSection('브랜드 정보', {
+                '브랜드명': app.brandName,
+                '소개': app.introduction,
+                '주소': app.address,
+                '연락처': app.contactPhone,
+                '이메일': app.contactEmail,
+              }),
+              _buildSection('사업자 및 계좌 정보', {
+                '사업자유형': app.bizType,
+                '사업자명': app.bizName,
+                '사업자번호': app.bizNumber,
+                '대표자': app.representativeName,
+                '은행': app.bankName,
+                '계좌번호': app.accountNumber,
+                '예금주': app.accountHolder,
+              }),
+              const SizedBox(height: 24),
+              const Text(
+                '증빙 서류 확인',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
+              const SizedBox(height: 12),
+              _buildDocTile('사업자등록증', app.bizRegistrationPath),
+              _buildDocTile('통장 사본', app.bankbookPath),
+
+              const SizedBox(height: 48),
+              BlocBuilder<PartnerBloc, PartnerState>(
+                builder: (context, state) {
+                  final isLoading = state.maybeWhen(
+                    loading: () => true,
+                    orElse: () => false,
+                  );
+
+                  if (isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _handleReview('rejected'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.red,
+                          ),
+                          child: const Text('반려'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _handleReview('needs_correction'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.blue,
+                          ),
+                          child: const Text('보완 요청'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => _handleReview('approved'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('최종 승인'),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

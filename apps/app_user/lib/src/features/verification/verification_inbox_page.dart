@@ -10,45 +10,37 @@ class VerificationInboxPage extends StatefulWidget {
 }
 
 class _VerificationInboxPageState extends State<VerificationInboxPage> {
-  bool _isLoading = true;
-  List<Map<String, dynamic>> _correctionRequests = [];
-
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadRequests());
+    _loadRequests();
   }
 
-  Future<void> _loadRequests() async {
-    setState(() => _isLoading = true);
-    try {
-      final repository = context.read<VerificationRepository>();
-      // 보완이 필요한 요청들만 가져옴
-      final requests = await repository.getRequestsByStatus(
-        VerificationStatus.needsCorrection,
-      );
-      setState(() {
-        _correctionRequests = requests;
-        _isLoading = false;
-      });
-    } on Exception catch (e) {
-      Log.e('Load inbox error', e);
-      setState(() => _isLoading = false);
-    }
+  void _loadRequests() {
+    context.read<VerificationBloc>().add(
+      const VerificationEvent.loadCorrectionRequests(),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('인증 알림함')),
-      body: RefreshIndicator(
-        onRefresh: _loadRequests,
-        child:
-            _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _correctionRequests.isEmpty
-                ? _buildEmptyView()
-                : _buildListView(),
+      body: BlocBuilder<VerificationBloc, VerificationState>(
+        builder: (context, state) {
+          return state.maybeWhen(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            correctionRequestsLoaded: (List<Map<String, dynamic>> requests) {
+              if (requests.isEmpty) return _buildEmptyView();
+              return RefreshIndicator(
+                onRefresh: () async => _loadRequests(),
+                child: _buildListView(requests),
+              );
+            },
+            failure: (msg) => Center(child: Text('Error: $msg')),
+            orElse: () => const Center(child: Text('알림을 불러오는 중입니다...')),
+          );
+        },
       ),
     );
   }
@@ -69,12 +61,12 @@ class _VerificationInboxPageState extends State<VerificationInboxPage> {
     );
   }
 
-  Widget _buildListView() {
+  Widget _buildListView(List<Map<String, dynamic>> requests) {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: _correctionRequests.length,
+      itemCount: requests.length,
       itemBuilder: (context, index) {
-        final req = _correctionRequests[index];
+        final req = requests[index];
         final partner = req['partner'] as Map<String, dynamic>;
         final verification = req['verification'] as Map<String, dynamic>;
 
@@ -113,6 +105,7 @@ class _VerificationInboxPageState extends State<VerificationInboxPage> {
                       ),
                 ),
               );
+              _loadRequests(); // 돌아왔을 때 목록 새로고침
             },
           ),
         );

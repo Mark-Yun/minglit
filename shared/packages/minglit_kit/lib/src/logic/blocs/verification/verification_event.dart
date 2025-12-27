@@ -23,6 +23,12 @@ class VerificationEvent with _$VerificationEvent {
   // Partner Events
   const factory VerificationEvent.loadPendingRequests() = _LoadPendingRequests;
 
+  const factory VerificationEvent.loadCorrectionRequests() =
+      _LoadCorrectionRequests;
+
+  const factory VerificationEvent.loadComments({required String requestId}) =
+      _LoadComments;
+
   const factory VerificationEvent.reviewRequest({
     required String requestId,
     required VerificationStatus status,

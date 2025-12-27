@@ -55,14 +55,15 @@ extension PartnerStatePatterns on PartnerState {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _Initial value)?  initial,TResult Function( _Loading value)?  loading,TResult Function( _ApplicationLoaded value)?  applicationLoaded,TResult Function( _MembersLoaded value)?  membersLoaded,TResult Function( _Success value)?  success,TResult Function( _Failure value)?  failure,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _Initial value)?  initial,TResult Function( _Loading value)?  loading,TResult Function( _ApplicationLoaded value)?  applicationLoaded,TResult Function( _MembersLoaded value)?  membersLoaded,TResult Function( _ApplicationsLoaded value)?  applicationsLoaded,TResult Function( _Success value)?  success,TResult Function( _Failure value)?  failure,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial(_that);case _Loading() when loading != null:
 return loading(_that);case _ApplicationLoaded() when applicationLoaded != null:
 return applicationLoaded(_that);case _MembersLoaded() when membersLoaded != null:
-return membersLoaded(_that);case _Success() when success != null:
+return membersLoaded(_that);case _ApplicationsLoaded() when applicationsLoaded != null:
+return applicationsLoaded(_that);case _Success() when success != null:
 return success(_that);case _Failure() when failure != null:
 return failure(_that);case _:
   return orElse();
@@ -82,14 +83,15 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _Initial value)  initial,required TResult Function( _Loading value)  loading,required TResult Function( _ApplicationLoaded value)  applicationLoaded,required TResult Function( _MembersLoaded value)  membersLoaded,required TResult Function( _Success value)  success,required TResult Function( _Failure value)  failure,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _Initial value)  initial,required TResult Function( _Loading value)  loading,required TResult Function( _ApplicationLoaded value)  applicationLoaded,required TResult Function( _MembersLoaded value)  membersLoaded,required TResult Function( _ApplicationsLoaded value)  applicationsLoaded,required TResult Function( _Success value)  success,required TResult Function( _Failure value)  failure,}){
 final _that = this;
 switch (_that) {
 case _Initial():
 return initial(_that);case _Loading():
 return loading(_that);case _ApplicationLoaded():
 return applicationLoaded(_that);case _MembersLoaded():
-return membersLoaded(_that);case _Success():
+return membersLoaded(_that);case _ApplicationsLoaded():
+return applicationsLoaded(_that);case _Success():
 return success(_that);case _Failure():
 return failure(_that);case _:
   throw StateError('Unexpected subclass');
@@ -108,14 +110,15 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _Initial value)?  initial,TResult? Function( _Loading value)?  loading,TResult? Function( _ApplicationLoaded value)?  applicationLoaded,TResult? Function( _MembersLoaded value)?  membersLoaded,TResult? Function( _Success value)?  success,TResult? Function( _Failure value)?  failure,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _Initial value)?  initial,TResult? Function( _Loading value)?  loading,TResult? Function( _ApplicationLoaded value)?  applicationLoaded,TResult? Function( _MembersLoaded value)?  membersLoaded,TResult? Function( _ApplicationsLoaded value)?  applicationsLoaded,TResult? Function( _Success value)?  success,TResult? Function( _Failure value)?  failure,}){
 final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial(_that);case _Loading() when loading != null:
 return loading(_that);case _ApplicationLoaded() when applicationLoaded != null:
 return applicationLoaded(_that);case _MembersLoaded() when membersLoaded != null:
-return membersLoaded(_that);case _Success() when success != null:
+return membersLoaded(_that);case _ApplicationsLoaded() when applicationsLoaded != null:
+return applicationsLoaded(_that);case _Success() when success != null:
 return success(_that);case _Failure() when failure != null:
 return failure(_that);case _:
   return null;
@@ -134,13 +137,14 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( PartnerApplication? application)?  applicationLoaded,TResult Function( List<Map<String, dynamic>> members)?  membersLoaded,TResult Function()?  success,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( PartnerApplication? application)?  applicationLoaded,TResult Function( List<Map<String, dynamic>> members)?  membersLoaded,TResult Function( List<PartnerApplication> applications)?  applicationsLoaded,TResult Function()?  success,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial();case _Loading() when loading != null:
 return loading();case _ApplicationLoaded() when applicationLoaded != null:
 return applicationLoaded(_that.application);case _MembersLoaded() when membersLoaded != null:
-return membersLoaded(_that.members);case _Success() when success != null:
+return membersLoaded(_that.members);case _ApplicationsLoaded() when applicationsLoaded != null:
+return applicationsLoaded(_that.applications);case _Success() when success != null:
 return success();case _Failure() when failure != null:
 return failure(_that.message);case _:
   return orElse();
@@ -160,13 +164,14 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( PartnerApplication? application)  applicationLoaded,required TResult Function( List<Map<String, dynamic>> members)  membersLoaded,required TResult Function()  success,required TResult Function( String message)  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( PartnerApplication? application)  applicationLoaded,required TResult Function( List<Map<String, dynamic>> members)  membersLoaded,required TResult Function( List<PartnerApplication> applications)  applicationsLoaded,required TResult Function()  success,required TResult Function( String message)  failure,}) {final _that = this;
 switch (_that) {
 case _Initial():
 return initial();case _Loading():
 return loading();case _ApplicationLoaded():
 return applicationLoaded(_that.application);case _MembersLoaded():
-return membersLoaded(_that.members);case _Success():
+return membersLoaded(_that.members);case _ApplicationsLoaded():
+return applicationsLoaded(_that.applications);case _Success():
 return success();case _Failure():
 return failure(_that.message);case _:
   throw StateError('Unexpected subclass');
@@ -185,13 +190,14 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( PartnerApplication? application)?  applicationLoaded,TResult? Function( List<Map<String, dynamic>> members)?  membersLoaded,TResult? Function()?  success,TResult? Function( String message)?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( PartnerApplication? application)?  applicationLoaded,TResult? Function( List<Map<String, dynamic>> members)?  membersLoaded,TResult? Function( List<PartnerApplication> applications)?  applicationsLoaded,TResult? Function()?  success,TResult? Function( String message)?  failure,}) {final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial();case _Loading() when loading != null:
 return loading();case _ApplicationLoaded() when applicationLoaded != null:
 return applicationLoaded(_that.application);case _MembersLoaded() when membersLoaded != null:
-return membersLoaded(_that.members);case _Success() when success != null:
+return membersLoaded(_that.members);case _ApplicationsLoaded() when applicationsLoaded != null:
+return applicationsLoaded(_that.applications);case _Success() when success != null:
 return success();case _Failure() when failure != null:
 return failure(_that.message);case _:
   return null;
@@ -409,6 +415,78 @@ class __$MembersLoadedCopyWithImpl<$Res>
   return _then(_MembersLoaded(
 null == members ? _self._members : members // ignore: cast_nullable_to_non_nullable
 as List<Map<String, dynamic>>,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class _ApplicationsLoaded implements PartnerState {
+  const _ApplicationsLoaded(final  List<PartnerApplication> applications): _applications = applications;
+  
+
+ final  List<PartnerApplication> _applications;
+ List<PartnerApplication> get applications {
+  if (_applications is EqualUnmodifiableListView) return _applications;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_applications);
+}
+
+
+/// Create a copy of PartnerState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ApplicationsLoadedCopyWith<_ApplicationsLoaded> get copyWith => __$ApplicationsLoadedCopyWithImpl<_ApplicationsLoaded>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ApplicationsLoaded&&const DeepCollectionEquality().equals(other._applications, _applications));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_applications));
+
+@override
+String toString() {
+  return 'PartnerState.applicationsLoaded(applications: $applications)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ApplicationsLoadedCopyWith<$Res> implements $PartnerStateCopyWith<$Res> {
+  factory _$ApplicationsLoadedCopyWith(_ApplicationsLoaded value, $Res Function(_ApplicationsLoaded) _then) = __$ApplicationsLoadedCopyWithImpl;
+@useResult
+$Res call({
+ List<PartnerApplication> applications
+});
+
+
+
+
+}
+/// @nodoc
+class __$ApplicationsLoadedCopyWithImpl<$Res>
+    implements _$ApplicationsLoadedCopyWith<$Res> {
+  __$ApplicationsLoadedCopyWithImpl(this._self, this._then);
+
+  final _ApplicationsLoaded _self;
+  final $Res Function(_ApplicationsLoaded) _then;
+
+/// Create a copy of PartnerState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? applications = null,}) {
+  return _then(_ApplicationsLoaded(
+null == applications ? _self._applications : applications // ignore: cast_nullable_to_non_nullable
+as List<PartnerApplication>,
   ));
 }
 

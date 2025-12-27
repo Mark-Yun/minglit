@@ -25,6 +25,16 @@ class VerificationState with _$VerificationState {
     List<Map<String, dynamic>> requests,
   ) = _PendingRequestsLoaded;
 
+  /// User: List of verification requests that need correction.
+  const factory VerificationState.correctionRequestsLoaded(
+    List<Map<String, dynamic>> requests,
+  ) = _CorrectionRequestsLoaded;
+
+  /// Common: List of comments for a request.
+  const factory VerificationState.commentsLoaded(
+    List<Map<String, dynamic>> comments,
+  ) = _CommentsLoaded;
+
   /// Generic success state.
   const factory VerificationState.success() = _Success;
 

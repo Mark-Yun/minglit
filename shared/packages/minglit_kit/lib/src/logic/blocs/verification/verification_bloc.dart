@@ -26,24 +26,49 @@ class VerificationBloc extends Bloc<VerificationEvent, VerificationState> {
               verificationId,
               claimData,
               proofFiles,
-              existingRequestId,
-              emit,
-            ),
-        loadPendingRequests: () => _onLoadPendingRequests(emit),
-        reviewRequest:
-            (requestId, status, rejectionReason, comment) => _onReviewRequest(
-              requestId,
-              status,
-              rejectionReason,
-              comment,
-              emit,
-            ),
-      );
-    });
-  }
-  final VerificationRepository _verificationRepository;
-
-  Future<void> _onLoadPartnerRequirements(
+                          existingRequestId,
+                                      emit,
+                                    ),
+                                  loadPendingRequests: () => _onLoadPendingRequests(emit),
+                                  loadCorrectionRequests: () => _onLoadCorrectionRequests(emit),
+                                  loadComments: (id) => _onLoadComments(id, emit),
+                                  reviewRequest:
+                                      (requestId, status, rejectionReason, comment) => _onReviewRequest(
+                                        requestId,
+                                        status,
+                                        rejectionReason,
+                                        comment,
+                                        emit,
+                                      ),
+                                );
+                              });
+                            }
+                            final VerificationRepository _verificationRepository;
+                          
+                            Future<void> _onLoadComments(String requestId, Emitter<VerificationState> emit) async {
+                              emit(const VerificationState.loading());
+                              try {
+                                final comments = await _verificationRepository.getVerificationComments(requestId);
+                                emit(VerificationState.commentsLoaded(comments));
+                              } on Exception catch (e) {
+                                emit(VerificationState.failure(e.toString()));
+                              }
+                            }
+                          
+                            Future<void> _onLoadCorrectionRequests(Emitter<VerificationState> emit) async {
+                          
+                  emit(const VerificationState.loading());
+                  try {
+                    final requests = await _verificationRepository
+                        .getRequestsByStatus(VerificationStatus.needsCorrection);
+                    emit(VerificationState.correctionRequestsLoaded(requests));
+                  } on Exception catch (e) {
+                    emit(VerificationState.failure(e.toString()));
+                  }
+                }
+              
+                Future<void> _onLoadPartnerRequirements(
+              
     String partnerId,
     List<String> requiredIds,
     Emitter<VerificationState> emit,
