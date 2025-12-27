@@ -31,7 +31,7 @@ class PartnerDevMap extends StatelessWidget {
           screenBuilder: (_) => const PartnerApplicationPage(),
         ),
         DevScreenItem(
-          title: 'Manage Members & Permissions',
+          title: 'Partner Members & Permissions',
           description: '직원 목록 조회 및 세부 권한 설정',
           screenBuilder:
               (_) => const PartnerMemberListPage(
