@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:minglit_kit/src/core/error/error_handler.dart';
 import 'package:minglit_kit/src/data/repositories/auth_repository.dart';
 import 'package:minglit_kit/src/logic/blocs/auth/auth_event.dart';
 import 'package:minglit_kit/src/logic/blocs/auth/auth_state.dart';
@@ -46,7 +47,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       await _authRepository.signInWithGoogle();
     } on Exception catch (e) {
-      emit(AuthState.failure(e.toString()));
+      emit(AuthState.failure(ErrorHandler.handle(e)));
       emit(const AuthState.unauthenticated());
     }
   }
@@ -56,7 +57,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       await _authRepository.signOut();
     } on Exception catch (e) {
-      emit(AuthState.failure(e.toString()));
+      emit(AuthState.failure(ErrorHandler.handle(e)));
     }
   }
 

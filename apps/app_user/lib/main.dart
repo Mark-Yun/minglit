@@ -130,14 +130,14 @@ class LoginPage extends StatelessWidget {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         state.whenOrNull(
-          failure: (message) {
+          failure: (failure) {
             unawaited(
               showDialog<void>(
                 context: context,
                 builder:
                     (context) => AlertDialog(
                       title: const Text('로그인 실패'),
-                      content: SelectableText('Error: $message'),
+                      content: SelectableText('Error: ${failure.message}'),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),

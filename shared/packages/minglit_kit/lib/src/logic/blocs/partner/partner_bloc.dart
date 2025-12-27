@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:minglit_kit/src/core/error/error_handler.dart';
 import 'package:minglit_kit/src/data/repositories/partner_repository.dart';
 import 'package:minglit_kit/src/logic/blocs/partner/partner_event.dart';
 import 'package:minglit_kit/src/logic/blocs/partner/partner_state.dart';
@@ -38,7 +39,7 @@ class PartnerBloc extends Bloc<PartnerEvent, PartnerState> {
       );
       emit(PartnerState.applicationsLoaded(applications));
     } on Exception catch (e) {
-      emit(PartnerState.failure(e.toString()));
+      emit(PartnerState.failure(ErrorHandler.handle(e)));
     }
   }
 
@@ -59,7 +60,7 @@ class PartnerBloc extends Bloc<PartnerEvent, PartnerState> {
       // Reload the list after review to update UI
       add(const PartnerEvent.loadAllApplications());
     } on Exception catch (e) {
-      emit(PartnerState.failure(e.toString()));
+      emit(PartnerState.failure(ErrorHandler.handle(e)));
     }
   }
 
@@ -69,7 +70,7 @@ class PartnerBloc extends Bloc<PartnerEvent, PartnerState> {
       final application = await _partnerRepository.getMyApplication();
       emit(PartnerState.applicationLoaded(application));
     } on Exception catch (e) {
-      emit(PartnerState.failure(e.toString()));
+      emit(PartnerState.failure(ErrorHandler.handle(e)));
     }
   }
 
@@ -89,7 +90,7 @@ class PartnerBloc extends Bloc<PartnerEvent, PartnerState> {
       emit(const PartnerState.success());
       add(const PartnerEvent.checkApplicationStatus());
     } on Exception catch (e) {
-      emit(PartnerState.failure(e.toString()));
+      emit(PartnerState.failure(ErrorHandler.handle(e)));
     }
   }
 
@@ -102,7 +103,7 @@ class PartnerBloc extends Bloc<PartnerEvent, PartnerState> {
       final members = await _partnerRepository.getPartnerMembers(partnerId);
       emit(PartnerState.membersLoaded(members));
     } on Exception catch (e) {
-      emit(PartnerState.failure(e.toString()));
+      emit(PartnerState.failure(ErrorHandler.handle(e)));
     }
   }
 }

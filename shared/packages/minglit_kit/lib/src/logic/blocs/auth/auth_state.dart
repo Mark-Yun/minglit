@@ -21,5 +21,5 @@ class AuthState with _$AuthState {
   const factory AuthState.unauthenticated() = _Unauthenticated;
 
   /// Authentication process failed.
-  const factory AuthState.failure(String message) = _Failure;
+  const factory AuthState.failure(Failure failure) = _Failure;
 }

@@ -39,5 +39,5 @@ class VerificationState with _$VerificationState {
   const factory VerificationState.success() = _Success;
 
   /// Operation failed.
-  const factory VerificationState.failure(String message) = _Failure;
+  const factory VerificationState.failure(Failure failure) = _Failure;
 }

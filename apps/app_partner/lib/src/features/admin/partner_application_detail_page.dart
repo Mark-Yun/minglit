@@ -96,10 +96,10 @@ class _PartnerApplicationDetailPageState
             ).showSnackBar(const SnackBar(content: Text('처리가 완료되었습니다.')));
             Navigator.pop(context);
           },
-          failure: (msg) {
+          failure: (failure) {
             ScaffoldMessenger.of(
               context,
-            ).showSnackBar(SnackBar(content: Text('Error: $msg')));
+            ).showSnackBar(SnackBar(content: Text('Error: ${failure.message}')));
           },
         );
       },

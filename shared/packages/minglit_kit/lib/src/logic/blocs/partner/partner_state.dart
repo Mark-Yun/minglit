@@ -34,5 +34,5 @@ class PartnerState with _$PartnerState {
   const factory PartnerState.success() = _Success;
 
   /// Operation failed.
-  const factory PartnerState.failure(String message) = _Failure;
+  const factory PartnerState.failure(Failure failure) = _Failure;
 }

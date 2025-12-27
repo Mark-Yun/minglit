@@ -100,10 +100,10 @@ class _VerificationManagementPageState
             ).showSnackBar(const SnackBar(content: Text('모든 수정사항이 제출되었습니다.')));
             _refreshStatus(); // 제출 성공 후 상태 새로고침
           },
-          failure: (msg) {
+          failure: (failure) {
             ScaffoldMessenger.of(
               context,
-            ).showSnackBar(SnackBar(content: Text('제출 실패: $msg')));
+            ).showSnackBar(SnackBar(content: Text('제출 실패: ${failure.message}')));
           },
         );
       },
@@ -449,7 +449,7 @@ class _CommentsModalState extends State<_CommentsModal> {
                       },
                     );
                   },
-                  failure: (msg) => Center(child: Text('Error: $msg')),
+                  failure: (failure) => Center(child: Text('Error: ${failure.message}')),
                   orElse: () => const Center(child: Text('불러오는 중...')),
                 );
               },

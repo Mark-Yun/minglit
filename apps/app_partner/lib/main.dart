@@ -131,10 +131,10 @@ class PartnerLoginPage extends StatelessWidget {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         state.whenOrNull(
-          failure: (message) {
+          failure: (failure) {
             ScaffoldMessenger.of(
               context,
-            ).showSnackBar(SnackBar(content: Text('Login Failed: $message')));
+            ).showSnackBar(SnackBar(content: Text('Login Failed: ${failure.message}')));
           },
         );
       },

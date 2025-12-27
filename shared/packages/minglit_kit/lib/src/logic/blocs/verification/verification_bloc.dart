@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:minglit_kit/src/core/error/error_handler.dart';
 import 'package:minglit_kit/src/data/models/verification.dart';
 import 'package:minglit_kit/src/data/repositories/verification_repository.dart';
 import 'package:minglit_kit/src/logic/blocs/verification/verification_event.dart';
@@ -26,49 +27,54 @@ class VerificationBloc extends Bloc<VerificationEvent, VerificationState> {
               verificationId,
               claimData,
               proofFiles,
-                          existingRequestId,
-                                      emit,
-                                    ),
-                                  loadPendingRequests: () => _onLoadPendingRequests(emit),
-                                  loadCorrectionRequests: () => _onLoadCorrectionRequests(emit),
-                                  loadComments: (id) => _onLoadComments(id, emit),
-                                  reviewRequest:
-                                      (requestId, status, rejectionReason, comment) => _onReviewRequest(
-                                        requestId,
-                                        status,
-                                        rejectionReason,
-                                        comment,
-                                        emit,
-                                      ),
-                                );
-                              });
-                            }
-                            final VerificationRepository _verificationRepository;
-                          
-                            Future<void> _onLoadComments(String requestId, Emitter<VerificationState> emit) async {
-                              emit(const VerificationState.loading());
-                              try {
-                                final comments = await _verificationRepository.getVerificationComments(requestId);
-                                emit(VerificationState.commentsLoaded(comments));
-                              } on Exception catch (e) {
-                                emit(VerificationState.failure(e.toString()));
-                              }
-                            }
-                          
-                            Future<void> _onLoadCorrectionRequests(Emitter<VerificationState> emit) async {
-                          
-                  emit(const VerificationState.loading());
-                  try {
-                    final requests = await _verificationRepository
-                        .getRequestsByStatus(VerificationStatus.needsCorrection);
-                    emit(VerificationState.correctionRequestsLoaded(requests));
-                  } on Exception catch (e) {
-                    emit(VerificationState.failure(e.toString()));
-                  }
-                }
-              
-                Future<void> _onLoadPartnerRequirements(
-              
+              existingRequestId,
+              emit,
+            ),
+        loadPendingRequests: () => _onLoadPendingRequests(emit),
+        loadCorrectionRequests: () => _onLoadCorrectionRequests(emit),
+        loadComments: (id) => _onLoadComments(id, emit),
+        reviewRequest:
+            (requestId, status, rejectionReason, comment) => _onReviewRequest(
+              requestId,
+              status,
+              rejectionReason,
+              comment,
+              emit,
+            ),
+      );
+    });
+  }
+
+  final VerificationRepository _verificationRepository;
+
+  Future<void> _onLoadComments(
+    String requestId,
+    Emitter<VerificationState> emit,
+  ) async {
+    emit(const VerificationState.loading());
+    try {
+      final comments = await _verificationRepository.getVerificationComments(
+        requestId,
+      );
+      emit(VerificationState.commentsLoaded(comments));
+    } on Exception catch (e) {
+      emit(VerificationState.failure(ErrorHandler.handle(e)));
+    }
+  }
+
+  Future<void> _onLoadCorrectionRequests(Emitter<VerificationState> emit) async {
+    emit(const VerificationState.loading());
+    try {
+      final requests = await _verificationRepository.getRequestsByStatus(
+        VerificationStatus.needsCorrection,
+      );
+      emit(VerificationState.correctionRequestsLoaded(requests));
+    } on Exception catch (e) {
+      emit(VerificationState.failure(ErrorHandler.handle(e)));
+    }
+  }
+
+  Future<void> _onLoadPartnerRequirements(
     String partnerId,
     List<String> requiredIds,
     Emitter<VerificationState> emit,
@@ -82,7 +88,7 @@ class VerificationBloc extends Bloc<VerificationEvent, VerificationState> {
           );
       emit(VerificationState.requirementsLoaded(requirements));
     } on Exception catch (e) {
-      emit(VerificationState.failure(e.toString()));
+      emit(VerificationState.failure(ErrorHandler.handle(e)));
     }
   }
 
@@ -96,7 +102,7 @@ class VerificationBloc extends Bloc<VerificationEvent, VerificationState> {
   ) async {
     emit(const VerificationState.loading());
     try {
-      await _verificationRepository.submitOrUpdateVerification(
+      await _verificationRepository.submitVerification(
         partnerId: partnerId,
         verificationId: verificationId,
         claimData: claimData,
@@ -105,7 +111,7 @@ class VerificationBloc extends Bloc<VerificationEvent, VerificationState> {
       );
       emit(const VerificationState.success());
     } on Exception catch (e) {
-      emit(VerificationState.failure(e.toString()));
+      emit(VerificationState.failure(ErrorHandler.handle(e)));
     }
   }
 
@@ -115,7 +121,7 @@ class VerificationBloc extends Bloc<VerificationEvent, VerificationState> {
       final requests = await _verificationRepository.getPendingRequests();
       emit(VerificationState.pendingRequestsLoaded(requests));
     } on Exception catch (e) {
-      emit(VerificationState.failure(e.toString()));
+      emit(VerificationState.failure(ErrorHandler.handle(e)));
     }
   }
 
@@ -144,7 +150,7 @@ class VerificationBloc extends Bloc<VerificationEvent, VerificationState> {
       emit(const VerificationState.success());
       add(const VerificationEvent.loadPendingRequests());
     } on Exception catch (e) {
-      emit(VerificationState.failure(e.toString()));
+      emit(VerificationState.failure(ErrorHandler.handle(e)));
     }
   }
 }

@@ -61,7 +61,7 @@ class _PartnerApplicationListPageState
                     );
                   },
                   failure:
-                      (msg) => Center(child: Text('Error loading data: $msg')),
+                      (failure) => Center(child: Text('Error loading data: ${failure.message}')),
                   orElse: () => const Center(child: Text('데이터를 불러오는 중입니다...')),
                 );
               },
