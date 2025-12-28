@@ -8,13 +8,35 @@ part of 'app_router.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// **Centralized Router Provider**
+///
+/// Configures [GoRouter] with:
+/// 1. **Initial Location**: Default entry point (`/`).
+/// 2. **Refresh Logic**: Listens to [authStateChangesProvider] to auto-redirect on login/logout.
+/// 3. **Redirect Logic**: Enforces authentication policy (Guest -> Login).
+/// 4. **Routes**: Uses Type-safe routes from [app_routes.dart].
 
 @ProviderFor(goRouter)
 const goRouterProvider = GoRouterProvider._();
 
+/// **Centralized Router Provider**
+///
+/// Configures [GoRouter] with:
+/// 1. **Initial Location**: Default entry point (`/`).
+/// 2. **Refresh Logic**: Listens to [authStateChangesProvider] to auto-redirect on login/logout.
+/// 3. **Redirect Logic**: Enforces authentication policy (Guest -> Login).
+/// 4. **Routes**: Uses Type-safe routes from [app_routes.dart].
+
 final class GoRouterProvider
     extends $FunctionalProvider<GoRouter, GoRouter, GoRouter>
     with $Provider<GoRouter> {
+  /// **Centralized Router Provider**
+  ///
+  /// Configures [GoRouter] with:
+  /// 1. **Initial Location**: Default entry point (`/`).
+  /// 2. **Refresh Logic**: Listens to [authStateChangesProvider] to auto-redirect on login/logout.
+  /// 3. **Redirect Logic**: Enforces authentication policy (Guest -> Login).
+  /// 4. **Routes**: Uses Type-safe routes from [app_routes.dart].
   const GoRouterProvider._()
     : super(
         from: null,

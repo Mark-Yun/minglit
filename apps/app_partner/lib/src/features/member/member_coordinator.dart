@@ -1,7 +1,7 @@
+import 'dart:async';
 
 import 'package:app_partner/src/routing/app_router.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'member_coordinator.g.dart';
@@ -40,8 +40,10 @@ class MemberCoordinator extends _$MemberCoordinator {
 
     // Push the route onto the stack
     // Note: Uses global navigator key from RouterProvider to access context.
-    route.push(
-      ref.read(goRouterProvider).routerDelegate.navigatorKey.currentContext!,
+    unawaited(
+      route.push<void>(
+        ref.read(goRouterProvider).routerDelegate.navigatorKey.currentContext!,
+      ),
     );
   }
 }

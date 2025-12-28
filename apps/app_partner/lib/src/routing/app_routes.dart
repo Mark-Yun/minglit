@@ -1,5 +1,7 @@
-
-import 'package:app_partner/main.dart';
+import 'package:app_partner/src/features/admin/partner_application_detail_page.dart';
+import 'package:app_partner/src/features/admin/partner_application_list_page.dart';
+import 'package:app_partner/src/features/auth/partner_login_page.dart';
+import 'package:app_partner/src/features/home/partner_home_page.dart';
 import 'package:app_partner/src/features/member/partner_member_list_page.dart';
 import 'package:app_partner/src/features/member/partner_member_permission_page.dart';
 import 'package:flutter/material.dart';
@@ -32,6 +34,37 @@ class HomeRoute extends GoRouteData with $HomeRoute {
       const PartnerHomePage();
 }
 
+/// **Admin: Application List Route**
+///
+/// Path: `/admin/applications`
+@TypedGoRoute<ApplicationListRoute>(
+  path: '/admin/applications',
+  routes: [
+    TypedGoRoute<ApplicationDetailRoute>(path: ':applicationId'),
+  ],
+)
+class ApplicationListRoute extends GoRouteData with $ApplicationListRoute {
+  const ApplicationListRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const PartnerApplicationListPage();
+}
+
+/// **Admin: Application Detail Route**
+///
+/// Path: `/admin/applications/:applicationId`
+class ApplicationDetailRoute extends GoRouteData with $ApplicationDetailRoute {
+  const ApplicationDetailRoute({required this.applicationId});
+
+  final String applicationId;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return PartnerApplicationDetailPage(applicationId: applicationId);
+  }
+}
+
 /// **Member List Route**: Manage partner staff and their permissions.
 ///
 /// Path: `/partners/:partnerId/members`
@@ -53,7 +86,8 @@ class MemberListRoute extends GoRouteData with $MemberListRoute {
       PartnerMemberListPage(partnerId: partnerId);
 }
 
-/// **Member Permission Route**: Detail view for editing a specific member's role.
+/// **Member Permission Route**:
+/// Detail view for editing a specific member's role.
 ///
 /// Path: `/partners/:partnerId/members/:targetUserId/permission`
 ///
@@ -76,4 +110,3 @@ class MemberPermissionRoute extends GoRouteData with $MemberPermissionRoute {
     );
   }
 }
-

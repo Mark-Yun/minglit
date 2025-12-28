@@ -1,4 +1,5 @@
-import 'package:app_user/main.dart';
+import 'package:app_user/src/features/auth/login_page.dart';
+import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/features/verification/verification_inbox_page.dart';
 import 'package:app_user/src/features/verification/verification_page.dart';
 import 'package:flutter/material.dart';
@@ -13,8 +14,7 @@ class LoginRoute extends GoRouteData with $LoginRoute {
   const LoginRoute();
 
   @override
-  Widget build(BuildContext context, GoRouterState state) =>
-      const LoginPage();
+  Widget build(BuildContext context, GoRouterState state) => const LoginPage();
 }
 
 /// **Home Route**: Main Dashboard.
@@ -24,8 +24,7 @@ class HomeRoute extends GoRouteData with $HomeRoute {
   const HomeRoute();
 
   @override
-  Widget build(BuildContext context, GoRouterState state) =>
-      const HomePage();
+  Widget build(BuildContext context, GoRouterState state) => const HomePage();
 }
 
 /// **Verification Inbox Route**: List of notifications/requests.
@@ -46,14 +45,16 @@ class VerificationInboxRoute extends GoRouteData with $VerificationInboxRoute {
 
 /// **Verification Management Route**: Detail view for submitting verifications.
 /// Path: `/verification/inbox/management/:partnerId`
-class VerificationManagementRoute extends GoRouteData with $VerificationManagementRoute {
+class VerificationManagementRoute extends GoRouteData
+    with $VerificationManagementRoute {
   const VerificationManagementRoute({
     required this.partnerId,
     required this.verificationIds,
   });
 
   final String partnerId;
-  /// Comma-separated list of verification IDs to manage.
+
+  /// Comma-separated list of verification IDs.
   final String verificationIds;
 
   @override
@@ -65,4 +66,3 @@ class VerificationManagementRoute extends GoRouteData with $VerificationManageme
     );
   }
 }
-

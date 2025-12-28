@@ -19,7 +19,7 @@ final _rootNavigatorKey = GlobalKey<NavigatorState>();
 @riverpod
 GoRouter goRouter(Ref ref) {
   final authState = ValueNotifier<AuthState?>(null);
-  
+
   ref.listen(authStateChangesProvider, (_, next) {
     next.whenData((state) {
       authState.value = state;

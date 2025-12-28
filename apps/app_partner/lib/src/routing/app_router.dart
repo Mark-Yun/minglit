@@ -7,21 +7,21 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'app_router.g.dart';
 
-// Global navigator key to allow context access from non-widget classes if needed.
+// Global navigator key to allow context access.
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 /// **Centralized Router Provider**
 ///
 /// Configures [GoRouter] with:
 /// 1. **Initial Location**: Default entry point (`/`).
-/// 2. **Refresh Logic**: Listens to [authStateChangesProvider] to auto-redirect on login/logout.
-/// 3. **Redirect Logic**: Enforces authentication policy (Guest -> Login).
-/// 4. **Routes**: Uses Type-safe routes from [app_routes.dart].
+/// 2. **Refresh Logic**: Listens to auth changes to auto-redirect.
+/// 3. **Redirect Logic**: Enforces authentication policy.
+/// 4. **Routes**: Uses Type-safe routes from app_routes.dart.
 @riverpod
 GoRouter goRouter(Ref ref) {
   // Listen to auth state changes to trigger router refresh.
   final authState = ValueNotifier<AuthState?>(null);
-  
+
   ref.listen(authStateChangesProvider, (_, next) {
     next.whenData((state) {
       authState.value = state;

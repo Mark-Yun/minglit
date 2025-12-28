@@ -1,6 +1,23 @@
-import 'package:app_partner/src/features/admin/partner_application_detail_page.dart';
+import 'package:app_partner/src/features/admin/admin_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'partner_application_list_page.g.dart';
+
+@riverpod
+Future<List<PartnerApplication>> partnerApplications(
+  Ref ref, {
+  String status = 'all',
+  String? searchTerm,
+}) async {
+  return ref
+      .read(partnerRepositoryProvider)
+      .getAllApplications(
+        status: status,
+        searchTerm: searchTerm,
+      );
+}
 
 class PartnerApplicationListPage extends ConsumerStatefulWidget {
   const PartnerApplicationListPage({super.key});
@@ -15,81 +32,47 @@ class _PartnerApplicationListPageState
   final TextEditingController _searchController = TextEditingController();
   String _selectedStatus = 'all';
 
-  bool _isLoading = false;
-  List<PartnerApplication> _applications = [];
-  String? _errorMessage;
-
-  @override
-  void initState() {
-    super.initState();
-    // Use addPostFrameCallback to safely call _loadApplications after build
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadApplications();
-    });
-  }
-
-  Future<void> _loadApplications() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final apps = await ref.read(partnerRepositoryProvider).getAllApplications(
-        status: _selectedStatus,
-        searchTerm: _searchController.text,
-      );
-      if (mounted) {
-        setState(() {
-          _applications = apps;
-        });
-      }
-    } on Exception catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage = e.toString();
-        });
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final appsAsync = ref.watch(
+      partnerApplicationsProvider(
+        status: _selectedStatus,
+        searchTerm: _searchController.text,
+      ),
+    );
+
     return Scaffold(
       appBar: AppBar(title: const Text('입점 신청 관리')),
       body: Column(
         children: [
           _buildFilterBar(),
-          Expanded(child: _buildContent()),
+          Expanded(
+            child: appsAsync.when(
+              data: (apps) {
+                if (apps.isEmpty) {
+                  return const Center(child: Text('신청 내역이 없습니다.'));
+                }
+                return RefreshIndicator(
+                  onRefresh:
+                      () => ref.refresh(
+                        partnerApplicationsProvider(
+                          status: _selectedStatus,
+                          searchTerm: _searchController.text,
+                        ).future,
+                      ),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: apps.length,
+                    itemBuilder:
+                        (context, index) => _buildApplicationCard(apps[index]),
+                  ),
+                );
+              },
+              error: (e, s) => Center(child: Text('Error: $e')),
+              loading: () => const Center(child: CircularProgressIndicator()),
+            ),
+          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildContent() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (_errorMessage != null) {
-      return Center(child: Text('Error: $_errorMessage'));
-    }
-    if (_applications.isEmpty) {
-      return const Center(child: Text('신청 내역이 없습니다.'));
-    }
-
-    return RefreshIndicator(
-      onRefresh: _loadApplications,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _applications.length,
-        itemBuilder:
-            (context, index) => _buildApplicationCard(_applications[index]),
       ),
     );
   }
@@ -107,14 +90,16 @@ class _PartnerApplicationListPageState
               prefixIcon: const Icon(Icons.search),
               suffixIcon: IconButton(
                 icon: const Icon(Icons.search),
-                onPressed: _loadApplications,
+                onPressed: () {
+                  setState(() {}); // Trigger rebuild to update provider params
+                },
               ),
               border: const OutlineInputBorder(),
               filled: true,
               fillColor: Colors.white,
             ),
             onSubmitted: (_) {
-              _loadApplications();
+              setState(() {});
             },
           ),
           const SizedBox(height: 12),
@@ -147,7 +132,6 @@ class _PartnerApplicationListPageState
       onSelected: (selected) {
         if (selected) {
           setState(() => _selectedStatus = value);
-          _loadApplications();
         }
       },
     );
@@ -164,13 +148,9 @@ class _PartnerApplicationListPageState
         subtitle: Text('${app.bizName} / ${app.representativeName}'),
         trailing: _buildStatusBadge(app.status),
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute<void>(
-              builder:
-                  (context) => PartnerApplicationDetailPage(application: app),
-            ),
-          ).then((_) => _loadApplications()); // Reload when returning from detail
+          ref
+              .read(adminCoordinatorProvider.notifier)
+              .goToApplicationDetail(app.id);
         },
       ),
     );
@@ -210,4 +190,3 @@ class _PartnerApplicationListPageState
     );
   }
 }
-

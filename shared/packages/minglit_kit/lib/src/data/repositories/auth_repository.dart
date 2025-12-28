@@ -8,7 +8,6 @@ part 'auth_repository.g.dart';
 
 /// Configuration for AuthRepository.
 class AuthConfig {
-
   const AuthConfig({this.webClientId, this.defaultRedirectUrl});
   final String? webClientId;
   final String? defaultRedirectUrl;

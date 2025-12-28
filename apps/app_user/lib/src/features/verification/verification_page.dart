@@ -1,20 +1,20 @@
+import 'dart:async';
+
 import 'package:app_user/src/features/verification/career_verification_form.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:minglit_kit/src/data/models/verification.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
 /// **Verification Management Page**
 ///
-/// The core screen where users view requirements, fill out forms, upload proofs,
-/// and handle correction requests.
+/// The core screen where users view requirements, fill out forms,
+/// upload proofs, and handle correction requests.
 ///
 /// **Flow:**
-/// 1. Load requirements via [verificationRepositoryProvider].
+/// 1. Load requirements via verificationRepositoryProvider.
 /// 2. User fills forms (e.g., [CareerVerificationForm]) and picks images.
-/// 3. Submit data to [submitOrUpdateVerification].
+/// 3. Submit data to submitOrUpdateVerification.
 /// 4. View feedback/comments if status is 'needs_correction'.
 class VerificationManagementPage extends ConsumerStatefulWidget {
   const VerificationManagementPage({
@@ -45,7 +45,7 @@ class _VerificationManagementPageState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadStatus();
+      unawaited(_loadStatus());
     });
   }
 
@@ -59,7 +59,7 @@ class _VerificationManagementPageState
             requiredVerificationIds: widget.requiredVerificationIds,
           );
       if (mounted) setState(() => _requirements = reqs);
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -110,9 +110,9 @@ class _VerificationManagementPageState
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('모든 수정사항이 제출되었습니다.')));
-        _loadStatus();
+        unawaited(_loadStatus());
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -280,8 +280,9 @@ class _VerificationManagementPageState
           ),
           TextButton(
             onPressed:
-                () async =>
-                    _showCommentsModal(req.activeRequest!['id'] as String),
+                () => unawaited(
+                  _showCommentsModal(req.activeRequest!['id'] as String),
+                ),
             style: TextButton.styleFrom(
               padding: EdgeInsets.zero,
               minimumSize: const Size(0, 30),
@@ -296,7 +297,6 @@ class _VerificationManagementPageState
   Widget _buildFormByCategory(VerificationRequirementStatus req) {
     final vId = req.master['id'] as String;
     final categoryStr = req.master['category'] as String;
-    // Handle 'etc' safely or default
     final category =
         VerificationCategory.values.asNameMap()[categoryStr] ??
         VerificationCategory.etc;
@@ -312,7 +312,11 @@ class _VerificationManagementPageState
           initialData: initialData,
           onChanged: (data) => _draftData[vId] = data,
         );
-      default:
+      case VerificationCategory.asset:
+      case VerificationCategory.marriage:
+      case VerificationCategory.academic:
+      case VerificationCategory.vehicle:
+      case VerificationCategory.etc:
         return const Text('이 카테고리의 폼은 아직 준비 중입니다.');
     }
   }
@@ -323,7 +327,7 @@ class _VerificationManagementPageState
         (req.originalData?['proof_images'] as List?)?.isNotEmpty ?? false;
 
     return GestureDetector(
-      onTap: () async => _pickImage(vId),
+      onTap: () => unawaited(_pickImage(vId)),
       child: Container(
         width: double.infinity,
         height: 120,
@@ -376,7 +380,7 @@ class _VerificationManagementPageState
           width: double.infinity,
           height: 54,
           child: ElevatedButton(
-            onPressed: hasChanges ? _submitAll : null,
+            onPressed: hasChanges ? () => unawaited(_submitAll()) : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue[900],
               foregroundColor: Colors.white,

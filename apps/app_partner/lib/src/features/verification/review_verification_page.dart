@@ -1,7 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:minglit_kit/src/data/models/verification.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// **Verification Review Page**
@@ -30,7 +30,7 @@ class _ReviewVerificationPageState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadRequests();
+      unawaited(_loadRequests());
     });
   }
 
@@ -41,7 +41,7 @@ class _ReviewVerificationPageState
           await ref.read(verificationRepositoryProvider).getPendingRequests();
       if (!mounted) return;
       setState(() => _pendingRequests = reqs);
-    } catch (e) {
+    } on Exception catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -59,22 +59,23 @@ class _ReviewVerificationPageState
     String? comment,
   }) async {
     try {
-      await ref.read(verificationRepositoryProvider).reviewRequest(
-        requestId: id,
-        status: status,
-        rejectionReason: reason,
-      );
+      await ref
+          .read(verificationRepositoryProvider)
+          .reviewRequest(
+            requestId: id,
+            status: status,
+            rejectionReason: reason,
+          );
       if (comment != null) {
-        // 코멘트 추가 로직 (Repository에 있다면 호출)
-        // await ref.read(verificationRepositoryProvider).addComment(...);
+        // TODO(developer): Implement comment addition if needed.
       }
 
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('처리가 완료되었습니다.')));
-      _loadRequests();
-    } catch (e) {
+      unawaited(_loadRequests());
+    } on Exception catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -120,11 +121,13 @@ class _ReviewVerificationPageState
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  _reviewRequest(
-                    requestId,
-                    VerificationStatus.needsCorrection,
-                    reason: reasonController.text,
-                    comment: commentController.text,
+                  unawaited(
+                    _reviewRequest(
+                      requestId,
+                      VerificationStatus.needsCorrection,
+                      reason: reasonController.text,
+                      comment: commentController.text,
+                    ),
                   );
                 },
                 child: const Text('보완 요청 전송'),
@@ -192,7 +195,8 @@ class _ReviewVerificationPageState
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: _pendingRequests.length,
-      itemBuilder: (context, index) => _buildRequestCard(_pendingRequests[index]),
+      itemBuilder:
+          (context, index) => _buildRequestCard(_pendingRequests[index]),
     );
   }
 
@@ -237,7 +241,7 @@ class _ReviewVerificationPageState
                   itemCount: images.length,
                   itemBuilder:
                       (context, i) => GestureDetector(
-                        onTap: () => _showImageDialog(images[i]),
+                        onTap: () => unawaited(_showImageDialog(images[i])),
                         child: Container(
                           width: 80,
                           margin: const EdgeInsets.only(right: 8),
@@ -256,7 +260,10 @@ class _ReviewVerificationPageState
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => _showCorrectionDialog(req['id'] as String),
+                    onPressed:
+                        () => unawaited(
+                          _showCorrectionDialog(req['id'] as String),
+                        ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.orange,
                     ),
@@ -267,9 +274,11 @@ class _ReviewVerificationPageState
                 Expanded(
                   child: ElevatedButton(
                     onPressed:
-                        () => _reviewRequest(
-                          req['id'] as String,
-                          VerificationStatus.approved,
+                        () => unawaited(
+                          _reviewRequest(
+                            req['id'] as String,
+                            VerificationStatus.approved,
+                          ),
                         ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
@@ -282,7 +291,8 @@ class _ReviewVerificationPageState
             ),
             Center(
               child: TextButton(
-                onPressed: () => _showCommentsModal(req['id'] as String),
+                onPressed:
+                    () => unawaited(_showCommentsModal(req['id'] as String)),
                 child: const Text('대화 내역 확인', style: TextStyle(fontSize: 12)),
               ),
             ),

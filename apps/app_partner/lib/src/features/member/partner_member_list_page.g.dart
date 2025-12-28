@@ -8,14 +8,20 @@ part of 'partner_member_list_page.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Fetch partner members based on partnerId.
-/// Auto-disposes when the screen is closed.
+/// **Local Provider: Partner Members**
+///
+/// Fetches the list of members for a specific partner.
+/// - **AutoDispose**: Automatically cleans up when the UI is closed.
+/// - **Family**: Can be called with different [partnerId]s independently.
 
 @ProviderFor(partnerMembers)
 const partnerMembersProvider = PartnerMembersFamily._();
 
-/// Fetch partner members based on partnerId.
-/// Auto-disposes when the screen is closed.
+/// **Local Provider: Partner Members**
+///
+/// Fetches the list of members for a specific partner.
+/// - **AutoDispose**: Automatically cleans up when the UI is closed.
+/// - **Family**: Can be called with different [partnerId]s independently.
 
 final class PartnerMembersProvider
     extends
@@ -27,8 +33,11 @@ final class PartnerMembersProvider
     with
         $FutureModifier<List<Map<String, dynamic>>>,
         $FutureProvider<List<Map<String, dynamic>>> {
-  /// Fetch partner members based on partnerId.
-  /// Auto-disposes when the screen is closed.
+  /// **Local Provider: Partner Members**
+  ///
+  /// Fetches the list of members for a specific partner.
+  /// - **AutoDispose**: Automatically cleans up when the UI is closed.
+  /// - **Family**: Can be called with different [partnerId]s independently.
   const PartnerMembersProvider._({
     required PartnerMembersFamily super.from,
     required String super.argument,
@@ -75,8 +84,11 @@ final class PartnerMembersProvider
 
 String _$partnerMembersHash() => r'61400c3d950954968fc732e9ade14a2c7114faf5';
 
-/// Fetch partner members based on partnerId.
-/// Auto-disposes when the screen is closed.
+/// **Local Provider: Partner Members**
+///
+/// Fetches the list of members for a specific partner.
+/// - **AutoDispose**: Automatically cleans up when the UI is closed.
+/// - **Family**: Can be called with different [partnerId]s independently.
 
 final class PartnerMembersFamily extends $Family
     with
@@ -93,8 +105,11 @@ final class PartnerMembersFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// Fetch partner members based on partnerId.
-  /// Auto-disposes when the screen is closed.
+  /// **Local Provider: Partner Members**
+  ///
+  /// Fetches the list of members for a specific partner.
+  /// - **AutoDispose**: Automatically cleans up when the UI is closed.
+  /// - **Family**: Can be called with different [partnerId]s independently.
 
   PartnerMembersProvider call({required String partnerId}) =>
       PartnerMembersProvider._(argument: partnerId, from: this);

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_user/src/features/verification/verification_page.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -36,7 +38,7 @@ class _VerificationInboxPageState extends ConsumerState<VerificationInboxPage> {
           _requests = requests;
         });
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         setState(() {
           _errorMessage = e.toString();
@@ -136,7 +138,7 @@ class _VerificationInboxPageState extends ConsumerState<VerificationInboxPage> {
                       ),
                 ),
               );
-              _loadRequests(); // 돌아왔을 때 목록 새로고침
+              unawaited(_loadRequests()); // 돌아왔을 때 목록 새로고침
             },
           ),
         );
@@ -144,4 +146,3 @@ class _VerificationInboxPageState extends ConsumerState<VerificationInboxPage> {
     );
   }
 }
-

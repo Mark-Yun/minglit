@@ -1,6 +1,7 @@
+import 'dart:async';
+
 import 'package:app_user/src/routing/app_router.dart';
 import 'package:app_user/src/routing/app_routes.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'verification_coordinator.g.dart';
@@ -18,15 +19,22 @@ class VerificationCoordinator extends _$VerificationCoordinator {
   ///
   /// - [partnerId]: The ID of the partner requesting verification.
   /// - [verificationIds]: List of verification requirement IDs to fulfill.
-  void goToVerificationManagement(String partnerId, List<String> verificationIds) {
+  void goToVerificationManagement(
+    String partnerId,
+    List<String> verificationIds,
+  ) {
     // Comma-separated list for simplicity in URL
     final idsStr = verificationIds.join(',');
-    
+
     final route = VerificationManagementRoute(
       partnerId: partnerId,
       verificationIds: idsStr,
     );
 
-    route.push(ref.read(goRouterProvider).routerDelegate.navigatorKey.currentContext!);
+    unawaited(
+      route.push<void>(
+        ref.read(goRouterProvider).routerDelegate.navigatorKey.currentContext!,
+      ),
+    );
   }
 }

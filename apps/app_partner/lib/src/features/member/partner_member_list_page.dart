@@ -1,7 +1,5 @@
 import 'package:app_partner/src/features/member/member_coordinator.dart';
-import 'package:app_partner/src/features/member/partner_member_permission_page.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -119,7 +117,9 @@ class PartnerMemberListPage extends ConsumerWidget {
         trailing: const Icon(Icons.settings, size: 20),
         onTap: () {
           final targetUserId = member['user_id'] as String;
-          ref.read(memberCoordinatorProvider.notifier).goToMemberPermission(partnerId, targetUserId);
+          ref
+              .read(memberCoordinatorProvider.notifier)
+              .goToMemberPermission(partnerId, targetUserId);
         },
       ),
     );

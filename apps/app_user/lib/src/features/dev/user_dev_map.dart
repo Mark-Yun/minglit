@@ -1,4 +1,6 @@
-import 'package:app_user/main.dart'; // 패키지 임포트로 변경
+import 'package:app_user/src/features/auth/auth_wrapper.dart';
+import 'package:app_user/src/features/auth/login_page.dart';
+import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/features/verification/verification_inbox_page.dart';
 import 'package:app_user/src/features/verification/verification_page.dart';
 import 'package:flutter/material.dart';

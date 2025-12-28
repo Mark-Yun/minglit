@@ -8,12 +8,54 @@ part of 'member_coordinator.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// **Member Feature Coordinator**
+///
+/// Handles all navigation logic related to the Member Management feature.
+/// Acts as a bridge between the UI (Screens) and the Router (GoRouter).
+///
+/// **Role:**
+/// - Decides *where* to navigate (Target Route).
+/// - Decides *how* to navigate (Push, Go, Replace).
+/// - Prepares necessary parameters (Ids, Objects) for the route.
+///
+/// **Usage:**
+/// ```dart
+/// ref.read(memberCoordinatorProvider.notifier).goToMemberPermission(...);
+/// ```
 
 @ProviderFor(MemberCoordinator)
 const memberCoordinatorProvider = MemberCoordinatorProvider._();
 
+/// **Member Feature Coordinator**
+///
+/// Handles all navigation logic related to the Member Management feature.
+/// Acts as a bridge between the UI (Screens) and the Router (GoRouter).
+///
+/// **Role:**
+/// - Decides *where* to navigate (Target Route).
+/// - Decides *how* to navigate (Push, Go, Replace).
+/// - Prepares necessary parameters (Ids, Objects) for the route.
+///
+/// **Usage:**
+/// ```dart
+/// ref.read(memberCoordinatorProvider.notifier).goToMemberPermission(...);
+/// ```
 final class MemberCoordinatorProvider
     extends $NotifierProvider<MemberCoordinator, void> {
+  /// **Member Feature Coordinator**
+  ///
+  /// Handles all navigation logic related to the Member Management feature.
+  /// Acts as a bridge between the UI (Screens) and the Router (GoRouter).
+  ///
+  /// **Role:**
+  /// - Decides *where* to navigate (Target Route).
+  /// - Decides *how* to navigate (Push, Go, Replace).
+  /// - Prepares necessary parameters (Ids, Objects) for the route.
+  ///
+  /// **Usage:**
+  /// ```dart
+  /// ref.read(memberCoordinatorProvider.notifier).goToMemberPermission(...);
+  /// ```
   const MemberCoordinatorProvider._()
     : super(
         from: null,
@@ -42,6 +84,21 @@ final class MemberCoordinatorProvider
 }
 
 String _$memberCoordinatorHash() => r'a7f871a03426b93bdde7cba736aa4e6c15f692be';
+
+/// **Member Feature Coordinator**
+///
+/// Handles all navigation logic related to the Member Management feature.
+/// Acts as a bridge between the UI (Screens) and the Router (GoRouter).
+///
+/// **Role:**
+/// - Decides *where* to navigate (Target Route).
+/// - Decides *how* to navigate (Push, Go, Replace).
+/// - Prepares necessary parameters (Ids, Objects) for the route.
+///
+/// **Usage:**
+/// ```dart
+/// ref.read(memberCoordinatorProvider.notifier).goToMemberPermission(...);
+/// ```
 
 abstract class _$MemberCoordinator extends $Notifier<void> {
   void build();

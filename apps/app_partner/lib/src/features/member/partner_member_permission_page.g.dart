@@ -8,12 +8,18 @@ part of 'partner_member_permission_page.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Fetch single member permission data.
+/// **Local Provider: Single Partner Member**
+///
+/// Fetches details for a specific member.
+/// Currently filters from the full list, but can be updated to fetch from DB directly.
 
 @ProviderFor(partnerMember)
 const partnerMemberProvider = PartnerMemberFamily._();
 
-/// Fetch single member permission data.
+/// **Local Provider: Single Partner Member**
+///
+/// Fetches details for a specific member.
+/// Currently filters from the full list, but can be updated to fetch from DB directly.
 
 final class PartnerMemberProvider
     extends
@@ -25,7 +31,10 @@ final class PartnerMemberProvider
     with
         $FutureModifier<Map<String, dynamic>?>,
         $FutureProvider<Map<String, dynamic>?> {
-  /// Fetch single member permission data.
+  /// **Local Provider: Single Partner Member**
+  ///
+  /// Fetches details for a specific member.
+  /// Currently filters from the full list, but can be updated to fetch from DB directly.
   const PartnerMemberProvider._({
     required PartnerMemberFamily super.from,
     required ({String partnerId, String targetUserId}) super.argument,
@@ -76,7 +85,10 @@ final class PartnerMemberProvider
 
 String _$partnerMemberHash() => r'441e81eb6f5388fa16ed763fcd1edb45dd07785e';
 
-/// Fetch single member permission data.
+/// **Local Provider: Single Partner Member**
+///
+/// Fetches details for a specific member.
+/// Currently filters from the full list, but can be updated to fetch from DB directly.
 
 final class PartnerMemberFamily extends $Family
     with
@@ -93,7 +105,10 @@ final class PartnerMemberFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// Fetch single member permission data.
+  /// **Local Provider: Single Partner Member**
+  ///
+  /// Fetches details for a specific member.
+  /// Currently filters from the full list, but can be updated to fetch from DB directly.
 
   PartnerMemberProvider call({
     required String partnerId,

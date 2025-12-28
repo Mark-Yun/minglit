@@ -28,8 +28,10 @@ class PartnerRepository {
 
   /// **Submit Application**
   ///
-  /// Uploads proof files to Storage and inserts a record into `partner_applications`.
-  /// Uses a transaction-like flow (manual rollback on error) to ensure data consistency.
+  /// Uploads proof files to Storage and inserts a record into
+  /// `partner_applications`.
+  /// Uses a transaction-like flow (manual rollback on error) to ensure
+  /// data consistency.
   Future<void> submitApplication({
     required Map<String, dynamic> applicationData,
     required XFile bizRegistrationFile,
