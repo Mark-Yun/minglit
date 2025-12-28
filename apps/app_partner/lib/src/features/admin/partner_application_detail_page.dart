@@ -11,14 +11,35 @@ Future<PartnerApplication?> partnerApplication(
   Ref ref, {
   required String applicationId,
 }) async {
+  if (applicationId == 'dummy-id') {
+    return const PartnerApplication(
+      id: 'dummy-id',
+      userId: 'dummy-user',
+      brandName: '밍글릿 커피 스테이션',
+      introduction: '신선한 원두와 프리미엄 분위기의 카페입니다.',
+      address: '서울시 강남구 테헤란로 123',
+      contactPhone: '010-1234-5678',
+      contactEmail: 'coffee@minglit.com',
+      bizType: 'cafe',
+      bizName: '밍글 커피 주식회사',
+      bizNumber: '123-45-67890',
+      representativeName: '홍길동',
+      bankName: '우리은행',
+      accountNumber: '1002-123-456789',
+      accountHolder: '홍길동',
+      bizRegistrationPath: 'dummy/biz_reg.pdf',
+      bankbookPath: 'dummy/bankbook.pdf',
+    );
+  }
+
   final apps = await ref
       .read(partnerRepositoryProvider)
       .getAllApplications(status: 'all');
-  try {
-    return apps.firstWhere((a) => a.id == applicationId);
-  } on Exception {
-    return null;
-  }
+
+  return apps.cast<PartnerApplication?>().firstWhere(
+    (a) => a?.id == applicationId,
+    orElse: () => null,
+  );
 }
 
 class PartnerApplicationDetailPage extends ConsumerStatefulWidget {
