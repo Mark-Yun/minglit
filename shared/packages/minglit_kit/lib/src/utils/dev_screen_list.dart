@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 /// Item representing a screen in the Dev Map.
 class DevScreenItem {
@@ -22,7 +23,7 @@ class DevScreenItem {
 }
 
 /// A list view for displaying and navigating to development screens.
-class DevScreenList extends StatelessWidget {
+class DevScreenList extends ConsumerWidget {
   /// Creates a [DevScreenList].
   const DevScreenList({
     required this.appName,
@@ -37,36 +38,44 @@ class DevScreenList extends StatelessWidget {
   final List<DevScreenItem> items;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
         title: Text('$appName Dev Map 🛠️'),
         backgroundColor: Colors.grey[900],
         foregroundColor: Colors.white,
       ),
-      body: ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: items.length,
-        separatorBuilder: (context, index) => const Divider(),
-        itemBuilder: (context, index) {
-          final item = items[index];
-          return ListTile(
-            title: Text(
-              item.title,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+      body: Column(
+        children: [
+          const UserSessionInfo(),
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: items.length,
+              separatorBuilder: (context, index) => const Divider(),
+              itemBuilder: (context, index) {
+                final item = items[index];
+                return ListTile(
+                  title: Text(
+                    item.title,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle:
+                      item.description != null ? Text(item.description!) : null,
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    unawaited(
+                      Navigator.push<void>(
+                        context,
+                        MaterialPageRoute(builder: item.screenBuilder),
+                      ),
+                    );
+                  },
+                );
+              },
             ),
-            subtitle: item.description != null ? Text(item.description!) : null,
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {
-              unawaited(
-                Navigator.push<void>(
-                  context,
-                  MaterialPageRoute(builder: item.screenBuilder),
-                ),
-              );
-            },
-          );
-        },
+          ),
+        ],
       ),
     );
   }
