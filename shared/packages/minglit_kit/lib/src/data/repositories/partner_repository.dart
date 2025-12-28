@@ -60,10 +60,14 @@ class PartnerRepository {
       Log.i('🎉 [PartnerRepo] Application submitted successfully!');
     } on Exception catch (e, stackTrace) {
       Log.e('❌ [PartnerRepo] Application Failed', e, stackTrace);
-      await _supabase.storage.from('partner-proofs').remove([
-        bizRegPath,
-        bankbookPath,
-      ].whereType<String>().toList());
+      await _supabase.storage
+          .from('partner-proofs')
+          .remove(
+            [
+              bizRegPath,
+              bankbookPath,
+            ].whereType<String>().toList(),
+          );
       rethrow;
     }
   }
@@ -89,14 +93,13 @@ class PartnerRepository {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) return null;
 
-    final data =
-        await _supabase
-            .from('partner_applications')
-            .select()
-            .eq('user_id', userId)
-            .order('created_at', ascending: false)
-            .limit(1)
-            .maybeSingle();
+    final data = await _supabase
+        .from('partner_applications')
+        .select()
+        .eq('user_id', userId)
+        .order('created_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
 
     if (data == null) return null;
     return PartnerApplication.fromJson(data);

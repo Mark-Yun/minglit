@@ -15,37 +15,41 @@ class PartnerDevMap extends StatelessWidget {
       appName: 'Minglit Partner',
       items: [
         DevScreenItem(
-          title: 'Login Page',
-          description: '로그인 화면',
+          category: 'Auth',
+          title: 'Login',
+          description: '파트너 로그인 화면',
           screenBuilder: (_) => const PartnerLoginPage(),
         ),
         DevScreenItem(
-          title: 'Home Page',
-          description: '메인 대시보드',
+          category: 'Dashboard',
+          title: 'Main Dashboard',
+          description: '메인 관리 대시보드',
           screenBuilder: (_) => const PartnerHomePage(),
         ),
-
         DevScreenItem(
-          title: 'Verification Review',
-          description: '유저 인증 요청 심사 (승인/반려)',
-          screenBuilder: (_) => const ReviewVerificationPage(),
-        ),
-        DevScreenItem(
-          title: 'Admin: Partner Applications',
-          description: '관리자: 파트너 입점 신청 목록 심사',
+          category: 'Admin',
+          title: 'Application List',
+          description: '파트너 입점 신청 목록 (관리자)',
           screenBuilder: (_) => const PartnerApplicationListPage(),
         ),
         DevScreenItem(
+          category: 'Admin',
           title: 'Application Detail',
-          description: '입점 신청 상세 화면',
+          description: '입점 신청 상세 정보 및 심사',
           screenBuilder:
               (_) =>
                   const PartnerApplicationDetailPage(applicationId: 'dummy-id'),
         ),
-
         DevScreenItem(
-          title: 'My Profile Preview',
-          description: '내 파트너 정보 미리보기',
+          category: 'Verification',
+          title: 'User Verifications',
+          description: '사용자 인증(PASS/재직) 요청 심사',
+          screenBuilder: (_) => const ReviewVerificationPage(),
+        ),
+        DevScreenItem(
+          category: 'Preview',
+          title: 'My Partner Profile',
+          description: '유저에게 노출되는 파트너 프로필 미리보기',
           screenBuilder:
               (_) => Scaffold(
                 appBar: AppBar(title: const Text('My Profile')),

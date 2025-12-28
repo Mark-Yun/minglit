@@ -15,38 +15,44 @@ class UserDevMap extends StatelessWidget {
       appName: 'Minglit User',
       items: [
         DevScreenItem(
-          title: 'Main App Flow',
-          description: '정상적인 앱 시작 흐름 (인증 체크)',
+          category: 'App Flow',
+          title: 'App Entry (Auth Wrapper)',
+          description: '인증 상태에 따른 자동 분기 흐름',
           screenBuilder: (_) => const AuthWrapper(),
         ),
         DevScreenItem(
-          title: 'Login Page',
+          category: 'Auth',
+          title: 'Login',
           description: '로그인 및 소셜 가입 화면',
           screenBuilder: (_) => const LoginPage(),
         ),
         DevScreenItem(
-          title: 'Home Page',
-          description: '로그인 후 메인 홈 화면',
+          category: 'Home',
+          title: 'Home',
+          description: '메인 홈 화면 (파티 목록 등)',
           screenBuilder: (_) => const HomePage(),
         ),
         DevScreenItem(
-          title: 'Verification Management',
-          description: '다중 인증 및 보완 요청 관리 페이지',
+          category: 'Verification',
+          title: 'Verification Center',
+          description: '인증 진행 현황 및 관리',
           screenBuilder: (_) {
             return const VerificationManagementPage(
-              partnerId: '00000000-0000-0000-0000-000000000000', // 테스트용 더미 ID
+              partnerId: '00000000-0000-0000-0000-000000000000',
               requiredVerificationIds: [],
             );
           },
         ),
         DevScreenItem(
+          category: 'Verification',
           title: 'Verification Inbox',
-          description: '보완 요청 알림 리스트',
+          description: '인증 관련 알림 및 메시지 함',
           screenBuilder: (_) => const VerificationInboxPage(),
         ),
         DevScreenItem(
-          title: 'Partner Detail View',
-          description: '유저가 보는 파트너 상세 프로필',
+          category: 'Preview',
+          title: 'Partner Profile',
+          description: '유저가 보는 파트너 상세 페이지 미리보기',
           screenBuilder:
               (_) => Scaffold(
                 appBar: AppBar(title: const Text('Partner Profile')),

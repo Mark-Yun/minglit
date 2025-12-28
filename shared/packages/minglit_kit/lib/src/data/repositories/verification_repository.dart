@@ -159,10 +159,9 @@ class VerificationRepository {
     required VerificationStatus status,
     String? rejectionReason,
   }) async {
-    final statusName =
-        status == VerificationStatus.needsCorrection
-            ? 'needs_correction'
-            : status.name;
+    final statusName = status == VerificationStatus.needsCorrection
+        ? 'needs_correction'
+        : status.name;
 
     await _supabase
         .from('verification_requests')
@@ -181,10 +180,9 @@ class VerificationRepository {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) return [];
 
-    final statusName =
-        status == VerificationStatus.needsCorrection
-            ? 'needs_correction'
-            : status.name;
+    final statusName = status == VerificationStatus.needsCorrection
+        ? 'needs_correction'
+        : status.name;
 
     final data = await _supabase
         .from('verification_requests')

@@ -23,12 +23,12 @@ class MinglitLoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Theme colors (User: Navy / Partner: Orange)
-    final primaryColor =
-        isPartner ? const Color(0xFFFF7043) : const Color(0xFF1A237E);
-    final slogan =
-        isPartner
-            ? 'Verified Vibe, Spark Your Business'
-            : 'Verified Vibe, Spark Your Moment';
+    final primaryColor = isPartner
+        ? const Color(0xFFFF7043)
+        : const Color(0xFF1A237E);
+    final slogan = isPartner
+        ? 'Verified Vibe, Spark Your Business'
+        : 'Verified Vibe, Spark Your Moment';
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -149,10 +149,9 @@ class _SocialLoginButton extends StatelessWidget {
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
-            side:
-                borderColor != null
-                    ? BorderSide(color: borderColor!)
-                    : BorderSide.none,
+            side: borderColor != null
+                ? BorderSide(color: borderColor!)
+                : BorderSide.none,
           ),
         ),
       ),

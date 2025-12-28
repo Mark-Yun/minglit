@@ -18,8 +18,9 @@ class MinglitSplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor =
-        isPartner ? const Color(0xFFFF7043) : const Color(0xFF1A237E);
+    final primaryColor = isPartner
+        ? const Color(0xFFFF7043)
+        : const Color(0xFF1A237E);
 
     return Scaffold(
       backgroundColor: Colors.white,
