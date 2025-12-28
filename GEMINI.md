@@ -30,7 +30,7 @@ minglit/ (Root)
     ├── assets/          # 로고, 이미지, 폰트 공용 자산
     ├── docs/            # 기획서 및 API 명세
     └── packages/        # 공용 Dart/Flutter 패키지
-        └── minglit_kit/ # 공용 UI 및 서비스 (Auth 등)
+        └── minglit_kit/ # 공용 UI 및 서비스 (Auth, Repositories)
 ```
 
 ---
@@ -41,7 +41,8 @@ minglit/ (Root)
 * **Backend:** Supabase (Auth, Database, Storage, Real-time)
 * **Database Management:** SQL Migration (Supabase CLI 기반 형상 관리)
 * **CI/CD:** GitHub Actions + Vercel
-* **State Management:** StreamBuilder / Provider (예정)
+* **State Management:** **Riverpod** (AsyncNotifier, Generator)
+* **Navigation:** **GoRouter** (Type-safe, Coordinator Pattern)
 
 ---
 
@@ -62,25 +63,26 @@ Organization-Member 모델을 기반으로 설계되었습니다.
 5. [x] CI/CD 환경 구축 (GitHub Actions + Vercel)
 6. [x] Supabase 환경별 연동 (Dev/Main) 및 자동 배포 파이프라인
 7. [x] 공용 UI 패키지(`minglit_kit`) 구축 및 Google 로그인 연동
-    - 웹: Supabase OAuth (Redirect) 방식 적용 (디자인 자유도 확보 및 Deprecation 해결)
-    - 모바일: Google Sign-In Native SDK 연동
-    - **GetIt을 활용한 Service Locator (DI) 패턴 도입**
-8. [ ] 메인 랜딩 페이지 개발 (Flutter Web)
-9. [ ] 파티 예약 및 로테이션 미팅 로직 구현
-10. [ ] PASS/SMS 본인인증 연동
+8. [x] **아키텍처 대전환: Bloc/GetIt -> Riverpod/GoRouter/Coordinator**
+    - 전역 의존성 주입(DI)을 Riverpod Provider로 일원화
+    - 타입 안전한 라우팅 및 네비게이션 로직 분리(Coordinator)
+    - 전체 프로젝트 **Zero Warning** 달성
+9. [ ] 메인 랜딩 페이지 개발 (Flutter Web)
+10. [ ] 파티 예약 및 로테이션 미팅 로직 구현
+11. [ ] PASS/SMS 본인인증 연동
 
 ---
 
 ## 💡 Tech Insights (Today's Progress)
 
-### 1. Hybrid Auth Strategy
-- **Web:** `google_sign_in` 패키지의 웹 버전 제약을 피하기 위해 `_supabase.auth.signInWithOAuth` 방식을 채택했습니다. 이를 통해 커스텀 UI를 유지하면서도 안전한 리다이렉트 인증이 가능해졌습니다.
-- **Mobile:** 사용자 경험을 위해 네이티브 팝업 방식인 `signInWithIdToken`을 유지합니다.
+### 1. Modern State Management with Riverpod
+- **Goodbye Boilerplate**: 복잡한 BLoC 클래스들을 직관적인 `AsyncNotifier`와 `Provider`로 대체했습니다.
+- **Compile-safe DI**: `GetIt`의 런타임 위험성을 제거하고, 컴파일 타임에 의존성을 검증하는 구조를 갖췄습니다.
 
-### 2. Dependency Injection (DI) with GetIt
-- `minglit_kit` 내에 `locator.dart`를 생성하여 전역적으로 서비스를 관리합니다.
-- `AuthService`를 싱글톤(LazySingleton)으로 등록하여, 어느 위젯에서든 `locator<AuthService>()`로 일관된 상태에 접근할 수 있습니다.
+### 2. Router-agnostic UI (Coordinator Pattern)
+- **Decoupling**: UI 위젯은 다음 페이지가 무엇인지 알 필요가 없습니다. 모든 네비게이션 로직은 `Coordinator` 클래스에 캡슐화되어 유지보수성이 극대화되었습니다.
+- **Type-safe Routing**: `go_router_builder`를 통해 URL 문자열 하드코딩을 방지하고 컴파일러의 도움을 받습니다.
 
-### 3. Local Development Environment
-- `localhost:3000`과 `127.0.0.1:3000` 모두에서 인증 리다이렉트가 작동하도록 `config.toml`을 최적화했습니다.
-- 보안 민감 정보(Client Secret 등)는 `backend/supabase/.env`에서 관리하도록 설정했습니다.
+### 3. Craftsmanship: Zero Warning Policy
+- `very_good_analysis` 룰을 기반으로 프로젝트 전체의 모든 린트 경고를 해결했습니다. (Line length, discarded futures, catch clauses 등)
+- 고품질의 `ARCHITECTURE.md`와 각 앱별 `README.md`를 작성하여 문서화 수준을 끌어올렸습니다.
