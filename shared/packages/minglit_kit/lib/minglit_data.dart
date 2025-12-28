@@ -4,6 +4,14 @@ export 'package:supabase_flutter/supabase_flutter.dart'
 
 // Error Handling (Implementation)
 export 'src/core/error/error_handler.dart';
+
+// Models
+export 'src/data/models/event.dart';
+export 'src/data/models/partner.dart';
+export 'src/data/models/partner_application.dart';
+export 'src/data/models/party.dart';
+export 'src/data/models/verification.dart';
+
 // Repositories
 export 'src/data/repositories/auth_repository.dart';
 export 'src/data/repositories/partner_repository.dart';

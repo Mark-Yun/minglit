@@ -60,12 +60,10 @@ class PartnerRepository {
       Log.i('🎉 [PartnerRepo] Application submitted successfully!');
     } on Exception catch (e, stackTrace) {
       Log.e('❌ [PartnerRepo] Application Failed', e, stackTrace);
-      if (bizRegPath != null || bankbookPath != null) {
-        await _supabase.storage.from('partner-proofs').remove([
-          if (bizRegPath != null) bizRegPath,
-          if (bankbookPath != null) bankbookPath,
-        ]);
-      }
+      await _supabase.storage.from('partner-proofs').remove([
+        bizRegPath,
+        bankbookPath,
+      ].whereType<String>().toList());
       rethrow;
     }
   }
