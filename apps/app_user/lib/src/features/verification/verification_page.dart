@@ -1,11 +1,22 @@
 import 'package:app_user/src/features/verification/career_verification_form.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/data/models/verification.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
-/// 다중 인증 및 보완 요청 관리 페이지
-class VerificationManagementPage extends StatefulWidget {
+/// **Verification Management Page**
+///
+/// The core screen where users view requirements, fill out forms, upload proofs,
+/// and handle correction requests.
+///
+/// **Flow:**
+/// 1. Load requirements via [verificationRepositoryProvider].
+/// 2. User fills forms (e.g., [CareerVerificationForm]) and picks images.
+/// 3. Submit data to [submitOrUpdateVerification].
+/// 4. View feedback/comments if status is 'needs_correction'.
+class VerificationManagementPage extends ConsumerStatefulWidget {
   const VerificationManagementPage({
     required this.partnerId,
     required this.requiredVerificationIds,
@@ -15,31 +26,48 @@ class VerificationManagementPage extends StatefulWidget {
   final List<String> requiredVerificationIds;
 
   @override
-  State<VerificationManagementPage> createState() =>
+  ConsumerState<VerificationManagementPage> createState() =>
       _VerificationManagementPageState();
 }
 
 class _VerificationManagementPageState
-    extends State<VerificationManagementPage> {
+    extends ConsumerState<VerificationManagementPage> {
   final ImagePicker _imagePicker = ImagePicker();
 
   // 각 인증 항목별 현재 입력 데이터 및 파일 관리
   final _draftData = <String, Map<String, dynamic>>{};
   final _draftFiles = <String, XFile?>{};
 
+  bool _isLoading = false;
+  List<VerificationRequirementStatus> _requirements = [];
+
   @override
   void initState() {
     super.initState();
-    _refreshStatus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadStatus();
+    });
   }
 
-  void _refreshStatus() {
-    context.read<VerificationBloc>().add(
-      VerificationEvent.loadPartnerRequirements(
-        partnerId: widget.partnerId,
-        requiredIds: widget.requiredVerificationIds,
-      ),
-    );
+  Future<void> _loadStatus() async {
+    setState(() => _isLoading = true);
+    try {
+      final reqs = await ref
+          .read(verificationRepositoryProvider)
+          .getPartnerRequirementsStatus(
+            partnerId: widget.partnerId,
+            requiredVerificationIds: widget.requiredVerificationIds,
+          );
+      if (mounted) setState(() => _requirements = reqs);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _pickImage(String vId) async {
@@ -54,15 +82,18 @@ class _VerificationManagementPageState
     }
   }
 
-  void _submitAll(List<VerificationRequirementStatus> requirements) {
-    for (final req in requirements) {
-      final vId = req.master['id'] as String;
-      if (_draftData.containsKey(vId) || _draftFiles[vId] != null) {
-        final files =
-            _draftFiles[vId] != null ? [_draftFiles[vId]!] : <XFile>[];
+  Future<void> _submitAll() async {
+    final repository = ref.read(verificationRepositoryProvider);
+    setState(() => _isLoading = true);
 
-        context.read<VerificationBloc>().add(
-          VerificationEvent.submitVerification(
+    try {
+      for (final req in _requirements) {
+        final vId = req.master['id'] as String;
+        if (_draftData.containsKey(vId) || _draftFiles[vId] != null) {
+          final files =
+              _draftFiles[vId] != null ? [_draftFiles[vId]!] : <XFile>[];
+
+          await repository.submitOrUpdateVerification(
             partnerId: widget.partnerId,
             verificationId: vId,
             claimData:
@@ -72,9 +103,23 @@ class _VerificationManagementPageState
                     as Map<String, dynamic>,
             proofFiles: files,
             existingRequestId: req.activeRequest?['id'] as String?,
-          ),
-        );
+          );
+        }
       }
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('모든 수정사항이 제출되었습니다.')));
+        _loadStatus();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('제출 실패: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -91,54 +136,33 @@ class _VerificationManagementPageState
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<VerificationBloc, VerificationState>(
-      listener: (context, state) {
-        state.whenOrNull(
-          success: () {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('모든 수정사항이 제출되었습니다.')));
-            _refreshStatus(); // 제출 성공 후 상태 새로고침
-          },
-          failure: (failure) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(
-              SnackBar(content: Text('제출 실패: ${failure.message}')),
-            );
-          },
-        );
-      },
-      builder: (context, state) {
-        return Scaffold(
-          appBar: AppBar(title: const Text('파티 참가 인증')),
-          body: state.maybeWhen(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            requirementsLoaded: (requirements) {
-              final completedCount =
-                  requirements.where((r) => r.isApproved).length;
-              final totalCount = requirements.length;
+    if (_isLoading && _requirements.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('파티 참가 인증')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
-              return Column(
-                children: [
-                  _buildSummaryHeader(completedCount, totalCount),
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: requirements.length,
-                      itemBuilder:
-                          (context, index) =>
-                              _buildVerificationCard(requirements[index]),
-                    ),
-                  ),
-                  _buildSubmitButton(requirements),
-                ],
-              );
-            },
-            orElse: () => const Center(child: Text('인증 정보를 불러오는 중입니다...')),
+    final completedCount = _requirements.where((r) => r.isApproved).length;
+    final totalCount = _requirements.length;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('파티 참가 인증')),
+      body: Column(
+        children: [
+          _buildSummaryHeader(completedCount, totalCount),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _requirements.length,
+              itemBuilder:
+                  (context, index) =>
+                      _buildVerificationCard(_requirements[index]),
+            ),
           ),
-        );
-      },
+          _buildSubmitButton(),
+        ],
+      ),
     );
   }
 
@@ -271,9 +295,12 @@ class _VerificationManagementPageState
 
   Widget _buildFormByCategory(VerificationRequirementStatus req) {
     final vId = req.master['id'] as String;
-    final category = VerificationCategory.values.byName(
-      req.master['category'] as String,
-    );
+    final categoryStr = req.master['category'] as String;
+    // Handle 'etc' safely or default
+    final category =
+        VerificationCategory.values.asNameMap()[categoryStr] ??
+        VerificationCategory.etc;
+
     final initialData =
         (req.activeRequest?['claim_snapshot'] ??
                 req.originalData?['claim_data'])
@@ -285,11 +312,7 @@ class _VerificationManagementPageState
           initialData: initialData,
           onChanged: (data) => _draftData[vId] = data,
         );
-      case VerificationCategory.asset:
-      case VerificationCategory.marriage:
-      case VerificationCategory.academic:
-      case VerificationCategory.vehicle:
-      case VerificationCategory.etc:
+      default:
         return const Text('이 카테고리의 폼은 아직 준비 중입니다.');
     }
   }
@@ -333,7 +356,7 @@ class _VerificationManagementPageState
     );
   }
 
-  Widget _buildSubmitButton(List<VerificationRequirementStatus> requirements) {
+  Widget _buildSubmitButton() {
     final hasChanges = _draftData.isNotEmpty || _draftFiles.isNotEmpty;
 
     return Container(
@@ -353,7 +376,7 @@ class _VerificationManagementPageState
           width: double.infinity,
           height: 54,
           child: ElevatedButton(
-            onPressed: hasChanges ? () => _submitAll(requirements) : null,
+            onPressed: hasChanges ? _submitAll : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue[900],
               foregroundColor: Colors.white,
@@ -362,10 +385,16 @@ class _VerificationManagementPageState
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text(
-              '수정 및 제출하기',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
+            child:
+                _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                      '수정 및 제출하기',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
           ),
         ),
       ),
@@ -373,25 +402,12 @@ class _VerificationManagementPageState
   }
 }
 
-class _CommentsModal extends StatefulWidget {
+class _CommentsModal extends ConsumerWidget {
   const _CommentsModal({required this.requestId});
   final String requestId;
 
   @override
-  State<_CommentsModal> createState() => _CommentsModalState();
-}
-
-class _CommentsModalState extends State<_CommentsModal> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<VerificationBloc>().add(
-      VerificationEvent.loadComments(requestId: widget.requestId),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.7,
       padding: const EdgeInsets.all(20),
@@ -413,48 +429,42 @@ class _CommentsModalState extends State<_CommentsModal> {
           ),
           const Divider(),
           Expanded(
-            child: BlocBuilder<VerificationBloc, VerificationState>(
-              builder: (context, state) {
-                return state.maybeWhen(
-                  loading:
-                      () => const Center(child: CircularProgressIndicator()),
-                  commentsLoaded: (List<Map<String, dynamic>> comments) {
-                    if (comments.isEmpty) {
-                      return const Center(child: Text('대화 내역이 없습니다.'));
-                    }
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: ref
+                  .read(verificationRepositoryProvider)
+                  .getVerificationComments(requestId),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final comments = snapshot.data!;
+                if (comments.isEmpty) {
+                  return const Center(child: Text('대화 내역이 없습니다.'));
+                }
 
-                    return ListView.builder(
-                      itemCount: comments.length,
-                      itemBuilder: (context, index) {
-                        final comment = comments[index];
-                        final content =
-                            comment['content'] as Map<String, dynamic>;
-                        final isMe =
-                            comment['author_id'] ==
-                            Supabase.instance.client.auth.currentUser?.id;
+                return ListView.builder(
+                  itemCount: comments.length,
+                  itemBuilder: (context, index) {
+                    final comment = comments[index];
+                    final content = comment['content'] as Map<String, dynamic>;
+                    final isMe =
+                        comment['author_id'] ==
+                        Supabase.instance.client.auth.currentUser?.id;
 
-                        return Align(
-                          alignment:
-                              isMe
-                                  ? Alignment.centerRight
-                                  : Alignment.centerLeft,
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(vertical: 8),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: isMe ? Colors.blue[100] : Colors.grey[200],
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(content['text'] as String? ?? ''),
-                          ),
-                        );
-                      },
+                    return Align(
+                      alignment:
+                          isMe ? Alignment.centerRight : Alignment.centerLeft,
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isMe ? Colors.blue[100] : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(content['text'] as String? ?? ''),
+                      ),
                     );
                   },
-                  failure:
-                      (failure) =>
-                          Center(child: Text('Error: ${failure.message}')),
-                  orElse: () => const Center(child: Text('불러오는 중...')),
                 );
               },
             ),

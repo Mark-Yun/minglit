@@ -2,47 +2,77 @@ import 'package:app_user/src/features/verification/verification_page.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-class VerificationInboxPage extends StatefulWidget {
+class VerificationInboxPage extends ConsumerStatefulWidget {
   const VerificationInboxPage({super.key});
 
   @override
-  State<VerificationInboxPage> createState() => _VerificationInboxPageState();
+  ConsumerState<VerificationInboxPage> createState() =>
+      _VerificationInboxPageState();
 }
 
-class _VerificationInboxPageState extends State<VerificationInboxPage> {
+class _VerificationInboxPageState extends ConsumerState<VerificationInboxPage> {
+  bool _isLoading = false;
+  List<Map<String, dynamic>> _requests = [];
+  String? _errorMessage;
+
   @override
   void initState() {
     super.initState();
-    _loadRequests();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadRequests());
   }
 
-  void _loadRequests() {
-    context.read<VerificationBloc>().add(
-      const VerificationEvent.loadCorrectionRequests(),
-    );
+  Future<void> _loadRequests() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final requests = await ref
+          .read(verificationRepositoryProvider)
+          .getRequestsByStatus(VerificationStatus.needsCorrection);
+      if (mounted) {
+        setState(() {
+          _requests = requests;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('인증 알림함')),
-      body: BlocBuilder<VerificationBloc, VerificationState>(
-        builder: (context, state) {
-          return state.maybeWhen(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            correctionRequestsLoaded: (List<Map<String, dynamic>> requests) {
-              if (requests.isEmpty) return _buildEmptyView();
-              return RefreshIndicator(
-                onRefresh: () async => _loadRequests(),
-                child: _buildListView(requests),
-              );
-            },
-            failure:
-                (failure) => Center(child: Text('Error: ${failure.message}')),
-            orElse: () => const Center(child: Text('알림을 불러오는 중입니다...')),
-          );
-        },
-      ),
+      body: _buildContent(),
+    );
+  }
+
+  Widget _buildContent() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_errorMessage != null) {
+      return Center(child: Text('Error: $_errorMessage'));
+    }
+    if (_requests.isEmpty) {
+      return _buildEmptyView();
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadRequests,
+      child: _buildListView(_requests),
     );
   }
 
@@ -114,3 +144,4 @@ class _VerificationInboxPageState extends State<VerificationInboxPage> {
     );
   }
 }
+

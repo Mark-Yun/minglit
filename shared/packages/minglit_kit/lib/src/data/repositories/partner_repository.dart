@@ -2,9 +2,23 @@ import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:minglit_kit/src/data/models/partner_application.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:path/path.dart' as p;
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+part 'partner_repository.g.dart';
+
+/// Provider for PartnerRepository.
+@Riverpod(keepAlive: true)
+PartnerRepository partnerRepository(Ref ref) {
+  return PartnerRepository();
+}
+
 /// Repository for managing Partner-related data.
+///
+/// Handles database interactions for:
+/// - Partner Application (Submit, List, Review).
+/// - Member Management (List members, Update roles).
+/// - File Uploads (Proof documents).
 class PartnerRepository {
   /// Creates a [PartnerRepository] with a [SupabaseClient].
   PartnerRepository({SupabaseClient? supabase})
@@ -12,7 +26,10 @@ class PartnerRepository {
 
   final SupabaseClient _supabase;
 
-  /// Submits a partner application with proof documents.
+  /// **Submit Application**
+  ///
+  /// Uploads proof files to Storage and inserts a record into `partner_applications`.
+  /// Uses a transaction-like flow (manual rollback on error) to ensure data consistency.
   Future<void> submitApplication({
     required Map<String, dynamic> applicationData,
     required XFile bizRegistrationFile,

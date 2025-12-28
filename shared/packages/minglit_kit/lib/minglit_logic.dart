@@ -1,15 +1,7 @@
 // External Dependencies for Logic
-export 'package:flutter_bloc/flutter_bloc.dart';
+export 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// Auth BLoC
-export 'src/logic/blocs/auth/auth_bloc.dart';
-export 'src/logic/blocs/auth/auth_event.dart';
-export 'src/logic/blocs/auth/auth_state.dart';
-// Partner BLoC
-export 'src/logic/blocs/partner/partner_bloc.dart';
-export 'src/logic/blocs/partner/partner_event.dart';
-export 'src/logic/blocs/partner/partner_state.dart';
-// Verification BLoC
-export 'src/logic/blocs/verification/verification_bloc.dart';
-export 'src/logic/blocs/verification/verification_event.dart';
-export 'src/logic/blocs/verification/verification_state.dart';
+// Providers
+export 'src/logic/providers/auth_controller.dart';
+// Note: Other repositories are exported via minglit_data.dart, or should be added here if they are logic-heavy.
+

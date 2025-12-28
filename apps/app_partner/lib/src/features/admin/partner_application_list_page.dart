@@ -1,34 +1,62 @@
-
 import 'package:app_partner/src/features/admin/partner_application_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-class PartnerApplicationListPage extends StatefulWidget {
+class PartnerApplicationListPage extends ConsumerStatefulWidget {
   const PartnerApplicationListPage({super.key});
 
   @override
-  State<PartnerApplicationListPage> createState() =>
+  ConsumerState<PartnerApplicationListPage> createState() =>
       _PartnerApplicationListPageState();
 }
 
 class _PartnerApplicationListPageState
-    extends State<PartnerApplicationListPage> {
+    extends ConsumerState<PartnerApplicationListPage> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedStatus = 'all';
+
+  bool _isLoading = false;
+  List<PartnerApplication> _applications = [];
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _loadApplications();
+    // Use addPostFrameCallback to safely call _loadApplications after build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadApplications();
+    });
   }
 
   Future<void> _loadApplications() async {
-    context.read<PartnerBloc>().add(
-      PartnerEvent.loadAllApplications(
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final apps = await ref.read(partnerRepositoryProvider).getAllApplications(
         status: _selectedStatus,
         searchTerm: _searchController.text,
-      ),
-    );
+      );
+      if (mounted) {
+        setState(() {
+          _applications = apps;
+        });
+      }
+    } on Exception catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -38,37 +66,30 @@ class _PartnerApplicationListPageState
       body: Column(
         children: [
           _buildFilterBar(),
-          Expanded(
-            child: BlocBuilder<PartnerBloc, PartnerState>(
-              builder: (context, state) {
-                return state.maybeWhen(
-                  loading:
-                      () => const Center(child: CircularProgressIndicator()),
-                  applicationsLoaded: (List<PartnerApplication> applications) {
-                    if (applications.isEmpty) {
-                      return const Center(child: Text('신청 내역이 없습니다.'));
-                    }
-                    return RefreshIndicator(
-                      onRefresh: () => _loadApplications(),
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: applications.length,
-                        itemBuilder:
-                            (context, index) =>
-                                _buildApplicationCard(applications[index]),
-                      ),
-                    );
-                  },
-                  failure:
-                      (failure) => Center(
-                        child: Text('Error loading data: ${failure.message}'),
-                      ),
-                  orElse: () => const Center(child: Text('데이터를 불러오는 중입니다...')),
-                );
-              },
-            ),
-          ),
+          Expanded(child: _buildContent()),
         ],
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_errorMessage != null) {
+      return Center(child: Text('Error: $_errorMessage'));
+    }
+    if (_applications.isEmpty) {
+      return const Center(child: Text('신청 내역이 없습니다.'));
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadApplications,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _applications.length,
+        itemBuilder:
+            (context, index) => _buildApplicationCard(_applications[index]),
       ),
     );
   }
@@ -149,7 +170,7 @@ class _PartnerApplicationListPageState
               builder:
                   (context) => PartnerApplicationDetailPage(application: app),
             ),
-          );
+          ).then((_) => _loadApplications()); // Reload when returning from detail
         },
       ),
     );
@@ -189,3 +210,4 @@ class _PartnerApplicationListPageState
     );
   }
 }
+

@@ -4,7 +4,16 @@ import 'package:minglit_kit/src/data/models/partner.dart' show Partner;
 import 'package:minglit_kit/src/data/models/verification.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:path/path.dart' as p;
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+part 'verification_repository.g.dart';
+
+/// Provider for VerificationRepository.
+@Riverpod(keepAlive: true)
+VerificationRepository verificationRepository(Ref ref) {
+  return VerificationRepository();
+}
 
 /// Repository for handling user and partner verification logic.
 class VerificationRepository {

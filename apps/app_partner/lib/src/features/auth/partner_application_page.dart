@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-class PartnerApplicationPage extends StatefulWidget {
+class PartnerApplicationPage extends ConsumerStatefulWidget {
   const PartnerApplicationPage({super.key});
 
   @override
-  State<PartnerApplicationPage> createState() => _PartnerApplicationPageState();
+  ConsumerState<PartnerApplicationPage> createState() =>
+      _PartnerApplicationPageState();
 }
 
-class _PartnerApplicationPageState extends State<PartnerApplicationPage> {
+class _PartnerApplicationPageState
+    extends ConsumerState<PartnerApplicationPage> {
   final _formKey = GlobalKey<FormState>();
   final ImagePicker _picker = ImagePicker();
   bool _isLoading = false;
@@ -31,7 +33,7 @@ class _PartnerApplicationPageState extends State<PartnerApplicationPage> {
 
   Future<void> _checkExistingApplication() async {
     setState(() => _isLoading = true);
-    final repository = locator<PartnerRepository>();
+    final repository = ref.read(partnerRepositoryProvider);
     final app = await repository.getMyApplication();
     if (app != null && mounted) {
       // 이미 신청한 내역이 있다면 안내 화면으로 이동 (혹은 상태 표시)
@@ -84,7 +86,7 @@ class _PartnerApplicationPageState extends State<PartnerApplicationPage> {
     setState(() => _isLoading = true);
 
     try {
-      final repository = locator<PartnerRepository>();
+      final repository = ref.read(partnerRepositoryProvider);
       await repository.submitApplication(
         applicationData: _data,
         bizRegistrationFile: _bizRegFile!,

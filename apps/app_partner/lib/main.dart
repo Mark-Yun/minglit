@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:app_partner/src/routing/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -17,54 +20,46 @@ Future<void> main() async {
   const googleWebClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
 
   await Supabase.initialize(url: supabaseUrl, anonKey: supabasePublishableKey);
-  setupLocator(
-    googleWebClientId: googleWebClientId,
-    defaultRedirectUrl: 'http://localhost:3001',
-  );
 
-  runApp(const MinglitPartnerApp());
+  runApp(
+    ProviderScope(
+      overrides: [
+        authConfigProvider.overrideWithValue(
+          const AuthConfig(
+            webClientId: googleWebClientId,
+            defaultRedirectUrl: 'http://localhost:3001',
+          ),
+        ),
+      ],
+      child: const MinglitPartnerApp(),
+    ),
+  );
 }
 
-class MinglitPartnerApp extends StatelessWidget {
+class MinglitPartnerApp extends ConsumerWidget {
   const MinglitPartnerApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MultiRepositoryProvider(
-      providers: [
-        RepositoryProvider.value(value: locator<AuthRepository>()),
-        RepositoryProvider.value(value: locator<PartnerRepository>()),
-        RepositoryProvider.value(value: locator<VerificationRepository>()),
-      ],
-      child: MultiBlocProvider(
-        providers: [
-          BlocProvider(
-            create:
-                (context) =>
-                    AuthBloc(authRepository: context.read<AuthRepository>()),
-          ),
-          BlocProvider(
-            create:
-                (context) => PartnerBloc(
-                  partnerRepository: context.read<PartnerRepository>(),
-                ),
-          ),
-          BlocProvider(
-            create:
-                (context) => VerificationBloc(
-                  verificationRepository:
-                      context.read<VerificationRepository>(),
-                ),
-          ),
-        ],
-        child: const _AppView(),
-      ),
-    );
+  Widget build(BuildContext context, WidgetRef ref) {
+    return const _AppView();
   }
 }
 
-class _AppView extends StatelessWidget {
+class _AppView extends ConsumerStatefulWidget {
   const _AppView();
+
+  @override
+  ConsumerState<_AppView> createState() => _AppViewState();
+}
+
+class _AppViewState extends ConsumerState<_AppView> {
+  late Future<void> _initFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _initFuture = _initialize();
+  }
 
   Future<void> _initialize() async {
     await GoogleFonts.pendingFonts([
@@ -75,7 +70,9 @@ class _AppView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    final goRouter = ref.watch(goRouterProvider);
+
+    return MaterialApp.router(
       title: 'Minglit Partner',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -87,78 +84,84 @@ class _AppView extends StatelessWidget {
         useMaterial3: true,
         textTheme: GoogleFonts.notoSansKrTextTheme(),
       ),
-      home: FutureBuilder(
-        future: _initialize(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const MinglitSplashScreen(
-              appName: 'Partner',
-              isPartner: true,
-            );
-          }
-          return const AuthWrapper();
-        },
-      ),
-    );
-  }
-}
-
-class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        return state.maybeWhen(
-          authenticated: (_) => const PartnerHomePage(),
-          loading:
-              () => const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              ),
-          orElse: () => const PartnerLoginPage(),
-        );
-      },
-    );
-  }
-}
-
-class PartnerLoginPage extends StatelessWidget {
-  const PartnerLoginPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
-        state.whenOrNull(
-          failure: (failure) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(
-              SnackBar(content: Text('Login Failed: ${failure.message}')),
-            );
+      routerConfig: goRouter,
+      builder: (context, child) {
+        return FutureBuilder(
+          future: _initFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const MinglitSplashScreen(
+                appName: 'Partner',
+                isPartner: true,
+              );
+            }
+            return child!;
           },
         );
       },
-      child: MinglitLoginScreen(
-        isPartner: true,
-        onGoogleSignIn: () {
-          context.read<AuthBloc>().add(const AuthEvent.signInWithGoogle());
-        },
-      ),
     );
   }
 }
 
-class PartnerHomePage extends StatelessWidget {
+/// A wrapper widget to handle authentication state and display the appropriate screen.
+/// Note: With GoRouter redirect logic, this might be less used as a root widget,
+/// but still useful for 'DevMap' or isolated testing.
+class AuthWrapper extends ConsumerWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authStateChangesProvider);
+
+    return authState.when(
+      data: (state) {
+        if (state.session != null) {
+          return const PartnerHomePage();
+        } else {
+          return const PartnerLoginPage();
+        }
+      },
+      error: (e, st) => Scaffold(body: Center(child: Text('Error: $e'))),
+      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+    );
+  }
+}
+
+class PartnerLoginPage extends ConsumerWidget {
+  const PartnerLoginPage({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Listen for AuthController errors
+    ref.listen(authControllerProvider, (previous, next) {
+      if (next is AsyncError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login Failed: ${next.error}')),
+        );
+      }
+    });
+
+    final authState = ref.watch(authControllerProvider);
+
+    if (authState.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    return MinglitLoginScreen(
+      isPartner: true,
+      onGoogleSignIn: () {
+        ref.read(authControllerProvider.notifier).signInWithGoogle();
+      },
+    );
+  }
+}
+
+class PartnerHomePage extends ConsumerWidget {
   const PartnerHomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final user = context.select(
-      (AuthBloc bloc) =>
-          bloc.state.maybeWhen(authenticated: (u) => u, orElse: () => null),
-    );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(currentUserProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Partner Dashboard')),
@@ -172,7 +175,7 @@ class PartnerHomePage extends StatelessWidget {
             const SizedBox(height: 40),
             ElevatedButton(
               onPressed: () {
-                context.read<AuthBloc>().add(const AuthEvent.signOut());
+                ref.read(authControllerProvider.notifier).signOut();
               },
               child: const Text('로그아웃'),
             ),

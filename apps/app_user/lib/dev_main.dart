@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   const supabaseUrl = String.fromEnvironment(
@@ -18,12 +18,20 @@ void main() async {
   const googleWebClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
 
   await Supabase.initialize(url: supabaseUrl, anonKey: supabasePublishableKey);
-  setupLocator(
-    googleWebClientId: googleWebClientId,
-    defaultRedirectUrl: 'http://localhost:3000',
-  );
 
-  runApp(const MinglitDevApp());
+  runApp(
+    ProviderScope(
+      overrides: [
+        authConfigProvider.overrideWithValue(
+          const AuthConfig(
+            webClientId: googleWebClientId,
+            defaultRedirectUrl: 'http://localhost:3000',
+          ),
+        ),
+      ],
+      child: const MinglitDevApp(),
+    ),
+  );
 }
 
 class MinglitDevApp extends StatelessWidget {
@@ -31,45 +39,54 @@ class MinglitDevApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiRepositoryProvider(
-      providers: [
-        RepositoryProvider.value(value: locator<AuthRepository>()),
-        RepositoryProvider.value(value: locator<PartnerRepository>()),
-        RepositoryProvider.value(value: locator<VerificationRepository>()),
-      ],
-      child: MultiBlocProvider(
-        providers: [
-          BlocProvider(
-            create:
-                (context) =>
-                    AuthBloc(authRepository: context.read<AuthRepository>()),
-          ),
-          BlocProvider(
-            create:
-                (context) => PartnerBloc(
-                  partnerRepository: context.read<PartnerRepository>(),
-                ),
-          ),
-          BlocProvider(
-            create:
-                (context) => VerificationBloc(
-                  verificationRepository:
-                      context.read<VerificationRepository>(),
-                ),
-          ),
-        ],
-        child: MaterialApp(
-          title: 'Minglit User (DEV)',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF1A237E),
-            ),
-            useMaterial3: true,
-            textTheme: GoogleFonts.notoSansKrTextTheme(),
-          ),
-          home: const UserDevMap(),
+    return const _AppView();
+  }
+}
+
+class _AppView extends StatefulWidget {
+  const _AppView();
+
+  @override
+  State<_AppView> createState() => _AppViewState();
+}
+
+class _AppViewState extends State<_AppView> {
+  late Future<void> _initFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _initFuture = _initialize();
+  }
+
+  Future<void> _initialize() async {
+    await GoogleFonts.pendingFonts([
+      GoogleFonts.poppins(),
+      GoogleFonts.notoSansKr(),
+    ]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Minglit User (Dev)',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF1A237E),
+          primary: const Color(0xFF1A237E),
+          secondary: const Color(0xFFFF7043),
         ),
+        useMaterial3: true,
+        textTheme: GoogleFonts.notoSansKrTextTheme(),
+      ),
+      home: FutureBuilder(
+        future: _initFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const MinglitSplashScreen(appName: 'User Dev');
+          }
+          return const UserDevMap();
+        },
       ),
     );
   }

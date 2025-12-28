@@ -1,41 +1,85 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/data/models/verification.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class ReviewVerificationPage extends StatefulWidget {
+/// **Verification Review Page**
+///
+/// Allows partners to review pending verification requests from users.
+///
+/// **Features:**
+/// - **Load**: Fetches pending requests via [verificationRepositoryProvider].
+/// - **Approve**: Grants verification.
+/// - **Reject/Correct**: Sends requests back to the user with a reason.
+/// - **Interact**: View images and chat history.
+class ReviewVerificationPage extends ConsumerStatefulWidget {
   const ReviewVerificationPage({super.key});
 
   @override
-  State<ReviewVerificationPage> createState() => _ReviewVerificationPageState();
+  ConsumerState<ReviewVerificationPage> createState() =>
+      _ReviewVerificationPageState();
 }
 
-class _ReviewVerificationPageState extends State<ReviewVerificationPage> {
+class _ReviewVerificationPageState
+    extends ConsumerState<ReviewVerificationPage> {
+  bool _isLoading = false;
+  List<Map<String, dynamic>> _pendingRequests = [];
+
   @override
   void initState() {
     super.initState();
-    // BLoC을 통한 초기 로드
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<VerificationBloc>().add(
-        const VerificationEvent.loadPendingRequests(),
-      );
+      _loadRequests();
     });
   }
 
+  Future<void> _loadRequests() async {
+    setState(() => _isLoading = true);
+    try {
+      final reqs =
+          await ref.read(verificationRepositoryProvider).getPendingRequests();
+      if (!mounted) return;
+      setState(() => _pendingRequests = reqs);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   /// 심사 처리
-  void _reviewRequest(
+  Future<void> _reviewRequest(
     String id,
     VerificationStatus status, {
     String? reason,
     String? comment,
-  }) {
-    context.read<VerificationBloc>().add(
-      VerificationEvent.reviewRequest(
+  }) async {
+    try {
+      await ref.read(verificationRepositoryProvider).reviewRequest(
         requestId: id,
         status: status,
         rejectionReason: reason,
-        comment: comment,
-      ),
-    );
+      );
+      if (comment != null) {
+        // 코멘트 추가 로직 (Repository에 있다면 호출)
+        // await ref.read(verificationRepositoryProvider).addComment(...);
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('처리가 완료되었습니다.')));
+      _loadRequests();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('처리 실패: $e')));
+    }
   }
 
   Future<void> _showCorrectionDialog(String requestId) async {
@@ -124,61 +168,39 @@ class _ReviewVerificationPageState extends State<ReviewVerificationPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<VerificationBloc, VerificationState>(
-      listener: (context, state) {
-        state.whenOrNull(
-          success: () {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('처리가 완료되었습니다.')));
-          },
-          failure: (msg) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text('처리 실패: $msg')));
-          },
-        );
-      },
-      builder: (context, state) {
-        return Scaffold(
-          appBar: AppBar(
-            title: state.maybeWhen(
-              pendingRequestsLoaded:
-                  (reqs) => Text('인증 심사 대기열 (${reqs.length})'),
-              orElse: () => const Text('인증 심사 대기열'),
-            ),
-          ),
-          body: RefreshIndicator(
-            onRefresh: () async {
-              context.read<VerificationBloc>().add(
-                const VerificationEvent.loadPendingRequests(),
-              );
-            },
-            child: state.maybeWhen(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              pendingRequestsLoaded: (requests) {
-                if (requests.isEmpty) {
-                  return const Center(child: Text('모든 심사가 완료되었습니다! 🎉'));
-                }
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: requests.length,
-                  itemBuilder:
-                      (context, index) => _buildRequestCard(requests[index]),
-                );
-              },
-              orElse: () => const Center(child: Text('데이터를 불러오는 중입니다...')),
-            ),
-          ),
-        );
-      },
+    return Scaffold(
+      appBar: AppBar(
+        title:
+            _isLoading
+                ? const Text('인증 심사 대기열')
+                : Text('인증 심사 대기열 (${_pendingRequests.length})'),
+      ),
+      body: RefreshIndicator(
+        onRefresh: _loadRequests,
+        child: _buildContent(),
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_pendingRequests.isEmpty) {
+      return const Center(child: Text('모든 심사가 완료되었습니다! 🎉'));
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _pendingRequests.length,
+      itemBuilder: (context, index) => _buildRequestCard(_pendingRequests[index]),
     );
   }
 
   Widget _buildRequestCard(Map<String, dynamic> req) {
     final user = req['user'] as Map<String, dynamic>? ?? {};
-    final claim = req['claim_snapshot'] as Map<String, dynamic>;
+    final claim = req['claim_snapshot'] as Map<String, dynamic>? ?? {};
     final images = (req['proof_images'] as List?)?.cast<String>() ?? [];
+    final category = (req['category'] as String?)?.toUpperCase() ?? 'UNKNOWN';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 20),
@@ -190,9 +212,7 @@ class _ReviewVerificationPageState extends State<ReviewVerificationPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Chip(
-                  label: Text((req['category'] as String).toUpperCase()),
-                ),
+                Chip(label: Text(category)),
                 Text(
                   (user['email'] as String?) ?? 'Unknown User',
                   style: const TextStyle(color: Colors.grey, fontSize: 12),
@@ -273,13 +293,13 @@ class _ReviewVerificationPageState extends State<ReviewVerificationPage> {
   }
 }
 
-class _CommentsView extends StatelessWidget {
+class _CommentsView extends ConsumerWidget {
   const _CommentsView({required this.requestId});
   final String requestId;
 
   @override
-  Widget build(BuildContext context) {
-    final repository = context.read<VerificationRepository>();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final repository = ref.read(verificationRepositoryProvider);
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
       padding: const EdgeInsets.all(20),

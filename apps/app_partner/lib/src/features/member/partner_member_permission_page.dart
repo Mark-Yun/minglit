@@ -1,22 +1,87 @@
+import 'package:app_partner/src/features/member/partner_member_list_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-class PartnerMemberPermissionPage extends StatefulWidget {
+part 'partner_member_permission_page.g.dart';
+
+/// **Local Provider: Single Partner Member**
+///
+/// Fetches details for a specific member.
+/// Currently filters from the full list, but can be updated to fetch from DB directly.
+@riverpod
+Future<Map<String, dynamic>?> partnerMember(
+  Ref ref, {
+  required String partnerId,
+  required String targetUserId,
+}) async {
+  // Ideally, Repository should support getMember(partnerId, userId).
+  // For now, let's filter from the list for simplicity, or fetch fresh.
+  // Fetching fresh is safer.
+  final members = await ref.read(partnerRepositoryProvider).getPartnerMembers(partnerId);
+  try {
+    return members.firstWhere((m) => m['user_id'] == targetUserId);
+  } catch (e) {
+    return null;
+  }
+}
+
+/// **Partner Member Permission Page**
+///
+/// Allows editing the Role and Permissions of a specific member.
+///
+/// **Architecture Pattern:**
+/// - **Fetch**: Uses [partnerMemberProvider] to load initial data.
+/// - **Mutate**: Uses `_save()` to call Repository directly.
+/// - **Sync**: Invalidates both list and detail providers on success to ensure data consistency.
+class PartnerMemberPermissionPage extends ConsumerWidget {
   const PartnerMemberPermissionPage({
     required this.partnerId,
-    required this.memberData,
+    required this.targetUserId,
     super.key,
   });
+
+  final String partnerId;
+  final String targetUserId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final memberAsync = ref.watch(partnerMemberProvider(partnerId: partnerId, targetUserId: targetUserId));
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('권한 상세 설정')),
+      body: memberAsync.when(
+        data: (memberData) {
+          if (memberData == null) {
+            return const Center(child: Text('멤버를 찾을 수 없습니다.'));
+          }
+          return _MemberPermissionForm(
+            partnerId: partnerId,
+            memberData: memberData,
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(child: Text('Error: $err')),
+      ),
+    );
+  }
+}
+
+class _MemberPermissionForm extends ConsumerStatefulWidget {
+  const _MemberPermissionForm({
+    required this.partnerId,
+    required this.memberData,
+  });
+
   final String partnerId;
   final Map<String, dynamic> memberData;
 
   @override
-  State<PartnerMemberPermissionPage> createState() =>
-      _PartnerMemberPermissionPageState();
+  ConsumerState<_MemberPermissionForm> createState() => _MemberPermissionFormState();
 }
 
-class _PartnerMemberPermissionPageState
-    extends State<PartnerMemberPermissionPage> {
+class _MemberPermissionFormState extends ConsumerState<_MemberPermissionForm> {
   late String _selectedRole;
   late List<String> _currentPermissions;
   bool _isSaving = false;
@@ -45,29 +110,36 @@ class _PartnerMemberPermissionPageState
   Future<void> _save() async {
     setState(() => _isSaving = true);
     try {
-      final repository = locator<PartnerRepository>();
+      final repository = ref.read(partnerRepositoryProvider);
       final userId = widget.memberData['user_id'] as String;
 
-      // 1. 역할 업데이트 (트리거가 권한 자동 동기화)
       await repository.updateMemberRole(
         partnerId: widget.partnerId,
         userId: userId,
         role: _selectedRole,
       );
 
-      // 2. 만약 수동으로 권한을 더 만졌다면 직접 업데이트 (선택 사항)
       await repository.updateMemberPermissions(
         partnerId: widget.partnerId,
         userId: userId,
         permissions: _currentPermissions,
       );
 
-      if (mounted) Navigator.pop(context, true);
-    } on Exception catch (e) {
+      // Invalidate both list and detail providers to refresh data
+      ref.invalidate(partnerMembersProvider(partnerId: widget.partnerId));
+      ref.invalidate(partnerMemberProvider(partnerId: widget.partnerId, targetUserId: userId));
+
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('저장 실패: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('저장되었습니다.')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('저장 실패: $e')),
+        );
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -78,77 +150,52 @@ class _PartnerMemberPermissionPageState
   Widget build(BuildContext context) {
     final user = widget.memberData['user'] as Map<String, dynamic>? ?? {};
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('권한 상세 설정')),
-      body:
-          _isSaving
-              ? const Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      user['name'] as String? ?? '멤버 정보',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      user['email'] as String? ?? '',
-                      style: const TextStyle(color: Colors.grey),
-                    ),
-                    const SizedBox(height: 32),
+    if (_isSaving) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-                    const Text(
-                      '역할(Role) 선택',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildRoleSelector(),
-
-                    const SizedBox(height: 32),
-                    const Text(
-                      '상세 기능 권한(Permissions)',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      '역할을 변경하면 권한 배열이 기본값으로 초기화됩니다.',
-                      style: TextStyle(fontSize: 12, color: Colors.blue),
-                    ),
-                    const SizedBox(height: 16),
-
-                    ..._permissionLabels.entries.map(
-                      (e) => _buildPermissionTile(e.key, e.value),
-                    ),
-
-                    const SizedBox(height: 48),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 54,
-                      child: ElevatedButton(
-                        onPressed: _save,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange[800],
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          '변경 사항 저장',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            user['name'] as String? ?? '멤버 정보',
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          Text(
+            user['email'] as String? ?? '',
+            style: const TextStyle(color: Colors.grey),
+          ),
+          const SizedBox(height: 32),
+          const Text('역할(Role) 선택', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          _buildRoleSelector(),
+          const SizedBox(height: 32),
+          const Text('상세 기능 권한(Permissions)', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          const Text(
+            '역할을 변경하면 권한 배열이 기본값으로 초기화됩니다.',
+            style: TextStyle(fontSize: 12, color: Colors.blue),
+          ),
+          const SizedBox(height: 16),
+          ..._permissionLabels.entries.map((e) => _buildPermissionTile(e.key, e.value)),
+          const SizedBox(height: 48),
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: ElevatedButton(
+              onPressed: _save,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange[800],
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
+              child: const Text('변경 사항 저장', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -165,17 +212,13 @@ class _PartnerMemberPermissionPageState
           isExpanded: true,
           items: const [
             DropdownMenuItem(value: 'owner', child: Text('Owner (모든 권한)')),
-            DropdownMenuItem(
-              value: 'manager',
-              child: Text('Manager (운영 및 심사)'),
-            ),
+            DropdownMenuItem(value: 'manager', child: Text('Manager (운영 및 심사)')),
             DropdownMenuItem(value: 'staff', child: Text('Staff (단순 업무)')),
           ],
           onChanged: (v) {
             if (v != null) {
               setState(() {
                 _selectedRole = v;
-                // 역할 변경 시 프론트엔드에서도 시각적 피드백을 위해 권한 배열 동기화 (트리거와 동일 로직)
                 _syncPermissionsLocally(v);
               });
             }
@@ -198,11 +241,7 @@ class _PartnerMemberPermissionPageState
         'COMMENT_MANAGE',
       ];
     } else {
-      _currentPermissions = [
-        'VERIFY_LIST_VIEW',
-        'COMMENT_MANAGE',
-        'PARTY_MANAGE',
-      ];
+      _currentPermissions = ['VERIFY_LIST_VIEW', 'COMMENT_MANAGE', 'PARTY_MANAGE'];
     }
   }
 
