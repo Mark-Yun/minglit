@@ -151,16 +151,6 @@ create table public.partner_verified_users (
   primary key (partner_id, user_id, verification_id)
 );
 
--- 13. 파티 테이블
-create table public.parties (
-  id uuid default gen_random_uuid() primary key,
-  partner_id uuid references public.partners(id) on delete cascade not null,
-  title text not null,
-  required_verification_ids uuid[] not null,
-  created_at timestamp with time zone default now(),
-  updated_at timestamp with time zone default now()
-);
-
 -- 14. [보안 함수] --
 
 create or replace function public.is_super_admin()
@@ -196,7 +186,6 @@ alter table public.user_verifications disable row level security;
 alter table public.verification_requests disable row level security;
 alter table public.verification_comments disable row level security;
 alter table public.partner_verified_users disable row level security;
-alter table public.parties disable row level security;
 
 -- 16. [트리거 및 함수] --
 
@@ -213,7 +202,6 @@ create trigger set_partners_updated_at before update on public.partners for each
 create trigger set_partner_settlements_updated_at before update on public.partner_settlements for each row execute procedure public.handle_updated_at();
 create trigger set_partner_applications_updated_at before update on public.partner_applications for each row execute procedure public.handle_updated_at();
 create trigger set_verification_requests_updated_at before update on public.verification_requests for each row execute procedure public.handle_updated_at();
-create trigger set_parties_updated_at before update on public.parties for each row execute procedure public.handle_updated_at();
 
 -- 역할 변경 시 권한 자동 동기화
 create or replace function public.sync_partner_member_permissions()

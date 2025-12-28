@@ -77,9 +77,10 @@ class _AppViewState extends ConsumerState<_AppView> {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1A237E),
-          primary: const Color(0xFF1A237E),
-          secondary: const Color(0xFFFF7043),
+          seedColor: const Color(0xFF9900FF),
+          primary: const Color(0xFF9900FF),
+          secondary: const Color(0xFFFF9900),
+          surface: Colors.white,
         ),
         useMaterial3: true,
         textTheme: GoogleFonts.notoSansKrTextTheme(),
