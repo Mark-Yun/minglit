@@ -89,13 +89,13 @@ class PartyDetailView extends ConsumerWidget {
           style: const TextStyle(fontSize: 16, height: 1.6),
         ),
         const SizedBox(height: 16),
-        if (party.contactPhone != null)
+        if (party.contactOptions['phone'] != null)
           Row(
             children: [
               const Icon(Icons.phone, size: 16, color: Colors.grey),
               const SizedBox(width: 8),
               Text(
-                party.contactPhone!,
+                party.contactOptions['phone'] as String,
                 style: const TextStyle(color: Colors.grey),
               ),
             ],

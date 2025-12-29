@@ -19,8 +19,9 @@ abstract class Event with _$Event {
     @JsonKey(name: 'location_id') String? locationId,
     String? title, // Override
     Map<String, dynamic>? description, // Override
-    @JsonKey(name: 'contact_phone') String? contactPhone, // Override
-    @JsonKey(name: 'contact_email') String? contactEmail, // Override
+    @JsonKey(name: 'contact_options')
+    @Default({})
+    Map<String, dynamic> contactOptions,
     @JsonKey(name: 'max_participants') @Default(20) int maxParticipants,
     @JsonKey(name: 'current_participants') @Default(0) int currentParticipants,
     @Default('scheduled') String status,

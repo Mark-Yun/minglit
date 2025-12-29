@@ -2,6 +2,7 @@ import 'package:app_partner/src/features/admin/partner_application_detail_page.d
 import 'package:app_partner/src/features/admin/partner_application_list_page.dart';
 import 'package:app_partner/src/features/auth/partner_login_page.dart';
 import 'package:app_partner/src/features/home/partner_home_page.dart';
+import 'package:app_partner/src/features/party/create/party_create_screen.dart';
 import 'package:app_partner/src/features/verification/review_verification_page.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -14,6 +15,12 @@ class PartnerDevMap extends StatelessWidget {
     return DevScreenList(
       appName: 'Minglit Partner',
       items: [
+        DevScreenItem(
+          category: 'Party',
+          title: 'Create Party',
+          description: '새로운 파티 생성',
+          screenBuilder: (_) => const PartyCreateScreen(),
+        ),
         DevScreenItem(
           category: 'Auth',
           title: 'Login',

@@ -17,9 +17,7 @@ mixin _$Event {
 
  String get id;@JsonKey(name: 'party_id') String get partyId;@JsonKey(name: 'start_time') DateTime get startTime;@JsonKey(name: 'end_time') DateTime get endTime;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'updated_at') DateTime get updatedAt;@JsonKey(name: 'location_id') String? get locationId; String? get title;// Override
  Map<String, dynamic>? get description;// Override
-@JsonKey(name: 'contact_phone') String? get contactPhone;// Override
-@JsonKey(name: 'contact_email') String? get contactEmail;// Override
-@JsonKey(name: 'max_participants') int get maxParticipants;@JsonKey(name: 'current_participants') int get currentParticipants; String get status;// Relationships (Optional, loaded via join)
+@JsonKey(name: 'contact_options') Map<String, dynamic> get contactOptions;@JsonKey(name: 'max_participants') int get maxParticipants;@JsonKey(name: 'current_participants') int get currentParticipants; String get status;// Relationships (Optional, loaded via join)
  Party? get party; Location? get location;
 /// Create a copy of Event
 /// with the given fields replaced by the non-null parameter values.
@@ -33,16 +31,16 @@ $EventCopyWith<Event> get copyWith => _$EventCopyWithImpl<Event>(this as Event, 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Event&&(identical(other.id, id) || other.id == id)&&(identical(other.partyId, partyId) || other.partyId == partyId)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.locationId, locationId) || other.locationId == locationId)&&(identical(other.title, title) || other.title == title)&&const DeepCollectionEquality().equals(other.description, description)&&(identical(other.contactPhone, contactPhone) || other.contactPhone == contactPhone)&&(identical(other.contactEmail, contactEmail) || other.contactEmail == contactEmail)&&(identical(other.maxParticipants, maxParticipants) || other.maxParticipants == maxParticipants)&&(identical(other.currentParticipants, currentParticipants) || other.currentParticipants == currentParticipants)&&(identical(other.status, status) || other.status == status)&&(identical(other.party, party) || other.party == party)&&(identical(other.location, location) || other.location == location));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Event&&(identical(other.id, id) || other.id == id)&&(identical(other.partyId, partyId) || other.partyId == partyId)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.locationId, locationId) || other.locationId == locationId)&&(identical(other.title, title) || other.title == title)&&const DeepCollectionEquality().equals(other.description, description)&&const DeepCollectionEquality().equals(other.contactOptions, contactOptions)&&(identical(other.maxParticipants, maxParticipants) || other.maxParticipants == maxParticipants)&&(identical(other.currentParticipants, currentParticipants) || other.currentParticipants == currentParticipants)&&(identical(other.status, status) || other.status == status)&&(identical(other.party, party) || other.party == party)&&(identical(other.location, location) || other.location == location));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,partyId,startTime,endTime,createdAt,updatedAt,locationId,title,const DeepCollectionEquality().hash(description),contactPhone,contactEmail,maxParticipants,currentParticipants,status,party,location);
+int get hashCode => Object.hash(runtimeType,id,partyId,startTime,endTime,createdAt,updatedAt,locationId,title,const DeepCollectionEquality().hash(description),const DeepCollectionEquality().hash(contactOptions),maxParticipants,currentParticipants,status,party,location);
 
 @override
 String toString() {
-  return 'Event(id: $id, partyId: $partyId, startTime: $startTime, endTime: $endTime, createdAt: $createdAt, updatedAt: $updatedAt, locationId: $locationId, title: $title, description: $description, contactPhone: $contactPhone, contactEmail: $contactEmail, maxParticipants: $maxParticipants, currentParticipants: $currentParticipants, status: $status, party: $party, location: $location)';
+  return 'Event(id: $id, partyId: $partyId, startTime: $startTime, endTime: $endTime, createdAt: $createdAt, updatedAt: $updatedAt, locationId: $locationId, title: $title, description: $description, contactOptions: $contactOptions, maxParticipants: $maxParticipants, currentParticipants: $currentParticipants, status: $status, party: $party, location: $location)';
 }
 
 
@@ -53,7 +51,7 @@ abstract mixin class $EventCopyWith<$Res>  {
   factory $EventCopyWith(Event value, $Res Function(Event) _then) = _$EventCopyWithImpl;
 @useResult
 $Res call({
- String id,@JsonKey(name: 'party_id') String partyId,@JsonKey(name: 'start_time') DateTime startTime,@JsonKey(name: 'end_time') DateTime endTime,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'location_id') String? locationId, String? title, Map<String, dynamic>? description,@JsonKey(name: 'contact_phone') String? contactPhone,@JsonKey(name: 'contact_email') String? contactEmail,@JsonKey(name: 'max_participants') int maxParticipants,@JsonKey(name: 'current_participants') int currentParticipants, String status, Party? party, Location? location
+ String id,@JsonKey(name: 'party_id') String partyId,@JsonKey(name: 'start_time') DateTime startTime,@JsonKey(name: 'end_time') DateTime endTime,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'location_id') String? locationId, String? title, Map<String, dynamic>? description,@JsonKey(name: 'contact_options') Map<String, dynamic> contactOptions,@JsonKey(name: 'max_participants') int maxParticipants,@JsonKey(name: 'current_participants') int currentParticipants, String status, Party? party, Location? location
 });
 
 
@@ -70,7 +68,7 @@ class _$EventCopyWithImpl<$Res>
 
 /// Create a copy of Event
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? partyId = null,Object? startTime = null,Object? endTime = null,Object? createdAt = null,Object? updatedAt = null,Object? locationId = freezed,Object? title = freezed,Object? description = freezed,Object? contactPhone = freezed,Object? contactEmail = freezed,Object? maxParticipants = null,Object? currentParticipants = null,Object? status = null,Object? party = freezed,Object? location = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? partyId = null,Object? startTime = null,Object? endTime = null,Object? createdAt = null,Object? updatedAt = null,Object? locationId = freezed,Object? title = freezed,Object? description = freezed,Object? contactOptions = null,Object? maxParticipants = null,Object? currentParticipants = null,Object? status = null,Object? party = freezed,Object? location = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,partyId: null == partyId ? _self.partyId : partyId // ignore: cast_nullable_to_non_nullable
@@ -81,9 +79,8 @@ as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore
 as DateTime,locationId: freezed == locationId ? _self.locationId : locationId // ignore: cast_nullable_to_non_nullable
 as String?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>?,contactPhone: freezed == contactPhone ? _self.contactPhone : contactPhone // ignore: cast_nullable_to_non_nullable
-as String?,contactEmail: freezed == contactEmail ? _self.contactEmail : contactEmail // ignore: cast_nullable_to_non_nullable
-as String?,maxParticipants: null == maxParticipants ? _self.maxParticipants : maxParticipants // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>?,contactOptions: null == contactOptions ? _self.contactOptions : contactOptions // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>,maxParticipants: null == maxParticipants ? _self.maxParticipants : maxParticipants // ignore: cast_nullable_to_non_nullable
 as int,currentParticipants: null == currentParticipants ? _self.currentParticipants : currentParticipants // ignore: cast_nullable_to_non_nullable
 as int,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,party: freezed == party ? _self.party : party // ignore: cast_nullable_to_non_nullable
@@ -197,10 +194,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'party_id')  String partyId, @JsonKey(name: 'start_time')  DateTime startTime, @JsonKey(name: 'end_time')  DateTime endTime, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'location_id')  String? locationId,  String? title,  Map<String, dynamic>? description, @JsonKey(name: 'contact_phone')  String? contactPhone, @JsonKey(name: 'contact_email')  String? contactEmail, @JsonKey(name: 'max_participants')  int maxParticipants, @JsonKey(name: 'current_participants')  int currentParticipants,  String status,  Party? party,  Location? location)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'party_id')  String partyId, @JsonKey(name: 'start_time')  DateTime startTime, @JsonKey(name: 'end_time')  DateTime endTime, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'location_id')  String? locationId,  String? title,  Map<String, dynamic>? description, @JsonKey(name: 'contact_options')  Map<String, dynamic> contactOptions, @JsonKey(name: 'max_participants')  int maxParticipants, @JsonKey(name: 'current_participants')  int currentParticipants,  String status,  Party? party,  Location? location)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Event() when $default != null:
-return $default(_that.id,_that.partyId,_that.startTime,_that.endTime,_that.createdAt,_that.updatedAt,_that.locationId,_that.title,_that.description,_that.contactPhone,_that.contactEmail,_that.maxParticipants,_that.currentParticipants,_that.status,_that.party,_that.location);case _:
+return $default(_that.id,_that.partyId,_that.startTime,_that.endTime,_that.createdAt,_that.updatedAt,_that.locationId,_that.title,_that.description,_that.contactOptions,_that.maxParticipants,_that.currentParticipants,_that.status,_that.party,_that.location);case _:
   return orElse();
 
 }
@@ -218,10 +215,10 @@ return $default(_that.id,_that.partyId,_that.startTime,_that.endTime,_that.creat
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'party_id')  String partyId, @JsonKey(name: 'start_time')  DateTime startTime, @JsonKey(name: 'end_time')  DateTime endTime, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'location_id')  String? locationId,  String? title,  Map<String, dynamic>? description, @JsonKey(name: 'contact_phone')  String? contactPhone, @JsonKey(name: 'contact_email')  String? contactEmail, @JsonKey(name: 'max_participants')  int maxParticipants, @JsonKey(name: 'current_participants')  int currentParticipants,  String status,  Party? party,  Location? location)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'party_id')  String partyId, @JsonKey(name: 'start_time')  DateTime startTime, @JsonKey(name: 'end_time')  DateTime endTime, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'location_id')  String? locationId,  String? title,  Map<String, dynamic>? description, @JsonKey(name: 'contact_options')  Map<String, dynamic> contactOptions, @JsonKey(name: 'max_participants')  int maxParticipants, @JsonKey(name: 'current_participants')  int currentParticipants,  String status,  Party? party,  Location? location)  $default,) {final _that = this;
 switch (_that) {
 case _Event():
-return $default(_that.id,_that.partyId,_that.startTime,_that.endTime,_that.createdAt,_that.updatedAt,_that.locationId,_that.title,_that.description,_that.contactPhone,_that.contactEmail,_that.maxParticipants,_that.currentParticipants,_that.status,_that.party,_that.location);case _:
+return $default(_that.id,_that.partyId,_that.startTime,_that.endTime,_that.createdAt,_that.updatedAt,_that.locationId,_that.title,_that.description,_that.contactOptions,_that.maxParticipants,_that.currentParticipants,_that.status,_that.party,_that.location);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -238,10 +235,10 @@ return $default(_that.id,_that.partyId,_that.startTime,_that.endTime,_that.creat
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'party_id')  String partyId, @JsonKey(name: 'start_time')  DateTime startTime, @JsonKey(name: 'end_time')  DateTime endTime, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'location_id')  String? locationId,  String? title,  Map<String, dynamic>? description, @JsonKey(name: 'contact_phone')  String? contactPhone, @JsonKey(name: 'contact_email')  String? contactEmail, @JsonKey(name: 'max_participants')  int maxParticipants, @JsonKey(name: 'current_participants')  int currentParticipants,  String status,  Party? party,  Location? location)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'party_id')  String partyId, @JsonKey(name: 'start_time')  DateTime startTime, @JsonKey(name: 'end_time')  DateTime endTime, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'location_id')  String? locationId,  String? title,  Map<String, dynamic>? description, @JsonKey(name: 'contact_options')  Map<String, dynamic> contactOptions, @JsonKey(name: 'max_participants')  int maxParticipants, @JsonKey(name: 'current_participants')  int currentParticipants,  String status,  Party? party,  Location? location)?  $default,) {final _that = this;
 switch (_that) {
 case _Event() when $default != null:
-return $default(_that.id,_that.partyId,_that.startTime,_that.endTime,_that.createdAt,_that.updatedAt,_that.locationId,_that.title,_that.description,_that.contactPhone,_that.contactEmail,_that.maxParticipants,_that.currentParticipants,_that.status,_that.party,_that.location);case _:
+return $default(_that.id,_that.partyId,_that.startTime,_that.endTime,_that.createdAt,_that.updatedAt,_that.locationId,_that.title,_that.description,_that.contactOptions,_that.maxParticipants,_that.currentParticipants,_that.status,_that.party,_that.location);case _:
   return null;
 
 }
@@ -253,7 +250,7 @@ return $default(_that.id,_that.partyId,_that.startTime,_that.endTime,_that.creat
 @JsonSerializable()
 
 class _Event implements Event {
-  const _Event({required this.id, @JsonKey(name: 'party_id') required this.partyId, @JsonKey(name: 'start_time') required this.startTime, @JsonKey(name: 'end_time') required this.endTime, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'updated_at') required this.updatedAt, @JsonKey(name: 'location_id') this.locationId, this.title, final  Map<String, dynamic>? description, @JsonKey(name: 'contact_phone') this.contactPhone, @JsonKey(name: 'contact_email') this.contactEmail, @JsonKey(name: 'max_participants') this.maxParticipants = 20, @JsonKey(name: 'current_participants') this.currentParticipants = 0, this.status = 'scheduled', this.party, this.location}): _description = description;
+  const _Event({required this.id, @JsonKey(name: 'party_id') required this.partyId, @JsonKey(name: 'start_time') required this.startTime, @JsonKey(name: 'end_time') required this.endTime, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'updated_at') required this.updatedAt, @JsonKey(name: 'location_id') this.locationId, this.title, final  Map<String, dynamic>? description, @JsonKey(name: 'contact_options') final  Map<String, dynamic> contactOptions = const {}, @JsonKey(name: 'max_participants') this.maxParticipants = 20, @JsonKey(name: 'current_participants') this.currentParticipants = 0, this.status = 'scheduled', this.party, this.location}): _description = description,_contactOptions = contactOptions;
   factory _Event.fromJson(Map<String, dynamic> json) => _$EventFromJson(json);
 
 @override final  String id;
@@ -276,10 +273,14 @@ class _Event implements Event {
 }
 
 // Override
-@override@JsonKey(name: 'contact_phone') final  String? contactPhone;
+ final  Map<String, dynamic> _contactOptions;
 // Override
-@override@JsonKey(name: 'contact_email') final  String? contactEmail;
-// Override
+@override@JsonKey(name: 'contact_options') Map<String, dynamic> get contactOptions {
+  if (_contactOptions is EqualUnmodifiableMapView) return _contactOptions;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_contactOptions);
+}
+
 @override@JsonKey(name: 'max_participants') final  int maxParticipants;
 @override@JsonKey(name: 'current_participants') final  int currentParticipants;
 @override@JsonKey() final  String status;
@@ -300,16 +301,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Event&&(identical(other.id, id) || other.id == id)&&(identical(other.partyId, partyId) || other.partyId == partyId)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.locationId, locationId) || other.locationId == locationId)&&(identical(other.title, title) || other.title == title)&&const DeepCollectionEquality().equals(other._description, _description)&&(identical(other.contactPhone, contactPhone) || other.contactPhone == contactPhone)&&(identical(other.contactEmail, contactEmail) || other.contactEmail == contactEmail)&&(identical(other.maxParticipants, maxParticipants) || other.maxParticipants == maxParticipants)&&(identical(other.currentParticipants, currentParticipants) || other.currentParticipants == currentParticipants)&&(identical(other.status, status) || other.status == status)&&(identical(other.party, party) || other.party == party)&&(identical(other.location, location) || other.location == location));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Event&&(identical(other.id, id) || other.id == id)&&(identical(other.partyId, partyId) || other.partyId == partyId)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.locationId, locationId) || other.locationId == locationId)&&(identical(other.title, title) || other.title == title)&&const DeepCollectionEquality().equals(other._description, _description)&&const DeepCollectionEquality().equals(other._contactOptions, _contactOptions)&&(identical(other.maxParticipants, maxParticipants) || other.maxParticipants == maxParticipants)&&(identical(other.currentParticipants, currentParticipants) || other.currentParticipants == currentParticipants)&&(identical(other.status, status) || other.status == status)&&(identical(other.party, party) || other.party == party)&&(identical(other.location, location) || other.location == location));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,partyId,startTime,endTime,createdAt,updatedAt,locationId,title,const DeepCollectionEquality().hash(_description),contactPhone,contactEmail,maxParticipants,currentParticipants,status,party,location);
+int get hashCode => Object.hash(runtimeType,id,partyId,startTime,endTime,createdAt,updatedAt,locationId,title,const DeepCollectionEquality().hash(_description),const DeepCollectionEquality().hash(_contactOptions),maxParticipants,currentParticipants,status,party,location);
 
 @override
 String toString() {
-  return 'Event(id: $id, partyId: $partyId, startTime: $startTime, endTime: $endTime, createdAt: $createdAt, updatedAt: $updatedAt, locationId: $locationId, title: $title, description: $description, contactPhone: $contactPhone, contactEmail: $contactEmail, maxParticipants: $maxParticipants, currentParticipants: $currentParticipants, status: $status, party: $party, location: $location)';
+  return 'Event(id: $id, partyId: $partyId, startTime: $startTime, endTime: $endTime, createdAt: $createdAt, updatedAt: $updatedAt, locationId: $locationId, title: $title, description: $description, contactOptions: $contactOptions, maxParticipants: $maxParticipants, currentParticipants: $currentParticipants, status: $status, party: $party, location: $location)';
 }
 
 
@@ -320,7 +321,7 @@ abstract mixin class _$EventCopyWith<$Res> implements $EventCopyWith<$Res> {
   factory _$EventCopyWith(_Event value, $Res Function(_Event) _then) = __$EventCopyWithImpl;
 @override @useResult
 $Res call({
- String id,@JsonKey(name: 'party_id') String partyId,@JsonKey(name: 'start_time') DateTime startTime,@JsonKey(name: 'end_time') DateTime endTime,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'location_id') String? locationId, String? title, Map<String, dynamic>? description,@JsonKey(name: 'contact_phone') String? contactPhone,@JsonKey(name: 'contact_email') String? contactEmail,@JsonKey(name: 'max_participants') int maxParticipants,@JsonKey(name: 'current_participants') int currentParticipants, String status, Party? party, Location? location
+ String id,@JsonKey(name: 'party_id') String partyId,@JsonKey(name: 'start_time') DateTime startTime,@JsonKey(name: 'end_time') DateTime endTime,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'location_id') String? locationId, String? title, Map<String, dynamic>? description,@JsonKey(name: 'contact_options') Map<String, dynamic> contactOptions,@JsonKey(name: 'max_participants') int maxParticipants,@JsonKey(name: 'current_participants') int currentParticipants, String status, Party? party, Location? location
 });
 
 
@@ -337,7 +338,7 @@ class __$EventCopyWithImpl<$Res>
 
 /// Create a copy of Event
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? partyId = null,Object? startTime = null,Object? endTime = null,Object? createdAt = null,Object? updatedAt = null,Object? locationId = freezed,Object? title = freezed,Object? description = freezed,Object? contactPhone = freezed,Object? contactEmail = freezed,Object? maxParticipants = null,Object? currentParticipants = null,Object? status = null,Object? party = freezed,Object? location = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? partyId = null,Object? startTime = null,Object? endTime = null,Object? createdAt = null,Object? updatedAt = null,Object? locationId = freezed,Object? title = freezed,Object? description = freezed,Object? contactOptions = null,Object? maxParticipants = null,Object? currentParticipants = null,Object? status = null,Object? party = freezed,Object? location = freezed,}) {
   return _then(_Event(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,partyId: null == partyId ? _self.partyId : partyId // ignore: cast_nullable_to_non_nullable
@@ -348,9 +349,8 @@ as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore
 as DateTime,locationId: freezed == locationId ? _self.locationId : locationId // ignore: cast_nullable_to_non_nullable
 as String?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,description: freezed == description ? _self._description : description // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>?,contactPhone: freezed == contactPhone ? _self.contactPhone : contactPhone // ignore: cast_nullable_to_non_nullable
-as String?,contactEmail: freezed == contactEmail ? _self.contactEmail : contactEmail // ignore: cast_nullable_to_non_nullable
-as String?,maxParticipants: null == maxParticipants ? _self.maxParticipants : maxParticipants // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>?,contactOptions: null == contactOptions ? _self._contactOptions : contactOptions // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>,maxParticipants: null == maxParticipants ? _self.maxParticipants : maxParticipants // ignore: cast_nullable_to_non_nullable
 as int,currentParticipants: null == currentParticipants ? _self.currentParticipants : currentParticipants // ignore: cast_nullable_to_non_nullable
 as int,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,party: freezed == party ? _self.party : party // ignore: cast_nullable_to_non_nullable

@@ -8,7 +8,7 @@ part 'dev_user_switch_screen.g.dart';
 /// **Dev User Switch Screen**
 ///
 /// A development-only screen to quickly switch between test users.
-/// Fetches users from `user_profiles` table and logs in using 
+/// Fetches users from `user_profiles` table and logs in using
 /// the seed password.
 class DevUserSwitchScreen extends ConsumerStatefulWidget {
   const DevUserSwitchScreen({super.key});
@@ -25,10 +25,12 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
     setState(() => _isActionRunning = true);
     try {
       // In local dev, all seed users have the same password.
-      await ref.read(authControllerProvider.notifier).signInWithEmail(
-        email: email,
-        password: 'password',
-      );
+      await ref
+          .read(authControllerProvider.notifier)
+          .signInWithEmail(
+            email: email,
+            password: 'password',
+          );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -88,9 +90,9 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
         title: const Text('Dev: Session Switcher'),
         bottom: _isActionRunning
             ? const PreferredSize(
-              preferredSize: Size.fromHeight(2),
-              child: LinearProgressIndicator(),
-            )
+                preferredSize: Size.fromHeight(2),
+                child: LinearProgressIndicator(),
+              )
             : null,
         actions: [
           IconButton(
@@ -192,10 +194,9 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
 @riverpod
 Future<List<Map<String, dynamic>>> devUserProfiles(Ref ref) async {
   final supabase = Supabase.instance.client;
-  final data =
-      await supabase
-          .from('user_profiles')
-          .select('id, name, username')
-          .order('username', ascending: true); // Sort by username
+  final data = await supabase
+      .from('user_profiles')
+      .select('id, name, username')
+      .order('username', ascending: true); // Sort by username
   return List<Map<String, dynamic>>.from(data);
 }

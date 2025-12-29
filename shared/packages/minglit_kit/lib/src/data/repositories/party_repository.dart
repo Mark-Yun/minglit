@@ -1,5 +1,7 @@
+import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/src/data/models/event.dart';
 import 'package:minglit_kit/src/data/models/party.dart';
+import 'package:path/path.dart' as p;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -17,6 +19,26 @@ class PartyRepository {
     : _supabase = supabase ?? Supabase.instance.client;
 
   final SupabaseClient _supabase;
+
+  /// Uploads a party image and returns the public URL.
+  Future<String> uploadPartyImage(XFile file, String partnerId) async {
+    final extension = p.extension(file.name);
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    // Structure: partner_id/timestamp_filename
+    final path = '$partnerId/$timestamp$extension';
+    final bytes = await file.readAsBytes();
+
+    await _supabase.storage.from('party-assets').uploadBinary(
+          path,
+          bytes,
+          fileOptions: const FileOptions(
+            contentType: 'image/jpeg',
+            upsert: true,
+          ),
+        );
+
+    return _supabase.storage.from('party-assets').getPublicUrl(path);
+  }
 
   /// Fetches all active parties.
   Future<List<Party>> getParties() async {
@@ -59,5 +81,18 @@ class PartyRepository {
     return (data as List<dynamic>)
         .map((json) => Event.fromJson(json as Map<String, dynamic>))
         .toList();
+  }
+
+  /// Creates a new party.
+  Future<Party> createParty(Party party) async {
+    final json = party.toJson()
+      ..remove('id')
+      ..remove('created_at')
+      ..remove('updated_at');
+
+    final data =
+        await _supabase.from('parties').insert(json).select().single();
+
+    return Party.fromJson(data);
   }
 }

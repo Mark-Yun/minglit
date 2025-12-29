@@ -38,13 +38,14 @@ _Party _$PartyFromJson(Map<String, dynamic> json) => _Party(
   updatedAt: DateTime.parse(json['updated_at'] as String),
   description: json['description'] as Map<String, dynamic>?,
   imageUrl: json['image_url'] as String?,
-  contactPhone: json['contact_phone'] as String?,
-  contactEmail: json['contact_email'] as String?,
+  contactOptions: json['contact_options'] as Map<String, dynamic>? ?? const {},
   requiredVerificationIds:
       (json['required_verification_ids'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList() ??
       const [],
+  minConfirmedCount: (json['min_confirmed_count'] as num?)?.toInt() ?? 0,
+  maxParticipants: (json['max_participants'] as num?)?.toInt() ?? 20,
   status: json['status'] as String? ?? 'active',
 );
 
@@ -56,8 +57,9 @@ Map<String, dynamic> _$PartyToJson(_Party instance) => <String, dynamic>{
   'updated_at': instance.updatedAt.toIso8601String(),
   'description': instance.description,
   'image_url': instance.imageUrl,
-  'contact_phone': instance.contactPhone,
-  'contact_email': instance.contactEmail,
+  'contact_options': instance.contactOptions,
   'required_verification_ids': instance.requiredVerificationIds,
+  'min_confirmed_count': instance.minConfirmedCount,
+  'max_participants': instance.maxParticipants,
   'status': instance.status,
 };

@@ -106,42 +106,56 @@ class DatabaseSeeder {
 
   Future<void> _seedPartySet(String partnerId, int index) async {
     // 1. Location
-    final locRes = await _adminClient.from('locations').insert({
-      'partner_id': partnerId,
-      'name': 'Gangnam Branch #$index',
-      'address': 'Seoul Gangnam-gu Teheran-ro ${100 + index}',
-      'sido': 'Seoul',
-      'sigungu': 'Gangnam-gu',
-      // geo_point skipped for now (needs RPC or PostGIS driver)
-    }).select('id').single();
+    final locRes = await _adminClient
+        .from('locations')
+        .insert({
+          'partner_id': partnerId,
+          'name': 'Gangnam Branch #$index',
+          'address': 'Seoul Gangnam-gu Teheran-ro ${100 + index}',
+          'sido': 'Seoul',
+          'sigungu': 'Gangnam-gu',
+          // geo_point skipped for now (needs RPC or PostGIS driver)
+        })
+        .select('id')
+        .single();
     final locationId = locRes['id'] as String;
 
     // 2. Party (Theme)
-    final partyRes = await _adminClient.from('parties').insert({
-      'partner_id': partnerId,
-      'title': 'Friday Night Fever #$index',
-      'description': {'text': 'Come and join the best party in town!'},
-      'status': 'active',
-      'contact_phone': '02-1234-${1000 + index}',
-    }).select('id').single();
+    final partyRes = await _adminClient
+        .from('parties')
+        .insert({
+          'partner_id': partnerId,
+          'title': 'Friday Night Fever #$index',
+          'description': {'text': 'Come and join the best party in town!'},
+          'status': 'active',
+          'contact_phone': '02-1234-${1000 + index}',
+        })
+        .select('id')
+        .single();
     final partyId = partyRes['id'] as String;
 
     // 3. Event (Instance)
     // Date: 3 days later, 19:00
-    final startTime =
-        DateTime.now().add(const Duration(days: 3)).toIso8601String();
-    final endTime =
-        DateTime.now().add(const Duration(days: 3, hours: 4)).toIso8601String();
+    final startTime = DateTime.now()
+        .add(const Duration(days: 3))
+        .toIso8601String();
+    final endTime = DateTime.now()
+        .add(const Duration(days: 3, hours: 4))
+        .toIso8601String();
 
-    final eventRes = await _adminClient.from('events').insert({
-      'party_id': partyId,
-      'location_id': locationId,
-      'title': 'Vol.1 Grand Opening',
-      'start_time': startTime,
-      'end_time': endTime,
-      'max_participants': 40,
-      'status': 'scheduled',
-    }).select('id').single();
+    final eventRes = await _adminClient
+        .from('events')
+        .insert({
+          'party_id': partyId,
+          'location_id': locationId,
+          'title': 'Vol.1 Grand Opening',
+          'start_time': startTime,
+          'end_time': endTime,
+          'max_participants': 40,
+          'status': 'scheduled',
+        })
+        .select('id')
+        .single();
     final eventId = eventRes['id'] as String;
 
     // 4. Tickets
@@ -161,7 +175,7 @@ class DatabaseSeeder {
         'quantity': 20,
         'gender': 'female',
         'status': 'on_sale',
-      }
+      },
     ]);
   }
 

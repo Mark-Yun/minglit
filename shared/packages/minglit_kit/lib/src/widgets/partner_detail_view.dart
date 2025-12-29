@@ -108,8 +108,9 @@ class PartnerDetailView extends ConsumerWidget {
               );
             }
             return Column(
-              children:
-                  parties.map((p) => _buildPartyCard(p, context)).toList(),
+              children: parties
+                  .map((p) => _buildPartyCard(p, context))
+                  .toList(),
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -149,7 +150,7 @@ class PartnerDetailView extends ConsumerWidget {
         ),
         title: Text(party.title),
         subtitle: Text(
-          party.contactPhone ?? '문의처 없음',
+          (party.contactOptions['phone'] as String?) ?? '문의처 없음',
           style: const TextStyle(fontSize: 12),
         ),
         trailing: const Icon(Icons.chevron_right),

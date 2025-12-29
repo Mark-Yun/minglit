@@ -1,5 +1,7 @@
 import 'package:app_partner/src/features/dev/partner_dev_map.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -91,6 +93,16 @@ class _AppViewState extends State<_AppView> {
         useMaterial3: true,
         textTheme: GoogleFonts.notoSansKrTextTheme(),
       ),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        FlutterQuillLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('ko', 'KR'),
+        Locale('en', 'US'),
+      ],
       home: FutureBuilder(
         future: _initFuture,
         builder: (context, snapshot) {

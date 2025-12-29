@@ -31,14 +31,12 @@ class PartnerListPreviewScreen extends ConsumerWidget {
               final partner = partners[index];
               return ListTile(
                 leading: CircleAvatar(
-                  backgroundImage:
-                      partner.profileImageUrl != null
-                          ? NetworkImage(partner.profileImageUrl!)
-                          : null,
-                  child:
-                      partner.profileImageUrl == null
-                          ? Text(partner.name[0])
-                          : null,
+                  backgroundImage: partner.profileImageUrl != null
+                      ? NetworkImage(partner.profileImageUrl!)
+                      : null,
+                  child: partner.profileImageUrl == null
+                      ? Text(partner.name[0])
+                      : null,
                 ),
                 title: Text(partner.name),
                 subtitle: Text(partner.introduction ?? 'No introduction'),
@@ -48,11 +46,10 @@ class PartnerListPreviewScreen extends ConsumerWidget {
                     Navigator.push<void>(
                       context,
                       MaterialPageRoute<void>(
-                        builder:
-                            (context) => Scaffold(
-                              appBar: AppBar(title: Text(partner.name)),
-                              body: PartnerDetailView(partner: partner),
-                            ),
+                        builder: (context) => Scaffold(
+                          appBar: AppBar(title: Text(partner.name)),
+                          body: PartnerDetailView(partner: partner),
+                        ),
                       ),
                     ),
                   );

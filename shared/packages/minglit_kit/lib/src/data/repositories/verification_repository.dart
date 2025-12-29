@@ -23,6 +23,15 @@ class VerificationRepository {
 
   final SupabaseClient _supabase;
 
+  /// Fetches all available verification types.
+  Future<List<Map<String, dynamic>>> getVerifications() async {
+    final data = await _supabase
+        .from('verifications')
+        .select()
+        .order('title', ascending: true);
+    return (data as List<dynamic>).cast<Map<String, dynamic>>();
+  }
+
   /// [User] 특정 파트너가 요구하는 인증들의 상태를 일괄 조회
   Future<List<VerificationRequirementStatus>> getPartnerRequirementsStatus({
     required String partnerId,

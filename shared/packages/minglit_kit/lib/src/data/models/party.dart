@@ -39,11 +39,14 @@ abstract class Party with _$Party {
     @JsonKey(name: 'updated_at') required DateTime updatedAt,
     Map<String, dynamic>? description, // Quill Delta JSON
     @JsonKey(name: 'image_url') String? imageUrl,
-    @JsonKey(name: 'contact_phone') String? contactPhone,
-    @JsonKey(name: 'contact_email') String? contactEmail,
+    @JsonKey(name: 'contact_options')
+    @Default({})
+    Map<String, dynamic> contactOptions,
     @JsonKey(name: 'required_verification_ids')
     @Default([])
     List<String> requiredVerificationIds,
+    @JsonKey(name: 'min_confirmed_count') @Default(0) int minConfirmedCount,
+    @JsonKey(name: 'max_participants') @Default(20) int maxParticipants,
     @Default('active') String status,
   }) = _Party;
 

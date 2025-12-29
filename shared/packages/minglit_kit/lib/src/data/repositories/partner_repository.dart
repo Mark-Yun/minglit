@@ -1,6 +1,7 @@
 import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:minglit_kit/src/data/models/partner.dart';
 import 'package:minglit_kit/src/data/models/partner_application.dart';
+import 'package:minglit_kit/src/data/models/party.dart' show Location;
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:path/path.dart' as p;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -202,5 +203,30 @@ class PartnerRepository {
         .match(
           {'partner_id': partnerId, 'user_id': userId},
         );
+  }
+
+  /// Fetches locations belonging to a specific partner.
+  Future<List<Location>> getLocations(String partnerId) async {
+    final data = await _supabase
+        .from('locations')
+        .select()
+        .eq('partner_id', partnerId)
+        .order('name', ascending: true);
+
+    return (data as List<dynamic>)
+        .map((json) => Location.fromJson(json as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Fetches a specific partner by ID.
+  Future<Partner?> getPartnerById(String partnerId) async {
+    final data = await _supabase
+        .from('partners')
+        .select()
+        .eq('id', partnerId)
+        .maybeSingle();
+
+    if (data == null) return null;
+    return Partner.fromJson(data);
   }
 }
