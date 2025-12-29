@@ -51,26 +51,13 @@ class PartnerDevMap extends StatelessWidget {
           description: '사용자 인증(PASS/재직) 요청 심사',
           screenBuilder: (_) => const ReviewVerificationPage(),
         ),
-        DevScreenItem(
-          category: 'Preview',
-          title: 'My Partner Profile',
-          description: '유저에게 노출되는 파트너 프로필 미리보기',
-          screenBuilder: (_) => Scaffold(
-            appBar: AppBar(title: const Text('My Profile')),
-            body: const PartnerDetailView(
-              partner: Partner(
-                id: 'my-id',
-                name: '밍글릿 사장님 모드',
-                introduction: '파트너 앱에서 설정한 정보가 유저들에게 이렇게 보입니다.',
-                bizName: '성공하는 파트너',
-                representativeName: '김대표',
-                bizNumber: '987-65-43210',
-                contactEmail: 'partner@minglit.com',
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
+                DevScreenItem(
+                  category: 'Preview',
+                  title: 'Partner List Preview',
+                  description: '생성된 모든 파트너 목록 및 상세 화면 확인',
+                  screenBuilder: (_) => const PartnerListPreviewScreen(),
+                ),
+              ],
+            );
+          }
+        }

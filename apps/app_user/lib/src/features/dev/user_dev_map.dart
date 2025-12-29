@@ -57,26 +57,9 @@ class UserDevMap extends StatelessWidget {
         ),
         DevScreenItem(
           category: 'Preview',
-          title: 'Partner Profile',
-          description: '유저가 보는 파트너 상세 페이지 미리보기',
-          screenBuilder:
-              (_) => Scaffold(
-                appBar: AppBar(title: const Text('Partner Profile')),
-                body: const PartnerDetailView(
-                  partner: Partner(
-                    id: 'dummy-id',
-                    name: '밍글릿 강남점',
-                    introduction:
-                        '강남 최고의 소셜 파티 공간, 밍글릿입니다. \n다양한 사람들과 즐거운 시간을 가져보세요!',
-                    address: '서울시 강남구 테헤란로 123',
-                    bizName: '(주)밍글릿 컴퍼니',
-                    representativeName: '홍길동',
-                    bizNumber: '123-45-67890',
-                    contactEmail: 'contact@minglit.com',
-                    contactPhone: '02-1234-5678',
-                  ),
-                ),
-              ),
+          title: 'Partner List Preview',
+          description: '생성된 모든 파트너 목록 및 상세 화면 확인',
+          screenBuilder: (_) => const PartnerListPreviewScreen(),
         ),
       ],
     );

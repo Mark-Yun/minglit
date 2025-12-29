@@ -1,4 +1,5 @@
 import 'package:image_picker/image_picker.dart' show XFile;
+import 'package:minglit_kit/src/data/models/partner.dart';
 import 'package:minglit_kit/src/data/models/partner_application.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:path/path.dart' as p;
@@ -25,6 +26,19 @@ class PartnerRepository {
     : _supabase = supabase ?? Supabase.instance.client;
 
   final SupabaseClient _supabase;
+
+  /// Fetches all active partners.
+  Future<List<Partner>> getPartners() async {
+    final data = await _supabase
+        .from('partners')
+        .select()
+        .eq('is_active', true)
+        .order('created_at', ascending: false);
+
+    return (data as List<dynamic>)
+        .map((json) => Partner.fromJson(json as Map<String, dynamic>))
+        .toList();
+  }
 
   /// **Submit Application**
   ///
