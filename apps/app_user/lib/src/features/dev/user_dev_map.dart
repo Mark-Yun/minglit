@@ -58,8 +58,15 @@ class UserDevMap extends StatelessWidget {
         DevScreenItem(
           category: 'Preview',
           title: 'Partner List Preview',
-          description: '생성된 모든 파트너 목록 및 상세 화면 확인',
+          description: '생성된 모든 파트너 목록 및 '
+              '상세 화면 확인',
           screenBuilder: (_) => const PartnerListPreviewScreen(),
+        ),
+        DevScreenItem(
+          category: 'Preview',
+          title: 'Party List Preview',
+          description: '생성된 모든 파티 목록 확인',
+          screenBuilder: (_) => const PartyListPreviewScreen(),
         ),
       ],
     );

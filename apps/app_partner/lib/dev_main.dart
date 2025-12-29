@@ -1,11 +1,15 @@
 import 'package:app_partner/src/features/dev/partner_dev_map.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Korean locale for date formatting
+  await initializeDateFormatting('ko_KR');
 
   const supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',

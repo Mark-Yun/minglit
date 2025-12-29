@@ -1,8 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'partner_detail_view.g.dart';
 
 /// A detailed view of a Partner profile.
-class PartnerDetailView extends StatelessWidget {
+class PartnerDetailView extends ConsumerWidget {
   /// Creates a [PartnerDetailView].
   const PartnerDetailView({
     required this.partner,
@@ -13,7 +18,7 @@ class PartnerDetailView extends StatelessWidget {
   final Partner partner;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -61,6 +66,10 @@ class PartnerDetailView extends StatelessWidget {
           _buildSection('소개', partner.introduction ?? '소개글이 없습니다.'),
           const Divider(height: 48),
 
+          // Parties
+          _buildPartySection(ref, context),
+          const Divider(height: 48),
+
           // Business Info
           _buildSection('사업자 정보', ''),
           _buildInfoRow('상호명', partner.bizName),
@@ -73,6 +82,77 @@ class PartnerDetailView extends StatelessWidget {
           _buildInfoRow('이메일', partner.contactEmail),
           _buildInfoRow('전화번호', partner.contactPhone),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPartySection(WidgetRef ref, BuildContext context) {
+    final partiesAsync = ref.watch(
+      partnerPartiesProvider(partnerId: partner.id),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '진행 중인 파티',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        partiesAsync.when(
+          data: (parties) {
+            if (parties.isEmpty) {
+              return const Text(
+                '등록된 파티가 없습니다.',
+                style: TextStyle(color: Colors.grey),
+              );
+            }
+            return Column(
+              children:
+                  parties.map((p) => _buildPartyCard(p, context)).toList(),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Text('Error: $e'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPartyCard(Party party, BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        onTap: () {
+          unawaited(
+            Navigator.push<void>(
+              context,
+              MaterialPageRoute<void>(
+                builder: (context) => PartyDetailView(party: party),
+              ),
+            ),
+          );
+        },
+        leading: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: Colors.orange[50],
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Icon(Icons.celebration, color: Colors.orange),
+        ),
+        title: Text(party.title),
+        subtitle: Text(
+          party.contactPhone ?? '문의처 없음',
+          style: const TextStyle(fontSize: 12),
+        ),
+        trailing: const Icon(Icons.chevron_right),
       ),
     );
   }
@@ -112,4 +192,10 @@ class PartnerDetailView extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Provider to fetch parties for a specific partner.
+@riverpod
+Future<List<Party>> partnerParties(Ref ref, {required String partnerId}) {
+  return ref.read(partyRepositoryProvider).getPartiesByPartnerId(partnerId);
 }

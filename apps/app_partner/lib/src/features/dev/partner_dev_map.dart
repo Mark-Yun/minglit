@@ -51,13 +51,21 @@ class PartnerDevMap extends StatelessWidget {
           description: '사용자 인증(PASS/재직) 요청 심사',
           screenBuilder: (_) => const ReviewVerificationPage(),
         ),
-                DevScreenItem(
-                  category: 'Preview',
-                  title: 'Partner List Preview',
-                  description: '생성된 모든 파트너 목록 및 상세 화면 확인',
-                  screenBuilder: (_) => const PartnerListPreviewScreen(),
-                ),
-              ],
-            );
-          }
-        }
+        DevScreenItem(
+          category: 'Preview',
+          title: 'Partner List Preview',
+          description:
+              '생성된 모든 파트너 목록 및 '
+              '상세 화면 확인',
+          screenBuilder: (_) => const PartnerListPreviewScreen(),
+        ),
+        DevScreenItem(
+          category: 'Preview',
+          title: 'Party List Preview',
+          description: '생성된 모든 파티 목록 확인',
+          screenBuilder: (_) => const PartyListPreviewScreen(),
+        ),
+      ],
+    );
+  }
+}

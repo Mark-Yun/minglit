@@ -15,4 +15,5 @@ export 'src/data/models/verification.dart';
 // Repositories
 export 'src/data/repositories/auth_repository.dart';
 export 'src/data/repositories/partner_repository.dart';
+export 'src/data/repositories/party_repository.dart';
 export 'src/data/repositories/verification_repository.dart';

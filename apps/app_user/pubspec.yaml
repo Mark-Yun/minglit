@@ -37,6 +37,7 @@ dependencies:
   google_fonts: ^6.3.2
   google_sign_in: 6.2.1
   image_picker: ^1.2.1
+  intl: ^0.20.2
   minglit_kit:
     path: ../../shared/packages/minglit_kit
   riverpod_annotation: ^3.0.3
