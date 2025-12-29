@@ -75,16 +75,7 @@ class _AppViewState extends ConsumerState<_AppView> {
     return MaterialApp.router(
       title: 'Minglit Partner',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF9900FF),
-          primary: const Color(0xFF9900FF),
-          secondary: const Color(0xFFFF9900),
-          surface: Colors.white,
-        ),
-        useMaterial3: true,
-        textTheme: GoogleFonts.notoSansKrTextTheme(),
-      ),
+      theme: MinglitTheme.materialTheme,
       routerConfig: goRouter,
       builder: (context, child) {
         return FutureBuilder(

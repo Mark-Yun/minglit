@@ -84,15 +84,7 @@ class _AppViewState extends State<_AppView> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Minglit Partner (Dev)',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFFF7043),
-          primary: const Color(0xFFFF7043),
-          secondary: const Color(0xFF1A237E),
-        ),
-        useMaterial3: true,
-        textTheme: GoogleFonts.notoSansKrTextTheme(),
-      ),
+      theme: MinglitTheme.materialTheme,
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,

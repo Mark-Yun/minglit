@@ -283,10 +283,6 @@ class _VerificationManagementPageState
                 () => unawaited(
                   _showCommentsModal(req.activeRequest!['id'] as String),
                 ),
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.zero,
-              minimumSize: const Size(0, 30),
-            ),
             child: const Text('대화 내역 보기 >'),
           ),
         ],
@@ -376,30 +372,11 @@ class _VerificationManagementPageState
         ],
       ),
       child: SafeArea(
-        child: SizedBox(
-          width: double.infinity,
-          height: 54,
-          child: ElevatedButton(
-            onPressed: hasChanges ? () => unawaited(_submitAll()) : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue[900],
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: Colors.grey[300],
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child:
-                _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                      '수정 및 제출하기',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-          ),
+        child: ElevatedButton(
+          onPressed: hasChanges ? () => unawaited(_submitAll()) : null,
+          child: _isLoading
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text('수정 및 제출하기'),
         ),
       ),
     );

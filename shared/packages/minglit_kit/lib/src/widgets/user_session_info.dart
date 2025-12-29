@@ -92,10 +92,6 @@ class UserSessionInfo extends ConsumerWidget {
               ),
               icon: const Icon(Icons.logout, size: 16),
               label: const Text('Sign Out'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.red,
-                side: const BorderSide(color: Colors.red),
-              ),
             ),
           ),
         ],

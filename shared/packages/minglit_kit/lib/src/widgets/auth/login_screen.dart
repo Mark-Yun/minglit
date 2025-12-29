@@ -70,21 +70,24 @@ class MinglitLoginScreen extends StatelessWidget {
               const Spacer(),
 
               // 2. Login Buttons
-              _SocialLoginButton(
-                text: 'Google로 시작하기',
-                color: Colors.white,
-                textColor: Colors.black87,
-                icon: Icons.g_mobiledata, // exchange with SVG later
+              OutlinedButton.icon(
                 onPressed: onGoogleSignIn,
-                borderColor: Colors.grey[300],
+                icon: const Icon(Icons.g_mobiledata, size: 24),
+                label: const Text('Google로 시작하기'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.black87,
+                  side: BorderSide(color: Colors.grey[300]!),
+                ),
               ),
               const SizedBox(height: 12),
-              _SocialLoginButton(
-                text: 'Kakao로 시작하기',
-                color: const Color(0xFFFEE500),
-                textColor: Colors.black87,
-                icon: Icons.chat_bubble, // exchange with SVG later
+              ElevatedButton.icon(
                 onPressed: onKakaoSignIn,
+                icon: const Icon(Icons.chat_bubble, size: 18),
+                label: const Text('Kakao로 시작하기'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFEE500),
+                  foregroundColor: Colors.black87,
+                ),
               ),
               const SizedBox(height: 12),
               if (isPartner) ...[
@@ -103,55 +106,6 @@ class MinglitLoginScreen extends StatelessWidget {
               ],
               const SizedBox(height: 48),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SocialLoginButton extends StatelessWidget {
-  const _SocialLoginButton({
-    required this.text,
-    required this.color,
-    required this.textColor,
-    required this.icon,
-    this.onPressed,
-    this.borderColor,
-  });
-
-  final String text;
-  final Color color;
-  final Color textColor;
-  final IconData icon;
-  final VoidCallback? onPressed;
-  final Color? borderColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton.icon(
-        onPressed: onPressed,
-        icon: Icon(icon, color: textColor),
-        label: Text(
-          text,
-          style: TextStyle(
-            color: textColor,
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          foregroundColor: textColor,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-            side: borderColor != null
-                ? BorderSide(color: borderColor!)
-                : BorderSide.none,
           ),
         ),
       ),

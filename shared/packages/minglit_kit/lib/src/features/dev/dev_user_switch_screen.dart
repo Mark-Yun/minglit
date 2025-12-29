@@ -136,9 +136,6 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
             onPressed: _isActionRunning ? null : _runSeeder,
             icon: const Icon(Icons.cloud_upload),
             label: const Text('Run Database Seeder'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
           ),
         ],
       ),

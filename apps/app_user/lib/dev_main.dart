@@ -82,15 +82,7 @@ class _AppViewState extends State<_AppView> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Minglit User (Dev)',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1A237E),
-          primary: const Color(0xFF1A237E),
-          secondary: const Color(0xFFFF7043),
-        ),
-        useMaterial3: true,
-        textTheme: GoogleFonts.notoSansKrTextTheme(),
-      ),
+      theme: MinglitTheme.materialTheme,
       home: FutureBuilder(
         future: _initFuture,
         builder: (context, snapshot) {

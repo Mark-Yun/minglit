@@ -358,14 +358,6 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
                           }
                         });
                       },
-                      checkmarkColor: Colors.white,
-                      selectedColor: const Color(0xFFFF7043),
-                      labelStyle: TextStyle(
-                        color: isSelected ? Colors.white : Colors.black87,
-                        fontWeight: isSelected
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
                     );
                   }).toList(),
                 ),
@@ -380,15 +372,6 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: isLoading ? null : _submit,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    backgroundColor: const Color(0xFF1A237E), // Navy Button
-                    foregroundColor: Colors.white,
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
                   child: isLoading
                       ? const SizedBox(
                           width: 24,
@@ -398,13 +381,7 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
                             strokeWidth: 2,
                           ),
                         )
-                      : const Text(
-                          '파티 생성 완료',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                      : const Text('파티 생성 완료'),
                 ),
               ),
               const SizedBox(height: 40),

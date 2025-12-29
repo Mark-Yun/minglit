@@ -53,19 +53,15 @@ class DevScreenList extends ConsumerWidget {
     final categories = groupedItems.keys.toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('$appName Dev Map 🛠️'),
-        backgroundColor: Colors.grey[900],
-        foregroundColor: Colors.white,
-      ),
-      body: Column(
-        children: [
-          const UserSessionInfo(),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: categories.length,
-              itemBuilder: (context, catIndex) {
+      body: CustomScrollView(
+        slivers: [
+          MinglitTheme.sliverAppBar(title: '$appName Dev Map 🛠️'),
+          const SliverToBoxAdapter(
+            child: UserSessionInfo(),
+          ),
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, catIndex) {
                 final category = categories[catIndex];
                 final categoryItems = groupedItems[category]!;
 
@@ -78,13 +74,13 @@ class DevScreenList extends ConsumerWidget {
                         horizontal: 16,
                         vertical: 12,
                       ),
-                      color: Colors.grey[200],
+                      color: Colors.grey[100],
                       child: Text(
                         category.toUpperCase(),
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: Colors.grey[700],
+                          color: Colors.grey[600],
                           letterSpacing: 1.2,
                         ),
                       ),
@@ -133,6 +129,7 @@ class DevScreenList extends ConsumerWidget {
                   ],
                 );
               },
+              childCount: categories.length,
             ),
           ),
         ],

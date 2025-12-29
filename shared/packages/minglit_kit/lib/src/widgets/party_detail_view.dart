@@ -132,11 +132,6 @@ class PartyDetailView extends ConsumerWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(12),
-      ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
         title: Text(
@@ -168,10 +163,6 @@ class PartyDetailView extends ConsumerWidget {
         ),
         trailing: ElevatedButton(
           onPressed: () {},
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
-            foregroundColor: Colors.white,
-          ),
           child: const Text('예매'),
         ),
       ),
@@ -209,15 +200,7 @@ class PartyDetailView extends ConsumerWidget {
                     const SnackBar(content: Text('주최자에게 문의하기 (TBD)')),
                   );
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1A237E), // Midnight Navy
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Text(
-                  '문의하기',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
+                child: const Text('문의하기'),
               ),
             ),
           ],

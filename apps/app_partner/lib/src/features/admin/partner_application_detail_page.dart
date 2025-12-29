@@ -130,10 +130,6 @@ class _PartnerApplicationDetailPageState
                     children: [
                       Expanded(
                         child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,
-                          ),
                           onPressed: () => unawaited(
                             _processReview(
                               status: 'approved',
@@ -146,10 +142,6 @@ class _PartnerApplicationDetailPageState
                       const SizedBox(width: 16),
                       Expanded(
                         child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            foregroundColor: Colors.white,
-                          ),
                           onPressed: () => unawaited(
                             _processReview(
                               status: 'needs_correction',
@@ -162,10 +154,6 @@ class _PartnerApplicationDetailPageState
                       const SizedBox(width: 16),
                       Expanded(
                         child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            foregroundColor: Colors.white,
-                          ),
                           onPressed: () => unawaited(
                             _processReview(
                               status: 'rejected',

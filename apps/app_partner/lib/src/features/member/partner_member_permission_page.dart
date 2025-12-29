@@ -198,23 +198,9 @@ class _MemberPermissionFormState extends ConsumerState<_MemberPermissionForm> {
             (e) => _buildPermissionTile(e.key, e.value),
           ),
           const SizedBox(height: 48),
-          SizedBox(
-            width: double.infinity,
-            height: 54,
-            child: ElevatedButton(
-              onPressed: () => unawaited(_save()),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange[800],
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                '변경 사항 저장',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
+          ElevatedButton(
+            onPressed: () => unawaited(_save()),
+            child: const Text('변경 사항 저장'),
           ),
         ],
       ),

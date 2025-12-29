@@ -168,26 +168,9 @@ class _PartnerApplicationPageState
                     ),
 
                     const SizedBox(height: 48),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 54,
-                      child: ElevatedButton(
-                        onPressed: _submit,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange[800],
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          '입점 신청하기',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                    ElevatedButton(
+                      onPressed: _submit,
+                      child: const Text('입점 신청하기'),
                     ),
                   ],
                 ),

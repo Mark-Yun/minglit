@@ -260,9 +260,6 @@ class _ReviewVerificationPageState
                     onPressed: () => unawaited(
                       _showCorrectionDialog(req['id'] as String),
                     ),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.orange,
-                    ),
                     child: const Text('보완 요청'),
                   ),
                 ),
@@ -274,10 +271,6 @@ class _ReviewVerificationPageState
                         req['id'] as String,
                         VerificationStatus.approved,
                       ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
                     ),
                     child: const Text('최종 승인'),
                   ),
