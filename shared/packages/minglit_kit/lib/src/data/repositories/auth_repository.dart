@@ -121,4 +121,19 @@ class AuthRepository {
       rethrow;
     }
   }
+
+  /// **Dev/Test**: Sign in with Email and Password.
+  Future<void> signInWithEmail({
+    required String email,
+    required String password,
+  }) async {
+    Log.d('🔐 [AuthRepo] Email Sign-In started: $email');
+    try {
+      await _supabase.auth.signInWithPassword(email: email, password: password);
+      Log.i('🎉 [AuthRepo] Email Sign-In successful!');
+    } on Exception catch (e, stackTrace) {
+      Log.e('❌ [AuthRepo] Email Sign-In Error', e, stackTrace);
+      rethrow;
+    }
+  }
 }

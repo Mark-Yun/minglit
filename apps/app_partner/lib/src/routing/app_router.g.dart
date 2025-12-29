@@ -12,9 +12,9 @@ part of 'app_router.dart';
 ///
 /// Configures [GoRouter] with:
 /// 1. **Initial Location**: Default entry point (`/`).
-/// 2. **Refresh Logic**: Listens to [authStateChangesProvider] to auto-redirect on login/logout.
-/// 3. **Redirect Logic**: Enforces authentication policy (Guest -> Login).
-/// 4. **Routes**: Uses Type-safe routes from [app_routes.dart].
+/// 2. **Refresh Logic**: Listens to auth changes to auto-redirect.
+/// 3. **Redirect Logic**: Enforces authentication policy.
+/// 4. **Routes**: Uses Type-safe routes from app_routes.dart.
 
 @ProviderFor(goRouter)
 const goRouterProvider = GoRouterProvider._();
@@ -23,9 +23,9 @@ const goRouterProvider = GoRouterProvider._();
 ///
 /// Configures [GoRouter] with:
 /// 1. **Initial Location**: Default entry point (`/`).
-/// 2. **Refresh Logic**: Listens to [authStateChangesProvider] to auto-redirect on login/logout.
-/// 3. **Redirect Logic**: Enforces authentication policy (Guest -> Login).
-/// 4. **Routes**: Uses Type-safe routes from [app_routes.dart].
+/// 2. **Refresh Logic**: Listens to auth changes to auto-redirect.
+/// 3. **Redirect Logic**: Enforces authentication policy.
+/// 4. **Routes**: Uses Type-safe routes from app_routes.dart.
 
 final class GoRouterProvider
     extends $FunctionalProvider<GoRouter, GoRouter, GoRouter>
@@ -34,9 +34,9 @@ final class GoRouterProvider
   ///
   /// Configures [GoRouter] with:
   /// 1. **Initial Location**: Default entry point (`/`).
-  /// 2. **Refresh Logic**: Listens to [authStateChangesProvider] to auto-redirect on login/logout.
-  /// 3. **Redirect Logic**: Enforces authentication policy (Guest -> Login).
-  /// 4. **Routes**: Uses Type-safe routes from [app_routes.dart].
+  /// 2. **Refresh Logic**: Listens to auth changes to auto-redirect.
+  /// 3. **Redirect Logic**: Enforces authentication policy.
+  /// 4. **Routes**: Uses Type-safe routes from app_routes.dart.
   const GoRouterProvider._()
     : super(
         from: null,

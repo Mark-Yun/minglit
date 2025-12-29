@@ -134,13 +134,12 @@ class _PartnerApplicationDetailPageState
                             backgroundColor: Colors.green,
                             foregroundColor: Colors.white,
                           ),
-                          onPressed:
-                              () => unawaited(
-                                _processReview(
-                                  status: 'approved',
-                                  comment: _commentController.text,
-                                ),
-                              ),
+                          onPressed: () => unawaited(
+                            _processReview(
+                              status: 'approved',
+                              comment: _commentController.text,
+                            ),
+                          ),
                           child: const Text('승인'),
                         ),
                       ),
@@ -151,13 +150,12 @@ class _PartnerApplicationDetailPageState
                             backgroundColor: Colors.blue,
                             foregroundColor: Colors.white,
                           ),
-                          onPressed:
-                              () => unawaited(
-                                _processReview(
-                                  status: 'needs_correction',
-                                  comment: _commentController.text,
-                                ),
-                              ),
+                          onPressed: () => unawaited(
+                            _processReview(
+                              status: 'needs_correction',
+                              comment: _commentController.text,
+                            ),
+                          ),
                           child: const Text('보완 요청'),
                         ),
                       ),
@@ -168,13 +166,12 @@ class _PartnerApplicationDetailPageState
                             backgroundColor: Colors.red,
                             foregroundColor: Colors.white,
                           ),
-                          onPressed:
-                              () => unawaited(
-                                _processReview(
-                                  status: 'rejected',
-                                  comment: _commentController.text,
-                                ),
-                              ),
+                          onPressed: () => unawaited(
+                            _processReview(
+                              status: 'rejected',
+                              comment: _commentController.text,
+                            ),
+                          ),
                           child: const Text('반려'),
                         ),
                       ),

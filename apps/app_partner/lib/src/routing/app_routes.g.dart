@@ -7,11 +7,38 @@ part of 'app_routes.dart';
 // **************************************************************************
 
 List<RouteBase> get $appRoutes => [
+  $devUserSwitchRoute,
   $loginRoute,
   $homeRoute,
   $applicationListRoute,
   $memberListRoute,
 ];
+
+RouteBase get $devUserSwitchRoute => GoRouteData.$route(
+  path: '/dev/user-switch',
+  factory: $DevUserSwitchRoute._fromState,
+);
+
+mixin $DevUserSwitchRoute on GoRouteData {
+  static DevUserSwitchRoute _fromState(GoRouterState state) =>
+      const DevUserSwitchRoute();
+
+  @override
+  String get location => GoRouteData.$location('/dev/user-switch');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
 
 RouteBase get $loginRoute =>
     GoRouteData.$route(path: '/login', factory: $LoginRoute._fromState);

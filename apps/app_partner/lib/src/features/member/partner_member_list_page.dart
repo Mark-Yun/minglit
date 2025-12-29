@@ -44,10 +44,9 @@ class PartnerMemberListPage extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed:
-                () => ref.invalidate(
-                  partnerMembersProvider(partnerId: partnerId),
-                ),
+            onPressed: () => ref.invalidate(
+              partnerMembersProvider(partnerId: partnerId),
+            ),
           ),
         ],
       ),
@@ -83,14 +82,13 @@ class PartnerMemberListPage extends ConsumerWidget {
     }
 
     return RefreshIndicator(
-      onRefresh:
-          () =>
-              ref.refresh(partnerMembersProvider(partnerId: partnerId).future),
+      onRefresh: () =>
+          ref.refresh(partnerMembersProvider(partnerId: partnerId).future),
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: members.length,
-        itemBuilder:
-            (context, index) => _buildMemberCard(context, ref, members[index]),
+        itemBuilder: (context, index) =>
+            _buildMemberCard(context, ref, members[index]),
       ),
     );
   }
@@ -135,10 +133,9 @@ class PartnerMemberListPage extends ConsumerWidget {
           Text('목록을 불러오지 못했습니다.\n$error', textAlign: TextAlign.center),
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed:
-                () => ref.invalidate(
-                  partnerMembersProvider(partnerId: partnerId),
-                ),
+            onPressed: () => ref.invalidate(
+              partnerMembersProvider(partnerId: partnerId),
+            ),
             child: const Text('다시 시도'),
           ),
         ],

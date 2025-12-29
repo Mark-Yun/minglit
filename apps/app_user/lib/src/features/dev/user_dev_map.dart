@@ -27,6 +27,12 @@ class UserDevMap extends StatelessWidget {
           screenBuilder: (_) => const LoginPage(),
         ),
         DevScreenItem(
+          category: 'Auth',
+          title: 'Session Switcher',
+          description: '테스트 유저 계정으로 즉시 전환',
+          screenBuilder: (_) => const DevUserSwitchScreen(),
+        ),
+        DevScreenItem(
           category: 'Home',
           title: 'Home',
           description: '메인 홈 화면 (파티 목록 등)',

@@ -6,8 +6,21 @@ import 'package:app_partner/src/features/member/partner_member_list_page.dart';
 import 'package:app_partner/src/features/member/partner_member_permission_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 part 'app_routes.g.dart';
+
+/// **Dev: User Switch Route**
+///
+/// Path: `/dev/user-switch`
+@TypedGoRoute<DevUserSwitchRoute>(path: '/dev/user-switch')
+class DevUserSwitchRoute extends GoRouteData with $DevUserSwitchRoute {
+  const DevUserSwitchRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const DevUserSwitchScreen();
+}
 
 /// **Auth Route**: Login Screen.
 ///

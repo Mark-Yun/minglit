@@ -32,8 +32,9 @@ class UserSessionInfo extends ConsumerWidget {
     }
 
     const encoder = JsonEncoder.withIndent('  ');
-    final prettyMetadata =
-        user.userMetadata != null ? encoder.convert(user.userMetadata) : '{}';
+    final prettyMetadata = user.userMetadata != null
+        ? encoder.convert(user.userMetadata)
+        : '{}';
 
     return Container(
       width: double.infinity,
@@ -86,10 +87,9 @@ class UserSessionInfo extends ConsumerWidget {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed:
-                  () => unawaited(
-                    ref.read(authControllerProvider.notifier).signOut(),
-                  ),
+              onPressed: () => unawaited(
+                ref.read(authControllerProvider.notifier).signOut(),
+              ),
               icon: const Icon(Icons.logout, size: 16),
               label: const Text('Sign Out'),
               style: OutlinedButton.styleFrom(

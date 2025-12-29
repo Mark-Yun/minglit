@@ -67,7 +67,7 @@ final class PartnerApplicationProvider
 }
 
 String _$partnerApplicationHash() =>
-    r'2995a0b0dd9b08cb3d481bd8d3e192bee63811be';
+    r'904ede68e412e9d5aa4eff4aca50afc81370264a';
 
 final class PartnerApplicationFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<PartnerApplication?>, String> {

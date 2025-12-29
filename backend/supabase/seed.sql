@@ -1,0 +1,6 @@
+--
+-- SEED DATA (Empty)
+--
+-- Data seeding is now handled by Dart script (DatabaseSeeder)
+-- to ensure Auth compatibility and complex relationships.
+--

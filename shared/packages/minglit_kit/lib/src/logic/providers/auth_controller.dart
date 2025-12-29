@@ -15,16 +15,48 @@ class AuthController extends _$AuthController {
   /// Trigger Google Sign-In
   Future<void> signInWithGoogle() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref.read(authRepositoryProvider).signInWithGoogle(),
-    );
+    try {
+      await ref.read(authRepositoryProvider).signInWithGoogle();
+      state = const AsyncData(null);
+    } on Object catch (e, st) {
+      try {
+        state = AsyncError(e, st);
+      } on Object catch (_) {}
+    }
+  }
+
+  /// Trigger Email Sign-In (Dev/Test)
+  Future<void> signInWithEmail({
+    required String email,
+    required String password,
+  }) async {
+    state = const AsyncLoading();
+    try {
+      await ref
+          .read(authRepositoryProvider)
+          .signInWithEmail(
+            email: email,
+            password: password,
+          );
+      // Success: Do nothing. Auth state change will trigger UI updates/redirects.
+      // Setting state here causes 'disposed' error if redirect happens fast.
+    } on Object catch (e, st) {
+      try {
+        state = AsyncError(e, st);
+      } on Object catch (_) {}
+    }
   }
 
   /// Trigger Sign-Out
   Future<void> signOut() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref.read(authRepositoryProvider).signOut(),
-    );
+    try {
+      await ref.read(authRepositoryProvider).signOut();
+      state = const AsyncData(null);
+    } on Object catch (e, st) {
+      try {
+        state = AsyncError(e, st);
+      } on Object catch (_) {}
+    }
   }
 }

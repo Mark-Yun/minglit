@@ -11,7 +11,7 @@ part of 'partner_member_permission_page.dart';
 /// **Local Provider: Single Partner Member**
 ///
 /// Fetches details for a specific member.
-/// Currently filters from the full list, but can be updated to fetch from DB directly.
+/// Filters from full list, can be updated to fetch from DB.
 
 @ProviderFor(partnerMember)
 const partnerMemberProvider = PartnerMemberFamily._();
@@ -19,7 +19,7 @@ const partnerMemberProvider = PartnerMemberFamily._();
 /// **Local Provider: Single Partner Member**
 ///
 /// Fetches details for a specific member.
-/// Currently filters from the full list, but can be updated to fetch from DB directly.
+/// Filters from full list, can be updated to fetch from DB.
 
 final class PartnerMemberProvider
     extends
@@ -34,7 +34,7 @@ final class PartnerMemberProvider
   /// **Local Provider: Single Partner Member**
   ///
   /// Fetches details for a specific member.
-  /// Currently filters from the full list, but can be updated to fetch from DB directly.
+  /// Filters from full list, can be updated to fetch from DB.
   const PartnerMemberProvider._({
     required PartnerMemberFamily super.from,
     required ({String partnerId, String targetUserId}) super.argument,
@@ -83,12 +83,12 @@ final class PartnerMemberProvider
   }
 }
 
-String _$partnerMemberHash() => r'441e81eb6f5388fa16ed763fcd1edb45dd07785e';
+String _$partnerMemberHash() => r'28b6c1ad53112e4630bf553eeb90e59178a7dfd5';
 
 /// **Local Provider: Single Partner Member**
 ///
 /// Fetches details for a specific member.
-/// Currently filters from the full list, but can be updated to fetch from DB directly.
+/// Filters from full list, can be updated to fetch from DB.
 
 final class PartnerMemberFamily extends $Family
     with
@@ -108,7 +108,7 @@ final class PartnerMemberFamily extends $Family
   /// **Local Provider: Single Partner Member**
   ///
   /// Fetches details for a specific member.
-  /// Currently filters from the full list, but can be updated to fetch from DB directly.
+  /// Filters from full list, can be updated to fetch from DB.
 
   PartnerMemberProvider call({
     required String partnerId,

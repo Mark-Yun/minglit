@@ -37,8 +37,9 @@ class _ReviewVerificationPageState
   Future<void> _loadRequests() async {
     setState(() => _isLoading = true);
     try {
-      final reqs =
-          await ref.read(verificationRepositoryProvider).getPendingRequests();
+      final reqs = await ref
+          .read(verificationRepositoryProvider)
+          .getPendingRequests();
       if (!mounted) return;
       setState(() => _pendingRequests = reqs);
     } on Exception catch (e) {
@@ -89,51 +90,50 @@ class _ReviewVerificationPageState
 
     await showDialog<void>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('보완 요청'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: reasonController,
-                  decoration: const InputDecoration(
-                    labelText: '반려 사유 (요약)',
-                    hintText: '예: 서류 식별 불가',
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: commentController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: '상세 안내 (코멘트)',
-                    hintText: '유저에게 전달할 자세한 내용을 적어주세요.',
-                  ),
-                ),
-              ],
+      builder: (context) => AlertDialog(
+        title: const Text('보완 요청'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                labelText: '반려 사유 (요약)',
+                hintText: '예: 서류 식별 불가',
+              ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('취소'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: commentController,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                labelText: '상세 안내 (코멘트)',
+                hintText: '유저에게 전달할 자세한 내용을 적어주세요.',
               ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  unawaited(
-                    _reviewRequest(
-                      requestId,
-                      VerificationStatus.needsCorrection,
-                      reason: reasonController.text,
-                      comment: commentController.text,
-                    ),
-                  );
-                },
-                child: const Text('보완 요청 전송'),
-              ),
-            ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
           ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              unawaited(
+                _reviewRequest(
+                  requestId,
+                  VerificationStatus.needsCorrection,
+                  reason: reasonController.text,
+                  comment: commentController.text,
+                ),
+              );
+            },
+            child: const Text('보완 요청 전송'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -156,13 +156,12 @@ class _ReviewVerificationPageState
       if (!mounted) return;
       await showDialog<void>(
         context: context,
-        builder:
-            (context) => Dialog(
-              backgroundColor: Colors.transparent,
-              child: InteractiveViewer(
-                child: Image.network(signedUrl, fit: BoxFit.contain),
-              ),
-            ),
+        builder: (context) => Dialog(
+          backgroundColor: Colors.transparent,
+          child: InteractiveViewer(
+            child: Image.network(signedUrl, fit: BoxFit.contain),
+          ),
+        ),
       );
     } on Exception catch (e) {
       Log.e('Image load error', e);
@@ -173,10 +172,9 @@ class _ReviewVerificationPageState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:
-            _isLoading
-                ? const Text('인증 심사 대기열')
-                : Text('인증 심사 대기열 (${_pendingRequests.length})'),
+        title: _isLoading
+            ? const Text('인증 심사 대기열')
+            : Text('인증 심사 대기열 (${_pendingRequests.length})'),
       ),
       body: RefreshIndicator(
         onRefresh: _loadRequests,
@@ -195,8 +193,8 @@ class _ReviewVerificationPageState
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: _pendingRequests.length,
-      itemBuilder:
-          (context, index) => _buildRequestCard(_pendingRequests[index]),
+      itemBuilder: (context, index) =>
+          _buildRequestCard(_pendingRequests[index]),
     );
   }
 
@@ -239,19 +237,18 @@ class _ReviewVerificationPageState
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: images.length,
-                  itemBuilder:
-                      (context, i) => GestureDetector(
-                        onTap: () => unawaited(_showImageDialog(images[i])),
-                        child: Container(
-                          width: 80,
-                          margin: const EdgeInsets.only(right: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(Icons.image),
-                        ),
+                  itemBuilder: (context, i) => GestureDetector(
+                    onTap: () => unawaited(_showImageDialog(images[i])),
+                    child: Container(
+                      width: 80,
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(8),
                       ),
+                      child: const Icon(Icons.image),
+                    ),
+                  ),
                 ),
               ),
 
@@ -260,10 +257,9 @@ class _ReviewVerificationPageState
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed:
-                        () => unawaited(
-                          _showCorrectionDialog(req['id'] as String),
-                        ),
+                    onPressed: () => unawaited(
+                      _showCorrectionDialog(req['id'] as String),
+                    ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.orange,
                     ),
@@ -273,13 +269,12 @@ class _ReviewVerificationPageState
                 const SizedBox(width: 8),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed:
-                        () => unawaited(
-                          _reviewRequest(
-                            req['id'] as String,
-                            VerificationStatus.approved,
-                          ),
-                        ),
+                    onPressed: () => unawaited(
+                      _reviewRequest(
+                        req['id'] as String,
+                        VerificationStatus.approved,
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
@@ -291,8 +286,8 @@ class _ReviewVerificationPageState
             ),
             Center(
               child: TextButton(
-                onPressed:
-                    () => unawaited(_showCommentsModal(req['id'] as String)),
+                onPressed: () =>
+                    unawaited(_showCommentsModal(req['id'] as String)),
                 child: const Text('대화 내역 확인', style: TextStyle(fontSize: 12)),
               ),
             ),
@@ -339,16 +334,16 @@ class _CommentsView extends ConsumerWidget {
                     final text = content['text'] as String? ?? '';
 
                     return Align(
-                      alignment:
-                          isPartner
-                              ? Alignment.centerRight
-                              : Alignment.centerLeft,
+                      alignment: isPartner
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
                       child: Container(
                         margin: const EdgeInsets.symmetric(vertical: 4),
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color:
-                              isPartner ? Colors.orange[100] : Colors.grey[200],
+                          color: isPartner
+                              ? Colors.orange[100]
+                              : Colors.grey[200],
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(text),

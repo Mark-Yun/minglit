@@ -21,6 +21,12 @@ class PartnerDevMap extends StatelessWidget {
           screenBuilder: (_) => const PartnerLoginPage(),
         ),
         DevScreenItem(
+          category: 'Auth',
+          title: 'Session Switcher',
+          description: '테스트 유저 계정으로 즉시 전환',
+          screenBuilder: (_) => const DevUserSwitchScreen(),
+        ),
+        DevScreenItem(
           category: 'Dashboard',
           title: 'Main Dashboard',
           description: '메인 관리 대시보드',
@@ -36,9 +42,8 @@ class PartnerDevMap extends StatelessWidget {
           category: 'Admin',
           title: 'Application Detail',
           description: '입점 신청 상세 정보 및 심사',
-          screenBuilder:
-              (_) =>
-                  const PartnerApplicationDetailPage(applicationId: 'dummy-id'),
+          screenBuilder: (_) =>
+              const PartnerApplicationDetailPage(applicationId: 'dummy-id'),
         ),
         DevScreenItem(
           category: 'Verification',
@@ -50,21 +55,20 @@ class PartnerDevMap extends StatelessWidget {
           category: 'Preview',
           title: 'My Partner Profile',
           description: '유저에게 노출되는 파트너 프로필 미리보기',
-          screenBuilder:
-              (_) => Scaffold(
-                appBar: AppBar(title: const Text('My Profile')),
-                body: const PartnerDetailView(
-                  partner: Partner(
-                    id: 'my-id',
-                    name: '밍글릿 사장님 모드',
-                    introduction: '파트너 앱에서 설정한 정보가 유저들에게 이렇게 보입니다.',
-                    bizName: '성공하는 파트너',
-                    representativeName: '김대표',
-                    bizNumber: '987-65-43210',
-                    contactEmail: 'partner@minglit.com',
-                  ),
-                ),
+          screenBuilder: (_) => Scaffold(
+            appBar: AppBar(title: const Text('My Profile')),
+            body: const PartnerDetailView(
+              partner: Partner(
+                id: 'my-id',
+                name: '밍글릿 사장님 모드',
+                introduction: '파트너 앱에서 설정한 정보가 유저들에게 이렇게 보입니다.',
+                bizName: '성공하는 파트너',
+                representativeName: '김대표',
+                bizNumber: '987-65-43210',
+                contactEmail: 'partner@minglit.com',
               ),
+            ),
+          ),
         ),
       ],
     );

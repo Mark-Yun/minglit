@@ -46,17 +46,16 @@ class _PartnerApplicationPageState
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('신청 현황'),
-            content: Text('현재 가입 신청이 [$status] 상태입니다. 심사가 완료될 때까지 기다려 주세요.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('확인'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text('신청 현황'),
+        content: Text('현재 가입 신청이 [$status] 상태입니다. 심사가 완료될 때까지 기다려 주세요.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('확인'),
           ),
+        ],
+      ),
     );
   }
 
@@ -95,11 +94,10 @@ class _PartnerApplicationPageState
       if (mounted) {
         await showDialog<void>(
           context: context,
-          builder:
-              (context) => const AlertDialog(
-                title: Text('신청 완료'),
-                content: Text('입점 신청이 제출되었습니다. 심사 결과는 이메일로 안내해 드립니다.'),
-              ),
+          builder: (context) => const AlertDialog(
+            title: Text('신청 완료'),
+            content: Text('입점 신청이 제출되었습니다. 심사 결과는 이메일로 안내해 드립니다.'),
+          ),
         );
       }
     } on Exception catch (e) {
@@ -117,85 +115,84 @@ class _PartnerApplicationPageState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('파트너 입점 신청')),
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildSectionTitle('1. 브랜드 정보'),
-                      _buildTextField('brand_name', '브랜드/매장명', '예: 밍글릿 강남점'),
-                      _buildTextField(
-                        'introduction',
-                        '소개글',
-                        '사장님과 매장을 소개해 주세요.',
-                        maxLines: 3,
-                      ),
-                      _buildTextField('address', '주소', '파티가 열릴 매장 주소'),
-                      _buildTextField('contact_phone', '연락처', '010-0000-0000'),
-                      _buildTextField(
-                        'contact_email',
-                        '이메일',
-                        'partner@example.com',
-                      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionTitle('1. 브랜드 정보'),
+                    _buildTextField('brand_name', '브랜드/매장명', '예: 밍글릿 강남점'),
+                    _buildTextField(
+                      'introduction',
+                      '소개글',
+                      '사장님과 매장을 소개해 주세요.',
+                      maxLines: 3,
+                    ),
+                    _buildTextField('address', '주소', '파티가 열릴 매장 주소'),
+                    _buildTextField('contact_phone', '연락처', '010-0000-0000'),
+                    _buildTextField(
+                      'contact_email',
+                      '이메일',
+                      'partner@example.com',
+                    ),
 
-                      const SizedBox(height: 32),
-                      _buildSectionTitle('2. 사업자 정보'),
-                      _buildBizTypeDropdown(),
-                      _buildTextField('biz_name', '사업자명', '사업자 등록증상 이름'),
-                      _buildTextField('biz_number', '사업자 번호', '000-00-00000'),
-                      _buildTextField('representative_name', '대표자명', '성함'),
+                    const SizedBox(height: 32),
+                    _buildSectionTitle('2. 사업자 정보'),
+                    _buildBizTypeDropdown(),
+                    _buildTextField('biz_name', '사업자명', '사업자 등록증상 이름'),
+                    _buildTextField('biz_number', '사업자 번호', '000-00-00000'),
+                    _buildTextField('representative_name', '대표자명', '성함'),
 
-                      const SizedBox(height: 32),
-                      _buildSectionTitle('3. 정산 계좌 정보'),
-                      _buildTextField('bank_name', '은행명', '예: 신한은행'),
-                      _buildTextField('account_number', '계좌번호', '숫자만 입력'),
-                      _buildTextField('account_holder', '예금주', '성함'),
+                    const SizedBox(height: 32),
+                    _buildSectionTitle('3. 정산 계좌 정보'),
+                    _buildTextField('bank_name', '은행명', '예: 신한은행'),
+                    _buildTextField('account_number', '계좌번호', '숫자만 입력'),
+                    _buildTextField('account_holder', '예금주', '성함'),
 
-                      const SizedBox(height: 32),
-                      _buildSectionTitle('4. 서류 첨부'),
-                      _buildFilePicker(
-                        '사업자등록증',
-                        _bizRegFile,
-                        () async => _pickFile(true),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildFilePicker(
-                        '통장 사본',
-                        _bankbookFile,
-                        () async => _pickFile(false),
-                      ),
+                    const SizedBox(height: 32),
+                    _buildSectionTitle('4. 서류 첨부'),
+                    _buildFilePicker(
+                      '사업자등록증',
+                      _bizRegFile,
+                      () async => _pickFile(true),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildFilePicker(
+                      '통장 사본',
+                      _bankbookFile,
+                      () async => _pickFile(false),
+                    ),
 
-                      const SizedBox(height: 48),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 54,
-                        child: ElevatedButton(
-                          onPressed: _submit,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange[800],
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                    const SizedBox(height: 48),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: ElevatedButton(
+                        onPressed: _submit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange[800],
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Text(
-                            '입점 신청하기',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        ),
+                        child: const Text(
+                          '입점 신청하기',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
+            ),
     );
   }
 

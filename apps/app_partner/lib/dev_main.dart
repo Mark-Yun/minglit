@@ -15,9 +15,17 @@ Future<void> main() async {
     'SUPABASE_PUBLISHABLE_KEY',
     defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
   );
+  // WARNING: Service Role Key is DANGEROUS. Only use in local dev.
+  const supabaseServiceRoleKey = String.fromEnvironment(
+    'SUPABASE_SERVICE_ROLE_KEY',
+    defaultValue: 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz', // Local default
+  );
   const googleWebClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
 
   await Supabase.initialize(url: supabaseUrl, anonKey: supabasePublishableKey);
+
+  // Initialize Dev Config for Seeding
+  DevConfig.init(supabaseUrl, supabaseServiceRoleKey);
 
   runApp(
     ProviderScope(

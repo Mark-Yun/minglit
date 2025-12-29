@@ -83,7 +83,7 @@ final class MemberCoordinatorProvider
   }
 }
 
-String _$memberCoordinatorHash() => r'a7f871a03426b93bdde7cba736aa4e6c15f692be';
+String _$memberCoordinatorHash() => r'12ebaac0e2f590a9672ad30b69b8bfd50edd87ea';
 
 /// **Member Feature Coordinator**
 ///

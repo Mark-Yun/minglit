@@ -53,18 +53,17 @@ class _PartnerApplicationListPageState
                   return const Center(child: Text('신청 내역이 없습니다.'));
                 }
                 return RefreshIndicator(
-                  onRefresh:
-                      () => ref.refresh(
-                        partnerApplicationsProvider(
-                          status: _selectedStatus,
-                          searchTerm: _searchController.text,
-                        ).future,
-                      ),
+                  onRefresh: () => ref.refresh(
+                    partnerApplicationsProvider(
+                      status: _selectedStatus,
+                      searchTerm: _searchController.text,
+                    ).future,
+                  ),
                   child: ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: apps.length,
-                    itemBuilder:
-                        (context, index) => _buildApplicationCard(apps[index]),
+                    itemBuilder: (context, index) =>
+                        _buildApplicationCard(apps[index]),
                   ),
                 );
               },
