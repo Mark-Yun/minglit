@@ -31,7 +31,7 @@ class UserSessionInfo extends ConsumerWidget {
       );
     }
 
-    final encoder = const JsonEncoder.withIndent('  ');
+    const encoder = JsonEncoder.withIndent('  ');
     final prettyMetadata =
         user.userMetadata != null ? encoder.convert(user.userMetadata) : '{}';
 
@@ -48,7 +48,10 @@ class UserSessionInfo extends ConsumerWidget {
             color: Colors.blueGrey,
           ),
         ),
-        subtitle: const Text('Tap to view full session JSON', style: TextStyle(fontSize: 11)),
+        subtitle: const Text(
+          'Tap to view full session JSON',
+          style: TextStyle(fontSize: 11),
+        ),
         leading: const Icon(Icons.account_circle, color: Colors.blueGrey),
         childrenPadding: const EdgeInsets.all(16),
         expandedCrossAxisAlignment: CrossAxisAlignment.start,
@@ -67,7 +70,7 @@ class UserSessionInfo extends ConsumerWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(4),
             ),
             child: SelectableText(
@@ -83,7 +86,10 @@ class UserSessionInfo extends ConsumerWidget {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: () => unawaited(ref.read(authControllerProvider.notifier).signOut()),
+              onPressed:
+                  () => unawaited(
+                    ref.read(authControllerProvider.notifier).signOut(),
+                  ),
               icon: const Icon(Icons.logout, size: 16),
               label: const Text('Sign Out'),
               style: OutlinedButton.styleFrom(

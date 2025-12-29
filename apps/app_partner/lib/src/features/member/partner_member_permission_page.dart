@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_partner/src/features/member/partner_member_list_page.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -19,11 +20,8 @@ Future<Map<String, dynamic>?> partnerMember(
 }) async {
   final repository = ref.read(partnerRepositoryProvider);
   final members = await repository.getPartnerMembers(partnerId);
-  try {
-    return members.firstWhere((m) => m['user_id'] == targetUserId);
-  } on Exception {
-    return null;
-  }
+
+  return members.firstWhereOrNull((m) => m['user_id'] == targetUserId);
 }
 
 /// **Partner Member Permission Page**
