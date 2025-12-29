@@ -67,22 +67,80 @@ Organization-Member 모델을 기반으로 설계되었습니다.
     - 전역 의존성 주입(DI)을 Riverpod Provider로 일원화
     - 타입 안전한 라우팅 및 네비게이션 로직 분리(Coordinator)
     - 전체 프로젝트 **Zero Warning** 달성
-9. [ ] 메인 랜딩 페이지 개발 (Flutter Web)
-10. [ ] 파티 예약 및 로테이션 미팅 로직 구현
-11. [ ] PASS/SMS 본인인증 연동
+9. [x] **통합 개발 환경 구축 및 데이터 무결성 강화**
+    - `auth.users` 가입 시 `user_profiles` 자동 생성 SQL 트리거 구축
+    - `minglit_kit` 기반 공용 `DatabaseSeeder` (Admin API) 구현
+    - 개발자용 `Session Switcher` 및 스마트 시딩 UI 구축 (User/Partner 앱 공통)
+10. [ ] 메인 랜딩 페이지 개발 (Flutter Web)
+11. [ ] 파티 예약 및 로테이션 미팅 로직 구현
+12. [ ] PASS/SMS 본인인증 연동
 
 ---
 
-## 💡 Tech Insights (Today's Progress)
 
-### 1. Modern State Management with Riverpod
-- **Goodbye Boilerplate**: 복잡한 BLoC 클래스들을 직관적인 `AsyncNotifier`와 `Provider`로 대체했습니다.
-- **Compile-safe DI**: `GetIt`의 런타임 위험성을 제거하고, 컴파일 타임에 의존성을 검증하는 구조를 갖췄습니다.
 
-### 2. Router-agnostic UI (Coordinator Pattern)
-- **Decoupling**: UI 위젯은 다음 페이지가 무엇인지 알 필요가 없습니다. 모든 네비게이션 로직은 `Coordinator` 클래스에 캡슐화되어 유지보수성이 극대화되었습니다.
-- **Type-safe Routing**: `go_router_builder`를 통해 URL 문자열 하드코딩을 방지하고 컴파일러의 도움을 받습니다.
+## 🏗️ Architectural Highlights
 
-### 3. Craftsmanship: Zero Warning Policy
-- `very_good_analysis` 룰을 기반으로 프로젝트 전체의 모든 린트 경고를 해결했습니다. (Line length, discarded futures, catch clauses 등)
-- 고품질의 `ARCHITECTURE.md`와 각 앱별 `README.md`를 작성하여 문서화 수준을 끌어올렸습니다.
+
+
+### 1. Robust Data Integrity (Backend)
+
+- **Atomic Profile Sync**: DB 트리거(`handle_new_user`)를 통해 `auth.users`와 `user_profiles` 간의 원자적 동기화를 보장합니다.
+
+- **Strict Consistency Policy**: 프로필 생성 실패 시 가입 자체를 차단하여 시스템 내 "좀비 계정" 발생을 원천 봉쇄하는 무결성 정책을 준수합니다.
+
+
+
+### 2. High-Efficiency DX (Developer Experience)
+
+- **Programmatic Database Seeder**: 불안정한 SQL 기반 시딩을 지양하고, Supabase Admin API를 사용하는 Dart 기반 시더를 구축하여 비밀번호 해시 호환성 및 복잡한 관계 설정을 100% 코드로 제어합니다.
+
+- **Smart Session Switcher**: 개발자 도구에서 실시간 데이터 유무를 감지하여 시딩을 제안하고, 원클릭으로 100여 명의 테스트 유저 세션을 광속으로 전환할 수 있는 지능형 UI를 제공합니다.
+
+
+
+### 3. Sustainable Shared Kit Architecture
+
+
+
+- **Zero Redundancy**: 모든 핵심 비즈니스 로직, 모델, 리포지토리, 그리고 개발 도구까지 `minglit_kit` 공용 패키지에 캡슐화하여 `app_user`와 `app_partner` 간의 코드 중복을 0%로 유지합니다.
+
+
+
+- **Type-safe Dependency Injection**: Riverpod Provider를 전역 DI 시스템으로 활용하여, 런타임 오류 없이 컴파일 타임에 모든 의존성을 검증합니다.
+
+
+
+- **Safe State Management**: AsyncNotifier와 Generator를 사용하여 비동기 상태를 선언적으로 관리하며, 특히 비동기 업데이트 중 발생할 수 있는 메모리 해제 오류(`disposed ref`)를 철저히 방지하는 안전 패턴을 적용했습니다.
+
+
+
+
+
+
+
+### 4. Modern Navigation & Logic Decoupling
+
+
+
+- **Coordinator Pattern**: UI 위젯은 내비게이션의 "목적지"를 알 필요가 없습니다. 모든 라우팅 로직은 전용 `Coordinator` 클래스에 캡슐화되어 UI와 비즈니스 흐름의 완벽한 분리를 달성했습니다.
+
+
+
+- **Type-safe Routing (GoRouter)**: `go_router_builder`를 통해 URL 문자열 하드코딩을 완전히 제거했습니다. 모든 경로는 컴파일 타임에 정적으로 검증되어 오타로 인한 라우팅 오류를 원천 차단합니다.
+
+
+
+- **Dynamic Auth Redirects**: 유저의 인증 상태(Riverpod Auth Provider)를 실시간으로 감지하여 보호된 경로(Protected Routes)에 대한 접근을 선언적으로 제어합니다.
+
+
+
+
+
+
+
+### 5. Craftsmanship & Quality
+
+- **Zero Warning Policy**: `very_good_analysis` 룰을 기반으로 프로젝트 전체의 린트 경고를 0으로 유지하는 엄격한 코드 퀄리티를 유지합니다.
+
+- **Documentation First**: `ARCHITECTURE.md`, `AGENT.md` 등을 통해 설계 의도와 업무 수칙을 명문화하여 프로젝트의 지속 가능성을 확보했습니다.
