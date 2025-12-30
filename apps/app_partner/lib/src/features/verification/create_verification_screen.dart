@@ -74,38 +74,27 @@ class _CreateVerificationScreenState
         title: '새 인증 만들기',
         actions: [
           TextButton(
-            onPressed: state.isSubmitting ? null : _onSubmit,
+            onPressed: _onSubmit,
             child: Text(
               '저장',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: state.isSubmitting ? Colors.grey : colorScheme.primary,
+                color: colorScheme.primary,
               ),
             ),
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          Form(
-            key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.all(MinglitSpacing.medium),
-              children: [
-                _buildBasicInfoSection(theme, controller),
-                const SizedBox(height: MinglitSpacing.large),
-                _buildFormBuilderSection(theme, state, controller),
-              ],
-            ),
-          ),
-          if (state.isSubmitting)
-            ColoredBox(
-              color: Colors.black.withValues(alpha: 0.3),
-              child: const Center(
-                child: CircularProgressIndicator(),
-              ),
-            ),
-        ],
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(MinglitSpacing.medium),
+          children: [
+            _buildBasicInfoSection(theme, controller),
+            const SizedBox(height: MinglitSpacing.large),
+            _buildFormBuilderSection(theme, state, controller),
+          ],
+        ),
       ),
     );
   }

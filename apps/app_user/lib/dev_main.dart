@@ -83,6 +83,9 @@ class _AppViewState extends State<_AppView> {
     return MaterialApp(
       title: 'Minglit User (Dev)',
       theme: MinglitTheme.materialTheme,
+      builder: (context, child) {
+        return MinglitGlobalLoadingOverlay(child: child!);
+      },
       home: FutureBuilder(
         future: _initFuture,
         builder: (context, snapshot) {

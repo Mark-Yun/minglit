@@ -84,7 +84,7 @@ class _AppViewState extends ConsumerState<_AppView> {
             if (snapshot.connectionState != ConnectionState.done) {
               return const MinglitSplashScreen(appName: 'User');
             }
-            return child!;
+            return MinglitGlobalLoadingOverlay(child: child!);
           },
         );
       },

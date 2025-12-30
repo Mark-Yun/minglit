@@ -95,6 +95,9 @@ class _AppViewState extends State<_AppView> {
         Locale('ko', 'KR'),
         Locale('en', 'US'),
       ],
+      builder: (context, child) {
+        return MinglitGlobalLoadingOverlay(child: child!);
+      },
       home: FutureBuilder(
         future: _initFuture,
         builder: (context, snapshot) {

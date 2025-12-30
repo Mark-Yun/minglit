@@ -51,12 +51,26 @@ class UserDevMap extends StatelessWidget {
             description: '생성된 모든 파티 목록 확인',
             screenBuilder: (_) => const PartyListPreviewScreen(),
           ),
+          DevScreenItem(
+            category: 'System',
+            title: 'Global Loading Test',
+            description: '3초간 전역 로딩 오버레이 테스트',
+            onTap: (context, ref) async {
+              final notifier = ref.read(
+                globalLoadingControllerProvider.notifier,
+              )..show();
+              await Future<void>.delayed(const Duration(seconds: 3));
+              notifier.hide();
+            },
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
+          // Navigation result is not used
+          // ignore: discarded_futures
+          Navigator.of(context).push<void>(
+            MaterialPageRoute<void>(
               builder: (_) => const DevUserSwitchScreen(),
             ),
           );

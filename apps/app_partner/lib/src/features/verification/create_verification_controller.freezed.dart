@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CreateVerificationState {
 
- String get displayName; String get internalName; String get description; List<VerificationFormField> get fields; bool get isSubmitting; String? get error;
+ String get displayName; String get internalName; String get description; List<VerificationFormField> get fields; String? get error;
 /// Create a copy of CreateVerificationState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $CreateVerificationStateCopyWith<CreateVerificationState> get copyWith => _$Crea
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CreateVerificationState&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.internalName, internalName) || other.internalName == internalName)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other.fields, fields)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.error, error) || other.error == error));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CreateVerificationState&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.internalName, internalName) || other.internalName == internalName)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other.fields, fields)&&(identical(other.error, error) || other.error == error));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,displayName,internalName,description,const DeepCollectionEquality().hash(fields),isSubmitting,error);
+int get hashCode => Object.hash(runtimeType,displayName,internalName,description,const DeepCollectionEquality().hash(fields),error);
 
 @override
 String toString() {
-  return 'CreateVerificationState(displayName: $displayName, internalName: $internalName, description: $description, fields: $fields, isSubmitting: $isSubmitting, error: $error)';
+  return 'CreateVerificationState(displayName: $displayName, internalName: $internalName, description: $description, fields: $fields, error: $error)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $CreateVerificationStateCopyWith<$Res>  {
   factory $CreateVerificationStateCopyWith(CreateVerificationState value, $Res Function(CreateVerificationState) _then) = _$CreateVerificationStateCopyWithImpl;
 @useResult
 $Res call({
- String displayName, String internalName, String description, List<VerificationFormField> fields, bool isSubmitting, String? error
+ String displayName, String internalName, String description, List<VerificationFormField> fields, String? error
 });
 
 
@@ -62,14 +62,13 @@ class _$CreateVerificationStateCopyWithImpl<$Res>
 
 /// Create a copy of CreateVerificationState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? displayName = null,Object? internalName = null,Object? description = null,Object? fields = null,Object? isSubmitting = null,Object? error = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? displayName = null,Object? internalName = null,Object? description = null,Object? fields = null,Object? error = freezed,}) {
   return _then(_self.copyWith(
 displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
 as String,internalName: null == internalName ? _self.internalName : internalName // ignore: cast_nullable_to_non_nullable
 as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String,fields: null == fields ? _self.fields : fields // ignore: cast_nullable_to_non_nullable
-as List<VerificationFormField>,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
-as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as List<VerificationFormField>,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -155,10 +154,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String displayName,  String internalName,  String description,  List<VerificationFormField> fields,  bool isSubmitting,  String? error)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String displayName,  String internalName,  String description,  List<VerificationFormField> fields,  String? error)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CreateVerificationState() when $default != null:
-return $default(_that.displayName,_that.internalName,_that.description,_that.fields,_that.isSubmitting,_that.error);case _:
+return $default(_that.displayName,_that.internalName,_that.description,_that.fields,_that.error);case _:
   return orElse();
 
 }
@@ -176,10 +175,10 @@ return $default(_that.displayName,_that.internalName,_that.description,_that.fie
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String displayName,  String internalName,  String description,  List<VerificationFormField> fields,  bool isSubmitting,  String? error)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String displayName,  String internalName,  String description,  List<VerificationFormField> fields,  String? error)  $default,) {final _that = this;
 switch (_that) {
 case _CreateVerificationState():
-return $default(_that.displayName,_that.internalName,_that.description,_that.fields,_that.isSubmitting,_that.error);case _:
+return $default(_that.displayName,_that.internalName,_that.description,_that.fields,_that.error);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -196,10 +195,10 @@ return $default(_that.displayName,_that.internalName,_that.description,_that.fie
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String displayName,  String internalName,  String description,  List<VerificationFormField> fields,  bool isSubmitting,  String? error)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String displayName,  String internalName,  String description,  List<VerificationFormField> fields,  String? error)?  $default,) {final _that = this;
 switch (_that) {
 case _CreateVerificationState() when $default != null:
-return $default(_that.displayName,_that.internalName,_that.description,_that.fields,_that.isSubmitting,_that.error);case _:
+return $default(_that.displayName,_that.internalName,_that.description,_that.fields,_that.error);case _:
   return null;
 
 }
@@ -211,7 +210,7 @@ return $default(_that.displayName,_that.internalName,_that.description,_that.fie
 
 
 class _CreateVerificationState implements CreateVerificationState {
-  const _CreateVerificationState({this.displayName = '', this.internalName = '', this.description = '', final  List<VerificationFormField> fields = const [], this.isSubmitting = false, this.error}): _fields = fields;
+  const _CreateVerificationState({this.displayName = '', this.internalName = '', this.description = '', final  List<VerificationFormField> fields = const [], this.error}): _fields = fields;
   
 
 @override@JsonKey() final  String displayName;
@@ -224,7 +223,6 @@ class _CreateVerificationState implements CreateVerificationState {
   return EqualUnmodifiableListView(_fields);
 }
 
-@override@JsonKey() final  bool isSubmitting;
 @override final  String? error;
 
 /// Create a copy of CreateVerificationState
@@ -237,16 +235,16 @@ _$CreateVerificationStateCopyWith<_CreateVerificationState> get copyWith => __$C
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CreateVerificationState&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.internalName, internalName) || other.internalName == internalName)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other._fields, _fields)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.error, error) || other.error == error));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CreateVerificationState&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.internalName, internalName) || other.internalName == internalName)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other._fields, _fields)&&(identical(other.error, error) || other.error == error));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,displayName,internalName,description,const DeepCollectionEquality().hash(_fields),isSubmitting,error);
+int get hashCode => Object.hash(runtimeType,displayName,internalName,description,const DeepCollectionEquality().hash(_fields),error);
 
 @override
 String toString() {
-  return 'CreateVerificationState(displayName: $displayName, internalName: $internalName, description: $description, fields: $fields, isSubmitting: $isSubmitting, error: $error)';
+  return 'CreateVerificationState(displayName: $displayName, internalName: $internalName, description: $description, fields: $fields, error: $error)';
 }
 
 
@@ -257,7 +255,7 @@ abstract mixin class _$CreateVerificationStateCopyWith<$Res> implements $CreateV
   factory _$CreateVerificationStateCopyWith(_CreateVerificationState value, $Res Function(_CreateVerificationState) _then) = __$CreateVerificationStateCopyWithImpl;
 @override @useResult
 $Res call({
- String displayName, String internalName, String description, List<VerificationFormField> fields, bool isSubmitting, String? error
+ String displayName, String internalName, String description, List<VerificationFormField> fields, String? error
 });
 
 
@@ -274,14 +272,13 @@ class __$CreateVerificationStateCopyWithImpl<$Res>
 
 /// Create a copy of CreateVerificationState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? displayName = null,Object? internalName = null,Object? description = null,Object? fields = null,Object? isSubmitting = null,Object? error = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? displayName = null,Object? internalName = null,Object? description = null,Object? fields = null,Object? error = freezed,}) {
   return _then(_CreateVerificationState(
 displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
 as String,internalName: null == internalName ? _self.internalName : internalName // ignore: cast_nullable_to_non_nullable
 as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String,fields: null == fields ? _self._fields : fields // ignore: cast_nullable_to_non_nullable
-as List<VerificationFormField>,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
-as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as List<VerificationFormField>,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

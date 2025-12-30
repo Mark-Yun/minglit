@@ -87,7 +87,7 @@ class _AppViewState extends ConsumerState<_AppView> {
                 isPartner: true,
               );
             }
-            return child!;
+            return MinglitGlobalLoadingOverlay(child: child!);
           },
         );
       },

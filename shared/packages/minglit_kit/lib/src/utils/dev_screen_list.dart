@@ -6,18 +6,27 @@ import 'package:minglit_kit/minglit_kit.dart';
 /// Item representing a screen in the Dev Map.
 class DevScreenItem {
   /// Creates a [DevScreenItem].
+  ///
+  /// Either [screenBuilder] or [onTap] must be provided.
   DevScreenItem({
     required this.title,
-    required this.screenBuilder,
+    this.screenBuilder,
+    this.onTap,
     this.category,
     this.description,
-  });
+  }) : assert(
+         screenBuilder != null || onTap != null,
+         'Either screenBuilder or onTap must be provided',
+       );
 
   /// The title of the screen.
   final String title;
 
   /// Builder for the screen widget.
-  final WidgetBuilder screenBuilder;
+  final WidgetBuilder? screenBuilder;
+
+  /// Optional callback to execute directly instead of navigation.
+  final void Function(BuildContext context, WidgetRef ref)? onTap;
 
   /// Category of the screen for grouping.
   final String? category;
@@ -86,6 +95,7 @@ class DevScreenList extends ConsumerWidget {
                       ),
                     ),
                     ...categoryItems.map((item) {
+                      final isAction = item.onTap != null;
                       return Column(
                         children: [
                           ListTile(
@@ -106,19 +116,25 @@ class DevScreenList extends ConsumerWidget {
                                     style: TextStyle(color: Colors.grey[600]),
                                   )
                                 : null,
-                            trailing: const Icon(
-                              Icons.arrow_forward_ios,
+                            trailing: Icon(
+                              isAction
+                                  ? Icons.touch_app
+                                  : Icons.arrow_forward_ios,
                               size: 14,
                             ),
                             onTap: () {
-                              unawaited(
-                                Navigator.push<void>(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: item.screenBuilder,
+                              if (item.onTap != null) {
+                                item.onTap!(context, ref);
+                              } else if (item.screenBuilder != null) {
+                                unawaited(
+                                  Navigator.push<void>(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: item.screenBuilder!,
+                                    ),
                                   ),
-                                ),
-                              );
+                                );
+                              }
                             },
                           ),
                           if (item != categoryItems.last)

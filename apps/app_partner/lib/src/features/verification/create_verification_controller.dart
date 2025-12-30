@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:async/async.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -12,13 +15,14 @@ abstract class CreateVerificationState with _$CreateVerificationState {
     @Default('') String internalName,
     @Default('') String description,
     @Default([]) List<VerificationFormField> fields,
-    @Default(false) bool isSubmitting,
     String? error,
   }) = _CreateVerificationState;
 }
 
 @riverpod
 class CreateVerificationController extends _$CreateVerificationController {
+  CancelableOperation<void>? _submitOperation;
+
   @override
   CreateVerificationState build() {
     return const CreateVerificationState();
@@ -63,42 +67,64 @@ class CreateVerificationController extends _$CreateVerificationController {
       return false;
     }
 
-    state = state.copyWith(isSubmitting: true, error: null);
+    state = state.copyWith(error: null);
+
+    // Create Cancelable Operation
+    _submitOperation = CancelableOperation.fromFuture(
+      _performSubmit(partnerId),
+      onCancel: () {
+        state = state.copyWith(error: '작업이 취소되었습니다.');
+      },
+    );
+
+    ref.read(globalLoadingControllerProvider.notifier).show(
+      onCancel: () {
+        unawaited(_submitOperation?.cancel());
+      },
+    );
 
     try {
-      final partnerRepo = ref.read(partnerRepositoryProvider);
-      var effectivePartnerId = partnerId;
-
-      if (effectivePartnerId == null) {
-        final myPartners = await partnerRepo.getMyManagedPartners();
-        effectivePartnerId = myPartners.firstOrNull?.id;
-      }
-
-      if (effectivePartnerId == null) {
-        throw Exception('사용 가능한 파트너 정보를 찾을 수 없습니다.');
-      }
-
-      final newVerification = Verification(
-        id: '', // Repo will handle
-        partnerId: effectivePartnerId,
-        category: VerificationCategory.etc,
-        internalName: state.internalName.trim(),
-        displayName: state.displayName.trim(),
-        description: state.description.trim(),
-        iconKey: 'star',
-        formSchema: state.fields,
-      );
-
-      await ref
-          .read(verificationRepositoryProvider)
-          .createVerification(newVerification);
-
+      await _submitOperation!.value;
       return true;
     } on Exception catch (e) {
+      // If cancelled, it might not throw but simply return null or stop.
+      // But if _performSubmit throws, we catch it here.
+      if (_submitOperation?.isCanceled ?? false) {
+        return false;
+      }
       state = state.copyWith(error: e.toString());
       return false;
     } finally {
-      state = state.copyWith(isSubmitting: false);
+      ref.read(globalLoadingControllerProvider.notifier).hide();
     }
+  }
+
+  Future<void> _performSubmit(String? partnerId) async {
+    final partnerRepo = ref.read(partnerRepositoryProvider);
+    var effectivePartnerId = partnerId;
+
+    if (effectivePartnerId == null) {
+      final myPartners = await partnerRepo.getMyManagedPartners();
+      effectivePartnerId = myPartners.firstOrNull?.id;
+    }
+
+    if (effectivePartnerId == null) {
+      throw Exception('사용 가능한 파트너 정보를 찾을 수 없습니다.');
+    }
+
+    final newVerification = Verification(
+      id: '', // Repo will handle
+      partnerId: effectivePartnerId,
+      category: VerificationCategory.etc,
+      internalName: state.internalName.trim(),
+      displayName: state.displayName.trim(),
+      description: state.description.trim(),
+      iconKey: 'star',
+      formSchema: state.fields,
+    );
+
+    await ref
+        .read(verificationRepositoryProvider)
+        .createVerification(newVerification);
   }
 }

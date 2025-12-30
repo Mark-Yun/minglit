@@ -47,7 +47,7 @@ final class CreateVerificationControllerProvider
 }
 
 String _$createVerificationControllerHash() =>
-    r'8570e4c33e8df79f595dfa140aa402e393a41a2c';
+    r'4da4dafce81cb38cca3986d56c0cf1504c16a72c';
 
 abstract class _$CreateVerificationController
     extends $Notifier<CreateVerificationState> {
