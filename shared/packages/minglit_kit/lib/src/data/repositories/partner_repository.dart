@@ -41,6 +41,35 @@ class PartnerRepository {
         .toList();
   }
 
+  /// Fetches partners managed by the current user.
+  Future<List<Partner>> getMyManagedPartners() async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) return [];
+
+    // 1. Get partner_ids from permissions
+    final permissions = await _supabase
+        .from('partner_member_permissions')
+        .select('partner_id')
+        .eq('user_id', userId);
+
+    final partnerIds = (permissions as List)
+        .map((e) => (e as Map)['partner_id'] as String)
+        .toList();
+
+    if (partnerIds.isEmpty) return [];
+
+    // 2. Get partners details
+    final data = await _supabase
+        .from('partners')
+        .select()
+        .inFilter('id', partnerIds)
+        .eq('is_active', true);
+
+    return (data as List)
+        .map((e) => Partner.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   /// **Submit Application**
   ///
   /// Uploads proof files to Storage and inserts a record into

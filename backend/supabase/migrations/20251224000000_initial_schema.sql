@@ -5,7 +5,7 @@ create extension if not exists moddatetime schema extensions;
 -- 2. Enum Types
 create type public.gender as enum ('male', 'female');
 create type public.partner_role as enum ('owner', 'manager', 'staff');
-create type public.verification_status as enum ('pending', 'approved', 'rejected', 'needs_correction', 'resubmitted');
+create type public.verification_status as enum ('pending', 'approved', 'rejected', 'needs_correction', 'cancelled');
 create type public.verification_category as enum ('career', 'asset', 'marriage', 'academic', 'vehicle', 'etc');
 create type public.partner_application_status as enum ('pending', 'approved', 'rejected', 'needs_correction');
 create type public.business_type as enum ('individual', 'corporate');
@@ -18,7 +18,7 @@ create table public.user_profiles (
   phone_number text unique,
   birth_date date,
   gender gender,
-  is_verified boolean default false,
+  is_verified boolean default false, -- Global platform verification status
   ci text,
   di text unique,
   created_at timestamptz default now(),
@@ -117,7 +117,26 @@ create table public.locations (
 );
 create index locations_geo_point_idx on public.locations using GIST (geo_point);
 
--- 10. Parties
+-- 10. Verifications (Definition Table)
+create table public.verifications (
+  id uuid default gen_random_uuid() primary key,
+  partner_id uuid references public.partners(id) on delete cascade, -- NULL for Global System Verifications
+  
+  category verification_category not null, -- Keep for filtering/grouping
+  internal_name text not null, -- e.g. "Dolsing Group A - Marriage Cert"
+  display_name text not null,  -- e.g. "Marriage Verification"
+  description text,
+  icon_key text, -- e.g. "document_marriage"
+
+  -- Dynamic Form Schema (JSONB)
+  -- e.g. [{ "key": "cert_file", "type": "file", "label": "Upload Cert" }, { "key": "child_cnt", "type": "number", "label": "Children Count" }]
+  form_schema jsonb not null default '[]'::jsonb,
+  
+  is_active boolean default true,
+  created_at timestamptz default now()
+);
+
+-- 11. Parties
 create table public.parties (
   id uuid not null default gen_random_uuid(),
   partner_id uuid not null references public.partners(id) on delete cascade,
@@ -125,7 +144,10 @@ create table public.parties (
   description jsonb,
   image_url text,
   contact_options jsonb default '{}'::jsonb,
+  
+  -- Required Verification IDs for this party
   required_verification_ids uuid[] default '{}',
+  
   min_confirmed_count integer not null default 0,
   max_participants integer not null default 20,
   status text not null default 'active' check (status in ('draft', 'active', 'closed')),
@@ -134,7 +156,7 @@ create table public.parties (
   primary key (id)
 );
 
--- 11. Events
+-- 12. Events
 create table public.events (
   id uuid not null default gen_random_uuid(),
   party_id uuid not null references public.parties(id) on delete cascade,
@@ -152,7 +174,7 @@ create table public.events (
   primary key (id)
 );
 
--- 12. Event Tickets
+-- 13. Event Tickets
 create table public.event_tickets (
   id uuid not null default gen_random_uuid(),
   event_id uuid not null references public.events(id) on delete cascade,
@@ -164,64 +186,74 @@ create table public.event_tickets (
   gender text check (gender in ('male', 'female')),
   min_birth_year integer, 
   max_birth_year integer,
+  
+  -- Ticket specific verification requirements (overrides or adds to party requirements)
   required_verification_ids uuid[] default '{}',
+  
   status text not null default 'on_sale' check (status in ('on_sale', 'sold_out', 'hidden')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   primary key (id)
 );
 
--- 13. Verifications
-create table public.verifications (
-  id uuid default gen_random_uuid() primary key,
-  category verification_category not null,
-  title text not null,
-  description text,
-  required_docs jsonb,
-  partner_id uuid references public.partners(id) on delete cascade,
-  created_at timestamptz default now()
-);
-
--- 14. User Verifications
+-- 14. User Verifications (User's Private Vault - The Source of Truth)
 create table public.user_verifications (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users(id) on delete cascade not null,
   verification_id uuid references public.verifications(id) on delete cascade not null,
-  claim_data jsonb not null,
-  proof_images text[] not null,
+  
+  -- User's input data (includes text values and storage paths)
+  data jsonb not null default '{}'::jsonb,
+  
   updated_at timestamptz default now(),
   unique(user_id, verification_id)
 );
 
--- 15. Verification Requests
-create table public.verification_requests (
+-- 15. Verification Submissions (The History/Log of Requests)
+-- Created when user submits their 'user_verification' data to a partner
+create table public.verification_submissions (
   id uuid default gen_random_uuid() primary key,
   partner_id uuid references public.partners(id) on delete cascade not null,
   user_id uuid references auth.users(id) on delete cascade not null,
   verification_id uuid references public.verifications(id) on delete cascade not null,
+  
   status verification_status default 'pending' not null,
-  claim_snapshot jsonb not null,
-  rejection_reason text,
+  
+  -- Snapshot of data at the time of submission (Immutable, includes files)
+  snapshot_data jsonb not null,
+  
+  admin_comment text, -- Rejection reason or internal note
+  
+  reviewed_at timestamptz,
+  reviewed_by uuid references auth.users(id), -- Staff who reviewed this
+  
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
 
--- 16. Verification Comments
+-- 16. Verification Comments (Communication Loop)
 create table public.verification_comments (
   id uuid default gen_random_uuid() primary key,
-  request_id uuid references public.verification_requests(id) on delete cascade not null,
+  submission_id uuid references public.verification_submissions(id) on delete cascade not null,
   author_id uuid references auth.users(id) not null,
-  content jsonb not null,
+  content jsonb not null, -- Rich text support
   created_at timestamptz default now()
 );
 
--- 17. Partner Verified Users
+-- 17. Partner Verified Users (The Result Cache / "Entry Pass")
+-- OPTIMIZATION TABLE: Only contains valid, approved verifications.
+-- Queried when checking if a user can join a party.
 create table public.partner_verified_users (
   partner_id uuid references public.partners(id) on delete cascade not null,
   user_id uuid references auth.users(id) on delete cascade not null,
   verification_id uuid references public.verifications(id) on delete cascade not null,
-  verified_snapshot jsonb not null,
+  
+  -- The submission that granted this verification
+  submission_id uuid references public.verification_submissions(id) on delete cascade not null,
+  
   verified_at timestamptz default now(),
+  valid_until timestamptz, -- Optional expiration date
+  
   primary key (partner_id, user_id, verification_id)
 );
 
@@ -296,7 +328,7 @@ create trigger handle_updated_at before update on public.event_tickets for each 
 create trigger handle_updated_at before update on public.event_applications for each row execute procedure moddatetime (updated_at);
 create trigger handle_updated_at before update on public.event_participants for each row execute procedure moddatetime (updated_at);
 create trigger handle_updated_at before update on public.partner_applications for each row execute procedure moddatetime (updated_at);
-create trigger handle_updated_at before update on public.verification_requests for each row execute procedure moddatetime (updated_at);
+create trigger handle_updated_at before update on public.verification_submissions for each row execute procedure moddatetime (updated_at);
 
 -- Update participation stats
 create or replace function public.update_event_participation_stats()
@@ -338,8 +370,8 @@ create trigger trigger_sync_permissions before insert or update of role on publi
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.user_profiles (id, name, phone_number)
-  values (new.id, new.raw_user_meta_data->>'name', new.raw_user_meta_data->>'phone_number');
+  insert into public.user_profiles (id, username, name, phone_number)
+  values (new.id, new.raw_user_meta_data->>'username', new.raw_user_meta_data->>'name', new.raw_user_meta_data->>'phone_number');
   return new;
 end;
 $$ language plpgsql security definer;
@@ -347,6 +379,28 @@ $$ language plpgsql security definer;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- Auto-Approve Logic (Trigger): When submission is approved, insert into partner_verified_users
+create or replace function public.handle_verification_approval()
+returns trigger as $$
+begin
+  if (new.status = 'approved' and old.status != 'approved') then
+    insert into public.partner_verified_users (partner_id, user_id, verification_id, submission_id, verified_at)
+    values (new.partner_id, new.user_id, new.verification_id, new.id, now())
+    on conflict (partner_id, user_id, verification_id) 
+    do update set submission_id = new.id, verified_at = now(), valid_until = null; 
+  elsif (new.status != 'approved' and old.status = 'approved') then
+    -- Revoke verification if status changes back (e.g., cancelled)
+    delete from public.partner_verified_users
+    where submission_id = new.id;
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_submission_status_change
+  after update on public.verification_submissions
+  for each row execute procedure public.handle_verification_approval();
 
 -- 21. Storage Buckets
 insert into storage.buckets (id, name, public) values ('verification-proofs', 'verification-proofs', false) on conflict (id) do nothing;
@@ -363,6 +417,9 @@ alter table public.event_tickets enable row level security;
 alter table public.event_applications enable row level security;
 alter table public.event_participants enable row level security;
 alter table public.verifications enable row level security;
+alter table public.user_verifications enable row level security;
+alter table public.verification_submissions enable row level security;
+alter table public.partner_verified_users enable row level security;
 
 -- Public Access
 create policy "Public read access" on public.locations for select using (true);
@@ -370,6 +427,7 @@ create policy "Public read access" on public.parties for select using (true);
 create policy "Public read access" on public.events for select using (true);
 create policy "Public read access" on public.event_tickets for select using (true);
 create policy "Public read access" on public.verifications for select using (true);
+create policy "Public read access" on public.user_profiles for select using (true);
 
 -- Authenticated Storage
 create policy "Allow Authenticated" on storage.objects for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');

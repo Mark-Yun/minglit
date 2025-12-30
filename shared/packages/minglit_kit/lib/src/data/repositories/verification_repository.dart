@@ -1,9 +1,5 @@
-import 'package:image_picker/image_picker.dart' show XFile;
-import 'package:minglit_kit/minglit_kit.dart' show Partner;
-import 'package:minglit_kit/src/data/models/partner.dart' show Partner;
 import 'package:minglit_kit/src/data/models/verification.dart';
 import 'package:minglit_kit/src/utils/log.dart';
-import 'package:path/path.dart' as p;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -12,27 +8,185 @@ part 'verification_repository.g.dart';
 /// Provider for VerificationRepository.
 @Riverpod(keepAlive: true)
 VerificationRepository verificationRepository(Ref ref) {
-  return VerificationRepository();
+  return SupabaseVerificationRepository();
+}
+
+/// Data Transfer Object for verification submission.
+class VerificationSubmission {
+  /// Creates a [VerificationSubmission] instance.
+  VerificationSubmission({
+    required this.verificationId,
+    required this.claimData,
+    this.existingRequestId,
+  });
+
+  /// The ID of the verification definition.
+  final String verificationId;
+
+  /// The data being claimed (key-value pairs).
+  final Map<String, dynamic> claimData;
+
+  /// Optional: Existing submission ID to update.
+  final String? existingRequestId;
 }
 
 /// Repository for handling user and partner verification logic.
-class VerificationRepository {
-  /// Creates a [VerificationRepository] with a [SupabaseClient].
-  VerificationRepository({SupabaseClient? supabase})
+abstract class VerificationRepository {
+  // --- Partner Management (Create/Edit Verifications) ---
+
+  /// Creates a new verification requirement for a partner.
+  Future<Verification> createVerification(Verification verification);
+
+  /// Updates an existing verification.
+  Future<void> updateVerification(Verification verification);
+
+  /// Soft-deletes a verification (sets is_active = false).
+  Future<void> deleteVerification(String verificationId);
+
+  /// Fetches verifications created by a specific partner (Active only).
+  Future<List<Verification>> getPartnerVerifications(String partnerId);
+
+  /// Fetches global (system) verifications (Active only).
+  Future<List<Verification>> getGlobalVerifications();
+
+  /// Fetches a specific verification by ID.
+  Future<Verification?> getVerificationById(String id);
+
+  // --- User Flow (Requirements & Status) ---
+
+  /// User 특정 파트너가 요구하는 인증들의 상태를 일괄 조회
+  Future<List<VerificationRequirementStatus>> getPartnerRequirementsStatus({
+    required String partnerId,
+    required List<String> requiredVerificationIds,
+  });
+
+  /// User 인증 데이터 저장 및 파트너에게 제출 (Snapshot 복사)
+  Future<void> submitOrUpdateVerification({
+    required String partnerId,
+    required String verificationId,
+    required Map<String, dynamic> claimData,
+    String? existingSubmissionId,
+  });
+
+  /// User 다수의 인증 요청을 일괄 제출
+  Future<void> submitBulkVerifications({
+    required String partnerId,
+    required List<VerificationSubmission> submissions,
+  });
+
+  // --- Partner Flow (Review) ---
+
+  /// Partner 대기 중인 모든 요청 조회
+  Future<List<Map<String, dynamic>>> getPendingRequests();
+
+  /// Partner 요청 심사 처리
+  Future<void> reviewRequest({
+    required String submissionId,
+    required VerificationStatus status,
+    String? adminComment,
+  });
+
+  /// User 특정 상태의 모든 요청 조회 (예: 보완 필요 건만 모아보기)
+  Future<List<Map<String, dynamic>>> getRequestsByStatus(
+    VerificationStatus status,
+  );
+
+  /// Common: 인증 요청에 달린 코멘트 내역 조회
+  Future<List<Map<String, dynamic>>> getVerificationComments(
+    String submissionId,
+  );
+
+  /// Common: 코멘트 작성
+  Future<void> submitComment({
+    required String submissionId,
+    required Map<String, dynamic> content,
+  });
+}
+
+/// Concrete implementation of [VerificationRepository] using Supabase.
+class SupabaseVerificationRepository implements VerificationRepository {
+  /// Creates a [SupabaseVerificationRepository] with a [SupabaseClient].
+  SupabaseVerificationRepository({SupabaseClient? supabase})
     : _supabase = supabase ?? Supabase.instance.client;
 
   final SupabaseClient _supabase;
 
-  /// Fetches all available verification types.
-  Future<List<Map<String, dynamic>>> getVerifications() async {
+  @override
+  Future<Verification> createVerification(Verification verification) async {
+    final json = verification.toJson()
+      ..remove('id')
+      ..remove('created_at');
+
+    final res = await _supabase
+        .from('verifications')
+        .insert(json)
+        .select()
+        .single();
+    return Verification.fromJson(res);
+  }
+
+  @override
+  Future<void> updateVerification(Verification verification) async {
+    final json = verification.toJson()
+      ..remove('id')
+      ..remove('created_at')
+      ..remove('partner_id');
+
+    await _supabase
+        .from('verifications')
+        .update(json)
+        .eq('id', verification.id);
+  }
+
+  @override
+  Future<void> deleteVerification(String verificationId) async {
+    await _supabase
+        .from('verifications')
+        .update({'is_active': false})
+        .eq('id', verificationId);
+  }
+
+  @override
+  Future<List<Verification>> getPartnerVerifications(String partnerId) async {
     final data = await _supabase
         .from('verifications')
         .select()
-        .order('title', ascending: true);
-    return (data as List<dynamic>).cast<Map<String, dynamic>>();
+        .eq('partner_id', partnerId)
+        .eq('is_active', true)
+        .order('created_at', ascending: false);
+
+    return (data as List)
+        .map((e) => Verification.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
-  /// [User] 특정 파트너가 요구하는 인증들의 상태를 일괄 조회
+  @override
+  Future<List<Verification>> getGlobalVerifications() async {
+    final data = await _supabase
+        .from('verifications')
+        .select()
+        .filter('partner_id', 'is', null)
+        .eq('is_active', true)
+        .order('display_name', ascending: true);
+
+    return (data as List)
+        .map((e) => Verification.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  @override
+  Future<Verification?> getVerificationById(String id) async {
+    final data = await _supabase
+        .from('verifications')
+        .select()
+        .eq('id', id)
+        .maybeSingle();
+
+    if (data == null) return null;
+    return Verification.fromJson(data);
+  }
+
+  @override
   Future<List<VerificationRequirementStatus>> getPartnerRequirementsStatus({
     required String partnerId,
     required List<String> requiredVerificationIds,
@@ -40,28 +194,25 @@ class VerificationRepository {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) return [];
 
-    // 1. 인증 마스터 정보 조회
     final masters = await _supabase
         .from('verifications')
         .select()
         .inFilter('id', requiredVerificationIds);
 
-    // 2. 유저 원본 데이터 조회
     final originalDatas = await _supabase
         .from('user_verifications')
         .select()
         .eq('user_id', userId)
         .inFilter('verification_id', requiredVerificationIds);
 
-    // 3. 파트너에게 보낸 현재 요청 조회
-    final activeRequests = await _supabase
-        .from('verification_requests')
+    final activeSubmissions = await _supabase
+        .from('verification_submissions')
         .select()
         .eq('user_id', userId)
         .eq('partner_id', partnerId)
-        .inFilter('verification_id', requiredVerificationIds);
+        .inFilter('verification_id', requiredVerificationIds)
+        .order('created_at', ascending: false);
 
-    // 4. 이 파트너에게 이미 승인받은 결과 조회
     final verifiedResults = await _supabase
         .from('partner_verified_users')
         .select()
@@ -72,12 +223,15 @@ class VerificationRepository {
     return (masters as List).map((dynamic m) {
       final map = m as Map<String, dynamic>;
       final vId = map['id'];
+
       final original = (originalDatas as List)
           .cast<Map<String, dynamic>?>()
           .firstWhere((d) => d?['verification_id'] == vId, orElse: () => null);
-      final request = (activeRequests as List)
+
+      final submission = (activeSubmissions as List)
           .cast<Map<String, dynamic>?>()
           .firstWhere((r) => r?['verification_id'] == vId, orElse: () => null);
+
       final result = (verifiedResults as List)
           .cast<Map<String, dynamic>?>()
           .firstWhere(
@@ -86,64 +240,48 @@ class VerificationRepository {
           );
 
       return VerificationRequirementStatus(
-        master: map,
-        originalData: original,
-        activeRequest: request,
+        master: Verification.fromJson(map),
+        userVerification: original,
+        activeSubmission: submission,
         verifiedResult: result,
       );
     }).toList();
   }
 
-  /// [User] 인증 요청 제출 또는 재제출
+  @override
   Future<void> submitOrUpdateVerification({
     required String partnerId,
     required String verificationId,
     required Map<String, dynamic> claimData,
-    required List<XFile> proofFiles,
-    String? existingRequestId,
+    String? existingSubmissionId,
   }) async {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) throw const AuthException('User not authenticated');
 
-    final uploadedPaths = <String>[];
-
     try {
-      for (final file in proofFiles) {
-        final extension = p.extension(file.name);
-        final fileName = '${DateTime.now().millisecondsSinceEpoch}$extension';
-        final path = '$userId/$fileName';
-        final bytes = await file.readAsBytes();
-
-        await _supabase.storage
-            .from('verification-proofs')
-            .uploadBinary(path, bytes);
-        uploadedPaths.add(path);
-      }
-
       await _supabase.from('user_verifications').upsert({
         'user_id': userId,
         'verification_id': verificationId,
-        'claim_data': claimData,
-        'proof_images': uploadedPaths,
+        'data': claimData,
         'updated_at': DateTime.now().toIso8601String(),
       });
 
-      if (existingRequestId != null) {
+      if (existingSubmissionId != null) {
         await _supabase
-            .from('verification_requests')
+            .from('verification_submissions')
             .update({
-              'status': VerificationStatus.resubmitted.name,
-              'claim_snapshot': claimData,
+              'status': VerificationStatus.pending.name,
+              'snapshot_data': claimData,
               'updated_at': DateTime.now().toIso8601String(),
             })
-            .eq('id', existingRequestId);
+            .eq('id', existingSubmissionId);
       } else {
-        await _supabase.from('verification_requests').insert({
+        await _supabase.from('verification_submissions').insert({
           'partner_id': partnerId,
           'user_id': userId,
           'verification_id': verificationId,
           'status': VerificationStatus.pending.name,
-          'claim_snapshot': claimData,
+          'snapshot_data': claimData,
         });
       }
     } on Exception catch (e, stackTrace) {
@@ -152,37 +290,49 @@ class VerificationRepository {
     }
   }
 
-  /// [Partner] 대기 중인 모든 요청 조회
+  @override
+  Future<void> submitBulkVerifications({
+    required String partnerId,
+    required List<VerificationSubmission> submissions,
+  }) async {
+    for (final submission in submissions) {
+      await submitOrUpdateVerification(
+        partnerId: partnerId,
+        verificationId: submission.verificationId,
+        claimData: submission.claimData,
+        existingSubmissionId: submission.existingRequestId,
+      );
+    }
+  }
+
+  @override
   Future<List<Map<String, dynamic>>> getPendingRequests() async {
     final data = await _supabase
-        .from('verification_requests')
-        .select('*, user:user_profiles!verification_requests_user_id_fkey(*)')
+        .from('verification_submissions')
+        .select('*, user:user_profiles(*)')
         .eq('status', 'pending')
         .order('created_at', ascending: true);
     return (data as List<dynamic>).cast<Map<String, dynamic>>();
   }
 
-  /// [Partner] 요청 심사 처리
+  @override
   Future<void> reviewRequest({
-    required String requestId,
+    required String submissionId,
     required VerificationStatus status,
-    String? rejectionReason,
+    String? adminComment,
   }) async {
-    final statusName = status == VerificationStatus.needsCorrection
-        ? 'needs_correction'
-        : status.name;
-
     await _supabase
-        .from('verification_requests')
+        .from('verification_submissions')
         .update({
-          'status': statusName,
-          'rejection_reason': rejectionReason,
-          'updated_at': DateTime.now().toIso8601String(),
+          'status': status.name,
+          'admin_comment': adminComment,
+          'reviewed_at': DateTime.now().toIso8601String(),
+          'reviewed_by': _supabase.auth.currentUser?.id,
         })
-        .eq('id', requestId);
+        .eq('id', submissionId);
   }
 
-  /// [User] 특정 상태의 모든 요청 조회 (예: 보완 필요 건만 모아보기)
+  @override
   Future<List<Map<String, dynamic>>> getRequestsByStatus(
     VerificationStatus status,
   ) async {
@@ -194,7 +344,7 @@ class VerificationRepository {
         : status.name;
 
     final data = await _supabase
-        .from('verification_requests')
+        .from('verification_submissions')
         .select('*, partner:partners(*), verification:verifications(*)')
         .eq('user_id', userId)
         .eq('status', statusName)
@@ -202,26 +352,26 @@ class VerificationRepository {
     return (data as List<dynamic>).cast<Map<String, dynamic>>();
   }
 
-  /// Common: 인증 요청에 달린 코멘트 내역 조회
+  @override
   Future<List<Map<String, dynamic>>> getVerificationComments(
-    String requestId,
+    String submissionId,
   ) async {
     final data = await _supabase
         .from('verification_comments')
         .select()
-        .eq('request_id', requestId)
+        .eq('submission_id', submissionId)
         .order('created_at', ascending: true);
     return (data as List<dynamic>).cast<Map<String, dynamic>>();
   }
 
-  /// Common: 코멘트 작성
+  @override
   Future<void> submitComment({
-    required String requestId,
+    required String submissionId,
     required Map<String, dynamic> content,
   }) async {
     final userId = _supabase.auth.currentUser?.id;
     await _supabase.from('verification_comments').insert({
-      'request_id': requestId,
+      'submission_id': submissionId,
       'author_id': userId,
       'content': content,
     });

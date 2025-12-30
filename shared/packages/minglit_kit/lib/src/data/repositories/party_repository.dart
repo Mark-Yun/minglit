@@ -28,7 +28,9 @@ class PartyRepository {
     final path = '$partnerId/$timestamp$extension';
     final bytes = await file.readAsBytes();
 
-    await _supabase.storage.from('party-assets').uploadBinary(
+    await _supabase.storage
+        .from('party-assets')
+        .uploadBinary(
           path,
           bytes,
           fileOptions: const FileOptions(
@@ -90,8 +92,7 @@ class PartyRepository {
       ..remove('created_at')
       ..remove('updated_at');
 
-    final data =
-        await _supabase.from('parties').insert(json).select().single();
+    final data = await _supabase.from('parties').insert(json).select().single();
 
     return Party.fromJson(data);
   }

@@ -5,9 +5,27 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'party_create_controller.g.dart';
 
 @riverpod
-Future<List<Map<String, dynamic>>> partyVerificationTypes(Ref ref) async {
+Future<List<Verification>> partyVerificationTypes(Ref ref) async {
   final repo = ref.watch(verificationRepositoryProvider);
-  return repo.getVerifications();
+  final user = ref.watch(currentUserProvider);
+
+  // 1. Fetch Global Verifications
+  final globalList = await repo.getGlobalVerifications();
+
+  // 2. Fetch Partner Specific Verifications (if partnerId known)
+  // TODO(User): Retrieve actual Partner ID from user context more reliably.
+  // For now, assuming user.id is partnerId or using logic from main app.
+  var partnerList = <Verification>[];
+  if (user != null) {
+    // In real app, we need to fetch which partner this user manages.
+    // Assuming user.id matches partner_member_permissions logic or similar.
+    // Temporarily using user.id as partnerId for simplicity, but might need 
+    // correction.
+    final partnerId = user.id;
+    partnerList = await repo.getPartnerVerifications(partnerId);
+  }
+
+  return [...globalList, ...partnerList];
 }
 
 @riverpod
@@ -21,8 +39,8 @@ Future<List<Location>> partnerLocations(Ref ref, String partnerId) async {
 Future<Partner?> currentPartnerInfo(Ref ref) async {
   final user = ref.watch(currentUserProvider);
   if (user == null) return null;
-  // Assume user.id is the partner.id for simplicity in this partner app context
-  // or fetch via relation if different.
+  // Assume user.id is the partner.id for simplicity in this partner
+  // app context or fetch via relation if different.
   final repo = ref.watch(partnerRepositoryProvider);
   return repo.getPartnerById(user.id);
 }

@@ -50,16 +50,35 @@ class MinglitTheme {
     return SliverAppBar(
       floating: floating,
       snap: snap,
-      pinned: false,
       titleSpacing: 0,
       title: Row(
         children: [
           const SizedBox(width: 16),
           appBarLogo(height: 36),
           const SizedBox(width: 12),
-          Text(title),
+          Expanded(
+            child: Text(
+              title,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
+      actions: actions,
+      backgroundColor: MinglitColors.background,
+      surfaceTintColor: Colors.transparent,
+    );
+  }
+
+  /// Standard AppBar with title and optional actions.
+  static PreferredSizeWidget simpleAppBar({
+    required String title,
+    List<Widget>? actions,
+    bool centerTitle = false,
+  }) {
+    return AppBar(
+      title: Text(title),
+      centerTitle: centerTitle,
       actions: actions,
       backgroundColor: MinglitColors.background,
       surfaceTintColor: Colors.transparent,
@@ -102,7 +121,6 @@ class MinglitTheme {
       appBarTheme: const AppBarTheme(
         backgroundColor: MinglitColors.background,
         elevation: 0,
-        centerTitle: false, // 로고가 왼쪽에 오도록 false로 변경
         iconTheme: IconThemeData(color: MinglitColors.textPrimary),
         titleTextStyle: TextStyle(
           color: MinglitColors.textPrimary,

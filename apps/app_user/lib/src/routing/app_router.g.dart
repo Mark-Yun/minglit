@@ -8,13 +8,35 @@ part of 'app_router.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// **User App Router**
+///
+/// Handles navigation and redirects for the User Application.
+///
+/// **Policy:**
+/// - Guests are redirected to `/login`.
+/// - Logged-in users trying to access `/login` are redirected to `/`.
 
 @ProviderFor(goRouter)
 const goRouterProvider = GoRouterProvider._();
 
+/// **User App Router**
+///
+/// Handles navigation and redirects for the User Application.
+///
+/// **Policy:**
+/// - Guests are redirected to `/login`.
+/// - Logged-in users trying to access `/login` are redirected to `/`.
+
 final class GoRouterProvider
     extends $FunctionalProvider<GoRouter, GoRouter, GoRouter>
     with $Provider<GoRouter> {
+  /// **User App Router**
+  ///
+  /// Handles navigation and redirects for the User Application.
+  ///
+  /// **Policy:**
+  /// - Guests are redirected to `/login`.
+  /// - Logged-in users trying to access `/login` are redirected to `/`.
   const GoRouterProvider._()
     : super(
         from: null,

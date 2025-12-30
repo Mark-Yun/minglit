@@ -101,6 +101,12 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _isActionRunning ? null : _runSeeder,
+        icon: const Icon(Icons.cloud_upload),
+        label: const Text('Seed Data'),
+        tooltip: 'Run Database Seeder',
+      ),
       body: usersAsync.when<Widget>(
         data: (List<Map<String, dynamic>> users) {
           if (users.isEmpty) {

@@ -63,12 +63,17 @@ class _ReviewVerificationPageState
       await ref
           .read(verificationRepositoryProvider)
           .reviewRequest(
-            requestId: id,
+            submissionId: id,
             status: status,
-            rejectionReason: reason,
+            adminComment: reason,
           );
       if (comment != null) {
-        // TODO(developer): Implement comment addition if needed.
+        await ref
+            .read(verificationRepositoryProvider)
+            .submitComment(
+              submissionId: id,
+              content: {'text': comment},
+            );
       }
 
       if (!mounted) return;
@@ -84,7 +89,7 @@ class _ReviewVerificationPageState
     }
   }
 
-  Future<void> _showCorrectionDialog(String requestId) async {
+  Future<void> _showCorrectionDialog(String submissionId) async {
     final reasonController = TextEditingController();
     final commentController = TextEditingController();
 
@@ -123,7 +128,7 @@ class _ReviewVerificationPageState
               Navigator.pop(context);
               unawaited(
                 _reviewRequest(
-                  requestId,
+                  submissionId,
                   VerificationStatus.needsCorrection,
                   reason: reasonController.text,
                   comment: commentController.text,
@@ -137,14 +142,14 @@ class _ReviewVerificationPageState
     );
   }
 
-  Future<void> _showCommentsModal(String requestId) async {
+  Future<void> _showCommentsModal(String submissionId) async {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => _CommentsView(requestId: requestId),
+      builder: (context) => _CommentsView(submissionId: submissionId),
     );
   }
 
@@ -200,9 +205,12 @@ class _ReviewVerificationPageState
 
   Widget _buildRequestCard(Map<String, dynamic> req) {
     final user = req['user'] as Map<String, dynamic>? ?? {};
-    final claim = req['claim_snapshot'] as Map<String, dynamic>? ?? {};
-    final images = (req['proof_images'] as List?)?.cast<String>() ?? [];
-    final category = (req['category'] as String?)?.toUpperCase() ?? 'UNKNOWN';
+    final claim = req['snapshot_data'] as Map<String, dynamic>? ?? {};
+    // Extract proof images from snapshot_data if they exist
+    final images = claim.values
+        .whereType<String>()
+        .where((val) => val.contains('/')) // Simple check for path-like strings
+        .toList();
 
     return Card(
       margin: const EdgeInsets.only(bottom: 20),
@@ -214,7 +222,7 @@ class _ReviewVerificationPageState
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Chip(label: Text(category)),
+                const Chip(label: Text('VERIFICATION')),
                 Text(
                   (user['email'] as String?) ?? 'Unknown User',
                   style: const TextStyle(color: Colors.grey, fontSize: 12),
@@ -222,12 +230,17 @@ class _ReviewVerificationPageState
               ],
             ),
             const SizedBox(height: 12),
-            ...claim.entries.map(
-              (e) => Text(
-                '${e.key}: ${e.value}',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
+            ...claim.entries
+                .where(
+                  (e) =>
+                      e.value is! String || !e.value.toString().contains('/'),
+                )
+                .map(
+                  (e) => Text(
+                    '${e.key}: ${e.value}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
             const SizedBox(height: 16),
 
             // 이미지 썸네일
@@ -292,8 +305,8 @@ class _ReviewVerificationPageState
 }
 
 class _CommentsView extends ConsumerWidget {
-  const _CommentsView({required this.requestId});
-  final String requestId;
+  const _CommentsView({required this.submissionId});
+  final String submissionId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -310,7 +323,7 @@ class _CommentsView extends ConsumerWidget {
           const Divider(),
           Expanded(
             child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: repository.getVerificationComments(requestId),
+              future: repository.getVerificationComments(submissionId),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());

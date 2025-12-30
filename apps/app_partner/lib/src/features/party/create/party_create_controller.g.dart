@@ -15,13 +15,13 @@ const partyVerificationTypesProvider = PartyVerificationTypesProvider._();
 final class PartyVerificationTypesProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<Map<String, dynamic>>>,
-          List<Map<String, dynamic>>,
-          FutureOr<List<Map<String, dynamic>>>
+          AsyncValue<List<Verification>>,
+          List<Verification>,
+          FutureOr<List<Verification>>
         >
     with
-        $FutureModifier<List<Map<String, dynamic>>>,
-        $FutureProvider<List<Map<String, dynamic>>> {
+        $FutureModifier<List<Verification>>,
+        $FutureProvider<List<Verification>> {
   const PartyVerificationTypesProvider._()
     : super(
         from: null,
@@ -38,18 +38,18 @@ final class PartyVerificationTypesProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<Map<String, dynamic>>> $createElement(
+  $FutureProviderElement<List<Verification>> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<List<Map<String, dynamic>>> create(Ref ref) {
+  FutureOr<List<Verification>> create(Ref ref) {
     return partyVerificationTypes(ref);
   }
 }
 
 String _$partyVerificationTypesHash() =>
-    r'bb384c66ff0155b3855aadc98c3234916d17a019';
+    r'95e6e487c3d6f5f10d2430675922ab666a4f4c40';
 
 @ProviderFor(partnerLocations)
 const partnerLocationsProvider = PartnerLocationsFamily._();
@@ -186,7 +186,7 @@ final class PartyCreateControllerProvider
 }
 
 String _$partyCreateControllerHash() =>
-    r'12849c993c78a159e029c01f6acd04b7363c75ea';
+    r'728fdc80b50c394058898012c50ad5d595945a01';
 
 abstract class _$PartyCreateController extends $AsyncNotifier<void> {
   FutureOr<void> build();

@@ -1,222 +1,235 @@
-import 'dart:math';
-
-import 'package:minglit_kit/src/utils/log.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// **Database Seeder**
+/// **Database Seeder (Refactored)**
 ///
-/// Handles programmatic data seeding for local development.
-/// Requires a [SupabaseClient] initialized with
-/// **SERVICE ROLE KEY**.
+/// Handles programmatic data seeding for local development using Models.
 class DatabaseSeeder {
   DatabaseSeeder(this._adminClient);
 
   final SupabaseClient _adminClient;
-  final _random = Random();
 
   /// Runs the full seeding process.
   Future<void> seed() async {
-    Log.i('🌱 [Seeder] Starting Database Seeding...');
+    Log.i('🌱 [Seeder] Starting Fresh Seeding...');
 
     try {
-      // 1. Clean up (Optional: You might rely on 'db reset' instead)
-      // We cannot easily truncate via API, so we assume DB is clean or handles
-      // conflicts. For a true reset, use 'supabase db reset' in terminal.
+      // 1. Create Global Verifications
+      final globalVerifIds = await _seedGlobalVerifications();
+      Log.i('✅ Global Verifications Created: ${globalVerifIds.length} items');
 
-      // 2. Create Partners & Owners & Staffs
-      for (var i = 1; i <= 10; i++) {
-        await _seedPartnerSet(i);
-      }
+      // 2. Create Normal Users
+      await _seedUsers();
 
-      // 3. Create Normal Users
-      await _seedNormalUsers();
+      // 3. Create Partners & Their Members
+      await _seedPartners();
 
-      Log.i('🌳 [Seeder] Seeding Completed Successfully!');
+      Log.i('✅ [Seeder] Seeding Completed!');
     } catch (e, st) {
       Log.e('🔥 [Seeder] Seeding Failed', e, st);
       rethrow;
     }
   }
 
-  Future<void> _seedPartnerSet(int index) async {
-    final partnerName = 'Partner Shop $index';
-    Log.d('Creating $partnerName...');
+  Future<List<String>> _seedGlobalVerifications() async {
+    Log.i('📜 Step 0: Seeding Global Verifications...');
 
-    // A. Create Owner
-    final ownerEmail = 'owner$index@test.com';
-    final ownerId = await _createUser(
-      email: ownerEmail,
-      password: 'password',
-      meta: {
-        'name': 'Owner $index',
-        'username': 'owner_$index',
-        'is_verified': true,
-        'gender': 'male',
-      },
-    );
+    // We can use the Verification model if available, but simple maps are fine
+    // for structure defs
+    final result = await _adminClient
+        .from('verifications')
+        .insert([
+          {
+            'category': 'career',
+            'internal_name': 'Global Career Verification',
+            'display_name': '직장 인증',
+            'description': '회사 이메일 또는 재직증명서로 인증하세요.',
+            'icon_key': 'briefcase',
+            'form_schema': [
+              {
+                'key': 'company_name',
+                'type': 'text',
+                'label': '회사명',
+                'required': true,
+              },
+              {
+                'key': 'proof_doc',
+                'type': 'file',
+                'label': '재직증명서/명함',
+                'required': true,
+              },
+            ],
+            'partner_id': null, // Global
+          },
+          {
+            'category': 'academic',
+            'internal_name': 'Global Academic Verification',
+            'display_name': '학력 인증',
+            'description': '졸업증명서로 학력을 인증하세요.',
+            'icon_key': 'school',
+            'form_schema': [
+              {
+                'key': 'univ_name',
+                'type': 'text',
+                'label': '학교명',
+                'required': true,
+              },
+              {
+                'key': 'major',
+                'type': 'text',
+                'label': '전공',
+                'required': true,
+              },
+              {
+                'key': 'proof_doc',
+                'type': 'file',
+                'label': '졸업증명서',
+                'required': true,
+              },
+            ],
+            'partner_id': null, // Global
+          },
+        ])
+        .select('id');
 
-    // B. Create Partner
-    final partnerRes = await _adminClient
-        .from('partners')
-        .insert({
-          'name': partnerName,
-          'introduction': 'Best shop in town #$index',
-          'contact_email': ownerEmail,
-          'biz_name': 'Minglit Biz $index',
-          'biz_number': '123-00-${10000 + index}',
-          'is_active': true,
-        })
-        .select('id')
-        .single();
-    final partnerId = partnerRes['id'] as String;
-
-    // C. Link Owner
-    await _adminClient.from('partner_member_permissions').insert({
-      'partner_id': partnerId,
-      'user_id': ownerId,
-      'role': 'owner',
-    });
-
-    // D. Create Staffs (1~3 per partner)
-    final staffCount = 1 + _random.nextInt(3); // 1 to 3
-    for (var j = 1; j <= staffCount; j++) {
-      final staffEmail = 'staff$index-$j@test.com'; // staff1-1@test.com
-      final staffId = await _createUser(
-        email: staffEmail,
-        password: 'password',
-        meta: {
-          'name': 'Staff $index-$j',
-          'username': 'staff_${index}_$j',
-          'is_verified': true,
-          'gender': 'female',
-        },
-      );
-
-      await _adminClient.from('partner_member_permissions').insert({
-        'partner_id': partnerId,
-        'user_id': staffId,
-        'role': 'staff',
-        'permissions': ['VERIFY_LIST_VIEW', 'COMMENT_MANAGE'],
-      });
-    }
-
-    // E. Create Party System Data
-    await _seedPartySet(partnerId, index);
+    return (result as List)
+        .map((dynamic e) => (e as Map<String, dynamic>)['id'] as String)
+        .toList();
   }
 
-  Future<void> _seedPartySet(String partnerId, int index) async {
-    // 1. Location
-    final locRes = await _adminClient
-        .from('locations')
-        .insert({
-          'partner_id': partnerId,
-          'name': 'Gangnam Branch #$index',
-          'address': 'Seoul Gangnam-gu Teheran-ro ${100 + index}',
-          'sido': 'Seoul',
-          'sigungu': 'Gangnam-gu',
-          // geo_point skipped for now (needs RPC or PostGIS driver)
-        })
-        .select('id')
-        .single();
-    final locationId = locRes['id'] as String;
+  Future<void> _seedUsers() async {
+    Log.i('👥 Step 1: Seeding 100 Normal Users...');
+    for (var i = 1; i <= 100; i++) {
+      final metadata = <String, dynamic>{
+        'name': 'User $i',
+        'username': 'user_$i', // username은 식별을 위해 항상 포함
+      };
 
-    // 2. Party (Theme)
-    final partyRes = await _adminClient
-        .from('parties')
-        .insert({
-          'partner_id': partnerId,
-          'title': 'Friday Night Fever #$index',
-          'description': {'text': 'Come and join the best party in town!'},
-          'status': 'active',
-          'contact_phone': '02-1234-${1000 + index}',
-        })
-        .select('id')
-        .single();
-    final partyId = partyRes['id'] as String;
+      // 50번 미만 유저만 상세 정보(인증 상태 가정) 포함
+      if (i < 50) {
+        metadata['username'] = 'user_$i';
+        metadata['gender'] = i.isOdd ? 'male' : 'female';
+        metadata['phone_number'] = '010-${1000 + i}-${2000 + i}';
+      }
 
-    // 3. Event (Instance)
-    // Date: 3 days later, 19:00
-    final startTime = DateTime.now()
-        .add(const Duration(days: 3))
-        .toIso8601String();
-    final endTime = DateTime.now()
-        .add(const Duration(days: 3, hours: 4))
-        .toIso8601String();
-
-    final eventRes = await _adminClient
-        .from('events')
-        .insert({
-          'party_id': partyId,
-          'location_id': locationId,
-          'title': 'Vol.1 Grand Opening',
-          'start_time': startTime,
-          'end_time': endTime,
-          'max_participants': 40,
-          'status': 'scheduled',
-        })
-        .select('id')
-        .single();
-    final eventId = eventRes['id'] as String;
-
-    // 4. Tickets
-    await _adminClient.from('event_tickets').insert([
-      {
-        'event_id': eventId,
-        'name': 'Male Early Bird',
-        'price': 30000,
-        'quantity': 20,
-        'gender': 'male',
-        'status': 'on_sale',
-      },
-      {
-        'event_id': eventId,
-        'name': 'Female Early Bird',
-        'price': 10000,
-        'quantity': 20,
-        'gender': 'female',
-        'status': 'on_sale',
-      },
-    ]);
-  }
-
-  Future<void> _seedNormalUsers() async {
-    Log.d('Creating 20 Normal Users...'); // Reduced from 100 for speed in UI
-    for (var i = 1; i <= 20; i++) {
-      final gender = i.isOdd ? 'male' : 'female';
-      await _createUser(
+      await _createAdminUser(
         email: 'user$i@test.com',
         password: 'password',
-        meta: {
-          'name': 'User $i',
-          'username': 'user_$i',
-          'is_verified': i % 3 == 0,
-          'gender': gender,
-        },
+        metadata: metadata,
       );
     }
   }
 
-  /// Creates a user using Admin API. Returns User ID.
-  Future<String> _createUser({
+  Future<void> _seedPartners() async {
+    Log.i('🏢 Step 2: Seeding 10 Partners & Staffs...');
+    for (var i = 1; i <= 10; i++) {
+      final partnerName = 'Minglit Shop $i';
+
+      // 1. Create Owner User
+      final ownerId = await _createAdminUser(
+        email: 'owner$i@test.com',
+        password: 'password',
+        metadata: {
+          'name': 'Owner $i ($partnerName)',
+          'username': 'owner_$i',
+          'gender': 'male',
+          'phone_number': '010-0000-${1000 + i}',
+        },
+      );
+
+      // 2. Create Partner record
+      final partnerRes = await _adminClient
+          .from('partners')
+          .insert({
+            'name': partnerName,
+            'introduction': 'Welcome to $partnerName! Best service guaranteed.',
+            'biz_name': 'Biz $i',
+            'biz_number': '123-45-${60000 + i}',
+            'contact_email': 'owner$i@test.com',
+          })
+          .select('id')
+          .single();
+      final partnerId = partnerRes['id'] as String;
+
+      // 3. Link Owner
+      await _adminClient.from('partner_member_permissions').insert({
+        'partner_id': partnerId,
+        'user_id': ownerId,
+        'role': 'owner',
+      });
+
+      // 4. Create 2 Staffs per partner
+      for (var s = 1; s <= 2; s++) {
+        final staffId = await _createAdminUser(
+          email: 'staff$i-$s@test.com',
+          password: 'password',
+          metadata: {
+            'name': 'Staff $i-$s ($partnerName)',
+            'username': 'staff_${i}_$s',
+            'gender': s.isOdd ? 'female' : 'male',
+            'phone_number': '010-1111-${(i * 10) + s}',
+          },
+        );
+
+        await _adminClient.from('partner_member_permissions').insert({
+          'partner_id': partnerId,
+          'user_id': staffId,
+          'role': 'staff',
+        });
+      }
+    }
+  }
+
+  /// Creates a user via Supabase Admin API.
+  /// Deletes existing user if email is already taken for a clean start.
+  Future<String> _createAdminUser({
     required String email,
     required String password,
-    required Map<String, dynamic> meta,
+    required Map<String, dynamic> metadata,
   }) async {
-    // Check if exists (Clean DB is better, but handle idempotency)
     try {
       final res = await _adminClient.auth.admin.createUser(
         AdminUserAttributes(
           email: email,
           password: password,
           emailConfirm: true,
-          userMetadata: meta,
+          userMetadata: metadata,
         ),
       );
       return res.user!.id;
     } on AuthException catch (e) {
-      if (e.message.contains('already registered')) {
-        Log.w('User $email already exists. Skipping creation.');
-        rethrow;
+      if (e.message.contains('already registered') ||
+          e.code == 'email_exists') {
+        // Cleanup and retry
+        try {
+          // Attempt to find user with pagination (up to 1000 users)
+          final usersRes = await _adminClient.auth.admin.listUsers(
+            perPage: 1000,
+          );
+
+          try {
+            final existing = usersRes.firstWhere((u) => u.email == email);
+            await _adminClient.auth.admin.deleteUser(existing.id);
+            Log.i('♻️ Deleted existing user: $email');
+          } catch (_) {
+            // User not found in list, but create failed?
+            // This is a weird edge case. Just return null or rethrow.
+            Log.w(
+              '''⚠️ User $email creation failed but could not find in list to delete.''',
+            );
+            rethrow;
+          }
+
+          // Retry creation
+          return _createAdminUser(
+            email: email,
+            password: password,
+            metadata: metadata,
+          );
+        } catch (cleanupError) {
+          Log.e('❌ Cleanup failed for $email', cleanupError);
+          rethrow;
+        }
       }
       rethrow;
     }

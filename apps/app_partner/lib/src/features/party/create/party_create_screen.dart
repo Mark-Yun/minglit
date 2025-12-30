@@ -104,13 +104,14 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
       final state = ref.read(partyCreateControllerProvider);
       if (state.hasError) {
         coordinator.onError(state.error!);
-              } else {
-              coordinator.onPartyCreated();
-            }
-          } on Exception catch (e) {
-            coordinator.onError(e);
-          }
-        }
+      } else {
+        coordinator.onPartyCreated();
+      }
+    } on Exception catch (e) {
+      coordinator.onError(e);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(partyCreateControllerProvider);
@@ -336,15 +337,15 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
               ),
               const SizedBox(height: 24),
 
-              // 6. 참가 자격
+              // 6. 참가 자격 (인증)
               const _SectionTitle('참가 자격 (인증)'),
               verificationsAsync.when(
                 data: (verifications) => Wrap(
                   spacing: 8,
                   runSpacing: 4,
                   children: verifications.map((v) {
-                    final id = v['id'] as String;
-                    final name = v['title'] as String;
+                    final id = v.id;
+                    final name = v.displayName;
                     final isSelected = _selectedVerificationIds.contains(id);
                     return FilterChip(
                       label: Text(name),

@@ -5,73 +5,113 @@ part 'verification.g.dart';
 
 /// Categories for different types of verification.
 enum VerificationCategory {
-  /// Career/Job related.
   career,
-
-  /// Asset/Wealth related.
   asset,
-
-  /// Marriage/Single status related.
   marriage,
-
-  /// Academic/Degree related.
   academic,
-
-  /// Vehicle/Car related.
   vehicle,
-
-  /// Other types.
   etc,
 }
 
 /// Status of a verification request.
 enum VerificationStatus {
-  /// Waiting for review.
   pending,
-
-  /// Approved by reviewer.
   approved,
-
-  /// Rejected with reason.
   rejected,
-
-  /// Needs more info or correction.
   @JsonValue('needs_correction')
   needsCorrection,
-
-  /// Resubmitted by user.
-  resubmitted,
+  cancelled,
 }
 
-/// Comprehensive status of a specific verification requirement.
+/// Represents a single field definition in the dynamic form schema.
+@freezed
+abstract class VerificationFormField with _$VerificationFormField {
+  const factory VerificationFormField({
+    /// Unique key for the field (e.g., 'company_name').
+    required String key,
+
+    /// Input type: 'text', 'number', 'file', 'date', etc.
+    required String type,
+
+    /// UI Label (e.g., '회사명').
+    required String label,
+
+    /// Whether this field is mandatory.
+    @Default(true) bool required,
+
+    /// Placeholder text for the input.
+    String? placeholder,
+
+    /// List of options (for select/radio types).
+    List<String>? options,
+  }) = _VerificationFormField;
+
+  factory VerificationFormField.fromJson(Map<String, dynamic> json) =>
+      _$VerificationFormFieldFromJson(json);
+}
+
+/// The main Verification definition model.
+@freezed
+abstract class Verification with _$Verification {
+  const factory Verification({
+    required String id,
+    required VerificationCategory category,
+
+    /// Internal identifier (e.g., 'global_career').
+    @JsonKey(name: 'internal_name') required String internalName,
+
+    /// Display name shown to users (e.g., '직장 인증').
+    @JsonKey(name: 'display_name') required String displayName,
+
+    /// Partner ID who owns this verification. Null means Global/System verification.
+    @JsonKey(name: 'partner_id') String? partnerId,
+    String? description,
+
+    /// Icon identifier (e.g., 'briefcase').
+    @JsonKey(name: 'icon_key') String? iconKey,
+
+    /// Dynamic form definition.
+    @JsonKey(name: 'form_schema')
+    @Default([])
+    List<VerificationFormField> formSchema,
+
+    @JsonKey(name: 'is_active') @Default(true) bool isActive,
+    @JsonKey(name: 'created_at') DateTime? createdAt,
+  }) = _Verification;
+
+  factory Verification.fromJson(Map<String, dynamic> json) =>
+      _$VerificationFromJson(json);
+}
+
+/// Helper model for wrapping verification status (UI helper).
 @freezed
 abstract class VerificationRequirementStatus
     with _$VerificationRequirementStatus {
-  /// Creates a [VerificationRequirementStatus] instance.
   const factory VerificationRequirementStatus({
-    required Map<String, dynamic> master,
-    Map<String, dynamic>? originalData,
-    Map<String, dynamic>? activeRequest,
-    Map<String, dynamic>? verifiedResult,
+    required Verification master,
+
+    /// User's original data (내 서랍 데이터)
+    @JsonKey(name: 'user_verification') Map<String, dynamic>? userVerification,
+
+    /// Active submission to a partner (제출 내역)
+    @JsonKey(name: 'active_submission') Map<String, dynamic>? activeSubmission,
+
+    /// Final verified result (출입증)
+    @JsonKey(name: 'verified_result') Map<String, dynamic>? verifiedResult,
   }) = _VerificationRequirementStatus;
 
-  /// Private constructor for custom getters.
   const VerificationRequirementStatus._();
 
-  /// Creates a [VerificationRequirementStatus] from a JSON map.
   factory VerificationRequirementStatus.fromJson(Map<String, dynamic> json) =>
       _$VerificationRequirementStatusFromJson(json);
 
-  /// Returns true if the requirement is fully approved.
   bool get isApproved => verifiedResult != null;
 
-  /// Returns true if there is an ongoing request.
-  bool get hasActiveRequest => activeRequest != null;
+  bool get hasActiveRequest => activeSubmission != null;
 
-  /// Returns the current status of the active request.
   VerificationStatus? get status {
-    if (activeRequest == null) return null;
-    final statusStr = activeRequest!['status'] as String;
+    if (activeSubmission == null) return null;
+    final statusStr = activeSubmission!['status'] as String;
     return VerificationStatus.values.firstWhere(
       (e) =>
           e.name == statusStr ||
