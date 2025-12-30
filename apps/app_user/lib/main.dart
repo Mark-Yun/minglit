@@ -2,24 +2,18 @@ import 'dart:async';
 
 import 'package:app_user/src/routing/app_router.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
+
+part 'main.g.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  const supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: 'http://127.0.0.1:54321',
-  );
-  const supabasePublishableKey = String.fromEnvironment(
-    'SUPABASE_PUBLISHABLE_KEY',
-    defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
-  );
   const googleWebClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
-
-  await Supabase.initialize(url: supabaseUrl, anonKey: supabasePublishableKey);
 
   runApp(
     ProviderScope(
@@ -36,58 +30,76 @@ Future<void> main() async {
   );
 }
 
-class MinglitApp extends ConsumerWidget {
+@riverpod
+Future<void> appStartup(Ref ref) async {
+  const supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: 'http://127.0.0.1:54321',
+  );
+  const supabasePublishableKey = String.fromEnvironment(
+    'SUPABASE_PUBLISHABLE_KEY',
+    defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
+  );
+
+  try {
+    await Future.wait([
+      initializeDateFormatting('ko_KR'),
+      Supabase.initialize(
+        url: supabaseUrl,
+        anonKey: supabasePublishableKey,
+      ),
+    ]);
+  } on Exception catch (e) {
+    debugPrint('⚠️ App startup warning: $e');
+  }
+}
+
+class MinglitApp extends StatelessWidget {
   const MinglitApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return const _AppView();
   }
 }
 
-class _AppView extends ConsumerStatefulWidget {
+class _AppView extends ConsumerWidget {
   const _AppView();
 
   @override
-  ConsumerState<_AppView> createState() => _AppViewState();
-}
-
-class _AppViewState extends ConsumerState<_AppView> {
-  late Future<void> _initFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _initFuture = _initialize();
-  }
-
-  Future<void> _initialize() async {
-    await GoogleFonts.pendingFonts([
-      GoogleFonts.poppins(),
-      GoogleFonts.notoSansKr(),
-    ]);
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final startupState = ref.watch(appStartupProvider);
     final goRouter = ref.watch(goRouterProvider);
 
-    return MaterialApp.router(
-      title: 'Minglit User',
-      debugShowCheckedModeBanner: false,
-      theme: MinglitTheme.materialTheme,
-      routerConfig: goRouter,
-      builder: (context, child) {
-        return FutureBuilder(
-          future: _initFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
-              return const MinglitSplashScreen(appName: 'User');
-            }
-            return MinglitGlobalLoadingOverlay(child: child!);
-          },
-        );
-      },
+    return startupState.when(
+      data: (_) => MaterialApp.router(
+        title: 'Minglit User',
+        debugShowCheckedModeBanner: false,
+        theme: MinglitTheme.materialTheme,
+        routerConfig: goRouter,
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('ko', 'KR'),
+          Locale('en', 'US'),
+        ],
+        builder: (context, child) {
+          return MinglitGlobalLoadingOverlay(child: child!);
+        },
+      ),
+      loading: () => MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: MinglitTheme.materialTheme,
+        home: const MinglitSplashScreen(appName: 'User'),
+      ),
+      error: (e, st) => MaterialApp(
+        home: Scaffold(
+          body: Center(child: Text('Error: $e')),
+        ),
+      ),
     );
   }
 }

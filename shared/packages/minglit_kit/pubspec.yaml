@@ -22,6 +22,7 @@ dependencies:
   logger: ^2.6.2
   path: ^1.9.1
   riverpod_annotation: ^3.0.3
+  shimmer: ^3.0.0
   supabase_flutter: ^2.12.0
 
 dev_dependencies:
@@ -44,6 +45,12 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/fonts/Noto_Sans_KR/
+
+  fonts:
+    - family: NotoSansKR
+      fonts:
+        - asset: assets/fonts/Noto_Sans_KR/NotoSansKR-VariableFont_wght.ttf
 
   # To add assets to your package, add an assets section, like this:
   # assets:

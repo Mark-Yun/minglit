@@ -432,3 +432,59 @@ create policy "Public read access" on public.user_profiles for select using (tru
 -- Authenticated Storage
 create policy "Allow Authenticated" on storage.objects for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 create policy "Public Storage Read" on storage.objects for select using (bucket_id = 'party-assets');
+
+-- 23. Extended RLS Policies (Admin/Owner Write Access)
+
+-- User Profiles
+create policy "Users can update own profile" on public.user_profiles for update using (auth.uid() = id);
+
+-- Partners
+create policy "Public partners read access" on public.partners for select using (true);
+create policy "Admin/Owner partners all access" on public.partners for all 
+  using (public.is_super_admin() or public.has_partner_permission(id, 'PARTNER_EDIT'));
+
+-- Partner Member Permissions
+create policy "Users can read own permissions" on public.partner_member_permissions for select 
+  using (auth.uid() = user_id or public.is_super_admin() or public.has_partner_permission(partner_id, 'MEMBER_MANAGE'));
+
+-- Partner Applications
+create policy "Users can read own applications" on public.partner_applications for select 
+  using (auth.uid() = user_id or public.is_super_admin());
+
+-- Locations (Write Access)
+create policy "Admin/Owner locations all access" on public.locations for all 
+  using (public.is_super_admin() or public.has_partner_permission(partner_id, 'PARTY_MANAGE'));
+
+-- Parties (Write Access)
+create policy "Admin/Owner parties all access" on public.parties for all 
+  using (public.is_super_admin() or public.has_partner_permission(partner_id, 'PARTY_MANAGE'));
+
+-- Events (Write Access)
+create policy "Admin/Owner events all access" on public.events for all 
+  using (
+    public.is_super_admin() or 
+    exists (
+      select 1 from public.parties p
+      where p.id = party_id
+      and public.has_partner_permission(p.partner_id, 'PARTY_MANAGE')
+    )
+  );
+
+-- Event Tickets (Write Access)
+create policy "Admin/Owner event_tickets all access" on public.event_tickets for all 
+  using (
+    public.is_super_admin() or 
+    exists (
+      select 1 from public.events e
+      join public.parties p on p.id = e.party_id
+      where e.id = event_id
+      and public.has_partner_permission(p.partner_id, 'PARTY_MANAGE')
+    )
+  );
+
+-- Verifications (Write Access)
+create policy "Admin/Owner verifications all access" on public.verifications for all 
+  using (
+    public.is_super_admin() or 
+    (partner_id is not null and public.has_partner_permission(partner_id, 'PARTNER_EDIT'))
+  );

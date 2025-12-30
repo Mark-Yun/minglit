@@ -23,10 +23,9 @@ class AuthWrapper extends ConsumerWidget {
         }
       },
       error: (e, st) => Scaffold(body: Center(child: Text('Error: $e'))),
-      loading:
-          () => const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          ),
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
     );
   }
 }

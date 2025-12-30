@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:minglit_kit/src/widgets/common/minglit_image.dart';
 
 /// A branded splash screen shown during app initialization.
 class MinglitSplashScreen extends StatelessWidget {
@@ -18,31 +18,24 @@ class MinglitSplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = isPartner
-        ? const Color(0xFFFF7043)
-        : const Color(0xFF1A237E);
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'Minglit',
-              style: GoogleFonts.poppins(
-                fontSize: 48,
-                fontWeight: FontWeight.w700,
-                color: primaryColor,
-              ),
+            const MinglitImage(
+              assetPath:
+                  'packages/minglit_kit/assets/images/minglit_app_bar_logo.png',
+              height: 64,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             Text(
               appName.toUpperCase(),
-              style: GoogleFonts.poppins(
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey[400],
+                color: Colors.grey,
                 letterSpacing: 4,
               ),
             ),

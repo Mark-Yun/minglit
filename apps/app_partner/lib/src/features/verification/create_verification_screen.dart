@@ -36,20 +36,21 @@ class _CreateVerificationScreenState
     super.dispose();
   }
 
-    Future<void> _onSubmit() async {
-      if (!_formKey.currentState!.validate()) return;
-  
-      final success = await ref
-          .read(createVerificationControllerProvider.notifier)
-          .submit(widget.partnerId);
-  
-      if (success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('인증이 생성되었습니다.')),
-        );
-        Navigator.pop(context, true);
-      }
+  Future<void> _onSubmit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final success = await ref
+        .read(createVerificationControllerProvider.notifier)
+        .submit(widget.partnerId);
+
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('인증이 생성되었습니다.')),
+      );
+      Navigator.pop(context, true);
     }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

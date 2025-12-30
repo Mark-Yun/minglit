@@ -44,7 +44,12 @@ class PartnerRepository {
   /// Fetches partners managed by the current user.
   Future<List<Partner>> getMyManagedPartners() async {
     final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) return [];
+    Log.d('🔍 [PartnerRepo] getMyManagedPartners for user: $userId');
+
+    if (userId == null) {
+      Log.w('⚠️ [PartnerRepo] User not logged in');
+      return [];
+    }
 
     // 1. Get partner_ids from permissions
     final permissions = await _supabase
@@ -52,11 +57,16 @@ class PartnerRepository {
         .select('partner_id')
         .eq('user_id', userId);
 
+    Log.d('🔍 [PartnerRepo] Found permissions count: ${permissions.length}');
+
     final partnerIds = (permissions as List)
         .map((e) => (e as Map)['partner_id'] as String)
         .toList();
 
-    if (partnerIds.isEmpty) return [];
+    if (partnerIds.isEmpty) {
+      Log.w('⚠️ [PartnerRepo] No managed partners found for user');
+      return [];
+    }
 
     // 2. Get partners details
     final data = await _supabase
@@ -64,6 +74,8 @@ class PartnerRepository {
         .select()
         .inFilter('id', partnerIds)
         .eq('is_active', true);
+
+    Log.d('🔍 [PartnerRepo] Fetched partners count: ${data.length}');
 
     return (data as List)
         .map((e) => Partner.fromJson(e as Map<String, dynamic>))

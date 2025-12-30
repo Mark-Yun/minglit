@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 /// A common login screen for both User and Partner apps.
 class MinglitLoginScreen extends StatelessWidget {
@@ -23,9 +23,6 @@ class MinglitLoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Theme colors (User: Navy / Partner: Orange)
-    final primaryColor = isPartner
-        ? const Color(0xFFFF7043)
-        : const Color(0xFF1A237E);
     final slogan = isPartner
         ? 'Verified Vibe, Spark Your Business'
         : 'Verified Vibe, Spark Your Moment';
@@ -40,21 +37,18 @@ class MinglitLoginScreen extends StatelessWidget {
             children: [
               const Spacer(),
               // 1. Logo & Slogan
-              Text(
-                'Minglit',
-                style: GoogleFonts.poppins(
-                  fontSize: 48,
-                  fontWeight: FontWeight.w700,
-                  color: primaryColor,
-                ),
+              const MinglitImage(
+                assetPath:
+                    'packages/minglit_kit/assets/images/minglit_app_bar_logo.png',
+                height: 64,
               ),
               if (isPartner)
-                Text(
+                const Text(
                   'PARTNER',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey[600],
+                    color: Colors.grey,
                     letterSpacing: 2,
                   ),
                 ),
@@ -62,9 +56,9 @@ class MinglitLoginScreen extends StatelessWidget {
               Text(
                 slogan,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.notoSans(
+                style: const TextStyle(
                   fontSize: 16,
-                  color: Colors.grey[700],
+                  color: Colors.grey,
                 ),
               ),
               const Spacer(),

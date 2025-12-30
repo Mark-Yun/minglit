@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Layer 3: 디자인 토큰 (Custom Constants)
 /// 테마에 담기 애매한 수치들과 브랜드 색상을 상수로 관리합니다.
@@ -86,10 +85,9 @@ class MinglitTheme {
   }
 
   static ThemeData get materialTheme {
-    final baseTextTheme = GoogleFonts.notoSansKrTextTheme();
-
     return ThemeData(
       useMaterial3: true,
+      fontFamily: 'NotoSansKR',
       colorScheme: ColorScheme.fromSeed(
         seedColor: MinglitColors.primary,
         primary: MinglitColors.primary,
@@ -100,19 +98,19 @@ class MinglitTheme {
         onSurfaceVariant: MinglitColors.textSecondary,
       ),
       scaffoldBackgroundColor: MinglitColors.background,
-      // Layer 1: 텍스트 통일성
-      textTheme: baseTextTheme.copyWith(
-        displayLarge: GoogleFonts.notoSansKr(
+      // Layer 1: 텍스트 통일성 (Using local fontFamily 'NotoSansKR')
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: MinglitColors.textPrimary,
         ),
-        titleLarge: GoogleFonts.notoSansKr(
+        titleLarge: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,
           color: MinglitColors.textPrimary,
         ),
-        bodyMedium: GoogleFonts.notoSansKr(
+        bodyMedium: TextStyle(
           fontSize: 16,
           color: MinglitColors.textSecondary,
         ),

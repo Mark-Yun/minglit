@@ -14,17 +14,16 @@ class LoginPage extends ConsumerWidget {
         unawaited(
           showDialog<void>(
             context: context,
-            builder:
-                (context) => AlertDialog(
-                  title: const Text('로그인 실패'),
-                  content: SelectableText('Error: ${next.error}'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('확인'),
-                    ),
-                  ],
+            builder: (context) => AlertDialog(
+              title: const Text('로그인 실패'),
+              content: SelectableText('Error: ${next.error}'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('확인'),
                 ),
+              ],
+            ),
           ),
         );
       }

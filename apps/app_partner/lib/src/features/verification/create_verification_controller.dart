@@ -99,7 +99,8 @@ class CreateVerificationController extends _$CreateVerificationController {
     try {
       await _submitOperation!.value;
       return true;
-    } on Exception catch (e) {
+    } on Exception catch (e, st) {
+      Log.e('Failed to create verification', e, st);
       // If cancelled, it might not throw but simply return null or stop.
       // But if _performSubmit throws, we catch it here.
       if (_submitOperation?.isCanceled ?? false) {

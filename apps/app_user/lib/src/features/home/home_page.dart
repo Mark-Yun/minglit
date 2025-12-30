@@ -25,8 +25,8 @@ class HomePage extends ConsumerWidget {
             Text('안녕하세요, ${user?.userMetadata?['full_name'] ?? user?.email}님!'),
             const SizedBox(height: 40),
             ElevatedButton(
-              onPressed:
-                  () => ref.read(authControllerProvider.notifier).signOut(),
+              onPressed: () =>
+                  ref.read(authControllerProvider.notifier).signOut(),
               child: const Text('로그아웃'),
             ),
           ],
