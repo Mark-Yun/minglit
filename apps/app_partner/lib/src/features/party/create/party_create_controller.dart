@@ -19,7 +19,7 @@ Future<List<Verification>> partyVerificationTypes(Ref ref) async {
   if (user != null) {
     // In real app, we need to fetch which partner this user manages.
     // Assuming user.id matches partner_member_permissions logic or similar.
-    // Temporarily using user.id as partnerId for simplicity, but might need 
+    // Temporarily using user.id as partnerId for simplicity, but might need
     // correction.
     final partnerId = user.id;
     partnerList = await repo.getPartnerVerifications(partnerId);

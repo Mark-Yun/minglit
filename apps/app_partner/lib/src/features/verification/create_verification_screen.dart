@@ -36,25 +36,23 @@ class _CreateVerificationScreenState
     super.dispose();
   }
 
-  Future<void> _onSubmit() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    final success = await ref
-        .read(createVerificationControllerProvider.notifier)
-        .submit(widget.partnerId);
-
-    if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('인증이 생성되었습니다.')),
-      );
-      Navigator.pop(context, true);
+    Future<void> _onSubmit() async {
+      if (!_formKey.currentState!.validate()) return;
+  
+      final success = await ref
+          .read(createVerificationControllerProvider.notifier)
+          .submit(widget.partnerId);
+  
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('인증이 생성되었습니다.')),
+        );
+        Navigator.pop(context, true);
+      }
     }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     // Watch state
     final state = ref.watch(createVerificationControllerProvider);
@@ -72,18 +70,18 @@ class _CreateVerificationScreenState
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(
         title: '새 인증 만들기',
-        actions: [
-          TextButton(
-            onPressed: _onSubmit,
-            child: Text(
-              '저장',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: colorScheme.primary,
-              ),
-            ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: MinglitSpacing.medium,
+            vertical: MinglitSpacing.small,
           ),
-        ],
+          child: ElevatedButton(
+            onPressed: _onSubmit,
+            child: const Text('저장하기'),
+          ),
+        ),
       ),
       body: Form(
         key: _formKey,
@@ -165,12 +163,10 @@ class _CreateVerificationScreenState
             ),
             PopupMenuButton<String>(
               onSelected: controller.addField,
-              icon: Icon(Icons.add_circle, color: colorScheme.primary),
+              icon: Icon(Icons.add_circle, color: colorScheme.onSurfaceVariant),
               itemBuilder: (context) => [
                 const PopupMenuItem(value: 'text', child: Text('텍스트 입력')),
-                const PopupMenuItem(value: 'number', child: Text('숫자 입력')),
                 const PopupMenuItem(value: 'file', child: Text('파일 업로드')),
-                const PopupMenuItem(value: 'date', child: Text('날짜 선택')),
               ],
             ),
           ],
@@ -182,7 +178,7 @@ class _CreateVerificationScreenState
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(MinglitSpacing.small),
               border: Border.all(color: colorScheme.outlineVariant),
             ),
             child: Text(
@@ -192,17 +188,24 @@ class _CreateVerificationScreenState
           )
         else
           ReorderableListView.builder(
+            buildDefaultDragHandles: false,
+            proxyDecorator: (child, index, animation) {
+              return Material(
+                borderRadius: BorderRadius.circular(MinglitRadius.card),
+                color: Colors.transparent,
+                clipBehavior: Clip.antiAlias,
+                child: child,
+              );
+            },
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: state.fields.length,
-            onReorder: (oldIndex, newIndex) {
-              // TODO(dev): Implement reorder in controller if needed
-              // For now, simple index swap logic or just ignore
-            },
+            onReorder: controller.reorderFields,
             itemBuilder: (context, index) {
               final field = state.fields[index];
               return _FieldEditorCard(
                 key: ValueKey(field.key),
+                index: index,
                 field: field,
                 onUpdate: (updated) => controller.updateField(index, updated),
                 onDelete: () => controller.removeField(index),
@@ -216,12 +219,14 @@ class _CreateVerificationScreenState
 
 class _FieldEditorCard extends StatefulWidget {
   const _FieldEditorCard({
+    required this.index,
     required this.field,
     required this.onUpdate,
     required this.onDelete,
     super.key,
   });
 
+  final int index;
   final VerificationFormField field;
   final ValueChanged<VerificationFormField> onUpdate;
   final VoidCallback onDelete;
@@ -232,6 +237,7 @@ class _FieldEditorCard extends StatefulWidget {
 
 class _FieldEditorCardState extends State<_FieldEditorCard> {
   late TextEditingController _labelController;
+  final _focusNode = FocusNode();
 
   @override
   void initState() {
@@ -242,7 +248,7 @@ class _FieldEditorCardState extends State<_FieldEditorCard> {
   @override
   void didUpdateWidget(covariant _FieldEditorCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.field.label != widget.field.label) {
+    if (widget.field.label != _labelController.text && !_focusNode.hasFocus) {
       _labelController.text = widget.field.label;
     }
   }
@@ -250,6 +256,7 @@ class _FieldEditorCardState extends State<_FieldEditorCard> {
   @override
   void dispose() {
     _labelController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -275,16 +282,15 @@ class _FieldEditorCardState extends State<_FieldEditorCard> {
     };
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      // Card theme handles elevation and color automatically
+      margin: const EdgeInsets.only(bottom: MinglitSpacing.medium),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(MinglitSpacing.medium),
         child: Column(
           children: [
             Row(
               children: [
-                Icon(typeIcon, size: 20, color: colorScheme.primary),
-                const SizedBox(width: 8),
+                Icon(typeIcon, size: 20, color: colorScheme.onSurfaceVariant),
+                const SizedBox(width: MinglitSpacing.small),
                 Text(
                   typeLabel,
                   style: theme.textTheme.titleMedium?.copyWith(
@@ -294,10 +300,16 @@ class _FieldEditorCardState extends State<_FieldEditorCard> {
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: Icon(Icons.delete, color: colorScheme.error),
+                  icon: Icon(Icons.delete, color: colorScheme.onSurfaceVariant),
                   onPressed: widget.onDelete,
                 ),
-                Icon(Icons.drag_handle, color: colorScheme.onSurfaceVariant),
+                ReorderableDragStartListener(
+                  index: widget.index,
+                  child: Icon(
+                    Icons.drag_handle,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ],
             ),
             const Divider(),
@@ -305,6 +317,7 @@ class _FieldEditorCardState extends State<_FieldEditorCard> {
               children: [
                 Expanded(
                   child: TextField(
+                    focusNode: _focusNode,
                     controller: _labelController,
                     decoration: const InputDecoration(
                       labelText: '라벨 (질문 내용)',
@@ -315,7 +328,7 @@ class _FieldEditorCardState extends State<_FieldEditorCard> {
                     },
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: MinglitSpacing.medium),
                 Row(
                   children: [
                     Checkbox(

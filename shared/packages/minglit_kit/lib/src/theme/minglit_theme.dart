@@ -97,6 +97,7 @@ class MinglitTheme {
         tertiary: MinglitColors.tertiary,
         surface: MinglitColors.background,
         error: MinglitColors.error,
+        onSurfaceVariant: MinglitColors.textSecondary,
       ),
       scaffoldBackgroundColor: MinglitColors.background,
       // Layer 1: 텍스트 통일성
@@ -212,11 +213,31 @@ class MinglitTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(100),
         ),
-
         side: BorderSide.none,
         backgroundColor: MinglitColors.surface,
         secondarySelectedColor: MinglitColors.primary,
         labelStyle: const TextStyle(fontSize: 13),
+      ),
+
+      // Checkbox 테마
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return MinglitColors.primary;
+          }
+          return null;
+        }),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(4),
+        ),
+        side: const BorderSide(color: Colors.grey, width: 1.5),
+      ),
+
+      // Divider 테마
+      dividerTheme: const DividerThemeData(
+        color: Color(0xFFE5E7EB), // Gray-200
+        thickness: 1,
+        space: MinglitSpacing.medium,
       ),
     );
   }

@@ -61,6 +61,17 @@ class CreateVerificationController extends _$CreateVerificationController {
     state = state.copyWith(fields: newFields);
   }
 
+  void reorderFields(int oldIndex, int newIndex) {
+    var effectiveNewIndex = newIndex;
+    if (oldIndex < effectiveNewIndex) {
+      effectiveNewIndex -= 1;
+    }
+    final newFields = List<VerificationFormField>.from(state.fields);
+    final item = newFields.removeAt(oldIndex);
+    newFields.insert(effectiveNewIndex, item);
+    state = state.copyWith(fields: newFields);
+  }
+
   Future<bool> submit(String? partnerId) async {
     if (state.fields.isEmpty) {
       state = state.copyWith(error: '적어도 하나의 입력 필드가 필요합니다.');
@@ -77,11 +88,13 @@ class CreateVerificationController extends _$CreateVerificationController {
       },
     );
 
-    ref.read(globalLoadingControllerProvider.notifier).show(
-      onCancel: () {
-        unawaited(_submitOperation?.cancel());
-      },
-    );
+    ref
+        .read(globalLoadingControllerProvider.notifier)
+        .show(
+          onCancel: () {
+            unawaited(_submitOperation?.cancel());
+          },
+        );
 
     try {
       await _submitOperation!.value;
