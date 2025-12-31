@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_partner/src/features/party/create/party_create_controller.dart';
 import 'package:async/async.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -140,5 +141,8 @@ class CreateVerificationController extends _$CreateVerificationController {
     await ref
         .read(verificationRepositoryProvider)
         .createVerification(newVerification);
+
+    // Invalidate the provider to refresh the list in PartyCreateScreen
+    ref.invalidate(partyVerificationTypesProvider);
   }
 }
