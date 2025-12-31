@@ -1,8 +1,9 @@
 import 'dart:async';
 
-import 'package:app_partner/src/features/verification/create_verification_screen.dart';
+import 'package:app_partner/src/features/party/create/location_search_page.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 class PartyCreateCoordinator {
   const PartyCreateCoordinator(this.context);
@@ -10,30 +11,27 @@ class PartyCreateCoordinator {
   final BuildContext context;
 
   void onPartyCreated() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('파티가 성공적으로 생성되었습니다!')),
-    );
     Navigator.of(context).pop();
   }
 
-  void goToCreateVerification(String? partnerId) {
-    // If GoRouter is available, use it. Otherwise, use standard Navigator.
-    try {
-      unawaited(CreateVerificationRoute(partnerId: partnerId).push(context));
-    } on Object {
-      unawaited(
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => CreateVerificationScreen(partnerId: partnerId),
-          ),
-        ),
-      );
-    }
+  void onError(Exception e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('에러 발생: $e')),
+    );
   }
 
-  void onError(Object error) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error creating party: $error')),
+  void goToCreateVerification(String? partnerId) {
+    unawaited(
+      CreateVerificationRoute(partnerId: partnerId).push<void>(context),
+    );
+  }
+
+  Future<PartyLocation?> goToLocationSearch() async {
+    return Navigator.of(context).push<PartyLocation>(
+      MaterialPageRoute(
+        builder: (_) => const LocationSearchPage(),
+        fullscreenDialog: true,
+      ),
     );
   }
 }

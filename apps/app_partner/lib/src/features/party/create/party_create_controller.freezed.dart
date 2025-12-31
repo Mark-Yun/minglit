@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PartyCreateState {
 
- List<String> get selectedVerificationIds; Set<String> get enabledContactMethods; AsyncValue<void> get status; String? get descriptionError;
+ List<String> get selectedVerificationIds; Set<String> get enabledContactMethods; AsyncValue<void> get status; PartyLocation? get selectedLocation; String? get descriptionError;
 /// Create a copy of PartyCreateState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $PartyCreateStateCopyWith<PartyCreateState> get copyWith => _$PartyCreateStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PartyCreateState&&const DeepCollectionEquality().equals(other.selectedVerificationIds, selectedVerificationIds)&&const DeepCollectionEquality().equals(other.enabledContactMethods, enabledContactMethods)&&(identical(other.status, status) || other.status == status)&&(identical(other.descriptionError, descriptionError) || other.descriptionError == descriptionError));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PartyCreateState&&const DeepCollectionEquality().equals(other.selectedVerificationIds, selectedVerificationIds)&&const DeepCollectionEquality().equals(other.enabledContactMethods, enabledContactMethods)&&(identical(other.status, status) || other.status == status)&&(identical(other.selectedLocation, selectedLocation) || other.selectedLocation == selectedLocation)&&(identical(other.descriptionError, descriptionError) || other.descriptionError == descriptionError));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(selectedVerificationIds),const DeepCollectionEquality().hash(enabledContactMethods),status,descriptionError);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(selectedVerificationIds),const DeepCollectionEquality().hash(enabledContactMethods),status,selectedLocation,descriptionError);
 
 @override
 String toString() {
-  return 'PartyCreateState(selectedVerificationIds: $selectedVerificationIds, enabledContactMethods: $enabledContactMethods, status: $status, descriptionError: $descriptionError)';
+  return 'PartyCreateState(selectedVerificationIds: $selectedVerificationIds, enabledContactMethods: $enabledContactMethods, status: $status, selectedLocation: $selectedLocation, descriptionError: $descriptionError)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $PartyCreateStateCopyWith<$Res>  {
   factory $PartyCreateStateCopyWith(PartyCreateState value, $Res Function(PartyCreateState) _then) = _$PartyCreateStateCopyWithImpl;
 @useResult
 $Res call({
- List<String> selectedVerificationIds, Set<String> enabledContactMethods, AsyncValue<void> status, String? descriptionError
+ List<String> selectedVerificationIds, Set<String> enabledContactMethods, AsyncValue<void> status, PartyLocation? selectedLocation, String? descriptionError
 });
 
 
@@ -62,12 +62,13 @@ class _$PartyCreateStateCopyWithImpl<$Res>
 
 /// Create a copy of PartyCreateState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? selectedVerificationIds = null,Object? enabledContactMethods = null,Object? status = null,Object? descriptionError = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? selectedVerificationIds = null,Object? enabledContactMethods = null,Object? status = null,Object? selectedLocation = freezed,Object? descriptionError = freezed,}) {
   return _then(_self.copyWith(
 selectedVerificationIds: null == selectedVerificationIds ? _self.selectedVerificationIds : selectedVerificationIds // ignore: cast_nullable_to_non_nullable
 as List<String>,enabledContactMethods: null == enabledContactMethods ? _self.enabledContactMethods : enabledContactMethods // ignore: cast_nullable_to_non_nullable
 as Set<String>,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as AsyncValue<void>,descriptionError: freezed == descriptionError ? _self.descriptionError : descriptionError // ignore: cast_nullable_to_non_nullable
+as AsyncValue<void>,selectedLocation: freezed == selectedLocation ? _self.selectedLocation : selectedLocation // ignore: cast_nullable_to_non_nullable
+as PartyLocation?,descriptionError: freezed == descriptionError ? _self.descriptionError : descriptionError // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -153,10 +154,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<String> selectedVerificationIds,  Set<String> enabledContactMethods,  AsyncValue<void> status,  String? descriptionError)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<String> selectedVerificationIds,  Set<String> enabledContactMethods,  AsyncValue<void> status,  PartyLocation? selectedLocation,  String? descriptionError)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PartyCreateState() when $default != null:
-return $default(_that.selectedVerificationIds,_that.enabledContactMethods,_that.status,_that.descriptionError);case _:
+return $default(_that.selectedVerificationIds,_that.enabledContactMethods,_that.status,_that.selectedLocation,_that.descriptionError);case _:
   return orElse();
 
 }
@@ -174,10 +175,10 @@ return $default(_that.selectedVerificationIds,_that.enabledContactMethods,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<String> selectedVerificationIds,  Set<String> enabledContactMethods,  AsyncValue<void> status,  String? descriptionError)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<String> selectedVerificationIds,  Set<String> enabledContactMethods,  AsyncValue<void> status,  PartyLocation? selectedLocation,  String? descriptionError)  $default,) {final _that = this;
 switch (_that) {
 case _PartyCreateState():
-return $default(_that.selectedVerificationIds,_that.enabledContactMethods,_that.status,_that.descriptionError);case _:
+return $default(_that.selectedVerificationIds,_that.enabledContactMethods,_that.status,_that.selectedLocation,_that.descriptionError);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -194,10 +195,10 @@ return $default(_that.selectedVerificationIds,_that.enabledContactMethods,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<String> selectedVerificationIds,  Set<String> enabledContactMethods,  AsyncValue<void> status,  String? descriptionError)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<String> selectedVerificationIds,  Set<String> enabledContactMethods,  AsyncValue<void> status,  PartyLocation? selectedLocation,  String? descriptionError)?  $default,) {final _that = this;
 switch (_that) {
 case _PartyCreateState() when $default != null:
-return $default(_that.selectedVerificationIds,_that.enabledContactMethods,_that.status,_that.descriptionError);case _:
+return $default(_that.selectedVerificationIds,_that.enabledContactMethods,_that.status,_that.selectedLocation,_that.descriptionError);case _:
   return null;
 
 }
@@ -209,7 +210,7 @@ return $default(_that.selectedVerificationIds,_that.enabledContactMethods,_that.
 
 
 class _PartyCreateState implements PartyCreateState {
-  const _PartyCreateState({final  List<String> selectedVerificationIds = const [], final  Set<String> enabledContactMethods = const {'phone', 'email'}, this.status = const AsyncValue.data(null), this.descriptionError}): _selectedVerificationIds = selectedVerificationIds,_enabledContactMethods = enabledContactMethods;
+  const _PartyCreateState({final  List<String> selectedVerificationIds = const [], final  Set<String> enabledContactMethods = const {'phone', 'email'}, this.status = const AsyncValue.data(null), this.selectedLocation, this.descriptionError}): _selectedVerificationIds = selectedVerificationIds,_enabledContactMethods = enabledContactMethods;
   
 
  final  List<String> _selectedVerificationIds;
@@ -227,6 +228,7 @@ class _PartyCreateState implements PartyCreateState {
 }
 
 @override@JsonKey() final  AsyncValue<void> status;
+@override final  PartyLocation? selectedLocation;
 @override final  String? descriptionError;
 
 /// Create a copy of PartyCreateState
@@ -239,16 +241,16 @@ _$PartyCreateStateCopyWith<_PartyCreateState> get copyWith => __$PartyCreateStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PartyCreateState&&const DeepCollectionEquality().equals(other._selectedVerificationIds, _selectedVerificationIds)&&const DeepCollectionEquality().equals(other._enabledContactMethods, _enabledContactMethods)&&(identical(other.status, status) || other.status == status)&&(identical(other.descriptionError, descriptionError) || other.descriptionError == descriptionError));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PartyCreateState&&const DeepCollectionEquality().equals(other._selectedVerificationIds, _selectedVerificationIds)&&const DeepCollectionEquality().equals(other._enabledContactMethods, _enabledContactMethods)&&(identical(other.status, status) || other.status == status)&&(identical(other.selectedLocation, selectedLocation) || other.selectedLocation == selectedLocation)&&(identical(other.descriptionError, descriptionError) || other.descriptionError == descriptionError));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_selectedVerificationIds),const DeepCollectionEquality().hash(_enabledContactMethods),status,descriptionError);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_selectedVerificationIds),const DeepCollectionEquality().hash(_enabledContactMethods),status,selectedLocation,descriptionError);
 
 @override
 String toString() {
-  return 'PartyCreateState(selectedVerificationIds: $selectedVerificationIds, enabledContactMethods: $enabledContactMethods, status: $status, descriptionError: $descriptionError)';
+  return 'PartyCreateState(selectedVerificationIds: $selectedVerificationIds, enabledContactMethods: $enabledContactMethods, status: $status, selectedLocation: $selectedLocation, descriptionError: $descriptionError)';
 }
 
 
@@ -259,7 +261,7 @@ abstract mixin class _$PartyCreateStateCopyWith<$Res> implements $PartyCreateSta
   factory _$PartyCreateStateCopyWith(_PartyCreateState value, $Res Function(_PartyCreateState) _then) = __$PartyCreateStateCopyWithImpl;
 @override @useResult
 $Res call({
- List<String> selectedVerificationIds, Set<String> enabledContactMethods, AsyncValue<void> status, String? descriptionError
+ List<String> selectedVerificationIds, Set<String> enabledContactMethods, AsyncValue<void> status, PartyLocation? selectedLocation, String? descriptionError
 });
 
 
@@ -276,12 +278,13 @@ class __$PartyCreateStateCopyWithImpl<$Res>
 
 /// Create a copy of PartyCreateState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? selectedVerificationIds = null,Object? enabledContactMethods = null,Object? status = null,Object? descriptionError = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? selectedVerificationIds = null,Object? enabledContactMethods = null,Object? status = null,Object? selectedLocation = freezed,Object? descriptionError = freezed,}) {
   return _then(_PartyCreateState(
 selectedVerificationIds: null == selectedVerificationIds ? _self._selectedVerificationIds : selectedVerificationIds // ignore: cast_nullable_to_non_nullable
 as List<String>,enabledContactMethods: null == enabledContactMethods ? _self._enabledContactMethods : enabledContactMethods // ignore: cast_nullable_to_non_nullable
 as Set<String>,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as AsyncValue<void>,descriptionError: freezed == descriptionError ? _self.descriptionError : descriptionError // ignore: cast_nullable_to_non_nullable
+as AsyncValue<void>,selectedLocation: freezed == selectedLocation ? _self.selectedLocation : selectedLocation // ignore: cast_nullable_to_non_nullable
+as PartyLocation?,descriptionError: freezed == descriptionError ? _self.descriptionError : descriptionError // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

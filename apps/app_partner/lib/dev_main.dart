@@ -2,14 +2,15 @@ import 'dart:async';
 
 import 'package:app_partner/src/routing/app_router.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:kakao_map_plugin/kakao_map_plugin.dart' as kakao;
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -18,6 +19,9 @@ part 'dev_main.g.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables first
+  await dotenv.load();
 
   const googleWebClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
 
@@ -112,6 +116,16 @@ Future<void> appStartup(Ref ref) async {
       ]),
     ]);
 
+    // Initialize Kakao Map SDK
+    final kakaoMapKey = dotenv.env['KAKAO_MAP_JAVASCRIPT_KEY'] ?? '';
+    if (kakaoMapKey.isNotEmpty) {
+      kakao.AuthRepository.initialize(appKey: kakaoMapKey);
+    } else {
+      debugPrint('⚠️ Kakao Map Key is missing in .env');
+    }
+
+    // 3. Background Caching for remaining images
+
     // 3. Background Caching for remaining images
     for (final asset in imageAssets) {
       if (asset != logoPath) {
@@ -195,7 +209,7 @@ class _AuthenticatedApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: MinglitTheme.materialTheme,
       routerConfig: goRouter,
-      localizationsDelegates: [
+      localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

@@ -9,8 +9,10 @@ environment:
 
 dependencies:
   async: ^2.13.0
+  dio: ^5.9.0
   flutter:
     sdk: flutter
+  flutter_dotenv: ^6.0.0
   flutter_quill: ^11.5.0
   flutter_riverpod: ^3.0.3
   flutter_svg: ^2.2.2

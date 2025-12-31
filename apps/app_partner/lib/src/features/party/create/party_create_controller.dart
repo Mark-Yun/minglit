@@ -12,6 +12,7 @@ abstract class PartyCreateState with _$PartyCreateState {
     @Default([]) List<String> selectedVerificationIds,
     @Default({'phone', 'email'}) Set<String> enabledContactMethods,
     @Default(AsyncValue.data(null)) AsyncValue<void> status,
+    PartyLocation? selectedLocation,
     String? descriptionError,
   }) = _PartyCreateState;
 }
@@ -61,6 +62,10 @@ class PartyCreateController extends _$PartyCreateController {
   @override
   PartyCreateState build() {
     return const PartyCreateState();
+  }
+
+  void updateLocation(PartyLocation? location) {
+    state = state.copyWith(selectedLocation: location);
   }
 
   void toggleVerification(String id) {
@@ -132,6 +137,10 @@ class PartyCreateController extends _$PartyCreateController {
 
     final result = await AsyncValue.guard(() async {
       // 1. Business Validation
+      if (state.selectedLocation == null) {
+        throw Exception('파티 장소를 선택해주세요.');
+      }
+
       if (state.enabledContactMethods.isEmpty) {
         throw Exception('최소 한 개의 문의 연락처를 선택해야 합니다.');
       }

@@ -72,8 +72,12 @@ Organization-Member 모델을 기반으로 설계되었습니다.
     - `minglit_kit` 기반 공용 `DatabaseSeeder` (Admin API) 구현
     - 개발자용 `Session Switcher` 및 스마트 시딩 UI 구축 (User/Partner 앱 공통)
 10. [ ] 메인 랜딩 페이지 개발 (Flutter Web)
-11. [ ] 파티 예약 및 로테이션 미팅 로직 구현
-12. [ ] PASS/SMS 본인인증 연동
+11. [x] 카카오맵 연동 및 장소 검색 기능 구현
+    - Kakao Local REST API 기반 장소 검색 (`KakaoLocationRepository`)
+    - Flutter Web용 커스텀 카카오맵 위젯 (`HtmlElementView` + JS Interop)
+    - 주소 복사 및 외부 지도 연결 편의 기능
+12. [ ] 파티 예약 및 로테이션 미팅 로직 구현
+13. [ ] PASS/SMS 본인인증 연동
 
 ---
 

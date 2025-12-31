@@ -194,7 +194,7 @@ final class PartyCreateControllerProvider
 }
 
 String _$partyCreateControllerHash() =>
-    r'728629b6b066dc667a669216c3a52da644bf115e';
+    r'53718c22fdb117dd6b36b06a8660d7c313b43157';
 
 abstract class _$PartyCreateController extends $Notifier<PartyCreateState> {
   PartyCreateState build();

@@ -11,9 +11,9 @@ part of 'global_loading_controller.dart';
 /// **Global Loading Controller**
 ///
 /// Manages the visibility of the global loading overlay.
-/// Use [show] to block user interaction with a loading indicator.
-/// Provide an [onCancel] callback to allow user cancellation (Back button).
-/// Use [hide] to restore interaction.
+/// Use `show` to block user interaction with a loading indicator.
+/// Provide an `onCancel` callback to allow user cancellation (Back button).
+/// Use `hide` to restore interaction.
 ///
 /// **Usage:**
 /// ```dart
@@ -30,9 +30,9 @@ const globalLoadingControllerProvider = GlobalLoadingControllerProvider._();
 /// **Global Loading Controller**
 ///
 /// Manages the visibility of the global loading overlay.
-/// Use [show] to block user interaction with a loading indicator.
-/// Provide an [onCancel] callback to allow user cancellation (Back button).
-/// Use [hide] to restore interaction.
+/// Use `show` to block user interaction with a loading indicator.
+/// Provide an `onCancel` callback to allow user cancellation (Back button).
+/// Use `hide` to restore interaction.
 ///
 /// **Usage:**
 /// ```dart
@@ -47,9 +47,9 @@ final class GlobalLoadingControllerProvider
   /// **Global Loading Controller**
   ///
   /// Manages the visibility of the global loading overlay.
-  /// Use [show] to block user interaction with a loading indicator.
-  /// Provide an [onCancel] callback to allow user cancellation (Back button).
-  /// Use [hide] to restore interaction.
+  /// Use `show` to block user interaction with a loading indicator.
+  /// Provide an `onCancel` callback to allow user cancellation (Back button).
+  /// Use `hide` to restore interaction.
   ///
   /// **Usage:**
   /// ```dart
@@ -92,9 +92,9 @@ String _$globalLoadingControllerHash() =>
 /// **Global Loading Controller**
 ///
 /// Manages the visibility of the global loading overlay.
-/// Use [show] to block user interaction with a loading indicator.
-/// Provide an [onCancel] callback to allow user cancellation (Back button).
-/// Use [hide] to restore interaction.
+/// Use `show` to block user interaction with a loading indicator.
+/// Provide an `onCancel` callback to allow user cancellation (Back button).
+/// Use `hide` to restore interaction.
 ///
 /// **Usage:**
 /// ```dart
