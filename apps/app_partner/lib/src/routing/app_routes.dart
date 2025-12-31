@@ -4,6 +4,7 @@ import 'package:app_partner/src/features/auth/partner_login_page.dart';
 import 'package:app_partner/src/features/home/partner_home_page.dart';
 import 'package:app_partner/src/features/member/partner_member_list_page.dart';
 import 'package:app_partner/src/features/member/partner_member_permission_page.dart';
+import 'package:app_partner/src/features/verification/create_verification_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -20,6 +21,20 @@ class DevUserSwitchRoute extends GoRouteData with $DevUserSwitchRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const DevUserSwitchScreen();
+}
+
+/// **Verification: Create Verification Route**
+///
+/// Path: `/verifications/create`
+@TypedGoRoute<CreateVerificationRoute>(path: '/verifications/create')
+class CreateVerificationRoute extends GoRouteData with $CreateVerificationRoute {
+  const CreateVerificationRoute({this.partnerId});
+
+  final String? partnerId;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      CreateVerificationScreen(partnerId: partnerId);
 }
 
 /// **Auth Route**: Login Screen.

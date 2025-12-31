@@ -183,6 +183,12 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
                 verificationsAsync: verificationsAsync,
                 selectedVerificationIds: state.selectedVerificationIds,
                 onToggle: controller.toggleVerification,
+                onAddTap: () {
+                  final partnerId = partnerInfoAsync.value?.id;
+                  PartyCreateCoordinator(
+                    context,
+                  ).goToCreateVerification(partnerId);
+                },
               ),
               const SizedBox(height: MinglitSpacing.xlarge),
 
