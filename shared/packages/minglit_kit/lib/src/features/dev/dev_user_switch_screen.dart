@@ -36,7 +36,11 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Switched to $email')),
         );
-        Navigator.pop(context);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            Navigator.of(context).pop();
+          }
+        });
       }
     } on Exception catch (e, st) {
       Log.e('❌ Failed to switch user to $email', e, st);

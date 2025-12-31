@@ -3,8 +3,10 @@ import 'package:app_partner/src/features/admin/partner_application_list_page.dar
 import 'package:app_partner/src/features/auth/partner_login_page.dart';
 import 'package:app_partner/src/features/home/partner_home_page.dart';
 import 'package:app_partner/src/features/party/create/party_create_screen.dart';
+import 'package:app_partner/src/features/party/list/party_list_page.dart';
 import 'package:app_partner/src/features/verification/create_verification_screen.dart';
 import 'package:app_partner/src/features/verification/review_verification_page.dart';
+import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -19,39 +21,46 @@ class PartnerDevMap extends StatelessWidget {
         items: [
           DevScreenItem(
             category: 'Party',
+            title: 'Manage Parties',
+            description: '파티 및 회차 관리 (목록/상세)',
+            onTap: (context, ref) => const PartyListRoute().push(context),
+          ),
+          DevScreenItem(
+            category: 'Party',
             title: 'Create Party',
             description: '새로운 파티 생성',
-            screenBuilder: (_) => const PartyCreateScreen(),
+            onTap: (context, ref) => const PartyCreateRoute().push(context),
           ),
           DevScreenItem(
             category: 'Verification',
             title: 'Create Verification',
             description: '새로운 인증 요구사항 생성 (커스텀 폼)',
-            screenBuilder: (_) => const CreateVerificationScreen(),
+            onTap: (context, ref) =>
+                const CreateVerificationRoute().push(context),
           ),
           DevScreenItem(
             category: 'Auth',
             title: 'Login',
             description: '파트너 로그인 화면',
-            screenBuilder: (_) => const PartnerLoginPage(),
+            onTap: (context, ref) => const LoginRoute().push(context),
           ),
           DevScreenItem(
             category: 'Auth',
             title: 'Session Switcher',
             description: '테스트 유저 계정으로 즉시 전환',
-            screenBuilder: (_) => const DevUserSwitchScreen(),
+            onTap: (context, ref) => const DevUserSwitchRoute().push(context),
           ),
           DevScreenItem(
             category: 'Dashboard',
             title: 'Main Dashboard',
             description: '메인 관리 대시보드',
-            screenBuilder: (_) => const PartnerHomePage(),
+            onTap: (context, ref) => const HomeRoute().push(context),
           ),
           DevScreenItem(
             category: 'Admin',
             title: 'Application List',
             description: '파트너 입점 신청 목록 (관리자)',
-            screenBuilder: (_) => const PartnerApplicationListPage(),
+            onTap: (context, ref) => const ApplicationListRoute().push(context),
           ),
           DevScreenItem(
             category: 'Admin',
@@ -98,11 +107,7 @@ class PartnerDevMap extends StatelessWidget {
         onPressed: () {
           // Navigation result is not used
           // ignore: discarded_futures
-          Navigator.of(context).push<void>(
-            MaterialPageRoute<void>(
-              builder: (_) => const DevUserSwitchScreen(),
-            ),
-          );
+          const DevUserSwitchRoute().push(context);
         },
         child: const Icon(Icons.people_alt),
       ),

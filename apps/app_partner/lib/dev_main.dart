@@ -1,15 +1,18 @@
 import 'dart:async';
 
-import 'package:app_partner/src/features/dev/partner_dev_map.dart';
+import 'package:app_partner/src/routing/app_router.dart';
+import 'package:app_partner/src/routing/app_routes.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'dev_main.g.dart';
 
@@ -27,6 +30,40 @@ Future<void> main() async {
             defaultRedirectUrl: 'http://localhost:3001',
           ),
         ),
+        // Override goRouter to start at /dev for dev_main
+        goRouterProvider.overrideWith((ref) {
+          final rootNavigatorKey = GlobalKey<NavigatorState>();
+          final authState = ValueNotifier<AuthState?>(null);
+
+          ref.listen(authStateChangesProvider, (_, next) {
+            next.whenData((state) {
+              authState.value = state;
+            });
+          });
+
+          return GoRouter(
+            navigatorKey: rootNavigatorKey,
+            initialLocation: '/dev',
+            refreshListenable: authState,
+            redirect: (context, state) {
+              final isLoggedIn = ref.read(currentUserProvider) != null;
+              final isLoggingIn = state.uri.path == '/login';
+              final isDevPage = state.uri.path.startsWith('/dev');
+
+              // Allow dev pages without login for testing
+              if (isDevPage) return null;
+
+              if (!isLoggedIn && !isLoggingIn) {
+                return '/login';
+              }
+              if (isLoggedIn && isLoggingIn) {
+                return '/';
+              }
+              return null;
+            },
+            routes: $appRoutes,
+          );
+        }),
       ],
       child: const MinglitPartnerDevApp(),
     ),
@@ -140,26 +177,37 @@ class _AppView extends ConsumerWidget {
         ),
       ),
 
-      // Case 3: Ready - Show the Real App with PartnerDevMap
-      data: (_) => MaterialApp(
-        title: 'Minglit Partner (Dev)',
-        debugShowCheckedModeBanner: false,
-        theme: MinglitTheme.materialTheme,
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          FlutterQuillLocalizations.delegate,
-        ],
-        supportedLocales: const [
-          Locale('ko', 'KR'),
-          Locale('en', 'US'),
-        ],
-        builder: (context, child) {
-          return MinglitGlobalLoadingOverlay(child: child!);
-        },
-        home: const PartnerDevMap(),
-      ),
+      // Case 3: Ready - Show the Real App using GoRouter
+      data: (_) => const _AuthenticatedApp(),
+    );
+  }
+}
+
+class _AuthenticatedApp extends ConsumerWidget {
+  const _AuthenticatedApp();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final goRouter = ref.watch(goRouterProvider);
+
+    return MaterialApp.router(
+      title: 'Minglit Partner (Dev)',
+      debugShowCheckedModeBanner: false,
+      theme: MinglitTheme.materialTheme,
+      routerConfig: goRouter,
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        FlutterQuillLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('ko', 'KR'),
+        Locale('en', 'US'),
+      ],
+      builder: (context, child) {
+        return MinglitGlobalLoadingOverlay(child: child!);
+      },
     );
   }
 }

@@ -54,7 +54,9 @@ class PartyVerificationSelector extends StatelessWidget {
             AnimatedContainer(
               duration: MinglitAnimation.fast,
               decoration: BoxDecoration(
-                color: colorScheme.secondary.withValues(alpha: 0.08), // Light Orange Background
+                color: colorScheme.secondary.withValues(
+                  alpha: 0.08,
+                ), // Light Orange Background
                 borderRadius: BorderRadius.circular(MinglitRadius.card),
                 // Border is explicitly removed
               ),
@@ -96,7 +98,9 @@ class PartyVerificationSelector extends StatelessWidget {
                             Text(
                               '원하는 참가 자격이 없다면 직접 만들어보세요.',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                                color: colorScheme.onSurfaceVariant.withValues(
+                                  alpha: 0.8,
+                                ),
                               ),
                             ),
                           ],

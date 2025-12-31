@@ -42,6 +42,17 @@ class PartyRepository {
     return _supabase.storage.from('party-assets').getPublicUrl(path);
   }
 
+  /// Fetches a single party by ID.
+  Future<Party> getPartyById(String partyId) async {
+    final data = await _supabase
+        .from('parties')
+        .select()
+        .eq('id', partyId)
+        .single();
+
+    return Party.fromJson(data);
+  }
+
   /// Fetches all active parties.
   Future<List<Party>> getParties() async {
     final data = await _supabase
@@ -85,6 +96,17 @@ class PartyRepository {
         .toList();
   }
 
+  /// Fetches a single event by ID.
+  Future<Event> getEventById(String eventId) async {
+    final data = await _supabase
+        .from('events')
+        .select()
+        .eq('id', eventId)
+        .single();
+
+    return Event.fromJson(data);
+  }
+
   /// Creates a new party.
   Future<Party> createParty(Party party) async {
     final json = party.toJson()
@@ -95,5 +117,111 @@ class PartyRepository {
     final data = await _supabase.from('parties').insert(json).select().single();
 
     return Party.fromJson(data);
+  }
+
+  /// Updates an existing party.
+  Future<Party> updateParty(Party party) async {
+    final json = party.toJson()
+      ..remove('id')
+      ..remove('created_at')
+      ..remove('updated_at');
+
+    final data = await _supabase
+        .from('parties')
+        .update(json)
+        .eq('id', party.id)
+        .select()
+        .single();
+
+    return Party.fromJson(data);
+  }
+
+  /// Updates only the status of a party.
+  Future<void> updatePartyStatus(String partyId, String status) async {
+    await _supabase
+        .from('parties')
+        .update({'status': status})
+        .eq('id', partyId);
+  }
+
+  /// Creates a new event for a party.
+  Future<Event> createEvent(Event event) async {
+    final json = event.toJson()
+      ..remove('id')
+      ..remove('created_at')
+      ..remove('updated_at')
+      ..remove('party')
+      ..remove('location');
+
+    final data = await _supabase.from('events').insert(json).select().single();
+
+    return Event.fromJson(data);
+  }
+
+  /// Updates an existing event.
+  Future<Event> updateEvent(Event event) async {
+    final json = event.toJson()
+      ..remove('id')
+      ..remove('created_at')
+      ..remove('updated_at')
+      ..remove('party')
+      ..remove('location');
+
+    final data = await _supabase
+        .from('events')
+        .update(json)
+        .eq('id', event.id)
+        .select()
+        .single();
+
+    return Event.fromJson(data);
+  }
+
+  /// Updates only the status of an event.
+  Future<void> updateEventStatus(String eventId, String status) async {
+    await _supabase.from('events').update({'status': status}).eq('id', eventId);
+  }
+
+  /// Fetches tickets for a specific event.
+  Future<List<EventTicket>> getTicketsByEventId(String eventId) async {
+    final data = await _supabase
+        .from('event_tickets')
+        .select()
+        .eq('event_id', eventId)
+        .order('price', ascending: true);
+
+    return (data as List<dynamic>)
+        .map((json) => EventTicket.fromJson(json as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Fetches all tickets associated with any event of a specific party.
+  Future<List<EventTicket>> getTicketsByPartyId(String partyId) async {
+    final data = await _supabase
+        .from('event_tickets')
+        .select('*, events!inner(party_id)')
+        .eq('events.party_id', partyId)
+        .order('created_at', ascending: true);
+
+    return (data as List<dynamic>)
+        .map((json) => EventTicket.fromJson(json as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Creates a new ticket for an event.
+  Future<EventTicket> createTicket(EventTicket ticket) async {
+    final json = ticket.toJson()
+      ..remove('id')
+      ..remove('created_at')
+      ..remove('updated_at')
+      ..remove('sold_count');
+
+    final data = await _supabase
+        .from('event_tickets')
+        .insert(json)
+        .select()
+        .single();
+
+    return EventTicket.fromJson(data);
   }
 }

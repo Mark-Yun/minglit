@@ -20,7 +20,7 @@ class PartyCreateCoordinator {
     // If GoRouter is available, use it. Otherwise, use standard Navigator.
     try {
       unawaited(CreateVerificationRoute(partnerId: partnerId).push(context));
-    } catch (e) {
+    } on Object {
       unawaited(
         Navigator.of(context).push(
           MaterialPageRoute<void>(
