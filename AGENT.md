@@ -25,6 +25,8 @@
 ## 🏗️ Technical Standards
 
 -   **Shared Kit First**: 공통 로직은 반드시 `minglit_kit`에 구현하여 `app_user`와 `app_partner` 간의 코드 중복을 0%로 유지합니다.
+-   **Theme-Driven UI**: 모든 UI 구현 시 하드코딩된 수치(Margin, Padding, Size, Color 등)를 지양하고, `MinglitTheme`에 정의된 디자인 토큰(`MinglitSpacing`, `MinglitIconSize`, `MinglitAnimation`, `MinglitTextStyles` 등)을 반드시 활용합니다.
+-   **Design Token Consistency**: 새로운 시각적 패턴이나 반복되는 데코레이션이 발생할 경우, 이를 즉시 `MinglitTheme` 또는 `MinglitDecorations`로 추출하여 프로젝트 전반의 시각적 일관성을 보장합니다.
 -   **Security Definer**: DB 트리거와 민감한 작업은 서비스 롤 및 보안 정의 함수를 통해 안전하게 처리합니다.
 -   **Safe State Management**: Riverpod 프로바이더 사용 시 `mounted` 체크 및 예외 처리를 통해 비동기 업데이트 중 발생할 수 있는 메모리 해제 오류를 철저히 방지합니다.
 -   **DX (Developer Experience)**: 개발자 도구(Seeder, Switcher 등)는 단순히 작동하는 것을 넘어, 지능적이고 편리한 UI/UX를 제공해야 합니다.
