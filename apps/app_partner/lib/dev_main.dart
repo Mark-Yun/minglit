@@ -140,7 +140,7 @@ class _AppView extends ConsumerWidget {
         ),
       ),
 
-      // Case 3: Ready - Show the Real App with full theme and routes
+      // Case 3: Ready - Show the Real App with PartnerDevMap
       data: (_) => MaterialApp(
         title: 'Minglit Partner (Dev)',
         debugShowCheckedModeBanner: false,

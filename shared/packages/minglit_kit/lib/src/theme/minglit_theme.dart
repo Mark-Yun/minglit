@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 
 /// Layer 3: 디자인 토큰 (Custom Constants)
 /// 테마에 담기 애매한 수치들과 브랜드 색상을 상수로 관리합니다.
@@ -15,6 +16,8 @@ class MinglitColors {
 }
 
 class MinglitSpacing {
+  static const double xxsmall = 2;
+  static const double xsmall = 4;
   static const double small = 8;
   static const double medium = 16;
   static const double large = 24;
@@ -25,6 +28,124 @@ class MinglitRadius {
   static const double button = 16;
   static const double card = 24;
   static const double input = 12;
+}
+
+class MinglitIconSize {
+  static const double small = 20;
+  static const double medium = 24;
+  static const double large = 28;
+  static const double xlarge = 32;
+}
+
+class MinglitAnimation {
+  static const Duration fast = Duration(milliseconds: 200);
+  static const Duration medium = Duration(milliseconds: 350);
+  static const Duration slow = Duration(milliseconds: 500);
+}
+
+class MinglitShadows {
+  static List<BoxShadow> cardSelected(Color accentColor) => [
+    BoxShadow(
+      color: accentColor.withValues(alpha: 0.1),
+      blurRadius: MinglitSpacing.small,
+      offset: const Offset(0, 4),
+    ),
+  ];
+}
+
+class MinglitBorders {
+  static Border card(ColorScheme colorScheme, {bool isSelected = false}) =>
+      Border.all(
+        color: isSelected ? colorScheme.secondary : colorScheme.outlineVariant,
+      );
+}
+
+class MinglitDecorations {
+  static BoxDecoration selectableCard(
+    BuildContext context, {
+    required bool isSelected,
+  }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final accentColor = colorScheme.secondary;
+
+    return BoxDecoration(
+      color: isSelected ? accentColor.withValues(alpha: 0.05) : theme.cardColor,
+      borderRadius: BorderRadius.circular(MinglitRadius.card),
+      border: MinglitBorders.card(colorScheme, isSelected: isSelected),
+      boxShadow: isSelected ? MinglitShadows.cardSelected(accentColor) : null,
+    );
+  }
+}
+
+class MinglitTextStyles {
+  static TextStyle selectableCardTitle(
+    BuildContext context, {
+    required bool isSelected,
+  }) {
+    final theme = Theme.of(context);
+    return theme.textTheme.titleSmall!.copyWith(
+      color: isSelected ? theme.colorScheme.secondary : null,
+    );
+  }
+
+  static TextStyle selectableCardSubtitle(BuildContext context) {
+    final theme = Theme.of(context);
+    return theme.textTheme.bodySmall!.copyWith(
+      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+      fontSize: 11,
+    );
+  }
+
+  static TextStyle selectableCardDescription(BuildContext context) {
+    final theme = Theme.of(context);
+    return theme.textTheme.bodySmall!.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+  }
+
+  static TextStyle infoText(BuildContext context) {
+    final theme = Theme.of(context);
+    return theme.textTheme.bodySmall!.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+      fontSize: 12,
+    );
+  }
+}
+
+class MinglitQuillTheme {
+  static QuillSimpleToolbarConfig toolbarConfig(BuildContext context) {
+    return const QuillSimpleToolbarConfig(
+      showFontFamily: false,
+      showFontSize: false,
+      showSearchButton: false,
+      showInlineCode: false,
+      showSubscript: false,
+      showSuperscript: false,
+      showSmallButton: true,
+      showAlignmentButtons: true,
+      multiRowsDisplay: false,
+    );
+  }
+
+  static QuillEditorConfig editorConfig(
+    BuildContext context, {
+    required String placeholder,
+  }) {
+    return QuillEditorConfig(
+      placeholder: placeholder,
+      padding: const EdgeInsets.all(MinglitSpacing.medium),
+    );
+  }
+
+  static BoxDecoration editorDecoration(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return BoxDecoration(
+      border: Border.all(color: colorScheme.outlineVariant),
+      borderRadius: BorderRadius.circular(MinglitRadius.input),
+      color: colorScheme.surface,
+    );
+  }
 }
 
 /// Layer 1 & 2: 기본 테마 및 컴포넌트 테마
@@ -107,6 +228,16 @@ class MinglitTheme {
         ),
         titleLarge: TextStyle(
           fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: MinglitColors.textPrimary,
+        ),
+        titleMedium: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: MinglitColors.textPrimary,
+        ),
+        titleSmall: TextStyle(
+          fontSize: 14,
           fontWeight: FontWeight.bold,
           color: MinglitColors.textPrimary,
         ),

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 /// A reusable skeleton loader with a subtle pulsing animation.
 class MinglitSkeleton extends StatefulWidget {
@@ -29,13 +30,13 @@ class _MinglitSkeletonState extends State<MinglitSkeleton>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: MinglitAnimation.slow * 2,
     );
     unawaited(_controller.repeat(reverse: true));
 
     _colorAnimation = ColorTween(
       begin: const Color(0xFFF3F4F6), // Gray-100
-      end: const Color(0xFFE5E7EB),   // Gray-200
+      end: const Color(0xFFE5E7EB), // Gray-200
     ).animate(_controller);
   }
 

@@ -49,7 +49,7 @@ final class PartyVerificationTypesProvider
 }
 
 String _$partyVerificationTypesHash() =>
-    r'95e6e487c3d6f5f10d2430675922ab666a4f4c40';
+    r'7b1b9687d5ccfb84e21ba6efeb572aa268a50838';
 
 @ProviderFor(partnerLocations)
 const partnerLocationsProvider = PartnerLocationsFamily._();
@@ -159,13 +159,13 @@ final class CurrentPartnerInfoProvider
 }
 
 String _$currentPartnerInfoHash() =>
-    r'34839f99bf0fd231b6579dbf787df7eaaae3359f';
+    r'64d0d3d0355e6eeeeb51602baecfd60eeb6655f5';
 
 @ProviderFor(PartyCreateController)
 const partyCreateControllerProvider = PartyCreateControllerProvider._();
 
 final class PartyCreateControllerProvider
-    extends $AsyncNotifierProvider<PartyCreateController, void> {
+    extends $NotifierProvider<PartyCreateController, PartyCreateState> {
   const PartyCreateControllerProvider._()
     : super(
         from: null,
@@ -183,26 +183,34 @@ final class PartyCreateControllerProvider
   @$internal
   @override
   PartyCreateController create() => PartyCreateController();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(PartyCreateState value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<PartyCreateState>(value),
+    );
+  }
 }
 
 String _$partyCreateControllerHash() =>
-    r'728fdc80b50c394058898012c50ad5d595945a01';
+    r'728629b6b066dc667a669216c3a52da644bf115e';
 
-abstract class _$PartyCreateController extends $AsyncNotifier<void> {
-  FutureOr<void> build();
+abstract class _$PartyCreateController extends $Notifier<PartyCreateState> {
+  PartyCreateState build();
   @$mustCallSuper
   @override
   void runBuild() {
-    build();
-    final ref = this.ref as $Ref<AsyncValue<void>, void>;
+    final created = build();
+    final ref = this.ref as $Ref<PartyCreateState, PartyCreateState>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<void>, void>,
-              AsyncValue<void>,
+              AnyNotifier<PartyCreateState, PartyCreateState>,
+              PartyCreateState,
               Object?,
               Object?
             >;
-    element.handleValue(ref, null);
+    element.handleValue(ref, created);
   }
 }

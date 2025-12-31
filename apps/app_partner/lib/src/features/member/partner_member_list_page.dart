@@ -112,7 +112,7 @@ class PartnerMemberListPage extends ConsumerWidget {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Text('역할: $role ($userEmail)'),
-        trailing: const Icon(Icons.settings, size: 20),
+        trailing: const Icon(Icons.settings, size: MinglitIconSize.small),
         onTap: () {
           final targetUserId = member['user_id'] as String;
           ref

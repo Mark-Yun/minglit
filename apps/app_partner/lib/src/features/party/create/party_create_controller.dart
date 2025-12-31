@@ -1,31 +1,45 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+part 'party_create_controller.freezed.dart';
 part 'party_create_controller.g.dart';
+
+@freezed
+abstract class PartyCreateState with _$PartyCreateState {
+  const factory PartyCreateState({
+    @Default([]) List<String> selectedVerificationIds,
+    @Default({'phone', 'email'}) Set<String> enabledContactMethods,
+    @Default(AsyncValue.data(null)) AsyncValue<void> status,
+    String? descriptionError,
+  }) = _PartyCreateState;
+}
 
 @riverpod
 Future<List<Verification>> partyVerificationTypes(Ref ref) async {
   final repo = ref.watch(verificationRepositoryProvider);
   final user = ref.watch(currentUserProvider);
 
+  if (user == null) return [];
+
   // 1. Fetch Global Verifications
   final globalList = await repo.getGlobalVerifications();
 
-  // 2. Fetch Partner Specific Verifications (if partnerId known)
-  // TODO(User): Retrieve actual Partner ID from user context more reliably.
-  // For now, assuming user.id is partnerId or using logic from main app.
-  var partnerList = <Verification>[];
-  if (user != null) {
-    // In real app, we need to fetch which partner this user manages.
-    // Assuming user.id matches partner_member_permissions logic or similar.
-    // Temporarily using user.id as partnerId for simplicity, but might need
-    // correction.
-    final partnerId = user.id;
-    partnerList = await repo.getPartnerVerifications(partnerId);
+  // 2. Fetch Partner Specific Verifications
+  final partnerRepo = ref.watch(partnerRepositoryProvider);
+  final myPartners = await partnerRepo.getMyManagedPartners();
+
+  final partnerVerifList = <Verification>[];
+  for (final partner in myPartners) {
+    final list = await repo.getPartnerVerifications(partner.id);
+    partnerVerifList.addAll(list);
   }
 
-  return [...globalList, ...partnerList];
+  // Combine and remove duplicates by ID
+  final all = [...globalList, ...partnerVerifList];
+  final seen = <String>{};
+  return all.where((v) => seen.add(v.id)).toList();
 }
 
 @riverpod
@@ -37,19 +51,71 @@ Future<List<Location>> partnerLocations(Ref ref, String partnerId) async {
 
 @riverpod
 Future<Partner?> currentPartnerInfo(Ref ref) async {
-  final user = ref.watch(currentUserProvider);
-  if (user == null) return null;
-  // Assume user.id is the partner.id for simplicity in this partner
-  // app context or fetch via relation if different.
-  final repo = ref.watch(partnerRepositoryProvider);
-  return repo.getPartnerById(user.id);
+  final partnerRepo = ref.watch(partnerRepositoryProvider);
+  final myPartners = await partnerRepo.getMyManagedPartners();
+  return myPartners.firstOrNull;
 }
 
 @riverpod
 class PartyCreateController extends _$PartyCreateController {
   @override
-  FutureOr<void> build() {
-    // Initial state
+  PartyCreateState build() {
+    return const PartyCreateState();
+  }
+
+  void toggleVerification(String id) {
+    final current = List<String>.from(state.selectedVerificationIds);
+    if (current.contains(id)) {
+      current.remove(id);
+    } else {
+      current.add(id);
+    }
+    state = state.copyWith(selectedVerificationIds: current);
+  }
+
+  void toggleContactMethod(String method) {
+    final current = Set<String>.from(state.enabledContactMethods);
+    if (current.contains(method)) {
+      current.remove(method);
+    } else {
+      current.add(method);
+    }
+    state = state.copyWith(enabledContactMethods: current);
+  }
+
+  // --- Validators ---
+
+  String? validateTitle(String? value) {
+    if (value == null || value.trim().isEmpty) return '파티 이름을 입력해주세요.';
+    return null;
+  }
+
+  String? validateCapacity(String? value) {
+    if (value == null || value.isEmpty) return '필수';
+    if (int.tryParse(value) == null) return '숫자만 입력 가능합니다.';
+    return null;
+  }
+
+  String? validateMaxCapacity(String? value, String? minStr) {
+    final error = validateCapacity(value);
+    if (error != null) return error;
+
+    final min = int.tryParse(minStr ?? '') ?? 0;
+    final max = int.tryParse(value ?? '') ?? 0;
+    if (min > max) return '최소 인원보다 커야 합니다.';
+    return null;
+  }
+
+  String? validatePhone(String? value) {
+    if (value == null || value.isEmpty) return '연락처를 입력해주세요.';
+    return null;
+  }
+
+  String? validateEmail(String? value) {
+    if (value == null || value.isEmpty) return '이메일을 입력해주세요.';
+    final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegExp.hasMatch(value)) return '유효한 이메일 형식이 아닙니다.';
+    return null;
   }
 
   Future<void> createParty({
@@ -59,19 +125,33 @@ class PartyCreateController extends _$PartyCreateController {
     required int maxParticipants,
     required String contactPhone,
     required String contactEmail,
-    required List<String> requiredVerificationIds,
     String? contactKakao,
     XFile? imageFile,
   }) async {
-    state = const AsyncValue.loading();
+    state = state.copyWith(status: const AsyncValue.loading());
 
-    state = await AsyncValue.guard(() async {
-      // 1. Auto-detect Partner ID
-      final user = ref.read(currentUserProvider);
-      if (user == null) {
-        throw const AuthException('User not authenticated');
+    final result = await AsyncValue.guard(() async {
+      // 1. Business Validation
+      if (state.enabledContactMethods.isEmpty) {
+        throw Exception('최소 한 개의 문의 연락처를 선택해야 합니다.');
       }
-      final partnerId = user.id; // Assumes User ID = Partner ID for now
+
+      final ops = description['ops'] as List?;
+      if (ops == null ||
+          ops.isEmpty ||
+          (ops.length == 1 &&
+              (ops[0] as Map<String, dynamic>)['insert'] == '\n')) {
+        state = state.copyWith(descriptionError: '파티 설명을 입력해주세요.');
+        throw Exception('파티 설명을 입력해주세요.');
+      }
+      state = state.copyWith(descriptionError: null);
+
+      final partnerRepo = ref.read(partnerRepositoryProvider);
+      final myPartners = await partnerRepo.getMyManagedPartners();
+      if (myPartners.isEmpty) {
+        throw Exception('사용 가능한 파트너 정보를 찾을 수 없습니다.');
+      }
+      final partnerId = myPartners.first.id;
 
       final repository = ref.read(partyRepositoryProvider);
       String? imageUrl;
@@ -81,31 +161,40 @@ class PartyCreateController extends _$PartyCreateController {
         imageUrl = await repository.uploadPartyImage(imageFile, partnerId);
       }
 
-      // 3. Prepare Contact Options (Organic JSON)
+      // 3. Prepare Contact Options
       final contactOptions = <String, dynamic>{};
-      if (contactPhone.isNotEmpty) contactOptions['phone'] = contactPhone;
-      if (contactEmail.isNotEmpty) contactOptions['email'] = contactEmail;
-      if (contactKakao != null && contactKakao.isNotEmpty) {
+      if (state.enabledContactMethods.contains('phone') &&
+          contactPhone.isNotEmpty) {
+        contactOptions['phone'] = contactPhone;
+      }
+      if (state.enabledContactMethods.contains('email') &&
+          contactEmail.isNotEmpty) {
+        contactOptions['email'] = contactEmail;
+      }
+      if (state.enabledContactMethods.contains('kakao') &&
+          contactKakao != null &&
+          contactKakao.isNotEmpty) {
         contactOptions['kakao_open_chat'] = contactKakao;
       }
-      // Add more dynamic contacts here in the future (e.g., instagram)
 
       // 4. Create Party
       final newParty = Party(
         id: '', // Server generated
         partnerId: partnerId,
         title: title,
-        description: description, // Store rich text JSON directly
+        description: description,
         minConfirmedCount: minConfirmedCount,
         maxParticipants: maxParticipants,
         contactOptions: contactOptions,
         imageUrl: imageUrl,
-        requiredVerificationIds: requiredVerificationIds,
+        requiredVerificationIds: state.selectedVerificationIds,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
 
       await repository.createParty(newParty);
     });
+
+    state = state.copyWith(status: result);
   }
 }

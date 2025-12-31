@@ -7,17 +7,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'app_router.g.dart';
 
-final _rootNavigatorKey = GlobalKey<NavigatorState>();
-
-/// **User App Router**
-///
-/// Handles navigation and redirects for the User Application.
-///
-/// **Policy:**
-/// - Guests are redirected to `/login`.
-/// - Logged-in users trying to access `/login` are redirected to `/`.
 @riverpod
 GoRouter goRouter(Ref ref) {
+  final rootNavigatorKey = GlobalKey<NavigatorState>();
   final authState = ValueNotifier<AuthState?>(null);
 
   ref.listen(authStateChangesProvider, (_, next) {
@@ -27,7 +19,7 @@ GoRouter goRouter(Ref ref) {
   });
 
   return GoRouter(
-    navigatorKey: _rootNavigatorKey,
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/',
     refreshListenable: authState,
     redirect: (context, state) {

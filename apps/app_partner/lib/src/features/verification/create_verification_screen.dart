@@ -290,7 +290,11 @@ class _FieldEditorCardState extends State<_FieldEditorCard> {
           children: [
             Row(
               children: [
-                Icon(typeIcon, size: 20, color: colorScheme.onSurfaceVariant),
+                Icon(
+                  typeIcon,
+                  size: MinglitIconSize.small,
+                  color: colorScheme.onSurfaceVariant,
+                ),
                 const SizedBox(width: MinglitSpacing.small),
                 Text(
                   typeLabel,
