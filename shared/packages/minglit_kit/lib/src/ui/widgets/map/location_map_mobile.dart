@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:kakao_map_plugin/kakao_map_plugin.dart';
 
-class PartyLocationMap extends StatefulWidget {
-  const PartyLocationMap({
+class LocationMap extends StatefulWidget {
+  const LocationMap({
     required this.latitude,
     required this.longitude,
     super.key,
@@ -12,14 +12,14 @@ class PartyLocationMap extends StatefulWidget {
   final double longitude;
 
   @override
-  State<PartyLocationMap> createState() => _PartyLocationMapState();
+  State<LocationMap> createState() => _LocationMapState();
 }
 
-class _PartyLocationMapState extends State<PartyLocationMap> {
+class _LocationMapState extends State<LocationMap> {
   KakaoMapController? _mapController;
 
   @override
-  void didUpdateWidget(covariant PartyLocationMap oldWidget) {
+  void didUpdateWidget(covariant LocationMap oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.latitude != oldWidget.latitude ||
         widget.longitude != oldWidget.longitude) {

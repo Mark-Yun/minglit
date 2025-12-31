@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class PartyLocationMap extends StatelessWidget {
-  const PartyLocationMap({
+class LocationMap extends StatelessWidget {
+  const LocationMap({
     required this.latitude,
     required this.longitude,
     super.key,

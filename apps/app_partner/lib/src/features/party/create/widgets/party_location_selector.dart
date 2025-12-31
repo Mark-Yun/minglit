@@ -1,8 +1,5 @@
 import 'dart:async';
 
-import 'package:app_partner/src/features/party/create/widgets/party_location_map.dart'
-    if (dart.library.html) 'package:app_partner/src/features/party/create/widgets/party_location_map_web.dart'
-    if (dart.library.io) 'package:app_partner/src/features/party/create/widgets/party_location_map_mobile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -111,7 +108,7 @@ class _PartyLocationSelectorState extends State<PartyLocationSelector> {
 
     return Stack(
       children: [
-        PartyLocationMap(
+        LocationMap(
           latitude: loc.latitude,
           longitude: loc.longitude,
         ),

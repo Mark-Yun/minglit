@@ -8,6 +8,9 @@ export 'src/features/dev/party_list_preview_screen.dart';
 export 'src/features/loading/global_loading_controller.dart';
 export 'src/features/loading/minglit_global_loading_overlay.dart';
 export 'src/theme/minglit_theme.dart';
+export 'src/ui/widgets/map/location_map.dart'
+    if (dart.library.html) 'src/ui/widgets/map/location_map_web.dart'
+    if (dart.library.io) 'src/ui/widgets/map/location_map_mobile.dart';
 export 'src/utils/dev_screen_list.dart';
 export 'src/utils/splash_screen.dart';
 export 'src/widgets/auth/login_screen.dart';

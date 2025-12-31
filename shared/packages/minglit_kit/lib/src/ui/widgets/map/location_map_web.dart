@@ -11,9 +11,9 @@ import 'package:flutter/material.dart';
 import 'package:web/web.dart' as web;
 
 /// Web implementation of Kakao Map using JS SDK.
-class PartyLocationMap extends StatefulWidget {
-  /// Creates a [PartyLocationMap].
-  const PartyLocationMap({
+class LocationMap extends StatefulWidget {
+  /// Creates a [LocationMap].
+  const LocationMap({
     required this.latitude,
     required this.longitude,
     super.key,
@@ -26,11 +26,11 @@ class PartyLocationMap extends StatefulWidget {
   final double longitude;
 
   @override
-  State<PartyLocationMap> createState() => _PartyLocationMapState();
+  State<LocationMap> createState() => _LocationMapState();
 }
 
-class _PartyLocationMapState extends State<PartyLocationMap> {
-  final String _viewId = 'kakao-map-view';
+class _LocationMapState extends State<LocationMap> {
+  final String _viewId = 'minglit-map-view';
   JSObject? _map;
   JSObject? _marker;
 
@@ -47,7 +47,7 @@ class _PartyLocationMapState extends State<PartyLocationMap> {
   }
 
   @override
-  void didUpdateWidget(covariant PartyLocationMap oldWidget) {
+  void didUpdateWidget(covariant LocationMap oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.latitude != oldWidget.latitude ||
         widget.longitude != oldWidget.longitude) {
