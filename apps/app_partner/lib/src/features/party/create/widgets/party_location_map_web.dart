@@ -1,3 +1,8 @@
+// JS interop requires explicit casting that triggers lint errors.
+// ignore_for_file: cast_nullable_to_non_nullable
+// ignore_for_file: avoid_redundant_argument_values
+// ignore_for_file: cascade_invocations
+
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 import 'dart:ui_web' as ui;
@@ -5,14 +10,19 @@ import 'dart:ui_web' as ui;
 import 'package:flutter/material.dart';
 import 'package:web/web.dart' as web;
 
+/// Web implementation of Kakao Map using JS SDK.
 class PartyLocationMap extends StatefulWidget {
+  /// Creates a [PartyLocationMap].
   const PartyLocationMap({
     required this.latitude,
     required this.longitude,
     super.key,
   });
 
+  /// The latitude of the location.
   final double latitude;
+
+  /// The longitude of the location.
   final double longitude;
 
   @override
@@ -29,10 +39,10 @@ class _PartyLocationMapState extends State<PartyLocationMap> {
     super.initState();
     ui.platformViewRegistry.registerViewFactory(_viewId, (int id) {
       final element = web.document.createElement('div') as web.HTMLDivElement;
-      return element
-        ..id = 'kakao-map-$id'
-        ..style.width = '100%'
-        ..style.height = '100%';
+      element.id = 'kakao-map-$id';
+      element.style.width = '100%';
+      element.style.height = '100%';
+      return element;
     });
   }
 
@@ -67,7 +77,7 @@ class _PartyLocationMapState extends State<PartyLocationMap> {
 
     // 3. Create LatLng using constructor
     final latLngConstructor = maps.getProperty('LatLng'.toJS) as JSFunction;
-    final latLng = latLngConstructor.callAsConstructor(
+    final latLng = latLngConstructor.callAsConstructor<JSObject>(
       lat.toJS,
       lng.toJS,
     );
@@ -82,7 +92,7 @@ class _PartyLocationMapState extends State<PartyLocationMap> {
         ..setProperty('level'.toJS, 3.toJS);
 
       final mapConstructor = maps.getProperty('Map'.toJS) as JSFunction;
-      _map = mapConstructor.callAsConstructor(
+      _map = mapConstructor.callAsConstructor<JSObject>(
         container as JSObject,
         options,
       );
@@ -100,7 +110,7 @@ class _PartyLocationMapState extends State<PartyLocationMap> {
       final markerOptions = JSObject()..setProperty('position'.toJS, latLng);
 
       final markerConstructor = maps.getProperty('Marker'.toJS) as JSFunction;
-      _marker = markerConstructor.callAsConstructor(markerOptions);
+      _marker = markerConstructor.callAsConstructor<JSObject>(markerOptions);
 
       _marker!.callMethod('setMap'.toJS, _map);
     }
