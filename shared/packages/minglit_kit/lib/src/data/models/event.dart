@@ -12,43 +12,44 @@ abstract class Event with _$Event {
   const factory Event({
     required String id,
     @JsonKey(name: 'party_id') required String partyId,
-    @JsonKey(name: 'start_time') required DateTime startTime,
-    @JsonKey(name: 'end_time') required DateTime endTime,
+    required DateTime startTime,
+    required DateTime endTime,
     @JsonKey(name: 'created_at') required DateTime createdAt,
     @JsonKey(name: 'updated_at') required DateTime updatedAt,
     @JsonKey(name: 'location_id') String? locationId,
-    String? title, // Override
-    Map<String, dynamic>? description, // Override
+    String? title,
+    Map<String, dynamic>? description,
     @JsonKey(name: 'contact_options')
     @Default({})
     Map<String, dynamic> contactOptions,
+    @Default({}) Map<String, dynamic> conditions, // JSONB
     @JsonKey(name: 'max_participants') @Default(20) int maxParticipants,
     @JsonKey(name: 'current_participants') @Default(0) int currentParticipants,
     @Default('scheduled') String status,
-    // Relationships (Optional, loaded via join)
-    Party? party,
     Location? location,
+    Party? party,
   }) = _Event;
 
   factory Event.fromJson(Map<String, dynamic> json) => _$EventFromJson(json);
 }
 
 /// **Event Ticket Model**
+///
+/// Represents a ticket configuration for an event or a party template.
 @freezed
 abstract class EventTicket with _$EventTicket {
   const factory EventTicket({
     required String id,
-    @JsonKey(name: 'event_id') required String eventId,
     required String name,
-    required int quantity,
     @JsonKey(name: 'created_at') required DateTime createdAt,
     @JsonKey(name: 'updated_at') required DateTime updatedAt,
+    @JsonKey(name: 'event_id') String? eventId, // Nullable for templates
+    @JsonKey(name: 'party_id') String? partyId, // Nullable for event instances
     String? description,
     @Default(0) int price,
+    @Default(0) int quantity,
     @JsonKey(name: 'sold_count') @Default(0) int soldCount,
-    String? gender, // 'male', 'female', null
-    @JsonKey(name: 'min_birth_year') int? minBirthYear,
-    @JsonKey(name: 'max_birth_year') int? maxBirthYear,
+    @Default({}) Map<String, dynamic> conditions, // JSONB (gender, age, etc.)
     @JsonKey(name: 'required_verification_ids')
     @Default([])
     List<String> requiredVerificationIds,

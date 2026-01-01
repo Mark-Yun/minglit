@@ -216,7 +216,21 @@ class PartyRepository {
         .toList();
   }
 
-  /// Creates a new ticket for an event.
+  /// Fetches default ticket templates for a specific party (template tickets).
+  Future<List<EventTicket>> getDefaultTicketsByPartyId(String partyId) async {
+    final data = await _supabase
+        .from('event_tickets')
+        .select()
+        .eq('party_id', partyId)
+        .filter('event_id', 'is', null)
+        .order('created_at', ascending: true);
+
+    return (data as List<dynamic>)
+        .map((json) => EventTicket.fromJson(json as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Creates a new ticket for an event or a party template.
   Future<EventTicket> createTicket(EventTicket ticket) async {
     final json = ticket.toJson()
       ..remove('id')

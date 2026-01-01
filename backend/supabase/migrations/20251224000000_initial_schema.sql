@@ -149,6 +149,10 @@ create table public.parties (
   image_url text,
   contact_options jsonb default '{}'::jsonb,
   
+  -- Combined Conditions (JSONB)
+  -- e.g. { "gender": "male", "age_range": { "min": 1990 } }
+  conditions jsonb default '{}'::jsonb,
+  
   -- Required Verification IDs for this party
   required_verification_ids uuid[] default '{}',
   
@@ -168,6 +172,10 @@ create table public.events (
   title text, 
   description jsonb,
   contact_options jsonb default '{}'::jsonb,
+  
+  -- Instance-specific conditions (Overrides or adds to party conditions)
+  conditions jsonb default '{}'::jsonb,
+  
   start_time timestamptz not null,
   end_time timestamptz not null,
   max_participants int not null default 20,
@@ -181,15 +189,19 @@ create table public.events (
 -- 13. Event Tickets
 create table public.event_tickets (
   id uuid not null default gen_random_uuid(),
-  event_id uuid not null references public.events(id) on delete cascade,
+  
+  -- Can belong to a Party (Template) or an Event (Instance)
+  party_id uuid references public.parties(id) on delete cascade,
+  event_id uuid references public.events(id) on delete cascade,
+  
   name text not null,
   description text,
   price integer not null default 0,
   quantity integer not null,
   sold_count integer not null default 0,
-  gender text check (gender in ('male', 'female')),
-  min_birth_year integer, 
-  max_birth_year integer,
+  
+  -- Combined Purchase Conditions (JSONB)
+  conditions jsonb default '{}'::jsonb,
   
   -- Ticket specific verification requirements (overrides or adds to party requirements)
   required_verification_ids uuid[] default '{}',
@@ -197,7 +209,13 @@ create table public.event_tickets (
   status text not null default 'on_sale' check (status in ('on_sale', 'sold_out', 'hidden')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  primary key (id)
+  primary key (id),
+  
+  -- Ensure it belongs to either a party or an event
+  constraint ticket_owner_check check (
+    (party_id is not null and event_id is null) or
+    (event_id is not null and party_id is null)
+  )
 );
 
 -- 14. User Verifications (User's Private Vault - The Source of Truth)

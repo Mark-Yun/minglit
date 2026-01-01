@@ -325,7 +325,8 @@ as double,
 mixin _$Party {
 
  String get id;@JsonKey(name: 'partner_id') String get partnerId; String get title;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'updated_at') DateTime get updatedAt;@JsonKey(name: 'location_id') String? get locationId;@JsonKey(includeToJson: false) Location? get location; Map<String, dynamic>? get description;// Quill Delta JSON
-@JsonKey(name: 'image_url') String? get imageUrl;@JsonKey(name: 'contact_options') Map<String, dynamic> get contactOptions;@JsonKey(name: 'required_verification_ids') List<String> get requiredVerificationIds;@JsonKey(name: 'min_confirmed_count') int get minConfirmedCount;@JsonKey(name: 'max_participants') int get maxParticipants; String get status;
+@JsonKey(name: 'image_url') String? get imageUrl;@JsonKey(name: 'contact_options') Map<String, dynamic> get contactOptions; Map<String, dynamic> get conditions;// JSONB
+@JsonKey(name: 'required_verification_ids') List<String> get requiredVerificationIds;@JsonKey(name: 'min_confirmed_count') int get minConfirmedCount;@JsonKey(name: 'max_participants') int get maxParticipants; String get status;
 /// Create a copy of Party
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -338,16 +339,16 @@ $PartyCopyWith<Party> get copyWith => _$PartyCopyWithImpl<Party>(this as Party, 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Party&&(identical(other.id, id) || other.id == id)&&(identical(other.partnerId, partnerId) || other.partnerId == partnerId)&&(identical(other.title, title) || other.title == title)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.locationId, locationId) || other.locationId == locationId)&&(identical(other.location, location) || other.location == location)&&const DeepCollectionEquality().equals(other.description, description)&&(identical(other.imageUrl, imageUrl) || other.imageUrl == imageUrl)&&const DeepCollectionEquality().equals(other.contactOptions, contactOptions)&&const DeepCollectionEquality().equals(other.requiredVerificationIds, requiredVerificationIds)&&(identical(other.minConfirmedCount, minConfirmedCount) || other.minConfirmedCount == minConfirmedCount)&&(identical(other.maxParticipants, maxParticipants) || other.maxParticipants == maxParticipants)&&(identical(other.status, status) || other.status == status));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Party&&(identical(other.id, id) || other.id == id)&&(identical(other.partnerId, partnerId) || other.partnerId == partnerId)&&(identical(other.title, title) || other.title == title)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.locationId, locationId) || other.locationId == locationId)&&(identical(other.location, location) || other.location == location)&&const DeepCollectionEquality().equals(other.description, description)&&(identical(other.imageUrl, imageUrl) || other.imageUrl == imageUrl)&&const DeepCollectionEquality().equals(other.contactOptions, contactOptions)&&const DeepCollectionEquality().equals(other.conditions, conditions)&&const DeepCollectionEquality().equals(other.requiredVerificationIds, requiredVerificationIds)&&(identical(other.minConfirmedCount, minConfirmedCount) || other.minConfirmedCount == minConfirmedCount)&&(identical(other.maxParticipants, maxParticipants) || other.maxParticipants == maxParticipants)&&(identical(other.status, status) || other.status == status));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,partnerId,title,createdAt,updatedAt,locationId,location,const DeepCollectionEquality().hash(description),imageUrl,const DeepCollectionEquality().hash(contactOptions),const DeepCollectionEquality().hash(requiredVerificationIds),minConfirmedCount,maxParticipants,status);
+int get hashCode => Object.hash(runtimeType,id,partnerId,title,createdAt,updatedAt,locationId,location,const DeepCollectionEquality().hash(description),imageUrl,const DeepCollectionEquality().hash(contactOptions),const DeepCollectionEquality().hash(conditions),const DeepCollectionEquality().hash(requiredVerificationIds),minConfirmedCount,maxParticipants,status);
 
 @override
 String toString() {
-  return 'Party(id: $id, partnerId: $partnerId, title: $title, createdAt: $createdAt, updatedAt: $updatedAt, locationId: $locationId, location: $location, description: $description, imageUrl: $imageUrl, contactOptions: $contactOptions, requiredVerificationIds: $requiredVerificationIds, minConfirmedCount: $minConfirmedCount, maxParticipants: $maxParticipants, status: $status)';
+  return 'Party(id: $id, partnerId: $partnerId, title: $title, createdAt: $createdAt, updatedAt: $updatedAt, locationId: $locationId, location: $location, description: $description, imageUrl: $imageUrl, contactOptions: $contactOptions, conditions: $conditions, requiredVerificationIds: $requiredVerificationIds, minConfirmedCount: $minConfirmedCount, maxParticipants: $maxParticipants, status: $status)';
 }
 
 
@@ -358,7 +359,7 @@ abstract mixin class $PartyCopyWith<$Res>  {
   factory $PartyCopyWith(Party value, $Res Function(Party) _then) = _$PartyCopyWithImpl;
 @useResult
 $Res call({
- String id,@JsonKey(name: 'partner_id') String partnerId, String title,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'location_id') String? locationId,@JsonKey(includeToJson: false) Location? location, Map<String, dynamic>? description,@JsonKey(name: 'image_url') String? imageUrl,@JsonKey(name: 'contact_options') Map<String, dynamic> contactOptions,@JsonKey(name: 'required_verification_ids') List<String> requiredVerificationIds,@JsonKey(name: 'min_confirmed_count') int minConfirmedCount,@JsonKey(name: 'max_participants') int maxParticipants, String status
+ String id,@JsonKey(name: 'partner_id') String partnerId, String title,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'location_id') String? locationId,@JsonKey(includeToJson: false) Location? location, Map<String, dynamic>? description,@JsonKey(name: 'image_url') String? imageUrl,@JsonKey(name: 'contact_options') Map<String, dynamic> contactOptions, Map<String, dynamic> conditions,@JsonKey(name: 'required_verification_ids') List<String> requiredVerificationIds,@JsonKey(name: 'min_confirmed_count') int minConfirmedCount,@JsonKey(name: 'max_participants') int maxParticipants, String status
 });
 
 
@@ -375,7 +376,7 @@ class _$PartyCopyWithImpl<$Res>
 
 /// Create a copy of Party
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? partnerId = null,Object? title = null,Object? createdAt = null,Object? updatedAt = null,Object? locationId = freezed,Object? location = freezed,Object? description = freezed,Object? imageUrl = freezed,Object? contactOptions = null,Object? requiredVerificationIds = null,Object? minConfirmedCount = null,Object? maxParticipants = null,Object? status = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? partnerId = null,Object? title = null,Object? createdAt = null,Object? updatedAt = null,Object? locationId = freezed,Object? location = freezed,Object? description = freezed,Object? imageUrl = freezed,Object? contactOptions = null,Object? conditions = null,Object? requiredVerificationIds = null,Object? minConfirmedCount = null,Object? maxParticipants = null,Object? status = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,partnerId: null == partnerId ? _self.partnerId : partnerId // ignore: cast_nullable_to_non_nullable
@@ -387,6 +388,7 @@ as String?,location: freezed == location ? _self.location : location // ignore: 
 as Location?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as Map<String, dynamic>?,imageUrl: freezed == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
 as String?,contactOptions: null == contactOptions ? _self.contactOptions : contactOptions // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>,conditions: null == conditions ? _self.conditions : conditions // ignore: cast_nullable_to_non_nullable
 as Map<String, dynamic>,requiredVerificationIds: null == requiredVerificationIds ? _self.requiredVerificationIds : requiredVerificationIds // ignore: cast_nullable_to_non_nullable
 as List<String>,minConfirmedCount: null == minConfirmedCount ? _self.minConfirmedCount : minConfirmedCount // ignore: cast_nullable_to_non_nullable
 as int,maxParticipants: null == maxParticipants ? _self.maxParticipants : maxParticipants // ignore: cast_nullable_to_non_nullable
@@ -488,10 +490,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'partner_id')  String partnerId,  String title, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'location_id')  String? locationId, @JsonKey(includeToJson: false)  Location? location,  Map<String, dynamic>? description, @JsonKey(name: 'image_url')  String? imageUrl, @JsonKey(name: 'contact_options')  Map<String, dynamic> contactOptions, @JsonKey(name: 'required_verification_ids')  List<String> requiredVerificationIds, @JsonKey(name: 'min_confirmed_count')  int minConfirmedCount, @JsonKey(name: 'max_participants')  int maxParticipants,  String status)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'partner_id')  String partnerId,  String title, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'location_id')  String? locationId, @JsonKey(includeToJson: false)  Location? location,  Map<String, dynamic>? description, @JsonKey(name: 'image_url')  String? imageUrl, @JsonKey(name: 'contact_options')  Map<String, dynamic> contactOptions,  Map<String, dynamic> conditions, @JsonKey(name: 'required_verification_ids')  List<String> requiredVerificationIds, @JsonKey(name: 'min_confirmed_count')  int minConfirmedCount, @JsonKey(name: 'max_participants')  int maxParticipants,  String status)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Party() when $default != null:
-return $default(_that.id,_that.partnerId,_that.title,_that.createdAt,_that.updatedAt,_that.locationId,_that.location,_that.description,_that.imageUrl,_that.contactOptions,_that.requiredVerificationIds,_that.minConfirmedCount,_that.maxParticipants,_that.status);case _:
+return $default(_that.id,_that.partnerId,_that.title,_that.createdAt,_that.updatedAt,_that.locationId,_that.location,_that.description,_that.imageUrl,_that.contactOptions,_that.conditions,_that.requiredVerificationIds,_that.minConfirmedCount,_that.maxParticipants,_that.status);case _:
   return orElse();
 
 }
@@ -509,10 +511,10 @@ return $default(_that.id,_that.partnerId,_that.title,_that.createdAt,_that.updat
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'partner_id')  String partnerId,  String title, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'location_id')  String? locationId, @JsonKey(includeToJson: false)  Location? location,  Map<String, dynamic>? description, @JsonKey(name: 'image_url')  String? imageUrl, @JsonKey(name: 'contact_options')  Map<String, dynamic> contactOptions, @JsonKey(name: 'required_verification_ids')  List<String> requiredVerificationIds, @JsonKey(name: 'min_confirmed_count')  int minConfirmedCount, @JsonKey(name: 'max_participants')  int maxParticipants,  String status)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'partner_id')  String partnerId,  String title, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'location_id')  String? locationId, @JsonKey(includeToJson: false)  Location? location,  Map<String, dynamic>? description, @JsonKey(name: 'image_url')  String? imageUrl, @JsonKey(name: 'contact_options')  Map<String, dynamic> contactOptions,  Map<String, dynamic> conditions, @JsonKey(name: 'required_verification_ids')  List<String> requiredVerificationIds, @JsonKey(name: 'min_confirmed_count')  int minConfirmedCount, @JsonKey(name: 'max_participants')  int maxParticipants,  String status)  $default,) {final _that = this;
 switch (_that) {
 case _Party():
-return $default(_that.id,_that.partnerId,_that.title,_that.createdAt,_that.updatedAt,_that.locationId,_that.location,_that.description,_that.imageUrl,_that.contactOptions,_that.requiredVerificationIds,_that.minConfirmedCount,_that.maxParticipants,_that.status);case _:
+return $default(_that.id,_that.partnerId,_that.title,_that.createdAt,_that.updatedAt,_that.locationId,_that.location,_that.description,_that.imageUrl,_that.contactOptions,_that.conditions,_that.requiredVerificationIds,_that.minConfirmedCount,_that.maxParticipants,_that.status);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -529,10 +531,10 @@ return $default(_that.id,_that.partnerId,_that.title,_that.createdAt,_that.updat
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'partner_id')  String partnerId,  String title, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'location_id')  String? locationId, @JsonKey(includeToJson: false)  Location? location,  Map<String, dynamic>? description, @JsonKey(name: 'image_url')  String? imageUrl, @JsonKey(name: 'contact_options')  Map<String, dynamic> contactOptions, @JsonKey(name: 'required_verification_ids')  List<String> requiredVerificationIds, @JsonKey(name: 'min_confirmed_count')  int minConfirmedCount, @JsonKey(name: 'max_participants')  int maxParticipants,  String status)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'partner_id')  String partnerId,  String title, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'location_id')  String? locationId, @JsonKey(includeToJson: false)  Location? location,  Map<String, dynamic>? description, @JsonKey(name: 'image_url')  String? imageUrl, @JsonKey(name: 'contact_options')  Map<String, dynamic> contactOptions,  Map<String, dynamic> conditions, @JsonKey(name: 'required_verification_ids')  List<String> requiredVerificationIds, @JsonKey(name: 'min_confirmed_count')  int minConfirmedCount, @JsonKey(name: 'max_participants')  int maxParticipants,  String status)?  $default,) {final _that = this;
 switch (_that) {
 case _Party() when $default != null:
-return $default(_that.id,_that.partnerId,_that.title,_that.createdAt,_that.updatedAt,_that.locationId,_that.location,_that.description,_that.imageUrl,_that.contactOptions,_that.requiredVerificationIds,_that.minConfirmedCount,_that.maxParticipants,_that.status);case _:
+return $default(_that.id,_that.partnerId,_that.title,_that.createdAt,_that.updatedAt,_that.locationId,_that.location,_that.description,_that.imageUrl,_that.contactOptions,_that.conditions,_that.requiredVerificationIds,_that.minConfirmedCount,_that.maxParticipants,_that.status);case _:
   return null;
 
 }
@@ -544,7 +546,7 @@ return $default(_that.id,_that.partnerId,_that.title,_that.createdAt,_that.updat
 @JsonSerializable()
 
 class _Party implements Party {
-  const _Party({required this.id, @JsonKey(name: 'partner_id') required this.partnerId, required this.title, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'updated_at') required this.updatedAt, @JsonKey(name: 'location_id') this.locationId, @JsonKey(includeToJson: false) this.location, final  Map<String, dynamic>? description, @JsonKey(name: 'image_url') this.imageUrl, @JsonKey(name: 'contact_options') final  Map<String, dynamic> contactOptions = const {}, @JsonKey(name: 'required_verification_ids') final  List<String> requiredVerificationIds = const [], @JsonKey(name: 'min_confirmed_count') this.minConfirmedCount = 0, @JsonKey(name: 'max_participants') this.maxParticipants = 20, this.status = 'active'}): _description = description,_contactOptions = contactOptions,_requiredVerificationIds = requiredVerificationIds;
+  const _Party({required this.id, @JsonKey(name: 'partner_id') required this.partnerId, required this.title, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'updated_at') required this.updatedAt, @JsonKey(name: 'location_id') this.locationId, @JsonKey(includeToJson: false) this.location, final  Map<String, dynamic>? description, @JsonKey(name: 'image_url') this.imageUrl, @JsonKey(name: 'contact_options') final  Map<String, dynamic> contactOptions = const {}, final  Map<String, dynamic> conditions = const {}, @JsonKey(name: 'required_verification_ids') final  List<String> requiredVerificationIds = const [], @JsonKey(name: 'min_confirmed_count') this.minConfirmedCount = 0, @JsonKey(name: 'max_participants') this.maxParticipants = 20, this.status = 'active'}): _description = description,_contactOptions = contactOptions,_conditions = conditions,_requiredVerificationIds = requiredVerificationIds;
   factory _Party.fromJson(Map<String, dynamic> json) => _$PartyFromJson(json);
 
 @override final  String id;
@@ -572,7 +574,16 @@ class _Party implements Party {
   return EqualUnmodifiableMapView(_contactOptions);
 }
 
+ final  Map<String, dynamic> _conditions;
+@override@JsonKey() Map<String, dynamic> get conditions {
+  if (_conditions is EqualUnmodifiableMapView) return _conditions;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_conditions);
+}
+
+// JSONB
  final  List<String> _requiredVerificationIds;
+// JSONB
 @override@JsonKey(name: 'required_verification_ids') List<String> get requiredVerificationIds {
   if (_requiredVerificationIds is EqualUnmodifiableListView) return _requiredVerificationIds;
   // ignore: implicit_dynamic_type
@@ -596,16 +607,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Party&&(identical(other.id, id) || other.id == id)&&(identical(other.partnerId, partnerId) || other.partnerId == partnerId)&&(identical(other.title, title) || other.title == title)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.locationId, locationId) || other.locationId == locationId)&&(identical(other.location, location) || other.location == location)&&const DeepCollectionEquality().equals(other._description, _description)&&(identical(other.imageUrl, imageUrl) || other.imageUrl == imageUrl)&&const DeepCollectionEquality().equals(other._contactOptions, _contactOptions)&&const DeepCollectionEquality().equals(other._requiredVerificationIds, _requiredVerificationIds)&&(identical(other.minConfirmedCount, minConfirmedCount) || other.minConfirmedCount == minConfirmedCount)&&(identical(other.maxParticipants, maxParticipants) || other.maxParticipants == maxParticipants)&&(identical(other.status, status) || other.status == status));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Party&&(identical(other.id, id) || other.id == id)&&(identical(other.partnerId, partnerId) || other.partnerId == partnerId)&&(identical(other.title, title) || other.title == title)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.locationId, locationId) || other.locationId == locationId)&&(identical(other.location, location) || other.location == location)&&const DeepCollectionEquality().equals(other._description, _description)&&(identical(other.imageUrl, imageUrl) || other.imageUrl == imageUrl)&&const DeepCollectionEquality().equals(other._contactOptions, _contactOptions)&&const DeepCollectionEquality().equals(other._conditions, _conditions)&&const DeepCollectionEquality().equals(other._requiredVerificationIds, _requiredVerificationIds)&&(identical(other.minConfirmedCount, minConfirmedCount) || other.minConfirmedCount == minConfirmedCount)&&(identical(other.maxParticipants, maxParticipants) || other.maxParticipants == maxParticipants)&&(identical(other.status, status) || other.status == status));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,partnerId,title,createdAt,updatedAt,locationId,location,const DeepCollectionEquality().hash(_description),imageUrl,const DeepCollectionEquality().hash(_contactOptions),const DeepCollectionEquality().hash(_requiredVerificationIds),minConfirmedCount,maxParticipants,status);
+int get hashCode => Object.hash(runtimeType,id,partnerId,title,createdAt,updatedAt,locationId,location,const DeepCollectionEquality().hash(_description),imageUrl,const DeepCollectionEquality().hash(_contactOptions),const DeepCollectionEquality().hash(_conditions),const DeepCollectionEquality().hash(_requiredVerificationIds),minConfirmedCount,maxParticipants,status);
 
 @override
 String toString() {
-  return 'Party(id: $id, partnerId: $partnerId, title: $title, createdAt: $createdAt, updatedAt: $updatedAt, locationId: $locationId, location: $location, description: $description, imageUrl: $imageUrl, contactOptions: $contactOptions, requiredVerificationIds: $requiredVerificationIds, minConfirmedCount: $minConfirmedCount, maxParticipants: $maxParticipants, status: $status)';
+  return 'Party(id: $id, partnerId: $partnerId, title: $title, createdAt: $createdAt, updatedAt: $updatedAt, locationId: $locationId, location: $location, description: $description, imageUrl: $imageUrl, contactOptions: $contactOptions, conditions: $conditions, requiredVerificationIds: $requiredVerificationIds, minConfirmedCount: $minConfirmedCount, maxParticipants: $maxParticipants, status: $status)';
 }
 
 
@@ -616,7 +627,7 @@ abstract mixin class _$PartyCopyWith<$Res> implements $PartyCopyWith<$Res> {
   factory _$PartyCopyWith(_Party value, $Res Function(_Party) _then) = __$PartyCopyWithImpl;
 @override @useResult
 $Res call({
- String id,@JsonKey(name: 'partner_id') String partnerId, String title,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'location_id') String? locationId,@JsonKey(includeToJson: false) Location? location, Map<String, dynamic>? description,@JsonKey(name: 'image_url') String? imageUrl,@JsonKey(name: 'contact_options') Map<String, dynamic> contactOptions,@JsonKey(name: 'required_verification_ids') List<String> requiredVerificationIds,@JsonKey(name: 'min_confirmed_count') int minConfirmedCount,@JsonKey(name: 'max_participants') int maxParticipants, String status
+ String id,@JsonKey(name: 'partner_id') String partnerId, String title,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'location_id') String? locationId,@JsonKey(includeToJson: false) Location? location, Map<String, dynamic>? description,@JsonKey(name: 'image_url') String? imageUrl,@JsonKey(name: 'contact_options') Map<String, dynamic> contactOptions, Map<String, dynamic> conditions,@JsonKey(name: 'required_verification_ids') List<String> requiredVerificationIds,@JsonKey(name: 'min_confirmed_count') int minConfirmedCount,@JsonKey(name: 'max_participants') int maxParticipants, String status
 });
 
 
@@ -633,7 +644,7 @@ class __$PartyCopyWithImpl<$Res>
 
 /// Create a copy of Party
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? partnerId = null,Object? title = null,Object? createdAt = null,Object? updatedAt = null,Object? locationId = freezed,Object? location = freezed,Object? description = freezed,Object? imageUrl = freezed,Object? contactOptions = null,Object? requiredVerificationIds = null,Object? minConfirmedCount = null,Object? maxParticipants = null,Object? status = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? partnerId = null,Object? title = null,Object? createdAt = null,Object? updatedAt = null,Object? locationId = freezed,Object? location = freezed,Object? description = freezed,Object? imageUrl = freezed,Object? contactOptions = null,Object? conditions = null,Object? requiredVerificationIds = null,Object? minConfirmedCount = null,Object? maxParticipants = null,Object? status = null,}) {
   return _then(_Party(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,partnerId: null == partnerId ? _self.partnerId : partnerId // ignore: cast_nullable_to_non_nullable
@@ -645,6 +656,7 @@ as String?,location: freezed == location ? _self.location : location // ignore: 
 as Location?,description: freezed == description ? _self._description : description // ignore: cast_nullable_to_non_nullable
 as Map<String, dynamic>?,imageUrl: freezed == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
 as String?,contactOptions: null == contactOptions ? _self._contactOptions : contactOptions // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>,conditions: null == conditions ? _self._conditions : conditions // ignore: cast_nullable_to_non_nullable
 as Map<String, dynamic>,requiredVerificationIds: null == requiredVerificationIds ? _self._requiredVerificationIds : requiredVerificationIds // ignore: cast_nullable_to_non_nullable
 as List<String>,minConfirmedCount: null == minConfirmedCount ? _self.minConfirmedCount : minConfirmedCount // ignore: cast_nullable_to_non_nullable
 as int,maxParticipants: null == maxParticipants ? _self.maxParticipants : maxParticipants // ignore: cast_nullable_to_non_nullable

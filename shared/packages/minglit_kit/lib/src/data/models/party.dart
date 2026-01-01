@@ -50,6 +50,7 @@ abstract class Party with _$Party {
     @JsonKey(name: 'contact_options')
     @Default({})
     Map<String, dynamic> contactOptions,
+    @Default({}) Map<String, dynamic> conditions, // JSONB
     @JsonKey(name: 'required_verification_ids')
     @Default([])
     List<String> requiredVerificationIds,

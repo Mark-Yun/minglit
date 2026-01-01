@@ -23,6 +23,12 @@ class TicketListItem extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final currencyFormat = NumberFormat.currency(locale: 'ko_KR', symbol: '₩');
 
+    // Parse conditions
+    final gender = ticket.conditions['gender'] as String?;
+    final ageRange = ticket.conditions['age_range'] as Map<String, dynamic>?;
+    final hasAgeLimit = ageRange != null &&
+        (ageRange['min'] != null || ageRange['max'] != null);
+
     return Card(
       margin: EdgeInsets.zero,
       child: InkWell(
@@ -50,18 +56,17 @@ class TicketListItem extends StatelessWidget {
                       size: MinglitIconSize.medium,
                     ),
                   ),
-                  if (ticket.gender != null)
+                  if (gender != null)
                     Container(
                       padding: const EdgeInsets.all(2),
                       decoration: BoxDecoration(
-                        color: ticket.gender == 'male'
-                            ? Colors.blue
-                            : Colors.pinkAccent,
+                        color:
+                            gender == 'male' ? Colors.blue : Colors.pinkAccent,
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 1.5),
                       ),
                       child: Icon(
-                        ticket.gender == 'male' ? Icons.male : Icons.female,
+                        gender == 'male' ? Icons.male : Icons.female,
                         size: 10,
                         color: Colors.white,
                       ),
@@ -89,12 +94,11 @@ class TicketListItem extends StatelessWidget {
                         color: colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    if (ticket.minBirthYear != null ||
-                        ticket.maxBirthYear != null)
+                    if (hasAgeLimit)
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
                         child: Text(
-                          '나이제한: ${_getAgeRangeText()}',
+                          '나이제한: ${_getAgeRangeText(ageRange)}',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colorScheme.secondary,
                             fontSize: 10,
@@ -141,13 +145,16 @@ class TicketListItem extends StatelessWidget {
     );
   }
 
-  String _getAgeRangeText() {
-    if (ticket.minBirthYear != null && ticket.maxBirthYear != null) {
-      return '${ticket.minBirthYear}~${ticket.maxBirthYear}년생';
-    } else if (ticket.minBirthYear != null) {
-      return '${ticket.minBirthYear}년생 이후';
-    } else if (ticket.maxBirthYear != null) {
-      return '${ticket.maxBirthYear}년생 이전';
+  String _getAgeRangeText(Map<String, dynamic> ageRange) {
+    final min = ageRange['min'];
+    final max = ageRange['max'];
+
+    if (min != null && max != null) {
+      return '$min~$max년생';
+    } else if (min != null) {
+      return '$min년생 이후';
+    } else if (max != null) {
+      return '$max년생 이전';
     }
     return '제한 없음';
   }

@@ -23,17 +23,24 @@ class TicketCreateController extends _$TicketCreateController {
     state = await AsyncValue.guard(() async {
       final repo = ref.read(partyRepositoryProvider);
 
+      final conditions = <String, dynamic>{};
+      if (gender != null) conditions['gender'] = gender;
+      if (minBirthYear != null || maxBirthYear != null) {
+        conditions['age_range'] = {
+          'min': minBirthYear,
+          'max': maxBirthYear,
+        }..removeWhere((k, v) => v == null);
+      }
+
       final ticket = EventTicket(
         id: '', // DB Generated
-        eventId: eventId,
         name: name,
+        eventId: eventId,
         price: price,
         quantity: quantity,
+        conditions: conditions,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-        gender: gender,
-        minBirthYear: minBirthYear,
-        maxBirthYear: maxBirthYear,
       );
 
       await repo.createTicket(ticket);
