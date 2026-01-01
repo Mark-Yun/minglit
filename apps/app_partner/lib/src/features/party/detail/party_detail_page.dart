@@ -146,18 +146,14 @@ class PartyDetailPage extends ConsumerWidget {
                     const SizedBox(height: MinglitSpacing.large),
                     Text(
                       '장소 정보',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: colorScheme.primary,
-                      ),
+                      style: theme.textTheme.titleMedium,
                     ),
                     const SizedBox(height: MinglitSpacing.small),
                     _LocationSection(locationId: party.locationId),
                     const SizedBox(height: MinglitSpacing.large),
                     Text(
                       '개설된 회차 (이벤트)',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: colorScheme.primary,
-                      ),
+                      style: theme.textTheme.titleMedium,
                     ),
                     const SizedBox(height: MinglitSpacing.small),
                   ],
@@ -214,35 +210,9 @@ class PartyDetailPage extends ConsumerWidget {
                   MinglitSpacing.medium,
                   MinglitSpacing.small,
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '등록된 티켓 현황',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: colorScheme.primary,
-                      ),
-                    ),
-                    TextButton.icon(
-                      onPressed: () {
-                        if (eventsAsync.value?.isEmpty ?? true) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('티켓을 만들기 전, 먼저 회차(이벤트)를 개설해주세요.'),
-                            ),
-                          );
-                          return;
-                        }
-                        final firstEvent = eventsAsync.value!.first;
-                        coordinator.goToCreateTicket(partyId, firstEvent.id);
-                      },
-                      icon: const Icon(
-                        Icons.add,
-                        size: MinglitIconSize.small,
-                      ),
-                      label: const Text('티켓 생성'),
-                    ),
-                  ],
+                child: Text(
+                  '등록된 티켓 현황',
+                  style: theme.textTheme.titleMedium,
                 ),
               ),
             ),
@@ -255,15 +225,21 @@ class PartyDetailPage extends ConsumerWidget {
                 sliver: SliverToBoxAdapter(
                   child: TicketListView(
                     tickets: tickets,
-                    onCreatePressed: (eventsAsync.value?.isNotEmpty ?? false)
-                        ? () {
-                            final firstEvent = eventsAsync.value!.first;
-                            coordinator.goToCreateTicket(
-                              partyId,
-                              firstEvent.id,
-                            );
-                          }
-                        : null,
+                    onCreatePressed: () {
+                      if (eventsAsync.value?.isEmpty ?? true) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('티켓을 만들기 전, 먼저 회차(이벤트)를 개설해주세요.'),
+                          ),
+                        );
+                        return;
+                      }
+                      final firstEvent = eventsAsync.value!.first;
+                      coordinator.goToCreateTicket(
+                        partyId,
+                        firstEvent.id,
+                      );
+                    },
                     onTicketTap: (ticket) {
                       // Navigate to appropriate detail/edit if needed
                     },
@@ -379,11 +355,17 @@ class _LocationSection extends ConsumerWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            Text(
-              '''${loc.address}${loc.addressDetail != null ? ' ${loc.addressDetail}' : ''}''',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
+            Builder(
+              builder: (context) {
+                final detail =
+                    loc.addressDetail != null ? ' ${loc.addressDetail}' : '';
+                return Text(
+                  '${loc.address}$detail',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                );
+              },
             ),
             if (loc.directionsGuide != null && loc.directionsGuide!.isNotEmpty)
               Padding(

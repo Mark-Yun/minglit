@@ -7,8 +7,7 @@ class MinglitColors {
   static const background = Color(0xFFFFFFFF);
   static const primary = Color(0xFF9900FF);
   static const secondary = Color(0xFFFF9900); // Auxiliary 1
-  static const tertiary = Color(0xFF21FFFE); // Auxiliary 2
-
+  static const tertiary = Color(0xFF48C9B0); // Toned down Mint
   static const surface = Color(0xFFF9FAFB); // 부드러운 회색 배경
   static const error = Color(0xFFEF4444);
   static const textPrimary = Color(0xFF111827);

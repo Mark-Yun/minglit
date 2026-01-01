@@ -61,18 +61,45 @@ class _PartyLocationSelectorState extends State<PartyLocationSelector> {
         ),
         const SizedBox(height: MinglitSpacing.small),
 
-        // 2. Search Button
-        TextButton.icon(
-          onPressed: widget.onSearchTap,
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.small),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(MinglitRadius.button),
-            ),
+        // 2. Search Button (Slim Refined Card)
+        AnimatedContainer(
+          duration: MinglitAnimation.fast,
+          decoration: BoxDecoration(
+            color: colorScheme.tertiary.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(MinglitRadius.input),
           ),
-          icon: const Icon(Icons.search, size: MinglitIconSize.small),
-          label: Text(
-            widget.selectedLocation == null ? '위치 검색하기' : '장소 변경하기',
+          child: InkWell(
+            onTap: widget.onSearchTap,
+            borderRadius: BorderRadius.circular(MinglitRadius.input),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: MinglitSpacing.medium,
+                vertical: MinglitSpacing.medium,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.search,
+                    color: colorScheme.tertiary,
+                    size: MinglitIconSize.small,
+                  ),
+                  const SizedBox(width: MinglitSpacing.medium),
+                  Expanded(
+                    child: Text(
+                      widget.selectedLocation == null ? '위치 검색하기' : '장소 변경하기',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    color: colorScheme.tertiary.withValues(alpha: 0.6),
+                    size: MinglitIconSize.medium,
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ],

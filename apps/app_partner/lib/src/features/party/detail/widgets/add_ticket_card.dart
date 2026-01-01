@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-class AddEventCard extends StatelessWidget {
-  const AddEventCard({
+class AddTicketCard extends StatelessWidget {
+  const AddTicketCard({
     required this.onTap,
     super.key,
   });
@@ -28,7 +28,7 @@ class AddEventCard extends StatelessWidget {
           child: Row(
             children: [
               Icon(
-                Icons.add_circle_outline,
+                Icons.confirmation_number_outlined,
                 color: colorScheme.tertiary,
                 size: MinglitIconSize.small,
               ),
@@ -39,14 +39,14 @@ class AddEventCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      '새로운 회차 개설하기',
+                      '새로운 티켓 만들기',
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: MinglitSpacing.xxsmall),
                     Text(
-                      '새로운 날짜와 시간에 파티를 열어보세요.',
+                      '성별/나이 제한 등 판매 조건을 설정하세요.',
                       style: MinglitTextStyles.infoText(context),
                     ),
                   ],

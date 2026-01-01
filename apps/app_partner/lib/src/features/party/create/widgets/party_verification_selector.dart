@@ -54,9 +54,9 @@ class PartyVerificationSelector extends StatelessWidget {
             AnimatedContainer(
               duration: MinglitAnimation.fast,
               decoration: BoxDecoration(
-                color: colorScheme.secondary.withValues(
+                color: colorScheme.tertiary.withValues(
                   alpha: 0.08,
-                ), // Light Orange Background
+                ), // Lime/Mint Background
                 borderRadius: BorderRadius.circular(MinglitRadius.card),
                 // Border is explicitly removed
               ),
@@ -71,12 +71,12 @@ class PartyVerificationSelector extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: colorScheme.secondary.withValues(alpha: 0.15),
+                          color: colorScheme.tertiary.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           Icons.add,
-                          color: colorScheme.secondary,
+                          color: colorScheme.tertiary,
                           size: MinglitIconSize.small,
                         ),
                       ),
@@ -112,7 +112,7 @@ class PartyVerificationSelector extends StatelessWidget {
                       // Right Indicator
                       Icon(
                         Icons.chevron_right,
-                        color: colorScheme.secondary.withValues(alpha: 0.6),
+                        color: colorScheme.tertiary.withValues(alpha: 0.6),
                         size: MinglitIconSize.large,
                       ),
                     ],

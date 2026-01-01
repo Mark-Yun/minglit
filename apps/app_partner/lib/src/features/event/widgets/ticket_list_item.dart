@@ -1,3 +1,4 @@
+import 'package:app_partner/src/features/party/detail/widgets/add_ticket_card.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -175,16 +176,26 @@ class TicketListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (tickets.isEmpty) {
+      // Empty state with AddTicketCard if create action is available
+      if (onCreatePressed != null) {
+        return AddTicketCard(onTap: onCreatePressed!);
+      }
       return _buildEmptyState(context);
     }
 
     return ListView.separated(
       shrinkWrap: shrinkWrap,
       physics: physics,
-      itemCount: tickets.length,
+      itemCount: tickets.length + (onCreatePressed != null ? 1 : 0),
       separatorBuilder: (context, index) =>
           const SizedBox(height: MinglitSpacing.small),
       itemBuilder: (context, index) {
+        if (index == tickets.length) {
+          return Padding(
+            padding: const EdgeInsets.only(top: MinglitSpacing.xxsmall),
+            child: AddTicketCard(onTap: onCreatePressed!),
+          );
+        }
         final ticket = tickets[index];
         return TicketListItem(
           ticket: ticket,
@@ -221,17 +232,6 @@ class TicketListView extends StatelessWidget {
               color: colorScheme.onSurfaceVariant,
             ),
           ),
-          if (onCreatePressed != null) ...[
-            const SizedBox(height: MinglitSpacing.medium),
-            ElevatedButton.icon(
-              onPressed: onCreatePressed,
-              icon: const Icon(Icons.add, size: MinglitIconSize.small),
-              label: const Text('티켓 생성하기'),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(160, 44),
-              ),
-            ),
-          ],
         ],
       ),
     );

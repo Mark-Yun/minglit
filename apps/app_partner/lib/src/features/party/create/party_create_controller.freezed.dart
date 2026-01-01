@@ -222,7 +222,7 @@ return $default(_that.selectedVerificationIds,_that.enabledContactMethods,_that.
 
 
 class _PartyCreateState implements PartyCreateState {
-  const _PartyCreateState({final  List<String> selectedVerificationIds = const [], final  Set<String> enabledContactMethods = const {'phone', 'email'}, this.status = const AsyncValue.data(null), this.selectedLocation, this.descriptionError}): _selectedVerificationIds = selectedVerificationIds,_enabledContactMethods = enabledContactMethods;
+  const _PartyCreateState({final  List<String> selectedVerificationIds = const [], final  Set<String> enabledContactMethods = const {}, this.status = const AsyncValue.data(null), this.selectedLocation, this.descriptionError}): _selectedVerificationIds = selectedVerificationIds,_enabledContactMethods = enabledContactMethods;
   
 
  final  List<String> _selectedVerificationIds;

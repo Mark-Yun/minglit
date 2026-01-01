@@ -11,7 +11,7 @@ part 'party_create_controller.g.dart';
 abstract class PartyCreateState with _$PartyCreateState {
   const factory PartyCreateState({
     @Default([]) List<String> selectedVerificationIds,
-    @Default({'phone', 'email'}) Set<String> enabledContactMethods,
+    @Default({}) Set<String> enabledContactMethods,
     @Default(AsyncValue.data(null)) AsyncValue<void> status,
     Location? selectedLocation,
     String? descriptionError,

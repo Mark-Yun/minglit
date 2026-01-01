@@ -122,11 +122,20 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
     ref.listen(currentPartnerInfoProvider, (previous, next) {
       if (next.value != null && !_isDataLoaded) {
         final partner = next.value!;
-        if (partner.contactPhone != null) {
+        final controller = ref.read(partyCreateControllerProvider.notifier);
+        final state = ref.read(partyCreateControllerProvider);
+
+        if (partner.contactPhone != null && partner.contactPhone!.isNotEmpty) {
           _phoneController.text = partner.contactPhone!;
+          if (!state.enabledContactMethods.contains('phone')) {
+            controller.toggleContactMethod('phone');
+          }
         }
-        if (partner.contactEmail != null) {
+        if (partner.contactEmail != null && partner.contactEmail!.isNotEmpty) {
           _emailController.text = partner.contactEmail!;
+          if (!state.enabledContactMethods.contains('email')) {
+            controller.toggleContactMethod('email');
+          }
         }
         setState(() => _isDataLoaded = true);
       }

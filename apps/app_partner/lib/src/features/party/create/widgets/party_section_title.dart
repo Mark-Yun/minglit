@@ -14,7 +14,6 @@ class PartySectionTitle extends StatelessWidget {
       child: Text(
         title,
         style: theme.textTheme.titleMedium?.copyWith(
-          color: theme.colorScheme.primary, // Midnight Navy
           fontWeight: FontWeight.bold,
         ),
       ),
