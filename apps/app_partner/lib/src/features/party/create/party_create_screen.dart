@@ -30,6 +30,8 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _kakaoController = TextEditingController();
+  final _addressDetailController = TextEditingController();
+  final _directionsController = TextEditingController();
 
   // State
   XFile? _selectedImage;
@@ -45,6 +47,8 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
     _phoneController.dispose();
     _emailController.dispose();
     _kakaoController.dispose();
+    _addressDetailController.dispose();
+    _directionsController.dispose();
     _editorFocusNode.dispose();
     super.dispose();
   }
@@ -89,6 +93,8 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
                 ? _kakaoController.text
                 : null,
             imageFile: _selectedImage,
+            addressDetail: _addressDetailController.text,
+            directionsGuide: _directionsController.text,
           );
 
       final state = ref.read(partyCreateControllerProvider);
@@ -166,6 +172,25 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
                 selectedLocation: state.selectedLocation,
                 onSearchTap: _handleLocationSearch,
               ),
+              if (state.selectedLocation != null) ...[
+                const SizedBox(height: MinglitSpacing.medium),
+                TextFormField(
+                  controller: _addressDetailController,
+                  decoration: const InputDecoration(
+                    labelText: '상세 주소 (선택)',
+                    hintText: '예: 2층 201호, 루프탑 등',
+                  ),
+                ),
+                const SizedBox(height: MinglitSpacing.small),
+                TextFormField(
+                  controller: _directionsController,
+                  decoration: const InputDecoration(
+                    labelText: '오시는 길 안내 (선택)',
+                    hintText: '예: 강남역 11번 출구에서 도보 5분 거리입니다.',
+                  ),
+                  maxLines: 2,
+                ),
+              ],
               const SizedBox(height: MinglitSpacing.large),
 
               const PartySectionTitle('모집 인원'),

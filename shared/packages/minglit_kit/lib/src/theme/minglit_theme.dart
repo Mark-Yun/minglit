@@ -25,6 +25,7 @@ class MinglitSpacing {
 }
 
 class MinglitRadius {
+  static const double small = 8;
   static const double button = 16;
   static const double card = 24;
   static const double input = 12;

@@ -16,10 +16,16 @@ abstract class Location with _$Location {
     @JsonKey(name: 'created_at') required DateTime createdAt,
     @JsonKey(name: 'updated_at') required DateTime updatedAt,
     @JsonKey(name: 'address_detail') String? addressDetail,
-    String? sido,
-    String? sigungu,
+    @JsonKey(name: 'region_1') String? region1,
+    @JsonKey(name: 'region_2') String? region2,
+    @JsonKey(name: 'region_3') String? region3,
+    @JsonKey(name: 'directions_guide') String? directionsGuide,
+    @JsonKey(name: 'postal_code') String? postalCode,
     // GeoJSON Point or lat/lng handled manually if needed.
     @JsonKey(includeFromJson: false, includeToJson: false) dynamic geoPoint,
+    // UI Convenience fields
+    @JsonKey(name: 'lat') @Default(0.0) double latitude,
+    @JsonKey(name: 'lng') @Default(0.0) double longitude,
   }) = _Location;
 
   factory Location.fromJson(Map<String, dynamic> json) =>
@@ -37,6 +43,8 @@ abstract class Party with _$Party {
     required String title,
     @JsonKey(name: 'created_at') required DateTime createdAt,
     @JsonKey(name: 'updated_at') required DateTime updatedAt,
+    @JsonKey(name: 'location_id') String? locationId,
+    @JsonKey(includeToJson: false) Location? location,
     Map<String, dynamic>? description, // Quill Delta JSON
     @JsonKey(name: 'image_url') String? imageUrl,
     @JsonKey(name: 'contact_options')

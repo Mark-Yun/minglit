@@ -108,8 +108,11 @@ create table public.locations (
   name text not null,
   address text not null,
   address_detail text,
-  sido text,
-  sigungu text,
+  region_1 text,
+  region_2 text,
+  region_3 text,
+  directions_guide text,
+  postal_code text,
   geo_point geography(Point, 4326),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -140,6 +143,7 @@ create table public.verifications (
 create table public.parties (
   id uuid not null default gen_random_uuid(),
   partner_id uuid not null references public.partners(id) on delete cascade,
+  location_id uuid references public.locations(id) on delete set null,
   title text not null,
   description jsonb,
   image_url text,
@@ -402,7 +406,16 @@ create trigger on_submission_status_change
   after update on public.verification_submissions
   for each row execute procedure public.handle_verification_approval();
 
--- 21. Storage Buckets
+-- 21. Helper Views
+-- locations_view: Decodes geography(Point) into separate lat/lng fields.
+create or replace view public.locations_view as
+select 
+  *,
+  st_y(geo_point::geometry) as lat,
+  st_x(geo_point::geometry) as lng
+from public.locations;
+
+-- 22. Storage Buckets
 insert into storage.buckets (id, name, public) values ('verification-proofs', 'verification-proofs', false) on conflict (id) do nothing;
 insert into storage.buckets (id, name, public) values ('partner-proofs', 'partner-proofs', false) on conflict (id) do nothing;
 insert into storage.buckets (id, name, public) values ('party-assets', 'party-assets', true) on conflict (id) do nothing;

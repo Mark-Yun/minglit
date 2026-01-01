@@ -16,7 +16,7 @@ class KakaoLocationRepository {
   // Load from .env
   String get _restApiKey => dotenv.env['KAKAO_LOCAL_REST_API_KEY'] ?? '';
 
-  Future<List<PartyLocation>> searchKeyword(String query) async {
+  Future<List<Location>> searchKeyword(String query) async {
     if (query.isEmpty) return [];
 
     try {
@@ -33,12 +33,26 @@ class KakaoLocationRepository {
         final documents = data['documents'] as List<dynamic>;
         return documents.map((doc) {
           final map = doc as Map<String, dynamic>;
-          return PartyLocation(
-            placeName: map['place_name'] as String,
+          final roadAddr = map['road_address'] as Map<String, dynamic>?;
+          final addr = map['address'] as Map<String, dynamic>?;
+
+          return Location(
+            id: '', // Temporary
+            partnerId: '', // Temporary
+            name: map['place_name'] as String,
             address: map['road_address_name'] as String? ??
                 map['address_name'] as String,
+            region1: roadAddr?['region_1depth_name'] as String? ??
+                addr?['region_1depth_name'] as String?,
+            region2: roadAddr?['region_2depth_name'] as String? ??
+                addr?['region_2depth_name'] as String?,
+            region3: roadAddr?['region_3depth_name'] as String? ??
+                addr?['region_3depth_name'] as String?,
+            postalCode: roadAddr?['zone_no'] as String?,
             latitude: double.parse(map['y'] as String),
             longitude: double.parse(map['x'] as String),
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
           );
         }).toList();
       }

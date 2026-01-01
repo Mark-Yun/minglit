@@ -62,6 +62,8 @@ class _LocationMapState extends State<LocationMap> {
   }
 
   void _updateMap(double lat, double lng, {int? id}) {
+    debugPrint('🗺️ [WebMap] Updating Map: lat=$lat, lng=$lng, id=$id');
+
     // 1. Get Kakao Object
     final kakaoAny = web.window.getProperty('kakao'.toJS);
     if (kakaoAny == null) {

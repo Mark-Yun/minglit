@@ -177,6 +177,38 @@ class DatabaseSeeder {
           'role': 'staff',
         });
       }
+
+      // 5. Create 1 Location (Gangnam Station style) for each partner
+      final locationRes = await _adminClient
+          .from('locations')
+          .insert({
+            'partner_id': partnerId,
+            'name': 'Gangnam Station Branch',
+            'address': 'Seoul Gangnam-gu Gangnam-daero 396',
+            'address_detail': 'Exit 11',
+            'region_1': 'Seoul',
+            'region_2': 'Gangnam-gu',
+            'region_3': 'Yeoksam-dong',
+            'geo_point': 'POINT(127.0276 37.4979)',
+          })
+          .select('id')
+          .single();
+      final locationId = locationRes['id'] as String;
+
+      // 6. Create 1 Party linked to this location
+      await _adminClient.from('parties').insert({
+        'partner_id': partnerId,
+        'location_id': locationId,
+        'title': '$partnerName Friday Party',
+        'description': {
+          'ops': [
+            {'insert': "Let's drink wine!\n"},
+          ],
+        },
+        'min_confirmed_count': 5,
+        'max_participants': 20,
+        'status': 'active',
+      });
     }
   }
 

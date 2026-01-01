@@ -229,3 +229,77 @@ final class PartyTicketsFamily extends $Family
   @override
   String toString() => r'partyTicketsProvider';
 }
+
+@ProviderFor(locationDetail)
+const locationDetailProvider = LocationDetailFamily._();
+
+final class LocationDetailProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Location?>,
+          Location?,
+          FutureOr<Location?>
+        >
+    with $FutureModifier<Location?>, $FutureProvider<Location?> {
+  const LocationDetailProvider._({
+    required LocationDetailFamily super.from,
+    required String? super.argument,
+  }) : super(
+         retry: null,
+         name: r'locationDetailProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$locationDetailHash();
+
+  @override
+  String toString() {
+    return r'locationDetailProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<Location?> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Location?> create(Ref ref) {
+    final argument = this.argument as String?;
+    return locationDetail(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is LocationDetailProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$locationDetailHash() => r'6a453c5aa63c4007355e0724a0d2a7c342fca60a';
+
+final class LocationDetailFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<Location?>, String?> {
+  const LocationDetailFamily._()
+    : super(
+        retry: null,
+        name: r'locationDetailProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  LocationDetailProvider call(String? locationId) =>
+      LocationDetailProvider._(argument: locationId, from: this);
+
+  @override
+  String toString() => r'locationDetailProvider';
+}

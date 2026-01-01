@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PartyCreateState {
 
- List<String> get selectedVerificationIds; Set<String> get enabledContactMethods; AsyncValue<void> get status; PartyLocation? get selectedLocation; String? get descriptionError;
+ List<String> get selectedVerificationIds; Set<String> get enabledContactMethods; AsyncValue<void> get status; Location? get selectedLocation; String? get descriptionError;
 /// Create a copy of PartyCreateState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -45,11 +45,11 @@ abstract mixin class $PartyCreateStateCopyWith<$Res>  {
   factory $PartyCreateStateCopyWith(PartyCreateState value, $Res Function(PartyCreateState) _then) = _$PartyCreateStateCopyWithImpl;
 @useResult
 $Res call({
- List<String> selectedVerificationIds, Set<String> enabledContactMethods, AsyncValue<void> status, PartyLocation? selectedLocation, String? descriptionError
+ List<String> selectedVerificationIds, Set<String> enabledContactMethods, AsyncValue<void> status, Location? selectedLocation, String? descriptionError
 });
 
 
-
+$LocationCopyWith<$Res>? get selectedLocation;
 
 }
 /// @nodoc
@@ -68,11 +68,23 @@ selectedVerificationIds: null == selectedVerificationIds ? _self.selectedVerific
 as List<String>,enabledContactMethods: null == enabledContactMethods ? _self.enabledContactMethods : enabledContactMethods // ignore: cast_nullable_to_non_nullable
 as Set<String>,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as AsyncValue<void>,selectedLocation: freezed == selectedLocation ? _self.selectedLocation : selectedLocation // ignore: cast_nullable_to_non_nullable
-as PartyLocation?,descriptionError: freezed == descriptionError ? _self.descriptionError : descriptionError // ignore: cast_nullable_to_non_nullable
+as Location?,descriptionError: freezed == descriptionError ? _self.descriptionError : descriptionError // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
+/// Create a copy of PartyCreateState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LocationCopyWith<$Res>? get selectedLocation {
+    if (_self.selectedLocation == null) {
+    return null;
+  }
 
+  return $LocationCopyWith<$Res>(_self.selectedLocation!, (value) {
+    return _then(_self.copyWith(selectedLocation: value));
+  });
+}
 }
 
 
@@ -154,7 +166,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<String> selectedVerificationIds,  Set<String> enabledContactMethods,  AsyncValue<void> status,  PartyLocation? selectedLocation,  String? descriptionError)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<String> selectedVerificationIds,  Set<String> enabledContactMethods,  AsyncValue<void> status,  Location? selectedLocation,  String? descriptionError)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PartyCreateState() when $default != null:
 return $default(_that.selectedVerificationIds,_that.enabledContactMethods,_that.status,_that.selectedLocation,_that.descriptionError);case _:
@@ -175,7 +187,7 @@ return $default(_that.selectedVerificationIds,_that.enabledContactMethods,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<String> selectedVerificationIds,  Set<String> enabledContactMethods,  AsyncValue<void> status,  PartyLocation? selectedLocation,  String? descriptionError)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<String> selectedVerificationIds,  Set<String> enabledContactMethods,  AsyncValue<void> status,  Location? selectedLocation,  String? descriptionError)  $default,) {final _that = this;
 switch (_that) {
 case _PartyCreateState():
 return $default(_that.selectedVerificationIds,_that.enabledContactMethods,_that.status,_that.selectedLocation,_that.descriptionError);case _:
@@ -195,7 +207,7 @@ return $default(_that.selectedVerificationIds,_that.enabledContactMethods,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<String> selectedVerificationIds,  Set<String> enabledContactMethods,  AsyncValue<void> status,  PartyLocation? selectedLocation,  String? descriptionError)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<String> selectedVerificationIds,  Set<String> enabledContactMethods,  AsyncValue<void> status,  Location? selectedLocation,  String? descriptionError)?  $default,) {final _that = this;
 switch (_that) {
 case _PartyCreateState() when $default != null:
 return $default(_that.selectedVerificationIds,_that.enabledContactMethods,_that.status,_that.selectedLocation,_that.descriptionError);case _:
@@ -228,7 +240,7 @@ class _PartyCreateState implements PartyCreateState {
 }
 
 @override@JsonKey() final  AsyncValue<void> status;
-@override final  PartyLocation? selectedLocation;
+@override final  Location? selectedLocation;
 @override final  String? descriptionError;
 
 /// Create a copy of PartyCreateState
@@ -261,11 +273,11 @@ abstract mixin class _$PartyCreateStateCopyWith<$Res> implements $PartyCreateSta
   factory _$PartyCreateStateCopyWith(_PartyCreateState value, $Res Function(_PartyCreateState) _then) = __$PartyCreateStateCopyWithImpl;
 @override @useResult
 $Res call({
- List<String> selectedVerificationIds, Set<String> enabledContactMethods, AsyncValue<void> status, PartyLocation? selectedLocation, String? descriptionError
+ List<String> selectedVerificationIds, Set<String> enabledContactMethods, AsyncValue<void> status, Location? selectedLocation, String? descriptionError
 });
 
 
-
+@override $LocationCopyWith<$Res>? get selectedLocation;
 
 }
 /// @nodoc
@@ -284,12 +296,24 @@ selectedVerificationIds: null == selectedVerificationIds ? _self._selectedVerifi
 as List<String>,enabledContactMethods: null == enabledContactMethods ? _self._enabledContactMethods : enabledContactMethods // ignore: cast_nullable_to_non_nullable
 as Set<String>,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as AsyncValue<void>,selectedLocation: freezed == selectedLocation ? _self.selectedLocation : selectedLocation // ignore: cast_nullable_to_non_nullable
-as PartyLocation?,descriptionError: freezed == descriptionError ? _self.descriptionError : descriptionError // ignore: cast_nullable_to_non_nullable
+as Location?,descriptionError: freezed == descriptionError ? _self.descriptionError : descriptionError // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
 
+/// Create a copy of PartyCreateState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LocationCopyWith<$Res>? get selectedLocation {
+    if (_self.selectedLocation == null) {
+    return null;
+  }
 
+  return $LocationCopyWith<$Res>(_self.selectedLocation!, (value) {
+    return _then(_self.copyWith(selectedLocation: value));
+  });
+}
 }
 
 // dart format on

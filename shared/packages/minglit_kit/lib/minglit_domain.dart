@@ -4,4 +4,3 @@ export 'src/core/error/failures.dart';
 export 'src/data/models/partner.dart';
 export 'src/data/models/partner_application.dart';
 export 'src/data/models/verification.dart';
-export 'src/domain/models/party_location.dart';

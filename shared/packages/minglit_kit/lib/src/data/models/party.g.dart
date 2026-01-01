@@ -14,8 +14,13 @@ _Location _$LocationFromJson(Map<String, dynamic> json) => _Location(
   createdAt: DateTime.parse(json['created_at'] as String),
   updatedAt: DateTime.parse(json['updated_at'] as String),
   addressDetail: json['address_detail'] as String?,
-  sido: json['sido'] as String?,
-  sigungu: json['sigungu'] as String?,
+  region1: json['region_1'] as String?,
+  region2: json['region_2'] as String?,
+  region3: json['region_3'] as String?,
+  directionsGuide: json['directions_guide'] as String?,
+  postalCode: json['postal_code'] as String?,
+  latitude: (json['lat'] as num?)?.toDouble() ?? 0.0,
+  longitude: (json['lng'] as num?)?.toDouble() ?? 0.0,
 );
 
 Map<String, dynamic> _$LocationToJson(_Location instance) => <String, dynamic>{
@@ -26,8 +31,13 @@ Map<String, dynamic> _$LocationToJson(_Location instance) => <String, dynamic>{
   'created_at': instance.createdAt.toIso8601String(),
   'updated_at': instance.updatedAt.toIso8601String(),
   'address_detail': instance.addressDetail,
-  'sido': instance.sido,
-  'sigungu': instance.sigungu,
+  'region_1': instance.region1,
+  'region_2': instance.region2,
+  'region_3': instance.region3,
+  'directions_guide': instance.directionsGuide,
+  'postal_code': instance.postalCode,
+  'lat': instance.latitude,
+  'lng': instance.longitude,
 };
 
 _Party _$PartyFromJson(Map<String, dynamic> json) => _Party(
@@ -36,6 +46,10 @@ _Party _$PartyFromJson(Map<String, dynamic> json) => _Party(
   title: json['title'] as String,
   createdAt: DateTime.parse(json['created_at'] as String),
   updatedAt: DateTime.parse(json['updated_at'] as String),
+  locationId: json['location_id'] as String?,
+  location: json['location'] == null
+      ? null
+      : Location.fromJson(json['location'] as Map<String, dynamic>),
   description: json['description'] as Map<String, dynamic>?,
   imageUrl: json['image_url'] as String?,
   contactOptions: json['contact_options'] as Map<String, dynamic>? ?? const {},
@@ -55,6 +69,7 @@ Map<String, dynamic> _$PartyToJson(_Party instance) => <String, dynamic>{
   'title': instance.title,
   'created_at': instance.createdAt.toIso8601String(),
   'updated_at': instance.updatedAt.toIso8601String(),
+  'location_id': instance.locationId,
   'description': instance.description,
   'image_url': instance.imageUrl,
   'contact_options': instance.contactOptions,

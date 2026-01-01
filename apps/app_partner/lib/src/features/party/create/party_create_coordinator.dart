@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:app_partner/src/features/party/create/location_search_page.dart';
+import 'package:app_partner/src/features/search/location/location_search_page.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -26,8 +26,8 @@ class PartyCreateCoordinator {
     );
   }
 
-  Future<PartyLocation?> goToLocationSearch() async {
-    return Navigator.of(context).push<PartyLocation>(
+  Future<Location?> goToLocationSearch() async {
+    return Navigator.of(context).push<Location>(
       MaterialPageRoute(
         builder: (_) => const LocationSearchPage(),
         fullscreenDialog: true,

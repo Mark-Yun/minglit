@@ -1,3 +1,4 @@
+import 'package:app_partner/src/features/party/list/party_list_controller.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -12,7 +13,7 @@ abstract class PartyCreateState with _$PartyCreateState {
     @Default([]) List<String> selectedVerificationIds,
     @Default({'phone', 'email'}) Set<String> enabledContactMethods,
     @Default(AsyncValue.data(null)) AsyncValue<void> status,
-    PartyLocation? selectedLocation,
+    Location? selectedLocation,
     String? descriptionError,
   }) = _PartyCreateState;
 }
@@ -46,7 +47,7 @@ Future<List<Verification>> partyVerificationTypes(Ref ref) async {
 @riverpod
 Future<List<Location>> partnerLocations(Ref ref, String partnerId) async {
   if (partnerId.isEmpty) return [];
-  final repo = ref.watch(partnerRepositoryProvider);
+  final repo = ref.watch(locationRepositoryProvider);
   return repo.getLocations(partnerId);
 }
 
@@ -64,7 +65,7 @@ class PartyCreateController extends _$PartyCreateController {
     return const PartyCreateState();
   }
 
-  void updateLocation(PartyLocation? location) {
+  void updateLocation(Location? location) {
     state = state.copyWith(selectedLocation: location);
   }
 
@@ -132,6 +133,8 @@ class PartyCreateController extends _$PartyCreateController {
     required String contactEmail,
     String? contactKakao,
     XFile? imageFile,
+    String? addressDetail,
+    String? directionsGuide,
   }) async {
     state = state.copyWith(status: const AsyncValue.loading());
 
@@ -186,10 +189,26 @@ class PartyCreateController extends _$PartyCreateController {
         contactOptions['kakao_open_chat'] = contactKakao;
       }
 
-      // 4. Create Party
+      // 4. Create Location (if selected)
+      String? locationId;
+      if (state.selectedLocation != null) {
+        final loc = state.selectedLocation!;
+        final locationRepo = ref.read(locationRepositoryProvider);
+        final newLocation = await locationRepo.createLocation(
+          loc.copyWith(
+            partnerId: partnerId,
+            addressDetail: addressDetail,
+            directionsGuide: directionsGuide,
+          ),
+        );
+        locationId = newLocation.id;
+      }
+
+      // 5. Create Party
       final newParty = Party(
         id: '', // Server generated
         partnerId: partnerId,
+        locationId: locationId,
         title: title,
         description: description,
         minConfirmedCount: minConfirmedCount,
@@ -202,6 +221,9 @@ class PartyCreateController extends _$PartyCreateController {
       );
 
       await repository.createParty(newParty);
+
+      // Refresh party list to show the new item
+      ref.invalidate(partyListProvider);
     });
 
     state = state.copyWith(status: result);

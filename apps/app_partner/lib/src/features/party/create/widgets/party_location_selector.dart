@@ -12,7 +12,7 @@ class PartyLocationSelector extends StatefulWidget {
     super.key,
   });
 
-  final PartyLocation? selectedLocation;
+  final Location? selectedLocation;
   final VoidCallback onSearchTap;
 
   @override
@@ -104,7 +104,9 @@ class _PartyLocationSelectorState extends State<PartyLocationSelector> {
   Widget _buildSelectedState(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final loc = widget.selectedLocation!;
+    final loc = widget.selectedLocation;
+
+    if (loc == null) return const SizedBox.shrink();
 
     return Stack(
       children: [
@@ -144,7 +146,7 @@ class _PartyLocationSelectorState extends State<PartyLocationSelector> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        loc.placeName,
+                        loc.name,
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
