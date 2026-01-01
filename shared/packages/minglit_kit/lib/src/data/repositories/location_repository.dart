@@ -71,4 +71,17 @@ class LocationRepository {
 
     return Location.fromJson(mergedData);
   }
+
+  /// Updates location details (address detail and directions guide).
+  Future<void> updateLocationDetails({
+    required String locationId,
+    String? addressDetail,
+    String? directionsGuide,
+  }) async {
+    await _supabase.from('locations').update({
+      'address_detail': addressDetail,
+      'directions_guide': directionsGuide,
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', locationId);
+  }
 }
