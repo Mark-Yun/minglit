@@ -1,11 +1,13 @@
 import 'package:app_partner/src/features/party/create/party_create_controller.dart';
 import 'package:app_partner/src/features/party/create/party_create_coordinator.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_capacity_input.dart';
+import 'package:app_partner/src/features/party/create/widgets/party_conditions_selector.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_contact_input.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_description_editor.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_image_picker.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_location_selector.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_section_title.dart';
+import 'package:app_partner/src/features/party/create/widgets/party_ticket_template_editor.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_verification_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
@@ -210,6 +212,13 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
               ),
               const SizedBox(height: MinglitSpacing.large),
 
+              const PartySectionTitle('입장 조건 (기본)'),
+              PartyConditionsSelector(
+                conditions: state.conditions,
+                onChanged: controller.updateConditions,
+              ),
+              const SizedBox(height: MinglitSpacing.large),
+
               const PartySectionTitle('문의 연락처'),
               if (partnerInfoAsync.isLoading)
                 Padding(
@@ -239,6 +248,14 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
                     context,
                   ).goToCreateVerification(partnerId);
                 },
+              ),
+              const SizedBox(height: MinglitSpacing.large),
+
+              const PartySectionTitle('기본 티켓 설정'),
+              PartyTicketTemplateEditor(
+                ticketTemplates: state.ticketTemplates,
+                onAdd: controller.addTicketTemplate,
+                onRemove: controller.removeTicketTemplate,
               ),
               const SizedBox(height: MinglitSpacing.xlarge),
 

@@ -14,6 +14,8 @@ abstract class PartyCreateState with _$PartyCreateState {
     @Default({}) Set<String> enabledContactMethods,
     @Default(AsyncValue.data(null)) AsyncValue<void> status,
     Location? selectedLocation,
+    @Default({}) Map<String, dynamic> conditions,
+    @Default([]) List<EventTicket> ticketTemplates,
     String? descriptionError,
   }) = _PartyCreateState;
 }
@@ -67,6 +69,21 @@ class PartyCreateController extends _$PartyCreateController {
 
   void updateLocation(Location? location) {
     state = state.copyWith(selectedLocation: location);
+  }
+
+  void updateConditions(Map<String, dynamic> newConditions) {
+    state = state.copyWith(conditions: newConditions);
+  }
+
+  void addTicketTemplate(EventTicket ticket) {
+    state = state.copyWith(
+      ticketTemplates: [...state.ticketTemplates, ticket],
+    );
+  }
+
+  void removeTicketTemplate(int index) {
+    final list = List<EventTicket>.from(state.ticketTemplates)..removeAt(index);
+    state = state.copyWith(ticketTemplates: list);
   }
 
   void toggleVerification(String id) {
@@ -148,6 +165,10 @@ class PartyCreateController extends _$PartyCreateController {
         throw Exception('최소 한 개의 문의 연락처를 선택해야 합니다.');
       }
 
+      if (state.ticketTemplates.isEmpty) {
+        throw Exception('최소 한 개의 티켓 템플릿을 생성해야 합니다.');
+      }
+
       final ops = description['ops'] as List?;
       if (ops == null ||
           ops.isEmpty ||
@@ -165,12 +186,13 @@ class PartyCreateController extends _$PartyCreateController {
       }
       final partnerId = myPartners.first.id;
 
-      final repository = ref.read(partyRepositoryProvider);
+      final partyRepo = ref.read(partyRepositoryProvider);
+      final locationRepo = ref.read(locationRepositoryProvider);
       String? imageUrl;
 
       // 2. Upload Image
       if (imageFile != null) {
-        imageUrl = await repository.uploadPartyImage(imageFile, partnerId);
+        imageUrl = await partyRepo.uploadPartyImage(imageFile, partnerId);
       }
 
       // 3. Prepare Contact Options
@@ -193,7 +215,6 @@ class PartyCreateController extends _$PartyCreateController {
       String? locationId;
       if (state.selectedLocation != null) {
         final loc = state.selectedLocation!;
-        final locationRepo = ref.read(locationRepositoryProvider);
         final newLocation = await locationRepo.createLocation(
           loc.copyWith(
             partnerId: partnerId,
@@ -214,13 +235,24 @@ class PartyCreateController extends _$PartyCreateController {
         minConfirmedCount: minConfirmedCount,
         maxParticipants: maxParticipants,
         contactOptions: contactOptions,
+        conditions: state.conditions,
         imageUrl: imageUrl,
         requiredVerificationIds: state.selectedVerificationIds,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
 
-      await repository.createParty(newParty);
+      final createdParty = await partyRepo.createParty(newParty);
+
+      // 6. Create Ticket Templates linked to Party
+      for (final template in state.ticketTemplates) {
+        await partyRepo.createTicket(
+          template.copyWith(
+            partyId: createdParty.id,
+            eventId: null,
+          ),
+        );
+      }
 
       // Refresh party list to show the new item
       ref.invalidate(partyListProvider);
