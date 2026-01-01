@@ -133,10 +133,19 @@ class _GenderChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return ChoiceChip(
-      label: Text(label),
+      label: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? Colors.white : null,
+          fontWeight: isSelected ? FontWeight.bold : null,
+        ),
+      ),
       selected: isSelected,
       onSelected: onSelected,
+      selectedColor: colorScheme.secondary,
       showCheckmark: false,
     );
   }
