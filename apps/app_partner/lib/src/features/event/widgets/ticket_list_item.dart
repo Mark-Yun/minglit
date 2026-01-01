@@ -1,4 +1,3 @@
-import 'package:app_partner/src/features/party/detail/widgets/add_ticket_card.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -178,7 +177,12 @@ class TicketListView extends StatelessWidget {
     if (tickets.isEmpty) {
       // Empty state with AddTicketCard if create action is available
       if (onCreatePressed != null) {
-        return AddTicketCard(onTap: onCreatePressed!);
+        return AddActionCard(
+              title: '새로운 티켓 만들기',
+              subtitle: '성별/나이 제한 등 판매 조건을 설정하세요.',
+              iconData: Icons.confirmation_number_outlined,
+              onTap: onCreatePressed!,
+            );
       }
       return _buildEmptyState(context);
     }
@@ -193,7 +197,12 @@ class TicketListView extends StatelessWidget {
         if (index == tickets.length) {
           return Padding(
             padding: const EdgeInsets.only(top: MinglitSpacing.xxsmall),
-            child: AddTicketCard(onTap: onCreatePressed!),
+            child: AddActionCard(
+              title: '새로운 티켓 만들기',
+              subtitle: '성별/나이 제한 등 판매 조건을 설정하세요.',
+              iconData: Icons.confirmation_number_outlined,
+              onTap: onCreatePressed!,
+            ),
           );
         }
         final ticket = tickets[index];

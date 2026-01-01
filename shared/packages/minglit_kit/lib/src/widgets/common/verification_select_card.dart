@@ -6,13 +6,15 @@ class VerificationSelectCard extends StatelessWidget {
   const VerificationSelectCard({
     required this.verification,
     required this.isSelected,
-    required this.onTap,
+    this.onTap,
+    this.isReadOnly = false,
     super.key,
   });
 
   final Verification verification;
   final bool isSelected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final bool isReadOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +30,7 @@ class VerificationSelectCard extends StatelessWidget {
         isSelected: isSelected,
       ),
       child: InkWell(
-        onTap: onTap,
+        onTap: isReadOnly ? null : onTap,
         borderRadius: BorderRadius.circular(
           MinglitRadius.card - 2,
         ), // Adjust for border
@@ -90,28 +92,29 @@ class VerificationSelectCard extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(width: MinglitSpacing.small),
-
-              // Selection Indicator (Aligned to top-right)
-              Padding(
-                padding: const EdgeInsets.only(top: MinglitSpacing.xsmall),
-                child: AnimatedSwitcher(
-                  duration: MinglitAnimation.fast,
-                  child: isSelected
-                      ? Icon(
-                          Icons.check_circle,
-                          key: const ValueKey('checked'),
-                          color: accentColor,
-                          size: MinglitIconSize.large,
-                        )
-                      : Icon(
-                          Icons.radio_button_unchecked,
-                          key: const ValueKey('unchecked'),
-                          color: colorScheme.outlineVariant,
-                          size: MinglitIconSize.large,
-                        ),
+              if (!isReadOnly) ...[
+                const SizedBox(width: MinglitSpacing.small),
+                // Selection Indicator (Aligned to top-right)
+                Padding(
+                  padding: const EdgeInsets.only(top: MinglitSpacing.xsmall),
+                  child: AnimatedSwitcher(
+                    duration: MinglitAnimation.fast,
+                    child: isSelected
+                        ? Icon(
+                            Icons.check_circle,
+                            key: const ValueKey('checked'),
+                            color: accentColor,
+                            size: MinglitIconSize.large,
+                          )
+                        : Icon(
+                            Icons.radio_button_unchecked,
+                            key: const ValueKey('unchecked'),
+                            color: colorScheme.outlineVariant,
+                            size: MinglitIconSize.large,
+                          ),
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),

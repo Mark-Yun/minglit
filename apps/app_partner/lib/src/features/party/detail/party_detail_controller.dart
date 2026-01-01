@@ -27,3 +27,12 @@ Future<Location?> locationDetail(Ref ref, String? locationId) async {
   final repo = ref.watch(locationRepositoryProvider);
   return repo.getLocationById(locationId);
 }
+
+@riverpod
+Future<List<Verification>> partyVerifications(Ref ref, String partyId) async {
+  final party = await ref.watch(partyDetailProvider(partyId).future);
+  if (party.requiredVerificationIds.isEmpty) return [];
+
+  final repo = ref.watch(verificationRepositoryProvider);
+  return repo.getVerificationsByIds(party.requiredVerificationIds);
+}

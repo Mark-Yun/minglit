@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
+import 'package:app_partner/src/features/search/location/location_search_page.dart';
 import 'package:app_partner/src/routing/app_router.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +23,15 @@ class PartyDetailCoordinator {
   void goToEditParty(String partyId) {
     // TODO(mark): Implement Party Edit Route
     debugPrint('Coordinator: Edit Party $partyId');
+  }
+
+  Future<Location?> goToLocationSearch(BuildContext context) async {
+    return Navigator.of(context).push<Location>(
+      MaterialPageRoute(
+        builder: (_) => const LocationSearchPage(),
+        fullscreenDialog: true,
+      ),
+    );
   }
 
   Future<void> activateParty(String partyId, BuildContext context) async {

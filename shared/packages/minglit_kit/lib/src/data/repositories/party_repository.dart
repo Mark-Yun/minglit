@@ -144,6 +144,14 @@ class PartyRepository {
         .eq('id', partyId);
   }
 
+  /// Updates the location of a party.
+  Future<void> updatePartyLocation(String partyId, String locationId) async {
+    await _supabase
+        .from('parties')
+        .update({'location_id': locationId})
+        .eq('id', partyId);
+  }
+
   /// Creates a new event for a party.
   Future<Event> createEvent(Event event) async {
     final json = event.toJson()

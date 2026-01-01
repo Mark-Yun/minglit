@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:app_partner/src/features/event/widgets/ticket_list_item.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
-import 'package:app_partner/src/features/party/detail/widgets/add_event_card.dart';
 import 'package:app_partner/src/features/party/detail/widgets/event_list_item.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart' hide partyEventsProvider;
@@ -135,21 +134,25 @@ class PartyDetailPage extends ConsumerWidget {
                               '${party.minConfirmedCount}'
                               '~${party.maxParticipants}명',
                         ),
-                        const SizedBox(width: MinglitSpacing.small),
-                        _InfoChip(
-                          icon: Icons.verified_user_outlined,
-                          label:
-                              '${party.requiredVerificationIds.length}개 인증 필수',
-                        ),
                       ],
                     ),
+                    const SizedBox(height: MinglitSpacing.large),
+                    Text(
+                      '참가 자격 (인증)',
+                      style: theme.textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: MinglitSpacing.small),
+                    _VerificationSection(partyId: party.id),
                     const SizedBox(height: MinglitSpacing.large),
                     Text(
                       '장소 정보',
                       style: theme.textTheme.titleMedium,
                     ),
                     const SizedBox(height: MinglitSpacing.small),
-                    _LocationSection(locationId: party.locationId),
+                    _LocationSection(
+                      locationId: party.locationId,
+                      partyId: party.id,
+                    ),
                     const SizedBox(height: MinglitSpacing.large),
                     Text(
                       '개설된 회차 (이벤트)',
@@ -184,7 +187,9 @@ class PartyDetailPage extends ConsumerWidget {
                         padding: const EdgeInsets.only(
                           top: MinglitSpacing.xxsmall,
                         ),
-                        child: AddEventCard(
+                        child: AddActionCard(
+                          title: '새로운 회차 개설하기',
+                          subtitle: '새로운 날짜와 시간에 파티를 열어보세요.',
                           onTap: () => coordinator.goToCreateEvent(party.id),
                         ),
                       );
@@ -310,86 +315,125 @@ class _InfoChip extends StatelessWidget {
 }
 
 class _LocationSection extends ConsumerWidget {
-  const _LocationSection({required this.locationId});
+  const _LocationSection({required this.locationId, required this.partyId});
+
   final String? locationId;
+
+  final String partyId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (locationId == null) {
-      return const Card(
+      return Card(
         child: Padding(
-          padding: EdgeInsets.all(MinglitSpacing.medium),
-          child: Text('지정된 장소 정보가 없습니다.'),
+          padding: const EdgeInsets.all(MinglitSpacing.medium),
+
+          child: Column(
+            children: [
+              const Text('지정된 장소 정보가 없습니다.'),
+
+              const SizedBox(height: MinglitSpacing.medium),
+
+              _buildEditButton(context, ref),
+            ],
+          ),
         ),
       );
     }
 
     final locationAsync = ref.watch(locationDetailProvider(locationId));
+
     final theme = Theme.of(context);
+
     final colorScheme = theme.colorScheme;
 
     return locationAsync.when(
       data: (loc) {
         if (loc == null) return const Text('장소 정보를 불러올 수 없습니다.');
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+
           children: [
             Container(
               height: 180,
+
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(MinglitRadius.card),
+
                 border: Border.all(color: colorScheme.outlineVariant),
               ),
+
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(MinglitRadius.card),
+
                 child: LocationMap(
                   latitude: loc.latitude,
+
                   longitude: loc.longitude,
                 ),
               ),
             ),
+
             const SizedBox(height: MinglitSpacing.small),
+
             Text(
               loc.name,
+
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
+
             Builder(
               builder: (context) {
-                final detail =
-                    loc.addressDetail != null ? ' ${loc.addressDetail}' : '';
+                final detail = loc.addressDetail != null
+                    ? ' ${loc.addressDetail}'
+                    : '';
+
                 return Text(
                   '${loc.address}$detail',
+
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
                 );
               },
             ),
+
             if (loc.directionsGuide != null && loc.directionsGuide!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: MinglitSpacing.xsmall),
+
                 child: Container(
                   padding: const EdgeInsets.all(MinglitSpacing.small),
+
                   decoration: BoxDecoration(
                     color: colorScheme.surfaceContainerHighest.withValues(
                       alpha: 0.3,
                     ),
+
                     borderRadius: BorderRadius.circular(MinglitRadius.small),
                   ),
+
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
+
                     children: [
                       Icon(
                         Icons.directions,
+
                         size: 16,
+
                         color: colorScheme.primary,
                       ),
+
                       const SizedBox(width: 8),
+
                       Expanded(
                         child: Text(
                           loc.directionsGuide!,
+
                           style: theme.textTheme.bodySmall,
                         ),
                       ),
@@ -397,11 +441,125 @@ class _LocationSection extends ConsumerWidget {
                   ),
                 ),
               ),
+
+            const SizedBox(height: MinglitSpacing.small),
+
+            _buildEditButton(context, ref),
           ],
         );
       },
+
       loading: () => const MinglitSkeleton(height: 180),
+
       error: (e, s) => Text('장소 로드 실패: $e'),
+    );
+  }
+
+  Widget _buildEditButton(BuildContext context, WidgetRef ref) {
+    return AddActionCard(
+      title: '장소 수정하기',
+
+      iconData: Icons.edit_location_alt_outlined,
+
+      onTap: () async {
+        final coordinator = ref.read(partyDetailCoordinatorProvider);
+
+        final newLocation = await coordinator.goToLocationSearch(context);
+
+        if (newLocation != null) {
+          final loading = ref.read(globalLoadingControllerProvider.notifier)
+            ..show();
+
+          try {
+            // 1. Get Party Info (for partnerId)
+
+            final party = await ref.read(partyDetailProvider(partyId).future);
+
+            // 2. Create New Location
+
+            final locationRepo = ref.read(locationRepositoryProvider);
+
+            final savedLocation = await locationRepo.createLocation(
+              newLocation.copyWith(partnerId: party.partnerId),
+            );
+
+            // 3. Update Party
+
+            final partyRepo = ref.read(partyRepositoryProvider);
+
+            await partyRepo.updatePartyLocation(partyId, savedLocation.id);
+
+            // 4. Refresh
+
+            ref.invalidate(partyDetailProvider(partyId));
+
+            // locationDetailProvider will be refreshed automatically
+
+            // when party reloads with new locationId
+
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('장소가 수정되었습니다.')),
+              );
+            }
+          } on Exception catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('장소 수정 실패: $e')),
+              );
+            }
+          } finally {
+            loading.hide();
+          }
+        }
+      },
+    );
+  }
+}
+
+class _VerificationSection extends ConsumerWidget {
+  const _VerificationSection({required this.partyId});
+  final String partyId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final verificationsAsync = ref.watch(partyVerificationsProvider(partyId));
+
+    return verificationsAsync.when(
+      data: (list) {
+        if (list.isEmpty) {
+          return const Card(
+            child: Padding(
+              padding: EdgeInsets.all(MinglitSpacing.medium),
+              child: Text('설정된 참가 자격이 없습니다 (누구나 참여 가능)'),
+            ),
+          );
+        }
+        return Column(
+          children: [
+            ...list.map(
+              (v) => VerificationSelectCard(
+                verification: v,
+                isSelected: false, // Don't highlight in read-only mode
+                isReadOnly: true,
+              ),
+            ),
+            const SizedBox(height: MinglitSpacing.small),
+            AddActionCard(
+              title: '참가 자격 수정하기',
+              iconData: Icons.edit_outlined,
+              onTap: () {
+                // TODO(mark): Navigate to Edit Party (Verification Step)
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('참가 자격 수정 기능 준비 중입니다.')),
+                );
+              },
+            ),
+          ],
+        );
+      },
+      loading: () => const MinglitSkeleton(height: 80),
+      error: (e, s) => Text('인증 정보 로드 실패: $e'),
     );
   }
 }

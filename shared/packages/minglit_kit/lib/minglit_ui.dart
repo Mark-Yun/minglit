@@ -14,6 +14,7 @@ export 'src/ui/widgets/map/location_map.dart'
 export 'src/utils/dev_screen_list.dart';
 export 'src/utils/splash_screen.dart';
 export 'src/widgets/auth/login_screen.dart';
+export 'src/widgets/common/add_action_card.dart';
 export 'src/widgets/common/minglit_image.dart';
 export 'src/widgets/common/minglit_skeleton.dart';
 export 'src/widgets/common/verification_select_card.dart';

@@ -52,6 +52,9 @@ abstract class VerificationRepository {
   /// Fetches a specific verification by ID.
   Future<Verification?> getVerificationById(String id);
 
+  /// Fetches a list of verifications by their IDs.
+  Future<List<Verification>> getVerificationsByIds(List<String> ids);
+
   // --- User Flow (Requirements & Status) ---
 
   /// User 특정 파트너가 요구하는 인증들의 상태를 일괄 조회
@@ -184,6 +187,17 @@ class SupabaseVerificationRepository implements VerificationRepository {
 
     if (data == null) return null;
     return Verification.fromJson(data);
+  }
+
+  @override
+  Future<List<Verification>> getVerificationsByIds(List<String> ids) async {
+    if (ids.isEmpty) return [];
+    final data =
+        await _supabase.from('verifications').select().inFilter('id', ids);
+
+    return (data as List)
+        .map((e) => Verification.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override

@@ -303,3 +303,81 @@ final class LocationDetailFamily extends $Family
   @override
   String toString() => r'locationDetailProvider';
 }
+
+@ProviderFor(partyVerifications)
+const partyVerificationsProvider = PartyVerificationsFamily._();
+
+final class PartyVerificationsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Verification>>,
+          List<Verification>,
+          FutureOr<List<Verification>>
+        >
+    with
+        $FutureModifier<List<Verification>>,
+        $FutureProvider<List<Verification>> {
+  const PartyVerificationsProvider._({
+    required PartyVerificationsFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'partyVerificationsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$partyVerificationsHash();
+
+  @override
+  String toString() {
+    return r'partyVerificationsProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<List<Verification>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<Verification>> create(Ref ref) {
+    final argument = this.argument as String;
+    return partyVerifications(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is PartyVerificationsProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$partyVerificationsHash() =>
+    r'f21f00f8dcbb7b1f30752fd5c15c46d9878e7c58';
+
+final class PartyVerificationsFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<List<Verification>>, String> {
+  const PartyVerificationsFamily._()
+    : super(
+        retry: null,
+        name: r'partyVerificationsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  PartyVerificationsProvider call(String partyId) =>
+      PartyVerificationsProvider._(argument: partyId, from: this);
+
+  @override
+  String toString() => r'partyVerificationsProvider';
+}

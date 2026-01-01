@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-class AddTicketCard extends StatelessWidget {
-  const AddTicketCard({
+/// A reusable card-style button for add/create actions.
+/// Uses the tertiary (mint/lime) color scheme.
+class AddActionCard extends StatelessWidget {
+  const AddActionCard({
+    required this.title,
     required this.onTap,
+    this.subtitle,
+    this.iconData = Icons.add_circle_outline,
     super.key,
   });
 
+  final String title;
+  final String? subtitle;
   final VoidCallback onTap;
+  final IconData iconData;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +36,7 @@ class AddTicketCard extends StatelessWidget {
           child: Row(
             children: [
               Icon(
-                Icons.confirmation_number_outlined,
+                iconData,
                 color: colorScheme.tertiary,
                 size: MinglitIconSize.small,
               ),
@@ -39,16 +47,18 @@ class AddTicketCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      '새로운 티켓 만들기',
+                      title,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: MinglitSpacing.xxsmall),
-                    Text(
-                      '성별/나이 제한 등 판매 조건을 설정하세요.',
-                      style: MinglitTextStyles.infoText(context),
-                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: MinglitSpacing.xxsmall),
+                      Text(
+                        subtitle!,
+                        style: MinglitTextStyles.infoText(context),
+                      ),
+                    ],
                   ],
                 ),
               ),
