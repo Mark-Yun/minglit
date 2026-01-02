@@ -1,0 +1,6 @@
+{
+  "@@locale": "ko",
+  "common_button_confirm": "확인",
+  "common_button_cancel": "취소",
+  "common_error_system": "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
+}
