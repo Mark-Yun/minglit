@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_partner/src/features/event/widgets/ticket_list_item.dart';
+import 'package:app_partner/src/features/party/create/ticket_template_create_page.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
 import 'package:app_partner/src/features/party/detail/widgets/event_list_item.dart';
@@ -237,20 +238,42 @@ class PartyDetailPage extends ConsumerWidget {
                 sliver: SliverToBoxAdapter(
                   child: TicketListView(
                     tickets: tickets,
-                    onCreatePressed: () {
-                      if (eventsAsync.value?.isEmpty ?? true) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('티켓을 만들기 전, 먼저 회차(이벤트)를 개설해주세요.'),
-                          ),
-                        );
-                        return;
+                    onCreatePressed: () async {
+                      final newTicket =
+                          await Navigator.of(context).push<Ticket>(
+                            MaterialPageRoute(
+                              builder: (_) => const TicketTemplateCreatePage(),
+                            ),
+                          );
+
+                      if (newTicket != null) {
+                        final loading =
+                            ref.read(globalLoadingControllerProvider.notifier)
+                              ..show();
+                        try {
+                          final repo = ref.read(ticketRepositoryProvider);
+                          await repo.createTicket(
+                            newTicket.copyWith(partyId: partyId, eventId: null),
+                          );
+                          ref.invalidate(partyTicketsProvider(partyId));
+
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('티켓 템플릿이 추가되었습니다.'),
+                              ),
+                            );
+                          }
+                        } on Exception catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('티켓 추가 실패: $e')),
+                            );
+                          }
+                        } finally {
+                          loading.hide();
+                        }
                       }
-                      final firstEvent = eventsAsync.value!.first;
-                      coordinator.goToCreateTicket(
-                        partyId,
-                        firstEvent.id,
-                      );
                     },
                     onTicketTap: (ticket) {
                       // Navigate to appropriate detail/edit if needed
