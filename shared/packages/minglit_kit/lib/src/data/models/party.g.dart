@@ -53,7 +53,7 @@ _Party _$PartyFromJson(Map<String, dynamic> json) => _Party(
   description: json['description'] as Map<String, dynamic>?,
   imageUrl: json['image_url'] as String?,
   contactOptions: json['contact_options'] as Map<String, dynamic>? ?? const {},
-  conditions: json['conditions'] as Map<String, dynamic>? ?? const {},
+  conditions: json['conditions'] as List<dynamic>? ?? const [],
   requiredVerificationIds:
       (json['required_verification_ids'] as List<dynamic>?)
           ?.map((e) => e as String)

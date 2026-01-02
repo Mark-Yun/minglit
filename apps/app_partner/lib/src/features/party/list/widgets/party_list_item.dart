@@ -114,23 +114,23 @@ class PartyListItem extends StatelessWidget {
                                     context.l10n.partyList_message_noLocation,
                               ),
 
-                            // Participants Chip
+                        // Participants Chip
+                        _InfoChip(
+                          icon: Icons.people,
+                          label: context.l10n.partyList_chip_maxParticipants(
+                            party.maxParticipants,
+                          ),
+                        ),
+
+                        // Condition Chips (Gender/Age)
+                        for (final condition in party.conditionSummaries)
+                          if (condition != '조건 없음')
                             _InfoChip(
-                              icon: Icons.people,
-                              label: context.l10n
-                                  .partyList_chip_maxParticipants(
-                                    party.maxParticipants,
-                                  ),
+                              icon: Icons.assignment,
+                              label: condition,
                             ),
 
-                            // Condition Chip (Gender/Age)
-                            if (party.summaryCondition != '조건 없음')
-                              _InfoChip(
-                                icon: Icons.assignment,
-                                label: party.summaryCondition,
-                              ),
-
-                            // Verification Chip
+                        // Verification Chip
                             if (party.requiredVerificationIds.isNotEmpty)
                               _InfoChip(
                                 icon: Icons.verified_user,

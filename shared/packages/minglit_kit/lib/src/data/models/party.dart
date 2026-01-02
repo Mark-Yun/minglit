@@ -50,7 +50,7 @@ abstract class Party with _$Party {
     @JsonKey(name: 'contact_options')
     @Default({})
     Map<String, dynamic> contactOptions,
-    @Default({}) Map<String, dynamic> conditions, // JSONB
+    @Default([]) List<dynamic> conditions, // JSONB Array of condition sets
     @JsonKey(name: 'required_verification_ids')
     @Default([])
     List<String> requiredVerificationIds,
@@ -80,36 +80,55 @@ extension PartyX on Party {
   bool get isClosed => status == 'closed';
   bool get isDraft => status == 'draft';
 
-  String get summaryCondition {
-    final gender = conditions['gender'];
-    final ageData = conditions['age_range'];
+  List<String> get conditionSummaries {
+    if (conditions.isEmpty) return ['조건 없음'];
 
-    String genderText;
-    if (gender == 'male') {
-      genderText = '남성';
-    } else if (gender == 'female') {
-      genderText = '여성';
-    } else {
-      genderText = '성별 무관';
-    }
+    final summaries = conditions.map((cond) {
+      if (cond is! Map) return '';
 
-    String ageText = '나이 무관';
-    if (ageData is Map) {
-      final min = ageData['min'];
-      final max = ageData['max'];
-      if (min != null && max != null) {
-        ageText = '$min~$max년생';
-      } else if (min != null) {
-        ageText = '$min년생 이후';
-      } else if (max != null) {
-        ageText = '$max년생 이전';
+      final gender = cond['gender'];
+      final ageData = cond['age_range'];
+      final verifIds = cond['required_verification_ids'] as List?;
+
+      var genderText = '성별 무관';
+      if (gender == 'male') {
+        genderText = '남성';
+      } else if (gender == 'female') {
+        genderText = '여성';
       }
-    }
 
-    if (genderText == '성별 무관' && ageText == '나이 무관') return '조건 없음';
-    if (ageText == '나이 무관') return genderText;
-    if (genderText == '성별 무관') return ageText;
+      var ageText = '나이 무관';
+      if (ageData is Map) {
+        final min = ageData['min'];
+        final max = ageData['max'];
+        if (min != null && max != null) {
+          ageText = '$min~$max년생';
+        } else if (min != null) {
+          ageText = '$min년생 이후';
+        } else if (max != null) {
+          ageText = '$max년생 이전';
+        }
+      }
 
-    return '$genderText · $ageText';
+      String base;
+      if (genderText == '성별 무관' && ageText == '나이 무관') {
+        base = '전체';
+      } else if (ageText == '나이 무관') {
+        base = genderText;
+      } else if (genderText == '성별 무관') {
+        base = ageText;
+      } else {
+        base = '$genderText($ageText)';
+      }
+
+      // 인증 정보 추가
+      if (verifIds != null && verifIds.isNotEmpty) {
+        return '$base +🛡️${verifIds.length}';
+      }
+      return base;
+    }).where((s) => s.isNotEmpty).toList();
+
+    if (summaries.isEmpty) return ['조건 없음'];
+    return summaries;
   }
 }

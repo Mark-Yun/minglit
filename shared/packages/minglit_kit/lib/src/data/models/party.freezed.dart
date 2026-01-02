@@ -325,7 +325,7 @@ as double,
 mixin _$Party {
 
  String get id;@JsonKey(name: 'partner_id') String get partnerId; String get title;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'updated_at') DateTime get updatedAt;@JsonKey(name: 'location_id') String? get locationId;@JsonKey(includeToJson: false) Location? get location; Map<String, dynamic>? get description;// Quill Delta JSON
-@JsonKey(name: 'image_url') String? get imageUrl;@JsonKey(name: 'contact_options') Map<String, dynamic> get contactOptions; Map<String, dynamic> get conditions;// JSONB
+@JsonKey(name: 'image_url') String? get imageUrl;@JsonKey(name: 'contact_options') Map<String, dynamic> get contactOptions; List<dynamic> get conditions;// JSONB Array of condition sets
 @JsonKey(name: 'required_verification_ids') List<String> get requiredVerificationIds;@JsonKey(name: 'min_confirmed_count') int get minConfirmedCount;@JsonKey(name: 'max_participants') int get maxParticipants; String get status;
 /// Create a copy of Party
 /// with the given fields replaced by the non-null parameter values.
@@ -359,7 +359,7 @@ abstract mixin class $PartyCopyWith<$Res>  {
   factory $PartyCopyWith(Party value, $Res Function(Party) _then) = _$PartyCopyWithImpl;
 @useResult
 $Res call({
- String id,@JsonKey(name: 'partner_id') String partnerId, String title,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'location_id') String? locationId,@JsonKey(includeToJson: false) Location? location, Map<String, dynamic>? description,@JsonKey(name: 'image_url') String? imageUrl,@JsonKey(name: 'contact_options') Map<String, dynamic> contactOptions, Map<String, dynamic> conditions,@JsonKey(name: 'required_verification_ids') List<String> requiredVerificationIds,@JsonKey(name: 'min_confirmed_count') int minConfirmedCount,@JsonKey(name: 'max_participants') int maxParticipants, String status
+ String id,@JsonKey(name: 'partner_id') String partnerId, String title,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'location_id') String? locationId,@JsonKey(includeToJson: false) Location? location, Map<String, dynamic>? description,@JsonKey(name: 'image_url') String? imageUrl,@JsonKey(name: 'contact_options') Map<String, dynamic> contactOptions, List<dynamic> conditions,@JsonKey(name: 'required_verification_ids') List<String> requiredVerificationIds,@JsonKey(name: 'min_confirmed_count') int minConfirmedCount,@JsonKey(name: 'max_participants') int maxParticipants, String status
 });
 
 
@@ -389,7 +389,7 @@ as Location?,description: freezed == description ? _self.description : descripti
 as Map<String, dynamic>?,imageUrl: freezed == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
 as String?,contactOptions: null == contactOptions ? _self.contactOptions : contactOptions // ignore: cast_nullable_to_non_nullable
 as Map<String, dynamic>,conditions: null == conditions ? _self.conditions : conditions // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>,requiredVerificationIds: null == requiredVerificationIds ? _self.requiredVerificationIds : requiredVerificationIds // ignore: cast_nullable_to_non_nullable
+as List<dynamic>,requiredVerificationIds: null == requiredVerificationIds ? _self.requiredVerificationIds : requiredVerificationIds // ignore: cast_nullable_to_non_nullable
 as List<String>,minConfirmedCount: null == minConfirmedCount ? _self.minConfirmedCount : minConfirmedCount // ignore: cast_nullable_to_non_nullable
 as int,maxParticipants: null == maxParticipants ? _self.maxParticipants : maxParticipants // ignore: cast_nullable_to_non_nullable
 as int,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
@@ -490,7 +490,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'partner_id')  String partnerId,  String title, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'location_id')  String? locationId, @JsonKey(includeToJson: false)  Location? location,  Map<String, dynamic>? description, @JsonKey(name: 'image_url')  String? imageUrl, @JsonKey(name: 'contact_options')  Map<String, dynamic> contactOptions,  Map<String, dynamic> conditions, @JsonKey(name: 'required_verification_ids')  List<String> requiredVerificationIds, @JsonKey(name: 'min_confirmed_count')  int minConfirmedCount, @JsonKey(name: 'max_participants')  int maxParticipants,  String status)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'partner_id')  String partnerId,  String title, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'location_id')  String? locationId, @JsonKey(includeToJson: false)  Location? location,  Map<String, dynamic>? description, @JsonKey(name: 'image_url')  String? imageUrl, @JsonKey(name: 'contact_options')  Map<String, dynamic> contactOptions,  List<dynamic> conditions, @JsonKey(name: 'required_verification_ids')  List<String> requiredVerificationIds, @JsonKey(name: 'min_confirmed_count')  int minConfirmedCount, @JsonKey(name: 'max_participants')  int maxParticipants,  String status)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Party() when $default != null:
 return $default(_that.id,_that.partnerId,_that.title,_that.createdAt,_that.updatedAt,_that.locationId,_that.location,_that.description,_that.imageUrl,_that.contactOptions,_that.conditions,_that.requiredVerificationIds,_that.minConfirmedCount,_that.maxParticipants,_that.status);case _:
@@ -511,7 +511,7 @@ return $default(_that.id,_that.partnerId,_that.title,_that.createdAt,_that.updat
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'partner_id')  String partnerId,  String title, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'location_id')  String? locationId, @JsonKey(includeToJson: false)  Location? location,  Map<String, dynamic>? description, @JsonKey(name: 'image_url')  String? imageUrl, @JsonKey(name: 'contact_options')  Map<String, dynamic> contactOptions,  Map<String, dynamic> conditions, @JsonKey(name: 'required_verification_ids')  List<String> requiredVerificationIds, @JsonKey(name: 'min_confirmed_count')  int minConfirmedCount, @JsonKey(name: 'max_participants')  int maxParticipants,  String status)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'partner_id')  String partnerId,  String title, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'location_id')  String? locationId, @JsonKey(includeToJson: false)  Location? location,  Map<String, dynamic>? description, @JsonKey(name: 'image_url')  String? imageUrl, @JsonKey(name: 'contact_options')  Map<String, dynamic> contactOptions,  List<dynamic> conditions, @JsonKey(name: 'required_verification_ids')  List<String> requiredVerificationIds, @JsonKey(name: 'min_confirmed_count')  int minConfirmedCount, @JsonKey(name: 'max_participants')  int maxParticipants,  String status)  $default,) {final _that = this;
 switch (_that) {
 case _Party():
 return $default(_that.id,_that.partnerId,_that.title,_that.createdAt,_that.updatedAt,_that.locationId,_that.location,_that.description,_that.imageUrl,_that.contactOptions,_that.conditions,_that.requiredVerificationIds,_that.minConfirmedCount,_that.maxParticipants,_that.status);case _:
@@ -531,7 +531,7 @@ return $default(_that.id,_that.partnerId,_that.title,_that.createdAt,_that.updat
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'partner_id')  String partnerId,  String title, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'location_id')  String? locationId, @JsonKey(includeToJson: false)  Location? location,  Map<String, dynamic>? description, @JsonKey(name: 'image_url')  String? imageUrl, @JsonKey(name: 'contact_options')  Map<String, dynamic> contactOptions,  Map<String, dynamic> conditions, @JsonKey(name: 'required_verification_ids')  List<String> requiredVerificationIds, @JsonKey(name: 'min_confirmed_count')  int minConfirmedCount, @JsonKey(name: 'max_participants')  int maxParticipants,  String status)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'partner_id')  String partnerId,  String title, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'location_id')  String? locationId, @JsonKey(includeToJson: false)  Location? location,  Map<String, dynamic>? description, @JsonKey(name: 'image_url')  String? imageUrl, @JsonKey(name: 'contact_options')  Map<String, dynamic> contactOptions,  List<dynamic> conditions, @JsonKey(name: 'required_verification_ids')  List<String> requiredVerificationIds, @JsonKey(name: 'min_confirmed_count')  int minConfirmedCount, @JsonKey(name: 'max_participants')  int maxParticipants,  String status)?  $default,) {final _that = this;
 switch (_that) {
 case _Party() when $default != null:
 return $default(_that.id,_that.partnerId,_that.title,_that.createdAt,_that.updatedAt,_that.locationId,_that.location,_that.description,_that.imageUrl,_that.contactOptions,_that.conditions,_that.requiredVerificationIds,_that.minConfirmedCount,_that.maxParticipants,_that.status);case _:
@@ -546,7 +546,7 @@ return $default(_that.id,_that.partnerId,_that.title,_that.createdAt,_that.updat
 @JsonSerializable()
 
 class _Party implements Party {
-  const _Party({required this.id, @JsonKey(name: 'partner_id') required this.partnerId, required this.title, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'updated_at') required this.updatedAt, @JsonKey(name: 'location_id') this.locationId, @JsonKey(includeToJson: false) this.location, final  Map<String, dynamic>? description, @JsonKey(name: 'image_url') this.imageUrl, @JsonKey(name: 'contact_options') final  Map<String, dynamic> contactOptions = const {}, final  Map<String, dynamic> conditions = const {}, @JsonKey(name: 'required_verification_ids') final  List<String> requiredVerificationIds = const [], @JsonKey(name: 'min_confirmed_count') this.minConfirmedCount = 0, @JsonKey(name: 'max_participants') this.maxParticipants = 20, this.status = 'active'}): _description = description,_contactOptions = contactOptions,_conditions = conditions,_requiredVerificationIds = requiredVerificationIds;
+  const _Party({required this.id, @JsonKey(name: 'partner_id') required this.partnerId, required this.title, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'updated_at') required this.updatedAt, @JsonKey(name: 'location_id') this.locationId, @JsonKey(includeToJson: false) this.location, final  Map<String, dynamic>? description, @JsonKey(name: 'image_url') this.imageUrl, @JsonKey(name: 'contact_options') final  Map<String, dynamic> contactOptions = const {}, final  List<dynamic> conditions = const [], @JsonKey(name: 'required_verification_ids') final  List<String> requiredVerificationIds = const [], @JsonKey(name: 'min_confirmed_count') this.minConfirmedCount = 0, @JsonKey(name: 'max_participants') this.maxParticipants = 20, this.status = 'active'}): _description = description,_contactOptions = contactOptions,_conditions = conditions,_requiredVerificationIds = requiredVerificationIds;
   factory _Party.fromJson(Map<String, dynamic> json) => _$PartyFromJson(json);
 
 @override final  String id;
@@ -574,16 +574,16 @@ class _Party implements Party {
   return EqualUnmodifiableMapView(_contactOptions);
 }
 
- final  Map<String, dynamic> _conditions;
-@override@JsonKey() Map<String, dynamic> get conditions {
-  if (_conditions is EqualUnmodifiableMapView) return _conditions;
+ final  List<dynamic> _conditions;
+@override@JsonKey() List<dynamic> get conditions {
+  if (_conditions is EqualUnmodifiableListView) return _conditions;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(_conditions);
+  return EqualUnmodifiableListView(_conditions);
 }
 
-// JSONB
+// JSONB Array of condition sets
  final  List<String> _requiredVerificationIds;
-// JSONB
+// JSONB Array of condition sets
 @override@JsonKey(name: 'required_verification_ids') List<String> get requiredVerificationIds {
   if (_requiredVerificationIds is EqualUnmodifiableListView) return _requiredVerificationIds;
   // ignore: implicit_dynamic_type
@@ -627,7 +627,7 @@ abstract mixin class _$PartyCopyWith<$Res> implements $PartyCopyWith<$Res> {
   factory _$PartyCopyWith(_Party value, $Res Function(_Party) _then) = __$PartyCopyWithImpl;
 @override @useResult
 $Res call({
- String id,@JsonKey(name: 'partner_id') String partnerId, String title,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'location_id') String? locationId,@JsonKey(includeToJson: false) Location? location, Map<String, dynamic>? description,@JsonKey(name: 'image_url') String? imageUrl,@JsonKey(name: 'contact_options') Map<String, dynamic> contactOptions, Map<String, dynamic> conditions,@JsonKey(name: 'required_verification_ids') List<String> requiredVerificationIds,@JsonKey(name: 'min_confirmed_count') int minConfirmedCount,@JsonKey(name: 'max_participants') int maxParticipants, String status
+ String id,@JsonKey(name: 'partner_id') String partnerId, String title,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'location_id') String? locationId,@JsonKey(includeToJson: false) Location? location, Map<String, dynamic>? description,@JsonKey(name: 'image_url') String? imageUrl,@JsonKey(name: 'contact_options') Map<String, dynamic> contactOptions, List<dynamic> conditions,@JsonKey(name: 'required_verification_ids') List<String> requiredVerificationIds,@JsonKey(name: 'min_confirmed_count') int minConfirmedCount,@JsonKey(name: 'max_participants') int maxParticipants, String status
 });
 
 
@@ -657,7 +657,7 @@ as Location?,description: freezed == description ? _self._description : descript
 as Map<String, dynamic>?,imageUrl: freezed == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
 as String?,contactOptions: null == contactOptions ? _self._contactOptions : contactOptions // ignore: cast_nullable_to_non_nullable
 as Map<String, dynamic>,conditions: null == conditions ? _self._conditions : conditions // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>,requiredVerificationIds: null == requiredVerificationIds ? _self._requiredVerificationIds : requiredVerificationIds // ignore: cast_nullable_to_non_nullable
+as List<dynamic>,requiredVerificationIds: null == requiredVerificationIds ? _self._requiredVerificationIds : requiredVerificationIds // ignore: cast_nullable_to_non_nullable
 as List<String>,minConfirmedCount: null == minConfirmedCount ? _self.minConfirmedCount : minConfirmedCount // ignore: cast_nullable_to_non_nullable
 as int,maxParticipants: null == maxParticipants ? _self.maxParticipants : maxParticipants // ignore: cast_nullable_to_non_nullable
 as int,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable

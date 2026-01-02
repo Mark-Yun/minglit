@@ -34,7 +34,7 @@ final class LocationSearchControllerProvider
 }
 
 String _$locationSearchControllerHash() =>
-    r'01fe09ba8149eba5f8e14b8208b799220114e720';
+    r'e787fdd93fe8ee5ef3d61f2e0e8097d6b9fe77d9';
 
 abstract class _$LocationSearchController
     extends $AsyncNotifier<List<Location>> {

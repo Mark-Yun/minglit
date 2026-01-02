@@ -208,7 +208,7 @@ final class PartyTicketsProvider
   }
 }
 
-String _$partyTicketsHash() => r'fb7e0af12e9b64b82eb7930eaf1d64701859007e';
+String _$partyTicketsHash() => r'cca5bb8fdbe5f8126efaa453f3bc34484c529d66';
 
 final class PartyTicketsFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<Ticket>>, String> {
@@ -378,4 +378,82 @@ final class PartyVerificationsFamily extends $Family
 
   @override
   String toString() => r'partyVerificationsProvider';
+}
+
+@ProviderFor(verificationsByIds)
+const verificationsByIdsProvider = VerificationsByIdsFamily._();
+
+final class VerificationsByIdsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Verification>>,
+          List<Verification>,
+          FutureOr<List<Verification>>
+        >
+    with
+        $FutureModifier<List<Verification>>,
+        $FutureProvider<List<Verification>> {
+  const VerificationsByIdsProvider._({
+    required VerificationsByIdsFamily super.from,
+    required List<String> super.argument,
+  }) : super(
+         retry: null,
+         name: r'verificationsByIdsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$verificationsByIdsHash();
+
+  @override
+  String toString() {
+    return r'verificationsByIdsProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<List<Verification>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<Verification>> create(Ref ref) {
+    final argument = this.argument as List<String>;
+    return verificationsByIds(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is VerificationsByIdsProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$verificationsByIdsHash() =>
+    r'56316be7791e011cb69b886a57a955344090d2d7';
+
+final class VerificationsByIdsFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<List<Verification>>, List<String>> {
+  const VerificationsByIdsFamily._()
+    : super(
+        retry: null,
+        name: r'verificationsByIdsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  VerificationsByIdsProvider call(List<String> ids) =>
+      VerificationsByIdsProvider._(argument: ids, from: this);
+
+  @override
+  String toString() => r'verificationsByIdsProvider';
 }

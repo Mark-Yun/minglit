@@ -22,7 +22,7 @@ class DatabaseSeeder {
       await _seedUsers();
 
       // 3. Create Partners & Their Members
-      await _seedPartners();
+      await _seedPartners(globalVerifIds);
 
       Log.i('✅ [Seeder] Seeding Completed!');
     } catch (e, st) {
@@ -120,11 +120,12 @@ class DatabaseSeeder {
     }
   }
 
-  Future<void> _seedPartners() async {
+  Future<void> _seedPartners(List<String> globalVerifIds) async {
     Log.i('🏢 Step 2: Seeding 10 Partners & Staffs...');
     for (var i = 1; i <= 10; i++) {
       final partnerName = 'Minglit Shop $i';
 
+      // ... (Owner creation code remains same) ...
       // 1. Create Owner User
       final ownerId = await _createAdminUser(
         email: 'owner$i@test.com',
@@ -196,6 +197,24 @@ class DatabaseSeeder {
       final locationId = locationRes['id'] as String;
 
       // 6. Create 1 Party linked to this location
+      // Scenario:
+      // - Male (1990~2000) needs Job Verification (globalVerifIds[0])
+      // - Female (1995~2005) needs School Verification (globalVerifIds[1])
+      final conditions = [
+        {
+          'gender': 'male',
+          'age_range': {'min': 1990, 'max': 2000},
+          'required_verification_ids':
+              globalVerifIds.isNotEmpty ? [globalVerifIds[0]] : <String>[],
+        },
+        {
+          'gender': 'female',
+          'age_range': {'min': 1995, 'max': 2005},
+          'required_verification_ids':
+              globalVerifIds.length > 1 ? [globalVerifIds[1]] : <String>[],
+        },
+      ];
+
       await _adminClient.from('parties').insert({
         'partner_id': partnerId,
         'location_id': locationId,
@@ -208,6 +227,9 @@ class DatabaseSeeder {
         'min_confirmed_count': 5,
         'max_participants': 20,
         'status': 'active',
+        'conditions': conditions,
+        // Legacy field kept for compatibility or removed if schema changed
+        'required_verification_ids': <String>[],
       });
     }
   }
