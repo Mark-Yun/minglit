@@ -76,6 +76,7 @@ class TicketListItem extends StatelessWidget {
     this.entryGroups = const [],
     this.onTap,
     this.trailing,
+    this.showStats = true,
     super.key,
   });
 
@@ -83,6 +84,7 @@ class TicketListItem extends StatelessWidget {
   final List<PartyEntryGroup> entryGroups;
   final VoidCallback? onTap;
   final Widget? trailing;
+  final bool showStats;
 
   @override
   Widget build(BuildContext context) {
@@ -148,9 +150,8 @@ class TicketListItem extends StatelessWidget {
                               vertical: 1,
                             ),
                             decoration: BoxDecoration(
-                              color: colorScheme.primaryContainer.withValues(
-                                alpha: 0.3,
-                              ),
+                              color: colorScheme.primaryContainer
+                                  .withValues(alpha: 0.3),
                               borderRadius: BorderRadius.circular(2),
                             ),
                             child: Text(
@@ -190,7 +191,7 @@ class TicketListItem extends StatelessWidget {
               // Trailing / Stats
               if (trailing != null)
                 trailing!
-              else ...[
+              else if (showStats) ...[
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -242,8 +243,8 @@ class TicketListItem extends StatelessWidget {
     final gInitial = group.gender == 'male'
         ? '남'
         : group.gender == 'female'
-        ? '여'
-        : '무관';
+            ? '여'
+            : '무관';
     return '$gInitial($ageText)';
   }
 }
@@ -258,6 +259,7 @@ class TicketListView extends StatelessWidget {
     this.maxParticipants,
     this.onTicketTap,
     this.onCreatePressed,
+    this.showStats = true,
     this.shrinkWrap = true,
     this.physics = const NeverScrollableScrollPhysics(),
     super.key,
@@ -268,6 +270,7 @@ class TicketListView extends StatelessWidget {
   final int? maxParticipants;
   final void Function(Ticket)? onTicketTap;
   final VoidCallback? onCreatePressed;
+  final bool showStats;
   final bool shrinkWrap;
   final ScrollPhysics physics;
 
@@ -317,6 +320,7 @@ class TicketListView extends StatelessWidget {
             return TicketListItem(
               ticket: ticket,
               entryGroups: entryGroups,
+              showStats: showStats,
               onTap: onTicketTap != null ? () => onTicketTap!(ticket) : null,
             );
           },
@@ -346,9 +350,8 @@ class TicketListView extends StatelessWidget {
           const SizedBox(height: MinglitSpacing.small),
           Text(
             context.l10n.ticketList_empty,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.outline,
-            ),
+            style:
+                theme.textTheme.bodyMedium?.copyWith(color: colorScheme.outline),
           ),
         ],
       ),

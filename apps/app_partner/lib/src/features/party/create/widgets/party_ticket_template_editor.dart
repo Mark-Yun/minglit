@@ -50,6 +50,7 @@ class PartyTicketTemplateEditor extends StatelessWidget {
                 child: TicketListItem(
                   ticket: ticket,
                   entryGroups: entryGroups,
+                  showStats: false,
                   onTap: () => unawaited(
                     _navigateToEditPage(context, index, ticket),
                   ),

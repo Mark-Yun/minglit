@@ -886,6 +886,60 @@ abstract class AppLocalizations {
   /// **'기획 완료'**
   String get wizard_button_complete;
 
+  /// No description provided for @wizard_review_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'입력한 정보를 확인해주세요.'**
+  String get wizard_review_title;
+
+  /// No description provided for @wizard_review_basicInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 정보'**
+  String get wizard_review_basicInfo;
+
+  /// No description provided for @wizard_review_location.
+  ///
+  /// In ko, this message translates to:
+  /// **'장소 정보'**
+  String get wizard_review_location;
+
+  /// No description provided for @wizard_review_capacityContact.
+  ///
+  /// In ko, this message translates to:
+  /// **'인원 및 연락처'**
+  String get wizard_review_capacityContact;
+
+  /// No description provided for @wizard_review_entryRules.
+  ///
+  /// In ko, this message translates to:
+  /// **'입장 규칙'**
+  String get wizard_review_entryRules;
+
+  /// No description provided for @wizard_review_tickets.
+  ///
+  /// In ko, this message translates to:
+  /// **'티켓 정보'**
+  String get wizard_review_tickets;
+
+  /// No description provided for @wizard_review_descriptionDone.
+  ///
+  /// In ko, this message translates to:
+  /// **'상세 설명이 작성되었습니다.'**
+  String get wizard_review_descriptionDone;
+
+  /// No description provided for @wizard_review_noLocation.
+  ///
+  /// In ko, this message translates to:
+  /// **'장소 미지정'**
+  String get wizard_review_noLocation;
+
+  /// No description provided for @wizard_review_successMessage.
+  ///
+  /// In ko, this message translates to:
+  /// **'파티가 성공적으로 생성되었습니다.'**
+  String get wizard_review_successMessage;
+
   /// No description provided for @partyCreate_label_title.
   ///
   /// In ko, this message translates to:

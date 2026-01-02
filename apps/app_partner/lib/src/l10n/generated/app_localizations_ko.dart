@@ -422,6 +422,33 @@ class AppLocalizationsKo extends AppLocalizations {
   String get wizard_button_complete => '기획 완료';
 
   @override
+  String get wizard_review_title => '입력한 정보를 확인해주세요.';
+
+  @override
+  String get wizard_review_basicInfo => '기본 정보';
+
+  @override
+  String get wizard_review_location => '장소 정보';
+
+  @override
+  String get wizard_review_capacityContact => '인원 및 연락처';
+
+  @override
+  String get wizard_review_entryRules => '입장 규칙';
+
+  @override
+  String get wizard_review_tickets => '티켓 정보';
+
+  @override
+  String get wizard_review_descriptionDone => '상세 설명이 작성되었습니다.';
+
+  @override
+  String get wizard_review_noLocation => '장소 미지정';
+
+  @override
+  String get wizard_review_successMessage => '파티가 성공적으로 생성되었습니다.';
+
+  @override
   String get partyCreate_label_title => '파티 제목';
 
   @override

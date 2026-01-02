@@ -6,8 +6,11 @@ import 'package:app_partner/src/features/party/create/wizard/steps/step2_locatio
 import 'package:app_partner/src/features/party/create/wizard/steps/step3_capacity_contact.dart';
 import 'package:app_partner/src/features/party/create/wizard/steps/step4_entry_rules.dart';
 import 'package:app_partner/src/features/party/create/wizard/steps/step5_tickets.dart';
+import 'package:app_partner/src/features/party/create/wizard/steps/step6_review.dart';
+import 'package:app_partner/src/utils/error_handler.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class PartyCreateWizardPage extends ConsumerStatefulWidget {
@@ -48,15 +51,37 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
     final state = ref.watch(partyCreateWizardControllerProvider);
     final notifier = ref.read(partyCreateWizardControllerProvider.notifier);
 
-    // Sync PageController with state if needed
-    ref.listen(
-      partyCreateWizardControllerProvider.select((s) => s.currentStep),
-      (prev, next) {
-        if (next.index != _pageController.page?.round()) {
-          _onStepChanged(next);
-        }
-      },
-    );
+    // Sync PageController with state
+    ref
+      ..listen(
+        partyCreateWizardControllerProvider.select((s) => s.currentStep),
+        (prev, next) {
+          if (next.index != _pageController.page?.round()) {
+            _onStepChanged(next);
+          }
+        },
+      )
+      // Listen to submission status
+      ..listen(
+        partyCreateWizardControllerProvider.select((s) => s.status),
+        (prev, next) {
+          next.whenOrNull(
+            data: (_) {
+              if (prev?.isLoading ?? false) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(context.l10n.wizard_review_successMessage),
+                  ),
+                );
+                context.pop(); // Return to Party List
+              }
+            },
+            error: (error, st) {
+              handleMinglitError(context, error, st);
+            },
+          );
+        },
+      );
 
     return Scaffold(
       appBar: AppBar(
@@ -70,17 +95,27 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
           ),
         ),
       ),
-      body: PageView(
-        controller: _pageController,
-        physics: const NeverScrollableScrollPhysics(), // Disable swipe
-        children: const [
-          Step1BasicInfo(),
-          Step2Location(),
-          Step3CapacityContact(),
-          Step4EntryRules(),
-          Step5Tickets(),
-          // TODO(mark): Implement Review Step
-          Center(child: Text('Review & Submit')),
+      body: Stack(
+        children: [
+          PageView(
+            controller: _pageController,
+            physics: const NeverScrollableScrollPhysics(),
+            children: const [
+              Step1BasicInfo(),
+              Step2Location(),
+              Step3CapacityContact(),
+              Step4EntryRules(),
+              Step5Tickets(),
+              Step6Review(),
+            ],
+          ),
+          if (state.status.isLoading)
+            const ColoredBox(
+              color: Colors.black26,
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
         ],
       ),
       bottomNavigationBar: SafeArea(
@@ -91,7 +126,9 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
               if (state.currentStep.index > 0)
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: notifier.previousStep,
+                    onPressed: state.status.isLoading
+                        ? null
+                        : notifier.previousStep,
                     child: Text(context.l10n.wizard_button_prev),
                   ),
                 ),
@@ -100,9 +137,11 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
               Expanded(
                 flex: 2,
                 child: ElevatedButton(
-                  onPressed: state.currentStep == PartyCreateStep.review
-                      ? () => unawaited(notifier.submit())
-                      : notifier.nextStep,
+                  onPressed: state.status.isLoading
+                      ? null
+                      : (state.currentStep == PartyCreateStep.review
+                            ? () => unawaited(notifier.submit())
+                            : notifier.nextStep),
                   child: Text(
                     state.currentStep == PartyCreateStep.review
                         ? context.l10n.wizard_button_complete

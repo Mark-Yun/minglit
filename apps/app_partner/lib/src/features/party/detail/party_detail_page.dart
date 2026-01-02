@@ -279,6 +279,7 @@ class PartyDetailPage extends ConsumerWidget {
                     tickets: tickets,
                     entryGroups: party.entryGroups,
                     maxParticipants: party.maxParticipants,
+                    showStats: false,
                     onCreatePressed: () async {
                       final newTicket = await Navigator.of(context)
                           .push<Ticket>(
