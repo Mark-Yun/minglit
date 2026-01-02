@@ -116,6 +116,7 @@ class SupabaseVerificationRepository implements VerificationRepository {
 
   @override
   Future<Verification> createVerification(Verification verification) async {
+    Log.d('createVerification called | name: ${verification.displayName}');
     try {
       final json = verification.toJson()
         ..remove('id')
@@ -126,7 +127,9 @@ class SupabaseVerificationRepository implements VerificationRepository {
           .insert(json)
           .select()
           .single();
-      return Verification.fromJson(res);
+      final result = Verification.fromJson(res);
+      Log.d('createVerification success | id: ${result.id}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [VerificationRepo] createVerification Error', e, st);
       rethrow;
@@ -135,6 +138,7 @@ class SupabaseVerificationRepository implements VerificationRepository {
 
   @override
   Future<void> updateVerification(Verification verification) async {
+    Log.d('updateVerification called | id: ${verification.id}');
     try {
       final json = verification.toJson()
         ..remove('id')
@@ -145,6 +149,7 @@ class SupabaseVerificationRepository implements VerificationRepository {
           .from('verifications')
           .update(json)
           .eq('id', verification.id);
+      Log.d('updateVerification success');
     } catch (e, st) {
       Log.e('❌ [VerificationRepo] updateVerification Error', e, st);
       rethrow;
@@ -153,11 +158,13 @@ class SupabaseVerificationRepository implements VerificationRepository {
 
   @override
   Future<void> deleteVerification(String verificationId) async {
+    Log.d('deleteVerification called | verificationId: $verificationId');
     try {
       await _supabase
           .from('verifications')
           .update({'is_active': false})
           .eq('id', verificationId);
+      Log.d('deleteVerification success');
     } catch (e, st) {
       Log.e('❌ [VerificationRepo] deleteVerification Error', e, st);
       rethrow;
@@ -166,6 +173,7 @@ class SupabaseVerificationRepository implements VerificationRepository {
 
   @override
   Future<List<Verification>> getPartnerVerifications(String partnerId) async {
+    Log.d('getPartnerVerifications called | partnerId: $partnerId');
     try {
       final data = await _supabase
           .from('verifications')
@@ -174,9 +182,12 @@ class SupabaseVerificationRepository implements VerificationRepository {
           .eq('is_active', true)
           .order('created_at', ascending: false);
 
-      return (data as List)
+      final result = (data as List)
           .map((e) => Verification.fromJson(e as Map<String, dynamic>))
           .toList();
+
+      Log.d('getPartnerVerifications success | count: ${result.length}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [VerificationRepo] getPartnerVerifications Error', e, st);
       rethrow;
@@ -185,6 +196,7 @@ class SupabaseVerificationRepository implements VerificationRepository {
 
   @override
   Future<List<Verification>> getGlobalVerifications() async {
+    Log.d('getGlobalVerifications called');
     try {
       final data = await _supabase
           .from('verifications')
@@ -193,9 +205,12 @@ class SupabaseVerificationRepository implements VerificationRepository {
           .eq('is_active', true)
           .order('display_name', ascending: true);
 
-      return (data as List)
+      final result = (data as List)
           .map((e) => Verification.fromJson(e as Map<String, dynamic>))
           .toList();
+
+      Log.d('getGlobalVerifications success | count: ${result.length}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [VerificationRepo] getGlobalVerifications Error', e, st);
       rethrow;
@@ -204,6 +219,7 @@ class SupabaseVerificationRepository implements VerificationRepository {
 
   @override
   Future<Verification?> getVerificationById(String id) async {
+    Log.d('getVerificationById called | id: $id');
     try {
       final data = await _supabase
           .from('verifications')
@@ -211,8 +227,13 @@ class SupabaseVerificationRepository implements VerificationRepository {
           .eq('id', id)
           .maybeSingle();
 
-      if (data == null) return null;
-      return Verification.fromJson(data);
+      if (data == null) {
+        Log.d('getVerificationById success | result: null');
+        return null;
+      }
+      final result = Verification.fromJson(data);
+      Log.d('getVerificationById success | name: ${result.displayName}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [VerificationRepo] getVerificationById Error', e, st);
       rethrow;
@@ -221,6 +242,7 @@ class SupabaseVerificationRepository implements VerificationRepository {
 
   @override
   Future<List<Verification>> getVerificationsByIds(List<String> ids) async {
+    Log.d('getVerificationsByIds called | ids: $ids');
     if (ids.isEmpty) return [];
     try {
       final data = await _supabase
@@ -228,9 +250,12 @@ class SupabaseVerificationRepository implements VerificationRepository {
           .select()
           .inFilter('id', ids);
 
-      return (data as List)
+      final result = (data as List)
           .map((e) => Verification.fromJson(e as Map<String, dynamic>))
           .toList();
+
+      Log.d('getVerificationsByIds success | count: ${result.length}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [VerificationRepo] getVerificationsByIds Error', e, st);
       rethrow;
@@ -242,8 +267,15 @@ class SupabaseVerificationRepository implements VerificationRepository {
     required String partnerId,
     required List<String> requiredVerificationIds,
   }) async {
+    Log.d(
+      'getPartnerRequirementsStatus called | partnerId: $partnerId,'
+      ' requiredIds: $requiredVerificationIds',
+    );
     final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) return [];
+    if (userId == null) {
+      Log.w('getPartnerRequirementsStatus: User not logged in');
+      return [];
+    }
 
     try {
       final masters = await _supabase
@@ -272,7 +304,7 @@ class SupabaseVerificationRepository implements VerificationRepository {
           .eq('partner_id', partnerId)
           .inFilter('verification_id', requiredVerificationIds);
 
-      return (masters as List).map((dynamic m) {
+      final result = (masters as List).map((dynamic m) {
         final map = m as Map<String, dynamic>;
         final vId = map['id'];
 
@@ -304,6 +336,9 @@ class SupabaseVerificationRepository implements VerificationRepository {
           verifiedResult: result,
         );
       }).toList();
+
+      Log.d('getPartnerRequirementsStatus success | count: ${result.length}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [VerificationRepo] getPartnerRequirementsStatus Error', e, st);
       rethrow;
@@ -317,6 +352,10 @@ class SupabaseVerificationRepository implements VerificationRepository {
     required Map<String, dynamic> claimData,
     String? existingSubmissionId,
   }) async {
+    Log.d(
+      'submitOrUpdateVerification called | partnerId: $partnerId,'
+      ' verificationId: $verificationId',
+    );
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) throw const AuthException('User not authenticated');
 
@@ -346,6 +385,7 @@ class SupabaseVerificationRepository implements VerificationRepository {
           'snapshot_data': claimData,
         });
       }
+      Log.d('submitOrUpdateVerification success');
     } on Exception catch (e, stackTrace) {
       Log.e('❌ [VerificationRepo] Submission Failed', e, stackTrace);
       rethrow;
@@ -357,6 +397,10 @@ class SupabaseVerificationRepository implements VerificationRepository {
     required String partnerId,
     required List<VerificationSubmission> submissions,
   }) async {
+    Log.d(
+      'submitBulkVerifications called | partnerId: $partnerId,'
+      ' count: ${submissions.length}',
+    );
     try {
       for (final submission in submissions) {
         await submitOrUpdateVerification(
@@ -366,6 +410,7 @@ class SupabaseVerificationRepository implements VerificationRepository {
           existingSubmissionId: submission.existingRequestId,
         );
       }
+      Log.d('submitBulkVerifications success');
     } catch (e, st) {
       Log.e('❌ [VerificationRepo] submitBulkVerifications Error', e, st);
       rethrow;
@@ -374,13 +419,16 @@ class SupabaseVerificationRepository implements VerificationRepository {
 
   @override
   Future<List<Map<String, dynamic>>> getPendingRequests() async {
+    Log.d('getPendingRequests called');
     try {
       final data = await _supabase
           .from('verification_submissions')
           .select('*, user:user_profiles(*)')
           .eq('status', 'pending')
           .order('created_at', ascending: true);
-      return (data as List<dynamic>).cast<Map<String, dynamic>>();
+      final result = (data as List<dynamic>).cast<Map<String, dynamic>>();
+      Log.d('getPendingRequests success | count: ${result.length}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [VerificationRepo] getPendingRequests Error', e, st);
       rethrow;
@@ -393,6 +441,9 @@ class SupabaseVerificationRepository implements VerificationRepository {
     required VerificationStatus status,
     String? adminComment,
   }) async {
+    Log.d(
+      'reviewRequest called | submissionId: $submissionId, status: $status',
+    );
     try {
       await _supabase
           .from('verification_submissions')
@@ -403,6 +454,7 @@ class SupabaseVerificationRepository implements VerificationRepository {
             'reviewed_by': _supabase.auth.currentUser?.id,
           })
           .eq('id', submissionId);
+      Log.d('reviewRequest success');
     } catch (e, st) {
       Log.e('❌ [VerificationRepo] reviewRequest Error', e, st);
       rethrow;
@@ -413,6 +465,7 @@ class SupabaseVerificationRepository implements VerificationRepository {
   Future<List<Map<String, dynamic>>> getRequestsByStatus(
     VerificationStatus status,
   ) async {
+    Log.d('getRequestsByStatus called | status: $status');
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) return [];
 
@@ -427,7 +480,9 @@ class SupabaseVerificationRepository implements VerificationRepository {
           .eq('user_id', userId)
           .eq('status', statusName)
           .order('updated_at', ascending: false);
-      return (data as List<dynamic>).cast<Map<String, dynamic>>();
+      final result = (data as List<dynamic>).cast<Map<String, dynamic>>();
+      Log.d('getRequestsByStatus success | count: ${result.length}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [VerificationRepo] getRequestsByStatus Error', e, st);
       rethrow;
@@ -438,13 +493,16 @@ class SupabaseVerificationRepository implements VerificationRepository {
   Future<List<Map<String, dynamic>>> getVerificationComments(
     String submissionId,
   ) async {
+    Log.d('getVerificationComments called | submissionId: $submissionId');
     try {
       final data = await _supabase
           .from('verification_comments')
           .select()
           .eq('submission_id', submissionId)
           .order('created_at', ascending: true);
-      return (data as List<dynamic>).cast<Map<String, dynamic>>();
+      final result = (data as List<dynamic>).cast<Map<String, dynamic>>();
+      Log.d('getVerificationComments success | count: ${result.length}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [VerificationRepo] getVerificationComments Error', e, st);
       rethrow;
@@ -456,6 +514,7 @@ class SupabaseVerificationRepository implements VerificationRepository {
     required String submissionId,
     required Map<String, dynamic> content,
   }) async {
+    Log.d('submitComment called | submissionId: $submissionId');
     final userId = _supabase.auth.currentUser?.id;
     try {
       await _supabase.from('verification_comments').insert({
@@ -463,6 +522,7 @@ class SupabaseVerificationRepository implements VerificationRepository {
         'author_id': userId,
         'content': content,
       });
+      Log.d('submitComment success');
     } catch (e, st) {
       Log.e('❌ [VerificationRepo] submitComment Error', e, st);
       rethrow;

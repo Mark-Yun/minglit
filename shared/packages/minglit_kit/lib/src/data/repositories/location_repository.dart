@@ -18,6 +18,7 @@ class LocationRepository {
 
   /// Fetches a single location by ID.
   Future<Location?> getLocationById(String id) async {
+    Log.d('getLocationById called | id: $id');
     try {
       final data = await _supabase
           .from('locations_view')
@@ -25,8 +26,13 @@ class LocationRepository {
           .eq('id', id)
           .maybeSingle();
 
-      if (data == null) return null;
-      return Location.fromJson(data);
+      if (data == null) {
+        Log.d('getLocationById success | result: null');
+        return null;
+      }
+      final result = Location.fromJson(data);
+      Log.d('getLocationById success | name: ${result.name}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [LocationRepo] getLocationById Error', e, st);
       rethrow;
@@ -35,6 +41,7 @@ class LocationRepository {
 
   /// Fetches locations belonging to a specific partner.
   Future<List<Location>> getLocations(String partnerId) async {
+    Log.d('getLocations called | partnerId: $partnerId');
     try {
       final data = await _supabase
           .from('locations_view')
@@ -42,9 +49,12 @@ class LocationRepository {
           .eq('partner_id', partnerId)
           .order('name', ascending: true);
 
-      return (data as List<dynamic>)
+      final result = (data as List<dynamic>)
           .map((json) => Location.fromJson(json as Map<String, dynamic>))
           .toList();
+
+      Log.d('getLocations success | count: ${result.length}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [LocationRepo] getLocations Error', e, st);
       rethrow;
@@ -53,6 +63,7 @@ class LocationRepository {
 
   /// Creates a new location entry.
   Future<Location> createLocation(Location location) async {
+    Log.d('createLocation called | name: ${location.name}');
     try {
       // Use WKT (Well-Known Text) format for PostGIS geography type.
       // Format: POINT(longitude latitude)
@@ -81,7 +92,9 @@ class LocationRepository {
       mergedData['lat'] = location.latitude;
       mergedData['lng'] = location.longitude;
 
-      return Location.fromJson(mergedData);
+      final result = Location.fromJson(mergedData);
+      Log.d('createLocation success | id: ${result.id}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [LocationRepo] createLocation Error', e, st);
       rethrow;
@@ -94,6 +107,7 @@ class LocationRepository {
     String? addressDetail,
     String? directionsGuide,
   }) async {
+    Log.d('updateLocationDetails called | locationId: $locationId');
     try {
       await _supabase
           .from('locations')
@@ -103,6 +117,7 @@ class LocationRepository {
             'updated_at': DateTime.now().toIso8601String(),
           })
           .eq('id', locationId);
+      Log.d('updateLocationDetails success');
     } catch (e, st) {
       Log.e('❌ [LocationRepo] updateLocationDetails Error', e, st);
       rethrow;

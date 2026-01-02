@@ -23,6 +23,9 @@ class PartyRepository {
 
   /// Uploads a party image and returns the public URL.
   Future<String> uploadPartyImage(XFile file, String partnerId) async {
+    Log.d(
+      'uploadPartyImage called | partnerId: $partnerId, file: ${file.name}',
+    );
     try {
       final extension = p.extension(file.name);
       final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -41,7 +44,9 @@ class PartyRepository {
             ),
           );
 
-      return _supabase.storage.from('party-assets').getPublicUrl(path);
+      final url = _supabase.storage.from('party-assets').getPublicUrl(path);
+      Log.d('uploadPartyImage success | url: $url');
+      return url;
     } catch (e, st) {
       Log.e('❌ [PartyRepo] uploadPartyImage Error', e, st);
       rethrow;
@@ -50,6 +55,7 @@ class PartyRepository {
 
   /// Fetches a single party by ID.
   Future<Party> getPartyById(String partyId) async {
+    Log.d('getPartyById called | partyId: $partyId');
     try {
       final data = await _supabase
           .from('parties')
@@ -57,7 +63,9 @@ class PartyRepository {
           .eq('id', partyId)
           .single();
 
-      return Party.fromJson(data);
+      final result = Party.fromJson(data);
+      Log.d('getPartyById success | title: ${result.title}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [PartyRepo] getPartyById Error', e, st);
       rethrow;
@@ -66,6 +74,7 @@ class PartyRepository {
 
   /// Fetches all active parties.
   Future<List<Party>> getParties() async {
+    Log.d('getParties called');
     try {
       final data = await _supabase
           .from('parties')
@@ -73,9 +82,12 @@ class PartyRepository {
           .eq('status', 'active')
           .order('created_at', ascending: false);
 
-      return (data as List<dynamic>)
+      final result = (data as List<dynamic>)
           .map((json) => Party.fromJson(json as Map<String, dynamic>))
           .toList();
+
+      Log.d('getParties success | count: ${result.length}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [PartyRepo] getParties Error', e, st);
       rethrow;
@@ -84,6 +96,7 @@ class PartyRepository {
 
   /// Fetches parties for a specific partner.
   Future<List<Party>> getPartiesByPartnerId(String partnerId) async {
+    Log.d('getPartiesByPartnerId called | partnerId: $partnerId');
     try {
       final data = await _supabase
           .from('parties')
@@ -91,9 +104,12 @@ class PartyRepository {
           .eq('partner_id', partnerId)
           .order('created_at', ascending: false);
 
-      return (data as List<dynamic>)
+      final result = (data as List<dynamic>)
           .map((json) => Party.fromJson(json as Map<String, dynamic>))
           .toList();
+
+      Log.d('getPartiesByPartnerId success | count: ${result.length}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [PartyRepo] getPartiesByPartnerId Error', e, st);
       rethrow;
@@ -102,6 +118,7 @@ class PartyRepository {
 
   /// Fetches upcoming events for a specific party.
   Future<List<Event>> getEventsByPartyId(String partyId) async {
+    Log.d('getEventsByPartyId called | partyId: $partyId');
     try {
       final data = await _supabase
           .from('events')
@@ -113,9 +130,12 @@ class PartyRepository {
           ) // Future events only
           .order('start_time', ascending: true);
 
-      return (data as List<dynamic>)
+      final result = (data as List<dynamic>)
           .map((json) => Event.fromJson(json as Map<String, dynamic>))
           .toList();
+
+      Log.d('getEventsByPartyId success | count: ${result.length}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [PartyRepo] getEventsByPartyId Error', e, st);
       rethrow;
@@ -124,6 +144,7 @@ class PartyRepository {
 
   /// Fetches a single event by ID.
   Future<Event> getEventById(String eventId) async {
+    Log.d('getEventById called | eventId: $eventId');
     try {
       final data = await _supabase
           .from('events')
@@ -131,7 +152,9 @@ class PartyRepository {
           .eq('id', eventId)
           .single();
 
-      return Event.fromJson(data);
+      final result = Event.fromJson(data);
+      Log.d('getEventById success | id: ${result.id}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [PartyRepo] getEventById Error', e, st);
       rethrow;
@@ -140,6 +163,7 @@ class PartyRepository {
 
   /// Creates a new party.
   Future<Party> createParty(Party party) async {
+    Log.d('createParty called | title: ${party.title}');
     try {
       final json = party.toJson()
         ..remove('id')
@@ -152,7 +176,9 @@ class PartyRepository {
           .select()
           .single();
 
-      return Party.fromJson(data);
+      final result = Party.fromJson(data);
+      Log.d('createParty success | id: ${result.id}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [PartyRepo] createParty Error', e, st);
       rethrow;
@@ -161,6 +187,7 @@ class PartyRepository {
 
   /// Updates an existing party.
   Future<Party> updateParty(Party party) async {
+    Log.d('updateParty called | id: ${party.id}');
     try {
       final json = party.toJson()
         ..remove('id')
@@ -174,7 +201,9 @@ class PartyRepository {
           .select()
           .single();
 
-      return Party.fromJson(data);
+      final result = Party.fromJson(data);
+      Log.d('updateParty success | id: ${result.id}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [PartyRepo] updateParty Error', e, st);
       rethrow;
@@ -183,11 +212,13 @@ class PartyRepository {
 
   /// Updates only the status of a party.
   Future<void> updatePartyStatus(String partyId, String status) async {
+    Log.d('updatePartyStatus called | partyId: $partyId, status: $status');
     try {
       await _supabase
           .from('parties')
           .update({'status': status})
           .eq('id', partyId);
+      Log.d('updatePartyStatus success');
     } catch (e, st) {
       Log.e('❌ [PartyRepo] updatePartyStatus Error', e, st);
       rethrow;
@@ -196,11 +227,15 @@ class PartyRepository {
 
   /// Updates the location of a party.
   Future<void> updatePartyLocation(String partyId, String locationId) async {
+    Log.d(
+      'updatePartyLocation called | partyId: $partyId, locationId: $locationId',
+    );
     try {
       await _supabase
           .from('parties')
           .update({'location_id': locationId})
           .eq('id', partyId);
+      Log.d('updatePartyLocation success');
     } catch (e, st) {
       Log.e('❌ [PartyRepo] updatePartyLocation Error', e, st);
       rethrow;
@@ -209,6 +244,7 @@ class PartyRepository {
 
   /// Creates a new event for a party.
   Future<Event> createEvent(Event event) async {
+    Log.d('createEvent called | partyId: ${event.partyId}');
     try {
       final json = event.toJson()
         ..remove('id')
@@ -223,7 +259,9 @@ class PartyRepository {
           .select()
           .single();
 
-      return Event.fromJson(data);
+      final result = Event.fromJson(data);
+      Log.d('createEvent success | id: ${result.id}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [PartyRepo] createEvent Error', e, st);
       rethrow;
@@ -232,6 +270,7 @@ class PartyRepository {
 
   /// Updates an existing event.
   Future<Event> updateEvent(Event event) async {
+    Log.d('updateEvent called | id: ${event.id}');
     try {
       final json = event.toJson()
         ..remove('id')
@@ -247,7 +286,9 @@ class PartyRepository {
           .select()
           .single();
 
-      return Event.fromJson(data);
+      final result = Event.fromJson(data);
+      Log.d('updateEvent success | id: ${result.id}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [PartyRepo] updateEvent Error', e, st);
       rethrow;
@@ -256,11 +297,13 @@ class PartyRepository {
 
   /// Updates only the status of an event.
   Future<void> updateEventStatus(String eventId, String status) async {
+    Log.d('updateEventStatus called | eventId: $eventId, status: $status');
     try {
       await _supabase
           .from('events')
           .update({'status': status})
           .eq('id', eventId);
+      Log.d('updateEventStatus success');
     } catch (e, st) {
       Log.e('❌ [PartyRepo] updateEventStatus Error', e, st);
       rethrow;

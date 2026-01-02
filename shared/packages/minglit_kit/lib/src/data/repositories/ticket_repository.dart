@@ -17,6 +17,7 @@ class TicketRepository {
 
   /// Fetches tickets for a specific event.
   Future<List<Ticket>> getTicketsByEventId(String eventId) async {
+    Log.d('getTicketsByEventId called | eventId: $eventId');
     try {
       final data = await _supabase
           .from('tickets')
@@ -24,9 +25,12 @@ class TicketRepository {
           .eq('event_id', eventId)
           .order('price', ascending: true);
 
-      return (data as List<dynamic>)
+      final result = (data as List<dynamic>)
           .map((json) => Ticket.fromJson(json as Map<String, dynamic>))
           .toList();
+
+      Log.d('getTicketsByEventId success | count: ${result.length}');
+      return result;
     } catch (e, st) {
       Log.e('getTicketsByEventId failed', e, st);
       rethrow;
@@ -35,6 +39,7 @@ class TicketRepository {
 
   /// Fetches all tickets associated with any event of a specific party.
   Future<List<Ticket>> getTicketsByPartyId(String partyId) async {
+    Log.d('getTicketsByPartyId called | partyId: $partyId');
     try {
       final data = await _supabase
           .from('tickets')
@@ -42,9 +47,12 @@ class TicketRepository {
           .eq('events.party_id', partyId)
           .order('created_at', ascending: true);
 
-      return (data as List<dynamic>)
+      final result = (data as List<dynamic>)
           .map((json) => Ticket.fromJson(json as Map<String, dynamic>))
           .toList();
+
+      Log.d('getTicketsByPartyId success | count: ${result.length}');
+      return result;
     } catch (e, st) {
       Log.e('getTicketsByPartyId failed', e, st);
       rethrow;
@@ -53,6 +61,7 @@ class TicketRepository {
 
   /// Fetches default ticket templates for a specific party.
   Future<List<Ticket>> getDefaultTicketsByPartyId(String partyId) async {
+    Log.d('getDefaultTicketsByPartyId called | partyId: $partyId');
     try {
       final data = await _supabase
           .from('tickets')
@@ -61,9 +70,12 @@ class TicketRepository {
           .filter('event_id', 'is', null)
           .order('created_at', ascending: true);
 
-      return (data as List<dynamic>)
+      final result = (data as List<dynamic>)
           .map((json) => Ticket.fromJson(json as Map<String, dynamic>))
           .toList();
+
+      Log.d('getDefaultTicketsByPartyId success | count: ${result.length}');
+      return result;
     } catch (e, st) {
       Log.e('getDefaultTicketsByPartyId failed', e, st);
       rethrow;
@@ -72,6 +84,7 @@ class TicketRepository {
 
   /// Creates a new ticket.
   Future<Ticket> createTicket(Ticket ticket) async {
+    Log.d('createTicket called | ticket: ${ticket.name}');
     try {
       final json = ticket.toJson()
         ..remove('id')
@@ -85,7 +98,9 @@ class TicketRepository {
           .select()
           .single();
 
-      return Ticket.fromJson(data);
+      final result = Ticket.fromJson(data);
+      Log.d('createTicket success | id: ${result.id}');
+      return result;
     } catch (e, st) {
       Log.e('createTicket failed: ${ticket.name}', e, st);
       rethrow;

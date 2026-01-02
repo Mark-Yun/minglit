@@ -29,6 +29,7 @@ class PartnerRepository {
 
   /// Fetches all active partners.
   Future<List<Partner>> getPartners() async {
+    Log.d('getPartners called');
     try {
       final data = await _supabase
           .from('partners')
@@ -36,9 +37,12 @@ class PartnerRepository {
           .eq('is_active', true)
           .order('created_at', ascending: false);
 
-      return (data as List<dynamic>)
+      final result = (data as List<dynamic>)
           .map((json) => Partner.fromJson(json as Map<String, dynamic>))
           .toList();
+
+      Log.d('getPartners success | count: ${result.length}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [PartnerRepo] getPartners Error', e, st);
       rethrow;
@@ -48,7 +52,7 @@ class PartnerRepository {
   /// Fetches partners managed by the current user.
   Future<List<Partner>> getMyManagedPartners() async {
     final userId = _supabase.auth.currentUser?.id;
-    Log.d('🔍 [PartnerRepo] getMyManagedPartners for user: $userId');
+    Log.d('getMyManagedPartners called | user: $userId');
 
     if (userId == null) {
       Log.w('⚠️ [PartnerRepo] User not logged in');
@@ -80,9 +84,9 @@ class PartnerRepository {
           .inFilter('id', partnerIds)
           .eq('is_active', true);
 
-      Log.d('🔍 [PartnerRepo] Fetched partners raw data: $data');
-
-      return data.map(Partner.fromJson).toList();
+      final result = data.map(Partner.fromJson).toList();
+      Log.d('getMyManagedPartners success | count: ${result.length}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [PartnerRepo] getMyManagedPartners Error', e, st);
       rethrow;
@@ -103,7 +107,7 @@ class PartnerRepository {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) throw const AuthException('User not authenticated');
 
-    Log.d('🚀 [PartnerRepo] Submitting Application for user: $userId');
+    Log.d('submitApplication called | user: $userId');
 
     String? bizRegPath;
     String? bankbookPath;
@@ -120,7 +124,7 @@ class PartnerRepository {
         'status': 'pending',
       });
 
-      Log.i('🎉 [PartnerRepo] Application submitted successfully!');
+      Log.i('submitApplication success');
     } on Exception catch (e, stackTrace) {
       Log.e('❌ [PartnerRepo] Application Failed', e, stackTrace);
       // Attempt cleanup (Best effort)
@@ -138,6 +142,7 @@ class PartnerRepository {
   }
 
   Future<String> _uploadFile(String userId, XFile file, String type) async {
+    Log.d('_uploadFile called | type: $type, file: ${file.name}');
     final extension = p.extension(file.name);
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final path = '$userId/${type}_$timestamp$extension';
@@ -150,13 +155,18 @@ class PartnerRepository {
           bytes,
           fileOptions: FileOptions(contentType: file.mimeType),
         );
+    Log.d('_uploadFile success | path: $path');
     return path;
   }
 
   /// Fetches the most recent application for the current user.
   Future<PartnerApplication?> getMyApplication() async {
+    Log.d('getMyApplication called');
     final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) return null;
+    if (userId == null) {
+      Log.d('getMyApplication: User not logged in');
+      return null;
+    }
 
     try {
       final data = await _supabase
@@ -167,8 +177,13 @@ class PartnerRepository {
           .limit(1)
           .maybeSingle();
 
-      if (data == null) return null;
-      return PartnerApplication.fromJson(data);
+      if (data == null) {
+        Log.d('getMyApplication success | result: null');
+        return null;
+      }
+      final result = PartnerApplication.fromJson(data);
+      Log.d('getMyApplication success | id: ${result.id}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [PartnerRepo] getMyApplication Error', e, st);
       rethrow;
@@ -180,6 +195,7 @@ class PartnerRepository {
     String? status,
     String? searchTerm,
   }) async {
+    Log.d('getAllApplications called | status: $status, search: $searchTerm');
     try {
       var query = _supabase.from('partner_applications').select();
 
@@ -196,12 +212,15 @@ class PartnerRepository {
       final data =
           await query.order('created_at', ascending: false) as List<dynamic>;
 
-      return data
+      final result = data
           .map(
             (dynamic json) =>
                 PartnerApplication.fromJson(json as Map<String, dynamic>),
           )
           .toList();
+
+      Log.d('getAllApplications success | count: ${result.length}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [PartnerRepo] getAllApplications Error', e, st);
       rethrow;
@@ -214,7 +233,9 @@ class PartnerRepository {
     required String status,
     String? adminComment,
   }) async {
-    Log.d('⚖️ [PartnerRepo] Reviewing Application: ID=$applicationId');
+    Log.d(
+      'reviewApplication called | id: $applicationId, status: $status, comment: $adminComment',
+    );
     try {
       await _supabase
           .from('partner_applications')
@@ -224,6 +245,7 @@ class PartnerRepository {
             'updated_at': DateTime.now().toIso8601String(),
           })
           .eq('id', applicationId);
+      Log.d('reviewApplication success');
     } catch (e, st) {
       Log.e('❌ [PartnerRepo] reviewApplication Error', e, st);
       rethrow;
@@ -232,13 +254,16 @@ class PartnerRepository {
 
   /// Fetches members belonging to a specific partner.
   Future<List<Map<String, dynamic>>> getPartnerMembers(String partnerId) async {
+    Log.d('getPartnerMembers called | partnerId: $partnerId');
     try {
       final data = await _supabase
           .from('partner_member_permissions')
           .select('*, user:user_profiles(*)')
           .eq('partner_id', partnerId)
           .order('joined_at', ascending: true);
-      return (data as List<dynamic>).cast<Map<String, dynamic>>();
+      final result = (data as List<dynamic>).cast<Map<String, dynamic>>();
+      Log.d('getPartnerMembers success | count: ${result.length}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [PartnerRepo] getPartnerMembers Error', e, st);
       rethrow;
@@ -251,7 +276,10 @@ class PartnerRepository {
     required String userId,
     required String role,
   }) async {
-    Log.d('🎭 [PartnerRepo] Updating Role: Partner=$partnerId, User=$userId');
+    Log.d(
+      'updateMemberRole called | partnerId: $partnerId, userId: $userId,'
+      ' role: $role',
+    );
     try {
       await _supabase
           .from('partner_member_permissions')
@@ -259,6 +287,7 @@ class PartnerRepository {
           .match(
             {'partner_id': partnerId, 'user_id': userId},
           );
+      Log.d('updateMemberRole success');
     } catch (e, st) {
       Log.e('❌ [PartnerRepo] updateMemberRole Error', e, st);
       rethrow;
@@ -271,7 +300,10 @@ class PartnerRepository {
     required String userId,
     required List<String> permissions,
   }) async {
-    Log.d('⚙️ [PartnerRepo] Updating Permissions: Partner=$partnerId');
+    Log.d(
+      'updateMemberPermissions called | partnerId: $partnerId, userId: $userId,'
+      ' perms: $permissions',
+    );
     try {
       await _supabase
           .from('partner_member_permissions')
@@ -279,6 +311,7 @@ class PartnerRepository {
           .match(
             {'partner_id': partnerId, 'user_id': userId},
           );
+      Log.d('updateMemberPermissions success');
     } catch (e, st) {
       Log.e('❌ [PartnerRepo] updateMemberPermissions Error', e, st);
       rethrow;
@@ -287,6 +320,7 @@ class PartnerRepository {
 
   /// Fetches a specific partner by ID.
   Future<Partner?> getPartnerById(String partnerId) async {
+    Log.d('getPartnerById called | partnerId: $partnerId');
     try {
       final data = await _supabase
           .from('partners')
@@ -294,8 +328,13 @@ class PartnerRepository {
           .eq('id', partnerId)
           .maybeSingle();
 
-      if (data == null) return null;
-      return Partner.fromJson(data);
+      if (data == null) {
+        Log.d('getPartnerById success | result: null');
+        return null;
+      }
+      final result = Partner.fromJson(data);
+      Log.d('getPartnerById success | name: ${result.name}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [PartnerRepo] getPartnerById Error', e, st);
       rethrow;
