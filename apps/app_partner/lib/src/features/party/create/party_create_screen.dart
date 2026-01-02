@@ -5,6 +5,7 @@ import 'package:app_partner/src/features/party/create/widgets/party_conditions_s
 import 'package:app_partner/src/features/party/create/widgets/party_contact_input.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_description_editor.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_image_picker.dart';
+import 'package:app_partner/src/features/party/create/widgets/party_location_detail_input.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_location_selector.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_section_title.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_ticket_template_editor.dart';
@@ -184,22 +185,10 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
                 onSearchTap: _handleLocationSearch,
               ),
               if (state.selectedLocation != null) ...[
-                const SizedBox(height: MinglitSpacing.medium),
-                TextFormField(
-                  controller: _addressDetailController,
-                  decoration: const InputDecoration(
-                    labelText: '상세 주소 (선택)',
-                    hintText: '예: 2층 201호, 루프탑 등',
-                  ),
-                ),
-                const SizedBox(height: MinglitSpacing.small),
-                TextFormField(
-                  controller: _directionsController,
-                  decoration: const InputDecoration(
-                    labelText: '오시는 길 안내 (선택)',
-                    hintText: '예: 강남역 11번 출구에서 도보 5분 거리입니다.',
-                  ),
-                  maxLines: 2,
+                const SizedBox(height: MinglitSpacing.large),
+                PartyLocationDetailInput(
+                  addressDetailController: _addressDetailController,
+                  directionsController: _directionsController,
                 ),
               ],
               const SizedBox(height: MinglitSpacing.large),
@@ -208,7 +197,11 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
               PartyCapacityInput(
                 minController: _minCountController,
                 maxController: _maxCountController,
-                controller: controller,
+                minValidator: controller.validateCapacity,
+                maxValidator: (v) => controller.validateMaxCapacity(
+                  v,
+                  _minCountController.text,
+                ),
               ),
               const SizedBox(height: MinglitSpacing.large),
 
@@ -232,8 +225,10 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
                 phoneController: _phoneController,
                 emailController: _emailController,
                 kakaoController: _kakaoController,
-                state: state,
-                controller: controller,
+                enabledMethods: state.enabledContactMethods,
+                onToggleMethod: controller.toggleContactMethod,
+                phoneValidator: controller.validatePhone,
+                emailValidator: controller.validateEmail,
               ),
               const SizedBox(height: MinglitSpacing.small),
 

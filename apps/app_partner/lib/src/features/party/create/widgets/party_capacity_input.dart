@@ -1,4 +1,3 @@
-import 'package:app_partner/src/features/party/create/party_create_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -6,13 +5,19 @@ class PartyCapacityInput extends StatelessWidget {
   const PartyCapacityInput({
     required this.minController,
     required this.maxController,
-    required this.controller,
+    this.onMinChanged,
+    this.onMaxChanged,
+    this.minValidator,
+    this.maxValidator,
     super.key,
   });
 
   final TextEditingController minController;
   final TextEditingController maxController;
-  final PartyCreateController controller;
+  final ValueChanged<String>? onMinChanged;
+  final ValueChanged<String>? onMaxChanged;
+  final FormFieldValidator<String>? minValidator;
+  final FormFieldValidator<String>? maxValidator;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +33,8 @@ class PartyCapacityInput extends StatelessWidget {
                   labelText: '최소 확정',
                   suffixText: '명',
                 ),
-                validator: controller.validateCapacity,
+                onChanged: onMinChanged,
+                validator: minValidator,
               ),
             ),
             const SizedBox(width: MinglitSpacing.medium),
@@ -40,10 +46,8 @@ class PartyCapacityInput extends StatelessWidget {
                   labelText: '최대 정원',
                   suffixText: '명',
                 ),
-                validator: (v) => controller.validateMaxCapacity(
-                  v,
-                  minController.text,
-                ),
+                onChanged: onMaxChanged,
+                validator: maxValidator,
               ),
             ),
           ],

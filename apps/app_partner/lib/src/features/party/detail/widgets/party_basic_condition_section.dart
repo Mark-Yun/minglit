@@ -89,8 +89,8 @@ class PartyBasicConditionSection extends ConsumerWidget {
     final birthYearRange = group.birthYearRange;
 
     var genderText = '성별 무관';
-    if (gender == 'male') genderText = '남성 전용';
-    if (gender == 'female') genderText = '여성 전용';
+    if (gender == 'male') genderText = '남성';
+    if (gender == 'female') genderText = '여성';
 
     var birthYearText = '나이 무관';
     if (birthYearRange != null) {
@@ -111,7 +111,6 @@ class PartyBasicConditionSection extends ConsumerWidget {
           child: _buildConditionItem(
             context,
             Icons.wc,
-            '성별 조건',
             genderText,
           ),
         ),
@@ -126,7 +125,6 @@ class PartyBasicConditionSection extends ConsumerWidget {
           child: _buildConditionItem(
             context,
             Icons.cake_outlined,
-            '나이 조건',
             birthYearText,
           ),
         ),
@@ -137,32 +135,20 @@ class PartyBasicConditionSection extends ConsumerWidget {
   Widget _buildConditionItem(
     BuildContext context,
     IconData icon,
-    String label,
     String value,
   ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Column(
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: MinglitIconSize.small,
-              color: colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: MinglitSpacing.xsmall),
-            Text(
-              label,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
+        Icon(
+          icon,
+          size: MinglitIconSize.small,
+          color: colorScheme.onSurfaceVariant,
         ),
-        const SizedBox(height: MinglitSpacing.xsmall),
+        const SizedBox(width: MinglitSpacing.small),
         Text(
           value,
           style: theme.textTheme.bodyMedium?.copyWith(

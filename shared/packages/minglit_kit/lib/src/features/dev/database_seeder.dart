@@ -208,15 +208,17 @@ class DatabaseSeeder {
             'id': const Uuid().v4(),
             'gender': 'male',
             'birth_year_range': {'min': 1990, 'max': 2000},
-            'required_verification_ids':
-                globalVerifIds.isNotEmpty ? [globalVerifIds[0]] : <String>[],
+            'required_verification_ids': globalVerifIds.isNotEmpty
+                ? [globalVerifIds[0]]
+                : <String>[],
           },
           {
             'id': const Uuid().v4(),
             'gender': 'female',
             'birth_year_range': {'min': 1995, 'max': 2005},
-            'required_verification_ids':
-                globalVerifIds.length > 1 ? [globalVerifIds[1]] : <String>[],
+            'required_verification_ids': globalVerifIds.length > 1
+                ? [globalVerifIds[1]]
+                : <String>[],
           },
         ];
       } else if (i % 3 == 2) {
@@ -226,9 +228,10 @@ class DatabaseSeeder {
             'id': const Uuid().v4(),
             'gender': null, // Anyone
             'birth_year_range': null, // Any age
-            'required_verification_ids':
-                globalVerifIds.isNotEmpty ? [globalVerifIds[0]] : <String>[],
-          }
+            'required_verification_ids': globalVerifIds.isNotEmpty
+                ? [globalVerifIds[0]]
+                : <String>[],
+          },
         ];
       } else {
         // Scenario C: 20s Only + No Verification
@@ -238,7 +241,7 @@ class DatabaseSeeder {
             'gender': null,
             'birth_year_range': {'min': 1995, 'max': 2004},
             'required_verification_ids': <String>[],
-          }
+          },
         ];
       }
 

@@ -239,7 +239,7 @@ return $default(_that.currentStep,_that.title,_that.description,_that.imageFile,
 
 
 class _PartyCreateWizardState implements PartyCreateWizardState {
-  const _PartyCreateWizardState({this.currentStep = PartyCreateStep.basicInfo, this.title = '', final  Map<String, dynamic> description = const {}, this.imageFile, this.selectedLocation, this.addressDetail, this.directionsGuide, this.minConfirmedCount = 5, this.maxParticipants = 20, this.contactPhone = '', this.contactEmail = '', this.contactKakao, final  Set<String> enabledContactMethods = const {'phone', 'email'}, final  List<PartyEntryGroup> entryGroups = const [], final  List<Ticket> tickets = const [], this.status = const AsyncValue.data(null)}): _description = description,_enabledContactMethods = enabledContactMethods,_entryGroups = entryGroups,_tickets = tickets;
+  const _PartyCreateWizardState({this.currentStep = PartyCreateStep.basicInfo, this.title = '', final  Map<String, dynamic> description = const {}, this.imageFile, this.selectedLocation, this.addressDetail, this.directionsGuide, this.minConfirmedCount = 5, this.maxParticipants = 20, this.contactPhone = '', this.contactEmail = '', this.contactKakao, final  Set<String> enabledContactMethods = const {}, final  List<PartyEntryGroup> entryGroups = const [], final  List<Ticket> tickets = const [], this.status = const AsyncValue.data(null)}): _description = description,_enabledContactMethods = enabledContactMethods,_entryGroups = entryGroups,_tickets = tickets;
   
 
 @override@JsonKey() final  PartyCreateStep currentStep;

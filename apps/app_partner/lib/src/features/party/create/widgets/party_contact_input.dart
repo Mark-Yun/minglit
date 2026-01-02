@@ -1,4 +1,3 @@
-import 'package:app_partner/src/features/party/create/party_create_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -7,16 +6,26 @@ class PartyContactInput extends StatelessWidget {
     required this.phoneController,
     required this.emailController,
     required this.kakaoController,
-    required this.state,
-    required this.controller,
+    required this.enabledMethods,
+    required this.onToggleMethod,
+    this.onPhoneChanged,
+    this.onEmailChanged,
+    this.onKakaoChanged,
+    this.phoneValidator,
+    this.emailValidator,
     super.key,
   });
 
   final TextEditingController phoneController;
   final TextEditingController emailController;
   final TextEditingController kakaoController;
-  final PartyCreateState state;
-  final PartyCreateController controller;
+  final Set<String> enabledMethods;
+  final ValueChanged<String> onToggleMethod;
+  final ValueChanged<String>? onPhoneChanged;
+  final ValueChanged<String>? onEmailChanged;
+  final ValueChanged<String>? onKakaoChanged;
+  final FormFieldValidator<String>? phoneValidator;
+  final FormFieldValidator<String>? emailValidator;
 
   @override
   Widget build(BuildContext context) {
@@ -28,11 +37,11 @@ class PartyContactInput extends StatelessWidget {
         // Phone
         _ContactMethodRow(
           methodKey: 'phone',
-          isSelected: state.enabledContactMethods.contains('phone'),
-          onToggle: () => controller.toggleContactMethod('phone'),
+          isSelected: enabledMethods.contains('phone'),
+          onToggle: () => onToggleMethod('phone'),
           child: TextFormField(
             controller: phoneController,
-            enabled: state.enabledContactMethods.contains('phone'),
+            enabled: enabledMethods.contains('phone'),
             decoration: const InputDecoration(
               labelText: '전화번호',
               isDense: true,
@@ -42,9 +51,8 @@ class PartyContactInput extends StatelessWidget {
               ),
               prefixIcon: Icon(Icons.phone, size: 18),
             ),
-            validator: (v) => state.enabledContactMethods.contains('phone')
-                ? controller.validatePhone(v)
-                : null,
+            onChanged: onPhoneChanged,
+            validator: phoneValidator,
           ),
         ),
         const SizedBox(height: MinglitSpacing.small),
@@ -52,11 +60,11 @@ class PartyContactInput extends StatelessWidget {
         // Email
         _ContactMethodRow(
           methodKey: 'email',
-          isSelected: state.enabledContactMethods.contains('email'),
-          onToggle: () => controller.toggleContactMethod('email'),
+          isSelected: enabledMethods.contains('email'),
+          onToggle: () => onToggleMethod('email'),
           child: TextFormField(
             controller: emailController,
-            enabled: state.enabledContactMethods.contains('email'),
+            enabled: enabledMethods.contains('email'),
             decoration: const InputDecoration(
               labelText: '이메일',
               isDense: true,
@@ -66,9 +74,8 @@ class PartyContactInput extends StatelessWidget {
               ),
               prefixIcon: Icon(Icons.email, size: 18),
             ),
-            validator: (v) => state.enabledContactMethods.contains('email')
-                ? controller.validateEmail(v)
-                : null,
+            onChanged: onEmailChanged,
+            validator: emailValidator,
           ),
         ),
         const SizedBox(height: MinglitSpacing.small),
@@ -76,11 +83,11 @@ class PartyContactInput extends StatelessWidget {
         // Kakao Link
         _ContactMethodRow(
           methodKey: 'kakao',
-          isSelected: state.enabledContactMethods.contains('kakao'),
-          onToggle: () => controller.toggleContactMethod('kakao'),
+          isSelected: enabledMethods.contains('kakao'),
+          onToggle: () => onToggleMethod('kakao'),
           child: TextFormField(
             controller: kakaoController,
-            enabled: state.enabledContactMethods.contains('kakao'),
+            enabled: enabledMethods.contains('kakao'),
             decoration: const InputDecoration(
               labelText: '오픈카카오톡 링크 (선택)',
               isDense: true,
@@ -92,6 +99,7 @@ class PartyContactInput extends StatelessWidget {
               prefixIcon: Icon(Icons.chat_bubble_outline, size: 18),
               helperText: '참가자들과 소통할 오픈채팅방 링크를 입력해주세요.',
             ),
+            onChanged: onKakaoChanged,
           ),
         ),
 
@@ -100,7 +108,7 @@ class PartyContactInput extends StatelessWidget {
           height: MinglitSpacing.large,
           child: AnimatedSwitcher(
             duration: MinglitAnimation.fast,
-            child: state.enabledContactMethods.isEmpty
+            child: enabledMethods.isEmpty
                 ? Align(
                     alignment: Alignment.centerLeft,
                     child: Padding(

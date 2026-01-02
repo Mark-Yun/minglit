@@ -7,6 +7,7 @@ class PartyVerificationSelector extends StatelessWidget {
     required this.selectedVerificationIds,
     required this.onToggle,
     required this.onAddTap,
+    this.showAddButton = true,
     super.key,
   });
 
@@ -14,6 +15,7 @@ class PartyVerificationSelector extends StatelessWidget {
   final List<String> selectedVerificationIds;
   final void Function(String) onToggle;
   final VoidCallback onAddTap;
+  final bool showAddButton;
 
   @override
   Widget build(BuildContext context) {
@@ -51,75 +53,77 @@ class PartyVerificationSelector extends StatelessWidget {
               ),
 
             // Add Verification Card
-            AnimatedContainer(
-              duration: MinglitAnimation.fast,
-              decoration: BoxDecoration(
-                color: colorScheme.tertiary.withValues(
-                  alpha: 0.08,
-                ), // Lime/Mint Background
-                borderRadius: BorderRadius.circular(MinglitRadius.card),
-                // Border is explicitly removed
-              ),
-              child: InkWell(
-                onTap: onAddTap,
-                borderRadius: BorderRadius.circular(MinglitRadius.card),
-                child: Padding(
-                  padding: const EdgeInsets.all(MinglitSpacing.medium),
-                  child: Row(
-                    children: [
-                      // Icon Section
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: colorScheme.tertiary.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
+            if (showAddButton)
+              AnimatedContainer(
+                duration: MinglitAnimation.fast,
+                decoration: BoxDecoration(
+                  color: colorScheme.tertiary.withValues(
+                    alpha: 0.08,
+                  ), // Lime/Mint Background
+                  borderRadius: BorderRadius.circular(MinglitRadius.card),
+                  // Border is explicitly removed
+                ),
+                child: InkWell(
+                  onTap: onAddTap,
+                  borderRadius: BorderRadius.circular(MinglitRadius.card),
+                  child: Padding(
+                    padding: const EdgeInsets.all(MinglitSpacing.medium),
+                    child: Row(
+                      children: [
+                        // Icon Section
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: colorScheme.tertiary.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.add,
+                            color: colorScheme.tertiary,
+                            size: MinglitIconSize.small,
+                          ),
                         ),
-                        child: Icon(
-                          Icons.add,
-                          color: colorScheme.tertiary,
-                          size: MinglitIconSize.small,
-                        ),
-                      ),
-                      const SizedBox(width: MinglitSpacing.medium),
+                        const SizedBox(width: MinglitSpacing.medium),
 
-                      // Text Section
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '새로운 인증 만들기',
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: MinglitSpacing.xxsmall),
-                            Text(
-                              '원하는 참가 자격이 없다면 직접 만들어보세요.',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: colorScheme.onSurfaceVariant.withValues(
-                                  alpha: 0.8,
+                        // Text Section
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '새로운 인증 만들기',
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: MinglitSpacing.xxsmall),
+                              Text(
+                                '원하는 참가 자격이 없다면 직접 만들어보세요.',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant
+                                      .withValues(
+                                        alpha: 0.8,
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
 
-                      const SizedBox(width: MinglitSpacing.small),
+                        const SizedBox(width: MinglitSpacing.small),
 
-                      // Right Indicator
-                      Icon(
-                        Icons.chevron_right,
-                        color: colorScheme.tertiary.withValues(alpha: 0.6),
-                        size: MinglitIconSize.large,
-                      ),
-                    ],
+                        // Right Indicator
+                        Icon(
+                          Icons.chevron_right,
+                          color: colorScheme.tertiary.withValues(alpha: 0.6),
+                          size: MinglitIconSize.large,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
           ],
         );
       },
