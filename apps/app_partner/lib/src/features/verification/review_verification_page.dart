@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_partner/src/utils/error_handler.dart';
+import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -78,7 +79,13 @@ class _ReviewVerificationPageState
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('처리가 완료되었습니다.')));
+      ).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.l10n.reviewVerification_message_processComplete,
+          ),
+        ),
+      );
       unawaited(_loadRequests());
     } on Object catch (e, st) {
       if (!mounted) return;
@@ -93,24 +100,32 @@ class _ReviewVerificationPageState
     await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('보완 요청'),
+        title: Text(context.l10n.reviewVerification_dialog_correction_title),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: reasonController,
-              decoration: const InputDecoration(
-                labelText: '반려 사유 (요약)',
-                hintText: '예: 서류 식별 불가',
+              decoration: InputDecoration(
+                labelText: context
+                    .l10n
+                    .reviewVerification_dialog_correction_reasonLabel,
+                hintText: context
+                    .l10n
+                    .reviewVerification_dialog_correction_reasonHint,
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: commentController,
               maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: '상세 안내 (코멘트)',
-                hintText: '유저에게 전달할 자세한 내용을 적어주세요.',
+              decoration: InputDecoration(
+                labelText: context
+                    .l10n
+                    .reviewVerification_dialog_correction_commentLabel,
+                hintText: context
+                    .l10n
+                    .reviewVerification_dialog_correction_commentHint,
               ),
             ),
           ],
@@ -118,7 +133,7 @@ class _ReviewVerificationPageState
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text(context.l10n.common_button_cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -132,7 +147,7 @@ class _ReviewVerificationPageState
                 ),
               );
             },
-            child: const Text('보완 요청 전송'),
+            child: Text(context.l10n.reviewVerification_dialog_correction_send),
           ),
         ],
       ),
@@ -175,8 +190,11 @@ class _ReviewVerificationPageState
     return Scaffold(
       appBar: AppBar(
         title: _isLoading
-            ? const Text('인증 심사 대기열')
-            : Text('인증 심사 대기열 (${_pendingRequests.length})'),
+            ? Text(context.l10n.reviewVerification_title_pending)
+            : Text(
+                '${context.l10n.reviewVerification_title_pending} '
+                '(${_pendingRequests.length})',
+              ),
       ),
       body: RefreshIndicator(
         onRefresh: _loadRequests,
@@ -190,7 +208,7 @@ class _ReviewVerificationPageState
       return const Center(child: CircularProgressIndicator());
     }
     if (_pendingRequests.isEmpty) {
-      return const Center(child: Text('모든 심사가 완료되었습니다! 🎉'));
+      return Center(child: Text(context.l10n.reviewVerification_message_empty));
     }
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -270,7 +288,9 @@ class _ReviewVerificationPageState
                     onPressed: () => unawaited(
                       _showCorrectionDialog(req['id'] as String),
                     ),
-                    child: const Text('보완 요청'),
+                    child: Text(
+                      context.l10n.reviewVerification_button_correction,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -282,7 +302,7 @@ class _ReviewVerificationPageState
                         VerificationStatus.approved,
                       ),
                     ),
-                    child: const Text('최종 승인'),
+                    child: Text(context.l10n.reviewVerification_button_approve),
                   ),
                 ),
               ],
@@ -291,7 +311,10 @@ class _ReviewVerificationPageState
               child: TextButton(
                 onPressed: () =>
                     unawaited(_showCommentsModal(req['id'] as String)),
-                child: const Text('대화 내역 확인', style: TextStyle(fontSize: 12)),
+                child: Text(
+                  context.l10n.reviewVerification_button_chat,
+                  style: const TextStyle(fontSize: 12),
+                ),
               ),
             ),
           ],
@@ -313,9 +336,9 @@ class _CommentsView extends ConsumerWidget {
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          const Text(
-            '유저와 대화',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            context.l10n.reviewVerification_chat_title,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const Divider(),
           Expanded(

@@ -9,6 +9,7 @@ import 'package:app_partner/src/features/party/detail/widgets/party_basic_condit
 import 'package:app_partner/src/features/party/detail/widgets/party_info_chip.dart';
 import 'package:app_partner/src/features/party/detail/widgets/party_location_section.dart';
 import 'package:app_partner/src/features/party/detail/widgets/party_verification_section.dart';
+import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart' hide partyEventsProvider;
 
@@ -77,27 +78,27 @@ class PartyDetailPage extends ConsumerWidget {
                     }
                   },
                   itemBuilder: (context) => [
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'edit',
                       child: Row(
                         children: [
-                          Icon(Icons.edit, size: MinglitIconSize.small),
-                          SizedBox(width: MinglitSpacing.small),
-                          Text('파티 정보 수정'),
+                          const Icon(Icons.edit, size: MinglitIconSize.small),
+                          const SizedBox(width: MinglitSpacing.small),
+                          Text(context.l10n.partyDetail_menu_edit),
                         ],
                       ),
                     ),
                     if (party.status == 'closed')
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'activate',
                         child: Row(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.play_arrow_outlined,
                               size: MinglitIconSize.small,
                             ),
-                            SizedBox(width: MinglitSpacing.small),
-                            Text('파티 다시 활성화'),
+                            const SizedBox(width: MinglitSpacing.small),
+                            Text(context.l10n.partyDetail_menu_activate),
                           ],
                         ),
                       ),
@@ -113,7 +114,7 @@ class PartyDetailPage extends ConsumerWidget {
                             ),
                             const SizedBox(width: MinglitSpacing.small),
                             Text(
-                              '파티 비활성화 (보관)',
+                              context.l10n.partyDetail_menu_deactivate,
                               style: TextStyle(color: colorScheme.error),
                             ),
                           ],
@@ -143,21 +144,21 @@ class PartyDetailPage extends ConsumerWidget {
                     ),
                     const SizedBox(height: MinglitSpacing.large),
                     Text(
-                      '입장 조건 (기본)',
+                      context.l10n.partyDetail_section_entranceCondition,
                       style: theme.textTheme.titleMedium,
                     ),
                     const SizedBox(height: MinglitSpacing.small),
                     PartyBasicConditionSection(party: party),
                     const SizedBox(height: MinglitSpacing.large),
                     Text(
-                      '참가 자격 (인증)',
+                      context.l10n.partyDetail_section_verification,
                       style: theme.textTheme.titleMedium,
                     ),
                     const SizedBox(height: MinglitSpacing.small),
                     PartyVerificationSection(partyId: party.id),
                     const SizedBox(height: MinglitSpacing.large),
                     Text(
-                      '장소 정보',
+                      context.l10n.partyDetail_section_location,
                       style: theme.textTheme.titleMedium,
                     ),
                     const SizedBox(height: MinglitSpacing.small),
@@ -167,14 +168,14 @@ class PartyDetailPage extends ConsumerWidget {
                     ),
                     const SizedBox(height: MinglitSpacing.large),
                     Text(
-                      '장소 상세',
+                      context.l10n.partyDetail_section_locationDetail,
                       style: theme.textTheme.titleMedium,
                     ),
                     const SizedBox(height: MinglitSpacing.small),
                     PartyLocationDetailSection(locationId: party.locationId),
                     const SizedBox(height: MinglitSpacing.large),
                     Text(
-                      '개설된 회차 (이벤트)',
+                      context.l10n.partyDetail_section_events,
                       style: theme.textTheme.titleMedium,
                     ),
                     const SizedBox(height: MinglitSpacing.small),
@@ -207,8 +208,9 @@ class PartyDetailPage extends ConsumerWidget {
                           top: MinglitSpacing.xxsmall,
                         ),
                         child: AddActionCard(
-                          title: '새로운 회차 개설하기',
-                          subtitle: '새로운 날짜와 시간에 파티를 열어보세요.',
+                          title: context.l10n.partyDetail_button_createEvent,
+                          subtitle:
+                              context.l10n.partyDetail_subtitle_createEvent,
                           onTap: () => coordinator.goToCreateEvent(party.id),
                         ),
                       );
@@ -221,7 +223,11 @@ class PartyDetailPage extends ConsumerWidget {
                 child: Center(child: CircularProgressIndicator()),
               ),
               error: (e, s) => SliverToBoxAdapter(
-                child: Center(child: Text('이벤트 로드 실패: $e')),
+                child: Center(
+                  child: Text(
+                    context.l10n.partyDetail_error_eventLoad(e.toString()),
+                  ),
+                ),
               ),
             ),
 
@@ -235,7 +241,7 @@ class PartyDetailPage extends ConsumerWidget {
                   MinglitSpacing.small,
                 ),
                 child: Text(
-                  '등록된 티켓 현황',
+                  context.l10n.partyDetail_section_tickets,
                   style: theme.textTheme.titleMedium,
                 ),
               ),
@@ -270,17 +276,19 @@ class PartyDetailPage extends ConsumerWidget {
 
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('티켓 템플릿이 추가되었습니다.'),
+                              SnackBar(
+                                content: Text(
+                                  context.l10n.partyDetail_message_ticketAdded,
+                                ),
                               ),
                             );
                           }
                         } on Exception catch (_) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
+                              SnackBar(
                                 content: Text(
-                                  '일시적인 오류로 티켓을 생성하지 못했습니다. 잠시 후 다시 시도해주세요.',
+                                  context.l10n.common_error_system,
                                 ),
                               ),
                             );
@@ -300,7 +308,11 @@ class PartyDetailPage extends ConsumerWidget {
                 child: Center(child: CircularProgressIndicator()),
               ),
               error: (e, s) => SliverToBoxAdapter(
-                child: Center(child: Text('티켓 로드 실패: $e')),
+                child: Center(
+                  child: Text(
+                    context.l10n.partyDetail_error_ticketLoad(e.toString()),
+                  ),
+                ),
               ),
             ),
 
@@ -312,7 +324,9 @@ class PartyDetailPage extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, s) => Scaffold(
           appBar: AppBar(),
-          body: Center(child: Text('파티 로드 실패: $e')),
+          body: Center(
+            child: Text(context.l10n.partyDetail_error_partyLoad(e.toString())),
+          ),
         ),
       ),
     );

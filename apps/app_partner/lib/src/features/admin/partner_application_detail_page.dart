@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_partner/src/utils/error_handler.dart';
+import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -72,7 +73,9 @@ class _PartnerApplicationDetailPageState
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('처리되었습니다 ($status)')),
+        SnackBar(
+          content: Text(context.l10n.appDetail_message_processed(status)),
+        ),
       );
       // Refresh the provider to show updated status
       ref.invalidate(
@@ -91,36 +94,60 @@ class _PartnerApplicationDetailPageState
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('상세 정보')),
+      appBar: AppBar(title: Text(context.l10n.appDetail_title)),
       body: appAsync.when(
         data: (app) {
           if (app == null) {
-            return const Center(child: Text('신청 정보를 찾을 수 없습니다.'));
+            return Center(child: Text(context.l10n.appDetail_message_notFound));
           }
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSectionHeader('기본 정보'),
-                _buildInfoRow('브랜드명', app.brandName),
-                _buildInfoRow('사업자명', app.bizName),
-                _buildInfoRow('대표자명', app.representativeName),
-                _buildInfoRow('사업자등록번호', app.bizNumber),
-                _buildInfoRow('연락처', app.contactPhone),
-                _buildInfoRow('주소', app.address),
+                _buildSectionHeader(context.l10n.appDetail_section_basic),
+                _buildInfoRow(
+                  context.l10n.partnerApplication_field_brandName,
+                  app.brandName,
+                ),
+                _buildInfoRow(
+                  context.l10n.partnerApplication_field_bizName,
+                  app.bizName,
+                ),
+                _buildInfoRow(
+                  context.l10n.partnerApplication_field_repName,
+                  app.representativeName,
+                ),
+                _buildInfoRow(
+                  context.l10n.partnerApplication_field_bizNumber,
+                  app.bizNumber,
+                ),
+                _buildInfoRow(
+                  context.l10n.partnerApplication_field_phone,
+                  app.contactPhone,
+                ),
+                _buildInfoRow(
+                  context.l10n.partnerApplication_field_address,
+                  app.address,
+                ),
                 const SizedBox(height: 24),
-                _buildSectionHeader('첨부 서류'),
-                _buildFileLink('사업자등록증', app.bizRegistrationPath),
-                _buildFileLink('통장사본', app.bankbookPath),
+                _buildSectionHeader(context.l10n.appDetail_section_files),
+                _buildFileLink(
+                  context.l10n.appDetail_label_bizReg,
+                  app.bizRegistrationPath,
+                ),
+                _buildFileLink(
+                  context.l10n.appDetail_label_bankbook,
+                  app.bankbookPath,
+                ),
                 const SizedBox(height: 24),
                 if (app.status == 'pending') ...[
-                  _buildSectionHeader('심사 처리'),
+                  _buildSectionHeader(context.l10n.appDetail_section_review),
                   TextField(
                     controller: _commentController,
-                    decoration: const InputDecoration(
-                      labelText: '관리자 코멘트 (선택)',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: context.l10n.appDetail_label_adminComment,
+                      border: const OutlineInputBorder(),
                     ),
                     maxLines: 3,
                   ),
@@ -135,7 +162,7 @@ class _PartnerApplicationDetailPageState
                               comment: _commentController.text,
                             ),
                           ),
-                          child: const Text('승인'),
+                          child: Text(context.l10n.appDetail_button_approve),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -147,7 +174,7 @@ class _PartnerApplicationDetailPageState
                               comment: _commentController.text,
                             ),
                           ),
-                          child: const Text('보완 요청'),
+                          child: Text(context.l10n.appDetail_button_correction),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -159,16 +186,22 @@ class _PartnerApplicationDetailPageState
                               comment: _commentController.text,
                             ),
                           ),
-                          child: const Text('반려'),
+                          child: Text(context.l10n.appDetail_button_reject),
                         ),
                       ),
                     ],
                   ),
                 ] else ...[
-                  _buildSectionHeader('심사 결과'),
-                  _buildInfoRow('상태', app.status),
+                  _buildSectionHeader(context.l10n.appDetail_section_result),
+                  _buildInfoRow(
+                    context.l10n.appDetail_label_status,
+                    app.status,
+                  ),
                   if (app.adminComment != null)
-                    _buildInfoRow('코멘트', app.adminComment!),
+                    _buildInfoRow(
+                      context.l10n.appDetail_label_comment,
+                      app.adminComment!,
+                    ),
                 ],
               ],
             ),
@@ -224,11 +257,13 @@ class _PartnerApplicationDetailPageState
           ),
           TextButton.icon(
             icon: const Icon(Icons.download, size: 16),
-            label: const Text('다운로드/보기'),
+            label: Text(context.l10n.appDetail_label_download),
             onPressed: () {
               // TODO(developer): Implement file download logic.
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('파일 다운로드 기능 구현 필요')),
+                SnackBar(
+                  content: Text(context.l10n.appDetail_message_downloadNotImpl),
+                ),
               );
             },
           ),

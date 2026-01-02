@@ -1,3 +1,4 @@
+import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -33,8 +34,8 @@ void handleMinglitError(
     Log.e('❌ [Unknown Error] Unhandled exception', error, st);
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'),
+        SnackBar(
+          content: Text(context.l10n.common_error_system),
         ),
       );
     }

@@ -5,6 +5,7 @@ import 'package:app_partner/src/features/search/location/location_search_page.da
 import 'package:app_partner/src/routing/app_router.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:app_partner/src/utils/error_handler.dart';
+import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -44,7 +45,7 @@ class PartyDetailCoordinator {
       _ref.invalidate(partyDetailProvider(partyId));
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('파티가 활성화되었습니다.')),
+          SnackBar(content: Text(context.l10n.partyDetail_message_activated)),
         );
       }
     } on Object catch (e, st) {
@@ -65,7 +66,7 @@ class PartyDetailCoordinator {
       _ref.invalidate(partyDetailProvider(partyId));
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('파티가 비활성화(보관)되었습니다.')),
+          SnackBar(content: Text(context.l10n.partyDetail_message_deactivated)),
         );
       }
     } on Object catch (e, st) {

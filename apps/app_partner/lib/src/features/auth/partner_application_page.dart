@@ -1,4 +1,5 @@
 import 'package:app_partner/src/utils/error_handler.dart';
+import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -48,12 +49,14 @@ class _PartnerApplicationPageState
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('신청 현황'),
-        content: Text('현재 가입 신청이 [$status] 상태입니다. 심사가 완료될 때까지 기다려 주세요.'),
+        title: Text(context.l10n.partnerApplication_status_dialogTitle),
+        content: Text(
+          context.l10n.partnerApplication_status_dialogContent(status),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
+            child: Text(context.l10n.common_button_confirm),
           ),
         ],
       ),
@@ -76,9 +79,11 @@ class _PartnerApplicationPageState
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_bizRegFile == null || _bankbookFile == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('필수 서류를 모두 업로드해 주세요.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.partnerApplication_message_missingFiles),
+        ),
+      );
       return;
     }
 
@@ -95,9 +100,11 @@ class _PartnerApplicationPageState
       if (mounted) {
         await showDialog<void>(
           context: context,
-          builder: (context) => const AlertDialog(
-            title: Text('신청 완료'),
-            content: Text('입점 신청이 제출되었습니다. 심사 결과는 이메일로 안내해 드립니다.'),
+          builder: (context) => AlertDialog(
+            title: Text(context.l10n.partnerApplication_dialog_successTitle),
+            content: Text(
+              context.l10n.partnerApplication_dialog_successContent,
+            ),
           ),
         );
       }
@@ -113,7 +120,7 @@ class _PartnerApplicationPageState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('파트너 입점 신청')),
+      appBar: AppBar(title: Text(context.l10n.partnerApplication_title)),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -123,45 +130,90 @@ class _PartnerApplicationPageState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildSectionTitle('1. 브랜드 정보'),
-                    _buildTextField('brand_name', '브랜드/매장명', '예: 밍글릿 강남점'),
+                    _buildSectionTitle(
+                      context.l10n.partnerApplication_section_brand,
+                    ),
+                    _buildTextField(
+                      'brand_name',
+                      context.l10n.partnerApplication_field_brandName,
+                      context.l10n.partnerApplication_hint_brandName,
+                    ),
                     _buildTextField(
                       'introduction',
-                      '소개글',
-                      '사장님과 매장을 소개해 주세요.',
+                      context.l10n.partnerApplication_field_intro,
+                      context.l10n.partnerApplication_hint_intro,
                       maxLines: 3,
                     ),
-                    _buildTextField('address', '주소', '파티가 열릴 매장 주소'),
-                    _buildTextField('contact_phone', '연락처', '010-0000-0000'),
+                    _buildTextField(
+                      'address',
+                      context.l10n.partnerApplication_field_address,
+                      context.l10n.partnerApplication_hint_address,
+                    ),
+                    _buildTextField(
+                      'contact_phone',
+                      context.l10n.partnerApplication_field_phone,
+                      context.l10n.partnerApplication_hint_phone,
+                    ),
                     _buildTextField(
                       'contact_email',
-                      '이메일',
-                      'partner@example.com',
+                      context.l10n.partnerApplication_field_email,
+                      context.l10n.partnerApplication_hint_email,
                     ),
 
                     const SizedBox(height: 32),
-                    _buildSectionTitle('2. 사업자 정보'),
+                    _buildSectionTitle(
+                      context.l10n.partnerApplication_section_biz,
+                    ),
                     _buildBizTypeDropdown(),
-                    _buildTextField('biz_name', '사업자명', '사업자 등록증상 이름'),
-                    _buildTextField('biz_number', '사업자 번호', '000-00-00000'),
-                    _buildTextField('representative_name', '대표자명', '성함'),
+                    _buildTextField(
+                      'biz_name',
+                      context.l10n.partnerApplication_field_bizName,
+                      context.l10n.partnerApplication_hint_bizName,
+                    ),
+                    _buildTextField(
+                      'biz_number',
+                      context.l10n.partnerApplication_field_bizNumber,
+                      context.l10n.partnerApplication_hint_bizNumber,
+                    ),
+                    _buildTextField(
+                      'representative_name',
+                      context.l10n.partnerApplication_field_repName,
+                      context.l10n.partnerApplication_hint_repName,
+                    ),
 
                     const SizedBox(height: 32),
-                    _buildSectionTitle('3. 정산 계좌 정보'),
-                    _buildTextField('bank_name', '은행명', '예: 신한은행'),
-                    _buildTextField('account_number', '계좌번호', '숫자만 입력'),
-                    _buildTextField('account_holder', '예금주', '성함'),
+                    _buildSectionTitle(
+                      context.l10n.partnerApplication_section_account,
+                    ),
+                    _buildTextField(
+                      'bank_name',
+                      context.l10n.partnerApplication_field_bankName,
+                      context.l10n.partnerApplication_hint_bankName,
+                    ),
+                    _buildTextField(
+                      'account_number',
+                      context.l10n.partnerApplication_field_accountNum,
+                      context.l10n.partnerApplication_hint_accountNum,
+                    ),
+                    _buildTextField(
+                      'account_holder',
+                      context.l10n.partnerApplication_field_holder,
+                      // Reusing repName hint ("성함")
+                      context.l10n.partnerApplication_hint_repName,
+                    ),
 
                     const SizedBox(height: 32),
-                    _buildSectionTitle('4. 서류 첨부'),
+                    _buildSectionTitle(
+                      context.l10n.partnerApplication_section_files,
+                    ),
                     _buildFilePicker(
-                      '사업자등록증',
+                      context.l10n.partnerApplication_label_bizReg,
                       _bizRegFile,
                       () async => _pickFile(true),
                     ),
                     const SizedBox(height: 12),
                     _buildFilePicker(
-                      '통장 사본',
+                      context.l10n.partnerApplication_label_bankbook,
                       _bankbookFile,
                       () async => _pickFile(false),
                     ),
@@ -169,7 +221,9 @@ class _PartnerApplicationPageState
                     const SizedBox(height: 48),
                     ElevatedButton(
                       onPressed: _submit,
-                      child: const Text('입점 신청하기'),
+                      child: Text(
+                        context.l10n.partnerApplication_button_submit,
+                      ),
                     ),
                   ],
                 ),
@@ -207,7 +261,9 @@ class _PartnerApplicationPageState
           hintText: hint,
           border: const OutlineInputBorder(),
         ),
-        validator: (v) => (v == null || v.isEmpty) ? '필수 입력 항목입니다.' : null,
+        validator: (v) => (v == null || v.isEmpty)
+            ? context.l10n.partnerApplication_error_required
+            : null,
         onSaved: (v) => _data[key] = v,
       ),
     );
@@ -218,13 +274,19 @@ class _PartnerApplicationPageState
       padding: const EdgeInsets.only(bottom: 16),
       child: DropdownButtonFormField<String>(
         initialValue: _data['biz_type'] as String?,
-        decoration: const InputDecoration(
-          labelText: '사업자 유형',
-          border: OutlineInputBorder(),
+        decoration: InputDecoration(
+          labelText: context.l10n.partnerApplication_field_bizType,
+          border: const OutlineInputBorder(),
         ),
-        items: const [
-          DropdownMenuItem(value: 'individual', child: Text('개인 사업자')),
-          DropdownMenuItem(value: 'corporate', child: Text('법인 사업자')),
+        items: [
+          DropdownMenuItem(
+            value: 'individual',
+            child: Text(context.l10n.partnerApplication_option_individual),
+          ),
+          DropdownMenuItem(
+            value: 'corporate',
+            child: Text(context.l10n.partnerApplication_option_corporate),
+          ),
         ],
         onChanged: (v) => setState(() => _data['biz_type'] = v),
       ),
@@ -237,7 +299,9 @@ class _PartnerApplicationPageState
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       title: Text(label, style: const TextStyle(fontSize: 14)),
       subtitle: Text(
-        file != null ? file.name : '파일을 선택해 주세요.',
+        file != null
+            ? file.name
+            : context.l10n.partnerApplication_hint_fileSelect,
         style: TextStyle(color: file != null ? Colors.blue : Colors.grey),
       ),
       trailing: const Icon(Icons.attach_file),

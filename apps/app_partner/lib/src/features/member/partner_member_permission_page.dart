@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app_partner/src/features/member/partner_member_list_page.dart';
 import 'package:app_partner/src/utils/error_handler.dart';
+import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -53,11 +54,13 @@ class PartnerMemberPermissionPage extends ConsumerWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('권한 상세 설정')),
+      appBar: AppBar(title: Text(context.l10n.memberPermission_title)),
       body: memberAsync.when(
         data: (memberData) {
           if (memberData == null) {
-            return const Center(child: Text('멤버를 찾을 수 없습니다.'));
+            return Center(
+              child: Text(context.l10n.memberPermission_message_notFound),
+            );
           }
           return _MemberPermissionForm(
             partnerId: partnerId,
@@ -90,17 +93,23 @@ class _MemberPermissionFormState extends ConsumerState<_MemberPermissionForm> {
   late List<String> _currentPermissions;
   bool _isSaving = false;
 
-  final Map<String, String> _permissionLabels = {
-    'PARTNER_EDIT': '파트너 정보 수정',
-    'SETTLEMENT_VIEW': '정산 정보 조회',
-    'SETTLEMENT_EDIT': '정산 계좌 수정',
-    'MEMBER_MANAGE': '멤버 초대 및 권한 관리',
-    'PARTY_MANAGE': '파티 생성 및 관리',
-    'VERIFY_LIST_VIEW': '유저 심사 목록 조회',
-    'USER_DATA_VIEW': '유저 증빙 서류 열람',
-    'VERIFY_REVIEW': '유저 심사 승인/반려',
-    'COMMENT_MANAGE': '유저 코멘트 대화',
-  };
+  late final Map<String, String> _permissionLabels;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _permissionLabels = {
+      'PARTNER_EDIT': context.l10n.permission_PARTNER_EDIT,
+      'SETTLEMENT_VIEW': context.l10n.permission_SETTLEMENT_VIEW,
+      'SETTLEMENT_EDIT': context.l10n.permission_SETTLEMENT_EDIT,
+      'MEMBER_MANAGE': context.l10n.permission_MEMBER_MANAGE,
+      'PARTY_MANAGE': context.l10n.permission_PARTY_MANAGE,
+      'VERIFY_LIST_VIEW': context.l10n.permission_VERIFY_LIST_VIEW,
+      'USER_DATA_VIEW': context.l10n.permission_USER_DATA_VIEW,
+      'VERIFY_REVIEW': context.l10n.permission_VERIFY_REVIEW,
+      'COMMENT_MANAGE': context.l10n.permission_COMMENT_MANAGE,
+    };
+  }
 
   @override
   void initState() {
@@ -142,7 +151,9 @@ class _MemberPermissionFormState extends ConsumerState<_MemberPermissionForm> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('저장되었습니다.')));
+        ).showSnackBar(
+          SnackBar(content: Text(context.l10n.memberPermission_message_saved)),
+        );
         Navigator.pop(context);
       }
     } on Object catch (e, st) {
@@ -168,7 +179,8 @@ class _MemberPermissionFormState extends ConsumerState<_MemberPermissionForm> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            user['name'] as String? ?? '멤버 정보',
+            user['name'] as String? ??
+                context.l10n.memberPermission_defaultName,
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           Text(
@@ -176,21 +188,21 @@ class _MemberPermissionFormState extends ConsumerState<_MemberPermissionForm> {
             style: const TextStyle(color: Colors.grey),
           ),
           const SizedBox(height: 32),
-          const Text(
-            '역할(Role) 선택',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          Text(
+            context.l10n.memberPermission_section_role,
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           _buildRoleSelector(),
           const SizedBox(height: 32),
-          const Text(
-            '상세 기능 권한(Permissions)',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          Text(
+            context.l10n.memberPermission_section_permission,
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          const Text(
-            '역할을 변경하면 권한 배열이 기본값으로 초기화됩니다.',
-            style: TextStyle(fontSize: 12, color: Colors.blue),
+          Text(
+            context.l10n.memberPermission_message_roleWarning,
+            style: const TextStyle(fontSize: 12, color: Colors.blue),
           ),
           const SizedBox(height: 16),
           ..._permissionLabels.entries.map(
@@ -199,7 +211,7 @@ class _MemberPermissionFormState extends ConsumerState<_MemberPermissionForm> {
           const SizedBox(height: 48),
           ElevatedButton(
             onPressed: () => unawaited(_save()),
-            child: const Text('변경 사항 저장'),
+            child: Text(context.l10n.memberPermission_button_save),
           ),
         ],
       ),
@@ -217,13 +229,19 @@ class _MemberPermissionFormState extends ConsumerState<_MemberPermissionForm> {
         child: DropdownButton<String>(
           value: _selectedRole,
           isExpanded: true,
-          items: const [
-            DropdownMenuItem(value: 'owner', child: Text('Owner (모든 권한)')),
+          items: [
+            DropdownMenuItem(
+              value: 'owner',
+              child: Text(context.l10n.memberPermission_role_owner),
+            ),
             DropdownMenuItem(
               value: 'manager',
-              child: Text('Manager (운영 및 심사)'),
+              child: Text(context.l10n.memberPermission_role_manager),
             ),
-            DropdownMenuItem(value: 'staff', child: Text('Staff (단순 업무)')),
+            DropdownMenuItem(
+              value: 'staff',
+              child: Text(context.l10n.memberPermission_role_staff),
+            ),
           ],
           onChanged: (v) {
             if (v != null) {

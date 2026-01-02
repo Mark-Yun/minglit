@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_partner/src/l10n/generated/app_localizations.dart';
 import 'package:app_partner/src/routing/app_router.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
@@ -210,15 +211,13 @@ class _AuthenticatedApp extends ConsumerWidget {
       theme: MinglitTheme.materialTheme,
       routerConfig: goRouter,
       localizationsDelegates: const [
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
         FlutterQuillLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('ko', 'KR'),
-        Locale('en', 'US'),
-      ],
+      supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
         return MinglitGlobalLoadingOverlay(child: child!);
       },
