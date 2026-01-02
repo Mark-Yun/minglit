@@ -1,4 +1,5 @@
 import 'package:app_partner/src/features/party/create/widgets/party_section_title.dart';
+import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -21,20 +22,20 @@ class PartyLocationDetailInput extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const PartySectionTitle('상세 주소 (선택)'),
+        PartySectionTitle(context.l10n.partyCreate_label_addressDetail),
         TextFormField(
           controller: addressDetailController,
-          decoration: const InputDecoration(
-            hintText: '예: 2층 201호, 루프탑 등',
+          decoration: InputDecoration(
+            hintText: context.l10n.partyCreate_hint_addressDetail,
           ),
           onChanged: onAddressDetailChanged,
         ),
         const SizedBox(height: MinglitSpacing.large),
-        const PartySectionTitle('오시는 길 안내 (선택)'),
+        PartySectionTitle(context.l10n.partyCreate_label_directions),
         TextFormField(
           controller: directionsController,
-          decoration: const InputDecoration(
-            hintText: '예: 강남역 11번 출구에서 도보 5분 거리입니다.',
+          decoration: InputDecoration(
+            hintText: context.l10n.partyCreate_hint_directions,
           ),
           maxLines: 3,
           onChanged: onDirectionsChanged,

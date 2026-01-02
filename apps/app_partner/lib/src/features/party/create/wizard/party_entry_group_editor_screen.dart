@@ -2,6 +2,7 @@ import 'package:app_partner/src/features/party/create/party_create_controller.da
 import 'package:app_partner/src/features/party/create/party_create_coordinator.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_verification_selector.dart';
 import 'package:app_partner/src/features/party/create/wizard/party_create_wizard_controller.dart';
+import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:uuid/uuid.dart';
@@ -60,7 +61,7 @@ class _PartyEntryGroupEditorScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('입장 그룹 설정'),
+        title: Text(context.l10n.entryGroup_title),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(MinglitSpacing.medium),
@@ -68,13 +69,25 @@ class _PartyEntryGroupEditorScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 1. Gender
-            Text('성별', style: theme.textTheme.titleSmall),
+            Text(
+              context.l10n.entryGroup_label_gender,
+              style: theme.textTheme.titleSmall,
+            ),
             const SizedBox(height: MinglitSpacing.small),
             SegmentedButton<String?>(
-              segments: const [
-                ButtonSegment(value: null, label: Text('무관')),
-                ButtonSegment(value: 'male', label: Text('남성')),
-                ButtonSegment(value: 'female', label: Text('여성')),
+              segments: [
+                ButtonSegment(
+                  value: null,
+                  label: Text(context.l10n.entryGroup_option_any),
+                ),
+                ButtonSegment(
+                  value: 'male',
+                  label: Text(context.l10n.entryGroup_option_male),
+                ),
+                ButtonSegment(
+                  value: 'female',
+                  label: Text(context.l10n.entryGroup_option_female),
+                ),
               ],
               selected: {_gender},
               onSelectionChanged: (newSelection) {
@@ -84,7 +97,10 @@ class _PartyEntryGroupEditorScreenState
             const SizedBox(height: MinglitSpacing.large),
 
             // 2. Birth Year
-            Text('출생년도 범위', style: theme.textTheme.titleSmall),
+            Text(
+              context.l10n.entryGroup_label_birthYear,
+              style: theme.textTheme.titleSmall,
+            ),
             const SizedBox(height: MinglitSpacing.small),
             Row(
               children: [
@@ -92,9 +108,9 @@ class _PartyEntryGroupEditorScreenState
                   child: TextFormField(
                     controller: _minYearController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: '최소 (예: 1990)',
-                      suffixText: '년생',
+                    decoration: InputDecoration(
+                      labelText: context.l10n.entryGroup_label_minYear,
+                      suffixText: context.l10n.entryGroup_suffix_year,
                     ),
                   ),
                 ),
@@ -103,9 +119,9 @@ class _PartyEntryGroupEditorScreenState
                   child: TextFormField(
                     controller: _maxYearController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: '최대 (예: 2000)',
-                      suffixText: '년생',
+                    decoration: InputDecoration(
+                      labelText: context.l10n.entryGroup_label_maxYear,
+                      suffixText: context.l10n.entryGroup_suffix_year,
                     ),
                   ),
                 ),
@@ -114,7 +130,10 @@ class _PartyEntryGroupEditorScreenState
             const SizedBox(height: MinglitSpacing.large),
 
             // 3. Verifications
-            Text('필수 인증', style: theme.textTheme.titleSmall),
+            Text(
+              context.l10n.entryGroup_label_verification,
+              style: theme.textTheme.titleSmall,
+            ),
             const SizedBox(height: MinglitSpacing.small),
             PartyVerificationSelector(
               verificationsAsync: verificationsAsync,
@@ -147,7 +166,7 @@ class _PartyEntryGroupEditorScreenState
             width: double.infinity,
             child: ElevatedButton(
               onPressed: _submit,
-              child: const Text('입장 그룹 추가 완료'),
+              child: Text(context.l10n.entryGroup_button_complete),
             ),
           ),
         ),

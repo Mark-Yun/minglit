@@ -2,6 +2,7 @@ import 'package:app_partner/src/features/party/create/widgets/party_description_
 import 'package:app_partner/src/features/party/create/widgets/party_image_picker.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_section_title.dart';
 import 'package:app_partner/src/features/party/create/wizard/party_create_wizard_controller.dart';
+import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:image_picker/image_picker.dart';
@@ -65,34 +66,30 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(partyCreateWizardControllerProvider);
-    final theme = Theme.of(context);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(MinglitSpacing.medium),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const PartySectionTitle('파티 제목'),
+          PartySectionTitle(context.l10n.partyCreate_label_title),
           TextFormField(
             controller: _titleController,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.normal,
+            decoration: InputDecoration(
+              hintText: context.l10n.partyCreate_hint_title,
             ),
-            decoration: const InputDecoration(hintText: '예: 강남역 불금 와인 파티'),
             onChanged: (val) => ref
                 .read(partyCreateWizardControllerProvider.notifier)
                 .updateTitle(val),
           ),
           const SizedBox(height: MinglitSpacing.large),
-
-          const PartySectionTitle('상세 설명'),
+          PartySectionTitle(context.l10n.partyCreate_label_description),
           PartyDescriptionEditor(
             quillController: _quillController,
             focusNode: _editorFocusNode,
           ),
           const SizedBox(height: MinglitSpacing.large),
-
-          const PartySectionTitle('커버 이미지'),
+          PartySectionTitle(context.l10n.partyCreate_label_coverImage),
           PartyImagePicker(
             selectedImage: state.imageFile,
             onPickImage: _pickImage,

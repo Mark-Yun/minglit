@@ -3,6 +3,7 @@ import 'package:app_partner/src/features/party/create/widgets/party_location_det
 import 'package:app_partner/src/features/party/create/widgets/party_location_selector.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_section_title.dart';
 import 'package:app_partner/src/features/party/create/wizard/party_create_wizard_controller.dart';
+import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -52,7 +53,7 @@ class _Step2LocationState extends ConsumerState<Step2Location> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const PartySectionTitle('파티 장소'),
+          PartySectionTitle(context.l10n.partyCreate_label_location),
           PartyLocationSelector(
             selectedLocation: state.selectedLocation,
             onSearchTap: _handleLocationSearch,

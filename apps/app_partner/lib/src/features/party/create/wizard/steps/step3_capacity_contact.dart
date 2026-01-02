@@ -3,6 +3,7 @@ import 'package:app_partner/src/features/party/create/widgets/party_capacity_inp
 import 'package:app_partner/src/features/party/create/widgets/party_contact_input.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_section_title.dart';
 import 'package:app_partner/src/features/party/create/wizard/party_create_wizard_controller.dart';
+import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -108,7 +109,7 @@ class _Step3CapacityContactState extends ConsumerState<Step3CapacityContact> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const PartySectionTitle('모집 인원'),
+          PartySectionTitle(context.l10n.partyCreate_label_capacity),
           PartyCapacityInput(
             minController: _minCountController,
             maxController: _maxCountController,
@@ -118,11 +119,11 @@ class _Step3CapacityContactState extends ConsumerState<Step3CapacityContact> {
                 notifier.updateCapacity(max: int.tryParse(val)),
           ),
           const SizedBox(height: MinglitSpacing.large),
-          const PartySectionTitle('문의 연락처'),
+          PartySectionTitle(context.l10n.partyCreate_label_contact),
           if (partnerInfoAsync.isLoading)
-            const Padding(
-              padding: EdgeInsets.only(bottom: MinglitSpacing.small),
-              child: Text('파트너 정보 불러오는 중...'),
+            Padding(
+              padding: const EdgeInsets.only(bottom: MinglitSpacing.small),
+              child: Text(context.l10n.partyCreate_info_loadingPartner),
             ),
           PartyContactInput(
             phoneController: _phoneController,

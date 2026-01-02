@@ -6,6 +6,7 @@ import 'package:app_partner/src/features/party/create/wizard/steps/step2_locatio
 import 'package:app_partner/src/features/party/create/wizard/steps/step3_capacity_contact.dart';
 import 'package:app_partner/src/features/party/create/wizard/steps/step4_entry_rules.dart';
 import 'package:app_partner/src/features/party/create/wizard/steps/step5_tickets.dart';
+import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -59,7 +60,7 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_getStepTitle(state.currentStep)),
+        title: Text(_getStepTitle(context, state.currentStep)),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
           child: LinearProgressIndicator(
@@ -78,9 +79,8 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
           Step3CapacityContact(),
           Step4EntryRules(),
           Step5Tickets(),
-          Center(
-            child: Text('Review & Submit'),
-          ),
+          // TODO(mark): Implement Review Step
+          Center(child: Text('Review & Submit')),
         ],
       ),
       bottomNavigationBar: SafeArea(
@@ -92,7 +92,7 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: notifier.previousStep,
-                    child: const Text('이전'),
+                    child: Text(context.l10n.wizard_button_prev),
                   ),
                 ),
               if (state.currentStep.index > 0)
@@ -105,8 +105,8 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
                       : notifier.nextStep,
                   child: Text(
                     state.currentStep == PartyCreateStep.review
-                        ? '기획 완료'
-                        : '다음',
+                        ? context.l10n.wizard_button_complete
+                        : context.l10n.wizard_button_next,
                   ),
                 ),
               ),
@@ -117,20 +117,20 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
     );
   }
 
-  String _getStepTitle(PartyCreateStep step) {
+  String _getStepTitle(BuildContext context, PartyCreateStep step) {
     switch (step) {
       case PartyCreateStep.basicInfo:
-        return '1. 기본 정보';
+        return context.l10n.wizard_step_basic;
       case PartyCreateStep.location:
-        return '2. 장소 설정';
+        return context.l10n.wizard_step_location;
       case PartyCreateStep.capacityAndContact:
-        return '3. 인원 및 연락처';
+        return context.l10n.wizard_step_capacity;
       case PartyCreateStep.entryRules:
-        return '4. 입장 규칙';
+        return context.l10n.wizard_step_entry;
       case PartyCreateStep.tickets:
-        return '5. 티켓 설정';
+        return context.l10n.wizard_step_ticket;
       case PartyCreateStep.review:
-        return '최종 확인';
+        return context.l10n.wizard_step_review;
     }
   }
 }

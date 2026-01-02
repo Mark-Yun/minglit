@@ -381,4 +381,132 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get appDetail_error_processFailed => '신청서 상태 변경에 실패했습니다.';
+
+  @override
+  String get wizard_step_basic => '1. 기본 정보';
+
+  @override
+  String get wizard_step_location => '2. 장소 설정';
+
+  @override
+  String get wizard_step_capacity => '3. 인원 및 연락처';
+
+  @override
+  String get wizard_step_entry => '4. 입장 규칙';
+
+  @override
+  String get wizard_step_ticket => '5. 티켓 설정';
+
+  @override
+  String get wizard_step_review => '최종 확인';
+
+  @override
+  String get wizard_button_next => '다음';
+
+  @override
+  String get wizard_button_prev => '이전';
+
+  @override
+  String get wizard_button_complete => '기획 완료';
+
+  @override
+  String get partyCreate_label_title => '파티 제목';
+
+  @override
+  String get partyCreate_hint_title => '예: 강남역 불금 와인 파티';
+
+  @override
+  String get partyCreate_label_description => '상세 설명';
+
+  @override
+  String get partyCreate_hint_description =>
+      '파티의 분위기, 드레스코드, 제공되는 주류 등을 자유롭게 적어주세요.';
+
+  @override
+  String get partyCreate_label_coverImage => '커버 이미지';
+
+  @override
+  String get partyCreate_label_location => '파티 장소';
+
+  @override
+  String get partyCreate_label_addressDetail => '상세 주소 (선택)';
+
+  @override
+  String get partyCreate_hint_addressDetail => '예: 2층 201호, 루프탑 등';
+
+  @override
+  String get partyCreate_label_directions => '오시는 길 안내 (선택)';
+
+  @override
+  String get partyCreate_hint_directions => '예: 강남역 11번 출구에서 도보 5분 거리입니다.';
+
+  @override
+  String get partyCreate_label_capacity => '모집 인원';
+
+  @override
+  String get partyCreate_label_contact => '문의 연락처';
+
+  @override
+  String get partyCreate_info_loadingPartner => '파트너 정보 불러오는 중...';
+
+  @override
+  String get partyCreate_title_entryRules => '누가 파티에 입장할 수 있나요?';
+
+  @override
+  String get partyCreate_desc_entryRules =>
+      '성별, 나이, 필수 인증을 조합하여 입장 그룹을 만들어보세요.\n(예: \"20대 남성 + 재직증명\", \"20대 여성 + 학생증\")';
+
+  @override
+  String get partyCreate_empty_entryGroups => '아직 추가된 입장 그룹이 없습니다.';
+
+  @override
+  String get partyCreate_button_addEntryGroup => '입장 그룹 추가하기';
+
+  @override
+  String get partyCreate_subtitle_addEntryGroup => '새로운 입장 조건을 설정합니다.';
+
+  @override
+  String partyCreate_label_entryGroupHeader(int index) {
+    return '입장 그룹 $index';
+  }
+
+  @override
+  String get partyCreate_title_tickets => '티켓을 만들어주세요.';
+
+  @override
+  String get partyCreate_desc_tickets =>
+      '위에서 설정한 입장 그룹에 해당하는 티켓을 자유롭게 구성할 수 있습니다.';
+
+  @override
+  String get entryGroup_title => '입장 그룹 설정';
+
+  @override
+  String get entryGroup_label_gender => '성별';
+
+  @override
+  String get entryGroup_option_any => '무관';
+
+  @override
+  String get entryGroup_option_male => '남성';
+
+  @override
+  String get entryGroup_option_female => '여성';
+
+  @override
+  String get entryGroup_label_birthYear => '출생년도 범위';
+
+  @override
+  String get entryGroup_label_minYear => '최소 (예: 1990)';
+
+  @override
+  String get entryGroup_label_maxYear => '최대 (예: 2000)';
+
+  @override
+  String get entryGroup_suffix_year => '년생';
+
+  @override
+  String get entryGroup_label_verification => '필수 인증';
+
+  @override
+  String get entryGroup_button_complete => '입장 그룹 추가 완료';
 }

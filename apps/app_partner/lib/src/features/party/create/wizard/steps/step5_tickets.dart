@@ -1,5 +1,6 @@
 import 'package:app_partner/src/features/party/create/widgets/party_ticket_template_editor.dart';
 import 'package:app_partner/src/features/party/create/wizard/party_create_wizard_controller.dart';
+import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -16,14 +17,14 @@ class Step5Tickets extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '티켓을 만들어주세요.',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            context.l10n.partyCreate_title_tickets,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: MinglitSpacing.small),
-          const Text(
-            '위에서 설정한 입장 그룹에 해당하는 티켓을 자유롭게 구성할 수 있습니다.',
-            style: TextStyle(color: Colors.grey),
+          Text(
+            context.l10n.partyCreate_desc_tickets,
+            style: const TextStyle(color: Colors.grey),
           ),
           const SizedBox(height: MinglitSpacing.large),
           PartyTicketTemplateEditor(

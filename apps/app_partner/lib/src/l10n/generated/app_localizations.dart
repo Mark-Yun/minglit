@@ -807,6 +807,252 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'신청서 상태 변경에 실패했습니다.'**
   String get appDetail_error_processFailed;
+
+  /// No description provided for @wizard_step_basic.
+  ///
+  /// In ko, this message translates to:
+  /// **'1. 기본 정보'**
+  String get wizard_step_basic;
+
+  /// No description provided for @wizard_step_location.
+  ///
+  /// In ko, this message translates to:
+  /// **'2. 장소 설정'**
+  String get wizard_step_location;
+
+  /// No description provided for @wizard_step_capacity.
+  ///
+  /// In ko, this message translates to:
+  /// **'3. 인원 및 연락처'**
+  String get wizard_step_capacity;
+
+  /// No description provided for @wizard_step_entry.
+  ///
+  /// In ko, this message translates to:
+  /// **'4. 입장 규칙'**
+  String get wizard_step_entry;
+
+  /// No description provided for @wizard_step_ticket.
+  ///
+  /// In ko, this message translates to:
+  /// **'5. 티켓 설정'**
+  String get wizard_step_ticket;
+
+  /// No description provided for @wizard_step_review.
+  ///
+  /// In ko, this message translates to:
+  /// **'최종 확인'**
+  String get wizard_step_review;
+
+  /// No description provided for @wizard_button_next.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음'**
+  String get wizard_button_next;
+
+  /// No description provided for @wizard_button_prev.
+  ///
+  /// In ko, this message translates to:
+  /// **'이전'**
+  String get wizard_button_prev;
+
+  /// No description provided for @wizard_button_complete.
+  ///
+  /// In ko, this message translates to:
+  /// **'기획 완료'**
+  String get wizard_button_complete;
+
+  /// No description provided for @partyCreate_label_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'파티 제목'**
+  String get partyCreate_label_title;
+
+  /// No description provided for @partyCreate_hint_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'예: 강남역 불금 와인 파티'**
+  String get partyCreate_hint_title;
+
+  /// No description provided for @partyCreate_label_description.
+  ///
+  /// In ko, this message translates to:
+  /// **'상세 설명'**
+  String get partyCreate_label_description;
+
+  /// No description provided for @partyCreate_hint_description.
+  ///
+  /// In ko, this message translates to:
+  /// **'파티의 분위기, 드레스코드, 제공되는 주류 등을 자유롭게 적어주세요.'**
+  String get partyCreate_hint_description;
+
+  /// No description provided for @partyCreate_label_coverImage.
+  ///
+  /// In ko, this message translates to:
+  /// **'커버 이미지'**
+  String get partyCreate_label_coverImage;
+
+  /// No description provided for @partyCreate_label_location.
+  ///
+  /// In ko, this message translates to:
+  /// **'파티 장소'**
+  String get partyCreate_label_location;
+
+  /// No description provided for @partyCreate_label_addressDetail.
+  ///
+  /// In ko, this message translates to:
+  /// **'상세 주소 (선택)'**
+  String get partyCreate_label_addressDetail;
+
+  /// No description provided for @partyCreate_hint_addressDetail.
+  ///
+  /// In ko, this message translates to:
+  /// **'예: 2층 201호, 루프탑 등'**
+  String get partyCreate_hint_addressDetail;
+
+  /// No description provided for @partyCreate_label_directions.
+  ///
+  /// In ko, this message translates to:
+  /// **'오시는 길 안내 (선택)'**
+  String get partyCreate_label_directions;
+
+  /// No description provided for @partyCreate_hint_directions.
+  ///
+  /// In ko, this message translates to:
+  /// **'예: 강남역 11번 출구에서 도보 5분 거리입니다.'**
+  String get partyCreate_hint_directions;
+
+  /// No description provided for @partyCreate_label_capacity.
+  ///
+  /// In ko, this message translates to:
+  /// **'모집 인원'**
+  String get partyCreate_label_capacity;
+
+  /// No description provided for @partyCreate_label_contact.
+  ///
+  /// In ko, this message translates to:
+  /// **'문의 연락처'**
+  String get partyCreate_label_contact;
+
+  /// No description provided for @partyCreate_info_loadingPartner.
+  ///
+  /// In ko, this message translates to:
+  /// **'파트너 정보 불러오는 중...'**
+  String get partyCreate_info_loadingPartner;
+
+  /// No description provided for @partyCreate_title_entryRules.
+  ///
+  /// In ko, this message translates to:
+  /// **'누가 파티에 입장할 수 있나요?'**
+  String get partyCreate_title_entryRules;
+
+  /// No description provided for @partyCreate_desc_entryRules.
+  ///
+  /// In ko, this message translates to:
+  /// **'성별, 나이, 필수 인증을 조합하여 입장 그룹을 만들어보세요.\n(예: \"20대 남성 + 재직증명\", \"20대 여성 + 학생증\")'**
+  String get partyCreate_desc_entryRules;
+
+  /// No description provided for @partyCreate_empty_entryGroups.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 추가된 입장 그룹이 없습니다.'**
+  String get partyCreate_empty_entryGroups;
+
+  /// No description provided for @partyCreate_button_addEntryGroup.
+  ///
+  /// In ko, this message translates to:
+  /// **'입장 그룹 추가하기'**
+  String get partyCreate_button_addEntryGroup;
+
+  /// No description provided for @partyCreate_subtitle_addEntryGroup.
+  ///
+  /// In ko, this message translates to:
+  /// **'새로운 입장 조건을 설정합니다.'**
+  String get partyCreate_subtitle_addEntryGroup;
+
+  /// No description provided for @partyCreate_label_entryGroupHeader.
+  ///
+  /// In ko, this message translates to:
+  /// **'입장 그룹 {index}'**
+  String partyCreate_label_entryGroupHeader(int index);
+
+  /// No description provided for @partyCreate_title_tickets.
+  ///
+  /// In ko, this message translates to:
+  /// **'티켓을 만들어주세요.'**
+  String get partyCreate_title_tickets;
+
+  /// No description provided for @partyCreate_desc_tickets.
+  ///
+  /// In ko, this message translates to:
+  /// **'위에서 설정한 입장 그룹에 해당하는 티켓을 자유롭게 구성할 수 있습니다.'**
+  String get partyCreate_desc_tickets;
+
+  /// No description provided for @entryGroup_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'입장 그룹 설정'**
+  String get entryGroup_title;
+
+  /// No description provided for @entryGroup_label_gender.
+  ///
+  /// In ko, this message translates to:
+  /// **'성별'**
+  String get entryGroup_label_gender;
+
+  /// No description provided for @entryGroup_option_any.
+  ///
+  /// In ko, this message translates to:
+  /// **'무관'**
+  String get entryGroup_option_any;
+
+  /// No description provided for @entryGroup_option_male.
+  ///
+  /// In ko, this message translates to:
+  /// **'남성'**
+  String get entryGroup_option_male;
+
+  /// No description provided for @entryGroup_option_female.
+  ///
+  /// In ko, this message translates to:
+  /// **'여성'**
+  String get entryGroup_option_female;
+
+  /// No description provided for @entryGroup_label_birthYear.
+  ///
+  /// In ko, this message translates to:
+  /// **'출생년도 범위'**
+  String get entryGroup_label_birthYear;
+
+  /// No description provided for @entryGroup_label_minYear.
+  ///
+  /// In ko, this message translates to:
+  /// **'최소 (예: 1990)'**
+  String get entryGroup_label_minYear;
+
+  /// No description provided for @entryGroup_label_maxYear.
+  ///
+  /// In ko, this message translates to:
+  /// **'최대 (예: 2000)'**
+  String get entryGroup_label_maxYear;
+
+  /// No description provided for @entryGroup_suffix_year.
+  ///
+  /// In ko, this message translates to:
+  /// **'년생'**
+  String get entryGroup_suffix_year;
+
+  /// No description provided for @entryGroup_label_verification.
+  ///
+  /// In ko, this message translates to:
+  /// **'필수 인증'**
+  String get entryGroup_label_verification;
+
+  /// No description provided for @entryGroup_button_complete.
+  ///
+  /// In ko, this message translates to:
+  /// **'입장 그룹 추가 완료'**
+  String get entryGroup_button_complete;
 }
 
 class _AppLocalizationsDelegate
