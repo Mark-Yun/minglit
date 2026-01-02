@@ -9,8 +9,8 @@ part of 'event.dart';
 _Event _$EventFromJson(Map<String, dynamic> json) => _Event(
   id: json['id'] as String,
   partyId: json['party_id'] as String,
-  startTime: DateTime.parse(json['startTime'] as String),
-  endTime: DateTime.parse(json['endTime'] as String),
+  startTime: DateTime.parse(json['start_time'] as String),
+  endTime: DateTime.parse(json['end_time'] as String),
   createdAt: DateTime.parse(json['created_at'] as String),
   updatedAt: DateTime.parse(json['updated_at'] as String),
   locationId: json['location_id'] as String?,
@@ -32,8 +32,8 @@ _Event _$EventFromJson(Map<String, dynamic> json) => _Event(
 Map<String, dynamic> _$EventToJson(_Event instance) => <String, dynamic>{
   'id': instance.id,
   'party_id': instance.partyId,
-  'startTime': instance.startTime.toIso8601String(),
-  'endTime': instance.endTime.toIso8601String(),
+  'start_time': instance.startTime.toIso8601String(),
+  'end_time': instance.endTime.toIso8601String(),
   'created_at': instance.createdAt.toIso8601String(),
   'updated_at': instance.updatedAt.toIso8601String(),
   'location_id': instance.locationId,

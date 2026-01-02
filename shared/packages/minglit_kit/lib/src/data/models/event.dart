@@ -13,8 +13,8 @@ abstract class Event with _$Event {
   const factory Event({
     required String id,
     @JsonKey(name: 'party_id') required String partyId,
-    required DateTime startTime,
-    required DateTime endTime,
+    @JsonKey(name: 'start_time') required DateTime startTime,
+    @JsonKey(name: 'end_time') required DateTime endTime,
     @JsonKey(name: 'created_at') required DateTime createdAt,
     @JsonKey(name: 'updated_at') required DateTime updatedAt,
     @JsonKey(name: 'location_id') String? locationId,
