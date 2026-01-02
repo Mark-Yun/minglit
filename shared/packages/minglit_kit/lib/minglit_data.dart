@@ -10,6 +10,7 @@ export 'src/data/models/event.dart';
 export 'src/data/models/partner.dart';
 export 'src/data/models/partner_application.dart';
 export 'src/data/models/party.dart';
+export 'src/data/models/party_entry_group.dart';
 export 'src/data/models/ticket.dart';
 export 'src/data/models/verification.dart';
 

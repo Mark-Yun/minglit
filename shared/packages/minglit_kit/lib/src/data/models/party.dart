@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:minglit_kit/src/data/models/party_entry_group.dart';
 
 part 'party.freezed.dart';
 part 'party.g.dart';
@@ -80,15 +81,19 @@ extension PartyX on Party {
   bool get isClosed => status == 'closed';
   bool get isDraft => status == 'draft';
 
+  List<PartyEntryGroup> get entryGroups {
+    return conditions
+        .map((e) => PartyEntryGroup.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   List<String> get conditionSummaries {
-    if (conditions.isEmpty) return ['조건 없음'];
+    if (entryGroups.isEmpty) return ['조건 없음'];
 
-    final summaries = conditions.map((cond) {
-      if (cond is! Map) return '';
-
-      final gender = cond['gender'];
-      final ageData = cond['age_range'];
-      final verifIds = cond['required_verification_ids'] as List?;
+    final summaries = entryGroups.map((group) {
+      final gender = group.gender;
+      final birthYearData = group.birthYearRange;
+      final verifIds = group.requiredVerificationIds;
 
       var genderText = '성별 무관';
       if (gender == 'male') {
@@ -97,38 +102,37 @@ extension PartyX on Party {
         genderText = '여성';
       }
 
-      var ageText = '나이 무관';
-      if (ageData is Map) {
-        final min = ageData['min'];
-        final max = ageData['max'];
+      var birthYearText = '나이 무관';
+      if (birthYearData != null) {
+        final min = birthYearData['min'];
+        final max = birthYearData['max'];
         if (min != null && max != null) {
-          ageText = '$min~$max년생';
+          birthYearText = '$min~$max년생';
         } else if (min != null) {
-          ageText = '$min년생 이후';
+          birthYearText = '$min년생 이후';
         } else if (max != null) {
-          ageText = '$max년생 이전';
+          birthYearText = '$max년생 이전';
         }
       }
 
       String base;
-      if (genderText == '성별 무관' && ageText == '나이 무관') {
+      if (genderText == '성별 무관' && birthYearText == '나이 무관') {
         base = '전체';
-      } else if (ageText == '나이 무관') {
+      } else if (birthYearText == '나이 무관') {
         base = genderText;
       } else if (genderText == '성별 무관') {
-        base = ageText;
+        base = birthYearText;
       } else {
-        base = '$genderText($ageText)';
+        base = '$genderText($birthYearText)';
       }
 
       // 인증 정보 추가
-      if (verifIds != null && verifIds.isNotEmpty) {
+      if (verifIds.isNotEmpty) {
         return '$base +🛡️${verifIds.length}';
       }
       return base;
-    }).where((s) => s.isNotEmpty).toList();
+    }).toList();
 
-    if (summaries.isEmpty) return ['조건 없음'];
     return summaries;
   }
 }

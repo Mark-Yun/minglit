@@ -1,5 +1,6 @@
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 /// **Database Seeder (Refactored)**
 ///
@@ -197,28 +198,54 @@ class DatabaseSeeder {
       final locationId = locationRes['id'] as String;
 
       // 6. Create 1 Party linked to this location
-      // Scenario:
-      // - Male (1990~2000) needs Job Verification (globalVerifIds[0])
-      // - Female (1995~2005) needs School Verification (globalVerifIds[1])
-      final conditions = [
-        {
-          'gender': 'male',
-          'age_range': {'min': 1990, 'max': 2000},
-          'required_verification_ids':
-              globalVerifIds.isNotEmpty ? [globalVerifIds[0]] : <String>[],
-        },
-        {
-          'gender': 'female',
-          'age_range': {'min': 1995, 'max': 2005},
-          'required_verification_ids':
-              globalVerifIds.length > 1 ? [globalVerifIds[1]] : <String>[],
-        },
-      ];
+      // Diverse Scenarios based on loop index
+      List<Map<String, dynamic>> conditions;
+
+      if (i % 3 == 1) {
+        // Scenario A: Male(Job) vs Female(School)
+        conditions = [
+          {
+            'id': const Uuid().v4(),
+            'gender': 'male',
+            'birth_year_range': {'min': 1990, 'max': 2000},
+            'required_verification_ids':
+                globalVerifIds.isNotEmpty ? [globalVerifIds[0]] : <String>[],
+          },
+          {
+            'id': const Uuid().v4(),
+            'gender': 'female',
+            'birth_year_range': {'min': 1995, 'max': 2005},
+            'required_verification_ids':
+                globalVerifIds.length > 1 ? [globalVerifIds[1]] : <String>[],
+          },
+        ];
+      } else if (i % 3 == 2) {
+        // Scenario B: Anyone + Job Verification
+        conditions = [
+          {
+            'id': const Uuid().v4(),
+            'gender': null, // Anyone
+            'birth_year_range': null, // Any age
+            'required_verification_ids':
+                globalVerifIds.isNotEmpty ? [globalVerifIds[0]] : <String>[],
+          }
+        ];
+      } else {
+        // Scenario C: 20s Only + No Verification
+        conditions = [
+          {
+            'id': const Uuid().v4(),
+            'gender': null,
+            'birth_year_range': {'min': 1995, 'max': 2004},
+            'required_verification_ids': <String>[],
+          }
+        ];
+      }
 
       await _adminClient.from('parties').insert({
         'partner_id': partnerId,
         'location_id': locationId,
-        'title': '$partnerName Friday Party',
+        'title': '$partnerName Party (Type ${i % 3})',
         'description': {
           'ops': [
             {'insert': "Let's drink wine!\n"},

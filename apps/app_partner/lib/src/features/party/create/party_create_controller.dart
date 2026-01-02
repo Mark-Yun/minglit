@@ -227,27 +227,27 @@ class PartyCreateController extends _$PartyCreateController {
           locationId = newLocation.id;
         }
 
-      // 5. Create Party
-      final newParty = Party(
-        id: '', // Server generated
-        partnerId: partnerId,
-        locationId: locationId,
-        title: title,
-        description: description,
-        minConfirmedCount: minConfirmedCount,
-        maxParticipants: maxParticipants,
-        contactOptions: contactOptions,
-        conditions: [
-          {
-            ...state.conditions,
-            'required_verification_ids': state.selectedVerificationIds,
-          }
-        ],
-        imageUrl: imageUrl,
-        requiredVerificationIds: state.selectedVerificationIds,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+        // 5. Create Party
+        final newParty = Party(
+          id: '', // Server generated
+          partnerId: partnerId,
+          locationId: locationId,
+          title: title,
+          description: description,
+          minConfirmedCount: minConfirmedCount,
+          maxParticipants: maxParticipants,
+          contactOptions: contactOptions,
+          conditions: [
+            {
+              ...state.conditions,
+              'required_verification_ids': state.selectedVerificationIds,
+            },
+          ],
+          imageUrl: imageUrl,
+          requiredVerificationIds: state.selectedVerificationIds,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
 
         final createdParty = await partyRepo.createParty(newParty);
 

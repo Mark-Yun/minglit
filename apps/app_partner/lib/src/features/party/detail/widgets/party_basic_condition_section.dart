@@ -11,9 +11,9 @@ class PartyBasicConditionSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final conditions = party.conditions;
+    final groups = party.entryGroups;
 
-    if (conditions.isEmpty) {
+    if (groups.isEmpty) {
       return Card(
         child: Padding(
           padding: const EdgeInsets.all(MinglitSpacing.medium),
@@ -33,7 +33,7 @@ class PartyBasicConditionSection extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            for (var i = 0; i < conditions.length; i++) ...[
+            for (var i = 0; i < groups.length; i++) ...[
               if (i > 0)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 12),
@@ -41,11 +41,7 @@ class PartyBasicConditionSection extends ConsumerWidget {
                     color: colorScheme.outlineVariant.withValues(alpha: 0.5),
                   ),
                 ),
-              _buildConditionGroup(
-                context,
-                ref,
-                conditions[i] as Map<String, dynamic>,
-              ),
+              _buildConditionGroup(context, ref, groups[i]),
             ],
           ],
         ),
@@ -56,18 +52,17 @@ class PartyBasicConditionSection extends ConsumerWidget {
   Widget _buildConditionGroup(
     BuildContext context,
     WidgetRef ref,
-    Map<String, dynamic> cond,
+    PartyEntryGroup group,
   ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final verifIds =
-        List<String>.from(cond['required_verification_ids'] as List? ?? []);
+    final verifIds = group.requiredVerificationIds;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 1. Gender & Age Row
-        _buildConditionRow(context, cond),
+        _buildConditionRow(context, group),
 
         // 2. Verifications for this group
         if (verifIds.isNotEmpty) ...[
@@ -86,27 +81,27 @@ class PartyBasicConditionSection extends ConsumerWidget {
     );
   }
 
-  Widget _buildConditionRow(BuildContext context, Map<String, dynamic> cond) {
+  Widget _buildConditionRow(BuildContext context, PartyEntryGroup group) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    final gender = cond['gender'] as String?;
-    final ageRange = cond['age_range'] as Map<String, dynamic>?;
+    final gender = group.gender;
+    final birthYearRange = group.birthYearRange;
 
     var genderText = '성별 무관';
     if (gender == 'male') genderText = '남성 전용';
     if (gender == 'female') genderText = '여성 전용';
 
-    var ageText = '나이 무관';
-    if (ageRange != null) {
-      final min = ageRange['min'];
-      final max = ageRange['max'];
+    var birthYearText = '나이 무관';
+    if (birthYearRange != null) {
+      final min = birthYearRange['min'];
+      final max = birthYearRange['max'];
       if (min != null && max != null) {
-        ageText = '$min~$max년생';
+        birthYearText = '$min~$max년생';
       } else if (min != null) {
-        ageText = '$min년생 이후';
+        birthYearText = '$min년생 이후';
       } else if (max != null) {
-        ageText = '$max년생 이전';
+        birthYearText = '$max년생 이전';
       }
     }
 
@@ -132,7 +127,7 @@ class PartyBasicConditionSection extends ConsumerWidget {
             context,
             Icons.cake_outlined,
             '나이 조건',
-            ageText,
+            birthYearText,
           ),
         ),
       ],
@@ -199,20 +194,20 @@ class _VerificationBadges extends ConsumerWidget {
                 avatar: const Icon(Icons.verified, size: 14),
                 visualDensity: VisualDensity.compact,
                 labelStyle: const TextStyle(fontSize: 11),
-                backgroundColor:
-                    colorScheme.primaryContainer.withValues(alpha: 0.3),
+                backgroundColor: colorScheme.primaryContainer.withValues(
+                  alpha: 0.3,
+                ),
                 side: BorderSide.none,
               ),
             )
             .toList(),
       ),
       loading: () => const MinglitSkeleton(height: 32, width: 100),
-      error:
-          (e, s) => const Icon(
-            Icons.error_outline,
-            size: 16,
-            color: Colors.red,
-          ),
+      error: (e, s) => const Icon(
+        Icons.error_outline,
+        size: 16,
+        color: Colors.red,
+      ),
     );
   }
 }

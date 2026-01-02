@@ -24,9 +24,34 @@
 
 ## 🏗️ Technical Standards
 
+### 📦 Shared Kit & Architecture
 -   **Shared Kit First**: 공통 로직은 반드시 `minglit_kit`에 구현하여 `app_user`와 `app_partner` 간의 코드 중복을 0%로 유지합니다.
--   **Theme-Driven UI**: 모든 UI 구현 시 하드코딩된 수치(Margin, Padding, Size, Color 등)를 지양하고, `MinglitTheme`에 정의된 디자인 토큰(`MinglitSpacing`, `MinglitIconSize`, `MinglitAnimation`, `MinglitTextStyles` 등)을 반드시 활용합니다.
--   **Design Token Consistency**: 새로운 시각적 패턴이나 반복되는 데코레이션이 발생할 경우, 이를 즉시 `MinglitTheme` 또는 `MinglitDecorations`로 추출하여 프로젝트 전반의 시각적 일관성을 보장합니다.
--   **Security Definer**: DB 트리거와 민감한 작업은 서비스 롤 및 보안 정의 함수를 통해 안전하게 처리합니다.
 -   **Safe State Management**: Riverpod 프로바이더 사용 시 `mounted` 체크 및 예외 처리를 통해 비동기 업데이트 중 발생할 수 있는 메모리 해제 오류를 철저히 방지합니다.
 -   **DX (Developer Experience)**: 개발자 도구(Seeder, Switcher 등)는 단순히 작동하는 것을 넘어, 지능적이고 편리한 UI/UX를 제공해야 합니다.
+
+### 🎨 Theme & UI
+-   **Theme-Driven UI**: 모든 UI 구현 시 하드코딩된 수치(Margin, Padding, Size, Color 등)를 지양하고, `MinglitTheme`에 정의된 디자인 토큰(`MinglitSpacing`, `MinglitIconSize`, `MinglitAnimation`, `MinglitTextStyles` 등)을 반드시 활용합니다.
+-   **Design Token Consistency**: 새로운 시각적 패턴이나 반복되는 데코레이션이 발생할 경우, 이를 즉시 `MinglitTheme` 또는 `MinglitDecorations`로 추출하여 프로젝트 전반의 시각적 일관성을 보장합니다.
+
+### 🛡️ Error Handling Policy
+-   **Layered Exception**: 에러의 성격에 따라 명확히 구분합니다.
+    -   `MinglitUserException`: 사용자 과실/유효성 검사. (로그 X, 메시지 그대로 노출)
+    -   `MinglitSystemException`: 시스템 오류. (로그 O, 친절한 공통 메시지로 치환)
+-   **Global Handler**: UI 계층에서는 `handleMinglitError(context, e)`를 사용하여 일관된 사용자 피드백을 제공합니다.
+-   **Catch Pattern**: 린트 준수를 위해 `on Object catch (e, st)` 패턴을 사용하며, 스택 트레이스를 반드시 확보하여 로깅합니다.
+
+### 📝 Logging Policy
+-   **Repository Layer**: 모든 Input/Output에 대해 `Log.d`로 디버깅 정보를 남기고, 에러 발생 시 `Log.e`로 스택 트레이스를 기록한 후 `rethrow` 합니다.
+-   **Navigation**: `MinglitNavigationObserver`를 통해 모든 화면 이동(Push/Pop)을 `Log.i`로 자동 기록하여 유저 플로우를 추적합니다.
+-   **UI Layer**: UI에서는 직접 로깅하지 않고 시스템 로직(Repo, Coordinator)에 위임하거나 `handleMinglitError`를 통해 처리합니다.
+
+### 🌍 i18n Convention
+-   **Standard**: `flutter_localizations` 및 `.arb` 파일을 표준으로 사용합니다.
+-   **Context Extension**: `context.l10n.variableName` 형태로 접근하여 생산성을 높입니다.
+-   **Key Naming**: `feature_component_description` (계층형) 네이밍을 준수하여 추적성을 확보합니다. (예: `login_button_submit`, `common_error_network`)
+
+### 💾 Data Structure Decisions
+-   **Party Entry Rules**:
+    -   `conditions`는 `List<PartyEntryGroup>` (JSONB 배열)으로 관리하여 다중 조건 그룹을 지원합니다.
+    -   필수 인증(`required_verification_ids`)은 각 조건 그룹 내부에 포함하여 조건별로 다른 인증을 요구할 수 있도록 합니다.
+    -   나이 범위 필드명은 `age_range` 대신 명확한 **`birth_year_range`**를 사용합니다.
