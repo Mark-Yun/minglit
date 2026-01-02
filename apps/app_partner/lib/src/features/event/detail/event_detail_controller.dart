@@ -10,7 +10,7 @@ Future<Event> eventDetail(Ref ref, String eventId) async {
 }
 
 @riverpod
-Future<List<EventTicket>> eventTickets(Ref ref, String eventId) async {
-  final repo = ref.watch(partyRepositoryProvider);
+Future<List<Ticket>> eventTickets(Ref ref, String eventId) async {
+  final repo = ref.watch(ticketRepositoryProvider);
   return repo.getTicketsByEventId(eventId);
 }

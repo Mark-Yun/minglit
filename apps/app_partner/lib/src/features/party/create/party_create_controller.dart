@@ -15,7 +15,7 @@ abstract class PartyCreateState with _$PartyCreateState {
     @Default(AsyncValue.data(null)) AsyncValue<void> status,
     Location? selectedLocation,
     @Default({}) Map<String, dynamic> conditions,
-    @Default([]) List<EventTicket> ticketTemplates,
+    @Default([]) List<Ticket> ticketTemplates,
     String? descriptionError,
   }) = _PartyCreateState;
 }
@@ -75,14 +75,14 @@ class PartyCreateController extends _$PartyCreateController {
     state = state.copyWith(conditions: newConditions);
   }
 
-  void addTicketTemplate(EventTicket ticket) {
+  void addTicketTemplate(Ticket ticket) {
     state = state.copyWith(
       ticketTemplates: [...state.ticketTemplates, ticket],
     );
   }
 
   void removeTicketTemplate(int index) {
-    final list = List<EventTicket>.from(state.ticketTemplates)..removeAt(index);
+    final list = List<Ticket>.from(state.ticketTemplates)..removeAt(index);
     state = state.copyWith(ticketTemplates: list);
   }
 
@@ -188,6 +188,7 @@ class PartyCreateController extends _$PartyCreateController {
 
       final partyRepo = ref.read(partyRepositoryProvider);
       final locationRepo = ref.read(locationRepositoryProvider);
+      final ticketRepo = ref.read(ticketRepositoryProvider);
       String? imageUrl;
 
       // 2. Upload Image
@@ -246,7 +247,7 @@ class PartyCreateController extends _$PartyCreateController {
 
       // 6. Create Ticket Templates linked to Party
       for (final template in state.ticketTemplates) {
-        await partyRepo.createTicket(
+        await ticketRepo.createTicket(
           template.copyWith(
             partyId: createdParty.id,
             eventId: null,

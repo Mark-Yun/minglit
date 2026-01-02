@@ -13,7 +13,7 @@ class TicketListItem extends StatelessWidget {
     super.key,
   });
 
-  final EventTicket ticket;
+  final Ticket ticket;
   final VoidCallback? onTap;
   final Widget? trailing;
 
@@ -173,8 +173,8 @@ class TicketListView extends StatelessWidget {
     super.key,
   });
 
-  final List<EventTicket> tickets;
-  final void Function(EventTicket)? onTicketTap;
+  final List<Ticket> tickets;
+  final void Function(Ticket)? onTicketTap;
   final VoidCallback? onCreatePressed;
   final bool shrinkWrap;
   final ScrollPhysics physics;

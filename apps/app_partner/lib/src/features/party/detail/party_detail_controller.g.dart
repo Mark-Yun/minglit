@@ -159,13 +159,11 @@ const partyTicketsProvider = PartyTicketsFamily._();
 final class PartyTicketsProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<EventTicket>>,
-          List<EventTicket>,
-          FutureOr<List<EventTicket>>
+          AsyncValue<List<Ticket>>,
+          List<Ticket>,
+          FutureOr<List<Ticket>>
         >
-    with
-        $FutureModifier<List<EventTicket>>,
-        $FutureProvider<List<EventTicket>> {
+    with $FutureModifier<List<Ticket>>, $FutureProvider<List<Ticket>> {
   const PartyTicketsProvider._({
     required PartyTicketsFamily super.from,
     required String super.argument,
@@ -189,12 +187,12 @@ final class PartyTicketsProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<EventTicket>> $createElement(
+  $FutureProviderElement<List<Ticket>> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<List<EventTicket>> create(Ref ref) {
+  FutureOr<List<Ticket>> create(Ref ref) {
     final argument = this.argument as String;
     return partyTickets(ref, argument);
   }
@@ -210,10 +208,10 @@ final class PartyTicketsProvider
   }
 }
 
-String _$partyTicketsHash() => r'513308dc01728b24285dc436b79eda8abc9371f5';
+String _$partyTicketsHash() => r'fb7e0af12e9b64b82eb7930eaf1d64701859007e';
 
 final class PartyTicketsFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<List<EventTicket>>, String> {
+    with $FunctionalFamilyOverride<FutureOr<List<Ticket>>, String> {
   const PartyTicketsFamily._()
     : super(
         retry: null,

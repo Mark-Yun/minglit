@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PartyCreateState {
 
- List<String> get selectedVerificationIds; Set<String> get enabledContactMethods; AsyncValue<void> get status; Location? get selectedLocation; Map<String, dynamic> get conditions; List<EventTicket> get ticketTemplates; String? get descriptionError;
+ List<String> get selectedVerificationIds; Set<String> get enabledContactMethods; AsyncValue<void> get status; Location? get selectedLocation; Map<String, dynamic> get conditions; List<Ticket> get ticketTemplates; String? get descriptionError;
 /// Create a copy of PartyCreateState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -45,7 +45,7 @@ abstract mixin class $PartyCreateStateCopyWith<$Res>  {
   factory $PartyCreateStateCopyWith(PartyCreateState value, $Res Function(PartyCreateState) _then) = _$PartyCreateStateCopyWithImpl;
 @useResult
 $Res call({
- List<String> selectedVerificationIds, Set<String> enabledContactMethods, AsyncValue<void> status, Location? selectedLocation, Map<String, dynamic> conditions, List<EventTicket> ticketTemplates, String? descriptionError
+ List<String> selectedVerificationIds, Set<String> enabledContactMethods, AsyncValue<void> status, Location? selectedLocation, Map<String, dynamic> conditions, List<Ticket> ticketTemplates, String? descriptionError
 });
 
 
@@ -70,7 +70,7 @@ as Set<String>,status: null == status ? _self.status : status // ignore: cast_nu
 as AsyncValue<void>,selectedLocation: freezed == selectedLocation ? _self.selectedLocation : selectedLocation // ignore: cast_nullable_to_non_nullable
 as Location?,conditions: null == conditions ? _self.conditions : conditions // ignore: cast_nullable_to_non_nullable
 as Map<String, dynamic>,ticketTemplates: null == ticketTemplates ? _self.ticketTemplates : ticketTemplates // ignore: cast_nullable_to_non_nullable
-as List<EventTicket>,descriptionError: freezed == descriptionError ? _self.descriptionError : descriptionError // ignore: cast_nullable_to_non_nullable
+as List<Ticket>,descriptionError: freezed == descriptionError ? _self.descriptionError : descriptionError // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -168,7 +168,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<String> selectedVerificationIds,  Set<String> enabledContactMethods,  AsyncValue<void> status,  Location? selectedLocation,  Map<String, dynamic> conditions,  List<EventTicket> ticketTemplates,  String? descriptionError)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<String> selectedVerificationIds,  Set<String> enabledContactMethods,  AsyncValue<void> status,  Location? selectedLocation,  Map<String, dynamic> conditions,  List<Ticket> ticketTemplates,  String? descriptionError)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PartyCreateState() when $default != null:
 return $default(_that.selectedVerificationIds,_that.enabledContactMethods,_that.status,_that.selectedLocation,_that.conditions,_that.ticketTemplates,_that.descriptionError);case _:
@@ -189,7 +189,7 @@ return $default(_that.selectedVerificationIds,_that.enabledContactMethods,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<String> selectedVerificationIds,  Set<String> enabledContactMethods,  AsyncValue<void> status,  Location? selectedLocation,  Map<String, dynamic> conditions,  List<EventTicket> ticketTemplates,  String? descriptionError)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<String> selectedVerificationIds,  Set<String> enabledContactMethods,  AsyncValue<void> status,  Location? selectedLocation,  Map<String, dynamic> conditions,  List<Ticket> ticketTemplates,  String? descriptionError)  $default,) {final _that = this;
 switch (_that) {
 case _PartyCreateState():
 return $default(_that.selectedVerificationIds,_that.enabledContactMethods,_that.status,_that.selectedLocation,_that.conditions,_that.ticketTemplates,_that.descriptionError);case _:
@@ -209,7 +209,7 @@ return $default(_that.selectedVerificationIds,_that.enabledContactMethods,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<String> selectedVerificationIds,  Set<String> enabledContactMethods,  AsyncValue<void> status,  Location? selectedLocation,  Map<String, dynamic> conditions,  List<EventTicket> ticketTemplates,  String? descriptionError)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<String> selectedVerificationIds,  Set<String> enabledContactMethods,  AsyncValue<void> status,  Location? selectedLocation,  Map<String, dynamic> conditions,  List<Ticket> ticketTemplates,  String? descriptionError)?  $default,) {final _that = this;
 switch (_that) {
 case _PartyCreateState() when $default != null:
 return $default(_that.selectedVerificationIds,_that.enabledContactMethods,_that.status,_that.selectedLocation,_that.conditions,_that.ticketTemplates,_that.descriptionError);case _:
@@ -224,7 +224,7 @@ return $default(_that.selectedVerificationIds,_that.enabledContactMethods,_that.
 
 
 class _PartyCreateState implements PartyCreateState {
-  const _PartyCreateState({final  List<String> selectedVerificationIds = const [], final  Set<String> enabledContactMethods = const {}, this.status = const AsyncValue.data(null), this.selectedLocation, final  Map<String, dynamic> conditions = const {}, final  List<EventTicket> ticketTemplates = const [], this.descriptionError}): _selectedVerificationIds = selectedVerificationIds,_enabledContactMethods = enabledContactMethods,_conditions = conditions,_ticketTemplates = ticketTemplates;
+  const _PartyCreateState({final  List<String> selectedVerificationIds = const [], final  Set<String> enabledContactMethods = const {}, this.status = const AsyncValue.data(null), this.selectedLocation, final  Map<String, dynamic> conditions = const {}, final  List<Ticket> ticketTemplates = const [], this.descriptionError}): _selectedVerificationIds = selectedVerificationIds,_enabledContactMethods = enabledContactMethods,_conditions = conditions,_ticketTemplates = ticketTemplates;
   
 
  final  List<String> _selectedVerificationIds;
@@ -250,8 +250,8 @@ class _PartyCreateState implements PartyCreateState {
   return EqualUnmodifiableMapView(_conditions);
 }
 
- final  List<EventTicket> _ticketTemplates;
-@override@JsonKey() List<EventTicket> get ticketTemplates {
+ final  List<Ticket> _ticketTemplates;
+@override@JsonKey() List<Ticket> get ticketTemplates {
   if (_ticketTemplates is EqualUnmodifiableListView) return _ticketTemplates;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_ticketTemplates);
@@ -289,7 +289,7 @@ abstract mixin class _$PartyCreateStateCopyWith<$Res> implements $PartyCreateSta
   factory _$PartyCreateStateCopyWith(_PartyCreateState value, $Res Function(_PartyCreateState) _then) = __$PartyCreateStateCopyWithImpl;
 @override @useResult
 $Res call({
- List<String> selectedVerificationIds, Set<String> enabledContactMethods, AsyncValue<void> status, Location? selectedLocation, Map<String, dynamic> conditions, List<EventTicket> ticketTemplates, String? descriptionError
+ List<String> selectedVerificationIds, Set<String> enabledContactMethods, AsyncValue<void> status, Location? selectedLocation, Map<String, dynamic> conditions, List<Ticket> ticketTemplates, String? descriptionError
 });
 
 
@@ -314,7 +314,7 @@ as Set<String>,status: null == status ? _self.status : status // ignore: cast_nu
 as AsyncValue<void>,selectedLocation: freezed == selectedLocation ? _self.selectedLocation : selectedLocation // ignore: cast_nullable_to_non_nullable
 as Location?,conditions: null == conditions ? _self._conditions : conditions // ignore: cast_nullable_to_non_nullable
 as Map<String, dynamic>,ticketTemplates: null == ticketTemplates ? _self._ticketTemplates : ticketTemplates // ignore: cast_nullable_to_non_nullable
-as List<EventTicket>,descriptionError: freezed == descriptionError ? _self.descriptionError : descriptionError // ignore: cast_nullable_to_non_nullable
+as List<Ticket>,descriptionError: freezed == descriptionError ? _self.descriptionError : descriptionError // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

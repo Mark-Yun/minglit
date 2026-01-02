@@ -21,7 +21,7 @@ class TicketCreateController extends _$TicketCreateController {
   }) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      final repo = ref.read(partyRepositoryProvider);
+      final repo = ref.read(ticketRepositoryProvider);
 
       final conditions = <String, dynamic>{};
       if (gender != null) conditions['gender'] = gender;
@@ -32,7 +32,7 @@ class TicketCreateController extends _$TicketCreateController {
         }..removeWhere((k, v) => v == null);
       }
 
-      final ticket = EventTicket(
+      final ticket = Ticket(
         id: '', // DB Generated
         name: name,
         eventId: eventId,

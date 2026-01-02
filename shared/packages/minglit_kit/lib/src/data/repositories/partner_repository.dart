@@ -51,34 +51,37 @@ class PartnerRepository {
     }
 
     // 1. Get partner_ids from permissions
-    final permissions = await _supabase
-        .from('partner_member_permissions')
-        .select('partner_id')
-        .eq('user_id', userId);
+    try {
+      final permissions = await _supabase
+          .from('partner_member_permissions')
+          .select('partner_id')
+          .eq('user_id', userId);
 
-    Log.d('🔍 [PartnerRepo] Found permissions count: ${permissions.length}');
+      Log.d('🔍 [PartnerRepo] Found permissions raw data: $permissions');
 
-    final partnerIds = (permissions as List)
-        .map((e) => (e as Map)['partner_id'] as String)
-        .toList();
+      final partnerIds = permissions
+          .map((e) => e['partner_id'] as String)
+          .toList();
 
-    if (partnerIds.isEmpty) {
-      Log.w('⚠️ [PartnerRepo] No managed partners found for user');
-      return [];
+      if (partnerIds.isEmpty) {
+        Log.w('⚠️ [PartnerRepo] No managed partners found for user');
+        return [];
+      }
+
+      // 2. Get partners details
+      final data = await _supabase
+          .from('partners')
+          .select()
+          .inFilter('id', partnerIds)
+          .eq('is_active', true);
+
+      Log.d('🔍 [PartnerRepo] Fetched partners raw data: $data');
+
+      return data.map(Partner.fromJson).toList();
+    } catch (e, st) {
+      Log.e('❌ [PartnerRepo] getMyManagedPartners Error', e, st);
+      rethrow;
     }
-
-    // 2. Get partners details
-    final data = await _supabase
-        .from('partners')
-        .select()
-        .inFilter('id', partnerIds)
-        .eq('is_active', true);
-
-    Log.d('🔍 [PartnerRepo] Fetched partners count: ${data.length}');
-
-    return (data as List)
-        .map((e) => Partner.fromJson(e as Map<String, dynamic>))
-        .toList();
   }
 
   /// **Submit Application**
