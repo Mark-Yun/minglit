@@ -195,13 +195,12 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
 
               const PartySectionTitle('모집 인원'),
               PartyCapacityInput(
-                minController: _minCountController,
-                maxController: _maxCountController,
-                minValidator: controller.validateCapacity,
-                maxValidator: (v) => controller.validateMaxCapacity(
-                  v,
-                  _minCountController.text,
-                ),
+                minCount: int.tryParse(_minCountController.text) ?? 0,
+                maxCount: int.tryParse(_maxCountController.text) ?? 0,
+                onMinChanged: (val) =>
+                    setState(() => _minCountController.text = val.toString()),
+                onMaxChanged: (val) =>
+                    setState(() => _maxCountController.text = val.toString()),
               ),
               const SizedBox(height: MinglitSpacing.large),
 

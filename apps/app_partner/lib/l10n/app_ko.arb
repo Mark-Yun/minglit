@@ -235,5 +235,13 @@
   "entryGroup_label_maxYear": "최대 (예: 2000)",
   "entryGroup_suffix_year": "년생",
   "entryGroup_label_verification": "필수 인증",
-  "entryGroup_button_complete": "입장 그룹 추가 완료"
+  "entryGroup_button_complete": "입장 그룹 추가 완료",
+
+  "ticketCreate_title": "기본 티켓 추가",
+  "ticketCreate_label_name": "티켓 이름",
+  "ticketCreate_hint_name": "예: 얼리버드 남성",
+  "ticketCreate_label_price": "가격",
+  "ticketCreate_label_quantity": "기본 수량",
+  "ticketCreate_label_gender": "구매 가능 성별",
+  "ticketCreate_button_add": "추가하기"
 }

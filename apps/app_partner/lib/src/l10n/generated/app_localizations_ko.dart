@@ -509,4 +509,25 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get entryGroup_button_complete => '입장 그룹 추가 완료';
+
+  @override
+  String get ticketCreate_title => '기본 티켓 추가';
+
+  @override
+  String get ticketCreate_label_name => '티켓 이름';
+
+  @override
+  String get ticketCreate_hint_name => '예: 얼리버드 남성';
+
+  @override
+  String get ticketCreate_label_price => '가격';
+
+  @override
+  String get ticketCreate_label_quantity => '기본 수량';
+
+  @override
+  String get ticketCreate_label_gender => '구매 가능 성별';
+
+  @override
+  String get ticketCreate_button_add => '추가하기';
 }

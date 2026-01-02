@@ -3,21 +3,17 @@ import 'package:minglit_kit/minglit_kit.dart';
 
 class PartyCapacityInput extends StatelessWidget {
   const PartyCapacityInput({
-    required this.minController,
-    required this.maxController,
-    this.onMinChanged,
-    this.onMaxChanged,
-    this.minValidator,
-    this.maxValidator,
+    required this.minCount,
+    required this.maxCount,
+    required this.onMinChanged,
+    required this.onMaxChanged,
     super.key,
   });
 
-  final TextEditingController minController;
-  final TextEditingController maxController;
-  final ValueChanged<String>? onMinChanged;
-  final ValueChanged<String>? onMaxChanged;
-  final FormFieldValidator<String>? minValidator;
-  final FormFieldValidator<String>? maxValidator;
+  final int minCount;
+  final int maxCount;
+  final ValueChanged<int> onMinChanged;
+  final ValueChanged<int> onMaxChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -26,28 +22,22 @@ class PartyCapacityInput extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: TextFormField(
-                controller: minController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: '최소 확정',
-                  suffixText: '명',
-                ),
+              child: NumberStepperInput(
+                label: '최소 확정',
+                value: minCount,
                 onChanged: onMinChanged,
-                validator: minValidator,
+                suffixText: '명',
+                min: 1,
               ),
             ),
             const SizedBox(width: MinglitSpacing.medium),
             Expanded(
-              child: TextFormField(
-                controller: maxController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: '최대 정원',
-                  suffixText: '명',
-                ),
+              child: NumberStepperInput(
+                label: '최대 정원',
+                value: maxCount,
                 onChanged: onMaxChanged,
-                validator: maxValidator,
+                suffixText: '명',
+                min: 1,
               ),
             ),
           ],

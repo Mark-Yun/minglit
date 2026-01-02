@@ -1053,6 +1053,48 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'입장 그룹 추가 완료'**
   String get entryGroup_button_complete;
+
+  /// No description provided for @ticketCreate_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 티켓 추가'**
+  String get ticketCreate_title;
+
+  /// No description provided for @ticketCreate_label_name.
+  ///
+  /// In ko, this message translates to:
+  /// **'티켓 이름'**
+  String get ticketCreate_label_name;
+
+  /// No description provided for @ticketCreate_hint_name.
+  ///
+  /// In ko, this message translates to:
+  /// **'예: 얼리버드 남성'**
+  String get ticketCreate_hint_name;
+
+  /// No description provided for @ticketCreate_label_price.
+  ///
+  /// In ko, this message translates to:
+  /// **'가격'**
+  String get ticketCreate_label_price;
+
+  /// No description provided for @ticketCreate_label_quantity.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 수량'**
+  String get ticketCreate_label_quantity;
+
+  /// No description provided for @ticketCreate_label_gender.
+  ///
+  /// In ko, this message translates to:
+  /// **'구매 가능 성별'**
+  String get ticketCreate_label_gender;
+
+  /// No description provided for @ticketCreate_button_add.
+  ///
+  /// In ko, this message translates to:
+  /// **'추가하기'**
+  String get ticketCreate_button_add;
 }
 
 class _AppLocalizationsDelegate

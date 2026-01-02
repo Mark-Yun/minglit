@@ -18,28 +18,23 @@ class PartyEntryGroupEditorScreen extends ConsumerStatefulWidget {
 class _PartyEntryGroupEditorScreenState
     extends ConsumerState<PartyEntryGroupEditorScreen> {
   String? _gender;
-  final _minYearController = TextEditingController();
-  final _maxYearController = TextEditingController();
+  int? _minYear;
+  int? _maxYear;
   // State is mutable
   // ignore: prefer_final_fields
   List<String> _selectedVerificationIds = [];
 
   @override
   void dispose() {
-    _minYearController.dispose();
-    _maxYearController.dispose();
     super.dispose();
   }
 
   void _submit() {
-    final min = int.tryParse(_minYearController.text);
-    final max = int.tryParse(_maxYearController.text);
-
     Map<String, dynamic>? birthYearRange;
-    if (min != null || max != null) {
+    if (_minYear != null || _maxYear != null) {
       birthYearRange = {
-        'min': min,
-        'max': max,
+        'min': _minYear,
+        'max': _maxYear,
       }..removeWhere((k, v) => v == null);
     }
 
@@ -61,7 +56,7 @@ class _PartyEntryGroupEditorScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.l10n.entryGroup_title),
+        title: const Text('입장 그룹 설정'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(MinglitSpacing.medium),
@@ -105,24 +100,24 @@ class _PartyEntryGroupEditorScreenState
             Row(
               children: [
                 Expanded(
-                  child: TextFormField(
-                    controller: _minYearController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.entryGroup_label_minYear,
-                      suffixText: context.l10n.entryGroup_suffix_year,
-                    ),
+                  child: NumberStepperInput(
+                    label: context.l10n.entryGroup_label_minYear,
+                    value: _minYear ?? 1995,
+                    min: 1950,
+                    max: 2010,
+                    onChanged: (val) => setState(() => _minYear = val),
+                    suffixText: context.l10n.entryGroup_suffix_year,
                   ),
                 ),
                 const SizedBox(width: MinglitSpacing.medium),
                 Expanded(
-                  child: TextFormField(
-                    controller: _maxYearController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.entryGroup_label_maxYear,
-                      suffixText: context.l10n.entryGroup_suffix_year,
-                    ),
+                  child: NumberStepperInput(
+                    label: context.l10n.entryGroup_label_maxYear,
+                    value: _maxYear ?? 2005,
+                    min: 1950,
+                    max: 2010,
+                    onChanged: (val) => setState(() => _maxYear = val),
+                    suffixText: context.l10n.entryGroup_suffix_year,
                   ),
                 ),
               ],
