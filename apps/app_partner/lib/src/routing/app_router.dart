@@ -44,5 +44,8 @@ GoRouter goRouter(Ref ref) {
       return null;
     },
     routes: $appRoutes, // Generated routes from app_routes.dart
+    observers: [
+      MinglitNavigationObserver(),
+    ],
   );
 }
