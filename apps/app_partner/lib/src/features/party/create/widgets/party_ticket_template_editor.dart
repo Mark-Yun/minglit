@@ -10,17 +10,33 @@ class PartyTicketTemplateEditor extends StatelessWidget {
     required this.ticketTemplates,
     required this.onAdd,
     required this.onRemove,
+    required this.onUpdate,
+    required this.entryGroups,
+    this.maxParticipants,
     super.key,
   });
 
   final List<Ticket> ticketTemplates;
   final void Function(Ticket) onAdd;
   final void Function(int) onRemove;
+  final void Function(int, Ticket) onUpdate;
+  final List<PartyEntryGroup> entryGroups;
+  final int? maxParticipants;
 
   @override
   Widget build(BuildContext context) {
+    // Calculate total issued tickets
+    final totalIssued = ticketTemplates.fold(0, (sum, t) => sum + t.quantity);
+
     return Column(
       children: [
+        // 0. Status Header
+        if (ticketTemplates.isNotEmpty && maxParticipants != null)
+          TicketStatusHeader(
+            totalIssued: totalIssued,
+            maxParticipants: maxParticipants,
+          ),
+
         // 1. Existing Templates List
         if (ticketTemplates.isNotEmpty)
           ListView.builder(
@@ -33,8 +49,12 @@ class PartyTicketTemplateEditor extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: MinglitSpacing.small),
                 child: TicketListItem(
                   ticket: ticket,
+                  entryGroups: entryGroups,
+                  onTap: () => unawaited(
+                    _navigateToEditPage(context, index, ticket),
+                  ),
                   trailing: IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    icon: const Icon(Icons.close, color: Colors.grey),
                     onPressed: () => onRemove(index),
                   ),
                 ),
@@ -54,11 +74,32 @@ class PartyTicketTemplateEditor extends StatelessWidget {
 
   Future<void> _navigateToAddPage(BuildContext context) async {
     final ticket = await Navigator.of(context).push<Ticket>(
-      MaterialPageRoute(builder: (_) => const TicketTemplateCreatePage()),
+      MaterialPageRoute(
+        builder: (_) => TicketTemplateCreatePage(entryGroups: entryGroups),
+      ),
     );
 
     if (ticket != null) {
       onAdd(ticket);
+    }
+  }
+
+  Future<void> _navigateToEditPage(
+    BuildContext context,
+    int index,
+    Ticket ticket,
+  ) async {
+    final updatedTicket = await Navigator.of(context).push<Ticket>(
+      MaterialPageRoute(
+        builder: (_) => TicketTemplateCreatePage(
+          entryGroups: entryGroups,
+          initialTicket: ticket,
+        ),
+      ),
+    );
+
+    if (updatedTicket != null) {
+      onUpdate(index, updatedTicket);
     }
   }
 }

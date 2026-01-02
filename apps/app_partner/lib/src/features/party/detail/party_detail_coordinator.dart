@@ -78,6 +78,43 @@ class PartyDetailCoordinator {
     }
   }
 
+  Future<void> updatePartyEntryGroup(
+    String partyId,
+    PartyEntryGroup updatedGroup,
+    BuildContext context,
+  ) async {
+    final loading = _ref.read(globalLoadingControllerProvider.notifier)..show();
+    try {
+      final party = await _ref.read(partyDetailProvider(partyId).future);
+      final currentGroups = party.entryGroups;
+
+      final updatedGroups = currentGroups
+          .map((g) => g.id == updatedGroup.id ? updatedGroup : g)
+          .toList();
+
+      await _ref
+          .read(partyRepositoryProvider)
+          .updateParty(
+            party.copyWith(
+              conditions: updatedGroups.map((e) => e.toJson()).toList(),
+            ),
+          );
+
+      _ref.invalidate(partyDetailProvider(partyId));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('입장 그룹이 수정되었습니다.')),
+        );
+      }
+    } on Object catch (e, st) {
+      if (context.mounted) {
+        handleMinglitError(context, e, st);
+      }
+    } finally {
+      loading.hide();
+    }
+  }
+
   void goToCreateEvent(String partyId) {
     unawaited(
       _ref

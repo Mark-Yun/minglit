@@ -9,6 +9,8 @@ import 'package:app_partner/src/features/party/detail/widgets/party_basic_condit
 import 'package:app_partner/src/features/party/detail/widgets/party_info_chip.dart';
 import 'package:app_partner/src/features/party/detail/widgets/party_location_section.dart';
 import 'package:app_partner/src/features/party/detail/widgets/party_verification_section.dart';
+import 'package:app_partner/src/features/party/entry_group/entry_group_editor_screen.dart';
+import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart' hide partyEventsProvider;
@@ -148,7 +150,27 @@ class PartyDetailPage extends ConsumerWidget {
                       style: theme.textTheme.titleMedium,
                     ),
                     const SizedBox(height: MinglitSpacing.small),
-                    PartyBasicConditionSection(party: party),
+                    PartyBasicConditionSection(
+                      party: party,
+                      onGroupTap: (PartyEntryGroup group) async {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (context) => EntryGroupEditorScreen(
+                              initialGroup: group,
+                              onSaved: (PartyEntryGroup updatedGroup) {
+                                unawaited(
+                                  coordinator.updatePartyEntryGroup(
+                                    party.id,
+                                    updatedGroup,
+                                    context,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                     const SizedBox(height: MinglitSpacing.large),
                     Text(
                       context.l10n.partyDetail_section_verification,
@@ -255,11 +277,15 @@ class PartyDetailPage extends ConsumerWidget {
                 sliver: SliverToBoxAdapter(
                   child: TicketListView(
                     tickets: tickets,
+                    entryGroups: party.entryGroups,
+                    maxParticipants: party.maxParticipants,
                     onCreatePressed: () async {
                       final newTicket = await Navigator.of(context)
                           .push<Ticket>(
                             MaterialPageRoute(
-                              builder: (_) => const TicketTemplateCreatePage(),
+                              builder: (_) => TicketTemplateCreatePage(
+                                entryGroups: party.entryGroups,
+                              ),
                             ),
                           );
 
@@ -299,7 +325,12 @@ class PartyDetailPage extends ConsumerWidget {
                       }
                     },
                     onTicketTap: (ticket) {
-                      // Navigate to appropriate detail/edit if needed
+                      unawaited(
+                        PartyTicketEditRoute(
+                          partyId: partyId,
+                          ticketId: ticket.id,
+                        ).push<void>(context),
+                      );
                     },
                   ),
                 ),

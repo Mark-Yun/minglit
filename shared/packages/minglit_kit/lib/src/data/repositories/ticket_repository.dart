@@ -82,6 +82,25 @@ class TicketRepository {
     }
   }
 
+  /// Fetches a specific ticket by ID.
+  Future<Ticket> getTicketById(String id) async {
+    Log.d('getTicketById called | id: $id');
+    try {
+      final data = await _supabase
+          .from('tickets')
+          .select()
+          .eq('id', id)
+          .single();
+
+      final result = Ticket.fromJson(data);
+      Log.d('getTicketById success | id: ${result.id}');
+      return result;
+    } catch (e, st) {
+      Log.e('getTicketById failed', e, st);
+      rethrow;
+    }
+  }
+
   /// Creates a new ticket.
   Future<Ticket> createTicket(Ticket ticket) async {
     Log.d('createTicket called | ticket: ${ticket.name}');
@@ -103,6 +122,31 @@ class TicketRepository {
       return result;
     } catch (e, st) {
       Log.e('createTicket failed: ${ticket.name}', e, st);
+      rethrow;
+    }
+  }
+
+  /// Updates an existing ticket.
+  Future<Ticket> updateTicket(Ticket ticket) async {
+    Log.d('updateTicket called | ticket: ${ticket.id}');
+    try {
+      final json = ticket.toJson()
+        ..remove('created_at')
+        ..remove('updated_at') // moddatetime trigger handles this
+        ..remove('sold_count'); // usually not updatable directly
+
+      final data = await _supabase
+          .from('tickets')
+          .update(json)
+          .eq('id', ticket.id)
+          .select()
+          .single();
+
+      final result = Ticket.fromJson(data);
+      Log.d('updateTicket success | id: ${result.id}');
+      return result;
+    } catch (e, st) {
+      Log.e('updateTicket failed: ${ticket.id}', e, st);
       rethrow;
     }
   }

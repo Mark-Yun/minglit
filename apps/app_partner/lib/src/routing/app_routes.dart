@@ -4,13 +4,14 @@ import 'package:app_partner/src/features/auth/partner_login_page.dart';
 import 'package:app_partner/src/features/dev/partner_dev_map.dart';
 import 'package:app_partner/src/features/event/create/event_create_page.dart';
 import 'package:app_partner/src/features/event/detail/event_detail_page.dart';
-import 'package:app_partner/src/features/event/ticket/create/ticket_create_page.dart';
 import 'package:app_partner/src/features/home/partner_home_page.dart';
 import 'package:app_partner/src/features/member/partner_member_list_page.dart';
 import 'package:app_partner/src/features/member/partner_member_permission_page.dart';
 import 'package:app_partner/src/features/party/create/wizard/party_create_wizard_page.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_page.dart';
 import 'package:app_partner/src/features/party/list/party_list_page.dart';
+import 'package:app_partner/src/features/ticket/create/ticket_create_page.dart';
+import 'package:app_partner/src/features/ticket/edit/ticket_edit_page.dart';
 import 'package:app_partner/src/features/verification/create_verification_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -67,11 +68,13 @@ class CreateVerificationRoute extends GoRouteData
     TypedGoRoute<PartyDetailRoute>(
       path: ':partyId',
       routes: [
+        TypedGoRoute<PartyTicketEditRoute>(path: 'tickets/:ticketId/edit'),
         TypedGoRoute<EventCreateRoute>(path: 'events/create'),
         TypedGoRoute<EventDetailRoute>(
           path: 'events/:eventId',
           routes: [
             TypedGoRoute<TicketCreateRoute>(path: 'tickets/create'),
+            TypedGoRoute<TicketEditRoute>(path: 'tickets/:ticketId/edit'),
           ],
         ),
       ],
@@ -102,6 +105,20 @@ class PartyDetailRoute extends GoRouteData with $PartyDetailRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       PartyDetailPage(partyId: partyId);
+}
+
+class PartyTicketEditRoute extends GoRouteData with $PartyTicketEditRoute {
+  const PartyTicketEditRoute({
+    required this.partyId,
+    required this.ticketId,
+  });
+
+  final String partyId;
+  final String ticketId;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      TicketEditPage(partyId: partyId, eventId: '', ticketId: ticketId);
 }
 
 class EventCreateRoute extends GoRouteData with $EventCreateRoute {
@@ -136,7 +153,23 @@ class TicketCreateRoute extends GoRouteData with $TicketCreateRoute {
 
   @override
   Widget build(BuildContext context, GoRouterState state) =>
-      TicketCreatePage(eventId: eventId);
+      TicketCreatePage(partyId: partyId, eventId: eventId);
+}
+
+class TicketEditRoute extends GoRouteData with $TicketEditRoute {
+  const TicketEditRoute({
+    required this.partyId,
+    required this.eventId,
+    required this.ticketId,
+  });
+
+  final String partyId;
+  final String eventId;
+  final String ticketId;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      TicketEditPage(partyId: partyId, eventId: eventId, ticketId: ticketId);
 }
 
 /// **Auth Route**: Login Screen.

@@ -58,15 +58,14 @@ class _Step2LocationState extends ConsumerState<Step2Location> {
             selectedLocation: state.selectedLocation,
             onSearchTap: _handleLocationSearch,
           ),
-          if (state.selectedLocation != null) ...[
-            const SizedBox(height: MinglitSpacing.large),
-            PartyLocationDetailInput(
-              addressDetailController: _addressDetailController,
-              directionsController: _directionsController,
-              onAddressDetailChanged: notifier.updateAddressDetail,
-              onDirectionsChanged: notifier.updateDirections,
-            ),
-          ],
+          const SizedBox(height: MinglitSpacing.large),
+          PartyLocationDetailInput(
+            addressDetailController: _addressDetailController,
+            directionsController: _directionsController,
+            enabled: state.selectedLocation != null,
+            onAddressDetailChanged: notifier.updateAddressDetail,
+            onDirectionsChanged: notifier.updateDirections,
+          ),
         ],
       ),
     );

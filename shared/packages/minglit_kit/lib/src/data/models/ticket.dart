@@ -19,7 +19,9 @@ abstract class Ticket with _$Ticket {
     @Default(0) int price,
     @Default(0) int quantity,
     @JsonKey(name: 'sold_count') @Default(0) int soldCount,
-    @Default({}) Map<String, dynamic> conditions, // JSONB (gender, age, etc.)
+    @JsonKey(name: 'target_entry_group_ids')
+    @Default([])
+    List<String> targetEntryGroupIds,
     @JsonKey(name: 'required_verification_ids')
     @Default([])
     List<String> requiredVerificationIds,
@@ -27,4 +29,10 @@ abstract class Ticket with _$Ticket {
   }) = _Ticket;
 
   factory Ticket.fromJson(Map<String, dynamic> json) => _$TicketFromJson(json);
+}
+
+extension TicketX on Ticket {
+  // TicketX previously had gender/age label getters based on conditions.
+  // Since conditions are removed, these are no longer relevant here.
+  // They should be moved to PartyEntryGroup if not already there.
 }

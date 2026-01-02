@@ -112,11 +112,35 @@ abstract class AppLocalizations {
   /// **'저장하기'**
   String get common_button_save;
 
+  /// No description provided for @common_button_edit.
+  ///
+  /// In ko, this message translates to:
+  /// **'수정하기'**
+  String get common_button_edit;
+
+  /// No description provided for @common_button_delete.
+  ///
+  /// In ko, this message translates to:
+  /// **'삭제하기'**
+  String get common_button_delete;
+
   /// No description provided for @common_error_system.
   ///
   /// In ko, this message translates to:
   /// **'일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'**
   String get common_error_system;
+
+  /// No description provided for @common_message_saved.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장되었습니다.'**
+  String get common_message_saved;
+
+  /// No description provided for @common_message_deleted.
+  ///
+  /// In ko, this message translates to:
+  /// **'삭제되었습니다.'**
+  String get common_message_deleted;
 
   /// No description provided for @partyDetail_section_entranceCondition.
   ///
@@ -922,6 +946,12 @@ abstract class AppLocalizations {
   /// **'예: 강남역 11번 출구에서 도보 5분 거리입니다.'**
   String get partyCreate_hint_directions;
 
+  /// No description provided for @partyCreate_message_selectLocationFirst.
+  ///
+  /// In ko, this message translates to:
+  /// **'장소를 먼저 선택해주세요.'**
+  String get partyCreate_message_selectLocationFirst;
+
   /// No description provided for @partyCreate_label_capacity.
   ///
   /// In ko, this message translates to:
@@ -988,11 +1018,17 @@ abstract class AppLocalizations {
   /// **'위에서 설정한 입장 그룹에 해당하는 티켓을 자유롭게 구성할 수 있습니다.'**
   String get partyCreate_desc_tickets;
 
-  /// No description provided for @entryGroup_title.
+  /// No description provided for @entryGroup_title_add.
   ///
   /// In ko, this message translates to:
-  /// **'입장 그룹 설정'**
-  String get entryGroup_title;
+  /// **'입장 그룹 추가'**
+  String get entryGroup_title_add;
+
+  /// No description provided for @entryGroup_title_edit.
+  ///
+  /// In ko, this message translates to:
+  /// **'입장 그룹 수정'**
+  String get entryGroup_title_edit;
 
   /// No description provided for @entryGroup_label_gender.
   ///
@@ -1003,7 +1039,7 @@ abstract class AppLocalizations {
   /// No description provided for @entryGroup_option_any.
   ///
   /// In ko, this message translates to:
-  /// **'무관'**
+  /// **'성별 제한 없음'**
   String get entryGroup_option_any;
 
   /// No description provided for @entryGroup_option_male.
@@ -1036,6 +1072,12 @@ abstract class AppLocalizations {
   /// **'최대 (예: 2000)'**
   String get entryGroup_label_maxYear;
 
+  /// No description provided for @entryGroup_option_anyYear.
+  ///
+  /// In ko, this message translates to:
+  /// **'나이 제한 없음'**
+  String get entryGroup_option_anyYear;
+
   /// No description provided for @entryGroup_suffix_year.
   ///
   /// In ko, this message translates to:
@@ -1051,8 +1093,152 @@ abstract class AppLocalizations {
   /// No description provided for @entryGroup_button_complete.
   ///
   /// In ko, this message translates to:
-  /// **'입장 그룹 추가 완료'**
+  /// **'설정 완료'**
   String get entryGroup_button_complete;
+
+  /// No description provided for @entryGroup_message_saved.
+  ///
+  /// In ko, this message translates to:
+  /// **'입장 그룹이 설정되었습니다.'**
+  String get entryGroup_message_saved;
+
+  /// No description provided for @ticket_title_create.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 티켓 만들기'**
+  String get ticket_title_create;
+
+  /// No description provided for @ticket_title_edit.
+  ///
+  /// In ko, this message translates to:
+  /// **'티켓 수정'**
+  String get ticket_title_edit;
+
+  /// No description provided for @ticket_title_template.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 티켓 추가'**
+  String get ticket_title_template;
+
+  /// No description provided for @ticket_label_name.
+  ///
+  /// In ko, this message translates to:
+  /// **'티켓 이름'**
+  String get ticket_label_name;
+
+  /// No description provided for @ticket_hint_name.
+  ///
+  /// In ko, this message translates to:
+  /// **'예: 얼리버드 남성 티켓'**
+  String get ticket_hint_name;
+
+  /// No description provided for @ticket_label_price.
+  ///
+  /// In ko, this message translates to:
+  /// **'가격'**
+  String get ticket_label_price;
+
+  /// No description provided for @ticket_label_quantity.
+  ///
+  /// In ko, this message translates to:
+  /// **'발행 수량'**
+  String get ticket_label_quantity;
+
+  /// No description provided for @ticket_label_targetGroups.
+  ///
+  /// In ko, this message translates to:
+  /// **'구매 가능 대상 (입장 그룹)'**
+  String get ticket_label_targetGroups;
+
+  /// No description provided for @ticket_empty_groups.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정된 입장 그룹이 없습니다.\n파티 관리에서 입장 그룹을 먼저 생성해주세요.'**
+  String get ticket_empty_groups;
+
+  /// No description provided for @ticket_button_create.
+  ///
+  /// In ko, this message translates to:
+  /// **'티켓 생성 완료'**
+  String get ticket_button_create;
+
+  /// No description provided for @ticket_button_edit.
+  ///
+  /// In ko, this message translates to:
+  /// **'수정 완료'**
+  String get ticket_button_edit;
+
+  /// No description provided for @ticket_button_add.
+  ///
+  /// In ko, this message translates to:
+  /// **'추가하기'**
+  String get ticket_button_add;
+
+  /// No description provided for @ticket_message_created.
+  ///
+  /// In ko, this message translates to:
+  /// **'티켓이 생성되었습니다.'**
+  String get ticket_message_created;
+
+  /// No description provided for @ticket_message_updated.
+  ///
+  /// In ko, this message translates to:
+  /// **'티켓이 수정되었습니다.'**
+  String get ticket_message_updated;
+
+  /// No description provided for @ticket_error_minOneGroup.
+  ///
+  /// In ko, this message translates to:
+  /// **'최소 한 개의 입장 그룹을 선택해야 합니다.'**
+  String get ticket_error_minOneGroup;
+
+  /// No description provided for @ticketList_header_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 발행 현황'**
+  String get ticketList_header_title;
+
+  /// No description provided for @ticketList_header_summary.
+  ///
+  /// In ko, this message translates to:
+  /// **'현재 발행 {issued}매 / 정원 {max}매 발행'**
+  String ticketList_header_summary(int issued, int max);
+
+  /// No description provided for @ticketList_empty.
+  ///
+  /// In ko, this message translates to:
+  /// **'등록된 티켓이 없습니다.'**
+  String get ticketList_empty;
+
+  /// No description provided for @ticketList_add_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'티켓 추가'**
+  String get ticketList_add_title;
+
+  /// No description provided for @ticketList_add_subtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'새로운 판매 옵션을 추가합니다.'**
+  String get ticketList_add_subtitle;
+
+  /// No description provided for @ticketList_status_onSale.
+  ///
+  /// In ko, this message translates to:
+  /// **'판매중'**
+  String get ticketList_status_onSale;
+
+  /// No description provided for @ticketList_status_soldOut.
+  ///
+  /// In ko, this message translates to:
+  /// **'판매중지'**
+  String get ticketList_status_soldOut;
+
+  /// No description provided for @ticketList_label_sold.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}매 판매'**
+  String ticketList_label_sold(int count);
 
   /// No description provided for @ticketCreate_title.
   ///

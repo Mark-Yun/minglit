@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app_partner/src/features/event/detail/event_detail_controller.dart';
 import 'package:app_partner/src/features/event/widgets/ticket_list_item.dart';
+import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -23,6 +24,8 @@ class EventDetailPage extends ConsumerWidget {
       appBar: AppBar(title: const Text('회차 상세')),
       body: eventAsync.when(
         data: (event) {
+          final partyAsync = ref.watch(partyDetailProvider(event.partyId));
+          final entryGroups = partyAsync.asData?.value.entryGroups ?? [];
           final dateFormat = DateFormat('yyyy년 MM월 dd일 (E)', 'ko');
           final timeFormat = DateFormat('a h:mm', 'ko');
 
@@ -126,6 +129,8 @@ class EventDetailPage extends ConsumerWidget {
                 ticketsAsync.when(
                   data: (tickets) => TicketListView(
                     tickets: tickets,
+                    entryGroups: entryGroups,
+                    maxParticipants: event.maxParticipants,
 
                     onCreatePressed: () {
                       unawaited(
@@ -138,7 +143,13 @@ class EventDetailPage extends ConsumerWidget {
                     },
 
                     onTicketTap: (ticket) {
-                      // TODO(mark): Implement Ticket Detail or Edit
+                      unawaited(
+                        TicketEditRoute(
+                          partyId: event.partyId,
+                          eventId: event.id,
+                          ticketId: ticket.id,
+                        ).push<void>(context),
+                      );
                     },
                   ),
 

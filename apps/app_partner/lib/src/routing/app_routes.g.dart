@@ -109,6 +109,10 @@ RouteBase get $partyListRoute => GoRouteData.$route(
       factory: $PartyDetailRoute._fromState,
       routes: [
         GoRouteData.$route(
+          path: 'tickets/:ticketId/edit',
+          factory: $PartyTicketEditRoute._fromState,
+        ),
+        GoRouteData.$route(
           path: 'events/create',
           factory: $EventCreateRoute._fromState,
         ),
@@ -119,6 +123,10 @@ RouteBase get $partyListRoute => GoRouteData.$route(
             GoRouteData.$route(
               path: 'tickets/create',
               factory: $TicketCreateRoute._fromState,
+            ),
+            GoRouteData.$route(
+              path: 'tickets/:ticketId/edit',
+              factory: $TicketEditRoute._fromState,
             ),
           ],
         ),
@@ -178,6 +186,34 @@ mixin $PartyDetailRoute on GoRouteData {
   @override
   String get location =>
       GoRouteData.$location('/parties/${Uri.encodeComponent(_self.partyId)}');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $PartyTicketEditRoute on GoRouteData {
+  static PartyTicketEditRoute _fromState(GoRouterState state) =>
+      PartyTicketEditRoute(
+        partyId: state.pathParameters['partyId']!,
+        ticketId: state.pathParameters['ticketId']!,
+      );
+
+  PartyTicketEditRoute get _self => this as PartyTicketEditRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/parties/${Uri.encodeComponent(_self.partyId)}/tickets/${Uri.encodeComponent(_self.ticketId)}/edit',
+  );
 
   @override
   void go(BuildContext context) => context.go(location);
@@ -256,6 +292,34 @@ mixin $TicketCreateRoute on GoRouteData {
   @override
   String get location => GoRouteData.$location(
     '/parties/${Uri.encodeComponent(_self.partyId)}/events/${Uri.encodeComponent(_self.eventId)}/tickets/create',
+  );
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $TicketEditRoute on GoRouteData {
+  static TicketEditRoute _fromState(GoRouterState state) => TicketEditRoute(
+    partyId: state.pathParameters['partyId']!,
+    eventId: state.pathParameters['eventId']!,
+    ticketId: state.pathParameters['ticketId']!,
+  );
+
+  TicketEditRoute get _self => this as TicketEditRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/parties/${Uri.encodeComponent(_self.partyId)}/events/${Uri.encodeComponent(_self.eventId)}/tickets/${Uri.encodeComponent(_self.ticketId)}/edit',
   );
 
   @override

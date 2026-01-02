@@ -29,8 +29,11 @@ class Step5Tickets extends ConsumerWidget {
           const SizedBox(height: MinglitSpacing.large),
           PartyTicketTemplateEditor(
             ticketTemplates: state.tickets,
+            entryGroups: state.entryGroups,
+            maxParticipants: state.maxParticipants,
             onAdd: notifier.addTicket,
             onRemove: notifier.removeTicket,
+            onUpdate: notifier.updateTicket,
           ),
         ],
       ),

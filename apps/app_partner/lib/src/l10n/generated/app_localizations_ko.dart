@@ -18,7 +18,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get common_button_save => '저장하기';
 
   @override
+  String get common_button_edit => '수정하기';
+
+  @override
+  String get common_button_delete => '삭제하기';
+
+  @override
   String get common_error_system => '일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+
+  @override
+  String get common_message_saved => '저장되었습니다.';
+
+  @override
+  String get common_message_deleted => '삭제되었습니다.';
 
   @override
   String get partyDetail_section_entranceCondition => '입장 조건 (기본)';
@@ -441,6 +453,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get partyCreate_hint_directions => '예: 강남역 11번 출구에서 도보 5분 거리입니다.';
 
   @override
+  String get partyCreate_message_selectLocationFirst => '장소를 먼저 선택해주세요.';
+
+  @override
   String get partyCreate_label_capacity => '모집 인원';
 
   @override
@@ -478,13 +493,16 @@ class AppLocalizationsKo extends AppLocalizations {
       '위에서 설정한 입장 그룹에 해당하는 티켓을 자유롭게 구성할 수 있습니다.';
 
   @override
-  String get entryGroup_title => '입장 그룹 설정';
+  String get entryGroup_title_add => '입장 그룹 추가';
+
+  @override
+  String get entryGroup_title_edit => '입장 그룹 수정';
 
   @override
   String get entryGroup_label_gender => '성별';
 
   @override
-  String get entryGroup_option_any => '무관';
+  String get entryGroup_option_any => '성별 제한 없음';
 
   @override
   String get entryGroup_option_male => '남성';
@@ -502,13 +520,93 @@ class AppLocalizationsKo extends AppLocalizations {
   String get entryGroup_label_maxYear => '최대 (예: 2000)';
 
   @override
+  String get entryGroup_option_anyYear => '나이 제한 없음';
+
+  @override
   String get entryGroup_suffix_year => '년생';
 
   @override
   String get entryGroup_label_verification => '필수 인증';
 
   @override
-  String get entryGroup_button_complete => '입장 그룹 추가 완료';
+  String get entryGroup_button_complete => '설정 완료';
+
+  @override
+  String get entryGroup_message_saved => '입장 그룹이 설정되었습니다.';
+
+  @override
+  String get ticket_title_create => '새 티켓 만들기';
+
+  @override
+  String get ticket_title_edit => '티켓 수정';
+
+  @override
+  String get ticket_title_template => '기본 티켓 추가';
+
+  @override
+  String get ticket_label_name => '티켓 이름';
+
+  @override
+  String get ticket_hint_name => '예: 얼리버드 남성 티켓';
+
+  @override
+  String get ticket_label_price => '가격';
+
+  @override
+  String get ticket_label_quantity => '발행 수량';
+
+  @override
+  String get ticket_label_targetGroups => '구매 가능 대상 (입장 그룹)';
+
+  @override
+  String get ticket_empty_groups =>
+      '설정된 입장 그룹이 없습니다.\n파티 관리에서 입장 그룹을 먼저 생성해주세요.';
+
+  @override
+  String get ticket_button_create => '티켓 생성 완료';
+
+  @override
+  String get ticket_button_edit => '수정 완료';
+
+  @override
+  String get ticket_button_add => '추가하기';
+
+  @override
+  String get ticket_message_created => '티켓이 생성되었습니다.';
+
+  @override
+  String get ticket_message_updated => '티켓이 수정되었습니다.';
+
+  @override
+  String get ticket_error_minOneGroup => '최소 한 개의 입장 그룹을 선택해야 합니다.';
+
+  @override
+  String get ticketList_header_title => '전체 발행 현황';
+
+  @override
+  String ticketList_header_summary(int issued, int max) {
+    return '현재 발행 $issued매 / 정원 $max매 발행';
+  }
+
+  @override
+  String get ticketList_empty => '등록된 티켓이 없습니다.';
+
+  @override
+  String get ticketList_add_title => '티켓 추가';
+
+  @override
+  String get ticketList_add_subtitle => '새로운 판매 옵션을 추가합니다.';
+
+  @override
+  String get ticketList_status_onSale => '판매중';
+
+  @override
+  String get ticketList_status_soldOut => '판매중지';
+
+  @override
+  String ticketList_label_sold(int count) {
+    return '$count매 판매';
+  }
 
   @override
   String get ticketCreate_title => '기본 티켓 추가';

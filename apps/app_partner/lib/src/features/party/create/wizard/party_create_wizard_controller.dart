@@ -118,6 +118,14 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
     state = state.copyWith(entryGroups: [...state.entryGroups, group]);
   }
 
+  void updateEntryGroup(PartyEntryGroup group) {
+    state = state.copyWith(
+      entryGroups: state.entryGroups
+          .map((g) => g.id == group.id ? group : g)
+          .toList(),
+    );
+  }
+
   void removeEntryGroup(String id) {
     state = state.copyWith(
       entryGroups: state.entryGroups.where((g) => g.id != id).toList(),
@@ -126,6 +134,12 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
 
   void addTicket(Ticket ticket) {
     state = state.copyWith(tickets: [...state.tickets, ticket]);
+  }
+
+  void updateTicket(int index, Ticket ticket) {
+    final list = List<Ticket>.from(state.tickets);
+    list[index] = ticket;
+    state = state.copyWith(tickets: list);
   }
 
   void removeTicket(int index) {

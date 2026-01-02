@@ -53,8 +53,7 @@ class _Step3CapacityContactState extends ConsumerState<Step3CapacityContact> {
           !_isDataLoaded &&
           _phoneController.text.isEmpty) {
         final partner = next.value!;
-        if (partner.contactPhone != null &&
-            partner.contactPhone!.isNotEmpty) {
+        if (partner.contactPhone != null && partner.contactPhone!.isNotEmpty) {
           _phoneController.text = partner.contactPhone!;
           notifier.updateContactPhone(partner.contactPhone!);
           // Ensure method is enabled
@@ -62,8 +61,7 @@ class _Step3CapacityContactState extends ConsumerState<Step3CapacityContact> {
             notifier.toggleContactMethod('phone');
           }
         }
-        if (partner.contactEmail != null &&
-            partner.contactEmail!.isNotEmpty) {
+        if (partner.contactEmail != null && partner.contactEmail!.isNotEmpty) {
           _emailController.text = partner.contactEmail!;
           notifier.updateContactEmail(partner.contactEmail!);
           // Ensure method is enabled

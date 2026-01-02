@@ -1,11 +1,17 @@
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
+import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class PartyBasicConditionSection extends ConsumerWidget {
-  const PartyBasicConditionSection({required this.party, super.key});
+  const PartyBasicConditionSection({
+    required this.party,
+    this.onGroupTap,
+    super.key,
+  });
 
   final Party party;
+  final void Function(PartyEntryGroup)? onGroupTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -14,38 +20,43 @@ class PartyBasicConditionSection extends ConsumerWidget {
     final groups = party.entryGroups;
 
     if (groups.isEmpty) {
-      return Card(
-        child: Padding(
-          padding: const EdgeInsets.all(MinglitSpacing.medium),
-          child: Text(
-            '입장 조건이 없습니다.',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.small),
+        child: Text(
+          '입장 조건이 없습니다.',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant,
           ),
         ),
       );
     }
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(MinglitSpacing.medium),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (var i = 0; i < groups.length; i++) ...[
-              if (i > 0)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Divider(
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                  ),
-                ),
-              _buildConditionGroup(context, ref, groups[i]),
-            ],
-          ],
-        ),
-      ),
+    // Borderless minimal design
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < groups.length; i++) ...[
+          if (i > 0)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Divider(
+                height: 1,
+                color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+              ),
+            ),
+          InkWell(
+            onTap: onGroupTap != null ? () => onGroupTap!(groups[i]) : null,
+            borderRadius: BorderRadius.circular(MinglitRadius.small),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: MinglitSpacing.small,
+                horizontal: 4,
+              ),
+              child: _buildConditionGroup(context, ref, groups[i]),
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -61,20 +72,19 @@ class PartyBasicConditionSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 1. Gender & Age Row
-        _buildConditionRow(context, group),
-
-        // 2. Verifications for this group
-        if (verifIds.isNotEmpty) ...[
-          const SizedBox(height: MinglitSpacing.medium),
+        if (group.label != null && group.label!.isNotEmpty) ...[
           Text(
-            '필수 인증',
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: colorScheme.primary,
+            group.label!,
+            style: theme.textTheme.labelMedium?.copyWith(
               fontWeight: FontWeight.bold,
+              color: colorScheme.primary,
             ),
           ),
-          const SizedBox(height: MinglitSpacing.xsmall),
+          const SizedBox(height: 4),
+        ],
+        _buildConditionRow(context, group),
+        if (verifIds.isNotEmpty) ...[
+          const SizedBox(height: MinglitSpacing.small),
           _VerificationBadges(verifIds: verifIds),
         ],
       ],
@@ -88,11 +98,11 @@ class PartyBasicConditionSection extends ConsumerWidget {
     final gender = group.gender;
     final birthYearRange = group.birthYearRange;
 
-    var genderText = '성별 무관';
-    if (gender == 'male') genderText = '남성';
-    if (gender == 'female') genderText = '여성';
+    var genderText = context.l10n.entryGroup_option_any;
+    if (gender == 'male') genderText = context.l10n.entryGroup_option_male;
+    if (gender == 'female') genderText = context.l10n.entryGroup_option_female;
 
-    var birthYearText = '나이 무관';
+    var birthYearText = context.l10n.entryGroup_option_anyYear;
     if (birthYearRange != null) {
       final min = birthYearRange['min'];
       final max = birthYearRange['max'];
@@ -107,52 +117,27 @@ class PartyBasicConditionSection extends ConsumerWidget {
 
     return Row(
       children: [
-        Expanded(
-          child: _buildConditionItem(
-            context,
-            Icons.wc,
-            genderText,
+        Icon(Icons.wc, size: 14, color: colorScheme.onSurfaceVariant),
+        const SizedBox(width: 6),
+        Text(
+          genderText,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w500,
+            fontSize: 13,
           ),
         ),
-        SizedBox(
-          height: 24,
-          child: VerticalDivider(
-            color: colorScheme.outlineVariant,
-            width: MinglitSpacing.medium,
-          ),
-        ),
-        Expanded(
-          child: _buildConditionItem(
-            context,
-            Icons.cake_outlined,
-            birthYearText,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildConditionItem(
-    BuildContext context,
-    IconData icon,
-    String value,
-  ) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
+        const SizedBox(width: MinglitSpacing.medium),
         Icon(
-          icon,
-          size: MinglitIconSize.small,
+          Icons.cake_outlined,
+          size: 14,
           color: colorScheme.onSurfaceVariant,
         ),
-        const SizedBox(width: MinglitSpacing.small),
+        const SizedBox(width: 6),
         Text(
-          value,
+          birthYearText,
           style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w500,
+            fontSize: 13,
           ),
         ),
       ],
@@ -171,29 +156,37 @@ class _VerificationBadges extends ConsumerWidget {
 
     return verificationsAsync.when(
       data: (list) => Wrap(
-        spacing: 6,
-        runSpacing: 6,
+        spacing: 4,
+        runSpacing: 4,
         children: list
             .map(
-              (v) => Chip(
-                label: Text(v.displayName),
-                avatar: const Icon(Icons.verified, size: 14),
-                visualDensity: VisualDensity.compact,
-                labelStyle: const TextStyle(fontSize: 11),
-                backgroundColor: colorScheme.primaryContainer.withValues(
-                  alpha: 0.3,
+              (v) => Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(4),
                 ),
-                side: BorderSide.none,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.verified, size: 10, color: colorScheme.primary),
+                    const SizedBox(width: 4),
+                    Text(
+                      v.displayName,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             )
             .toList(),
       ),
-      loading: () => const MinglitSkeleton(height: 32, width: 100),
-      error: (e, s) => const Icon(
-        Icons.error_outline,
-        size: 16,
-        color: Colors.red,
-      ),
+      loading: () => const MinglitSkeleton(height: 20, width: 60),
+      error: (e, s) => const SizedBox.shrink(),
     );
   }
 }

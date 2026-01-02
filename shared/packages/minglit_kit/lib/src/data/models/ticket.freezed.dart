@@ -17,8 +17,7 @@ mixin _$Ticket {
 
  String get id; String get name;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'updated_at') DateTime get updatedAt;@JsonKey(name: 'event_id') String? get eventId;// Nullable for templates
 @JsonKey(name: 'party_id') String? get partyId;// Nullable for event instances
- String? get description; int get price; int get quantity;@JsonKey(name: 'sold_count') int get soldCount; Map<String, dynamic> get conditions;// JSONB (gender, age, etc.)
-@JsonKey(name: 'required_verification_ids') List<String> get requiredVerificationIds; String get status;
+ String? get description; int get price; int get quantity;@JsonKey(name: 'sold_count') int get soldCount;@JsonKey(name: 'target_entry_group_ids') List<String> get targetEntryGroupIds;@JsonKey(name: 'required_verification_ids') List<String> get requiredVerificationIds; String get status;
 /// Create a copy of Ticket
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -31,16 +30,16 @@ $TicketCopyWith<Ticket> get copyWith => _$TicketCopyWithImpl<Ticket>(this as Tic
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Ticket&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.partyId, partyId) || other.partyId == partyId)&&(identical(other.description, description) || other.description == description)&&(identical(other.price, price) || other.price == price)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.soldCount, soldCount) || other.soldCount == soldCount)&&const DeepCollectionEquality().equals(other.conditions, conditions)&&const DeepCollectionEquality().equals(other.requiredVerificationIds, requiredVerificationIds)&&(identical(other.status, status) || other.status == status));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Ticket&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.partyId, partyId) || other.partyId == partyId)&&(identical(other.description, description) || other.description == description)&&(identical(other.price, price) || other.price == price)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.soldCount, soldCount) || other.soldCount == soldCount)&&const DeepCollectionEquality().equals(other.targetEntryGroupIds, targetEntryGroupIds)&&const DeepCollectionEquality().equals(other.requiredVerificationIds, requiredVerificationIds)&&(identical(other.status, status) || other.status == status));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,createdAt,updatedAt,eventId,partyId,description,price,quantity,soldCount,const DeepCollectionEquality().hash(conditions),const DeepCollectionEquality().hash(requiredVerificationIds),status);
+int get hashCode => Object.hash(runtimeType,id,name,createdAt,updatedAt,eventId,partyId,description,price,quantity,soldCount,const DeepCollectionEquality().hash(targetEntryGroupIds),const DeepCollectionEquality().hash(requiredVerificationIds),status);
 
 @override
 String toString() {
-  return 'Ticket(id: $id, name: $name, createdAt: $createdAt, updatedAt: $updatedAt, eventId: $eventId, partyId: $partyId, description: $description, price: $price, quantity: $quantity, soldCount: $soldCount, conditions: $conditions, requiredVerificationIds: $requiredVerificationIds, status: $status)';
+  return 'Ticket(id: $id, name: $name, createdAt: $createdAt, updatedAt: $updatedAt, eventId: $eventId, partyId: $partyId, description: $description, price: $price, quantity: $quantity, soldCount: $soldCount, targetEntryGroupIds: $targetEntryGroupIds, requiredVerificationIds: $requiredVerificationIds, status: $status)';
 }
 
 
@@ -51,7 +50,7 @@ abstract mixin class $TicketCopyWith<$Res>  {
   factory $TicketCopyWith(Ticket value, $Res Function(Ticket) _then) = _$TicketCopyWithImpl;
 @useResult
 $Res call({
- String id, String name,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'event_id') String? eventId,@JsonKey(name: 'party_id') String? partyId, String? description, int price, int quantity,@JsonKey(name: 'sold_count') int soldCount, Map<String, dynamic> conditions,@JsonKey(name: 'required_verification_ids') List<String> requiredVerificationIds, String status
+ String id, String name,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'event_id') String? eventId,@JsonKey(name: 'party_id') String? partyId, String? description, int price, int quantity,@JsonKey(name: 'sold_count') int soldCount,@JsonKey(name: 'target_entry_group_ids') List<String> targetEntryGroupIds,@JsonKey(name: 'required_verification_ids') List<String> requiredVerificationIds, String status
 });
 
 
@@ -68,7 +67,7 @@ class _$TicketCopyWithImpl<$Res>
 
 /// Create a copy of Ticket
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? createdAt = null,Object? updatedAt = null,Object? eventId = freezed,Object? partyId = freezed,Object? description = freezed,Object? price = null,Object? quantity = null,Object? soldCount = null,Object? conditions = null,Object? requiredVerificationIds = null,Object? status = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? createdAt = null,Object? updatedAt = null,Object? eventId = freezed,Object? partyId = freezed,Object? description = freezed,Object? price = null,Object? quantity = null,Object? soldCount = null,Object? targetEntryGroupIds = null,Object? requiredVerificationIds = null,Object? status = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -80,8 +79,8 @@ as String?,description: freezed == description ? _self.description : description
 as String?,price: null == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
 as int,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
 as int,soldCount: null == soldCount ? _self.soldCount : soldCount // ignore: cast_nullable_to_non_nullable
-as int,conditions: null == conditions ? _self.conditions : conditions // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>,requiredVerificationIds: null == requiredVerificationIds ? _self.requiredVerificationIds : requiredVerificationIds // ignore: cast_nullable_to_non_nullable
+as int,targetEntryGroupIds: null == targetEntryGroupIds ? _self.targetEntryGroupIds : targetEntryGroupIds // ignore: cast_nullable_to_non_nullable
+as List<String>,requiredVerificationIds: null == requiredVerificationIds ? _self.requiredVerificationIds : requiredVerificationIds // ignore: cast_nullable_to_non_nullable
 as List<String>,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,
   ));
@@ -168,10 +167,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'event_id')  String? eventId, @JsonKey(name: 'party_id')  String? partyId,  String? description,  int price,  int quantity, @JsonKey(name: 'sold_count')  int soldCount,  Map<String, dynamic> conditions, @JsonKey(name: 'required_verification_ids')  List<String> requiredVerificationIds,  String status)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'event_id')  String? eventId, @JsonKey(name: 'party_id')  String? partyId,  String? description,  int price,  int quantity, @JsonKey(name: 'sold_count')  int soldCount, @JsonKey(name: 'target_entry_group_ids')  List<String> targetEntryGroupIds, @JsonKey(name: 'required_verification_ids')  List<String> requiredVerificationIds,  String status)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Ticket() when $default != null:
-return $default(_that.id,_that.name,_that.createdAt,_that.updatedAt,_that.eventId,_that.partyId,_that.description,_that.price,_that.quantity,_that.soldCount,_that.conditions,_that.requiredVerificationIds,_that.status);case _:
+return $default(_that.id,_that.name,_that.createdAt,_that.updatedAt,_that.eventId,_that.partyId,_that.description,_that.price,_that.quantity,_that.soldCount,_that.targetEntryGroupIds,_that.requiredVerificationIds,_that.status);case _:
   return orElse();
 
 }
@@ -189,10 +188,10 @@ return $default(_that.id,_that.name,_that.createdAt,_that.updatedAt,_that.eventI
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'event_id')  String? eventId, @JsonKey(name: 'party_id')  String? partyId,  String? description,  int price,  int quantity, @JsonKey(name: 'sold_count')  int soldCount,  Map<String, dynamic> conditions, @JsonKey(name: 'required_verification_ids')  List<String> requiredVerificationIds,  String status)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'event_id')  String? eventId, @JsonKey(name: 'party_id')  String? partyId,  String? description,  int price,  int quantity, @JsonKey(name: 'sold_count')  int soldCount, @JsonKey(name: 'target_entry_group_ids')  List<String> targetEntryGroupIds, @JsonKey(name: 'required_verification_ids')  List<String> requiredVerificationIds,  String status)  $default,) {final _that = this;
 switch (_that) {
 case _Ticket():
-return $default(_that.id,_that.name,_that.createdAt,_that.updatedAt,_that.eventId,_that.partyId,_that.description,_that.price,_that.quantity,_that.soldCount,_that.conditions,_that.requiredVerificationIds,_that.status);case _:
+return $default(_that.id,_that.name,_that.createdAt,_that.updatedAt,_that.eventId,_that.partyId,_that.description,_that.price,_that.quantity,_that.soldCount,_that.targetEntryGroupIds,_that.requiredVerificationIds,_that.status);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -209,10 +208,10 @@ return $default(_that.id,_that.name,_that.createdAt,_that.updatedAt,_that.eventI
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'event_id')  String? eventId, @JsonKey(name: 'party_id')  String? partyId,  String? description,  int price,  int quantity, @JsonKey(name: 'sold_count')  int soldCount,  Map<String, dynamic> conditions, @JsonKey(name: 'required_verification_ids')  List<String> requiredVerificationIds,  String status)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'event_id')  String? eventId, @JsonKey(name: 'party_id')  String? partyId,  String? description,  int price,  int quantity, @JsonKey(name: 'sold_count')  int soldCount, @JsonKey(name: 'target_entry_group_ids')  List<String> targetEntryGroupIds, @JsonKey(name: 'required_verification_ids')  List<String> requiredVerificationIds,  String status)?  $default,) {final _that = this;
 switch (_that) {
 case _Ticket() when $default != null:
-return $default(_that.id,_that.name,_that.createdAt,_that.updatedAt,_that.eventId,_that.partyId,_that.description,_that.price,_that.quantity,_that.soldCount,_that.conditions,_that.requiredVerificationIds,_that.status);case _:
+return $default(_that.id,_that.name,_that.createdAt,_that.updatedAt,_that.eventId,_that.partyId,_that.description,_that.price,_that.quantity,_that.soldCount,_that.targetEntryGroupIds,_that.requiredVerificationIds,_that.status);case _:
   return null;
 
 }
@@ -224,7 +223,7 @@ return $default(_that.id,_that.name,_that.createdAt,_that.updatedAt,_that.eventI
 @JsonSerializable()
 
 class _Ticket implements Ticket {
-  const _Ticket({required this.id, required this.name, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'updated_at') required this.updatedAt, @JsonKey(name: 'event_id') this.eventId, @JsonKey(name: 'party_id') this.partyId, this.description, this.price = 0, this.quantity = 0, @JsonKey(name: 'sold_count') this.soldCount = 0, final  Map<String, dynamic> conditions = const {}, @JsonKey(name: 'required_verification_ids') final  List<String> requiredVerificationIds = const [], this.status = 'on_sale'}): _conditions = conditions,_requiredVerificationIds = requiredVerificationIds;
+  const _Ticket({required this.id, required this.name, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'updated_at') required this.updatedAt, @JsonKey(name: 'event_id') this.eventId, @JsonKey(name: 'party_id') this.partyId, this.description, this.price = 0, this.quantity = 0, @JsonKey(name: 'sold_count') this.soldCount = 0, @JsonKey(name: 'target_entry_group_ids') final  List<String> targetEntryGroupIds = const [], @JsonKey(name: 'required_verification_ids') final  List<String> requiredVerificationIds = const [], this.status = 'on_sale'}): _targetEntryGroupIds = targetEntryGroupIds,_requiredVerificationIds = requiredVerificationIds;
   factory _Ticket.fromJson(Map<String, dynamic> json) => _$TicketFromJson(json);
 
 @override final  String id;
@@ -239,16 +238,14 @@ class _Ticket implements Ticket {
 @override@JsonKey() final  int price;
 @override@JsonKey() final  int quantity;
 @override@JsonKey(name: 'sold_count') final  int soldCount;
- final  Map<String, dynamic> _conditions;
-@override@JsonKey() Map<String, dynamic> get conditions {
-  if (_conditions is EqualUnmodifiableMapView) return _conditions;
+ final  List<String> _targetEntryGroupIds;
+@override@JsonKey(name: 'target_entry_group_ids') List<String> get targetEntryGroupIds {
+  if (_targetEntryGroupIds is EqualUnmodifiableListView) return _targetEntryGroupIds;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(_conditions);
+  return EqualUnmodifiableListView(_targetEntryGroupIds);
 }
 
-// JSONB (gender, age, etc.)
  final  List<String> _requiredVerificationIds;
-// JSONB (gender, age, etc.)
 @override@JsonKey(name: 'required_verification_ids') List<String> get requiredVerificationIds {
   if (_requiredVerificationIds is EqualUnmodifiableListView) return _requiredVerificationIds;
   // ignore: implicit_dynamic_type
@@ -270,16 +267,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Ticket&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.partyId, partyId) || other.partyId == partyId)&&(identical(other.description, description) || other.description == description)&&(identical(other.price, price) || other.price == price)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.soldCount, soldCount) || other.soldCount == soldCount)&&const DeepCollectionEquality().equals(other._conditions, _conditions)&&const DeepCollectionEquality().equals(other._requiredVerificationIds, _requiredVerificationIds)&&(identical(other.status, status) || other.status == status));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Ticket&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.partyId, partyId) || other.partyId == partyId)&&(identical(other.description, description) || other.description == description)&&(identical(other.price, price) || other.price == price)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.soldCount, soldCount) || other.soldCount == soldCount)&&const DeepCollectionEquality().equals(other._targetEntryGroupIds, _targetEntryGroupIds)&&const DeepCollectionEquality().equals(other._requiredVerificationIds, _requiredVerificationIds)&&(identical(other.status, status) || other.status == status));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,createdAt,updatedAt,eventId,partyId,description,price,quantity,soldCount,const DeepCollectionEquality().hash(_conditions),const DeepCollectionEquality().hash(_requiredVerificationIds),status);
+int get hashCode => Object.hash(runtimeType,id,name,createdAt,updatedAt,eventId,partyId,description,price,quantity,soldCount,const DeepCollectionEquality().hash(_targetEntryGroupIds),const DeepCollectionEquality().hash(_requiredVerificationIds),status);
 
 @override
 String toString() {
-  return 'Ticket(id: $id, name: $name, createdAt: $createdAt, updatedAt: $updatedAt, eventId: $eventId, partyId: $partyId, description: $description, price: $price, quantity: $quantity, soldCount: $soldCount, conditions: $conditions, requiredVerificationIds: $requiredVerificationIds, status: $status)';
+  return 'Ticket(id: $id, name: $name, createdAt: $createdAt, updatedAt: $updatedAt, eventId: $eventId, partyId: $partyId, description: $description, price: $price, quantity: $quantity, soldCount: $soldCount, targetEntryGroupIds: $targetEntryGroupIds, requiredVerificationIds: $requiredVerificationIds, status: $status)';
 }
 
 
@@ -290,7 +287,7 @@ abstract mixin class _$TicketCopyWith<$Res> implements $TicketCopyWith<$Res> {
   factory _$TicketCopyWith(_Ticket value, $Res Function(_Ticket) _then) = __$TicketCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'event_id') String? eventId,@JsonKey(name: 'party_id') String? partyId, String? description, int price, int quantity,@JsonKey(name: 'sold_count') int soldCount, Map<String, dynamic> conditions,@JsonKey(name: 'required_verification_ids') List<String> requiredVerificationIds, String status
+ String id, String name,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'event_id') String? eventId,@JsonKey(name: 'party_id') String? partyId, String? description, int price, int quantity,@JsonKey(name: 'sold_count') int soldCount,@JsonKey(name: 'target_entry_group_ids') List<String> targetEntryGroupIds,@JsonKey(name: 'required_verification_ids') List<String> requiredVerificationIds, String status
 });
 
 
@@ -307,7 +304,7 @@ class __$TicketCopyWithImpl<$Res>
 
 /// Create a copy of Ticket
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? createdAt = null,Object? updatedAt = null,Object? eventId = freezed,Object? partyId = freezed,Object? description = freezed,Object? price = null,Object? quantity = null,Object? soldCount = null,Object? conditions = null,Object? requiredVerificationIds = null,Object? status = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? createdAt = null,Object? updatedAt = null,Object? eventId = freezed,Object? partyId = freezed,Object? description = freezed,Object? price = null,Object? quantity = null,Object? soldCount = null,Object? targetEntryGroupIds = null,Object? requiredVerificationIds = null,Object? status = null,}) {
   return _then(_Ticket(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -319,8 +316,8 @@ as String?,description: freezed == description ? _self.description : description
 as String?,price: null == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
 as int,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
 as int,soldCount: null == soldCount ? _self.soldCount : soldCount // ignore: cast_nullable_to_non_nullable
-as int,conditions: null == conditions ? _self._conditions : conditions // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>,requiredVerificationIds: null == requiredVerificationIds ? _self._requiredVerificationIds : requiredVerificationIds // ignore: cast_nullable_to_non_nullable
+as int,targetEntryGroupIds: null == targetEntryGroupIds ? _self._targetEntryGroupIds : targetEntryGroupIds // ignore: cast_nullable_to_non_nullable
+as List<String>,requiredVerificationIds: null == requiredVerificationIds ? _self._requiredVerificationIds : requiredVerificationIds // ignore: cast_nullable_to_non_nullable
 as List<String>,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,
   ));

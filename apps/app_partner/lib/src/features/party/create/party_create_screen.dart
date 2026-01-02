@@ -184,13 +184,12 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
                 selectedLocation: state.selectedLocation,
                 onSearchTap: _handleLocationSearch,
               ),
-              if (state.selectedLocation != null) ...[
-                const SizedBox(height: MinglitSpacing.large),
-                PartyLocationDetailInput(
-                  addressDetailController: _addressDetailController,
-                  directionsController: _directionsController,
-                ),
-              ],
+              const SizedBox(height: MinglitSpacing.large),
+              PartyLocationDetailInput(
+                addressDetailController: _addressDetailController,
+                directionsController: _directionsController,
+                enabled: state.selectedLocation != null,
+              ),
               const SizedBox(height: MinglitSpacing.large),
 
               const PartySectionTitle('모집 인원'),
@@ -248,8 +247,18 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
               const PartySectionTitle('기본 티켓 설정'),
               PartyTicketTemplateEditor(
                 ticketTemplates: state.ticketTemplates,
+                entryGroups: [
+                  PartyEntryGroup(
+                    id: 'default',
+                    gender: state.conditions['gender'] as String?,
+                    birthYearRange:
+                        state.conditions['age_range'] as Map<String, dynamic>?,
+                    requiredVerificationIds: state.selectedVerificationIds,
+                  ),
+                ],
                 onAdd: controller.addTicketTemplate,
                 onRemove: controller.removeTicketTemplate,
+                onUpdate: controller.updateTicketTemplate,
               ),
               const SizedBox(height: MinglitSpacing.xlarge),
 

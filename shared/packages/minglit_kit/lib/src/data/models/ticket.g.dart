@@ -17,7 +17,11 @@ _Ticket _$TicketFromJson(Map<String, dynamic> json) => _Ticket(
   price: (json['price'] as num?)?.toInt() ?? 0,
   quantity: (json['quantity'] as num?)?.toInt() ?? 0,
   soldCount: (json['sold_count'] as num?)?.toInt() ?? 0,
-  conditions: json['conditions'] as Map<String, dynamic>? ?? const {},
+  targetEntryGroupIds:
+      (json['target_entry_group_ids'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const [],
   requiredVerificationIds:
       (json['required_verification_ids'] as List<dynamic>?)
           ?.map((e) => e as String)
@@ -37,7 +41,7 @@ Map<String, dynamic> _$TicketToJson(_Ticket instance) => <String, dynamic>{
   'price': instance.price,
   'quantity': instance.quantity,
   'sold_count': instance.soldCount,
-  'conditions': instance.conditions,
+  'target_entry_group_ids': instance.targetEntryGroupIds,
   'required_verification_ids': instance.requiredVerificationIds,
   'status': instance.status,
 };

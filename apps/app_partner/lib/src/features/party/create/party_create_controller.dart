@@ -81,6 +81,12 @@ class PartyCreateController extends _$PartyCreateController {
     );
   }
 
+  void updateTicketTemplate(int index, Ticket ticket) {
+    final list = List<Ticket>.from(state.ticketTemplates);
+    list[index] = ticket;
+    state = state.copyWith(ticketTemplates: list);
+  }
+
   void removeTicketTemplate(int index) {
     final list = List<Ticket>.from(state.ticketTemplates)..removeAt(index);
     state = state.copyWith(ticketTemplates: list);
