@@ -250,17 +250,17 @@ class PartyDetailPage extends ConsumerWidget {
                   child: TicketListView(
                     tickets: tickets,
                     onCreatePressed: () async {
-                      final newTicket =
-                          await Navigator.of(context).push<Ticket>(
+                      final newTicket = await Navigator.of(context)
+                          .push<Ticket>(
                             MaterialPageRoute(
                               builder: (_) => const TicketTemplateCreatePage(),
                             ),
                           );
 
                       if (newTicket != null) {
-                        final loading =
-                            ref.read(globalLoadingControllerProvider.notifier)
-                              ..show();
+                        final loading = ref.read(
+                          globalLoadingControllerProvider.notifier,
+                        )..show();
                         try {
                           final repo = ref.read(ticketRepositoryProvider);
                           await repo.createTicket(

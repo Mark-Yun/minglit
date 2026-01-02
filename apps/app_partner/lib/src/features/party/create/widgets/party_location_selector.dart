@@ -115,8 +115,8 @@ class _PartyLocationSelectorState extends State<PartyLocationSelector> {
             Icons.map_outlined,
             size: 48,
             color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(
-                  alpha: 0.5,
-                ),
+              alpha: 0.5,
+            ),
           ),
           const SizedBox(height: MinglitSpacing.small),
           Text(
@@ -202,8 +202,9 @@ class _PartyLocationSelectorState extends State<PartyLocationSelector> {
                               child: Icon(
                                 Icons.copy,
                                 size: 14,
-                                color: colorScheme.onSurfaceVariant
-                                    .withValues(alpha: 0.6),
+                                color: colorScheme.onSurfaceVariant.withValues(
+                                  alpha: 0.6,
+                                ),
                               ),
                             ),
                           ),
@@ -218,8 +219,9 @@ class _PartyLocationSelectorState extends State<PartyLocationSelector> {
                               child: Icon(
                                 Icons.open_in_new,
                                 size: 14,
-                                color: colorScheme.onSurfaceVariant
-                                    .withValues(alpha: 0.6),
+                                color: colorScheme.onSurfaceVariant.withValues(
+                                  alpha: 0.6,
+                                ),
                               ),
                             ),
                           ),

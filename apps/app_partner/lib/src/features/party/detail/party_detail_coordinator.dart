@@ -4,6 +4,7 @@ import 'package:app_partner/src/features/party/detail/party_detail_controller.da
 import 'package:app_partner/src/features/search/location/location_search_page.dart';
 import 'package:app_partner/src/routing/app_router.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
+import 'package:app_partner/src/utils/error_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -46,11 +47,9 @@ class PartyDetailCoordinator {
           const SnackBar(content: Text('파티가 활성화되었습니다.')),
         );
       }
-    } on Exception catch (_) {
+    } on Object catch (e, st) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('파티 상태 변경 중 오류가 발생했습니다.')),
-        );
+        handleMinglitError(context, e, st);
       }
     } finally {
       loading.hide();
@@ -69,11 +68,9 @@ class PartyDetailCoordinator {
           const SnackBar(content: Text('파티가 비활성화(보관)되었습니다.')),
         );
       }
-    } on Exception catch (_) {
+    } on Object catch (e, st) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('파티 상태 변경 중 오류가 발생했습니다.')),
-        );
+        handleMinglitError(context, e, st);
       }
     } finally {
       loading.hide();

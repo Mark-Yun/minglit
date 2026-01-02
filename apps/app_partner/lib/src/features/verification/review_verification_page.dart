@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_partner/src/utils/error_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -42,11 +43,9 @@ class _ReviewVerificationPageState
           .getPendingRequests();
       if (!mounted) return;
       setState(() => _pendingRequests = reqs);
-    } on Exception catch (_) {
+    } on Object catch (e, st) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('심사 요청 목록을 불러오지 못했습니다.')));
+      handleMinglitError(context, e, st);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -81,13 +80,9 @@ class _ReviewVerificationPageState
         context,
       ).showSnackBar(const SnackBar(content: Text('처리가 완료되었습니다.')));
       unawaited(_loadRequests());
-    } on Exception catch (_) {
+    } on Object catch (e, st) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('심사 처리에 실패했습니다. 잠시 후 다시 시도해주세요.'),
-        ),
-      );
+      handleMinglitError(context, e, st);
     }
   }
 

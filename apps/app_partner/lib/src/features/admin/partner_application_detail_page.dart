@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_partner/src/utils/error_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -77,11 +78,9 @@ class _PartnerApplicationDetailPageState
       ref.invalidate(
         partnerApplicationProvider(applicationId: widget.applicationId),
       );
-    } on Exception catch (_) {
+    } on Object catch (e, st) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('신청서 상태 변경에 실패했습니다.')));
+      handleMinglitError(context, e, st);
     }
   }
 

@@ -1,3 +1,4 @@
+import 'package:app_partner/src/utils/error_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -100,11 +101,9 @@ class _PartnerApplicationPageState
           ),
         );
       }
-    } on Exception catch (_) {
+    } on Object catch (e, st) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('입점 신청서를 제출하지 못했습니다. 입력 내용을 확인해주세요.')),
-        );
+        handleMinglitError(context, e, st);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

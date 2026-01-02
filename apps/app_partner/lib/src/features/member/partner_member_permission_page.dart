@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_partner/src/features/member/partner_member_list_page.dart';
+import 'package:app_partner/src/utils/error_handler.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -144,11 +145,9 @@ class _MemberPermissionFormState extends ConsumerState<_MemberPermissionForm> {
         ).showSnackBar(const SnackBar(content: Text('저장되었습니다.')));
         Navigator.pop(context);
       }
-    } on Exception catch (_) {
+    } on Object catch (e, st) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('권한 설정 저장 중 오류가 발생했습니다.')));
+        handleMinglitError(context, e, st);
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);

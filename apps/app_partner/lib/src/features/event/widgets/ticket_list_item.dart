@@ -26,7 +26,8 @@ class TicketListItem extends StatelessWidget {
     // Parse conditions
     final gender = ticket.conditions['gender'] as String?;
     final ageRange = ticket.conditions['age_range'] as Map<String, dynamic>?;
-    final hasAgeLimit = ageRange != null &&
+    final hasAgeLimit =
+        ageRange != null &&
         (ageRange['min'] != null || ageRange['max'] != null);
 
     return Card(
@@ -60,8 +61,9 @@ class TicketListItem extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(2),
                       decoration: BoxDecoration(
-                        color:
-                            gender == 'male' ? Colors.blue : Colors.pinkAccent,
+                        color: gender == 'male'
+                            ? Colors.blue
+                            : Colors.pinkAccent,
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 1.5),
                       ),
@@ -185,11 +187,11 @@ class TicketListView extends StatelessWidget {
       // Empty state with AddTicketCard if create action is available
       if (onCreatePressed != null) {
         return AddActionCard(
-              title: '새로운 티켓 만들기',
-              subtitle: '성별/나이 제한 등 판매 조건을 설정하세요.',
-              iconData: Icons.confirmation_number_outlined,
-              onTap: onCreatePressed!,
-            );
+          title: '새로운 티켓 만들기',
+          subtitle: '성별/나이 제한 등 판매 조건을 설정하세요.',
+          iconData: Icons.confirmation_number_outlined,
+          onTap: onCreatePressed!,
+        );
       }
       return _buildEmptyState(context);
     }

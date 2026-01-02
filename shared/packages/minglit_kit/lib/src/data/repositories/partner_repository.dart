@@ -234,7 +234,7 @@ class PartnerRepository {
     String? adminComment,
   }) async {
     Log.d(
-      'reviewApplication called | id: $applicationId, status: $status, comment: $adminComment',
+      '''reviewApplication called | id: $applicationId, status: $status, comment: $adminComment''',
     );
     try {
       await _supabase

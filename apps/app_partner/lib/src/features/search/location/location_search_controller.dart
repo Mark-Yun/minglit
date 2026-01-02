@@ -17,7 +17,7 @@ class LocationSearchController extends _$LocationSearchController {
 
   void onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
-    
+
     // Debounce for 500ms
     _debounce = Timer(const Duration(milliseconds: 500), () {
       unawaited(_performSearch(query));

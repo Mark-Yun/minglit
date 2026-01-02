@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
+import 'package:app_partner/src/utils/error_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -91,8 +92,8 @@ class PartyLocationSection extends ConsumerWidget {
     final coordinator = ref.read(partyDetailCoordinatorProvider);
     final newLocation = await coordinator.goToLocationSearch(context);
     if (newLocation != null) {
-      final loading =
-          ref.read(globalLoadingControllerProvider.notifier)..show();
+      final loading = ref.read(globalLoadingControllerProvider.notifier)
+        ..show();
       try {
         final party = await ref.read(partyDetailProvider(partyId).future);
         final locationRepo = ref.read(locationRepositoryProvider);
@@ -110,11 +111,9 @@ class PartyLocationSection extends ConsumerWidget {
             const SnackBar(content: Text('장소가 수정되었습니다.')),
           );
         }
-      } on Exception catch (_) {
+      } on Object catch (e, st) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('장소 정보를 수정하지 못했습니다.')),
-          );
+          handleMinglitError(context, e, st);
         }
       } finally {
         loading.hide();

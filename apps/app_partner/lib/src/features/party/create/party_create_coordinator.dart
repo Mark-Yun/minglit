@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app_partner/src/features/search/location/location_search_page.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
+import 'package:app_partner/src/utils/error_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -14,10 +15,8 @@ class PartyCreateCoordinator {
     Navigator.of(context).pop();
   }
 
-  void onError(Exception e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('파티를 생성하는 중 문제가 발생했습니다.')),
-    );
+  void onError(Object e, [StackTrace? st]) {
+    handleMinglitError(context, e, st);
   }
 
   void goToCreateVerification(String? partnerId) {

@@ -156,107 +156,116 @@ class PartyCreateController extends _$PartyCreateController {
     state = state.copyWith(status: const AsyncValue.loading());
 
     final result = await AsyncValue.guard(() async {
-      // 1. Business Validation
-      if (state.selectedLocation == null) {
-        throw Exception('파티 장소를 선택해주세요.');
-      }
+      try {
+        // 1. Business Validation
+        if (state.selectedLocation == null) {
+          throw const MinglitUserException('파티 장소를 선택해주세요.');
+        }
 
-      if (state.enabledContactMethods.isEmpty) {
-        throw Exception('최소 한 개의 문의 연락처를 선택해야 합니다.');
-      }
+        if (state.enabledContactMethods.isEmpty) {
+          throw const MinglitUserException('최소 한 개의 문의 연락처를 선택해야 합니다.');
+        }
 
-      if (state.ticketTemplates.isEmpty) {
-        throw Exception('최소 한 개의 티켓 템플릿을 생성해야 합니다.');
-      }
+        if (state.ticketTemplates.isEmpty) {
+          throw const MinglitUserException('최소 한 개의 티켓 템플릿을 생성해야 합니다.');
+        }
 
-      final ops = description['ops'] as List?;
-      if (ops == null ||
-          ops.isEmpty ||
-          (ops.length == 1 &&
-              (ops[0] as Map<String, dynamic>)['insert'] == '\n')) {
-        state = state.copyWith(descriptionError: '파티 설명을 입력해주세요.');
-        throw Exception('파티 설명을 입력해주세요.');
-      }
-      state = state.copyWith(descriptionError: null);
+        final ops = description['ops'] as List?;
+        if (ops == null ||
+            ops.isEmpty ||
+            (ops.length == 1 &&
+                (ops[0] as Map<String, dynamic>)['insert'] == '\n')) {
+          state = state.copyWith(descriptionError: '파티 설명을 입력해주세요.');
+          throw const MinglitUserException('파티 설명을 입력해주세요.');
+        }
+        state = state.copyWith(descriptionError: null);
 
-      final partnerRepo = ref.read(partnerRepositoryProvider);
-      final myPartners = await partnerRepo.getMyManagedPartners();
-      if (myPartners.isEmpty) {
-        throw Exception('사용 가능한 파트너 정보를 찾을 수 없습니다.');
-      }
-      final partnerId = myPartners.first.id;
+        final partnerRepo = ref.read(partnerRepositoryProvider);
+        final myPartners = await partnerRepo.getMyManagedPartners();
+        if (myPartners.isEmpty) {
+          throw const MinglitSystemException('사용 가능한 파트너 정보를 찾을 수 없습니다.');
+        }
+        final partnerId = myPartners.first.id;
 
-      final partyRepo = ref.read(partyRepositoryProvider);
-      final locationRepo = ref.read(locationRepositoryProvider);
-      final ticketRepo = ref.read(ticketRepositoryProvider);
-      String? imageUrl;
+        final partyRepo = ref.read(partyRepositoryProvider);
+        final locationRepo = ref.read(locationRepositoryProvider);
+        final ticketRepo = ref.read(ticketRepositoryProvider);
+        String? imageUrl;
 
-      // 2. Upload Image
-      if (imageFile != null) {
-        imageUrl = await partyRepo.uploadPartyImage(imageFile, partnerId);
-      }
+        // 2. Upload Image
+        if (imageFile != null) {
+          imageUrl = await partyRepo.uploadPartyImage(imageFile, partnerId);
+        }
 
-      // 3. Prepare Contact Options
-      final contactOptions = <String, dynamic>{};
-      if (state.enabledContactMethods.contains('phone') &&
-          contactPhone.isNotEmpty) {
-        contactOptions['phone'] = contactPhone;
-      }
-      if (state.enabledContactMethods.contains('email') &&
-          contactEmail.isNotEmpty) {
-        contactOptions['email'] = contactEmail;
-      }
-      if (state.enabledContactMethods.contains('kakao') &&
-          contactKakao != null &&
-          contactKakao.isNotEmpty) {
-        contactOptions['kakao_open_chat'] = contactKakao;
-      }
+        // 3. Prepare Contact Options
+        final contactOptions = <String, dynamic>{};
+        if (state.enabledContactMethods.contains('phone') &&
+            contactPhone.isNotEmpty) {
+          contactOptions['phone'] = contactPhone;
+        }
+        if (state.enabledContactMethods.contains('email') &&
+            contactEmail.isNotEmpty) {
+          contactOptions['email'] = contactEmail;
+        }
+        if (state.enabledContactMethods.contains('kakao') &&
+            contactKakao != null &&
+            contactKakao.isNotEmpty) {
+          contactOptions['kakao_open_chat'] = contactKakao;
+        }
 
-      // 4. Create Location (if selected)
-      String? locationId;
-      if (state.selectedLocation != null) {
-        final loc = state.selectedLocation!;
-        final newLocation = await locationRepo.createLocation(
-          loc.copyWith(
-            partnerId: partnerId,
-            addressDetail: addressDetail,
-            directionsGuide: directionsGuide,
-          ),
+        // 4. Create Location (if selected)
+        String? locationId;
+        if (state.selectedLocation != null) {
+          final loc = state.selectedLocation!;
+          final newLocation = await locationRepo.createLocation(
+            loc.copyWith(
+              partnerId: partnerId,
+              addressDetail: addressDetail,
+              directionsGuide: directionsGuide,
+            ),
+          );
+          locationId = newLocation.id;
+        }
+
+        // 5. Create Party
+        final newParty = Party(
+          id: '', // Server generated
+          partnerId: partnerId,
+          locationId: locationId,
+          title: title,
+          description: description,
+          minConfirmedCount: minConfirmedCount,
+          maxParticipants: maxParticipants,
+          contactOptions: contactOptions,
+          conditions: state.conditions,
+          imageUrl: imageUrl,
+          requiredVerificationIds: state.selectedVerificationIds,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
         );
-        locationId = newLocation.id;
-      }
 
-      // 5. Create Party
-      final newParty = Party(
-        id: '', // Server generated
-        partnerId: partnerId,
-        locationId: locationId,
-        title: title,
-        description: description,
-        minConfirmedCount: minConfirmedCount,
-        maxParticipants: maxParticipants,
-        contactOptions: contactOptions,
-        conditions: state.conditions,
-        imageUrl: imageUrl,
-        requiredVerificationIds: state.selectedVerificationIds,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+        final createdParty = await partyRepo.createParty(newParty);
 
-      final createdParty = await partyRepo.createParty(newParty);
+        // 6. Create Ticket Templates linked to Party
+        for (final template in state.ticketTemplates) {
+          await ticketRepo.createTicket(
+            template.copyWith(
+              partyId: createdParty.id,
+              eventId: null,
+            ),
+          );
+        }
 
-      // 6. Create Ticket Templates linked to Party
-      for (final template in state.ticketTemplates) {
-        await ticketRepo.createTicket(
-          template.copyWith(
-            partyId: createdParty.id,
-            eventId: null,
-          ),
+        // Refresh party list to show the new item
+        ref.invalidate(partyListProvider);
+      } catch (e, st) {
+        if (e is MinglitException) rethrow;
+        throw MinglitSystemException(
+          'createParty failed',
+          originalError: e,
+          stackTrace: st,
         );
       }
-
-      // Refresh party list to show the new item
-      ref.invalidate(partyListProvider);
     });
 
     state = state.copyWith(status: result);
