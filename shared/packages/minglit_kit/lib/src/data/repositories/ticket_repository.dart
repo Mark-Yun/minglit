@@ -17,58 +17,78 @@ class TicketRepository {
 
   /// Fetches tickets for a specific event.
   Future<List<Ticket>> getTicketsByEventId(String eventId) async {
-    final data = await _supabase
-        .from('tickets')
-        .select()
-        .eq('event_id', eventId)
-        .order('price', ascending: true);
+    try {
+      final data = await _supabase
+          .from('tickets')
+          .select()
+          .eq('event_id', eventId)
+          .order('price', ascending: true);
 
-    return (data as List<dynamic>)
-        .map((json) => Ticket.fromJson(json as Map<String, dynamic>))
-        .toList();
+      return (data as List<dynamic>)
+          .map((json) => Ticket.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } catch (e, st) {
+      Log.e('getTicketsByEventId failed', e, st);
+      rethrow;
+    }
   }
 
   /// Fetches all tickets associated with any event of a specific party.
   Future<List<Ticket>> getTicketsByPartyId(String partyId) async {
-    final data = await _supabase
-        .from('tickets')
-        .select('*, events!inner(party_id)')
-        .eq('events.party_id', partyId)
-        .order('created_at', ascending: true);
+    try {
+      final data = await _supabase
+          .from('tickets')
+          .select('*, events!inner(party_id)')
+          .eq('events.party_id', partyId)
+          .order('created_at', ascending: true);
 
-    return (data as List<dynamic>)
-        .map((json) => Ticket.fromJson(json as Map<String, dynamic>))
-        .toList();
+      return (data as List<dynamic>)
+          .map((json) => Ticket.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } catch (e, st) {
+      Log.e('getTicketsByPartyId failed', e, st);
+      rethrow;
+    }
   }
 
   /// Fetches default ticket templates for a specific party.
   Future<List<Ticket>> getDefaultTicketsByPartyId(String partyId) async {
-    final data = await _supabase
-        .from('tickets')
-        .select()
-        .eq('party_id', partyId)
-        .filter('event_id', 'is', null)
-        .order('created_at', ascending: true);
+    try {
+      final data = await _supabase
+          .from('tickets')
+          .select()
+          .eq('party_id', partyId)
+          .filter('event_id', 'is', null)
+          .order('created_at', ascending: true);
 
-    return (data as List<dynamic>)
-        .map((json) => Ticket.fromJson(json as Map<String, dynamic>))
-        .toList();
+      return (data as List<dynamic>)
+          .map((json) => Ticket.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } catch (e, st) {
+      Log.e('getDefaultTicketsByPartyId failed', e, st);
+      rethrow;
+    }
   }
 
   /// Creates a new ticket.
   Future<Ticket> createTicket(Ticket ticket) async {
-    final json = ticket.toJson()
-      ..remove('id')
-      ..remove('created_at')
-      ..remove('updated_at')
-      ..remove('sold_count');
+    try {
+      final json = ticket.toJson()
+        ..remove('id')
+        ..remove('created_at')
+        ..remove('updated_at')
+        ..remove('sold_count');
 
-    final data = await _supabase
-        .from('tickets')
-        .insert(json)
-        .select()
-        .single();
+      final data = await _supabase
+          .from('tickets')
+          .insert(json)
+          .select()
+          .single();
 
-    return Ticket.fromJson(data);
+      return Ticket.fromJson(data);
+    } catch (e, st) {
+      Log.e('createTicket failed: ${ticket.name}', e, st);
+      rethrow;
+    }
   }
 }

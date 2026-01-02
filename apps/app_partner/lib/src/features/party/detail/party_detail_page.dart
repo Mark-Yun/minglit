@@ -264,10 +264,14 @@ class PartyDetailPage extends ConsumerWidget {
                               ),
                             );
                           }
-                        } on Exception catch (e) {
+                        } on Exception catch (_) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('티켓 추가 실패: $e')),
+                              const SnackBar(
+                                content: Text(
+                                  '일시적인 오류로 티켓을 생성하지 못했습니다. 잠시 후 다시 시도해주세요.',
+                                ),
+                              ),
                             );
                           }
                         } finally {
