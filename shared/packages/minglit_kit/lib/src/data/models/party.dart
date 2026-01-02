@@ -61,3 +61,55 @@ abstract class Party with _$Party {
 
   factory Party.fromJson(Map<String, dynamic> json) => _$PartyFromJson(json);
 }
+
+extension PartyX on Party {
+  String get statusLabel {
+    switch (status) {
+      case 'active':
+        return '운영중';
+      case 'closed':
+        return '종료됨';
+      case 'draft':
+        return '임시저장';
+      default:
+        return '알 수 없음';
+    }
+  }
+
+  bool get isActive => status == 'active';
+  bool get isClosed => status == 'closed';
+  bool get isDraft => status == 'draft';
+
+  String get summaryCondition {
+    final gender = conditions['gender'];
+    final ageData = conditions['age_range'];
+
+    String genderText;
+    if (gender == 'male') {
+      genderText = '남성';
+    } else if (gender == 'female') {
+      genderText = '여성';
+    } else {
+      genderText = '성별 무관';
+    }
+
+    String ageText = '나이 무관';
+    if (ageData is Map) {
+      final min = ageData['min'];
+      final max = ageData['max'];
+      if (min != null && max != null) {
+        ageText = '$min~$max년생';
+      } else if (min != null) {
+        ageText = '$min년생 이후';
+      } else if (max != null) {
+        ageText = '$max년생 이전';
+      }
+    }
+
+    if (genderText == '성별 무관' && ageText == '나이 무관') return '조건 없음';
+    if (ageText == '나이 무관') return genderText;
+    if (genderText == '성별 무관') return ageText;
+
+    return '$genderText · $ageText';
+  }
+}

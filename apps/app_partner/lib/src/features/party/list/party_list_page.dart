@@ -46,9 +46,14 @@ class PartyListPage extends ConsumerWidget {
             );
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(MinglitSpacing.medium),
+          return ListView.separated(
+            padding: const EdgeInsets.only(bottom: 80),
             itemCount: parties.length,
+            separatorBuilder: (context, index) => Divider(
+              height: 1,
+              thickness: 1,
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
             itemBuilder: (context, index) {
               final party = parties[index];
               return PartyListItem(

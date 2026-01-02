@@ -220,6 +220,48 @@ abstract class AppLocalizations {
   /// **'파티 로드 실패: {error}'**
   String partyDetail_error_partyLoad(String error);
 
+  /// No description provided for @partyList_badge_active.
+  ///
+  /// In ko, this message translates to:
+  /// **'운영중'**
+  String get partyList_badge_active;
+
+  /// No description provided for @partyList_badge_closed.
+  ///
+  /// In ko, this message translates to:
+  /// **'종료됨'**
+  String get partyList_badge_closed;
+
+  /// No description provided for @partyList_badge_draft.
+  ///
+  /// In ko, this message translates to:
+  /// **'임시저장'**
+  String get partyList_badge_draft;
+
+  /// No description provided for @partyList_chip_maxParticipants.
+  ///
+  /// In ko, this message translates to:
+  /// **'최대 {count}명'**
+  String partyList_chip_maxParticipants(int count);
+
+  /// No description provided for @partyList_chip_requiredVerifications.
+  ///
+  /// In ko, this message translates to:
+  /// **'인증 {count}개 필요'**
+  String partyList_chip_requiredVerifications(int count);
+
+  /// No description provided for @partyList_chip_noVerification.
+  ///
+  /// In ko, this message translates to:
+  /// **'인증 불필요'**
+  String get partyList_chip_noVerification;
+
+  /// No description provided for @partyList_message_noLocation.
+  ///
+  /// In ko, this message translates to:
+  /// **'지정된 장소 없음'**
+  String get partyList_message_noLocation;
+
   /// No description provided for @reviewVerification_title_pending.
   ///
   /// In ko, this message translates to:

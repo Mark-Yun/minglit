@@ -78,7 +78,7 @@ class PartyRepository {
     try {
       final data = await _supabase
           .from('parties')
-          .select()
+          .select('*, location:locations(*)')
           .eq('status', 'active')
           .order('created_at', ascending: false);
 
@@ -100,7 +100,7 @@ class PartyRepository {
     try {
       final data = await _supabase
           .from('parties')
-          .select()
+          .select('*, location:locations(*)')
           .eq('partner_id', partnerId)
           .order('created_at', ascending: false);
 

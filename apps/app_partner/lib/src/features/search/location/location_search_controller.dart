@@ -11,6 +11,9 @@ class LocationSearchController extends _$LocationSearchController {
 
   @override
   FutureOr<List<Location>> build() {
+    ref.onDispose(() {
+      _debounce?.cancel();
+    });
     // Initial state is empty list
     return [];
   }

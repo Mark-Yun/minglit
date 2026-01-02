@@ -50,6 +50,28 @@
     }
   },
 
+  "partyList_badge_active": "운영중",
+  "partyList_badge_closed": "종료됨",
+  "partyList_badge_draft": "임시저장",
+  "partyList_chip_maxParticipants": "최대 {count}명",
+  "@partyList_chip_maxParticipants": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "partyList_chip_requiredVerifications": "인증 {count}개 필요",
+  "@partyList_chip_requiredVerifications": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "partyList_chip_noVerification": "인증 불필요",
+  "partyList_message_noLocation": "지정된 장소 없음",
+
   "reviewVerification_title_pending": "인증 심사 대기열",
   "reviewVerification_message_empty": "모든 심사가 완료되었습니다! 🎉",
   "reviewVerification_button_correction": "보완 요청",

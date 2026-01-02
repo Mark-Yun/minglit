@@ -78,6 +78,31 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get partyList_badge_active => '운영중';
+
+  @override
+  String get partyList_badge_closed => '종료됨';
+
+  @override
+  String get partyList_badge_draft => '임시저장';
+
+  @override
+  String partyList_chip_maxParticipants(int count) {
+    return '최대 $count명';
+  }
+
+  @override
+  String partyList_chip_requiredVerifications(int count) {
+    return '인증 $count개 필요';
+  }
+
+  @override
+  String get partyList_chip_noVerification => '인증 불필요';
+
+  @override
+  String get partyList_message_noLocation => '지정된 장소 없음';
+
+  @override
   String get reviewVerification_title_pending => '인증 심사 대기열';
 
   @override
