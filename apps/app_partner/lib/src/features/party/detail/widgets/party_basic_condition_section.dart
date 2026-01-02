@@ -31,28 +31,26 @@ class PartyBasicConditionSection extends ConsumerWidget {
       );
     }
 
-    // Borderless minimal design
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (var i = 0; i < groups.length; i++) ...[
-          if (i > 0)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Divider(
-                height: 1,
-                color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          Container(
+            margin: const EdgeInsets.only(bottom: MinglitSpacing.small),
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: BorderRadius.circular(MinglitRadius.card),
+              border: Border.all(
+                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
               ),
             ),
-          InkWell(
-            onTap: onGroupTap != null ? () => onGroupTap!(groups[i]) : null,
-            borderRadius: BorderRadius.circular(MinglitRadius.small),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: MinglitSpacing.small,
-                horizontal: 4,
+            child: InkWell(
+              onTap: onGroupTap != null ? () => onGroupTap!(groups[i]) : null,
+              borderRadius: BorderRadius.circular(MinglitRadius.card),
+              child: Padding(
+                padding: const EdgeInsets.all(MinglitSpacing.medium),
+                child: _buildConditionGroup(context, ref, groups[i]),
               ),
-              child: _buildConditionGroup(context, ref, groups[i]),
             ),
           ),
         ],
@@ -75,16 +73,16 @@ class PartyBasicConditionSection extends ConsumerWidget {
         if (group.label != null && group.label!.isNotEmpty) ...[
           Text(
             group.label!,
-            style: theme.textTheme.labelMedium?.copyWith(
-              fontWeight: FontWeight.bold,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
               color: colorScheme.primary,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: MinglitSpacing.xsmall),
         ],
         _buildConditionRow(context, group),
         if (verifIds.isNotEmpty) ...[
-          const SizedBox(height: MinglitSpacing.small),
+          const SizedBox(height: MinglitSpacing.medium),
           _VerificationBadges(verifIds: verifIds),
         ],
       ],
@@ -117,27 +115,33 @@ class PartyBasicConditionSection extends ConsumerWidget {
 
     return Row(
       children: [
-        Icon(Icons.wc, size: 14, color: colorScheme.onSurfaceVariant),
-        const SizedBox(width: 6),
-        Text(
-          genderText,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w500,
-            fontSize: 13,
-          ),
-        ),
-        const SizedBox(width: MinglitSpacing.medium),
+        // Year First
         Icon(
           Icons.cake_outlined,
-          size: 14,
+          size: 16,
           color: colorScheme.onSurfaceVariant,
         ),
         const SizedBox(width: 6),
         Text(
           birthYearText,
           style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w500,
-            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ),
+        const SizedBox(width: MinglitSpacing.large),
+        // Gender Second
+        Icon(
+          Icons.wc,
+          size: 16,
+          color: colorScheme.onSurfaceVariant,
+        ),
+        const SizedBox(width: 6),
+        Text(
+          genderText,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
           ),
         ),
       ],
@@ -152,31 +156,42 @@ class _VerificationBadges extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final verificationsAsync = ref.watch(verificationsByIdsProvider(verifIds));
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return verificationsAsync.when(
       data: (list) => Wrap(
-        spacing: 4,
-        runSpacing: 4,
+        spacing: 8,
+        runSpacing: 8,
         children: list
             .map(
               (v) => Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: colorScheme.primaryContainer.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(MinglitRadius.small),
+                  border: Border.all(
+                    color: colorScheme.primary.withValues(alpha: 0.1),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.verified, size: 10, color: colorScheme.primary),
-                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.verified_user_outlined,
+                      size: 14,
+                      color: colorScheme.primary,
+                    ),
+                    const SizedBox(width: 6),
                     Text(
                       v.displayName,
-                      style: TextStyle(
-                        fontSize: 10,
+                      style: theme.textTheme.labelMedium?.copyWith(
                         color: colorScheme.primary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
                       ),
                     ),
                   ],
@@ -185,7 +200,7 @@ class _VerificationBadges extends ConsumerWidget {
             )
             .toList(),
       ),
-      loading: () => const MinglitSkeleton(height: 20, width: 60),
+      loading: () => const MinglitSkeleton(height: 32, width: 80),
       error: (e, s) => const SizedBox.shrink(),
     );
   }
