@@ -77,11 +77,11 @@ class _PartnerApplicationDetailPageState
       ref.invalidate(
         partnerApplicationProvider(applicationId: widget.applicationId),
       );
-    } on Exception catch (e) {
+    } on Exception catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('처리 실패: $e')));
+      ).showSnackBar(const SnackBar(content: Text('신청서 상태 변경에 실패했습니다.')));
     }
   }
 

@@ -16,7 +16,7 @@ class PartyCreateCoordinator {
 
   void onError(Exception e) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('에러 발생: $e')),
+      const SnackBar(content: Text('파티를 생성하는 중 문제가 발생했습니다.')),
     );
   }
 

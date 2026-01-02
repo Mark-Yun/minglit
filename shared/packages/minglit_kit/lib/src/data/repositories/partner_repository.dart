@@ -29,15 +29,20 @@ class PartnerRepository {
 
   /// Fetches all active partners.
   Future<List<Partner>> getPartners() async {
-    final data = await _supabase
-        .from('partners')
-        .select()
-        .eq('is_active', true)
-        .order('created_at', ascending: false);
+    try {
+      final data = await _supabase
+          .from('partners')
+          .select()
+          .eq('is_active', true)
+          .order('created_at', ascending: false);
 
-    return (data as List<dynamic>)
-        .map((json) => Partner.fromJson(json as Map<String, dynamic>))
-        .toList();
+      return (data as List<dynamic>)
+          .map((json) => Partner.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } catch (e, st) {
+      Log.e('❌ [PartnerRepo] getPartners Error', e, st);
+      rethrow;
+    }
   }
 
   /// Fetches partners managed by the current user.
@@ -118,14 +123,16 @@ class PartnerRepository {
       Log.i('🎉 [PartnerRepo] Application submitted successfully!');
     } on Exception catch (e, stackTrace) {
       Log.e('❌ [PartnerRepo] Application Failed', e, stackTrace);
-      await _supabase.storage
-          .from('partner-proofs')
-          .remove(
-            [
-              bizRegPath,
-              bankbookPath,
-            ].whereType<String>().toList(),
-          );
+      // Attempt cleanup (Best effort)
+      try {
+        await _supabase.storage
+            .from('partner-proofs')
+            .remove(
+              [bizRegPath, bankbookPath].whereType<String>().toList(),
+            );
+      } on Exception catch (_) {
+        // Ignore cleanup errors
+      }
       rethrow;
     }
   }
@@ -151,16 +158,21 @@ class PartnerRepository {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) return null;
 
-    final data = await _supabase
-        .from('partner_applications')
-        .select()
-        .eq('user_id', userId)
-        .order('created_at', ascending: false)
-        .limit(1)
-        .maybeSingle();
+    try {
+      final data = await _supabase
+          .from('partner_applications')
+          .select()
+          .eq('user_id', userId)
+          .order('created_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
 
-    if (data == null) return null;
-    return PartnerApplication.fromJson(data);
+      if (data == null) return null;
+      return PartnerApplication.fromJson(data);
+    } catch (e, st) {
+      Log.e('❌ [PartnerRepo] getMyApplication Error', e, st);
+      rethrow;
+    }
   }
 
   /// Fetches all applications (Admin functionality).
@@ -168,27 +180,32 @@ class PartnerRepository {
     String? status,
     String? searchTerm,
   }) async {
-    var query = _supabase.from('partner_applications').select();
+    try {
+      var query = _supabase.from('partner_applications').select();
 
-    if (status != null && status != 'all') {
-      query = query.eq('status', status);
+      if (status != null && status != 'all') {
+        query = query.eq('status', status);
+      }
+
+      if (searchTerm != null && searchTerm.isNotEmpty) {
+        query = query.or(
+          'brand_name.ilike.%$searchTerm%,biz_name.ilike.%$searchTerm%',
+        );
+      }
+
+      final data =
+          await query.order('created_at', ascending: false) as List<dynamic>;
+
+      return data
+          .map(
+            (dynamic json) =>
+                PartnerApplication.fromJson(json as Map<String, dynamic>),
+          )
+          .toList();
+    } catch (e, st) {
+      Log.e('❌ [PartnerRepo] getAllApplications Error', e, st);
+      rethrow;
     }
-
-    if (searchTerm != null && searchTerm.isNotEmpty) {
-      query = query.or(
-        'brand_name.ilike.%$searchTerm%,biz_name.ilike.%$searchTerm%',
-      );
-    }
-
-    final data =
-        await query.order('created_at', ascending: false) as List<dynamic>;
-
-    return data
-        .map(
-          (dynamic json) =>
-              PartnerApplication.fromJson(json as Map<String, dynamic>),
-        )
-        .toList();
   }
 
   /// Reviews an application (Admin functionality).
@@ -198,24 +215,34 @@ class PartnerRepository {
     String? adminComment,
   }) async {
     Log.d('⚖️ [PartnerRepo] Reviewing Application: ID=$applicationId');
-    await _supabase
-        .from('partner_applications')
-        .update({
-          'status': status,
-          'admin_comment': adminComment,
-          'updated_at': DateTime.now().toIso8601String(),
-        })
-        .eq('id', applicationId);
+    try {
+      await _supabase
+          .from('partner_applications')
+          .update({
+            'status': status,
+            'admin_comment': adminComment,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', applicationId);
+    } catch (e, st) {
+      Log.e('❌ [PartnerRepo] reviewApplication Error', e, st);
+      rethrow;
+    }
   }
 
   /// Fetches members belonging to a specific partner.
   Future<List<Map<String, dynamic>>> getPartnerMembers(String partnerId) async {
-    final data = await _supabase
-        .from('partner_member_permissions')
-        .select('*, user:user_profiles(*)')
-        .eq('partner_id', partnerId)
-        .order('joined_at', ascending: true);
-    return (data as List<dynamic>).cast<Map<String, dynamic>>();
+    try {
+      final data = await _supabase
+          .from('partner_member_permissions')
+          .select('*, user:user_profiles(*)')
+          .eq('partner_id', partnerId)
+          .order('joined_at', ascending: true);
+      return (data as List<dynamic>).cast<Map<String, dynamic>>();
+    } catch (e, st) {
+      Log.e('❌ [PartnerRepo] getPartnerMembers Error', e, st);
+      rethrow;
+    }
   }
 
   /// Updates a member's role.
@@ -225,12 +252,17 @@ class PartnerRepository {
     required String role,
   }) async {
     Log.d('🎭 [PartnerRepo] Updating Role: Partner=$partnerId, User=$userId');
-    await _supabase
-        .from('partner_member_permissions')
-        .update({'role': role})
-        .match(
-          {'partner_id': partnerId, 'user_id': userId},
-        );
+    try {
+      await _supabase
+          .from('partner_member_permissions')
+          .update({'role': role})
+          .match(
+            {'partner_id': partnerId, 'user_id': userId},
+          );
+    } catch (e, st) {
+      Log.e('❌ [PartnerRepo] updateMemberRole Error', e, st);
+      rethrow;
+    }
   }
 
   /// Updates a member's specific permissions.
@@ -240,23 +272,33 @@ class PartnerRepository {
     required List<String> permissions,
   }) async {
     Log.d('⚙️ [PartnerRepo] Updating Permissions: Partner=$partnerId');
-    await _supabase
-        .from('partner_member_permissions')
-        .update({'permissions': permissions})
-        .match(
-          {'partner_id': partnerId, 'user_id': userId},
-        );
+    try {
+      await _supabase
+          .from('partner_member_permissions')
+          .update({'permissions': permissions})
+          .match(
+            {'partner_id': partnerId, 'user_id': userId},
+          );
+    } catch (e, st) {
+      Log.e('❌ [PartnerRepo] updateMemberPermissions Error', e, st);
+      rethrow;
+    }
   }
 
   /// Fetches a specific partner by ID.
   Future<Partner?> getPartnerById(String partnerId) async {
-    final data = await _supabase
-        .from('partners')
-        .select()
-        .eq('id', partnerId)
-        .maybeSingle();
+    try {
+      final data = await _supabase
+          .from('partners')
+          .select()
+          .eq('id', partnerId)
+          .maybeSingle();
 
-    if (data == null) return null;
-    return Partner.fromJson(data);
+      if (data == null) return null;
+      return Partner.fromJson(data);
+    } catch (e, st) {
+      Log.e('❌ [PartnerRepo] getPartnerById Error', e, st);
+      rethrow;
+    }
   }
 }

@@ -40,13 +40,17 @@ class KakaoLocationRepository {
             id: '', // Temporary
             partnerId: '', // Temporary
             name: map['place_name'] as String,
-            address: map['road_address_name'] as String? ??
+            address:
+                map['road_address_name'] as String? ??
                 map['address_name'] as String,
-            region1: roadAddr?['region_1depth_name'] as String? ??
+            region1:
+                roadAddr?['region_1depth_name'] as String? ??
                 addr?['region_1depth_name'] as String?,
-            region2: roadAddr?['region_2depth_name'] as String? ??
+            region2:
+                roadAddr?['region_2depth_name'] as String? ??
                 addr?['region_2depth_name'] as String?,
-            region3: roadAddr?['region_3depth_name'] as String? ??
+            region3:
+                roadAddr?['region_3depth_name'] as String? ??
                 addr?['region_3depth_name'] as String?,
             postalCode: roadAddr?['zone_no'] as String?,
             latitude: double.parse(map['y'] as String),

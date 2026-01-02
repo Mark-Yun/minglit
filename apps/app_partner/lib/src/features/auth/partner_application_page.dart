@@ -100,11 +100,11 @@ class _PartnerApplicationPageState
           ),
         );
       }
-    } on Exception catch (e) {
+    } on Exception catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('제출 실패: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('입점 신청서를 제출하지 못했습니다. 입력 내용을 확인해주세요.')),
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

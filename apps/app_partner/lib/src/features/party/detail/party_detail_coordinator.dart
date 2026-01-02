@@ -46,10 +46,10 @@ class PartyDetailCoordinator {
           const SnackBar(content: Text('파티가 활성화되었습니다.')),
         );
       }
-    } on Exception catch (e) {
+    } on Exception catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('활성화 실패: $e')),
+          const SnackBar(content: Text('파티 상태 변경 중 오류가 발생했습니다.')),
         );
       }
     } finally {
@@ -69,10 +69,10 @@ class PartyDetailCoordinator {
           const SnackBar(content: Text('파티가 비활성화(보관)되었습니다.')),
         );
       }
-    } on Exception catch (e) {
+    } on Exception catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('비활성화 실패: $e')),
+          const SnackBar(content: Text('파티 상태 변경 중 오류가 발생했습니다.')),
         );
       }
     } finally {

@@ -448,10 +448,10 @@ class _LocationSection extends ConsumerWidget {
             const SnackBar(content: Text('장소가 수정되었습니다.')),
           );
         }
-      } on Exception catch (e) {
+      } on Exception catch (_) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('장소 수정 실패: $e')),
+            const SnackBar(content: Text('장소 정보를 수정하지 못했습니다.')),
           );
         }
       } finally {

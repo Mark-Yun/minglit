@@ -144,11 +144,11 @@ class _MemberPermissionFormState extends ConsumerState<_MemberPermissionForm> {
         ).showSnackBar(const SnackBar(content: Text('저장되었습니다.')));
         Navigator.pop(context);
       }
-    } on Exception catch (e) {
+    } on Exception catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('저장 실패: $e')));
+        ).showSnackBar(const SnackBar(content: Text('권한 설정 저장 중 오류가 발생했습니다.')));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
