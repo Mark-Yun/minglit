@@ -83,6 +83,11 @@ Organization-Member 모델을 기반으로 설계되었습니다.
 
 
 
+## ⚡ Operational Rules
+
+1. **State Preservation**: 작업을 시작하기 전, 현재까지의 변경사항이 있다면 커밋하여 진행 중인 작업을 보존합니다.
+2. **Linting Workflow**: `analyze_files`를 실행하기 전에 반드시 `dart fix --apply`와 `dart format .`을 먼저 수행합니다.
+
 ## 🏗️ Architectural Highlights
 
 
