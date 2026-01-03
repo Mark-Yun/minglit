@@ -5,7 +5,6 @@ import 'package:app_partner/src/routing/app_router.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:go_router/go_router.dart';
@@ -20,9 +19,6 @@ part 'dev_main.g.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Load environment variables first
-  await dotenv.load();
 
   const googleWebClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
 
@@ -118,11 +114,11 @@ Future<void> appStartup(Ref ref) async {
     ]);
 
     // Initialize Kakao Map SDK
-    final kakaoMapKey = dotenv.env['KAKAO_MAP_JAVASCRIPT_KEY'] ?? '';
+    const kakaoMapKey = String.fromEnvironment('KAKAO_MAP_JAVASCRIPT_KEY');
     if (kakaoMapKey.isNotEmpty) {
       kakao.AuthRepository.initialize(appKey: kakaoMapKey);
     } else {
-      debugPrint('⚠️ Kakao Map Key is missing in .env');
+      debugPrint('⚠️ Kakao Map Key is missing in environment variables');
     }
 
     // 3. Background Caching for remaining images

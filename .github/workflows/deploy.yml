@@ -46,6 +46,7 @@ jobs:
           SUPABASE_MAIN_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
           GOOGLE_MAIN_ID: ${{ secrets.GOOGLE_MAIN_WEB_CLIENT_ID }}
         run: |
+          touch .env
           flutter pub get
           
           if [[ "${{ github.ref_name }}" == "main" ]]; then
@@ -104,6 +105,7 @@ jobs:
           SUPABASE_MAIN_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
           GOOGLE_MAIN_ID: ${{ secrets.GOOGLE_MAIN_WEB_CLIENT_ID }}
         run: |
+          touch .env
           flutter pub get
           
           if [[ "${{ github.ref_name }}" == "main" ]]; then

@@ -4,7 +4,6 @@ import 'package:app_user/src/l10n/generated/app_localizations.dart';
 import 'package:app_user/src/routing/app_router.dart';
 import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:go_router/go_router.dart';
@@ -17,9 +16,6 @@ part 'dev_main.g.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Load environment variables first
-  await dotenv.load();
 
   const googleWebClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
 
