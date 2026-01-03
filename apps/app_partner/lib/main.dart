@@ -5,6 +5,7 @@ import 'package:app_partner/src/routing/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:kakao_map_plugin/kakao_map_plugin.dart' as kakao;
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
@@ -50,6 +51,14 @@ Future<void> appStartup(Ref ref) async {
         anonKey: supabasePublishableKey,
       ),
     ]);
+
+    // Initialize Kakao Map SDK
+    const kakaoMapKey = String.fromEnvironment('KAKAO_MAP_JAVASCRIPT_KEY');
+    if (kakaoMapKey.isNotEmpty) {
+      kakao.AuthRepository.initialize(appKey: kakaoMapKey);
+    } else {
+      debugPrint('⚠️ Kakao Map Key is missing in environment variables');
+    }
   } on Exception catch (e) {
     debugPrint('⚠️ App startup warning: $e');
   }

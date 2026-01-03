@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -13,11 +12,16 @@ KakaoLocationRepository kakaoLocationRepository(Ref ref) {
 class KakaoLocationRepository {
   final Dio _dio = Dio();
 
-  // Load from .env
-  String get _restApiKey => dotenv.env['KAKAO_LOCAL_REST_API_KEY'] ?? '';
+  // Load from --dart-define
+  static const _restApiKey = String.fromEnvironment('KAKAO_LOCAL_REST_API_KEY');
 
   Future<List<Location>> searchKeyword(String query) async {
     if (query.isEmpty) return [];
+
+    if (_restApiKey.isEmpty) {
+      Log.e('KAKAO_LOCAL_REST_API_KEY is not defined');
+      return [];
+    }
 
     try {
       final response = await _dio.get<Map<String, dynamic>>(
