@@ -7,7 +7,7 @@ import 'package:app_partner/src/features/party/widgets/party_capacity_input.dart
 import 'package:app_partner/src/features/party/widgets/party_capacity_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_contact_input.dart';
 import 'package:app_partner/src/features/party/widgets/party_contact_summary.dart';
-import 'package:app_partner/src/features/party/widgets/party_entrance_condition_section.dart';
+import 'package:app_partner/src/features/party/widgets/party_entrance_condition_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_location_summary.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
@@ -63,7 +63,7 @@ class PartyDetailInfoTab extends ConsumerWidget {
             style: theme.textTheme.titleMedium,
           ),
           const SizedBox(height: MinglitSpacing.small),
-          PartyEntranceConditionSection(
+          PartyEntranceConditionSummary(
             party: party,
             onGroupTap: (PartyEntryGroup group) async {
               await Navigator.of(context).push(

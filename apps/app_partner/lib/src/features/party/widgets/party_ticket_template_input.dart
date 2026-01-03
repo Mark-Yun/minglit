@@ -1,17 +1,17 @@
 import 'dart:async';
 
-import 'package:app_partner/src/features/event/widgets/ticket_list_item.dart';
+import 'package:app_partner/src/features/party/event/widgets/ticket_list_item.dart';
 import 'package:app_partner/src/features/party/ticket/ticket_template_create_page.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-class PartyTicketTemplateEditor extends StatelessWidget {
-  const PartyTicketTemplateEditor({
+class PartyTicketTemplateInput extends StatelessWidget {
+  const PartyTicketTemplateInput({
     required this.ticketTemplates,
+    required this.entryGroups,
     required this.onAdd,
     required this.onRemove,
     required this.onUpdate,
-    required this.entryGroups,
     this.maxParticipants,
     super.key,
   });

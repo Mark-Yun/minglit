@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-class PartyConditionsSelector extends StatelessWidget {
-  const PartyConditionsSelector({
+class PartyConditionsInput extends StatelessWidget {
+  const PartyConditionsInput({
     required this.conditions,
     required this.onChanged,
     super.key,

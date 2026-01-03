@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:minglit_kit/minglit_kit.dart';
 
-class PartyDescriptionEditor extends StatelessWidget {
-  const PartyDescriptionEditor({
+class PartyDescriptionInput extends StatelessWidget {
+  const PartyDescriptionInput({
     required this.quillController,
     required this.focusNode,
     this.errorText,

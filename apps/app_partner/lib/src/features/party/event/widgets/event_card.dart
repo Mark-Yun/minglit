@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-class PartyEventListItem extends StatelessWidget {
-  const PartyEventListItem({
+class EventCard extends StatelessWidget {
+  const EventCard({
     required this.event,
     this.onTap,
     super.key,

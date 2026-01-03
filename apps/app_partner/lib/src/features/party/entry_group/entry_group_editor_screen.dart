@@ -1,6 +1,6 @@
 import 'package:app_partner/src/features/party/create/party_create_coordinator.dart';
 import 'package:app_partner/src/features/party/party_providers.dart';
-import 'package:app_partner/src/features/party/widgets/party_verification_selector.dart';
+import 'package:app_partner/src/features/party/widgets/party_verification_input.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -196,7 +196,7 @@ class _EntryGroupEditorScreenState
               style: theme.textTheme.titleSmall,
             ),
             const SizedBox(height: MinglitSpacing.small),
-            PartyVerificationSelector(
+            PartyVerificationInput(
               verificationsAsync: verificationsAsync,
               selectedVerificationIds: _selectedVerificationIds,
               onToggle: (id) {

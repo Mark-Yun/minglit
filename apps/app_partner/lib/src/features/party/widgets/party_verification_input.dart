@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-class PartyVerificationSelector extends StatelessWidget {
-  const PartyVerificationSelector({
+class PartyVerificationInput extends StatelessWidget {
+  const PartyVerificationInput({
     required this.verificationsAsync,
     required this.selectedVerificationIds,
     required this.onToggle,

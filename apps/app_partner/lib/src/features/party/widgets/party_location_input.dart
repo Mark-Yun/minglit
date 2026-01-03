@@ -5,8 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class PartyLocationSelector extends StatefulWidget {
-  const PartyLocationSelector({
+class PartyLocationInput extends StatefulWidget {
+  const PartyLocationInput({
     required this.selectedLocation,
     required this.onSearchTap,
     super.key,
@@ -16,10 +16,10 @@ class PartyLocationSelector extends StatefulWidget {
   final VoidCallback onSearchTap;
 
   @override
-  State<PartyLocationSelector> createState() => _PartyLocationSelectorState();
+  State<PartyLocationInput> createState() => _PartyLocationInputState();
 }
 
-class _PartyLocationSelectorState extends State<PartyLocationSelector> {
+class _PartyLocationInputState extends State<PartyLocationInput> {
   void _copyAddress(String address) {
     unawaited(Clipboard.setData(ClipboardData(text: address)));
     ScaffoldMessenger.of(context).showSnackBar(

@@ -2,13 +2,13 @@ import 'package:app_partner/src/features/admin/partner_application_detail_page.d
 import 'package:app_partner/src/features/admin/partner_application_list_page.dart';
 import 'package:app_partner/src/features/auth/partner_login_page.dart';
 import 'package:app_partner/src/features/dev/partner_dev_map.dart';
-import 'package:app_partner/src/features/event/create/event_create_page.dart';
-import 'package:app_partner/src/features/event/detail/event_detail_page.dart';
 import 'package:app_partner/src/features/home/partner_home_page.dart';
 import 'package:app_partner/src/features/member/partner_member_list_page.dart';
 import 'package:app_partner/src/features/member/partner_member_permission_page.dart';
 import 'package:app_partner/src/features/party/create/party_create_wizard_page.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_page.dart';
+import 'package:app_partner/src/features/party/event/create/event_create_page.dart';
+import 'package:app_partner/src/features/party/event/detail/event_detail_page.dart';
 import 'package:app_partner/src/features/party/list/party_list_page.dart';
 import 'package:app_partner/src/features/ticket/create/ticket_create_page.dart';
 import 'package:app_partner/src/features/ticket/edit/ticket_edit_page.dart';
