@@ -20,6 +20,7 @@
 3.  **계획(Plan)**: 구조적 리뷰를 거쳐 최적의 재사용성을 고려한 설계안을 제안합니다.
 4.  **구현(Implement)**:
     -   **Linting First**: `analyze_files`를 실행하기 전에 반드시 `dart fix --apply`와 `dart format .`을 먼저 수행합니다.
+    -   **Theme & i18n**: 모든 UI 구현 시 하드코딩을 배제하고 `Theme.of(context)`와 `context.l10n`을 반드시 적용합니다.
 5.  **검증(Verification)**: 구현 후에는 반드시 직접 실행 및 로그 분석을 통해 100% 완벽한지 검증합니다.
 6.  **확인(Approval)**: 커밋 전에 유저와 함께 최종 결과를 검증하며, 독단적인 커밋은 지양합니다.
 

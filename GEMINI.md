@@ -87,6 +87,7 @@ Organization-Member 모델을 기반으로 설계되었습니다.
 
 1. **State Preservation**: 새로운 작업을 시작할 때 예상되는 커밋 메시지를 미리 작성하여 작업의 목표를 명확히 공유합니다. 포매팅, 픽스 린트 작업 완료 후에는 유저에게 커밋 여부를 묻고, 승인 시에만 커밋하여 작업을 보존합니다.
 2. **Linting Workflow**: `analyze_files`를 실행하기 전에 반드시 `dart fix --apply`와 `dart format .`을 먼저 수행합니다.
+3. **UI Consistency**: 모든 신규 UI 작업은 `Theme.of(context)`와 `context.l10n`을 준수하여 하드코딩된 스타일과 문자열을 배제합니다.
 
 ## 🏗️ Architectural Highlights
 
