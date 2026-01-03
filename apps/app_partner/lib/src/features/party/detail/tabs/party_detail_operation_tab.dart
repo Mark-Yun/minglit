@@ -4,7 +4,7 @@ import 'package:app_partner/src/features/party/detail/party_detail_controller.da
 import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
 import 'package:app_partner/src/features/party/ticket/ticket_template_create_page.dart';
 import 'package:app_partner/src/features/party/ticket/widgets/party_tickets_summary.dart';
-import 'package:app_partner/src/features/party/widgets/party_events_summary.dart';
+import 'package:app_partner/src/features/party/widgets/party_event_list_summary.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
@@ -64,7 +64,7 @@ class PartyDetailOperationTab extends ConsumerWidget {
           ),
           const SizedBox(height: MinglitSpacing.small),
           eventsAsync.when(
-            data: (events) => PartyEventsSummary(
+            data: (events) => PartyEventListSummary(
               events: events,
               onEventTap: (event) =>
                   coordinator.goToEventDetail(party.id, event.id),
