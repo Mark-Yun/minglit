@@ -1,6 +1,5 @@
 import 'package:app_partner/src/features/party/create/widgets/party_description_editor.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_image_picker.dart';
-import 'package:app_partner/src/features/party/create/widgets/party_section_title.dart';
 import 'package:app_partner/src/features/party/create/wizard/party_create_wizard_controller.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
@@ -66,13 +65,20 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(partyCreateWizardControllerProvider);
+    final theme = Theme.of(context);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(MinglitSpacing.medium),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          PartySectionTitle(context.l10n.partyCreate_label_title),
+          Text(
+            context.l10n.partyCreate_label_title,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.medium),
           TextFormField(
             controller: _titleController,
             decoration: InputDecoration(
@@ -83,13 +89,25 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                 .updateTitle(val),
           ),
           const SizedBox(height: MinglitSpacing.large),
-          PartySectionTitle(context.l10n.partyCreate_label_description),
+          Text(
+            context.l10n.partyCreate_label_description,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.medium),
           PartyDescriptionEditor(
             quillController: _quillController,
             focusNode: _editorFocusNode,
           ),
           const SizedBox(height: MinglitSpacing.large),
-          PartySectionTitle(context.l10n.partyCreate_label_coverImage),
+          Text(
+            context.l10n.partyCreate_label_coverImage,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.medium),
           PartyImagePicker(
             selectedImage: state.imageFile,
             onPickImage: _pickImage,

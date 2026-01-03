@@ -115,6 +115,42 @@ class PartyDetailCoordinator {
     }
   }
 
+  Future<void> updatePartyCapacityAndContact({
+    required String partyId,
+    required int minCount,
+    required int maxCount,
+    required Map<String, dynamic> contactOptions,
+    required BuildContext context,
+  }) async {
+    final loading = _ref.read(globalLoadingControllerProvider.notifier)..show();
+    try {
+      final party = await _ref.read(partyDetailProvider(partyId).future);
+
+      await _ref
+          .read(partyRepositoryProvider)
+          .updateParty(
+            party.copyWith(
+              minConfirmedCount: minCount,
+              maxParticipants: maxCount,
+              contactOptions: contactOptions,
+            ),
+          );
+
+      _ref.invalidate(partyDetailProvider(partyId));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.common_message_saved)),
+        );
+      }
+    } on Object catch (e, st) {
+      if (context.mounted) {
+        handleMinglitError(context, e, st);
+      }
+    } finally {
+      loading.hide();
+    }
+  }
+
   void goToCreateEvent(String partyId) {
     unawaited(
       _ref

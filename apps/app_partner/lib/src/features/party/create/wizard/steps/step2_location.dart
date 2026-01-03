@@ -1,7 +1,6 @@
 import 'package:app_partner/src/features/party/create/party_create_coordinator.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_location_detail_input.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_location_selector.dart';
-import 'package:app_partner/src/features/party/create/widgets/party_section_title.dart';
 import 'package:app_partner/src/features/party/create/wizard/party_create_wizard_controller.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
@@ -47,13 +46,20 @@ class _Step2LocationState extends ConsumerState<Step2Location> {
   Widget build(BuildContext context) {
     final state = ref.watch(partyCreateWizardControllerProvider);
     final notifier = ref.read(partyCreateWizardControllerProvider.notifier);
+    final theme = Theme.of(context);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(MinglitSpacing.medium),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          PartySectionTitle(context.l10n.partyCreate_label_location),
+          Text(
+            context.l10n.partyCreate_label_location,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.medium),
           PartyLocationSelector(
             selectedLocation: state.selectedLocation,
             onSearchTap: _handleLocationSearch,

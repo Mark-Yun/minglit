@@ -1,9 +1,6 @@
 import 'package:app_partner/src/features/party/create/party_create_controller.dart';
-import 'package:app_partner/src/features/party/create/widgets/party_capacity_input.dart';
-import 'package:app_partner/src/features/party/create/widgets/party_contact_input.dart';
-import 'package:app_partner/src/features/party/create/widgets/party_section_title.dart';
+import 'package:app_partner/src/features/party/create/widgets/party_capacity_contact_form.dart';
 import 'package:app_partner/src/features/party/create/wizard/party_create_wizard_controller.dart';
-import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -55,7 +52,6 @@ class _Step3CapacityContactState extends ConsumerState<Step3CapacityContact> {
         if (partner.contactPhone != null && partner.contactPhone!.isNotEmpty) {
           _phoneController.text = partner.contactPhone!;
           notifier.updateContactPhone(partner.contactPhone!);
-          // Ensure method is enabled
           if (!state.enabledContactMethods.contains('phone')) {
             notifier.toggleContactMethod('phone');
           }
@@ -63,7 +59,6 @@ class _Step3CapacityContactState extends ConsumerState<Step3CapacityContact> {
         if (partner.contactEmail != null && partner.contactEmail!.isNotEmpty) {
           _emailController.text = partner.contactEmail!;
           notifier.updateContactEmail(partner.contactEmail!);
-          // Ensure method is enabled
           if (!state.enabledContactMethods.contains('email')) {
             notifier.toggleContactMethod('email');
           }
@@ -74,29 +69,19 @@ class _Step3CapacityContactState extends ConsumerState<Step3CapacityContact> {
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(MinglitSpacing.medium),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          PartySectionTitle(context.l10n.partyCreate_label_capacity),
-          PartyCapacityInput(
-            minCount: state.minConfirmedCount,
-            maxCount: state.maxParticipants,
-            onMinChanged: (val) => notifier.updateCapacity(min: val),
-            onMaxChanged: (val) => notifier.updateCapacity(max: val),
-          ),
-          const SizedBox(height: MinglitSpacing.large),
-          PartySectionTitle(context.l10n.partyCreate_label_contact),
-          PartyContactInput(
-            phoneController: _phoneController,
-            emailController: _emailController,
-            kakaoController: _kakaoController,
-            enabledMethods: state.enabledContactMethods,
-            onToggleMethod: notifier.toggleContactMethod,
-            onPhoneChanged: notifier.updateContactPhone,
-            onEmailChanged: notifier.updateContactEmail,
-            onKakaoChanged: notifier.updateContactKakao,
-          ),
-        ],
+      child: PartyCapacityContactForm(
+        minCount: state.minConfirmedCount,
+        maxCount: state.maxParticipants,
+        phoneController: _phoneController,
+        emailController: _emailController,
+        kakaoController: _kakaoController,
+        enabledMethods: state.enabledContactMethods,
+        onMinChanged: (val) => notifier.updateCapacity(min: val),
+        onMaxChanged: (val) => notifier.updateCapacity(max: val),
+        onToggleMethod: notifier.toggleContactMethod,
+        onPhoneChanged: notifier.updateContactPhone,
+        onEmailChanged: notifier.updateContactEmail,
+        onKakaoChanged: notifier.updateContactKakao,
       ),
     );
   }

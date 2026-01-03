@@ -299,7 +299,7 @@
   "ticket_error_minOneGroup": "최소 한 개의 입장 그룹을 선택해야 합니다.",
   
   "ticketList_header_title": "전체 발행 현황",
-  "ticketList_header_summary": "현재 발행 {issued}매 / 정원 {max}매 발행",
+  "ticketList_header_summary": "현재 발행 {issued}매 / 최대 정원 {max}명",
   "@ticketList_header_summary": {
     "placeholders": {
       "issued": { "type": "int" },

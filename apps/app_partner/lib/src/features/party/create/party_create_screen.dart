@@ -7,7 +7,6 @@ import 'package:app_partner/src/features/party/create/widgets/party_description_
 import 'package:app_partner/src/features/party/create/widgets/party_image_picker.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_location_detail_input.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_location_selector.dart';
-import 'package:app_partner/src/features/party/create/widgets/party_section_title.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_ticket_template_editor.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_verification_selector.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
@@ -154,7 +153,13 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              PartySectionTitle(context.l10n.partyCreate_label_title),
+              Text(
+                context.l10n.partyCreate_label_title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: MinglitSpacing.medium),
               TextFormField(
                 controller: _titleController,
                 style: theme.textTheme.titleMedium?.copyWith(
@@ -167,7 +172,13 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
               ),
               const SizedBox(height: MinglitSpacing.large),
 
-              PartySectionTitle(context.l10n.partyCreate_label_description),
+              Text(
+                context.l10n.partyCreate_label_description,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: MinglitSpacing.medium),
               PartyDescriptionEditor(
                 quillController: _quillController,
                 focusNode: _editorFocusNode,
@@ -175,14 +186,26 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
               ),
               const SizedBox(height: MinglitSpacing.large),
 
-              PartySectionTitle(context.l10n.partyCreate_label_coverImage),
+              Text(
+                context.l10n.partyCreate_label_coverImage,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: MinglitSpacing.medium),
               PartyImagePicker(
                 selectedImage: _selectedImage,
                 onPickImage: _pickImage,
               ),
               const SizedBox(height: MinglitSpacing.large),
 
-              PartySectionTitle(context.l10n.partyCreate_label_location),
+              Text(
+                context.l10n.partyCreate_label_location,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: MinglitSpacing.medium),
               PartyLocationSelector(
                 selectedLocation: state.selectedLocation,
                 onSearchTap: _handleLocationSearch,
@@ -195,7 +218,13 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
               ),
               const SizedBox(height: MinglitSpacing.large),
 
-              PartySectionTitle(context.l10n.partyCreate_label_capacity),
+              Text(
+                context.l10n.partyCreate_label_capacity,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: MinglitSpacing.medium),
               PartyCapacityInput(
                 minCount: int.tryParse(_minCountController.text) ?? 0,
                 maxCount: int.tryParse(_maxCountController.text) ?? 0,
@@ -206,16 +235,26 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
               ),
               const SizedBox(height: MinglitSpacing.large),
 
-              PartySectionTitle(
+              Text(
                 context.l10n.partyDetail_section_entranceCondition,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
+              const SizedBox(height: MinglitSpacing.medium),
               PartyConditionsSelector(
                 conditions: state.conditions,
                 onChanged: controller.updateConditions,
               ),
               const SizedBox(height: MinglitSpacing.large),
 
-              PartySectionTitle(context.l10n.partyCreate_label_contact),
+              Text(
+                context.l10n.partyCreate_label_contact,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: MinglitSpacing.medium),
               PartyContactInput(
                 phoneController: _phoneController,
                 emailController: _emailController,
@@ -227,7 +266,13 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
               ),
               const SizedBox(height: MinglitSpacing.small),
 
-              PartySectionTitle(context.l10n.partyDetail_section_verification),
+              Text(
+                context.l10n.partyDetail_section_verification,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: MinglitSpacing.medium),
               PartyVerificationSelector(
                 verificationsAsync: verificationsAsync,
                 selectedVerificationIds: state.selectedVerificationIds,
@@ -241,7 +286,13 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
               ),
               const SizedBox(height: MinglitSpacing.large),
 
-              PartySectionTitle(context.l10n.partyDetail_section_tickets),
+              Text(
+                context.l10n.partyDetail_section_tickets,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: MinglitSpacing.medium),
               PartyTicketTemplateEditor(
                 ticketTemplates: state.ticketTemplates,
                 entryGroups: [

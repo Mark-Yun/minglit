@@ -1447,7 +1447,7 @@ abstract class AppLocalizations {
   /// No description provided for @ticketList_header_summary.
   ///
   /// In ko, this message translates to:
-  /// **'현재 발행 {issued}매 / 정원 {max}매 발행'**
+  /// **'현재 발행 {issued}매 / 최대 정원 {max}명'**
   String ticketList_header_summary(int issued, int max);
 
   /// No description provided for @ticketList_empty.

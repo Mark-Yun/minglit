@@ -1,10 +1,8 @@
-import 'dart:io';
-
-import 'package:app_partner/src/features/event/widgets/ticket_list_item.dart';
 import 'package:app_partner/src/features/party/create/wizard/party_create_wizard_controller.dart';
-import 'package:app_partner/src/features/party/detail/widgets/party_basic_condition_section.dart';
+import 'package:app_partner/src/features/party/widgets/party_capacity_contact_summary.dart';
+import 'package:app_partner/src/features/party/widgets/party_location_summary.dart';
+import 'package:app_partner/src/features/party/widgets/party_tickets_summary.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -33,52 +31,7 @@ class Step6Review extends ConsumerWidget {
           const SizedBox(height: MinglitSpacing.medium),
 
           // Validation Warnings
-          if (errors.isNotEmpty)
-            Container(
-              margin: const EdgeInsets.only(bottom: MinglitSpacing.large),
-              padding: const EdgeInsets.all(MinglitSpacing.medium),
-              decoration: BoxDecoration(
-                color: colorScheme.errorContainer.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(MinglitRadius.card),
-                border: Border.all(
-                  color: colorScheme.error.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        color: colorScheme.error,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        context.l10n.wizard_review_warningTitle,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          color: colorScheme.error,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  ...errors.map(
-                    (err) => Padding(
-                      padding: const EdgeInsets.only(bottom: 4, left: 26),
-                      child: Text(
-                        '• $err',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.error,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          if (errors.isNotEmpty) _buildErrorCard(context, errors),
 
           // 1. Basic Info Section
           _buildSection(
@@ -94,19 +47,12 @@ class Step6Review extends ConsumerWidget {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(MinglitRadius.card),
-                      child: kIsWeb
-                          ? Image.network(
-                              state.imageFile!.path,
-                              height: 160,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            )
-                          : Image.file(
-                              File(state.imageFile!.path),
-                              height: 160,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
+                      child: MinglitImage(
+                        assetPath: state.imageFile!.path,
+                        height: 160,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 Text(
@@ -127,158 +73,98 @@ class Step6Review extends ConsumerWidget {
             ),
           ),
 
-          // 2. Location Section
-          _buildSection(
-            context,
-            title: context.l10n.wizard_review_location,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.location_on_outlined,
-                      size: 16,
-                      color: state.selectedLocation == null
-                          ? colorScheme.error
-                          : colorScheme.primary,
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        state.selectedLocation?.name ??
-                            context.l10n.wizard_review_noLocation,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: state.selectedLocation == null
-                              ? colorScheme.error
-                              : null,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                if (state.selectedLocation != null) ...[
-                  Text(
-                    state.selectedLocation!.address,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  if (state.addressDetail != null &&
-                      state.addressDetail!.isNotEmpty)
-                    Text(
-                      state.addressDetail!,
-                      style: theme.textTheme.bodySmall,
-                    ),
-                ],
-              ],
+          // 2. Location Summary (Reused)
+          PartyLocationSummary(
+            location: state.selectedLocation,
+            addressDetail: state.addressDetail,
+            directionsGuide: state.directionsGuide,
+            showError: true,
+          ),
+
+          const SizedBox(height: MinglitSpacing.large),
+
+          // 3. Capacity & Contact Summary (Reused)
+          Text(
+            context.l10n.wizard_review_capacityContact,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.bold,
             ),
           ),
+          const SizedBox(height: MinglitSpacing.small),
+          PartyCapacityContactSummary(
+            minCount: state.minConfirmedCount,
+            maxCount: state.maxParticipants,
+            contactOptions: {
+              'phone': state.contactPhone,
+              'email': state.contactEmail,
+              'kakao': state.contactKakao,
+            },
+            enabledContactMethods: state.enabledContactMethods,
+            showError: true,
+          ),
 
-          // 3. Capacity & Contact Section
-          _buildSection(
-            context,
-            title: context.l10n.wizard_review_capacityContact,
-            child: Column(
-              children: [
-                _buildInfoRow(
-                  context,
-                  Icons.people_outline,
-                  context.l10n.partyCreate_label_capacity,
-                  '${state.minConfirmedCount} ~ ${state.maxParticipants}명',
-                ),
-                if (state.enabledContactMethods.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      '연락처가 선택되지 않았습니다.',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.error,
-                      ),
-                    ),
-                  )
-                else ...[
-                  if (state.enabledContactMethods.contains('phone'))
-                    _buildInfoRow(
-                      context,
-                      Icons.phone_outlined,
-                      '연락처',
-                      state.contactPhone,
-                    ),
-                  if (state.enabledContactMethods.contains('email'))
-                    _buildInfoRow(
-                      context,
-                      Icons.email_outlined,
-                      '이메일',
-                      state.contactEmail,
-                    ),
-                  if (state.enabledContactMethods.contains('kakao'))
-                    _buildInfoRow(
-                      context,
-                      Icons.chat_bubble_outline,
-                      '카카오톡',
-                      state.contactKakao ?? '-',
-                    ),
-                ],
-              ],
+          const SizedBox(height: MinglitSpacing.large),
+
+          // 4. Tickets Summary (Reused)
+          Text(
+            context.l10n.wizard_review_tickets,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.bold,
             ),
           ),
-
-          // 4. Entry Rules Section
-          _buildSection(
-            context,
-            title: context.l10n.wizard_review_entryRules,
-            child: state.entryGroups.isEmpty
-                ? Text(
-                    '입장 그룹이 없습니다.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.error,
-                    ),
-                  )
-                : PartyBasicConditionSection(
-                    party: Party(
-                      id: '',
-                      partnerId: '',
-                      title: '',
-                      createdAt: DateTime.now(),
-                      updatedAt: DateTime.now(),
-                      conditions: state.entryGroups
-                          .map((e) => e.toJson())
-                          .toList(),
-                    ),
-                  ),
-          ),
-
-          // 5. Tickets Section
-          _buildSection(
-            context,
-            title: context.l10n.wizard_review_tickets,
-            child: state.tickets.isEmpty
-                ? Text(
-                    '티켓이 없습니다.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.error,
-                    ),
-                  )
-                : ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: state.tickets.length,
-                    separatorBuilder: (_, _) =>
-                        const SizedBox(height: MinglitSpacing.small),
-                    itemBuilder: (context, index) {
-                      return TicketListItem(
-                        ticket: state.tickets[index],
-                        entryGroups: state.entryGroups,
-                        showStats: false,
-                      );
-                    },
-                  ),
+          const SizedBox(height: MinglitSpacing.small),
+          PartyTicketsSummary(
+            tickets: state.tickets,
+            entryGroups: state.entryGroups,
+            maxCapacity: state.maxParticipants,
+            showStats: false,
+            showError: true,
           ),
 
           const SizedBox(height: MinglitSpacing.xlarge),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorCard(BuildContext context, List<String> errors) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.only(bottom: MinglitSpacing.large),
+      padding: const EdgeInsets.all(MinglitSpacing.medium),
+      decoration: BoxDecoration(
+        color: colorScheme.errorContainer.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(MinglitRadius.card),
+        border: Border.all(color: colorScheme.error.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.error_outline, color: colorScheme.error, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                context.l10n.wizard_review_warningTitle,
+                style: TextStyle(
+                  color: colorScheme.error,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...errors.map(
+            (err) => Padding(
+              padding: const EdgeInsets.only(bottom: 4, left: 26),
+              child: Text(
+                '• $err',
+                style: TextStyle(color: colorScheme.error, fontSize: 12),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -304,32 +190,6 @@ class Step6Review extends ConsumerWidget {
           ),
           const SizedBox(height: MinglitSpacing.small),
           child,
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(
-    BuildContext context,
-    IconData icon,
-    String label,
-    String value,
-  ) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        children: [
-          Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(width: 8),
-          Text(label, style: theme.textTheme.bodySmall),
-          const Spacer(),
-          Text(
-            value,
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
         ],
       ),
     );

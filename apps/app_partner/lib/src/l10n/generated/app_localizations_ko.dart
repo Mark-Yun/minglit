@@ -722,7 +722,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String ticketList_header_summary(int issued, int max) {
-    return '현재 발행 $issued매 / 정원 $max매 발행';
+    return '현재 발행 $issued매 / 최대 정원 $max명';
   }
 
   @override
