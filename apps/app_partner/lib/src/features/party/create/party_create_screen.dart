@@ -252,7 +252,8 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
                     id: 'default',
                     gender: state.conditions['gender'] as String?,
                     birthYearRange:
-                        state.conditions['age_range'] as Map<String, dynamic>?,
+                        state.conditions['birth_year_range']
+                            as Map<String, dynamic>?,
                     requiredVerificationIds: state.selectedVerificationIds,
                   ),
                 ],

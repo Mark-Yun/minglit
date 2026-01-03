@@ -2,6 +2,7 @@ import 'package:app_partner/src/features/event/detail/event_detail_controller.da
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/ticket/controller/ticket_controller.dart';
 import 'package:app_partner/src/features/ticket/widgets/ticket_form.dart';
+import 'package:app_partner/src/utils/error_handler.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -21,40 +22,43 @@ class TicketCreatePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final partyAsync = ref.watch(partyDetailProvider(partyId));
     final eventAsync = ref.watch(eventDetailProvider(eventId));
+    final ticketsAsync = ref.watch(eventTicketsProvider(eventId));
     final ticketState = ref.watch(ticketControllerProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.ticket_title_create)),
       body: partyAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error:
-            (
-              Object e,
-              StackTrace s,
-            ) => Center(
-              child: Text(
-                context.l10n.partyDetail_error_partyLoad(
-                  e.toString(),
-                ),
-              ),
-            ),
+        error: (Object e, StackTrace s) => Center(
+          child: Text(
+            context.l10n.partyDetail_error_partyLoad(e.toString()),
+          ),
+        ),
         data: (Party party) {
           final entryGroups = party.entryGroups;
-
-          // Calculate initial quantity based on max participants and entry
-          // groups count.
-          int? initialQuantity;
           final event = eventAsync.asData?.value;
+          final existingTickets = ticketsAsync.asData?.value ?? [];
+
+          // 1. Calculate default initial quantity
+          int? initialQuantity;
           if (event != null && entryGroups.isNotEmpty) {
             initialQuantity = (event.maxParticipants / entryGroups.length)
                 .floor();
           }
+
+          // 2. Calculate sum of other tickets' quantities
+          final otherTicketsQuantity = existingTickets.fold(
+            0,
+            (sum, t) => sum + t.quantity,
+          );
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(MinglitSpacing.medium),
             child: TicketForm(
               entryGroups: entryGroups,
               initialQuantity: initialQuantity,
+              maxCapacity: event?.maxParticipants,
+              otherTicketsQuantity: otherTicketsQuantity,
               submitButtonLabel: context.l10n.ticket_button_create,
               isLoading: ticketState.isLoading,
               onSaved:
@@ -84,8 +88,10 @@ class TicketCreatePage extends ConsumerWidget {
                       );
                       ref.invalidate(eventTicketsProvider(eventId));
                     } else if (updatedState.hasError && context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('생성 실패: ${updatedState.error}')),
+                      handleMinglitError(
+                        context,
+                        updatedState.error!,
+                        updatedState.stackTrace,
                       );
                     }
                   },

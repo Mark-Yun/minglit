@@ -140,7 +140,9 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
                   onPressed: state.status.isLoading
                       ? null
                       : (state.currentStep == PartyCreateStep.review
-                            ? () => unawaited(notifier.submit())
+                            ? (notifier.validationErrors.isEmpty
+                                  ? () => unawaited(notifier.submit())
+                                  : null)
                             : notifier.nextStep),
                   child: Text(
                     state.currentStep == PartyCreateStep.review

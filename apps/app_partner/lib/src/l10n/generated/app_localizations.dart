@@ -883,7 +883,7 @@ abstract class AppLocalizations {
   /// No description provided for @wizard_button_complete.
   ///
   /// In ko, this message translates to:
-  /// **'기획 완료'**
+  /// **'완료'**
   String get wizard_button_complete;
 
   /// No description provided for @wizard_review_title.
@@ -891,6 +891,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'입력한 정보를 확인해주세요.'**
   String get wizard_review_title;
+
+  /// No description provided for @wizard_review_warningTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'누락된 정보가 있습니다.'**
+  String get wizard_review_warningTitle;
 
   /// No description provided for @wizard_review_basicInfo.
   ///
@@ -1093,7 +1099,7 @@ abstract class AppLocalizations {
   /// No description provided for @entryGroup_option_any.
   ///
   /// In ko, this message translates to:
-  /// **'성별 제한 없음'**
+  /// **'제한 없음'**
   String get entryGroup_option_any;
 
   /// No description provided for @entryGroup_option_male.

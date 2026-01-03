@@ -15,9 +15,10 @@ class PartyConditionsSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final gender = conditions['gender'] as String?;
-    final ageRange = conditions['age_range'] as Map<String, dynamic>?;
-    final minAge = ageRange?['min'] as int?;
-    final maxAge = ageRange?['max'] as int?;
+    final birthYearRange =
+        conditions['birth_year_range'] as Map<String, dynamic>?;
+    final minAge = birthYearRange?['min'] as int?;
+    final maxAge = birthYearRange?['max'] as int?;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -109,9 +110,9 @@ class PartyConditionsSelector extends StatelessWidget {
   void _updateAge({int? min, int? max}) {
     final newConditions = Map<String, dynamic>.from(conditions);
     if (min == null && max == null) {
-      newConditions.remove('age_range');
+      newConditions.remove('birth_year_range');
     } else {
-      newConditions['age_range'] = {
+      newConditions['birth_year_range'] = {
         'min': min,
         'max': max,
       }..removeWhere((k, v) => v == null);

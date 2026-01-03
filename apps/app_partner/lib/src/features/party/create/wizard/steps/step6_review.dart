@@ -14,8 +14,10 @@ class Step6Review extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(partyCreateWizardControllerProvider);
+    final notifier = ref.read(partyCreateWizardControllerProvider.notifier);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final errors = notifier.validationErrors;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(MinglitSpacing.medium),
@@ -29,6 +31,54 @@ class Step6Review extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: MinglitSpacing.medium),
+
+          // Validation Warnings
+          if (errors.isNotEmpty)
+            Container(
+              margin: const EdgeInsets.only(bottom: MinglitSpacing.large),
+              padding: const EdgeInsets.all(MinglitSpacing.medium),
+              decoration: BoxDecoration(
+                color: colorScheme.errorContainer.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(MinglitRadius.card),
+                border: Border.all(
+                  color: colorScheme.error.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        color: colorScheme.error,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        context.l10n.wizard_review_warningTitle,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: colorScheme.error,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ...errors.map(
+                    (err) => Padding(
+                      padding: const EdgeInsets.only(bottom: 4, left: 26),
+                      child: Text(
+                        '• $err',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.error,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
           // 1. Basic Info Section
           _buildSection(
@@ -60,9 +110,10 @@ class Step6Review extends ConsumerWidget {
                     ),
                   ),
                 Text(
-                  state.title,
+                  state.title.isEmpty ? '(제목 없음)' : state.title,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
+                    color: state.title.isEmpty ? colorScheme.error : null,
                   ),
                 ),
                 const SizedBox(height: MinglitSpacing.xsmall),
@@ -88,7 +139,9 @@ class Step6Review extends ConsumerWidget {
                     Icon(
                       Icons.location_on_outlined,
                       size: 16,
-                      color: colorScheme.primary,
+                      color: state.selectedLocation == null
+                          ? colorScheme.error
+                          : colorScheme.primary,
                     ),
                     const SizedBox(width: 4),
                     Expanded(
@@ -97,24 +150,29 @@ class Step6Review extends ConsumerWidget {
                             context.l10n.wizard_review_noLocation,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
+                          color: state.selectedLocation == null
+                              ? colorScheme.error
+                              : null,
                         ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  state.selectedLocation?.address ?? '',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                if (state.addressDetail != null &&
-                    state.addressDetail!.isNotEmpty)
+                if (state.selectedLocation != null) ...[
                   Text(
-                    state.addressDetail!,
-                    style: theme.textTheme.bodySmall,
+                    state.selectedLocation!.address,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
+                  if (state.addressDetail != null &&
+                      state.addressDetail!.isNotEmpty)
+                    Text(
+                      state.addressDetail!,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                ],
               ],
             ),
           ),
@@ -131,27 +189,39 @@ class Step6Review extends ConsumerWidget {
                   context.l10n.partyCreate_label_capacity,
                   '${state.minConfirmedCount} ~ ${state.maxParticipants}명',
                 ),
-                if (state.enabledContactMethods.contains('phone'))
-                  _buildInfoRow(
-                    context,
-                    Icons.phone_outlined,
-                    '연락처',
-                    state.contactPhone,
-                  ),
-                if (state.enabledContactMethods.contains('email'))
-                  _buildInfoRow(
-                    context,
-                    Icons.email_outlined,
-                    '이메일',
-                    state.contactEmail,
-                  ),
-                if (state.enabledContactMethods.contains('kakao'))
-                  _buildInfoRow(
-                    context,
-                    Icons.chat_bubble_outline,
-                    '카카오톡',
-                    state.contactKakao ?? '-',
-                  ),
+                if (state.enabledContactMethods.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      '연락처가 선택되지 않았습니다.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.error,
+                      ),
+                    ),
+                  )
+                else ...[
+                  if (state.enabledContactMethods.contains('phone'))
+                    _buildInfoRow(
+                      context,
+                      Icons.phone_outlined,
+                      '연락처',
+                      state.contactPhone,
+                    ),
+                  if (state.enabledContactMethods.contains('email'))
+                    _buildInfoRow(
+                      context,
+                      Icons.email_outlined,
+                      '이메일',
+                      state.contactEmail,
+                    ),
+                  if (state.enabledContactMethods.contains('kakao'))
+                    _buildInfoRow(
+                      context,
+                      Icons.chat_bubble_outline,
+                      '카카오톡',
+                      state.contactKakao ?? '-',
+                    ),
+                ],
               ],
             ),
           ),
@@ -160,36 +230,52 @@ class Step6Review extends ConsumerWidget {
           _buildSection(
             context,
             title: context.l10n.wizard_review_entryRules,
-            child: PartyBasicConditionSection(
-              party: Party(
-                id: '',
-                partnerId: '',
-                title: '',
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-                conditions: state.entryGroups.map((e) => e.toJson()).toList(),
-              ),
-            ),
+            child: state.entryGroups.isEmpty
+                ? Text(
+                    '입장 그룹이 없습니다.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.error,
+                    ),
+                  )
+                : PartyBasicConditionSection(
+                    party: Party(
+                      id: '',
+                      partnerId: '',
+                      title: '',
+                      createdAt: DateTime.now(),
+                      updatedAt: DateTime.now(),
+                      conditions: state.entryGroups
+                          .map((e) => e.toJson())
+                          .toList(),
+                    ),
+                  ),
           ),
 
           // 5. Tickets Section
           _buildSection(
             context,
             title: context.l10n.wizard_review_tickets,
-            child: ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: state.tickets.length,
-              separatorBuilder: (_, _) =>
-                  const SizedBox(height: MinglitSpacing.small),
-              itemBuilder: (context, index) {
-                return TicketListItem(
-                  ticket: state.tickets[index],
-                  entryGroups: state.entryGroups,
-                  showStats: false,
-                );
-              },
-            ),
+            child: state.tickets.isEmpty
+                ? Text(
+                    '티켓이 없습니다.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.error,
+                    ),
+                  )
+                : ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: state.tickets.length,
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: MinglitSpacing.small),
+                    itemBuilder: (context, index) {
+                      return TicketListItem(
+                        ticket: state.tickets[index],
+                        entryGroups: state.entryGroups,
+                        showStats: false,
+                      );
+                    },
+                  ),
           ),
 
           const SizedBox(height: MinglitSpacing.xlarge),

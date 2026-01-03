@@ -2,6 +2,7 @@ import 'package:app_partner/src/features/event/detail/event_detail_controller.da
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/ticket/controller/ticket_controller.dart';
 import 'package:app_partner/src/features/ticket/widgets/ticket_form.dart';
+import 'package:app_partner/src/utils/error_handler.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -25,12 +26,19 @@ class TicketEditPage extends ConsumerWidget {
     final ticketAsync = ref.watch(ticketDetailProvider(ticketId));
     final ticketState = ref.watch(ticketControllerProvider);
 
+    // Get sibling tickets to calculate capacity overflow
+    final siblingTicketsAsync = eventId.isNotEmpty
+        ? ref.watch(eventTicketsProvider(eventId))
+        : ref.watch(partyTicketsProvider(partyId));
+
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.ticket_title_edit)),
       body: ticketAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (Object e, StackTrace s) => Center(
-          child: Text(context.l10n.partyDetail_error_ticketLoad(e.toString())),
+          child: Text(
+            context.l10n.partyDetail_error_ticketLoad(e.toString()),
+          ),
         ),
         data: (Ticket ticket) {
           return partyAsync.when(
@@ -41,54 +49,62 @@ class TicketEditPage extends ConsumerWidget {
               ),
             ),
             data: (Party party) {
+              final siblingTickets = siblingTicketsAsync.asData?.value ?? [];
+
+              // Calculate sum of OTHER tickets
+              final otherQty = siblingTickets
+                  .where((t) => t.id != ticketId)
+                  .fold(0, (sum, t) => sum + t.quantity);
+
+              final maxCapacity = party.maxParticipants;
+
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(MinglitSpacing.medium),
                 child: TicketForm(
                   initialTicket: ticket,
                   entryGroups: party.entryGroups,
+                  maxCapacity: maxCapacity,
+                  otherTicketsQuantity: otherQty,
                   submitButtonLabel: context.l10n.ticket_button_edit,
                   isLoading: ticketState.isLoading,
-                  onSaved:
-                      ({
-                        required String name,
-                        required int price,
-                        required int quantity,
-                        required List<String> targetEntryGroupIds,
-                      }) async {
-                        await ref
-                            .read(ticketControllerProvider.notifier)
-                            .updateTicket(
-                              ticket: ticket,
-                              name: name,
-                              price: price,
-                              quantity: quantity,
-                              targetEntryGroupIds: targetEntryGroupIds,
-                            );
+                  onSaved: ({
+                    required String name,
+                    required int price,
+                    required int quantity,
+                    required List<String> targetEntryGroupIds,
+                  }) async {
+                    await ref
+                        .read(ticketControllerProvider.notifier)
+                        .updateTicket(
+                          ticket: ticket,
+                          name: name,
+                          price: price,
+                          quantity: quantity,
+                          targetEntryGroupIds: targetEntryGroupIds,
+                        );
 
-                        final updatedState = ref.read(ticketControllerProvider);
-                        if (!updatedState.hasError && context.mounted) {
-                          context.pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                context.l10n.ticket_message_updated,
-                              ),
-                            ),
-                          );
-                          ref.invalidate(ticketDetailProvider(ticketId));
-                          if (eventId.isNotEmpty) {
-                            ref.invalidate(eventTicketsProvider(eventId));
-                          } else {
-                            ref.invalidate(partyTicketsProvider(partyId));
-                          }
-                        } else if (updatedState.hasError && context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('수정 실패: ${updatedState.error}'),
-                            ),
-                          );
-                        }
-                      },
+                    final updatedState = ref.read(ticketControllerProvider);
+                    if (!updatedState.hasError && context.mounted) {
+                      context.pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(context.l10n.ticket_message_updated),
+                        ),
+                      );
+                      ref.invalidate(ticketDetailProvider(ticketId));
+                      if (eventId.isNotEmpty) {
+                        ref.invalidate(eventTicketsProvider(eventId));
+                      } else {
+                        ref.invalidate(partyTicketsProvider(partyId));
+                      }
+                    } else if (updatedState.hasError && context.mounted) {
+                      handleMinglitError(
+                        context,
+                        updatedState.error!,
+                        updatedState.stackTrace,
+                      );
+                    }
+                  },
                 ),
               );
             },

@@ -419,10 +419,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get wizard_button_prev => '이전';
 
   @override
-  String get wizard_button_complete => '기획 완료';
+  String get wizard_button_complete => '완료';
 
   @override
   String get wizard_review_title => '입력한 정보를 확인해주세요.';
+
+  @override
+  String get wizard_review_warningTitle => '누락된 정보가 있습니다.';
 
   @override
   String get wizard_review_basicInfo => '기본 정보';
@@ -529,7 +532,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get entryGroup_label_gender => '성별';
 
   @override
-  String get entryGroup_option_any => '성별 제한 없음';
+  String get entryGroup_option_any => '제한 없음';
 
   @override
   String get entryGroup_option_male => '남성';

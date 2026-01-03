@@ -68,6 +68,7 @@ class _EntryGroupEditorScreenState
   Widget build(BuildContext context) {
     final verificationsAsync = ref.watch(partyVerificationTypesProvider);
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -88,45 +89,48 @@ class _EntryGroupEditorScreenState
               style: theme.textTheme.titleSmall,
             ),
             const SizedBox(height: MinglitSpacing.small),
-            SegmentedButton<String?>(
-              style: ButtonStyle(
-                backgroundColor: WidgetStateProperty.resolveWith((states) {
-                  if (states.contains(WidgetState.selected)) {
-                    return theme.colorScheme.secondaryContainer;
-                  }
-                  return null;
-                }),
-                foregroundColor: WidgetStateProperty.resolveWith((states) {
-                  if (states.contains(WidgetState.selected)) {
-                    return theme.colorScheme.onSecondaryContainer;
-                  }
-                  return theme.colorScheme.onSurface;
-                }),
-                iconColor: WidgetStateProperty.resolveWith((states) {
-                  if (states.contains(WidgetState.selected)) {
-                    return theme.colorScheme.onSecondaryContainer;
-                  }
-                  return theme.colorScheme.onSurface;
-                }),
+            SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<String?>(
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return theme.colorScheme.secondaryContainer;
+                    }
+                    return null;
+                  }),
+                  foregroundColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return theme.colorScheme.onSecondaryContainer;
+                    }
+                    return theme.colorScheme.onSurface;
+                  }),
+                  iconColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return theme.colorScheme.onSecondaryContainer;
+                    }
+                    return theme.colorScheme.onSurface;
+                  }),
+                ),
+                segments: [
+                  ButtonSegment(
+                    value: null,
+                    label: Text(context.l10n.entryGroup_option_any),
+                  ),
+                  ButtonSegment(
+                    value: 'male',
+                    label: Text(context.l10n.entryGroup_option_male),
+                  ),
+                  ButtonSegment(
+                    value: 'female',
+                    label: Text(context.l10n.entryGroup_option_female),
+                  ),
+                ],
+                selected: {_gender},
+                onSelectionChanged: (newSelection) {
+                  setState(() => _gender = newSelection.first);
+                },
               ),
-              segments: [
-                ButtonSegment(
-                  value: null,
-                  label: Text(context.l10n.entryGroup_option_any),
-                ),
-                ButtonSegment(
-                  value: 'male',
-                  label: Text(context.l10n.entryGroup_option_male),
-                ),
-                ButtonSegment(
-                  value: 'female',
-                  label: Text(context.l10n.entryGroup_option_female),
-                ),
-              ],
-              selected: {_gender},
-              onSelectionChanged: (newSelection) {
-                setState(() => _gender = newSelection.first);
-              },
             ),
             const SizedBox(height: MinglitSpacing.large),
 
@@ -137,26 +141,54 @@ class _EntryGroupEditorScreenState
             ),
             const SizedBox(height: MinglitSpacing.small),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: NumberStepperInput(
-                    label: context.l10n.entryGroup_label_minYear,
-                    value: _minYear ?? 1995,
-                    min: 1950,
-                    max: 2010,
-                    onChanged: (val) => setState(() => _minYear = val),
-                    suffixText: context.l10n.entryGroup_suffix_year,
+                  child: Column(
+                    children: [
+                      NumberStepperInput(
+                        label: context.l10n.entryGroup_label_minYear,
+                        value: _minYear ?? 1995,
+                        min: 1950,
+                        max: 2010,
+                        onChanged: (val) => setState(() => _minYear = val),
+                        suffixText: context.l10n.entryGroup_suffix_year,
+                      ),
+                      const SizedBox(height: MinglitSpacing.xsmall),
+                      Text(
+                        '${AgeUtil.calculateKoreanAge(_minYear ?? 1995)}세',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: MinglitSpacing.medium),
+                const Padding(
+                  padding: EdgeInsets.only(top: 12),
+                  child: Text(' ~ '),
+                ),
                 Expanded(
-                  child: NumberStepperInput(
-                    label: context.l10n.entryGroup_label_maxYear,
-                    value: _maxYear ?? 2005,
-                    min: 1950,
-                    max: 2010,
-                    onChanged: (val) => setState(() => _maxYear = val),
-                    suffixText: context.l10n.entryGroup_suffix_year,
+                  child: Column(
+                    children: [
+                      NumberStepperInput(
+                        label: context.l10n.entryGroup_label_maxYear,
+                        value: _maxYear ?? 2005,
+                        min: 1950,
+                        max: 2010,
+                        onChanged: (val) => setState(() => _maxYear = val),
+                        suffixText: context.l10n.entryGroup_suffix_year,
+                      ),
+                      const SizedBox(height: MinglitSpacing.xsmall),
+                      Text(
+                        '${AgeUtil.calculateKoreanAge(_maxYear ?? 2005)}세',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
