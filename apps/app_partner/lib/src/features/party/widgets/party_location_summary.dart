@@ -30,6 +30,20 @@ class PartyLocationSummary extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     if (location == null) {
+      final emptyText = Text(
+        context.l10n.partyDetail_empty_location,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: showError ? colorScheme.error : colorScheme.onSurfaceVariant,
+        ),
+      );
+
+      if (onEditLocation == null) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.small),
+          child: emptyText,
+        );
+      }
+
       return Container(
         padding: const EdgeInsets.all(MinglitSpacing.medium),
         decoration: BoxDecoration(
@@ -43,18 +57,13 @@ class PartyLocationSummary extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Text(
-              context.l10n.partyDetail_empty_location,
-              style: TextStyle(color: showError ? colorScheme.error : null),
+            emptyText,
+            const SizedBox(height: MinglitSpacing.medium),
+            AddActionCard(
+              title: context.l10n.common_button_edit,
+              iconData: Icons.edit_location_alt_outlined,
+              onTap: onEditLocation!,
             ),
-            if (onEditLocation != null) ...[
-              const SizedBox(height: MinglitSpacing.medium),
-              AddActionCard(
-                title: context.l10n.common_button_edit,
-                iconData: Icons.edit_location_alt_outlined,
-                onTap: onEditLocation!,
-              ),
-            ],
           ],
         ),
       );

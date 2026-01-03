@@ -64,7 +64,7 @@ class PartyDetailInfoTab extends ConsumerWidget {
           ),
           const SizedBox(height: MinglitSpacing.small),
           PartyEntranceConditionSummary(
-            party: party,
+            entryGroups: party.entryGroups,
             onGroupTap: (PartyEntryGroup group) async {
               await Navigator.of(context).push(
                 MaterialPageRoute<void>(

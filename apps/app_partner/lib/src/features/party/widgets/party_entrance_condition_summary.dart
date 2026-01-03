@@ -4,21 +4,20 @@ import 'package:minglit_kit/minglit_kit.dart';
 
 class PartyEntranceConditionSummary extends ConsumerWidget {
   const PartyEntranceConditionSummary({
-    required this.party,
+    required this.entryGroups,
     this.onGroupTap,
     super.key,
   });
 
-  final Party party;
+  final List<PartyEntryGroup> entryGroups;
   final void Function(PartyEntryGroup)? onGroupTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final groups = party.entryGroups;
 
-    if (groups.isEmpty) {
+    if (entryGroups.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.small),
         child: Text(
@@ -33,7 +32,7 @@ class PartyEntranceConditionSummary extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (var i = 0; i < groups.length; i++) ...[
+        for (var i = 0; i < entryGroups.length; i++) ...[
           Container(
             margin: const EdgeInsets.only(bottom: MinglitSpacing.small),
             decoration: BoxDecoration(
@@ -44,12 +43,14 @@ class PartyEntranceConditionSummary extends ConsumerWidget {
               ),
             ),
             child: InkWell(
-              onTap: onGroupTap != null ? () => onGroupTap!(groups[i]) : null,
+              onTap: onGroupTap != null
+                  ? () => onGroupTap!(entryGroups[i])
+                  : null,
               borderRadius: BorderRadius.circular(MinglitRadius.card),
               child: Padding(
                 padding: const EdgeInsets.all(MinglitSpacing.medium),
                 child: EntryGroupDetail(
-                  group: groups[i],
+                  group: entryGroups[i],
                   anyLabel: context.l10n.entryGroup_option_any,
                   anyYearLabel: context.l10n.entryGroup_option_anyYear,
                 ),

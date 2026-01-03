@@ -10,7 +10,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show AuthState, Supabase;
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show AuthState, Supabase;
 
 part 'dev_main.g.dart';
 

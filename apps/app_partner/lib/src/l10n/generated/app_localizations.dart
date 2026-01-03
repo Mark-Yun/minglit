@@ -1033,7 +1033,7 @@ abstract class AppLocalizations {
   /// No description provided for @wizard_review_warningTitle.
   ///
   /// In ko, this message translates to:
-  /// **'누락된 정보가 있습니다.'**
+  /// **'누락된 정보를 입력해주세요.'**
   String get wizard_review_warningTitle;
 
   /// No description provided for @wizard_review_basicInfo.
@@ -1077,6 +1077,18 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'장소 미지정'**
   String get wizard_review_noLocation;
+
+  /// No description provided for @wizard_review_noTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'파티 제목이 없습니다.'**
+  String get wizard_review_noTitle;
+
+  /// No description provided for @wizard_review_noDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'상세 설명이 없습니다.'**
+  String get wizard_review_noDescription;
 
   /// No description provided for @wizard_review_successMessage.
   ///

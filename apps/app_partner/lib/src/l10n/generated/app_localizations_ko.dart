@@ -508,7 +508,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get wizard_review_title => '입력한 정보를 확인해주세요.';
 
   @override
-  String get wizard_review_warningTitle => '누락된 정보가 있습니다.';
+  String get wizard_review_warningTitle => '누락된 정보를 입력해주세요.';
 
   @override
   String get wizard_review_basicInfo => '기본 정보';
@@ -530,6 +530,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get wizard_review_noLocation => '장소 미지정';
+
+  @override
+  String get wizard_review_noTitle => '파티 제목이 없습니다.';
+
+  @override
+  String get wizard_review_noDescription => '상세 설명이 없습니다.';
 
   @override
   String get wizard_review_successMessage => '파티가 성공적으로 생성되었습니다.';
