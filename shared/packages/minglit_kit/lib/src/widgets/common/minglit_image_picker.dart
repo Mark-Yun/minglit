@@ -4,43 +4,64 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-class PartyImagePicker extends StatelessWidget {
-  const PartyImagePicker({
-    required this.selectedImage,
+/// A generic image picker widget with preview.
+class MinglitImagePicker extends StatelessWidget {
+  const MinglitImagePicker({
     required this.onPickImage,
+    this.selectedImage,
+    this.initialImageUrl,
+    this.height = 200,
+    this.emptyText = '등록된 이미지가 없습니다',
+    this.uploadButtonText = '이미지 업로드',
+    this.changeButtonText = '이미지 변경하기',
     super.key,
   });
 
   final XFile? selectedImage;
+  final String? initialImageUrl;
   final VoidCallback onPickImage;
+  final double height;
+  final String emptyText;
+  final String uploadButtonText;
+  final String changeButtonText;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    // Determine image provider
+    ImageProvider? imageProvider;
+    if (selectedImage != null) {
+      if (kIsWeb) {
+        imageProvider = NetworkImage(selectedImage!.path);
+      } else {
+        imageProvider = FileImage(File(selectedImage!.path));
+      }
+    } else if (initialImageUrl != null && initialImageUrl!.isNotEmpty) {
+      imageProvider = NetworkImage(initialImageUrl!);
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // 1. Image Preview Area
         Container(
-          height: 200,
+          height: height,
           decoration: BoxDecoration(
             color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(MinglitRadius.card),
             border: Border.all(
               color: colorScheme.outlineVariant.withValues(alpha: 0.5),
             ),
-            image: selectedImage != null
+            image: imageProvider != null
                 ? DecorationImage(
-                    image: kIsWeb
-                        ? NetworkImage(selectedImage!.path)
-                        : FileImage(File(selectedImage!.path)) as ImageProvider,
+                    image: imageProvider,
                     fit: BoxFit.cover,
                   )
                 : null,
           ),
-          child: selectedImage == null
+          child: imageProvider == null
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -54,7 +75,7 @@ class PartyImagePicker extends StatelessWidget {
                       ),
                       const SizedBox(height: MinglitSpacing.small),
                       Text(
-                        '등록된 이미지가 없습니다',
+                        emptyText,
                         style: MinglitTextStyles.infoText(context),
                       ),
                     ],
@@ -64,7 +85,7 @@ class PartyImagePicker extends StatelessWidget {
         ),
         const SizedBox(height: MinglitSpacing.small),
 
-        // 2. Upload Button (Consistent with Location/Verification)
+        // 2. Upload Button
         AnimatedContainer(
           duration: MinglitAnimation.fast,
           decoration: BoxDecoration(
@@ -89,7 +110,9 @@ class PartyImagePicker extends StatelessWidget {
                   const SizedBox(width: MinglitSpacing.medium),
                   Expanded(
                     child: Text(
-                      selectedImage == null ? '이미지 업로드' : '이미지 변경하기',
+                      imageProvider == null
+                          ? uploadButtonText
+                          : changeButtonText,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),

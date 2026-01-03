@@ -20,6 +20,7 @@ export 'src/widgets/auth/login_screen.dart';
 // Common Widgets
 export 'src/widgets/common/add_action_card.dart';
 export 'src/widgets/common/minglit_image.dart';
+export 'src/widgets/common/minglit_image_picker.dart';
 export 'src/widgets/common/minglit_skeleton.dart';
 export 'src/widgets/common/number_stepper_input.dart';
 export 'src/widgets/common/verification_select_card.dart';
