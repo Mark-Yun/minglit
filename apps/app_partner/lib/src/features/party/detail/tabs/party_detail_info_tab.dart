@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
 import 'package:app_partner/src/features/party/ticket/entry_group_editor_screen.dart';
+import 'package:app_partner/src/features/party/widgets/party_basic_info_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_capacity_input.dart';
 import 'package:app_partner/src/features/party/widgets/party_capacity_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_contact_input.dart';
@@ -29,6 +30,20 @@ class PartyDetailInfoTab extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 0. Basic Info (Description)
+          Text(
+            context.l10n.wizard_review_basicInfo,
+            style: theme.textTheme.titleMedium,
+          ),
+          const SizedBox(height: MinglitSpacing.small),
+          PartyBasicInfoSummary(
+            title: party.title,
+            description: party.description ?? {},
+            showTitle: false, // Title is in AppBar
+            showFullDescription: true,
+          ),
+          const SizedBox(height: MinglitSpacing.large),
+
           // 1. Capacity & Contact Section
           Text(
             '인원 및 연락처 설정',
