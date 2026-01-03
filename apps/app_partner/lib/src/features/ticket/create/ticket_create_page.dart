@@ -22,14 +22,13 @@ class TicketCreatePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final partyAsync = ref.watch(partyDetailProvider(partyId));
     final eventAsync = ref.watch(eventDetailProvider(eventId));
-    final ticketsAsync = ref.watch(eventTicketsProvider(eventId));
     final ticketState = ref.watch(ticketControllerProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.ticket_title_create)),
       body: partyAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (Object e, StackTrace s) => Center(
+        error: (e, s) => Center(
           child: Text(
             context.l10n.partyDetail_error_partyLoad(e.toString()),
           ),
@@ -37,64 +36,50 @@ class TicketCreatePage extends ConsumerWidget {
         data: (Party party) {
           final entryGroups = party.entryGroups;
           final event = eventAsync.asData?.value;
-          final existingTickets = ticketsAsync.asData?.value ?? [];
 
-          // 1. Calculate default initial quantity
+          // Calculate initial quantity
           int? initialQuantity;
           if (event != null && entryGroups.isNotEmpty) {
-            initialQuantity = (event.maxParticipants / entryGroups.length)
-                .floor();
+            initialQuantity =
+                (event.maxParticipants / entryGroups.length).floor();
           }
-
-          // 2. Calculate sum of other tickets' quantities
-          final otherTicketsQuantity = existingTickets.fold(
-            0,
-            (sum, t) => sum + t.quantity,
-          );
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(MinglitSpacing.medium),
             child: TicketForm(
               entryGroups: entryGroups,
               initialQuantity: initialQuantity,
-              maxCapacity: event?.maxParticipants,
-              otherTicketsQuantity: otherTicketsQuantity,
               submitButtonLabel: context.l10n.ticket_button_create,
               isLoading: ticketState.isLoading,
-              onSaved:
-                  ({
-                    required String name,
-                    required int price,
-                    required int quantity,
-                    required List<String> targetEntryGroupIds,
-                  }) async {
-                    await ref
-                        .read(ticketControllerProvider.notifier)
-                        .createTicket(
-                          eventId: eventId,
-                          name: name,
-                          price: price,
-                          quantity: quantity,
-                          targetEntryGroupIds: targetEntryGroupIds,
-                        );
+              onSaved: ({
+                required String name,
+                required int price,
+                required int quantity,
+                required List<String> targetEntryGroupIds,
+              }) async {
+                await ref.read(ticketControllerProvider.notifier).createTicket(
+                      eventId: eventId,
+                      name: name,
+                      price: price,
+                      quantity: quantity,
+                      targetEntryGroupIds: targetEntryGroupIds,
+                    );
 
-                    final updatedState = ref.read(ticketControllerProvider);
-                    if (!updatedState.hasError && context.mounted) {
-                      context.pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(context.l10n.ticket_message_created),
-                        ),
-                      );
-                      ref.invalidate(eventTicketsProvider(eventId));
-                    } else if (updatedState.hasError && context.mounted) {
-                      handleMinglitError(
-                        context,
-                        updatedState.error!,
-                        updatedState.stackTrace,
-                      );
-                    }
-                  },
+                final updatedState = ref.read(ticketControllerProvider);
+                if (!updatedState.hasError && context.mounted) {
+                  context.pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(context.l10n.ticket_message_created)),
+                  );
+                  ref.invalidate(eventTicketsProvider(eventId));
+                } else if (updatedState.hasError && context.mounted) {
+                  handleMinglitError(
+                    context,
+                    updatedState.error!,
+                    updatedState.stackTrace,
+                  );
+                }
+              },
             ),
           );
         },

@@ -211,14 +211,6 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
               const SizedBox(height: MinglitSpacing.large),
 
               const PartySectionTitle('문의 연락처'),
-              if (partnerInfoAsync.isLoading)
-                Padding(
-                  padding: const EdgeInsets.all(MinglitSpacing.small),
-                  child: Text(
-                    '파트너 정보 불러오는 중...',
-                    style: MinglitTextStyles.infoText(context),
-                  ),
-                ),
               PartyContactInput(
                 phoneController: _phoneController,
                 emailController: _emailController,

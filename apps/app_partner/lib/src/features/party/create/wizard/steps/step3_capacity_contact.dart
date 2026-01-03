@@ -44,7 +44,6 @@ class _Step3CapacityContactState extends ConsumerState<Step3CapacityContact> {
   Widget build(BuildContext context) {
     final state = ref.watch(partyCreateWizardControllerProvider);
     final notifier = ref.read(partyCreateWizardControllerProvider.notifier);
-    final partnerInfoAsync = ref.watch(currentPartnerInfoProvider);
 
     // Auto-fill partner info if not already loaded or entered
     ref.listen(currentPartnerInfoProvider, (previous, next) {
@@ -87,11 +86,6 @@ class _Step3CapacityContactState extends ConsumerState<Step3CapacityContact> {
           ),
           const SizedBox(height: MinglitSpacing.large),
           PartySectionTitle(context.l10n.partyCreate_label_contact),
-          if (partnerInfoAsync.isLoading)
-            Padding(
-              padding: const EdgeInsets.only(bottom: MinglitSpacing.small),
-              child: Text(context.l10n.partyCreate_info_loadingPartner),
-            ),
           PartyContactInput(
             phoneController: _phoneController,
             emailController: _emailController,

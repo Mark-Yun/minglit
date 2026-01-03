@@ -14,8 +14,6 @@ class TicketForm extends StatefulWidget {
     this.initialTicket,
     this.initialQuantity,
     this.isLoading = false,
-    this.maxCapacity,
-    this.otherTicketsQuantity = 0,
     super.key,
   });
 
@@ -24,8 +22,6 @@ class TicketForm extends StatefulWidget {
   final int? initialQuantity;
   final bool isLoading;
   final String submitButtonLabel;
-  final int? maxCapacity;
-  final int otherTicketsQuantity;
   final void Function({
     required String name,
     required int price,
@@ -44,12 +40,6 @@ class _TicketFormState extends State<TicketForm> {
   int _price = 0;
   int _quantity = 10;
   final Set<String> _selectedGroupIds = {};
-
-  bool get _isUnderCapacity =>
-      widget.maxCapacity != null &&
-      (widget.otherTicketsQuantity + _quantity) < widget.maxCapacity!;
-
-  int get _totalPlanned => widget.otherTicketsQuantity + _quantity;
 
   @override
   void initState() {
@@ -84,19 +74,6 @@ class _TicketFormState extends State<TicketForm> {
         SnackBar(content: Text(context.l10n.ticket_error_minOneGroup)),
       );
       return;
-    }
-
-    // Capacity Checker (Under capacity check)
-    if (_isUnderCapacity) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '주의: 총 발행 티켓 수($_totalPlanned매)가 '
-            '정원(${widget.maxCapacity}명)보다 적습니다.',
-          ),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
     }
 
     widget.onSaved(
@@ -156,32 +133,6 @@ class _TicketFormState extends State<TicketForm> {
               ),
             ],
           ),
-
-          // 실시간 부족 경고 메시지
-          if (_isUnderCapacity)
-            Padding(
-              padding: const EdgeInsets.only(top: MinglitSpacing.small),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.error_outline_rounded,
-                    size: 14,
-                    color: colorScheme.error,
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      '총 발행량($_totalPlanned매)이 '
-                      '정원(${widget.maxCapacity}명)에 미달합니다.',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.error,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
 
           const SizedBox(height: MinglitSpacing.xlarge),
 

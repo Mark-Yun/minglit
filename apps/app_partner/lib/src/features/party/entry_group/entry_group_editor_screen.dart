@@ -165,10 +165,7 @@ class _EntryGroupEditorScreenState
                     ],
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.only(top: 12),
-                  child: Text(' ~ '),
-                ),
+                const SizedBox(width: MinglitSpacing.medium),
                 Expanded(
                   child: Column(
                     children: [
