@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-class EventListItem extends StatelessWidget {
-  const EventListItem({
+class PartyEventListItem extends StatelessWidget {
+  const PartyEventListItem({
     required this.event,
-    required this.onTap,
+    this.onTap,
     super.key,
   });
 
   final Event event;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {

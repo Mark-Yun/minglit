@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:app_partner/src/features/party/create/ticket_template_create_page.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
+import 'package:app_partner/src/features/party/ticket/ticket_template_create_page.dart';
 import 'package:app_partner/src/features/party/widgets/party_events_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_tickets_summary.dart';
 import 'package:app_partner/src/routing/app_routes.dart';

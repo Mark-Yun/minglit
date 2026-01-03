@@ -2,8 +2,8 @@ import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-class PartyBasicConditionSection extends ConsumerWidget {
-  const PartyBasicConditionSection({
+class PartyEntranceConditionSection extends ConsumerWidget {
+  const PartyEntranceConditionSection({
     required this.party,
     this.onGroupTap,
     super.key,
