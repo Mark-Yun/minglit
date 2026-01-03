@@ -3,8 +3,8 @@ export 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Providers
 
-export 'src/logic/providers/auth_controller.dart';
-export 'src/logic/search/location_search_controller.dart';
+export 'src/features/auth/logic/auth_controller.dart';
+export 'src/features/search/logic/location_search_controller.dart';
 
 // Note: Other repositories are exported via minglit_data.dart,
 
