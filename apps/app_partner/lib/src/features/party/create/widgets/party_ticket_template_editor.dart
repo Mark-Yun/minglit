@@ -55,7 +55,10 @@ class PartyTicketTemplateEditor extends StatelessWidget {
                     _navigateToEditPage(context, index, ticket),
                   ),
                   trailing: IconButton(
-                    icon: const Icon(Icons.close, color: Colors.grey),
+                    icon: Icon(
+                      Icons.close,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                     onPressed: () => onRemove(index),
                   ),
                 ),

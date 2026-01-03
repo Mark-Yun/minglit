@@ -195,7 +195,7 @@ class MinglitTheme {
   static PreferredSizeWidget simpleAppBar({
     required String title,
     List<Widget>? actions,
-    bool centerTitle = false,
+    bool centerTitle = true,
   }) {
     return AppBar(
       title: Text(title),
@@ -335,7 +335,10 @@ class MinglitTheme {
         ),
 
         contentPadding: const EdgeInsets.all(MinglitSpacing.medium),
-        hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+        hintStyle: const TextStyle(
+          color: MinglitColors.textSecondary,
+          fontSize: 14,
+        ),
       ),
 
       // Chip 테마

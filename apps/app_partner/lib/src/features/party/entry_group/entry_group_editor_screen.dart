@@ -71,12 +71,10 @@ class _EntryGroupEditorScreenState
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.initialGroup == null
-              ? context.l10n.entryGroup_title_add
-              : context.l10n.entryGroup_title_edit,
-        ),
+      appBar: MinglitTheme.simpleAppBar(
+        title: widget.initialGroup == null
+            ? context.l10n.entryGroup_title_add
+            : context.l10n.entryGroup_title_edit,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(MinglitSpacing.medium),
@@ -95,21 +93,21 @@ class _EntryGroupEditorScreenState
                 style: ButtonStyle(
                   backgroundColor: WidgetStateProperty.resolveWith((states) {
                     if (states.contains(WidgetState.selected)) {
-                      return theme.colorScheme.secondaryContainer;
+                      return colorScheme.secondaryContainer;
                     }
                     return null;
                   }),
                   foregroundColor: WidgetStateProperty.resolveWith((states) {
                     if (states.contains(WidgetState.selected)) {
-                      return theme.colorScheme.onSecondaryContainer;
+                      return colorScheme.onSecondaryContainer;
                     }
-                    return theme.colorScheme.onSurface;
+                    return colorScheme.onSurface;
                   }),
                   iconColor: WidgetStateProperty.resolveWith((states) {
                     if (states.contains(WidgetState.selected)) {
-                      return theme.colorScheme.onSecondaryContainer;
+                      return colorScheme.onSecondaryContainer;
                     }
-                    return theme.colorScheme.onSurface;
+                    return colorScheme.onSurface;
                   }),
                 ),
                 segments: [
@@ -151,13 +149,13 @@ class _EntryGroupEditorScreenState
                         value: _minYear ?? 1995,
                         min: 1950,
                         max: 2010,
-                        onChanged: (val) => setState(() => _minYear = val),
+                        onChanged: (int val) => setState(() => _minYear = val),
                         suffixText: context.l10n.entryGroup_suffix_year,
                       ),
                       const SizedBox(height: MinglitSpacing.xsmall),
                       Text(
                         '${AgeUtil.calculateKoreanAge(_minYear ?? 1995)}세',
-                        style: theme.textTheme.bodySmall?.copyWith(
+                        style: theme.textTheme.labelSmall?.copyWith(
                           color: colorScheme.primary,
                           fontWeight: FontWeight.w600,
                         ),
@@ -174,13 +172,13 @@ class _EntryGroupEditorScreenState
                         value: _maxYear ?? 2005,
                         min: 1950,
                         max: 2010,
-                        onChanged: (val) => setState(() => _maxYear = val),
+                        onChanged: (int val) => setState(() => _maxYear = val),
                         suffixText: context.l10n.entryGroup_suffix_year,
                       ),
                       const SizedBox(height: MinglitSpacing.xsmall),
                       Text(
                         '${AgeUtil.calculateKoreanAge(_maxYear ?? 2005)}세',
-                        style: theme.textTheme.bodySmall?.copyWith(
+                        style: theme.textTheme.labelSmall?.copyWith(
                           color: colorScheme.primary,
                           fontWeight: FontWeight.w600,
                         ),

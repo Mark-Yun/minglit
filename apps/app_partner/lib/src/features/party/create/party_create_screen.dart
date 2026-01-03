@@ -145,7 +145,7 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
     });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('파티 기획하기')),
+      appBar: MinglitTheme.simpleAppBar(title: '파티 기획하기'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(MinglitSpacing.medium),
         child: Form(

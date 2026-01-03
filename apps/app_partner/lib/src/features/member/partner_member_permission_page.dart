@@ -54,7 +54,9 @@ class PartnerMemberPermissionPage extends ConsumerWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.memberPermission_title)),
+      appBar: MinglitTheme.simpleAppBar(
+        title: context.l10n.memberPermission_title,
+      ),
       body: memberAsync.when(
         data: (memberData) {
           if (memberData == null) {

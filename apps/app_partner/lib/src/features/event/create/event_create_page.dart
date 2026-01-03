@@ -118,7 +118,7 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('새 회차(이벤트) 만들기')),
+      appBar: MinglitTheme.simpleAppBar(title: '새 회차(이벤트) 만들기'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(MinglitSpacing.medium),
         child: Form(

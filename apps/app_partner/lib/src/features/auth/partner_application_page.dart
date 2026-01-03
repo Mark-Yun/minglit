@@ -15,15 +15,15 @@ class PartnerApplicationPage extends ConsumerStatefulWidget {
 class _PartnerApplicationPageState
     extends ConsumerState<PartnerApplicationPage> {
   final _formKey = GlobalKey<FormState>();
-  final ImagePicker _picker = ImagePicker();
-  bool _isLoading = false;
+  final _picker = ImagePicker();
 
-  // 데이터 필드
+  // 브랜드 정보 controllers
   final Map<String, dynamic> _data = {
     'biz_type': 'individual',
   };
   XFile? _bizRegFile;
   XFile? _bankbookFile;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -35,13 +35,16 @@ class _PartnerApplicationPageState
 
   Future<void> _checkExistingApplication() async {
     setState(() => _isLoading = true);
-    final repository = ref.read(partnerRepositoryProvider);
-    final app = await repository.getMyApplication();
-    if (app != null && mounted) {
-      // 이미 신청한 내역이 있다면 안내 화면으로 이동 (혹은 상태 표시)
-      await _showStatusDialog(app.status);
+    try {
+      final repository = ref.read(partnerRepositoryProvider);
+      final app = await repository.getMyApplication();
+      if (app != null && mounted) {
+        // 이미 신청한 내역이 있다면 안내 화면으로 이동 (혹은 상태 표시)
+        await _showStatusDialog(app.status);
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-    setState(() => _isLoading = false);
   }
 
   Future<void> _showStatusDialog(String status) async {
@@ -120,115 +123,119 @@ class _PartnerApplicationPageState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.partnerApplication_title)),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSectionTitle(
-                      context.l10n.partnerApplication_section_brand,
-                    ),
-                    _buildTextField(
-                      'brand_name',
-                      context.l10n.partnerApplication_field_brandName,
-                      context.l10n.partnerApplication_hint_brandName,
-                    ),
-                    _buildTextField(
-                      'introduction',
-                      context.l10n.partnerApplication_field_intro,
-                      context.l10n.partnerApplication_hint_intro,
-                      maxLines: 3,
-                    ),
-                    _buildTextField(
-                      'address',
-                      context.l10n.partnerApplication_field_address,
-                      context.l10n.partnerApplication_hint_address,
-                    ),
-                    _buildTextField(
-                      'contact_phone',
-                      context.l10n.partnerApplication_field_phone,
-                      context.l10n.partnerApplication_hint_phone,
-                    ),
-                    _buildTextField(
-                      'contact_email',
-                      context.l10n.partnerApplication_field_email,
-                      context.l10n.partnerApplication_hint_email,
-                    ),
-
-                    const SizedBox(height: 32),
-                    _buildSectionTitle(
-                      context.l10n.partnerApplication_section_biz,
-                    ),
-                    _buildBizTypeDropdown(),
-                    _buildTextField(
-                      'biz_name',
-                      context.l10n.partnerApplication_field_bizName,
-                      context.l10n.partnerApplication_hint_bizName,
-                    ),
-                    _buildTextField(
-                      'biz_number',
-                      context.l10n.partnerApplication_field_bizNumber,
-                      context.l10n.partnerApplication_hint_bizNumber,
-                    ),
-                    _buildTextField(
-                      'representative_name',
-                      context.l10n.partnerApplication_field_repName,
-                      context.l10n.partnerApplication_hint_repName,
-                    ),
-
-                    const SizedBox(height: 32),
-                    _buildSectionTitle(
-                      context.l10n.partnerApplication_section_account,
-                    ),
-                    _buildTextField(
-                      'bank_name',
-                      context.l10n.partnerApplication_field_bankName,
-                      context.l10n.partnerApplication_hint_bankName,
-                    ),
-                    _buildTextField(
-                      'account_number',
-                      context.l10n.partnerApplication_field_accountNum,
-                      context.l10n.partnerApplication_hint_accountNum,
-                    ),
-                    _buildTextField(
-                      'account_holder',
-                      context.l10n.partnerApplication_field_holder,
-                      // Reusing repName hint ("성함")
-                      context.l10n.partnerApplication_hint_repName,
-                    ),
-
-                    const SizedBox(height: 32),
-                    _buildSectionTitle(
-                      context.l10n.partnerApplication_section_files,
-                    ),
-                    _buildFilePicker(
-                      context.l10n.partnerApplication_label_bizReg,
-                      _bizRegFile,
-                      () async => _pickFile(true),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildFilePicker(
-                      context.l10n.partnerApplication_label_bankbook,
-                      _bankbookFile,
-                      () async => _pickFile(false),
-                    ),
-
-                    const SizedBox(height: 48),
-                    ElevatedButton(
-                      onPressed: _submit,
-                      child: Text(
-                        context.l10n.partnerApplication_button_submit,
-                      ),
-                    ),
-                  ],
-                ),
+      appBar: MinglitTheme.simpleAppBar(
+        title: context.l10n.partnerApplication_title,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionTitle(
+                context.l10n.partnerApplication_section_brand,
               ),
-            ),
+              _buildTextField(
+                'brand_name',
+                context.l10n.partnerApplication_field_brandName,
+                context.l10n.partnerApplication_hint_brandName,
+              ),
+              _buildTextField(
+                'introduction',
+                context.l10n.partnerApplication_field_intro,
+                context.l10n.partnerApplication_hint_intro,
+                maxLines: 3,
+              ),
+              _buildTextField(
+                'address',
+                context.l10n.partnerApplication_field_address,
+                context.l10n.partnerApplication_hint_address,
+              ),
+              _buildTextField(
+                'contact_phone',
+                context.l10n.partnerApplication_field_phone,
+                context.l10n.partnerApplication_hint_phone,
+              ),
+              _buildTextField(
+                'contact_email',
+                context.l10n.partnerApplication_field_email,
+                context.l10n.partnerApplication_hint_email,
+              ),
+
+              const SizedBox(height: 32),
+              _buildSectionTitle(
+                context.l10n.partnerApplication_section_biz,
+              ),
+              _buildBizTypeDropdown(),
+              _buildTextField(
+                'biz_name',
+                context.l10n.partnerApplication_field_bizName,
+                context.l10n.partnerApplication_hint_bizName,
+              ),
+              _buildTextField(
+                'biz_number',
+                context.l10n.partnerApplication_field_bizNumber,
+                context.l10n.partnerApplication_hint_bizNumber,
+              ),
+              _buildTextField(
+                'representative_name',
+                context.l10n.partnerApplication_field_repName,
+                context.l10n.partnerApplication_hint_repName,
+              ),
+
+              const SizedBox(height: 32),
+              _buildSectionTitle(
+                context.l10n.partnerApplication_section_account,
+              ),
+              _buildTextField(
+                'bank_name',
+                context.l10n.partnerApplication_field_bankName,
+                context.l10n.partnerApplication_hint_bankName,
+              ),
+              _buildTextField(
+                'account_number',
+                context.l10n.partnerApplication_field_accountNum,
+                context.l10n.partnerApplication_hint_accountNum,
+              ),
+              _buildTextField(
+                'account_holder',
+                context.l10n.partnerApplication_field_holder,
+                // Reusing repName hint ("성함")
+                context.l10n.partnerApplication_hint_repName,
+              ),
+
+              const SizedBox(height: 32),
+              _buildSectionTitle(
+                context.l10n.partnerApplication_section_files,
+              ),
+              _buildFilePicker(
+                context.l10n.partnerApplication_label_bizReg,
+                _bizRegFile,
+                () async => _pickFile(true),
+              ),
+              const SizedBox(height: 12),
+              _buildFilePicker(
+                context.l10n.partnerApplication_label_bankbook,
+                _bankbookFile,
+                () async => _pickFile(false),
+              ),
+
+              const SizedBox(height: 48),
+              ElevatedButton(
+                onPressed: _isLoading ? null : _submit,
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(context.l10n.partnerApplication_button_submit),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

@@ -25,7 +25,9 @@ class TicketCreatePage extends ConsumerWidget {
     final ticketState = ref.watch(ticketControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.ticket_title_create)),
+      appBar: MinglitTheme.simpleAppBar(
+        title: context.l10n.ticket_title_create,
+      ),
       body: partyAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, s) => Center(
@@ -40,8 +42,8 @@ class TicketCreatePage extends ConsumerWidget {
           // Calculate initial quantity
           int? initialQuantity;
           if (event != null && entryGroups.isNotEmpty) {
-            initialQuantity =
-                (event.maxParticipants / entryGroups.length).floor();
+            initialQuantity = (event.maxParticipants / entryGroups.length)
+                .floor();
           }
 
           return SingleChildScrollView(
@@ -51,35 +53,40 @@ class TicketCreatePage extends ConsumerWidget {
               initialQuantity: initialQuantity,
               submitButtonLabel: context.l10n.ticket_button_create,
               isLoading: ticketState.isLoading,
-              onSaved: ({
-                required String name,
-                required int price,
-                required int quantity,
-                required List<String> targetEntryGroupIds,
-              }) async {
-                await ref.read(ticketControllerProvider.notifier).createTicket(
-                      eventId: eventId,
-                      name: name,
-                      price: price,
-                      quantity: quantity,
-                      targetEntryGroupIds: targetEntryGroupIds,
-                    );
+              onSaved:
+                  ({
+                    required String name,
+                    required int price,
+                    required int quantity,
+                    required List<String> targetEntryGroupIds,
+                  }) async {
+                    await ref
+                        .read(ticketControllerProvider.notifier)
+                        .createTicket(
+                          eventId: eventId,
+                          name: name,
+                          price: price,
+                          quantity: quantity,
+                          targetEntryGroupIds: targetEntryGroupIds,
+                        );
 
-                final updatedState = ref.read(ticketControllerProvider);
-                if (!updatedState.hasError && context.mounted) {
-                  context.pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.l10n.ticket_message_created)),
-                  );
-                  ref.invalidate(eventTicketsProvider(eventId));
-                } else if (updatedState.hasError && context.mounted) {
-                  handleMinglitError(
-                    context,
-                    updatedState.error!,
-                    updatedState.stackTrace,
-                  );
-                }
-              },
+                    final updatedState = ref.read(ticketControllerProvider);
+                    if (!updatedState.hasError && context.mounted) {
+                      context.pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(context.l10n.ticket_message_created),
+                        ),
+                      );
+                      ref.invalidate(eventTicketsProvider(eventId));
+                    } else if (updatedState.hasError && context.mounted) {
+                      handleMinglitError(
+                        context,
+                        updatedState.error!,
+                        updatedState.stackTrace,
+                      );
+                    }
+                  },
             ),
           );
         },

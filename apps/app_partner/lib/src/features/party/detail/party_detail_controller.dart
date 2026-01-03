@@ -36,10 +36,3 @@ Future<List<Verification>> partyVerifications(Ref ref, String partyId) async {
   final repo = ref.watch(verificationRepositoryProvider);
   return repo.getVerificationsByIds(party.requiredVerificationIds);
 }
-
-@riverpod
-Future<List<Verification>> verificationsByIds(Ref ref, List<String> ids) async {
-  if (ids.isEmpty) return [];
-  final repo = ref.watch(verificationRepositoryProvider);
-  return repo.getVerificationsByIds(ids);
-}

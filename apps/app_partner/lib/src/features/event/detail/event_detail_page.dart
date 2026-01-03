@@ -21,7 +21,7 @@ class EventDetailPage extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('회차 상세')),
+      appBar: MinglitTheme.simpleAppBar(title: '회차 상세'),
       body: eventAsync.when(
         data: (event) {
           final partyAsync = ref.watch(partyDetailProvider(event.partyId));

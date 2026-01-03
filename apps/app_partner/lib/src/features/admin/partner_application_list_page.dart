@@ -42,13 +42,13 @@ class _PartnerApplicationListPageState
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('입점 신청 관리')),
+      appBar: MinglitTheme.simpleAppBar(title: '입점 신청 관리'),
       body: Column(
         children: [
           _buildFilterBar(),
           Expanded(
             child: appsAsync.when(
-              data: (apps) {
+              data: (List<PartnerApplication> apps) {
                 if (apps.isEmpty) {
                   return const Center(child: Text('신청 내역이 없습니다.'));
                 }
@@ -67,7 +67,8 @@ class _PartnerApplicationListPageState
                   ),
                 );
               },
-              error: (e, s) => Center(child: Text('Error: $e')),
+              error: (Object e, StackTrace s) =>
+                  Center(child: Text('Error: $e')),
               loading: () => const Center(child: CircularProgressIndicator()),
             ),
           ),

@@ -1,5 +1,4 @@
 import 'package:app_partner/src/features/party/create/wizard/party_create_wizard_controller.dart';
-import 'package:app_partner/src/features/party/detail/widgets/party_basic_condition_section.dart';
 import 'package:app_partner/src/features/party/entry_group/entry_group_editor_screen.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +26,9 @@ class Step4EntryRules extends ConsumerWidget {
           const SizedBox(height: MinglitSpacing.small),
           Text(
             context.l10n.partyCreate_desc_entryRules,
-            style: const TextStyle(color: Colors.grey),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: MinglitSpacing.large),
 
@@ -86,30 +87,20 @@ class Step4EntryRules extends ConsumerWidget {
                         ),
                       ),
 
-                      // Body (Clickable)
+                      // Body (Clickable Group Detail)
                       InkWell(
                         onTap: () => _showEntryGroupEditor(
                           context,
                           ref,
                           initialGroup: group,
                         ),
-                        child: Theme(
-                          data: Theme.of(context).copyWith(
-                            cardTheme: const CardThemeData(
-                              elevation: 0,
-                              margin: EdgeInsets.zero,
-                              color: Colors.transparent,
-                            ),
-                          ),
-                          child: PartyBasicConditionSection(
-                            party: Party(
-                              id: '',
-                              partnerId: '',
-                              title: '',
-                              createdAt: DateTime.now(),
-                              updatedAt: DateTime.now(),
-                              conditions: [group.toJson()],
-                            ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(MinglitSpacing.medium),
+                          child: EntryGroupDetail(
+                            group: group,
+                            anyLabel: context.l10n.entryGroup_option_any,
+                            anyYearLabel:
+                                context.l10n.entryGroup_option_anyYear,
                           ),
                         ),
                       ),

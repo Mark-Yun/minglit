@@ -2,6 +2,7 @@ import 'package:app_partner/src/features/party/list/party_list_controller.dart';
 import 'package:app_partner/src/features/party/list/party_list_coordinator.dart';
 import 'package:app_partner/src/features/party/list/widgets/party_list_item.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class PartyListPage extends ConsumerWidget {
@@ -9,20 +10,21 @@ class PartyListPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final partyListAsync = ref.watch(partyListProvider);
+    final partiesAsync = ref.watch(partyListProvider);
     final coordinator = PartyListCoordinator(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('파티 관리'),
+      appBar: MinglitTheme.simpleAppBar(
+        title: '파티 기획 관리',
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () => context.push('/parties/create'),
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: coordinator.goToCreate,
-        icon: const Icon(Icons.add),
-        label: const Text('새 파티 기획'),
-      ),
-      body: partyListAsync.when(
-        data: (parties) {
+      body: partiesAsync.when(
+        data: (List<Party> parties) {
           if (parties.isEmpty) {
             return Center(
               child: Column(
@@ -64,7 +66,8 @@ class PartyListPage extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, s) => Center(child: Text('오류가 발생했습니다: $e')),
+        error: (Object e, StackTrace s) =>
+            Center(child: Text('오류가 발생했습니다: $e')),
       ),
     );
   }

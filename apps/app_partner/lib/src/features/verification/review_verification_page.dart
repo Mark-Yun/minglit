@@ -188,18 +188,10 @@ class _ReviewVerificationPageState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: _isLoading
-            ? Text(context.l10n.reviewVerification_title_pending)
-            : Text(
-                '${context.l10n.reviewVerification_title_pending} '
-                '(${_pendingRequests.length})',
-              ),
+      appBar: MinglitTheme.simpleAppBar(
+        title: context.l10n.reviewVerification_title_pending,
       ),
-      body: RefreshIndicator(
-        onRefresh: _loadRequests,
-        child: _buildContent(),
-      ),
+      body: _buildContent(),
     );
   }
 

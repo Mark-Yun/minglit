@@ -11,6 +11,16 @@ VerificationRepository verificationRepository(Ref ref) {
   return SupabaseVerificationRepository();
 }
 
+@riverpod
+Future<List<Verification>> verificationsByIds(
+  Ref ref,
+  List<String> ids,
+) async {
+  if (ids.isEmpty) return [];
+  final repo = ref.watch(verificationRepositoryProvider);
+  return repo.getVerificationsByIds(ids);
+}
+
 /// Data Transfer Object for verification submission.
 class VerificationSubmission {
   /// Creates a [VerificationSubmission] instance.

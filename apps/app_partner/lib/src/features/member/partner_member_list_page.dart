@@ -39,14 +39,14 @@ class PartnerMemberListPage extends ConsumerWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('직원 및 권한 관리'),
+      appBar: MinglitTheme.simpleAppBar(
+        title: '직원 관리',
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => ref.invalidate(
-              partnerMembersProvider(partnerId: partnerId),
-            ),
+            icon: const Icon(Icons.person_add_alt_1_outlined),
+            onPressed: () {
+              // TODO(mark): Implement Invite Member
+            },
           ),
         ],
       ),

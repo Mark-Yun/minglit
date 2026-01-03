@@ -355,7 +355,7 @@ class PartyDetailPage extends ConsumerWidget {
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, s) => Scaffold(
-          appBar: AppBar(),
+          appBar: MinglitTheme.simpleAppBar(title: ''),
           body: Center(
             child: Text(context.l10n.partyDetail_error_partyLoad(e.toString())),
           ),

@@ -24,8 +24,14 @@ class _LocationSearchPageState extends ConsumerState<LocationSearchPage> {
     final controller = ref.read(locationSearchControllerProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('장소 검색'),
+      appBar: MinglitTheme.simpleAppBar(
+        title: '장소 검색',
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
       ),
       body: Column(
         children: [

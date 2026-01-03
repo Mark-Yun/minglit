@@ -11,6 +11,8 @@ class Step5Tickets extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(partyCreateWizardControllerProvider);
     final notifier = ref.read(partyCreateWizardControllerProvider.notifier);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(MinglitSpacing.medium),
@@ -24,7 +26,9 @@ class Step5Tickets extends ConsumerWidget {
           const SizedBox(height: MinglitSpacing.small),
           Text(
             context.l10n.partyCreate_desc_tickets,
-            style: const TextStyle(color: Colors.grey),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: MinglitSpacing.large),
           PartyTicketTemplateEditor(

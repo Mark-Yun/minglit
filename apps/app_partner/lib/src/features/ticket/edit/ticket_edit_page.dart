@@ -27,7 +27,7 @@ class TicketEditPage extends ConsumerWidget {
     final ticketState = ref.watch(ticketControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.ticket_title_edit)),
+      appBar: MinglitTheme.simpleAppBar(title: context.l10n.ticket_title_edit),
       body: ticketAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (Object e, StackTrace s) => Center(

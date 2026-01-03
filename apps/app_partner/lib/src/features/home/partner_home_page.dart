@@ -12,8 +12,8 @@ class PartnerHomePage extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Partner Dashboard')),
-      body: Center(
+      appBar: MinglitTheme.simpleAppBar(title: 'Partner Dashboard'),
+      body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(MinglitSpacing.large),
           child: Column(

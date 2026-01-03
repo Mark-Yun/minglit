@@ -40,16 +40,28 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
     unawaited(
       _pageController.animateToPage(
         step.index,
-        duration: const Duration(milliseconds: 300),
+        duration: MinglitAnimation.medium,
         curve: Curves.easeInOut,
       ),
     );
+  }
+
+  Future<void> _handleSubmit() async {
+    final notifier = ref.read(partyCreateWizardControllerProvider.notifier);
+    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
+    try {
+      await notifier.submit();
+    } finally {
+      loading.hide();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(partyCreateWizardControllerProvider);
     final notifier = ref.read(partyCreateWizardControllerProvider.notifier);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     // Sync PageController with state
     ref
@@ -84,38 +96,33 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
       );
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_getStepTitle(context, state.currentStep)),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(4),
-          child: LinearProgressIndicator(
+      appBar: MinglitTheme.simpleAppBar(
+        title: _getStepTitle(context, state.currentStep),
+      ),
+      body: Column(
+        children: [
+          // Styled Progress Indicator
+          LinearProgressIndicator(
             value:
                 (state.currentStep.index + 1) / PartyCreateStep.values.length,
-            backgroundColor: Colors.transparent,
+            backgroundColor: colorScheme.surfaceContainerHighest,
+            valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+            minHeight: 2,
           ),
-        ),
-      ),
-      body: Stack(
-        children: [
-          PageView(
-            controller: _pageController,
-            physics: const NeverScrollableScrollPhysics(),
-            children: const [
-              Step1BasicInfo(),
-              Step2Location(),
-              Step3CapacityContact(),
-              Step4EntryRules(),
-              Step5Tickets(),
-              Step6Review(),
-            ],
-          ),
-          if (state.status.isLoading)
-            const ColoredBox(
-              color: Colors.black26,
-              child: Center(
-                child: CircularProgressIndicator(),
-              ),
+          Expanded(
+            child: PageView(
+              controller: _pageController,
+              physics: const NeverScrollableScrollPhysics(),
+              children: const [
+                Step1BasicInfo(),
+                Step2Location(),
+                Step3CapacityContact(),
+                Step4EntryRules(),
+                Step5Tickets(),
+                Step6Review(),
+              ],
             ),
+          ),
         ],
       ),
       bottomNavigationBar: SafeArea(
@@ -141,7 +148,7 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
                       ? null
                       : (state.currentStep == PartyCreateStep.review
                             ? (notifier.validationErrors.isEmpty
-                                  ? () => unawaited(notifier.submit())
+                                  ? _handleSubmit
                                   : null)
                             : notifier.nextStep),
                   child: Text(

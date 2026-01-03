@@ -15,10 +15,8 @@ class TicketTemplateCreatePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          initialTicket == null ? '기본 티켓 추가' : '티켓 수정',
-        ),
+      appBar: MinglitTheme.simpleAppBar(
+        title: initialTicket == null ? '기본 티켓 추가' : '티켓 수정',
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(MinglitSpacing.medium),

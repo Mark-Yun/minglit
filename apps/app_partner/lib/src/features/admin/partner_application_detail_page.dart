@@ -94,9 +94,9 @@ class _PartnerApplicationDetailPageState
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.appDetail_title)),
+      appBar: MinglitTheme.simpleAppBar(title: context.l10n.appDetail_title),
       body: appAsync.when(
-        data: (app) {
+        data: (PartnerApplication? app) {
           if (app == null) {
             return Center(child: Text(context.l10n.appDetail_message_notFound));
           }
@@ -207,7 +207,7 @@ class _PartnerApplicationDetailPageState
             ),
           );
         },
-        error: (e, s) => Center(child: Text('Error: $e')),
+        error: (Object e, StackTrace s) => Center(child: Text('Error: $e')),
         loading: () => const Center(child: CircularProgressIndicator()),
       ),
     );
