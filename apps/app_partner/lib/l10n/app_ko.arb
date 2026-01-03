@@ -65,6 +65,8 @@
   "@partyDetail_error_partyLoad": {
     "placeholders": { "error": { "type": "String" } }
   },
+  "partyDetail_tab_operation": "회차 및 티켓",
+  "partyDetail_tab_info": "파티 정보",
 
   "partyList_badge_active": "운영중",
   "partyList_badge_closed": "종료됨",

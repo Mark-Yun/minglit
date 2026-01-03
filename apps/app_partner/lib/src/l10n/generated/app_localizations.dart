@@ -316,6 +316,18 @@ abstract class AppLocalizations {
   /// **'파티 로드 실패: {error}'**
   String partyDetail_error_partyLoad(String error);
 
+  /// No description provided for @partyDetail_tab_operation.
+  ///
+  /// In ko, this message translates to:
+  /// **'회차 및 티켓'**
+  String get partyDetail_tab_operation;
+
+  /// No description provided for @partyDetail_tab_info.
+  ///
+  /// In ko, this message translates to:
+  /// **'파티 정보'**
+  String get partyDetail_tab_info;
+
   /// No description provided for @partyList_badge_active.
   ///
   /// In ko, this message translates to:

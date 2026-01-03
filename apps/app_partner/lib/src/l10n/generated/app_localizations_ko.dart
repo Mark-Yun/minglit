@@ -132,6 +132,12 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get partyDetail_tab_operation => '회차 및 티켓';
+
+  @override
+  String get partyDetail_tab_info => '파티 정보';
+
+  @override
   String get partyList_badge_active => '운영중';
 
   @override

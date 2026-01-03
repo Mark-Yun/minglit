@@ -252,11 +252,13 @@ class MinglitTheme {
       appBarTheme: const AppBarTheme(
         backgroundColor: MinglitColors.background,
         elevation: 0,
+        centerTitle: true,
         iconTheme: IconThemeData(color: MinglitColors.textPrimary),
         titleTextStyle: TextStyle(
           color: MinglitColors.textPrimary,
           fontSize: 18,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
+          fontFamily: 'NotoSansKR',
         ),
       ),
 
@@ -309,7 +311,6 @@ class MinglitTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(MinglitRadius.card),
         ),
-
         elevation: 0,
         color: MinglitColors.surface,
         margin: EdgeInsets.zero,
@@ -323,17 +324,14 @@ class MinglitTheme {
           borderRadius: BorderRadius.circular(MinglitRadius.input),
           borderSide: BorderSide.none,
         ),
-
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(MinglitRadius.input),
           borderSide: BorderSide.none,
         ),
-
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(MinglitRadius.input),
           borderSide: const BorderSide(color: MinglitColors.primary, width: 2),
         ),
-
         contentPadding: const EdgeInsets.all(MinglitSpacing.medium),
         hintStyle: const TextStyle(
           color: MinglitColors.textSecondary,
@@ -364,6 +362,25 @@ class MinglitTheme {
           borderRadius: BorderRadius.circular(4),
         ),
         side: const BorderSide(color: Colors.grey, width: 1.5),
+      ),
+
+      // TabBar 테마
+      tabBarTheme: const TabBarThemeData(
+        labelColor: MinglitColors.primary,
+        unselectedLabelColor: MinglitColors.textSecondary,
+        indicatorColor: MinglitColors.primary,
+        indicatorSize: TabBarIndicatorSize.tab,
+        dividerColor: Colors.transparent, // Remove default bottom line
+        labelStyle: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'NotoSansKR',
+        ),
+        unselectedLabelStyle: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          fontFamily: 'NotoSansKR',
+        ),
       ),
 
       // Divider 테마
