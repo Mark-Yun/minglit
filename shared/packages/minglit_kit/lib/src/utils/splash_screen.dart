@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/src/widgets/common/minglit_image.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_image.dart';
 
 /// A branded splash screen shown during app initialization.
 class MinglitSplashScreen extends StatelessWidget {
