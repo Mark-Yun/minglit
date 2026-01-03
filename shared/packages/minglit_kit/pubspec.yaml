@@ -52,6 +52,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/seed/
     - assets/fonts/Noto_Sans_KR/
 
   fonts:

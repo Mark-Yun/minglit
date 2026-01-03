@@ -150,7 +150,7 @@ create table public.parties (
   contact_options jsonb default '{}'::jsonb,
   
   -- Combined Conditions (JSONB)
-  -- e.g. { "gender": "male", "age_range": { "min": 1990 } }
+  -- e.g. { "gender": "male", "birth_year_range": { "min": 1990 } }
   conditions jsonb default '{}'::jsonb,
   
   -- Required Verification IDs for this party
@@ -174,6 +174,7 @@ create table public.events (
   contact_options jsonb default '{}'::jsonb,
   
   -- Instance-specific conditions (Overrides or adds to party conditions)
+  -- Uses target_entry_group_ids in tickets to link
   conditions jsonb default '{}'::jsonb,
   
   start_time timestamptz not null,
@@ -200,8 +201,8 @@ create table public.tickets (
   quantity integer not null,
   sold_count integer not null default 0,
   
-  -- Combined Purchase Conditions (JSONB)
-  conditions jsonb default '{}'::jsonb,
+  -- Linked Entry Group IDs (UUID Array)
+  target_entry_group_ids uuid[] default '{}',
   
   -- Ticket specific verification requirements (overrides or adds to party requirements)
   required_verification_ids uuid[] default '{}',

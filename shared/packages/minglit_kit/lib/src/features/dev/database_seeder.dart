@@ -1,10 +1,13 @@
+import 'dart:convert';
+
+import 'package:flutter/services.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
-/// **Database Seeder (Refactored)**
+/// **Database Seeder**
 ///
-/// Handles programmatic data seeding for local development using Models.
+/// Handles programmatic data seeding using JSON assets for local development.
 class DatabaseSeeder {
   DatabaseSeeder(this._adminClient);
 
@@ -12,86 +15,37 @@ class DatabaseSeeder {
 
   /// Runs the full seeding process.
   Future<void> seed() async {
-    Log.i('🌱 [Seeder] Starting Fresh Seeding...');
+    Log.i('🌱 [Seeder] Starting Fresh Seeding from JSON...');
 
     try {
-      // 1. Create Global Verifications
-      final globalVerifIds = await _seedGlobalVerifications();
-      Log.i('✅ Global Verifications Created: ${globalVerifIds.length} items');
+      // 1. Load Seed Data from JSON
+      final jsonStr = await rootBundle.loadString(
+        'packages/minglit_kit/assets/seed/seed_data.json',
+      );
+      final seedData = jsonDecode(jsonStr) as Map<String, dynamic>;
 
-      // 2. Create Normal Users
+      // 2. Fetch Global Verifications (created by seed.sql)
+      final globalVerifIds = await _getGlobalVerificationIds();
+      Log.i('✅ Global Verifications Found: ${globalVerifIds.length} items');
+
+      // 3. Create Normal Users
       await _seedUsers();
 
-      // 3. Create Partners & Their Members
-      await _seedPartners(globalVerifIds);
+      // 4. Create Partners & Diverse Content from JSON
+      await _processSeedData(seedData, globalVerifIds);
 
       Log.i('✅ [Seeder] Seeding Completed!');
-    } catch (e, st) {
+    } on Object catch (e, st) {
       Log.e('🔥 [Seeder] Seeding Failed', e, st);
       rethrow;
     }
   }
 
-  Future<List<String>> _seedGlobalVerifications() async {
-    Log.i('📜 Step 0: Seeding Global Verifications...');
-
-    // We can use the Verification model if available, but simple maps are fine
-    // for structure defs
+  Future<List<String>> _getGlobalVerificationIds() async {
     final result = await _adminClient
         .from('verifications')
-        .insert([
-          {
-            'category': 'career',
-            'internal_name': 'Global Career Verification',
-            'display_name': '직장 인증',
-            'description': '회사 이메일 또는 재직증명서로 인증하세요.',
-            'icon_key': 'briefcase',
-            'form_schema': [
-              {
-                'key': 'company_name',
-                'type': 'text',
-                'label': '회사명',
-                'required': true,
-              },
-              {
-                'key': 'proof_doc',
-                'type': 'file',
-                'label': '재직증명서/명함',
-                'required': true,
-              },
-            ],
-            'partner_id': null, // Global
-          },
-          {
-            'category': 'academic',
-            'internal_name': 'Global Academic Verification',
-            'display_name': '학력 인증',
-            'description': '졸업증명서로 학력을 인증하세요.',
-            'icon_key': 'school',
-            'form_schema': [
-              {
-                'key': 'univ_name',
-                'type': 'text',
-                'label': '학교명',
-                'required': true,
-              },
-              {
-                'key': 'major',
-                'type': 'text',
-                'label': '전공',
-                'required': true,
-              },
-              {
-                'key': 'proof_doc',
-                'type': 'file',
-                'label': '졸업증명서',
-                'required': true,
-              },
-            ],
-            'partner_id': null, // Global
-          },
-        ])
-        .select('id');
+        .select('id')
+        .filter('partner_id', 'is', null);
 
     return (result as List)
         .map((dynamic e) => (e as Map<String, dynamic>)['id'] as String)
@@ -103,15 +57,10 @@ class DatabaseSeeder {
     for (var i = 1; i <= 100; i++) {
       final metadata = <String, dynamic>{
         'name': 'User $i',
-        'username': 'user_$i', // username은 식별을 위해 항상 포함
+        'username': 'user_$i',
+        'gender': i.isOdd ? 'male' : 'female',
+        'phone_number': '010-${1000 + i}-${2000 + i}',
       };
-
-      // 50번 미만 유저만 상세 정보(인증 상태 가정) 포함
-      if (i < 50) {
-        metadata['username'] = 'user_$i';
-        metadata['gender'] = i.isOdd ? 'male' : 'female';
-        metadata['phone_number'] = '010-${1000 + i}-${2000 + i}';
-      }
 
       await _createAdminUser(
         email: 'user$i@test.com',
@@ -121,151 +70,176 @@ class DatabaseSeeder {
     }
   }
 
-  Future<void> _seedPartners(List<String> globalVerifIds) async {
-    Log.i('🏢 Step 2: Seeding 10 Partners & Staffs...');
-    for (var i = 1; i <= 10; i++) {
-      final partnerName = 'Minglit Shop $i';
+  Future<void> _processSeedData(
+    Map<String, dynamic> seedData,
+    List<String> globalVerifIds,
+  ) async {
+    final partners = seedData['partners'] as List<dynamic>;
+    final genericCount = seedData['generic_partners_count'] as int? ?? 0;
 
-      // ... (Owner creation code remains same) ...
-      // 1. Create Owner User
+    Log.i('🏢 Step 2: Processing ${partners.length} defined partners...');
+
+    // 1. Process Defined Partners (e.g. Partner 1, 2)
+    for (final dynamic p in partners) {
+      final pData = p as Map<String, dynamic>;
+      final index = pData['index'] as int;
+      final partnerName = pData['name'] as String;
+      final email = pData['email'] as String;
+
+      // Create Owner
       final ownerId = await _createAdminUser(
-        email: 'owner$i@test.com',
+        email: email,
         password: 'password',
         metadata: {
-          'name': 'Owner $i ($partnerName)',
-          'username': 'owner_$i',
+          'name': 'Owner $index ($partnerName)',
+          'username': 'owner_$index',
           'gender': 'male',
-          'phone_number': '010-0000-${1000 + i}',
         },
       );
 
-      // 2. Create Partner record
+      // Create Partner
       final partnerRes = await _adminClient
           .from('partners')
           .insert({
             'name': partnerName,
-            'introduction': 'Welcome to $partnerName! Best service guaranteed.',
-            'biz_name': 'Biz $i',
-            'biz_number': '123-45-${60000 + i}',
-            'contact_email': 'owner$i@test.com',
+            'introduction': pData['introduction'] ?? 'Premium Store',
+            'biz_name': pData['biz_name'],
+            'biz_number': pData['biz_number'],
+            'contact_email': email,
           })
           .select('id')
           .single();
       final partnerId = partnerRes['id'] as String;
 
-      // 3. Link Owner
+      // Link Owner
       await _adminClient.from('partner_member_permissions').insert({
         'partner_id': partnerId,
         'user_id': ownerId,
         'role': 'owner',
       });
 
-      // 4. Create 2 Staffs per partner
-      for (var s = 1; s <= 2; s++) {
-        final staffId = await _createAdminUser(
-          email: 'staff$i-$s@test.com',
-          password: 'password',
-          metadata: {
-            'name': 'Staff $i-$s ($partnerName)',
-            'username': 'staff_${i}_$s',
-            'gender': s.isOdd ? 'female' : 'male',
-            'phone_number': '010-1111-${(i * 10) + s}',
-          },
-        );
-
-        await _adminClient.from('partner_member_permissions').insert({
-          'partner_id': partnerId,
-          'user_id': staffId,
-          'role': 'staff',
-        });
-      }
-
-      // 5. Create 1 Location (Gangnam Station style) for each partner
+      // Create Location
       final locationRes = await _adminClient
           .from('locations')
           .insert({
             'partner_id': partnerId,
-            'name': 'Gangnam Station Branch',
-            'address': 'Seoul Gangnam-gu Gangnam-daero 396',
-            'address_detail': 'Exit 11',
-            'region_1': 'Seoul',
-            'region_2': 'Gangnam-gu',
-            'region_3': 'Yeoksam-dong',
+            'name': '$partnerName Main Branch',
+            'address': 'Seoul Gangnam-gu Gangnam-daero ${396 + index}',
             'geo_point': 'POINT(127.0276 37.4979)',
           })
           .select('id')
           .single();
       final locationId = locationRes['id'] as String;
 
-      // 6. Create 1 Party linked to this location
-      // Diverse Scenarios based on loop index
-      List<Map<String, dynamic>> conditions;
-
-      if (i % 3 == 1) {
-        // Scenario A: Male(Job) vs Female(School)
-        conditions = [
-          {
-            'id': const Uuid().v4(),
-            'gender': 'male',
-            'birth_year_range': {'min': 1990, 'max': 2000},
-            'required_verification_ids': globalVerifIds.isNotEmpty
-                ? [globalVerifIds[0]]
-                : <String>[],
-          },
-          {
-            'id': const Uuid().v4(),
-            'gender': 'female',
-            'birth_year_range': {'min': 1995, 'max': 2005},
-            'required_verification_ids': globalVerifIds.length > 1
-                ? [globalVerifIds[1]]
-                : <String>[],
-          },
-        ];
-      } else if (i % 3 == 2) {
-        // Scenario B: Anyone + Job Verification
-        conditions = [
-          {
-            'id': const Uuid().v4(),
-            'gender': null, // Anyone
-            'birth_year_range': null, // Any age
-            'required_verification_ids': globalVerifIds.isNotEmpty
-                ? [globalVerifIds[0]]
-                : <String>[],
-          },
-        ];
-      } else {
-        // Scenario C: 20s Only + No Verification
-        conditions = [
-          {
-            'id': const Uuid().v4(),
-            'gender': null,
-            'birth_year_range': {'min': 1995, 'max': 2004},
-            'required_verification_ids': <String>[],
-          },
-        ];
+      // Create Local Verifications
+      final localVerifIds = <String>[];
+      final verifs = pData['verifications'] as List<dynamic>? ?? [];
+      if (verifs.isNotEmpty) {
+        final localVerifRes = await _adminClient
+            .from('verifications')
+            .insert(
+              verifs.map((dynamic v) {
+                final vMap = v as Map<String, dynamic>;
+                return {...vMap, 'partner_id': partnerId};
+              }).toList(),
+            )
+            .select('id');
+        localVerifIds.addAll(
+          (localVerifRes as List).map(
+            (dynamic e) => (e as Map<String, dynamic>)['id'] as String,
+          ),
+        );
       }
 
-      await _adminClient.from('parties').insert({
-        'partner_id': partnerId,
-        'location_id': locationId,
-        'title': '$partnerName Party (Type ${i % 3})',
-        'description': {
-          'ops': [
-            {'insert': "Let's drink wine!\n"},
-          ],
-        },
-        'min_confirmed_count': 5,
-        'max_participants': 20,
-        'status': 'active',
-        'conditions': conditions,
-        // Legacy field kept for compatibility or removed if schema changed
-        'required_verification_ids': <String>[],
-      });
+      // Create Parties
+      final parties = pData['parties'] as List<dynamic>? ?? [];
+      for (final dynamic pEntry in parties) {
+        final partyData = pEntry as Map<String, dynamic>;
+        final partyId = const Uuid().v4();
+
+        // Map Entry Groups
+        final entryGroups = (partyData['entry_groups'] as List<dynamic>).map((
+          dynamic g,
+        ) {
+          final gMap = g as Map<String, dynamic>;
+          final groupUuid = const Uuid().v4();
+          final requiredIds = <String>[];
+
+          // Add Global Verifs
+          final globalIndices = gMap['use_global_ids'] as List<dynamic>? ?? [];
+          for (final dynamic gi in globalIndices) {
+            final idx = gi as int;
+            if (globalVerifIds.length > idx) {
+              requiredIds.add(globalVerifIds[idx]);
+            }
+          }
+
+          // Add Local Verifs
+          final localIndices =
+              gMap['use_local_indices'] as List<dynamic>? ?? [];
+          for (final dynamic li in localIndices) {
+            final idx = li as int;
+            if (localVerifIds.length > idx) {
+              requiredIds.add(localVerifIds[idx]);
+            }
+          }
+
+          return {
+            'id': groupUuid,
+            'label': gMap['label'],
+            'gender': gMap['gender'],
+            'birth_year_range': gMap['birth_year_range'],
+            'required_verification_ids': requiredIds,
+          };
+        }).toList();
+
+        final allVerifIds = entryGroups
+            .expand((e) => e['required_verification_ids'] as List)
+            .toSet()
+            .toList();
+
+        await _adminClient.from('parties').insert({
+          'id': partyId,
+          'partner_id': partnerId,
+          'location_id': locationId,
+          'title': partyData['title'],
+          'description': {
+            'ops': [
+              {'insert': '${partyData['description']}\n'},
+            ],
+          },
+          'min_confirmed_count': 5,
+          'max_participants': 20,
+          'conditions': entryGroups,
+          'required_verification_ids': allVerifIds,
+        });
+
+        // Create Tickets
+        final tickets = partyData['tickets'] as List<dynamic>? ?? [];
+        await _adminClient
+            .from('tickets')
+            .insert(
+              tickets.map((dynamic t) {
+                final tMap = t as Map<String, dynamic>;
+                final groupIdx = tMap['group_index'] as int;
+                return {
+                  'party_id': partyId,
+                  'name': tMap['name'],
+                  'price': tMap['price'],
+                  'quantity': tMap['quantity'],
+                  'target_entry_group_ids': [entryGroups[groupIdx]['id']],
+                };
+              }).toList(),
+            );
+      }
+    }
+
+    // 2. Create Generic Partners if needed
+    if (genericCount > 0) {
+      Log.i('🏢 Step 3: Seeding $genericCount generic partners...');
     }
   }
 
-  /// Creates a user via Supabase Admin API.
-  /// Deletes existing user if email is already taken for a clean start.
   Future<String> _createAdminUser({
     required String email,
     required String password,
@@ -280,40 +254,24 @@ class DatabaseSeeder {
           userMetadata: metadata,
         ),
       );
-      return res.user!.id;
+      final user = res.user;
+      if (user == null) {
+        throw const MinglitSystemException('User creation failed');
+      }
+      return user.id;
     } on AuthException catch (e) {
       if (e.message.contains('already registered') ||
           e.code == 'email_exists') {
-        // Cleanup and retry
+        final usersRes = await _adminClient.auth.admin.listUsers(perPage: 1000);
         try {
-          // Attempt to find user with pagination (up to 1000 users)
-          final usersRes = await _adminClient.auth.admin.listUsers(
-            perPage: 1000,
-          );
-
-          try {
-            final existing = usersRes.firstWhere((u) => u.email == email);
-            await _adminClient.auth.admin.deleteUser(existing.id);
-            Log.i('♻️ Deleted existing user: $email');
-          } catch (_) {
-            // User not found in list, but create failed?
-            // This is a weird edge case. Just return null or rethrow.
-            Log.w(
-              '''⚠️ User $email creation failed but could not find in list to delete.''',
-            );
-            rethrow;
-          }
-
-          // Retry creation
-          return _createAdminUser(
-            email: email,
-            password: password,
-            metadata: metadata,
-          );
-        } catch (cleanupError) {
-          Log.e('❌ Cleanup failed for $email', cleanupError);
-          rethrow;
-        }
+          final existing = usersRes.firstWhere((u) => u.email == email);
+          await _adminClient.auth.admin.deleteUser(existing.id);
+        } on Object catch (_) {}
+        return _createAdminUser(
+          email: email,
+          password: password,
+          metadata: metadata,
+        );
       }
       rethrow;
     }
