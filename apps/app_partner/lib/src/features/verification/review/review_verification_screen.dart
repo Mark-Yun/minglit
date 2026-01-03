@@ -7,16 +7,16 @@ import 'package:minglit_kit/minglit_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// **Verification Review Page**
-class ReviewVerificationPage extends ConsumerStatefulWidget {
-  const ReviewVerificationPage({super.key});
+class ReviewVerificationScreen extends ConsumerStatefulWidget {
+  const ReviewVerificationScreen({super.key});
 
   @override
-  ConsumerState<ReviewVerificationPage> createState() =>
-      _ReviewVerificationPageState();
+  ConsumerState<ReviewVerificationScreen> createState() =>
+      _ReviewVerificationScreenState();
 }
 
-class _ReviewVerificationPageState
-    extends ConsumerState<ReviewVerificationPage> {
+class _ReviewVerificationScreenState
+    extends ConsumerState<ReviewVerificationScreen> {
   bool _isLoading = false;
   List<Map<String, dynamic>> _pendingRequests = [];
 

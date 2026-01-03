@@ -42,7 +42,7 @@ final class CurrentPartnerInfoProvider
 }
 
 String _$currentPartnerInfoHash() =>
-    r'adcc4017e5bc8e8c6c631aa01f98f1b5b4c7a456';
+    r'c0296f7da2cb82e41e8b5b524d60f45e9808a3aa';
 
 @ProviderFor(partyVerificationTypes)
 const partyVerificationTypesProvider = PartyVerificationTypesProvider._();

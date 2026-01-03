@@ -1,5 +1,5 @@
 import 'package:app_partner/src/features/admin/partner_application_detail_page.dart';
-import 'package:app_partner/src/features/verification/review_verification_page.dart';
+import 'package:app_partner/src/features/verification/review/review_verification_screen.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -71,7 +71,7 @@ class PartnerDevMap extends StatelessWidget {
             category: 'Verification',
             title: 'User Verifications',
             description: '사용자 인증(PASS/재직) 요청 심사',
-            screenBuilder: (_) => const ReviewVerificationPage(),
+            screenBuilder: (_) => const ReviewVerificationScreen(),
           ),
           DevScreenItem(
             category: 'Preview',

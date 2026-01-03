@@ -12,7 +12,7 @@ import 'package:app_partner/src/features/party/event/detail/event_detail_page.da
 import 'package:app_partner/src/features/party/list/party_list_page.dart';
 import 'package:app_partner/src/features/ticket/create/ticket_create_page.dart';
 import 'package:app_partner/src/features/ticket/edit/ticket_edit_page.dart';
-import 'package:app_partner/src/features/verification/create_verification_screen.dart';
+import 'package:app_partner/src/features/verification/create/create_verification_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
