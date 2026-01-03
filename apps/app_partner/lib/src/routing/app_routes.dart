@@ -7,7 +7,7 @@ import 'package:app_partner/src/features/event/detail/event_detail_page.dart';
 import 'package:app_partner/src/features/home/partner_home_page.dart';
 import 'package:app_partner/src/features/member/partner_member_list_page.dart';
 import 'package:app_partner/src/features/member/partner_member_permission_page.dart';
-import 'package:app_partner/src/features/party/create/wizard/party_create_wizard_page.dart';
+import 'package:app_partner/src/features/party/create/party_create_wizard_page.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_page.dart';
 import 'package:app_partner/src/features/party/list/party_list_page.dart';
 import 'package:app_partner/src/features/ticket/create/ticket_create_page.dart';

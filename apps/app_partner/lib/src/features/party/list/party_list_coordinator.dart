@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:app_partner/src/features/party/create/party_create_screen.dart';
+import 'package:app_partner/src/features/party/create/party_create_wizard_page.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_page.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +17,7 @@ class PartyListCoordinator {
       unawaited(
         Navigator.of(context).push(
           MaterialPageRoute<void>(
-            builder: (_) => const PartyCreateScreen(),
+            builder: (_) => const PartyCreateWizardPage(),
           ),
         ),
       );

@@ -1,5 +1,5 @@
-import 'package:app_partner/src/features/party/create/party_create_controller.dart';
-import 'package:app_partner/src/features/party/create/wizard/party_create_wizard_controller.dart';
+import 'package:app_partner/src/features/party/create/party_create_wizard_controller.dart';
+import 'package:app_partner/src/features/party/party_providers.dart';
 import 'package:app_partner/src/features/party/widgets/party_capacity_contact_form.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';

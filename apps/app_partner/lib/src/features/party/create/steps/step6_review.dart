@@ -1,4 +1,4 @@
-import 'package:app_partner/src/features/party/create/wizard/party_create_wizard_controller.dart';
+import 'package:app_partner/src/features/party/create/party_create_wizard_controller.dart';
 import 'package:app_partner/src/features/party/widgets/party_capacity_contact_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_location_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_tickets_summary.dart';

@@ -1,5 +1,5 @@
-import 'package:app_partner/src/features/party/create/party_create_controller.dart';
 import 'package:app_partner/src/features/party/create/party_create_coordinator.dart';
+import 'package:app_partner/src/features/party/party_providers.dart';
 import 'package:app_partner/src/features/party/widgets/party_verification_selector.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';

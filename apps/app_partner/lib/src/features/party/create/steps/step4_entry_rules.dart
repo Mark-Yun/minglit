@@ -1,4 +1,4 @@
-import 'package:app_partner/src/features/party/create/wizard/party_create_wizard_controller.dart';
+import 'package:app_partner/src/features/party/create/party_create_wizard_controller.dart';
 import 'package:app_partner/src/features/party/entry_group/entry_group_editor_screen.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';

@@ -1,12 +1,12 @@
 import 'dart:async';
 
-import 'package:app_partner/src/features/party/create/wizard/party_create_wizard_controller.dart';
-import 'package:app_partner/src/features/party/create/wizard/steps/step1_basic_info.dart';
-import 'package:app_partner/src/features/party/create/wizard/steps/step2_location.dart';
-import 'package:app_partner/src/features/party/create/wizard/steps/step3_capacity_contact.dart';
-import 'package:app_partner/src/features/party/create/wizard/steps/step4_entry_rules.dart';
-import 'package:app_partner/src/features/party/create/wizard/steps/step5_tickets.dart';
-import 'package:app_partner/src/features/party/create/wizard/steps/step6_review.dart';
+import 'package:app_partner/src/features/party/create/party_create_wizard_controller.dart';
+import 'package:app_partner/src/features/party/create/steps/step1_basic_info.dart';
+import 'package:app_partner/src/features/party/create/steps/step2_location.dart';
+import 'package:app_partner/src/features/party/create/steps/step3_capacity_contact.dart';
+import 'package:app_partner/src/features/party/create/steps/step4_entry_rules.dart';
+import 'package:app_partner/src/features/party/create/steps/step5_tickets.dart';
+import 'package:app_partner/src/features/party/create/steps/step6_review.dart';
 import 'package:app_partner/src/utils/error_handler.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';

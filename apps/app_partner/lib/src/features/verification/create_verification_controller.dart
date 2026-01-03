@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:app_partner/src/features/party/create/party_create_controller.dart';
+import 'package:app_partner/src/features/party/party_providers.dart';
 import 'package:async/async.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:minglit_kit/minglit_kit.dart';
