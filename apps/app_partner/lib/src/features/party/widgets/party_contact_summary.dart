@@ -1,30 +1,29 @@
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 class PartyContactSummary extends StatelessWidget {
   const PartyContactSummary({
     required this.contactOptions,
     required this.enabledContactMethods,
-    this.showError = false,
     super.key,
   });
 
   final Map<String, dynamic> contactOptions;
   final Set<String> enabledContactMethods;
-  final bool showError;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    if (enabledContactMethods.isEmpty && showError) {
+    if (enabledContactMethods.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.only(top: 4),
+        padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.small),
         child: Text(
           context.l10n.wizard_review_empty_contact,
           style: theme.textTheme.bodySmall?.copyWith(
-            color: colorScheme.error,
+            color: colorScheme.onSurfaceVariant,
           ),
         ),
       );
@@ -82,6 +81,7 @@ class PartyContactSummary extends StatelessWidget {
             value,
             style: theme.textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurface,
             ),
           ),
         ],

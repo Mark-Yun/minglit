@@ -25,7 +25,7 @@ class MinglitSplashScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const MinglitImage(
-              assetPath:
+              path:
                   'packages/minglit_kit/assets/images/minglit_app_bar_logo.png',
               height: 64,
             ),

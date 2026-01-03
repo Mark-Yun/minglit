@@ -43,7 +43,7 @@ class Step6Review extends ConsumerWidget {
               title: state.title,
               description: state.description,
               imageFile: state.imageFile,
-              showError: true,
+              collapsible: true,
             ),
           ),
 
@@ -77,7 +77,6 @@ class Step6Review extends ConsumerWidget {
                     'kakao': state.contactKakao,
                   },
                   enabledContactMethods: state.enabledContactMethods,
-                  showError: true,
                 ),
               ],
             ),

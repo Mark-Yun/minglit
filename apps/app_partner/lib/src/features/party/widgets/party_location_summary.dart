@@ -13,7 +13,6 @@ class PartyLocationSummary extends StatelessWidget {
     this.directionsGuide,
     this.onEditLocation,
     this.onEditDetail,
-    this.showError = false,
     super.key,
   });
 
@@ -22,7 +21,6 @@ class PartyLocationSummary extends StatelessWidget {
   final String? directionsGuide;
   final VoidCallback? onEditLocation;
   final VoidCallback? onEditDetail;
-  final bool showError;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +31,7 @@ class PartyLocationSummary extends StatelessWidget {
       final emptyText = Text(
         context.l10n.partyDetail_empty_location,
         style: theme.textTheme.bodyMedium?.copyWith(
-          color: showError ? colorScheme.error : colorScheme.onSurfaceVariant,
+          color: colorScheme.onSurfaceVariant,
         ),
       );
 
@@ -50,9 +48,7 @@ class PartyLocationSummary extends StatelessWidget {
           color: colorScheme.surface,
           borderRadius: BorderRadius.circular(MinglitRadius.card),
           border: Border.all(
-            color: showError
-                ? colorScheme.error.withValues(alpha: 0.5)
-                : colorScheme.outlineVariant.withValues(alpha: 0.5),
+            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
           ),
         ),
         child: Column(
@@ -150,64 +146,47 @@ class PartyLocationSummary extends StatelessWidget {
           style: theme.textTheme.titleMedium,
         ),
         const SizedBox(height: MinglitSpacing.small),
-        Container(
-          padding: const EdgeInsets.all(MinglitSpacing.medium),
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(MinglitRadius.card),
-            border: Border.all(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (addressDetail != null && addressDetail!.isNotEmpty)
-                _buildDetailItem(
-                  context,
-                  Icons.apartment,
-                  context.l10n.partyCreate_label_addressDetail,
-                  addressDetail!,
-                )
-              else if (showError)
-                _buildMissingItem(context, '상세 주소가 입력되지 않았습니다.'),
-
-              if (directionsGuide != null && directionsGuide!.isNotEmpty)
-                _buildDetailItem(
-                  context,
-                  Icons.directions,
-                  context.l10n.partyCreate_label_directions,
-                  directionsGuide!,
-                )
-              else if (showError)
-                _buildMissingItem(context, '오시는 길 안내가 입력되지 않았습니다.'),
-
-              if ((addressDetail == null || addressDetail!.isEmpty) &&
-                  (directionsGuide == null || directionsGuide!.isEmpty) &&
-                  !showError)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: MinglitSpacing.small),
-                  child: Text(
-                    context.l10n.partyDetail_empty_locationDetail,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (addressDetail != null && addressDetail!.isNotEmpty)
+              _buildDetailItem(
+                context,
+                Icons.apartment,
+                context.l10n.partyCreate_label_addressDetail,
+                addressDetail!,
+              ),
+            if (directionsGuide != null && directionsGuide!.isNotEmpty)
+              _buildDetailItem(
+                context,
+                Icons.directions,
+                context.l10n.partyCreate_label_directions,
+                directionsGuide!,
+              ),
+            if ((addressDetail == null || addressDetail!.isEmpty) &&
+                (directionsGuide == null || directionsGuide!.isEmpty))
+              Padding(
+                padding: const EdgeInsets.only(bottom: MinglitSpacing.small),
+                child: Text(
+                  context.l10n.partyDetail_empty_locationDetail,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
-              if (onEditDetail != null) ...[
-                const SizedBox(height: MinglitSpacing.xsmall),
-                if ((addressDetail?.isNotEmpty ?? false) ||
-                    (directionsGuide?.isNotEmpty ?? false))
-                  const Divider(),
-                const SizedBox(height: MinglitSpacing.xsmall),
-                AddActionCard(
-                  title: '상세 정보 수정',
-                  iconData: Icons.edit_note,
-                  onTap: onEditDetail!,
-                ),
-              ],
+              ),
+            if (onEditDetail != null) ...[
+              const SizedBox(height: MinglitSpacing.xsmall),
+              if ((addressDetail?.isNotEmpty ?? false) ||
+                  (directionsGuide?.isNotEmpty ?? false))
+                const Divider(),
+              const SizedBox(height: MinglitSpacing.xsmall),
+              AddActionCard(
+                title: '상세 정보 수정',
+                iconData: Icons.edit_note,
+                onTap: onEditDetail!,
+              ),
             ],
-          ),
+          ],
         ),
       ],
     );
@@ -244,19 +223,6 @@ class PartyLocationSummary extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildMissingItem(BuildContext context, String message) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        message,
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: theme.colorScheme.error,
-        ),
       ),
     );
   }

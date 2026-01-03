@@ -38,7 +38,7 @@ class MinglitLoginScreen extends StatelessWidget {
               const Spacer(),
               // 1. Logo & Slogan
               const MinglitImage(
-                assetPath:
+                path:
                     'packages/minglit_kit/assets/images/minglit_app_bar_logo.png',
                 height: 64,
               ),

@@ -1,25 +1,45 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
 /// A smart image widget that shows a shimmer effect while loading.
+/// Handles network URLs, assets, and local file paths (including Web blobs).
 class MinglitImage extends StatelessWidget {
   const MinglitImage({
-    required this.assetPath,
+    required this.path,
     super.key,
     this.height,
     this.width,
     this.fit = BoxFit.contain,
   });
 
-  final String assetPath;
+  final String path;
   final double? height;
   final double? width;
   final BoxFit fit;
 
+  bool get _isNetwork => path.startsWith('http');
+  bool get _isAsset =>
+      !path.startsWith('http') &&
+      !path.startsWith('blob:') &&
+      !path.contains('/');
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
-      assetPath,
+    ImageProvider provider;
+
+    if (_isNetwork) {
+      provider = NetworkImage(path);
+    } else if (kIsWeb && path.startsWith('blob:')) {
+      // Web blobs are handled like network images in Flutter Web
+      provider = NetworkImage(path);
+    } else if (_isAsset) {
+      provider = AssetImage(path);
+    } else {
+      // Assuming it's a file path for native or other types of paths
+      provider = AssetImage(path);
+    }
+    return Image(
+      image: provider,
       height: height,
       width: width,
       fit: fit,
@@ -44,7 +64,10 @@ class MinglitImage extends StatelessWidget {
         return Container(
           height: height,
           width: width,
-          color: Colors.grey[100],
+          decoration: BoxDecoration(
+            color: Colors.grey[100],
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: const Icon(Icons.broken_image, color: Colors.grey),
         );
       },

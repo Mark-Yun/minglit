@@ -18,13 +18,28 @@ class PartyEntranceConditionSummary extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
 
     if (entryGroups.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.small),
-        child: Text(
-          '입장 조건이 없습니다.',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-          ),
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(MinglitSpacing.large),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(MinglitRadius.card),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.assignment_ind_outlined,
+              size: 32,
+              color: colorScheme.outline,
+            ),
+            const SizedBox(height: MinglitSpacing.small),
+            Text(
+              context.l10n.partyCreate_empty_entryGroups,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.outline,
+              ),
+            ),
+          ],
         ),
       );
     }
