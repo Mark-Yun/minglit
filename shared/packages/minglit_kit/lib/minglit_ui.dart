@@ -12,6 +12,7 @@ export 'src/features/loading/minglit_global_loading_overlay.dart';
 // Theme
 export 'src/theme/minglit_theme.dart';
 export 'src/ui/screens/auth/minglit_login_screen.dart';
+export 'src/ui/screens/search/location_search_screen.dart';
 // Common Widgets (UI)
 export 'src/ui/widgets/common/add_action_card.dart';
 export 'src/ui/widgets/common/entry_group_detail.dart';

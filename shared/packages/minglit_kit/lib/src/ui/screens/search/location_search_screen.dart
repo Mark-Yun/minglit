@@ -1,15 +1,15 @@
-import 'package:app_partner/src/features/search/location/location_search_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-class LocationSearchPage extends ConsumerStatefulWidget {
-  const LocationSearchPage({super.key});
+class LocationSearchScreen extends ConsumerStatefulWidget {
+  const LocationSearchScreen({super.key});
 
   @override
-  ConsumerState<LocationSearchPage> createState() => _LocationSearchPageState();
+  ConsumerState<LocationSearchScreen> createState() =>
+      _LocationSearchScreenState();
 }
 
-class _LocationSearchPageState extends ConsumerState<LocationSearchPage> {
+class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
   final _searchController = TextEditingController();
 
   @override

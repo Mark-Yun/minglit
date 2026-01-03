@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
-import 'package:app_partner/src/features/search/location/location_search_page.dart';
 import 'package:app_partner/src/routing/app_router.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:app_partner/src/utils/error_handler.dart';
@@ -30,7 +29,7 @@ class PartyDetailCoordinator {
   Future<Location?> goToLocationSearch(BuildContext context) async {
     return Navigator.of(context).push<Location>(
       MaterialPageRoute(
-        builder: (_) => const LocationSearchPage(),
+        builder: (_) => const LocationSearchScreen(),
         fullscreenDialog: true,
       ),
     );

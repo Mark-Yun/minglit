@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
-import 'package:app_partner/src/features/party/entry_group/entry_group_editor_screen.dart';
+import 'package:app_partner/src/features/party/ticket/entry_group_editor_screen.dart';
 import 'package:app_partner/src/features/party/widgets/party_capacity_input.dart';
 import 'package:app_partner/src/features/party/widgets/party_capacity_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_contact_input.dart';
