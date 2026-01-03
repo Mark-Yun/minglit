@@ -148,6 +148,18 @@ abstract class AppLocalizations {
   /// **'삭제되었습니다.'**
   String get common_message_deleted;
 
+  /// No description provided for @common_unit_person.
+  ///
+  /// In ko, this message translates to:
+  /// **'명'**
+  String get common_unit_person;
+
+  /// No description provided for @common_label_kakao.
+  ///
+  /// In ko, this message translates to:
+  /// **'카카오톡'**
+  String get common_label_kakao;
+
   /// No description provided for @home_welcome_user.
   ///
   /// In ko, this message translates to:

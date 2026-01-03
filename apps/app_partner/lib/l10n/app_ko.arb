@@ -15,6 +15,8 @@
   "common_error_system": "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
   "common_message_saved": "저장되었습니다.",
   "common_message_deleted": "삭제되었습니다.",
+  "common_unit_person": "명",
+  "common_label_kakao": "카카오톡",
 
   "home_welcome_user": "사장님({email}) 환영합니다!",
   "@home_welcome_user": {

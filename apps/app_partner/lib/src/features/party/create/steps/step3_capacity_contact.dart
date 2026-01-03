@@ -1,6 +1,8 @@
 import 'package:app_partner/src/features/party/create/party_create_wizard_controller.dart';
 import 'package:app_partner/src/features/party/party_providers.dart';
-import 'package:app_partner/src/features/party/widgets/party_capacity_contact_form.dart';
+import 'package:app_partner/src/features/party/widgets/party_capacity_input.dart';
+import 'package:app_partner/src/features/party/widgets/party_contact_input.dart';
+import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -67,21 +69,44 @@ class _Step3CapacityContactState extends ConsumerState<Step3CapacityContact> {
       }
     });
 
+    final theme = Theme.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(MinglitSpacing.medium),
-      child: PartyCapacityContactForm(
-        minCount: state.minConfirmedCount,
-        maxCount: state.maxParticipants,
-        phoneController: _phoneController,
-        emailController: _emailController,
-        kakaoController: _kakaoController,
-        enabledMethods: state.enabledContactMethods,
-        onMinChanged: (val) => notifier.updateCapacity(min: val),
-        onMaxChanged: (val) => notifier.updateCapacity(max: val),
-        onToggleMethod: notifier.toggleContactMethod,
-        onPhoneChanged: notifier.updateContactPhone,
-        onEmailChanged: notifier.updateContactEmail,
-        onKakaoChanged: notifier.updateContactKakao,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.l10n.partyCreate_label_capacity,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.medium),
+          PartyCapacityInput(
+            minCount: state.minConfirmedCount,
+            maxCount: state.maxParticipants,
+            onMinChanged: (val) => notifier.updateCapacity(min: val),
+            onMaxChanged: (val) => notifier.updateCapacity(max: val),
+          ),
+          const SizedBox(height: MinglitSpacing.large),
+          Text(
+            context.l10n.partyCreate_label_contact,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.medium),
+          PartyContactInput(
+            phoneController: _phoneController,
+            emailController: _emailController,
+            kakaoController: _kakaoController,
+            enabledMethods: state.enabledContactMethods,
+            onToggleMethod: notifier.toggleContactMethod,
+            onPhoneChanged: notifier.updateContactPhone,
+            onEmailChanged: notifier.updateContactEmail,
+            onKakaoChanged: notifier.updateContactKakao,
+          ),
+        ],
       ),
     );
   }

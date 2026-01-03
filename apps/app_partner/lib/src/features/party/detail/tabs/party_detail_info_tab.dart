@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
 import 'package:app_partner/src/features/party/entry_group/entry_group_editor_screen.dart';
-import 'package:app_partner/src/features/party/widgets/party_capacity_contact_form.dart';
-import 'package:app_partner/src/features/party/widgets/party_capacity_contact_summary.dart';
+import 'package:app_partner/src/features/party/widgets/party_capacity_input.dart';
+import 'package:app_partner/src/features/party/widgets/party_capacity_summary.dart';
+import 'package:app_partner/src/features/party/widgets/party_contact_input.dart';
+import 'package:app_partner/src/features/party/widgets/party_contact_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_entrance_condition_section.dart';
 import 'package:app_partner/src/features/party/widgets/party_location_summary.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
@@ -33,16 +35,24 @@ class PartyDetailInfoTab extends ConsumerWidget {
             style: theme.textTheme.titleMedium,
           ),
           const SizedBox(height: MinglitSpacing.small),
-          PartyCapacityContactSummary(
+          PartyCapacitySummary(
             minCount: party.minConfirmedCount,
             maxCount: party.maxParticipants,
+          ),
+          const SizedBox(height: MinglitSpacing.small),
+          PartyContactSummary(
             contactOptions: party.contactOptions,
             enabledContactMethods: Set<String>.from(
               party.contactOptions.keys.map(
                 (k) => k == 'kakao_open_chat' ? 'kakao' : k,
               ),
             ),
-            onEdit: () => _showCapacityContactEditSheet(context, ref, party),
+          ),
+          const SizedBox(height: MinglitSpacing.medium),
+          AddActionCard(
+            title: '인원 및 연락처 수정',
+            iconData: Icons.edit_outlined,
+            onTap: () => _showCapacityContactEditSheet(context, ref, party),
           ),
 
           const SizedBox(height: MinglitSpacing.large),
@@ -184,15 +194,34 @@ class PartyDetailInfoTab extends ConsumerWidget {
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: MinglitSpacing.large),
-                      PartyCapacityContactForm(
+                      Text(
+                        context.l10n.partyCreate_label_capacity,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: MinglitSpacing.medium),
+                      PartyCapacityInput(
                         minCount: minCount,
                         maxCount: maxCount,
+                        onMinChanged: (val) => setState(() => minCount = val),
+                        onMaxChanged: (val) => setState(() => maxCount = val),
+                      ),
+                      const SizedBox(height: MinglitSpacing.large),
+                      Text(
+                        context.l10n.partyCreate_label_contact,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: MinglitSpacing.medium),
+                      PartyContactInput(
                         phoneController: phoneController,
                         emailController: emailController,
                         kakaoController: kakaoController,
                         enabledMethods: enabledMethods,
-                        onMinChanged: (val) => setState(() => minCount = val),
-                        onMaxChanged: (val) => setState(() => maxCount = val),
                         onToggleMethod: (method) {
                           setState(() {
                             if (enabledMethods.contains(method)) {

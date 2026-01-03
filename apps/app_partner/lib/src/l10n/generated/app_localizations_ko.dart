@@ -36,6 +36,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get common_message_deleted => '삭제되었습니다.';
 
   @override
+  String get common_unit_person => '명';
+
+  @override
+  String get common_label_kakao => '카카오톡';
+
+  @override
   String home_welcome_user(String email) {
     return '사장님($email) 환영합니다!';
   }
