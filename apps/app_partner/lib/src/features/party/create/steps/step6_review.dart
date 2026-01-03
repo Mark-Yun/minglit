@@ -55,7 +55,6 @@ class Step6Review extends ConsumerWidget {
               location: state.selectedLocation,
               addressDetail: state.addressDetail,
               directionsGuide: state.directionsGuide,
-              showError: false,
             ),
           ),
 
