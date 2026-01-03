@@ -1,4 +1,5 @@
 import 'package:app_partner/src/features/event/create/event_create_controller.dart';
+import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -118,7 +119,7 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: MinglitTheme.simpleAppBar(title: '새 회차(이벤트) 만들기'),
+      appBar: MinglitTheme.simpleAppBar(title: context.l10n.eventCreate_title),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(MinglitSpacing.medium),
         child: Form(
@@ -128,14 +129,17 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
             children: [
               TextFormField(
                 controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: '회차 제목 (선택)',
+                decoration: InputDecoration(
+                  labelText: context.l10n.eventCreate_label_title,
                   hintText: '예: 할로윈 특집 (미입력시 파티 제목 사용)',
                 ),
               ),
               const SizedBox(height: MinglitSpacing.large),
 
-              Text('일시', style: theme.textTheme.titleMedium),
+              Text(
+                context.l10n.eventDetail_label_dateTime,
+                style: theme.textTheme.titleMedium,
+              ),
               const SizedBox(height: MinglitSpacing.small),
               ListTile(
                 contentPadding: EdgeInsets.zero,
@@ -171,13 +175,17 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
               TextFormField(
                 controller: _maxParticipantsController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: '최대 정원',
+                decoration: InputDecoration(
+                  labelText: context.l10n.eventCreate_label_maxParticipants,
                   suffixText: '명',
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) return '정원을 입력해주세요';
-                  if (int.tryParse(value) == null) return '숫자만 입력해주세요';
+                  if (value == null || value.isEmpty) {
+                    return context.l10n.partnerApplication_error_required;
+                  }
+                  if (int.tryParse(value) == null) {
+                    return '숫자만 입력해주세요';
+                  }
                   return null;
                 },
               ),

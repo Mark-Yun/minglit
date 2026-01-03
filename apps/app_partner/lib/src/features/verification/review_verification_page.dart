@@ -7,14 +7,6 @@ import 'package:minglit_kit/minglit_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// **Verification Review Page**
-///
-/// Allows partners to review pending verification requests from users.
-///
-/// **Features:**
-/// - **Load**: Fetches pending requests via [verificationRepositoryProvider].
-/// - **Approve**: Grants verification.
-/// - **Reject/Correct**: Sends requests back to the user with a reason.
-/// - **Interact**: View images and chat history.
 class ReviewVerificationPage extends ConsumerStatefulWidget {
   const ReviewVerificationPage({super.key});
 
@@ -213,10 +205,9 @@ class _ReviewVerificationPageState
   Widget _buildRequestCard(Map<String, dynamic> req) {
     final user = req['user'] as Map<String, dynamic>? ?? {};
     final claim = req['snapshot_data'] as Map<String, dynamic>? ?? {};
-    // Extract proof images from snapshot_data if they exist
     final images = claim.values
         .whereType<String>()
-        .where((val) => val.contains('/')) // Simple check for path-like strings
+        .where((val) => val.contains('/'))
         .toList();
 
     return Card(
@@ -249,8 +240,6 @@ class _ReviewVerificationPageState
                   ),
                 ),
             const SizedBox(height: 16),
-
-            // 이미지 썸네일
             if (images.isNotEmpty)
               SizedBox(
                 height: 80,
@@ -271,7 +260,6 @@ class _ReviewVerificationPageState
                   ),
                 ),
               ),
-
             const SizedBox(height: 20),
             Row(
               children: [

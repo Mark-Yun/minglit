@@ -11,9 +11,19 @@
   "common_button_save": "저장하기",
   "common_button_edit": "수정하기",
   "common_button_delete": "삭제하기",
+  "common_button_retry": "다시 시도",
   "common_error_system": "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
   "common_message_saved": "저장되었습니다.",
   "common_message_deleted": "삭제되었습니다.",
+
+  "home_welcome_user": "사장님({email}) 환영합니다!",
+  "@home_welcome_user": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  },
+  "home_button_manageParties": "파티 및 회차 관리",
+  "home_button_logout": "로그아웃",
 
   "partyDetail_section_entranceCondition": "입장 조건 (기본)",
   "partyDetail_section_verification": "참가 자격 (인증)",
@@ -23,35 +33,37 @@
   "partyDetail_section_tickets": "등록된 티켓 현황",
   "partyDetail_message_activated": "파티가 활성화되었습니다.",
   "partyDetail_message_deactivated": "파티가 비활성화(보관)되었습니다.",
+  "partyDetail_message_locationUpdated": "장소가 수정되었습니다.",
+  "partyDetail_message_locationDetailUpdated": "장소 상세 정보가 수정되었습니다.",
+  "partyDetail_empty_location": "지정된 장소 정보가 없습니다.",
+  "partyDetail_empty_locationDetail": "등록된 상세 정보가 없습니다.",
+  "partyDetail_empty_verifications": "설정된 참가 자격이 없습니다 (누구나 참여 가능)",
+  "partyDetail_error_locationLoad": "장소 로드 실패: {error}",
+  "@partyDetail_error_locationLoad": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "partyDetail_error_locationDetailLoad": "상세 정보 로드 실패: {error}",
+  "@partyDetail_error_locationDetailLoad": {
+    "placeholders": { "error": { "type": "String" } }
+  },
   "partyDetail_menu_edit": "파티 정보 수정",
   "partyDetail_menu_activate": "파티 다시 활성화",
   "partyDetail_menu_deactivate": "파티 비활성화 (보관)",
   "partyDetail_button_createEvent": "새로운 회차 개설하기",
   "partyDetail_subtitle_createEvent": "새로운 날짜와 시간에 파티를 열어보세요.",
   "partyDetail_message_ticketAdded": "티켓 템플릿이 추가되었습니다.",
+  "partyDetail_message_entryGroupUpdated": "입장 그룹이 수정되었습니다.",
   "partyDetail_error_eventLoad": "이벤트 로드 실패: {error}",
   "@partyDetail_error_eventLoad": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
+    "placeholders": { "error": { "type": "String" } }
   },
   "partyDetail_error_ticketLoad": "티켓 로드 실패: {error}",
   "@partyDetail_error_ticketLoad": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
+    "placeholders": { "error": { "type": "String" } }
   },
   "partyDetail_error_partyLoad": "파티 로드 실패: {error}",
   "@partyDetail_error_partyLoad": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
+    "placeholders": { "error": { "type": "String" } }
   },
 
   "partyList_badge_active": "운영중",
@@ -59,22 +71,18 @@
   "partyList_badge_draft": "임시저장",
   "partyList_chip_maxParticipants": "최대 {count}명",
   "@partyList_chip_maxParticipants": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
+    "placeholders": { "count": { "type": "int" } }
   },
   "partyList_chip_requiredVerifications": "인증 {count}개 필요",
   "@partyList_chip_requiredVerifications": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
+    "placeholders": { "count": { "type": "int" } }
   },
   "partyList_chip_noVerification": "인증 불필요",
   "partyList_message_noLocation": "지정된 장소 없음",
+  "partyList_error_load": "오류가 발생했습니다: {error}",
+  "@partyList_error_load": {
+    "placeholders": { "error": { "type": "String" } }
+  },
 
   "reviewVerification_title_pending": "인증 심사 대기열",
   "reviewVerification_message_empty": "모든 심사가 완료되었습니다! 🎉",
@@ -89,16 +97,16 @@
   "reviewVerification_dialog_correction_send": "보완 요청 전송",
   "reviewVerification_chat_title": "유저와 대화",
   "reviewVerification_message_processComplete": "처리가 완료되었습니다.",
+  "reviewVerification_error_load": "인증 목록 로드 실패: {error}",
+  "@reviewVerification_error_load": {
+    "placeholders": { "error": { "type": "String" } }
+  },
 
   "partnerApplication_title": "파트너 입점 신청",
   "partnerApplication_status_dialogTitle": "신청 현황",
   "partnerApplication_status_dialogContent": "현재 가입 신청이 [{status}] 상태입니다. 심사가 완료될 때까지 기다려 주세요.",
   "@partnerApplication_status_dialogContent": {
-    "placeholders": {
-      "status": {
-        "type": "String"
-      }
-    }
+    "placeholders": { "status": { "type": "String" } }
   },
   "partnerApplication_message_missingFiles": "필수 서류를 모두 업로드해 주세요.",
   "partnerApplication_dialog_successTitle": "신청 완료",
@@ -149,6 +157,20 @@
   "memberPermission_button_save": "변경 사항 저장",
   "memberPermission_message_saved": "저장되었습니다.",
   "memberPermission_error_saveFailed": "권한 설정 저장 중 오류가 발생했습니다.",
+  "memberList_title": "직원 관리",
+  "memberList_button_add": "직원 추가",
+  "memberList_empty": "등록된 직원이 없습니다.",
+  "memberList_label_roleAndEmail": "역할: {role} ({email})",
+  "@memberList_label_roleAndEmail": {
+    "placeholders": {
+      "role": { "type": "String" },
+      "email": { "type": "String" }
+    }
+  },
+  "memberList_error_load": "목록을 불러오지 못했습니다.\n{error}",
+  "@memberList_error_load": {
+    "placeholders": { "error": { "type": "String" } }
+  },
   
   "permission_PARTNER_EDIT": "파트너 정보 수정",
   "permission_SETTLEMENT_VIEW": "정산 정보 조회",
@@ -178,11 +200,7 @@
   "appDetail_message_downloadNotImpl": "파일 다운로드 기능 구현 필요",
   "appDetail_message_processed": "처리되었습니다 ({status})",
   "@appDetail_message_processed": {
-    "placeholders": {
-      "status": {
-        "type": "String"
-      }
-    }
+    "placeholders": { "status": { "type": "String" } }
   },
   "appDetail_error_processFailed": "신청서 상태 변경에 실패했습니다.",
 
@@ -206,6 +224,9 @@
   "wizard_review_descriptionDone": "상세 설명이 작성되었습니다.",
   "wizard_review_noLocation": "장소 미지정",
   "wizard_review_successMessage": "파티가 성공적으로 생성되었습니다.",
+  "wizard_review_empty_entryGroups": "입장 그룹이 없습니다.",
+  "wizard_review_empty_tickets": "티켓이 없습니다.",
+  "wizard_review_empty_contact": "연락처가 선택되지 않았습니다.",
 
   "partyCreate_label_title": "파티 제목",
   "partyCreate_hint_title": "예: 강남역 불금 와인 파티",
@@ -219,9 +240,13 @@
   "partyCreate_label_directions": "오시는 길 안내 (선택)",
   "partyCreate_hint_directions": "예: 강남역 11번 출구에서 도보 5분 거리입니다.",
   "partyCreate_message_selectLocationFirst": "장소를 먼저 선택해주세요.",
+  "partyCreate_message_addressCopied": "주소가 클립보드에 복사되었습니다.",
   
   "partyCreate_label_capacity": "모집 인원",
   "partyCreate_label_contact": "문의 연락처",
+  "partyCreate_label_phone": "전화번호",
+  "partyCreate_label_email": "이메일",
+  "partyCreate_label_kakao": "오픈카카오톡 링크 (선택)",
   "partyCreate_info_loadingPartner": "파트너 정보 불러오는 중...",
   
   "partyCreate_title_entryRules": "누가 파티에 입장할 수 있나요?",
@@ -231,19 +256,18 @@
   "partyCreate_subtitle_addEntryGroup": "새로운 입장 조건을 설정합니다.",
   "partyCreate_label_entryGroupHeader": "입장 그룹 {index}",
   "@partyCreate_label_entryGroupHeader": {
-    "placeholders": {
-      "index": {
-        "type": "int"
-      }
-    }
+    "placeholders": { "index": { "type": "int" } }
   },
   
   "partyCreate_title_tickets": "티켓을 만들어주세요.",
   "partyCreate_desc_tickets": "위에서 설정한 입장 그룹에 해당하는 티켓을 자유롭게 구성할 수 있습니다.",
+  "partyCreate_button_submit": "파티 생성 완료",
   
   "entryGroup_title_add": "입장 그룹 추가",
   "entryGroup_title_edit": "입장 그룹 수정",
   "entryGroup_label_gender": "성별",
+  "entryGroup_label_genderFilter": "성별 제한",
+  "entryGroup_label_ageFilter": "나이 제한 (출생년도)",
   "entryGroup_option_any": "제한 없음",
   "entryGroup_option_male": "남성",
   "entryGroup_option_female": "여성",
@@ -287,16 +311,25 @@
   "ticketList_status_soldOut": "판매중지",
   "ticketList_label_sold": "{count}매 판매",
   "@ticketList_label_sold": {
-    "placeholders": {
-      "count": { "type": "int" }
-    }
+    "placeholders": { "count": { "type": "int" } }
   },
 
-  "ticketCreate_title": "기본 티켓 추가",
-  "ticketCreate_label_name": "티켓 이름",
-  "ticketCreate_hint_name": "예: 얼리버드 남성",
-  "ticketCreate_label_price": "가격",
-  "ticketCreate_label_quantity": "기본 수량",
-  "ticketCreate_label_gender": "구매 가능 성별",
-  "ticketCreate_button_add": "추가하기"
+  "eventCreate_title": "새 회차(이벤트) 만들기",
+  "eventCreate_label_title": "회차 제목 (선택)",
+  "eventCreate_label_maxParticipants": "최대 정원",
+  "eventDetail_title": "회차 상세",
+  "eventDetail_label_dateTime": "일시",
+  "eventDetail_label_time": "시간",
+  "eventDetail_label_capacity": "정원",
+  "eventDetail_label_status": "상태",
+  "eventDetail_status_scheduled": "모집 예정/진행중",
+  "eventDetail_status_cancelled": "취소됨",
+  "eventDetail_status_completed": "종료됨",
+  "eventDetail_button_createTicket": "티켓 만들기",
+  "eventDetail_section_ticketManage": "티켓 관리",
+
+  "verification_label_nameUser": "인증 이름 (유저에게 표시)",
+  "verification_label_nameAdmin": "관리용 이름 (내부 식별용)",
+  "verification_label_description": "설명",
+  "verification_label_formLabel": "라벨 (질문 내용)"
 }

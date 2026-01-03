@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
 import 'package:app_partner/src/utils/error_handler.dart';
+import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -24,7 +25,7 @@ class PartyLocationSection extends ConsumerWidget {
           padding: const EdgeInsets.all(MinglitSpacing.medium),
           child: Column(
             children: [
-              const Text('지정된 장소 정보가 없습니다.'),
+              Text(context.l10n.partyDetail_empty_location),
               const SizedBox(height: MinglitSpacing.medium),
               _buildEditButton(context, ref),
             ],
@@ -39,7 +40,9 @@ class PartyLocationSection extends ConsumerWidget {
 
     return locationAsync.when(
       data: (loc) {
-        if (loc == null) return const Text('장소 정보를 불러올 수 없습니다.');
+        if (loc == null) {
+          return Center(child: Text(context.l10n.partyList_message_noLocation));
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -76,13 +79,15 @@ class PartyLocationSection extends ConsumerWidget {
         );
       },
       loading: () => const MinglitSkeleton(height: 180),
-      error: (e, s) => Text('장소 로드 실패: $e'),
+      error: (e, s) => Text(
+        context.l10n.partyDetail_error_locationLoad(e.toString()),
+      ),
     );
   }
 
   Widget _buildEditButton(BuildContext context, WidgetRef ref) {
     return AddActionCard(
-      title: '장소 수정하기',
+      title: context.l10n.common_button_edit,
       iconData: Icons.edit_location_alt_outlined,
       onTap: () => unawaited(_handleEditLocation(context, ref)),
     );
@@ -108,7 +113,9 @@ class PartyLocationSection extends ConsumerWidget {
 
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('장소가 수정되었습니다.')),
+            SnackBar(
+              content: Text(context.l10n.partyDetail_message_locationUpdated),
+            ),
           );
         }
       } on Object catch (e, st) {
@@ -130,10 +137,10 @@ class PartyLocationDetailSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (locationId == null) {
-      return const Card(
+      return Card(
         child: Padding(
-          padding: EdgeInsets.all(MinglitSpacing.medium),
-          child: Text('장소 정보가 없어 상세 내용을 표시할 수 없습니다.'),
+          padding: const EdgeInsets.all(MinglitSpacing.medium),
+          child: Text(context.l10n.partyDetail_empty_location),
         ),
       );
     }
@@ -150,24 +157,24 @@ class PartyLocationDetailSection extends ConsumerWidget {
               _buildDetailItem(
                 context,
                 Icons.apartment,
-                '상세 주소',
+                context.l10n.partyCreate_label_addressDetail,
                 loc.addressDetail!,
               ),
             if (loc.directionsGuide != null && loc.directionsGuide!.isNotEmpty)
               _buildDetailItem(
                 context,
                 Icons.directions,
-                '오시는 길',
+                context.l10n.partyCreate_label_directions,
                 loc.directionsGuide!,
               ),
             if ((loc.addressDetail == null || loc.addressDetail!.isEmpty) &&
                 (loc.directionsGuide == null || loc.directionsGuide!.isEmpty))
-              const Padding(
-                padding: EdgeInsets.only(bottom: MinglitSpacing.medium),
-                child: Text('등록된 상세 정보가 없습니다.'),
+              Padding(
+                padding: const EdgeInsets.only(bottom: MinglitSpacing.medium),
+                child: Text(context.l10n.partyDetail_empty_locationDetail),
               ),
             AddActionCard(
-              title: '장소 상세 수정하기',
+              title: context.l10n.common_button_edit,
               iconData: Icons.edit_note,
               onTap: () => _showEditSheet(context, ref, loc),
             ),
@@ -175,7 +182,9 @@ class PartyLocationDetailSection extends ConsumerWidget {
         );
       },
       loading: () => const MinglitSkeleton(height: 100),
-      error: (e, s) => Text('상세 정보 로드 실패: $e'),
+      error: (e, s) => Text(
+        context.l10n.partyDetail_error_locationDetailLoad(e.toString()),
+      ),
     );
   }
 
@@ -234,52 +243,56 @@ class PartyLocationDetailSection extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    '장소 상세 정보 수정',
+                    '${context.l10n.partyCreate_label_location} '
+                    '${context.l10n.common_button_edit}',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: MinglitSpacing.large),
                   TextFormField(
                     controller: detailController,
-                    decoration: const InputDecoration(
-                      labelText: '상세 주소 (층/호수)',
-                      hintText: '예: 2층 201호',
+                    decoration: InputDecoration(
+                      labelText: context.l10n.partyCreate_label_addressDetail,
+                      hintText: context.l10n.partyCreate_hint_addressDetail,
                     ),
                   ),
                   const SizedBox(height: MinglitSpacing.medium),
                   TextFormField(
                     controller: guideController,
-                    decoration: const InputDecoration(
-                      labelText: '오시는 길 안내',
-                      hintText: '예: 1번 출구에서 직진 50m',
+                    decoration: InputDecoration(
+                      labelText: context.l10n.partyCreate_label_directions,
+                      hintText: context.l10n.partyCreate_hint_directions,
                     ),
                     maxLines: 3,
                   ),
                   const SizedBox(height: MinglitSpacing.xlarge),
                   ElevatedButton(
                     onPressed: () {
-                      unawaited(() async {
-                        try {
-                          final repo = ref.read(locationRepositoryProvider);
-                          await repo.updateLocationDetails(
-                            locationId: loc.id,
-                            addressDetail: detailController.text,
-                            directionsGuide: guideController.text,
-                          );
-                          ref.invalidate(locationDetailProvider(loc.id));
-                          if (context.mounted) {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('장소 상세 정보가 수정되었습니다.'),
-                              ),
+                      unawaited(
+                        () async {
+                          try {
+                            final repo = ref.read(locationRepositoryProvider);
+                            await repo.updateLocationDetails(
+                              locationId: loc.id,
+                              addressDetail: detailController.text,
+                              directionsGuide: guideController.text,
                             );
+                            ref.invalidate(locationDetailProvider(loc.id));
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              final msg = context
+                                  .l10n
+                                  .partyDetail_message_locationDetailUpdated;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(msg)),
+                              );
+                            }
+                          } on Exception catch (e) {
+                            debugPrint('Update failed: $e');
                           }
-                        } on Exception catch (e) {
-                          debugPrint('Update failed: $e');
-                        }
-                      }());
+                        }(),
+                      );
                     },
-                    child: const Text('저장하기'),
+                    child: Text(context.l10n.common_button_save),
                   ),
                   const SizedBox(height: MinglitSpacing.large),
                 ],

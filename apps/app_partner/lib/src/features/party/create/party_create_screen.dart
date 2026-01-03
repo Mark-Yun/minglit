@@ -10,6 +10,7 @@ import 'package:app_partner/src/features/party/create/widgets/party_location_sel
 import 'package:app_partner/src/features/party/create/widgets/party_section_title.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_ticket_template_editor.dart';
 import 'package:app_partner/src/features/party/create/widgets/party_verification_selector.dart';
+import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:image_picker/image_picker.dart';
@@ -153,18 +154,20 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const PartySectionTitle('파티 제목'),
+              PartySectionTitle(context.l10n.partyCreate_label_title),
               TextFormField(
                 controller: _titleController,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.normal,
                 ),
-                decoration: const InputDecoration(hintText: '예: 강남역 불금 와인 파티'),
+                decoration: InputDecoration(
+                  hintText: context.l10n.partyCreate_hint_title,
+                ),
                 validator: controller.validateTitle,
               ),
               const SizedBox(height: MinglitSpacing.large),
 
-              const PartySectionTitle('상세 설명'),
+              PartySectionTitle(context.l10n.partyCreate_label_description),
               PartyDescriptionEditor(
                 quillController: _quillController,
                 focusNode: _editorFocusNode,
@@ -172,14 +175,14 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
               ),
               const SizedBox(height: MinglitSpacing.large),
 
-              const PartySectionTitle('커버 이미지'),
+              PartySectionTitle(context.l10n.partyCreate_label_coverImage),
               PartyImagePicker(
                 selectedImage: _selectedImage,
                 onPickImage: _pickImage,
               ),
               const SizedBox(height: MinglitSpacing.large),
 
-              const PartySectionTitle('파티 장소'),
+              PartySectionTitle(context.l10n.partyCreate_label_location),
               PartyLocationSelector(
                 selectedLocation: state.selectedLocation,
                 onSearchTap: _handleLocationSearch,
@@ -192,7 +195,7 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
               ),
               const SizedBox(height: MinglitSpacing.large),
 
-              const PartySectionTitle('모집 인원'),
+              PartySectionTitle(context.l10n.partyCreate_label_capacity),
               PartyCapacityInput(
                 minCount: int.tryParse(_minCountController.text) ?? 0,
                 maxCount: int.tryParse(_maxCountController.text) ?? 0,
@@ -203,14 +206,16 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
               ),
               const SizedBox(height: MinglitSpacing.large),
 
-              const PartySectionTitle('입장 조건 (기본)'),
+              PartySectionTitle(
+                context.l10n.partyDetail_section_entranceCondition,
+              ),
               PartyConditionsSelector(
                 conditions: state.conditions,
                 onChanged: controller.updateConditions,
               ),
               const SizedBox(height: MinglitSpacing.large),
 
-              const PartySectionTitle('문의 연락처'),
+              PartySectionTitle(context.l10n.partyCreate_label_contact),
               PartyContactInput(
                 phoneController: _phoneController,
                 emailController: _emailController,
@@ -222,7 +227,7 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
               ),
               const SizedBox(height: MinglitSpacing.small),
 
-              const PartySectionTitle('참가 자격 (인증)'),
+              PartySectionTitle(context.l10n.partyDetail_section_verification),
               PartyVerificationSelector(
                 verificationsAsync: verificationsAsync,
                 selectedVerificationIds: state.selectedVerificationIds,
@@ -236,7 +241,7 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
               ),
               const SizedBox(height: MinglitSpacing.large),
 
-              const PartySectionTitle('기본 티켓 설정'),
+              PartySectionTitle(context.l10n.partyDetail_section_tickets),
               PartyTicketTemplateEditor(
                 ticketTemplates: state.ticketTemplates,
                 entryGroups: [
@@ -259,7 +264,7 @@ class _PartyCreateScreenState extends ConsumerState<PartyCreateScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: state.status.isLoading ? null : _submit,
-                  child: const Text('파티 생성 완료'),
+                  child: Text(context.l10n.partyCreate_button_submit),
                 ),
               ),
               const SizedBox(height: MinglitSpacing.large),

@@ -4,6 +4,7 @@ import 'package:app_partner/src/features/event/detail/event_detail_controller.da
 import 'package:app_partner/src/features/event/widgets/ticket_list_item.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
+import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -21,7 +22,7 @@ class EventDetailPage extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: MinglitTheme.simpleAppBar(title: '회차 상세'),
+      appBar: MinglitTheme.simpleAppBar(title: context.l10n.eventDetail_title),
       body: eventAsync.when(
         data: (event) {
           final partyAsync = ref.watch(partyDetailProvider(event.partyId));
@@ -55,7 +56,7 @@ class EventDetailPage extends ConsumerWidget {
                     children: [
                       _DetailRow(
                         icon: Icons.calendar_today,
-                        label: '일시',
+                        label: context.l10n.eventDetail_label_dateTime,
                         value: dateFormat.format(event.startTime),
                       ),
                       const Padding(
@@ -66,7 +67,7 @@ class EventDetailPage extends ConsumerWidget {
                       ),
                       _DetailRow(
                         icon: Icons.access_time,
-                        label: '시간',
+                        label: context.l10n.eventDetail_label_time,
                         value:
                             '${timeFormat.format(event.startTime)} ~ '
                             '${timeFormat.format(event.endTime)}',
@@ -79,9 +80,10 @@ class EventDetailPage extends ConsumerWidget {
                       ),
                       _DetailRow(
                         icon: Icons.people_outline,
-                        label: '정원',
+                        label: context.l10n.eventDetail_label_capacity,
                         value:
-                            '${event.currentParticipants} / ${event.maxParticipants}명',
+                            '${event.currentParticipants} / '
+                            '${event.maxParticipants}명',
                       ),
                       const Padding(
                         padding: EdgeInsets.symmetric(
@@ -91,8 +93,8 @@ class EventDetailPage extends ConsumerWidget {
                       ),
                       _DetailRow(
                         icon: Icons.info_outline,
-                        label: '상태',
-                        value: _getStatusLabel(event.status),
+                        label: context.l10n.eventDetail_label_status,
+                        value: _getStatusLabel(context, event.status),
                         valueColor: _getStatusColor(event.status, colorScheme),
                       ),
                     ],
@@ -105,7 +107,7 @@ class EventDetailPage extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '티켓 관리',
+                      context.l10n.eventDetail_section_ticketManage,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -120,7 +122,7 @@ class EventDetailPage extends ConsumerWidget {
                         );
                       },
                       icon: const Icon(Icons.add, size: MinglitIconSize.small),
-                      label: const Text('티켓 만들기'),
+                      label: Text(context.l10n.eventDetail_button_createTicket),
                     ),
                   ],
                 ),
@@ -131,17 +133,14 @@ class EventDetailPage extends ConsumerWidget {
                     tickets: tickets,
                     entryGroups: entryGroups,
                     maxParticipants: event.maxParticipants,
-
                     onCreatePressed: () {
                       unawaited(
                         TicketCreateRoute(
                           partyId: event.partyId,
-
                           eventId: event.id,
                         ).push<void>(context),
                       );
                     },
-
                     onTicketTap: (ticket) {
                       unawaited(
                         TicketEditRoute(
@@ -152,30 +151,32 @@ class EventDetailPage extends ConsumerWidget {
                       );
                     },
                   ),
-
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-
-                  error: (e, s) => Text('티켓 로드 실패: $e'),
+                  error: (e, s) => Text(
+                    context.l10n.partyDetail_error_ticketLoad(e.toString()),
+                  ),
                 ),
               ],
             ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, s) => Center(child: Text('로드 실패: $e')),
+        error: (e, s) => Center(
+          child: Text(context.l10n.partyList_error_load(e.toString())),
+        ),
       ),
     );
   }
 
-  String _getStatusLabel(String status) {
+  String _getStatusLabel(BuildContext context, String status) {
     switch (status) {
       case 'scheduled':
-        return '모집 예정/진행중';
+        return context.l10n.eventDetail_status_scheduled;
       case 'cancelled':
-        return '취소됨';
+        return context.l10n.eventDetail_status_cancelled;
       case 'completed':
-        return '종료됨';
+        return context.l10n.eventDetail_status_completed;
       default:
         return status;
     }

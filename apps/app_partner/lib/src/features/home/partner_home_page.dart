@@ -1,7 +1,6 @@
-import 'dart:async';
-
-import 'package:app_partner/src/routing/app_routes.dart';
+import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class PartnerHomePage extends ConsumerWidget {
@@ -21,23 +20,22 @@ class PartnerHomePage extends ConsumerWidget {
             children: [
               const Icon(Icons.store, size: 80, color: Color(0xFFFF7043)),
               const SizedBox(height: 20),
-              Text('사장님(${user?.email ?? 'Unknown'}) 환영합니다!'),
-              const SizedBox(height: 40),
-
-              ElevatedButton.icon(
-                onPressed: () => const PartyListRoute().go(context),
-                icon: const Icon(Icons.party_mode),
-                label: const Text('파티 및 회차 관리'),
+              Center(
+                child: Text(
+                  context.l10n.home_welcome_user(user?.email ?? 'Unknown'),
+                ),
               ),
-              const SizedBox(height: MinglitSpacing.medium),
-
-              OutlinedButton(
-                onPressed: () {
-                  unawaited(
+              const SizedBox(height: 32),
+              ElevatedButton.icon(
+                onPressed: () => context.push('/parties'),
+                icon: const Icon(Icons.celebration),
+                label: Text(context.l10n.home_button_manageParties),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () =>
                     ref.read(authControllerProvider.notifier).signOut(),
-                  );
-                },
-                child: const Text('로그아웃'),
+                child: Text(context.l10n.home_button_logout),
               ),
             ],
           ),

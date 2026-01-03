@@ -24,6 +24,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get common_button_delete => '삭제하기';
 
   @override
+  String get common_button_retry => '다시 시도';
+
+  @override
   String get common_error_system => '일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
 
   @override
@@ -31,6 +34,17 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get common_message_deleted => '삭제되었습니다.';
+
+  @override
+  String home_welcome_user(String email) {
+    return '사장님($email) 환영합니다!';
+  }
+
+  @override
+  String get home_button_manageParties => '파티 및 회차 관리';
+
+  @override
+  String get home_button_logout => '로그아웃';
 
   @override
   String get partyDetail_section_entranceCondition => '입장 조건 (기본)';
@@ -57,6 +71,31 @@ class AppLocalizationsKo extends AppLocalizations {
   String get partyDetail_message_deactivated => '파티가 비활성화(보관)되었습니다.';
 
   @override
+  String get partyDetail_message_locationUpdated => '장소가 수정되었습니다.';
+
+  @override
+  String get partyDetail_message_locationDetailUpdated => '장소 상세 정보가 수정되었습니다.';
+
+  @override
+  String get partyDetail_empty_location => '지정된 장소 정보가 없습니다.';
+
+  @override
+  String get partyDetail_empty_locationDetail => '등록된 상세 정보가 없습니다.';
+
+  @override
+  String get partyDetail_empty_verifications => '설정된 참가 자격이 없습니다 (누구나 참여 가능)';
+
+  @override
+  String partyDetail_error_locationLoad(String error) {
+    return '장소 로드 실패: $error';
+  }
+
+  @override
+  String partyDetail_error_locationDetailLoad(String error) {
+    return '상세 정보 로드 실패: $error';
+  }
+
+  @override
   String get partyDetail_menu_edit => '파티 정보 수정';
 
   @override
@@ -73,6 +112,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get partyDetail_message_ticketAdded => '티켓 템플릿이 추가되었습니다.';
+
+  @override
+  String get partyDetail_message_entryGroupUpdated => '입장 그룹이 수정되었습니다.';
 
   @override
   String partyDetail_error_eventLoad(String error) {
@@ -115,6 +157,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get partyList_message_noLocation => '지정된 장소 없음';
 
   @override
+  String partyList_error_load(String error) {
+    return '오류가 발생했습니다: $error';
+  }
+
+  @override
   String get reviewVerification_title_pending => '인증 심사 대기열';
 
   @override
@@ -153,6 +200,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get reviewVerification_message_processComplete => '처리가 완료되었습니다.';
+
+  @override
+  String reviewVerification_error_load(String error) {
+    return '인증 목록 로드 실패: $error';
+  }
 
   @override
   String get partnerApplication_title => '파트너 입점 신청';
@@ -312,6 +364,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String get memberPermission_error_saveFailed => '권한 설정 저장 중 오류가 발생했습니다.';
 
   @override
+  String get memberList_title => '직원 관리';
+
+  @override
+  String get memberList_button_add => '직원 추가';
+
+  @override
+  String get memberList_empty => '등록된 직원이 없습니다.';
+
+  @override
+  String memberList_label_roleAndEmail(String role, String email) {
+    return '역할: $role ($email)';
+  }
+
+  @override
+  String memberList_error_load(String error) {
+    return '목록을 불러오지 못했습니다.\n$error';
+  }
+
+  @override
   String get permission_PARTNER_EDIT => '파트너 정보 수정';
 
   @override
@@ -452,6 +523,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get wizard_review_successMessage => '파티가 성공적으로 생성되었습니다.';
 
   @override
+  String get wizard_review_empty_entryGroups => '입장 그룹이 없습니다.';
+
+  @override
+  String get wizard_review_empty_tickets => '티켓이 없습니다.';
+
+  @override
+  String get wizard_review_empty_contact => '연락처가 선택되지 않았습니다.';
+
+  @override
   String get partyCreate_label_title => '파티 제목';
 
   @override
@@ -486,10 +566,22 @@ class AppLocalizationsKo extends AppLocalizations {
   String get partyCreate_message_selectLocationFirst => '장소를 먼저 선택해주세요.';
 
   @override
+  String get partyCreate_message_addressCopied => '주소가 클립보드에 복사되었습니다.';
+
+  @override
   String get partyCreate_label_capacity => '모집 인원';
 
   @override
   String get partyCreate_label_contact => '문의 연락처';
+
+  @override
+  String get partyCreate_label_phone => '전화번호';
+
+  @override
+  String get partyCreate_label_email => '이메일';
+
+  @override
+  String get partyCreate_label_kakao => '오픈카카오톡 링크 (선택)';
 
   @override
   String get partyCreate_info_loadingPartner => '파트너 정보 불러오는 중...';
@@ -523,6 +615,9 @@ class AppLocalizationsKo extends AppLocalizations {
       '위에서 설정한 입장 그룹에 해당하는 티켓을 자유롭게 구성할 수 있습니다.';
 
   @override
+  String get partyCreate_button_submit => '파티 생성 완료';
+
+  @override
   String get entryGroup_title_add => '입장 그룹 추가';
 
   @override
@@ -530,6 +625,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get entryGroup_label_gender => '성별';
+
+  @override
+  String get entryGroup_label_genderFilter => '성별 제한';
+
+  @override
+  String get entryGroup_label_ageFilter => '나이 제한 (출생년도)';
 
   @override
   String get entryGroup_option_any => '제한 없음';
@@ -639,23 +740,53 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get ticketCreate_title => '기본 티켓 추가';
+  String get eventCreate_title => '새 회차(이벤트) 만들기';
 
   @override
-  String get ticketCreate_label_name => '티켓 이름';
+  String get eventCreate_label_title => '회차 제목 (선택)';
 
   @override
-  String get ticketCreate_hint_name => '예: 얼리버드 남성';
+  String get eventCreate_label_maxParticipants => '최대 정원';
 
   @override
-  String get ticketCreate_label_price => '가격';
+  String get eventDetail_title => '회차 상세';
 
   @override
-  String get ticketCreate_label_quantity => '기본 수량';
+  String get eventDetail_label_dateTime => '일시';
 
   @override
-  String get ticketCreate_label_gender => '구매 가능 성별';
+  String get eventDetail_label_time => '시간';
 
   @override
-  String get ticketCreate_button_add => '추가하기';
+  String get eventDetail_label_capacity => '정원';
+
+  @override
+  String get eventDetail_label_status => '상태';
+
+  @override
+  String get eventDetail_status_scheduled => '모집 예정/진행중';
+
+  @override
+  String get eventDetail_status_cancelled => '취소됨';
+
+  @override
+  String get eventDetail_status_completed => '종료됨';
+
+  @override
+  String get eventDetail_button_createTicket => '티켓 만들기';
+
+  @override
+  String get eventDetail_section_ticketManage => '티켓 관리';
+
+  @override
+  String get verification_label_nameUser => '인증 이름 (유저에게 표시)';
+
+  @override
+  String get verification_label_nameAdmin => '관리용 이름 (내부 식별용)';
+
+  @override
+  String get verification_label_description => '설명';
+
+  @override
+  String get verification_label_formLabel => '라벨 (질문 내용)';
 }

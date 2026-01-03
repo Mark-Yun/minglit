@@ -41,23 +41,13 @@ class TicketStatusHeader extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          RichText(
-            text: TextSpan(
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-              children: [
-                TextSpan(
-                  text: '$totalIssued',
-                  style: TextStyle(
-                    color: colorScheme.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                TextSpan(
-                  text: ' / ${maxParticipants ?? '-'}매 발행',
-                ),
-              ],
+          Text(
+            context.l10n.ticketList_header_summary(
+              totalIssued,
+              maxParticipants ?? 0,
+            ),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
         ],
