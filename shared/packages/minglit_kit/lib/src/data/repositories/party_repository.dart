@@ -210,6 +210,28 @@ class PartyRepository {
     }
   }
 
+  /// Updates basic information of a party.
+  Future<void> updatePartyBasicInfo({
+    required String partyId,
+    required String title,
+    required Map<String, dynamic> description,
+    String? imageUrl,
+  }) async {
+    Log.d('updatePartyBasicInfo called | partyId: $partyId, title: $title');
+    try {
+      await _supabase.from('parties').update({
+        'title': title,
+        'description': description,
+        'image_url': imageUrl,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', partyId);
+      Log.d('updatePartyBasicInfo success');
+    } catch (e, st) {
+      Log.e('❌ [PartyRepo] updatePartyBasicInfo Error', e, st);
+      rethrow;
+    }
+  }
+
   /// Updates only the status of a party.
   Future<void> updatePartyStatus(String partyId, String status) async {
     Log.d('updatePartyStatus called | partyId: $partyId, status: $status');

@@ -84,6 +84,14 @@ class EventCreateController extends _$EventCreateController {
     state = state.copyWith(description: value);
   }
 
+  void updateImageUrl(String? value) {
+    state = state.copyWith(imageUrl: value);
+  }
+
+  void updateContactOptions(Map<String, dynamic> options) {
+    state = state.copyWith(contactOptions: options);
+  }
+
   void updateLocation(Location? location) {
     state = state.copyWith(
       selectedLocation: location,

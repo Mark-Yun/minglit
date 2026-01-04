@@ -2,17 +2,19 @@ import 'dart:async';
 
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
+import 'package:app_partner/src/features/party/widgets/party_basic_info_edit_screen.dart';
 import 'package:app_partner/src/features/party/widgets/party_basic_info_summary.dart';
-import 'package:app_partner/src/features/party/widgets/party_capacity_input.dart';
+import 'package:app_partner/src/features/party/widgets/party_capacity_contact_edit_screen.dart';
 import 'package:app_partner/src/features/party/widgets/party_capacity_summary.dart';
-import 'package:app_partner/src/features/party/widgets/party_contact_input.dart';
 import 'package:app_partner/src/features/party/widgets/party_contact_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_entrance_condition_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_location_edit_screen.dart';
 import 'package:app_partner/src/features/party/widgets/party_location_summary.dart';
 import 'package:app_partner/src/ui/widgets/common/minglit_editable_section.dart';
+import 'package:app_partner/src/utils/error_handler.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class PartyDetailInfoTab extends ConsumerWidget {
@@ -31,9 +33,26 @@ class PartyDetailInfoTab extends ConsumerWidget {
           // 1. Basic Info Section
           MinglitEditableSection(
             title: context.l10n.wizard_review_basicInfo,
-            onTap: () => ref
-                .read(partyDetailCoordinatorProvider)
-                .goToEditParty(party.id),
+            onTap: () {
+              unawaited(
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (context) => PartyBasicInfoEditScreen(
+                      party: party,
+                      onSave: (title, description, image) =>
+                          _handleUpdateBasicInfo(
+                            context,
+                            ref,
+                            title,
+                            description,
+                            image,
+                          ),
+                    ),
+                  ),
+                ),
+              );
+            },
             child: PartyBasicInfoSummary(
               title: party.title,
               description: party.description ?? {},
@@ -46,7 +65,26 @@ class PartyDetailInfoTab extends ConsumerWidget {
           // 2. Capacity & Contact Section
           MinglitEditableSection(
             title: '인원 및 연락처 설정',
-            onTap: () => _showCapacityContactEditSheet(context, ref, party),
+            onTap: () {
+              unawaited(
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (context) => PartyCapacityContactEditScreen(
+                      party: party,
+                      onSave: (min, max, options) =>
+                          _handleUpdateCapacityContact(
+                            context,
+                            ref,
+                            min,
+                            max,
+                            options,
+                          ),
+                    ),
+                  ),
+                ),
+              );
+            },
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -206,125 +244,66 @@ class PartyDetailInfoTab extends ConsumerWidget {
     }
   }
 
-  void _showCapacityContactEditSheet(
+  Future<void> _handleUpdateBasicInfo(
     BuildContext context,
     WidgetRef ref,
-    Party party,
-  ) {
-    final phoneController = TextEditingController(
-      text: party.contactOptions['phone'] as String?,
-    );
-    final emailController = TextEditingController(
-      text: party.contactOptions['email'] as String?,
-    );
-    final kakaoController = TextEditingController(
-      text: party.contactOptions['kakao_open_chat'] as String?,
-    );
-    var minCount = party.minConfirmedCount;
-    var maxCount = party.maxParticipants;
-    final enabledMethods = Set<String>.from(
-      party.contactOptions.keys.map((k) {
-        if (k == 'kakao_open_chat') return 'kakao';
-        return k;
-      }),
-    );
+    String title,
+    Map<String, dynamic> description,
+    XFile? image,
+  ) async {
+    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
+    try {
+      final repo = ref.read(partyRepositoryProvider);
+      var imageUrl = party.imageUrl;
 
-    unawaited(
-      showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        builder: (context) {
-          return StatefulBuilder(
-            builder: (context, setState) {
-              return Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                ),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(MinglitSpacing.large),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        '인원 및 연락처 수정',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: MinglitSpacing.large),
-                      Text(
-                        context.l10n.partyCreate_label_capacity,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: MinglitSpacing.medium),
-                      PartyCapacityInput(
-                        minCount: minCount,
-                        maxCount: maxCount,
-                        onMinChanged: (val) => setState(() => minCount = val),
-                        onMaxChanged: (val) => setState(() => maxCount = val),
-                      ),
-                      const SizedBox(height: MinglitSpacing.large),
-                      Text(
-                        context.l10n.partyCreate_label_contact,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: MinglitSpacing.medium),
-                      PartyContactInput(
-                        phoneController: phoneController,
-                        emailController: emailController,
-                        kakaoController: kakaoController,
-                        enabledMethods: enabledMethods,
-                        onToggleMethod: (method) {
-                          setState(() {
-                            if (enabledMethods.contains(method)) {
-                              enabledMethods.remove(method);
-                            } else {
-                              enabledMethods.add(method);
-                            }
-                          });
-                        },
-                      ),
-                      const SizedBox(height: MinglitSpacing.xlarge),
-                      ElevatedButton(
-                        onPressed: () async {
-                          final options = <String, String>{};
-                          if (enabledMethods.contains('phone')) {
-                            options['phone'] = phoneController.text;
-                          }
-                          if (enabledMethods.contains('email')) {
-                            options['email'] = emailController.text;
-                          }
-                          if (enabledMethods.contains('kakao')) {
-                            options['kakao_open_chat'] = kakaoController.text;
-                          }
+      if (image != null) {
+        imageUrl = await repo.uploadPartyImage(image, party.partnerId);
+      }
 
-                          await ref
-                              .read(partyDetailCoordinatorProvider)
-                              .updatePartyCapacityAndContact(
-                                partyId: party.id,
-                                minCount: minCount,
-                                maxCount: maxCount,
-                                contactOptions: options,
-                                context: context,
-                              );
-                          if (context.mounted) Navigator.pop(context);
-                        },
-                        child: Text(context.l10n.common_button_save),
-                      ),
-                      const SizedBox(height: MinglitSpacing.large),
-                    ],
-                  ),
-                ),
-              );
-            },
+      await repo.updatePartyBasicInfo(
+        partyId: party.id,
+        title: title,
+        description: description,
+        imageUrl: imageUrl,
+      );
+
+      ref.invalidate(partyDetailProvider(party.id));
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('기본 정보가 수정되었습니다.')),
+        );
+      }
+    } on Exception catch (e, st) {
+      if (context.mounted) handleMinglitError(context, e, st);
+    } finally {
+      loading.hide();
+    }
+  }
+
+  Future<void> _handleUpdateCapacityContact(
+    BuildContext context,
+    WidgetRef ref,
+    int minCount,
+    int maxCount,
+    Map<String, String> contactOptions,
+  ) async {
+    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
+    try {
+      await ref
+          .read(partyDetailCoordinatorProvider)
+          .updatePartyCapacityAndContact(
+            partyId: party.id,
+            minCount: minCount,
+            maxCount: maxCount,
+            contactOptions: contactOptions,
+            context: context,
           );
-        },
-      ),
-    );
+      ref.invalidate(partyDetailProvider(party.id));
+    } on Exception catch (e, st) {
+      if (context.mounted) handleMinglitError(context, e, st);
+    } finally {
+      loading.hide();
+    }
   }
 }
