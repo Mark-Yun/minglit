@@ -17,24 +17,41 @@ class EventCreateOperationTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(MinglitSpacing.medium),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionHeader(context, '일정 설정'),
-          EventDateTimeInput(
-            startTime: state.startTime,
-            endTime: state.endTime,
-            onStartTimeChanged: notifier.updateStartTime,
-            onEndTimeChanged: notifier.updateEndTime,
+          Padding(
+            padding: const EdgeInsets.all(MinglitSpacing.medium),
+            child: _buildSectionHeader(context, '일정 설정'),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: MinglitSpacing.medium,
+            ),
+            child: EventDateTimeInput(
+              startTime: state.startTime,
+              endTime: state.endTime,
+              onStartTimeChanged: notifier.updateStartTime,
+              onEndTimeChanged: notifier.updateEndTime,
+            ),
           ),
           const SizedBox(height: MinglitSpacing.large),
-          _buildSectionHeader(context, '티켓 판매 현황'),
-          PartyTicketsSummary(
-            tickets: state.tickets,
-            entryGroups: state.entryGroups,
-            maxCapacity: state.maxParticipants,
-            showStats: false,
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: MinglitSpacing.medium,
+            ),
+            child: _buildSectionHeader(context, '티켓 판매 현황'),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: MinglitSpacing.medium,
+            ),
+            child: PartyTicketsSummary(
+              tickets: state.tickets,
+              entryGroups: state.entryGroups,
+              maxCapacity: state.maxParticipants,
+              showStats: false,
+            ),
           ),
         ],
       ),

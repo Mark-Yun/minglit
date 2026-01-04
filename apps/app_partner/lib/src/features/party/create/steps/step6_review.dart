@@ -5,6 +5,7 @@ import 'package:app_partner/src/features/party/widgets/party_capacity_summary.da
 import 'package:app_partner/src/features/party/widgets/party_contact_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_entrance_condition_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_location_summary.dart';
+import 'package:app_partner/src/ui/widgets/common/minglit_editable_section.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -20,25 +21,32 @@ class Step6Review extends ConsumerWidget {
     final errors = notifier.validationErrors;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(MinglitSpacing.medium),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            context.l10n.wizard_review_title,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
+          Padding(
+            padding: const EdgeInsets.all(MinglitSpacing.medium),
+            child: Text(
+              context.l10n.wizard_review_title,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-          const SizedBox(height: MinglitSpacing.medium),
 
           // Validation Warnings
-          if (errors.isNotEmpty) _buildErrorCard(context, errors),
+          if (errors.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: MinglitSpacing.medium,
+              ),
+              child: _buildErrorCard(context, errors),
+            ),
 
           // 1. Basic Info Section
-          _buildSection(
-            context,
+          MinglitEditableSection(
             title: context.l10n.wizard_review_basicInfo,
+            onTap: () => notifier.setStep(PartyCreateStep.basicInfo),
             child: PartyBasicInfoSummary(
               title: state.title,
               description: state.description,
@@ -46,22 +54,24 @@ class Step6Review extends ConsumerWidget {
               collapsible: true,
             ),
           ),
+          const SizedBox(height: MinglitSpacing.large),
 
           // 2. Location Summary
-          _buildSection(
-            context,
+          MinglitEditableSection(
             title: context.l10n.wizard_review_location,
+            onTap: () => notifier.setStep(PartyCreateStep.location),
             child: PartyLocationSummary(
               location: state.selectedLocation,
               addressDetail: state.addressDetail,
               directionsGuide: state.directionsGuide,
             ),
           ),
+          const SizedBox(height: MinglitSpacing.large),
 
           // 3. Capacity & Contact Summary
-          _buildSection(
-            context,
+          MinglitEditableSection(
             title: context.l10n.wizard_review_capacityContact,
+            onTap: () => notifier.setStep(PartyCreateStep.capacityAndContact),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -81,20 +91,22 @@ class Step6Review extends ConsumerWidget {
               ],
             ),
           ),
+          const SizedBox(height: MinglitSpacing.large),
 
-          // 4. Entry Rules (New)
-          _buildSection(
-            context,
+          // 4. Entry Rules
+          MinglitEditableSection(
             title: context.l10n.wizard_review_entryRules,
+            onTap: () => notifier.setStep(PartyCreateStep.entryRules),
             child: PartyEntranceConditionSummary(
               entryGroups: state.entryGroups,
             ),
           ),
+          const SizedBox(height: MinglitSpacing.large),
 
           // 5. Tickets Summary
-          _buildSection(
-            context,
+          MinglitEditableSection(
             title: context.l10n.wizard_review_tickets,
+            onTap: () => notifier.setStep(PartyCreateStep.tickets),
             child: PartyTicketsSummary(
               tickets: state.tickets,
               entryGroups: state.entryGroups,
@@ -146,31 +158,6 @@ class Step6Review extends ConsumerWidget {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSection(
-    BuildContext context, {
-    required String title,
-    required Widget child,
-  }) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: MinglitSpacing.xlarge),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: MinglitSpacing.small),
-          child,
         ],
       ),
     );

@@ -23,56 +23,73 @@ class PartyDetailOperationTab extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(MinglitSpacing.medium),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 1. Events Section
-          Text(
-            context.l10n.partyDetail_section_events,
-            style: theme.textTheme.titleMedium,
+          Padding(
+            padding: const EdgeInsets.all(MinglitSpacing.medium),
+            child: Text(
+              context.l10n.partyDetail_section_events,
+              style: theme.textTheme.titleMedium,
+            ),
           ),
           const SizedBox(height: MinglitSpacing.small),
-          eventsAsync.when(
-            data: (events) => PartyEventListSummary(
-              events: events,
-              onEventTap: (event) =>
-                  coordinator.goToEventDetail(party.id, event.id),
-              onCreatePressed: () => coordinator.goToCreateEvent(party.id),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: MinglitSpacing.medium,
             ),
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, s) => Text(
-              context.l10n.partyDetail_error_eventLoad(e.toString()),
+            child: eventsAsync.when(
+              data: (events) => PartyEventListSummary(
+                events: events,
+                onEventTap: (event) =>
+                    coordinator.goToEventDetail(party.id, event.id),
+                onCreatePressed: () => coordinator.goToCreateEvent(party.id),
+              ),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, s) => Text(
+                context.l10n.partyDetail_error_eventLoad(e.toString()),
+              ),
             ),
           ),
 
           const SizedBox(height: MinglitSpacing.xlarge),
 
           // 2. Tickets Section
-          Text(
-            context.l10n.partyDetail_section_tickets,
-            style: theme.textTheme.titleMedium,
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: MinglitSpacing.medium,
+            ),
+            child: Text(
+              context.l10n.partyDetail_section_tickets,
+              style: theme.textTheme.titleMedium,
+            ),
           ),
           const SizedBox(height: MinglitSpacing.small),
-          ticketsAsync.when(
-            data: (tickets) => PartyTicketsSummary(
-              tickets: tickets,
-              entryGroups: party.entryGroups,
-              maxCapacity: party.maxParticipants,
-              showStats: false,
-              onCreatePressed: () => _handleCreateTicket(context, ref),
-              onTicketTap: (ticket) {
-                unawaited(
-                  PartyTicketEditRoute(
-                    partyId: party.id,
-                    ticketId: ticket.id,
-                  ).push<void>(context),
-                );
-              },
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: MinglitSpacing.medium,
             ),
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, s) => Text(
-              context.l10n.partyDetail_error_ticketLoad(e.toString()),
+            child: ticketsAsync.when(
+              data: (tickets) => PartyTicketsSummary(
+                tickets: tickets,
+                entryGroups: party.entryGroups,
+                maxCapacity: party.maxParticipants,
+                showStats: false,
+                onCreatePressed: () => _handleCreateTicket(context, ref),
+                onTicketTap: (ticket) {
+                  unawaited(
+                    PartyTicketEditRoute(
+                      partyId: party.id,
+                      ticketId: ticket.id,
+                    ).push<void>(context),
+                  );
+                },
+              ),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, s) => Text(
+                context.l10n.partyDetail_error_ticketLoad(e.toString()),
+              ),
             ),
           ),
           const SizedBox(height: MinglitSpacing.xlarge),
