@@ -8,13 +8,14 @@ import 'package:url_launcher/url_launcher.dart';
 /// **Location Map View**
 ///
 /// A reusable widget that displays a map with a floating info card overlay.
-/// Commonly used in Party/Event lists and details.
+/// The overlay card contains the location name and address.
 class LocationMapView extends StatelessWidget {
   const LocationMapView({
     required this.location,
     this.height = 200,
     this.showExternalMapButton = true,
     this.showCopyButton = true,
+    this.trailing,
     super.key,
   });
 
@@ -22,18 +23,23 @@ class LocationMapView extends StatelessWidget {
   final double height;
   final bool showExternalMapButton;
   final bool showCopyButton;
+  final Widget? trailing;
 
-  void _copyAddress(BuildContext context, String address) {
-    unawaited(Clipboard.setData(ClipboardData(text: address)));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('주소가 클립보드에 복사되었습니다.')),
+  Future<void> _openInKakaoMap() async {
+    final url = Uri.parse(
+      'https://map.kakao.com/link/map/${location.latitude},${location.longitude}',
     );
-  }
-
-  Future<void> _openExternalMap(double lat, double lng) async {
-    final url = Uri.parse('https://map.kakao.com/link/map/$lat,$lng');
     if (await canLaunchUrl(url)) {
       await launchUrl(url);
+    }
+  }
+
+  Future<void> _copyToClipboard(BuildContext context) async {
+    await Clipboard.setData(ClipboardData(text: location.address));
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('주소가 클립보드에 복사되었습니다.')),
+      );
     }
   }
 
@@ -103,27 +109,20 @@ class LocationMapView extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (showCopyButton || showExternalMapButton) ...[
+                  if (trailing != null)
+                    trailing!
+                  else if (showCopyButton || showExternalMapButton) ...[
                     const SizedBox(width: MinglitSpacing.small),
                     if (showCopyButton)
-                      IconButton(
-                        icon: const Icon(Icons.copy, size: 16),
-                        onPressed: () => _copyAddress(context, location.address),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        visualDensity: VisualDensity.compact,
-                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                      _ActionButton(
+                        icon: Icons.copy,
+                        onPressed: () => _copyToClipboard(context),
                       ),
                     if (showExternalMapButton) ...[
                       const SizedBox(width: MinglitSpacing.small),
-                      IconButton(
-                        icon: const Icon(Icons.open_in_new, size: 16),
-                        onPressed: () =>
-                            _openExternalMap(location.latitude, location.longitude),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        visualDensity: VisualDensity.compact,
-                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                      _ActionButton(
+                        icon: Icons.open_in_new,
+                        onPressed: _openInKakaoMap,
                       ),
                     ],
                   ],
@@ -133,6 +132,26 @@ class LocationMapView extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  const _ActionButton({required this.icon, required this.onPressed});
+
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return IconButton(
+      icon: Icon(icon, size: 16),
+      onPressed: onPressed,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(),
+      visualDensity: VisualDensity.compact,
+      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
     );
   }
 }
