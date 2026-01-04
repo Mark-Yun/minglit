@@ -7,7 +7,7 @@ import 'package:app_partner/src/features/member/partner_member_list_page.dart';
 import 'package:app_partner/src/features/member/partner_member_permission_page.dart';
 import 'package:app_partner/src/features/party/create/party_create_wizard_page.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_page.dart';
-import 'package:app_partner/src/features/party/event/create/event_create_page.dart';
+import 'package:app_partner/src/features/party/event/create/event_create_screen.dart';
 import 'package:app_partner/src/features/party/event/detail/event_detail_page.dart';
 import 'package:app_partner/src/features/party/list/party_list_page.dart';
 import 'package:app_partner/src/features/ticket/create/ticket_create_page.dart';
@@ -128,7 +128,7 @@ class EventCreateRoute extends GoRouteData with $EventCreateRoute {
 
   @override
   Widget build(BuildContext context, GoRouterState state) =>
-      EventCreatePage(partyId: partyId);
+      EventCreateScreen(partyId: partyId);
 }
 
 class EventDetailRoute extends GoRouteData with $EventDetailRoute {

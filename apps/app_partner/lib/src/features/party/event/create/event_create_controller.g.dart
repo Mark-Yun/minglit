@@ -10,47 +10,100 @@ part of 'event_create_controller.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(EventCreateController)
-const eventCreateControllerProvider = EventCreateControllerProvider._();
+const eventCreateControllerProvider = EventCreateControllerFamily._();
 
 final class EventCreateControllerProvider
-    extends $AsyncNotifierProvider<EventCreateController, void> {
-  const EventCreateControllerProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'eventCreateControllerProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+    extends $NotifierProvider<EventCreateController, EventCreateState> {
+  const EventCreateControllerProvider._({
+    required EventCreateControllerFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'eventCreateControllerProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$eventCreateControllerHash();
 
+  @override
+  String toString() {
+    return r'eventCreateControllerProvider'
+        ''
+        '($argument)';
+  }
+
   @$internal
   @override
   EventCreateController create() => EventCreateController();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(EventCreateState value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<EventCreateState>(value),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is EventCreateControllerProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
 }
 
 String _$eventCreateControllerHash() =>
-    r'efa1183644de62d86cd9a13e0e60b826f2bc717e';
+    r'8eff49a9a422d6b39206e2a64912e53aec57629b';
 
-abstract class _$EventCreateController extends $AsyncNotifier<void> {
-  FutureOr<void> build();
+final class EventCreateControllerFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          EventCreateController,
+          EventCreateState,
+          EventCreateState,
+          EventCreateState,
+          String
+        > {
+  const EventCreateControllerFamily._()
+    : super(
+        retry: null,
+        name: r'eventCreateControllerProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  EventCreateControllerProvider call(String partyId) =>
+      EventCreateControllerProvider._(argument: partyId, from: this);
+
+  @override
+  String toString() => r'eventCreateControllerProvider';
+}
+
+abstract class _$EventCreateController extends $Notifier<EventCreateState> {
+  late final _$args = ref.$arg as String;
+  String get partyId => _$args;
+
+  EventCreateState build(String partyId);
   @$mustCallSuper
   @override
   void runBuild() {
-    build();
-    final ref = this.ref as $Ref<AsyncValue<void>, void>;
+    final created = build(_$args);
+    final ref = this.ref as $Ref<EventCreateState, EventCreateState>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<void>, void>,
-              AsyncValue<void>,
+              AnyNotifier<EventCreateState, EventCreateState>,
+              EventCreateState,
               Object?,
               Object?
             >;
-    element.handleValue(ref, null);
+    element.handleValue(ref, created);
   }
 }
