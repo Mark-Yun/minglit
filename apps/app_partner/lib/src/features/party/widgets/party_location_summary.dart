@@ -68,50 +68,19 @@ class PartyLocationSummary extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 1. Map View
+        // 1. Map View with Basic Address Overlay (Reusable Widget)
         ClipRRect(
           borderRadius: BorderRadius.circular(MinglitRadius.card),
-          child: Container(
-            height: 160,
-            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-            child: LocationMap(
-              latitude: location!.latitude,
-              longitude: location!.longitude,
-            ),
-          ),
-        ),
-        const SizedBox(height: MinglitSpacing.medium),
-
-        // 2. Basic Address Info
-        Row(
-          children: [
-            Icon(
-              Icons.location_on_outlined,
-              size: 16,
-              color: colorScheme.primary,
-            ),
-            const SizedBox(width: 4),
-            Expanded(
-              child: Text(
-                location!.name,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          location!.address,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: colorScheme.onSurfaceVariant,
+          child: LocationMapView(
+            location: location!,
+            showExternalMapButton: false, // Cleaner view for summary
+            showCopyButton: false,
           ),
         ),
 
-        // 3. Detail Info (Address Detail & Directions) - Shown only if data exists
+        // 2. Detail Info (Address Detail & Directions) - Shown below map
         if (addressDetail != null && addressDetail!.isNotEmpty) ...[
-          const SizedBox(height: MinglitSpacing.small),
+          const SizedBox(height: MinglitSpacing.medium),
           _buildDetailItem(
             context,
             Icons.apartment,
@@ -127,7 +96,7 @@ class PartyLocationSummary extends StatelessWidget {
           ),
         ],
 
-        // 4. Edit Action (Separated by divider)
+        // 3. Edit Action (Separated by divider)
         if (onEditLocation != null || onEditDetail != null) ...[
           const SizedBox(height: MinglitSpacing.medium),
           const Divider(),

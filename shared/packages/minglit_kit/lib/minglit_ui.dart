@@ -28,6 +28,7 @@ export 'src/ui/widgets/debug/user_session_info.dart';
 export 'src/ui/widgets/map/location_map.dart'
     if (dart.library.html) 'src/ui/widgets/map/location_map_web.dart'
     if (dart.library.io) 'src/ui/widgets/map/location_map_mobile.dart';
+export 'src/ui/widgets/party/location_map_view.dart';
 // Utilities
 export 'src/utils/dev_screen_list.dart';
 export 'src/utils/splash_screen.dart';

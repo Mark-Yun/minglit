@@ -1,9 +1,5 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class PartyLocationInput extends StatefulWidget {
   const PartyLocationInput({
@@ -20,20 +16,6 @@ class PartyLocationInput extends StatefulWidget {
 }
 
 class _PartyLocationInputState extends State<PartyLocationInput> {
-  void _copyAddress(String address) {
-    unawaited(Clipboard.setData(ClipboardData(text: address)));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('주소가 클립보드에 복사되었습니다.')),
-    );
-  }
-
-  Future<void> _openExternalMap(double lat, double lng) async {
-    final url = Uri.parse('https://map.kakao.com/link/map/$lat,$lng');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -56,7 +38,9 @@ class _PartyLocationInputState extends State<PartyLocationInput> {
             borderRadius: BorderRadius.circular(MinglitRadius.card),
             child: widget.selectedLocation == null
                 ? _buildEmptyState(context)
-                : _buildSelectedState(context),
+                : LocationMapView(
+                    location: widget.selectedLocation!,
+                  ),
           ),
         ),
         const SizedBox(height: MinglitSpacing.small),
@@ -72,10 +56,7 @@ class _PartyLocationInputState extends State<PartyLocationInput> {
             onTap: widget.onSearchTap,
             borderRadius: BorderRadius.circular(MinglitRadius.input),
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: MinglitSpacing.medium,
-                vertical: MinglitSpacing.medium,
-              ),
+              padding: const EdgeInsets.all(MinglitSpacing.medium),
               child: Row(
                 children: [
                   Icon(
@@ -125,116 +106,6 @@ class _PartyLocationInputState extends State<PartyLocationInput> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSelectedState(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final loc = widget.selectedLocation;
-
-    if (loc == null) return const SizedBox.shrink();
-
-    return Stack(
-      children: [
-        LocationMap(
-          latitude: loc.latitude,
-          longitude: loc.longitude,
-        ),
-        // Location Info Overlay
-        Positioned(
-          left: MinglitSpacing.medium,
-          right: MinglitSpacing.medium,
-          bottom: MinglitSpacing.medium,
-          child: Container(
-            padding: const EdgeInsets.all(MinglitSpacing.medium),
-            decoration: BoxDecoration(
-              color: colorScheme.surface,
-              borderRadius: BorderRadius.circular(MinglitRadius.card),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.location_on,
-                  color: colorScheme.primary,
-                  size: MinglitIconSize.medium,
-                ),
-                const SizedBox(width: MinglitSpacing.small),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        loc.name,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              loc.address,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          InkWell(
-                            onTap: () => _copyAddress(loc.address),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                              ),
-                              child: Icon(
-                                Icons.copy,
-                                size: 14,
-                                color: colorScheme.onSurfaceVariant.withValues(
-                                  alpha: 0.6,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          InkWell(
-                            onTap: () =>
-                                _openExternalMap(loc.latitude, loc.longitude),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                              ),
-                              child: Icon(
-                                Icons.open_in_new,
-                                size: 14,
-                                color: colorScheme.onSurfaceVariant.withValues(
-                                  alpha: 0.6,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
