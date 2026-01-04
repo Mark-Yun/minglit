@@ -27,12 +27,14 @@ class _EventCreateScreenState extends ConsumerState<EventCreateScreen> {
     // Initialize controller state from Party data
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final party = await ref.read(partyDetailProvider(widget.partyId).future);
-      final tickets =
-          await ref.read(partyTicketsProvider(widget.partyId).future);
+      final tickets = await ref.read(
+        partyTicketsProvider(widget.partyId).future,
+      );
       Location? location;
       if (party.locationId != null) {
-        location =
-            await ref.read(locationDetailProvider(party.locationId).future);
+        location = await ref.read(
+          locationDetailProvider(party.locationId).future,
+        );
       }
 
       if (mounted) {
@@ -48,8 +50,9 @@ class _EventCreateScreenState extends ConsumerState<EventCreateScreen> {
   }
 
   Future<void> _submit() async {
-    final notifier =
-        ref.read(eventCreateControllerProvider(widget.partyId).notifier);
+    final notifier = ref.read(
+      eventCreateControllerProvider(widget.partyId).notifier,
+    );
 
     await notifier.submit();
 
@@ -67,8 +70,9 @@ class _EventCreateScreenState extends ConsumerState<EventCreateScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(eventCreateControllerProvider(widget.partyId));
-    final notifier =
-        ref.read(eventCreateControllerProvider(widget.partyId).notifier);
+    final notifier = ref.read(
+      eventCreateControllerProvider(widget.partyId).notifier,
+    );
     final theme = Theme.of(context);
 
     return DefaultTabController(

@@ -39,7 +39,7 @@ class PartyDetailInfoTab extends ConsumerWidget {
           PartyBasicInfoSummary(
             title: party.title,
             description: party.description ?? {},
-            showTitle: false, // Title is in AppBar
+            imageUrl: party.imageUrl,
             showFullDescription: true,
           ),
           const SizedBox(height: MinglitSpacing.large),

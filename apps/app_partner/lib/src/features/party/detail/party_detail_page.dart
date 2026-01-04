@@ -26,43 +26,14 @@ class PartyDetailPage extends ConsumerWidget {
         body: partyAsync.when(
           data: (party) => NestedScrollView(
             headerSliverBuilder: (context, innerBoxIsScrolled) => [
-              // 1. Header with Image
+              // 1. Simple AppBar
               SliverAppBar(
-                expandedHeight: 240,
+                title: Text(party.title),
                 pinned: true,
-                flexibleSpace: FlexibleSpaceBar(
-                  title: Text(
-                    party.title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      shadows: [
-                        Shadow(color: Colors.black45, blurRadius: 8),
-                      ],
-                    ),
-                  ),
-                  background: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      if (party.imageUrl != null)
-                        Image.network(party.imageUrl!, fit: BoxFit.cover)
-                      else
-                        Container(color: colorScheme.primaryContainer),
-                      const DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [Colors.transparent, Colors.black54],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                centerTitle: true,
                 actions: [
                   PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert, color: Colors.white),
+                    icon: const Icon(Icons.more_vert),
                     onSelected: (value) {
                       if (value == 'edit') {
                         coordinator.goToEditParty(party.id);
