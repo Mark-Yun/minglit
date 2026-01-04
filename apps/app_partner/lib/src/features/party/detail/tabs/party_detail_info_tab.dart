@@ -8,6 +8,7 @@ import 'package:app_partner/src/features/party/widgets/party_capacity_summary.da
 import 'package:app_partner/src/features/party/widgets/party_contact_input.dart';
 import 'package:app_partner/src/features/party/widgets/party_contact_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_entrance_condition_summary.dart';
+import 'package:app_partner/src/features/party/widgets/party_location_edit_screen.dart';
 import 'package:app_partner/src/features/party/widgets/party_location_summary.dart';
 import 'package:app_partner/src/ui/widgets/common/minglit_editable_section.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
@@ -22,7 +23,6 @@ class PartyDetailInfoTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final locationAsync = ref.watch(locationDetailProvider(party.locationId));
-    final coordinator = ref.read(partyDetailCoordinatorProvider);
 
     return SingleChildScrollView(
       child: Column(
@@ -31,7 +31,9 @@ class PartyDetailInfoTab extends ConsumerWidget {
           // 1. Basic Info Section
           MinglitEditableSection(
             title: context.l10n.wizard_review_basicInfo,
-            onTap: () => coordinator.goToEditParty(party.id),
+            onTap: () => ref
+                .read(partyDetailCoordinatorProvider)
+                .goToEditParty(party.id),
             child: PartyBasicInfoSummary(
               title: party.title,
               description: party.description ?? {},
@@ -79,15 +81,34 @@ class PartyDetailInfoTab extends ConsumerWidget {
           // 4. Location Summary
           MinglitEditableSection(
             title: context.l10n.partyDetail_section_location,
-            onTap: () => _handleEditLocation(context, ref),
+            onTap: () {
+              final loc = locationAsync.value;
+              unawaited(
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (context) => PartyLocationEditScreen(
+                      initialLocation: loc,
+                      initialAddressDetail: loc?.addressDetail,
+                      initialDirectionsGuide: loc?.directionsGuide,
+                      onSave: (newLoc, detail, directions) =>
+                          _handleUpdateLocation(
+                            context,
+                            ref,
+                            newLoc,
+                            detail,
+                            directions,
+                          ),
+                    ),
+                  ),
+                ),
+              );
+            },
             child: locationAsync.when(
               data: (loc) => PartyLocationSummary(
                 location: loc,
                 addressDetail: loc?.addressDetail,
                 directionsGuide: loc?.directionsGuide,
-                onEditDetail: loc != null
-                    ? () => _showLocationDetailEditSheet(context, ref, loc)
-                    : null,
               ),
               loading: () => const MinglitSkeleton(height: 120),
               error: (e, s) => Text(
@@ -112,39 +133,76 @@ class PartyDetailInfoTab extends ConsumerWidget {
     // but the section itself is now clickable.
   }
 
-  Future<void> _handleEditLocation(BuildContext context, WidgetRef ref) async {
-    final coordinator = ref.read(partyDetailCoordinatorProvider);
-    final newLocation = await coordinator.goToLocationSearch(context);
-    if (newLocation != null) {
-      final loading = ref.read(globalLoadingControllerProvider.notifier)
-        ..show();
-      try {
-        final locationRepo = ref.read(locationRepositoryProvider);
-        final savedLocation = await locationRepo.createLocation(
-          newLocation.copyWith(partnerId: party.partnerId),
+  Future<void> _handleUpdateLocation(
+    BuildContext context,
+    WidgetRef ref,
+    Location? newLocation,
+    String addressDetail,
+    String directionsGuide,
+  ) async {
+    if (newLocation == null) return;
+
+    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
+    try {
+      final locationRepo = ref.read(locationRepositoryProvider);
+      final partyRepo = ref.read(partyRepositoryProvider);
+
+      // Check if coordinates changed (New location vs Current location)
+      final currentLocation = ref
+          .read(locationDetailProvider(party.locationId))
+          .valueOrNull;
+
+      final isSameSpot =
+          currentLocation != null &&
+          currentLocation.latitude == newLocation.latitude &&
+          currentLocation.longitude == newLocation.longitude;
+
+      if (isSameSpot) {
+        // Scenario 1: Same spot, update only details
+        await locationRepo.updateLocationDetails(
+          locationId: currentLocation.id,
+          addressDetail: addressDetail,
+          directionsGuide: directionsGuide,
         );
-
-        final partyRepo = ref.read(partyRepositoryProvider);
+        Log.d(
+          'Location details updated for existing ID: ${currentLocation.id}',
+        );
+      } else {
+        // Scenario 2: New spot or no previous location, create new record
+        final savedLocation = await locationRepo.createLocation(
+          newLocation.copyWith(
+            partnerId: party.partnerId,
+            addressDetail: addressDetail,
+            directionsGuide: directionsGuide,
+          ),
+        );
+        // Link new location to party
         await partyRepo.updatePartyLocation(party.id, savedLocation.id);
-
-        ref.invalidate(partyDetailProvider(party.id));
-
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(context.l10n.partyDetail_message_locationUpdated),
-            ),
-          );
-        }
-      } on Exception catch (_) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.common_error_system)),
-          );
-        }
-      } finally {
-        loading.hide();
+        Log.d('New location created and linked to party: ${savedLocation.id}');
       }
+
+      // Refresh data
+      ref.invalidate(partyDetailProvider(party.id));
+      if (party.locationId != null) {
+        ref.invalidate(locationDetailProvider(party.locationId));
+      }
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.partyDetail_message_locationUpdated),
+          ),
+        );
+      }
+    } on Exception catch (e, st) {
+      Log.e('Failed to update location', e, st);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.common_error_system)),
+        );
+      }
+    } finally {
+      loading.hide();
     }
   }
 
@@ -264,91 +322,6 @@ class PartyDetailInfoTab extends ConsumerWidget {
                 ),
               );
             },
-          );
-        },
-      ),
-    );
-  }
-
-  void _showLocationDetailEditSheet(
-    BuildContext context,
-    WidgetRef ref,
-    Location loc,
-  ) {
-    final detailController = TextEditingController(text: loc.addressDetail);
-    final guideController = TextEditingController(text: loc.directionsGuide);
-
-    unawaited(
-      showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        builder: (context) {
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(MinglitSpacing.large),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    '${context.l10n.partyCreate_label_location} '
-                    '${context.l10n.common_button_edit}',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: MinglitSpacing.large),
-                  TextFormField(
-                    controller: detailController,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.partyCreate_label_addressDetail,
-                      hintText: context.l10n.partyCreate_hint_addressDetail,
-                    ),
-                  ),
-                  const SizedBox(height: MinglitSpacing.medium),
-                  TextFormField(
-                    controller: guideController,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.partyCreate_label_directions,
-                      hintText: context.l10n.partyCreate_hint_directions,
-                    ),
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: MinglitSpacing.xlarge),
-                  ElevatedButton(
-                    onPressed: () {
-                      unawaited(
-                        () async {
-                          try {
-                            final repo = ref.read(locationRepositoryProvider);
-                            await repo.updateLocationDetails(
-                              locationId: loc.id,
-                              addressDetail: detailController.text,
-                              directionsGuide: guideController.text,
-                            );
-                            ref.invalidate(locationDetailProvider(loc.id));
-                            if (context.mounted) {
-                              Navigator.pop(context);
-                              final msg = context
-                                  .l10n
-                                  .partyDetail_message_locationDetailUpdated;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(msg)),
-                              );
-                            }
-                          } on Exception catch (e) {
-                            debugPrint('Update failed: $e');
-                          }
-                        }(),
-                      );
-                    },
-                    child: Text(context.l10n.common_button_save),
-                  ),
-                  const SizedBox(height: MinglitSpacing.large),
-                ],
-              ),
-            ),
           );
         },
       ),

@@ -569,13 +569,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get partyCreate_label_location => '파티 장소';
 
   @override
-  String get partyCreate_label_addressDetail => '상세 주소 (선택)';
+  String get partyCreate_label_addressDetail => '상세 주소';
 
   @override
   String get partyCreate_hint_addressDetail => '예: 2층 201호, 루프탑 등';
 
   @override
-  String get partyCreate_label_directions => '오시는 길 안내 (선택)';
+  String get partyCreate_label_directions => '오시는 길 안내';
 
   @override
   String get partyCreate_hint_directions => '예: 강남역 11번 출구에서 도보 5분 거리입니다.';

@@ -1153,7 +1153,7 @@ abstract class AppLocalizations {
   /// No description provided for @partyCreate_label_addressDetail.
   ///
   /// In ko, this message translates to:
-  /// **'상세 주소 (선택)'**
+  /// **'상세 주소'**
   String get partyCreate_label_addressDetail;
 
   /// No description provided for @partyCreate_hint_addressDetail.
@@ -1165,7 +1165,7 @@ abstract class AppLocalizations {
   /// No description provided for @partyCreate_label_directions.
   ///
   /// In ko, this message translates to:
-  /// **'오시는 길 안내 (선택)'**
+  /// **'오시는 길 안내'**
   String get partyCreate_label_directions;
 
   /// No description provided for @partyCreate_hint_directions.

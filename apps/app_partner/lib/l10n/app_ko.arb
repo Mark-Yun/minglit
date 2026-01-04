@@ -241,9 +241,9 @@
   "partyCreate_label_coverImage": "커버 이미지",
   
   "partyCreate_label_location": "파티 장소",
-  "partyCreate_label_addressDetail": "상세 주소 (선택)",
+  "partyCreate_label_addressDetail": "상세 주소",
   "partyCreate_hint_addressDetail": "예: 2층 201호, 루프탑 등",
-  "partyCreate_label_directions": "오시는 길 안내 (선택)",
+  "partyCreate_label_directions": "오시는 길 안내",
   "partyCreate_hint_directions": "예: 강남역 11번 출구에서 도보 5분 거리입니다.",
   "partyCreate_message_selectLocationFirst": "장소를 먼저 선택해주세요.",
   "partyCreate_message_addressCopied": "주소가 클립보드에 복사되었습니다.",

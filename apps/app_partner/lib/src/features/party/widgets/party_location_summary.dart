@@ -68,126 +68,76 @@ class PartyLocationSummary extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 1. Map & Basic Address
-        Container(
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(MinglitRadius.card),
-            border: Border.all(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        // 1. Map View
+        ClipRRect(
+          borderRadius: BorderRadius.circular(MinglitRadius.card),
+          child: Container(
+            height: 160,
+            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            child: LocationMap(
+              latitude: location!.latitude,
+              longitude: location!.longitude,
             ),
           ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                height: 160,
-                color: colorScheme.surfaceContainerHighest.withValues(
-                  alpha: 0.3,
-                ),
-                child: LocationMap(
-                  latitude: location!.latitude,
-                  longitude: location!.longitude,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(MinglitSpacing.medium),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.location_on_outlined,
-                          size: 16,
-                          color: colorScheme.primary,
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            location!.name,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      location!.address,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    if (onEditLocation != null) ...[
-                      const SizedBox(height: MinglitSpacing.small),
-                      const Divider(),
-                      const SizedBox(height: MinglitSpacing.xsmall),
-                      AddActionCard(
-                        title: '장소 변경',
-                        iconData: Icons.map_outlined,
-                        onTap: onEditLocation!,
-                      ),
-                    ],
-                  ],
+        ),
+        const SizedBox(height: MinglitSpacing.medium),
+
+        // 2. Basic Address Info
+        Row(
+          children: [
+            Icon(
+              Icons.location_on_outlined,
+              size: 16,
+              color: colorScheme.primary,
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                location!.name,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          location!.address,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: colorScheme.onSurfaceVariant,
           ),
         ),
 
-        const SizedBox(height: MinglitSpacing.large),
+        // 3. Detail Info (Address Detail & Directions) - Shown only if data exists
+        if (addressDetail != null && addressDetail!.isNotEmpty) ...[
+          const SizedBox(height: MinglitSpacing.small),
+          _buildDetailItem(
+            context,
+            Icons.apartment,
+            addressDetail!,
+          ),
+        ],
+        if (directionsGuide != null && directionsGuide!.isNotEmpty) ...[
+          const SizedBox(height: MinglitSpacing.xxsmall),
+          _buildDetailItem(
+            context,
+            Icons.directions,
+            directionsGuide!,
+          ),
+        ],
 
-        // 2. Detail Info (Directions, etc)
-        Text(
-          context.l10n.partyDetail_section_locationDetail,
-          style: theme.textTheme.titleMedium,
-        ),
-        const SizedBox(height: MinglitSpacing.small),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (addressDetail != null && addressDetail!.isNotEmpty)
-              _buildDetailItem(
-                context,
-                Icons.apartment,
-                context.l10n.partyCreate_label_addressDetail,
-                addressDetail!,
-              ),
-            if (directionsGuide != null && directionsGuide!.isNotEmpty)
-              _buildDetailItem(
-                context,
-                Icons.directions,
-                context.l10n.partyCreate_label_directions,
-                directionsGuide!,
-              ),
-            if ((addressDetail == null || addressDetail!.isEmpty) &&
-                (directionsGuide == null || directionsGuide!.isEmpty))
-              Padding(
-                padding: const EdgeInsets.only(bottom: MinglitSpacing.small),
-                child: Text(
-                  context.l10n.partyDetail_empty_locationDetail,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            if (onEditDetail != null) ...[
-              const SizedBox(height: MinglitSpacing.xsmall),
-              if ((addressDetail?.isNotEmpty ?? false) ||
-                  (directionsGuide?.isNotEmpty ?? false))
-                const Divider(),
-              const SizedBox(height: MinglitSpacing.xsmall),
-              AddActionCard(
-                title: '상세 정보 수정',
-                iconData: Icons.edit_note,
-                onTap: onEditDetail!,
-              ),
-            ],
-          ],
-        ),
+        // 4. Edit Action (Separated by divider)
+        if (onEditLocation != null || onEditDetail != null) ...[
+          const SizedBox(height: MinglitSpacing.medium),
+          const Divider(),
+          const SizedBox(height: MinglitSpacing.xsmall),
+          AddActionCard(
+            title: '장소 정보 수정',
+            iconData: Icons.map_outlined,
+            onTap: onEditLocation ?? onEditDetail!,
+          ),
+        ],
       ],
     );
   }
@@ -195,35 +145,29 @@ class PartyLocationSummary extends StatelessWidget {
   Widget _buildDetailItem(
     BuildContext context,
     IconData icon,
-    String title,
     String content,
   ) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: MinglitSpacing.small),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 18, color: theme.colorScheme.primary),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(content, style: theme.textTheme.bodyMedium),
-              ],
+    final colorScheme = theme.colorScheme;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          icon,
+          size: 14,
+          color: colorScheme.primary,
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            content,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
