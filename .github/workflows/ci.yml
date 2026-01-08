@@ -41,7 +41,40 @@ jobs:
 
   # App User CI
   test-app-user:
-// ... (keep existing Flutter jobs)
+    needs: changes
+    if: ${{ needs.changes.outputs.app_user == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./apps/app_user
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+
+  # App Partner CI
+  test-app-partner:
+    needs: changes
+    if: ${{ needs.changes.outputs.app_partner == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./apps/app_partner
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+
   # Landing User CI
   lint-landing-user:
     needs: changes
