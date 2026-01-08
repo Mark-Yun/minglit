@@ -11,6 +11,8 @@ jobs:
     outputs:
       app_user: ${{ steps.filter.outputs.app_user }}
       app_partner: ${{ steps.filter.outputs.app_partner }}
+      landing_user: ${{ steps.filter.outputs.landing_user }}
+      landing_partner: ${{ steps.filter.outputs.landing_partner }}
     steps:
     - uses: actions/checkout@v4
     - uses: dorny/paths-filter@v3
@@ -23,6 +25,12 @@ jobs:
           app_partner:
             - 'apps/app_partner/**'
             - 'shared/packages/minglit_kit/**'
+          landing_user:
+            - 'apps/landing_user/**'
+            - 'shared/web/**'
+          landing_partner:
+            - 'apps/landing_partner/**'
+            - 'shared/web/**'
 
   deploy-user:
     needs: changes
@@ -81,6 +89,46 @@ jobs:
           else
             echo "👀 Deploying to Preview (Dev)..."
             vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes
+          fi
+
+  deploy-landing-user:
+    needs: changes
+    if: ${{ needs.changes.outputs.landing_user == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to Vercel (Landing User)
+        working-directory: ./apps/landing_user
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_LANDING_USER }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          npm install --global vercel@latest
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            vercel deploy --prod --token=$VERCEL_TOKEN --yes
+          else
+            vercel deploy --token=$VERCEL_TOKEN --yes
+          fi
+
+  deploy-landing-partner:
+    needs: changes
+    if: ${{ needs.changes.outputs.landing_partner == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to Vercel (Landing Partner)
+        working-directory: ./apps/landing_partner
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_LANDING_PARTNER }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          npm install --global vercel@latest
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            vercel deploy --prod --token=$VERCEL_TOKEN --yes
+          else
+            vercel deploy --token=$VERCEL_TOKEN --yes
           fi
 
   deploy-partner:
