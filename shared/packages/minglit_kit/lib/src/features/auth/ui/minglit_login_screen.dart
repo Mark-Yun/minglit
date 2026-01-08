@@ -1,5 +1,7 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// A common login screen for both User and Partner apps.
 class MinglitLoginScreen extends StatelessWidget {
@@ -26,6 +28,12 @@ class MinglitLoginScreen extends StatelessWidget {
     final slogan = isPartner
         ? 'Verified Vibe, Spark Your Business'
         : 'Verified Vibe, Spark Your Moment';
+
+    final textStyle = TextStyle(color: Colors.grey[500], fontSize: 12);
+    final linkStyle = textStyle.copyWith(
+      decoration: TextDecoration.underline,
+      fontWeight: FontWeight.bold,
+    );
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -86,15 +94,36 @@ class MinglitLoginScreen extends StatelessWidget {
               const SizedBox(height: 12),
               if (isPartner) ...[
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () => _launchUrl('https://partner.minglit.com'),
                   child: const Text('파트너 입점 문의'),
                 ),
               ] else ...[
-                TextButton(
-                  onPressed: () {}, // TODO(mark): Terms of service
-                  child: Text(
-                    '로그인 시 이용약관 및 개인정보처리방침에 동의하게 됩니다.',
-                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Text.rich(
+                    TextSpan(
+                      text: '로그인 시 ',
+                      style: textStyle,
+                      children: [
+                        TextSpan(
+                          text: '이용약관',
+                          style: linkStyle,
+                          recognizer: TapGestureRecognizer()
+                            ..onTap =
+                                () => _launchUrl('https://minglit.com/terms'),
+                        ),
+                        const TextSpan(text: ' 및 '),
+                        TextSpan(
+                          text: '개인정보처리방침',
+                          style: linkStyle,
+                          recognizer: TapGestureRecognizer()
+                            ..onTap =
+                                () => _launchUrl('https://minglit.com/privacy'),
+                        ),
+                        const TextSpan(text: '에 동의하게 됩니다.'),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ],
@@ -104,5 +133,12 @@ class MinglitLoginScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 }

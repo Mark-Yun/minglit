@@ -48,3 +48,23 @@ backend/supabase/functions/.well-known/
 # Shared assets
 shared/assets/fonts/*.zip
 shared/assets/images/*.zip
+
+# Node.js
+**/node_modules/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/.pnpm-debug.log*
+
+# Next.js
+**/.next/
+**/out/
+**/dist/
+**/.vercel/
+
+# Testing
+**/coverage/
+
+# Misc
+.env*.local
+.pnpm-store/

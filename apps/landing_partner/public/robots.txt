@@ -1,0 +1,22 @@
+# 검색 엔진은 전체 허용
+User-agent: *
+Allow: /
+
+# AI 수집 및 크롤링 봇 차단
+User-agent: GPTBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: AnthropicAI
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: OAI-SearchBot
+Disallow: /
