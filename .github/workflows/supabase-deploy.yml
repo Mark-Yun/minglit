@@ -1,0 +1,43 @@
+name: Deploy Supabase Migrations
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+    paths:
+      - 'backend/supabase/migrations/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # Dev 환경 배포
+      - name: Deploy to Dev Supabase
+        if: github.ref == 'refs/heads/dev'
+        working-directory: ./backend
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DEV_DB_PASSWORD }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_DEV_PROJECT_ID }}
+        run: |
+          supabase link --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD
+          supabase db push --password $SUPABASE_DB_PASSWORD
+
+      # Main 환경 배포
+      - name: Deploy to Main Supabase
+        if: github.ref == 'refs/heads/main'
+        working-directory: ./backend
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_MAIN_DB_PASSWORD }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_MAIN_PROJECT_ID }}
+        run: |
+          supabase link --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD
+          supabase db push --password $SUPABASE_DB_PASSWORD

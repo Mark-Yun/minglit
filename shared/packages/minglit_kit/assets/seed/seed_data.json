@@ -1,0 +1,109 @@
+{
+  "partners": [
+    {
+      "index": 1,
+      "name": "Partner 1 Store (Premium)",
+      "biz_name": "Premium Entity 1",
+      "biz_number": "123-45-60001",
+      "email": "owner1@test.com",
+      "is_special": true,
+      "verifications": [
+        {
+          "category": "career",
+          "internal_name": "NICE Rank Verification",
+          "display_name": "나이스 등급 인증",
+          "description": "NICE 신용 등급을 기반으로 한 인증입니다.",
+          "icon_key": "stars",
+          "form_schema": [
+            { "key": "rank", "type": "text", "label": "등급", "required": true }
+          ]
+        },
+        {
+          "category": "asset",
+          "internal_name": "Annual Income Verification",
+          "display_name": "연봉 인증",
+          "description": "참여 자격 확인을 위해 필요합니다.",
+          "icon_key": "payments",
+          "form_schema": [
+            { "key": "val", "type": "number", "label": "값", "required": true }
+          ]
+        }
+      ],
+      "parties": [
+        {
+          "title": "Gangnam Premium Wine Lounge",
+          "description": "Exclusive wine party for verified members.",
+          "entry_groups": [
+            {
+              "label": "남성 (직장인/나이스)",
+              "gender": "male",
+              "birth_year_range": { "min": 1988, "max": 1998 },
+              "use_global_ids": [0],
+              "use_local_indices": [0]
+            },
+            {
+              "label": "여성 (전문직)",
+              "gender": "female",
+              "birth_year_range": { "min": 1992, "max": 2002 },
+              "use_global_ids": [0],
+              "use_local_indices": [1]
+            }
+          ],
+          "tickets": [
+            { "name": "Premium Male Ticket", "price": 59000, "quantity": 10, "group_index": 0 },
+            { "name": "Premium Female Ticket", "price": 39000, "quantity": 10, "group_index": 1 }
+          ]
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "name": "Partner 2 (University Hub)",
+      "biz_name": "Edu Entity 2",
+      "biz_number": "123-45-60002",
+      "email": "owner2@test.com",
+      "is_special": true,
+      "verifications": [
+        {
+          "category": "academic",
+          "internal_name": "Student Council Verification",
+          "display_name": "학생회 인증",
+          "description": "학생회 소속임을 인증하세요.",
+          "icon_key": "school",
+          "form_schema": [
+            { "key": "dept", "type": "text", "label": "학과", "required": true }
+          ]
+        },
+        {
+          "category": "etc",
+          "internal_name": "Club Activity Verification",
+          "display_name": "동아리 인증",
+          "description": "활발한 커뮤니티 활동을 인증하세요.",
+          "icon_key": "groups",
+          "form_schema": [
+            { "key": "club", "type": "text", "label": "동아리명", "required": true }
+          ]
+        }
+      ],
+      "parties": [
+        {
+          "title": "Campus Mingle Party",
+          "description": "Fresh and energetic meeting for students.",
+          "entry_groups": [
+            {
+              "label": "재학생 그룹 (A)",
+              "gender": null,
+              "birth_year_range": { "min": 1998, "max": 2006 },
+              "use_global_ids": [0],
+              "use_local_indices": [0, 1]
+            }
+          ],
+          "tickets": [
+            { "name": "Student Special", "price": 15000, "quantity": 30, "group_index": 0 }
+          ]
+        }
+      ]
+    }
+  ],
+  "generic_partners_count": 8
+}

@@ -1,0 +1,23 @@
+{
+	"folders": [
+		{
+			"name": "ROOT",
+			"path": "."
+		},
+		{
+			"name": "APP: User",
+			"path": "apps/app_user"
+		},
+		{
+			"name": "APP: Partner",
+			"path": "apps/app_partner"
+		},
+		{
+			"name": "PKG: Minglit Kit",
+			"path": "shared/packages/minglit_kit"
+		}
+	],
+	"settings": {
+		"dart.projectSearchDepth": 10
+	}
+}

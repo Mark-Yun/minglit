@@ -15,6 +15,8 @@ jobs:
     outputs:
       app_user: ${{ steps.filter.outputs.app_user }}
       app_partner: ${{ steps.filter.outputs.app_partner }}
+      landing_user: ${{ steps.filter.outputs.landing_user }}
+      landing_partner: ${{ steps.filter.outputs.landing_partner }}
       supabase: ${{ steps.filter.outputs.supabase }}
     steps:
     - uses: actions/checkout@v4
@@ -24,46 +26,57 @@ jobs:
         filters: |
           app_user:
             - 'apps/app_user/**'
+            - 'shared/packages/minglit_kit/**'
           app_partner:
             - 'apps/app_partner/**'
+            - 'shared/packages/minglit_kit/**'
+          landing_user:
+            - 'apps/landing_user/**'
+            - 'shared/web/**'
+          landing_partner:
+            - 'apps/landing_partner/**'
+            - 'shared/web/**'
           supabase:
             - 'backend/supabase/**'
 
   # App User CI
   test-app-user:
+// ... (keep existing Flutter jobs)
+  # Landing User CI
+  lint-landing-user:
     needs: changes
-    if: ${{ needs.changes.outputs.app_user == 'true' }}
+    if: ${{ needs.changes.outputs.landing_user == 'true' }}
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./apps/app_user
+        working-directory: ./apps/landing_user
     steps:
       - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
+      - uses: actions/setup-node@v4
         with:
-          channel: 'stable'
-          cache: true
-      - run: flutter pub get
-      - run: flutter analyze
-      - run: flutter test
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./apps/landing_user/package-lock.json
+      - run: npm ci
+      - run: npm run lint
 
-  # App Partner CI
-  test-app-partner:
+  # Landing Partner CI
+  lint-landing-partner:
     needs: changes
-    if: ${{ needs.changes.outputs.app_partner == 'true' }}
+    if: ${{ needs.changes.outputs.landing_partner == 'true' }}
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./apps/app_partner
+        working-directory: ./apps/landing_partner
     steps:
       - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
+      - uses: actions/setup-node@v4
         with:
-          channel: 'stable'
-          cache: true
-      - run: flutter pub get
-      - run: flutter analyze
-      - run: flutter test
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./apps/landing_partner/package-lock.json
+      - run: npm ci
+      - run: npm run lint
 
   # Supabase Check
   check-supabase:
