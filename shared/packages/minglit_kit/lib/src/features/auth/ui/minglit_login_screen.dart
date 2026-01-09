@@ -109,16 +109,16 @@ class MinglitLoginScreen extends StatelessWidget {
                           text: '이용약관',
                           style: linkStyle,
                           recognizer: TapGestureRecognizer()
-                            ..onTap =
-                                () => _launchUrl('https://minglit.com/terms'),
+                            ..onTap = () =>
+                                _launchUrl('https://minglit.com/terms'),
                         ),
                         const TextSpan(text: ' 및 '),
                         TextSpan(
                           text: '개인정보처리방침',
                           style: linkStyle,
                           recognizer: TapGestureRecognizer()
-                            ..onTap =
-                                () => _launchUrl('https://minglit.com/privacy'),
+                            ..onTap = () =>
+                                _launchUrl('https://minglit.com/privacy'),
                         ),
                         const TextSpan(text: '에 동의하게 됩니다.'),
                       ],
