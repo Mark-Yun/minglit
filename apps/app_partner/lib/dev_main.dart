@@ -215,7 +215,9 @@ class _AuthenticatedApp extends ConsumerWidget {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
-        return MinglitGlobalLoadingOverlay(child: child!);
+        return StaffGuardWrapper(
+          child: MinglitGlobalLoadingOverlay(child: child!),
+        );
       },
     );
   }

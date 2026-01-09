@@ -56,8 +56,9 @@ class EventCreateInfoTab extends ConsumerWidget {
                           ..updateDescription(desc);
 
                         if (imageFile != null) {
-                          // Handle temp image upload for preview or just store XFile
-                          // For simplicity in creation, we can upload now or later.
+                          // Handle temp image upload for preview or just store
+                          // XFile for simplicity in creation, we can upload
+                          // now or later.
                           // Here we update title/desc immediately.
                         }
                       },

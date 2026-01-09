@@ -1,26 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Racing+Sans+One&display=swap');
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@font-face {
+  font-family: 'Pretendard';
+  src: url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@theme {
+  --font-racing: "Racing Sans One", cursive;
+  --font-pretendard: "Pretendard", system-ui, sans-serif;
+  
+  --color-primary: #9900FF;
+  --color-secondary: #FF9900;
+  --color-tertiary: #48C9B0;
+  --color-accent: #21fffe;
+  
+  --animate-gradient: gradient 3s ease infinite;
+  --animate-pulse-slow: pulse-slow 8s ease-in-out infinite;
+  --animate-bounce-slow: bounce 3s infinite;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  @keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 0.1; }
+    50% { opacity: 0.3; }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  body {
+    @apply antialiased;
+    font-family: "Pretendard", system-ui, sans-serif !important;
+    background-color: white;
+    color: #111827;
+  }
+
+  /* Racing Sans One 강제 적용 */
+  h1, h2, h3, .font-racing {
+    font-family: "Racing Sans One", cursive !important;
+  }
 }

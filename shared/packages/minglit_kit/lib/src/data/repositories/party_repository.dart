@@ -219,12 +219,15 @@ class PartyRepository {
   }) async {
     Log.d('updatePartyBasicInfo called | partyId: $partyId, title: $title');
     try {
-      await _supabase.from('parties').update({
-        'title': title,
-        'description': description,
-        'image_url': imageUrl,
-        'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', partyId);
+      await _supabase
+          .from('parties')
+          .update({
+            'title': title,
+            'description': description,
+            'image_url': imageUrl,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', partyId);
       Log.d('updatePartyBasicInfo success');
     } catch (e, st) {
       Log.e('❌ [PartyRepo] updatePartyBasicInfo Error', e, st);
