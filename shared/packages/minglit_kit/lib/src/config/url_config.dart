@@ -89,7 +89,7 @@ MinglitDomains minglitDomains(Ref ref) {
 @Riverpod(keepAlive: true)
 MinglitUrlConfig minglitUrlConfig(Ref ref) {
   final domains = ref.watch(minglitDomainsProvider);
-  
+
   String? origin;
   if (kIsWeb) {
     try {
