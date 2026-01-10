@@ -78,11 +78,12 @@ class StaffRepository {
     }
 
     Log.d('🛡️ [StaffRepo] Sending Magic Link to $email');
-    
-    // Normalize URL: Remove trailing slash to match exact redirect URL registration
-    final redirectTo = _redirectUrl != null && _redirectUrl!.endsWith('/')
-        ? _redirectUrl!.substring(0, _redirectUrl!.length - 1)
-        : _redirectUrl;
+
+    // Normalize URL: Remove trailing slash
+    var redirectTo = _redirectUrl;
+    if (redirectTo != null && redirectTo.endsWith('/')) {
+      redirectTo = redirectTo.substring(0, redirectTo.length - 1);
+    }
 
     Log.d('🛡️ [StaffRepo] Magic Link redirect URL: $redirectTo');
 
