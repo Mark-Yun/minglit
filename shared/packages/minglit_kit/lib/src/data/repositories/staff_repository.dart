@@ -78,11 +78,17 @@ class StaffRepository {
     }
 
     Log.d('🛡️ [StaffRepo] Sending Magic Link to $email');
-    Log.d('🛡️ [StaffRepo] Magic Link redirect URL: $_redirectUrl');
+    
+    // Normalize URL: Remove trailing slash to match exact redirect URL registration
+    final redirectTo = _redirectUrl != null && _redirectUrl!.endsWith('/')
+        ? _redirectUrl!.substring(0, _redirectUrl!.length - 1)
+        : _redirectUrl;
+
+    Log.d('🛡️ [StaffRepo] Magic Link redirect URL: $redirectTo');
 
     await _supabase.auth.signInWithOtp(
       email: email,
-      emailRedirectTo: _redirectUrl,
+      emailRedirectTo: redirectTo,
     );
   }
 }
