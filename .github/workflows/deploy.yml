@@ -88,7 +88,11 @@ jobs:
             vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
           else
             echo "👀 Deploying to Preview (Dev)..."
-            vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes
+            DEPLOY_URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes)
+            echo "Deployed to: $DEPLOY_URL"
+            
+            echo "🔗 Linking to dev.app.minglit.com..."
+            vercel alias set "$DEPLOY_URL" dev.app.minglit.com --token=${{ secrets.VERCEL_TOKEN }}
           fi
 
   deploy-landing-user:
@@ -187,5 +191,9 @@ jobs:
             vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
           else
             echo "👀 Deploying to Preview (Dev)..."
-            vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes
+            DEPLOY_URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes)
+            echo "Deployed to: $DEPLOY_URL"
+            
+            echo "🔗 Linking to dev.app.partner.minglit.com..."
+            vercel alias set "$DEPLOY_URL" dev.app.partner.minglit.com --token=${{ secrets.VERCEL_TOKEN }}
           fi
