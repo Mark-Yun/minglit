@@ -19,6 +19,20 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   const googleWebClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
+  const supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: 'http://127.0.0.1:54321',
+  );
+  const supabasePublishableKey = String.fromEnvironment(
+    'SUPABASE_PUBLISHABLE_KEY',
+    defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
+  );
+
+  // Initialize Supabase immediately for StaffGuard access
+  await Supabase.initialize(
+    url: supabaseUrl,
+    anonKey: supabasePublishableKey,
+  );
 
   runApp(
     ProviderScope(
@@ -80,23 +94,13 @@ Future<void> appStartup(Ref ref) async {
     'SUPABASE_URL',
     defaultValue: 'http://127.0.0.1:54321',
   );
-  const supabasePublishableKey = String.fromEnvironment(
-    'SUPABASE_PUBLISHABLE_KEY',
-    defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
-  );
   const supabaseServiceRoleKey = String.fromEnvironment(
     'SUPABASE_SERVICE_ROLE_KEY',
     defaultValue: 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz',
   );
 
   try {
-    await Future.wait([
-      initializeDateFormatting('ko_KR'),
-      Supabase.initialize(
-        url: supabaseUrl,
-        anonKey: supabasePublishableKey,
-      ),
-    ]);
+    await initializeDateFormatting('ko_KR');
 
     DevConfig.init(supabaseUrl, supabaseServiceRoleKey);
   } on AuthApiException catch (e) {
