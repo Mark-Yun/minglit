@@ -32,6 +32,8 @@ Future<void> main() async {
             defaultRedirectUrl: 'http://localhost:3001',
           ),
         ),
+        // Set environment domains to Dev
+        minglitDomainsProvider.overrideWithValue(const MinglitDomains.dev()),
         // Override goRouter to start at /dev for dev_main
         goRouterProvider.overrideWith((ref) {
           final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -150,7 +152,6 @@ Future<void> appStartup(Ref ref) async {
     debugPrint('❌ [Startup] Critical error: $e');
   }
 }
-
 
 class MinglitPartnerDevApp extends StatelessWidget {
   const MinglitPartnerDevApp({super.key});

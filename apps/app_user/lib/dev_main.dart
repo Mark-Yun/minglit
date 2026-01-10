@@ -29,6 +29,8 @@ Future<void> main() async {
             defaultRedirectUrl: 'http://localhost:3000',
           ),
         ),
+        // Set environment domains to Dev
+        minglitDomainsProvider.overrideWithValue(const MinglitDomains.dev()),
         // Override goRouter to start at /dev for dev_main
         goRouterProvider.overrideWith((ref) {
           final rootNavigatorKey = GlobalKey<NavigatorState>();
