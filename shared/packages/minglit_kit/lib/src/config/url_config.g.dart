@@ -55,7 +55,7 @@ final class MinglitDomainsProvider
   }
 }
 
-String _$minglitDomainsHash() => r'4f6a9ea9eb3b7207e08600f308aad9cd8744da2c';
+String _$minglitDomainsHash() => r'140ecde1b813e1cf271b78a30dd0b0804fba8431';
 
 /// Computes the final URLs based on [minglitDomainsProvider].
 
@@ -106,4 +106,4 @@ final class MinglitUrlConfigProvider
   }
 }
 
-String _$minglitUrlConfigHash() => r'e0a2c1a7b5bf1368bc3a5c0637ab0567dafc8216';
+String _$minglitUrlConfigHash() => r'80485a9eefd1b14362e39d8b8d1f44c9f3e5c261';

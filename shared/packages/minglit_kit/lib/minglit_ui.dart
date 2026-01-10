@@ -23,6 +23,7 @@ export 'src/ui/widgets/common/minglit_image.dart';
 export 'src/ui/widgets/common/minglit_image_picker.dart';
 export 'src/ui/widgets/common/minglit_skeleton.dart';
 export 'src/ui/widgets/common/number_stepper_input.dart';
+export 'src/ui/widgets/common/verification_card.dart';
 export 'src/ui/widgets/common/verification_select_card.dart';
 // Debug Widgets
 export 'src/ui/widgets/debug/user_session_info.dart';

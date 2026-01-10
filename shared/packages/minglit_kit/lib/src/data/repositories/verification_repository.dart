@@ -53,8 +53,15 @@ abstract class VerificationRepository {
   /// Soft-deletes a verification (sets is_active = false).
   Future<void> deleteVerification(String verificationId);
 
-  /// Fetches verifications created by a specific partner (Active only).
-  Future<List<Verification>> getPartnerVerifications(String partnerId);
+  /// Fetches verifications created by a specific partner.
+  /// [isActive] defaults to true. Set to false to fetch archived ones.
+  Future<List<Verification>> getPartnerVerifications(
+    String partnerId, {
+    bool isActive = true,
+  });
+
+  /// Restores an archived verification (sets is_active = true).
+  Future<void> restoreVerification(String verificationId);
 
   /// Fetches global (system) verifications (Active only).
   Future<List<Verification>> getGlobalVerifications();
@@ -182,14 +189,20 @@ class SupabaseVerificationRepository implements VerificationRepository {
   }
 
   @override
-  Future<List<Verification>> getPartnerVerifications(String partnerId) async {
-    Log.d('getPartnerVerifications called | partnerId: $partnerId');
+  Future<List<Verification>> getPartnerVerifications(
+    String partnerId, {
+    bool isActive = true,
+  }) async {
+    Log.d(
+      'getPartnerVerifications called | partnerId: $partnerId,'
+      ' isActive: $isActive',
+    );
     try {
       final data = await _supabase
           .from('verifications')
           .select()
           .eq('partner_id', partnerId)
-          .eq('is_active', true)
+          .eq('is_active', isActive)
           .order('created_at', ascending: false);
 
       final result = (data as List)
@@ -200,6 +213,21 @@ class SupabaseVerificationRepository implements VerificationRepository {
       return result;
     } catch (e, st) {
       Log.e('❌ [VerificationRepo] getPartnerVerifications Error', e, st);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> restoreVerification(String verificationId) async {
+    Log.d('restoreVerification called | verificationId: $verificationId');
+    try {
+      await _supabase
+          .from('verifications')
+          .update({'is_active': true})
+          .eq('id', verificationId);
+      Log.d('restoreVerification success');
+    } catch (e, st) {
+      Log.e('❌ [VerificationRepo] restoreVerification Error', e, st);
       rethrow;
     }
   }

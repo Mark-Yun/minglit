@@ -9,6 +9,7 @@ part of 'app_routes.dart';
 List<RouteBase> get $appRoutes => [
   $devMapRoute,
   $devUserSwitchRoute,
+  $verificationManageRoute,
   $createVerificationRoute,
   $partyListRoute,
   $loginRoute,
@@ -51,6 +52,32 @@ mixin $DevUserSwitchRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/dev/user-switch');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $verificationManageRoute => GoRouteData.$route(
+  path: '/verifications/manage',
+  factory: $VerificationManageRoute._fromState,
+);
+
+mixin $VerificationManageRoute on GoRouteData {
+  static VerificationManageRoute _fromState(GoRouterState state) =>
+      const VerificationManageRoute();
+
+  @override
+  String get location => GoRouteData.$location('/verifications/manage');
 
   @override
   void go(BuildContext context) => context.go(location);

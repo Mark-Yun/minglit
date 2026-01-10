@@ -49,4 +49,4 @@ final class StaffRepositoryProvider
   }
 }
 
-String _$staffRepositoryHash() => r'9acdf02dbebdd7ca0ab57d54fffec0c14dce1b9c';
+String _$staffRepositoryHash() => r'7953249d3faeeab54ea8945fecb3f1c04f7a1844';
