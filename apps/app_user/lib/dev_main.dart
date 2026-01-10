@@ -10,8 +10,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'
-    show AuthState, Supabase;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'dev_main.g.dart';
 
@@ -97,6 +97,17 @@ Future<void> appStartup(Ref ref) async {
     ]);
 
     DevConfig.init(supabaseUrl, supabaseServiceRoleKey);
+  } on AuthApiException catch (e) {
+    if (e.message.contains('Invalid Refresh Token') ||
+        e.code == 'refresh_token_already_used') {
+      debugPrint(
+        '⚠️ [Startup] Invalid Refresh Token detected. Clearing storage...',
+      );
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      debugPrint('✅ [Startup] Storage cleared. Please reload the app.');
+    }
+    rethrow;
   } on Exception catch (e) {
     debugPrint('⚠️ App startup warning: $e');
   }
@@ -159,8 +170,8 @@ class _AuthenticatedApp extends ConsumerWidget {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
-        return StaffGuardWrapper(
-          child: MinglitGlobalLoadingOverlay(child: child!),
+        return MinglitGlobalLoadingOverlay(
+          child: StaffGuardWrapper(child: child!),
         );
       },
     );

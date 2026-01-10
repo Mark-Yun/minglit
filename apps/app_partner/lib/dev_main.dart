@@ -13,6 +13,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:kakao_map_plugin/kakao_map_plugin.dart' as kakao;
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'dev_main.g.dart';
@@ -122,8 +123,6 @@ Future<void> appStartup(Ref ref) async {
     }
 
     // 3. Background Caching for remaining images
-
-    // 3. Background Caching for remaining images
     for (final asset in imageAssets) {
       if (asset != logoPath) {
         unawaited(rootBundle.load(asset));
@@ -136,10 +135,22 @@ Future<void> appStartup(Ref ref) async {
     // 5. Engine Stabilization Delay
     // Give 200ms for the engine to finish font mapping and image decoding
     await Future<void>.delayed(const Duration(milliseconds: 200));
+  } on AuthApiException catch (e) {
+    if (e.message.contains('Invalid Refresh Token') ||
+        e.code == 'refresh_token_already_used') {
+      debugPrint(
+        '⚠️ [Startup] Invalid Refresh Token detected. Clearing storage...',
+      );
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      debugPrint('✅ [Startup] Storage cleared. Please reload the app.');
+    }
+    rethrow;
   } on Exception catch (e) {
     debugPrint('❌ [Startup] Critical error: $e');
   }
 }
+
 
 class MinglitPartnerDevApp extends StatelessWidget {
   const MinglitPartnerDevApp({super.key});

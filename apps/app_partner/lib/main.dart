@@ -95,7 +95,9 @@ class _AppView extends ConsumerWidget {
         ],
         supportedLocales: AppLocalizations.supportedLocales,
         builder: (context, child) {
-          return MinglitGlobalLoadingOverlay(child: child!);
+          return MinglitGlobalLoadingOverlay(
+            child: StaffGuardWrapper(child: child!),
+          );
         },
       ),
       loading: () => MaterialApp(
