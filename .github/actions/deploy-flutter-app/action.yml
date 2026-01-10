@@ -40,7 +40,7 @@ runs:
             --dart-define=GOOGLE_WEB_CLIENT_ID=$GOOGLE_MAIN_ID
         else
           echo "🏗️ Building for Dev (Preview)..."
-          flutter build web --release \
+          flutter build web --release -t lib/dev_main.dart \
             --dart-define=SUPABASE_URL=$SUPABASE_DEV_URL \
             --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_DEV_KEY \
             --dart-define=GOOGLE_WEB_CLIENT_ID=$GOOGLE_DEV_ID
