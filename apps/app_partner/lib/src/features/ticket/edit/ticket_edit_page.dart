@@ -24,7 +24,6 @@ class TicketEditPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final partyAsync = ref.watch(partyDetailProvider(partyId));
     final ticketAsync = ref.watch(ticketDetailProvider(ticketId));
-    final ticketState = ref.watch(ticketControllerProvider);
 
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(title: context.l10n.ticket_title_edit),
@@ -54,7 +53,6 @@ class TicketEditPage extends ConsumerWidget {
                   initialTicket: ticket,
                   entryGroups: party.entryGroups,
                   submitButtonLabel: context.l10n.ticket_button_edit,
-                  isLoading: ticketState.isLoading,
                   onSaved:
                       ({
                         required String name,

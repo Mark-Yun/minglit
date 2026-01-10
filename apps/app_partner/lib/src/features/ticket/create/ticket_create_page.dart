@@ -22,7 +22,6 @@ class TicketCreatePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final partyAsync = ref.watch(partyDetailProvider(partyId));
     final eventAsync = ref.watch(eventDetailProvider(eventId));
-    final ticketState = ref.watch(ticketControllerProvider);
 
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(
@@ -52,7 +51,6 @@ class TicketCreatePage extends ConsumerWidget {
               entryGroups: entryGroups,
               initialQuantity: initialQuantity,
               submitButtonLabel: context.l10n.ticket_button_create,
-              isLoading: ticketState.isLoading,
               onSaved:
                   ({
                     required String name,

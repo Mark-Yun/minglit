@@ -17,8 +17,8 @@ class TicketController extends _$TicketController {
     required int quantity,
     List<String> targetEntryGroupIds = const [],
   }) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
+    try {
       final repo = ref.read(ticketRepositoryProvider);
 
       final ticket = Ticket(
@@ -33,7 +33,12 @@ class TicketController extends _$TicketController {
       );
 
       await repo.createTicket(ticket);
-    });
+      state = const AsyncData(null);
+    } on Object catch (e, st) {
+      state = AsyncError(e, st);
+    } finally {
+      loading.hide();
+    }
   }
 
   Future<void> updateTicket({
@@ -43,8 +48,8 @@ class TicketController extends _$TicketController {
     int? quantity,
     List<String>? targetEntryGroupIds,
   }) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
+    try {
       final repo = ref.read(ticketRepositoryProvider);
 
       final updatedTicket = ticket.copyWith(
@@ -56,7 +61,12 @@ class TicketController extends _$TicketController {
       );
 
       await repo.updateTicket(updatedTicket);
-    });
+      state = const AsyncData(null);
+    } on Object catch (e, st) {
+      state = AsyncError(e, st);
+    } finally {
+      loading.hide();
+    }
   }
 }
 

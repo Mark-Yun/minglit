@@ -50,24 +50,34 @@ class VerificationManageController extends _$VerificationManageController {
 
   /// Archives (soft-deletes) the verification.
   Future<void> archiveVerification(String verificationId) async {
+    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
+
     final repo = ref.read(verificationRepositoryProvider);
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    try {
       await repo.deleteVerification(verificationId);
-      // Re-fetch to update lists
-      return _fetchLists();
-    });
+      final newState = await _fetchLists();
+      state = AsyncData(newState);
+    } on Object catch (e, st) {
+      state = AsyncError(e, st);
+    } finally {
+      loading.hide();
+    }
   }
 
   /// Restores the verification.
   Future<void> restoreVerification(String verificationId) async {
+    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
+
     final repo = ref.read(verificationRepositoryProvider);
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    try {
       await repo.restoreVerification(verificationId);
-      // Re-fetch to update lists
-      return _fetchLists();
-    });
+      final newState = await _fetchLists();
+      state = AsyncData(newState);
+    } on Object catch (e, st) {
+      state = AsyncError(e, st);
+    } finally {
+      loading.hide();
+    }
   }
 
   Future<VerificationManageState> _fetchLists() async {
