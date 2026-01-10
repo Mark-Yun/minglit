@@ -1,0 +1,73 @@
+name: 'Deploy Flutter App'
+description: 'Builds and deploys a Flutter app to Vercel'
+inputs:
+  working-directory:
+    description: 'Path to the flutter app'
+    required: true
+  vercel-token:
+    description: 'Vercel Token'
+    required: true
+  vercel-org-id:
+    description: 'Vercel Org ID'
+    required: true
+  vercel-project-id:
+    description: 'Vercel Project ID'
+    required: true
+  dev-domain-alias:
+    description: 'Domain alias for dev environment'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+    
+    - name: Install & Build
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      # Note: Secrets must be passed as environment variables in the workflow calling this action
+      run: |
+        touch .env
+        flutter pub get
+        
+        if [[ "${{ github.ref_name }}" == "main" ]]; then
+          echo "🏗️ Building for Main (Production)..."
+          flutter build web --release \
+            --dart-define=SUPABASE_URL=$SUPABASE_MAIN_URL \
+            --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_MAIN_KEY \
+            --dart-define=GOOGLE_WEB_CLIENT_ID=$GOOGLE_MAIN_ID
+        else
+          echo "🏗️ Building for Dev (Preview)..."
+          flutter build web --release \
+            --dart-define=SUPABASE_URL=$SUPABASE_DEV_URL \
+            --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_DEV_KEY \
+            --dart-define=GOOGLE_WEB_CLIENT_ID=$GOOGLE_DEV_ID
+        fi
+
+    - name: Copy vercel.json
+      shell: bash
+      run: cp ${{ inputs.working-directory }}/vercel.json ${{ inputs.working-directory }}/build/web/vercel.json
+
+    - name: Deploy to Vercel
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}/build/web
+      env:
+        VERCEL_ORG_ID: ${{ inputs.vercel-org-id }}
+        VERCEL_PROJECT_ID: ${{ inputs.vercel-project-id }}
+        VERCEL_TOKEN: ${{ inputs.vercel-token }}
+      run: |
+        npm install --global vercel@latest
+        
+        if [[ "${{ github.ref_name }}" == "main" ]]; then
+          echo "🚀 Deploying to Production (Main)..."
+          vercel deploy --prod --token=$VERCEL_TOKEN --yes
+        else
+          echo "👀 Deploying to Preview (Dev)..."
+          DEPLOY_URL=$(vercel deploy --token=$VERCEL_TOKEN --yes)
+          echo "Deployed to: $DEPLOY_URL"
+          
+          echo "🔗 Linking to ${{ inputs.dev-domain-alias }}..."
+          vercel alias set "$DEPLOY_URL" ${{ inputs.dev-domain-alias }} --token=$VERCEL_TOKEN
+        fi

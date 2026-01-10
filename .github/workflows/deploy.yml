@@ -32,168 +32,74 @@ jobs:
             - 'apps/landing_partner/**'
             - 'shared/web/**'
 
-  deploy-user:
+  deploy-app_user:
     needs: changes
     if: ${{ needs.changes.outputs.app_user == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
+      - name: Deploy User App
+        uses: ./.github/actions/deploy-flutter-app
         with:
-          channel: 'stable'
-      
-      - name: Install & Build (User App)
-        working-directory: ./apps/app_user
+          working-directory: ./apps/app_user
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_USER }}
+          dev-domain-alias: dev.app.minglit.com
         env:
-          # Dev Secrets
           SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
           SUPABASE_DEV_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
           GOOGLE_DEV_ID: ${{ secrets.GOOGLE_DEV_WEB_CLIENT_ID }}
-          # Main Secrets
           SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
           SUPABASE_MAIN_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
           GOOGLE_MAIN_ID: ${{ secrets.GOOGLE_MAIN_WEB_CLIENT_ID }}
-        run: |
-          touch .env
-          flutter pub get
-          
-          if [[ "${{ github.ref_name }}" == "main" ]]; then
-            echo "🏗️ Building for Main (Production)..."
-            flutter build web --release \
-              --dart-define=SUPABASE_URL=$SUPABASE_MAIN_URL \
-              --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_MAIN_KEY \
-              --dart-define=GOOGLE_WEB_CLIENT_ID=$GOOGLE_MAIN_ID
-          else
-            echo "🏗️ Building for Dev (Preview)..."
-            flutter build web --release \
-              --dart-define=SUPABASE_URL=$SUPABASE_DEV_URL \
-              --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_DEV_KEY \
-              --dart-define=GOOGLE_WEB_CLIENT_ID=$GOOGLE_DEV_ID
-          fi
 
-      - name: Copy vercel.json
-        run: cp apps/app_user/vercel.json apps/app_user/build/web/vercel.json
-
-      - name: Deploy to Vercel (User App)
-        working-directory: ./apps/app_user/build/web
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_USER }}
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: |
-          npm install --global vercel@latest
-          
-          if [[ "${{ github.ref_name }}" == "main" ]]; then
-            echo "🚀 Deploying to Production (Main)..."
-            vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
-          else
-            echo "👀 Deploying to Preview (Dev)..."
-            DEPLOY_URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes)
-            echo "Deployed to: $DEPLOY_URL"
-            
-            echo "🔗 Linking to dev.app.minglit.com..."
-            vercel alias set "$DEPLOY_URL" dev.app.minglit.com --token=${{ secrets.VERCEL_TOKEN }}
-          fi
-
-  deploy-landing-user:
+  deploy-landing_user:
     needs: changes
     if: ${{ needs.changes.outputs.landing_user == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy to Vercel (Landing User)
-        working-directory: ./apps/landing_user
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_LANDING_USER }}
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: |
-          npm install --global vercel@latest
-          if [[ "${{ github.ref_name }}" == "main" ]]; then
-            vercel deploy --prod --token=$VERCEL_TOKEN --yes
-          else
-            vercel deploy --token=$VERCEL_TOKEN --yes
-          fi
+      - name: Deploy User Landing
+        uses: ./.github/actions/deploy-nextjs-app
+        with:
+          working-directory: ./apps/landing_user
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_LANDING_USER }}
 
-  deploy-landing-partner:
+  deploy-landing_partner:
     needs: changes
     if: ${{ needs.changes.outputs.landing_partner == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy to Vercel (Landing Partner)
-        working-directory: ./apps/landing_partner
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_LANDING_PARTNER }}
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: |
-          npm install --global vercel@latest
-          if [[ "${{ github.ref_name }}" == "main" ]]; then
-            vercel deploy --prod --token=$VERCEL_TOKEN --yes
-          else
-            vercel deploy --token=$VERCEL_TOKEN --yes
-          fi
+      - name: Deploy Partner Landing
+        uses: ./.github/actions/deploy-nextjs-app
+        with:
+          working-directory: ./apps/landing_partner
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_LANDING_PARTNER }}
 
-  deploy-partner:
+  deploy-app_partner:
     needs: changes
     if: ${{ needs.changes.outputs.app_partner == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
+      - name: Deploy Partner App
+        uses: ./.github/actions/deploy-flutter-app
         with:
-          channel: 'stable'
-      
-      - name: Install & Build (Partner App)
-        working-directory: ./apps/app_partner
+          working-directory: ./apps/app_partner
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_PARTNER }}
+          dev-domain-alias: dev.app.partner.minglit.com
         env:
-          # Dev Secrets
           SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
           SUPABASE_DEV_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
           GOOGLE_DEV_ID: ${{ secrets.GOOGLE_DEV_WEB_CLIENT_ID }}
-          # Main Secrets
           SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
           SUPABASE_MAIN_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
           GOOGLE_MAIN_ID: ${{ secrets.GOOGLE_MAIN_WEB_CLIENT_ID }}
-        run: |
-          touch .env
-          flutter pub get
-          
-          if [[ "${{ github.ref_name }}" == "main" ]]; then
-            echo "🏗️ Building for Main (Production)..."
-            flutter build web --release \
-              --dart-define=SUPABASE_URL=$SUPABASE_MAIN_URL \
-              --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_MAIN_KEY \
-              --dart-define=GOOGLE_WEB_CLIENT_ID=$GOOGLE_MAIN_ID
-          else
-            echo "🏗️ Building for Dev (Preview)..."
-            flutter build web --release \
-              --dart-define=SUPABASE_URL=$SUPABASE_DEV_URL \
-              --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_DEV_KEY \
-              --dart-define=GOOGLE_WEB_CLIENT_ID=$GOOGLE_DEV_ID
-          fi
-
-      - name: Copy vercel.json
-        run: cp apps/app_partner/vercel.json apps/app_partner/build/web/vercel.json
-
-      - name: Deploy to Vercel (Partner App)
-        working-directory: ./apps/app_partner/build/web
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_PARTNER }}
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: |
-          npm install --global vercel@latest
-          
-          if [[ "${{ github.ref_name }}" == "main" ]]; then
-            echo "🚀 Deploying to Production (Main)..."
-            vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
-          else
-            echo "👀 Deploying to Preview (Dev)..."
-            DEPLOY_URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes)
-            echo "Deployed to: $DEPLOY_URL"
-            
-            echo "🔗 Linking to dev.app.partner.minglit.com..."
-            vercel alias set "$DEPLOY_URL" dev.app.partner.minglit.com --token=${{ secrets.VERCEL_TOKEN }}
-          fi
