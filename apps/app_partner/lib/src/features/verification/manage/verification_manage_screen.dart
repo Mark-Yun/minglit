@@ -61,29 +61,16 @@ class VerificationManageScreen extends ConsumerWidget {
     WidgetRef ref,
     Verification verification,
   ) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await MinglitAlert.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('인증 보관'),
-        content: Text(
-          "'${verification.displayName}' 인증을 보관함으로 이동하시겠습니까?\n\n"
+      title: '인증 보관',
+      content: "'${verification.displayName}' 인증을 보관함으로 이동하시겠습니까?\n\n"
           '더 이상 새로운 파티에 이 인증을 사용할 수 없게 됩니다.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('보관하기'),
-          ),
-        ],
-      ),
+      confirmText: '보관하기',
+      isDestructive: true,
     );
 
-    if (confirmed ?? false) {
+    if (confirmed) {
       await ref
           .read(verificationManageControllerProvider.notifier)
           .archiveVerification(verification.id);
@@ -95,28 +82,15 @@ class VerificationManageScreen extends ConsumerWidget {
     WidgetRef ref,
     Verification verification,
   ) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await MinglitAlert.showConfirm(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('인증 복구'),
-        content: Text(
-          "'${verification.displayName}' 인증을 복구하시겠습니까?\n\n"
+      title: '인증 복구',
+      content: "'${verification.displayName}' 인증을 복구하시겠습니까?\n\n"
           '다시 파티 생성 시 선택할 수 있게 됩니다.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('복구하기'),
-          ),
-        ],
-      ),
+      confirmText: '복구하기',
     );
 
-    if (confirmed ?? false) {
+    if (confirmed) {
       await ref
           .read(verificationManageControllerProvider.notifier)
           .restoreVerification(verification.id);
