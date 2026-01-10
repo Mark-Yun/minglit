@@ -118,7 +118,15 @@ class MinglitDevApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _AppView();
+    // 1. Wrap the entire app with a Shell MaterialApp and StaffGuard.
+    // This ensures protection is active even during startup/loading/error states.
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: MinglitTheme.materialTheme,
+      home: const StaffGuardWrapper(
+        child: _AppView(),
+      ),
+    );
   }
 }
 
@@ -131,18 +139,12 @@ class _AppView extends ConsumerWidget {
 
     return startupState.when(
       data: (_) => const _AuthenticatedApp(),
-      loading: () => MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: MinglitTheme.materialTheme,
-        home: const MinglitSplashScreen(
-          appName: 'User Dev',
-        ),
+      loading: () => const MinglitSplashScreen(
+        appName: 'User Dev',
       ),
-      error: (e, st) => MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: Text('Startup Error: $e'),
-          ),
+      error: (e, st) => Scaffold(
+        body: Center(
+          child: Text('Startup Error: $e'),
         ),
       ),
     );
@@ -171,7 +173,7 @@ class _AuthenticatedApp extends ConsumerWidget {
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
         return MinglitGlobalLoadingOverlay(
-          child: StaffGuardWrapper(child: child!),
+          child: child!,
         );
       },
     );

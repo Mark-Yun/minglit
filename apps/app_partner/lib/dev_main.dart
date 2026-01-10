@@ -157,7 +157,15 @@ class MinglitPartnerDevApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _AppView();
+    // 1. Wrap the entire app with a Shell MaterialApp and StaffGuard.
+    // This ensures protection is active even during startup/loading/error states.
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: MinglitTheme.materialTheme,
+      home: const StaffGuardWrapper(
+        child: _AppView(),
+      ),
+    );
   }
 }
 
@@ -179,24 +187,15 @@ class _AppView extends ConsumerWidget {
     );
 
     return startupState.when(
-      // Case 1: Initializing - Show Splash immediately with a lightweight app
-      loading: () => MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          useMaterial3: true,
-          scaffoldBackgroundColor: Colors.white,
-        ),
-        home: const MinglitSplashScreen(
-          appName: 'Partner Dev',
-          isPartner: true,
-        ),
+      // Case 1: Initializing - Show Splash immediately
+      loading: () => const MinglitSplashScreen(
+        appName: 'Partner Dev',
+        isPartner: true,
       ),
 
       // Case 2: Error - Show Error UI
-      error: (e, st) => MaterialApp(
-        home: Scaffold(
-          body: Center(child: Text('Startup Error: $e')),
-        ),
+      error: (e, st) => Scaffold(
+        body: Center(child: Text('Startup Error: $e')),
       ),
 
       // Case 3: Ready - Show the Real App using GoRouter
@@ -226,9 +225,7 @@ class _AuthenticatedApp extends ConsumerWidget {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
-        return StaffGuardWrapper(
-          child: MinglitGlobalLoadingOverlay(child: child!),
-        );
+        return MinglitGlobalLoadingOverlay(child: child!);
       },
     );
   }
