@@ -276,7 +276,8 @@ class PartyRepository {
         ..remove('created_at')
         ..remove('updated_at')
         ..remove('party')
-        ..remove('location');
+        ..remove('location')
+        ..remove('tickets'); // Remove relational data
 
       final data = await _supabase
           .from('events')
@@ -302,7 +303,8 @@ class PartyRepository {
         ..remove('created_at')
         ..remove('updated_at')
         ..remove('party')
-        ..remove('location');
+        ..remove('location')
+        ..remove('tickets'); // Remove relational data
 
       final data = await _supabase
           .from('events')
