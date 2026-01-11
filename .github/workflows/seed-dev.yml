@@ -65,11 +65,8 @@ jobs:
           supabase link --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD
           
           # 2. Reset Database (Destructive)
-          # Piping 'yes' to handle any non-force confirmation prompts, though --linked usually implies remote.
-          # Note: Supabase CLI might require different flags depending on version, 
-          # but `db reset --linked` is the standard for remote reset.
-          # We assume 'backend/supabase' is the correct root for Supabase config.
-          yes | supabase db reset --linked
+          # Use the native --yes flag for non-interactive mode.
+          supabase db reset --linked --yes
 
       # Step 1.5: Apply Dev Permissions (Critical for Service Role Access)
       - name: Apply Dev Permissions
