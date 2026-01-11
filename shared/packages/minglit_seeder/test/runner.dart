@@ -25,7 +25,23 @@ void main() {
 
     print('🚀 [Seeder] Initializing Supabase Client...');
     print('   URL: $url');
-    // Don't print the key
+    
+    // Debug: Check JWT Role
+    try {
+      final parts = key.split('.');
+      if (parts.length == 3) {
+        final payload = parts[1];
+        final normalized = base64Url.normalize(payload);
+        final decoded = utf8.decode(base64Url.decode(normalized));
+        final Map<String, dynamic> json = jsonDecode(decoded);
+        print('   🔑 Key Role: ${json['role']}'); // Should be 'service_role'
+        if (json['role'] != 'service_role') {
+          print('   ⚠️ WARNING: You are NOT using the Service Role Key!');
+        }
+      }
+    } catch (e) {
+      print('   ⚠️ Failed to decode key: $e');
+    }
 
     final client = SupabaseClient(url, key);
     final seeder = DatabaseSeeder(client);
