@@ -77,21 +77,22 @@ class DatabaseSeeder {
     List<String> globalVerifIds,
   ) async {
     final partners = seedData['partners'] as List<dynamic>;
-    final genericCount = seedData['generic_partners_count'] as int? ?? 0;
+    // final genericCount = seedData['generic_partners_count'] as int? ?? 0;
 
     _Log.i('🏢 Step 2: Processing ${partners.length} defined partners...');
 
-    // 1. Process Defined Partners (e.g. Partner 1, 2)
+    // 1. Process Defined Partners (JSON)
     for (final dynamic p in partners) {
+      // ... (Existing logic for fixed JSON data, maybe refactor to reuse _createPartnerAndContent)
+      // For simplicity, keeping existing logic for JSON data but updating ticket table
       final pData = p as Map<String, dynamic>;
       final index = pData['index'] as int;
       final partnerName = pData['name'] as String;
       final email = pData['email'] as String;
 
-      // Create Owner
       final ownerId = await _createAdminUser(
         email: email,
-        password: 'password',
+        password: 'password1234!', // Secure password
         metadata: {
           'name': 'Owner $index ($partnerName)',
           'username': 'owner_$index',
@@ -99,41 +100,25 @@ class DatabaseSeeder {
         },
       );
 
-      // Create Partner
-      final partnerRes = await _adminClient
-          .from('partners')
-          .insert({
-            'name': partnerName,
-            'introduction': pData['introduction'] ?? 'Premium Store',
-            'biz_name': pData['biz_name'],
-            'biz_number': pData['biz_number'],
-            'contact_email': email,
-          })
-          .select('id')
-          .single();
-      final partnerId = partnerRes['id'] as String;
+      final partnerId = await _createPartner(
+        ownerId,
+        partnerName,
+        pData['introduction'] ?? 'Premium Store',
+        pData['biz_name'],
+        pData['biz_number'],
+        email,
+      );
 
-      // Link Owner
-      await _adminClient.from('partner_member_permissions').insert({
-        'partner_id': partnerId,
-        'user_id': ownerId,
-        'role': 'owner',
-      });
+      // Location
+      final locationId = await _createLocation(
+        partnerId,
+        '$partnerName Main Branch',
+        'Seoul Gangnam-gu Gangnam-daero ${396 + index}',
+        37.4979 + (index * 0.001),
+        127.0276 + (index * 0.001),
+      );
 
-      // Create Location
-      final locationRes = await _adminClient
-          .from('locations')
-          .insert({
-            'partner_id': partnerId,
-            'name': '$partnerName Main Branch',
-            'address': 'Seoul Gangnam-gu Gangnam-daero ${396 + index}',
-            'geo_point': 'POINT(127.0276 37.4979)',
-          })
-          .select('id')
-          .single();
-      final locationId = locationRes['id'] as String;
-
-      // Create Local Verifications
+      // Verifications (Local)
       final localVerifIds = <String>[];
       final verifs = pData['verifications'] as List<dynamic>? ?? [];
       if (verifs.isNotEmpty) {
@@ -153,92 +138,292 @@ class DatabaseSeeder {
         );
       }
 
-      // Create Parties
+      // Parties
       final parties = pData['parties'] as List<dynamic>? ?? [];
       for (final dynamic pEntry in parties) {
-        final partyData = pEntry as Map<String, dynamic>;
-        final partyId = const Uuid().v4();
-
-        // Map Entry Groups
-        final entryGroups = (partyData['entry_groups'] as List<dynamic>).map((
-          dynamic g,
-        ) {
-          final gMap = g as Map<String, dynamic>;
-          final groupUuid = const Uuid().v4();
-          final requiredIds = <String>[];
-
-          // Add Global Verifs
-          final globalIndices = gMap['use_global_ids'] as List<dynamic>? ?? [];
-          for (final dynamic gi in globalIndices) {
-            final idx = gi as int;
-            if (globalVerifIds.length > idx) {
-              requiredIds.add(globalVerifIds[idx]);
-            }
-          }
-
-          // Add Local Verifs
-          final localIndices =
-              gMap['use_local_indices'] as List<dynamic>? ?? [];
-          for (final dynamic li in localIndices) {
-            final idx = li as int;
-            if (localVerifIds.length > idx) {
-              requiredIds.add(localVerifIds[idx]);
-            }
-          }
-
-          return {
-            'id': groupUuid,
-            'label': gMap['label'],
-            'gender': gMap['gender'],
-            'birth_year_range': gMap['birth_year_range'],
-            'required_verification_ids': requiredIds,
-          };
-        }).toList();
-
-        final allVerifIds = entryGroups
-            .expand((e) => e['required_verification_ids'] as List)
-            .toSet()
-            .toList();
-
-        await _adminClient.from('parties').insert({
-          'id': partyId,
-          'partner_id': partnerId,
-          'location_id': locationId,
-          'title': partyData['title'],
-          'description': {
-            'ops': [
-              {'insert': '${partyData['description']}\n'},
-            ],
-          },
-          'min_confirmed_count': 5,
-          'max_participants': 20,
-          'conditions': entryGroups,
-          'required_verification_ids': allVerifIds,
-        });
-
-        // Create Ticket Templates
-        final tickets = partyData['tickets'] as List<dynamic>? ?? [];
-        await _adminClient
-            .from('ticket_templates')
-            .insert(
-              tickets.map((dynamic t) {
-                final tMap = t as Map<String, dynamic>;
-                final groupIdx = tMap['group_index'] as int;
-                return {
-                  'party_id': partyId,
-                  'name': tMap['name'],
-                  'price': tMap['price'],
-                  'quantity': tMap['quantity'],
-                  'target_entry_group_ids': [entryGroups[groupIdx]['id']],
-                };
-              }).toList(),
-            );
+        await _createPartyAndEvents(
+          partnerId,
+          locationId,
+          pEntry as Map<String, dynamic>,
+          globalVerifIds,
+          localVerifIds,
+        );
       }
     }
 
-    // 2. Create Generic Partners if needed
-    if (genericCount > 0) {
-      _Log.i('🏢 Step 3: Seeding $genericCount generic partners...');
+    // 2. Generate Random Partners & Content based on Hot Places
+    _Log.i('🏢 Step 3: Generating Random Partners for Hot Places...');
+    await _generateRandomContent(globalVerifIds);
+  }
+
+  // --- Helper Methods ---
+
+  final _hotPlaces = [
+    {'name': '서울 강남', 'lat': 37.4979, 'lng': 127.0276},
+    {'name': '서울 홍대', 'lat': 37.5575, 'lng': 126.9245},
+    {'name': '서울 성수', 'lat': 37.5445, 'lng': 127.0559},
+    {'name': '서울 이태원', 'lat': 37.5342, 'lng': 126.9946},
+    {'name': '부산 서면', 'lat': 35.1578, 'lng': 129.0600},
+    {'name': '부산 해운대', 'lat': 35.1587, 'lng': 129.1603},
+    {'name': '대구 동성로', 'lat': 35.8714, 'lng': 128.5947},
+    {'name': '대전 둔산동', 'lat': 36.3544, 'lng': 127.3776},
+    {'name': '광주 충장로', 'lat': 35.1475, 'lng': 126.9166},
+  ];
+
+  Future<void> _generateRandomContent(List<String> globalVerifIds) async {
+    int partnerCounter = 100; // Start from 100 to avoid conflict with JSON
+
+    for (final place in _hotPlaces) {
+      final placeName = place['name'] as String;
+      final lat = place['lat'] as double;
+      final lng = place['lng'] as double;
+
+      // 3 Partners per Hot Place
+      for (var i = 0; i < 3; i++) {
+        partnerCounter++;
+        final partnerName = '$placeName 핫플 파트너 $i';
+        final email = 'partner$partnerCounter@test.com';
+
+        final ownerId = await _createAdminUser(
+          email: email,
+          password: 'password1234!',
+          metadata: {
+            'name': '사장님 $partnerCounter ($placeName)',
+            'username': 'owner_$partnerCounter',
+            'gender': i.isEven ? 'male' : 'female',
+          },
+        );
+
+        final partnerId = await _createPartner(
+          ownerId,
+          partnerName,
+          '$placeName에서 가장 핫한 라운지입니다.',
+          'Minglit Corp $partnerCounter',
+          '123-45-$partnerCounter',
+          email,
+        );
+
+        // Random Location near Hot Place (approx 1km radius)
+        // 0.01 degree approx 1.1km
+        final rLat = lat + (DateTime.now().microsecond % 20 - 10) * 0.0005;
+        final rLng = lng + (DateTime.now().microsecond % 20 - 10) * 0.0005;
+
+        final locationId = await _createLocation(
+          partnerId,
+          '$partnerName 본점',
+          '$placeName 번화가 ${i + 1}길',
+          rLat,
+          rLng,
+        );
+
+        // 2 Parties per Partner
+        for (var p = 0; p < 2; p++) {
+          final partyTitle = i == 0 ? '불금 와인 파티' : '주말 루프탑 모임';
+          final partyData = {
+            'title': '[$placeName] $partyTitle',
+            'description': '멋진 사람들과 함께하는 $placeName 최고의 파티!',
+            'entry_groups': [
+              {
+                'label': '일반 입장',
+                'gender': null,
+                'birth_year_range': {'min': 1990, 'max': 2000},
+                'use_global_ids': [0], // Identity Verification
+                'use_local_indices': [],
+              }
+            ],
+            'tickets': [
+              {
+                'name': 'Early Bird Ticket',
+                'price': 15000,
+                'quantity': 10,
+                'group_index': 0
+              },
+              {
+                'name': 'Regular Ticket',
+                'price': 30000,
+                'quantity': 30,
+                'group_index': 0
+              }
+            ]
+          };
+
+          await _createPartyAndEvents(
+            partnerId,
+            locationId,
+            partyData,
+            globalVerifIds,
+            [],
+          );
+        }
+      }
+    }
+  }
+
+  Future<String> _createPartner(
+    String ownerId,
+    String name,
+    String intro,
+    String bizName,
+    String bizNumber,
+    String email,
+  ) async {
+    final partnerRes = await _adminClient
+        .from('partners')
+        .insert({
+          'name': name,
+          'introduction': intro,
+          'biz_name': bizName,
+          'biz_number': bizNumber,
+          'contact_email': email,
+        })
+        .select('id')
+        .single();
+    final partnerId = partnerRes['id'] as String;
+
+    await _adminClient.from('partner_member_permissions').insert({
+      'partner_id': partnerId,
+      'user_id': ownerId,
+      'role': 'owner',
+    });
+
+    return partnerId;
+  }
+
+  Future<String> _createLocation(
+    String partnerId,
+    String name,
+    String address,
+    double lat,
+    double lng,
+  ) async {
+    final locationRes = await _adminClient
+        .from('locations')
+        .insert({
+          'partner_id': partnerId,
+          'name': name,
+          'address': address,
+          'geo_point': 'POINT($lng $lat)',
+        })
+        .select('id')
+        .single();
+    return locationRes['id'] as String;
+  }
+
+  Future<void> _createPartyAndEvents(
+    String partnerId,
+    String locationId,
+    Map<String, dynamic> partyData,
+    List<String> globalVerifIds,
+    List<String> localVerifIds,
+  ) async {
+    final partyId = const Uuid().v4();
+
+    // Map Entry Groups
+    final entryGroups =
+        (partyData['entry_groups'] as List<dynamic>).map((dynamic g) {
+      final gMap = g as Map<String, dynamic>;
+      final groupUuid = const Uuid().v4();
+      final requiredIds = <String>[];
+
+      final globalIndices = gMap['use_global_ids'] as List<dynamic>? ?? [];
+      for (final dynamic gi in globalIndices) {
+        final idx = gi as int;
+        if (globalVerifIds.length > idx) requiredIds.add(globalVerifIds[idx]);
+      }
+
+      final localIndices = gMap['use_local_indices'] as List<dynamic>? ?? [];
+      for (final dynamic li in localIndices) {
+        final idx = li as int;
+        if (localVerifIds.length > idx) requiredIds.add(localVerifIds[idx]);
+      }
+
+      return {
+        'id': groupUuid,
+        'label': gMap['label'],
+        'gender': gMap['gender'],
+        'birth_year_range': gMap['birth_year_range'],
+        'required_verification_ids': requiredIds,
+      };
+    }).toList();
+
+    final allVerifIds = entryGroups
+        .expand((e) => e['required_verification_ids'] as List)
+        .toSet()
+        .toList();
+
+    await _adminClient.from('parties').insert({
+      'id': partyId,
+      'partner_id': partnerId,
+      'location_id': locationId,
+      'title': partyData['title'],
+      'description': {
+        'ops': [
+          {'insert': '${partyData['description']}\n'},
+        ],
+      },
+      'min_confirmed_count': 5,
+      'max_participants': 20,
+      'conditions': entryGroups,
+      'required_verification_ids': allVerifIds,
+    });
+
+    // Create Ticket Templates
+    final tickets = partyData['tickets'] as List<dynamic>? ?? [];
+    await _adminClient
+        .from('ticket_templates')
+        .insert(
+          tickets.map((dynamic t) {
+            final tMap = t as Map<String, dynamic>;
+            final groupIdx = tMap['group_index'] as int;
+            return {
+              'party_id': partyId,
+              'name': tMap['name'],
+              'price': tMap['price'],
+              'quantity': tMap['quantity'],
+              'target_entry_group_ids': [entryGroups[groupIdx]['id']],
+            };
+          }).toList(),
+        );
+
+    // Create Events (Instances)
+    // Create 3 events: Today, Next Sat, Next Sun
+    final now = DateTime.now();
+    final eventDates = [
+      now.add(const Duration(hours: 3)), // Today later
+      now.add(const Duration(days: 7)), // Next week
+      now.add(const Duration(days: 8)),
+    ];
+
+    for (final date in eventDates) {
+      final eventId = const Uuid().v4();
+      await _adminClient.from('events').insert({
+        'id': eventId,
+        'party_id': partyId,
+        'location_id': locationId,
+        'title': null, // Use party title
+        'start_time': date.toIso8601String(),
+        'end_time': date.add(const Duration(hours: 4)).toIso8601String(),
+        'max_participants': 30,
+        'status': 'scheduled',
+      });
+
+      // Create Event Tickets (Copy from Templates logic)
+      await _adminClient
+          .from('tickets')
+          .insert(
+            tickets.map((dynamic t) {
+              final tMap = t as Map<String, dynamic>;
+              final groupIdx = tMap['group_index'] as int;
+              return {
+                'event_id': eventId,
+                'name': tMap['name'],
+                'price': tMap['price'],
+                'quantity': tMap['quantity'],
+                'target_entry_group_ids': [entryGroups[groupIdx]['id']],
+                'status': 'on_sale',
+              };
+            }).toList(),
+          );
     }
   }
 
