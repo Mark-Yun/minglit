@@ -142,6 +142,7 @@ class EventCreateController extends _$EventCreateController {
         title: state.title,
         description: state.description.isEmpty ? null : state.description,
         contactOptions: state.contactOptions,
+        tickets: state.tickets, // Pass the tickets to repository
       );
 
       await repo.createEvent(event);

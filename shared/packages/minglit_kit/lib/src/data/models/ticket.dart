@@ -36,3 +36,18 @@ extension TicketX on Ticket {
   // Since conditions are removed, these are no longer relevant here.
   // They should be moved to PartyEntryGroup if not already there.
 }
+
+extension TicketDbX on Ticket {
+  Map<String, dynamic> toDbJson({String? eventId}) {
+    final json = toJson()
+      ..remove('id')
+      ..remove('created_at')
+      ..remove('updated_at');
+
+    if (eventId != null) {
+      json['event_id'] = eventId;
+      json['party_id'] = null;
+    }
+    return json;
+  }
+}

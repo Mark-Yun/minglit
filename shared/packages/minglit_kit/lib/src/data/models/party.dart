@@ -136,3 +136,12 @@ extension PartyX on Party {
     return summaries;
   }
 }
+
+extension PartyDbX on Party {
+  Map<String, dynamic> toDbJson() {
+    return toJson()
+      ..remove('id')
+      ..remove('created_at')
+      ..remove('updated_at');
+  }
+}

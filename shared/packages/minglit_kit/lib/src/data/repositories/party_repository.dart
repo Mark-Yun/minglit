@@ -1,6 +1,7 @@
 import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/src/data/models/event.dart';
 import 'package:minglit_kit/src/data/models/party.dart';
+import 'package:minglit_kit/src/data/models/ticket.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:path/path.dart' as p;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -165,10 +166,7 @@ class PartyRepository {
   Future<Party> createParty(Party party) async {
     Log.d('createParty called | title: ${party.title}');
     try {
-      final json = party.toJson()
-        ..remove('id')
-        ..remove('created_at')
-        ..remove('updated_at');
+      final json = party.toDbJson();
 
       final data = await _supabase
           .from('parties')
@@ -189,10 +187,7 @@ class PartyRepository {
   Future<Party> updateParty(Party party) async {
     Log.d('updateParty called | id: ${party.id}');
     try {
-      final json = party.toJson()
-        ..remove('id')
-        ..remove('created_at')
-        ..remove('updated_at');
+      final json = party.toDbJson();
 
       final data = await _supabase
           .from('parties')
@@ -271,23 +266,27 @@ class PartyRepository {
   Future<Event> createEvent(Event event) async {
     Log.d('createEvent called | partyId: ${event.partyId}');
     try {
-      final json = event.toJson()
-        ..remove('id')
-        ..remove('created_at')
-        ..remove('updated_at')
-        ..remove('party')
-        ..remove('location')
-        ..remove('tickets'); // Remove relational data
+      final eventJson = event.toDbJson();
 
       final data = await _supabase
           .from('events')
-          .insert(json)
+          .insert(eventJson)
           .select()
           .single();
 
-      final result = Event.fromJson(data);
-      Log.d('createEvent success | id: ${result.id}');
-      return result;
+      final createdEvent = Event.fromJson(data);
+
+      // Create associated tickets if provided
+      if (event.tickets != null && event.tickets!.isNotEmpty) {
+        final ticketsJson = event.tickets!
+            .map((t) => t.toDbJson(eventId: createdEvent.id))
+            .toList();
+
+        await _supabase.from('tickets').insert(ticketsJson);
+      }
+
+      Log.d('createEvent success | id: ${createdEvent.id}');
+      return createdEvent;
     } catch (e, st) {
       Log.e('❌ [PartyRepo] createEvent Error', e, st);
       rethrow;
@@ -298,13 +297,7 @@ class PartyRepository {
   Future<Event> updateEvent(Event event) async {
     Log.d('updateEvent called | id: ${event.id}');
     try {
-      final json = event.toJson()
-        ..remove('id')
-        ..remove('created_at')
-        ..remove('updated_at')
-        ..remove('party')
-        ..remove('location')
-        ..remove('tickets'); // Remove relational data
+      final json = event.toDbJson();
 
       final data = await _supabase
           .from('events')

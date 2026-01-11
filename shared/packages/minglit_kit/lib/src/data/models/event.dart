@@ -27,9 +27,9 @@ abstract class Event with _$Event {
     @JsonKey(name: 'max_participants') @Default(20) int maxParticipants,
     @JsonKey(name: 'current_participants') @Default(0) int currentParticipants,
     @Default('scheduled') String status,
-    Location? location,
-    Party? party,
-    List<Ticket>? tickets,
+    @JsonKey(includeToJson: false) Location? location,
+    @JsonKey(includeToJson: false) Party? party,
+    @JsonKey(includeToJson: false) List<Ticket>? tickets,
   }) = _Event;
 
   factory Event.fromJson(Map<String, dynamic> json) => _$EventFromJson(json);
@@ -73,4 +73,13 @@ abstract class EventParticipant with _$EventParticipant {
 
   factory EventParticipant.fromJson(Map<String, dynamic> json) =>
       _$EventParticipantFromJson(json);
+}
+
+extension EventDbX on Event {
+  Map<String, dynamic> toDbJson() {
+    return toJson()
+      ..remove('id')
+      ..remove('created_at')
+      ..remove('updated_at');
+  }
 }
