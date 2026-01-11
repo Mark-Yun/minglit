@@ -27,6 +27,9 @@ _Event _$EventFromJson(Map<String, dynamic> json) => _Event(
   party: json['party'] == null
       ? null
       : Party.fromJson(json['party'] as Map<String, dynamic>),
+  tickets: (json['tickets'] as List<dynamic>?)
+      ?.map((e) => Ticket.fromJson(e as Map<String, dynamic>))
+      .toList(),
 );
 
 Map<String, dynamic> _$EventToJson(_Event instance) => <String, dynamic>{
@@ -46,6 +49,7 @@ Map<String, dynamic> _$EventToJson(_Event instance) => <String, dynamic>{
   'status': instance.status,
   'location': instance.location,
   'party': instance.party,
+  'tickets': instance.tickets,
 };
 
 _EventApplication _$EventApplicationFromJson(Map<String, dynamic> json) =>

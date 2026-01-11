@@ -17,7 +17,9 @@ void main() {
 
     if (url == null || key == null) {
       print('⚠️ [Seeder] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.');
-      print('   Skipping seed execution. (This is expected during build/test unless env vars are set)');
+      print(
+        '   Skipping seed execution. (This is expected during build/test unless env vars are set)',
+      );
       return;
     }
 
@@ -29,9 +31,7 @@ void main() {
     final client = SupabaseClient(
       url,
       key,
-      authOptions: const AuthClientOptions(
-        authFlowType: AuthFlowType.implicit,
-      ),
+      authOptions: const AuthClientOptions(authFlowType: AuthFlowType.implicit),
     );
     final seeder = DatabaseSeeder(client);
 

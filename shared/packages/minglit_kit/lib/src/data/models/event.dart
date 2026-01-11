@@ -29,6 +29,7 @@ abstract class Event with _$Event {
     @Default('scheduled') String status,
     Location? location,
     Party? party,
+    List<Ticket>? tickets,
   }) = _Event;
 
   factory Event.fromJson(Map<String, dynamic> json) => _$EventFromJson(json);

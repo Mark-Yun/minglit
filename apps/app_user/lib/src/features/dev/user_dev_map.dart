@@ -1,6 +1,5 @@
 import 'package:app_user/src/features/auth/auth_wrapper.dart';
-import 'package:app_user/src/features/auth/login_page.dart';
-import 'package:app_user/src/features/home/home_page.dart';
+import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -23,19 +22,51 @@ class UserDevMap extends StatelessWidget {
             category: 'Auth',
             title: 'Login',
             description: '로그인 및 소셜 가입 화면',
-            screenBuilder: (_) => const LoginPage(),
+            onTap: (context, ref) => const LoginRoute().push<void>(context),
           ),
           DevScreenItem(
             category: 'Auth',
             title: 'Session Switcher',
             description: '테스트 유저 계정으로 즉시 전환',
-            screenBuilder: (_) => const DevUserSwitchScreen(),
+            onTap: (context, ref) =>
+                const DevUserSwitchRoute().push<void>(context),
           ),
           DevScreenItem(
             category: 'Home',
             title: 'Home',
             description: '메인 홈 화면 (파티 목록 등)',
-            screenBuilder: (_) => const HomePage(),
+            onTap: (context, ref) => const HomeRoute().push<void>(context),
+          ),
+          DevScreenItem(
+            category: 'Curation',
+            title: 'New Arrivals',
+            description: '신규 오픈 파티 목록',
+            onTap: (context, ref) =>
+                const EventCurationRoute().push<void>(context),
+          ),
+          DevScreenItem(
+            category: 'Curation',
+            title: 'Closing Soon',
+            description: '마감 임박 파티 목록',
+            onTap: (context, ref) => const EventCurationRoute(
+              type: EventFeedType.closingSoon,
+            ).push<void>(context),
+          ),
+          DevScreenItem(
+            category: 'Curation',
+            title: 'Nearest',
+            description: '내 주변 파티 목록',
+            onTap: (context, ref) => const EventCurationRoute(
+              type: EventFeedType.nearest,
+            ).push<void>(context),
+          ),
+          DevScreenItem(
+            category: 'Curation',
+            title: 'Early Bird',
+            description: '얼리버드 특가 파티 목록',
+            onTap: (context, ref) => const EventCurationRoute(
+              type: EventFeedType.earlyBird,
+            ).push<void>(context),
           ),
           DevScreenItem(
             category: 'Preview',
@@ -69,11 +100,7 @@ class UserDevMap extends StatelessWidget {
         onPressed: () {
           // Navigation result is not used
           // ignore: discarded_futures
-          Navigator.of(context).push<void>(
-            MaterialPageRoute<void>(
-              builder: (_) => const DevUserSwitchScreen(),
-            ),
-          );
+          const DevUserSwitchRoute().push<void>(context);
         },
         child: const Icon(Icons.people_alt),
       ),
