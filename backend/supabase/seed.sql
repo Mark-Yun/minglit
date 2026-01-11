@@ -2,6 +2,15 @@
 -- SEED DATA
 --
 
+-- 0. GRANT Permissions to service_role (Critical for CI/CD Seeder)
+-- This ensures the service_role key has full access to public tables after a reset.
+-- Note: This is safe because seed.sql is only executed during 'db reset'.
+GRANT USAGE ON SCHEMA public TO service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO service_role;
+
 -- 1. Global Verifications
 -- Note: Categories are career, asset, marriage, academic, vehicle, etc.
 insert into public.verifications (id, category, internal_name, display_name, description, icon_key, form_schema, partner_id)
