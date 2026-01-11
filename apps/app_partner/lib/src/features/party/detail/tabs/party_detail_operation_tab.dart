@@ -71,8 +71,8 @@ class PartyDetailOperationTab extends ConsumerWidget {
               horizontal: MinglitSpacing.medium,
             ),
             child: ticketsAsync.when(
-              data: (tickets) => PartyTicketsSummary(
-                tickets: tickets,
+              data: (templates) => PartyTicketsSummary(
+                tickets: templates.map(Ticket.createFromTemplate).toList(),
                 entryGroups: party.entryGroups,
                 maxCapacity: party.maxParticipants,
                 showStats: false,
@@ -99,7 +99,7 @@ class PartyDetailOperationTab extends ConsumerWidget {
   }
 
   Future<void> _handleCreateTicket(BuildContext context, WidgetRef ref) async {
-    final newTicket = await Navigator.of(context).push<Ticket>(
+    final newTemplate = await Navigator.of(context).push<TicketTemplate>(
       MaterialPageRoute(
         builder: (_) => TicketTemplateCreatePage(
           entryGroups: party.entryGroups,
@@ -107,13 +107,13 @@ class PartyDetailOperationTab extends ConsumerWidget {
       ),
     );
 
-    if (newTicket != null && context.mounted) {
+    if (newTemplate != null && context.mounted) {
       final loading = ref.read(globalLoadingControllerProvider.notifier)
         ..show();
       try {
         final repo = ref.read(ticketRepositoryProvider);
-        await repo.createTicket(
-          newTicket.copyWith(partyId: party.id, eventId: null),
+        await repo.createTicketTemplate(
+          newTemplate.copyWith(partyId: party.id),
         );
         ref.invalidate(partyTicketsProvider(party.id));
 

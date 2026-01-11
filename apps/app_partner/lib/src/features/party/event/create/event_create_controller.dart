@@ -43,9 +43,12 @@ class EventCreateController extends _$EventCreateController {
 
   void initWithParty({
     required Party party,
-    required List<Ticket> tickets,
+    required List<TicketTemplate> templates,
     Location? location,
   }) {
+    // Map templates to instance-based tickets using the factory method
+    final initialTickets = templates.map(Ticket.createFromTemplate).toList();
+
     state = state.copyWith(
       title: party.title,
       description: party.description ?? {},
@@ -53,7 +56,7 @@ class EventCreateController extends _$EventCreateController {
       maxParticipants: party.maxParticipants,
       contactOptions: party.contactOptions,
       entryGroups: party.entryGroups,
-      tickets: tickets,
+      tickets: initialTickets,
       locationId: party.locationId,
       selectedLocation: location,
       addressDetail: location?.addressDetail,

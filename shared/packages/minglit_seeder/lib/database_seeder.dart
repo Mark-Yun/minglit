@@ -216,10 +216,10 @@ class DatabaseSeeder {
           'required_verification_ids': allVerifIds,
         });
 
-        // Create Tickets
+        // Create Ticket Templates
         final tickets = partyData['tickets'] as List<dynamic>? ?? [];
         await _adminClient
-            .from('tickets')
+            .from('ticket_templates')
             .insert(
               tickets.map((dynamic t) {
                 final tMap = t as Map<String, dynamic>;

@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:minglit_kit/src/data/models/party_entry_group.dart';
+import 'package:minglit_kit/src/data/models/ticket_template.dart';
 
 part 'party.freezed.dart';
 part 'party.g.dart';
@@ -58,6 +59,7 @@ abstract class Party with _$Party {
     @JsonKey(name: 'min_confirmed_count') @Default(0) int minConfirmedCount,
     @JsonKey(name: 'max_participants') @Default(20) int maxParticipants,
     @Default('active') String status,
+    @JsonKey(includeToJson: false) List<TicketTemplate>? ticketTemplates,
   }) = _Party;
 
   factory Party.fromJson(Map<String, dynamic> json) => _$PartyFromJson(json);

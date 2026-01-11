@@ -108,7 +108,7 @@ class Step6Review extends ConsumerWidget {
             title: context.l10n.wizard_review_tickets,
             onTap: () => notifier.setStep(PartyCreateStep.tickets),
             child: PartyTicketsSummary(
-              tickets: state.tickets,
+              tickets: state.tickets.map(Ticket.createFromTemplate).toList(),
               entryGroups: state.entryGroups,
               maxCapacity: state.maxParticipants,
               showStats: false,

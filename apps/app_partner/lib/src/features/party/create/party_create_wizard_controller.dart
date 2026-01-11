@@ -44,8 +44,8 @@ abstract class PartyCreateWizardState with _$PartyCreateWizardState {
     // Step 4: Entry Rules (Entry Groups)
     @Default([]) List<PartyEntryGroup> entryGroups,
 
-    // Step 5: Tickets
-    @Default([]) List<Ticket> tickets,
+    // Step 5: Ticket Templates
+    @Default([]) List<TicketTemplate> tickets,
 
     // Global Status
     @Default(AsyncValue.data(null)) AsyncValue<void> status,
@@ -132,18 +132,18 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
     );
   }
 
-  void addTicket(Ticket ticket) {
+  void addTicket(TicketTemplate ticket) {
     state = state.copyWith(tickets: [...state.tickets, ticket]);
   }
 
-  void updateTicket(int index, Ticket ticket) {
-    final list = List<Ticket>.from(state.tickets);
+  void updateTicket(int index, TicketTemplate ticket) {
+    final list = List<TicketTemplate>.from(state.tickets);
     list[index] = ticket;
     state = state.copyWith(tickets: list);
   }
 
   void removeTicket(int index) {
-    final list = List<Ticket>.from(state.tickets)..removeAt(index);
+    final list = List<TicketTemplate>.from(state.tickets)..removeAt(index);
     state = state.copyWith(tickets: list);
   }
 
@@ -300,10 +300,9 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
 
         // 6. Create Ticket Templates linked to Party
         for (final template in state.tickets) {
-          await ticketRepo.createTicket(
+          await ticketRepo.createTicketTemplate(
             template.copyWith(
               partyId: createdParty.id,
-              eventId: null,
             ),
           );
         }

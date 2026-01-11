@@ -10,20 +10,24 @@ class TicketTemplateCreatePage extends StatelessWidget {
   });
 
   final List<PartyEntryGroup> entryGroups;
-  final Ticket? initialTicket;
+  final TicketTemplate? initialTicket;
 
   @override
   Widget build(BuildContext context) {
+    final template = initialTicket;
+
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(
-        title: initialTicket == null ? '기본 티켓 추가' : '티켓 수정',
+        title: template == null ? '기본 티켓 추가' : '티켓 수정',
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(MinglitSpacing.medium),
         child: TicketForm(
           entryGroups: entryGroups,
-          initialTicket: initialTicket,
-          submitButtonLabel: initialTicket == null ? '추가하기' : '수정 완료',
+          initialTicket: template != null
+              ? Ticket.createFromTemplate(template)
+              : null,
+          submitButtonLabel: template == null ? '추가하기' : '수정 완료',
           onSaved:
               ({
                 required String name,
@@ -31,10 +35,11 @@ class TicketTemplateCreatePage extends StatelessWidget {
                 required int quantity,
                 required List<String> targetEntryGroupIds,
               }) {
-                final ticket =
-                    (initialTicket ??
-                            Ticket(
+                final result =
+                    (template ??
+                            TicketTemplate(
                               id: '', // Temporary ID
+                              partyId: '',
                               name: '',
                               createdAt: DateTime.now(),
                               updatedAt: DateTime.now(),
@@ -47,7 +52,7 @@ class TicketTemplateCreatePage extends StatelessWidget {
                           updatedAt: DateTime.now(),
                         );
 
-                Navigator.of(context).pop(ticket);
+                Navigator.of(context).pop(result);
               },
         ),
       ),

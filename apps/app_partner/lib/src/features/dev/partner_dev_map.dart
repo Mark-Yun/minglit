@@ -4,7 +4,6 @@ import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:minglit_seeder/database_seeder.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PartnerDevMap extends StatelessWidget {
   const PartnerDevMap({super.key});
@@ -137,13 +136,13 @@ class PartnerDevMap extends StatelessWidget {
               )..show();
 
               try {
-                // Call Supabase Admin function to truncate tables (if exists)
-                // Or just run seeder which might rely on clean state.
-                // Since we can't run 'supabase db reset' from here,
-                // we assume Seeder handles cleanup or we just overwrite.
-                // NOTE: Proper reset requires SQL execution or Admin API.
-                // For now, let's just run seeder.
-                final seeder = DatabaseSeeder(Supabase.instance.client);
+                if (!DevConfig.isInitialized) {
+                  throw StateError(
+                    'DevConfig not initialized. Cannot run seeder.',
+                  );
+                }
+
+                final seeder = DatabaseSeeder(DevConfig.adminClient);
                 await seeder.seed();
 
                 if (context.mounted) {

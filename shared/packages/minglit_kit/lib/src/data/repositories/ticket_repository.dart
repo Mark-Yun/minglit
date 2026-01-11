@@ -59,27 +59,36 @@ class TicketRepository {
     }
   }
 
-  /// Fetches default ticket templates for a specific party.
-  Future<List<Ticket>> getDefaultTicketsByPartyId(String partyId) async {
-    Log.d('getDefaultTicketsByPartyId called | partyId: $partyId');
+  /// Fetches ticket templates for a specific party.
+  Future<List<TicketTemplate>> getTicketTemplatesByPartyId(
+    String partyId,
+  ) async {
+    Log.d('getTicketTemplatesByPartyId called | partyId: $partyId');
     try {
       final data = await _supabase
-          .from('tickets')
+          .from('ticket_templates')
           .select()
           .eq('party_id', partyId)
-          .filter('event_id', 'is', null)
           .order('created_at', ascending: true);
 
       final result = (data as List<dynamic>)
-          .map((json) => Ticket.fromJson(json as Map<String, dynamic>))
+          .map((json) => TicketTemplate.fromJson(json as Map<String, dynamic>))
           .toList();
 
-      Log.d('getDefaultTicketsByPartyId success | count: ${result.length}');
+      Log.d('getTicketTemplatesByPartyId success | count: ${result.length}');
       return result;
     } catch (e, st) {
-      Log.e('getDefaultTicketsByPartyId failed', e, st);
+      Log.e('getTicketTemplatesByPartyId failed', e, st);
       rethrow;
     }
+  }
+
+  /// Fetches default ticket templates for a specific party.
+  /// (Alias for getTicketTemplatesByPartyId for backward compatibility)
+  Future<List<TicketTemplate>> getDefaultTicketsByPartyId(
+    String partyId,
+  ) async {
+    return getTicketTemplatesByPartyId(partyId);
   }
 
   /// Fetches a specific ticket by ID.
@@ -97,6 +106,27 @@ class TicketRepository {
       return result;
     } catch (e, st) {
       Log.e('getTicketById failed', e, st);
+      rethrow;
+    }
+  }
+
+  /// Creates a new ticket template for a party.
+  Future<TicketTemplate> createTicketTemplate(TicketTemplate template) async {
+    Log.d('createTicketTemplate called | ticket: ${template.name}');
+    try {
+      final json = template.toDbJson();
+
+      final data = await _supabase
+          .from('ticket_templates')
+          .insert(json)
+          .select()
+          .single();
+
+      final result = TicketTemplate.fromJson(data);
+      Log.d('createTicketTemplate success | id: ${result.id}');
+      return result;
+    } catch (e, st) {
+      Log.e('createTicketTemplate failed: ${template.name}', e, st);
       rethrow;
     }
   }

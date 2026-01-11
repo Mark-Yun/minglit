@@ -42,7 +42,7 @@ class _EventCreateScreenState extends ConsumerState<EventCreateScreen> {
             .read(eventCreateControllerProvider(widget.partyId).notifier)
             .initWithParty(
               party: party,
-              tickets: tickets,
+              templates: tickets,
               location: location,
             );
       }

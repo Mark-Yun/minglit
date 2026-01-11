@@ -62,6 +62,9 @@ _Party _$PartyFromJson(Map<String, dynamic> json) => _Party(
   minConfirmedCount: (json['min_confirmed_count'] as num?)?.toInt() ?? 0,
   maxParticipants: (json['max_participants'] as num?)?.toInt() ?? 20,
   status: json['status'] as String? ?? 'active',
+  ticketTemplates: (json['ticketTemplates'] as List<dynamic>?)
+      ?.map((e) => TicketTemplate.fromJson(e as Map<String, dynamic>))
+      .toList(),
 );
 
 Map<String, dynamic> _$PartyToJson(_Party instance) => <String, dynamic>{

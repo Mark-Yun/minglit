@@ -187,13 +187,30 @@ create table public.events (
   primary key (id)
 );
 
--- 13. Tickets
+-- 13. Ticket Templates & Tickets
+create table public.ticket_templates (
+  id uuid not null default gen_random_uuid(),
+  party_id uuid not null references public.parties(id) on delete cascade,
+  
+  name text not null,
+  description text,
+  price integer not null default 0,
+  quantity integer not null,
+  
+  -- Linked Entry Group IDs (UUID Array)
+  target_entry_group_ids uuid[] default '{}',
+  
+  -- Ticket specific verification requirements
+  required_verification_ids uuid[] default '{}',
+  
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (id)
+);
+
 create table public.tickets (
   id uuid not null default gen_random_uuid(),
-  
-  -- Can belong to a Party (Template) or an Event (Instance)
-  party_id uuid references public.parties(id) on delete cascade,
-  event_id uuid references public.events(id) on delete cascade,
+  event_id uuid not null references public.events(id) on delete cascade,
   
   name text not null,
   description text,
@@ -204,19 +221,13 @@ create table public.tickets (
   -- Linked Entry Group IDs (UUID Array)
   target_entry_group_ids uuid[] default '{}',
   
-  -- Ticket specific verification requirements (overrides or adds to party requirements)
+  -- Ticket specific verification requirements
   required_verification_ids uuid[] default '{}',
   
   status text not null default 'on_sale' check (status in ('on_sale', 'sold_out', 'hidden')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  primary key (id),
-  
-  -- Ensure it belongs to either a party or an event
-  constraint ticket_owner_check check (
-    (party_id is not null and event_id is null) or
-    (event_id is not null and party_id is null)
-  )
+  primary key (id)
 );
 
 -- 14. User Verifications (User's Private Vault - The Source of Truth)
@@ -347,6 +358,7 @@ create trigger handle_updated_at before update on public.partners for each row e
 create trigger handle_updated_at before update on public.locations for each row execute procedure moddatetime (updated_at);
 create trigger handle_updated_at before update on public.parties for each row execute procedure moddatetime (updated_at);
 create trigger handle_updated_at before update on public.events for each row execute procedure moddatetime (updated_at);
+create trigger handle_updated_at before update on public.ticket_templates for each row execute procedure moddatetime (updated_at);
 create trigger handle_updated_at before update on public.tickets for each row execute procedure moddatetime (updated_at);
 create trigger handle_updated_at before update on public.event_applications for each row execute procedure moddatetime (updated_at);
 create trigger handle_updated_at before update on public.event_participants for each row execute procedure moddatetime (updated_at);
@@ -445,6 +457,7 @@ alter table public.partners enable row level security;
 alter table public.locations enable row level security;
 alter table public.parties enable row level security;
 alter table public.events enable row level security;
+alter table public.ticket_templates enable row level security;
 alter table public.tickets enable row level security;
 alter table public.event_applications enable row level security;
 alter table public.event_participants enable row level security;
@@ -457,6 +470,7 @@ alter table public.partner_verified_users enable row level security;
 create policy "Public read access" on public.locations for select using (true);
 create policy "Public read access" on public.parties for select using (true);
 create policy "Public read access" on public.events for select using (true);
+create policy "Public read access" on public.ticket_templates for select using (true);
 create policy "Public read access" on public.tickets for select using (true);
 create policy "Public read access" on public.verifications for select using (true);
 create policy "Public read access" on public.user_profiles for select using (true);
@@ -491,6 +505,17 @@ create policy "Admin/Owner locations all access" on public.locations for all
 create policy "Admin/Owner parties all access" on public.parties for all 
   using (public.is_super_admin() or public.has_partner_permission(partner_id, 'PARTY_MANAGE'));
 
+-- Ticket Templates (Write Access)
+create policy "Admin/Owner ticket_templates all access" on public.ticket_templates for all 
+  using (
+    public.is_super_admin() or 
+    exists (
+      select 1 from public.parties p
+      where p.id = party_id
+      and public.has_partner_permission(p.partner_id, 'PARTY_MANAGE')
+    )
+  );
+
 -- Events (Write Access)
 create policy "Admin/Owner events all access" on public.events for all 
   using (
@@ -507,8 +532,9 @@ create policy "Admin/Owner tickets all access" on public.tickets for all
   using (
     public.is_super_admin() or 
     exists (
-      select 1 from public.parties p
-      where p.id = party_id
+      select 1 from public.events e
+      join public.parties p on p.id = e.party_id
+      where e.id = event_id
       and public.has_partner_permission(p.partner_id, 'PARTY_MANAGE')
     )
   );

@@ -60,7 +60,7 @@ class PartyRepository {
     try {
       final data = await _supabase
           .from('parties')
-          .select()
+          .select('*, ticketTemplates:ticket_templates(*)')
           .eq('id', partyId)
           .single();
 
@@ -79,7 +79,9 @@ class PartyRepository {
     try {
       final data = await _supabase
           .from('parties')
-          .select('*, location:locations(*)')
+          .select(
+            '*, location:locations(*), ticketTemplates:ticket_templates(*)',
+          )
           .eq('status', 'active')
           .order('created_at', ascending: false);
 
@@ -101,7 +103,9 @@ class PartyRepository {
     try {
       final data = await _supabase
           .from('parties')
-          .select('*, location:locations(*)')
+          .select(
+            '*, location:locations(*), ticketTemplates:ticket_templates(*)',
+          )
           .eq('partner_id', partnerId)
           .order('created_at', ascending: false);
 
