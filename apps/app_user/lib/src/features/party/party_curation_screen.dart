@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -31,11 +34,14 @@ class PartyCurationScreen extends ConsumerWidget {
             separatorBuilder: (context, index) =>
                 const SizedBox(height: MinglitSpacing.medium),
             itemBuilder: (context, index) {
+              final event = events[index];
               return MinglitEventCard(
-                event: events[index],
+                event: event,
                 width: double.infinity,
                 onTap: () {
-                  // TODO(Mark): Go to event detail
+                  unawaited(
+                    EventDetailRoute(eventId: event.id).push<void>(context),
+                  );
                 },
               );
             },

@@ -118,3 +118,72 @@ final class EventFeedFamily extends $Family
   @override
   String toString() => r'eventFeedProvider';
 }
+
+@ProviderFor(eventDetail)
+const eventDetailProvider = EventDetailFamily._();
+
+final class EventDetailProvider
+    extends $FunctionalProvider<AsyncValue<Event>, Event, FutureOr<Event>>
+    with $FutureModifier<Event>, $FutureProvider<Event> {
+  const EventDetailProvider._({
+    required EventDetailFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'eventDetailProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$eventDetailHash();
+
+  @override
+  String toString() {
+    return r'eventDetailProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<Event> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Event> create(Ref ref) {
+    final argument = this.argument as String;
+    return eventDetail(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is EventDetailProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$eventDetailHash() => r'e8bf1134e6274c0428444f31f0264d0076b36288';
+
+final class EventDetailFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<Event>, String> {
+  const EventDetailFamily._()
+    : super(
+        retry: null,
+        name: r'eventDetailProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  EventDetailProvider call(String eventId) =>
+      EventDetailProvider._(argument: eventId, from: this);
+
+  @override
+  String toString() => r'eventDetailProvider';
+}

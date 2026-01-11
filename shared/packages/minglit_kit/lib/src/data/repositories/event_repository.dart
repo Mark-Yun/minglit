@@ -97,4 +97,26 @@ class EventRepository {
       rethrow;
     }
   }
+
+  /// Fetches a single event by ID with all relations.
+  Future<Event> getEventById(String eventId) async {
+    Log.d('getEventById called | id: $eventId');
+    try {
+      final data = await _supabase
+          .from('events')
+          .select(
+            '*, party:parties(*, location:locations(*), partner:partners(*)), '
+            'tickets(*)',
+          )
+          .eq('id', eventId)
+          .single();
+
+      final result = Event.fromJson(data);
+      Log.d('getEventById success | title: ${result.title}');
+      return result;
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] getEventById Error', e, st);
+      rethrow;
+    }
+  }
 }

@@ -22,3 +22,10 @@ Future<List<Event>> eventFeed(
     limit: limit,
   );
 }
+
+@riverpod
+Future<Event> eventDetail(Ref ref, String eventId) {
+  final repository = ref.watch(eventRepositoryProvider);
+  // Implementation in repository: fetch with all relations
+  return repository.getEventById(eventId);
+}

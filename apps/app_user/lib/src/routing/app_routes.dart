@@ -1,5 +1,6 @@
 import 'package:app_user/src/features/auth/login_page.dart';
 import 'package:app_user/src/features/dev/user_dev_map.dart';
+import 'package:app_user/src/features/event/detail/event_detail_screen.dart';
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/features/party/party_curation_screen.dart';
 import 'package:flutter/material.dart';
@@ -60,4 +61,17 @@ class EventCurationRoute extends GoRouteData with $EventCurationRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       PartyCurationScreen(type: type);
+}
+
+/// **Event Detail Route**: Detailed information about a specific event.
+/// Path: `/events/:eventId`
+@TypedGoRoute<EventDetailRoute>(path: '/events/:eventId')
+class EventDetailRoute extends GoRouteData with $EventDetailRoute {
+  const EventDetailRoute({required this.eventId});
+
+  final String eventId;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      EventDetailScreen(eventId: eventId);
 }

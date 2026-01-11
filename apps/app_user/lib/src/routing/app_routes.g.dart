@@ -12,6 +12,7 @@ List<RouteBase> get $appRoutes => [
   $loginRoute,
   $homeRoute,
   $eventCurationRoute,
+  $eventDetailRoute,
 ];
 
 RouteBase get $devRoute =>
@@ -170,4 +171,33 @@ T? _$convertMapValue<T>(
 extension<T extends Enum> on Map<T, String> {
   T? _$fromName(String? value) =>
       entries.where((element) => element.value == value).firstOrNull?.key;
+}
+
+RouteBase get $eventDetailRoute => GoRouteData.$route(
+  path: '/events/:eventId',
+  factory: $EventDetailRoute._fromState,
+);
+
+mixin $EventDetailRoute on GoRouteData {
+  static EventDetailRoute _fromState(GoRouterState state) =>
+      EventDetailRoute(eventId: state.pathParameters['eventId']!);
+
+  EventDetailRoute get _self => this as EventDetailRoute;
+
+  @override
+  String get location =>
+      GoRouteData.$location('/events/${Uri.encodeComponent(_self.eventId)}');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
 }
