@@ -83,7 +83,7 @@ final class EventFeedProvider
   }
 }
 
-String _$eventFeedHash() => r'30225645bbbe3b30a45217b8deee44dfe95ecf59';
+String _$eventFeedHash() => r'3bdba14c15ee6dd690b3250d33356c918a798b1f';
 
 final class EventFeedFamily extends $Family
     with

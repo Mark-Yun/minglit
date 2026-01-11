@@ -47,9 +47,6 @@ Map<String, dynamic> _$EventToJson(_Event instance) => <String, dynamic>{
   'max_participants': instance.maxParticipants,
   'current_participants': instance.currentParticipants,
   'status': instance.status,
-  'location': instance.location,
-  'party': instance.party,
-  'tickets': instance.tickets,
 };
 
 _EventApplication _$EventApplicationFromJson(Map<String, dynamic> json) =>
