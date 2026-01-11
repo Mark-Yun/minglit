@@ -43,6 +43,8 @@ dependencies:
   kakao_map_plugin: ^0.3.7
   minglit_kit:
     path: ../../shared/packages/minglit_kit
+  minglit_seeder:
+    path: ../../shared/packages/minglit_seeder
   riverpod_annotation: ^3.0.3
   shared_preferences: ^2.5.4
   supabase_flutter: ^2.12.0

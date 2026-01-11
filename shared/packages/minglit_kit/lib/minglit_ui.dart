@@ -3,7 +3,6 @@ export 'src/features/auth/ui/minglit_login_screen.dart';
 export 'src/features/auth/ui/staff_gate_screen.dart';
 export 'src/features/auth/ui/staff_guard_wrapper.dart';
 // Feature Widgets (Dev/Loading)
-export 'src/features/dev/database_seeder.dart';
 export 'src/features/dev/dev_config.dart';
 export 'src/features/dev/dev_user_switch_screen.dart';
 export 'src/features/dev/partner_list_preview_screen.dart';

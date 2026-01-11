@@ -1,14 +1,14 @@
 import 'dart:convert';
+import 'dart:developer' as dev;
 
 import 'package:flutter/services.dart';
-import 'package:minglit_kit/src/utils/exceptions.dart';
-import 'package:minglit_kit/src/utils/log.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 /// **Database Seeder**
 ///
 /// Handles programmatic data seeding using JSON assets for local development.
+/// This package is designed to be standalone and not depend on minglit_kit.
 class DatabaseSeeder {
   DatabaseSeeder(this._adminClient);
 
@@ -16,18 +16,19 @@ class DatabaseSeeder {
 
   /// Runs the full seeding process.
   Future<void> seed() async {
-    Log.i('🌱 [Seeder] Starting Fresh Seeding from JSON...');
+    _Log.i('🌱 [Seeder] Starting Fresh Seeding from JSON...');
 
     try {
       // 1. Load Seed Data from JSON
+      // Note: When loading assets from a package, use 'packages/<package_name>/<path>'
       final jsonStr = await rootBundle.loadString(
-        'packages/minglit_kit/assets/seed/seed_data.json',
+        'packages/minglit_seeder/assets/seed_data.json',
       );
       final seedData = jsonDecode(jsonStr) as Map<String, dynamic>;
 
       // 2. Fetch Global Verifications (created by seed.sql)
       final globalVerifIds = await _getGlobalVerificationIds();
-      Log.i('✅ Global Verifications Found: ${globalVerifIds.length} items');
+      _Log.i('✅ Global Verifications Found: ${globalVerifIds.length} items');
 
       // 3. Create Normal Users
       await _seedUsers();
@@ -35,9 +36,9 @@ class DatabaseSeeder {
       // 4. Create Partners & Diverse Content from JSON
       await _processSeedData(seedData, globalVerifIds);
 
-      Log.i('✅ [Seeder] Seeding Completed!');
+      _Log.i('✅ [Seeder] Seeding Completed!');
     } on Object catch (e, st) {
-      Log.e('🔥 [Seeder] Seeding Failed', e, st);
+      _Log.e('🔥 [Seeder] Seeding Failed', e, st);
       rethrow;
     }
   }
@@ -54,7 +55,7 @@ class DatabaseSeeder {
   }
 
   Future<void> _seedUsers() async {
-    Log.i('👥 Step 1: Seeding 100 Normal Users...');
+    _Log.i('👥 Step 1: Seeding 100 Normal Users...');
     for (var i = 1; i <= 100; i++) {
       final metadata = <String, dynamic>{
         'name': 'User $i',
@@ -78,7 +79,7 @@ class DatabaseSeeder {
     final partners = seedData['partners'] as List<dynamic>;
     final genericCount = seedData['generic_partners_count'] as int? ?? 0;
 
-    Log.i('🏢 Step 2: Processing ${partners.length} defined partners...');
+    _Log.i('🏢 Step 2: Processing ${partners.length} defined partners...');
 
     // 1. Process Defined Partners (e.g. Partner 1, 2)
     for (final dynamic p in partners) {
@@ -237,7 +238,7 @@ class DatabaseSeeder {
 
     // 2. Create Generic Partners if needed
     if (genericCount > 0) {
-      Log.i('🏢 Step 3: Seeding $genericCount generic partners...');
+      _Log.i('🏢 Step 3: Seeding $genericCount generic partners...');
     }
   }
 
@@ -257,17 +258,23 @@ class DatabaseSeeder {
       );
       final user = res.user;
       if (user == null) {
-        throw const MinglitSystemException('User creation failed');
+        throw Exception('User creation failed');
       }
       return user.id;
     } on AuthException catch (e) {
       if (e.message.contains('already registered') ||
           e.code == 'email_exists') {
+        // Since listUsers might be slow or paginated, we try to find it.
+        // For efficiency in seed, we might just skip or delete.
+        // The original code tried to delete and recreate.
         final usersRes = await _adminClient.auth.admin.listUsers(perPage: 1000);
         try {
           final existing = usersRes.firstWhere((u) => u.email == email);
           await _adminClient.auth.admin.deleteUser(existing.id);
-        } on Object catch (_) {}
+        } on Object catch (_) {
+          // Ignore if not found or delete fails
+        }
+        // Retry create
         return _createAdminUser(
           email: email,
           password: password,
@@ -276,5 +283,19 @@ class DatabaseSeeder {
       }
       rethrow;
     }
+  }
+}
+
+class _Log {
+  static void i(String message) {
+    // print(message); // Simple print for CLI output
+    dev.log(message, name: 'Seeder');
+    print(message); // Also print to stdout for CI visibility
+  }
+
+  static void e(String message, Object error, StackTrace? stackTrace) {
+    // print('$message\n$error\n$stackTrace');
+    dev.log(message, name: 'Seeder', error: error, stackTrace: stackTrace);
+    print('$message\n$error\n$stackTrace');
   }
 }

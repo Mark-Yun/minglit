@@ -1,6 +1,7 @@
 name: minglit_kit
 description: "A new Flutter package project."
 version: 0.0.1
+publish_to: 'none'
 homepage:
 
 environment:
@@ -24,6 +25,8 @@ dependencies:
   json_annotation: ^4.9.0
   kakao_map_plugin: ^0.3.7
   logger: ^2.6.2
+  minglit_seeder:
+    path: ../minglit_seeder
   path: ^1.9.1
   riverpod_annotation: ^3.0.3
   shared_preferences: ^2.5.4
@@ -53,7 +56,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
-    - assets/seed/
     - assets/fonts/Noto_Sans_KR/
 
   fonts:

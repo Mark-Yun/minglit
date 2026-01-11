@@ -3,6 +3,7 @@ import 'package:app_partner/src/features/verification/review/review_verification
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_seeder/database_seeder.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PartnerDevMap extends StatelessWidget {

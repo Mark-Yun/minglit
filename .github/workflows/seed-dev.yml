@@ -74,12 +74,12 @@ jobs:
       # Step 2: Install Dart Dependencies
       - name: Install Dart Dependencies
         run: flutter pub get
-        working-directory: shared/packages/minglit_kit
+        working-directory: shared/packages/minglit_seeder
 
       # Step 3: Run Dart Seeder (Dynamic Data)
       - name: Run Dart Seeder
-        working-directory: shared/packages/minglit_kit
+        working-directory: shared/packages/minglit_seeder
         env:
-          SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
-          SUPABASE_DEV_SECRET_KEY: ${{ secrets.SUPABASE_DEV_SECRET_KEY }}
-        run: flutter test test/maintenance/seed_runner_test.dart
+          SUPABASE_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_DEV_SECRET_KEY }}
+        run: flutter test test/runner.dart

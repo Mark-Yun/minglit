@@ -29,10 +29,28 @@ Future<void> main() async {
   );
 
   // Initialize Supabase immediately for StaffGuard access
-  await Supabase.initialize(
-    url: supabaseUrl,
-    anonKey: supabasePublishableKey,
-  );
+  try {
+    await Supabase.initialize(
+      url: supabaseUrl,
+      anonKey: supabasePublishableKey,
+    );
+  } catch (e) {
+    // Handle "Invalid Refresh Token" error by clearing storage and retrying
+    if (e.toString().contains('Invalid Refresh Token') ||
+        (e is AuthApiException && e.code == 'refresh_token_not_found')) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      Log.w('⚠️ Invalid Refresh Token detected during init. Storage cleared.');
+
+      // Retry initialization
+      await Supabase.initialize(
+        url: supabaseUrl,
+        anonKey: supabasePublishableKey,
+      );
+    } else {
+      rethrow;
+    }
+  }
 
   runApp(
     ProviderScope(
