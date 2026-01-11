@@ -35,6 +35,15 @@ abstract class Location with _$Location {
       _$LocationFromJson(json);
 }
 
+extension LocationDbX on Location {
+  Map<String, dynamic> toDbJson() {
+    return toJson()
+      ..remove('id')
+      ..remove('created_at')
+      ..remove('updated_at');
+  }
+}
+
 /// **Party Model**
 ///
 /// Represents a party concept/template.

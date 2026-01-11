@@ -34,3 +34,12 @@ abstract class PartnerApplication with _$PartnerApplication {
   factory PartnerApplication.fromJson(Map<String, dynamic> json) =>
       _$PartnerApplicationFromJson(json);
 }
+
+extension PartnerApplicationDbX on PartnerApplication {
+  Map<String, dynamic> toDbJson() {
+    return toJson()
+      ..remove('id')
+      ..remove('created_at')
+      ..remove('updated_at');
+  }
+}

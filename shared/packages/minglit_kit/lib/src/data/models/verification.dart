@@ -83,6 +83,14 @@ abstract class Verification with _$Verification {
       _$VerificationFromJson(json);
 }
 
+extension VerificationDbX on Verification {
+  Map<String, dynamic> toDbJson() {
+    return toJson()
+      ..remove('id')
+      ..remove('created_at');
+  }
+}
+
 /// Helper model for wrapping verification status (UI helper).
 @freezed
 abstract class VerificationRequirementStatus

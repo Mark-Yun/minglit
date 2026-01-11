@@ -135,9 +135,7 @@ class SupabaseVerificationRepository implements VerificationRepository {
   Future<Verification> createVerification(Verification verification) async {
     Log.d('createVerification called | name: ${verification.displayName}');
     try {
-      final json = verification.toJson()
-        ..remove('id')
-        ..remove('created_at');
+      final json = verification.toDbJson();
 
       final res = await _supabase
           .from('verifications')
@@ -157,10 +155,7 @@ class SupabaseVerificationRepository implements VerificationRepository {
   Future<void> updateVerification(Verification verification) async {
     Log.d('updateVerification called | id: ${verification.id}');
     try {
-      final json = verification.toJson()
-        ..remove('id')
-        ..remove('created_at')
-        ..remove('partner_id');
+      final json = verification.toDbJson()..remove('partner_id');
 
       await _supabase
           .from('verifications')
