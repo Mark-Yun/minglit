@@ -47,6 +47,8 @@ class MinglitEventCard extends StatelessWidget {
         ? '${NumberFormat('#,###').format(lowestPrice)}원~'
         : '가격 미정';
 
+    final partner = party?.partner;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -93,29 +95,43 @@ class MinglitEventCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Location & Date
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on_outlined,
-                        size: 14,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          location?.name ?? '장소 미정',
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                  // Partner Info
+                  if (partner != null) ...[
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 10,
+                          backgroundImage: partner.profileImageUrl != null
+                              ? NetworkImage(partner.profileImageUrl!)
+                              : null,
+                          backgroundColor:
+                              theme.colorScheme.surfaceContainerHighest,
+                          child: partner.profileImageUrl == null
+                              ? Icon(
+                                  Icons.store,
+                                  size: 12,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                )
+                              : null,
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: MinglitSpacing.xsmall),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            partner.name,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: MinglitSpacing.small),
+                  ],
+
+                  // Title
                   Text(
                     party?.title ?? event.title ?? '제목 없음',
                     style: theme.textTheme.titleMedium?.copyWith(
@@ -126,12 +142,30 @@ class MinglitEventCard extends StatelessWidget {
                   ),
                   const SizedBox(height: MinglitSpacing.small),
 
-                  // Date & Price
-                  Text(
-                    dateLabel,
-                    style: theme.textTheme.bodySmall,
+                  // Location & Date Row
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on_outlined,
+                        size: 14,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          '${location?.name ?? "장소 미정"} · $dateLabel',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: MinglitSpacing.xsmall),
+                  const SizedBox(height: MinglitSpacing.small),
+
+                  // Price
                   Text(
                     priceLabel,
                     style: theme.textTheme.titleSmall?.copyWith(

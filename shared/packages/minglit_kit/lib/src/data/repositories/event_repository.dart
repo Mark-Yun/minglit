@@ -32,13 +32,16 @@ class EventRepository {
     try {
       // 1. Base Query with Relations
       // Using !inner for filtering based on nested data
+      // Include partner info inside party relation
       var selectQuery =
-          '*, party:parties(*, location:locations(*)), tickets(*)';
+          '*, party:parties(*, location:locations(*), partner:partners(*)), '
+          'tickets(*)';
 
       // Special case for Early Bird: filter by ticket name
       if (type == EventFeedType.earlyBird) {
         selectQuery =
-            '*, party:parties(*, location:locations(*)), tickets!inner(*)';
+            '*, party:parties(*, location:locations(*), partner:partners(*)), '
+            'tickets!inner(*)';
       }
 
       dynamic query = _supabase.from('events').select(selectQuery);

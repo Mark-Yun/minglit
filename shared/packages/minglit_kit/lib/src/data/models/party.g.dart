@@ -65,6 +65,9 @@ _Party _$PartyFromJson(Map<String, dynamic> json) => _Party(
   ticketTemplates: (json['ticketTemplates'] as List<dynamic>?)
       ?.map((e) => TicketTemplate.fromJson(e as Map<String, dynamic>))
       .toList(),
+  partner: json['partner'] == null
+      ? null
+      : Partner.fromJson(json['partner'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$PartyToJson(_Party instance) => <String, dynamic>{
