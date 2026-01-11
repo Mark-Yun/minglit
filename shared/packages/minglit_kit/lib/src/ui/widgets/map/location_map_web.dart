@@ -8,6 +8,7 @@ import 'dart:js_interop_unsafe';
 import 'dart:ui_web' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/src/utils/log.dart';
 import 'package:web/web.dart' as web;
 
 /// Web implementation of Kakao Map using JS SDK.
@@ -62,12 +63,12 @@ class _LocationMapState extends State<LocationMap> {
   }
 
   void _updateMap(double lat, double lng, {int? id}) {
-    debugPrint('🗺️ [WebMap] Updating Map: lat=$lat, lng=$lng, id=$id');
+    Log.d('[WebMap] Updating Map: lat=$lat, lng=$lng, id=$id');
 
     // 1. Get Kakao Object
     final kakaoAny = web.window.getProperty('kakao'.toJS);
     if (kakaoAny == null) {
-      debugPrint('Kakao Maps SDK not loaded yet.');
+      Log.w('Kakao Maps SDK not loaded yet.');
       return;
     }
     final kakao = kakaoAny as JSObject;

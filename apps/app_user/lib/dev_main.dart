@@ -10,8 +10,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'
-    show AuthState, Supabase;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'dev_main.g.dart';
 
@@ -19,6 +19,20 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   const googleWebClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
+  const supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: 'http://127.0.0.1:54321',
+  );
+  const supabasePublishableKey = String.fromEnvironment(
+    'SUPABASE_PUBLISHABLE_KEY',
+    defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
+  );
+
+  // Initialize Supabase immediately for StaffGuard access
+  await Supabase.initialize(
+    url: supabaseUrl,
+    anonKey: supabasePublishableKey,
+  );
 
   runApp(
     ProviderScope(
@@ -29,6 +43,8 @@ Future<void> main() async {
             defaultRedirectUrl: 'http://localhost:3000',
           ),
         ),
+        // Set environment domains to Dev
+        minglitDomainsProvider.overrideWithValue(const MinglitDomains.dev()),
         // Override goRouter to start at /dev for dev_main
         goRouterProvider.overrideWith((ref) {
           final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -78,27 +94,28 @@ Future<void> appStartup(Ref ref) async {
     'SUPABASE_URL',
     defaultValue: 'http://127.0.0.1:54321',
   );
-  const supabasePublishableKey = String.fromEnvironment(
-    'SUPABASE_PUBLISHABLE_KEY',
-    defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
-  );
   const supabaseServiceRoleKey = String.fromEnvironment(
     'SUPABASE_SERVICE_ROLE_KEY',
     defaultValue: 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz',
   );
 
   try {
-    await Future.wait([
-      initializeDateFormatting('ko_KR'),
-      Supabase.initialize(
-        url: supabaseUrl,
-        anonKey: supabasePublishableKey,
-      ),
-    ]);
+    await initializeDateFormatting('ko_KR');
 
     DevConfig.init(supabaseUrl, supabaseServiceRoleKey);
+  } on AuthApiException catch (e) {
+    if (e.message.contains('Invalid Refresh Token') ||
+        e.code == 'refresh_token_already_used') {
+      Log.w(
+        '[Startup] Invalid Refresh Token detected. Clearing storage...',
+      );
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      Log.i('[Startup] Storage cleared. Please reload the app.');
+    }
+    rethrow;
   } on Exception catch (e) {
-    debugPrint('⚠️ App startup warning: $e');
+    Log.e('App startup warning', e);
   }
 }
 
@@ -107,7 +124,15 @@ class MinglitDevApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _AppView();
+    // 1. Wrap the entire app with a Shell MaterialApp and StaffGuard.
+    // This ensures protection is active even during startup/loading/error states.
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: MinglitTheme.materialTheme,
+      home: const StaffGuardWrapper(
+        child: _AppView(),
+      ),
+    );
   }
 }
 
@@ -120,18 +145,12 @@ class _AppView extends ConsumerWidget {
 
     return startupState.when(
       data: (_) => const _AuthenticatedApp(),
-      loading: () => MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: MinglitTheme.materialTheme,
-        home: const MinglitSplashScreen(
-          appName: 'User Dev',
-        ),
+      loading: () => const MinglitSplashScreen(
+        appName: 'User Dev',
       ),
-      error: (e, st) => MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: Text('Startup Error: $e'),
-          ),
+      error: (e, st) => Scaffold(
+        body: Center(
+          child: Text('Startup Error: $e'),
         ),
       ),
     );
@@ -159,8 +178,8 @@ class _AuthenticatedApp extends ConsumerWidget {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
-        return StaffGuardWrapper(
-          child: MinglitGlobalLoadingOverlay(child: child!),
+        return MinglitGlobalLoadingOverlay(
+          child: child!,
         );
       },
     );

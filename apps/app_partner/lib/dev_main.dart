@@ -13,6 +13,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:kakao_map_plugin/kakao_map_plugin.dart' as kakao;
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'dev_main.g.dart';
@@ -21,6 +22,20 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   const googleWebClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
+  const supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: 'http://127.0.0.1:54321',
+  );
+  const supabasePublishableKey = String.fromEnvironment(
+    'SUPABASE_PUBLISHABLE_KEY',
+    defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
+  );
+
+  // Initialize Supabase immediately for StaffGuard access
+  await Supabase.initialize(
+    url: supabaseUrl,
+    anonKey: supabasePublishableKey,
+  );
 
   runApp(
     ProviderScope(
@@ -31,6 +46,8 @@ Future<void> main() async {
             defaultRedirectUrl: 'http://localhost:3001',
           ),
         ),
+        // Set environment domains to Dev
+        minglitDomainsProvider.overrideWithValue(const MinglitDomains.dev()),
         // Override goRouter to start at /dev for dev_main
         goRouterProvider.overrideWith((ref) {
           final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -77,10 +94,6 @@ Future<void> appStartup(Ref ref) async {
     'SUPABASE_URL',
     defaultValue: 'http://127.0.0.1:54321',
   );
-  const supabasePublishableKey = String.fromEnvironment(
-    'SUPABASE_PUBLISHABLE_KEY',
-    defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
-  );
   const supabaseServiceRoleKey = String.fromEnvironment(
     'SUPABASE_SERVICE_ROLE_KEY',
     defaultValue: 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz',
@@ -102,10 +115,6 @@ Future<void> appStartup(Ref ref) async {
     // 2. Essential Startup (Wait for these)
     await Future.wait([
       initializeDateFormatting('ko_KR'),
-      Supabase.initialize(
-        url: supabaseUrl,
-        anonKey: supabasePublishableKey,
-      ),
       // Wait for the critical logo and fonts to prevent UI flicker
       rootBundle.load(logoPath),
       GoogleFonts.pendingFonts([
@@ -118,10 +127,8 @@ Future<void> appStartup(Ref ref) async {
     if (kakaoMapKey.isNotEmpty) {
       kakao.AuthRepository.initialize(appKey: kakaoMapKey);
     } else {
-      debugPrint('⚠️ Kakao Map Key is missing in environment variables');
+      Log.w('Kakao Map Key is missing in environment variables');
     }
-
-    // 3. Background Caching for remaining images
 
     // 3. Background Caching for remaining images
     for (final asset in imageAssets) {
@@ -136,8 +143,19 @@ Future<void> appStartup(Ref ref) async {
     // 5. Engine Stabilization Delay
     // Give 200ms for the engine to finish font mapping and image decoding
     await Future<void>.delayed(const Duration(milliseconds: 200));
+  } on AuthApiException catch (e) {
+    if (e.message.contains('Invalid Refresh Token') ||
+        e.code == 'refresh_token_already_used') {
+      Log.w(
+        '[Startup] Invalid Refresh Token detected. Clearing storage...',
+      );
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      Log.i('[Startup] Storage cleared. Please reload the app.');
+    }
+    rethrow;
   } on Exception catch (e) {
-    debugPrint('❌ [Startup] Critical error: $e');
+    Log.e('[Startup] Critical error', e);
   }
 }
 
@@ -146,7 +164,15 @@ class MinglitPartnerDevApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _AppView();
+    // 1. Wrap the entire app with a Shell MaterialApp and StaffGuard.
+    // This ensures protection is active even during startup/loading/error states.
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: MinglitTheme.materialTheme,
+      home: const StaffGuardWrapper(
+        child: _AppView(),
+      ),
+    );
   }
 }
 
@@ -168,24 +194,15 @@ class _AppView extends ConsumerWidget {
     );
 
     return startupState.when(
-      // Case 1: Initializing - Show Splash immediately with a lightweight app
-      loading: () => MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          useMaterial3: true,
-          scaffoldBackgroundColor: Colors.white,
-        ),
-        home: const MinglitSplashScreen(
-          appName: 'Partner Dev',
-          isPartner: true,
-        ),
+      // Case 1: Initializing - Show Splash immediately
+      loading: () => const MinglitSplashScreen(
+        appName: 'Partner Dev',
+        isPartner: true,
       ),
 
       // Case 2: Error - Show Error UI
-      error: (e, st) => MaterialApp(
-        home: Scaffold(
-          body: Center(child: Text('Startup Error: $e')),
-        ),
+      error: (e, st) => Scaffold(
+        body: Center(child: Text('Startup Error: $e')),
       ),
 
       // Case 3: Ready - Show the Real App using GoRouter
@@ -215,9 +232,7 @@ class _AuthenticatedApp extends ConsumerWidget {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
-        return StaffGuardWrapper(
-          child: MinglitGlobalLoadingOverlay(child: child!),
-        );
+        return MinglitGlobalLoadingOverlay(child: child!);
       },
     );
   }

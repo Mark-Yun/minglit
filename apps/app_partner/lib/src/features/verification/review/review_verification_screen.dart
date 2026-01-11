@@ -51,6 +51,7 @@ class _ReviewVerificationScreenState
     String? reason,
     String? comment,
   }) async {
+    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
     try {
       await ref
           .read(verificationRepositoryProvider)
@@ -82,6 +83,8 @@ class _ReviewVerificationScreenState
     } on Object catch (e, st) {
       if (!mounted) return;
       handleMinglitError(context, e, st);
+    } finally {
+      loading.hide();
     }
   }
 

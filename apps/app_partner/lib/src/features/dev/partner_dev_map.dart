@@ -35,6 +35,13 @@ class PartnerDevMap extends StatelessWidget {
                 const CreateVerificationRoute().push<void>(context),
           ),
           DevScreenItem(
+            category: 'Verification',
+            title: 'Manage Custom Verifications',
+            description: '내가 만든 인증 목록 조회 및 보관(삭제)',
+            onTap: (context, ref) =>
+                const VerificationManageRoute().push<void>(context),
+          ),
+          DevScreenItem(
             category: 'Auth',
             title: 'Login',
             description: '파트너 로그인 화면',

@@ -1,3 +1,4 @@
+import 'package:minglit_kit/src/config/url_config.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,15 +8,20 @@ part 'staff_repository.g.dart';
 
 @Riverpod(keepAlive: true)
 StaffRepository staffRepository(Ref ref) {
-  return StaffRepository();
+  final urlConfig = ref.watch(minglitUrlConfigProvider);
+  return StaffRepository(
+    redirectUrl: urlConfig.authRedirectUrl,
+  );
 }
 
 class StaffRepository {
-  StaffRepository({SupabaseClient? supabase})
-    : _supabase = supabase ?? Supabase.instance.client;
+  StaffRepository({SupabaseClient? supabase, String? redirectUrl})
+    : _supabase = supabase ?? Supabase.instance.client,
+      _redirectUrl = redirectUrl;
   static const _staffTokenKey = 'minglit_staff_proof_token';
 
   final SupabaseClient _supabase;
+  final String? _redirectUrl;
 
   /// Saves the provided JWT as a permanent staff proof.
   Future<void> saveStaffToken(String token) async {
@@ -72,9 +78,18 @@ class StaffRepository {
     }
 
     Log.d('🛡️ [StaffRepo] Sending Magic Link to $email');
+
+    // Normalize URL: Remove trailing slash
+    var redirectTo = _redirectUrl;
+    if (redirectTo != null && redirectTo.endsWith('/')) {
+      redirectTo = redirectTo.substring(0, redirectTo.length - 1);
+    }
+
+    Log.d('🛡️ [StaffRepo] Magic Link redirect URL: $redirectTo');
+
     await _supabase.auth.signInWithOtp(
       email: email,
-      // redirectTo: will be handled by Supabase default or deep link
+      emailRedirectTo: redirectTo,
     );
   }
 }

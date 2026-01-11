@@ -51,7 +51,7 @@ Future<void> appStartup(Ref ref) async {
       ),
     ]);
   } on Exception catch (e) {
-    debugPrint('⚠️ App startup warning: $e');
+    Log.e('App startup warning', e);
   }
 }
 

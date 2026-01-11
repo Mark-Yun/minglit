@@ -23,7 +23,7 @@ class PartyDetailCoordinator {
 
   void goToEditParty(String partyId) {
     // TODO(mark): Implement Party Edit Route
-    debugPrint('Coordinator: Edit Party $partyId');
+    Log.d(r'Coordinator: Edit Party $partyId');
   }
 
   Future<Location?> goToLocationSearch(BuildContext context) async {

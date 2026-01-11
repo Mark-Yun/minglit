@@ -13,6 +13,7 @@ import 'package:app_partner/src/features/party/list/party_list_page.dart';
 import 'package:app_partner/src/features/ticket/create/ticket_create_page.dart';
 import 'package:app_partner/src/features/ticket/edit/ticket_edit_page.dart';
 import 'package:app_partner/src/features/verification/create/create_verification_screen.dart';
+import 'package:app_partner/src/features/verification/manage/verification_manage_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -41,6 +42,19 @@ class DevUserSwitchRoute extends GoRouteData with $DevUserSwitchRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const DevUserSwitchScreen();
+}
+
+/// **Verification: Manage Route**
+///
+/// Path: `/verifications/manage`
+@TypedGoRoute<VerificationManageRoute>(path: '/verifications/manage')
+class VerificationManageRoute extends GoRouteData
+    with $VerificationManageRoute {
+  const VerificationManageRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const VerificationManageScreen();
 }
 
 /// **Verification: Create Verification Route**

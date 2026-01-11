@@ -4,7 +4,7 @@ import 'package:minglit_kit/minglit_kit.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// A common login screen for both User and Partner apps.
-class MinglitLoginScreen extends StatelessWidget {
+class MinglitLoginScreen extends ConsumerWidget {
   /// Creates a [MinglitLoginScreen].
   const MinglitLoginScreen({
     super.key,
@@ -23,7 +23,7 @@ class MinglitLoginScreen extends StatelessWidget {
   final bool isPartner;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // Theme colors (User: Navy / Partner: Orange)
     final slogan = isPartner
         ? 'Verified Vibe, Spark Your Business'
@@ -34,6 +34,8 @@ class MinglitLoginScreen extends StatelessWidget {
       decoration: TextDecoration.underline,
       fontWeight: FontWeight.bold,
     );
+
+    final urlConfig = ref.watch(minglitUrlConfigProvider);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -94,7 +96,7 @@ class MinglitLoginScreen extends StatelessWidget {
               const SizedBox(height: 12),
               if (isPartner) ...[
                 TextButton(
-                  onPressed: () => _launchUrl('https://partner.minglit.com'),
+                  onPressed: () => _launchUrl(urlConfig.partnerInquiryUrl),
                   child: const Text('파트너 입점 문의'),
                 ),
               ] else ...[
@@ -109,16 +111,14 @@ class MinglitLoginScreen extends StatelessWidget {
                           text: '이용약관',
                           style: linkStyle,
                           recognizer: TapGestureRecognizer()
-                            ..onTap = () =>
-                                _launchUrl('https://minglit.com/terms'),
+                            ..onTap = () => _launchUrl(urlConfig.termsUrl),
                         ),
                         const TextSpan(text: ' 및 '),
                         TextSpan(
                           text: '개인정보처리방침',
                           style: linkStyle,
                           recognizer: TapGestureRecognizer()
-                            ..onTap = () =>
-                                _launchUrl('https://minglit.com/privacy'),
+                            ..onTap = () => _launchUrl(urlConfig.privacyUrl),
                         ),
                         const TextSpan(text: '에 동의하게 됩니다.'),
                       ],

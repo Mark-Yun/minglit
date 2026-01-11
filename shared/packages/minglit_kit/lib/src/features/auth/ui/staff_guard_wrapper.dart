@@ -29,20 +29,24 @@ class _StaffGuardWrapperState extends ConsumerState<StaffGuardWrapper> {
   void initState() {
     super.initState();
     // Listen to auth changes to catch Magic Link login completion
-    _authSubscription =
-        Supabase.instance.client.auth.onAuthStateChange.listen((data) {
-      unawaited(() async {
-        final session = data.session;
-        if (session != null &&
-            (session.user.email?.endsWith('@minglit.com') ?? false)) {
-          await ref.read(staffGuardProvider.notifier).setVerified(session);
-        }
-      }());
-    });
+    _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen(
+      (data) {
+        unawaited(_handleAuthChange(data));
+      },
+    );
+  }
+
+  Future<void> _handleAuthChange(AuthState data) async {
+    final session = data.session;
+    if (session != null &&
+        (session.user.email?.endsWith('@minglit.com') ?? false)) {
+      await ref.read(staffGuardProvider.notifier).setVerified(session);
+    }
   }
 
   @override
   void dispose() {
+    // ignore: discarded_futures - Dispose must be synchronous, so we cannot await the cancel future.
     _authSubscription?.cancel();
     super.dispose();
   }

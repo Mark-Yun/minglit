@@ -57,10 +57,10 @@ Future<void> appStartup(Ref ref) async {
     if (kakaoMapKey.isNotEmpty) {
       kakao.AuthRepository.initialize(appKey: kakaoMapKey);
     } else {
-      debugPrint('⚠️ Kakao Map Key is missing in environment variables');
+      Log.w('Kakao Map Key is missing in environment variables');
     }
   } on Exception catch (e) {
-    debugPrint('⚠️ App startup warning: $e');
+    Log.e('App startup warning', e);
   }
 }
 
@@ -95,7 +95,9 @@ class _AppView extends ConsumerWidget {
         ],
         supportedLocales: AppLocalizations.supportedLocales,
         builder: (context, child) {
-          return MinglitGlobalLoadingOverlay(child: child!);
+          return MinglitGlobalLoadingOverlay(
+            child: child!,
+          );
         },
       ),
       loading: () => MaterialApp(

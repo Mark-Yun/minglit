@@ -18,6 +18,17 @@ Future<Partner?> currentPartnerInfo(Ref ref) async {
 @riverpod
 Future<List<Verification>> partyVerificationTypes(Ref ref) async {
   final repo = ref.watch(verificationRepositoryProvider);
-  // Assuming getGlobalVerifications exists
-  return repo.getGlobalVerifications();
+
+  // 1. Fetch Global Verifications (System Defaults)
+  final globalVerifications = await repo.getGlobalVerifications();
+
+  // 2. Fetch Partner Specific Verifications
+  final partner = await ref.watch(currentPartnerInfoProvider.future);
+  if (partner != null) {
+    final partnerVerifications = await repo.getPartnerVerifications(partner.id);
+    // Return combined list
+    return [...globalVerifications, ...partnerVerifications];
+  }
+
+  return globalVerifications;
 }
