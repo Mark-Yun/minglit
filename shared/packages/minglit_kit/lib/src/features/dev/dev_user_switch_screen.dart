@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:minglit_seeder/database_seeder.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'dev_user_switch_screen.g.dart';
 
@@ -201,7 +200,12 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
 // Internal provider to fetch test users
 @riverpod
 Future<List<Map<String, dynamic>>> devUserProfiles(Ref ref) async {
-  final supabase = Supabase.instance.client;
+  // Use Admin Client to bypass RLS policies and fetch all test users
+  if (!DevConfig.isInitialized) {
+    throw StateError('DevConfig not initialized. Cannot fetch user profiles.');
+  }
+
+  final supabase = DevConfig.adminClient;
   final data = await supabase
       .from('user_profiles')
       .select('id, name, username')
