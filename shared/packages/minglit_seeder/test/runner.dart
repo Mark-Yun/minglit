@@ -36,5 +36,5 @@ void main() {
     final seeder = DatabaseSeeder(client);
 
     await seeder.seed();
-  });
+  }, timeout: const Timeout(Duration(minutes: 5)));
 }
