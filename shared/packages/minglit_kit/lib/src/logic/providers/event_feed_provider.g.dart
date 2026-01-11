@@ -187,3 +187,78 @@ final class EventDetailFamily extends $Family
   @override
   String toString() => r'eventDetailProvider';
 }
+
+@ProviderFor(partyEvents)
+const partyEventsProvider = PartyEventsFamily._();
+
+final class PartyEventsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Event>>,
+          List<Event>,
+          FutureOr<List<Event>>
+        >
+    with $FutureModifier<List<Event>>, $FutureProvider<List<Event>> {
+  const PartyEventsProvider._({
+    required PartyEventsFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'partyEventsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$partyEventsHash();
+
+  @override
+  String toString() {
+    return r'partyEventsProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<List<Event>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<Event>> create(Ref ref) {
+    final argument = this.argument as String;
+    return partyEvents(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is PartyEventsProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$partyEventsHash() => r'1590c2d1d938ca36f798e5b9e10c5444a339d0e7';
+
+final class PartyEventsFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<List<Event>>, String> {
+  const PartyEventsFamily._()
+    : super(
+        retry: null,
+        name: r'partyEventsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  PartyEventsProvider call(String partyId) =>
+      PartyEventsProvider._(argument: partyId, from: this);
+
+  @override
+  String toString() => r'partyEventsProvider';
+}

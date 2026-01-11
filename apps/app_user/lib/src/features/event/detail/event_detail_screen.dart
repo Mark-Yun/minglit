@@ -108,7 +108,8 @@ class _EventDetailContent extends StatelessWidget {
                 _InfoTile(
                   icon: Icons.calendar_today_outlined,
                   title: dateLabel,
-                  subtitle: '${event.endTime.difference(event.startTime).inHours}'
+                  subtitle:
+                      '${event.endTime.difference(event.startTime).inHours}'
                       '시간 진행',
                 ),
                 const SizedBox(height: MinglitSpacing.small),
@@ -209,12 +210,6 @@ class _QuillViewer extends StatelessWidget {
 
     return QuillEditor.basic(
       controller: controller,
-      // ignore: avoid_redundant_argument_values
-      config: const QuillEditorConfig(
-        autoFocus: false,
-        expands: false,
-        padding: EdgeInsets.zero,
-      ),
     );
   }
 }

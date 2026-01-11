@@ -1,6 +1,6 @@
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:minglit_kit/minglit_kit.dart' hide partyEventsProvider;
+import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'event_create_controller.freezed.dart';

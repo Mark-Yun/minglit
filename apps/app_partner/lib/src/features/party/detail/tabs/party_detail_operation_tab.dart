@@ -8,7 +8,7 @@ import 'package:app_partner/src/features/party/widgets/party_event_list_summary.
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart' hide partyEventsProvider;
+import 'package:minglit_kit/minglit_kit.dart';
 
 class PartyDetailOperationTab extends ConsumerWidget {
   const PartyDetailOperationTab({required this.party, super.key});

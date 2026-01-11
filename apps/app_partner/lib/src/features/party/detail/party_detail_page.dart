@@ -6,7 +6,7 @@ import 'package:app_partner/src/features/party/detail/tabs/party_detail_info_tab
 import 'package:app_partner/src/features/party/detail/tabs/party_detail_operation_tab.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart' hide partyEventsProvider;
+import 'package:minglit_kit/minglit_kit.dart';
 
 class PartyDetailPage extends ConsumerWidget {
   const PartyDetailPage({required this.partyId, super.key});

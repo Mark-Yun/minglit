@@ -59,7 +59,7 @@ final class EventCreateControllerProvider
 }
 
 String _$eventCreateControllerHash() =>
-    r'b01e3924c6322e51604f7eab55f7237d8293731d';
+    r'f232fa18cf15e7a8c86b5943b8e48197961f4dfa';
 
 final class EventCreateControllerFamily extends $Family
     with

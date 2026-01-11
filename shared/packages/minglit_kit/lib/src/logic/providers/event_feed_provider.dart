@@ -29,3 +29,9 @@ Future<Event> eventDetail(Ref ref, String eventId) {
   // Implementation in repository: fetch with all relations
   return repository.getEventById(eventId);
 }
+
+@riverpod
+Future<List<Event>> partyEvents(Ref ref, String partyId) {
+  final repository = ref.watch(partyRepositoryProvider);
+  return repository.getEventsByPartyId(partyId);
+}

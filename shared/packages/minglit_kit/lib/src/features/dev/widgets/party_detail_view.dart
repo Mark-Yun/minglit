@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-
-part 'party_detail_view.g.dart';
 
 /// A detailed view of a Party.
 class PartyDetailView extends ConsumerWidget {
@@ -105,7 +102,7 @@ class PartyDetailView extends ConsumerWidget {
   }
 
   Widget _buildEventList(WidgetRef ref) {
-    final eventsAsync = ref.watch(partyEventsProvider(partyId: party.id));
+    final eventsAsync = ref.watch(partyEventsProvider(party.id));
 
     return eventsAsync.when(
       data: (events) {
@@ -208,10 +205,4 @@ class PartyDetailView extends ConsumerWidget {
       ),
     );
   }
-}
-
-/// Provider to fetch upcoming events for this party.
-@riverpod
-Future<List<Event>> partyEvents(Ref ref, {required String partyId}) {
-  return ref.read(partyRepositoryProvider).getEventsByPartyId(partyId);
 }
