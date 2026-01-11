@@ -141,10 +141,17 @@ class DatabaseSeeder {
       // Parties
       final parties = pData['parties'] as List<dynamic>? ?? [];
       for (final dynamic pEntry in parties) {
+        final pMap = pEntry as Map<String, dynamic>;
+        // Use rich description even for JSON-defined parties
+        pMap['description'] = _generateRichDescription(
+          pMap['title'] as String,
+          pMap['description'] as String,
+        );
+
         await _createPartyAndEvents(
           partnerId,
           locationId,
-          pEntry as Map<String, dynamic>,
+          pMap,
           globalVerifIds,
           localVerifIds,
         );
@@ -216,12 +223,16 @@ class DatabaseSeeder {
           rLng,
         );
 
-        // 2 Parties per Partner
+        // 2. Parties per Partner
         for (var p = 0; p < 2; p++) {
           final partyTitle = i == 0 ? '불금 와인 파티' : '주말 루프탑 모임';
+          final fullTitle = '[$placeName] $partyTitle';
+          final summary = '$placeName에서 가장 분위기 좋은 곳에서 새로운 사람들과 소중한 인연을 만들어보세요. '
+              '전문 MC와 함께하는 즐거운 프로그램이 준비되어 있습니다.';
+
           final partyData = {
-            'title': '[$placeName] $partyTitle',
-            'description': '멋진 사람들과 함께하는 $placeName 최고의 파티!',
+            'title': fullTitle,
+            'description': _generateRichDescription(fullTitle, summary),
             'entry_groups': [
               {
                 'label': '일반 입장',
@@ -257,6 +268,31 @@ class DatabaseSeeder {
         }
       }
     }
+  }
+
+  Map<String, dynamic> _generateRichDescription(String title, String summary) {
+    return {
+      "ops": [
+        {"insert": "✨ $title\n", "attributes": {"header": 1, "bold": true}},
+        {"insert": "\n"},
+        {"insert": "📍 파티 소개\n", "attributes": {"header": 2}},
+        {"insert": "$summary\n\n"},
+        {"insert": "🕒 타임테이블\n", "attributes": {"header": 2}},
+        {"insert": "19:00 - 입장 및 웰컴 드링크\n", "attributes": {"list": "bullet"}},
+        {"insert": "19:30 - 아이스브레이킹 게임 (어색함 타파!)\n", "attributes": {"list": "bullet"}},
+        {"insert": "20:30 - 1:1 대화 로테이션 및 네트워킹\n", "attributes": {"list": "bullet"}},
+        {"insert": "22:00 - 자유 대화 및 공식 행사 종료\n", "attributes": {"list": "bullet"}},
+        {"insert": "\n"},
+        {"insert": "✅ 제공 내역\n", "attributes": {"header": 2}},
+        {"insert": "레드/화이트/스파클링 와인 무제한\n", "attributes": {"list": "bullet"}},
+        {"insert": "프리미엄 핑거 푸드 케이터링\n", "attributes": {"list": "bullet"}},
+        {"insert": "매칭 확률을 높여주는 Minglit 가이드북\n", "attributes": {"list": "bullet"}},
+        {"insert": "\n"},
+        {"insert": "📢 안내 사항\n", "attributes": {"header": 2}},
+        {"insert": "신분증 지참 필수입니다. (PASS 인증 확인)\n", "attributes": {"bold": true}},
+        {"insert": "과도한 음주는 삼가주세요.\n"},
+      ]
+    };
   }
 
   Future<String> _createPartner(
@@ -356,11 +392,7 @@ class DatabaseSeeder {
       'partner_id': partnerId,
       'location_id': locationId,
       'title': partyData['title'],
-      'description': {
-        'ops': [
-          {'insert': '${partyData['description']}\n'},
-        ],
-      },
+      'description': partyData['description'], // Now a Map
       'min_confirmed_count': 5,
       'max_participants': 20,
       'conditions': entryGroups,
