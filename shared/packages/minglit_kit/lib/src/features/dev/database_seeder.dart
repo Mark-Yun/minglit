@@ -1,7 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/utils/exceptions.dart';
+import 'package:minglit_kit/src/utils/log.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
