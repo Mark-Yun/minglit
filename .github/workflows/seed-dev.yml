@@ -1,0 +1,85 @@
+name: Seed Dev Database (Reset & Populate)
+
+on:
+  workflow_dispatch: # Manual trigger
+  workflow_run:      # Auto-trigger after migration
+    workflows: ["Deploy Supabase Migrations"]
+    types:
+      - completed
+    branches:
+      - dev
+
+jobs:
+  reset-and-seed:
+    name: Reset DB and Run Seeder
+    runs-on: ubuntu-latest
+    # Safety Guard 1: Only run on dev branch, or if manually triggered.
+    # Also ensures the triggering workflow (migrations) was successful.
+    if: >
+      github.ref == 'refs/heads/dev' &&
+      (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Flutter Setup (for Dart Seeder)
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      
+      # Supabase CLI Setup (for DB Reset)
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # Safety Guard 2: Explicitly verify we are NOT targeting the MAIN project
+      - name: Verify Target Project
+        env:
+          TARGET_PROJECT_ID: ${{ secrets.SUPABASE_DEV_PROJECT_ID }}
+          MAIN_PROJECT_ID: ${{ secrets.SUPABASE_MAIN_PROJECT_ID }}
+        run: |
+          if [ -z "$TARGET_PROJECT_ID" ]; then
+             echo "❌ Error: SUPABASE_DEV_PROJECT_ID secret is missing."
+             exit 1
+          fi
+          
+          if [ "$TARGET_PROJECT_ID" == "$MAIN_PROJECT_ID" ]; then
+            echo "🔥 CRITICAL ERROR: Safety Guard Triggered!"
+            echo "Attempting to reset the MAIN database project ($MAIN_PROJECT_ID)."
+            echo "This operation is strictly forbidden in this workflow."
+            exit 1
+          fi
+          echo "✅ Safety Check Passed: Target Project ($TARGET_PROJECT_ID) is NOT Main DB."
+
+      # Step 1: DB Reset (Link -> Reset -> Seed.sql)
+      # This resets the remote DB, applies migrations, and runs backend/supabase/seed.sql
+      - name: Reset Remote Dev Database
+        working-directory: backend/supabase
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DEV_DB_PASSWORD }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_DEV_PROJECT_ID }}
+        run: |
+          # 1. Link to Remote Project
+          supabase link --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD
+          
+          # 2. Reset Database (Destructive)
+          # Piping 'yes' to handle any non-force confirmation prompts, though --linked usually implies remote.
+          # Note: Supabase CLI might require different flags depending on version, 
+          # but `db reset --linked` is the standard for remote reset.
+          # We assume 'backend/supabase' is the correct root for Supabase config.
+          yes | supabase db reset --linked
+
+      # Step 2: Install Dart Dependencies
+      - name: Install Dart Dependencies
+        run: flutter pub get
+        working-directory: shared/packages/minglit_kit
+
+      # Step 3: Run Dart Seeder (Dynamic Data)
+      - name: Run Dart Seeder
+        working-directory: shared/packages/minglit_kit
+        env:
+          SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_DEV_SECRET_KEY: ${{ secrets.SUPABASE_DEV_SECRET_KEY }}
+        run: flutter test test/maintenance/seed_runner_test.dart
