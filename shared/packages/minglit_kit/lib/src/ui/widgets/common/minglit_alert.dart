@@ -107,7 +107,7 @@ class MinglitAlert extends StatelessWidget {
         MinglitSpacing.medium,
         MinglitSpacing.medium,
       ),
-      
+
       title: Row(
         children: [
           if (type == MinglitAlertType.destructive) ...[

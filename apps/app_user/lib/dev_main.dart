@@ -106,16 +106,16 @@ Future<void> appStartup(Ref ref) async {
   } on AuthApiException catch (e) {
     if (e.message.contains('Invalid Refresh Token') ||
         e.code == 'refresh_token_already_used') {
-      debugPrint(
-        '⚠️ [Startup] Invalid Refresh Token detected. Clearing storage...',
+      Log.w(
+        '[Startup] Invalid Refresh Token detected. Clearing storage...',
       );
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
-      debugPrint('✅ [Startup] Storage cleared. Please reload the app.');
+      Log.i('[Startup] Storage cleared. Please reload the app.');
     }
     rethrow;
   } on Exception catch (e) {
-    debugPrint('⚠️ App startup warning: $e');
+    Log.e('App startup warning', e);
   }
 }
 
