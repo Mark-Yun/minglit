@@ -36,15 +36,34 @@ void main() {
         final decoded = utf8.decode(base64Url.decode(normalized));
         final Map<String, dynamic> json = jsonDecode(decoded);
         print('   🔑 Key Role: ${json['role']}'); // Should be 'service_role'
-        if (json['role'] != 'service_role') {
-          print('   ⚠️ WARNING: You are NOT using the Service Role Key!');
+        
+        // 🔍 Debug: Try Raw HTTP Request to verify permissions bypassing SDK
+        print('   🔍 Testing Raw HTTP Access to verifications...');
+        final httpClient = HttpClient();
+        final request = await httpClient.getUrl(Uri.parse('$url/rest/v1/verifications?select=count'));
+        request.headers.set('apikey', key);
+        request.headers.set('Authorization', 'Bearer $key');
+        final response = await request.close();
+        final responseBody = await response.transform(utf8.decoder).join();
+        print('   🔍 Raw Response Code: ${response.statusCode}');
+        if (response.statusCode != 200) {
+           print('   🔥 Raw Request Failed: $responseBody');
+        } else {
+           print('   ✅ Raw Request Success! SDK might be the issue.');
         }
       }
     } catch (e) {
-      print('   ⚠️ Failed to decode key: $e');
+      print('   ⚠️ Debugging failed: $e');
     }
 
-    final client = SupabaseClient(url, key);
+    // Initialize Client with specific options to avoid session interference
+    final client = SupabaseClient(
+      url,
+      key,
+      authOptions: const AuthClientOptions(
+        authFlowType: AuthFlowType.implicit,
+      ),
+    );
     final seeder = DatabaseSeeder(client);
 
     await seeder.seed();
