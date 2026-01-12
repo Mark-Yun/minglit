@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:app_user/src/features/event/admission/event_admission_controller.dart';
+import 'package:app_user/src/features/ticket/ui/ticket_selection_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:intl/intl.dart';
@@ -253,14 +257,16 @@ class _EntryConditionsSection extends StatelessWidget {
   }
 }
 
-class _BottomTicketBar extends StatelessWidget {
+class _BottomTicketBar extends ConsumerWidget {
   const _BottomTicketBar({required this.event});
 
   final Event event;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final admissionAsync = ref.watch(eventAdmissionControllerProvider(event));
+
     final lowestPrice = event.tickets?.fold<int?>(
       null,
       (min, t) => min == null || t.price < min ? t.price : min,
@@ -302,16 +308,88 @@ class _BottomTicketBar extends StatelessWidget {
             ),
             const SizedBox(width: 24),
             Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  // TODO(Mark): Open ticket selection bottom sheet
-                },
-                child: const Text('참가 신청하기'),
+              child: admissionAsync.when(
+                data: (state) => _buildActionButton(context, ref, state),
+                loading: () => const ElevatedButton(
+                  onPressed: null,
+                  child: SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+                error: (e, _) => ElevatedButton(
+                  onPressed: null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.colorScheme.errorContainer,
+                  ),
+                  child: const Text('오류 발생'),
+                ),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildActionButton(
+    BuildContext context,
+    WidgetRef ref,
+    AdmissionState state,
+  ) {
+    String text = '참가 신청하기';
+    VoidCallback? onPressed;
+    Color? backgroundColor;
+
+    switch (state.status) {
+      case EventAdmissionStatus.guest:
+        text = '로그인하고 신청하기';
+        onPressed = () {
+          // TODO(developer): Navigate to Login
+          handleMinglitError(context, const MinglitAuthException('로그인이 필요합니다.'));
+        };
+      case EventAdmissionStatus.identityRequired:
+        text = '본인인증 후 신청하기';
+        onPressed = () async {
+          final success = await Navigator.of(context).push<bool>(
+            MaterialPageRoute(
+              builder: (_) => const IdentityVerificationScreen(),
+              fullscreenDialog: true,
+            ),
+          );
+          if (success == true) {
+            ref.invalidate(eventAdmissionControllerProvider(event));
+          }
+        };
+      case EventAdmissionStatus.notEligible:
+        text = state.ineligibleReason ?? '참여 조건 미달';
+        onPressed = null; // Disabled
+        backgroundColor = Colors.grey;
+      case EventAdmissionStatus.eligible:
+        text = '참가 신청하기';
+        onPressed = () {
+          unawaited(
+            showModalBottomSheet<void>(
+              context: context,
+              isScrollControlled: true,
+              builder: (_) => TicketSelectionSheet(event: event),
+            ),
+          );
+        };
+      case EventAdmissionStatus.applied:
+        text = '이미 신청한 이벤트';
+        onPressed = () {
+          // TODO(developer): Navigate to Ticket Detail
+        };
+    }
+
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: backgroundColor != null
+          ? ElevatedButton.styleFrom(backgroundColor: backgroundColor)
+          : null,
+      child: Text(text),
     );
   }
 }
