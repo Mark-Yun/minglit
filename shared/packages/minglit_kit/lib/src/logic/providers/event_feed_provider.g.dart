@@ -32,7 +32,7 @@ final class EventFeedProvider
   }) : super(
          retry: null,
          name: r'eventFeedProvider',
-         isAutoDispose: true,
+         isAutoDispose: false,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
@@ -83,7 +83,7 @@ final class EventFeedProvider
   }
 }
 
-String _$eventFeedHash() => r'3bdba14c15ee6dd690b3250d33356c918a798b1f';
+String _$eventFeedHash() => r'edcefe3443ef901d69db7f4aa12967e816ef2d00';
 
 final class EventFeedFamily extends $Family
     with
@@ -97,7 +97,7 @@ final class EventFeedFamily extends $Family
         name: r'eventFeedProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
-        isAutoDispose: true,
+        isAutoDispose: false,
       );
 
   EventFeedProvider call({
@@ -131,7 +131,7 @@ final class EventDetailProvider
   }) : super(
          retry: null,
          name: r'eventDetailProvider',
-         isAutoDispose: true,
+         isAutoDispose: false,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
@@ -168,7 +168,7 @@ final class EventDetailProvider
   }
 }
 
-String _$eventDetailHash() => r'e8bf1134e6274c0428444f31f0264d0076b36288';
+String _$eventDetailHash() => r'3bfa5e13d5627ed80090c76e5c86ab97dd4e6d4c';
 
 final class EventDetailFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Event>, String> {
@@ -178,7 +178,7 @@ final class EventDetailFamily extends $Family
         name: r'eventDetailProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
-        isAutoDispose: true,
+        isAutoDispose: false,
       );
 
   EventDetailProvider call(String eventId) =>
@@ -205,7 +205,7 @@ final class PartyEventsProvider
   }) : super(
          retry: null,
          name: r'partyEventsProvider',
-         isAutoDispose: true,
+         isAutoDispose: false,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
@@ -243,7 +243,7 @@ final class PartyEventsProvider
   }
 }
 
-String _$partyEventsHash() => r'1590c2d1d938ca36f798e5b9e10c5444a339d0e7';
+String _$partyEventsHash() => r'740314621557dd2a4bdc322a311f3a1b8d4febbb';
 
 final class PartyEventsFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<Event>>, String> {
@@ -253,7 +253,7 @@ final class PartyEventsFamily extends $Family
         name: r'partyEventsProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
-        isAutoDispose: true,
+        isAutoDispose: false,
       );
 
   PartyEventsProvider call(String partyId) =>

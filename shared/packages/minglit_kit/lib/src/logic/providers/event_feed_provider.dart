@@ -3,7 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'event_feed_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<List<Event>> eventFeed(
   Ref ref, {
   required EventFeedType type,
@@ -23,14 +23,14 @@ Future<List<Event>> eventFeed(
   );
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<Event> eventDetail(Ref ref, String eventId) {
   final repository = ref.watch(eventRepositoryProvider);
   // Implementation in repository: fetch with all relations
   return repository.getEventById(eventId);
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<List<Event>> partyEvents(Ref ref, String partyId) {
   final repository = ref.watch(partyRepositoryProvider);
   return repository.getEventsByPartyId(partyId);
