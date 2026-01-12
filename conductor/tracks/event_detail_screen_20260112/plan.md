@@ -1,7 +1,7 @@
 # Plan: Implement Event Detail Screen
 
 ## Phase 1: Data & State Management
-- [ ] Task: Create EventDetailController & State
+- [x] Task: Create EventDetailController & State (23d319f)
   - [ ] Subtask: Write tests for EventDetailController (mock repository)
   - [ ] Subtask: Implement EventDetailController in `app_user`
 - [ ] Task: Integrate EventRepository
