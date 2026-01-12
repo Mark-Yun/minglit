@@ -4,7 +4,7 @@
 - [x] Task: Create EventDetailController & State (23d319f)
   - [ ] Subtask: Write tests for EventDetailController (mock repository)
   - [ ] Subtask: Implement EventDetailController in `app_user`
-- [ ] Task: Integrate EventRepository
+- [x] Task: Integrate EventRepository (dfacabc)
   - [ ] Subtask: Write integration test for fetching single event
   - [ ] Subtask: Ensure `getEvent` method exists and works in `EventRepository`
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Data & State Management' (Protocol in workflow.md)
