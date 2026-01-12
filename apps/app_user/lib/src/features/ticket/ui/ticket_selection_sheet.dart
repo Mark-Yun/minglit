@@ -23,7 +23,7 @@ class _TicketSelectionSheetState extends State<TicketSelectionSheet> {
 
     // TODO(Mark): Check if verification is needed for this ticket.
     // For now, assume payment/submission.
-    
+
     // Close sheet and return selection
     Navigator.pop(context, {
       'ticket': ticket,
@@ -61,40 +61,40 @@ class _TicketSelectionSheetState extends State<TicketSelectionSheet> {
           else
             ...tickets.map(_buildTicketOption),
           const SizedBox(height: 24),
-          
+
           // Quantity (Only if ticket selected)
           if (_selectedTicketId != null) ...[
-             Row(
-               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-               children: [
-                 const Text(
-                   '수량',
-                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                 ),
-                 _buildQuantityStepper(),
-               ],
-             ),
-             const SizedBox(height: 24),
-             const Divider(),
-             const SizedBox(height: 16),
-             Row(
-               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-               children: [
-                 const Text(
-                   '총 결제 금액',
-                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                 ),
-                 Text(
-                   _calculateTotal(),
-                   style: TextStyle(
-                     fontWeight: FontWeight.bold,
-                     fontSize: 20,
-                     color: theme.colorScheme.primary,
-                   ),
-                 ),
-               ],
-             ),
-             const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  '수량',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                _buildQuantityStepper(),
+              ],
+            ),
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  '총 결제 금액',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                Text(
+                  _calculateTotal(),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
           ],
 
           SizedBox(

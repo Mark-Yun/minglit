@@ -40,12 +40,12 @@ void handleMinglitError(
   // 4. Show Feedback (SnackBar)
   if (context.mounted) {
     final theme = Theme.of(context);
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isSystemError 
-            ? theme.colorScheme.error 
+        backgroundColor: isSystemError
+            ? theme.colorScheme.error
             : theme.colorScheme.secondary,
         behavior: SnackBarBehavior.floating,
       ),
