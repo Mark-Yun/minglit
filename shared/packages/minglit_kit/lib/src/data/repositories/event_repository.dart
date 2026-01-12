@@ -23,7 +23,6 @@ class EventRepository {
   /// Fetches events based on a specific curation type.
   Future<List<Event>> getEventsByType({
     required EventFeedType type,
-    UserProfile? currentUser,
     double? latitude,
     double? longitude,
     int limit = 10,
@@ -80,18 +79,8 @@ class EventRepository {
           .map((json) => Event.fromJson(json as Map<String, dynamic>))
           .toList();
 
-      // 5. Client-side Filtering (User Eligibility)
-      var filtered = result;
-      if (currentUser != null) {
-        filtered = result.where((event) {
-          final tickets = event.tickets ?? [];
-          if (tickets.isEmpty) return false;
-          return true;
-        }).toList();
-      }
-
-      Log.d('getEventsByType success | count: ${filtered.length}');
-      return filtered;
+      Log.d('getEventsByType success | count: ${result.length}');
+      return result;
     } catch (e, st) {
       Log.e('❌ [EventRepo] getEventsByType Error', e, st);
       rethrow;
