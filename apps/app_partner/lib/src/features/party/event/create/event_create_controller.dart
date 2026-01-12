@@ -46,18 +46,25 @@ class EventCreateController extends _$EventCreateController {
     required List<TicketTemplate> templates,
     Location? location,
   }) {
-    // Map templates to instance-based tickets using the factory method
+    // 1. Create a base event from party template using the standardized factory
+    final baseEvent = Event.createFromParty(
+      party,
+      startTime: state.startTime,
+      endTime: state.endTime,
+    );
+
+    // 2. Map templates to instance-based tickets using the factory method
     final initialTickets = templates.map(Ticket.createFromTemplate).toList();
 
     state = state.copyWith(
-      title: party.title,
-      description: party.description ?? {},
+      title: baseEvent.title ?? '',
+      description: baseEvent.description ?? {},
       imageUrl: party.imageUrl,
-      maxParticipants: party.maxParticipants,
-      contactOptions: party.contactOptions,
+      maxParticipants: baseEvent.maxParticipants,
+      contactOptions: baseEvent.contactOptions,
       entryGroups: party.entryGroups,
       tickets: initialTickets,
-      locationId: party.locationId,
+      locationId: baseEvent.locationId,
       selectedLocation: location,
       addressDetail: location?.addressDetail,
       directionsGuide: location?.directionsGuide,
@@ -145,6 +152,7 @@ class EventCreateController extends _$EventCreateController {
         title: state.title,
         description: state.description.isEmpty ? null : state.description,
         contactOptions: state.contactOptions,
+        conditions: state.entryGroups.map((e) => e.toJson()).toList(),
         tickets: state.tickets, // Pass the tickets to repository
       );
 

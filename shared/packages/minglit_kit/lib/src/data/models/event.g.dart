@@ -17,7 +17,7 @@ _Event _$EventFromJson(Map<String, dynamic> json) => _Event(
   title: json['title'] as String?,
   description: json['description'] as Map<String, dynamic>?,
   contactOptions: json['contact_options'] as Map<String, dynamic>? ?? const {},
-  conditions: json['conditions'] as Map<String, dynamic>? ?? const {},
+  conditions: json['conditions'] as List<dynamic>? ?? const [],
   maxParticipants: (json['max_participants'] as num?)?.toInt() ?? 20,
   currentParticipants: (json['current_participants'] as num?)?.toInt() ?? 0,
   status: json['status'] as String? ?? 'scheduled',
