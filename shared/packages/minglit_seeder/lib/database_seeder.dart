@@ -180,17 +180,54 @@ class DatabaseSeeder {
   Future<void> _generateRandomContent(List<String> globalVerifIds) async {
     int partnerCounter = 100; // Start from 100 to avoid conflict with JSON
 
+    // 4 Scenarios
+    final scenarios = [
+      {
+        'type': '20s',
+        'titles': ['두근두근 대학생 미팅', '20대 풋풋한 만남', '설레는 봄, 벚꽃 미팅'],
+        'desc_header': '20대만의 에너지가 넘치는 파티!',
+        'min_year': 1997, // 29세 (2026기준)
+        'max_year': 2006, // 20세
+        'split_gender': true,
+      },
+      {
+        'type': '30s',
+        'titles': ['30대 직장인 와인 파티', '퇴근 후 힐링 네트워킹', '진지한 만남, 가벼운 대화'],
+        'desc_header': '비슷한 라이프스타일의 30대를 위한 공간.',
+        'min_year': 1988, // 38세
+        'max_year': 1998, // 28세
+        'split_gender': true,
+      },
+      {
+        'type': '40s',
+        'titles': ['다시 사랑할 수 있을까', '40대 돌싱&골드미스/미스터', '편안한 대화가 있는 밤'],
+        'desc_header': '인생의 경험을 나누며 서로에게 스며드는 시간.',
+        'min_year': 1977, // 49세
+        'max_year': 1991, // 35세 (여성은 조금 더 넓게 잡는 등 변주 가능하지만 일단 통일)
+        'split_gender': true,
+      },
+      {
+        'type': 'All',
+        'titles': ['동네 친구 만들기', '누구나 환영! 맥주 파티', '개발자&기획자 네트워킹'],
+        'desc_header': '나이도 성별도 상관없어요. 취향으로 만나요!',
+        'min_year': 1981, // 45세
+        'max_year': 2006, // 20세
+        'split_gender': false,
+      },
+    ];
+
     for (final place in _hotPlaces) {
       final placeName = place['name'] as String;
       final lat = place['lat'] as double;
       final lng = place['lng'] as double;
 
-      // 3. Partners per Hot Place
+      // 3 Partners per Hot Place
       for (var i = 0; i < 3; i++) {
         partnerCounter++;
         final partnerName = '$placeName 핫플 파트너 $i';
         final email = 'owner$partnerCounter@test.com';
 
+        // Gender varies by partner to balance the owner pool
         final ownerId = await _createAdminUser(
           email: email,
           password: 'password1234!',
@@ -198,20 +235,21 @@ class DatabaseSeeder {
             'name': '사장님 $partnerCounter ($placeName)',
             'username': 'owner_$partnerCounter',
             'gender': i.isEven ? 'male' : 'female',
+            'birth_date': '1990-01-01',
+            'phone_number': '010-9999-$partnerCounter',
           },
         );
 
         final partnerId = await _createPartner(
           ownerId,
           partnerName,
-          '$placeName에서 가장 핫한 라운지입니다.',
+          '$placeName에서 가장 감각적인 공간, $partnerName입니다.',
           'Minglit Corp $partnerCounter',
           '123-45-$partnerCounter',
           email,
         );
 
-        // Random Location near Hot Place (approx 1km radius)
-        // 0.01 degree approx 1.1km
+        // Random Location
         final rLat = lat + (DateTime.now().microsecond % 20 - 10) * 0.0005;
         final rLng = lng + (DateTime.now().microsecond % 20 - 10) * 0.0005;
 
@@ -223,39 +261,75 @@ class DatabaseSeeder {
           rLng,
         );
 
-        // 2. Parties per Partner
+        // 2 Parties per Partner (Cycle through scenarios)
         for (var p = 0; p < 2; p++) {
-          final partyTitle = i == 0 ? '불금 와인 파티' : '주말 루프탑 모임';
-          final fullTitle = '[$placeName] $partyTitle';
-          final summary = '$placeName에서 가장 분위기 좋은 곳에서 새로운 사람들과 소중한 인연을 만들어보세요. '
-              '전문 MC와 함께하는 즐거운 프로그램이 준비되어 있습니다.';
+          final scenarioIndex = (partnerCounter + p) % scenarios.length;
+          final scenario = scenarios[scenarioIndex];
+          
+          final baseTitle = (scenario['titles'] as List)[p % 3];
+          final fullTitle = '[$placeName] $baseTitle';
+          final splitGender = scenario['split_gender'] as bool;
+          final minYear = scenario['min_year'] as int;
+          final maxYear = scenario['max_year'] as int;
+
+          // Construct Entry Groups & Tickets
+          final entryGroups = <Map<String, dynamic>>[];
+          final tickets = <Map<String, dynamic>>[];
+
+          if (splitGender) {
+            // Group 0: Male
+            entryGroups.add({
+              'label': '남성 입장',
+              'gender': 'male',
+              'birth_year_range': {'min': minYear, 'max': maxYear},
+              'use_global_ids': [0], // Identity Verification
+            });
+            // Group 1: Female
+            entryGroups.add({
+              'label': '여성 입장',
+              'gender': 'female',
+              'birth_year_range': {'min': minYear, 'max': maxYear}, // Can adjust for lady first
+              'use_global_ids': [0],
+            });
+
+            // Tickets linked to groups
+            tickets.add({
+              'name': '남성 입장권',
+              'price': 35000,
+              'quantity': 15,
+              'group_index': 0, // Links to Male Group
+            });
+            tickets.add({
+              'name': '여성 입장권',
+              'price': 15000, // Ladies discount (common in KR)
+              'quantity': 15,
+              'group_index': 1, // Links to Female Group
+            });
+          } else {
+            // Mixed Group
+            entryGroups.add({
+              'label': '일반 입장',
+              'gender': null, // Mixed
+              'birth_year_range': {'min': minYear, 'max': maxYear},
+              'use_global_ids': [0],
+            });
+
+            tickets.add({
+              'name': '일반 입장권',
+              'price': 20000,
+              'quantity': 30,
+              'group_index': 0,
+            });
+          }
 
           final partyData = {
             'title': fullTitle,
-            'description': _generateRichDescription(fullTitle, summary),
-            'entry_groups': [
-              {
-                'label': '일반 입장',
-                'gender': null,
-                'birth_year_range': {'min': 1990, 'max': 2000},
-                'use_global_ids': [0], // Identity Verification
-                'use_local_indices': [],
-              }
-            ],
-            'tickets': [
-              {
-                'name': 'Early Bird Ticket',
-                'price': 15000,
-                'quantity': 10,
-                'group_index': 0
-              },
-              {
-                'name': 'Regular Ticket',
-                'price': 30000,
-                'quantity': 30,
-                'group_index': 0
-              }
-            ]
+            'description': _generateRichDescription(
+              fullTitle,
+              '${scenario['desc_header']}\n멋진 인연을 만들어보세요.',
+            ),
+            'entry_groups': entryGroups,
+            'tickets': tickets,
           };
 
           await _createPartyAndEvents(
@@ -354,36 +428,13 @@ class DatabaseSeeder {
   ) async {
     final partyId = const Uuid().v4();
 
-    // Map Entry Groups
-    final entryGroups =
-        (partyData['entry_groups'] as List<dynamic>).map((dynamic g) {
-      final gMap = g as Map<String, dynamic>;
-      final groupUuid = const Uuid().v4();
-      final requiredIds = <String>[];
+    // Map Entry Groups & Tickets from input data
+    final entryGroupsList = partyData['entry_groups'] as List<dynamic>;
+    final ticketsList = partyData['tickets'] as List<dynamic>;
 
-      final globalIndices = gMap['use_global_ids'] as List<dynamic>? ?? [];
-      for (final dynamic gi in globalIndices) {
-        final idx = gi as int;
-        if (globalVerifIds.length > idx) requiredIds.add(globalVerifIds[idx]);
-      }
-
-      final localIndices = gMap['use_local_indices'] as List<dynamic>? ?? [];
-      for (final dynamic li in localIndices) {
-        final idx = li as int;
-        if (localVerifIds.length > idx) requiredIds.add(localVerifIds[idx]);
-      }
-
-      return {
-        'id': groupUuid,
-        'label': gMap['label'],
-        'gender': gMap['gender'],
-        'birth_year_range': gMap['birth_year_range'],
-        'required_verification_ids': requiredIds,
-      };
-    }).toList();
-
-    final allVerifIds = entryGroups
-        .expand((e) => e['required_verification_ids'] as List)
+    final allVerifIds = entryGroupsList
+        .expand((e) => (e as Map)['use_global_ids'] as List? ?? [])
+        .map((e) => globalVerifIds[e as int]) // Map index to real ID
         .toSet()
         .toList();
 
@@ -392,30 +443,33 @@ class DatabaseSeeder {
       'partner_id': partnerId,
       'location_id': locationId,
       'title': partyData['title'],
-      'description': partyData['description'], // Now a Map
+      'description': partyData['description'],
       'min_confirmed_count': 5,
       'max_participants': 20,
       'required_verification_ids': allVerifIds,
     });
 
-    // Create Entry Group Templates
+    // --- Template Creation (Skipping logic detailed check for brevity, assuming standard flow) ---
+    // 1. Create Entry Group Templates
     final entryGroupTemplatesRes = await _adminClient.from('entry_group_templates').insert(
-      entryGroups.map((g) => {
-        'party_id': partyId,
-        'label': g['label'],
-        'gender': g['gender'],
-        'birth_year_min': g['birth_year_range']?['min'],
-        'birth_year_max': g['birth_year_range']?['max'],
-        'required_verification_ids': g['required_verification_ids'],
+      entryGroupsList.map((dynamic g) {
+        final gMap = g as Map<String, dynamic>;
+        final reqIds = (gMap['use_global_ids'] as List? ?? []).map((i) => globalVerifIds[i as int]).toList();
+        return {
+          'party_id': partyId,
+          'label': gMap['label'],
+          'gender': gMap['gender'],
+          'birth_year_min': gMap['birth_year_range']?['min'],
+          'birth_year_max': gMap['birth_year_range']?['max'],
+          'required_verification_ids': reqIds,
+        };
       }).toList(),
     ).select('id');
-
     final templateIds = (entryGroupTemplatesRes as List).map((e) => e['id'] as String).toList();
 
-    // Create Ticket Templates (Use actual Entry Group Template IDs)
-    final tickets = partyData['tickets'] as List<dynamic>? ?? [];
+    // 2. Create Ticket Templates
     await _adminClient.from('ticket_templates').insert(
-      tickets.map((dynamic t) {
+      ticketsList.map((dynamic t) {
         final tMap = t as Map<String, dynamic>;
         final groupIdx = tMap['group_index'] as int;
         return {
@@ -428,12 +482,11 @@ class DatabaseSeeder {
       }).toList(),
     );
 
-    // Create Events (Instances)
+    // --- Instance Creation (Events) ---
     final now = DateTime.now();
     final eventDates = [
       now.add(const Duration(hours: 3)),
       now.add(const Duration(days: 7)),
-      now.add(const Duration(days: 8)),
     ];
 
     for (final date in eventDates) {
@@ -449,23 +502,26 @@ class DatabaseSeeder {
         'status': 'scheduled',
       });
 
-      // Create Event Entry Groups
+      // 1. Create Event Entry Groups
       final eventGroupsRes = await _adminClient.from('entry_groups').insert(
-        entryGroups.map((g) => {
-          'event_id': eventId,
-          'label': g['label'],
-          'gender': g['gender'],
-          'birth_year_min': g['birth_year_range']?['min'],
-          'birth_year_max': g['birth_year_range']?['max'],
-          'required_verification_ids': g['required_verification_ids'],
+        entryGroupsList.map((dynamic g) {
+          final gMap = g as Map<String, dynamic>;
+          final reqIds = (gMap['use_global_ids'] as List? ?? []).map((i) => globalVerifIds[i as int]).toList();
+          return {
+            'event_id': eventId,
+            'label': gMap['label'],
+            'gender': gMap['gender'],
+            'birth_year_min': gMap['birth_year_range']?['min'],
+            'birth_year_max': gMap['birth_year_range']?['max'],
+            'required_verification_ids': reqIds,
+          };
         }).toList(),
       ).select('id');
-
       final eventGroupIds = (eventGroupsRes as List).map((e) => e['id'] as String).toList();
 
-      // Create Event Tickets (Link to Event Entry Groups)
+      // 2. Create Event Tickets
       await _adminClient.from('tickets').insert(
-        tickets.map((dynamic t) {
+        ticketsList.map((dynamic t) {
           final tMap = t as Map<String, dynamic>;
           final groupIdx = tMap['group_index'] as int;
           return {
