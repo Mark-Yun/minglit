@@ -7,7 +7,8 @@ import 'package:minglit_kit/minglit_kit.dart';
 ///
 /// A screen where users input their PII (Personally Identifiable Information).
 /// In a real scenario, this would integrate with PASS/SMS verification.
-/// Currently, it mocks the process and updates the `user_profiles` table directly.
+/// Currently, it mocks the process and updates the `user_profiles`
+/// table directly.
 class IdentityVerificationScreen extends ConsumerStatefulWidget {
   const IdentityVerificationScreen({super.key});
 
@@ -50,7 +51,9 @@ class _IdentityVerificationScreenState
       // Mock Delay
       await Future<void>.delayed(const Duration(seconds: 1));
 
-      await ref.read(identityRepositoryProvider).verifyIdentity(
+      await ref
+          .read(identityRepositoryProvider)
+          .verifyIdentity(
             name: _name,
             birthDate: _birthDate!,
             gender: _gender,
@@ -121,8 +124,7 @@ class _IdentityVerificationScreenState
                   hintText: '실명을 입력해주세요',
                   border: OutlineInputBorder(),
                 ),
-                validator: (v) =>
-                    (v?.isEmpty ?? true) ? '이름을 입력해주세요.' : null,
+                validator: (v) => (v?.isEmpty ?? true) ? '이름을 입력해주세요.' : null,
                 onSaved: (v) => _name = v!,
               ),
               const SizedBox(height: 24),
@@ -148,11 +150,13 @@ class _IdentityVerificationScreenState
                           final bd = _birthDate;
                           final text = bd == null
                               ? '생년월일 선택'
-                              : '${bd.year}.${bd.month.toString().padLeft(2, '0')}.${bd.day.toString().padLeft(2, '0')}';
+                              : '''${bd.year}.${bd.month.toString().padLeft(2, '0')}.${bd.day.toString().padLeft(2, '0')}''';
                           return Text(
                             text,
                             style: TextStyle(
-                              color: bd == null ? Colors.grey[600] : Colors.black,
+                              color: bd == null
+                                  ? Colors.grey[600]
+                                  : Colors.black,
                             ),
                           );
                         },
@@ -271,9 +275,7 @@ class _IdentityVerificationScreenState
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: isSelected
-              ? color.withValues(alpha: 0.1)
-              : Colors.transparent,
+          color: isSelected ? color.withValues(alpha: 0.1) : Colors.transparent,
           border: Border.all(
             color: isSelected ? color : Colors.grey[400]!,
             width: isSelected ? 2 : 1,

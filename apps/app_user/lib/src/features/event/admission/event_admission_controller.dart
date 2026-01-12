@@ -52,48 +52,49 @@ class EventAdmissionController extends _$EventAdmissionController {
       );
     }
 
-        // 4. Check Eligibility (Age/Gender)
-        // Event has multiple tickets, each linked to EntryGroups.
-        // User is eligible if they match AT LEAST ONE ticket's condition.
-        final tickets = event.tickets ?? [];
-        final entryGroups = event.entryGroups ?? [];
-    
-        if (tickets.isEmpty) {
-          // No tickets? Should not happen for active event.
-          return AdmissionState(
-            status: EventAdmissionStatus.eligible,
-            user: currentUser,
-          );
+    // 4. Check Eligibility (Age/Gender)
+    // Event has multiple tickets, each linked to EntryGroups.
+    // User is eligible if they match AT LEAST ONE ticket's condition.
+    final tickets = event.tickets ?? [];
+    final entryGroups = event.entryGroups ?? [];
+
+    if (tickets.isEmpty) {
+      // No tickets? Should not happen for active event.
+      return AdmissionState(
+        status: EventAdmissionStatus.eligible,
+        user: currentUser,
+      );
+    }
+
+    var isAnyEligible = false;
+    String? firstReason;
+
+    for (final ticket in tickets) {
+      // Find linked groups
+      final groups = entryGroups
+          .where((g) => ticket.targetEntryGroupIds.contains(g.id))
+          .toList();
+
+      // If no groups linked, it means "Open to All" (or misconfig).
+      // Assume open.
+      if (groups.isEmpty) {
+        isAnyEligible = true;
+        break;
+      }
+
+      // Check each group condition
+      for (final group in groups) {
+        final reason = _checkGroupCondition(group, userProfile);
+        if (reason == null) {
+          isAnyEligible = true;
+          break; // Matches this ticket
+        } else {
+          firstReason ??= reason;
         }
-    
-        var isAnyEligible = false;
-        String? firstReason;
-    
-        for (final ticket in tickets) {
-          // Find linked groups
-          final groups = entryGroups
-              .where((g) => ticket.targetEntryGroupIds.contains(g.id))
-              .toList();
-    
-          // If no groups linked, it means "Open to All" (or misconfig). Assume open.
-          if (groups.isEmpty) {
-            isAnyEligible = true;
-            break;
-          }
-    
-          // Check each group condition
-          for (final group in groups) {
-            final reason = _checkGroupCondition(group, userProfile);
-            if (reason == null) {
-              isAnyEligible = true;
-              break; // Matches this ticket
-            } else {
-              firstReason ??= reason;
-            }
-          }
-          if (isAnyEligible) break;
-        }
-        if (!isAnyEligible) {
+      }
+      if (isAnyEligible) break;
+    }
+    if (!isAnyEligible) {
       return AdmissionState(
         status: EventAdmissionStatus.notEligible,
         user: currentUser,

@@ -338,7 +338,7 @@ class _BottomTicketBar extends ConsumerWidget {
     WidgetRef ref,
     AdmissionState state,
   ) {
-    String text = '참가 신청하기';
+    var text = '참가 신청하기';
     VoidCallback? onPressed;
     Color? backgroundColor;
 
@@ -347,7 +347,10 @@ class _BottomTicketBar extends ConsumerWidget {
         text = '로그인하고 신청하기';
         onPressed = () {
           // TODO(developer): Navigate to Login
-          handleMinglitError(context, const MinglitAuthException('로그인이 필요합니다.'));
+          handleMinglitError(
+            context,
+            const MinglitAuthException('로그인이 필요합니다.'),
+          );
         };
       case EventAdmissionStatus.identityRequired:
         text = '본인인증 후 신청하기';
@@ -358,7 +361,7 @@ class _BottomTicketBar extends ConsumerWidget {
               fullscreenDialog: true,
             ),
           );
-          if (success == true) {
+          if (success ?? false) {
             ref.invalidate(eventAdmissionControllerProvider(event));
           }
         };
