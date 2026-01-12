@@ -45,10 +45,7 @@ Future<void> appStartup(Ref ref) async {
   try {
     await Future.wait([
       initializeDateFormatting('ko_KR'),
-      Supabase.initialize(
-        url: supabaseUrl,
-        anonKey: supabasePublishableKey,
-      ),
+      Supabase.initialize(url: supabaseUrl, anonKey: supabasePublishableKey),
     ]);
   } on Exception catch (e) {
     Log.e('App startup warning', e);
@@ -95,9 +92,7 @@ class _AppView extends ConsumerWidget {
         home: const MinglitSplashScreen(appName: 'User'),
       ),
       error: (e, st) => MaterialApp(
-        home: Scaffold(
-          body: Center(child: Text('Error: $e')),
-        ),
+        home: Scaffold(body: Center(child: Text('Error: $e'))),
       ),
     );
   }

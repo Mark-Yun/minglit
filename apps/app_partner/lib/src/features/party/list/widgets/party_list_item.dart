@@ -3,11 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class PartyListItem extends StatelessWidget {
-  const PartyListItem({
-    required this.party,
-    required this.onTap,
-    super.key,
-  });
+  const PartyListItem({required this.party, required this.onTap, super.key});
 
   final Party party;
   final VoidCallback onTap;
@@ -77,10 +73,7 @@ class PartyListItem extends StatelessWidget {
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black54,
-                        ],
+                        colors: [Colors.transparent, Colors.black54],
                         stops: [0.6, 1.0],
                       ),
                     ),
@@ -187,11 +180,7 @@ class PartyListItem extends StatelessWidget {
         color: color,
         borderRadius: BorderRadius.circular(4),
         boxShadow: const [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
+          BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
         ],
       ),
       child: Text(
@@ -207,10 +196,7 @@ class PartyListItem extends StatelessWidget {
 }
 
 class _InfoChip extends StatelessWidget {
-  const _InfoChip({
-    required this.icon,
-    required this.label,
-  });
+  const _InfoChip({required this.icon, required this.label});
 
   final IconData icon;
   final String label;

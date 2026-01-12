@@ -122,13 +122,9 @@ class EventCreateInfoTab extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                EventCapacitySummary(
-                  maxParticipants: state.maxParticipants,
-                ),
+                EventCapacitySummary(maxParticipants: state.maxParticipants),
                 const SizedBox(height: MinglitSpacing.small),
-                EventContactSummary(
-                  contactOptions: state.contactOptions,
-                ),
+                EventContactSummary(contactOptions: state.contactOptions),
               ],
             ),
           ),
@@ -170,8 +166,9 @@ class EventCreateInfoTab extends ConsumerWidget {
             title: context.l10n.partyDetail_section_entranceCondition,
             onTap: () {}, // Event Entry Groups are read-only for now
             child: PartyEntranceConditionSummary(
-              entryGroups:
-                  state.entryGroups.map((e) => e.toTemplate()).toList(),
+              entryGroups: state.entryGroups
+                  .map((e) => e.toTemplate())
+                  .toList(),
             ),
           ),
         ],

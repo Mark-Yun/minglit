@@ -73,26 +73,26 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
         },
       )
       // Listen to submission status
-      ..listen(
-        partyCreateWizardControllerProvider.select((s) => s.status),
-        (prev, next) {
-          next.whenOrNull(
-            data: (_) {
-              if (prev?.isLoading ?? false) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(context.l10n.wizard_review_successMessage),
-                  ),
-                );
-                context.pop(); // Return to Party List
-              }
-            },
-            error: (error, st) {
-              handleMinglitError(context, error, st);
-            },
-          );
-        },
-      );
+      ..listen(partyCreateWizardControllerProvider.select((s) => s.status), (
+        prev,
+        next,
+      ) {
+        next.whenOrNull(
+          data: (_) {
+            if (prev?.isLoading ?? false) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(context.l10n.wizard_review_successMessage),
+                ),
+              );
+              context.pop(); // Return to Party List
+            }
+          },
+          error: (error, st) {
+            handleMinglitError(context, error, st);
+          },
+        );
+      });
 
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(

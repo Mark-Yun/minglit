@@ -155,10 +155,7 @@ class _ContactMethodRow extends StatelessWidget {
       inputDecorationTheme: theme.inputDecorationTheme.copyWith(
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(MinglitRadius.input),
-          borderSide: BorderSide(
-            color: colorScheme.secondary,
-            width: 2,
-          ),
+          borderSide: BorderSide(color: colorScheme.secondary, width: 2),
         ),
       ),
     );
@@ -171,10 +168,7 @@ class _ContactMethodRow extends StatelessWidget {
             child: AnimatedOpacity(
               duration: MinglitAnimation.fast,
               opacity: isSelected ? 1.0 : 0.5,
-              child: IgnorePointer(
-                ignoring: !isSelected,
-                child: child,
-              ),
+              child: IgnorePointer(ignoring: !isSelected, child: child),
             ),
           ),
         ),

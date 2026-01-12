@@ -57,10 +57,7 @@ class _PartnerApplicationDetailPageState
     extends ConsumerState<PartnerApplicationDetailPage> {
   final TextEditingController _commentController = TextEditingController();
 
-  Future<void> _processReview({
-    required String status,
-    String? comment,
-  }) async {
+  Future<void> _processReview({required String status, String? comment}) async {
     try {
       await ref
           .read(partnerRepositoryProvider)

@@ -100,9 +100,9 @@ class PartyDetailCoordinator {
 
       _ref.invalidate(partyDetailProvider(partyId));
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('입장 그룹이 수정되었습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('입장 그룹이 수정되었습니다.')));
       }
     } on Object catch (e, st) {
       if (context.mounted) {
@@ -160,9 +160,7 @@ class PartyDetailCoordinator {
   void goToEventDetail(String partyId, String eventId) {
     _ref
         .read(goRouterProvider)
-        .go(
-          EventDetailRoute(partyId: partyId, eventId: eventId).location,
-        );
+        .go(EventDetailRoute(partyId: partyId, eventId: eventId).location);
   }
 
   void goToCreateTicket(String partyId, String eventId) {

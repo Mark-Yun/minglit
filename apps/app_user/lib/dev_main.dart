@@ -95,9 +95,7 @@ Future<void> main() async {
               return null;
             },
             routes: $appRoutes,
-            observers: [
-              MinglitNavigationObserver(),
-            ],
+            observers: [MinglitNavigationObserver()],
           );
         }),
       ],
@@ -124,9 +122,7 @@ Future<void> appStartup(Ref ref) async {
   } on AuthApiException catch (e) {
     if (e.message.contains('Invalid Refresh Token') ||
         e.code == 'refresh_token_already_used') {
-      Log.w(
-        '[Startup] Invalid Refresh Token detected. Clearing storage...',
-      );
+      Log.w('[Startup] Invalid Refresh Token detected. Clearing storage...');
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
       Log.i('[Startup] Storage cleared. Please reload the app.');
@@ -147,9 +143,7 @@ class MinglitDevApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: MinglitTheme.materialTheme,
-      home: const StaffGuardWrapper(
-        child: _AppView(),
-      ),
+      home: const StaffGuardWrapper(child: _AppView()),
     );
   }
 }
@@ -163,14 +157,9 @@ class _AppView extends ConsumerWidget {
 
     return startupState.when(
       data: (_) => const _AuthenticatedApp(),
-      loading: () => const MinglitSplashScreen(
-        appName: 'User Dev',
-      ),
-      error: (e, st) => Scaffold(
-        body: Center(
-          child: Text('Startup Error: $e'),
-        ),
-      ),
+      loading: () => const MinglitSplashScreen(appName: 'User Dev'),
+      error: (e, st) =>
+          Scaffold(body: Center(child: Text('Startup Error: $e'))),
     );
   }
 }
@@ -196,9 +185,7 @@ class _AuthenticatedApp extends ConsumerWidget {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
-        return MinglitGlobalLoadingOverlay(
-          child: child!,
-        );
+        return MinglitGlobalLoadingOverlay(child: child!);
       },
     );
   }

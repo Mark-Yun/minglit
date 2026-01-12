@@ -2,10 +2,7 @@ import 'package:app_partner/src/features/party/widgets/party_capacity_summary.da
 import 'package:flutter/material.dart';
 
 class EventCapacitySummary extends StatelessWidget {
-  const EventCapacitySummary({
-    required this.maxParticipants,
-    super.key,
-  });
+  const EventCapacitySummary({required this.maxParticipants, super.key});
 
   final int maxParticipants;
 

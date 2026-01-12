@@ -66,9 +66,7 @@ class _PartyCapacityContactEditScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MinglitTheme.simpleAppBar(
-        title: '인원 및 연락처 수정',
-      ),
+      appBar: MinglitTheme.simpleAppBar(title: '인원 및 연락처 수정'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(MinglitSpacing.medium),
         child: Column(
@@ -77,9 +75,9 @@ class _PartyCapacityContactEditScreenState
             // 1. Capacity Section
             Text(
               context.l10n.partyCreate_label_capacity,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: MinglitSpacing.medium),
             PartyCapacityInput(
@@ -93,9 +91,9 @@ class _PartyCapacityContactEditScreenState
             // 2. Contact Section
             Text(
               context.l10n.partyCreate_label_contact,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: MinglitSpacing.medium),
             PartyContactInput(

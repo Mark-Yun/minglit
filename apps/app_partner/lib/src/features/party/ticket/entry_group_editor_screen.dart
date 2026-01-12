@@ -45,7 +45,7 @@ class _EntryGroupEditorScreenState
   }
 
   void _submit() {
-    final group = EntryGroupTemplate(
+    final group = PartyEntryGroup(
       id: widget.initialGroup?.id ?? const Uuid().v4(),
       partyId: '', // Will be set by controller/repo
       gender: _gender,

@@ -131,9 +131,7 @@ class Step4EntryRules extends ConsumerWidget {
         borderRadius: BorderRadius.circular(MinglitRadius.card),
         border: Border.all(color: Colors.grey[300]!),
       ),
-      child: Center(
-        child: Text(context.l10n.partyCreate_empty_entryGroups),
-      ),
+      child: Center(child: Text(context.l10n.partyCreate_empty_entryGroups)),
     );
   }
 

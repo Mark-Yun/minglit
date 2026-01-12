@@ -265,7 +265,7 @@ class DatabaseSeeder {
         for (var p = 0; p < 2; p++) {
           final scenarioIndex = (partnerCounter + p) % scenarios.length;
           final scenario = scenarios[scenarioIndex];
-          
+
           final baseTitle = (scenario['titles'] as List)[p % 3];
           final fullTitle = '[$placeName] $baseTitle';
           final splitGender = scenario['split_gender'] as bool;
@@ -288,7 +288,10 @@ class DatabaseSeeder {
             entryGroups.add({
               'label': '여성 입장',
               'gender': 'female',
-              'birth_year_range': {'min': minYear, 'max': maxYear}, // Can adjust for lady first
+              'birth_year_range': {
+                'min': minYear,
+                'max': maxYear,
+              }, // Can adjust for lady first
               'use_global_ids': [0],
             });
 
@@ -347,25 +350,64 @@ class DatabaseSeeder {
   Map<String, dynamic> _generateRichDescription(String title, String summary) {
     return {
       "ops": [
-        {"insert": "✨ $title\n", "attributes": {"header": 1, "bold": true}},
+        {
+          "insert": "✨ $title\n",
+          "attributes": {"header": 1, "bold": true},
+        },
         {"insert": "\n"},
-        {"insert": "📍 파티 소개\n", "attributes": {"header": 2}},
+        {
+          "insert": "📍 파티 소개\n",
+          "attributes": {"header": 2},
+        },
         {"insert": "$summary\n\n"},
-        {"insert": "🕒 타임테이블\n", "attributes": {"header": 2}},
-        {"insert": "19:00 - 입장 및 웰컴 드링크\n", "attributes": {"list": "bullet"}},
-        {"insert": "19:30 - 아이스브레이킹 게임 (어색함 타파!)\n", "attributes": {"list": "bullet"}},
-        {"insert": "20:30 - 1:1 대화 로테이션 및 네트워킹\n", "attributes": {"list": "bullet"}},
-        {"insert": "22:00 - 자유 대화 및 공식 행사 종료\n", "attributes": {"list": "bullet"}},
+        {
+          "insert": "🕒 타임테이블\n",
+          "attributes": {"header": 2},
+        },
+        {
+          "insert": "19:00 - 입장 및 웰컴 드링크\n",
+          "attributes": {"list": "bullet"},
+        },
+        {
+          "insert": "19:30 - 아이스브레이킹 게임 (어색함 타파!)\n",
+          "attributes": {"list": "bullet"},
+        },
+        {
+          "insert": "20:30 - 1:1 대화 로테이션 및 네트워킹\n",
+          "attributes": {"list": "bullet"},
+        },
+        {
+          "insert": "22:00 - 자유 대화 및 공식 행사 종료\n",
+          "attributes": {"list": "bullet"},
+        },
         {"insert": "\n"},
-        {"insert": "✅ 제공 내역\n", "attributes": {"header": 2}},
-        {"insert": "레드/화이트/스파클링 와인 무제한\n", "attributes": {"list": "bullet"}},
-        {"insert": "프리미엄 핑거 푸드 케이터링\n", "attributes": {"list": "bullet"}},
-        {"insert": "매칭 확률을 높여주는 Minglit 가이드북\n", "attributes": {"list": "bullet"}},
+        {
+          "insert": "✅ 제공 내역\n",
+          "attributes": {"header": 2},
+        },
+        {
+          "insert": "레드/화이트/스파클링 와인 무제한\n",
+          "attributes": {"list": "bullet"},
+        },
+        {
+          "insert": "프리미엄 핑거 푸드 케이터링\n",
+          "attributes": {"list": "bullet"},
+        },
+        {
+          "insert": "매칭 확률을 높여주는 Minglit 가이드북\n",
+          "attributes": {"list": "bullet"},
+        },
         {"insert": "\n"},
-        {"insert": "📢 안내 사항\n", "attributes": {"header": 2}},
-        {"insert": "신분증 지참 필수입니다. (PASS 인증 확인)\n", "attributes": {"bold": true}},
+        {
+          "insert": "📢 안내 사항\n",
+          "attributes": {"header": 2},
+        },
+        {
+          "insert": "신분증 지참 필수입니다. (PASS 인증 확인)\n",
+          "attributes": {"bold": true},
+        },
         {"insert": "과도한 음주는 삼가주세요.\n"},
-      ]
+      ],
     };
   }
 
@@ -451,36 +493,45 @@ class DatabaseSeeder {
 
     // --- Template Creation (Skipping logic detailed check for brevity, assuming standard flow) ---
     // 1. Create Entry Group Templates
-    final entryGroupTemplatesRes = await _adminClient.from('entry_group_templates').insert(
-      entryGroupsList.map((dynamic g) {
-        final gMap = g as Map<String, dynamic>;
-        final reqIds = (gMap['use_global_ids'] as List? ?? []).map((i) => globalVerifIds[i as int]).toList();
-        return {
-          'party_id': partyId,
-          'label': gMap['label'],
-          'gender': gMap['gender'],
-          'birth_year_min': gMap['birth_year_range']?['min'],
-          'birth_year_max': gMap['birth_year_range']?['max'],
-          'required_verification_ids': reqIds,
-        };
-      }).toList(),
-    ).select('id');
-    final templateIds = (entryGroupTemplatesRes as List).map((e) => e['id'] as String).toList();
+    final entryGroupTemplatesRes = await _adminClient
+        .from('entry_group_templates')
+        .insert(
+          entryGroupsList.map((dynamic g) {
+            final gMap = g as Map<String, dynamic>;
+            final reqIds = (gMap['use_global_ids'] as List? ?? [])
+                .map((i) => globalVerifIds[i as int])
+                .toList();
+            return {
+              'party_id': partyId,
+              'label': gMap['label'],
+              'gender': gMap['gender'],
+              'birth_year_min': gMap['birth_year_range']?['min'],
+              'birth_year_max': gMap['birth_year_range']?['max'],
+              'required_verification_ids': reqIds,
+            };
+          }).toList(),
+        )
+        .select('id');
+    final templateIds = (entryGroupTemplatesRes as List)
+        .map((e) => e['id'] as String)
+        .toList();
 
     // 2. Create Ticket Templates
-    await _adminClient.from('ticket_templates').insert(
-      ticketsList.map((dynamic t) {
-        final tMap = t as Map<String, dynamic>;
-        final groupIdx = tMap['group_index'] as int;
-        return {
-          'party_id': partyId,
-          'name': tMap['name'],
-          'price': tMap['price'],
-          'quantity': tMap['quantity'],
-          'target_entry_group_ids': [templateIds[groupIdx]],
-        };
-      }).toList(),
-    );
+    await _adminClient
+        .from('ticket_templates')
+        .insert(
+          ticketsList.map((dynamic t) {
+            final tMap = t as Map<String, dynamic>;
+            final groupIdx = tMap['group_index'] as int;
+            return {
+              'party_id': partyId,
+              'name': tMap['name'],
+              'price': tMap['price'],
+              'quantity': tMap['quantity'],
+              'target_entry_group_ids': [templateIds[groupIdx]],
+            };
+          }).toList(),
+        );
 
     // --- Instance Creation (Events) ---
     final now = DateTime.now();
@@ -503,37 +554,46 @@ class DatabaseSeeder {
       });
 
       // 1. Create Event Entry Groups
-      final eventGroupsRes = await _adminClient.from('entry_groups').insert(
-        entryGroupsList.map((dynamic g) {
-          final gMap = g as Map<String, dynamic>;
-          final reqIds = (gMap['use_global_ids'] as List? ?? []).map((i) => globalVerifIds[i as int]).toList();
-          return {
-            'event_id': eventId,
-            'label': gMap['label'],
-            'gender': gMap['gender'],
-            'birth_year_min': gMap['birth_year_range']?['min'],
-            'birth_year_max': gMap['birth_year_range']?['max'],
-            'required_verification_ids': reqIds,
-          };
-        }).toList(),
-      ).select('id');
-      final eventGroupIds = (eventGroupsRes as List).map((e) => e['id'] as String).toList();
+      final eventGroupsRes = await _adminClient
+          .from('entry_groups')
+          .insert(
+            entryGroupsList.map((dynamic g) {
+              final gMap = g as Map<String, dynamic>;
+              final reqIds = (gMap['use_global_ids'] as List? ?? [])
+                  .map((i) => globalVerifIds[i as int])
+                  .toList();
+              return {
+                'event_id': eventId,
+                'label': gMap['label'],
+                'gender': gMap['gender'],
+                'birth_year_min': gMap['birth_year_range']?['min'],
+                'birth_year_max': gMap['birth_year_range']?['max'],
+                'required_verification_ids': reqIds,
+              };
+            }).toList(),
+          )
+          .select('id');
+      final eventGroupIds = (eventGroupsRes as List)
+          .map((e) => e['id'] as String)
+          .toList();
 
       // 2. Create Event Tickets
-      await _adminClient.from('tickets').insert(
-        ticketsList.map((dynamic t) {
-          final tMap = t as Map<String, dynamic>;
-          final groupIdx = tMap['group_index'] as int;
-          return {
-            'event_id': eventId,
-            'name': tMap['name'],
-            'price': tMap['price'],
-            'quantity': tMap['quantity'],
-            'target_entry_group_ids': [eventGroupIds[groupIdx]],
-            'status': 'on_sale',
-          };
-        }).toList(),
-      );
+      await _adminClient
+          .from('tickets')
+          .insert(
+            ticketsList.map((dynamic t) {
+              final tMap = t as Map<String, dynamic>;
+              final groupIdx = tMap['group_index'] as int;
+              return {
+                'event_id': eventId,
+                'name': tMap['name'],
+                'price': tMap['price'],
+                'quantity': tMap['quantity'],
+                'target_entry_group_ids': [eventGroupIds[groupIdx]],
+                'status': 'on_sale',
+              };
+            }).toList(),
+          );
     }
   }
 

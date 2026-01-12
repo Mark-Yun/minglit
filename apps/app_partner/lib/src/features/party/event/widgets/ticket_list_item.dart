@@ -80,10 +80,7 @@ class TicketListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final currencyFormat = NumberFormat.currency(
-      locale: 'ko_KR',
-      symbol: '₩',
-    );
+    final currencyFormat = NumberFormat.currency(locale: 'ko_KR', symbol: '₩');
 
     // Filter linked entry groups
     final linkedGroups = entryGroups
@@ -111,9 +108,7 @@ class TicketListItem extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(MinglitSpacing.small),
                 decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer.withValues(
-                    alpha: 0.5,
-                  ),
+                  color: colorScheme.primaryContainer.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(MinglitRadius.input),
                 ),
                 child: Icon(

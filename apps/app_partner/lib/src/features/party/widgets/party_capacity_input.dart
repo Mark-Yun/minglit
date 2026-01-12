@@ -47,13 +47,9 @@ class PartyCapacityInput extends StatelessWidget {
           padding: const EdgeInsets.all(MinglitSpacing.small),
           child: const Column(
             children: [
-              _PolicyRow(
-                '파티 3일 전까지 최소 확정 인원에 미달한 경우 파티는 취소되고 자동 환불됩니다.',
-              ),
+              _PolicyRow('파티 3일 전까지 최소 확정 인원에 미달한 경우 파티는 취소되고 자동 환불됩니다.'),
               SizedBox(height: MinglitSpacing.xxsmall),
-              _PolicyRow(
-                '최대 정원에 도달할 경우 티켓 판매가 즉시 자동 종료됩니다.',
-              ),
+              _PolicyRow('최대 정원에 도달할 경우 티켓 판매가 즉시 자동 종료됩니다.'),
             ],
           ),
         ),
@@ -73,18 +69,9 @@ class _PolicyRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          Icons.info_outline,
-          size: 14,
-          color: colorScheme.onSurfaceVariant,
-        ),
+        Icon(Icons.info_outline, size: 14, color: colorScheme.onSurfaceVariant),
         const SizedBox(width: MinglitSpacing.small),
-        Expanded(
-          child: Text(
-            text,
-            style: MinglitTextStyles.infoText(context),
-          ),
-        ),
+        Expanded(child: Text(text, style: MinglitTextStyles.infoText(context))),
       ],
     );
   }

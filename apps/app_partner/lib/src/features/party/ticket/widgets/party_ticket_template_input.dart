@@ -51,9 +51,8 @@ class PartyTicketTemplateInput extends StatelessWidget {
                   ticket: Ticket.createFromTemplate(template),
                   entryGroups: entryGroups,
                   showStats: false,
-                  onTap: () => unawaited(
-                    _navigateToEditPage(context, index, template),
-                  ),
+                  onTap: () =>
+                      unawaited(_navigateToEditPage(context, index, template)),
                   trailing: IconButton(
                     icon: Icon(
                       Icons.close,

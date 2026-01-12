@@ -41,5 +41,28 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Iamport / PortOne related queries -->
+        <package android:name="com.kakao.talk" />
+        <package android:name="kr.co.bootpay" />
+        <package android:name="com.nhn.android.search" />
+        <package android:name="com.nhn.android.naverpay" />
+        <package android:name="com.samsung.android.spay" />
+        <package android:name="com.ssg.android.ssgpay" />
+        <package android:name="com.lotte.lpay" />
+        <package android:name="com.lotte.lottecard" />
+        <package android:name="com.shcard.smartpay" />
+        <package android:name="com.shinhancard.smartshinhan" />
+        <package android:name="com.kbcard.cxh" />
+        <package android:name="com.kbstar.liivbank" />
+        <package android:name="com.kbstar.kbbank" />
+        <package android:name="com.hanaskcard.paycla" />
+        <package android:name="com.wooricard.smartapp" />
+        <package android:name="com.wooribank.smart.npib" />
+        <package android:name="kvp.jjy.MispAndroid320" />
+        <package android:name="com.hyundaicard.appcard" />
+        <package android:name="net.nshc.droid.niceid" />
+        <package android:name="com.sktelecom.tauth" />
+        <package android:name="com.lguplus.smartotp" />
+        <package android:name="com.kt.ktauth" />
     </queries>
 </manifest>

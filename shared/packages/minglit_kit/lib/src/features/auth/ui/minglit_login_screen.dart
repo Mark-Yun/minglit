@@ -10,6 +10,7 @@ class MinglitLoginScreen extends ConsumerWidget {
     super.key,
     this.onGoogleSignIn,
     this.onKakaoSignIn,
+    this.onVerifyIdentity,
     this.isPartner = false,
   });
 
@@ -18,6 +19,9 @@ class MinglitLoginScreen extends ConsumerWidget {
 
   /// Callback when Kakao sign-in is pressed.
   final VoidCallback? onKakaoSignIn;
+
+  /// Callback when Verify Identity is pressed (User only).
+  final VoidCallback? onVerifyIdentity;
 
   /// Whether this is for the Partner app (theme adjustment).
   final bool isPartner;
@@ -93,6 +97,14 @@ class MinglitLoginScreen extends ConsumerWidget {
                   foregroundColor: Colors.black87,
                 ),
               ),
+              if (!isPartner && onVerifyIdentity != null) ...[
+                const SizedBox(height: 12),
+                TextButton.icon(
+                  onPressed: onVerifyIdentity,
+                  icon: const Icon(Icons.verified_user_outlined, size: 18),
+                  label: const Text('본인인증 테스트'),
+                ),
+              ],
               const SizedBox(height: 12),
               if (isPartner) ...[
                 TextButton(

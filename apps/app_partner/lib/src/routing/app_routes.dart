@@ -122,10 +122,7 @@ class PartyDetailRoute extends GoRouteData with $PartyDetailRoute {
 }
 
 class PartyTicketEditRoute extends GoRouteData with $PartyTicketEditRoute {
-  const PartyTicketEditRoute({
-    required this.partyId,
-    required this.ticketId,
-  });
+  const PartyTicketEditRoute({required this.partyId, required this.ticketId});
 
   final String partyId;
   final String ticketId;
@@ -157,10 +154,7 @@ class EventDetailRoute extends GoRouteData with $EventDetailRoute {
 }
 
 class TicketCreateRoute extends GoRouteData with $TicketCreateRoute {
-  const TicketCreateRoute({
-    required this.partyId,
-    required this.eventId,
-  });
+  const TicketCreateRoute({required this.partyId, required this.eventId});
 
   final String partyId;
   final String eventId;
@@ -216,9 +210,7 @@ class HomeRoute extends GoRouteData with $HomeRoute {
 /// Path: `/admin/applications`
 @TypedGoRoute<ApplicationListRoute>(
   path: '/admin/applications',
-  routes: [
-    TypedGoRoute<ApplicationDetailRoute>(path: ':applicationId'),
-  ],
+  routes: [TypedGoRoute<ApplicationDetailRoute>(path: ':applicationId')],
 )
 class ApplicationListRoute extends GoRouteData with $ApplicationListRoute {
   const ApplicationListRoute();

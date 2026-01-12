@@ -26,6 +26,13 @@ class UserDevMap extends StatelessWidget {
           ),
           DevScreenItem(
             category: 'Auth',
+            title: 'Identity Verification',
+            description: '본인인증 (PASS/문자) 테스트 화면',
+            onTap: (context, ref) =>
+                const CertificationRoute().push<void>(context),
+          ),
+          DevScreenItem(
+            category: 'Auth',
             title: 'Session Switcher',
             description: '테스트 유저 계정으로 즉시 전환',
             onTap: (context, ref) =>

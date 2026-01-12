@@ -75,9 +75,9 @@ class _PartyBasicInfoEditScreenState
             // 1. Image Picker
             Text(
               context.l10n.partyCreate_label_coverImage,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: MinglitSpacing.medium),
             MinglitImagePicker(
@@ -89,9 +89,9 @@ class _PartyBasicInfoEditScreenState
             // 2. Title Input
             Text(
               context.l10n.partyCreate_label_title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: MinglitSpacing.medium),
             TextFormField(
@@ -105,9 +105,9 @@ class _PartyBasicInfoEditScreenState
             // 3. Description Input
             Text(
               context.l10n.partyCreate_label_description,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: MinglitSpacing.medium),
             PartyDescriptionInput(
@@ -118,11 +118,9 @@ class _PartyBasicInfoEditScreenState
 
             ElevatedButton(
               onPressed: () {
-                widget.onSave(
-                  _titleController.text,
-                  {'ops': _quillController.document.toDelta().toJson()},
-                  _selectedImage,
-                );
+                widget.onSave(_titleController.text, {
+                  'ops': _quillController.document.toDelta().toJson(),
+                }, _selectedImage);
                 Navigator.pop(context);
               },
               child: Text(context.l10n.common_button_save),

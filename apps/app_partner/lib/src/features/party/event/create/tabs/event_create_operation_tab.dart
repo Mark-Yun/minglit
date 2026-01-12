@@ -46,8 +46,9 @@ class EventCreateOperationTab extends StatelessWidget {
             },
             child: PartyTicketsSummary(
               tickets: state.tickets,
-              entryGroups:
-                  state.entryGroups.map((e) => e.toTemplate()).toList(),
+              entryGroups: state.entryGroups
+                  .map((e) => e.toTemplate())
+                  .toList(),
               maxCapacity: state.maxParticipants,
               showStats: false,
             ),
@@ -60,10 +61,7 @@ class EventCreateOperationTab extends StatelessWidget {
   Widget _buildSectionHeader(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: MinglitSpacing.small),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
+      child: Text(title, style: Theme.of(context).textTheme.titleMedium),
     );
   }
 }

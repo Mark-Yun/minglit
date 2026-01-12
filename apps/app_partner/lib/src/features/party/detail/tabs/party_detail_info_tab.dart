@@ -269,9 +269,9 @@ class PartyDetailInfoTab extends ConsumerWidget {
       ref.invalidate(partyDetailProvider(party.id));
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('기본 정보가 수정되었습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('기본 정보가 수정되었습니다.')));
       }
     } on Exception catch (e, st) {
       if (context.mounted) handleMinglitError(context, e, st);

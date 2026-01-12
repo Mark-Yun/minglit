@@ -44,9 +44,9 @@ class _CreateVerificationScreenState
         .submit(widget.partnerId);
 
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('인증이 생성되었습니다.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('인증이 생성되었습니다.')));
       Navigator.pop(context, true);
     }
   }
@@ -62,16 +62,14 @@ class _CreateVerificationScreenState
     // Listen for errors
     ref.listen(createVerificationControllerProvider, (prev, next) {
       if (prev?.error != next.error && next.error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${next.error}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${next.error}')));
       }
     });
 
     return Scaffold(
-      appBar: MinglitTheme.simpleAppBar(
-        title: '새 인증 만들기',
-      ),
+      appBar: MinglitTheme.simpleAppBar(title: '새 인증 만들기'),
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(
@@ -105,10 +103,7 @@ class _CreateVerificationScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '기본 정보',
-          style: theme.textTheme.titleLarge,
-        ),
+        Text('기본 정보', style: theme.textTheme.titleLarge),
         const SizedBox(height: MinglitSpacing.medium),
         TextFormField(
           controller: _displayNameController,
@@ -158,10 +153,7 @@ class _CreateVerificationScreenState
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              '입력 양식 설정',
-              style: theme.textTheme.titleLarge,
-            ),
+            Text('입력 양식 설정', style: theme.textTheme.titleLarge),
             PopupMenuButton<String>(
               onSelected: controller.addField,
               icon: Icon(Icons.add_circle, color: colorScheme.onSurfaceVariant),

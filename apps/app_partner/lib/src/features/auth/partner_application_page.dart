@@ -17,9 +17,7 @@ class _PartnerApplicationPageState
   final _picker = ImagePicker();
 
   // 브랜드 정보 controllers
-  final Map<String, dynamic> _data = {
-    'biz_type': 'individual',
-  };
+  final Map<String, dynamic> _data = {'biz_type': 'individual'};
   XFile? _bizRegFile;
   XFile? _bankbookFile;
   bool _isLoading = false;
@@ -132,9 +130,7 @@ class _PartnerApplicationPageState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSectionTitle(
-                context.l10n.partnerApplication_section_brand,
-              ),
+              _buildSectionTitle(context.l10n.partnerApplication_section_brand),
               _buildTextField(
                 'brand_name',
                 context.l10n.partnerApplication_field_brandName,
@@ -163,9 +159,7 @@ class _PartnerApplicationPageState
               ),
 
               const SizedBox(height: 32),
-              _buildSectionTitle(
-                context.l10n.partnerApplication_section_biz,
-              ),
+              _buildSectionTitle(context.l10n.partnerApplication_section_biz),
               _buildBizTypeDropdown(),
               _buildTextField(
                 'biz_name',
@@ -205,9 +199,7 @@ class _PartnerApplicationPageState
               ),
 
               const SizedBox(height: 32),
-              _buildSectionTitle(
-                context.l10n.partnerApplication_section_files,
-              ),
+              _buildSectionTitle(context.l10n.partnerApplication_section_files),
               _buildFilePicker(
                 context.l10n.partnerApplication_label_bizReg,
                 _bizRegFile,

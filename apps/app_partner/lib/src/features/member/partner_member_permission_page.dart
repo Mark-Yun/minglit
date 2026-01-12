@@ -46,10 +46,7 @@ class PartnerMemberPermissionPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final memberAsync = ref.watch(
-      partnerMemberProvider(
-        partnerId: partnerId,
-        targetUserId: targetUserId,
-      ),
+      partnerMemberProvider(partnerId: partnerId, targetUserId: targetUserId),
     );
 
     return Scaffold(
@@ -150,9 +147,7 @@ class _MemberPermissionFormState extends ConsumerState<_MemberPermissionForm> {
         );
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(context.l10n.memberPermission_message_saved)),
         );
         Navigator.pop(context);

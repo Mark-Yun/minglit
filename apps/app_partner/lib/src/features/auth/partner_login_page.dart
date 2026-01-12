@@ -11,9 +11,9 @@ class PartnerLoginPage extends ConsumerWidget {
     // Listen for AuthController errors
     ref.listen(authControllerProvider, (previous, next) {
       if (next is AsyncError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login Failed: ${next.error}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Login Failed: ${next.error}')));
       }
     });
 

@@ -47,9 +47,8 @@ class PartyDetailOperationTab extends ConsumerWidget {
                 onCreatePressed: () => coordinator.goToCreateEvent(party.id),
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, s) => Text(
-                context.l10n.partyDetail_error_eventLoad(e.toString()),
-              ),
+              error: (e, s) =>
+                  Text(context.l10n.partyDetail_error_eventLoad(e.toString())),
             ),
           ),
 
@@ -87,9 +86,8 @@ class PartyDetailOperationTab extends ConsumerWidget {
                 },
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, s) => Text(
-                context.l10n.partyDetail_error_ticketLoad(e.toString()),
-              ),
+              error: (e, s) =>
+                  Text(context.l10n.partyDetail_error_ticketLoad(e.toString())),
             ),
           ),
           const SizedBox(height: MinglitSpacing.xlarge),
@@ -127,9 +125,7 @@ class PartyDetailOperationTab extends ConsumerWidget {
       } on Exception catch (_) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(context.l10n.common_error_system),
-            ),
+            SnackBar(content: Text(context.l10n.common_error_system)),
           );
         }
       } finally {

@@ -8,10 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class EventDetailScreen extends ConsumerWidget {
-  const EventDetailScreen({
-    required this.eventId,
-    super.key,
-  });
+  const EventDetailScreen({required this.eventId, super.key});
 
   final String eventId;
 
@@ -212,9 +209,7 @@ class _QuillViewer extends StatelessWidget {
       readOnly: true,
     );
 
-    return QuillEditor.basic(
-      controller: controller,
-    );
+    return QuillEditor.basic(controller: controller);
   }
 }
 
@@ -299,10 +294,7 @@ class _BottomTicketBar extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '최저가',
-                  style: theme.textTheme.labelSmall,
-                ),
+                Text('최저가', style: theme.textTheme.labelSmall),
                 Text(
                   lowestPrice != null
                       ? '${NumberFormat('#,###').format(lowestPrice)}원~'

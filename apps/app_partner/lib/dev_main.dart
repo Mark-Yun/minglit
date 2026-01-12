@@ -135,9 +135,7 @@ Future<void> appStartup(Ref ref) async {
       initializeDateFormatting('ko_KR'),
       // Wait for the critical logo and fonts to prevent UI flicker
       rootBundle.load(logoPath),
-      GoogleFonts.pendingFonts([
-        GoogleFonts.notoSansKr(),
-      ]),
+      GoogleFonts.pendingFonts([GoogleFonts.notoSansKr()]),
     ]);
 
     // Initialize Kakao Map SDK
@@ -164,9 +162,7 @@ Future<void> appStartup(Ref ref) async {
   } on AuthApiException catch (e) {
     if (e.message.contains('Invalid Refresh Token') ||
         e.code == 'refresh_token_already_used') {
-      Log.w(
-        '[Startup] Invalid Refresh Token detected. Clearing storage...',
-      );
+      Log.w('[Startup] Invalid Refresh Token detected. Clearing storage...');
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
       Log.i('[Startup] Storage cleared. Please reload the app.');
@@ -187,9 +183,7 @@ class MinglitPartnerDevApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: MinglitTheme.materialTheme,
-      home: const StaffGuardWrapper(
-        child: _AppView(),
-      ),
+      home: const StaffGuardWrapper(child: _AppView()),
     );
   }
 }
@@ -213,15 +207,12 @@ class _AppView extends ConsumerWidget {
 
     return startupState.when(
       // Case 1: Initializing - Show Splash immediately
-      loading: () => const MinglitSplashScreen(
-        appName: 'Partner Dev',
-        isPartner: true,
-      ),
+      loading: () =>
+          const MinglitSplashScreen(appName: 'Partner Dev', isPartner: true),
 
       // Case 2: Error - Show Error UI
-      error: (e, st) => Scaffold(
-        body: Center(child: Text('Startup Error: $e')),
-      ),
+      error: (e, st) =>
+          Scaffold(body: Center(child: Text('Startup Error: $e'))),
 
       // Case 3: Ready - Show the Real App using GoRouter
       data: (_) => const _AuthenticatedApp(),

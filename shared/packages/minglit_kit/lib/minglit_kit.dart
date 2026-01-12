@@ -12,3 +12,4 @@ export 'minglit_data.dart';
 export 'minglit_domain.dart';
 export 'minglit_logic.dart';
 export 'minglit_ui.dart';
+export 'src/features/iamport/iamport.dart';

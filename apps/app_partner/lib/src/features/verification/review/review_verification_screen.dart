@@ -62,16 +62,11 @@ class _ReviewVerificationScreenState
       if (comment != null) {
         await ref
             .read(verificationRepositoryProvider)
-            .submitComment(
-              submissionId: id,
-              content: {'text': comment},
-            );
+            .submitComment(submissionId: id, content: {'text': comment});
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             context.l10n.reviewVerification_message_processComplete,
@@ -267,9 +262,8 @@ class _ReviewVerificationScreenState
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => unawaited(
-                      _showCorrectionDialog(req['id'] as String),
-                    ),
+                    onPressed: () =>
+                        unawaited(_showCorrectionDialog(req['id'] as String)),
                     child: Text(
                       context.l10n.reviewVerification_button_correction,
                     ),

@@ -13,10 +13,7 @@ Future<List<PartnerApplication>> partnerApplications(
 }) async {
   return ref
       .read(partnerRepositoryProvider)
-      .getAllApplications(
-        status: status,
-        searchTerm: searchTerm,
-      );
+      .getAllApplications(status: status, searchTerm: searchTerm);
 }
 
 class PartnerApplicationListPage extends ConsumerStatefulWidget {

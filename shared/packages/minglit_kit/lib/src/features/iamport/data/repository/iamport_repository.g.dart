@@ -1,0 +1,57 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'iamport_repository.dart';
+
+// **************************************************************************
+// RiverpodGenerator
+// **************************************************************************
+
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
+@ProviderFor(iamportRepository)
+const iamportRepositoryProvider = IamportRepositoryProvider._();
+
+final class IamportRepositoryProvider
+    extends
+        $FunctionalProvider<
+          IamportRepository,
+          IamportRepository,
+          IamportRepository
+        >
+    with $Provider<IamportRepository> {
+  const IamportRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'iamportRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$iamportRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<IamportRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  IamportRepository create(Ref ref) {
+    return iamportRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(IamportRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<IamportRepository>(value),
+    );
+  }
+}
+
+String _$iamportRepositoryHash() => r'ea32fa9f01db5879c4fb51cb07587248a462b88f';

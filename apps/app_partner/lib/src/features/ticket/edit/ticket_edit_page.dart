@@ -29,20 +29,14 @@ class TicketEditPage extends ConsumerWidget {
       body: ticketAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (Object e, StackTrace s) => Center(
-          child: Text(
-            context.l10n.partyDetail_error_ticketLoad(
-              e.toString(),
-            ),
-          ),
+          child: Text(context.l10n.partyDetail_error_ticketLoad(e.toString())),
         ),
         data: (Ticket ticket) {
           return partyAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (Object e, StackTrace s) => Center(
               child: Text(
-                context.l10n.partyDetail_error_partyLoad(
-                  e.toString(),
-                ),
+                context.l10n.partyDetail_error_partyLoad(e.toString()),
               ),
             ),
             data: (Party party) {

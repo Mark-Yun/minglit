@@ -72,9 +72,7 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
       children: [
         if (imagePath != null && imagePath.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(
-              bottom: MinglitSpacing.medium,
-            ),
+            padding: const EdgeInsets.only(bottom: MinglitSpacing.medium),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(MinglitRadius.card),
               child: MinglitImage(
@@ -153,14 +151,10 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
                   if (!widget.viewOnly) const Divider(height: 1),
                   quill.QuillEditor.basic(
                     controller: _getController(ops),
-                    config:
-                        MinglitQuillTheme.editorConfig(
-                          context,
-                          placeholder: '',
-                        ).copyWith(
-                          autoFocus: false,
-                          expands: false,
-                        ),
+                    config: MinglitQuillTheme.editorConfig(
+                      context,
+                      placeholder: '',
+                    ).copyWith(autoFocus: false, expands: false),
                   ),
                 ],
               ),

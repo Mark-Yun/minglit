@@ -128,9 +128,8 @@ class PartnerMemberListPage extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed: () => ref.invalidate(
-              partnerMembersProvider(partnerId: partnerId),
-            ),
+            onPressed: () =>
+                ref.invalidate(partnerMembersProvider(partnerId: partnerId)),
             child: Text(context.l10n.common_button_retry),
           ),
         ],

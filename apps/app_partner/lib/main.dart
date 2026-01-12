@@ -46,10 +46,7 @@ Future<void> appStartup(Ref ref) async {
   try {
     await Future.wait([
       initializeDateFormatting('ko_KR'),
-      Supabase.initialize(
-        url: supabaseUrl,
-        anonKey: supabasePublishableKey,
-      ),
+      Supabase.initialize(url: supabaseUrl, anonKey: supabasePublishableKey),
     ]);
 
     // Initialize Kakao Map SDK
@@ -95,23 +92,16 @@ class _AppView extends ConsumerWidget {
         ],
         supportedLocales: AppLocalizations.supportedLocales,
         builder: (context, child) {
-          return MinglitGlobalLoadingOverlay(
-            child: child!,
-          );
+          return MinglitGlobalLoadingOverlay(child: child!);
         },
       ),
       loading: () => MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: MinglitTheme.materialTheme,
-        home: const MinglitSplashScreen(
-          appName: 'Partner',
-          isPartner: true,
-        ),
+        home: const MinglitSplashScreen(appName: 'Partner', isPartner: true),
       ),
       error: (e, st) => MaterialApp(
-        home: Scaffold(
-          body: Center(child: Text('Error: $e')),
-        ),
+        home: Scaffold(body: Center(child: Text('Error: $e'))),
       ),
     );
   }

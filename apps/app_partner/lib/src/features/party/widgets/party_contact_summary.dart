@@ -69,11 +69,7 @@ class PartyContactSummary extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Icon(
-            icon,
-            size: 16,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+          Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
           const SizedBox(width: 8),
           Text(label, style: theme.textTheme.bodySmall),
           const Spacer(),

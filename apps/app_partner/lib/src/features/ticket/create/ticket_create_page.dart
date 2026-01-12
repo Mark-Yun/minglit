@@ -29,9 +29,7 @@ class TicketCreatePage extends ConsumerWidget {
       body: partyAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, s) => Center(
-          child: Text(
-            context.l10n.partyDetail_error_partyLoad(e.toString()),
-          ),
+          child: Text(context.l10n.partyDetail_error_partyLoad(e.toString())),
         ),
         data: (Party party) {
           final entryGroups = party.entryGroups ?? [];

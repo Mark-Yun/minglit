@@ -146,15 +146,15 @@ class PartnerDevMap extends StatelessWidget {
                 await seeder.seed();
 
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('시딩 완료!')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('시딩 완료!')));
                 }
               } on Object catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('시딩 실패: $e')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('시딩 실패: $e')));
                 }
               } finally {
                 notifier.hide();

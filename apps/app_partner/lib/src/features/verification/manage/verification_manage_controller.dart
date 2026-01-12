@@ -42,10 +42,7 @@ class VerificationManageController extends _$VerificationManageController {
       repo.getPartnerVerifications(partner.id, isActive: false),
     ]);
 
-    return VerificationManageState(
-      active: results[0],
-      archived: results[1],
-    );
+    return VerificationManageState(active: results[0], archived: results[1]);
   }
 
   /// Archives (soft-deletes) the verification.
@@ -90,9 +87,6 @@ class VerificationManageController extends _$VerificationManageController {
       repo.getPartnerVerifications(partner.id, isActive: false),
     ]);
 
-    return VerificationManageState(
-      active: results[0],
-      archived: results[1],
-    );
+    return VerificationManageState(active: results[0], archived: results[1]);
   }
 }

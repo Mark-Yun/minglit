@@ -58,9 +58,9 @@ class _EventCreateScreenState extends ConsumerState<EventCreateScreen> {
     final state = ref.read(eventCreateControllerProvider(widget.partyId));
     if (state.status.hasValue && !state.status.hasError && mounted) {
       context.pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('새로운 회차가 성공적으로 생성되었습니다.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('새로운 회차가 성공적으로 생성되었습니다.')));
     } else if (state.status.hasError && mounted) {
       handleMinglitError(context, state.status.error!);
     }
@@ -92,10 +92,7 @@ class _EventCreateScreenState extends ConsumerState<EventCreateScreen> {
               child: TabBarView(
                 children: [
                   // Tab 1: Schedule & Tickets
-                  EventCreateOperationTab(
-                    state: state,
-                    notifier: notifier,
-                  ),
+                  EventCreateOperationTab(state: state, notifier: notifier),
 
                   // Tab 2: Event Details (Summary Based)
                   EventCreateInfoTab(

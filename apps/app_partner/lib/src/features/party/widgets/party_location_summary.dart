@@ -81,19 +81,11 @@ class PartyLocationSummary extends StatelessWidget {
         // 2. Detail Info (Address Detail & Directions) - Shown below map
         if (addressDetail != null && addressDetail!.isNotEmpty) ...[
           const SizedBox(height: MinglitSpacing.medium),
-          _buildDetailItem(
-            context,
-            Icons.apartment,
-            addressDetail!,
-          ),
+          _buildDetailItem(context, Icons.apartment, addressDetail!),
         ],
         if (directionsGuide != null && directionsGuide!.isNotEmpty) ...[
           const SizedBox(height: MinglitSpacing.xxsmall),
-          _buildDetailItem(
-            context,
-            Icons.directions,
-            directionsGuide!,
-          ),
+          _buildDetailItem(context, Icons.directions, directionsGuide!),
         ],
 
         // 3. Edit Action (Separated by divider)
@@ -111,22 +103,14 @@ class PartyLocationSummary extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailItem(
-    BuildContext context,
-    IconData icon,
-    String content,
-  ) {
+  Widget _buildDetailItem(BuildContext context, IconData icon, String content) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 14,
-          color: colorScheme.primary,
-        ),
+        Icon(icon, size: 14, color: colorScheme.primary),
         const SizedBox(width: 6),
         Expanded(
           child: Text(

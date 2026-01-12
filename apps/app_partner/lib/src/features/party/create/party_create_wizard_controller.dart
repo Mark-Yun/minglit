@@ -301,9 +301,7 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
         // 6. Create Ticket Templates linked to Party
         for (final template in state.tickets) {
           await ticketRepo.createTicketTemplate(
-            template.copyWith(
-              partyId: createdParty.id,
-            ),
+            template.copyWith(partyId: createdParty.id),
           );
         }
 
