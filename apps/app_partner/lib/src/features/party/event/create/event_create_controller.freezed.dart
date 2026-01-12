@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$EventCreateState {
 
- String get partyId; DateTime get startTime; DateTime get endTime; int get maxParticipants; String get title; Map<String, dynamic> get description; String? get imageUrl; String? get locationId; Location? get selectedLocation; String? get addressDetail; String? get directionsGuide; Map<String, dynamic> get contactOptions; List<PartyEntryGroup> get entryGroups; List<Ticket> get tickets; AsyncValue<void> get status;
+ String get partyId; DateTime get startTime; DateTime get endTime; int get maxParticipants; String get title; Map<String, dynamic> get description; String? get imageUrl; String? get locationId; Location? get selectedLocation; String? get addressDetail; String? get directionsGuide; Map<String, dynamic> get contactOptions; List<EntryGroup> get entryGroups; List<Ticket> get tickets; AsyncValue<void> get status;
 /// Create a copy of EventCreateState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -45,7 +45,7 @@ abstract mixin class $EventCreateStateCopyWith<$Res>  {
   factory $EventCreateStateCopyWith(EventCreateState value, $Res Function(EventCreateState) _then) = _$EventCreateStateCopyWithImpl;
 @useResult
 $Res call({
- String partyId, DateTime startTime, DateTime endTime, int maxParticipants, String title, Map<String, dynamic> description, String? imageUrl, String? locationId, Location? selectedLocation, String? addressDetail, String? directionsGuide, Map<String, dynamic> contactOptions, List<PartyEntryGroup> entryGroups, List<Ticket> tickets, AsyncValue<void> status
+ String partyId, DateTime startTime, DateTime endTime, int maxParticipants, String title, Map<String, dynamic> description, String? imageUrl, String? locationId, Location? selectedLocation, String? addressDetail, String? directionsGuide, Map<String, dynamic> contactOptions, List<EntryGroup> entryGroups, List<Ticket> tickets, AsyncValue<void> status
 });
 
 
@@ -77,7 +77,7 @@ as Location?,addressDetail: freezed == addressDetail ? _self.addressDetail : add
 as String?,directionsGuide: freezed == directionsGuide ? _self.directionsGuide : directionsGuide // ignore: cast_nullable_to_non_nullable
 as String?,contactOptions: null == contactOptions ? _self.contactOptions : contactOptions // ignore: cast_nullable_to_non_nullable
 as Map<String, dynamic>,entryGroups: null == entryGroups ? _self.entryGroups : entryGroups // ignore: cast_nullable_to_non_nullable
-as List<PartyEntryGroup>,tickets: null == tickets ? _self.tickets : tickets // ignore: cast_nullable_to_non_nullable
+as List<EntryGroup>,tickets: null == tickets ? _self.tickets : tickets // ignore: cast_nullable_to_non_nullable
 as List<Ticket>,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as AsyncValue<void>,
   ));
@@ -176,7 +176,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String partyId,  DateTime startTime,  DateTime endTime,  int maxParticipants,  String title,  Map<String, dynamic> description,  String? imageUrl,  String? locationId,  Location? selectedLocation,  String? addressDetail,  String? directionsGuide,  Map<String, dynamic> contactOptions,  List<PartyEntryGroup> entryGroups,  List<Ticket> tickets,  AsyncValue<void> status)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String partyId,  DateTime startTime,  DateTime endTime,  int maxParticipants,  String title,  Map<String, dynamic> description,  String? imageUrl,  String? locationId,  Location? selectedLocation,  String? addressDetail,  String? directionsGuide,  Map<String, dynamic> contactOptions,  List<EntryGroup> entryGroups,  List<Ticket> tickets,  AsyncValue<void> status)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _EventCreateState() when $default != null:
 return $default(_that.partyId,_that.startTime,_that.endTime,_that.maxParticipants,_that.title,_that.description,_that.imageUrl,_that.locationId,_that.selectedLocation,_that.addressDetail,_that.directionsGuide,_that.contactOptions,_that.entryGroups,_that.tickets,_that.status);case _:
@@ -197,7 +197,7 @@ return $default(_that.partyId,_that.startTime,_that.endTime,_that.maxParticipant
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String partyId,  DateTime startTime,  DateTime endTime,  int maxParticipants,  String title,  Map<String, dynamic> description,  String? imageUrl,  String? locationId,  Location? selectedLocation,  String? addressDetail,  String? directionsGuide,  Map<String, dynamic> contactOptions,  List<PartyEntryGroup> entryGroups,  List<Ticket> tickets,  AsyncValue<void> status)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String partyId,  DateTime startTime,  DateTime endTime,  int maxParticipants,  String title,  Map<String, dynamic> description,  String? imageUrl,  String? locationId,  Location? selectedLocation,  String? addressDetail,  String? directionsGuide,  Map<String, dynamic> contactOptions,  List<EntryGroup> entryGroups,  List<Ticket> tickets,  AsyncValue<void> status)  $default,) {final _that = this;
 switch (_that) {
 case _EventCreateState():
 return $default(_that.partyId,_that.startTime,_that.endTime,_that.maxParticipants,_that.title,_that.description,_that.imageUrl,_that.locationId,_that.selectedLocation,_that.addressDetail,_that.directionsGuide,_that.contactOptions,_that.entryGroups,_that.tickets,_that.status);case _:
@@ -217,7 +217,7 @@ return $default(_that.partyId,_that.startTime,_that.endTime,_that.maxParticipant
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String partyId,  DateTime startTime,  DateTime endTime,  int maxParticipants,  String title,  Map<String, dynamic> description,  String? imageUrl,  String? locationId,  Location? selectedLocation,  String? addressDetail,  String? directionsGuide,  Map<String, dynamic> contactOptions,  List<PartyEntryGroup> entryGroups,  List<Ticket> tickets,  AsyncValue<void> status)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String partyId,  DateTime startTime,  DateTime endTime,  int maxParticipants,  String title,  Map<String, dynamic> description,  String? imageUrl,  String? locationId,  Location? selectedLocation,  String? addressDetail,  String? directionsGuide,  Map<String, dynamic> contactOptions,  List<EntryGroup> entryGroups,  List<Ticket> tickets,  AsyncValue<void> status)?  $default,) {final _that = this;
 switch (_that) {
 case _EventCreateState() when $default != null:
 return $default(_that.partyId,_that.startTime,_that.endTime,_that.maxParticipants,_that.title,_that.description,_that.imageUrl,_that.locationId,_that.selectedLocation,_that.addressDetail,_that.directionsGuide,_that.contactOptions,_that.entryGroups,_that.tickets,_that.status);case _:
@@ -232,7 +232,7 @@ return $default(_that.partyId,_that.startTime,_that.endTime,_that.maxParticipant
 
 
 class _EventCreateState implements EventCreateState {
-  const _EventCreateState({required this.partyId, required this.startTime, required this.endTime, this.maxParticipants = 20, this.title = '', final  Map<String, dynamic> description = const {}, this.imageUrl, this.locationId, this.selectedLocation, this.addressDetail, this.directionsGuide, final  Map<String, dynamic> contactOptions = const {}, final  List<PartyEntryGroup> entryGroups = const [], final  List<Ticket> tickets = const [], this.status = const AsyncValue.data(null)}): _description = description,_contactOptions = contactOptions,_entryGroups = entryGroups,_tickets = tickets;
+  const _EventCreateState({required this.partyId, required this.startTime, required this.endTime, this.maxParticipants = 20, this.title = '', final  Map<String, dynamic> description = const {}, this.imageUrl, this.locationId, this.selectedLocation, this.addressDetail, this.directionsGuide, final  Map<String, dynamic> contactOptions = const {}, final  List<EntryGroup> entryGroups = const [], final  List<Ticket> tickets = const [], this.status = const AsyncValue.data(null)}): _description = description,_contactOptions = contactOptions,_entryGroups = entryGroups,_tickets = tickets;
   
 
 @override final  String partyId;
@@ -259,8 +259,8 @@ class _EventCreateState implements EventCreateState {
   return EqualUnmodifiableMapView(_contactOptions);
 }
 
- final  List<PartyEntryGroup> _entryGroups;
-@override@JsonKey() List<PartyEntryGroup> get entryGroups {
+ final  List<EntryGroup> _entryGroups;
+@override@JsonKey() List<EntryGroup> get entryGroups {
   if (_entryGroups is EqualUnmodifiableListView) return _entryGroups;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_entryGroups);
@@ -305,7 +305,7 @@ abstract mixin class _$EventCreateStateCopyWith<$Res> implements $EventCreateSta
   factory _$EventCreateStateCopyWith(_EventCreateState value, $Res Function(_EventCreateState) _then) = __$EventCreateStateCopyWithImpl;
 @override @useResult
 $Res call({
- String partyId, DateTime startTime, DateTime endTime, int maxParticipants, String title, Map<String, dynamic> description, String? imageUrl, String? locationId, Location? selectedLocation, String? addressDetail, String? directionsGuide, Map<String, dynamic> contactOptions, List<PartyEntryGroup> entryGroups, List<Ticket> tickets, AsyncValue<void> status
+ String partyId, DateTime startTime, DateTime endTime, int maxParticipants, String title, Map<String, dynamic> description, String? imageUrl, String? locationId, Location? selectedLocation, String? addressDetail, String? directionsGuide, Map<String, dynamic> contactOptions, List<EntryGroup> entryGroups, List<Ticket> tickets, AsyncValue<void> status
 });
 
 
@@ -337,7 +337,7 @@ as Location?,addressDetail: freezed == addressDetail ? _self.addressDetail : add
 as String?,directionsGuide: freezed == directionsGuide ? _self.directionsGuide : directionsGuide // ignore: cast_nullable_to_non_nullable
 as String?,contactOptions: null == contactOptions ? _self._contactOptions : contactOptions // ignore: cast_nullable_to_non_nullable
 as Map<String, dynamic>,entryGroups: null == entryGroups ? _self._entryGroups : entryGroups // ignore: cast_nullable_to_non_nullable
-as List<PartyEntryGroup>,tickets: null == tickets ? _self._tickets : tickets // ignore: cast_nullable_to_non_nullable
+as List<EntryGroup>,tickets: null == tickets ? _self._tickets : tickets // ignore: cast_nullable_to_non_nullable
 as List<Ticket>,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as AsyncValue<void>,
   ));

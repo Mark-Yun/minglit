@@ -42,7 +42,7 @@ abstract class PartyCreateWizardState with _$PartyCreateWizardState {
     @Default({}) Set<String> enabledContactMethods,
 
     // Step 4: Entry Rules (Entry Groups)
-    @Default([]) List<PartyEntryGroup> entryGroups,
+    @Default([]) List<EntryGroupTemplate> entryGroups,
 
     // Step 5: Ticket Templates
     @Default([]) List<TicketTemplate> tickets,
@@ -114,11 +114,11 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
     state = state.copyWith(enabledContactMethods: current);
   }
 
-  void addEntryGroup(PartyEntryGroup group) {
+  void addEntryGroup(EntryGroupTemplate group) {
     state = state.copyWith(entryGroups: [...state.entryGroups, group]);
   }
 
-  void updateEntryGroup(PartyEntryGroup group) {
+  void updateEntryGroup(EntryGroupTemplate group) {
     state = state.copyWith(
       entryGroups: state.entryGroups
           .map((g) => g.id == group.id ? group : g)
@@ -289,7 +289,7 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
           minConfirmedCount: state.minConfirmedCount,
           maxParticipants: state.maxParticipants,
           contactOptions: contactOptions,
-          conditions: state.entryGroups.map((e) => e.toJson()).toList(),
+          entryGroups: state.entryGroups,
           imageUrl: imageUrl,
           requiredVerificationIds: allVerifIds,
           createdAt: DateTime.now(),

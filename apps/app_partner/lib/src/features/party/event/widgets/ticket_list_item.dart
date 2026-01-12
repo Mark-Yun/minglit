@@ -217,19 +217,18 @@ class TicketListItem extends StatelessWidget {
   }
 
   String _getGroupSummary(BuildContext context, PartyEntryGroup group) {
-    final ageRange = group.birthYearRange;
+    final min = group.birthYearMin;
+    final max = group.birthYearMax;
     var ageText = context.l10n.entryGroup_option_anyYear;
-    if (ageRange != null) {
-      final min = ageRange['min'];
-      final max = ageRange['max'];
-      if (min != null && max != null) {
-        ageText = '$min~$max';
-      } else if (min != null) {
-        ageText = '$min~';
-      } else if (max != null) {
-        ageText = '~$max';
-      }
+
+    if (min != null && max != null) {
+      ageText = '$min~$max';
+    } else if (min != null) {
+      ageText = '$min~';
+    } else if (max != null) {
+      ageText = '~$max';
     }
+
     // Summary logic kept simple for list tags
     final gInitial = group.gender == 'male'
         ? '남'

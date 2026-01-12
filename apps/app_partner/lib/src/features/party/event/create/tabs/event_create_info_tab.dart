@@ -4,10 +4,10 @@ import 'package:app_partner/src/features/party/event/create/event_create_control
 import 'package:app_partner/src/features/party/event/widgets/event_basic_info_summary.dart';
 import 'package:app_partner/src/features/party/event/widgets/event_capacity_summary.dart';
 import 'package:app_partner/src/features/party/event/widgets/event_contact_summary.dart';
-import 'package:app_partner/src/features/party/event/widgets/event_entrance_condition_summary.dart';
 import 'package:app_partner/src/features/party/event/widgets/event_location_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_basic_info_edit_screen.dart';
 import 'package:app_partner/src/features/party/widgets/party_capacity_contact_edit_screen.dart';
+import 'package:app_partner/src/features/party/widgets/party_entrance_condition_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_location_edit_screen.dart';
 import 'package:app_partner/src/ui/widgets/common/minglit_editable_section.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
@@ -165,12 +165,13 @@ class EventCreateInfoTab extends ConsumerWidget {
           ),
           const SizedBox(height: MinglitSpacing.large),
 
-          // 4. Entrance Conditions Section
+          // 3. Entrance Conditions
           MinglitEditableSection(
             title: context.l10n.partyDetail_section_entranceCondition,
-            isEditable: false, // Core rules follow the party template
-            child: EventEntranceConditionSummary(
-              entryGroups: state.entryGroups,
+            onTap: () {}, // Event Entry Groups are read-only for now
+            child: PartyEntranceConditionSummary(
+              entryGroups:
+                  state.entryGroups.map((e) => e.toTemplate()).toList(),
             ),
           ),
         ],

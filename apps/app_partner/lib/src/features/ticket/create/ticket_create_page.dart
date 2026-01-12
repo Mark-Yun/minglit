@@ -35,7 +35,7 @@ class TicketCreatePage extends ConsumerWidget {
           ),
         ),
         data: (Party party) {
-          final entryGroups = party.entryGroups;
+          final entryGroups = party.entryGroups ?? [];
           final event = eventAsync.asData?.value;
 
           // Calculate initial quantity

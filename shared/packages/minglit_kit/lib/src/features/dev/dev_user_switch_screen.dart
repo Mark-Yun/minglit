@@ -29,7 +29,7 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
           .read(authControllerProvider.notifier)
           .signInWithEmail(
             email: email,
-            password: 'password',
+            password: 'password1234!',
           );
 
       if (mounted) {

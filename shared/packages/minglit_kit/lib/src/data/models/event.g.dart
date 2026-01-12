@@ -17,7 +17,6 @@ _Event _$EventFromJson(Map<String, dynamic> json) => _Event(
   title: json['title'] as String?,
   description: json['description'] as Map<String, dynamic>?,
   contactOptions: json['contact_options'] as Map<String, dynamic>? ?? const {},
-  conditions: json['conditions'] as List<dynamic>? ?? const [],
   maxParticipants: (json['max_participants'] as num?)?.toInt() ?? 20,
   currentParticipants: (json['current_participants'] as num?)?.toInt() ?? 0,
   status: json['status'] as String? ?? 'scheduled',
@@ -29,6 +28,9 @@ _Event _$EventFromJson(Map<String, dynamic> json) => _Event(
       : Party.fromJson(json['party'] as Map<String, dynamic>),
   tickets: (json['tickets'] as List<dynamic>?)
       ?.map((e) => Ticket.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  entryGroups: (json['entryGroups'] as List<dynamic>?)
+      ?.map((e) => EntryGroup.fromJson(e as Map<String, dynamic>))
       .toList(),
 );
 
@@ -43,7 +45,6 @@ Map<String, dynamic> _$EventToJson(_Event instance) => <String, dynamic>{
   'title': instance.title,
   'description': instance.description,
   'contact_options': instance.contactOptions,
-  'conditions': instance.conditions,
   'max_participants': instance.maxParticipants,
   'current_participants': instance.currentParticipants,
   'status': instance.status,

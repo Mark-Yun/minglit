@@ -62,7 +62,6 @@ abstract class Party with _$Party {
     @JsonKey(name: 'contact_options')
     @Default({})
     Map<String, dynamic> contactOptions,
-    @Default([]) List<dynamic> conditions, // JSONB Array of condition sets
     @JsonKey(name: 'required_verification_ids')
     @Default([])
     List<String> requiredVerificationIds,
@@ -71,6 +70,7 @@ abstract class Party with _$Party {
     @Default('active') String status,
     @JsonKey(includeToJson: false) List<TicketTemplate>? ticketTemplates,
     @JsonKey(includeToJson: false) Partner? partner,
+    @JsonKey(includeToJson: false) List<EntryGroupTemplate>? entryGroups,
   }) = _Party;
 
   factory Party.fromJson(Map<String, dynamic> json) => _$PartyFromJson(json);
@@ -94,18 +94,12 @@ extension PartyX on Party {
   bool get isClosed => status == 'closed';
   bool get isDraft => status == 'draft';
 
-  List<PartyEntryGroup> get entryGroups {
-    return conditions
-        .map((e) => PartyEntryGroup.fromJson(e as Map<String, dynamic>))
-        .toList();
-  }
-
   List<String> get conditionSummaries {
-    if (entryGroups.isEmpty) return ['조건 없음'];
+    final groups = entryGroups ?? [];
+    if (groups.isEmpty) return ['조건 없음'];
 
-    final summaries = entryGroups.map((group) {
+    final summaries = groups.map((group) {
       final gender = group.gender;
-      final birthYearData = group.birthYearRange;
       final verifIds = group.requiredVerificationIds;
 
       var genderText = '성별 무관';
@@ -116,16 +110,14 @@ extension PartyX on Party {
       }
 
       var birthYearText = '나이 무관';
-      if (birthYearData != null) {
-        final min = birthYearData['min'];
-        final max = birthYearData['max'];
-        if (min != null && max != null) {
-          birthYearText = '$min~$max년생';
-        } else if (min != null) {
-          birthYearText = '$min년생 이후';
-        } else if (max != null) {
-          birthYearText = '$max년생 이전';
-        }
+      final min = group.birthYearMin;
+      final max = group.birthYearMax;
+      if (min != null && max != null) {
+        birthYearText = '$min~$max년생';
+      } else if (min != null) {
+        birthYearText = '$min년생 이후';
+      } else if (max != null) {
+        birthYearText = '$max년생 이전';
       }
 
       String base;

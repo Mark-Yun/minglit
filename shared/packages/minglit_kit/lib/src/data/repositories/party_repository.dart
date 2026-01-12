@@ -1,6 +1,7 @@
 import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/src/data/models/event.dart';
 import 'package:minglit_kit/src/data/models/party.dart';
+import 'package:minglit_kit/src/data/models/party_entry_group.dart';
 import 'package:minglit_kit/src/data/models/ticket.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:path/path.dart' as p;
@@ -60,7 +61,9 @@ class PartyRepository {
     try {
       final data = await _supabase
           .from('parties')
-          .select('*, ticketTemplates:ticket_templates(*)')
+          .select(
+            '''*, ticketTemplates:ticket_templates(*), entryGroups:entry_group_templates(*)''',
+          )
           .eq('id', partyId)
           .single();
 
@@ -80,7 +83,7 @@ class PartyRepository {
       final data = await _supabase
           .from('parties')
           .select(
-            '*, location:locations(*), ticketTemplates:ticket_templates(*)',
+            '''*, location:locations(*), ticketTemplates:ticket_templates(*), entryGroups:entry_group_templates(*)''',
           )
           .eq('status', 'active')
           .order('created_at', ascending: false);
@@ -104,7 +107,7 @@ class PartyRepository {
       final data = await _supabase
           .from('parties')
           .select(
-            '*, location:locations(*), ticketTemplates:ticket_templates(*)',
+            '''*, location:locations(*), ticketTemplates:ticket_templates(*), entryGroups:entry_group_templates(*)''',
           )
           .eq('partner_id', partnerId)
           .order('created_at', ascending: false);
@@ -127,7 +130,7 @@ class PartyRepository {
     try {
       final data = await _supabase
           .from('events')
-          .select()
+          .select('*, entryGroups:entry_groups(*)')
           .eq('party_id', partyId)
           .gte(
             'start_time',
@@ -153,7 +156,7 @@ class PartyRepository {
     try {
       final data = await _supabase
           .from('events')
-          .select()
+          .select('*, entryGroups:entry_groups(*)')
           .eq('id', eventId)
           .single();
 
@@ -178,9 +181,18 @@ class PartyRepository {
           .select()
           .single();
 
-      final result = Party.fromJson(data);
-      Log.d('createParty success | id: ${result.id}');
-      return result;
+      final createdParty = Party.fromJson(data);
+
+      // Create entry group templates
+      if (party.entryGroups != null && party.entryGroups!.isNotEmpty) {
+        final groupsJson = party.entryGroups!
+            .map((g) => g.copyWith(partyId: createdParty.id).toDbJson())
+            .toList();
+        await _supabase.from('entry_group_templates').insert(groupsJson);
+      }
+
+      Log.d('createParty success | id: ${createdParty.id}');
+      return createdParty;
     } catch (e, st) {
       Log.e('❌ [PartyRepo] createParty Error', e, st);
       rethrow;
@@ -279,6 +291,14 @@ class PartyRepository {
           .single();
 
       final createdEvent = Event.fromJson(data);
+
+      // Create associated entry groups if provided
+      if (event.entryGroups != null && event.entryGroups!.isNotEmpty) {
+        final groupsJson = event.entryGroups!
+            .map((g) => g.copyWith(eventId: createdEvent.id).toDbJson())
+            .toList();
+        await _supabase.from('entry_groups').insert(groupsJson);
+      }
 
       // Create associated tickets if provided
       if (event.tickets != null && event.tickets!.isNotEmpty) {

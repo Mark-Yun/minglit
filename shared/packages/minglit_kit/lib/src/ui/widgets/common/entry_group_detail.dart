@@ -52,23 +52,20 @@ class EntryGroupDetail extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     final gender = group.gender;
-    final birthYearRange = group.birthYearRange;
+    final min = group.birthYearMin;
+    final max = group.birthYearMax;
 
     var genderText = anyLabel;
     if (gender == 'male') genderText = '남성';
     if (gender == 'female') genderText = '여성';
 
     var birthYearText = anyYearLabel;
-    if (birthYearRange != null) {
-      final min = birthYearRange['min'];
-      final max = birthYearRange['max'];
-      if (min != null && max != null) {
-        birthYearText = '$min~$max년생';
-      } else if (min != null) {
-        birthYearText = '$min년생 이후';
-      } else if (max != null) {
-        birthYearText = '$max년생 이전';
-      }
+    if (min != null && max != null) {
+      birthYearText = '$min~$max년생';
+    } else if (min != null) {
+      birthYearText = '$min년생 이후';
+    } else if (max != null) {
+      birthYearText = '$max년생 이전';
     }
 
     return Row(

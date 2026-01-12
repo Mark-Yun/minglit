@@ -44,7 +44,7 @@ final class PartyCreateWizardControllerProvider
 }
 
 String _$partyCreateWizardControllerHash() =>
-    r'0fe6f33e50caea3caed97c6abc0d91ce2cf650fd';
+    r'ff9c5af838a0492746818d7e5b8616cf17e46a4f';
 
 abstract class _$PartyCreateWizardController
     extends $Notifier<PartyCreateWizardState> {

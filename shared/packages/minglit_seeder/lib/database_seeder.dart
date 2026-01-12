@@ -66,7 +66,7 @@ class DatabaseSeeder {
 
       await _createAdminUser(
         email: 'user$i@test.com',
-        password: 'password',
+        password: 'password1234!',
         metadata: metadata,
       );
     }
@@ -185,11 +185,11 @@ class DatabaseSeeder {
       final lat = place['lat'] as double;
       final lng = place['lng'] as double;
 
-      // 3 Partners per Hot Place
+      // 3. Partners per Hot Place
       for (var i = 0; i < 3; i++) {
         partnerCounter++;
         final partnerName = '$placeName 핫플 파트너 $i';
-        final email = 'partner$partnerCounter@test.com';
+        final email = 'owner$partnerCounter@test.com';
 
         final ownerId = await _createAdminUser(
           email: email,
@@ -395,34 +395,44 @@ class DatabaseSeeder {
       'description': partyData['description'], // Now a Map
       'min_confirmed_count': 5,
       'max_participants': 20,
-      'conditions': entryGroups,
       'required_verification_ids': allVerifIds,
     });
 
-    // Create Ticket Templates
+    // Create Entry Group Templates
+    final entryGroupTemplatesRes = await _adminClient.from('entry_group_templates').insert(
+      entryGroups.map((g) => {
+        'party_id': partyId,
+        'label': g['label'],
+        'gender': g['gender'],
+        'birth_year_min': g['birth_year_range']?['min'],
+        'birth_year_max': g['birth_year_range']?['max'],
+        'required_verification_ids': g['required_verification_ids'],
+      }).toList(),
+    ).select('id');
+
+    final templateIds = (entryGroupTemplatesRes as List).map((e) => e['id'] as String).toList();
+
+    // Create Ticket Templates (Use actual Entry Group Template IDs)
     final tickets = partyData['tickets'] as List<dynamic>? ?? [];
-    await _adminClient
-        .from('ticket_templates')
-        .insert(
-          tickets.map((dynamic t) {
-            final tMap = t as Map<String, dynamic>;
-            final groupIdx = tMap['group_index'] as int;
-            return {
-              'party_id': partyId,
-              'name': tMap['name'],
-              'price': tMap['price'],
-              'quantity': tMap['quantity'],
-              'target_entry_group_ids': [entryGroups[groupIdx]['id']],
-            };
-          }).toList(),
-        );
+    await _adminClient.from('ticket_templates').insert(
+      tickets.map((dynamic t) {
+        final tMap = t as Map<String, dynamic>;
+        final groupIdx = tMap['group_index'] as int;
+        return {
+          'party_id': partyId,
+          'name': tMap['name'],
+          'price': tMap['price'],
+          'quantity': tMap['quantity'],
+          'target_entry_group_ids': [templateIds[groupIdx]],
+        };
+      }).toList(),
+    );
 
     // Create Events (Instances)
-    // Create 3 events: Today, Next Sat, Next Sun
     final now = DateTime.now();
     final eventDates = [
-      now.add(const Duration(hours: 3)), // Today later
-      now.add(const Duration(days: 7)), // Next week
+      now.add(const Duration(hours: 3)),
+      now.add(const Duration(days: 7)),
       now.add(const Duration(days: 8)),
     ];
 
@@ -432,30 +442,42 @@ class DatabaseSeeder {
         'id': eventId,
         'party_id': partyId,
         'location_id': locationId,
-        'title': null, // Use party title
+        'title': null,
         'start_time': date.toIso8601String(),
         'end_time': date.add(const Duration(hours: 4)).toIso8601String(),
         'max_participants': 30,
         'status': 'scheduled',
       });
 
-      // Create Event Tickets (Copy from Templates logic)
-      await _adminClient
-          .from('tickets')
-          .insert(
-            tickets.map((dynamic t) {
-              final tMap = t as Map<String, dynamic>;
-              final groupIdx = tMap['group_index'] as int;
-              return {
-                'event_id': eventId,
-                'name': tMap['name'],
-                'price': tMap['price'],
-                'quantity': tMap['quantity'],
-                'target_entry_group_ids': [entryGroups[groupIdx]['id']],
-                'status': 'on_sale',
-              };
-            }).toList(),
-          );
+      // Create Event Entry Groups
+      final eventGroupsRes = await _adminClient.from('entry_groups').insert(
+        entryGroups.map((g) => {
+          'event_id': eventId,
+          'label': g['label'],
+          'gender': g['gender'],
+          'birth_year_min': g['birth_year_range']?['min'],
+          'birth_year_max': g['birth_year_range']?['max'],
+          'required_verification_ids': g['required_verification_ids'],
+        }).toList(),
+      ).select('id');
+
+      final eventGroupIds = (eventGroupsRes as List).map((e) => e['id'] as String).toList();
+
+      // Create Event Tickets (Link to Event Entry Groups)
+      await _adminClient.from('tickets').insert(
+        tickets.map((dynamic t) {
+          final tMap = t as Map<String, dynamic>;
+          final groupIdx = tMap['group_index'] as int;
+          return {
+            'event_id': eventId,
+            'name': tMap['name'],
+            'price': tMap['price'],
+            'quantity': tMap['quantity'],
+            'target_entry_group_ids': [eventGroupIds[groupIdx]],
+            'status': 'on_sale',
+          };
+        }).toList(),
+      );
     }
   }
 

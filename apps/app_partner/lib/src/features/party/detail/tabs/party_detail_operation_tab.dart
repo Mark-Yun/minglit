@@ -73,7 +73,7 @@ class PartyDetailOperationTab extends ConsumerWidget {
             child: ticketsAsync.when(
               data: (templates) => PartyTicketsSummary(
                 tickets: templates.map(Ticket.createFromTemplate).toList(),
-                entryGroups: party.entryGroups,
+                entryGroups: party.entryGroups ?? [],
                 maxCapacity: party.maxParticipants,
                 showStats: false,
                 onCreatePressed: () => _handleCreateTicket(context, ref),
@@ -102,7 +102,7 @@ class PartyDetailOperationTab extends ConsumerWidget {
     final newTemplate = await Navigator.of(context).push<TicketTemplate>(
       MaterialPageRoute(
         builder: (_) => TicketTemplateCreatePage(
-          entryGroups: party.entryGroups,
+          entryGroups: party.entryGroups ?? [],
         ),
       ),
     );

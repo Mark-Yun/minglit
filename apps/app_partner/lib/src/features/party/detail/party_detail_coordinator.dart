@@ -87,7 +87,7 @@ class PartyDetailCoordinator {
       final party = await _ref.read(partyDetailProvider(partyId).future);
       final currentGroups = party.entryGroups;
 
-      final updatedGroups = currentGroups
+      final updatedGroups = (currentGroups ?? [])
           .map((g) => g.id == updatedGroup.id ? updatedGroup : g)
           .toList();
 
@@ -95,7 +95,7 @@ class PartyDetailCoordinator {
           .read(partyRepositoryProvider)
           .updateParty(
             party.copyWith(
-              conditions: updatedGroups.map((e) => e.toJson()).toList(),
+              entryGroups: updatedGroups,
             ),
           );
 

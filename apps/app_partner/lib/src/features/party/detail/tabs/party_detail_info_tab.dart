@@ -111,7 +111,7 @@ class PartyDetailInfoTab extends ConsumerWidget {
             title: context.l10n.partyDetail_section_entranceCondition,
             onTap: () => _showEntranceConditionsEdit(context, ref, party),
             child: PartyEntranceConditionSummary(
-              entryGroups: party.entryGroups,
+              entryGroups: party.entryGroups ?? [],
             ),
           ),
           const SizedBox(height: MinglitSpacing.large),

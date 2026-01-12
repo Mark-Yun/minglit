@@ -35,13 +35,13 @@ class EventRepository {
       // Include partner info inside party relation
       var selectQuery =
           '*, party:parties(*, location:locations(*), partner:partners(*)), '
-          'tickets(*)';
+          'entryGroups:entry_groups(*), tickets(*)';
 
       // Special case for Early Bird: filter by ticket name
       if (type == EventFeedType.earlyBird) {
         selectQuery =
             '*, party:parties(*, location:locations(*), partner:partners(*)), '
-            'tickets!inner(*)';
+            'entryGroups:entry_groups(*), tickets!inner(*)';
       }
 
       dynamic query = _supabase.from('events').select(selectQuery);
@@ -106,7 +106,7 @@ class EventRepository {
           .from('events')
           .select(
             '*, party:parties(*, location:locations(*), partner:partners(*)), '
-            'tickets(*)',
+            'entryGroups:entry_groups(*), tickets(*)',
           )
           .eq('id', eventId)
           .single();

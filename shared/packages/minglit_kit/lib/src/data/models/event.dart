@@ -24,13 +24,13 @@ abstract class Event with _$Event {
     @JsonKey(name: 'contact_options')
     @Default({})
     Map<String, dynamic> contactOptions,
-    @Default([]) List<dynamic> conditions, // JSONB Array
     @JsonKey(name: 'max_participants') @Default(20) int maxParticipants,
     @JsonKey(name: 'current_participants') @Default(0) int currentParticipants,
     @Default('scheduled') String status,
     @JsonKey(includeToJson: false) Location? location,
     @JsonKey(includeToJson: false) Party? party,
     @JsonKey(includeToJson: false) List<Ticket>? tickets,
+    @JsonKey(includeToJson: false) List<EntryGroup>? entryGroups,
   }) = _Event;
 
   factory Event.fromJson(Map<String, dynamic> json) => _$EventFromJson(json);
@@ -55,18 +55,16 @@ abstract class Event with _$Event {
           ? Map<String, dynamic>.from(party.description!)
           : null,
       contactOptions: Map<String, dynamic>.from(party.contactOptions),
-      conditions: List<dynamic>.from(party.conditions),
       maxParticipants: party.maxParticipants,
+      entryGroups: party.entryGroups
+          ?.map(EntryGroup.createFromTemplate)
+          .toList(),
     );
   }
 }
 
 extension EventX on Event {
-  List<PartyEntryGroup> get entryGroups {
-    return conditions
-        .map((e) => PartyEntryGroup.fromJson(e as Map<String, dynamic>))
-        .toList();
-  }
+  // Replaced JSONB entryGroups with typed relational field
 }
 
 extension EventDbX on Event {

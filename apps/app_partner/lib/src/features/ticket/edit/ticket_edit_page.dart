@@ -51,7 +51,7 @@ class TicketEditPage extends ConsumerWidget {
                 padding: const EdgeInsets.all(MinglitSpacing.medium),
                 child: TicketForm(
                   initialTicket: ticket,
-                  entryGroups: party.entryGroups,
+                  entryGroups: party.entryGroups ?? [],
                   submitButtonLabel: context.l10n.ticket_button_edit,
                   onSaved:
                       ({

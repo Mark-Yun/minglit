@@ -149,10 +149,6 @@ create table public.parties (
   image_url text,
   contact_options jsonb default '{}'::jsonb,
   
-  -- Combined Conditions (JSONB)
-  -- e.g. { "gender": "male", "birth_year_range": { "min": 1990 } }
-  conditions jsonb default '{}'::jsonb,
-  
   -- Required Verification IDs for this party
   required_verification_ids uuid[] default '{}',
   
@@ -173,10 +169,6 @@ create table public.events (
   description jsonb,
   contact_options jsonb default '{}'::jsonb,
   
-  -- Instance-specific conditions (Overrides or adds to party conditions)
-  -- Uses target_entry_group_ids in tickets to link
-  conditions jsonb default '{}'::jsonb,
-  
   start_time timestamptz not null,
   end_time timestamptz not null,
   max_participants int not null default 20,
@@ -187,7 +179,42 @@ create table public.events (
   primary key (id)
 );
 
--- 13. Ticket Templates & Tickets
+-- 13. Entry Groups (Templates & Instances)
+create table public.entry_group_templates (
+  id uuid not null default gen_random_uuid(),
+  party_id uuid not null references public.parties(id) on delete cascade,
+  
+  label text,
+  gender gender,
+  birth_year_min integer,
+  birth_year_max integer,
+  
+  -- Required Verification IDs for this group
+  required_verification_ids uuid[] default '{}',
+  
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (id)
+);
+
+create table public.entry_groups (
+  id uuid not null default gen_random_uuid(),
+  event_id uuid not null references public.events(id) on delete cascade,
+  
+  label text,
+  gender gender,
+  birth_year_min integer,
+  birth_year_max integer,
+  
+  -- Required Verification IDs for this group
+  required_verification_ids uuid[] default '{}',
+  
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (id)
+);
+
+-- 14. Ticket Templates & Tickets
 create table public.ticket_templates (
   id uuid not null default gen_random_uuid(),
   party_id uuid not null references public.parties(id) on delete cascade,
@@ -230,7 +257,7 @@ create table public.tickets (
   primary key (id)
 );
 
--- 14. User Verifications (User's Private Vault - The Source of Truth)
+-- 15. User Verifications (User's Private Vault - The Source of Truth)
 create table public.user_verifications (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users(id) on delete cascade not null,
@@ -358,6 +385,8 @@ create trigger handle_updated_at before update on public.partners for each row e
 create trigger handle_updated_at before update on public.locations for each row execute procedure moddatetime (updated_at);
 create trigger handle_updated_at before update on public.parties for each row execute procedure moddatetime (updated_at);
 create trigger handle_updated_at before update on public.events for each row execute procedure moddatetime (updated_at);
+create trigger handle_updated_at before update on public.entry_group_templates for each row execute procedure moddatetime (updated_at);
+create trigger handle_updated_at before update on public.entry_groups for each row execute procedure moddatetime (updated_at);
 create trigger handle_updated_at before update on public.ticket_templates for each row execute procedure moddatetime (updated_at);
 create trigger handle_updated_at before update on public.tickets for each row execute procedure moddatetime (updated_at);
 create trigger handle_updated_at before update on public.event_applications for each row execute procedure moddatetime (updated_at);
@@ -457,6 +486,8 @@ alter table public.partners enable row level security;
 alter table public.locations enable row level security;
 alter table public.parties enable row level security;
 alter table public.events enable row level security;
+alter table public.entry_group_templates enable row level security;
+alter table public.entry_groups enable row level security;
 alter table public.ticket_templates enable row level security;
 alter table public.tickets enable row level security;
 alter table public.event_applications enable row level security;
@@ -470,6 +501,8 @@ alter table public.partner_verified_users enable row level security;
 create policy "Public read access" on public.locations for select using (true);
 create policy "Public read access" on public.parties for select using (true);
 create policy "Public read access" on public.events for select using (true);
+create policy "Public read access" on public.entry_group_templates for select using (true);
+create policy "Public read access" on public.entry_groups for select using (true);
 create policy "Public read access" on public.ticket_templates for select using (true);
 create policy "Public read access" on public.tickets for select using (true);
 create policy "Public read access" on public.verifications for select using (true);
@@ -516,6 +549,17 @@ create policy "Admin/Owner ticket_templates all access" on public.ticket_templat
     )
   );
 
+-- Entry Group Templates (Write Access)
+create policy "Admin/Owner entry_group_templates all access" on public.entry_group_templates for all 
+  using (
+    public.is_super_admin() or 
+    exists (
+      select 1 from public.parties p
+      where p.id = party_id
+      and public.has_partner_permission(p.partner_id, 'PARTY_MANAGE')
+    )
+  );
+
 -- Events (Write Access)
 create policy "Admin/Owner events all access" on public.events for all 
   using (
@@ -523,6 +567,18 @@ create policy "Admin/Owner events all access" on public.events for all
     exists (
       select 1 from public.parties p
       where p.id = party_id
+      and public.has_partner_permission(p.partner_id, 'PARTY_MANAGE')
+    )
+  );
+
+-- Entry Groups (Write Access)
+create policy "Admin/Owner entry_groups all access" on public.entry_groups for all 
+  using (
+    public.is_super_admin() or 
+    exists (
+      select 1 from public.events e
+      join public.parties p on p.id = e.party_id
+      where e.id = event_id
       and public.has_partner_permission(p.partner_id, 'PARTY_MANAGE')
     )
   );
