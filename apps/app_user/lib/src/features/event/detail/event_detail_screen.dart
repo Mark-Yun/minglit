@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_user/src/features/event/admission/event_admission_controller.dart';
+import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
 import 'package:app_user/src/features/ticket/ui/ticket_selection_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
@@ -14,7 +15,7 @@ class EventDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final eventAsync = ref.watch(eventDetailProvider(eventId));
+    final eventAsync = ref.watch(eventDetailControllerProvider(eventId));
 
     return Scaffold(
       body: eventAsync.when(
