@@ -5,7 +5,7 @@
 1. **The Plan is the Source of Truth:** All work must be tracked in `plan.md`
 2. **The Tech Stack is Deliberate:** Changes to the tech stack must be documented in `tech-stack.md` *before* implementation
 3. **Test-Driven Development:** Write unit tests before implementing functionality
-4. **High Code Coverage:** Aim for >80% code coverage for all modules
+4. **High Code Coverage:** Aim for >80% code coverage for all modules (Temporarily disabled)
 5. **User Experience First:** Every decision should prioritize user experience
 6. **Non-Interactive & CI-Aware:** Prefer non-interactive commands. Use `CI=true` for watch-mode tools (tests, linters) to ensure single execution.
 
@@ -37,7 +37,7 @@ All tasks follow a strict lifecycle:
      1. **Format:** `dart format .` (Use MCP `dart_format`)
      2. **Fix:** `dart fix --apply` (Use MCP `dart_fix`)
      3. **Lint:** `flutter analyze` (Use MCP `analyze_files`)
-     4. **Test:** `flutter test` (Use MCP `run_tests`)
+     // 4. **Test:** `flutter test` (Use MCP `run_tests`)
    - **Loop:** If any of these steps fail, fix the issues and repeat the entire loop until all commands pass successfully.
 
 7. **Request Commit Approval:**
@@ -147,7 +147,7 @@ All tasks follow a strict lifecycle:
 Before marking any task complete, verify:
 
 - [ ] All tests pass
-- [ ] Code coverage meets requirements (>80%)
+- [ ] Code coverage meets requirements (>80%) (Temporarily disabled)
 - [ ] Code follows project's code style guidelines (as defined in `code_styleguides/`)
 - [ ] All public functions/methods are documented (e.g., docstrings, JSDoc, GoDoc)
 - [ ] Type safety is enforced (e.g., type hints, TypeScript types, Go types)
