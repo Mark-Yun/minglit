@@ -1,4 +1,3 @@
-import 'package:app_partner/src/utils/error_handler.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';

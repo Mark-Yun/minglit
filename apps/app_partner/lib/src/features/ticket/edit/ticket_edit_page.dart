@@ -2,7 +2,6 @@ import 'package:app_partner/src/features/party/detail/party_detail_controller.da
 import 'package:app_partner/src/features/party/event/detail/event_detail_controller.dart';
 import 'package:app_partner/src/features/ticket/controller/ticket_controller.dart';
 import 'package:app_partner/src/features/ticket/widgets/ticket_form.dart';
-import 'package:app_partner/src/utils/error_handler.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';

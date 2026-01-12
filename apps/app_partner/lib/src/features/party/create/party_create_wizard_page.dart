@@ -7,7 +7,6 @@ import 'package:app_partner/src/features/party/create/steps/step3_capacity_conta
 import 'package:app_partner/src/features/party/create/steps/step4_entry_rules.dart';
 import 'package:app_partner/src/features/party/create/steps/step5_tickets.dart';
 import 'package:app_partner/src/features/party/create/steps/step6_review.dart';
-import 'package:app_partner/src/utils/error_handler.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';

@@ -11,7 +11,6 @@ import 'package:app_partner/src/features/party/widgets/party_entrance_condition_
 import 'package:app_partner/src/features/party/widgets/party_location_edit_screen.dart';
 import 'package:app_partner/src/features/party/widgets/party_location_summary.dart';
 import 'package:app_partner/src/ui/widgets/common/minglit_editable_section.dart';
-import 'package:app_partner/src/utils/error_handler.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
