@@ -64,7 +64,59 @@ abstract class Event with _$Event {
 }
 
 extension EventX on Event {
-  // Replaced JSONB entryGroups with typed relational field
+  List<String> get conditionSummaries {
+    final groups = entryGroups ?? [];
+    if (groups.isEmpty) return ['조건 없음'];
+
+    return groups.map((group) {
+      final gender = group.gender;
+      final verifIds = group.requiredVerificationIds;
+
+      var genderText = '성별 무관';
+      if (gender == 'male') {
+        genderText = '남성';
+      } else if (gender == 'female') {
+        genderText = '여성';
+      }
+
+      var birthYearText = '나이 무관';
+      final min = group.birthYearMin;
+      final max = group.birthYearMax;
+      if (min != null && max != null) {
+        birthYearText = '$min~$max년생';
+      } else if (min != null) {
+        birthYearText = '$min년생 이후';
+      } else if (max != null) {
+        birthYearText = '$max년생 이전';
+      }
+
+      String base;
+      if (genderText == '성별 무관' && birthYearText == '나이 무관') {
+        base = '조건 없음';
+      } else if (birthYearText == '나이 무관') {
+        base = genderText;
+      } else if (genderText == '성별 무관') {
+        base = birthYearText;
+      } else {
+        base = '$genderText ($birthYearText)';
+      }
+
+      // Handle label (e.g., "Student Group (Male (1997~2006))")
+      if (group.label != null && group.label!.isNotEmpty) {
+        if (base == '조건 없음') {
+          base = group.label!;
+        } else {
+          base = '${group.label} ($base)';
+        }
+      }
+
+      // Add verification badge indicator if present
+      if (verifIds.isNotEmpty) {
+        return '$base +🛡️${verifIds.length}';
+      }
+      return base;
+    }).toList();
+  }
 }
 
 extension EventDbX on Event {

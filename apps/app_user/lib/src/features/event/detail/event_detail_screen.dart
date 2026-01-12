@@ -226,7 +226,7 @@ class _EntryConditionsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final summaries = event.party?.conditionSummaries ?? [];
+    final entryGroups = event.entryGroups ?? [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,19 +238,27 @@ class _EntryConditionsSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: MinglitSpacing.medium),
-        if (summaries.isEmpty)
+        if (entryGroups.isEmpty)
           const Text('별도의 참여 제한이 없습니다.')
         else
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: summaries.map((s) {
-              return MinglitChip(
-                label: s,
-                size: MinglitChipSize.large,
-                color: theme.colorScheme.tertiary,
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: entryGroups.length,
+            separatorBuilder: (context, index) =>
+                const SizedBox(height: MinglitSpacing.medium),
+            itemBuilder: (context, index) {
+              final group = entryGroups[index];
+              return Container(
+                padding: const EdgeInsets.all(MinglitSpacing.small),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(MinglitRadius.small),
+                  border: Border.all(color: theme.colorScheme.outlineVariant),
+                ),
+                child: EntryGroupDetail(group: group.toTemplate()),
               );
-            }).toList(),
+            },
           ),
       ],
     );

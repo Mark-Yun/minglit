@@ -98,7 +98,7 @@ extension PartyX on Party {
     final groups = entryGroups ?? [];
     if (groups.isEmpty) return ['조건 없음'];
 
-    final summaries = groups.map((group) {
+    return groups.map((group) {
       final gender = group.gender;
       final verifIds = group.requiredVerificationIds;
 
@@ -122,23 +122,30 @@ extension PartyX on Party {
 
       String base;
       if (genderText == '성별 무관' && birthYearText == '나이 무관') {
-        base = '전체';
+        base = '조건 없음';
       } else if (birthYearText == '나이 무관') {
         base = genderText;
       } else if (genderText == '성별 무관') {
         base = birthYearText;
       } else {
-        base = '$genderText($birthYearText)';
+        base = '$genderText ($birthYearText)';
       }
 
-      // 인증 정보 추가
+      // Handle label
+      if (group.label != null && group.label!.isNotEmpty) {
+        if (base == '조건 없음') {
+          base = group.label!;
+        } else {
+          base = '${group.label} ($base)';
+        }
+      }
+
+      // Add verification badge indicator
       if (verifIds.isNotEmpty) {
         return '$base +🛡️${verifIds.length}';
       }
       return base;
     }).toList();
-
-    return summaries;
   }
 }
 
