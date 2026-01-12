@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 

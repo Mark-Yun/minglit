@@ -1,12 +1,16 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iamport_flutter/iamport_certification.dart';
 import 'package:iamport_flutter/model/certification_data.dart';
 import 'package:minglit_kit/src/config/iamport_config.dart';
 import 'package:minglit_kit/src/features/iamport/logic/iamport_controller.dart';
+import 'package:minglit_kit/src/features/iamport/logic/iamport_helper.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
-class MinglitIamportCertification extends ConsumerWidget {
+class MinglitIamportCertification extends ConsumerStatefulWidget {
   const MinglitIamportCertification({
     required this.onSuccess,
     required this.onFail,
@@ -45,9 +49,84 @@ class MinglitIamportCertification extends ConsumerWidget {
   final void Function(String errorMsg) onFail;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MinglitIamportCertification> createState() =>
+      _MinglitIamportCertificationState();
+}
+
+class _MinglitIamportCertificationState
+    extends ConsumerState<MinglitIamportCertification> {
+  @override
+  void initState() {
+    super.initState();
+    if (kIsWeb) {
+      // Web: Trigger JS certification immediately after build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(_startWebCertification());
+      });
+    }
+  }
+
+  Future<void> _startWebCertification() async {
+    final config = ref.read(iamportConfigProvider);
+    final effectiveUserCode = widget.userCode ?? config.userCode;
+
+    final data = CertificationData(
+      merchantUid: widget.merchantUid ??
+          'mid_${DateTime.now().millisecondsSinceEpoch}',
+      name: widget.name,
+      phone: widget.phone,
+      carrier: widget.carrier,
+      company: widget.company ?? '밍글릿',
+    );
+
+    requestCertificationWeb(
+      userCode: effectiveUserCode,
+      data: data.toJson(),
+      onResult: (result) async {
+        await _handleResult(result);
+      },
+    );
+  }
+
+  Future<void> _handleResult(Map<String, String> result) async {
+    // Delegate to controller for verification/state update
+    await ref
+        .read(iamportControllerProvider.notifier)
+        .onCertificationResult(result);
+
+    final state = ref.read(iamportControllerProvider);
+
+    if (state.hasValue && state.value != null && state.value!.success) {
+      widget.onSuccess(state.value!.impUid!);
+    } else if (state.hasError) {
+      widget.onFail(state.error.toString());
+    } else {
+      widget.onFail(state.value?.errorMsg ?? '인증 취소 또는 실패');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (kIsWeb) {
+      // Web: Render loading or empty (JS popup handles UI)
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('본인인증 창을 띄우고 있습니다...'),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Native: Render Iamport WebView
     final config = ref.watch(iamportConfigProvider);
-    final effectiveUserCode = userCode ?? config.userCode;
+    final effectiveUserCode = widget.userCode ?? config.userCode;
 
     return IamportCertification(
       appBar: AppBar(
@@ -74,29 +153,14 @@ class MinglitIamportCertification extends ConsumerWidget {
       ),
       userCode: effectiveUserCode,
       data: CertificationData(
-        merchantUid:
-            merchantUid ?? 'mid_${DateTime.now().millisecondsSinceEpoch}',
-        name: name,
-        phone: phone,
-        carrier: carrier,
-        company: company ?? '밍글릿',
+        merchantUid: widget.merchantUid ??
+            'mid_${DateTime.now().millisecondsSinceEpoch}',
+        name: widget.name,
+        phone: widget.phone,
+        carrier: widget.carrier,
+        company: widget.company ?? '밍글릿',
       ),
-      callback: (Map<String, String> result) async {
-        // Delegate to controller for verification/state update
-        await ref
-            .read(iamportControllerProvider.notifier)
-            .onCertificationResult(result);
-
-        final state = ref.read(iamportControllerProvider);
-
-        if (state.hasValue && state.value != null && state.value!.success) {
-          onSuccess(state.value!.impUid!);
-        } else if (state.hasError) {
-          onFail(state.error.toString());
-        } else {
-          onFail(state.value?.errorMsg ?? '인증 취소 또는 실패');
-        }
-      },
+      callback: _handleResult,
     );
   }
 }

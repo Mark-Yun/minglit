@@ -31,6 +31,28 @@
 
   <title>app_user</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- PortOne (Iamport) Integration -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+  <script type="text/javascript" src="https://cdn.iamport.kr/js/iamport.payment-1.2.0.js"></script>
+  <script>
+    window.MinglitIamport = {
+      certification: function(userCode, dataJson, callbackName) {
+        if (!window.IMP) return;
+        
+        var data = JSON.parse(dataJson);
+        var IMP = window.IMP;
+        IMP.init(userCode);
+        
+        IMP.certification(data, function(rsp) {
+          // Send result back to Dart
+          if (window[callbackName]) {
+            window[callbackName](JSON.stringify(rsp));
+          }
+        });
+      }
+    };
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
