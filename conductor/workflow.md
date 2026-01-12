@@ -33,11 +33,11 @@ All tasks follow a strict lifecycle:
    - Rerun tests to ensure they still pass after refactoring.
 
 6. **Strict Verification Loop:**
-   - Run the following commands to ensure code quality:
-     1. **Format:** `dart format .`
-     2. **Fix:** `dart fix --apply`
-     3. **Lint:** `flutter analyze`
-     4. **Test:** `flutter test`
+   - Run the following checks to ensure code quality. **IMPORTANT:** You must use the appropriate MCP tools (e.g., `dart_format`, `dart_fix`, `analyze_files`, `run_tests`) to perform these actions instead of running raw shell commands whenever possible.
+     1. **Format:** `dart format .` (Use MCP `dart_format`)
+     2. **Fix:** `dart fix --apply` (Use MCP `dart_fix`)
+     3. **Lint:** `flutter analyze` (Use MCP `analyze_files`)
+     4. **Test:** `flutter test` (Use MCP `run_tests`)
    - **Loop:** If any of these steps fail, fix the issues and repeat the entire loop until all commands pass successfully.
 
 7. **Request Commit Approval:**
