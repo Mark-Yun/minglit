@@ -7,7 +7,7 @@ part 'event_feed_provider.g.dart';
 
 /// **Raw Data Provider**
 /// Fetches event data from the server.
-/// Uses [keepAlive] with a timer to prevent excessive API calls.
+/// Uses `ref.keepAlive()` with a timer to prevent excessive API calls.
 @riverpod
 Future<List<Event>> fetchEventFeed(
   Ref ref, {
@@ -18,10 +18,8 @@ Future<List<Event>> fetchEventFeed(
 }) {
   // Cache data for 5 minutes
   final link = ref.keepAlive();
-  final timer = Timer(const Duration(minutes: 5), () {
-    link.close();
-  });
-  ref.onDispose(() => timer.cancel());
+  final timer = Timer(const Duration(minutes: 5), link.close);
+  ref.onDispose(timer.cancel);
 
   final repository = ref.watch(eventRepositoryProvider);
 
@@ -35,8 +33,8 @@ Future<List<Event>> fetchEventFeed(
 
 /// **View Model Provider**
 /// Filters the raw event feed based on the current user's status.
-/// This provider re-computes when user profile changes, but DOES NOT trigger a new API call
-/// because it watches the cached [fetchEventFeedProvider].
+/// This provider re-computes when user profile changes, but DOES NOT trigger
+/// a new API call because it watches the cached [fetchEventFeedProvider].
 @riverpod
 Future<List<Event>> eventFeed(
   Ref ref, {
@@ -76,10 +74,8 @@ Future<List<Event>> eventFeed(
 Future<Event> eventDetail(Ref ref, String eventId) {
   // Cache detail for 5 minutes
   final link = ref.keepAlive();
-  final timer = Timer(const Duration(minutes: 5), () {
-    link.close();
-  });
-  ref.onDispose(() => timer.cancel());
+  final timer = Timer(const Duration(minutes: 5), link.close);
+  ref.onDispose(timer.cancel);
 
   final repository = ref.watch(eventRepositoryProvider);
   // Implementation in repository: fetch with all relations
@@ -90,10 +86,8 @@ Future<Event> eventDetail(Ref ref, String eventId) {
 Future<List<Event>> partyEvents(Ref ref, String partyId) {
   // Cache party events for 5 minutes
   final link = ref.keepAlive();
-  final timer = Timer(const Duration(minutes: 5), () {
-    link.close();
-  });
-  ref.onDispose(() => timer.cancel());
+  final timer = Timer(const Duration(minutes: 5), link.close);
+  ref.onDispose(timer.cancel);
 
   final repository = ref.watch(partyRepositoryProvider);
   return repository.getEventsByPartyId(partyId);
