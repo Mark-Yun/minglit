@@ -67,9 +67,55 @@
 ---
 
 ## 📅 Roadmap (High Level)
+
 1. [x] 아키텍처 대전환 (Riverpod/GoRouter)
+
 2. [x] 통합 개발 환경 구축 (Smart Session Switcher)
+
 3. [x] 카카오맵 연동 및 장소 검색
+
 4. [x] 이벤트 생성 시스템 리팩터링 (Aggregation)
-5. [ ] 메인 랜딩 페이지 개발
-6. [ ] PASS/SMS 본인인증 연동
+
+5. [x] 에러 핸들링 표준화 (Layered Trust Error System)
+
+6. [x] 신뢰 기반 입장 시스템 (Identity & Admission Flow)
+
+7. [ ] 메인 랜딩 페이지 개발
+
+8. [ ] PASS/SMS 본인인증 실연동 (현재 Mock 구현)
+
+
+
+---
+
+
+
+## 📝 Recent Context & Decisions (2026-01-12)
+
+
+
+### 1. Error Handling Standardization
+
+*   **Goal**: 일관된 에러 경험 제공 및 보안 강화.
+
+*   **Solution**: `minglit_kit`의 `handleMinglitError`로 로직 중앙화.
+
+*   **Usage**: UI에서는 `handleMinglitError(context, e)` 호출, Riverpod에서는 `ref.listen(..., (_, next) => next.showMinglitError(context))` 사용.
+
+
+
+### 2. Trust-based Admission System
+
+*   **Philosophy**: "확실하지 않으면 심사받아라" (Verified Vibe).
+
+*   **Structure**:
+
+    *   **Identity (신원)**: `users` 테이블의 필수 속성(`birth_date`, `gender`). PASS/SMS로 자동 검증 (Base Layer).
+
+    *   **Qualification (자격)**: `verifications` 테이블. 직장, 학력 등 파트너가 심사하는 추가 속성 (Add-on Layer).
+
+*   **Flow**:
+
+    *   `EventAdmissionController`가 유저 상태를 판별 (`guest` -> `identityRequired` -> `notEligible` -> `eligible`).
+
+    *   `EventDetailScreen`에서 상태에 따라 {로그인} -> {본인인증} -> {티켓선택}으로 물 흐르듯 유도.
