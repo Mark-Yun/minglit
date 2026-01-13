@@ -8,7 +8,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Data & State Management' (Protocol in workflow.md)
 
 ## Phase 2: Admission Logic Integration
-- [ ] Task: Implement EventAdmissionController Integration
+- [~] Task: Implement EventAdmissionController Integration
   - [ ] Subtask: Connect `EventAdmissionController` to `EventDetailScreen` logic
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Admission Logic Integration' (Protocol in workflow.md)
 
