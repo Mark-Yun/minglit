@@ -27,24 +27,27 @@ runs:
     - name: Install & Build
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      # Note: Secrets must be passed as environment variables in the workflow calling this action
       run: |
-        touch .env
         flutter pub get
         
         if [[ "${{ github.ref_name }}" == "main" ]]; then
-          echo "🏗️ Building for Main (Production)..."
-          flutter build web --release \
-            --dart-define=SUPABASE_URL=$SUPABASE_MAIN_URL \
-            --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_MAIN_KEY \
-            --dart-define=GOOGLE_WEB_CLIENT_ID=$GOOGLE_MAIN_ID
+          TARGET="lib/main.dart"
+          SB_URL="$SUPABASE_MAIN_URL"
+          SB_KEY="$SUPABASE_MAIN_KEY"
+          G_ID="$GOOGLE_MAIN_ID"
+          echo "🏗️ Building for Production (Main)..."
         else
-          echo "🏗️ Building for Dev (Preview)..."
-          flutter build web --release -t lib/dev_main.dart \
-            --dart-define=SUPABASE_URL=$SUPABASE_DEV_URL \
-            --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_DEV_KEY \
-            --dart-define=GOOGLE_WEB_CLIENT_ID=$GOOGLE_DEV_ID
+          TARGET="lib/dev_main.dart"
+          SB_URL="$SUPABASE_DEV_URL"
+          SB_KEY="$SUPABASE_DEV_KEY"
+          G_ID="$GOOGLE_DEV_ID"
+          echo "🏗️ Building for Preview (Dev)..."
         fi
+
+        flutter build web --release -t $TARGET \
+          --dart-define=SUPABASE_URL=$SB_URL \
+          --dart-define=SUPABASE_PUBLISHABLE_KEY=$SB_KEY \
+          --dart-define=GOOGLE_WEB_CLIENT_ID=$G_ID
 
     - name: Copy vercel.json
       shell: bash
@@ -52,22 +55,22 @@ runs:
 
     - name: Deploy to Vercel
       shell: bash
-      working-directory: ${{ inputs.working-directory }}/build/web
+      working-directory: ${{ inputs.working-directory }}
       env:
         VERCEL_ORG_ID: ${{ inputs.vercel-org-id }}
         VERCEL_PROJECT_ID: ${{ inputs.vercel-project-id }}
         VERCEL_TOKEN: ${{ inputs.vercel-token }}
       run: |
-        npm install --global vercel@latest
+        # Use npx to avoid global installation and ensure team scope
+        # The project ID is automatically picked up from VERCEL_PROJECT_ID env var
+        COMMON_ARGS="--token=$VERCEL_TOKEN --scope=$VERCEL_ORG_ID --yes"
+        
+        cd build/web
         
         if [[ "${{ github.ref_name }}" == "main" ]]; then
           echo "🚀 Deploying to Production (Main)..."
-          vercel deploy --prod --token=$VERCEL_TOKEN --yes
+          npx vercel deploy --prod $COMMON_ARGS
         else
-          echo "👀 Deploying to Preview (Dev)..."
-          DEPLOY_URL=$(vercel deploy --token=$VERCEL_TOKEN --yes)
-          echo "Deployed to: $DEPLOY_URL"
-          
-          echo "🔗 Linking to ${{ inputs.dev-domain-alias }}..."
-          vercel alias set "$DEPLOY_URL" ${{ inputs.dev-domain-alias }} --token=$VERCEL_TOKEN
+          echo "👀 Deploying to Preview (Dev) with Alias: ${{ inputs.dev-domain-alias }}..."
+          npx vercel deploy --alias ${{ inputs.dev-domain-alias }} $COMMON_ARGS
         fi
