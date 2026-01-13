@@ -1,3 +1,4 @@
+// This file is specific to Web and requires JS interop.
 // ignore_for_file: avoid_web_libraries_in_flutter, deprecated_member_use
 
 import 'dart:convert';
@@ -30,6 +31,8 @@ void requestCertificationWeb({
   // 2. Call the helper function in index.html
   final minglitIamport = js.context['MinglitIamport'];
   if (minglitIamport != null) {
+    // The MinglitIamport object is defined in index.html as a
+    // dynamic JS object.
     // ignore: avoid_dynamic_calls
     minglitIamport.callMethod('certification', [
       userCode,
