@@ -68,16 +68,17 @@ class AuthRepository {
   Stream<AuthState> get onAuthStateChange => _supabase.auth.onAuthStateChange;
 
   /// Initiates Google Sign-In process.
-  Future<void> signInWithGoogle() async {
+  Future<void> signInWithGoogle({String? redirectTo}) async {
     Log.d('🔐 [AuthRepo] Google Sign-In started (Web=$kIsWeb)');
     try {
       if (kIsWeb) {
-        final redirectTo = _defaultRedirectUrl ?? Uri.base.origin;
-        Log.d('🌐 [AuthRepo] OAuth redirect to: $redirectTo');
+        final targetRedirect =
+            redirectTo ?? _defaultRedirectUrl ?? Uri.base.origin;
+        Log.d('🌐 [AuthRepo] OAuth redirect to: $targetRedirect');
 
         await _supabase.auth.signInWithOAuth(
           OAuthProvider.google,
-          redirectTo: redirectTo,
+          redirectTo: targetRedirect,
         );
         return;
       }

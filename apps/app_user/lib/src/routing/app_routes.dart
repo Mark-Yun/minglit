@@ -34,10 +34,13 @@ class DevUserSwitchRoute extends GoRouteData with $DevUserSwitchRoute {
 /// Path: `/login`
 @TypedGoRoute<LoginRoute>(path: '/login')
 class LoginRoute extends GoRouteData with $LoginRoute {
-  const LoginRoute();
+  const LoginRoute({this.from});
+
+  final String? from;
 
   @override
-  Widget build(BuildContext context, GoRouterState state) => const LoginPage();
+  Widget build(BuildContext context, GoRouterState state) =>
+      LoginPage(from: from);
 }
 
 /// **Home Route**: Main Dashboard.

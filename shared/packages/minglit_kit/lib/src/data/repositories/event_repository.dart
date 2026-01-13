@@ -107,4 +107,25 @@ class EventRepository {
       rethrow;
     }
   }
+
+  /// Checks if a user has already applied for an event.
+  Future<bool> checkApplicationStatus({
+    required String eventId,
+    required String userId,
+  }) async {
+    Log.d('checkApplicationStatus called | event: $eventId, user: $userId');
+    try {
+      final response = await _supabase
+          .from('event_applications')
+          .select('id')
+          .eq('event_id', eventId)
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      return response != null;
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] checkApplicationStatus Error', e, st);
+      rethrow;
+    }
+  }
 }

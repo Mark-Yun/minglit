@@ -76,22 +76,53 @@ Future<void> main() async {
 
           return GoRouter(
             navigatorKey: rootNavigatorKey,
-            initialLocation: '/dev',
+            initialLocation: '/',
             refreshListenable: authState,
             redirect: (context, state) {
               final isLoggedIn = ref.read(currentUserProvider) != null;
               final isLoggingIn = state.uri.path == '/login';
-              final isDevPage = state.uri.path.startsWith('/dev');
+              final path = state.uri.path;
+              final isDevPage = path.startsWith('/dev');
+
+              Log.d(
+                '🧭 [Router] path: $path | isLoggedIn: $isLoggedIn | '
+                'isLoggingIn: $isLoggingIn | isDevPage: $isDevPage',
+              );
+
+              // 0. Default dev redirect for root path
+              if (path == '/') {
+                Log.d('🧭 [Router] Root path detected. Redirecting to /dev');
+                return '/dev';
+              }
 
               // Allow dev pages without login for testing
               if (isDevPage) return null;
 
-              if (!isLoggedIn && !isLoggingIn) {
-                return '/login';
-              }
+              // 1. 이미 로그인 상태인데 로그인 페이지로 가려면 홈으로 보냄
               if (isLoggedIn && isLoggingIn) {
+                Log.d(
+                  '🧭 [Router] Redirecting to / (LoggedIn & on Login Page)',
+                );
                 return '/';
               }
+
+              // 2. 보호된 경로 정의 (로그인 필수)
+              const protectedPaths = [
+                '/my', // 마이페이지
+                '/tickets/my', // 내 티켓 목록
+                '/payment', // 결제 관련
+              ];
+
+              final isProtected = protectedPaths.any(path.startsWith);
+
+              // 3. 비로그인 상태에서 보호된 경로 진입 시 -> 로그인 페이지로
+              if (!isLoggedIn && isProtected) {
+                Log.d(
+                  '🧭 [Router] Redirecting to /login (Not LoggedIn & Protected Path)',
+                );
+                return '/login';
+              }
+
               return null;
             },
             routes: $appRoutes,

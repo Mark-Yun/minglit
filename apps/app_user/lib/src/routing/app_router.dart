@@ -25,13 +25,28 @@ GoRouter goRouter(Ref ref) {
     redirect: (context, state) {
       final isLoggedIn = ref.read(currentUserProvider) != null;
       final isLoggingIn = state.uri.path == '/login';
+      final path = state.uri.path;
 
-      if (!isLoggedIn && !isLoggingIn) {
-        return '/login';
-      }
-
+      // 1. 이미 로그인 상태인데 로그인 페이지로 가려면 홈으로 보냄
       if (isLoggedIn && isLoggingIn) {
         return '/';
+      }
+
+      // 2. 보호된 경로 정의 (로그인 필수)
+      // 이 경로로 시작하는 모든 진입은 로그인을 요구함
+      const protectedPaths = [
+        '/my', // 마이페이지 (프로필, 설정 등)
+        '/tickets/my', // 내 티켓 목록
+        '/payment', // 결제 관련
+      ];
+
+      final isProtected = protectedPaths.any(path.startsWith);
+
+      // 3. 비로그인 상태에서 보호된 경로 진입 시 -> 로그인 페이지로
+      if (!isLoggedIn && isProtected) {
+        // 로그인 후 원래 가려던 곳으로 돌아오기 위해 쿼리 파라미터 추가 고려 가능
+        // return '/login?from=$path';
+        return '/login';
       }
 
       return null;

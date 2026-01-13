@@ -31,6 +31,7 @@ class EventAdmissionController extends _$EventAdmissionController {
   @override
   FutureOr<AdmissionState> build(Event event) async {
     final currentUser = ref.watch(currentUserProvider);
+    final repository = ref.watch(eventRepositoryProvider);
 
     // 1. Check Login
     if (currentUser == null) {
@@ -38,8 +39,17 @@ class EventAdmissionController extends _$EventAdmissionController {
     }
 
     // 2. Check Existing Application (DB Check)
-    // TODO(developer): Implement EventRepository.checkApplicationStatus
-    // For now, assume not applied.
+    final hasApplied = await repository.checkApplicationStatus(
+      eventId: event.id,
+      userId: currentUser.id,
+    );
+
+    if (hasApplied) {
+      return AdmissionState(
+        status: EventAdmissionStatus.applied,
+        user: currentUser,
+      );
+    }
 
     // 3. Fetch User Profile (Identity Check)
     // We need birth_date and gender from user_profiles.

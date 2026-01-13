@@ -4,5 +4,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [ ] Track: Implement Event Detail Screen on User App
+## [~] Track: Implement Event Detail Screen on User App
 *Link: [./conductor/tracks/event_detail_screen_20260112/](./conductor/tracks/event_detail_screen_20260112/)*

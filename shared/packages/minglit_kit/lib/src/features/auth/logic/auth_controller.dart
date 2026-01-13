@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:minglit_kit/src/data/repositories/auth_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -13,11 +14,19 @@ class AuthController extends _$AuthController {
   }
 
   /// Trigger Google Sign-In
-  Future<void> signInWithGoogle() async {
+  Future<void> signInWithGoogle({String? redirectTo}) async {
     state = const AsyncLoading();
     try {
-      await ref.read(authRepositoryProvider).signInWithGoogle();
-      state = const AsyncData(null);
+      await ref
+          .read(authRepositoryProvider)
+          .signInWithGoogle(
+            redirectTo: redirectTo,
+          );
+      // On Web, the browser redirects. We don't want to trigger "Login Success"
+      // navigation in the split second before the page unloads.
+      if (!kIsWeb) {
+        state = const AsyncData(null);
+      }
     } on Object catch (e, st) {
       try {
         state = AsyncError(e, st);

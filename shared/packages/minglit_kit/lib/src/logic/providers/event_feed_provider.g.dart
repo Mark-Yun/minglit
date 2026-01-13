@@ -10,14 +10,14 @@ part of 'event_feed_provider.dart';
 // ignore_for_file: type=lint, type=warning
 /// **Raw Data Provider**
 /// Fetches event data from the server.
-/// Uses [keepAlive] with a timer to prevent excessive API calls.
+/// Uses `ref.keepAlive()` with a timer to prevent excessive API calls.
 
 @ProviderFor(fetchEventFeed)
 const fetchEventFeedProvider = FetchEventFeedFamily._();
 
 /// **Raw Data Provider**
 /// Fetches event data from the server.
-/// Uses [keepAlive] with a timer to prevent excessive API calls.
+/// Uses `ref.keepAlive()` with a timer to prevent excessive API calls.
 
 final class FetchEventFeedProvider
     extends
@@ -29,7 +29,7 @@ final class FetchEventFeedProvider
     with $FutureModifier<List<Event>>, $FutureProvider<List<Event>> {
   /// **Raw Data Provider**
   /// Fetches event data from the server.
-  /// Uses [keepAlive] with a timer to prevent excessive API calls.
+  /// Uses `ref.keepAlive()` with a timer to prevent excessive API calls.
   const FetchEventFeedProvider._({
     required FetchEventFeedFamily super.from,
     required ({
@@ -93,11 +93,11 @@ final class FetchEventFeedProvider
   }
 }
 
-String _$fetchEventFeedHash() => r'61d080909ff14a17a73dad68efed9ce67af97053';
+String _$fetchEventFeedHash() => r'313b437798b1dded197ebdc0230248dac80d0746';
 
 /// **Raw Data Provider**
 /// Fetches event data from the server.
-/// Uses [keepAlive] with a timer to prevent excessive API calls.
+/// Uses `ref.keepAlive()` with a timer to prevent excessive API calls.
 
 final class FetchEventFeedFamily extends $Family
     with
@@ -116,7 +116,7 @@ final class FetchEventFeedFamily extends $Family
 
   /// **Raw Data Provider**
   /// Fetches event data from the server.
-  /// Uses [keepAlive] with a timer to prevent excessive API calls.
+  /// Uses `ref.keepAlive()` with a timer to prevent excessive API calls.
 
   FetchEventFeedProvider call({
     required EventFeedType type,
@@ -139,16 +139,16 @@ final class FetchEventFeedFamily extends $Family
 
 /// **View Model Provider**
 /// Filters the raw event feed based on the current user's status.
-/// This provider re-computes when user profile changes, but DOES NOT trigger a new API call
-/// because it watches the cached [fetchEventFeedProvider].
+/// This provider re-computes when user profile changes, but DOES NOT trigger
+/// a new API call because it watches the cached [fetchEventFeedProvider].
 
 @ProviderFor(eventFeed)
 const eventFeedProvider = EventFeedFamily._();
 
 /// **View Model Provider**
 /// Filters the raw event feed based on the current user's status.
-/// This provider re-computes when user profile changes, but DOES NOT trigger a new API call
-/// because it watches the cached [fetchEventFeedProvider].
+/// This provider re-computes when user profile changes, but DOES NOT trigger
+/// a new API call because it watches the cached [fetchEventFeedProvider].
 
 final class EventFeedProvider
     extends
@@ -160,8 +160,8 @@ final class EventFeedProvider
     with $FutureModifier<List<Event>>, $FutureProvider<List<Event>> {
   /// **View Model Provider**
   /// Filters the raw event feed based on the current user's status.
-  /// This provider re-computes when user profile changes, but DOES NOT trigger a new API call
-  /// because it watches the cached [fetchEventFeedProvider].
+  /// This provider re-computes when user profile changes, but DOES NOT trigger
+  /// a new API call because it watches the cached [fetchEventFeedProvider].
   const EventFeedProvider._({
     required EventFeedFamily super.from,
     required ({
@@ -229,8 +229,8 @@ String _$eventFeedHash() => r'1b9fbcad96d823160132f80635edecde94436961';
 
 /// **View Model Provider**
 /// Filters the raw event feed based on the current user's status.
-/// This provider re-computes when user profile changes, but DOES NOT trigger a new API call
-/// because it watches the cached [fetchEventFeedProvider].
+/// This provider re-computes when user profile changes, but DOES NOT trigger
+/// a new API call because it watches the cached [fetchEventFeedProvider].
 
 final class EventFeedFamily extends $Family
     with
@@ -249,8 +249,8 @@ final class EventFeedFamily extends $Family
 
   /// **View Model Provider**
   /// Filters the raw event feed based on the current user's status.
-  /// This provider re-computes when user profile changes, but DOES NOT trigger a new API call
-  /// because it watches the cached [fetchEventFeedProvider].
+  /// This provider re-computes when user profile changes, but DOES NOT trigger
+  /// a new API call because it watches the cached [fetchEventFeedProvider].
 
   EventFeedProvider call({
     required EventFeedType type,
@@ -320,7 +320,7 @@ final class EventDetailProvider
   }
 }
 
-String _$eventDetailHash() => r'4757ee178863a90cb5e11b6c9e991d64243b8c04';
+String _$eventDetailHash() => r'309f8f2a23dc3be0a8f3b3ef3833f2d4d3c710b4';
 
 final class EventDetailFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Event>, String> {
@@ -395,7 +395,7 @@ final class PartyEventsProvider
   }
 }
 
-String _$partyEventsHash() => r'867f764853cc62e85763820f8941da007b1c409c';
+String _$partyEventsHash() => r'a6f719e6d540a85291cc3127fbd914b7413861a0';
 
 final class PartyEventsFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<Event>>, String> {

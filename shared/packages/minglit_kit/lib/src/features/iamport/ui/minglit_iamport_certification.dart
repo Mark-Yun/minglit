@@ -71,8 +71,8 @@ class _MinglitIamportCertificationState
     final effectiveUserCode = widget.userCode ?? config.userCode;
 
     final data = CertificationData(
-      merchantUid: widget.merchantUid ??
-          'mid_${DateTime.now().millisecondsSinceEpoch}',
+      merchantUid:
+          widget.merchantUid ?? 'mid_${DateTime.now().millisecondsSinceEpoch}',
       name: widget.name,
       phone: widget.phone,
       carrier: widget.carrier,
@@ -153,7 +153,8 @@ class _MinglitIamportCertificationState
       ),
       userCode: effectiveUserCode,
       data: CertificationData(
-        merchantUid: widget.merchantUid ??
+        merchantUid:
+            widget.merchantUid ??
             'mid_${DateTime.now().millisecondsSinceEpoch}',
         name: widget.name,
         phone: widget.phone,
