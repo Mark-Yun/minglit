@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:postgres/postgres.dart';
 import 'package:test/test.dart';
 
@@ -9,7 +11,7 @@ void main() {
         port: 54322,
         database: 'postgres',
         username: 'postgres',
-        password: 'postgres', 
+        password: 'postgres',
       ),
       settings: const ConnectionSettings(sslMode: SslMode.disable),
     );
@@ -17,7 +19,8 @@ void main() {
     try {
       // 1. Check Tables
       final tablesResult = await connection.execute(
-        "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'",
+        "SELECT table_name FROM information_schema.tables WHERE "
+        "table_schema = 'public'",
       );
       final tables = tablesResult.map((row) => row[0]! as String).toList();
       expect(tables, contains('user_embeddings'));

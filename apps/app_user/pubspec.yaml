@@ -61,13 +61,10 @@ dev_dependencies:
   postgres: ^3.5.9
   riverpod_generator: ^3.0.3
   riverpod_lint: ^3.0.3
+  test: any
   very_good_analysis: ^10.0.0
 
 # For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
-
-# The following section is specific to Flutter packages.
-  test: any
 flutter:
   generate: true
 
