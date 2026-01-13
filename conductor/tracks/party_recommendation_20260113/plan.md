@@ -1,6 +1,6 @@
 # Implementation Plan: User Action-Based Recommendation System
 
-## Phase 1: Database Infrastructure & Schema Setup
+## Phase 1: Database Infrastructure & Schema Setup [checkpoint: 1f12526]
 - [x] Task: DB - Install and Configure `pgvector` and `pgmq` extensions
     - [x] Sub-task: Create migration to enable extensions in Supabase
     - [x] Sub-task: Verify extensions availability in the database
@@ -11,16 +11,17 @@
 - [x] Task: DB - User Action & PGMQ Setup
     - [x] Sub-task: Create `user_actions` table (user_id, party_id, action_type, created_at)
     - [x] Sub-task: Initialize PGMQ queue named `recommendation_updates`
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Database Infrastructure' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Database Infrastructure' (Protocol in workflow.md)
 
 ## Phase 2: Party Vectorization System
-- [ ] Task: Edge Function - Create `vectorize-party` function
-    - [ ] Sub-task: Write unit tests for OpenAI Embedding API integration
-    - [ ] Sub-task: Implement JSON serialization logic for party metadata (Title, Desc, Tags, etc.)
-    - [ ] Sub-task: Implement OpenAI API call and error handling
-- [ ] Task: DB - Party Vectorization Trigger
-    - [ ] Sub-task: Create a trigger on `parties` (or `events`) table to invoke `vectorize-party` via HTTP/Job
-    - [ ] Sub-task: Verify that newly created parties get their embedding automatically stored in `party_embeddings`
+- [~] Task: Edge Function - Create `vectorize-party` function
+    - [x] Sub-task: Write unit tests for OpenAI Embedding API integration
+    - [x] Sub-task: Implement JSON serialization logic for party metadata (Title, Desc, Tags, etc.)
+    - [x] Sub-task: Implement OpenAI API call and error handling
+- [x] Task: DB - Party Vectorization Trigger
+    - [x] Sub-task: Create a trigger on `parties` (or `events`) table to invoke `vectorize-party` via HTTP/Job
+    - [x] Sub-task: Verify that newly created parties get their embedding automatically stored in `party_embeddings`
+- [ ] Task: Conductor - User Manual Verification 'Phase 2: Party Vectorization' (Protocol in workflow.md)
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Party Vectorization' (Protocol in workflow.md)
 
 ## Phase 3: Action Queuing & Strategy Pattern Implementation

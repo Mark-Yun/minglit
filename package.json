@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "apps/*",
-    "shared/web"
+    "apps/*"
   ],
   "scripts": {
     "dev:user": "npm run dev --workspace=landing_user",
