@@ -30,18 +30,7 @@
     - [x] Sub-task: Verify that actions (view, like, etc.) correctly populate the queue
     - [x] Sub-task: Implement PGMQ consumer loop in Edge Function
     - [x] Sub-task: Update logic to read/write from `user_embeddings` table
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Action Queuing & Updates' (Protocol in workflow.md)
-## Phase 4: Personalized Curation API
-- [ ] Task: DB - Create Personalized Curation RPC function
-    - [ ] Sub-task: Write SQL function `get_personalized_events(user_id)` joining `party_embeddings` and `user_embeddings`
-    - [ ] Sub-task: Implement filtering and ranking logic (similarity threshold, limit) using Cosine Similarity (`<=>`)
-    - [ ] Sub-task: Verify search performance with HNSW index
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Curation API' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Action Queuing & Updates' (Protocol in workflow.md) [checkpoint: e5ad11f]
 
-## Phase 5: App Integration & UI
-- [ ] Task: App - Integrate User Action Tracking
-    - [ ] Sub-task: Update Repository to log `view`, `like`, `purchase` actions to `user_actions` table
-- [ ] Task: App - Recommendation UI Implementation
-    - [ ] Sub-task: Create `PersonalizedEventList` widget in `app_user`
-    - [ ] Sub-task: Connect to `get_personalized_events` RPC and display results
-- [ ] Task: Conductor - User Manual Verification 'Phase 5: App Integration' (Protocol in workflow.md)
+## Phase 4: Personalized Curation API (Postponed)
+## Phase 5: App Integration & UI (Postponed)

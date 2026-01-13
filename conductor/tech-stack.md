@@ -18,6 +18,10 @@
 - **Auth:** Supabase Auth (OTP, Identity Providers)
 - **Storage:** Supabase Storage (User assets, verification documents)
 - **Deployment:** Vercel (Next.js & Flutter Web), GitHub Actions (CI/CD)
+- **AI & Vector Search:**
+  - **Embedding:** OpenAI Text Embedding 3 Small
+  - **Vector DB:** pgvector (Supabase)
+  - **Queue:** PGMQ (Postgres Message Queue) for asynchronous processing
 
 ## External Integrations
 - **Maps:** Kakao Maps SDK (Place search)
