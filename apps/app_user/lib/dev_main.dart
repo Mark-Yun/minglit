@@ -74,6 +74,15 @@ Future<void> main() async {
             });
           });
 
+          Log.d(
+            '🧭 [Router] Initializing GoRouter with ${$appRoutes.length} routes',
+          );
+          for (final route in $appRoutes) {
+            if (route is GoRoute) {
+              Log.d('  - Route: ${route.path}');
+            }
+          }
+
           return GoRouter(
             navigatorKey: rootNavigatorKey,
             refreshListenable: authState,
