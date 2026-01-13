@@ -39,6 +39,7 @@ dependencies:
   go_router: ^17.0.0
   google_fonts: ^6.3.2
   google_sign_in: 6.2.1
+  iamport_flutter: ^0.10.21
   intl: ^0.20.2
   kakao_map_plugin: ^0.3.7
   minglit_kit:
