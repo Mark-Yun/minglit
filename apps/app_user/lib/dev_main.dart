@@ -76,8 +76,8 @@ Future<void> main() async {
 
           return GoRouter(
             navigatorKey: rootNavigatorKey,
-            initialLocation: '/',
             refreshListenable: authState,
+            debugLogDiagnostics: true, // Enable Router logging
             redirect: (context, state) {
               final isLoggedIn = ref.read(currentUserProvider) != null;
               final isLoggingIn = state.uri.path == '/login';
