@@ -123,7 +123,8 @@ Future<void> main() async {
                 ).toString();
 
                 Log.d(
-                  '🧭 [Router] Redirecting to $redirectUrl (Not LoggedIn & Protected Path)',
+                  '🧭 [Router] Redirecting to $redirectUrl '
+                  '(Not LoggedIn & Protected Path)',
                 );
                 return redirectUrl;
               }

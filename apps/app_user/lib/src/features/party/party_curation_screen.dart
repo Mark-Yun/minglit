@@ -19,9 +19,11 @@ class _PartyCurationScreenState extends ConsumerState<PartyCurationScreen> {
   void initState() {
     super.initState();
     // Refresh data when entering the screen
-    Future.microtask(() {
-      ref.invalidate(fetchEventFeedProvider(type: widget.type));
-    });
+    unawaited(
+      Future.microtask(() {
+        ref.invalidate(fetchEventFeedProvider(type: widget.type));
+      }),
+    );
   }
 
   @override
