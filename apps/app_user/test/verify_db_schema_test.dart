@@ -1,3 +1,4 @@
+// Test verification requires print output.
 // ignore_for_file: avoid_print
 
 import 'package:postgres/postgres.dart';
@@ -19,7 +20,7 @@ void main() {
     try {
       // 1. Check Tables
       final tablesResult = await connection.execute(
-        "SELECT table_name FROM information_schema.tables WHERE "
+        'SELECT table_name FROM information_schema.tables WHERE '
         "table_schema = 'public'",
       );
       final tables = tablesResult.map((row) => row[0]! as String).toList();
@@ -33,10 +34,9 @@ void main() {
       );
       final queues = queueResult.map((row) => row[0]! as String).toList();
       expect(queues, contains('recommendation_updates'));
-      
+
       print('Verified tables: $tables');
       print('Verified queues: $queues');
-
     } finally {
       await connection.close();
     }

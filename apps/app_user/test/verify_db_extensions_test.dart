@@ -1,4 +1,4 @@
-
+// Test verification requires print output.
 // ignore_for_file: avoid_print
 
 import 'package:postgres/postgres.dart';
@@ -27,8 +27,7 @@ void main() {
 
       expect(installedExtensions, contains('vector'));
       expect(installedExtensions, contains('pgmq'));
-    }
-    finally {
+    } finally {
       await connection.close();
     }
   });

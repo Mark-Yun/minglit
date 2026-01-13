@@ -1,3 +1,4 @@
+// Test script requires print output for status updates.
 // ignore_for_file: avoid_print
 
 import 'package:postgres/postgres.dart';
@@ -40,16 +41,16 @@ void main() async {
       "'Test Partner') ON CONFLICT (id) DO NOTHING",
     );
     await connection.execute(
-      "INSERT INTO public.parties (id, partner_id, title) VALUES "
+      'INSERT INTO public.parties (id, partner_id, title) VALUES '
       "('$partyUuid', '$partnerUuid', 'Test Party') "
-      "ON CONFLICT (id) DO NOTHING",
+      'ON CONFLICT (id) DO NOTHING',
     );
 
     // 3. Force Insert Party Embedding (Mock Vector)
     // [0.1, 0.1, ... 1536 times]
     final vectorStr = '[${List.filled(1536, 0.1).join(',')}]';
     await connection.execute(
-      "INSERT INTO public.party_embeddings (party_id, embedding) VALUES "
+      'INSERT INTO public.party_embeddings (party_id, embedding) VALUES '
       "('$partyUuid', '$vectorStr') ON CONFLICT (party_id) "
       "DO UPDATE SET embedding = '$vectorStr'",
     );
@@ -57,7 +58,7 @@ void main() async {
     // 4. Create Action
     print('Inserting User Action...');
     await connection.execute(
-      "INSERT INTO public.user_actions (user_id, party_id, action_type) "
+      'INSERT INTO public.user_actions (user_id, party_id, action_type) '
       "VALUES ('$userUuid', '$partyUuid', 'like')",
     );
 
@@ -68,4 +69,3 @@ void main() async {
     await connection.close();
   }
 }
-
