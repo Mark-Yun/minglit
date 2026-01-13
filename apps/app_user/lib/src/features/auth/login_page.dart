@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends ConsumerWidget {
   const LoginPage({super.key, this.from});
@@ -34,10 +35,6 @@ class LoginPage extends ConsumerWidget {
         Log.d('🔑 [Auth] Login Success! from: $from');
         if (from != null) {
           context.go(from!);
-        } else {
-          // If no 'from' path, let app_router redirect to Home.
-          // Or explicitly go home.
-          // context.go('/');
         }
       }
     });
@@ -49,27 +46,22 @@ class LoginPage extends ConsumerWidget {
     }
 
     return MinglitLoginScreen(
-      onGoogleSignIn: () {
-        String? redirectTo;
+      onGoogleSignIn: () async {
+        // Save return URL to storage to handle redirect after OAuth
         if (from != null) {
-          final base = Uri.base.origin;
-          // Ensure from starts with /
-          final path = from!.startsWith('/') ? from : '/$from';
-          // Add /# for Hash Routing (Flutter Web Default)
-          // If using PathUrlStrategy, remove /#
-          redirectTo = '$base/#$path';
-          Log.d(
-            '🌐 [Auth] Requesting Google Sign-In with redirectTo: $redirectTo',
-          );
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('auth_return_url', from!);
+          Log.d('💾 [Auth] Saved return URL: $from');
         }
 
-        unawaited(
-          ref
-              .read(authControllerProvider.notifier)
-              .signInWithGoogle(
-                redirectTo: redirectTo,
-              ),
-        );
+        if (context.mounted) {
+          unawaited(
+            ref.read(authControllerProvider.notifier).signInWithGoogle(
+                  // No redirectTo needed; we rely on storage redirect
+                  redirectTo: null,
+                ),
+          );
+        }
       },
     );
   }

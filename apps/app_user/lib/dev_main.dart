@@ -87,7 +87,7 @@ Future<void> main() async {
             navigatorKey: rootNavigatorKey,
             refreshListenable: authState,
             debugLogDiagnostics: true, // Enable Router logging
-            redirect: (context, state) {
+            redirect: (context, state) async {
               final isLoggedIn = ref.read(currentUserProvider) != null;
               final isLoggingIn = state.uri.path == '/login';
               final path = state.uri.path;
@@ -98,7 +98,18 @@ Future<void> main() async {
                 'isLoggingIn: $isLoggingIn | isDevPage: $isDevPage',
               );
 
-              // 0. Default dev redirect for root path
+              // 0. Check for Saved Return URL (After OAuth Login)
+              if (isLoggedIn) {
+                final prefs = await SharedPreferences.getInstance();
+                final returnUrl = prefs.getString('auth_return_url');
+                if (returnUrl != null) {
+                  Log.d('🧭 [Router] Found saved return URL: $returnUrl');
+                  await prefs.remove('auth_return_url');
+                  return returnUrl;
+                }
+              }
+
+              // 1. Default dev redirect for root path
               if (path == '/') {
                 Log.d('🧭 [Router] Root path detected. Redirecting to /dev');
                 return '/dev';
@@ -179,43 +190,13 @@ Future<void> appStartup(Ref ref) async {
   }
 }
 
-class MinglitDevApp extends StatelessWidget {
+class MinglitDevApp extends ConsumerWidget {
   const MinglitDevApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    // 1. Wrap the entire app with a Shell MaterialApp and StaffGuard.
-    // This ensures protection is active even during startup/loading/error states.
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: MinglitTheme.materialTheme,
-      home: const StaffGuardWrapper(child: _AppView()),
-    );
-  }
-}
-
-class _AppView extends ConsumerWidget {
-  const _AppView();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final startupState = ref.watch(appStartupProvider);
-
-    return startupState.when(
-      data: (_) => const _AuthenticatedApp(),
-      loading: () => const MinglitSplashScreen(appName: 'User Dev'),
-      error: (e, st) =>
-          Scaffold(body: Center(child: Text('Startup Error: $e'))),
-    );
-  }
-}
-
-class _AuthenticatedApp extends ConsumerWidget {
-  const _AuthenticatedApp();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final goRouter = ref.watch(goRouterProvider);
+    final startupState = ref.watch(appStartupProvider);
 
     return MaterialApp.router(
       title: 'Minglit User (Dev)',
@@ -231,7 +212,16 @@ class _AuthenticatedApp extends ConsumerWidget {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
-        return MinglitGlobalLoadingOverlay(child: child!);
+        // Handle Startup State
+        return startupState.when(
+          data: (_) => StaffGuardWrapper(
+            child: MinglitGlobalLoadingOverlay(child: child!),
+          ),
+          loading: () => const MinglitSplashScreen(appName: 'User Dev'),
+          error: (e, st) => MaterialApp(
+            home: Scaffold(body: Center(child: Text('Startup Error: $e'))),
+          ),
+        );
       },
     );
   }
