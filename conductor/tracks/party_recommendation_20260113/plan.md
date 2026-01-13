@@ -22,19 +22,15 @@
     - [x] Sub-task: Create a trigger on `parties` (or `events`) table to invoke `vectorize-party` via HTTP/Job
     - [x] Sub-task: Verify that newly created parties get their embedding automatically stored in `party_embeddings`
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Party Vectorization' (Protocol in workflow.md)
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Party Vectorization' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Party Vectorization' (Protocol in workflow.md) [checkpoint: 74b326b]
 
 ## Phase 3: Action Queuing & Strategy Pattern Implementation
-- [ ] Task: DB - Action Logging Trigger
-    - [ ] Sub-task: Create a trigger on `user_actions` to enqueue a message to `recommendation_updates` PGMQ
-    - [ ] Sub-task: Verify that actions (view, like, etc.) correctly populate the queue
-- [ ] Task: Edge Function - Implement `update-user-profile` logic
-    - [ ] Sub-task: Write tests for `HybridCalculator` (Strategy pattern) with weighted vector math
-    - [ ] Sub-task: Implement `HybridCalculator` using Moving Average + Cumulative logic
-    - [ ] Sub-task: Implement PGMQ consumer loop in Edge Function
-    - [ ] Sub-task: Update logic to read/write from `user_embeddings` table
+- [x] Task: DB - Action Logging Trigger
+    - [x] Sub-task: Create a trigger on `user_actions` to enqueue a message to `recommendation_updates` PGMQ
+    - [x] Sub-task: Verify that actions (view, like, etc.) correctly populate the queue
+    - [x] Sub-task: Implement PGMQ consumer loop in Edge Function
+    - [x] Sub-task: Update logic to read/write from `user_embeddings` table
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Action Queuing & Updates' (Protocol in workflow.md)
-
 ## Phase 4: Personalized Curation API
 - [ ] Task: DB - Create Personalized Curation RPC function
     - [ ] Sub-task: Write SQL function `get_personalized_events(user_id)` joining `party_embeddings` and `user_embeddings`
