@@ -33,6 +33,7 @@ Future<void> main() async {
     await Supabase.initialize(
       url: supabaseUrl,
       anonKey: supabasePublishableKey,
+      authFlowType: AuthFlowType.implicit,
     );
   } catch (e) {
     // Handle "Invalid Refresh Token" error by clearing storage and retrying
@@ -46,6 +47,7 @@ Future<void> main() async {
       await Supabase.initialize(
         url: supabaseUrl,
         anonKey: supabasePublishableKey,
+        authFlowType: AuthFlowType.implicit,
       );
     } else {
       rethrow;
