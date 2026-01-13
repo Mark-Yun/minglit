@@ -44,9 +44,8 @@ GoRouter goRouter(Ref ref) {
 
       // 3. 비로그인 상태에서 보호된 경로 진입 시 -> 로그인 페이지로
       if (!isLoggedIn && isProtected) {
-        // 로그인 후 원래 가려던 곳으로 돌아오기 위해 쿼리 파라미터 추가 고려 가능
-        // return '/login?from=$path';
-        return '/login';
+        // 로그인 후 원래 가려던 곳으로 돌아오기 위해 쿼리 파라미터 추가
+        return Uri(path: '/login', queryParameters: {'from': path}).toString();
       }
 
       return null;

@@ -117,10 +117,15 @@ Future<void> main() async {
 
               // 3. 비로그인 상태에서 보호된 경로 진입 시 -> 로그인 페이지로
               if (!isLoggedIn && isProtected) {
+                final redirectUrl = Uri(
+                  path: '/login',
+                  queryParameters: {'from': path},
+                ).toString();
+
                 Log.d(
-                  '🧭 [Router] Redirecting to /login (Not LoggedIn & Protected Path)',
+                  '🧭 [Router] Redirecting to $redirectUrl (Not LoggedIn & Protected Path)',
                 );
-                return '/login';
+                return redirectUrl;
               }
 
               return null;
