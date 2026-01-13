@@ -11,7 +11,7 @@ void main() {
         username: 'postgres',
         password: 'postgres', 
       ),
-      settings: ConnectionSettings(sslMode: SslMode.disable),
+      settings: const ConnectionSettings(sslMode: SslMode.disable),
     );
 
     try {
@@ -19,16 +19,16 @@ void main() {
       final tablesResult = await connection.execute(
         "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'",
       );
-      final tables = tablesResult.map((row) => row[0] as String).toList();
+      final tables = tablesResult.map((row) => row[0]! as String).toList();
       expect(tables, contains('user_embeddings'));
       expect(tables, contains('party_embeddings'));
       expect(tables, contains('user_actions'));
 
       // 2. Check Queue
       final queueResult = await connection.execute(
-        "SELECT * FROM pgmq.list_queues()",
+        'SELECT * FROM pgmq.list_queues()',
       );
-      final queues = queueResult.map((row) => row[0] as String).toList();
+      final queues = queueResult.map((row) => row[0]! as String).toList();
       expect(queues, contains('recommendation_updates'));
       
       print('Verified tables: $tables');

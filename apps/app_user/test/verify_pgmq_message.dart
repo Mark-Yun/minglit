@@ -5,7 +5,7 @@ void main() {
   test('Verify PGMQ has message', () async {
     final connection = await Connection.open(
       Endpoint(host: '127.0.0.1', port: 54322, database: 'postgres', username: 'postgres', password: 'postgres'),
-      settings: ConnectionSettings(sslMode: SslMode.disable),
+      settings: const ConnectionSettings(sslMode: SslMode.disable),
     );
 
     try {

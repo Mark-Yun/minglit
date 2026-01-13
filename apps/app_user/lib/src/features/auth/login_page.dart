@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -55,10 +56,22 @@ class LoginPage extends ConsumerWidget {
         }
 
         if (context.mounted) {
+          String? redirectTo;
+          if (kIsWeb) {
+            // Explicitly redirect to our hash-based callback route
+            // The browser will return to: origin + /#/auth/callback
+            // Note: Supabase handles the hash fragment token parsing
+            // automatically.
+            final origin = Uri.base.origin;
+            redirectTo = '$origin/#/auth/callback';
+            Log.d('🌐 [Auth] RedirectTo set: $redirectTo');
+          }
+
           unawaited(
-            ref.read(authControllerProvider.notifier).signInWithGoogle(
-                  // No redirectTo needed; we rely on storage redirect
-                  redirectTo: null,
+            ref
+                .read(authControllerProvider.notifier)
+                .signInWithGoogle(
+                  redirectTo: redirectTo,
                 ),
           );
         }

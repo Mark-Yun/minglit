@@ -1,4 +1,5 @@
 import 'package:app_user/src/features/auth/login_page.dart';
+import 'package:app_user/src/features/auth/ui/auth_callback_screen.dart';
 import 'package:app_user/src/features/dev/user_dev_map.dart';
 import 'package:app_user/src/features/event/detail/event_detail_screen.dart';
 import 'package:app_user/src/features/home/home_page.dart';
@@ -41,6 +42,17 @@ class LoginRoute extends GoRouteData with $LoginRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       LoginPage(from: from);
+}
+
+/// **Auth Callback Route**: Handles OAuth redirects.
+/// Path: `/auth/callback`
+@TypedGoRoute<AuthCallbackRoute>(path: '/auth/callback')
+class AuthCallbackRoute extends GoRouteData with $AuthCallbackRoute {
+  const AuthCallbackRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const AuthCallbackScreen();
 }
 
 /// **Home Route**: Main Dashboard.

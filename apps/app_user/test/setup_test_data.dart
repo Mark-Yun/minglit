@@ -3,7 +3,7 @@ import 'package:postgres/postgres.dart';
 void main() async {
   final connection = await Connection.open(
     Endpoint(host: '127.0.0.1', port: 54322, database: 'postgres', username: 'postgres', password: 'postgres'),
-    settings: ConnectionSettings(sslMode: SslMode.disable),
+    settings: const ConnectionSettings(sslMode: SslMode.disable),
   );
 
   try {
@@ -13,11 +13,11 @@ void main() async {
     // But auth.users is protected. We can insert into user_profiles directly if we disable triggers? No, FK constraint.
     // Let's use a known ID from seed if available, or try to insert into auth.users (superuser can).
     
-    final userId = 'test-user-001'; // Not UUID, might fail if UUID required.
+    const userId = 'test-user-001'; // Not UUID, might fail if UUID required.
     // UUID required.
-    final userUuid = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-    final partyUuid = 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b22';
-    final partnerUuid = 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33';
+    const userUuid = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+    const partyUuid = 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b22';
+    const partnerUuid = 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c33';
 
     await connection.execute("INSERT INTO auth.users (id, email) VALUES ('$userUuid', 'test@example.com') ON CONFLICT (id) DO NOTHING");
     // Trigger on auth.users will create user_profiles automatically.
@@ -28,7 +28,7 @@ void main() async {
 
     // 3. Force Insert Party Embedding (Mock Vector)
     // [0.1, 0.1, ... 1536 times]
-    final vectorStr = '[' + List.filled(1536, 0.1).join(',') + ']';
+    final vectorStr = '[${List.filled(1536, 0.1).join(',')}]';
     await connection.execute("INSERT INTO public.party_embeddings (party_id, embedding) VALUES ('$partyUuid', '$vectorStr') ON CONFLICT (party_id) DO UPDATE SET embedding = '$vectorStr'");
 
     // 4. Create Action

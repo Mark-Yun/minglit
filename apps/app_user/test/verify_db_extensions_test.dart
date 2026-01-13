@@ -12,15 +12,15 @@ void main() {
         username: 'postgres',
         password: 'postgres', // Supabase local default
       ),
-      settings: ConnectionSettings(sslMode: SslMode.disable),
+      settings: const ConnectionSettings(sslMode: SslMode.disable),
     );
 
     try {
       final result = await connection.execute(
-        "SELECT extname FROM pg_extension",
+        'SELECT extname FROM pg_extension',
       );
 
-      final installedExtensions = result.map((row) => row[0] as String).toList();
+      final installedExtensions = result.map((row) => row[0]! as String).toList();
       print('DEBUG: All installed extensions: $installedExtensions');
 
       expect(installedExtensions, contains('vector'));

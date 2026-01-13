@@ -10,6 +10,7 @@ List<RouteBase> get $appRoutes => [
   $devRoute,
   $devUserSwitchRoute,
   $loginRoute,
+  $authCallbackRoute,
   $homeRoute,
   $eventCurationRoute,
   $eventDetailRoute,
@@ -79,6 +80,32 @@ mixin $LoginRoute on GoRouteData {
     '/login',
     queryParams: {if (_self.from != null) 'from': _self.from},
   );
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $authCallbackRoute => GoRouteData.$route(
+  path: '/auth/callback',
+  factory: $AuthCallbackRoute._fromState,
+);
+
+mixin $AuthCallbackRoute on GoRouteData {
+  static AuthCallbackRoute _fromState(GoRouterState state) =>
+      const AuthCallbackRoute();
+
+  @override
+  String get location => GoRouteData.$location('/auth/callback');
 
   @override
   void go(BuildContext context) => context.go(location);

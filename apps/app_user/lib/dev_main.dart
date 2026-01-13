@@ -35,14 +35,12 @@ Future<void> main() async {
       anonKey: supabasePublishableKey,
     );
   } catch (e) {
-    // Handle "Invalid Refresh Token" error by clearing storage and retrying
     if (e.toString().contains('Invalid Refresh Token') ||
         (e is AuthApiException && e.code == 'refresh_token_not_found')) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
       Log.w('⚠️ Invalid Refresh Token detected during init. Storage cleared.');
 
-      // Retry initialization
       await Supabase.initialize(
         url: supabaseUrl,
         anonKey: supabasePublishableKey,
@@ -61,9 +59,7 @@ Future<void> main() async {
             defaultRedirectUrl: 'http://localhost:3000',
           ),
         ),
-        // Set environment domains to Dev
         minglitDomainsProvider.overrideWithValue(const MinglitDomains.dev()),
-        // Override goRouter to start at /dev for dev_main
         goRouterProvider.overrideWith((ref) {
           final rootNavigatorKey = GlobalKey<NavigatorState>();
           final authState = ValueNotifier<AuthState?>(null);
@@ -74,22 +70,14 @@ Future<void> main() async {
             });
           });
 
-          Log.d(
-            '🧭 [Router] Initializing GoRouter with ${$appRoutes.length} routes',
-          );
-          for (final route in $appRoutes) {
-            if (route is GoRoute) {
-              Log.d('  - Route: ${route.path}');
-            }
-          }
-
           return GoRouter(
             navigatorKey: rootNavigatorKey,
             refreshListenable: authState,
-            debugLogDiagnostics: true, // Enable Router logging
-            redirect: (context, state) async {
+            debugLogDiagnostics: true,
+            redirect: (context, state) {
               final isLoggedIn = ref.read(currentUserProvider) != null;
               final isLoggingIn = state.uri.path == '/login';
+              final isCallback = state.uri.path == '/auth/callback';
               final path = state.uri.path;
               final isDevPage = path.startsWith('/dev');
 
@@ -98,55 +86,34 @@ Future<void> main() async {
                 'isLoggingIn: $isLoggingIn | isDevPage: $isDevPage',
               );
 
-              // 0. Check for Saved Return URL (After OAuth Login)
-              if (isLoggedIn) {
-                final prefs = await SharedPreferences.getInstance();
-                final returnUrl = prefs.getString('auth_return_url');
-                if (returnUrl != null) {
-                  Log.d('🧭 [Router] Found saved return URL: $returnUrl');
-                  await prefs.remove('auth_return_url');
-                  return returnUrl;
-                }
-              }
+              // 0. Callback route should always be accessible
+              if (isCallback) return null;
 
-              // 1. Default dev redirect for root path
+              // 1. Root redirect
               if (path == '/') {
-                Log.d('🧭 [Router] Root path detected. Redirecting to /dev');
                 return '/dev';
               }
 
-              // Allow dev pages without login for testing
+              // 2. Auth logic
               if (isDevPage) return null;
 
-              // 1. 이미 로그인 상태인데 로그인 페이지로 가려면 홈으로 보냄
               if (isLoggedIn && isLoggingIn) {
-                Log.d(
-                  '🧭 [Router] Redirecting to / (LoggedIn & on Login Page)',
-                );
                 return '/';
               }
 
-              // 2. 보호된 경로 정의 (로그인 필수)
               const protectedPaths = [
-                '/my', // 마이페이지
-                '/tickets/my', // 내 티켓 목록
-                '/payment', // 결제 관련
+                '/my',
+                '/tickets/my',
+                '/payment',
               ];
 
               final isProtected = protectedPaths.any(path.startsWith);
 
-              // 3. 비로그인 상태에서 보호된 경로 진입 시 -> 로그인 페이지로
               if (!isLoggedIn && isProtected) {
-                final redirectUrl = Uri(
+                return Uri(
                   path: '/login',
                   queryParameters: {'from': path},
                 ).toString();
-
-                Log.d(
-                  '🧭 [Router] Redirecting to $redirectUrl '
-                  '(Not LoggedIn & Protected Path)',
-                );
-                return redirectUrl;
               }
 
               return null;
@@ -174,17 +141,7 @@ Future<void> appStartup(Ref ref) async {
 
   try {
     await initializeDateFormatting('ko_KR');
-
     DevConfig.init(supabaseUrl, supabaseServiceRoleKey);
-  } on AuthApiException catch (e) {
-    if (e.message.contains('Invalid Refresh Token') ||
-        e.code == 'refresh_token_already_used') {
-      Log.w('[Startup] Invalid Refresh Token detected. Clearing storage...');
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
-      Log.i('[Startup] Storage cleared. Please reload the app.');
-    }
-    rethrow;
   } on Exception catch (e) {
     Log.e('App startup warning', e);
   }
@@ -212,14 +169,13 @@ class MinglitDevApp extends ConsumerWidget {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
-        // Handle Startup State
         return startupState.when(
           data: (_) => StaffGuardWrapper(
             child: MinglitGlobalLoadingOverlay(child: child!),
           ),
           loading: () => const MinglitSplashScreen(appName: 'User Dev'),
-          error: (e, st) => MaterialApp(
-            home: Scaffold(body: Center(child: Text('Startup Error: $e'))),
+          error: (e, st) => Scaffold(
+            body: Center(child: Text('Startup Error: $e')),
           ),
         );
       },
