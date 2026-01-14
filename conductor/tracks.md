@@ -14,5 +14,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [ ] Track: Global Event Pipeline v2 (Robustness & Observability)
+## [x] Track: Global Event Pipeline v2 (Robustness & Observability)
 *Link: [./conductor/tracks/global_pipeline_v2_20260114/](./conductor/tracks/global_pipeline_v2_20260114/)*

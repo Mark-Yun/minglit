@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { OpenAIService } from './openai_service.ts'
 import { serializeParty } from './party_serializer.ts'
 import { HybridCalculator } from './calculator.ts'
+import { WorkerUtils } from '../_shared/worker_utils.ts'
 
 const WEIGHTS: Record<string, number> = {
   view: 0.1,
@@ -27,12 +28,12 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
     const openAi = new OpenAIService(openAiKey);
+    const utils = new WorkerUtils(supabase, 'q_vectors');
 
     // 1. Read Batch from PGMQ
-    // pgmq.read(queue_name, vt, limit)
     const { data: messages, error: readError } = await supabase.rpc('pgmq_read', {
       queue_name: 'q_vectors',
-      vt: 30, 
+      vt: 60, // Increase VT for batch processing
       limit: batchSize
     });
 
@@ -48,7 +49,7 @@ Deno.serve(async (req) => {
     }
 
     const msgArray = Array.isArray(messages) ? messages : [messages];
-    console.log(`Processing batch of ${msgArray.length} messages`);
+    console.log(`Processing v2 batch of ${msgArray.length} messages`);
 
     // deno-lint-ignore no-explicit-any
     const partyTasks: any[] = [];
@@ -58,17 +59,37 @@ Deno.serve(async (req) => {
 
     for (const msg of msgArray) {
       const p = msg.message;
-      if (p.event_type === 'party_created') {
-        partyTasks.push({ msgId: msg.msg_id, record: p.record });
-      } else if (p.event_type === 'user_interaction') {
-        interactionTasks.push({ msgId: msg.msg_id, record: p.record });
+      const traceId = p.id;
+
+      // A. DLQ Check
+      if (msg.read_ct > 5) {
+        await utils.moveToDLQ(msg.msg_id, p, "Max retries exceeded");
+        continue;
+      }
+
+      // B. Idempotency Check
+      if (await utils.isProcessed(traceId)) {
+        console.log(`[${traceId}] Already processed. Skipping.`);
+        processedMsgIds.push(msg.msg_id);
+        continue;
+      }
+
+      // C. Time Tracking
+      if (p.meta?.occurred_at) {
+        utils.logTimeLag(p.meta.occurred_at, traceId);
+      }
+
+      // D. Queue for Processing
+      if (p.type === 'party_created') {
+        partyTasks.push({ msgId: msg.msg_id, record: p.payload, traceId });
+      } else if (p.type === 'user_interaction') {
+        interactionTasks.push({ msgId: msg.msg_id, record: p.payload, traceId });
       } else {
-          // Unknown event, just mark as processed to clear queue
           processedMsgIds.push(msg.msg_id);
       }
     }
 
-    // 2. Process Party Vectorization (Efficient OpenAI Batching)
+    // 2. Process Party Vectorization
     if (partyTasks.length > 0) {
       try {
         const texts = partyTasks.map(t => serializeParty(t.record));
@@ -83,7 +104,10 @@ Deno.serve(async (req) => {
         const { error } = await supabase.from('party_embeddings').upsert(upserts);
         if (error) throw error;
         
-        partyTasks.forEach(t => processedMsgIds.push(t.msgId));
+        for (const t of partyTasks) {
+          await utils.markProcessed(t.traceId);
+          processedMsgIds.push(t.msgId);
+        }
       } catch (e) {
         console.error('Party Vectorization Error:', e);
       }
@@ -110,14 +134,15 @@ Deno.serve(async (req) => {
             updated_at: new Date().toISOString()
           });
           if (error) throw error;
+          
+          await utils.markProcessed(task.traceId);
           processedMsgIds.push(task.msgId);
         } else {
-          console.warn(`Skipping interaction for user ${user_id}: Party ${party_id} embedding not found.`);
-          // We can delete it or let it retry. Let's delete to avoid infinite loop if party is deleted.
+          console.warn(`Skipping interaction: Party ${party_id} embedding not found.`);
           processedMsgIds.push(task.msgId);
         }
       } catch (e) {
-        console.error(`Interaction Error for user ${task.record.user_id}:`, e);
+        console.error(`Interaction Error:`, e);
       }
     }
 

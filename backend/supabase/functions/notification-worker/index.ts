@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { runWorkerLoop } from './loop_worker.ts'
+import { WorkerUtils } from '../_shared/worker_utils.ts'
 
 Deno.serve(async (_req) => {
   try {
@@ -11,35 +12,63 @@ Deno.serve(async (_req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey)
+    const utils = new WorkerUtils(supabase, 'q_notifications')
 
-    console.log("Notification Worker Started");
+    console.log("Notification Worker v2 Started");
 
-    // Run loop for 55 seconds, polling every 5 seconds
     await runWorkerLoop({ maxDurationMs: 55000, intervalMs: 5000 }, async () => {
-      // Consume from q_notifications (Pop 1 message)
-      const { data: msgs, error } = await supabase.rpc('pgmq_pop', {
-        queue_name: 'q_notifications'
+      // Use pgmq_read instead of pop for safer retry handling
+      const { data: msgs, error } = await supabase.rpc('pgmq_read', {
+        queue_name: 'q_notifications',
+        vt: 30,
+        limit: 1
       });
 
       if (error) {
-        console.error('PGMQ Pop Error:', error);
+        console.error('PGMQ Read Error:', error);
         return false;
       }
 
       if (!msgs || (Array.isArray(msgs) && msgs.length === 0)) {
-        return false; // Queue empty
+        return false; 
       }
 
       const msg = Array.isArray(msgs) ? msgs[0] : msgs;
       const payload = msg.message;
+      const traceId = payload.id;
+
+      // 1. DLQ Check
+      if (msg.read_ct > 5) {
+        await utils.moveToDLQ(msg.msg_id, payload, "Max retries exceeded (5)");
+        return true;
+      }
+
+      // 2. Idempotency Check
+      if (await utils.isProcessed(traceId)) {
+        console.log(`[${traceId}] Already processed. Skipping.`);
+        await supabase.rpc('pgmq_delete', { queue_name: 'q_notifications', msg_id: msg.msg_id });
+        return true;
+      }
+
+      // 3. Time Tracking
+      if (payload.meta?.occurred_at) {
+        utils.logTimeLag(payload.meta.occurred_at, traceId);
+      }
+
+      // 4. Actual Processing
+      console.log(`[Notification] Processing event: ${payload.type} (ID: ${traceId})`);
       
-      console.log(`[Notification] Processing event: ${payload.event_type} (ID: ${msg.msg_id})`);
+      // TODO: Implement notification sending
 
-      // TODO: Implement actual notification sending logic (FCM, Email, etc.)
-      return true; // Work done
+      // 5. Finalize
+      await utils.markProcessed(traceId);
+      await supabase.rpc('pgmq_delete', {
+        queue_name: 'q_notifications',
+        msg_id: msg.msg_id
+      });
+
+      return true; 
     });
-
-    console.log("Notification Worker Finished (Timeout Reached)");
 
     return new Response(JSON.stringify({ status: "done" }), {
       headers: { "Content-Type": "application/json" },
