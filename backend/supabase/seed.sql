@@ -3,8 +3,6 @@
 --
 
 -- 0. GRANT Permissions to service_role (Critical for CI/CD Seeder)
--- This ensures the service_role key has full access to public tables after a reset.
--- Note: This is safe because seed.sql is only executed during 'db reset'.
 GRANT USAGE ON SCHEMA public TO service_role;
 GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO service_role;
@@ -12,7 +10,6 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO service_role;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO service_role;
 
 -- 1. Global Verifications
--- Note: Categories are career, asset, marriage, academic, vehicle, etc.
 insert into public.verifications (id, category, internal_name, display_name, description, icon_key, form_schema, partner_id)
 values
   (
@@ -55,3 +52,10 @@ values
     '[{"key": "asset_type", "type": "text", "label": "자산 종류", "required": true}, {"key": "proof", "type": "file", "label": "증빙 서류", "required": true}]'::jsonb,
     null
   );
+
+-- 2. Event Routes
+insert into public.event_routes (event_type, target_queue)
+values 
+  ('party_created', 'q_notifications'),
+  ('party_created', 'q_vectors'),
+  ('user_interaction', 'q_vectors');
