@@ -33,9 +33,9 @@ runs:
         flutter clean
 
         # Ensure shared packages dependencies are resolved
-        echo "📦 Installing shared package dependencies..."
-        (cd ../../shared/packages/minglit_kit && flutter pub get)
-        (cd ../../shared/packages/minglit_seeder && flutter pub get)
+        # echo "📦 Installing shared package dependencies..."
+        # (cd ../../shared/packages/minglit_kit && flutter pub get)
+        # (cd ../../shared/packages/minglit_seeder && flutter pub get)
 
         echo "📦 Installing app dependencies..."
         flutter pub get
