@@ -9,7 +9,7 @@ void main() {
     final connection = await Connection.open(
       Endpoint(
         host: '127.0.0.1',
-        port: 54322,
+        port: 54321,
         database: 'postgres',
         username: 'postgres',
         password: 'postgres',
