@@ -13,6 +13,7 @@ Minglit is a verification-based blind meeting service designed to provide a safe
 - **Automation:** Streamline the verification process using identity providers like PASS/SMS.
 - **Engagement:** Enable partners to attract and engage a broader user base from the platform.
 - **Personalization:** Deliver high-quality event discovery through AI-driven recommendation systems.
+- **Scalability:** Ensure system reliability and performance using an event-driven, asynchronous pipeline.
 
 ## Key Features
 

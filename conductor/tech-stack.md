@@ -22,6 +22,7 @@
   - **Embedding:** OpenAI Text Embedding 3 Small
   - **Vector DB:** pgvector (Supabase)
   - **Queue:** PGMQ (Postgres Message Queue) for asynchronous processing
+  - **Scheduler:** pg_cron for periodic worker execution
 
 ## External Integrations
 - **Maps:** Kakao Maps SDK (Place search)
