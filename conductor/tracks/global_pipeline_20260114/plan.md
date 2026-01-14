@@ -27,8 +27,8 @@
     - [x] Sub-task: Implement `Promise.all` for parallel API calls
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Vector Worker' (Protocol in workflow.md)
 
-## Phase 4: Integration & Testing
-- [~] Task: End-to-End Testing
-    - [ ] Sub-task: Create a test script to simulate `party_created` event
-    - [ ] Sub-task: Verify flow: DB -> Global Queue -> Dispatch -> 2nd Queues -> Workers -> Result
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Integration & Testing' (Protocol in workflow.md)
+## Phase 4: Integration & Testing [checkpoint: 20260114-phase4]
+- [x] Task: End-to-End Testing
+    - [x] Sub-task: Create a test script to simulate `party_created` event
+    - [x] Sub-task: Verify flow: DB -> Global Queue -> Dispatch -> 2nd Queues -> Workers -> Result
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Integration & Testing' (Protocol in workflow.md)

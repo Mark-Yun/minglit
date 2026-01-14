@@ -5,14 +5,15 @@ returns void as $$
 declare
   route record;
 begin
+  -- Find active routes for this event type
   for route in 
     select target_queue 
     from public.event_routes 
-    where event_type = p_event_type 
+    where event_type::text = p_event_type -- p_event_type is text
     and is_active = true
   loop
     -- Fan-out to target queues defined in event_routes
-    perform pgmq.send(route.target_queue, p_payload);
+    perform pgmq.send(route.target_queue::text, p_payload);
   end loop;
 end;
 $$ language plpgsql security definer;
