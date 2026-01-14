@@ -78,5 +78,11 @@ runs:
           npx vercel deploy --prod $COMMON_ARGS
         else
           echo "👀 Deploying to Preview (Dev) with Alias: ${{ inputs.dev-domain-alias }}..."
-          npx vercel deploy --alias ${{ inputs.dev-domain-alias }} $COMMON_ARGS
+          # Deploy and capture the deployment URL (standard output of vercel deploy)
+          DEPLOY_URL=$(npx vercel deploy $COMMON_ARGS)
+          echo "✅ Deployed to: $DEPLOY_URL"
+          
+          # Assign the custom alias to the deployment
+          echo "🔗 Assigning alias: ${{ inputs.dev-domain-alias }}"
+          npx vercel alias set "$DEPLOY_URL" "${{ inputs.dev-domain-alias }}" $COMMON_ARGS
         fi
