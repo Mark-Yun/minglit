@@ -1,5 +1,5 @@
 name: 'Deploy Flutter App'
-description: 'Builds and deploys a Flutter app to Vercel'
+description: 'Builds and deploys a Flutter app to Vercel (Optimized for Monorepo)'
 inputs:
   working-directory:
     description: 'Path to the flutter app'
