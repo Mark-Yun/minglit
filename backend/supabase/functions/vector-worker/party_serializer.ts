@@ -6,7 +6,6 @@ export function serializeParty(party: any): string {
   
   if (party.description) {
     let descText = "";
-    // Handle Quill Delta (ops)
     if (party.description.ops && Array.isArray(party.description.ops)) {
       descText = party.description.ops.map((op: any) => op.insert || "").join(" ");
     } else if (typeof party.description === 'string') {

@@ -20,15 +20,15 @@
     - [x] Sub-task: Write unit tests for polling logic
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Notification Worker' (Protocol in workflow.md)
 
-## Phase 3: Vector Worker (Batch Processing)
-- [~] Task: Edge Function - Create `vector-worker`
-    - [ ] Sub-task: Implement Batch Reader (`pgmq.read_batch` with size 50)
-    - [ ] Sub-task: Port `OpenAIService` and `serializeParty` logic from previous track
-    - [ ] Sub-task: Implement `Promise.all` for parallel API calls
+## Phase 3: Vector Worker (Batch Processing) [checkpoint: 20260114-phase3]
+- [x] Task: Edge Function - Create `vector-worker`
+    - [x] Sub-task: Implement Batch Reader (`pgmq.read_batch` with size 50)
+    - [x] Sub-task: Port `OpenAIService` and `serializeParty` logic from previous track
+    - [x] Sub-task: Implement `Promise.all` for parallel API calls
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Vector Worker' (Protocol in workflow.md)
 
 ## Phase 4: Integration & Testing
-- [ ] Task: End-to-End Testing
+- [~] Task: End-to-End Testing
     - [ ] Sub-task: Create a test script to simulate `party_created` event
     - [ ] Sub-task: Verify flow: DB -> Global Queue -> Dispatch -> 2nd Queues -> Workers -> Result
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: Integration & Testing' (Protocol in workflow.md)

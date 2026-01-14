@@ -1,4 +1,4 @@
-import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals } from "@std/assert";
 import { runWorkerLoop } from "./loop_worker.ts";
 
 Deno.test("runWorkerLoop - stops after max duration", async () => {
@@ -19,6 +19,7 @@ Deno.test("runWorkerLoop - stops after max duration", async () => {
   assertEquals(callCount >= 4, true);
 });
 
+
 Deno.test("runWorkerLoop - drains queue quickly", async () => {
   let callCount = 0;
   let workItems = 3;
@@ -32,7 +33,6 @@ Deno.test("runWorkerLoop - drains queue quickly", async () => {
     return Promise.resolve(false); // Empty
   };
 
-  const start = Date.now();
   // Run for 500ms, normal interval 100ms
   // Should drain 3 items very quickly (100ms delay for safety), then wait
   await runWorkerLoop({ maxDurationMs: 500, intervalMs: 100 }, mockTask);

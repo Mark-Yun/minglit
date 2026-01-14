@@ -1,4 +1,4 @@
-import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals } from "@std/assert";
 import { serializeParty } from "./party_serializer.ts";
 
 Deno.test("serializeParty - converts party object to text string", () => {

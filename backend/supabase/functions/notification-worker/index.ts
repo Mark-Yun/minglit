@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { runWorkerLoop } from './loop_worker.ts'
 
-Deno.serve(async (req) => {
+Deno.serve(async (_req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -36,9 +36,6 @@ Deno.serve(async (req) => {
       console.log(`[Notification] Processing event: ${payload.event_type} (ID: ${msg.msg_id})`);
 
       // TODO: Implement actual notification sending logic (FCM, Email, etc.)
-      // Example: 
-      // if (payload.event_type === 'party_created') { sendAdminAlert(payload.record); }
-
       return true; // Work done
     });
 
@@ -48,9 +45,10 @@ Deno.serve(async (req) => {
       headers: { "Content-Type": "application/json" },
     })
 
-  } catch (err: any) {
-    console.error("Worker Error:", err);
-    return new Response(JSON.stringify({ error: err.message }), { 
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.error("Worker Error:", errorMessage);
+    return new Response(JSON.stringify({ error: errorMessage }), { 
       status: 500, 
       headers: { "Content-Type": "application/json" }
     })
