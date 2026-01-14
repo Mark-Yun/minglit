@@ -26,8 +26,6 @@ dependencies:
   json_annotation: ^4.9.0
   kakao_map_plugin: ^0.3.7
   logger: ^2.6.2
-  minglit_seeder:
-    path: ../minglit_seeder
   path: ^1.9.1
   portone_flutter: ^0.12.1
   riverpod_annotation: ^3.0.3
@@ -46,6 +44,8 @@ dev_dependencies:
     sdk: flutter
   freezed: ^3.2.3
   json_serializable: ^6.11.2
+  minglit_seeder:
+    path: ../minglit_seeder
   riverpod_generator: ^3.0.3
   riverpod_lint: ^3.0.3
   very_good_analysis: ^10.0.0

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:minglit_seeder/database_seeder.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'dev_user_switch_screen.g.dart';
@@ -10,6 +9,10 @@ part 'dev_user_switch_screen.g.dart';
 /// A development-only screen to quickly switch between test users.
 /// Fetches users from `user_profiles` table and logs in using
 /// the seed password.
+///
+/// Note: Seeding functionality has been removed from the UI.
+/// Use `flutter test apps/app_user/test/setup_test_data.dart` or
+/// `flutter test shared/packages/minglit_seeder` CLI commands instead.
 class DevUserSwitchScreen extends ConsumerStatefulWidget {
   const DevUserSwitchScreen({super.key});
 
@@ -54,36 +57,6 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
     }
   }
 
-  Future<void> _runSeeder() async {
-    setState(() => _isActionRunning = true);
-    try {
-      if (!DevConfig.isInitialized) {
-        throw StateError('DevConfig not initialized. Cannot run seeder.');
-      }
-
-      final seeder = DatabaseSeeder(DevConfig.adminClient);
-      await seeder.seed();
-
-      // Refresh list
-      ref.invalidate(devUserProfilesProvider);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Seeding Completed!')),
-        );
-      }
-    } on Exception catch (e, st) {
-      Log.e('❌ Seeding Failed', e, st);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Seeding Failed: $e')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isActionRunning = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     // Fetch user profiles from Supabase
@@ -105,12 +78,6 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _isActionRunning ? null : _runSeeder,
-        icon: const Icon(Icons.cloud_upload),
-        label: const Text('Seed Data'),
-        tooltip: 'Run Database Seeder',
-      ),
       body: usersAsync.when<Widget>(
         data: (List<Map<String, dynamic>> users) {
           if (users.isEmpty) {
@@ -125,27 +92,22 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
+    return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.storage_outlined, size: 64, color: Colors.grey),
-          const SizedBox(height: 16),
-          const Text(
+          Icon(Icons.storage_outlined, size: 64, color: Colors.grey),
+          SizedBox(height: 16),
+          Text(
             'No Users Found',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 8),
-          const Text(
-            'The database seems empty.\nWould you like to generate seed data?',
+          SizedBox(height: 8),
+          Text(
+            'The database seems empty.\nPlease run the seeder from CLI:\n'
+            'flutter test apps/app_user/test/setup_test_data.dart',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey),
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: _isActionRunning ? null : _runSeeder,
-            icon: const Icon(Icons.cloud_upload),
-            label: const Text('Run Database Seeder'),
           ),
         ],
       ),
@@ -196,6 +158,7 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
     );
   }
 }
+
 
 // Internal provider to fetch test users
 @riverpod
