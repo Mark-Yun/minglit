@@ -1,0 +1,10 @@
+name: minglit_workspace
+description: Minglit Monorepo Workspace
+environment:
+  sdk: ^3.6.0
+
+workspace:
+  - apps/app_partner
+  - apps/app_user
+  - shared/packages/minglit_kit
+  - shared/packages/minglit_seeder

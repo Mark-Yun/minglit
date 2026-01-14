@@ -1,6 +1,7 @@
 name: minglit_seeder
 description: Standalone database seeder for Minglit.
 version: 0.0.1
+resolution: workspace
 publish_to: 'none'
 
 environment:

@@ -30,24 +30,11 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       run: |
         echo "🧹 Cleaning..."
-        flutter clean
 
-        echo "📦 Installing app dependencies..."
-        flutter pub get
+        # Dart Workspaces: Run pub get at the monorepo root to resolve all dependencies
+        echo "📦 Installing workspace dependencies..."
+        (cd ../../ && flutter pub get)
 
-        # [Workaround] Convert relative paths in package_config.json to absolute paths.
-        # dart2js has a known issue in monorepos where it incorrectly resolves relative paths
-        # for transitive dependencies imported from local path-dependent packages (minglit_kit).
-        # By converting to absolute paths (mimicking local dev behavior), we ensure
-        # the compiler can find the packages regardless of the source file's location.
-        echo "🔧 Patching package_config.json to use absolute paths..."
-        # Match any relative path pointing to .pub-cache (e.g., ../../../.pub-cache)
-        sed -i 's|"\.\./.*\.pub-cache|"file:///home/runner/.pub-cache|g' .dart_tool/package_config.json
-        
-        # Verify the patch (print first few lines of portone_flutter entry if possible, or just head)
-        echo "🔍 Verifying package_config.json patch..."
-        grep -m 1 "file:///home/runner/.pub-cache" .dart_tool/package_config.json || echo "⚠️ Patch might have failed"
-        
         if [[ "${{ github.ref_name }}" == "main" ]]; then
           TARGET="lib/main.dart"
           SB_URL="$SUPABASE_MAIN_URL"
@@ -62,7 +49,7 @@ runs:
           echo "🏗️ Building for Preview (Dev)..."
         fi
 
-        flutter build web --release --no-pub -t $TARGET \
+        flutter build web --release -t $TARGET \
           --dart-define=SUPABASE_URL=$SB_URL \
           --dart-define=SUPABASE_PUBLISHABLE_KEY=$SB_KEY \
           --dart-define=GOOGLE_WEB_CLIENT_ID=$G_ID

@@ -1,12 +1,12 @@
 name: minglit_kit
 description: "A new Flutter package project."
 version: 0.0.1
+resolution: workspace
 publish_to: 'none'
 homepage:
 
 environment:
   sdk: ^3.10.4
-  flutter: ">=1.17.0"
 
 dependencies:
   async: ^2.13.0
