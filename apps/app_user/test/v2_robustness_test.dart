@@ -1,6 +1,5 @@
-// ignore_for_file: avoid_print
-
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:math';
 
 import 'package:http/http.dart' as http;
@@ -45,7 +44,7 @@ void main() {
 
     test('Idempotency Test', () async {
       final traceId = generateUuid();
-      print('Testing Idempotency with ID: $traceId');
+      log('Testing Idempotency with ID: $traceId');
 
       // 1. Manually mark as processed
       await conn.execute(
@@ -59,8 +58,6 @@ void main() {
         'meta': {'occurred_at': 12345, 'source': 'test', 'attempt': 1},
         'payload': {'id': generateUuid(), 'title': 'Already Processed'},
       });
-      
-      // Fix: Actually insert the message!
       await conn.execute("SELECT pgmq.send('q_vectors', '$payload'::jsonb)");
 
       // 3. Invoke Worker
@@ -72,7 +69,7 @@ void main() {
         },
         body: jsonEncode({'batch_size': 1}),
       );
-      print('Worker Response: ${resp.statusCode} ${resp.body}');
+      log('Worker Response: ${resp.statusCode} ${resp.body}');
 
       // 4. Verify message is gone from queue
       final result = await conn.execute(
@@ -87,7 +84,7 @@ void main() {
 
     test('DLQ Test', () async {
       final traceId = generateUuid();
-      print('Testing DLQ with ID: $traceId');
+      log('Testing DLQ with ID: $traceId');
 
       // 1. Put message in queue
       final payload = jsonEncode({
@@ -112,7 +109,7 @@ void main() {
         },
         body: jsonEncode({'batch_size': 1}),
       );
-      print('Worker Response: ${resp.statusCode} ${resp.body}');
+      log('Worker Response: ${resp.statusCode} ${resp.body}');
 
       // 4. Verify moved to DLQ
       final dlqResult = await conn.execute(

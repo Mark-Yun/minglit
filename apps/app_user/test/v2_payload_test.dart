@@ -1,5 +1,4 @@
-// ignore_for_file: avoid_print
-
+import 'dart:developer';
 import 'dart:math';
 
 import 'package:postgres/postgres.dart';
@@ -53,7 +52,7 @@ void main() {
       );
 
       // 2. Trigger Event
-      print('Inserting User Action...');
+      log('Inserting User Action...');
       await connection.execute(
         "INSERT INTO public.user_actions (user_id, party_id, action_type) "
         "VALUES ('$userId', '$partyId', 'view')",
@@ -68,7 +67,7 @@ void main() {
       expect(result.length, greaterThan(0));
       final message = result.first[4]! as Map<String, dynamic>;
 
-      print('V2 Payload: $message');
+      log('V2 Payload: $message');
 
       // 4. Verify Structure
       expect(message.containsKey('id'), isTrue, reason: 'Missing trace ID');

@@ -1,5 +1,4 @@
-// ignore_for_file: avoid_print
-
+import 'dart:developer';
 import 'dart:math';
 
 import 'package:postgres/postgres.dart';
@@ -43,7 +42,7 @@ void main() {
 
       // 2. Create a new Party
       final partyId = generateUuid();
-      print('Creating test party: $partyId');
+      log('Creating test party: $partyId');
 
       await connection.execute("""
         INSERT INTO public.parties (id, partner_id, title, description) 
@@ -62,8 +61,8 @@ void main() {
         "SELECT * FROM pgmq.read('q_vectors', 30, 10)",
       );
 
-      print('q_notifications message count: ${qNotif.length}');
-      print('q_vectors message count: ${qVect.length}');
+      log('q_notifications message count: ${qNotif.length}');
+      log('q_vectors message count: ${qVect.length}');
 
       expect(
         qNotif.length,
