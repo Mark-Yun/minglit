@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/config/iamport_config.dart';
 import 'package:minglit_kit/src/features/iamport/logic/iamport_helper_web.dart';
-import 'package:minglit_kit/src/utils/log.dart';
 import 'package:portone_flutter/iamport_certification.dart';
 import 'package:portone_flutter/model/certification_data.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 class MinglitIamportCertification extends ConsumerStatefulWidget {
   const MinglitIamportCertification({
