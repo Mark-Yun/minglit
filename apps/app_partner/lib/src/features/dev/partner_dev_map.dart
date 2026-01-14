@@ -3,7 +3,6 @@ import 'package:app_partner/src/features/verification/review/review_verification
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:minglit_seeder/database_seeder.dart';
 
 class PartnerDevMap extends StatelessWidget {
   const PartnerDevMap({super.key});
@@ -104,61 +103,6 @@ class PartnerDevMap extends StatelessWidget {
               )..show();
               await Future<void>.delayed(const Duration(seconds: 3));
               notifier.hide();
-            },
-          ),
-          DevScreenItem(
-            category: 'System',
-            title: 'Reset & Seed DB',
-            description: '데이터베이스 초기화 및 시딩 (경고: 모든 데이터 삭제됨)',
-            onTap: (context, ref) async {
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('경고'),
-                  content: const Text('정말 DB를 초기화하시겠습니까?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('취소'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text('초기화'),
-                    ),
-                  ],
-                ),
-              );
-
-              if (confirmed != true) return;
-
-              final notifier = ref.read(
-                globalLoadingControllerProvider.notifier,
-              )..show();
-
-              try {
-                if (!DevConfig.isInitialized) {
-                  throw StateError(
-                    'DevConfig not initialized. Cannot run seeder.',
-                  );
-                }
-
-                final seeder = DatabaseSeeder(DevConfig.adminClient);
-                await seeder.seed();
-
-                if (context.mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('시딩 완료!')));
-                }
-              } on Object catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('시딩 실패: $e')));
-                }
-              } finally {
-                notifier.hide();
-              }
             },
           ),
         ],
