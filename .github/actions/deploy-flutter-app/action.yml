@@ -28,6 +28,10 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
+        # Set local PUB_CACHE to avoid deep relative path issues
+        export PUB_CACHE=$PWD/.pub_cache
+        export PATH="$PATH":"$PUB_CACHE/bin"
+        
         # Clean build artifacts
         echo "🧹 Cleaning..."
         flutter clean
