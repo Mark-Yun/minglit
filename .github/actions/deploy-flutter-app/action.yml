@@ -29,10 +29,6 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
-        # Set PUB_CACHE to a fixed absolute path in HOME to fix monorepo path resolution issues
-        export PUB_CACHE=$HOME/pub_cache
-        export PATH="$PATH":"$PUB_CACHE/bin"
-        
         echo "🧹 Cleaning..."
         flutter clean
 
@@ -45,7 +41,7 @@ runs:
         # By converting to absolute paths (mimicking local dev behavior), we ensure
         # the compiler can find the packages regardless of the source file's location.
         echo "🔧 Patching package_config.json to use absolute paths..."
-        sed -i 's|\.\./\.\./\.\./\.\./\.\./pub_cache|file:///home/runner/pub_cache|g' .dart_tool/package_config.json
+        sed -i 's|\.\./\.\./\.\./\.\./\.\./\.pub-cache|file:///home/runner/.pub-cache|g' .dart_tool/package_config.json
         
         if [[ "${{ github.ref_name }}" == "main" ]]; then
           TARGET="lib/main.dart"
