@@ -99,7 +99,8 @@ void main() {
 
       // 2. Manually make it "old" (read_ct > 5)
       await conn.execute(
-        "UPDATE pgmq.q_q_vectors SET read_ct = 6 WHERE message->>'id' = '$traceId'",
+        "UPDATE pgmq.q_q_vectors SET read_ct = 6 "
+        "WHERE message->>'id' = '$traceId'",
       );
 
       // 3. Invoke Worker
@@ -115,7 +116,8 @@ void main() {
 
       // 4. Verify moved to DLQ
       final dlqResult = await conn.execute(
-        "SELECT * FROM public.dead_letter_queue WHERE payload->>'id' = '$traceId'",
+        "SELECT * FROM public.dead_letter_queue "
+        "WHERE payload->>'id' = '$traceId'",
       );
       expect(dlqResult.length, 1, reason: 'Message should be in DLQ');
 

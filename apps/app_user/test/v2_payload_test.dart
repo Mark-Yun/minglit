@@ -40,19 +40,23 @@ void main() {
       final partnerId = generateUuid();
 
       await connection.execute(
-        "INSERT INTO auth.users (id, email) VALUES ('$userId', 'v2test@example.com') ON CONFLICT DO NOTHING",
+        "INSERT INTO auth.users (id, email) VALUES "
+        "('$userId', 'v2test@example.com') ON CONFLICT DO NOTHING",
       );
       await connection.execute(
-        "INSERT INTO public.partners (id, name) VALUES ('$partnerId', 'V2 Partner') ON CONFLICT DO NOTHING",
+        "INSERT INTO public.partners (id, name) VALUES "
+        "('$partnerId', 'V2 Partner') ON CONFLICT DO NOTHING",
       );
       await connection.execute(
-        "INSERT INTO public.parties (id, partner_id, title) VALUES ('$partyId', '$partnerId', 'V2 Test Party') ON CONFLICT DO NOTHING",
+        "INSERT INTO public.parties (id, partner_id, title) VALUES "
+        "('$partyId', '$partnerId', 'V2 Test Party') ON CONFLICT DO NOTHING",
       );
 
       // 2. Trigger Event
       print('Inserting User Action...');
       await connection.execute(
-        "INSERT INTO public.user_actions (user_id, party_id, action_type) VALUES ('$userId', '$partyId', 'view')",
+        "INSERT INTO public.user_actions (user_id, party_id, action_type) "
+        "VALUES ('$userId', '$partyId', 'view')",
       );
 
       // 3. Wait & Read Queue

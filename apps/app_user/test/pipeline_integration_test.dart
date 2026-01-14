@@ -37,7 +37,8 @@ void main() {
       // 1. Setup Partner
       final partnerId = generateUuid();
       await connection.execute(
-        "INSERT INTO public.partners (id, name) VALUES ('$partnerId', 'E2E Partner') ON CONFLICT DO NOTHING",
+        "INSERT INTO public.partners (id, name) VALUES "
+        "('$partnerId', 'E2E Partner') ON CONFLICT DO NOTHING",
       );
 
       // 2. Create a new Party
@@ -46,7 +47,8 @@ void main() {
 
       await connection.execute("""
         INSERT INTO public.parties (id, partner_id, title, description) 
-        VALUES ('$partyId', '$partnerId', 'E2E Test Party', '{"ops":[{"insert":"Test Content"}]}'::jsonb)
+        VALUES ('$partyId', '$partnerId', 'E2E Test Party', 
+        '{"ops":[{"insert":"Test Content"}]}'::jsonb)
       """);
 
       // 3. Wait a moment for trigger execution (immediate but safe)
