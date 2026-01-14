@@ -1,12 +1,12 @@
-import 'dart:developer';
-import 'dart:math';
+import 'dart:developer' as dev;
+import 'dart:math' as math;
 
 import 'package:postgres/postgres.dart';
 import 'package:test/test.dart';
 
 void main() {
   String generateUuid() {
-    final random = Random();
+    final random = math.Random();
     final parts = List.generate(5, (i) {
       if (i == 0) {
         return random.nextInt(0xFFFFFFFF).toRadixString(16).padLeft(8, '0');
@@ -36,22 +36,22 @@ void main() {
       // 1. Setup Partner
       final partnerId = generateUuid();
       await connection.execute(
-        "INSERT INTO public.partners (id, name) VALUES "
+        'INSERT INTO public.partners (id, name) VALUES '
         "('$partnerId', 'E2E Partner') ON CONFLICT DO NOTHING",
       );
 
       // 2. Create a new Party
       final partyId = generateUuid();
-      log('Creating test party: $partyId');
+      dev.log('Creating test party: $partyId');
 
-      await connection.execute("""
+      await connection.execute('''
         INSERT INTO public.parties (id, partner_id, title, description) 
         VALUES ('$partyId', '$partnerId', 'E2E Test Party', 
         '{"ops":[{"insert":"Test Content"}]}'::jsonb)
-      """);
+      ''');
 
       // 3. Wait a moment for trigger execution (immediate but safe)
-      await Future.delayed(const Duration(seconds: 1));
+      await Future<void>.delayed(const Duration(seconds: 1));
 
       // 4. Check secondary queues
       final qNotif = await connection.execute(
@@ -61,8 +61,8 @@ void main() {
         "SELECT * FROM pgmq.read('q_vectors', 30, 10)",
       );
 
-      log('q_notifications message count: ${qNotif.length}');
-      log('q_vectors message count: ${qVect.length}');
+      dev.log('q_notifications message count: ${qNotif.length}');
+      dev.log('q_vectors message count: ${qVect.length}');
 
       expect(
         qNotif.length,

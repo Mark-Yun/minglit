@@ -1,6 +1,8 @@
+// ignore_for_file: avoid_print
+
 import 'dart:convert';
-import 'dart:developer';
-import 'dart:math';
+import 'dart:developer' as dev;
+import 'dart:math' as math;
 
 import 'package:http/http.dart' as http;
 import 'package:postgres/postgres.dart';
@@ -8,7 +10,7 @@ import 'package:test/test.dart';
 
 void main() {
   String generateUuid() {
-    final random = Random();
+    final random = math.Random();
     final parts = List.generate(5, (i) {
       if (i == 0) {
         return random.nextInt(0xFFFFFFFF).toRadixString(16).padLeft(8, '0');
@@ -44,7 +46,7 @@ void main() {
 
     test('Idempotency Test', () async {
       final traceId = generateUuid();
-      log('Testing Idempotency with ID: $traceId');
+      dev.log('Testing Idempotency with ID: $traceId');
 
       // 1. Manually mark as processed
       await conn.execute(
@@ -52,24 +54,25 @@ void main() {
       );
 
       // 2. Put message in queue
-      final payload = jsonEncode({
+      final payload = jsonEncode(<String, dynamic>{
         'id': traceId,
         'type': 'party_created',
         'meta': {'occurred_at': 12345, 'source': 'test', 'attempt': 1},
         'payload': {'id': generateUuid(), 'title': 'Already Processed'},
       });
+
       await conn.execute("SELECT pgmq.send('q_vectors', '$payload'::jsonb)");
 
       // 3. Invoke Worker
       final resp = await http.post(
         Uri.parse('http://127.0.0.1:54321/functions/v1/vector-worker'),
-        headers: {
+        headers: <String, String>{
           'Content-Type': 'application/json',
           'Authorization': 'Bearer sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz',
         },
-        body: jsonEncode({'batch_size': 1}),
+        body: jsonEncode(<String, dynamic>{'batch_size': 1}),
       );
-      log('Worker Response: ${resp.statusCode} ${resp.body}');
+      dev.log('Worker Response: ${resp.statusCode} ${resp.body}');
 
       // 4. Verify message is gone from queue
       final result = await conn.execute(
@@ -84,36 +87,36 @@ void main() {
 
     test('DLQ Test', () async {
       final traceId = generateUuid();
-      log('Testing DLQ with ID: $traceId');
+      dev.log('Testing DLQ with ID: $traceId');
 
       // 1. Put message in queue
-      final payload = jsonEncode({
+      final payload = jsonEncode(<String, dynamic>{
         'id': traceId,
         'type': 'corrupted_event',
-        'payload': {},
+        'payload': <String, dynamic>{},
       });
       await conn.execute("SELECT pgmq.send('q_vectors', '$payload'::jsonb)");
 
       // 2. Manually make it "old" (read_ct > 5)
       await conn.execute(
-        "UPDATE pgmq.q_q_vectors SET read_ct = 6 "
+        'UPDATE pgmq.q_q_vectors SET read_ct = 6 '
         "WHERE message->>'id' = '$traceId'",
       );
 
       // 3. Invoke Worker
       final resp = await http.post(
         Uri.parse('http://127.0.0.1:54321/functions/v1/vector-worker'),
-        headers: {
+        headers: <String, String>{
           'Content-Type': 'application/json',
           'Authorization': 'Bearer sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz',
         },
-        body: jsonEncode({'batch_size': 1}),
+        body: jsonEncode(<String, dynamic>{'batch_size': 1}),
       );
-      log('Worker Response: ${resp.statusCode} ${resp.body}');
+      dev.log('Worker Response: ${resp.statusCode} ${resp.body}');
 
       // 4. Verify moved to DLQ
       final dlqResult = await conn.execute(
-        "SELECT * FROM public.dead_letter_queue "
+        'SELECT * FROM public.dead_letter_queue '
         "WHERE payload->>'id' = '$traceId'",
       );
       expect(dlqResult.length, 1, reason: 'Message should be in DLQ');
