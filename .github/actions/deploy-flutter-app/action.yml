@@ -30,6 +30,7 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       run: |
         echo "🧹 Cleaning..."
+        flutter clean
 
         # Dart Workspaces: Run pub get at the monorepo root to resolve all dependencies
         echo "📦 Installing workspace dependencies..."
