@@ -1,25 +1,10 @@
 import 'dart:developer' as dev;
-import 'dart:math' as math;
 
 import 'package:postgres/postgres.dart';
 import 'package:test/test.dart';
+import 'package:uuid/uuid.dart';
 
 void main() {
-  String generateUuid() {
-    final random = math.Random();
-    final parts = List.generate(5, (i) {
-      if (i == 0) {
-        return random.nextInt(0xFFFFFFFF).toRadixString(16).padLeft(8, '0');
-      }
-      if (i == 1 || i == 2 || i == 3) {
-        return random.nextInt(0xFFFF).toRadixString(16).padLeft(4, '0');
-      }
-      return (random.nextInt(0xFFFFFFFF).toRadixString(16).padLeft(8, '0')) +
-          (random.nextInt(0xFFFF).toRadixString(16).padLeft(4, '0'));
-    });
-    return parts.join('-');
-  }
-
   test('Verify V2 Standard Payload Structure', () async {
     final connection = await Connection.open(
       Endpoint(
@@ -34,9 +19,9 @@ void main() {
 
     try {
       // 1. Setup Data
-      final userId = generateUuid();
-      final partyId = generateUuid();
-      final partnerId = generateUuid();
+      final userId = const Uuid().v4();
+      final partyId = const Uuid().v4();
+      final partnerId = const Uuid().v4();
 
       await connection.execute(
         'INSERT INTO auth.users (id, email) VALUES '

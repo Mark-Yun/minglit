@@ -1,25 +1,10 @@
 import 'dart:developer' as dev;
-import 'dart:math' as math;
 
 import 'package:postgres/postgres.dart';
 import 'package:test/test.dart';
+import 'package:uuid/uuid.dart';
 
 void main() {
-  String generateUuid() {
-    final random = math.Random();
-    final parts = List.generate(5, (i) {
-      if (i == 0) {
-        return random.nextInt(0xFFFFFFFF).toRadixString(16).padLeft(8, '0');
-      }
-      if (i == 1 || i == 2 || i == 3) {
-        return random.nextInt(0xFFFF).toRadixString(16).padLeft(4, '0');
-      }
-      return (random.nextInt(0xFFFFFFFF).toRadixString(16).padLeft(8, '0')) +
-          (random.nextInt(0xFFFF).toRadixString(16).padLeft(4, '0'));
-    });
-    return parts.join('-');
-  }
-
   test('E2E Pipeline Integration: DB -> Queues -> Dispatcher', () async {
     final connection = await Connection.open(
       Endpoint(
@@ -34,14 +19,14 @@ void main() {
 
     try {
       // 1. Setup Partner
-      final partnerId = generateUuid();
+      final partnerId = const Uuid().v4();
       await connection.execute(
         'INSERT INTO public.partners (id, name) VALUES '
         "('$partnerId', 'E2E Partner') ON CONFLICT DO NOTHING",
       );
 
       // 2. Create a new Party
-      final partyId = generateUuid();
+      final partyId = const Uuid().v4();
       dev.log('Creating test party: $partyId');
 
       await connection.execute('''

@@ -1,29 +1,12 @@
-// ignore_for_file: avoid_print
-
 import 'dart:convert';
 import 'dart:developer' as dev;
-import 'dart:math' as math;
 
 import 'package:http/http.dart' as http;
 import 'package:postgres/postgres.dart';
 import 'package:test/test.dart';
+import 'package:uuid/uuid.dart';
 
 void main() {
-  String generateUuid() {
-    final random = math.Random();
-    final parts = List.generate(5, (i) {
-      if (i == 0) {
-        return random.nextInt(0xFFFFFFFF).toRadixString(16).padLeft(8, '0');
-      }
-      if (i == 1 || i == 2 || i == 3) {
-        return random.nextInt(0xFFFF).toRadixString(16).padLeft(4, '0');
-      }
-      return (random.nextInt(0xFFFFFFFF).toRadixString(16).padLeft(8, '0')) +
-          (random.nextInt(0xFFFF).toRadixString(16).padLeft(4, '0'));
-    });
-    return parts.join('-');
-  }
-
   group('V2 Robustness Verification', () {
     late Connection conn;
 
@@ -45,7 +28,7 @@ void main() {
     });
 
     test('Idempotency Test', () async {
-      final traceId = generateUuid();
+      final traceId = const Uuid().v4();
       dev.log('Testing Idempotency with ID: $traceId');
 
       // 1. Manually mark as processed
@@ -58,7 +41,7 @@ void main() {
         'id': traceId,
         'type': 'party_created',
         'meta': {'occurred_at': 12345, 'source': 'test', 'attempt': 1},
-        'payload': {'id': generateUuid(), 'title': 'Already Processed'},
+        'payload': {'id': const Uuid().v4(), 'title': 'Already Processed'},
       });
 
       await conn.execute("SELECT pgmq.send('q_vectors', '$payload'::jsonb)");
@@ -86,7 +69,7 @@ void main() {
     });
 
     test('DLQ Test', () async {
-      final traceId = generateUuid();
+      final traceId = const Uuid().v4();
       dev.log('Testing DLQ with ID: $traceId');
 
       // 1. Put message in queue
