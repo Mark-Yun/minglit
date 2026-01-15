@@ -84,5 +84,5 @@ runs:
           
           # Assign the custom alias to the deployment
           echo "🔗 Assigning alias: ${{ inputs.dev-domain-alias }}"
-          npx vercel alias set "$DEPLOY_URL" "${{ inputs.dev-domain-alias }}" $COMMON_ARGS
+          npx vercel alias set "$DEPLOY_URL" "${{ inputs.dev-domain-alias }}" --token=$VERCEL_TOKEN --scope=$VERCEL_ORG_ID
         fi
