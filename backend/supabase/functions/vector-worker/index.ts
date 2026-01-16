@@ -14,21 +14,28 @@ const WEIGHTS: Record<string, number> = {
 const calculator = new HybridCalculator({ decayRate: 0.05 });
 
 Deno.serve(async (req) => {
+  console.log("🚀 [Vector Worker] Triggered! Checking environment and auth...");
   try {
     const payload = await req.json().catch(() => ({}));
     const batchSize = payload.batch_size ?? 50;
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-    const openAiKey = Deno.env.get('OPENAI_API_KEY') ?? '';
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || Deno.env.get('SUPABASE_REST_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const openAiKey = Deno.env.get('OPENAI_API_KEY');
 
-    if (!supabaseUrl || !supabaseKey || !openAiKey) {
-        throw new Error("Missing environment variables");
-    }
+    if (!supabaseUrl) throw new Error("Missing SUPABASE_URL");
+    if (!supabaseKey) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
+    if (!openAiKey) throw new Error("Missing OPENAI_API_KEY (Make sure .env is in function folder)");
 
     const supabase = createClient(supabaseUrl, supabaseKey);
     const openAi = new OpenAIService(openAiKey);
     const utils = new WorkerUtils(supabase, 'q_vectors');
+
+    // DEBUG LOG
+    await supabase.from('debug_logs').insert({
+      message: 'Vector Worker Invoked',
+      payload: { batchSize, timestamp: new Date().toISOString() }
+    });
 
     // 1. Read Batch from PGMQ
     const { data: messages, error: readError } = await supabase.rpc('pgmq_read', {
@@ -89,24 +96,39 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 2. Process Party Vectorization
+    // 2. Process Party Vectorization (Efficient OpenAI Batching)
     if (partyTasks.length > 0) {
       try {
         const texts = partyTasks.map(t => serializeParty(t.record));
+        console.log(`Requesting ${texts.length} embeddings from OpenAI...`);
         const embeddings = await openAi.generateEmbeddings(texts);
+        console.log(`Received ${embeddings.length} embeddings.`);
         
-        const upserts = partyTasks.map((t, i) => ({
-          party_id: t.record.id,
-          embedding: embeddings[i],
-          updated_at: new Date().toISOString()
-        }));
-
-        const { error } = await supabase.from('party_embeddings').upsert(upserts);
-        if (error) throw error;
+        await supabase.from('debug_logs').insert({
+          message: 'OpenAI Result Check',
+          payload: { 
+            textCount: texts.length, 
+            embeddingCount: embeddings.length,
+            sample: embeddings.length > 0 ? Array.from(embeddings[0]).slice(0, 5) : null
+          }
+        });
         
-        for (const t of partyTasks) {
-          await utils.markProcessed(t.traceId);
-          processedMsgIds.push(t.msgId);
+        for (let i = 0; i < partyTasks.length; i++) {
+          const t = partyTasks[i];
+          const item = {
+            party_id: t.record.id,
+            embedding: embeddings[i],
+            updated_at: new Date().toISOString()
+          };
+          
+          const { error: upsertError } = await supabase.from('party_embeddings').upsert(item);
+          if (upsertError) {
+            console.error(`Upsert Error for party ${t.record.id}:`, JSON.stringify(upsertError));
+          } else {
+            console.log(`Successfully saved embedding for party ${t.record.id}`);
+            await utils.markProcessed(t.traceId);
+            processedMsgIds.push(t.msgId);
+          }
         }
       } catch (e) {
         console.error('Party Vectorization Error:', e);
@@ -146,13 +168,16 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 4. Delete processed messages from queue
+    // 4. Delete processed messages from queue individually for reliability
     if (processedMsgIds.length > 0) {
-      const { error: delError } = await supabase.rpc('pgmq_delete_batch', {
-        queue_name: 'q_vectors',
-        msg_ids: processedMsgIds
-      });
-      if (delError) console.error('PGMQ Delete Error:', delError);
+      console.log(`Deleting ${processedMsgIds.length} messages from queue...`);
+      for (const msgId of processedMsgIds) {
+        const { error: delError } = await supabase.rpc('pgmq_delete', {
+          queue_name: 'q_vectors',
+          msg_id: msgId
+        });
+        if (delError) console.error(`PGMQ Delete Error for ${msgId}:`, delError);
+      }
     }
 
     return new Response(JSON.stringify({ processed: processedMsgIds.length }), {

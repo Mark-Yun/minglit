@@ -1,6 +1,8 @@
 -- Upgrade produce_event to v2 standardized payload
 create or replace function public.produce_event()
-returns trigger as $$
+returns trigger 
+set search_path = public, extensions, pgmq, temp
+as $$
 declare
   event_type text;
   trace_id uuid := gen_random_uuid();

@@ -2,6 +2,7 @@
 create extension if not exists postgis;
 create extension if not exists moddatetime schema extensions;
 create extension if not exists vector schema extensions;
+create extension if not exists supabase_vault cascade;
 create extension if not exists pgmq cascade;
 create extension if not exists pg_cron;
 create extension if not exists pg_net;

@@ -1,7 +1,9 @@
 -- 2. Dispatcher Logic (Internal Helper)
 -- This function handles the routing logic based on event_routes table.
 create or replace function public.fan_out_event(p_event_type text, p_payload jsonb)
-returns void as $$
+returns void 
+set search_path = public, extensions, pgmq, temp
+as $$
 declare
   route record;
 begin
@@ -21,7 +23,9 @@ $$ language plpgsql security definer;
 -- 3. Generic Event Producer Trigger Function
 -- This function can be reused for any table. It takes 'event_type' as a trigger argument.
 create or replace function public.produce_event()
-returns trigger as $$
+returns trigger 
+set search_path = public, extensions, pgmq, temp
+as $$
 declare
   event_type text;
 begin
