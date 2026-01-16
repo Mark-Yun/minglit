@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class MinglitIamportCertification extends ConsumerStatefulWidget {
@@ -23,8 +24,14 @@ class MinglitIamportCertification extends ConsumerStatefulWidget {
   final void Function(String errorMsg) onFail;
 
   @override
-  // Stub implementation does not have logic in createState.
   ConsumerState<MinglitIamportCertification> createState() =>
-      throw UnimplementedError('Iamport is not supported on this platform');
+      _MinglitIamportCertificationState();
 }
 
+class _MinglitIamportCertificationState
+    extends ConsumerState<MinglitIamportCertification> {
+  @override
+  Widget build(BuildContext context) {
+    throw UnimplementedError('Iamport is not supported on this platform');
+  }
+}
