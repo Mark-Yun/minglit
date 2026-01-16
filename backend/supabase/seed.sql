@@ -54,8 +54,8 @@ values
   );
 
 -- 2. Event Routes
-insert into public.event_routes (event_type, target_queue)
+insert into public.event_routes (event_type, target_queue, is_active)
 values 
-  ('party_created', 'q_notifications'),
-  ('party_created', 'q_vectors'),
-  ('user_interaction', 'q_vectors');
+  ('party_created', 'q_notifications', true),
+  ('party_created', 'q_vectors', false),
+  ('user_interaction', 'q_vectors', false);
