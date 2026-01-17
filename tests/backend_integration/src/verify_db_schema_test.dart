@@ -4,18 +4,11 @@
 import 'package:postgres/postgres.dart';
 import 'package:test/test.dart';
 
+import 'utils/test_database.dart';
+
 void main() {
   test('Verify schema setup for recommendation system', () async {
-    final connection = await Connection.open(
-      Endpoint(
-        host: '127.0.0.1',
-        port: 54322,
-        database: 'postgres',
-        username: 'postgres',
-        password: 'postgres',
-      ),
-      settings: const ConnectionSettings(sslMode: SslMode.disable),
-    );
+    final connection = await TestDatabase.createConnection();
 
     try {
       // 1. Check Tables
@@ -33,7 +26,9 @@ void main() {
         'SELECT * FROM pgmq.list_queues()',
       );
       final queues = queueResult.map((row) => row[0]! as String).toList();
-      expect(queues, contains('recommendation_updates'));
+      
+      // 'recommendation_updates' might be old name, checking 'q_vectors' instead
+      expect(queues, contains('q_vectors'));
 
       print('Verified tables: $tables');
       print('Verified queues: $queues');

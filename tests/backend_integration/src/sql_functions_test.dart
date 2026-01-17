@@ -2,23 +2,14 @@
 
 import 'package:postgres/postgres.dart';
 import 'package:test/test.dart';
-import 'package:uuid/uuid.dart';
+
+import 'utils/test_database.dart';
 
 void main() {
   late Connection connection;
-  const uuid = Uuid();
 
   setUpAll(() async {
-    connection = await Connection.open(
-      Endpoint(
-        host: '127.0.0.1',
-        port: 54322,
-        database: 'postgres',
-        username: 'postgres',
-        password: 'postgres',
-      ),
-      settings: const ConnectionSettings(sslMode: SslMode.disable),
-    );
+    connection = await TestDatabase.createConnection();
   });
 
   tearDownAll(() async {
@@ -33,7 +24,9 @@ void main() {
     });
 
     tearDown(() async {
-      await connection.execute("SELECT pgmq.drop_queue('$testQueue')");
+      try {
+        await connection.execute("SELECT pgmq.drop_queue('$testQueue')");
+      } catch (_) {}
     });
 
     test('should send and read message using wrappers', () async {
@@ -54,21 +47,18 @@ void main() {
     });
 
     test('should delete message using wrapper', () async {
-      // 1. Send
       final sendRes = await connection.execute(
         "SELECT pgmq.send('$testQueue', '{\"foo\": \"delete_me\"}'::jsonb)",
       );
       final dynamic firstRow = sendRes.first[0];
       final msgId = firstRow as int;
 
-      // 2. Delete using wrapper: public.pgmq_delete
       final delRes = await connection.execute(
         "SELECT public.pgmq_delete('$testQueue', $msgId)",
       );
 
       expect(delRes.first[0], isTrue);
 
-      // 3. Verify empty
       final readRes = await connection.execute(
         "SELECT * FROM public.pgmq_read('$testQueue', 30, 1)",
       );
@@ -77,26 +67,31 @@ void main() {
   });
 
   group('Pipeline Dispatcher Test', () {
-    test('Trigger on user_actions should dispatch event to q_vectors', () async {
-      final userId = uuid.v4();
-      final partyId = uuid.v4();
-      final partnerId = uuid.v4();
+    late String userId;
+    late String partyId;
 
-      // Setup Prerequisites
-      try {
-        await connection.execute(
-          "INSERT INTO auth.users (id, email) VALUES ('$userId', 'test_sql_$userId@example.com')",
-        );
-      } catch (e) {
-        // Ignore
-      }
-
-      await connection.execute(
-        "INSERT INTO public.partners (id, name) VALUES ('$partnerId', 'Test SQL Partner') ON CONFLICT (id) DO NOTHING",
+    setUpAll(() async {
+      // 1. Find Seeded User (user_1)
+      final userRes = await connection.execute(
+        "SELECT id FROM public.user_profiles WHERE username = 'user_1' LIMIT 1",
       );
+      if (userRes.isEmpty) throw Exception('Seeded user_1 not found');
+      userId = userRes.first[0] as String;
 
+      // 2. Find Seeded Party
+      final partyRes = await connection.execute(
+        "SELECT id FROM public.parties LIMIT 1",
+      );
+      if (partyRes.isEmpty) throw Exception('Seeded party not found');
+      partyId = partyRes.first[0] as String;
+    });
+
+    test('Trigger on user_actions should dispatch event to q_vectors', () async {
+      print('🧪 Testing Trigger with User: $userId, Party: $partyId');
+
+      // 0. Enable Routing
       await connection.execute(
-        "INSERT INTO public.parties (id, partner_id, title) VALUES ('$partyId', '$partnerId', 'Test SQL Party') ON CONFLICT (id) DO NOTHING",
+        "UPDATE public.event_routes SET is_active = true WHERE event_type = 'user_interaction'",
       );
 
       // 1. Insert Action

@@ -4,18 +4,11 @@
 import 'package:postgres/postgres.dart';
 import 'package:test/test.dart';
 
+import 'utils/test_database.dart';
+
 void main() {
   test('Verify Database Extensions', () async {
-    final connection = await Connection.open(
-      Endpoint(
-        host: '127.0.0.1',
-        port: 54322,
-        database: 'postgres',
-        username: 'postgres',
-        password: 'postgres',
-      ),
-      settings: const ConnectionSettings(sslMode: SslMode.disable),
-    );
+    final connection = await TestDatabase.createConnection();
 
     try {
       final result = await connection.execute(
