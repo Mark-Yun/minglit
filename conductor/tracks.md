@@ -36,8 +36,3 @@
 
 ## [x] 트랙: 글로벌 이벤트 파이프라인 v2 (견고성 및 관측 가능성)
 *링크: [./conductor/tracks/global_pipeline_v2_20260114/](./conductor/tracks/global_pipeline_v2_20260114/)*
-
----
-
-## [x] 트랙: 커스텀 린트 규칙 구현 (Minglit Lints)
-*링크: [./conductor/tracks/custom_lint_rules_20260115/](./conductor/tracks/custom_lint_rules_20260115/)*
