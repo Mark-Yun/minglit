@@ -42,9 +42,8 @@ void main() {
     setUpAll(() async {
       print('🚀 [Setup] Fetching data for Party RLS...');
       
-      // Get user_1 as Guest
-      final u1 = await adminClient.from('user_profiles').select().eq('username', 'user_1').single();
-      guestId = u1['id'];
+          // Get user_25_m_ok as Guest
+          final u1 = await adminClient.from('user_profiles').select().eq('username', 'user_25_m_ok').single();      guestId = u1['id'];
 
       // Get Owner (from Partner)
       final p1 = await adminClient.from('partners').select('id, partner_member_permissions(user_id)').limit(1).single();

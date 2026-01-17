@@ -50,17 +50,16 @@ void main() {
   setUpAll(() async {
     print('🚀 [Setup] Fetching seeded data...');
 
-    // 1. Fetch a Normal User (user_1)
-    final userRes = await adminClient
-        .from('user_profiles')
-        .select()
-        .eq('username', 'user_1')
-        .maybeSingle();
-
-    if (userRes == null) {
-      throw Exception('🚨 User user_1 not found! Did you run the seeder?');
-    }
-    testUserId = userRes['id'];
+          // 1. Fetch a Normal User (user_25_m_ok)
+          final userRes = await adminClient
+              .from('user_profiles')
+              .select()
+              .eq('username', 'user_25_m_ok')
+              .maybeSingle();
+    
+          if (userRes == null) {
+            throw Exception('🚨 User user_25_m_ok not found! Did you run the seeder?');
+          }    testUserId = userRes['id'];
     print('👤 [Setup] Using User: $testUserId');
 
     // 2. Fetch an Event and Ticket

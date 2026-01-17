@@ -16,10 +16,9 @@ void main() {
 
       // Find Seeded Data
       final userRes = await connection.execute(
-        "SELECT id FROM public.user_profiles WHERE username = 'user_1' LIMIT 1",
-      );
-      if (userRes.isEmpty) throw Exception('Seeded user_1 not found');
-      userId = userRes.first[0] as String;
+            "SELECT id FROM public.user_profiles WHERE username = 'user_25_m_ok' LIMIT 1",
+          );
+          if (userRes.isEmpty) throw Exception('Seeded user_25_m_ok not found');      userId = userRes.first[0] as String;
 
       final partyRes = await connection.execute(
         "SELECT id FROM public.parties LIMIT 1",

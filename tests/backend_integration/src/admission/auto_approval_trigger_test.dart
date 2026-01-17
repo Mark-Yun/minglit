@@ -25,9 +25,8 @@ void main() {
     setUpAll(() async {
       print('🚀 [Setup] Fetching seeded data...');
       
-      // Get user_1
-      final u1 = await adminClient.from('user_profiles').select().eq('username', 'user_1').single();
-      testUserId = u1['id'];
+          // Get user_25_m_ok
+          final u1 = await adminClient.from('user_profiles').select().eq('username', 'user_25_m_ok').single();      testUserId = u1['id'];
 
       // Get Event & Ticket
       final event = await adminClient.from('events').select('id, tickets(id), party:parties(partner_id)').limit(1).single();

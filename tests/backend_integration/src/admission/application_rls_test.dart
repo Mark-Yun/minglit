@@ -42,10 +42,9 @@ void main() {
     setUpAll(() async {
       print('🚀 [Setup] Fetching users and creating test applications...');
 
-      // 1. Get user_1 and user_2
-      final u1 = await adminClient.from('user_profiles').select().eq('username', 'user_1').single();
-      final u2 = await adminClient.from('user_profiles').select().eq('username', 'user_2').single();
-      user1Id = u1['id'];
+          // 1. Get user_25_m_ok and user_25_f_ok
+          final u1 = await adminClient.from('user_profiles').select().eq('username', 'user_25_m_ok').single();
+          final u2 = await adminClient.from('user_profiles').select().eq('username', 'user_25_f_ok').single();      user1Id = u1['id'];
       user2Id = u2['id'];
 
       // 2. Get shared event and ticket
