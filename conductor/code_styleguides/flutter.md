@@ -40,3 +40,34 @@
 ## 7. 에러 핸들링
 - `minglit_kit`의 `handleMinglitError(context, e)`를 사용하세요.
 - Riverpod 기반 UI 업데이트에는 `AsyncValue.showMinglitError(context)`를 선호하세요.
+
+## 8. 디자인 시스템 및 토큰 사용 (필수)
+**"모든 UI 수치는 `minglit_kit`가 제어합니다."**
+
+하드코딩된 값은 디자인 일관성을 해치고 유지보수를 어렵게 만듭니다. 반드시 아래의 지정된 디자인 토큰을 사용하세요.
+
+### ❌ 절대 금지 (Bad)
+```dart
+// 숫자나 색상을 직접 입력하지 마세요!
+Padding(padding: EdgeInsets.all(16.0)); 
+Color(0xFF9900FF);
+SizedBox(height: 20);
+BorderRadius.circular(8.0);
+TextStyle(fontSize: 18, fontWeight: FontWeight.bold);
+```
+
+### ✅ 권장 (Good)
+```dart
+// minglit_kit의 토큰을 사용하세요.
+Padding(padding: EdgeInsets.all(MinglitSpacing.large)); // 간격
+MinglitColors.primary; // 색상
+MinglitSpacing.verticalMedium; // 높이 간격 (SizedBox 대용)
+MinglitRadius.small; // 모서리 반경
+MinglitTextStyles.titleLarge(context); // 텍스트 스타일
+```
+
+### 주요 토큰 목록
+*   **간격 (Spacing):** `MinglitSpacing.small` (8), `.medium` (16), `.large` (24) ...
+*   **반경 (Radius):** `MinglitRadius.small` (4), `.card` (12), `.circle` (999) ...
+*   **색상 (Colors):** `MinglitColors.primary`, `.secondary`, `.background` ...
+*   **타이포 (Typography):** `MinglitTextStyles` 클래스의 정적 메서드 사용 (context 필요).

@@ -1,30 +1,20 @@
-# Plan: Implement Event Detail Screen
+# 계획: 이벤트 상세 화면 구현
 
-## Phase 1: Data & State Management [checkpoint: 8aeb735]
-- [x] Task: Create EventDetailController & State (23d319f)
-  - [x] Subtask: Implement EventDetailController in `app_user`
-- [x] Task: Integrate EventRepository (dfacabc)
-  - [x] Subtask: Ensure `getEvent` method exists and works in `EventRepository`
-- [x] Task: Conductor - User Manual Verification 'Phase 1: Data & State Management' (Protocol in workflow.md)
+## Phase 1: 데이터 및 상태 관리 [checkpoint: 8aeb735]
+- [x] Task: EventDetailController 및 상태 생성 (23d319f)
+  - [x] Subtask: `app_user`에 `EventDetailController` 구현
+- [x] Task: EventRepository 연동 (dfacabc)
+  - [x] Subtask: `EventRepository`에 `getEvent` 메서드가 존재하고 작동하는지 확인
+- [x] Task: Conductor - 사용자 수동 검증 'Phase 1: 데이터 및 상태 관리' (workflow.md의 프로토콜 따름)
 
-## Phase 2: Admission Logic Integration
-- [~] Task: Implement EventAdmissionController Integration
-  - [ ] Subtask: Connect `EventAdmissionController` to `EventDetailScreen` logic
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Admission Logic Integration' (Protocol in workflow.md)
+## Phase 2: 입장 로직 통합
+- [~] Task: EventAdmissionController 통합 구현
+  - [ ] Subtask: `EventDetailScreen` 로직에 `EventAdmissionController` 연결
+- [ ] Task: Conductor - 사용자 수동 검증 'Phase 2: 입장 로직 통합' (workflow.md의 프로토콜 따름)
 
-## Phase 3: UI Implementation
-- [ ] Task: Build Screen Skeleton & Header
-  - [ ] Subtask: Implement Hero Image and Title section
-- [ ] Task: Build Info & Conditions Section
-  - [ ] Subtask: Implement Info cards and Entry Conditions list
-- [ ] Task: Build Dynamic CTA Button
-  - [ ] Subtask: Implement sticky bottom CTA with state-based logic
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: UI Implementation' (Protocol in workflow.md)
-
-## Phase 4: Navigation & Polish
-- [ ] Task: Register Route & Coordinator
-  - [ ] Subtask: Add `EventDetailRoute` and update `EventCoordinator`
-- [ ] Task: Error Handling & Refresh
-  - [ ] Subtask: Implement `handleMinglitError` and `RefreshIndicator`
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Navigation & Polish' (Protocol in workflow.md)
-
+## Phase 3: UI 구현
+- [ ] Task: 화면 스켈레톤 및 헤더 구축
+  - [ ] Subtask: 히어로 이미지 및 제목 섹션 구현
+- [ ] Task: 정보 및 조건 섹션 구축
+  - [ ] Subtask: 정보 카드 및 입장 조건 리스트 구현
+- [ ] Task: 동적 CTA 버튼 구축
