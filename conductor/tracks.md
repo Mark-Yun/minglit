@@ -14,6 +14,11 @@
 
 ---
 
+## [ ] 트랙: SQL 스키마 리팩토링 및 도메인 기반 분리
+*링크: [./conductor/tracks/sql_schema_refactoring_20260117/](./conductor/tracks/sql_schema_refactoring_20260117/)*
+
+---
+
 ## [x] 트랙: OpenAI 임베딩과 PGMQ를 활용한 사용자 행동 기반 파티 추천 시스템
 *링크: [./conductor/tracks/party_recommendation_20260113/](./conductor/tracks/party_recommendation_20260113/)*
 
