@@ -9,7 +9,7 @@
 
 ---
 
-## [~] 트랙: 원샷 이벤트 신청 플로우 구현 (인증+결제+신청 통합)
+## [x] 트랙: 원샷 이벤트 신청 플로우 구현 (인증+결제+신청 통합)
 *링크: [./conductor/tracks/event_application_flow_20260117/](./conductor/tracks/event_application_flow_20260117/)*
 
 ---

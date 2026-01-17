@@ -23,6 +23,7 @@
   - **벡터 DB:** pgvector (Supabase)
   - **큐:** PGMQ (Postgres Message Queue) - 비동기 처리용
   - **스케줄러:** pg_cron - 주기적 워커 실행용
+  - **트랜잭션 로직:** PL/pgSQL 기반 RPC (`apply_event`)를 통한 원자적 신청 처리
 
 ## 외부 연동
 - **지도:** Kakao Maps SDK (장소 검색)
