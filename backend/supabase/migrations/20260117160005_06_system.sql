@@ -154,13 +154,19 @@ create trigger on_user_action_event
   for each row execute procedure public.produce_event('user_interaction');
 
 -- 9. CRON Jobs
+-- Note: 'service_role_key' must be stored in vault.secrets
 select cron.schedule(
   'process-global-events',
   '* * * * *', -- Every minute
   $$
     select net.http_post(
       url:='https://pbbfiqjectdyyyucorpa.supabase.co/functions/v1/global-event-worker',
-      headers:='{"Content-Type": "application/json", "Authorization": "Bearer ' || current_setting('app.settings.service_key') || '"}'::jsonb,
+      headers:=(
+        jsonb_build_object(
+          'Content-Type', 'application/json',
+          'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'service_role_key' limit 1)
+        )
+      ),
       body:='{"batch_size": 10}'::jsonb
     ) as request_id;
   $$
