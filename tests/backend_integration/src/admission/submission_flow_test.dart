@@ -1,24 +1,20 @@
 import 'dart:math';
 
+import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 import 'package:minglit_kit/src/data/repositories/event_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:test/test.dart';
-import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 
-// --- CONFIGURATION ---
-const supabaseUrl = 'http://127.0.0.1:54321';
-// Actual Local Service Role Key
-const serviceRoleKey = 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz';
-const jwtSecret = 'super-secret-jwt-token-with-at-least-32-characters-long';
+import '../utils/test_config.dart';
 
 void main() {
   // 1. Admin Client (RLS Bypass for Setup/Query)
   final adminClient = SupabaseClient(
-    supabaseUrl,
-    serviceRoleKey,
+    TestConfig.supabaseUrl,
+    TestConfig.serviceRoleKey,
     headers: {
-      'Authorization': 'Bearer $serviceRoleKey',
-      'apikey': serviceRoleKey,
+      'Authorization': 'Bearer ${TestConfig.serviceRoleKey}',
+      'apikey': TestConfig.serviceRoleKey,
     },
   );
 
@@ -32,14 +28,14 @@ void main() {
         'email': 'test_user@example.com',
       },
     );
-    final token = jwt.sign(SecretKey(jwtSecret));
+    final token = jwt.sign(SecretKey(TestConfig.jwtSecret));
 
     return SupabaseClient(
-      supabaseUrl,
-      serviceRoleKey,
+      TestConfig.supabaseUrl,
+      TestConfig.serviceRoleKey,
       headers: {
         'Authorization': 'Bearer $token',
-        'apikey': serviceRoleKey,
+        'apikey': TestConfig.serviceRoleKey,
       },
     );
   }
@@ -55,8 +51,12 @@ void main() {
     print('🚀 [Setup] Fetching seeded data...');
 
     // 1. Fetch a Normal User (user_1)
-    final userRes = await adminClient.from('user_profiles').select().eq('username', 'user_1').maybeSingle();
-    
+    final userRes = await adminClient
+        .from('user_profiles')
+        .select()
+        .eq('username', 'user_1')
+        .maybeSingle();
+
     if (userRes == null) {
       throw Exception('🚨 User user_1 not found! Did you run the seeder?');
     }
@@ -77,7 +77,7 @@ void main() {
     testEventId = eventRes['id'];
     final party = eventRes['party'] as Map<String, dynamic>;
     testPartnerId = party['partner_id'];
-    
+
     final tickets = eventRes['tickets'] as List;
     if (tickets.isEmpty) {
       throw Exception('🚨 Event has no tickets!');
@@ -92,12 +92,19 @@ void main() {
         .eq('category', 'career')
         .limit(1)
         .maybeSingle();
-    
-    testVerificationId = verifRes?['id'] ?? (await adminClient.from('verifications').select().limit(1).single())['id'];
+
+    testVerificationId = verifRes?['id'] ??
+        (await adminClient
+            .from('verifications')
+            .select()
+            .limit(1)
+            .single())['id'];
     print('✅ [Setup] Using Verification: $testVerificationId');
   });
 
-  test('One-Shot Application Flow Test (Apply -> Pending -> Approve -> Confirmed)', () async {
+  test(
+      'One-Shot Application Flow Test (Apply -> Pending -> Approve -> Confirmed)',
+      () async {
     final userClient = createUserClient(testUserId);
     final eventRepo = EventRepository(supabase: userClient);
 
@@ -121,23 +128,34 @@ void main() {
     print('✅ [Test] Applied successfully. AppID: $appId');
 
     // 2. Verify Status
-    final app = await userClient.from('event_applications').select().eq('id', appId).single();
+    final app = await userClient
+        .from('event_applications')
+        .select()
+        .eq('id', appId)
+        .single();
     expect(app['status'], equals('pending_review'));
 
     // 3. Partner Approval (via Admin Client)
     print('👮 [Test] Admin approving verification...');
     await adminClient
         .from('verification_submissions')
-        .update({'status': 'approved'})
-        .eq('application_id', appId);
+        .update({'status': 'approved'}).eq('application_id', appId);
 
     // 4. Final Verification (Trigger Check)
     await Future.delayed(const Duration(milliseconds: 500));
-    
-    final updatedApp = await adminClient.from('event_applications').select().eq('id', appId).single();
+
+    final updatedApp = await adminClient
+        .from('event_applications')
+        .select()
+        .eq('id', appId)
+        .single();
     expect(updatedApp['status'], equals('approved'));
 
-    final participant = await adminClient.from('event_participants').select().eq('application_id', appId).maybeSingle();
+    final participant = await adminClient
+        .from('event_participants')
+        .select()
+        .eq('application_id', appId)
+        .maybeSingle();
     expect(participant, isNotNull);
     expect(participant!['ticket_code'], isNotNull);
 

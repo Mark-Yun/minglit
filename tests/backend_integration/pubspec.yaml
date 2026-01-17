@@ -26,3 +26,4 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   lints: ^5.0.0
+  test: any

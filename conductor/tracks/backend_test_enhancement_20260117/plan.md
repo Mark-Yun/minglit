@@ -1,13 +1,13 @@
 # 계획: 백엔드 통합 테스트 강화 (Backend Test Enhancement)
 
-## Phase 1: 테스트 환경 정비 및 기존 파일 이관
-- [ ] Task: 디렉토리 구조 생성
-    - [ ] `user/`, `partner/`, `party/`, `admission/`, `system/` 폴더 생성.
-- [ ] Task: 기존 테스트 파일 이관 및 리팩토링
-    - [ ] `apply_event_flow_test.dart` -> `admission/submission_flow_test.dart` 이동 및 정리.
-    - [ ] `sql_functions_test.dart` -> `user/action_trigger_test.dart` (일부) 및 `system/`으로 분산 이관.
-    - [ ] `verify_db_extensions_test.dart` -> `system/schema_health_test.dart` 통합.
-- [ ] Task: Conductor - 사용자 수동 검증 'Phase 1: 테스트 환경 정비' (Protocol in workflow.md)
+## Phase 1: 테스트 환경 정비 및 기존 파일 이관 [checkpoint: e6f2aac]
+- [x] Task: 디렉토리 구조 생성
+    - [x] `user/`, `partner/`, `party/`, `admission/`, `system/` 폴더 생성.
+- [x] Task: 기존 테스트 파일 이관 및 리팩토링
+    - [x] `apply_event_flow_test.dart` -> `admission/submission_flow_test.dart` 이동 및 정리.
+    - [x] `sql_functions_test.dart` -> `user/action_trigger_test.dart` (일부) 및 `system/`으로 분산 이관.
+    - [x] `verify_db_extensions_test.dart` -> `system/schema_health_test.dart` 통합.
+- [x] Task: Conductor - 사용자 수동 검증 'Phase 1: 테스트 환경 정비' (Protocol in workflow.md)
 
 ## Phase 2: Admission & Security 테스트 강화 (최우선)
 - [ ] Task: `admission/application_rls_test.dart` 구현
