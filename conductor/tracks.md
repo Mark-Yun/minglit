@@ -9,6 +9,11 @@
 
 ---
 
+## [ ] 트랙: 원샷 이벤트 신청 플로우 구현 (인증+결제+신청 통합)
+*링크: [./conductor/tracks/event_application_flow_20260117/](./conductor/tracks/event_application_flow_20260117/)*
+
+---
+
 ## [x] 트랙: OpenAI 임베딩과 PGMQ를 활용한 사용자 행동 기반 파티 추천 시스템
 *링크: [./conductor/tracks/party_recommendation_20260113/](./conductor/tracks/party_recommendation_20260113/)*
 

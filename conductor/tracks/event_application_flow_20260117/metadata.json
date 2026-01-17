@@ -1,0 +1,8 @@
+{
+  "track_id": "event_application_flow_20260117",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-17T14:30:00Z",
+  "updated_at": "2026-01-17T14:30:00Z",
+  "description": "Implement One-Shot Event Application Flow (인증+결제+신청 통합)"
+}
