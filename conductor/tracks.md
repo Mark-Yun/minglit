@@ -14,7 +14,7 @@
 
 ---
 
-## [ ] 트랙: 시딩 데이터 다양화 및 시나리오 강화
+## [x] 트랙: 시딩 데이터 다양화 및 시나리오 강화
 *링크: [./conductor/tracks/enhance_seed_scenarios_20260117/](./conductor/tracks/enhance_seed_scenarios_20260117/)*
 
 ---
