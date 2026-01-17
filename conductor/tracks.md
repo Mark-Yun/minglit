@@ -19,7 +19,7 @@
 
 ---
 
-## [~] 트랙: SQL 스키마 리팩토링 및 도메인 기반 분리
+## [x] 트랙: SQL 스키마 리팩토링 및 도메인 기반 분리
 *링크: [./conductor/tracks/sql_schema_refactoring_20260117/](./conductor/tracks/sql_schema_refactoring_20260117/)*
 
 ---
