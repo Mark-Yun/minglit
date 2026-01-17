@@ -140,6 +140,9 @@ abstract class EventApplication with _$EventApplication {
     @JsonKey(name: 'updated_at') required DateTime updatedAt,
     @Default('pending') String status,
     String? message,
+    @JsonKey(name: 'payment_id') String? paymentId,
+    @JsonKey(name: 'payment_amount') int? paymentAmount,
+    @JsonKey(name: 'refund_status') @Default('none') String refundStatus,
     // Relationships
     Event? event,
     Ticket? ticket,

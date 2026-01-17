@@ -1,4 +1,5 @@
 import 'package:minglit_kit/src/data/models/verification.dart';
+import 'package:minglit_kit/src/data/models/verification_submission.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -21,24 +22,7 @@ Future<List<Verification>> verificationsByIds(
   return repo.getVerificationsByIds(ids);
 }
 
-/// Data Transfer Object for verification submission.
-class VerificationSubmission {
-  /// Creates a [VerificationSubmission] instance.
-  VerificationSubmission({
-    required this.verificationId,
-    required this.claimData,
-    this.existingRequestId,
-  });
-
-  /// The ID of the verification definition.
-  final String verificationId;
-
-  /// The data being claimed (key-value pairs).
-  final Map<String, dynamic> claimData;
-
-  /// Optional: Existing submission ID to update.
-  final String? existingRequestId;
-}
+// VerificationSubmission class removed (Use model from models/verification.dart)
 
 /// Repository for handling user and partner verification logic.
 abstract class VerificationRepository {
@@ -348,12 +332,16 @@ class SupabaseVerificationRepository implements VerificationRepository {
               orElse: () => null,
             );
 
-        final submission = (activeSubmissions as List)
+        final submissionMap = (activeSubmissions as List)
             .cast<Map<String, dynamic>?>()
             .firstWhere(
               (r) => r?['verification_id'] == vId,
               orElse: () => null,
             );
+
+        final submission = submissionMap != null
+            ? VerificationSubmission.fromJson(submissionMap)
+            : null;
 
         final result = (verifiedResults as List)
             .cast<Map<String, dynamic>?>()
@@ -439,8 +427,8 @@ class SupabaseVerificationRepository implements VerificationRepository {
         await submitOrUpdateVerification(
           partnerId: partnerId,
           verificationId: submission.verificationId,
-          claimData: submission.claimData,
-          existingSubmissionId: submission.existingRequestId,
+          claimData: submission.snapshotData,
+          existingSubmissionId: submission.id,
         );
       }
       Log.d('submitBulkVerifications success');

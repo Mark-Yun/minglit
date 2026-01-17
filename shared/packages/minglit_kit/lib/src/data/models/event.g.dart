@@ -60,6 +60,9 @@ _EventApplication _$EventApplicationFromJson(Map<String, dynamic> json) =>
       updatedAt: DateTime.parse(json['updated_at'] as String),
       status: json['status'] as String? ?? 'pending',
       message: json['message'] as String?,
+      paymentId: json['payment_id'] as String?,
+      paymentAmount: (json['payment_amount'] as num?)?.toInt(),
+      refundStatus: json['refund_status'] as String? ?? 'none',
       event: json['event'] == null
           ? null
           : Event.fromJson(json['event'] as Map<String, dynamic>),
@@ -78,6 +81,9 @@ Map<String, dynamic> _$EventApplicationToJson(_EventApplication instance) =>
       'updated_at': instance.updatedAt.toIso8601String(),
       'status': instance.status,
       'message': instance.message,
+      'payment_id': instance.paymentId,
+      'payment_amount': instance.paymentAmount,
+      'refund_status': instance.refundStatus,
       'event': instance.event,
       'ticket': instance.ticket,
     };

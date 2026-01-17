@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:minglit_kit/src/data/models/verification_submission.dart';
 
 part 'verification.freezed.dart';
 part 'verification.g.dart';
@@ -102,7 +103,8 @@ abstract class VerificationRequirementStatus
     @JsonKey(name: 'user_verification') Map<String, dynamic>? userVerification,
 
     /// Active submission to a partner (제출 내역)
-    @JsonKey(name: 'active_submission') Map<String, dynamic>? activeSubmission,
+    @JsonKey(name: 'active_submission')
+    VerificationSubmission? activeSubmission,
 
     /// Final verified result (출입증)
     @JsonKey(name: 'verified_result') Map<String, dynamic>? verifiedResult,
@@ -117,15 +119,5 @@ abstract class VerificationRequirementStatus
 
   bool get hasActiveRequest => activeSubmission != null;
 
-  VerificationStatus? get status {
-    if (activeSubmission == null) return null;
-    final statusStr = activeSubmission!['status'] as String;
-    return VerificationStatus.values.firstWhere(
-      (e) =>
-          e.name == statusStr ||
-          (e == VerificationStatus.needsCorrection &&
-              statusStr == 'needs_correction'),
-      orElse: () => VerificationStatus.pending,
-    );
-  }
+  VerificationStatus? get status => activeSubmission?.status;
 }

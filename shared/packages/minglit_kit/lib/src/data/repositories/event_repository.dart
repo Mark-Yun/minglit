@@ -29,8 +29,6 @@ class EventRepository {
     Log.d('getEventsByType called | type: $type');
     try {
       // 1. Base Query with Relations
-      // Using !inner for filtering based on nested data
-      // Include partner info inside party relation
       var selectQuery =
           '*, party:parties(*, location:locations(*), partner:partners(*)), '
           'entryGroups:entry_groups(*), tickets(*)';
@@ -125,6 +123,40 @@ class EventRepository {
       return response != null;
     } catch (e, st) {
       Log.e('❌ [EventRepo] checkApplicationStatus Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// Submits an event application (One-Shot Flow).
+  /// Handles application creation and verification submission in one trans.
+  Future<String> applyEvent({
+    required String eventId,
+    required String ticketId,
+    required String userId,
+    required String paymentId,
+    required int paymentAmount,
+    Map<String, dynamic>? verificationData,
+  }) async {
+    Log.d('applyEvent called | event: $eventId, ticket: $ticketId');
+    try {
+      final params = {
+        'p_event_id': eventId,
+        'p_ticket_id': ticketId,
+        'p_user_id': userId,
+        'p_payment_id': paymentId,
+        'p_payment_amount': paymentAmount,
+        'p_verification_data': verificationData,
+      };
+
+      final response = await _supabase.rpc<String>(
+        'apply_event',
+        params: params,
+      );
+
+      Log.i('✅ [EventRepo] Application successful. ID: $response');
+      return response;
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] applyEvent Error', e, st);
       rethrow;
     }
   }

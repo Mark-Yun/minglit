@@ -263,12 +263,30 @@ create table public.user_verifications (
   unique(user_id, verification_id)
 );
 
--- 15. Verification Submissions
+-- 16. Event Applications & Participants
+create table public.event_applications (
+  id uuid not null default gen_random_uuid(),
+  event_id uuid not null references public.events(id) on delete cascade,
+  ticket_id uuid not null references public.tickets(id),
+  user_id uuid not null references public.user_profiles(id) on delete cascade,
+  status text not null default 'pending' check (status in ('pending', 'pending_review', 'approved', 'rejected', 'cancelled', 'paid')),
+  message text,
+  payment_id text,
+  payment_amount integer,
+  refund_status text check (refund_status in ('none', 'requested', 'completed', 'failed')) default 'none',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (id),
+  unique (event_id, user_id)
+);
+
+-- 17. Verification Submissions
 create table public.verification_submissions (
   id uuid default gen_random_uuid() primary key,
   partner_id uuid references public.partners(id) on delete cascade not null,
   user_id uuid references auth.users(id) on delete cascade not null,
   verification_id uuid references public.verifications(id) on delete cascade not null,
+  application_id uuid references public.event_applications(id) on delete cascade, -- Linked application
   status verification_status default 'pending' not null,
   snapshot_data jsonb not null,
   admin_comment text,
@@ -277,8 +295,9 @@ create table public.verification_submissions (
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+create index verification_submissions_application_id_idx on public.verification_submissions(application_id);
 
--- 16. Verification Comments
+-- 18. Verification Comments
 create table public.verification_comments (
   id uuid default gen_random_uuid() primary key,
   submission_id uuid references public.verification_submissions(id) on delete cascade not null,
@@ -287,7 +306,7 @@ create table public.verification_comments (
   created_at timestamptz default now()
 );
 
--- 17. Partner Verified Users
+-- 19. Partner Verified Users
 create table public.partner_verified_users (
   partner_id uuid references public.partners(id) on delete cascade not null,
   user_id uuid references auth.users(id) on delete cascade not null,
@@ -296,20 +315,6 @@ create table public.partner_verified_users (
   verified_at timestamptz default now(),
   valid_until timestamptz,
   primary key (partner_id, user_id, verification_id)
-);
-
--- 18. Event Applications & Participants
-create table public.event_applications (
-  id uuid not null default gen_random_uuid(),
-  event_id uuid not null references public.events(id) on delete cascade,
-  ticket_id uuid not null references public.tickets(id),
-  user_id uuid not null references public.user_profiles(id) on delete cascade,
-  status text not null default 'pending' check (status in ('pending', 'approved', 'rejected', 'cancelled', 'paid')),
-  message text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  primary key (id),
-  unique (event_id, user_id)
 );
 
 create table public.event_participants (
@@ -326,7 +331,7 @@ create table public.event_participants (
   unique (event_id, user_id)
 );
 
--- 19. User Actions (Behavior Logs)
+-- 20. User Actions (Behavior Logs)
 create table public.user_actions (
   id uuid default gen_random_uuid() primary key,
   user_id uuid not null references public.user_profiles(id) on delete cascade,
@@ -337,7 +342,7 @@ create table public.user_actions (
 create index user_actions_user_id_idx on public.user_actions(user_id);
 create index user_actions_party_id_idx on public.user_actions(party_id);
 
--- 20. Event Routes (Pipeline Config)
+-- 21. Event Routes (Pipeline Config)
 create table public.event_routes (
   id uuid default gen_random_uuid() primary key,
   event_type public.event_type_name not null, 
@@ -346,7 +351,7 @@ create table public.event_routes (
   created_at timestamptz default now()
 );
 
--- 21. Helper Views
+-- 22. Helper Views
 create or replace view public.locations_view as
 select 
   *,
@@ -354,7 +359,7 @@ select
   st_x(geo_point::geometry) as lng
 from public.locations;
 
--- 22. Security Functions
+-- 23. Security Functions
 create or replace function public.is_super_admin()
 returns boolean as $$
   select exists (
@@ -377,7 +382,7 @@ begin
 end;
 $$ language plpgsql security definer;
 
--- 23. Basic Triggers
+-- 24. Basic Triggers
 create or replace function public.handle_updated_at()
 returns trigger as $$
 begin
@@ -453,17 +458,29 @@ $$ language plpgsql;
 
 create trigger trigger_sync_permissions before insert or update of role on public.partner_member_permissions for each row execute procedure public.sync_partner_member_permissions();
 
--- Auto-Approve Logic (Trigger): When submission is approved, insert into partner_verified_users
+-- Auto-Approve Logic (Trigger): When submission is approved, insert into partner_verified_users & Approve Application
 create or replace function public.handle_verification_approval()
-returns trigger as $$
+returns trigger 
+set search_path = public
+as $$
 begin
   if (new.status = 'approved' and old.status != 'approved') then
+    -- 1. Create Partner Verified User
     insert into public.partner_verified_users (partner_id, user_id, verification_id, submission_id, verified_at)
     values (new.partner_id, new.user_id, new.verification_id, new.id, now())
     on conflict (partner_id, user_id, verification_id) 
     do update set submission_id = new.id, verified_at = now(), valid_until = null; 
+
+    -- 2. Auto-approve linked Event Application
+    if (new.application_id is not null) then
+      update public.event_applications
+      set status = 'approved', updated_at = now()
+      where id = new.application_id
+      and status in ('pending', 'pending_review');
+    end if;
+
   elsif (new.status != 'approved' and old.status = 'approved') then
-    -- Revoke verification if status changes back (e.g., cancelled)
+    -- Revoke verification if status changes back
     delete from public.partner_verified_users
     where submission_id = new.id;
   end if;
@@ -475,12 +492,45 @@ create trigger on_submission_status_change
   after update on public.verification_submissions
   for each row execute procedure public.handle_verification_approval();
 
--- 24. Storage Buckets
+-- Issue Ticket when Application is Approved
+create or replace function public.issue_ticket_on_approval()
+returns trigger 
+set search_path = public
+as $$
+begin
+  if (new.status in ('approved', 'paid') and old.status not in ('approved', 'paid')) then
+    insert into public.event_participants (
+      event_id, 
+      ticket_id, 
+      user_id, 
+      application_id, 
+      status, 
+      ticket_code
+    )
+    values (
+      new.event_id,
+      new.ticket_id,
+      new.user_id,
+      new.id,
+      'ticket_issued',
+      upper(substring(md5(gen_random_uuid()::text) from 1 for 8))
+    )
+    on conflict (event_id, user_id) do nothing;
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_application_approval
+  after update or insert on public.event_applications
+  for each row execute procedure public.issue_ticket_on_approval();
+
+-- 25. Storage Buckets
 insert into storage.buckets (id, name, public) values ('verification-proofs', 'verification-proofs', false) on conflict (id) do nothing;
 insert into storage.buckets (id, name, public) values ('partner-proofs', 'partner-proofs', false) on conflict (id) do nothing;
 insert into storage.buckets (id, name, public) values ('party-assets', 'party-assets', true) on conflict (id) do nothing;
 
--- 25. RLS Policies
+-- 26. RLS Policies
 alter table public.user_profiles enable row level security;
 alter table public.user_embeddings enable row level security;
 alter table public.partners enable row level security;
