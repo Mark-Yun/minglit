@@ -14,6 +14,11 @@
 
 ---
 
+## [ ] 트랙: 백엔드 통합 테스트 강화 (보안, 무결성, 로직)
+*링크: [./conductor/tracks/backend_test_enhancement_20260117/](./conductor/tracks/backend_test_enhancement_20260117/)*
+
+---
+
 ## [ ] 트랙: SQL 스키마 리팩토링 및 도메인 기반 분리
 *링크: [./conductor/tracks/sql_schema_refactoring_20260117/](./conductor/tracks/sql_schema_refactoring_20260117/)*
 
