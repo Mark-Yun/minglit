@@ -6,6 +6,7 @@
 - **상태 관리:** Riverpod (AsyncNotifier, Generator)
 - **네비게이션:** GoRouter (Coordinator 패턴을 적용한 타입 안전성 확보)
 - **공용 킷:** `minglit_kit` (로직 및 UI의 단일 진실 공급원 - SSOT)
+- **린트:** `minglit_lints` (커스텀 린트 규칙 - 디자인 토큰 및 UI 일관성 강제)
 
 ## 프론트엔드 (웹 랜딩)
 - **프레임워크:** Next.js (React)
