@@ -54,104 +54,106 @@ class DatabaseSeeder {
         .toList();
   }
 
-    /// Generates 124+ detailed user personas for testing diverse scenarios.
-    ///
-    /// Scenarios:
-    /// - Ages: 20-50 (31 ages)
-    /// - Gender: Male (2), Female (2) per age
-    /// - Status: Verified vs Unverified
-    Future<void> _seedPersonas() async {
-      _Log.i('👥 Step 1: Seeding 124+ Persona Users...');
-  
-      final currentYear = DateTime.now().year;
-  
-      // 1. Standard Personas: Age 20 ~ 50 (31 years)
-      for (var age = 20; age <= 50; age++) {
-        final birthYear = currentYear - age + 1; // Korean age roughly
-        final birthDate = '$birthYear-01-01';
-  
-        // 4 Personas per age
-        final personas = [
-          {'gender': 'male', 'verified': true, 'suffix': '인증O'},
-          {'gender': 'male', 'verified': false, 'suffix': '인증X'},
-          {'gender': 'female', 'verified': true, 'suffix': '인증O'},
-          {'gender': 'female', 'verified': false, 'suffix': '인증X'},
-        ];
-  
-        for (final p in personas) {
-          final gender = p['gender'] as String;
-          final verified = p['verified'] as bool;
-          final suffix = p['suffix'] as String;
-          final genderKr = gender == 'male' ? '남' : '여';
-          final genderShort = gender == 'male' ? 'm' : 'f';
-          final verifShort = verified ? 'ok' : 'no';
-  
-          final name = '${age}${genderKr}_$suffix';
-          final username = 'user_${age}_${genderShort}_$verifShort';
-          final email = '$username@test.com';
-  
-          // Unique phone number logic:
-          // Middle: 1000 + age (e.g., 1020)
-          // Last: 
-          //  - Verified (1) / Unverified (0)
-          //  - Male (1) / Female (2)
-          //  - 00 (padding)
-          final last4 = '${verified ? "1" : "0"}${gender == "male" ? "1" : "2"}00';
-          
-          final metadata = <String, dynamic>{
-            'name': name,
-            'username': username,
-            'gender': gender,
-            'birth_date': birthDate,
-            'phone_number': '010-${1000 + age}-$last4',
-            'is_verified': verified, // Custom flag for easy check
-          };
-  
-          await _createAdminUser(
-            email: email,
-            password: 'password1234!',
-            metadata: metadata,
-          );
-        }
-      }
-  
-      // 2. Edge Case Personas
-      // No profile image, no bio, etc.
-      final edgeCases = [
-        {
-          'name': '40남_정보누락',
-          'username': 'user_40_m_incomplete',
-          'gender': 'male',
-          'age': 40,
-          'verified': false,
-        },
-        {
-          'name': '25여_프로필없음',
-          'username': 'user_25_f_noprofile',
-          'gender': 'female',
-          'age': 25,
-          'verified': true,
-        },
+  /// Generates 124+ detailed user personas for testing diverse scenarios.
+  ///
+  /// Scenarios:
+  /// - Ages: 20-50 (31 ages)
+  /// - Gender: Male (2), Female (2) per age
+  /// - Status: Verified vs Unverified
+  Future<void> _seedPersonas() async {
+    _Log.i('👥 Step 1: Seeding 124+ Persona Users...');
+
+    final currentYear = DateTime.now().year;
+
+    // 1. Standard Personas: Age 20 ~ 50 (31 years)
+    for (var age = 20; age <= 50; age++) {
+      final birthYear = currentYear - age + 1; // Korean age roughly
+      final birthDate = '$birthYear-01-01';
+
+      // 4 Personas per age
+      final personas = [
+        {'gender': 'male', 'verified': true, 'suffix': '인증O'},
+        {'gender': 'male', 'verified': false, 'suffix': '인증X'},
+        {'gender': 'female', 'verified': true, 'suffix': '인증O'},
+        {'gender': 'female', 'verified': false, 'suffix': '인증X'},
       ];
-  
-      for (final ec in edgeCases) {
-        final age = ec['age'] as int;
-        final birthYear = currentYear - age + 1;
+
+      for (final p in personas) {
+        final gender = p['gender'] as String;
+        final verified = p['verified'] as bool;
+        final suffix = p['suffix'] as String;
+        final genderKr = gender == 'male' ? '남' : '여';
+        final genderShort = gender == 'male' ? 'm' : 'f';
+        final verifShort = verified ? 'ok' : 'no';
+
+        final name = '${age}${genderKr}_$suffix';
+        final username = 'user_${age}_${genderShort}_$verifShort';
+        final email = '$username@test.com';
+
+        // Unique phone number logic:
+        // Middle: 1000 + age (e.g., 1020)
+        // Last:
+        //  - Verified (1) / Unverified (0)
+        //  - Male (1) / Female (2)
+        //  - 00 (padding)
+        final last4 =
+            '${verified ? "1" : "0"}${gender == "male" ? "1" : "2"}00';
+
         final metadata = <String, dynamic>{
-          'name': ec['name'],
-          'username': ec['username'],
-          'gender': ec['gender'],
-          'birth_date': '$birthYear-01-01',
-          'phone_number': '010-9999-${age + 1000}',
+          'name': name,
+          'username': username,
+          'gender': gender,
+          'birth_date': birthDate,
+          'phone_number': '010-${1000 + age}-$last4',
+          'is_verified': verified, // Custom flag for easy check
         };
-  
+
         await _createAdminUser(
-          email: '${ec['username']}@test.com',
+          email: email,
           password: 'password1234!',
           metadata: metadata,
         );
       }
     }
+
+    // 2. Edge Case Personas
+    // No profile image, no bio, etc.
+    final edgeCases = [
+      {
+        'name': '40남_정보누락',
+        'username': 'user_40_m_incomplete',
+        'gender': 'male',
+        'age': 40,
+        'verified': false,
+      },
+      {
+        'name': '25여_프로필없음',
+        'username': 'user_25_f_noprofile',
+        'gender': 'female',
+        'age': 25,
+        'verified': true,
+      },
+    ];
+
+    for (final ec in edgeCases) {
+      final age = ec['age'] as int;
+      final birthYear = currentYear - age + 1;
+      final metadata = <String, dynamic>{
+        'name': ec['name'],
+        'username': ec['username'],
+        'gender': ec['gender'],
+        'birth_date': '$birthYear-01-01',
+        'phone_number': '010-9999-${age + 1000}',
+      };
+
+      await _createAdminUser(
+        email: '${ec['username']}@test.com',
+        password: 'password1234!',
+        metadata: metadata,
+      );
+    }
+  }
+
   Future<void> _processSeedData(
     Map<String, dynamic> seedData,
     List<String> globalVerifIds,
@@ -240,7 +242,7 @@ class DatabaseSeeder {
 
     // 2. Generate Random Partners & Content based on Hot Places
     _Log.i('🏢 Step 3: Generating Random Partners for Hot Places...');
-    await _generateRandomContent(globalVerifIds);
+    await _seedScenarioParties(globalVerifIds);
   }
 
   // --- Helper Methods ---
@@ -257,42 +259,122 @@ class DatabaseSeeder {
     {'name': '광주 충장로', 'lat': 35.1475, 'lng': 126.9166},
   ];
 
-  Future<void> _generateRandomContent(List<String> globalVerifIds) async {
+  Future<void> _seedScenarioParties(List<String> globalVerifIds) async {
     int partnerCounter = 100; // Start from 100 to avoid conflict with JSON
 
-    // 4 Scenarios
+    // Find indices for verifications
+    // Assuming the order from seed.sql insert or using known IDs would be safer.
+    // For now, let's rely on IDs if possible, or assume typical order if fetching all.
+    // Let's find index by checking against known IDs from seed.sql if available,
+    // OR we can just fetch them by name in _getGlobalVerificationIds.
+    // Given current helper just returns list, let's map them manually based on what we know.
+    // But since we don't have the map, let's do a best effort or fetch map.
+    // To be safe, let's just use the IDs directly in the scenarios and update helper later if needed.
+
+    // Hardcoded IDs from seed.sql (minus identity)
+    const careerId = '00000000-0000-0000-0000-000000000002';
+    const academicId = '00000000-0000-0000-0000-000000000003';
+    const assetId = '00000000-0000-0000-0000-000000000004';
+
+    final careerIdx = globalVerifIds.indexOf(careerId);
+    final academicIdx = globalVerifIds.indexOf(academicId);
+    final assetIdx = globalVerifIds.indexOf(assetId);
+
+    // 5 Scenarios
     final scenarios = [
       {
-        'type': '20s',
-        'titles': ['두근두근 대학생 미팅', '20대 풋풋한 만남', '설레는 봄, 벚꽃 미팅'],
-        'desc_header': '20대만의 에너지가 넘치는 파티!',
-        'min_year': 1997, // 29세 (2026기준)
-        'max_year': 2006, // 20세
-        'split_gender': true,
+        'label': 'Scenario A (대학생)',
+        'type': 'univ',
+        'titles': ['설레는 캠퍼스 미팅', '대학생 개강 파티', '시험 끝! 종강 파티'],
+        'desc_header': '풋풋한 대학생들의 설레는 만남.',
+        'groups': [
+          {
+            'label': '대학생(남)',
+            'gender': 'male',
+            'birth_year_range': {'min': 2001, 'max': 2006}, // 20~25
+            'use_global_ids': academicIdx != -1 ? [academicIdx] : [],
+          },
+          {
+            'label': '대학생(여)',
+            'gender': 'female',
+            'birth_year_range': {'min': 2001, 'max': 2006},
+            'use_global_ids': academicIdx != -1 ? [academicIdx] : [],
+          },
+        ],
       },
       {
-        'type': '30s',
-        'titles': ['30대 직장인 와인 파티', '퇴근 후 힐링 네트워킹', '진지한 만남, 가벼운 대화'],
-        'desc_header': '비슷한 라이프스타일의 30대를 위한 공간.',
-        'min_year': 1988, // 38세
-        'max_year': 1998, // 28세
-        'split_gender': true,
+        'label': 'Scenario B (직장인)',
+        'type': 'office',
+        'titles': ['직장인 퇴근 후 와인', '판교/강남 IT 네트워킹', '비슷한 결의 직장인 만남'],
+        'desc_header': '열심히 일한 당신, 오늘 밤은 즐기세요.',
+        'groups': [
+          {
+            'label': '직장인(남)',
+            'gender': 'male',
+            'birth_year_range': {'min': 1987, 'max': 1998}, // 28~39
+            'use_global_ids': careerIdx != -1 ? [careerIdx] : [],
+          },
+          {
+            'label': '직장인(여)',
+            'gender': 'female',
+            'birth_year_range': {'min': 1987, 'max': 1998},
+            'use_global_ids': careerIdx != -1 ? [careerIdx] : [],
+          },
+        ],
       },
       {
-        'type': '40s',
-        'titles': ['다시 사랑할 수 있을까', '40대 돌싱&골드미스/미스터', '편안한 대화가 있는 밤'],
-        'desc_header': '인생의 경험을 나누며 서로에게 스며드는 시간.',
-        'min_year': 1977, // 49세
-        'max_year': 1991, // 35세 (여성은 조금 더 넓게 잡는 등 변주 가능하지만 일단 통일)
-        'split_gender': true,
+        'label': 'Scenario C (노블레스)',
+        'type': 'noble',
+        'titles': ['프리미엄 프라이빗 파티', '성공한 사람들의 모임', '노블레스 라운지'],
+        'desc_header': '검증된 분들을 위한 프라이빗한 시간.',
+        'groups': [
+          {
+            'label': '노블레스(남)',
+            'gender': 'male',
+            'birth_year_range': null, // All ages
+            'use_global_ids': assetIdx != -1 ? [assetIdx] : [],
+          },
+          {
+            'label': '노블레스(여)',
+            'gender': 'female',
+            'birth_year_range': null,
+            'use_global_ids': assetIdx != -1 ? [assetIdx] : [],
+          },
+        ],
       },
       {
-        'type': 'All',
-        'titles': ['동네 친구 만들기', '누구나 환영! 맥주 파티', '개발자&기획자 네트워킹'],
-        'desc_header': '나이도 성별도 상관없어요. 취향으로 만나요!',
-        'min_year': 1981, // 45세
-        'max_year': 2006, // 20세
-        'split_gender': false,
+        'label': 'Scenario D (동네 친구)',
+        'type': 'local',
+        'titles': ['동네 친구 만들기', '편맥 한잔 하실 분', '산책 메이트 구함'],
+        'desc_header': '부담 없이 동네에서 만나요.',
+        'groups': [
+          {
+            'label': '누구나 환영',
+            'gender': null,
+            'birth_year_range': {'min': 1980, 'max': 2006}, // Adult
+            'use_global_ids': [], // No extra verification needed
+          },
+        ],
+      },
+      {
+        'label': 'Scenario E (복합 조건)',
+        'type': 'complex',
+        'titles': ['능력남 & 매력녀 매칭', '전문직 남성 & 20대 여성', '특별한 당신을 위해'],
+        'desc_header': '특별한 조건의 매칭을 경험해보세요.',
+        'groups': [
+          {
+            'label': '전문직 남성',
+            'gender': 'male',
+            'birth_year_range': {'min': 1987, 'max': 1996}, // 30s
+            'use_global_ids': careerIdx != -1 ? [careerIdx] : [],
+          },
+          {
+            'label': '매력적인 20대 여성',
+            'gender': 'female',
+            'birth_year_range': {'min': 1997, 'max': 2006}, // 20s
+            'use_global_ids': [], // No extra verification
+          },
+        ],
       },
     ];
 
@@ -301,128 +383,84 @@ class DatabaseSeeder {
       final lat = place['lat'] as double;
       final lng = place['lng'] as double;
 
-      // 3 Partners per Hot Place
-      for (var i = 0; i < 3; i++) {
-        partnerCounter++;
-        final partnerName = '$placeName 핫플 파트너 $i';
-        final email = 'owner$partnerCounter@test.com';
+      // Create 1 Partner per Hot Place (Simplified from 3)
+      partnerCounter++;
+      final partnerName = '$placeName 핫플 파트너';
+      final email = 'owner$partnerCounter@test.com';
 
-        // Gender varies by partner to balance the owner pool
-        final ownerId = await _createAdminUser(
-          email: email,
-          password: 'password1234!',
-          metadata: {
-            'name': '사장님 $partnerCounter ($placeName)',
-            'username': 'owner_$partnerCounter',
-            'gender': i.isEven ? 'male' : 'female',
-            'birth_date': '1990-01-01',
-            'phone_number': '010-9999-$partnerCounter',
-          },
-        );
+      final ownerId = await _createAdminUser(
+        email: email,
+        password: 'password1234!',
+        metadata: {
+          'name': '사장님 $partnerCounter ($placeName)',
+          'username': 'owner_$partnerCounter',
+          'gender': 'male',
+          'birth_date': '1990-01-01',
+          'phone_number': '010-9999-$partnerCounter',
+          'is_verified': true,
+        },
+      );
 
-        final partnerId = await _createPartner(
-          ownerId,
-          partnerName,
-          '$placeName에서 가장 감각적인 공간, $partnerName입니다.',
-          'Minglit Corp $partnerCounter',
-          '123-45-$partnerCounter',
-          email,
-        );
+      final partnerId = await _createPartner(
+        ownerId,
+        partnerName,
+        '$placeName에서 가장 핫한 라운지 바',
+        'Minglit Corp $partnerCounter',
+        '123-45-$partnerCounter',
+        email,
+      );
 
-        // Random Location
-        final rLat = lat + (DateTime.now().microsecond % 20 - 10) * 0.0005;
-        final rLng = lng + (DateTime.now().microsecond % 20 - 10) * 0.0005;
+      final locationId = await _createLocation(
+        partnerId,
+        '$partnerName 본점',
+        '$placeName 번화가 1길',
+        lat,
+        lng,
+      );
 
-        final locationId = await _createLocation(
-          partnerId,
-          '$partnerName 본점',
-          '$placeName 번화가 ${i + 1}길',
-          rLat,
-          rLng,
-        );
+      // Create 5 Parties (One for each scenario)
+      for (final scenario in scenarios) {
+        final titles = scenario['titles'] as List<String>;
+        final title = '[$placeName] ${titles[partnerCounter % titles.length]}';
+        final groups = scenario['groups'] as List<Map<String, dynamic>>;
 
-        // 2 Parties per Partner (Cycle through scenarios)
-        for (var p = 0; p < 2; p++) {
-          final scenarioIndex = (partnerCounter + p) % scenarios.length;
-          final scenario = scenarios[scenarioIndex];
+        final entryGroups = <Map<String, dynamic>>[];
+        final tickets = <Map<String, dynamic>>[];
 
-          final baseTitle = (scenario['titles'] as List)[p % 3];
-          final fullTitle = '[$placeName] $baseTitle';
-          final splitGender = scenario['split_gender'] as bool;
-          final minYear = scenario['min_year'] as int;
-          final maxYear = scenario['max_year'] as int;
+        for (var i = 0; i < groups.length; i++) {
+          final g = groups[i];
+          entryGroups.add({
+            'label': g['label'],
+            'gender': g['gender'],
+            'birth_year_range': g['birth_year_range'],
+            'use_global_ids': g['use_global_ids'],
+          });
 
-          // Construct Entry Groups & Tickets
-          final entryGroups = <Map<String, dynamic>>[];
-          final tickets = <Map<String, dynamic>>[];
-
-          if (splitGender) {
-            // Group 0: Male
-            entryGroups.add({
-              'label': '남성 입장',
-              'gender': 'male',
-              'birth_year_range': {'min': minYear, 'max': maxYear},
-              'use_global_ids': [0], // Identity Verification
-            });
-            // Group 1: Female
-            entryGroups.add({
-              'label': '여성 입장',
-              'gender': 'female',
-              'birth_year_range': {
-                'min': minYear,
-                'max': maxYear,
-              }, // Can adjust for lady first
-              'use_global_ids': [0],
-            });
-
-            // Tickets linked to groups
-            tickets.add({
-              'name': '남성 입장권',
-              'price': 35000,
-              'quantity': 15,
-              'group_index': 0, // Links to Male Group
-            });
-            tickets.add({
-              'name': '여성 입장권',
-              'price': 15000, // Ladies discount (common in KR)
-              'quantity': 15,
-              'group_index': 1, // Links to Female Group
-            });
-          } else {
-            // Mixed Group
-            entryGroups.add({
-              'label': '일반 입장',
-              'gender': null, // Mixed
-              'birth_year_range': {'min': minYear, 'max': maxYear},
-              'use_global_ids': [0],
-            });
-
-            tickets.add({
-              'name': '일반 입장권',
-              'price': 20000,
-              'quantity': 30,
-              'group_index': 0,
-            });
-          }
-
-          final partyData = {
-            'title': fullTitle,
-            'description': _generateRichDescription(
-              fullTitle,
-              '${scenario['desc_header']}\n멋진 인연을 만들어보세요.',
-            ),
-            'entry_groups': entryGroups,
-            'tickets': tickets,
-          };
-
-          await _createPartyAndEvents(
-            partnerId,
-            locationId,
-            partyData,
-            globalVerifIds,
-            [],
-          );
+          tickets.add({
+            'name': '${g['label']} 입장권',
+            'price': 20000 + (i * 5000), // Varies slightly
+            'quantity': 10,
+            'group_index': i,
+          });
         }
+
+        final partyData = {
+          'title': title,
+          'description': _generateRichDescription(
+            title,
+            '${scenario['desc_header']}\n[${scenario['label']}] 테마 파티입니다.',
+          ),
+          'entry_groups': entryGroups,
+          'tickets': tickets,
+        };
+
+        await _createPartyAndEvents(
+          partnerId,
+          locationId,
+          partyData,
+          globalVerifIds,
+          [],
+        );
       }
     }
   }
