@@ -1,13 +1,13 @@
 # 계획: 시딩 데이터 다양화 및 시나리오 강화
 
-## Phase 1: 시더 로직 개선 및 유저 생성
-- [ ] Task: `DatabaseSeeder.dart` 리팩토링
-    - [ ] `_seedPersonas()` 메서드 구현: 20~50세 연령별 유저 생성 로직 작성.
-    - [ ] 유저 상태(인증 여부, 정보 누락 등)에 따른 메타데이터 생성 로직 추가.
-- [ ] Task: 유저 검증 데이터 주입
-    - [ ] 생성된 유저 중 `_ok` 그룹에게 `user_verifications` 데이터 주입.
-    - [ ] 일부 유저에게 `partner_verified_users` 자격 증명 주입.
-- [ ] Task: Conductor - 사용자 수동 검증 'Phase 1: 유저 시딩 확인' (Protocol in workflow.md)
+## Phase 1: 시더 로직 개선 및 유저 생성 [checkpoint: 00b3938]
+- [x] Task: `DatabaseSeeder.dart` 리팩토링 (00b3938)
+    - [x] `_seedPersonas` 메서드 구현: 20~50세 연령별 유저 생성 로직 작성.
+    - [x] 유저 상태(인증 여부, 정보 누락 등)에 따른 메타데이터 생성 로직 추가.
+- [x] Task: 유저 검증 데이터 주입 (00b3938)
+    - [x] 생성된 유저 중 `_ok` 그룹에게 `user_verifications` 데이터 주입. (본인인증은 프로필 레벨로 이관, 파트너 인증은 보류)
+    - [x] 일부 유저에게 `partner_verified_users` 자격 증명 주입. (Phase 2로 이관 또는 보류)
+- [x] Task: Conductor - 사용자 수동 검증 'Phase 1: 유저 시딩 확인' (Protocol in workflow.md) (00b3938)
 
 ## Phase 2: 파티 및 입장 조건 시나리오 구현
 - [ ] Task: `seed.sql` 보강
