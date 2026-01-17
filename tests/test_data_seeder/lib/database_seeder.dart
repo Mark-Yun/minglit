@@ -22,7 +22,7 @@ class DatabaseSeeder {
       // 1. Load Seed Data from JSON
       // Note: When loading assets from a package, use 'packages/<package_name>/<path>'
       final jsonStr = await rootBundle.loadString(
-        'packages/minglit_seeder/assets/seed_data.json',
+        'packages/test_data_seeder/assets/seed_data.json',
       );
       final seedData = jsonDecode(jsonStr) as Map<String, dynamic>;
 

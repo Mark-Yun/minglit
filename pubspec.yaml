@@ -7,4 +7,5 @@ workspace:
   - apps/app_partner
   - apps/app_user
   - shared/packages/minglit_kit
-  - shared/packages/minglit_seeder
+  - tests/test_data_seeder
+  - tests/backend_integration

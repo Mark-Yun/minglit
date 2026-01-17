@@ -1,0 +1,25 @@
+name: backend_integration
+description: Integration tests for Minglit backend logic.
+publish_to: 'none'
+version: 1.0.0
+resolution: workspace
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  minglit_kit:
+    path: ../../shared/packages/minglit_kit
+  test_data_seeder:
+    path: ../test_data_seeder
+  supabase_flutter: ^2.3.0
+  collection: ^1.18.0
+  intl: ^0.20.2
+  dart_jsonwebtoken: ^2.4.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  lints: ^5.0.0 # Upgraded to match workspace

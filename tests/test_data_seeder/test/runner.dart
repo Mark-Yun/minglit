@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:minglit_seeder/database_seeder.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:test_data_seeder/database_seeder.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

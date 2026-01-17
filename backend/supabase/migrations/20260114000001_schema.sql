@@ -655,3 +655,24 @@ create policy "Admin/Owner verifications all access" on public.verifications for
     public.is_super_admin() or 
     (partner_id is not null and public.has_partner_permission(partner_id, 'PARTNER_EDIT'))
   );
+
+-- Event Applications (User Access)
+create policy "Users can read own applications" on public.event_applications for select 
+  using (auth.uid() = user_id);
+
+create policy "Users can create own applications" on public.event_applications for insert 
+  with check (auth.uid() = user_id);
+
+create policy "Users can update own applications" on public.event_applications for update 
+  using (auth.uid() = user_id);
+
+-- Event Participants (User Access)
+create policy "Users can read own participants" on public.event_participants for select 
+  using (auth.uid() = user_id);
+
+-- Verification Submissions (User Access)
+create policy "Users can read own submissions" on public.verification_submissions for select 
+  using (auth.uid() = user_id);
+
+create policy "Users can create own submissions" on public.verification_submissions for insert 
+  with check (auth.uid() = user_id);
