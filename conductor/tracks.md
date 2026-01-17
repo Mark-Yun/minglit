@@ -39,5 +39,5 @@
 
 ---
 
-## [~] 트랙: 커스텀 린트 규칙 구현 (Minglit Lints)
+## [x] 트랙: 커스텀 린트 규칙 구현 (Minglit Lints)
 *링크: [./conductor/tracks/custom_lint_rules_20260115/](./conductor/tracks/custom_lint_rules_20260115/)*
