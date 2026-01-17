@@ -14,7 +14,7 @@
 
 ---
 
-## [~] 트랙: 백엔드 통합 테스트 강화 (보안, 무결성, 로직)
+## [x] 트랙: 백엔드 통합 테스트 강화 (보안, 무결성, 로직)
 *링크: [./conductor/tracks/backend_test_enhancement_20260117/](./conductor/tracks/backend_test_enhancement_20260117/)*
 
 ---
