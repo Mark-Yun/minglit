@@ -9,12 +9,12 @@
     - [x] `verify_db_extensions_test.dart` -> `system/schema_health_test.dart` 통합.
 - [x] Task: Conductor - 사용자 수동 검증 'Phase 1: 테스트 환경 정비' (Protocol in workflow.md)
 
-## Phase 2: Admission & Security 테스트 강화 (최우선)
-- [ ] Task: `admission/application_rls_test.dart` 구현
-- [ ] Task: `admission/auto_approval_trigger_test.dart` 구현
-- [ ] Task: `user/profile_rls_test.dart` 구현
-- [ ] Task: 코드 품질 강화 (Zero-Warning 루프)
-- [ ] Task: Conductor - 사용자 수동 검증 'Phase 2: 보안 및 신청 로직 검증' (Protocol in workflow.md)
+## Phase 2: Admission & Security 테스트 강화 (최우선) [checkpoint: fd67eff]
+- [x] Task: `admission/application_rls_test.dart` 구현
+- [x] Task: `admission/auto_approval_trigger_test.dart` 구현
+- [x] Task: `user/profile_rls_test.dart` 구현
+- [x] Task: 코드 품질 강화 (Zero-Warning 루프)
+- [x] Task: Conductor - 사용자 수동 검증 'Phase 2: 보안 및 신청 로직 검증' (Protocol in workflow.md)
 
 ## Phase 3: Party & Partner 도메인 테스트 구현
 - [ ] Task: `party/party_rls_test.dart` 구현
