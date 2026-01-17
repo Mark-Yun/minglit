@@ -15,4 +15,16 @@ class EventCoordinator {
   void goToEventDetail(BuildContext context, String eventId) {
     unawaited(EventDetailRoute(eventId: eventId).push<void>(context));
   }
+
+  void goToApplicationWizard(
+    BuildContext context,
+    String eventId, {
+    String? ticketId,
+  }) {
+    unawaited(
+      EventApplicationRoute(eventId: eventId, ticketId: ticketId).push<void>(
+        context,
+      ),
+    );
+  }
 }

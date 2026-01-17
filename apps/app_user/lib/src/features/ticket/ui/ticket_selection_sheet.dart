@@ -1,34 +1,36 @@
+import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-class TicketSelectionSheet extends StatefulWidget {
+class TicketSelectionSheet extends ConsumerStatefulWidget {
   const TicketSelectionSheet({required this.event, super.key});
 
   final Event event;
 
   @override
-  State<TicketSelectionSheet> createState() => _TicketSelectionSheetState();
+  ConsumerState<TicketSelectionSheet> createState() =>
+      _TicketSelectionSheetState();
 }
 
-class _TicketSelectionSheetState extends State<TicketSelectionSheet> {
+class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
   String? _selectedTicketId;
   int _quantity = 1;
 
   void _onNext() {
     if (_selectedTicketId == null) return;
-    final ticket = widget.event.tickets!.firstWhere(
-      (t) => t.id == _selectedTicketId,
-    );
 
-    // TODO(Mark): Check if verification is needed for this ticket.
-    // For now, assume payment/submission.
+    // Close sheet first
+    Navigator.pop(context);
 
-    // Close sheet and return selection
-    Navigator.pop(context, {
-      'ticket': ticket,
-      'quantity': _quantity,
-    });
+    // Navigate to Application Wizard via Coordinator
+    ref
+        .read(eventCoordinatorProvider)
+        .goToApplicationWizard(
+          context,
+          widget.event.id,
+          ticketId: _selectedTicketId,
+        );
   }
 
   @override

@@ -1,6 +1,7 @@
 import 'package:app_user/src/features/auth/login_page.dart';
 import 'package:app_user/src/features/auth/ui/auth_callback_screen.dart';
 import 'package:app_user/src/features/dev/user_dev_map.dart';
+import 'package:app_user/src/features/event/admission/event_application_wizard_screen.dart';
 import 'package:app_user/src/features/event/detail/event_detail_screen.dart';
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/features/party/party_curation_screen.dart';
@@ -116,4 +117,18 @@ class CertificationRoute extends GoRouteData with $CertificationRoute {
       },
     );
   }
+}
+
+/// **Event Application Route**: Wizard for event application.
+/// Path: `/events/:eventId/apply`
+@TypedGoRoute<EventApplicationRoute>(path: '/events/:eventId/apply')
+class EventApplicationRoute extends GoRouteData with $EventApplicationRoute {
+  const EventApplicationRoute({required this.eventId, this.ticketId});
+
+  final String eventId;
+  final String? ticketId;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      EventApplicationWizardScreen(eventId: eventId, ticketId: ticketId);
 }
