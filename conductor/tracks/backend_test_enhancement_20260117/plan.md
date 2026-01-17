@@ -16,16 +16,16 @@
 - [x] Task: 코드 품질 강화 (Zero-Warning 루프)
 - [x] Task: Conductor - 사용자 수동 검증 'Phase 2: 보안 및 신청 로직 검증' (Protocol in workflow.md)
 
-## Phase 3: Party & Partner 도메인 테스트 구현
-- [ ] Task: `party/party_rls_test.dart` 구현
-- [ ] Task: `party/event_constraints_test.dart` 구현
-- [ ] Task: `partner/permission_policy_test.dart` 구현
-- [ ] Task: `partner/verification_manage_test.dart` 구현
-- [ ] Task: 코드 품질 강화 (Zero-Warning 루프)
-- [ ] Task: Conductor - 사용자 수동 검증 'Phase 3: 파티 및 파트너 권한 검증' (Protocol in workflow.md)
+## Phase 3: Party & Partner 도메인 테스트 구현 [checkpoint: 24fd800]
+- [x] Task: `party/party_rls_test.dart` 구현
+- [x] Task: `party/event_constraints_test.dart` 구현
+- [x] Task: `partner/permission_policy_test.dart` 구현
+- [x] Task: `partner/verification_manage_test.dart` 구현
+- [x] Task: 코드 품질 강화 (Zero-Warning 루프)
+- [x] Task: Conductor - 사용자 수동 검증 'Phase 3: 파티 및 파트너 권한 검증' (Protocol in workflow.md)
 
-## Phase 4: 시스템 건전성 및 파이프라인 검증
-- [ ] Task: `system/schema_health_test.dart` 고도화 (인덱스 체크 포함)
-- [ ] Task: `system/pipeline_robustness_test.dart` 구현 (멱등성)
-- [ ] Task: 전체 테스트 통합 실행 및 Green 확인
-- [ ] Task: Conductor - 사용자 수동 검증 'Phase 4: 전체 시스템 안정성 확인' (Protocol in workflow.md)
+## Phase 4: 시스템 건전성 및 파이프라인 검증 [checkpoint: pending]
+- [x] Task: `system/schema_health_test.dart` 고도화 (인덱스 체크 포함)
+- [x] Task: `system/pipeline_robustness_test.dart` 구현 (멱등성)
+- [x] Task: 전체 테스트 통합 실행 및 Green 확인
+- [x] Task: Conductor - 사용자 수동 검증 'Phase 4: 전체 시스템 안정성 확인' (Protocol in workflow.md)

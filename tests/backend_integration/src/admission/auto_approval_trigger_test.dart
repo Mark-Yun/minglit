@@ -38,6 +38,14 @@ void main() {
       // Get Verification
       final verif = await adminClient.from('verifications').select().limit(1).single();
       testVerificationId = verif['id'];
+
+      // Cleanup existing data
+      try {
+        await adminClient.from('event_participants').delete().eq('user_id', testUserId).eq('event_id', testEventId);
+        await adminClient.from('event_applications').delete().eq('user_id', testUserId).eq('event_id', testEventId);
+      } catch (e) {
+        print('⚠️ Cleanup warning: $e');
+      }
     });
 
     test('Chain Reaction: Verify Approved -> Application Approved -> Ticket Issued', () async {

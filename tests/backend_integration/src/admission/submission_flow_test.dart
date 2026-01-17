@@ -93,18 +93,19 @@ void main() {
         .limit(1)
         .maybeSingle();
 
-    testVerificationId = verifRes?['id'] ??
-        (await adminClient
-            .from('verifications')
-            .select()
-            .limit(1)
-            .single())['id'];
+    testVerificationId = verifRes?['id'] ?? (await adminClient.from('verifications').select().limit(1).single())['id'];
     print('✅ [Setup] Using Verification: $testVerificationId');
+
+    // 4. Cleanup existing data (Unique Constraint)
+    try {
+      await adminClient.from('event_participants').delete().eq('user_id', testUserId).eq('event_id', testEventId);
+      await adminClient.from('event_applications').delete().eq('user_id', testUserId).eq('event_id', testEventId);
+    } catch (e) {
+      print('⚠️ Cleanup warning: $e');
+    }
   });
 
-  test(
-      'One-Shot Application Flow Test (Apply -> Pending -> Approve -> Confirmed)',
-      () async {
+  test('One-Shot Application Flow Test (Apply -> Pending -> Approve -> Confirmed)', () async {
     final userClient = createUserClient(testUserId);
     final eventRepo = EventRepository(supabase: userClient);
 
