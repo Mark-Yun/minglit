@@ -13,16 +13,6 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO service_role
 insert into public.verifications (id, category, internal_name, display_name, description, icon_key, form_schema, partner_id)
 values
   (
-    '00000000-0000-0000-0000-000000000001',
-    'etc',
-    'Global Identity Verification',
-    '본인인증',
-    'PASS 또는 SMS를 통해 본인을 인증하세요.',
-    'person_check',
-    '[{"key": "phone", "type": "text", "label": "휴대폰 번호", "required": true}]'::jsonb,
-    null
-  ),
-  (
     '00000000-0000-0000-0000-000000000002',
     'career',
     'Global Career Verification',
