@@ -1,12 +1,9 @@
 import 'dart:math';
 
-import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
-import 'package:minglit_kit/src/data/models/event.dart';
-import 'package:minglit_kit/src/data/models/verification.dart';
-import 'package:minglit_kit/src/data/models/verification_submission.dart';
 import 'package:minglit_kit/src/data/repositories/event_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:test/test.dart';
+import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 
 // --- CONFIGURATION ---
 const supabaseUrl = 'http://127.0.0.1:54321';

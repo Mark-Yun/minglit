@@ -1,4 +1,4 @@
-// ignore_for_file: lines_longer_than_80_chars, avoid_dynamic_calls, avoid_catches_without_on_clauses
+// ignore_for_file: lines_longer_than_80_chars, avoid_dynamic_calls, avoid_catches_without_on_clauses, document_ignores
 
 import 'package:postgres/postgres.dart';
 import 'package:test/test.dart';
@@ -37,7 +37,7 @@ void main() {
     });
 
     test('should send and read message using wrappers', () async {
-      // 1. Send directly via pgmq.send (since wrapper is only for read/delete)
+      // 1. Send directly via pgmq.send
       await connection.execute(
         "SELECT pgmq.send('$testQueue', '{\"foo\": \"bar\"}'::jsonb)",
       );
@@ -48,7 +48,8 @@ void main() {
       );
 
       expect(result, isNotEmpty);
-      final msg = result.first[0] as Map<String, dynamic>;
+      final dynamic firstRow = result.first[0];
+      final msg = firstRow as Map<String, dynamic>;
       expect(msg['message']['foo'], equals('bar'));
     });
 
@@ -57,7 +58,8 @@ void main() {
       final sendRes = await connection.execute(
         "SELECT pgmq.send('$testQueue', '{\"foo\": \"delete_me\"}'::jsonb)",
       );
-      final msgId = sendRes.first[0] as int;
+      final dynamic firstRow = sendRes.first[0];
+      final msgId = firstRow as int;
 
       // 2. Delete using wrapper: public.pgmq_delete
       final delRes = await connection.execute(
@@ -75,26 +77,18 @@ void main() {
   });
 
   group('Pipeline Dispatcher Test', () {
-    // We rely on 'q_vectors' queue which is created by migration.
-    // We will insert into 'user_actions' which has a trigger.
-
     test('Trigger on user_actions should dispatch event to q_vectors', () async {
       final userId = uuid.v4();
       final partyId = uuid.v4();
       final partnerId = uuid.v4();
 
-      // Setup Prerequisites: User, Partner, Party
-      // Note: We use raw insert into auth.users to bypass foreign key constraints logic that might be complex
-      // But auth.users is protected. We will insert into user_profiles directly if we can,
-      // BUT user_profiles has FK to auth.users.
-      // So we must insert into auth.users first.
-
+      // Setup Prerequisites
       try {
         await connection.execute(
           "INSERT INTO auth.users (id, email) VALUES ('$userId', 'test_sql_$userId@example.com')",
         );
       } catch (e) {
-        // Ignore if user exists or permission issue (if testing as postgres user, should be fine)
+        // Ignore
       }
 
       await connection.execute(
@@ -105,31 +99,30 @@ void main() {
         "INSERT INTO public.parties (id, partner_id, title) VALUES ('$partyId', '$partnerId', 'Test SQL Party') ON CONFLICT (id) DO NOTHING",
       );
 
-      // 1. Insert Action (Trigger fires here)
+      // 1. Insert Action
       await connection.execute(
         "INSERT INTO public.user_actions (user_id, party_id, action_type) VALUES ('$userId', '$partyId', 'view')",
       );
 
       // 2. Check Queue
-      // Wait a bit for trigger -> function -> queue
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
 
       final qResult = await connection.execute(
         "SELECT * FROM public.pgmq_read('q_vectors', 10, 10)",
       );
 
-      // Find our message
       var found = false;
       for (final row in qResult) {
-        final msg = row[0] as Map<String, dynamic>;
+        final dynamic firstCol = row[0];
+        final msg = firstCol as Map<String, dynamic>;
         final payload = msg['message'] as Map<String, dynamic>;
 
         if (payload['type'] == 'user_interaction' &&
             payload['payload']['user_id'] == userId &&
             payload['payload']['party_id'] == partyId) {
           found = true;
-          // Cleanup message
-          final msgId = msg['msg_id'] as int;
+          final dynamic mId = msg['msg_id'];
+          final msgId = mId as int;
           await connection.execute(
             "SELECT public.pgmq_delete('q_vectors', $msgId)",
           );
