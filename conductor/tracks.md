@@ -50,7 +50,7 @@
 
 ---
 
-## [ ] 트랙: 파티 체크인 및 오프라인 QR 시스템 (Party Check-in System)
+## [x] 트랙: 파티 체크인 및 오프라인 QR 시스템 (Party Check-in System)
 *링크: [./conductor/tracks/party_checkin_system_20260117/](./conductor/tracks/party_checkin_system_20260117/)*
 
 ---
@@ -102,6 +102,11 @@
 
 ## [x] 트랙: 앱 단위 테스트 및 CI 파이프라인 구축 (App Unit Test & CI)
 *링크: [./conductor/tracks/app_unit_test_ci_20260117/](./conductor/tracks/app_unit_test_ci_20260117/)*
+
+---
+
+## [ ] 트랙: 안드로이드 앱 빌드 및 CI/CD 설정
+*링크: [./conductor/tracks/android_build_cicd_20260118/](./conductor/tracks/android_build_cicd_20260118/)*
 
 ---
 

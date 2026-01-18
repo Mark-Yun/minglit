@@ -15,9 +15,11 @@ export 'src/data/models/party_entry_group.dart';
 export 'src/data/models/social_interaction.dart';
 export 'src/data/models/ticket.dart';
 export 'src/data/models/ticket_template.dart';
-// Repositories
+export 'src/data/models/ticket_token.dart';
 export 'src/data/models/user_profile.dart';
+// Repositories
 export 'src/data/repositories/auth_repository.dart';
+export 'src/data/repositories/checkin_repository.dart';
 export 'src/data/repositories/event_repository.dart';
 export 'src/data/repositories/identity_repository.dart';
 export 'src/data/repositories/kakao_location_repository.dart';
