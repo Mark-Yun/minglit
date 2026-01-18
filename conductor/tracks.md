@@ -27,6 +27,26 @@
 
 ---
 
+## [ ] 트랙: UI/UX 피드백 시스템 표준화 (Minglit Feedback System)
+*링크: [./conductor/tracks/feedback_system_standardization_20260117/](./conductor/tracks/feedback_system_standardization_20260117/)*
+
+---
+
+## [ ] 트랙: 파티 체크인 및 오프라인 QR 시스템 (Party Check-in System)
+*링크: [./conductor/tracks/party_checkin_system_20260117/](./conductor/tracks/party_checkin_system_20260117/)*
+
+---
+
+## [ ] 트랙: 파티 입장 성비 및 그룹 밸런스 자동 관리 (Party Balance System)
+*링크: [./conductor/tracks/party_balance_system_20260117/](./conductor/tracks/party_balance_system_20260117/)*
+
+---
+
+## [ ] 트랙: 통합 알림 시스템 및 센터 (Unified Notification System)
+*링크: [./conductor/tracks/unified_notification_system_20260117/](./conductor/tracks/unified_notification_system_20260117/)*
+
+---
+
 ## [x] 트랙: SQL 스키마 리팩토링 및 도메인 기반 분리
 *링크: [./conductor/tracks/sql_schema_refactoring_20260117/](./conductor/tracks/sql_schema_refactoring_20260117/)*
 
