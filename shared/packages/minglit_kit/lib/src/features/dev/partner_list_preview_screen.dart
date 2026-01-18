@@ -19,7 +19,8 @@ class PartnerListPreviewScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Partner Preview List')),
-      body: partnersAsync.when(
+      body: MinglitAsyncValueWidget(
+        value: partnersAsync,
         data: (partners) {
           if (partners.isEmpty) {
             return const Center(child: Text('No active partners found.'));
@@ -58,7 +59,6 @@ class PartnerListPreviewScreen extends ConsumerWidget {
             },
           );
         },
-        loading: () => const MinglitCircularProgressIndicator(),
         error: (e, st) => Center(child: Text('Error: $e')),
       ),
     );

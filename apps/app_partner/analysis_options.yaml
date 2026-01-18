@@ -18,3 +18,4 @@ custom_lint:
     - no_hardcoded_colors
     - no_hardcoded_text_style
     - minglit_require_public_docs
+    - use_minglit_async_value_widget

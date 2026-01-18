@@ -169,6 +169,7 @@ class MinglitDevApp extends ConsumerWidget {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
+        // ignore: use_minglit_async_value_widget - This is the app entry point, MaterialApp is not yet available.
         return startupState.when(
           data: (_) => StaffGuardWrapper(
             child: MinglitGlobalLoadingOverlay(child: child!),

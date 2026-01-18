@@ -205,6 +205,7 @@ class _AppView extends ConsumerWidget {
       ),
     );
 
+    // ignore: use_minglit_async_value_widget - This is the app entry point, MaterialApp is not yet available.
     return startupState.when(
       // Case 1: Initializing - Show Splash immediately
       loading: () =>

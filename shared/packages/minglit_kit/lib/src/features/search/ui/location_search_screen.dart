@@ -48,9 +48,10 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
               autofocus: true,
             ),
           ),
-          if (searchAsync.isLoading) const LinearProgressIndicator(),
+          if (searchAsync.isLoading) const MinglitLinearProgressIndicator(),
           Expanded(
-            child: searchAsync.when(
+            child: MinglitAsyncValueWidget(
+              value: searchAsync,
               data: (results) {
                 if (results.isEmpty && _searchController.text.isNotEmpty) {
                   return const Center(child: Text('검색 결과가 없습니다.'));

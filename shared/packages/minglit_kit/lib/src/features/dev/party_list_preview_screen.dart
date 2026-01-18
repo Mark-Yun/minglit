@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/data/models/party.dart';
 import 'package:minglit_kit/src/data/repositories/party_repository.dart';
-import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'party_list_preview_screen.g.dart';
@@ -41,7 +41,8 @@ class PartyListPreviewScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Party Preview List')),
-      body: partiesAsync.when(
+      body: MinglitAsyncValueWidget(
+        value: partiesAsync,
         data: (parties) => ListView.builder(
           itemCount: parties.length,
           itemBuilder: (context, index) {
@@ -53,7 +54,6 @@ class PartyListPreviewScreen extends ConsumerWidget {
             );
           },
         ),
-        loading: () => const MinglitCircularProgressIndicator(),
         error: (e, st) => Center(child: Text('Error: $e')),
       ),
     );

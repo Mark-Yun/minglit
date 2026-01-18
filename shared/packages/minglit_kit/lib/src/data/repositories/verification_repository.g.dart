@@ -76,7 +76,7 @@ final class VerificationsByIdsProvider
         $FutureProvider<List<Verification>> {
   const VerificationsByIdsProvider._({
     required VerificationsByIdsFamily super.from,
-    required String super.argument,
+    required List<String> super.argument,
   }) : super(
          retry: null,
          name: r'verificationsByIdsProvider',
@@ -103,7 +103,7 @@ final class VerificationsByIdsProvider
 
   @override
   FutureOr<List<Verification>> create(Ref ref) {
-    final argument = this.argument as String;
+    final argument = this.argument as List<String>;
     return verificationsByIds(ref, argument);
   }
 
@@ -119,10 +119,10 @@ final class VerificationsByIdsProvider
 }
 
 String _$verificationsByIdsHash() =>
-    r'daa694f8c657545f62a16c46695415c62ca84c64';
+    r'56316be7791e011cb69b886a57a955344090d2d7';
 
 final class VerificationsByIdsFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<List<Verification>>, String> {
+    with $FunctionalFamilyOverride<FutureOr<List<Verification>>, List<String>> {
   const VerificationsByIdsFamily._()
     : super(
         retry: null,
@@ -132,8 +132,8 @@ final class VerificationsByIdsFamily extends $Family
         isAutoDispose: true,
       );
 
-  VerificationsByIdsProvider call(String commaSeparatedIds) =>
-      VerificationsByIdsProvider._(argument: commaSeparatedIds, from: this);
+  VerificationsByIdsProvider call(List<String> ids) =>
+      VerificationsByIdsProvider._(argument: ids, from: this);
 
   @override
   String toString() => r'verificationsByIdsProvider';

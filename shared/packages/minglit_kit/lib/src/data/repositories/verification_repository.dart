@@ -15,10 +15,9 @@ VerificationRepository verificationRepository(Ref ref) {
 @riverpod
 Future<List<Verification>> verificationsByIds(
   Ref ref,
-  String commaSeparatedIds,
+  List<String> ids,
 ) async {
-  if (commaSeparatedIds.isEmpty) return [];
-  final ids = commaSeparatedIds.split(',');
+  if (ids.isEmpty) return [];
   final repo = ref.watch(verificationRepositoryProvider);
   return repo.getVerificationsByIds(ids);
 }

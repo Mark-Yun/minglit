@@ -9,7 +9,7 @@ import 'package:minglit_kit/src/data/repositories/party_repository.dart';
 import 'package:minglit_kit/src/features/dev/widgets/party_detail_view.dart';
 import 'package:minglit_kit/src/features/social/ui/minglit_social_button.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'partner_detail_view.g.dart';
@@ -122,7 +122,8 @@ class PartnerDetailView extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: MinglitSpacing.medium),
-        partiesAsync.when(
+        MinglitAsyncValueWidget(
+          value: partiesAsync,
           data: (parties) {
             if (parties.isEmpty) {
               return Text(
@@ -138,7 +139,6 @@ class PartnerDetailView extends ConsumerWidget {
                   .toList(),
             );
           },
-          loading: () => const MinglitCircularProgressIndicator(),
           error: (e, _) => Text('Error: $e'),
         ),
       ],

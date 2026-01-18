@@ -5,7 +5,7 @@ import 'package:minglit_kit/src/data/models/event.dart';
 import 'package:minglit_kit/src/data/models/party.dart';
 import 'package:minglit_kit/src/logic/providers/event_feed_provider.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
 
 /// A detailed view of a Party.
 class PartyDetailView extends ConsumerWidget {
@@ -134,7 +134,8 @@ class PartyDetailView extends ConsumerWidget {
     final theme = Theme.of(context);
     final eventsAsync = ref.watch(partyEventsProvider(party.id));
 
-    return eventsAsync.when(
+    return MinglitAsyncValueWidget(
+      value: eventsAsync,
       data: (events) {
         if (events.isEmpty) {
           return Container(
@@ -152,7 +153,6 @@ class PartyDetailView extends ConsumerWidget {
           children: events.map((e) => _buildEventCard(context, e)).toList(),
         );
       },
-      loading: () => const MinglitCircularProgressIndicator(),
       error: (e, _) => Text('Error loading events: $e'),
     );
   }

@@ -60,6 +60,7 @@ class _StaffGuardWrapperState extends ConsumerState<StaffGuardWrapper> {
 
     final staffStatus = ref.watch(staffGuardProvider);
 
+    // ignore: use_minglit_async_value_widget - Specific splash logic required
     return staffStatus.when(
       data: (user) {
         if (user != null) {

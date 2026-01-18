@@ -36,7 +36,8 @@ class MinglitSocialButton extends ConsumerWidget {
       ),
     );
 
-    return asyncState.when(
+    return MinglitAsyncValueWidget(
+      value: asyncState,
       data: (state) => _buildButton(context, ref, state),
       loading: () => _buildLoading(context),
       error: (e, s) => _buildError(context),

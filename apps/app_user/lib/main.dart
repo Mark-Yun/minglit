@@ -69,6 +69,7 @@ class _AppView extends ConsumerWidget {
     final startupState = ref.watch(appStartupProvider);
     final goRouter = ref.watch(goRouterProvider);
 
+    // ignore: use_minglit_async_value_widget - This is the app entry point, MaterialApp is not yet available.
     return startupState.when(
       data: (_) => MaterialApp.router(
         title: 'Minglit User',

@@ -1,5 +1,10 @@
 ---
 
+## [x] 트랙: MinglitAsyncValueWidget 전체 적용 (Refactor)
+*링크: [./conductor/tracks/apply_minglit_async_widget_20260118/](./conductor/tracks/apply_minglit_async_widget_20260118/)*
+
+---
+
 ## [x] 트랙: 범용 소셜 그래프 시스템 (Universal Social Graph)
 *링크: [./conductor/tracks/universal_social_graph_20260118/](./conductor/tracks/universal_social_graph_20260118/)*
 

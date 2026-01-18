@@ -141,7 +141,8 @@ class PartyDetailInfoTab extends ConsumerWidget {
                 ),
               );
             },
-            child: locationAsync.when(
+            child: MinglitAsyncValueWidget(
+              value: locationAsync,
               data: (loc) => PartyLocationSummary(
                 location: loc,
                 addressDetail: loc?.addressDetail,
