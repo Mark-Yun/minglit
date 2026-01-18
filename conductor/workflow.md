@@ -29,10 +29,11 @@
      2. **포맷팅:** `dart format .` (MCP `dart_format` 사용)
      3. **정적 분석:** `flutter analyze` (MCP `analyze_files` 사용)
    - **반복:** `flutter analyze` 결과가 "No issues found!"가 될 때까지 코드를 수정하고 루프를 반복합니다.
+   - **빌드 검증:** 각 앱(`apps/app_partner`, `apps/app_user`)에서 `flutter build apk` 또는 `flutter build ios` (가능한 경우)를 실행하여 빌드 오류가 없는지 확인합니다. 최소한 `flutter build web` 또는 `flutter build bundle`로 컴파일 가능성을 검증해야 합니다.
    - **수동 검증:** 로컬 환경에서 앱을 실행하여 기능이 기획대로 동작하는지 확인합니다.
 
 5. **변경 사항 설명 및 리뷰 요청:**
-   - **검증 루프:** 위 검증 단계(format, fix, lint)가 모두 통과했음을 확인합니다.
+   - **검증 루프:** 위 검증 단계(format, fix, lint, build)가 모두 통과했음을 확인합니다.
    - **설명:** 구현된 기능과 변경된 코드의 핵심 내용, 특히 디자인 토큰 적용 여부를 사용자에게 상세히 설명합니다.
    - **요청:** 사용자에게 변경 사항에 대한 리뷰를 요청하고, 커밋해도 되는지 명시적으로 허락을 구합니다. 승인을 **기다립니다**.
 
@@ -44,6 +45,7 @@
 
 7. **코드 변경 커밋:**
    - **전제 조건:** 사용자의 최종 승인을 받았는지 확인합니다.
+   - **CI/CD 보호:** 린트 경고나 빌드 오류가 있는 상태에서 절대 푸시하지 않습니다.
    - 태스크와 관련된 모든 코드 변경 사항을 스테이징합니다.
    - 명확하고 간결한 커밋 메시지를 제안합니다. 예: `feat(ui): implement event header section`.
    - 커밋을 수행합니다.
@@ -171,9 +173,14 @@
 
 ### Before Committing
 ```bash
-# 예시: 커밋 전 실행할 모든 검사 명령어 (포맷, 린트, 타입 체크, 테스트 실행)
-# Node.js 프로젝트 예: npm run check
-# Go 프로젝트 예: make check (Makefile이 있는 경우)
+# 예시: 커밋 전 실행할 모든 검사 명령어
+# 1. 린트 및 포맷팅 (전체 프로젝트)
+dart fix --apply && dart format .
+# 2. 정적 분석 (Zero Warning 필수)
+flutter analyze
+# 3. 빌드 검증 (각 앱 폴더에서)
+# cd apps/app_partner && flutter build web
+# cd apps/app_user && flutter build web
 ```
 
 ## 테스트 요구사항

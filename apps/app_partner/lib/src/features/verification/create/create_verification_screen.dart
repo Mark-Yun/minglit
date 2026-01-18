@@ -60,7 +60,7 @@ class _CreateVerificationScreenState
     // Listen for errors
     ref.listen(createVerificationControllerProvider, (prev, next) {
       if (prev?.error != next.error && next.error != null) {
-        handleMinglitError(context, next.error!, next.stackTrace);
+        handleMinglitError(context, next.error!);
       }
     });
 

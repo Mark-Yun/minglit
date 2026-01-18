@@ -29,14 +29,12 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
     final state = ref.watch(checkinControllerProvider);
     final theme = Theme.of(context);
 
-    // Overlay Color based on result
-    final overlayColor = switch (state.result) {
-      CheckinResult.success => Colors.green.withValues(alpha: 0.8),
-      CheckinResult.invalid ||
-      CheckinResult.alreadyCheckedIn ||
-      CheckinResult.error => Colors.red.withValues(alpha: 0.8),
-      _ => null,
-    };
+    Color? overlayColor;
+    if (state.result == CheckinResult.success) {
+      overlayColor = Colors.green.withValues(alpha: 0.8);
+    } else if (state.result != CheckinResult.idle) {
+      overlayColor = theme.colorScheme.error.withValues(alpha: 0.8);
+    }
 
     return Scaffold(
       extendBodyBehindAppBar: true,

@@ -1,7 +1,4 @@
 import 'dart:convert';
-import 'package:cryptography/cryptography.dart';
-import 'package:flutter/foundation.dart';
-import 'package:minglit_kit/minglit_data.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -54,8 +51,7 @@ class CheckinController extends _$CheckinController {
 
     try {
       // 1. Parse JSON
-      final Map<String, dynamic> json =
-          jsonDecode(rawData) as Map<String, dynamic>;
+      final json = jsonDecode(rawData) as Map<String, dynamic>;
       final token = TicketToken.fromJson(json);
 
       // 2. Verify with Repository
@@ -64,8 +60,8 @@ class CheckinController extends _$CheckinController {
       // TODO(party_checkin_system_20260117): Get actual public key from server
       final success = await repo.verifyAndCheckin(
         token: token,
-        serverPublicKey:
-            await (await TicketCrypto().generateKeyPair()).extractPublicKey(),
+        serverPublicKey: await (await TicketCrypto().generateKeyPair())
+            .extractPublicKey(),
       );
 
       if (success) {
