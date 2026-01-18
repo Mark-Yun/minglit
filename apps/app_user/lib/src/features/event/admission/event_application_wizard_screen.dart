@@ -283,17 +283,36 @@ class _VerificationStep extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: MinglitSpacing.small),
-          TextFormField(
-            decoration: InputDecoration(
-              hintText: field.placeholder ?? '${field.label}을(를) 입력하세요',
-              border: const OutlineInputBorder(),
+          if (field.type == 'file')
+            OutlinedButton.icon(
+              onPressed: () {
+                // Mock File Pick (TODO: Implement real file picker)
+                ref
+                    .read(eventApplicationControllerProvider(event).notifier)
+                    .updateVerificationData(field.key, 'mock_proof_file.jpg');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('파일이 첨부되었습니다. (Mock)')),
+                );
+              },
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.all(MinglitSpacing.medium),
+                alignment: Alignment.centerLeft,
+              ),
+              icon: const Icon(Icons.upload_file),
+              label: const Text('파일 선택 (터치 시 Mock 업로드)'),
+            )
+          else
+            TextFormField(
+              decoration: InputDecoration(
+                hintText: field.placeholder ?? '${field.label}을(를) 입력하세요',
+                border: const OutlineInputBorder(),
+              ),
+              onChanged: (value) {
+                ref
+                    .read(eventApplicationControllerProvider(event).notifier)
+                    .updateVerificationData(field.key, value);
+              },
             ),
-            onChanged: (value) {
-              ref
-                  .read(eventApplicationControllerProvider(event).notifier)
-                  .updateVerificationData(field.key, value);
-            },
-          ),
         ],
       ),
     );
