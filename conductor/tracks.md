@@ -5,6 +5,11 @@
 
 ---
 
+## [ ] 트랙: 클라이언트 시나리오 통합 테스트 환경 구축 (Integration Scenario Tester)
+*링크: [./conductor/tracks/integration_scenario_tester_setup_20260118/](./conductor/tracks/integration_scenario_tester_setup_20260118/)*
+
+---
+
 ## [x] 트랙: 실시간 파티 매칭 시스템 (Party Matching System)
 *링크: [./conductor/tracks/party_matching_system_20260118/](./conductor/tracks/party_matching_system_20260118/)*
 
