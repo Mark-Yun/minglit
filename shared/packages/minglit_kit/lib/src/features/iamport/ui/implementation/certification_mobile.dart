@@ -56,6 +56,7 @@ class _MinglitIamportCertificationState
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     // Native: Render Iamport WebView
     final config = ref.watch(iamportConfigProvider);
     final effectiveUserCode = widget.userCode ?? config.userCode;
@@ -64,23 +65,24 @@ class _MinglitIamportCertificationState
       appBar: AppBar(
         title: const Text('본인인증'),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: theme.colorScheme.surface,
+        foregroundColor: theme.colorScheme.onSurface,
         elevation: 0,
       ),
-      initialChild: const ColoredBox(
-        color: Colors.white,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(
-                color: MinglitColors.primary,
-              ),
-              SizedBox(height: 16),
-              Text('인증 페이지로 이동 중입니다...'),
-            ],
-          ),
+      initialChild: ColoredBox(
+        color: theme.colorScheme.surface,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const MinglitCircularProgressIndicator(
+              color: MinglitColors.primary,
+            ),
+            const SizedBox(height: MinglitSpacing.medium),
+            Text(
+              '인증 페이지로 이동 중입니다...',
+              style: theme.textTheme.bodyMedium,
+            ),
+          ],
         ),
       ),
       userCode: effectiveUserCode,

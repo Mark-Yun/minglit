@@ -18,9 +18,10 @@ class PartnerDetailView extends ConsumerWidget {
   final Partner partner;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(MinglitSpacing.large),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -29,64 +30,64 @@ class PartnerDetailView extends ConsumerWidget {
             children: [
               if (partner.profileImageUrl != null)
                 CircleAvatar(
-                  radius: 40,
+                  radius: MinglitRadius.card + MinglitRadius.button, // 40
                   backgroundImage: NetworkImage(partner.profileImageUrl!),
                 )
               else
                 CircleAvatar(
-                  radius: 40,
-                  backgroundColor: Colors.grey[200],
-                  child: const Icon(Icons.store, size: 40, color: Colors.grey),
+                  radius: MinglitRadius.card + MinglitRadius.button, // 40
+                  backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                  child: Icon(Icons.store, size: MinglitIconSize.xlarge * 1.25, color: theme.colorScheme.outline),
                 ),
-              const SizedBox(width: 20),
+              const SizedBox(width: MinglitSpacing.medium),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       partner.name,
-                      style: const TextStyle(
-                        fontSize: 24,
+                      style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     if (partner.address != null)
                       Text(
                         partner.address!,
-                        style: TextStyle(color: Colors.grey[600]),
+                        style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                       ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: MinglitSpacing.xlarge),
 
           // Introduction
-          _buildSection('소개', partner.introduction ?? '소개글이 없습니다.'),
-          const Divider(height: 48),
+          _buildSection(context, '소개', partner.introduction ?? '소개글이 없습니다.'),
+          const Divider(height: MinglitSpacing.xlarge * 1.5),
 
           // Parties
           _buildPartySection(ref, context),
-          const Divider(height: 48),
+          const Divider(height: MinglitSpacing.xlarge * 1.5),
 
           // Business Info
-          _buildSection('사업자 정보', ''),
-          _buildInfoRow('상호명', partner.bizName),
-          _buildInfoRow('대표자', partner.representativeName),
-          _buildInfoRow('사업자번호', partner.bizNumber),
-          const SizedBox(height: 24),
+          _buildSection(context, '사업자 정보', ''),
+          _buildInfoRow(context, '상호명', partner.bizName),
+          _buildInfoRow(context, '대표자', partner.representativeName),
+          _buildInfoRow(context, '사업자번호', partner.bizNumber),
+          const SizedBox(height: MinglitSpacing.large),
 
           // Contact Info
-          _buildSection('연락처', ''),
-          _buildInfoRow('이메일', partner.contactEmail),
-          _buildInfoRow('전화번호', partner.contactPhone),
+          _buildSection(context, '연락처', ''),
+          _buildInfoRow(context, '이메일', partner.contactEmail),
+          _buildInfoRow(context, '전화번호', partner.contactPhone),
         ],
       ),
     );
   }
 
   Widget _buildPartySection(WidgetRef ref, BuildContext context) {
+    final theme = Theme.of(context);
     final partiesAsync = ref.watch(
       partnerPartiesProvider(partnerId: partner.id),
     );
@@ -94,17 +95,17 @@ class PartnerDetailView extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           '진행 중인 파티',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: MinglitSpacing.medium),
         partiesAsync.when(
           data: (parties) {
             if (parties.isEmpty) {
-              return const Text(
+              return Text(
                 '등록된 파티가 없습니다.',
-                style: TextStyle(color: Colors.grey),
+                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.outline),
               );
             }
             return Column(
@@ -113,7 +114,7 @@ class PartnerDetailView extends ConsumerWidget {
                   .toList(),
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const MinglitCircularProgressIndicator(),
           error: (e, _) => Text('Error: $e'),
         ),
       ],
@@ -121,12 +122,13 @@ class PartnerDetailView extends ConsumerWidget {
   }
 
   Widget _buildPartyCard(Party party, BuildContext context) {
+    final theme = Theme.of(context);
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: MinglitSpacing.small),
       elevation: 0,
       shape: RoundedRectangleBorder(
-        side: BorderSide(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(MinglitRadius.small),
       ),
       child: ListTile(
         onTap: () {
@@ -143,50 +145,52 @@ class PartnerDetailView extends ConsumerWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: Colors.orange[50],
-            borderRadius: BorderRadius.circular(8),
+            color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(MinglitRadius.small),
           ),
-          child: const Icon(Icons.celebration, color: Colors.orange),
+          child: Icon(Icons.celebration, color: theme.colorScheme.secondary),
         ),
-        title: Text(party.title),
+        title: Text(party.title, style: theme.textTheme.bodyLarge),
         subtitle: Text(
           (party.contactOptions['phone'] as String?) ?? '문의처 없음',
-          style: const TextStyle(fontSize: 12),
+          style: theme.textTheme.labelSmall,
         ),
         trailing: const Icon(Icons.chevron_right),
       ),
     );
   }
 
-  Widget _buildSection(String title, String content) {
+  Widget _buildSection(BuildContext context, String title, String content) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         if (content.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Text(content, style: const TextStyle(fontSize: 15, height: 1.5)),
+          const SizedBox(height: MinglitSpacing.small),
+          Text(content, style: theme.textTheme.bodyMedium?.copyWith(height: 1.5)),
         ],
       ],
     );
   }
 
-  Widget _buildInfoRow(String label, String? value) {
+  Widget _buildInfoRow(BuildContext context, String label, String? value) {
+    final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.xxsmall),
       child: Row(
         children: [
           SizedBox(
             width: 100,
-            child: Text(label, style: const TextStyle(color: Colors.grey)),
+            child: Text(label, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.outline)),
           ),
           Expanded(
             child: Text(
               value ?? '-',
-              style: const TextStyle(fontWeight: FontWeight.w500),
+              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
             ),
           ),
         ],

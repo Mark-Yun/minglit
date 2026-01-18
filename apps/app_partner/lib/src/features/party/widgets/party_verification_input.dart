@@ -72,7 +72,7 @@ class PartyVerificationInput extends StatelessWidget {
                       children: [
                         // Icon Section
                         Container(
-                          padding: const EdgeInsets.all(10),
+                          padding: const EdgeInsets.all(MinglitSpacing.small + MinglitSpacing.xxsmall), // 10
                           decoration: BoxDecoration(
                             color: colorScheme.tertiary.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
@@ -125,7 +125,7 @@ class PartyVerificationInput extends StatelessWidget {
           ],
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const MinglitCircularProgressIndicator(),
       error: (e, s) => Text('인증 목록 로드 실패: $e'),
     );
   }

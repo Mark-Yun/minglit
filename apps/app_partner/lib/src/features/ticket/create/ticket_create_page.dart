@@ -27,7 +27,7 @@ class TicketCreatePage extends ConsumerWidget {
         title: context.l10n.ticket_title_create,
       ),
       body: partyAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const MinglitCircularProgressIndicator(),
         error: (e, s) => Center(
           child: Text(context.l10n.partyDetail_error_partyLoad(e.toString())),
         ),

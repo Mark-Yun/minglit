@@ -19,46 +19,18 @@ class PartyListPreviewScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Party Preview List')),
       body: partiesAsync.when(
-        data: (parties) {
-          if (parties.isEmpty) {
-            return const Center(child: Text('No active parties found.'));
-          }
-          return ListView.separated(
-            itemCount: parties.length,
-            separatorBuilder: (context, _) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final party = parties[index];
-              return ListTile(
-                leading: Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: Colors.orange[50],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.celebration, color: Colors.orange),
-                ),
-                title: Text(party.title),
-                subtitle: Text(
-                  'Partner: ${party.partnerId.substring(0, 8)}...',
-                  style: const TextStyle(fontSize: 12),
-                ),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  unawaited(
-                    Navigator.push<void>(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (context) => PartyDetailView(party: party),
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        data: (parties) => ListView.builder(
+          itemCount: parties.length,
+          itemBuilder: (context, index) {
+            final p = parties[index];
+            return ListTile(
+              title: Text(p.title),
+              subtitle: Text(p.id),
+              onTap: () => _showDetail(context, p),
+            );
+          },
+        ),
+        loading: () => const MinglitCircularProgressIndicator(),
         error: (e, st) => Center(child: Text('Error: $e')),
       ),
     );

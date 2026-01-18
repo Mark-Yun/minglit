@@ -78,15 +78,10 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
           ),
         ],
       ),
-      body: usersAsync.when<Widget>(
-        data: (List<Map<String, dynamic>> users) {
-          if (users.isEmpty) {
-            return _buildEmptyState();
-          }
-          return _buildUserList(users);
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (Object e, StackTrace? st) => Center(child: Text('Error: $e')),
+      body: userListAsync.when(
+        data: (users) => _buildUserList(context, ref, users),
+        loading: () => const MinglitCircularProgressIndicator(),
+        error: (e, st) => Center(child: Text('Error: $e')),
       ),
     );
   }

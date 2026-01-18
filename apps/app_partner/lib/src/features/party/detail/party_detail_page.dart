@@ -127,7 +127,7 @@ class PartyDetailPage extends ConsumerWidget {
               ],
             ),
           ),
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const MinglitCircularProgressIndicator(),
           error: (e, s) => Scaffold(
             appBar: MinglitTheme.simpleAppBar(title: ''),
             body: Center(

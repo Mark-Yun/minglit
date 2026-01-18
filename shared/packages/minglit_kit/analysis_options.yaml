@@ -1,12 +1,22 @@
 include: package:very_good_analysis/analysis_options.yaml
 
 analyzer:
+  plugins:
+    - custom_lint
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
+    - "lib/src/theme/minglit_theme.dart" # Exclude design tokens source
   errors:
     invalid_annotation_target: ignore
 
 linter:
   rules:
     public_member_api_docs: false
+
+custom_lint:
+  rules:
+    - no_hardcoded_padding
+    - use_minglit_progress_indicator
+    - no_hardcoded_colors
+    - no_hardcoded_text_style

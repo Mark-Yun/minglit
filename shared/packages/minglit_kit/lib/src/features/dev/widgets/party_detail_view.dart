@@ -9,25 +9,26 @@ class PartyDetailView extends ConsumerWidget {
   final Party party;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          _buildAppBar(),
+          _buildAppBar(context),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(MinglitSpacing.large),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildDescription(),
-                  const SizedBox(height: 32),
-                  const Text(
+                  _buildDescription(context),
+                  const SizedBox(height: MinglitSpacing.xlarge),
+                  Text(
                     '다가오는 일정',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 16),
-                  _buildEventList(ref),
+                  const SizedBox(height: MinglitSpacing.medium),
+                  _buildEventList(context, ref),
                 ],
               ),
             ),
@@ -38,16 +39,18 @@ class PartyDetailView extends ConsumerWidget {
     );
   }
 
-  Widget _buildAppBar() {
+  Widget _buildAppBar(BuildContext context) {
+    final theme = Theme.of(context);
     return SliverAppBar(
       expandedHeight: 250,
       pinned: true,
       flexibleSpace: FlexibleSpaceBar(
         title: Text(
           party.title,
-          style: const TextStyle(
-            color: Colors.white,
-            shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: theme.colorScheme.onPrimary,
+            fontWeight: FontWeight.bold,
+            shadows: [Shadow(color: theme.shadowColor.withValues(alpha: 0.54), blurRadius: 4)],
           ),
         ),
         background: Stack(
@@ -56,14 +59,14 @@ class PartyDetailView extends ConsumerWidget {
             if (party.imageUrl != null)
               Image.network(party.imageUrl!, fit: BoxFit.cover)
             else
-              Container(color: Colors.orange[100]),
-            const DecoratedBox(
+              Container(color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.1)),
+            DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black54],
-                  stops: [0.6, 1.0],
+                  colors: [theme.colorScheme.surface.withValues(alpha: 0), theme.colorScheme.onSurface.withValues(alpha: 0.54)],
+                  stops: const [0.6, 1.0],
                 ),
               ),
             ),
@@ -73,7 +76,8 @@ class PartyDetailView extends ConsumerWidget {
     );
   }
 
-  Widget _buildDescription() {
+  Widget _buildDescription(BuildContext context) {
+    final theme = Theme.of(context);
     // Assuming description is simple text for now (DB has jsonb)
     final descMap = party.description;
     final text = descMap?['text'] as String? ?? '파티 소개가 없습니다.';
@@ -83,17 +87,17 @@ class PartyDetailView extends ConsumerWidget {
       children: [
         Text(
           text,
-          style: const TextStyle(fontSize: 16, height: 1.6),
+          style: theme.textTheme.bodyLarge?.copyWith(height: 1.6),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: MinglitSpacing.medium),
         if (party.contactOptions['phone'] != null)
           Row(
             children: [
-              const Icon(Icons.phone, size: 16, color: Colors.grey),
-              const SizedBox(width: 8),
+              Icon(Icons.phone, size: MinglitIconSize.xsmall, color: theme.colorScheme.outline),
+              const SizedBox(width: MinglitSpacing.small),
               Text(
                 party.contactOptions['phone'] as String,
-                style: const TextStyle(color: Colors.grey),
+                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.outline),
               ),
             ],
           ),
@@ -101,58 +105,61 @@ class PartyDetailView extends ConsumerWidget {
     );
   }
 
-  Widget _buildEventList(WidgetRef ref) {
+  Widget _buildEventList(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final eventsAsync = ref.watch(partyEventsProvider(party.id));
 
     return eventsAsync.when(
       data: (events) {
         if (events.isEmpty) {
           return Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(MinglitSpacing.medium),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(8),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(MinglitRadius.small),
             ),
             child: const Center(child: Text('예정된 일정이 없습니다.')),
           );
         }
-        return Column(children: events.map(_buildEventCard).toList());
+        return Column(children: events.map((e) => _buildEventCard(context, e)).toList());
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const MinglitCircularProgressIndicator(),
       error: (e, _) => Text('Error loading events: $e'),
     );
   }
 
-  Widget _buildEventCard(Event event) {
+  Widget _buildEventCard(BuildContext context, Event event) {
+    final theme = Theme.of(context);
     final dateFormat = DateFormat('MM월 dd일 (E) HH:mm', 'ko_KR');
     final dateStr = dateFormat.format(event.startTime);
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: MinglitSpacing.small),
       child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
+        contentPadding: const EdgeInsets.all(MinglitSpacing.medium),
         title: Text(
           event.title ?? '정기 파티',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 8),
+            const SizedBox(height: MinglitSpacing.small),
             Row(
               children: [
-                const Icon(Icons.calendar_today, size: 14, color: Colors.blue),
-                const SizedBox(width: 6),
-                Text(dateStr),
+                Icon(Icons.calendar_today, size: MinglitIconSize.xsmall * 0.8, color: theme.colorScheme.primary),
+                const SizedBox(width: MinglitSpacing.xxsmall),
+                Text(dateStr, style: theme.textTheme.bodySmall),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: MinglitSpacing.xxsmall),
             Row(
               children: [
-                const Icon(Icons.people, size: 14, color: Colors.grey),
-                const SizedBox(width: 6),
+                Icon(Icons.people, size: MinglitIconSize.xsmall * 0.8, color: theme.colorScheme.outline),
+                const SizedBox(width: MinglitSpacing.xxsmall),
                 Text(
                   '${event.currentParticipants} / ${event.maxParticipants}명',
+                  style: theme.textTheme.bodySmall,
                 ),
               ],
             ),
@@ -160,6 +167,10 @@ class PartyDetailView extends ConsumerWidget {
         ),
         trailing: ElevatedButton(
           onPressed: () {},
+          style: ElevatedButton.styleFrom(
+            minimumSize: const Size(60, 36),
+            padding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.small),
+          ),
           child: const Text('예매'),
         ),
       ),
@@ -167,13 +178,14 @@ class PartyDetailView extends ConsumerWidget {
   }
 
   Widget _buildBottomBar(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(MinglitSpacing.medium),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: theme.shadowColor.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),
@@ -188,7 +200,7 @@ class PartyDetailView extends ConsumerWidget {
                 child: const Text('공유하기'),
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: MinglitSpacing.medium),
             Expanded(
               flex: 2,
               child: ElevatedButton(

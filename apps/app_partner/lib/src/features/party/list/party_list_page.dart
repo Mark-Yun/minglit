@@ -65,7 +65,7 @@ class PartyListPage extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const MinglitCircularProgressIndicator(),
         error: (Object e, StackTrace s) =>
             Center(child: Text('오류가 발생했습니다: $e')),
       ),

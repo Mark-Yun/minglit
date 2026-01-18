@@ -151,8 +151,7 @@ class EventDetailPage extends ConsumerWidget {
                       );
                     },
                   ),
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
+                  loading: () => const MinglitCircularProgressIndicator(),
                   error: (e, s) => Text(
                     context.l10n.partyDetail_error_ticketLoad(e.toString()),
                   ),
@@ -161,7 +160,7 @@ class EventDetailPage extends ConsumerWidget {
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const MinglitCircularProgressIndicator(),
         error: (e, s) => Center(
           child: Text(context.l10n.partyList_error_load(e.toString())),
         ),

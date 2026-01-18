@@ -58,7 +58,7 @@ class PartnerListPreviewScreen extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const MinglitCircularProgressIndicator(),
         error: (e, st) => Center(child: Text('Error: $e')),
       ),
     );

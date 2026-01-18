@@ -46,7 +46,7 @@ class PartyDetailOperationTab extends ConsumerWidget {
                     coordinator.goToEventDetail(party.id, event.id),
                 onCreatePressed: () => coordinator.goToCreateEvent(party.id),
               ),
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const MinglitCircularProgressIndicator(),
               error: (e, s) =>
                   Text(context.l10n.partyDetail_error_eventLoad(e.toString())),
             ),
@@ -85,7 +85,7 @@ class PartyDetailOperationTab extends ConsumerWidget {
                   );
                 },
               ),
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const MinglitCircularProgressIndicator(),
               error: (e, s) =>
                   Text(context.l10n.partyDetail_error_ticketLoad(e.toString())),
             ),
