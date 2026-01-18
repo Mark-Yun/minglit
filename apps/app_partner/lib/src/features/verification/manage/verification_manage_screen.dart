@@ -34,7 +34,8 @@ class VerificationManageScreen extends ConsumerWidget {
             ],
           ),
         ),
-        body: asyncState.when(
+        body: MinglitAsyncValueWidget(
+          value: asyncState,
           data: (state) => TabBarView(
             children: [
               // 1. Active List
@@ -49,8 +50,6 @@ class VerificationManageScreen extends ConsumerWidget {
               ),
             ],
           ),
-          loading: () => const MinglitCircularProgressIndicator(),
-          error: (e, s) => Center(child: Text('Error: $e')),
         ),
       ),
     );

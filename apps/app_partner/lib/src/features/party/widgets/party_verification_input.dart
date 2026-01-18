@@ -22,7 +22,8 @@ class PartyVerificationInput extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return verificationsAsync.when(
+    return MinglitAsyncValueWidget(
+      value: verificationsAsync,
       data: (verifications) {
         return Column(
           children: [
@@ -72,7 +73,9 @@ class PartyVerificationInput extends StatelessWidget {
                       children: [
                         // Icon Section
                         Container(
-                          padding: const EdgeInsets.all(MinglitSpacing.small + MinglitSpacing.xxsmall), // 10
+                          padding: const EdgeInsets.all(
+                            MinglitSpacing.small + MinglitSpacing.xxsmall,
+                          ), // 10
                           decoration: BoxDecoration(
                             color: colorScheme.tertiary.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
@@ -125,7 +128,6 @@ class PartyVerificationInput extends StatelessWidget {
           ],
         );
       },
-      loading: () => const MinglitCircularProgressIndicator(),
       error: (e, s) => Text('인증 목록 로드 실패: $e'),
     );
   }

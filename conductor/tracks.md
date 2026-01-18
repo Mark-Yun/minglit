@@ -7,6 +7,11 @@
 
 ---
 
+## [ ] 트랙: 선언적 비동기 처리 위젯 (MinglitAsync) 구현
+*링크: [./conductor/tracks/minglit_async_widget_20260118/](./conductor/tracks/minglit_async_widget_20260118/)*
+
+---
+
 ## [~] 트랙: 유저 앱 이벤트 상세 화면 구현
 *링크: [./conductor/tracks/event_detail_screen_20260112/](./conductor/tracks/event_detail_screen_20260112/)*
 

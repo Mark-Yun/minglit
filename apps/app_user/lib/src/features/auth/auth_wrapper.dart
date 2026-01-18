@@ -14,7 +14,8 @@ class AuthWrapper extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authStateChangesProvider);
 
-    return authState.when(
+    return MinglitAsyncValueWidget(
+      value: authState,
       data: (state) {
         if (state.session != null) {
           return const HomePage();
@@ -22,7 +23,6 @@ class AuthWrapper extends ConsumerWidget {
           return const LoginPage();
         }
       },
-      error: (e, st) => Scaffold(body: Center(child: Text('Error: $e'))),
       loading: () => const Scaffold(body: MinglitCircularProgressIndicator()),
     );
   }

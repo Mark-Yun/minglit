@@ -39,14 +39,14 @@ class PartyDetailOperationTab extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(
               horizontal: MinglitSpacing.medium,
             ),
-            child: eventsAsync.when(
+            child: MinglitAsyncValueWidget(
+              value: eventsAsync,
               data: (events) => PartyEventListSummary(
                 events: events,
                 onEventTap: (event) =>
                     coordinator.goToEventDetail(party.id, event.id),
                 onCreatePressed: () => coordinator.goToCreateEvent(party.id),
               ),
-              loading: () => const MinglitCircularProgressIndicator(),
               error: (e, s) =>
                   Text(context.l10n.partyDetail_error_eventLoad(e.toString())),
             ),
@@ -69,7 +69,8 @@ class PartyDetailOperationTab extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(
               horizontal: MinglitSpacing.medium,
             ),
-            child: ticketsAsync.when(
+            child: MinglitAsyncValueWidget(
+              value: ticketsAsync,
               data: (templates) => PartyTicketsSummary(
                 tickets: templates.map(Ticket.createFromTemplate).toList(),
                 entryGroups: party.entryGroups ?? [],
@@ -85,7 +86,6 @@ class PartyDetailOperationTab extends ConsumerWidget {
                   );
                 },
               ),
-              loading: () => const MinglitCircularProgressIndicator(),
               error: (e, s) =>
                   Text(context.l10n.partyDetail_error_ticketLoad(e.toString())),
             ),

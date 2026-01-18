@@ -26,10 +26,9 @@ class EventApplicationWizardScreen extends ConsumerWidget {
         title: const Text('참여 신청'),
         leading: const CloseButton(),
       ),
-      body: eventAsync.when(
+      body: MinglitAsyncValueWidget(
+        value: eventAsync,
         data: (event) => _WizardBody(event: event, initialTicketId: ticketId),
-        loading: () => const MinglitCircularProgressIndicator(),
-        error: (e, s) => Center(child: Text('오류 발생: $e')),
       ),
     );
   }
@@ -231,7 +230,8 @@ class _VerificationStep extends ConsumerWidget {
     // Fetch the verification definition
     final verifAsync = ref.watch(verificationsByIdsProvider(verifIds));
 
-    return verifAsync.when(
+    return MinglitAsyncValueWidget(
+      value: verifAsync,
       data: (verifs) {
         if (verifs.isEmpty) return const Text('인증 정보를 불러올 수 없습니다.');
         final verif = verifs.first; // Handle first one for now
@@ -260,8 +260,6 @@ class _VerificationStep extends ConsumerWidget {
           ],
         );
       },
-      loading: () => const MinglitCircularProgressIndicator(),
-      error: (e, _) => Text('오류: $e'),
     );
   }
 

@@ -44,7 +44,8 @@ class _PartnerApplicationListPageState
         children: [
           _buildFilterBar(),
           Expanded(
-            child: appsAsync.when(
+            child: MinglitAsyncValueWidget(
+              value: appsAsync,
               data: (List<PartnerApplication> apps) {
                 if (apps.isEmpty) {
                   return const Center(child: Text('신청 내역이 없습니다.'));
@@ -64,9 +65,6 @@ class _PartnerApplicationListPageState
                   ),
                 );
               },
-              error: (Object e, StackTrace s) =>
-                  Center(child: Text('Error: $e')),
-              loading: () => const MinglitCircularProgressIndicator(),
             ),
           ),
         ],
@@ -159,7 +157,7 @@ class _PartnerApplicationListPageState
 
   Widget _buildStatusBadge(String status) {
     final theme = Theme.of(context);
-    Color color = theme.colorScheme.outline;
+    var color = theme.colorScheme.outline;
     var label = status;
     switch (status) {
       case 'pending':

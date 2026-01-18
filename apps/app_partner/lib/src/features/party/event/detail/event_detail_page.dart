@@ -23,7 +23,8 @@ class EventDetailPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(title: context.l10n.eventDetail_title),
-      body: eventAsync.when(
+      body: MinglitAsyncValueWidget(
+        value: eventAsync,
         data: (event) {
           final partyAsync = ref.watch(partyDetailProvider(event.partyId));
           final entryGroups = partyAsync.asData?.value.entryGroups ?? [];
@@ -128,7 +129,8 @@ class EventDetailPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: MinglitSpacing.small),
 
-                ticketsAsync.when(
+                MinglitAsyncValueWidget(
+                  value: ticketsAsync,
                   data: (tickets) => TicketListView(
                     tickets: tickets,
                     entryGroups: entryGroups,
@@ -151,7 +153,6 @@ class EventDetailPage extends ConsumerWidget {
                       );
                     },
                   ),
-                  loading: () => const MinglitCircularProgressIndicator(),
                   error: (e, s) => Text(
                     context.l10n.partyDetail_error_ticketLoad(e.toString()),
                   ),
@@ -160,7 +161,6 @@ class EventDetailPage extends ConsumerWidget {
             ),
           );
         },
-        loading: () => const MinglitCircularProgressIndicator(),
         error: (e, s) => Center(
           child: Text(context.l10n.partyList_error_load(e.toString())),
         ),

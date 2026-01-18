@@ -23,7 +23,8 @@ class PartyDetailPage extends ConsumerWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        body: partyAsync.when(
+        body: MinglitAsyncValueWidget(
+          value: partyAsync,
           data: (party) => NestedScrollView(
             headerSliverBuilder: (context, innerBoxIsScrolled) => [
               // 1. Simple AppBar
@@ -127,7 +128,6 @@ class PartyDetailPage extends ConsumerWidget {
               ],
             ),
           ),
-          loading: () => const MinglitCircularProgressIndicator(),
           error: (e, s) => Scaffold(
             appBar: MinglitTheme.simpleAppBar(title: ''),
             body: Center(

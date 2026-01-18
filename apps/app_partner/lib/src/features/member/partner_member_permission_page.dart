@@ -53,7 +53,8 @@ class PartnerMemberPermissionPage extends ConsumerWidget {
       appBar: MinglitTheme.simpleAppBar(
         title: context.l10n.memberPermission_title,
       ),
-      body: memberAsync.when(
+      body: MinglitAsyncValueWidget(
+        value: memberAsync,
         data: (memberData) {
           if (memberData == null) {
             return Center(
@@ -65,8 +66,6 @@ class PartnerMemberPermissionPage extends ConsumerWidget {
             memberData: memberData,
           );
         },
-        loading: () => const MinglitCircularProgressIndicator(),
-        error: (err, stack) => Center(child: Text('Error: $err')),
       ),
     );
   }

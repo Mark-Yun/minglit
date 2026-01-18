@@ -39,7 +39,8 @@ class _PartyCurationScreenState extends ConsumerState<PartyCurationScreen> {
             fetchEventFeedProvider(type: widget.type).future,
           );
         },
-        child: eventsAsync.when(
+        child: MinglitAsyncValueWidget(
+          value: eventsAsync,
           data: (List<Event> events) {
             if (events.isEmpty) {
               return Stack(
@@ -68,9 +69,6 @@ class _PartyCurationScreenState extends ConsumerState<PartyCurationScreen> {
               },
             );
           },
-          loading: () => const MinglitCircularProgressIndicator(),
-          error: (Object error, StackTrace? stack) =>
-              Center(child: Text('오류가 발생했습니다: $error')),
         ),
       ),
     );

@@ -23,7 +23,8 @@ class PartyListPage extends ConsumerWidget {
           ),
         ],
       ),
-      body: partiesAsync.when(
+      body: MinglitAsyncValueWidget(
+        value: partiesAsync,
         data: (List<Party> parties) {
           if (parties.isEmpty) {
             return Center(
@@ -65,9 +66,6 @@ class PartyListPage extends ConsumerWidget {
             },
           );
         },
-        loading: () => const MinglitCircularProgressIndicator(),
-        error: (Object e, StackTrace s) =>
-            Center(child: Text('오류가 발생했습니다: $e')),
       ),
     );
   }

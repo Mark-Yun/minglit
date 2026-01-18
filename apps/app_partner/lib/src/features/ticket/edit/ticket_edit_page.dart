@@ -26,14 +26,14 @@ class TicketEditPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(title: context.l10n.ticket_title_edit),
-      body: ticketAsync.when(
-        loading: () => const MinglitCircularProgressIndicator(),
+      body: MinglitAsyncValueWidget(
+        value: ticketAsync,
         error: (Object e, StackTrace s) => Center(
           child: Text(context.l10n.partyDetail_error_ticketLoad(e.toString())),
         ),
         data: (Ticket ticket) {
-          return partyAsync.when(
-            loading: () => const MinglitCircularProgressIndicator(),
+          return MinglitAsyncValueWidget(
+            value: partyAsync,
             error: (Object e, StackTrace s) => Center(
               child: Text(
                 context.l10n.partyDetail_error_partyLoad(e.toString()),

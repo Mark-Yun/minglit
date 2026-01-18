@@ -20,71 +20,51 @@ class TicketCreatePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final partyAsync = ref.watch(partyDetailProvider(partyId));
-    final eventAsync = ref.watch(eventDetailProvider(eventId));
+
+    Future<void> handleSave({
+      required String name,
+      required int price,
+      required int quantity,
+      required List<String> targetEntryGroupIds,
+    }) async {
+      await ref.read(ticketControllerProvider.notifier).createTicket(
+            eventId: eventId,
+            name: name,
+            price: price,
+            quantity: quantity,
+            targetEntryGroupIds: targetEntryGroupIds,
+          );
+
+      final state = ref.read(ticketControllerProvider);
+      if (!state.hasError && context.mounted) {
+        context.pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.ticket_message_created)),
+        );
+        if (eventId.isNotEmpty) {
+          ref.invalidate(eventTicketsProvider(eventId));
+        } else {
+          ref.invalidate(partyTicketsProvider(partyId));
+        }
+      } else if (state.hasError && context.mounted) {
+        handleMinglitError(context, state.error!, state.stackTrace);
+      }
+    }
 
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(
         title: context.l10n.ticket_title_create,
       ),
-      body: partyAsync.when(
-        loading: () => const MinglitCircularProgressIndicator(),
-        error: (e, s) => Center(
-          child: Text(context.l10n.partyDetail_error_partyLoad(e.toString())),
+      body: MinglitAsyncValueWidget(
+        value: partyAsync,
+        data: (party) => SingleChildScrollView(
+          padding: const EdgeInsets.all(MinglitSpacing.medium),
+          child: TicketForm(
+            entryGroups: party.entryGroups ?? [],
+            submitButtonLabel: context.l10n.ticket_button_create,
+            onSaved: handleSave,
+          ),
         ),
-        data: (Party party) {
-          final entryGroups = party.entryGroups ?? [];
-          final event = eventAsync.asData?.value;
-
-          // Calculate initial quantity
-          int? initialQuantity;
-          if (event != null && entryGroups.isNotEmpty) {
-            initialQuantity = (event.maxParticipants / entryGroups.length)
-                .floor();
-          }
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(MinglitSpacing.medium),
-            child: TicketForm(
-              entryGroups: entryGroups,
-              initialQuantity: initialQuantity,
-              submitButtonLabel: context.l10n.ticket_button_create,
-              onSaved:
-                  ({
-                    required String name,
-                    required int price,
-                    required int quantity,
-                    required List<String> targetEntryGroupIds,
-                  }) async {
-                    await ref
-                        .read(ticketControllerProvider.notifier)
-                        .createTicket(
-                          eventId: eventId,
-                          name: name,
-                          price: price,
-                          quantity: quantity,
-                          targetEntryGroupIds: targetEntryGroupIds,
-                        );
-
-                    final updatedState = ref.read(ticketControllerProvider);
-                    if (!updatedState.hasError && context.mounted) {
-                      context.pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(context.l10n.ticket_message_created),
-                        ),
-                      );
-                      ref.invalidate(eventTicketsProvider(eventId));
-                    } else if (updatedState.hasError && context.mounted) {
-                      handleMinglitError(
-                        context,
-                        updatedState.error!,
-                        updatedState.stackTrace,
-                      );
-                    }
-                  },
-            ),
-          );
-        },
       ),
     );
   }

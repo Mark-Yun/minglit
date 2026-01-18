@@ -37,9 +37,9 @@ class PartnerMemberListPage extends ConsumerWidget {
           ),
         ],
       ),
-      body: membersAsync.when(
+      body: MinglitAsyncValueWidget(
+        value: membersAsync,
         data: (members) => _buildListView(context, ref, members),
-        loading: () => const MinglitCircularProgressIndicator(),
         error: (err, stack) => _buildErrorView(context, ref, err),
       ),
       floatingActionButton: FloatingActionButton.extended(

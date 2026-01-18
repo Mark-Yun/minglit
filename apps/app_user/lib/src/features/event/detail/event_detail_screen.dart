@@ -20,10 +20,9 @@ class EventDetailScreen extends ConsumerWidget {
     final eventAsync = ref.watch(eventDetailControllerProvider(eventId));
 
     return Scaffold(
-      body: eventAsync.when(
+      body: MinglitAsyncValueWidget(
+        value: eventAsync,
         data: (event) => _EventDetailContent(event: event),
-        loading: () => const MinglitCircularProgressIndicator(),
-        error: (e, s) => Center(child: Text('오류가 발생했습니다: $e')),
       ),
       bottomNavigationBar: eventAsync.maybeWhen(
         data: (event) => _BottomTicketBar(event: event),
@@ -337,7 +336,8 @@ class _BottomTicketBar extends ConsumerWidget {
             ),
             const SizedBox(width: MinglitSpacing.large),
             Expanded(
-              child: admissionAsync.when(
+              child: MinglitAsyncValueWidget(
+                value: admissionAsync,
                 data: (state) => _buildActionButton(context, ref, state),
                 loading: () => const ElevatedButton(
                   onPressed: null,

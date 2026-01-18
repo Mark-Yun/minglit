@@ -91,7 +91,8 @@ class _PartnerApplicationDetailPageState
 
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(title: context.l10n.appDetail_title),
-      body: appAsync.when(
+      body: MinglitAsyncValueWidget(
+        value: appAsync,
         data: (PartnerApplication? app) {
           if (app == null) {
             return Center(child: Text(context.l10n.appDetail_message_notFound));
@@ -203,8 +204,6 @@ class _PartnerApplicationDetailPageState
             ),
           );
         },
-        error: (Object e, StackTrace s) => Center(child: Text('Error: $e')),
-        loading: () => const MinglitCircularProgressIndicator(),
       ),
     );
   }

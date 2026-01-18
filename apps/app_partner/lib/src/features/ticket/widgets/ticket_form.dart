@@ -189,7 +189,6 @@ class _TicketFormState extends State<TicketForm> {
               child: widget.isLoading
                   ? const MinglitCircularProgressIndicator(
                       size: 20,
-                      strokeWidth: 2,
                     )
                   : Text(widget.submitButtonLabel),
             ),

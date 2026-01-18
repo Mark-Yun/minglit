@@ -158,7 +158,7 @@ class PartyListItem extends StatelessWidget {
 
   Widget _buildPlaceholder(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
+    return ColoredBox(
       color: theme.colorScheme.onSurface,
       child: Center(
         child: Icon(
