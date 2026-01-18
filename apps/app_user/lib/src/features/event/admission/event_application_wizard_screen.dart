@@ -423,7 +423,6 @@ class _Footer extends StatelessWidget {
                 child: isSubmitting
                     ? const MinglitCircularProgressIndicator(
                         size: 20,
-                        strokeWidth: 2,
                       )
                     : Text(isFirstStep ? '다음' : '결제하고 신청하기'),
               ),

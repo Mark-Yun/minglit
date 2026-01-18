@@ -343,7 +343,6 @@ class _BottomTicketBar extends ConsumerWidget {
                   onPressed: null,
                   child: MinglitCircularProgressIndicator(
                     size: 20,
-                    strokeWidth: 2,
                   ),
                 ),
                 error: (e, _) => ElevatedButton(

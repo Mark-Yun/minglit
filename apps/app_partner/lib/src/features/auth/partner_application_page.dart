@@ -216,10 +216,7 @@ class _PartnerApplicationPageState
               ElevatedButton(
                 onPressed: _isLoading ? null : _submit,
                 child: _isLoading
-                    ? const MinglitCircularProgressIndicator(
-                        size: 20,
-                        strokeWidth: 2,
-                      )
+                    ? const MinglitCircularProgressIndicator(size: 20)
                     : Text(context.l10n.partnerApplication_button_submit),
               ),
             ],
