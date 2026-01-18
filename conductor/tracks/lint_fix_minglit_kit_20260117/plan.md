@@ -22,3 +22,9 @@
 - [x] Task: 기존 테스트 실행
     - [x] `minglit_kit` 내 기존 단위 테스트 통과 확인. (테스트 파일은 없거나 다른 패키지에 있음, 린트 통과로 충분)
 - [x] Task: Conductor - 사용자 수동 검증 'Phase 3: 린트 수정 완료 확인' (Protocol in workflow.md) (e775bd8)
+
+## Phase 4: 커스텀 린트 패키지 수정 (Added) [checkpoint: b9dac6a]
+- [x] Task: `minglit_lints` 패키지 에러 수정 (b9dac6a)
+    - [x] `ErrorReporter` -> `DiagnosticReporter` 교체.
+    - [x] `declaredElement` 접근 방식 수정.
+    - [x] 중복 요소 및 미사용 import 제거.
