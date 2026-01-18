@@ -18,7 +18,7 @@ class MatchingVoteController extends _$MatchingVoteController {
     try {
       final repo = ref.read(matchingRepositoryProvider);
       await repo.castVote(eventId: eventId, candidateId: candidateId);
-      
+
       // Refresh candidates (to update UI if needed, though mostly static)
       // and refresh matches to see if a match occurred instantly
       ref.invalidate(myMatchesProvider(eventId));

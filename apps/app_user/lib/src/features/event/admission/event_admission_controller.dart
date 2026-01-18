@@ -1,5 +1,4 @@
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:minglit_kit/src/data/repositories/user_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'event_admission_controller.g.dart';
@@ -67,7 +66,9 @@ class EventAdmissionController extends _$EventAdmissionController {
     }
 
     // 4. Fetch User's Approved Verifications
-    final userVerifIds = await userRepository.getApprovedVerificationIds(currentUser.id);
+    final userVerifIds = await userRepository.getApprovedVerificationIds(
+      currentUser.id,
+    );
 
     // 5. Check Eligibility & Qualifications
     final tickets = event.tickets ?? [];

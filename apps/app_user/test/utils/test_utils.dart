@@ -7,7 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 /// Use [observers] to spy on provider changes.
 ProviderContainer createContainer({
   ProviderContainer? parent,
-  List<dynamic> overrides = const [], // Use dynamic to bypass Override type issue
+  List<dynamic> overrides =
+      const [], // Use dynamic to bypass Override type issue
   List<ProviderObserver>? observers,
 }) {
   final container = ProviderContainer(

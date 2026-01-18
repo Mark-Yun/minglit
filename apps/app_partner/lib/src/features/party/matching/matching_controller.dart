@@ -25,7 +25,6 @@ class MatchingController extends _$MatchingController {
   }
 }
 
-
 @riverpod
 Future<List<MatchRule>> eventMatchRules(Ref ref, String eventId) {
   return ref.watch(matchingRepositoryProvider).getMatchRules(eventId);

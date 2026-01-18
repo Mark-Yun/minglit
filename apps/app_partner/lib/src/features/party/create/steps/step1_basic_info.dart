@@ -53,17 +53,8 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      ref.read(partyCreateWizardControllerProvider.notifier).updateImage(image);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(partyCreateWizardControllerProvider);
     final theme = Theme.of(context);
 
     return SingleChildScrollView(
@@ -107,9 +98,21 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
             ),
           ),
           const SizedBox(height: MinglitSpacing.medium),
-          MinglitImagePicker(
-            selectedImage: state.imageFile,
-            onPickImage: _pickImage,
+          MinglitFilePicker(
+            label: '이미지 선택',
+            hint: '파티 대표 이미지를 선택해주세요',
+            onFilesSelected: (files) {
+              if (files.isNotEmpty) {
+                final file = files.first;
+                ref
+                    .read(partyCreateWizardControllerProvider.notifier)
+                    .updateImage(XFile(file.path!));
+              } else {
+                ref
+                    .read(partyCreateWizardControllerProvider.notifier)
+                    .updateImage(null);
+              }
+            },
           ),
         ],
       ),

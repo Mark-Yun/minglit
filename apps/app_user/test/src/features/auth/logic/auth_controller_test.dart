@@ -1,7 +1,5 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:minglit_kit/src/features/auth/logic/auth_controller.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../utils/mocks.dart';
@@ -40,7 +38,9 @@ void main() {
           email: any(named: 'email'),
           password: any(named: 'password'),
         ),
-      ).thenAnswer((_) async => {}); // AuthResponse not needed as it returns void
+      ).thenAnswer(
+        (_) async => {},
+      ); // AuthResponse not needed as it returns void
 
       final container = createContainer(
         overrides: [
@@ -76,9 +76,9 @@ void main() {
       await controller.signOut();
 
       verify(() => mockAuthRepo.signOut()).called(1);
-      
+
       final state = container.read(authControllerProvider);
-      expect(state, isA<AsyncError>());
+      expect(state, isA<AsyncError<void>>());
       expect(state.error, exception);
     });
   });

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_file_picker.dart';
 
 class PartyBasicInfoEditScreen extends ConsumerStatefulWidget {
   const PartyBasicInfoEditScreen({
@@ -76,8 +75,9 @@ class _PartyBasicInfoEditScreenState
             MinglitFilePicker(
               label: '이미지 선택',
               hint: '파티 대표 이미지를 선택해주세요',
-              initialUrls:
-                  widget.party.imageUrl != null ? [widget.party.imageUrl!] : [],
+              initialUrls: widget.party.imageUrl != null
+                  ? [widget.party.imageUrl!]
+                  : [],
               onFilesSelected: (files) {
                 if (files.isNotEmpty) {
                   setState(() {

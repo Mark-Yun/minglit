@@ -26,8 +26,9 @@ void main() {
 
   group('EventDetailController', () {
     test('returns event when repository succeeds', () async {
-      when(() => mockEventRepo.getEventById('event_1'))
-          .thenAnswer((_) async => testEvent);
+      when(
+        () => mockEventRepo.getEventById('event_1'),
+      ).thenAnswer((_) async => testEvent);
 
       final container = createContainer(
         overrides: [
@@ -35,7 +36,9 @@ void main() {
         ],
       );
 
-      final result = await container.read(eventDetailControllerProvider('event_1').future);
+      final result = await container.read(
+        eventDetailControllerProvider('event_1').future,
+      );
       expect(result, testEvent);
     });
 
@@ -62,7 +65,7 @@ void main() {
     //     container.read(eventDetailControllerProvider('event_1').future),
     //     throwsA(isA<Exception>()),
     //   );
-      
+
     //   subscription.close();
     // });
   });

@@ -13,7 +13,7 @@ MatchingRepository matchingRepository(Ref ref) {
 
 class MatchingRepository {
   MatchingRepository({SupabaseClient? supabase})
-      : _supabase = supabase ?? Supabase.instance.client;
+    : _supabase = supabase ?? Supabase.instance.client;
 
   final SupabaseClient _supabase;
 
@@ -117,7 +117,7 @@ class MatchingRepository {
             (p) => p['id'] == m.partnerId,
             orElse: () => {},
           );
-          
+
           final contact = await _supabase.rpc<String?>(
             'get_matched_user_contact',
             params: {
@@ -159,7 +159,7 @@ class MatchingRepository {
       // Assuming we have a way to know user's group.
       // For MVP: Fetch ALL participants excluding self.
       // TODO(user): Implement strict group filtering based on tickets.
-      
+
       final participants = await _supabase
           .from('event_participants')
           .select('user_id, user:user_profiles(*)')

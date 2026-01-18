@@ -1,4 +1,3 @@
-import 'package:app_partner/src/features/party/event/detail/event_detail_controller.dart';
 import 'package:app_partner/src/features/party/matching/matching_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -49,7 +48,9 @@ class _MatchingSettingsScreenState
 
   void _initializeRules(List<MatchRule> rules) {
     for (final rule in rules) {
-      _selectedRules.putIfAbsent(rule.sourceGroupId, () => {}).add(
+      _selectedRules
+          .putIfAbsent(rule.sourceGroupId, () => {})
+          .add(
             rule.targetGroupId,
           );
     }
@@ -80,8 +81,7 @@ class _MatchingSettingsScreenState
     List<EntryGroup> allGroups,
   ) {
     final theme = Theme.of(context);
-    final selectedTargets =
-        _selectedRules[sourceGroup.id] ?? {};
+    final selectedTargets = _selectedRules[sourceGroup.id] ?? {};
 
     return Card(
       child: Padding(
@@ -106,9 +106,9 @@ class _MatchingSettingsScreenState
             Wrap(
               spacing: MinglitSpacing.small,
               runSpacing: MinglitSpacing.small,
-              children: allGroups
-                  .where((g) => g.id != sourceGroup.id)
-                  .map((targetGroup) {
+              children: allGroups.where((g) => g.id != sourceGroup.id).map((
+                targetGroup,
+              ) {
                 final isSelected = selectedTargets.contains(targetGroup.id);
                 return FilterChip(
                   label: Text(targetGroup.label ?? '그룹'),
@@ -156,7 +156,9 @@ class _MatchingSettingsScreenState
       }
     });
 
-    await ref.read(matchingControllerProvider.notifier).updateRules(
+    await ref
+        .read(matchingControllerProvider.notifier)
+        .updateRules(
           eventId: widget.eventId,
           rules: rules,
         );

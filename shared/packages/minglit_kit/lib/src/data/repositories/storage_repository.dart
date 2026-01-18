@@ -17,7 +17,7 @@ StorageRepository storageRepository(Ref ref) {
 /// Handles generic file upload operations to Supabase Storage.
 class StorageRepository {
   StorageRepository({SupabaseClient? supabase})
-      : _supabase = supabase ?? Supabase.instance.client;
+    : _supabase = supabase ?? Supabase.instance.client;
 
   final SupabaseClient _supabase;
 
@@ -43,7 +43,9 @@ class StorageRepository {
 
       Log.d('Uploading file to $bucket/$fullPath...');
 
-      await _supabase.storage.from(bucket).uploadBinary(
+      await _supabase.storage
+          .from(bucket)
+          .uploadBinary(
             fullPath,
             bytes,
             fileOptions: FileOptions(
@@ -59,7 +61,7 @@ class StorageRepository {
       rethrow;
     }
   }
-  
+
   /// Deletes a file from storage.
   Future<void> deleteFile({
     required String bucket,

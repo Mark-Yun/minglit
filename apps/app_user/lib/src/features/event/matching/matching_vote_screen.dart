@@ -20,7 +20,8 @@ class MatchingVoteScreen extends ConsumerWidget {
       if (state.hasError) {
         handleMinglitError(context, state.error!, state.stackTrace);
       } else if (!state.isLoading && state.hasValue) {
-        // Void async value technically has null value, but let's check !hasError
+        // Void async value technically has null value,
+        // but let's check !hasError
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('투표가 완료되었습니다.')),
         );
@@ -36,46 +37,48 @@ class MatchingVoteScreen extends ConsumerWidget {
             value: matchesAsync,
             data: (matches) {
               if (matches.isEmpty) return const SizedBox.shrink();
-              return Container(
+              return ColoredBox(
                 color: theme.colorScheme.secondaryContainer.withValues(
                   alpha: 0.2,
                 ),
-                padding: const EdgeInsets.all(MinglitSpacing.medium),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.favorite,
-                          color: theme.colorScheme.error,
-                          size: MinglitIconSize.small,
-                        ),
-                        const SizedBox(width: MinglitSpacing.small),
-                        Text(
-                          '매칭 성공! (${matches.length}명)',
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
+                child: Padding(
+                  padding: const EdgeInsets.all(MinglitSpacing.medium),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.favorite,
                             color: theme.colorScheme.error,
+                            size: MinglitIconSize.small,
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: MinglitSpacing.small),
-                    SizedBox(
-                      height: 80,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: matches.length,
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(width: MinglitSpacing.medium),
-                        itemBuilder: (context, index) {
-                          final match = matches[index];
-                          return _buildMatchCard(context, match);
-                        },
+                          const SizedBox(width: MinglitSpacing.small),
+                          Text(
+                            '매칭 성공! (${matches.length}명)',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.error,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: MinglitSpacing.small),
+                      SizedBox(
+                        height: 80,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: matches.length,
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(width: MinglitSpacing.medium),
+                          itemBuilder: (context, index) {
+                            final match = matches[index];
+                            return _buildMatchCard(context, match);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
@@ -187,12 +190,12 @@ class MatchingVoteScreen extends ConsumerWidget {
             right: 0,
             child: Container(
               padding: const EdgeInsets.all(MinglitSpacing.small),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: [
-                    Colors.black.withValues(alpha: 0.8),
+                    Colors.black87,
                     Colors.transparent,
                   ],
                 ),
@@ -201,7 +204,7 @@ class MatchingVoteScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    candidate.name ?? '익명',
+                    candidate.name,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -246,7 +249,9 @@ class MatchingVoteScreen extends ConsumerWidget {
     );
 
     if (confirmed) {
-      await ref.read(matchingVoteControllerProvider.notifier).vote(
+      await ref
+          .read(matchingVoteControllerProvider.notifier)
+          .vote(
             eventId: eventId,
             candidateId: candidate.id,
           );

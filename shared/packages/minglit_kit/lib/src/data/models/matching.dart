@@ -43,7 +43,7 @@ abstract class MatchPair with _$MatchPair {
     @JsonKey(name: 'event_id') required String eventId,
     @JsonKey(name: 'partner_id') required String partnerId,
     @JsonKey(name: 'matched_at') required DateTime matchedAt,
-    
+
     // Optional: Partner profile details (if joined)
     @JsonKey(includeFromJson: false) String? partnerName,
     @JsonKey(includeFromJson: false) String? partnerProfileImage,
