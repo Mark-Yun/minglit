@@ -1,6 +1,6 @@
 ---
 
-## [ ] 트랙: 범용 소셜 그래프 시스템 (Universal Social Graph)
+## [~] 트랙: 범용 소셜 그래프 시스템 (Universal Social Graph)
 *링크: [./conductor/tracks/universal_social_graph_20260118/](./conductor/tracks/universal_social_graph_20260118/)*
 
 ---

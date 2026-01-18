@@ -89,7 +89,19 @@ class PartyListItem extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Top-Left: Status Badge
-                        _buildStatusBadge(context),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildStatusBadge(context),
+                            MinglitSocialButton(
+                              targetId: party.id,
+                              targetType: SocialTargetType.party,
+                              interactionType: SocialInteractionType.like,
+                              inactiveColor: theme.colorScheme.surface,
+                              activeColor: theme.colorScheme.error,
+                            ),
+                          ],
+                        ),
                         const Spacer(),
 
                         // Bottom-Left: Chips

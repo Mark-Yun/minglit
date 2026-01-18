@@ -12,6 +12,8 @@ export 'src/features/dev/widgets/party_detail_view.dart';
 export 'src/features/loading/global_loading_controller.dart';
 export 'src/features/loading/minglit_global_loading_overlay.dart';
 export 'src/features/search/ui/location_search_screen.dart';
+// Social
+export 'src/features/social/ui/minglit_social_button.dart';
 // Verification
 export 'src/features/verification/ui/identity_verification_screen.dart';
 // Theme

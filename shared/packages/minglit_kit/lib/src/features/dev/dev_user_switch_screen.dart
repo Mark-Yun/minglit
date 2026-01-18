@@ -161,7 +161,6 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
   }
 }
 
-
 // Internal provider to fetch test users
 @riverpod
 Future<List<Map<String, dynamic>>> devUserProfiles(Ref ref) async {

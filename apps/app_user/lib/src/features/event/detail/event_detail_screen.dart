@@ -79,6 +79,20 @@ class _EventDetailContent extends ConsumerWidget {
                     ),
             ),
             leading: BackButton(color: theme.colorScheme.onPrimary),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: MinglitSpacing.small),
+                child: MinglitSocialButton(
+                  targetId: event.partyId, // Like the party
+                  targetType: SocialTargetType.party,
+                  interactionType: SocialInteractionType.like,
+                  activeColor: theme.colorScheme.onPrimary,
+                  inactiveColor: theme.colorScheme.onPrimary.withValues(
+                    alpha: 0.7,
+                  ),
+                ),
+              ),
+            ],
             backgroundColor: theme.colorScheme.primary,
           ),
 

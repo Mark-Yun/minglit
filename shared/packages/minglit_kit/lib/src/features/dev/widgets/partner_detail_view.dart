@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/data/models/partner.dart';
 import 'package:minglit_kit/src/data/models/party.dart';
+import 'package:minglit_kit/src/data/models/social_interaction.dart';
 import 'package:minglit_kit/src/data/repositories/party_repository.dart';
 import 'package:minglit_kit/src/features/dev/widgets/party_detail_view.dart';
+import 'package:minglit_kit/src/features/social/ui/minglit_social_button.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -67,6 +69,12 @@ class PartnerDetailView extends ConsumerWidget {
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
+                    const SizedBox(height: MinglitSpacing.small),
+                    MinglitSocialButton(
+                      targetId: partner.id,
+                      targetType: SocialTargetType.partner,
+                      interactionType: SocialInteractionType.subscribe,
+                    ),
                   ],
                 ),
               ),
