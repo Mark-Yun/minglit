@@ -73,4 +73,9 @@
 ## [ ] 트랙: 범용 파일 피커 (MinglitFilePicker) 구현 및 통합
 *링크: [./conductor/tracks/file_picker_implementation_20260117/](./conductor/tracks/file_picker_implementation_20260117/)*
 
+---
+
+## [ ] 트랙: 파티 참여자 심사 및 환불 관리 시스템 (Application Review System)
+*링크: [./conductor/tracks/application_review_system_20260117/](./conductor/tracks/application_review_system_20260117/)*
+
 
