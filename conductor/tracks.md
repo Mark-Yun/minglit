@@ -1,6 +1,9 @@
 ---
 
+## [ ] 트랙: 범용 소셜 그래프 시스템 (Universal Social Graph)
+*링크: [./conductor/tracks/universal_social_graph_20260118/](./conductor/tracks/universal_social_graph_20260118/)*
 
+---
 
 ## [x] 트랙: 린트 위반 사항 수정 및 디자인 시스템 적용
 *링크: [./conductor/tracks/fix_lint_violations_20260117/](./conductor/tracks/fix_lint_violations_20260117/)*
