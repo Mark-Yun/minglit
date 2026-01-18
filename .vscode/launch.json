@@ -1,0 +1,50 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Partner App (Dev)",
+            "request": "launch",
+            "type": "dart",
+            "program": "apps/app_partner/lib/dev_main.dart",
+            "cwd": "apps/app_partner",
+            "args": [
+                "--web-port=3003",
+                "--dart-define=SUPABASE_URL=http://127.0.0.1:54321",
+                "--dart-define=SUPABASE_ANON_KEY=sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH"
+            ]
+        },
+        {
+            "name": "User App (Dev)",
+            "request": "launch",
+            "type": "dart",
+            "program": "apps/app_user/lib/dev_main.dart",
+            "cwd": "apps/app_user",
+            "args": [
+                "--web-port=3001",
+                "--dart-define=SUPABASE_URL=http://127.0.0.1:54321",
+                "--dart-define=SUPABASE_ANON_KEY=sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH"
+            ]
+        },
+        {
+            "name": "Integration Tester",
+            "request": "launch",
+            "type": "dart",
+            "program": "apps/integration_scenario_tester/lib/main.dart",
+            "cwd": "apps/integration_scenario_tester"
+        },
+        {
+            "name": "Partner App (Prod)",
+            "request": "launch",
+            "type": "dart",
+            "program": "apps/app_partner/lib/main.dart",
+            "cwd": "apps/app_partner"
+        },
+        {
+            "name": "User App (Prod)",
+            "request": "launch",
+            "type": "dart",
+            "program": "apps/app_user/lib/main.dart",
+            "cwd": "apps/app_user"
+        }
+    ]
+}
