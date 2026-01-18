@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_file_picker.dart';
 
 class PartyBasicInfoEditScreen extends ConsumerStatefulWidget {
   const PartyBasicInfoEditScreen({
@@ -45,14 +46,6 @@ class _PartyBasicInfoEditScreenState
         : quill.QuillController.basic();
   }
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() => _selectedImage = image);
-    }
-  }
-
   @override
   void dispose() {
     _titleController.dispose();
@@ -80,10 +73,20 @@ class _PartyBasicInfoEditScreenState
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: MinglitSpacing.medium),
-            MinglitImagePicker(
-              initialImageUrl: widget.party.imageUrl,
-              selectedImage: _selectedImage,
-              onPickImage: _pickImage,
+            MinglitFilePicker(
+              label: '이미지 선택',
+              hint: '파티 대표 이미지를 선택해주세요',
+              initialUrls:
+                  widget.party.imageUrl != null ? [widget.party.imageUrl!] : [],
+              onFilesSelected: (files) {
+                if (files.isNotEmpty) {
+                  setState(() {
+                    _selectedImage = XFile(files.first.path!);
+                  });
+                } else {
+                  setState(() => _selectedImage = null);
+                }
+              },
             ),
             const SizedBox(height: MinglitSpacing.xlarge),
             // 2. Title Input

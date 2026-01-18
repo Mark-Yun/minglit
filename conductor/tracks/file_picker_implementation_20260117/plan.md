@@ -11,13 +11,13 @@
     - [x] PDF 파일 아이콘 및 파일명 렌더링.
 - [x] Task: Conductor - User Manual Verification 'Phase 1: 파일 선택 및 UI 확인' (Protocol in workflow.md) (1ecea72)
 
-## Phase 2: Supabase Storage 연동 및 자동 업로드
-- [~] Task: `StorageRepository` 확장
-    - [ ] 범용 파일 업로드 메서드 구현 (버킷 지정, 유니크 파일명 생성).
-- [ ] Task: 자동 업로드 상태 관리 (Riverpod)
-    - [ ] 선택된 파일의 업로드 상태(`pending`, `uploading`, `success`, `error`) 추적.
-    - [ ] 업로드 진행률(%) 표시 UI 연동.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: 스토리지 업로드 확인' (Protocol in workflow.md)
+## Phase 2: Supabase Storage 연동 및 자동 업로드 [checkpoint: c8c9a00]
+- [x] Task: `StorageRepository` 확장 [c8c9a00]
+    - [x] 범용 파일 업로드 메서드 구현 (버킷 지정, 유니크 파일명 생성).
+- [x] Task: 자동 업로드 상태 관리 (Riverpod) [c8c9a00]
+    - [x] 선택된 파일의 업로드 상태(`pending`, `uploading`, `success`, `error`) 추적.
+    - [x] 업로드 진행률(%) 표시 UI 연동.
+- [x] Task: Conductor - User Manual Verification 'Phase 2: 스토리지 업로드 확인' (Protocol in workflow.md)
 
 ## Phase 3: 기존 위젯 통합 및 마이그레이션
 - [ ] Task: `MinglitImagePicker` 리팩토링
