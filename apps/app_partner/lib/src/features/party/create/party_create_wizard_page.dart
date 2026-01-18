@@ -80,10 +80,11 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
         next.whenOrNull(
           data: (_) {
             if (prev?.isLoading ?? false) {
-              context.showMinglitSuccess(
-                context.l10n.wizard_review_successMessage,
-              );
-              context.pop(); // Return to Party List
+              context
+                ..showMinglitSuccess(
+                  context.l10n.wizard_review_successMessage,
+                )
+                ..pop(); // Return to Party List
             }
           },
           error: (error, st) {

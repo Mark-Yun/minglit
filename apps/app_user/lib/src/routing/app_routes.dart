@@ -103,13 +103,15 @@ class CertificationRoute extends GoRouteData with $CertificationRoute {
     return MinglitIamportCertification(
       onSuccess: (uid) {
         Log.i('Certification Success: $uid');
-        context.pop();
-        context.showMinglitSuccess('인증 성공! UID: $uid');
+        context
+          ..pop()
+          ..showMinglitSuccess('인증 성공! UID: $uid');
       },
       onFail: (msg) {
         Log.e('Certification Failed: $msg');
-        context.pop();
-        context.showMinglitWarning('인증 실패: $msg');
+        context
+          ..pop()
+          ..showMinglitWarning('인증 실패: $msg');
       },
     );
   }

@@ -228,8 +228,7 @@ class _VerificationStep extends ConsumerWidget {
     }
 
     // Fetch the verification definition
-    final sortedIds = List<String>.from(verifIds);
-    sortedIds.sort();
+    final sortedIds = List<String>.from(verifIds)..sort();
     final idsString = sortedIds.join(',');
     final verifAsync = ref.watch(verificationsByIdsProvider(idsString));
 

@@ -17,8 +17,7 @@ class TicketController extends _$TicketController {
     required int quantity,
     List<String> targetEntryGroupIds = const [],
   }) async {
-    final loading = ref.read(globalLoadingControllerProvider.notifier);
-    loading.show();
+    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
     try {
       final repo = ref.read(ticketRepositoryProvider);
 
@@ -49,7 +48,7 @@ class TicketController extends _$TicketController {
     int? quantity,
     List<String>? targetEntryGroupIds,
   }) async {
-    final loading = ref.read(globalLoadingControllerProvider.notifier).show();
+    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
     try {
       final repo = ref.read(ticketRepositoryProvider);
 

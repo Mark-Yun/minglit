@@ -65,10 +65,11 @@ class TicketEditPage extends ConsumerWidget {
 
                         final updatedState = ref.read(ticketControllerProvider);
                         if (!updatedState.hasError && context.mounted) {
-                          context.pop();
-                          context.showMinglitSuccess(
-                            context.l10n.ticket_message_updated,
-                          );
+                          context
+                            ..pop()
+                            ..showMinglitSuccess(
+                              context.l10n.ticket_message_updated,
+                            );
                           ref.invalidate(ticketDetailProvider(ticketId));
                           if (eventId.isNotEmpty) {
                             ref.invalidate(eventTicketsProvider(eventId));

@@ -30,8 +30,8 @@ void main() {
     testWidgets('shows loading indicator when isUploading would be true', (
       tester,
     ) async {
-      // Since _isUploading is internal state, we can't easily set it from outside
-      // without more complex mocking or state management.
+      // Since _isUploading is internal state, we can't easily set
+      // it from outside without more complex mocking or state management.
       // For now, let's verify it's NOT there initially.
       await tester.pumpWidget(
         ProviderScope(

@@ -50,7 +50,7 @@ class CheckinRepository {
   }) async {
     // 1. Reconstruct payload
     final payload =
-        '${token.ticketId}|${token.eventId}|${token.userId}|${token.expiresAt.toIso8601String()}';
+        '''${token.ticketId}|${token.eventId}|${token.userId}|${token.expiresAt.toIso8601String()}''';
 
     // 2. Verify Signature
     final isValid = await _crypto.verify(

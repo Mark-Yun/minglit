@@ -109,8 +109,7 @@ class _VerificationBadges extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Fetch the verification definition
-    final sortedIds = List<String>.from(verifIds);
-    sortedIds.sort();
+    final sortedIds = List<String>.from(verifIds)..sort();
     final idsString = sortedIds.join(',');
 
     final verificationsAsync = ref.watch(

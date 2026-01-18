@@ -180,8 +180,7 @@ class PartyDetailInfoTab extends ConsumerWidget {
   ) async {
     if (newLocation == null) return;
 
-    final loading = ref.read(globalLoadingControllerProvider.notifier);
-    loading.show();
+    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
     try {
       final locationRepo = ref.read(locationRepositoryProvider);
       final partyRepo = ref.read(partyRepositoryProvider);
@@ -248,8 +247,7 @@ class PartyDetailInfoTab extends ConsumerWidget {
     Map<String, dynamic> description,
     XFile? image,
   ) async {
-    final loading = ref.read(globalLoadingControllerProvider.notifier);
-    loading.show();
+    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
     try {
       final repo = ref.read(partyRepositoryProvider);
       var imageUrl = party.imageUrl;
@@ -284,8 +282,7 @@ class PartyDetailInfoTab extends ConsumerWidget {
     int maxCount,
     Map<String, String> contactOptions,
   ) async {
-    final loading = ref.read(globalLoadingControllerProvider.notifier);
-    loading.show();
+    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
     try {
       await ref
           .read(partyDetailCoordinatorProvider)

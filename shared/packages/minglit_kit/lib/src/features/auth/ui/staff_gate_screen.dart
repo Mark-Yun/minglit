@@ -26,8 +26,7 @@ class _StaffGateScreenState extends ConsumerState<StaffGateScreen> {
       return;
     }
 
-    final loading = ref.read(globalLoadingControllerProvider.notifier);
-    loading.show();
+    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
     setState(() => _message = null);
 
     try {

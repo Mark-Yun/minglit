@@ -42,7 +42,8 @@ void main() {
       expect(result, testEvent);
     });
 
-    // FIXME: This test fails with 'provider disposed' error. Needs investigation.
+    // FIXME: This test fails with 'provider disposed' error.
+    // Needs investigation.
     // test('throws exception when repository fails', () async {
     //   final exception = Exception('Network Error');
     //   when(() => mockEventRepo.getEventById('event_1'))

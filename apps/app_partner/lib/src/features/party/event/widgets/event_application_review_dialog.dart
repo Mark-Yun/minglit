@@ -60,7 +60,7 @@ class _EventApplicationReviewDialogState
               ),
               title: Text(user?.name ?? '익명'),
               subtitle: Text(
-                '${user?.gender == 'male' ? "남" : "여"} · ${user?.birthDate ?? ""}',
+                '''${user?.gender == 'male' ? "남" : "여"} · ${user?.birthDate ?? ""}''',
               ),
             ),
             const Divider(),
@@ -212,7 +212,8 @@ class _EventApplicationReviewDialogState
     }
 
     // Pass the logic to controller via Provider (requires a way to get ref)
-    // Actually, I can use a Navigator pop with result or use a context-based provider.
+    // Actually, I can use a Navigator pop with result or use
+    // a context-based provider.
     Navigator.pop(context, {'status': status, 'reason': reason});
   }
 }
