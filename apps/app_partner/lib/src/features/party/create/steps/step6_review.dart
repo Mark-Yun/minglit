@@ -122,7 +122,8 @@ class Step6Review extends ConsumerWidget {
   }
 
   Widget _buildErrorCard(BuildContext context, List<String> errors) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Container(
       margin: const EdgeInsets.only(bottom: MinglitSpacing.large),
       padding: const EdgeInsets.all(MinglitSpacing.medium),
@@ -136,25 +137,33 @@ class Step6Review extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.error_outline, color: colorScheme.error, size: 18),
-              const SizedBox(width: 8),
+              Icon(
+                Icons.error_outline,
+                color: colorScheme.error,
+                size: MinglitIconSize.xsmall,
+              ),
+              const SizedBox(width: MinglitSpacing.small),
               Text(
                 context.l10n.wizard_review_warningTitle,
-                style: TextStyle(
+                style: theme.textTheme.labelMedium?.copyWith(
                   color: colorScheme.error,
                   fontWeight: FontWeight.bold,
-                  fontSize: 13,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: MinglitSpacing.small),
           ...errors.map(
             (err) => Padding(
-              padding: const EdgeInsets.only(bottom: 4, left: 26),
+              padding: const EdgeInsets.only(
+                bottom: MinglitSpacing.xxsmall,
+                left: MinglitSpacing.large + MinglitSpacing.xxsmall,
+              ),
               child: Text(
                 '• $err',
-                style: TextStyle(color: colorScheme.error, fontSize: 12),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: colorScheme.error,
+                ),
               ),
             ),
           ),

@@ -37,7 +37,9 @@ class VerificationCard extends StatelessWidget {
     };
 
     final iconWidget = Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(
+        MinglitSpacing.small + MinglitSpacing.xxsmall,
+      ), // 10
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         shape: BoxShape.circle,
@@ -60,7 +62,7 @@ class VerificationCard extends StatelessWidget {
         boxShadow: [
           if (backgroundColor == null || backgroundColor == colorScheme.surface)
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
+              color: theme.shadowColor.withValues(alpha: 0.03),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),

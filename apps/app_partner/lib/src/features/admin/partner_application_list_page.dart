@@ -57,7 +57,7 @@ class _PartnerApplicationListPageState
                     ).future,
                   ),
                   child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(MinglitSpacing.medium),
                     itemCount: apps.length,
                     itemBuilder: (context, index) =>
                         _buildApplicationCard(apps[index]),
@@ -66,7 +66,7 @@ class _PartnerApplicationListPageState
               },
               error: (Object e, StackTrace s) =>
                   Center(child: Text('Error: $e')),
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const MinglitCircularProgressIndicator(),
             ),
           ),
         ],
@@ -75,9 +75,10 @@ class _PartnerApplicationListPageState
   }
 
   Widget _buildFilterBar() {
+    final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.all(16),
-      color: Colors.grey[50],
+      padding: const EdgeInsets.all(MinglitSpacing.medium),
+      color: theme.colorScheme.surface,
       child: Column(
         children: [
           TextField(
@@ -93,25 +94,25 @@ class _PartnerApplicationListPageState
               ),
               border: const OutlineInputBorder(),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: theme.colorScheme.surface,
             ),
             onSubmitted: (_) {
               setState(() {});
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: MinglitSpacing.small),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
                 _buildFilterChip('전체', 'all'),
-                const SizedBox(width: 8),
+                const SizedBox(width: MinglitSpacing.small),
                 _buildFilterChip('대기', 'pending'),
-                const SizedBox(width: 8),
+                const SizedBox(width: MinglitSpacing.small),
                 _buildFilterChip('승인', 'approved'),
-                const SizedBox(width: 8),
+                const SizedBox(width: MinglitSpacing.small),
                 _buildFilterChip('반려', 'rejected'),
-                const SizedBox(width: 8),
+                const SizedBox(width: MinglitSpacing.small),
                 _buildFilterChip('보완', 'needs_correction'),
               ],
             ),
@@ -135,12 +136,15 @@ class _PartnerApplicationListPageState
   }
 
   Widget _buildApplicationCard(PartnerApplication app) {
+    final theme = Theme.of(context);
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: MinglitSpacing.small),
       child: ListTile(
         title: Text(
           app.brandName,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: theme.textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         subtitle: Text('${app.bizName} / ${app.representativeName}'),
         trailing: _buildStatusBadge(app.status),
@@ -154,33 +158,36 @@ class _PartnerApplicationListPageState
   }
 
   Widget _buildStatusBadge(String status) {
-    Color color = Colors.grey;
+    final theme = Theme.of(context);
+    Color color = theme.colorScheme.outline;
     var label = status;
     switch (status) {
       case 'pending':
-        color = Colors.orange;
+        color = theme.colorScheme.secondary;
         label = '대기';
       case 'approved':
-        color = Colors.green;
+        color = theme.colorScheme.tertiary;
         label = '승인';
       case 'rejected':
-        color = Colors.red;
+        color = theme.colorScheme.error;
         label = '반려';
       case 'needs_correction':
-        color = Colors.blue;
+        color = theme.colorScheme.primary;
         label = '보완';
     }
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: MinglitSpacing.small,
+        vertical: MinglitSpacing.xxsmall,
+      ),
       decoration: BoxDecoration(
-        color: color.withAlpha(30),
-        borderRadius: BorderRadius.circular(4),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(MinglitSpacing.xxsmall),
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: theme.textTheme.labelSmall?.copyWith(
           color: color,
-          fontSize: 12,
           fontWeight: FontWeight.bold,
         ),
       ),

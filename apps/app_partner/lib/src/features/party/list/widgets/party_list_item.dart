@@ -68,13 +68,16 @@ class PartyListItem extends StatelessWidget {
                     _buildPlaceholder(context),
 
                   // Gradient (Bottom-up)
-                  const DecoratedBox(
+                  DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [Colors.transparent, Colors.black54],
-                        stops: [0.6, 1.0],
+                        colors: [
+                          theme.colorScheme.surface.withValues(alpha: 0),
+                          theme.colorScheme.onSurface.withValues(alpha: 0.54),
+                        ],
+                        stops: const [0.6, 1.0],
                       ),
                     ),
                   ),
@@ -91,8 +94,8 @@ class PartyListItem extends StatelessWidget {
 
                         // Bottom-Left: Chips
                         Wrap(
-                          spacing: 6,
-                          runSpacing: 6,
+                          spacing: MinglitSpacing.xxsmall,
+                          runSpacing: MinglitSpacing.xxsmall,
                           children: [
                             // Location Chip
                             if (party.location != null)
@@ -154,40 +157,57 @@ class PartyListItem extends StatelessWidget {
   }
 
   Widget _buildPlaceholder(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
-      color: Colors.grey[900],
+      color: theme.colorScheme.onSurface,
       child: Center(
         child: Icon(
           Icons.party_mode,
-          color: Colors.white.withValues(alpha: 0.2),
-          size: 48,
+          color: theme.colorScheme.surface.withValues(alpha: 0.2),
+          size: MinglitIconSize.xlarge * 1.5,
         ),
       ),
     );
   }
 
   Widget _buildStatusBadge(BuildContext context) {
+    final theme = Theme.of(context);
     final (label, color) = switch (party.status) {
-      'active' => (context.l10n.partyList_badge_active, Colors.green),
-      'closed' => (context.l10n.partyList_badge_closed, Colors.grey),
-      'draft' => (context.l10n.partyList_badge_draft, Colors.orange),
-      _ => (party.status, Colors.blue),
+      'active' => (
+        context.l10n.partyList_badge_active,
+        theme.colorScheme.tertiary,
+      ),
+      'closed' => (
+        context.l10n.partyList_badge_closed,
+        theme.colorScheme.outline,
+      ),
+      'draft' => (
+        context.l10n.partyList_badge_draft,
+        theme.colorScheme.secondary,
+      ),
+      _ => (party.status, theme.colorScheme.primary),
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: MinglitSpacing.small,
+        vertical: MinglitSpacing.xxsmall,
+      ),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(4),
-        boxShadow: const [
-          BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+        borderRadius: BorderRadius.circular(MinglitSpacing.xxsmall),
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadowColor.withValues(alpha: 0.26),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 11,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: theme.colorScheme.onPrimary,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -203,26 +223,33 @@ class _InfoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: MinglitSpacing.small,
+        vertical: MinglitSpacing.xxsmall,
+      ),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.5),
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(100),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.2),
+          color: theme.colorScheme.surface.withValues(alpha: 0.2),
           width: 0.5,
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: Colors.white),
-          const SizedBox(width: 4),
+          Icon(
+            icon,
+            size: MinglitIconSize.xsmall * 0.75,
+            color: theme.colorScheme.surface,
+          ),
+          const SizedBox(width: MinglitSpacing.xxsmall),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Colors.white,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.surface,
               fontWeight: FontWeight.w500,
             ),
           ),

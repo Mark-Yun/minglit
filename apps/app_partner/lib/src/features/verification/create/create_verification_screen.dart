@@ -176,7 +176,9 @@ class _CreateVerificationScreenState
             ),
             child: Text(
               '+ 버튼을 눌러 필드를 추가하세요',
-              style: TextStyle(color: colorScheme.onSurfaceVariant),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
           )
         else
@@ -185,7 +187,7 @@ class _CreateVerificationScreenState
             proxyDecorator: (child, index, animation) {
               return Material(
                 borderRadius: BorderRadius.circular(MinglitRadius.card),
-                color: Colors.transparent,
+                color: theme.colorScheme.surface.withValues(alpha: 0),
                 clipBehavior: Clip.antiAlias,
                 child: child,
               );

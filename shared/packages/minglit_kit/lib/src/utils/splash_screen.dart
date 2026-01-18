@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_image.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 /// A branded splash screen shown during app initialization.
 class MinglitSplashScreen extends StatelessWidget {
@@ -19,7 +19,7 @@ class MinglitSplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: MinglitColors.background,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -29,18 +29,18 @@ class MinglitSplashScreen extends StatelessWidget {
                   'packages/minglit_kit/assets/images/minglit_app_bar_logo.png',
               height: 64,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: MinglitSpacing.medium),
             Text(
               appName.toUpperCase(),
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey,
+                color: MinglitColors.textSecondary,
                 letterSpacing: 4,
               ),
             ),
-            const SizedBox(height: 48),
-            const CircularProgressIndicator(),
+            const SizedBox(height: MinglitSpacing.xlarge * 1.5),
+            const MinglitCircularProgressIndicator(),
           ],
         ),
       ),

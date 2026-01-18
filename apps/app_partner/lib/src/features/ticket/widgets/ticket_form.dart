@@ -187,10 +187,9 @@ class _TicketFormState extends State<TicketForm> {
             child: ElevatedButton(
               onPressed: widget.isLoading ? null : _handleSubmit,
               child: widget.isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                  ? const MinglitCircularProgressIndicator(
+                      size: 20,
+                      strokeWidth: 2,
                     )
                   : Text(widget.submitButtonLabel),
             ),

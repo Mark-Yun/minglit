@@ -47,28 +47,30 @@ class MinglitImage extends StatelessWidget {
         if (wasSynchronouslyLoaded || frame != null) {
           return child;
         }
+        final theme = Theme.of(context);
         return Shimmer.fromColors(
-          baseColor: Colors.grey[200]!,
-          highlightColor: Colors.white,
+          baseColor: theme.colorScheme.surfaceContainer,
+          highlightColor: theme.colorScheme.surface,
           child: Container(
             height: height,
             width: width ?? (height != null ? height! * 2 : null),
             decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(8),
+              color: theme.colorScheme.surfaceContainer,
+              borderRadius: BorderRadius.circular(MinglitRadius.small),
             ),
           ),
         );
       },
       errorBuilder: (context, error, stackTrace) {
+        final theme = Theme.of(context);
         return Container(
           height: height,
           width: width,
           decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(8),
+            color: theme.colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(MinglitRadius.small),
           ),
-          child: const Icon(Icons.broken_image, color: Colors.grey),
+          child: Icon(Icons.broken_image, color: theme.colorScheme.outline),
         );
       },
     );

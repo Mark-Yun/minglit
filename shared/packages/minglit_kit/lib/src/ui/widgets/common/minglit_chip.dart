@@ -54,8 +54,8 @@ class MinglitChip extends StatelessWidget {
         color ?? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
     final textColor = color != null
         ? (ThemeData.estimateBrightnessForColor(color!) == Brightness.dark
-              ? Colors.white
-              : Colors.black87)
+              ? theme.colorScheme.onPrimary
+              : theme.colorScheme.onSurface)
         : colorScheme.onSurfaceVariant;
 
     final widget = Container(
@@ -73,11 +73,11 @@ class MinglitChip extends StatelessWidget {
         children: [
           if (icon != null) ...[
             Icon(icon, size: iconSize, color: textColor),
-            const SizedBox(width: 4),
+            const SizedBox(width: MinglitSpacing.xxsmall),
           ],
           Text(
             label,
-            style: TextStyle(
+            style: theme.textTheme.labelSmall?.copyWith(
               fontSize: fontSize,
               color: textColor,
               fontWeight: FontWeight.w500,

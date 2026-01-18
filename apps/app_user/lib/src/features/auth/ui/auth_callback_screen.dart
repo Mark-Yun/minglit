@@ -65,6 +65,7 @@ class _AuthCallbackScreenState extends ConsumerState<AuthCallbackScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     // Listen for auth state changes
     ref.listen(currentUserProvider, (prev, next) {
       if (next != null) {
@@ -78,17 +79,23 @@ class _AuthCallbackScreenState extends ConsumerState<AuthCallbackScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (_isProcessing)
-              const CircularProgressIndicator()
+              const MinglitCircularProgressIndicator()
             else
-              const Icon(Icons.error_outline, size: 48, color: Colors.red),
-            const SizedBox(height: 24),
+              Icon(
+                Icons.error_outline,
+                size: MinglitIconSize.xlarge * 1.5,
+                color: theme.colorScheme.error,
+              ),
+            const SizedBox(height: MinglitSpacing.large),
             Text(
               _statusMessage,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, color: Colors.grey),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.outline,
+              ),
             ),
             if (!_isProcessing) ...[
-              const SizedBox(height: 24),
+              const SizedBox(height: MinglitSpacing.large),
               ElevatedButton(
                 onPressed: () => context.go('/login'),
                 child: const Text('로그인 화면으로 돌아가기'),

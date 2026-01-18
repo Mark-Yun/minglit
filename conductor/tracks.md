@@ -1,6 +1,7 @@
-# 프로젝트 트랙
+---
 
-이 파일은 프로젝트의 모든 주요 트랙을 추적합니다. 각 트랙은 해당 폴더 내에 자체 상세 계획을 가지고 있습니다.
+## [ ] 트랙: 린트 위반 사항 수정 및 디자인 시스템 적용
+*링크: [./conductor/tracks/fix_lint_violations_20260117/](./conductor/tracks/fix_lint_violations_20260117/)*
 
 ---
 

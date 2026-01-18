@@ -39,10 +39,12 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
     final tickets = widget.event.tickets ?? [];
 
     return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      padding: const EdgeInsets.all(MinglitSpacing.large),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(MinglitRadius.card),
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -54,54 +56,61 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: MinglitSpacing.medium),
           if (tickets.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
-              child: Text('구매 가능한 티켓이 없습니다.'),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: MinglitSpacing.large,
+              ),
+              child: Text(
+                '구매 가능한 티켓이 없습니다.',
+                style: theme.textTheme.bodyMedium,
+              ),
             )
           else
             ...tickets.map(_buildTicketOption),
-          const SizedBox(height: 24),
+          const SizedBox(height: MinglitSpacing.large),
 
           // Quantity (Only if ticket selected)
           if (_selectedTicketId != null) ...[
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   '수량',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 _buildQuantityStepper(),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: MinglitSpacing.large),
             const Divider(),
-            const SizedBox(height: 16),
+            const SizedBox(height: MinglitSpacing.medium),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   '총 결제 금액',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Text(
                   _calculateTotal(),
-                  style: TextStyle(
+                  style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
-                    fontSize: 20,
                     color: theme.colorScheme.primary,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: MinglitSpacing.large),
           ],
 
           SizedBox(
             width: double.infinity,
-            height: 52,
             child: ElevatedButton(
               onPressed: _selectedTicketId == null ? null : _onNext,
               child: const Text('다음'),
@@ -126,17 +135,19 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
         });
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.only(bottom: MinglitSpacing.small),
+        padding: const EdgeInsets.all(MinglitSpacing.medium),
         decoration: BoxDecoration(
           border: Border.all(
-            color: isSelected ? theme.colorScheme.primary : Colors.grey[300]!,
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outlineVariant,
             width: isSelected ? 2 : 1,
           ),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(MinglitRadius.input),
           color: isSelected
               ? theme.colorScheme.primary.withValues(alpha: 0.05)
-              : Colors.white,
+              : theme.colorScheme.surface,
         ),
         child: Row(
           children: [
@@ -146,18 +157,18 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
                 children: [
                   Text(
                     ticket.name,
-                    style: TextStyle(
+                    style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: isSelected
                           ? theme.colorScheme.primary
-                          : Colors.black,
+                          : theme.colorScheme.onSurface,
                     ),
                   ),
                   if (ticket.description != null)
                     Text(
                       ticket.description!,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                 ],
@@ -165,7 +176,9 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
             ),
             Text(
               '${formatter.format(ticket.price)}원',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -174,26 +187,29 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
   }
 
   Widget _buildQuantityStepper() {
+    final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(MinglitRadius.small),
       ),
       child: Row(
         children: [
           IconButton(
             onPressed: _quantity > 1 ? () => setState(() => _quantity--) : null,
-            icon: const Icon(Icons.remove, size: 16),
+            icon: const Icon(Icons.remove, size: MinglitIconSize.xsmall),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
           Text(
             '$_quantity',
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           IconButton(
             onPressed: () => setState(() => _quantity++),
-            icon: const Icon(Icons.add, size: 16),
+            icon: const Icon(Icons.add, size: MinglitIconSize.xsmall),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),

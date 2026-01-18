@@ -124,7 +124,7 @@ class _PartnerApplicationPageState
         title: context.l10n.partnerApplication_title,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(MinglitSpacing.large),
         child: Form(
           key: _formKey,
           child: Column(
@@ -158,7 +158,7 @@ class _PartnerApplicationPageState
                 context.l10n.partnerApplication_hint_email,
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: MinglitSpacing.xlarge),
               _buildSectionTitle(context.l10n.partnerApplication_section_biz),
               _buildBizTypeDropdown(),
               _buildTextField(
@@ -177,7 +177,7 @@ class _PartnerApplicationPageState
                 context.l10n.partnerApplication_hint_repName,
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: MinglitSpacing.xlarge),
               _buildSectionTitle(
                 context.l10n.partnerApplication_section_account,
               ),
@@ -198,28 +198,27 @@ class _PartnerApplicationPageState
                 context.l10n.partnerApplication_hint_repName,
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: MinglitSpacing.xlarge),
               _buildSectionTitle(context.l10n.partnerApplication_section_files),
               _buildFilePicker(
                 context.l10n.partnerApplication_label_bizReg,
                 _bizRegFile,
                 () async => _pickFile(true),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: MinglitSpacing.small),
               _buildFilePicker(
                 context.l10n.partnerApplication_label_bankbook,
                 _bankbookFile,
                 () async => _pickFile(false),
               ),
 
-              const SizedBox(height: 48),
+              const SizedBox(height: MinglitSpacing.xlarge * 1.5),
               ElevatedButton(
                 onPressed: _isLoading ? null : _submit,
                 child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                    ? const MinglitCircularProgressIndicator(
+                        size: 20,
+                        strokeWidth: 2,
                       )
                     : Text(context.l10n.partnerApplication_button_submit),
               ),
@@ -231,14 +230,14 @@ class _PartnerApplicationPageState
   }
 
   Widget _buildSectionTitle(String title) {
+    final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: MinglitSpacing.medium),
       child: Text(
         title,
-        style: const TextStyle(
-          fontSize: 18,
+        style: theme.textTheme.titleMedium?.copyWith(
           fontWeight: FontWeight.bold,
-          color: Colors.orange,
+          color: theme.colorScheme.secondary,
         ),
       ),
     );
@@ -251,7 +250,7 @@ class _PartnerApplicationPageState
     int maxLines = 1,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: MinglitSpacing.medium),
       child: TextFormField(
         maxLines: maxLines,
         decoration: InputDecoration(
@@ -269,7 +268,7 @@ class _PartnerApplicationPageState
 
   Widget _buildBizTypeDropdown() {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: MinglitSpacing.medium),
       child: DropdownButtonFormField<String>(
         initialValue: _data['biz_type'] as String?,
         decoration: InputDecoration(
@@ -292,15 +291,22 @@ class _PartnerApplicationPageState
   }
 
   Widget _buildFilePicker(String label, XFile? file, VoidCallback onTap) {
+    final theme = Theme.of(context);
     return ListTile(
-      tileColor: Colors.grey[100],
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      title: Text(label, style: const TextStyle(fontSize: 14)),
+      tileColor: theme.colorScheme.surfaceContainerHighest,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(MinglitRadius.small),
+      ),
+      title: Text(label, style: theme.textTheme.bodyMedium),
       subtitle: Text(
         file != null
             ? file.name
             : context.l10n.partnerApplication_hint_fileSelect,
-        style: TextStyle(color: file != null ? Colors.blue : Colors.grey),
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: file != null
+              ? theme.colorScheme.primary
+              : theme.colorScheme.outline,
+        ),
       ),
       trailing: const Icon(Icons.attach_file),
       onTap: onTap,

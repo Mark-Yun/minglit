@@ -21,7 +21,9 @@ class Step4EntryRules extends ConsumerWidget {
         children: [
           Text(
             context.l10n.partyCreate_title_entryRules,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: MinglitSpacing.small),
           Text(
@@ -72,7 +74,7 @@ class Step4EntryRules extends ConsumerWidget {
                               context.l10n.partyCreate_label_entryGroupHeader(
                                 index + 1,
                               ),
-                              style: const TextStyle(
+                              style: theme.textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -124,12 +126,13 @@ class Step4EntryRules extends ConsumerWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(MinglitSpacing.large),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(MinglitRadius.card),
-        border: Border.all(color: Colors.grey[300]!),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Center(child: Text(context.l10n.partyCreate_empty_entryGroups)),
     );

@@ -28,7 +28,7 @@ class EventApplicationWizardScreen extends ConsumerWidget {
       ),
       body: eventAsync.when(
         data: (event) => _WizardBody(event: event, initialTicketId: ticketId),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const MinglitCircularProgressIndicator(),
         error: (e, s) => Center(child: Text('오류 발생: $e')),
       ),
     );
@@ -133,10 +133,12 @@ class _StepIndicator extends StatelessWidget {
             currentStep == EventApplicationStep.verification,
           ),
           Container(
-            width: 40,
+            width: MinglitSpacing.xlarge + MinglitSpacing.small, // 40
             height: 2,
             color: theme.colorScheme.outlineVariant,
-            margin: const EdgeInsets.symmetric(horizontal: 8),
+            margin: const EdgeInsets.symmetric(
+              horizontal: MinglitSpacing.small,
+            ),
           ),
           _buildCircle(
             context,
@@ -163,14 +165,18 @@ class _StepIndicator extends StatelessWidget {
     return Column(
       children: [
         CircleAvatar(
-          radius: 12,
+          radius: MinglitSpacing
+              .medium, // Changed from 12 to 16 for better alignment with tokens
           backgroundColor: color,
           child: Text(
             num,
-            style: const TextStyle(color: Colors.white, fontSize: 12),
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onPrimary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: MinglitSpacing.xsmall),
         Text(
           label,
           style: theme.textTheme.labelSmall?.copyWith(
@@ -208,10 +214,16 @@ class _VerificationStep extends ConsumerWidget {
         .toList();
 
     if (verifIds.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 40),
-          child: Text('이 티켓은 추가 인증이 필요하지 않습니다.\n바로 결제로 진행해주세요.'),
+          padding: const EdgeInsets.symmetric(
+            vertical: MinglitSpacing.xlarge + MinglitSpacing.small,
+          ),
+          child: Text(
+            '이 티켓은 추가 인증이 필요하지 않습니다.\n바로 결제로 진행해주세요.',
+            style: theme.textTheme.bodyMedium,
+            textAlign: TextAlign.center,
+          ),
         ),
       );
     }
@@ -235,7 +247,7 @@ class _VerificationStep extends ConsumerWidget {
             ),
             if (verif.description != null)
               Padding(
-                padding: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.only(top: MinglitSpacing.xxsmall),
                 child: Text(
                   verif.description!,
                   style: theme.textTheme.bodySmall,
@@ -248,7 +260,7 @@ class _VerificationStep extends ConsumerWidget {
           ],
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const MinglitCircularProgressIndicator(),
       error: (e, _) => Text('오류: $e'),
     );
   }
@@ -258,6 +270,7 @@ class _VerificationStep extends ConsumerWidget {
     WidgetRef ref,
     VerificationFormField field,
   ) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: MinglitSpacing.medium),
       child: Column(
@@ -265,9 +278,11 @@ class _VerificationStep extends ConsumerWidget {
         children: [
           Text(
             field.label,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: MinglitSpacing.small),
           TextFormField(
             decoration: InputDecoration(
               hintText: field.placeholder ?? '${field.label}을(를) 입력하세요',
@@ -330,15 +345,16 @@ class _PaymentStep extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     '최종 결제 금액',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Text(
                     '${formatter.format(ticket.price)}원',
-                    style: TextStyle(
+                    style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
-                      fontSize: 18,
                       color: theme.colorScheme.primary,
                     ),
                   ),
@@ -348,9 +364,11 @@ class _PaymentStep extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: MinglitSpacing.xlarge),
-        const Text(
+        Text(
           '• 파트너 심사 반려 시 100% 환불됩니다.\n• 결제 완료 후 심사에는 최대 24시간이 소요될 수 있습니다.',
-          style: TextStyle(color: Colors.grey, fontSize: 12),
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.outline,
+          ),
         ),
       ],
     );
@@ -394,7 +412,7 @@ class _Footer extends StatelessWidget {
                   child: const Text('이전'),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: MinglitSpacing.medium),
             ],
             Expanded(
               flex: 2,
@@ -403,10 +421,9 @@ class _Footer extends StatelessWidget {
                     ? null
                     : (isFirstStep ? onNext : onSubmit),
                 child: isSubmitting
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                    ? const MinglitCircularProgressIndicator(
+                        size: 20,
+                        strokeWidth: 2,
                       )
                     : Text(isFirstStep ? '다음' : '결제하고 신청하기'),
               ),

@@ -65,7 +65,7 @@ class PartnerMemberPermissionPage extends ConsumerWidget {
             memberData: memberData,
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const MinglitCircularProgressIndicator(),
         error: (err, stack) => Center(child: Text('Error: $err')),
       ),
     );
@@ -163,48 +163,59 @@ class _MemberPermissionFormState extends ConsumerState<_MemberPermissionForm> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final user = widget.memberData['user'] as Map<String, dynamic>? ?? {};
 
     if (_isSaving) {
-      return const Center(child: CircularProgressIndicator());
+      return const MinglitCircularProgressIndicator();
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(MinglitSpacing.large),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             user['name'] as String? ??
                 context.l10n.memberPermission_defaultName,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           Text(
             user['email'] as String? ?? '',
-            style: const TextStyle(color: Colors.grey),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.outline,
+            ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: MinglitSpacing.xlarge),
           Text(
             context.l10n.memberPermission_section_role,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: MinglitSpacing.small),
           _buildRoleSelector(),
-          const SizedBox(height: 32),
+          const SizedBox(height: MinglitSpacing.xlarge),
           Text(
             context.l10n.memberPermission_section_permission,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: MinglitSpacing.xsmall),
           Text(
             context.l10n.memberPermission_message_roleWarning,
-            style: const TextStyle(fontSize: 12, color: Colors.blue),
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.primary,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: MinglitSpacing.medium),
           ..._permissionLabels.entries.map(
             (e) => _buildPermissionTile(e.key, e.value),
           ),
-          const SizedBox(height: 48),
+          const SizedBox(height: MinglitSpacing.xlarge * 1.5),
           ElevatedButton(
             onPressed: () => unawaited(_save()),
             child: Text(context.l10n.memberPermission_button_save),
@@ -215,11 +226,12 @@ class _MemberPermissionFormState extends ConsumerState<_MemberPermissionForm> {
   }
 
   Widget _buildRoleSelector() {
+    final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.small),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(MinglitRadius.small),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -274,9 +286,10 @@ class _MemberPermissionFormState extends ConsumerState<_MemberPermissionForm> {
   }
 
   Widget _buildPermissionTile(String key, String label) {
+    final theme = Theme.of(context);
     final isChecked = _currentPermissions.contains(key);
     return CheckboxListTile(
-      title: Text(label, style: const TextStyle(fontSize: 14)),
+      title: Text(label, style: theme.textTheme.bodyMedium),
       value: isChecked,
       controlAffinity: ListTileControlAffinity.leading,
       contentPadding: EdgeInsets.zero,

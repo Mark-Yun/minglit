@@ -148,7 +148,9 @@ class _ReviewVerificationScreenState
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(MinglitRadius.card),
+        ),
       ),
       builder: (context) => _CommentsView(submissionId: submissionId),
     );
@@ -186,13 +188,13 @@ class _ReviewVerificationScreenState
 
   Widget _buildContent() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const MinglitCircularProgressIndicator();
     }
     if (_pendingRequests.isEmpty) {
       return Center(child: Text(context.l10n.reviewVerification_message_empty));
     }
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(MinglitSpacing.medium),
       itemCount: _pendingRequests.length,
       itemBuilder: (context, index) =>
           _buildRequestCard(_pendingRequests[index]),
@@ -200,6 +202,7 @@ class _ReviewVerificationScreenState
   }
 
   Widget _buildRequestCard(Map<String, dynamic> req) {
+    final theme = Theme.of(context);
     final user = req['user'] as Map<String, dynamic>? ?? {};
     final claim = req['snapshot_data'] as Map<String, dynamic>? ?? {};
     final images = claim.values
@@ -208,9 +211,9 @@ class _ReviewVerificationScreenState
         .toList();
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: MinglitSpacing.medium),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(MinglitSpacing.medium),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -220,11 +223,13 @@ class _ReviewVerificationScreenState
                 const Chip(label: Text('VERIFICATION')),
                 Text(
                   (user['email'] as String?) ?? 'Unknown User',
-                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.outline,
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: MinglitSpacing.small),
             ...claim.entries
                 .where(
                   (e) =>
@@ -233,10 +238,12 @@ class _ReviewVerificationScreenState
                 .map(
                   (e) => Text(
                     '${e.key}: ${e.value}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-            const SizedBox(height: 16),
+            const SizedBox(height: MinglitSpacing.medium),
             if (images.isNotEmpty)
               SizedBox(
                 height: 80,
@@ -247,17 +254,21 @@ class _ReviewVerificationScreenState
                     onTap: () => unawaited(_showImageDialog(images[i])),
                     child: Container(
                       width: 80,
-                      margin: const EdgeInsets.only(right: 8),
+                      margin: const EdgeInsets.only(
+                        right: MinglitSpacing.small,
+                      ),
                       decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(8),
+                        color: theme.colorScheme.surfaceContainer,
+                        borderRadius: BorderRadius.circular(
+                          MinglitRadius.small,
+                        ),
                       ),
                       child: const Icon(Icons.image),
                     ),
                   ),
                 ),
               ),
-            const SizedBox(height: 20),
+            const SizedBox(height: MinglitSpacing.large),
             Row(
               children: [
                 Expanded(
@@ -269,7 +280,7 @@ class _ReviewVerificationScreenState
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: MinglitSpacing.small),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => unawaited(
@@ -289,7 +300,7 @@ class _ReviewVerificationScreenState
                     unawaited(_showCommentsModal(req['id'] as String)),
                 child: Text(
                   context.l10n.reviewVerification_button_chat,
-                  style: const TextStyle(fontSize: 12),
+                  style: theme.textTheme.labelSmall,
                 ),
               ),
             ),
@@ -306,15 +317,18 @@ class _CommentsView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final repository = ref.read(verificationRepositoryProvider);
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(MinglitSpacing.large),
       child: Column(
         children: [
           Text(
             context.l10n.reviewVerification_chat_title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const Divider(),
           Expanded(
@@ -322,7 +336,7 @@ class _CommentsView extends ConsumerWidget {
               future: repository.getVerificationComments(submissionId),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const MinglitCircularProgressIndicator();
                 }
                 final comments = snapshot.data!;
                 return ListView.builder(
@@ -340,13 +354,17 @@ class _CommentsView extends ConsumerWidget {
                           ? Alignment.centerRight
                           : Alignment.centerLeft,
                       child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 4),
-                        padding: const EdgeInsets.all(10),
+                        margin: const EdgeInsets.symmetric(
+                          vertical: MinglitSpacing.xxsmall,
+                        ),
+                        padding: const EdgeInsets.all(MinglitSpacing.small),
                         decoration: BoxDecoration(
                           color: isPartner
-                              ? Colors.orange[100]
-                              : Colors.grey[200],
-                          borderRadius: BorderRadius.circular(10),
+                              ? theme.colorScheme.secondaryContainer
+                              : theme.colorScheme.surfaceContainer,
+                          borderRadius: BorderRadius.circular(
+                            MinglitRadius.small,
+                          ),
                         ),
                         child: Text(text),
                       ),

@@ -22,7 +22,7 @@ class EventDetailScreen extends ConsumerWidget {
     return Scaffold(
       body: eventAsync.when(
         data: (event) => _EventDetailContent(event: event),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const MinglitCircularProgressIndicator(),
         error: (e, s) => Center(child: Text('오류가 발생했습니다: $e')),
       ),
       bottomNavigationBar: eventAsync.maybeWhen(
@@ -79,7 +79,7 @@ class _EventDetailContent extends ConsumerWidget {
                       ),
                     ),
             ),
-            leading: const BackButton(color: Colors.white),
+            leading: BackButton(color: theme.colorScheme.onPrimary),
             backgroundColor: theme.colorScheme.primary,
           ),
 
@@ -95,15 +95,18 @@ class _EventDetailContent extends ConsumerWidget {
                     Row(
                       children: [
                         CircleAvatar(
-                          radius: 12,
+                          radius: MinglitRadius.input, // 12
                           backgroundImage: partner.profileImageUrl != null
                               ? NetworkImage(partner.profileImageUrl!)
                               : null,
                           child: partner.profileImageUrl == null
-                              ? const Icon(Icons.store, size: 14)
+                              ? const Icon(
+                                  Icons.store,
+                                  size: MinglitIconSize.xsmall,
+                                )
                               : null,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: MinglitSpacing.small),
                         Text(
                           partner.name,
                           style: theme.textTheme.titleSmall?.copyWith(
@@ -156,7 +159,9 @@ class _EventDetailContent extends ConsumerWidget {
                   // 4. Entry Conditions
                   _EntryConditionsSection(event: event),
 
-                  const SizedBox(height: 100), // Bottom padding for FAB
+                  const SizedBox(
+                    height: MinglitSpacing.xlarge * 4,
+                  ), // Bottom padding for FAB
                 ],
               ),
             ),
@@ -184,14 +189,18 @@ class _InfoTile extends StatelessWidget {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(MinglitSpacing.small),
           decoration: BoxDecoration(
             color: theme.colorScheme.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(MinglitRadius.small),
           ),
-          child: Icon(icon, size: 20, color: theme.colorScheme.primary),
+          child: Icon(
+            icon,
+            size: MinglitIconSize.small,
+            color: theme.colorScheme.primary,
+          ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: MinglitSpacing.medium),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -301,7 +310,7 @@ class _BottomTicketBar extends ConsumerWidget {
         color: theme.colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: theme.shadowColor.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -326,16 +335,15 @@ class _BottomTicketBar extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(width: 24),
+            const SizedBox(width: MinglitSpacing.large),
             Expanded(
               child: admissionAsync.when(
                 data: (state) => _buildActionButton(context, ref, state),
                 loading: () => const ElevatedButton(
                   onPressed: null,
-                  child: SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                  child: MinglitCircularProgressIndicator(
+                    size: 20,
+                    strokeWidth: 2,
                   ),
                 ),
                 error: (e, _) => ElevatedButton(
@@ -358,6 +366,7 @@ class _BottomTicketBar extends ConsumerWidget {
     WidgetRef ref,
     AdmissionState state,
   ) {
+    final theme = Theme.of(context);
     var text = '참가 신청하기';
     VoidCallback? onPressed;
     Color? backgroundColor;
@@ -387,7 +396,7 @@ class _BottomTicketBar extends ConsumerWidget {
       case EventAdmissionStatus.notEligible:
         text = state.ineligibleReason ?? '참여 조건 미달';
         onPressed = null; // Disabled
-        backgroundColor = Colors.grey;
+        backgroundColor = theme.colorScheme.outline;
       case EventAdmissionStatus.eligible:
         text = '참가 신청하기';
         onPressed = () {

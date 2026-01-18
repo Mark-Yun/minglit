@@ -101,12 +101,11 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
       body: Column(
         children: [
           // Styled Progress Indicator
-          LinearProgressIndicator(
+          MinglitLinearProgressIndicator(
             value:
                 (state.currentStep.index + 1) / PartyCreateStep.values.length,
             backgroundColor: colorScheme.surfaceContainerHighest,
-            valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
-            minHeight: 2,
+            color: colorScheme.primary,
           ),
           Expanded(
             child: PageView(

@@ -43,7 +43,7 @@ class LoginPage extends ConsumerWidget {
     final authState = ref.watch(authControllerProvider);
 
     if (authState.isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(body: MinglitCircularProgressIndicator());
     }
 
     return MinglitLoginScreen(

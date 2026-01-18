@@ -68,7 +68,7 @@ class _PartyCurationScreenState extends ConsumerState<PartyCurationScreen> {
               },
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const MinglitCircularProgressIndicator(),
           error: (Object error, StackTrace? stack) =>
               Center(child: Text('오류가 발생했습니다: $error')),
         ),

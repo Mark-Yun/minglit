@@ -111,7 +111,7 @@ class _EventCreateScreenState extends ConsumerState<EventCreateScreen> {
                 color: theme.scaffoldBackgroundColor,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: theme.shadowColor.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, -4),
                   ),

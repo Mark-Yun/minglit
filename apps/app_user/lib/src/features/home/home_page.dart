@@ -19,11 +19,16 @@ class HomePage extends ConsumerWidget {
                 backgroundImage: NetworkImage(
                   user!.userMetadata!['avatar_url'] as String,
                 ),
-                radius: 40,
+                radius: MinglitSpacing.xlarge + MinglitSpacing.small, // 40
               ),
-            const SizedBox(height: 20),
-            Text('안녕하세요, ${user?.userMetadata?['full_name'] ?? user?.email}님!'),
-            const SizedBox(height: 40),
+            const SizedBox(height: MinglitSpacing.large),
+            Text(
+              '안녕하세요, ${user?.userMetadata?['full_name'] ?? user?.email}님!',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(
+              height: MinglitSpacing.xlarge + MinglitSpacing.small,
+            ), // 40
             ElevatedButton(
               onPressed: () =>
                   ref.read(authControllerProvider.notifier).signOut(),

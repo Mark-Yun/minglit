@@ -24,6 +24,7 @@ export 'src/ui/widgets/common/minglit_chip.dart';
 export 'src/ui/widgets/common/minglit_image.dart';
 export 'src/ui/widgets/common/minglit_image_picker.dart';
 export 'src/ui/widgets/common/minglit_skeleton.dart';
+export 'src/ui/widgets/common/loading_indicator.dart';
 export 'src/ui/widgets/common/number_stepper_input.dart';
 export 'src/ui/widgets/common/verification_card.dart';
 export 'src/ui/widgets/common/verification_select_card.dart';

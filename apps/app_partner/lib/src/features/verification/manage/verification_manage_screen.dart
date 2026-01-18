@@ -17,13 +17,13 @@ class VerificationManageScreen extends ConsumerWidget {
         appBar: AppBar(
           title: const Text('커스텀 인증 관리'),
           centerTitle: false,
-          backgroundColor: Colors.white,
+          backgroundColor: theme.colorScheme.surface,
           scrolledUnderElevation: 0,
           titleTextStyle: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: theme.colorScheme.onSurface,
           ),
-          iconTheme: const IconThemeData(color: Colors.black87),
+          iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
           bottom: TabBar(
             labelColor: theme.colorScheme.primary,
             unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
@@ -49,7 +49,7 @@ class VerificationManageScreen extends ConsumerWidget {
               ),
             ],
           ),
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const MinglitCircularProgressIndicator(),
           error: (e, s) => Center(child: Text('Error: $e')),
         ),
       ),
@@ -178,25 +178,26 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(MinglitSpacing.xlarge),
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLowest,
+        color: theme.colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(MinglitRadius.card),
       ),
       child: Column(
         children: [
           Icon(
             Icons.verified_user_outlined,
-            size: 48,
-            color: Theme.of(context).colorScheme.outlineVariant,
+            size: MinglitIconSize.xlarge * 1.5,
+            color: theme.colorScheme.outlineVariant,
           ),
           const SizedBox(height: MinglitSpacing.medium),
           Text(
             message,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ],

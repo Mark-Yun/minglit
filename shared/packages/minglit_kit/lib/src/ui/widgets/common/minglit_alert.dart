@@ -68,7 +68,9 @@ class MinglitAlert extends StatelessWidget {
               foregroundColor: isDestructive
                   ? Theme.of(context).colorScheme.error
                   : Theme.of(context).colorScheme.primary,
-              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+              textStyle: Theme.of(
+                context,
+              ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             child: Text(confirmText),
           ),
@@ -85,7 +87,9 @@ class MinglitAlert extends StatelessWidget {
 
     return AlertDialog(
       backgroundColor: colorScheme.surface,
-      surfaceTintColor: Colors.transparent, // Remove standardized tint
+      surfaceTintColor: colorScheme.surface.withValues(
+        alpha: 0,
+      ), // Remove standardized tint
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(MinglitRadius.card),
       ),

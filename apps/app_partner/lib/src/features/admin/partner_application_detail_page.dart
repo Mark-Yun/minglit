@@ -97,7 +97,7 @@ class _PartnerApplicationDetailPageState
             return Center(child: Text(context.l10n.appDetail_message_notFound));
           }
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(MinglitSpacing.medium),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -126,7 +126,7 @@ class _PartnerApplicationDetailPageState
                   context.l10n.partnerApplication_field_address,
                   app.address,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: MinglitSpacing.large),
                 _buildSectionHeader(context.l10n.appDetail_section_files),
                 _buildFileLink(
                   context.l10n.appDetail_label_bizReg,
@@ -136,7 +136,7 @@ class _PartnerApplicationDetailPageState
                   context.l10n.appDetail_label_bankbook,
                   app.bankbookPath,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: MinglitSpacing.large),
                 if (app.status == 'pending') ...[
                   _buildSectionHeader(context.l10n.appDetail_section_review),
                   TextField(
@@ -147,7 +147,7 @@ class _PartnerApplicationDetailPageState
                     ),
                     maxLines: 3,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: MinglitSpacing.medium),
                   Row(
                     children: [
                       Expanded(
@@ -161,7 +161,7 @@ class _PartnerApplicationDetailPageState
                           child: Text(context.l10n.appDetail_button_approve),
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: MinglitSpacing.medium),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () => unawaited(
@@ -173,7 +173,7 @@ class _PartnerApplicationDetailPageState
                           child: Text(context.l10n.appDetail_button_correction),
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: MinglitSpacing.medium),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () => unawaited(
@@ -204,24 +204,28 @@ class _PartnerApplicationDetailPageState
           );
         },
         error: (Object e, StackTrace s) => Center(child: Text('Error: $e')),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const MinglitCircularProgressIndicator(),
       ),
     );
   }
 
   Widget _buildSectionHeader(String title) {
+    final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: MinglitSpacing.small),
       child: Text(
         title,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        style: theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
 
   Widget _buildInfoRow(String label, String value) {
+    final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: MinglitSpacing.small),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -229,10 +233,12 @@ class _PartnerApplicationDetailPageState
             width: 100,
             child: Text(
               label,
-              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
-          Expanded(child: Text(value, style: const TextStyle(fontSize: 14))),
+          Expanded(child: Text(value, style: theme.textTheme.bodyMedium)),
         ],
       ),
     );
@@ -240,19 +246,22 @@ class _PartnerApplicationDetailPageState
 
   Widget _buildFileLink(String label, String? path) {
     if (path == null) return const SizedBox.shrink();
+    final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: MinglitSpacing.small),
       child: Row(
         children: [
           SizedBox(
             width: 100,
             child: Text(
               label,
-              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
           TextButton.icon(
-            icon: const Icon(Icons.download, size: 16),
+            icon: const Icon(Icons.download, size: MinglitIconSize.small),
             label: Text(context.l10n.appDetail_label_download),
             onPressed: () {
               // TODO(developer): Implement file download logic.
