@@ -42,7 +42,7 @@ class EventCreateOperationTab extends StatelessWidget {
           MinglitEditableSection(
             title: context.l10n.wizard_review_tickets,
             onTap: () {
-              // TODO(partner_party_management_20260117): Manage tickets
+              // TODO: (partner_party_management_20260117) Manage tickets
             },
             child: PartyTicketsSummary(
               tickets: state.tickets,

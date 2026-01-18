@@ -6,7 +6,8 @@ part 'ticket_token.g.dart';
 /// **Ticket Token**
 ///
 /// A signed token that can be converted into a QR code.
-/// Contains the minimal data needed for offline display and online verification.
+/// Contains the minimal data needed for offline display
+/// and online verification.
 @freezed
 abstract class TicketToken with _$TicketToken {
   const factory TicketToken({

@@ -1,7 +1,6 @@
 import 'package:app_user/src/features/ticket/data/ticket_wallet_repository.dart';
 import 'package:app_user/src/features/ticket/ui/widgets/ticket_qr_viewer.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod/src/providers/future_provider.dart';
 
@@ -21,7 +20,7 @@ class TicketQRScreen extends ConsumerWidget {
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(title: '내 티켓'),
       body: Center(
-        child: MinglitAsyncValueWidget(
+        child: MinglitAsyncValueWidget<TicketToken?>(
           value: ticketAsync,
           data: (token) {
             if (token == null) {

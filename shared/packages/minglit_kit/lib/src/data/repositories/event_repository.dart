@@ -1,5 +1,5 @@
-import 'package:minglit_kit/src/data/models/event_application.dart';
 import 'package:minglit_kit/src/data/models/event.dart';
+import 'package:minglit_kit/src/data/models/event_application.dart';
 import 'package:minglit_kit/src/data/models/event_feed_type.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -28,12 +28,16 @@ class EventRepository {
     try {
       final data = await _supabase
           .from('event_applications')
-          .select('*, user:user_profiles(*), submission:verification_submissions(*)')
+          .select(
+            '*, user:user_profiles(*), submission:verification_submissions(*)',
+          )
           .eq('event_id', eventId)
           .order('created_at', ascending: false);
 
       final result = (data as List)
-          .map((json) => EventApplication.fromJson(json as Map<String, dynamic>))
+          .map(
+            (json) => EventApplication.fromJson(json as Map<String, dynamic>),
+          )
           .toList();
 
       Log.d('getApplicationsByEventId success | count: ${result.length}');

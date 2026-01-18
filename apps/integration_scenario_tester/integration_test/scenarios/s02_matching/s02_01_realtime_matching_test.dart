@@ -20,8 +20,9 @@ void main() {
       await seeder.prepareBaseData();
     });
 
-    testWidgets('Should complete mutual matching when both users vote',
-        (tester) async {
+    testWidgets('Should complete mutual matching when both users vote', (
+      tester,
+    ) async {
       // 1. Setup: Prepare test event and users
       // Note: Real IDs would come from seeder.createPairForMatching()
       final (userA, userB) = await seeder.createPairForMatching();

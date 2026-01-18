@@ -199,37 +199,29 @@ class QrScannerOverlayShape extends ShapeBorder {
     );
 
     // Draw borders (corners)
-    canvas.drawPath(
-      Path()
-        ..moveTo(cutOutRect.left, cutOutRect.top + borderLength)
-        ..lineTo(cutOutRect.left, cutOutRect.top)
-        ..lineTo(cutOutRect.left + borderLength, cutOutRect.top),
-      paint,
-    );
+    final path1 = Path();
+    path1.moveTo(cutOutRect.left, cutOutRect.top + borderLength);
+    path1.lineTo(cutOutRect.left, cutOutRect.top);
+    path1.lineTo(cutOutRect.left + borderLength, cutOutRect.top);
+    canvas.drawPath(path1, paint);
 
-    canvas.drawPath(
-      Path()
-        ..moveTo(cutOutRect.right - borderLength, cutOutRect.top)
-        ..lineTo(cutOutRect.right, cutOutRect.top)
-        ..lineTo(cutOutRect.right, cutOutRect.top + borderLength),
-      paint,
-    );
+    final path2 = Path();
+    path2.moveTo(cutOutRect.right - borderLength, cutOutRect.top);
+    path2.lineTo(cutOutRect.right, cutOutRect.top);
+    path2.lineTo(cutOutRect.right, cutOutRect.top + borderLength);
+    canvas.drawPath(path2, paint);
 
-    canvas.drawPath(
-      Path()
-        ..moveTo(cutOutRect.right, cutOutRect.bottom - borderLength)
-        ..lineTo(cutOutRect.right, cutOutRect.bottom)
-        ..lineTo(cutOutRect.right - borderLength, cutOutRect.bottom),
-      paint,
-    );
+    final path3 = Path();
+    path3.moveTo(cutOutRect.right, cutOutRect.bottom - borderLength);
+    path3.lineTo(cutOutRect.right, cutOutRect.bottom);
+    path3.lineTo(cutOutRect.right - borderLength, cutOutRect.bottom);
+    canvas.drawPath(path3, paint);
 
-    canvas.drawPath(
-      Path()
-        ..moveTo(cutOutRect.left + borderLength, cutOutRect.bottom)
-        ..lineTo(cutOutRect.left, cutOutRect.bottom)
-        ..lineTo(cutOutRect.left, cutOutRect.bottom - borderLength),
-      paint,
-    );
+    final path4 = Path();
+    path4.moveTo(cutOutRect.left + borderLength, cutOutRect.bottom);
+    path4.lineTo(cutOutRect.left, cutOutRect.bottom);
+    path4.lineTo(cutOutRect.left, cutOutRect.bottom - borderLength);
+    canvas.drawPath(path4, paint);
   }
 
   @override

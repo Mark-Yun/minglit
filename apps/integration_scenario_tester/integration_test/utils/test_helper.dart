@@ -20,10 +20,7 @@ class TestHelper {
       defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
     );
 
-    await Supabase.initialize(
-      url: supabaseUrl,
-      anonKey: supabaseAnonKey,
-    );
+    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
 
     // Create a provider container for logic-only testing
     final container = ProviderContainer();
@@ -36,18 +33,18 @@ class TestHelper {
 /// A wrapper around [DatabaseSeeder] to prepare test data within integration tests.
 class SeederHelper {
   SeederHelper()
-      : _seeder = DatabaseSeeder(
-          SupabaseClient(
-            const String.fromEnvironment(
-              'SUPABASE_URL',
-              defaultValue: 'http://127.0.0.1:54321',
-            ),
-            const String.fromEnvironment(
-              'SUPABASE_SERVICE_ROLE_KEY',
-              defaultValue: 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz',
-            ),
+    : _seeder = DatabaseSeeder(
+        SupabaseClient(
+          const String.fromEnvironment(
+            'SUPABASE_URL',
+            defaultValue: 'http://127.0.0.1:54321',
           ),
-        );
+          const String.fromEnvironment(
+            'SUPABASE_SERVICE_ROLE_KEY',
+            defaultValue: 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz',
+          ),
+        ),
+      );
 
   final DatabaseSeeder _seeder;
 

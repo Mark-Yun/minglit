@@ -76,8 +76,9 @@ class _WizardBodyState extends ConsumerState<_WizardBody> {
     // Listen for success
     ref.listen(eventApplicationControllerProvider(widget.event), (_, next) {
       if (next.status == EventApplicationStatus.success) {
-        context.pop();
-        context.showMinglitSuccess('신청이 완료되었습니다! 파트너 심사 후 알려드릴게요.');
+        context
+          ..pop()
+          ..showMinglitSuccess('신청이 완료되었습니다! 파트너 심사 후 알려드릴게요.');
       }
       if (next.status == EventApplicationStatus.error) {
         handleMinglitError(context, next.errorMessage!);
@@ -227,7 +228,8 @@ class _VerificationStep extends ConsumerWidget {
     }
 
     // Fetch the verification definition
-    final sortedIds = List<String>.from(verifIds)..sort();
+    final sortedIds = List<String>.from(verifIds);
+    sortedIds.sort();
     final idsString = sortedIds.join(',');
     final verifAsync = ref.watch(verificationsByIdsProvider(idsString));
 

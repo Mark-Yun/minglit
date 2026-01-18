@@ -17,28 +17,30 @@ void main() {
       identityRepo = container.read(identityRepositoryProvider);
     });
 
-    testWidgets('Should complete identity verification and mark user as verified',
-        (tester) async {
-      // 1. Check initial state
-      final isVerifiedInitial = await identityRepo.isVerified();
-      Log.i('Initial verified state: $isVerifiedInitial');
+    testWidgets(
+      'Should complete identity verification and mark user as verified',
+      (tester) async {
+        // 1. Check initial state
+        final isVerifiedInitial = await identityRepo.isVerified();
+        Log.i('Initial verified state: $isVerifiedInitial');
 
-      // 2. Perform verification (Mock data)
-      try {
-        await identityRepo.verifyIdentity(
-          name: 'Test User',
-          birthDate: DateTime(1995, 1, 1),
-          gender: 'male',
-          phoneNumber: '01012345678',
-        );
+        // 2. Perform verification (Mock data)
+        try {
+          await identityRepo.verifyIdentity(
+            name: 'Test User',
+            birthDate: DateTime(1995, 1, 1),
+            gender: 'male',
+            phoneNumber: '01012345678',
+          );
 
-        // 3. Verify success
-        final isVerifiedFinal = await identityRepo.isVerified();
-        Log.i('Final verified state: $isVerifiedFinal');
-        // expect(isVerifiedFinal, isTrue);
-      } catch (e) {
-        Log.w('Identity verification failed (expected if not logged in): $e');
-      }
-    });
+          // 3. Verify success
+          final isVerifiedFinal = await identityRepo.isVerified();
+          Log.i('Final verified state: $isVerifiedFinal');
+          // expect(isVerifiedFinal, isTrue);
+        } catch (e) {
+          Log.w('Identity verification failed (expected if not logged in): $e');
+        }
+      },
+    );
   });
 }

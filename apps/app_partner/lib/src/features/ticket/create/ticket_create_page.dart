@@ -39,8 +39,9 @@ class TicketCreatePage extends ConsumerWidget {
 
       final state = ref.read(ticketControllerProvider);
       if (!state.hasError && context.mounted) {
-        context.pop();
-        context.showMinglitSuccess(context.l10n.ticket_message_created);
+        context
+          ..pop()
+          ..showMinglitSuccess(context.l10n.ticket_message_created);
         if (eventId.isNotEmpty) {
           ref.invalidate(eventTicketsProvider(eventId));
         } else {

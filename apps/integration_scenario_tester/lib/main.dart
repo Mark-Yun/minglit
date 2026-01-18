@@ -12,7 +12,9 @@ class IntegrationTesterApp extends StatelessWidget {
     return const MaterialApp(
       home: Scaffold(
         body: Center(
-          child: Text('Minglit Integration Scenario Tester\nRun tests via "flutter test integration_test"'),
+          child: Text(
+            'Minglit Integration Scenario Tester\nRun tests via "flutter test integration_test"',
+          ),
         ),
       ),
     );

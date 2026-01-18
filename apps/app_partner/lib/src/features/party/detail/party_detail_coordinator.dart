@@ -21,7 +21,7 @@ class PartyDetailCoordinator {
   final Ref _ref;
 
   void goToEditParty(String partyId) {
-    // TODO(partner_party_management_20260117): Implement Party Edit Route
+    // TODO: (partner_party_management_20260117) Implement Party Edit Route
     Log.d(r'Coordinator: Edit Party $partyId');
   }
 
@@ -35,7 +35,8 @@ class PartyDetailCoordinator {
   }
 
   Future<void> activateParty(String partyId, BuildContext context) async {
-    final loading = _ref.read(globalLoadingControllerProvider.notifier)..show();
+    final loading = _ref.read(globalLoadingControllerProvider.notifier);
+    loading.show();
     try {
       await _ref
           .read(partyRepositoryProvider)
@@ -54,7 +55,8 @@ class PartyDetailCoordinator {
   }
 
   Future<void> deactivateParty(String partyId, BuildContext context) async {
-    final loading = _ref.read(globalLoadingControllerProvider.notifier)..show();
+    final loading = _ref.read(globalLoadingControllerProvider.notifier);
+    loading.show();
     try {
       await _ref
           .read(partyRepositoryProvider)
@@ -79,7 +81,8 @@ class PartyDetailCoordinator {
     PartyEntryGroup updatedGroup,
     BuildContext context,
   ) async {
-    final loading = _ref.read(globalLoadingControllerProvider.notifier)..show();
+    final loading = _ref.read(globalLoadingControllerProvider.notifier);
+    loading.show();
     try {
       final party = await _ref.read(partyDetailProvider(partyId).future);
       final currentGroups = party.entryGroups;
@@ -116,7 +119,8 @@ class PartyDetailCoordinator {
     required Map<String, dynamic> contactOptions,
     required BuildContext context,
   }) async {
-    final loading = _ref.read(globalLoadingControllerProvider.notifier)..show();
+    final loading = _ref.read(globalLoadingControllerProvider.notifier);
+    loading.show();
     try {
       final party = await _ref.read(partyDetailProvider(partyId).future);
 

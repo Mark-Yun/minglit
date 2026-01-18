@@ -4,7 +4,8 @@ import 'package:cryptography/cryptography.dart';
 /// **Ticket Crypto Utility**
 ///
 /// Uses Ed25519 for secure ticket signing and verification.
-/// This allows offline QR code display on user apps and secure online validation on partner apps.
+/// This allows offline QR code display on user apps and secure online
+/// validation on partner apps.
 class TicketCrypto {
   final algorithm = Ed25519();
 
@@ -23,7 +24,8 @@ class TicketCrypto {
     return base64Url.encode(signature.bytes);
   }
 
-  /// Verifies the [payload] against the [signatureBase64] using the [publicKey].
+  /// Verifies the [payload] against the [signatureBase64] using the
+  /// [publicKey].
   Future<bool> verify(
     String payload,
     String signatureBase64,

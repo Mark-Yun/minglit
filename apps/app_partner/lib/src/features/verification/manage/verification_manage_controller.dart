@@ -47,9 +47,8 @@ class VerificationManageController extends _$VerificationManageController {
 
   /// Archives (soft-deletes) the verification.
   Future<void> archiveVerification(String verificationId) async {
-    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
-
     final repo = ref.read(verificationRepositoryProvider);
+    ref.read(globalLoadingControllerProvider.notifier).show();
     try {
       await repo.deleteVerification(verificationId);
       final newState = await _fetchLists();
@@ -57,15 +56,14 @@ class VerificationManageController extends _$VerificationManageController {
     } on Object catch (e, st) {
       state = AsyncError(e, st);
     } finally {
-      loading.hide();
+      ref.read(globalLoadingControllerProvider.notifier).hide();
     }
   }
 
   /// Restores the verification.
   Future<void> restoreVerification(String verificationId) async {
-    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
-
     final repo = ref.read(verificationRepositoryProvider);
+    ref.read(globalLoadingControllerProvider.notifier).show();
     try {
       await repo.restoreVerification(verificationId);
       final newState = await _fetchLists();
@@ -73,7 +71,7 @@ class VerificationManageController extends _$VerificationManageController {
     } on Object catch (e, st) {
       state = AsyncError(e, st);
     } finally {
-      loading.hide();
+      ref.read(globalLoadingControllerProvider.notifier).hide();
     }
   }
 

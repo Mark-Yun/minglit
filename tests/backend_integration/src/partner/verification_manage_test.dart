@@ -38,23 +38,31 @@ void main() {
     late String partnerId;
 
     setUpAll(() async {
-      final p1 = await adminClient.from('partners').select('id, partner_member_permissions(user_id)').limit(1).single();
+      final p1 = await adminClient
+          .from('partners')
+          .select('id, partner_member_permissions(user_id)')
+          .limit(1)
+          .single();
       partnerId = p1['id'];
       ownerId = (p1['partner_member_permissions'] as List).first['user_id'];
     });
 
     test('Owner should be able to create verification', () async {
       final client = createUserClient(ownerId);
-      final res = await client.from('verifications').insert({
-        'partner_id': partnerId,
-        'category': 'etc',
-        'internal_name': 'test_verify',
-        'display_name': 'Test Verification',
-        'form_schema': [],
-      }).select().single();
-      
+      final res = await client
+          .from('verifications')
+          .insert({
+            'partner_id': partnerId,
+            'category': 'etc',
+            'internal_name': 'test_verify',
+            'display_name': 'Test Verification',
+            'form_schema': [],
+          })
+          .select()
+          .single();
+
       expect(res['partner_id'], equals(partnerId));
-      
+
       // Cleanup
       await adminClient.from('verifications').delete().eq('id', res['id']);
     });

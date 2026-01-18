@@ -9,13 +9,13 @@
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: 환불 로직 테스트' (Protocol in workflow.md)
 
 ## Phase 2: 파트너 앱 심사 UI 구현 (`app_partner`)
-- [ ] Task: 신청 목록 리스트 UI 구현
-    - [ ] 이벤트별 대기 중인 신청 건 조회 및 표시.
-- [ ] Task: 상세 심사 및 거절 팝업 구현
-    - [ ] 유저 정보/제출 자료 확인 뷰 작성.
-    - [ ] 거절 사유 선택(라디오 버튼) 및 직접 입력 다이얼로그 구현.
-- [ ] Task: 승인/거절 API 연동
-    - [ ] `reviewRequest` (기존 repo 활용) 호출 및 UI 갱신.
+- [x] Task: 신청 목록 리스트 UI 구현 a6b1910
+    - [x] 이벤트별 대기 중인 신청 건 조회 및 표시.
+- [x] Task: 상세 심사 및 거절 팝업 구현 a6b1910
+    - [x] 유저 정보/제출 자료 확인 뷰 작성.
+    - [x] 거절 사유 선택(라디오 버튼) 및 직접 입력 다이얼로그 구현.
+- [x] Task: 승인/거절 API 연동 a6b1910
+    - [x] `reviewRequest` (기존 repo 활용) 호출 및 UI 갱신.
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: 심사 기능 확인' (Protocol in workflow.md)
 
 ## Phase 3: 유저 알림 및 재신청 유도 (`app_user`)

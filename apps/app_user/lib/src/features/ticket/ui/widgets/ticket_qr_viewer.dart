@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -30,15 +31,13 @@ class _TicketQRViewerState extends State<TicketQRViewer>
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
 
-    // ignore: discarded_futures
-    _maximizeBrightness();
+    unawaited(_maximizeBrightness());
   }
 
   @override
   void dispose() {
     _animationController.dispose();
-    // ignore: discarded_futures
-    _restoreBrightness();
+    unawaited(_restoreBrightness());
     super.dispose();
   }
 
@@ -54,8 +53,9 @@ class _TicketQRViewerState extends State<TicketQRViewer>
   Future<void> _restoreBrightness() async {
     if (_originalBrightness != null) {
       try {
-        await ScreenBrightness()
-            .setApplicationScreenBrightness(_originalBrightness!);
+        await ScreenBrightness().setApplicationScreenBrightness(
+          _originalBrightness!,
+        );
       } on Object catch (e) {
         Log.e('Failed to restore screen brightness', e);
       }

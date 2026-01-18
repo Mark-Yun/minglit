@@ -7,9 +7,7 @@ part 'ticket_wallet_repository.g.dart';
 
 @riverpod
 FlutterSecureStorage secureStorage(Ref ref) {
-  return const FlutterSecureStorage(
-    aOptions: AndroidOptions(),
-  );
+  return const FlutterSecureStorage();
 }
 
 @riverpod
@@ -18,7 +16,7 @@ TicketWalletRepository ticketWalletRepository(Ref ref) {
 }
 
 /// **Ticket Wallet Repository**
-/// 
+///
 /// Manages offline ticket storage using secure local storage.
 class TicketWalletRepository {
   TicketWalletRepository(this._storage);
@@ -38,7 +36,7 @@ class TicketWalletRepository {
     final key = '$_keyPrefix$ticketId';
     final value = await _storage.read(key: key);
     if (value == null) return null;
-    
+
     try {
       final json = jsonDecode(value) as Map<String, dynamic>;
       return TicketToken.fromJson(json);
@@ -47,6 +45,7 @@ class TicketWalletRepository {
       return null;
     }
   }
+
   /// Deletes a ticket from storage.
   Future<void> deleteTicket(String ticketId) async {
     final key = '$_keyPrefix$ticketId';

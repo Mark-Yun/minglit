@@ -50,16 +50,18 @@ void main() {
   setUpAll(() async {
     print('🚀 [Setup] Fetching seeded data...');
 
-          // 1. Fetch a Normal User (user_25_m_ok)
-          final userRes = await adminClient
-              .from('user_profiles')
-              .select()
-              .eq('username', 'user_25_m_ok')
-              .maybeSingle();
-    
-          if (userRes == null) {
-            throw Exception('🚨 User user_25_m_ok not found! Did you run the seeder?');
-          }    testUserId = userRes['id'];
+    // 1. Fetch a Normal User (user_25_m_ok)
+    final userRes = await adminClient
+        .from('user_profiles')
+        .select()
+        .eq('username', 'user_25_m_ok')
+        .maybeSingle();
+
+    if (userRes == null) {
+      throw Exception(
+          '🚨 User user_25_m_ok not found! Did you run the seeder?');
+    }
+    testUserId = userRes['id'];
     print('👤 [Setup] Using User: $testUserId');
 
     // 2. Fetch an Event and Ticket
@@ -92,19 +94,34 @@ void main() {
         .limit(1)
         .maybeSingle();
 
-    testVerificationId = verifRes?['id'] ?? (await adminClient.from('verifications').select().limit(1).single())['id'];
+    testVerificationId = verifRes?['id'] ??
+        (await adminClient
+            .from('verifications')
+            .select()
+            .limit(1)
+            .single())['id'];
     print('✅ [Setup] Using Verification: $testVerificationId');
 
     // 4. Cleanup existing data (Unique Constraint)
     try {
-      await adminClient.from('event_participants').delete().eq('user_id', testUserId).eq('event_id', testEventId);
-      await adminClient.from('event_applications').delete().eq('user_id', testUserId).eq('event_id', testEventId);
+      await adminClient
+          .from('event_participants')
+          .delete()
+          .eq('user_id', testUserId)
+          .eq('event_id', testEventId);
+      await adminClient
+          .from('event_applications')
+          .delete()
+          .eq('user_id', testUserId)
+          .eq('event_id', testEventId);
     } catch (e) {
       print('⚠️ Cleanup warning: $e');
     }
   });
 
-  test('One-Shot Application Flow Test (Apply -> Pending -> Approve -> Confirmed)', () async {
+  test(
+      'One-Shot Application Flow Test (Apply -> Pending -> Approve -> Confirmed)',
+      () async {
     final userClient = createUserClient(testUserId);
     final eventRepo = EventRepository(supabase: userClient);
 

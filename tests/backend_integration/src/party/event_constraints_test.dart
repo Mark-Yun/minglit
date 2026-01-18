@@ -18,18 +18,27 @@ void main() {
     late String testLocationId;
 
     setUpAll(() async {
-      final party = await adminClient.from('parties').select('id, location_id').limit(1).single();
+      final party = await adminClient
+          .from('parties')
+          .select('id, location_id')
+          .limit(1)
+          .single();
       testPartyId = party['id'];
       testLocationId = party['location_id'];
     });
 
     test('Should reject negative ticket price', () async {
-      final eventRes = await adminClient.from('events').insert({
-        'party_id': testPartyId,
-        'location_id': testLocationId,
-        'start_time': DateTime.now().toIso8601String(),
-        'end_time': DateTime.now().add(const Duration(hours: 2)).toIso8601String(),
-      }).select().single();
+      final eventRes = await adminClient
+          .from('events')
+          .insert({
+            'party_id': testPartyId,
+            'location_id': testLocationId,
+            'start_time': DateTime.now().toIso8601String(),
+            'end_time':
+                DateTime.now().add(const Duration(hours: 2)).toIso8601String(),
+          })
+          .select()
+          .single();
       final eventId = eventRes['id'];
 
       try {
@@ -43,7 +52,7 @@ void main() {
       } catch (e) {
         expect(e.toString(), contains('violates check constraint'));
       }
-      
+
       // Cleanup
       await adminClient.from('events').delete().eq('id', eventId);
     });
@@ -54,7 +63,8 @@ void main() {
           'party_id': testPartyId,
           'location_id': testLocationId,
           'start_time': DateTime.now().toIso8601String(),
-          'end_time': DateTime.now().add(const Duration(hours: 2)).toIso8601String(),
+          'end_time':
+              DateTime.now().add(const Duration(hours: 2)).toIso8601String(),
           'max_participants': -1, // Invalid
         });
         fail('Should have thrown constraint error');

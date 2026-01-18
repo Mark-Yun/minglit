@@ -22,14 +22,14 @@ class RequirePublicDocsRule extends DartLintRule {
       // Note: 'declaredElement' getter might be deprecated or missing on Declaration interface in newer analyzer versions.
       // Casting to specific types that have it, or using 'declaredFragment' if applicable.
       // For now, let's try casting to NamedCompilationUnitMember which definitely has it.
-      
+
       String? name;
       if (node is NamedCompilationUnitMember) {
         name = node.name.lexeme;
       } else if (node is VariableDeclaration) {
         name = node.name.lexeme;
       }
-      
+
       if (name == null || name.startsWith('_')) return;
 
       // 2. Already documented members are excluded
@@ -53,10 +53,10 @@ class RequirePublicDocsRule extends DartLintRule {
         'deactivate',
         'reassemble',
       };
-      
+
       // Check if it's a method declaration and matches lifecycle methods
       if (node is MethodDeclaration) {
-         if (flutterLifecycleMethods.contains(name)) return;
+        if (flutterLifecycleMethods.contains(name)) return;
       }
 
       // Report lint

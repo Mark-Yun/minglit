@@ -47,11 +47,11 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
 
   Future<void> _handleSubmit() async {
     final notifier = ref.read(partyCreateWizardControllerProvider.notifier);
-    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
+    ref.read(globalLoadingControllerProvider.notifier).show();
     try {
       await notifier.submit();
     } finally {
-      loading.hide();
+      ref.read(globalLoadingControllerProvider.notifier).hide();
     }
   }
 

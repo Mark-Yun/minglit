@@ -1,6 +1,5 @@
 import 'package:cryptography/cryptography.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:minglit_kit/src/utils/ticket_crypto.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'checkin_repository.g.dart';
@@ -65,9 +64,8 @@ class CheckinRepository {
     if (token.expiresAt.isBefore(DateTime.now())) return false;
 
     // 4. Update DB (Simulated)
-    // TODO(party_checkin_system_20260117): Call Supabase RPC to update participant status to 'checked_in'
-    Log.i('✅ Check-in Success for user: ${token.userId}');
-
+    // TODO: (party_checkin_system_20260117) Update verification logic
+    // when real server integration is ready.
     return true;
   }
 }

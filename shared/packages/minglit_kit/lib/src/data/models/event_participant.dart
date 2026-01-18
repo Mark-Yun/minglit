@@ -5,7 +5,7 @@ part 'event_participant.g.dart';
 
 /// **Event Participant Model** (Confirmed)
 @freezed
-class EventParticipant with _$EventParticipant {
+abstract class EventParticipant with _$EventParticipant {
   const factory EventParticipant({
     required String id,
     @JsonKey(name: 'event_id') required String eventId,

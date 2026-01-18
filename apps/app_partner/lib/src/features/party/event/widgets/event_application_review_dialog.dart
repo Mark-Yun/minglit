@@ -131,21 +131,23 @@ class _EventApplicationReviewDialogState
                 color: theme.colorScheme.error,
               ),
             ),
-            ..._presetReasons.map((reason) => RadioListTile<String>(
-                  title: Text(reason, style: theme.textTheme.bodySmall),
-                  value: reason,
-                  // ignore: deprecated_member_use, Reason: Flutter 3.32
-                  groupValue: _isCustomReason ? null : _selectedReason,
-                  // ignore: deprecated_member_use, Reason: Flutter 3.32
-                  onChanged: (val) {
-                    setState(() {
-                      _selectedReason = val;
-                      _isCustomReason = false;
-                    });
-                  },
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                )),
+            ..._presetReasons.map(
+              (reason) => RadioListTile<String>(
+                title: Text(reason, style: theme.textTheme.bodySmall),
+                value: reason,
+                // ignore: deprecated_member_use, Reason: Flutter 3.32
+                groupValue: _isCustomReason ? null : _selectedReason,
+                // ignore: deprecated_member_use, Reason: Flutter 3.32
+                onChanged: (val) {
+                  setState(() {
+                    _selectedReason = val;
+                    _isCustomReason = false;
+                  });
+                },
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+              ),
+            ),
             RadioListTile<bool>(
               title: const Text('직접 입력', style: TextStyle(fontSize: 12)),
               value: true,

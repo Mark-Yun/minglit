@@ -18,9 +18,14 @@ class MatchingVoteScreen extends ConsumerWidget {
     // Listen to vote action state
     ref.listen(matchingVoteControllerProvider, (_, state) {
       if (state.hasError) {
-        handleMinglitError(context, state.error!, state.stackTrace);
+        handleMinglitError(
+          context,
+          state.error!,
+          state.stackTrace,
+        );
       } else if (!state.isLoading && state.hasValue) {
-        // Void async value technically has null value, but let's check !hasError
+        // Void async value technically has null value,
+        // but let's check !hasError
         context.showMinglitSuccess('투표가 완료되었습니다.');
       }
     });
