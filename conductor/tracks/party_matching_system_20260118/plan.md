@@ -1,14 +1,10 @@
 # Implementation Plan: Party Matching System
 
-## Phase 1: Database Migration (Supabase)
-- [~] **Task: Create Migration File `08_matching.sql`**
-    - `match_rules` 테이블 생성: `event_id`, `source_group_id`, `target_group_id`.
-    - `match_votes` 테이블 생성: `event_id`, `voter_id`, `candidate_id`.
-    - `match_results` 테이블 생성: `event_id`, `user_a_id`, `user_b_id`.
-- [ ] **Task: Implement Real-time Matching Trigger**
-    - `match_votes`에 데이터가 들어오면 `user_a -> user_b`와 `user_b -> user_a`가 있는지 확인 후 `match_results` 자동 생성.
-- [ ] **Task: Secure Phone Number Exposure**
-    - 매칭된 유저끼리만 연락처를 볼 수 있는 Secure Function 또는 View 구현.
+## Phase 1: Database Migration (Supabase) [checkpoint: b21b080]
+- [x] **Task: Create Migration File `08_matching.sql`** [b21b080]
+- [x] **Task: Implement Real-time Matching Trigger** [b21b080]
+- [x] **Task: Secure Phone Number Exposure** [b21b080]
+- [~] Task: Conductor - User Manual Verification 'Phase 1: DB Migration' (Protocol in workflow.md)
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: DB Migration' (Protocol in workflow.md)
 
 ## Phase 2: Domain & Data Layer (`minglit_kit`)
