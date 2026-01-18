@@ -1,15 +1,15 @@
 # 계획: 범용 파일 피커 (MinglitFilePicker) 구현 및 통합
 
-## Phase 1: 기반 로직 및 위젯 구현 (`minglit_kit`)
-- [ ] Task: `file_picker` 패키지 추가
-    - [ ] `minglit_kit` 및 `app_user`, `app_partner`에 의존성 추가.
-- [ ] Task: `MinglitFilePicker` 코어 위젯 구현
-    - [ ] 파일 선택 로직 (`image_picker` + `file_picker` 하이브리드).
-    - [ ] 단일/다중 선택 및 이미지/PDF 필터링 기능.
-- [ ] Task: 미리보기(Preview) 섹션 구현
-    - [ ] 이미지 썸네일 렌더링.
-    - [ ] PDF 파일 아이콘 및 파일명 렌더링.
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: 파일 선택 및 UI 확인' (Protocol in workflow.md)
+## Phase 1: 기반 로직 및 위젯 구현 (`minglit_kit`) [checkpoint: 1ecea72]
+- [x] Task: `file_picker` 패키지 추가 (1ecea72)
+    - [x] `minglit_kit` 및 `app_user`, `app_partner`에 의존성 추가.
+- [x] Task: `MinglitFilePicker` 코어 위젯 구현 (1ecea72)
+    - [x] 파일 선택 로직 (`image_picker` + `file_picker` 하이브리드).
+    - [x] 단일/다중 선택 및 이미지/PDF 필터링 기능.
+- [x] Task: 미리보기(Preview) 섹션 구현 (1ecea72)
+    - [x] 이미지 썸네일 렌더링.
+    - [x] PDF 파일 아이콘 및 파일명 렌더링.
+- [x] Task: Conductor - User Manual Verification 'Phase 1: 파일 선택 및 UI 확인' (Protocol in workflow.md) (1ecea72)
 
 ## Phase 2: Supabase Storage 연동 및 자동 업로드
 - [ ] Task: `StorageRepository` 확장
