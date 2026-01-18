@@ -1,4 +1,5 @@
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/data/repositories/user_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'event_admission_controller.g.dart';
@@ -35,6 +36,7 @@ class EventAdmissionController extends _$EventAdmissionController {
   FutureOr<AdmissionState> build(Event event) async {
     final currentUser = ref.watch(currentUserProvider);
     final repository = ref.watch(eventRepositoryProvider);
+    final userRepository = ref.watch(userRepositoryProvider);
 
     // 1. Check Login
     if (currentUser == null) {
@@ -55,7 +57,7 @@ class EventAdmissionController extends _$EventAdmissionController {
     }
 
     // 3. Fetch User Profile (Identity Check)
-    final userProfile = await _fetchUserProfile(currentUser.id);
+    final userProfile = await userRepository.getUserProfile(currentUser.id);
 
     if (userProfile == null || !userProfile.isVerified) {
       return AdmissionState(
@@ -65,10 +67,7 @@ class EventAdmissionController extends _$EventAdmissionController {
     }
 
     // 4. Fetch User's Approved Verifications
-    final userVerifIds = await _fetchUserVerifications(
-      currentUser.id,
-      event.party?.partnerId,
-    );
+    final userVerifIds = await userRepository.getApprovedVerificationIds(currentUser.id);
 
     // 5. Check Eligibility & Qualifications
     final tickets = event.tickets ?? [];
@@ -139,45 +138,6 @@ class EventAdmissionController extends _$EventAdmissionController {
       user: currentUser,
       ineligibleReason: firstIneligibleReason ?? '참여 조건이 맞지 않습니다.',
     );
-  }
-
-  Future<UserProfile?> _fetchUserProfile(String userId) async {
-    final supabase = ref.read(supabaseClientProvider);
-    try {
-      final data = await supabase
-          .from('user_profiles')
-          .select()
-          .eq('id', userId)
-          .single();
-      return UserProfile.fromJson(data);
-    } on Object {
-      return null;
-    }
-  }
-
-  Future<List<String>> _fetchUserVerifications(
-    String userId,
-    String? partnerId,
-  ) async {
-    final supabase = ref.read(supabaseClientProvider);
-    try {
-      // Identity is already checked. Now fetch approved qualifications.
-      // We check partner_verified_users for approvals.
-      final query = supabase
-          .from('partner_verified_users')
-          .select('verification_id')
-          .eq('user_id', userId);
-
-      // If event is linked to a partner, we might check partner-specific ones.
-      // But global verifications also end up here if approved.
-      final data = await query;
-      return (data as List).map((dynamic e) {
-        final map = e as Map<String, dynamic>;
-        return map['verification_id'] as String;
-      }).toList();
-    } on Object {
-      return [];
-    }
   }
 
   /// Returns reason if NOT eligible, null if eligible.

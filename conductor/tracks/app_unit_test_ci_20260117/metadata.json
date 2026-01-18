@@ -1,0 +1,8 @@
+{
+  "track_id": "app_unit_test_ci_20260117",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-17T22:30:00Z",
+  "updated_at": "2026-01-17T22:30:00Z",
+  "description": "Establish unit testing environment for app_user and integrate with GitHub Actions CI"
+}

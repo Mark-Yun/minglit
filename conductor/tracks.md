@@ -98,4 +98,9 @@
 ## [ ] 트랙: 파트너 파티/티켓 관리 시스템 (Partner Party Management)
 *링크: [./conductor/tracks/partner_party_management_20260117/](./conductor/tracks/partner_party_management_20260117/)*
 
+---
+
+## [~] 트랙: 앱 단위 테스트 및 CI 파이프라인 구축 (App Unit Test & CI)
+*링크: [./conductor/tracks/app_unit_test_ci_20260117/](./conductor/tracks/app_unit_test_ci_20260117/)*
+
 

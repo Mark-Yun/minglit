@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:minglit_kit/src/features/auth/logic/staff_guard_provider.dart';
+import 'package:minglit_kit/src/utils/platform_utils.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:web/web.dart' as web;
 
 class StaffGuardWrapper extends ConsumerStatefulWidget {
   const StaffGuardWrapper({required this.child, super.key});
@@ -18,12 +18,6 @@ class StaffGuardWrapper extends ConsumerStatefulWidget {
 
 class _StaffGuardWrapperState extends ConsumerState<StaffGuardWrapper> {
   StreamSubscription<AuthState>? _authSubscription;
-
-  bool get _isLocalhost {
-    if (!kIsWeb) return false;
-    final hostname = web.window.location.hostname;
-    return hostname == 'localhost' || hostname == '127.0.0.1';
-  }
 
   @override
   void initState() {
@@ -54,7 +48,7 @@ class _StaffGuardWrapperState extends ConsumerState<StaffGuardWrapper> {
   @override
   Widget build(BuildContext context) {
     // Automatically bypass for local development
-    if (_isLocalhost) {
+    if (isLocalhost) {
       return widget.child;
     }
 
