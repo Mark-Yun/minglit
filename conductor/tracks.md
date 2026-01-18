@@ -32,7 +32,4 @@
 ## [x] 트랙: 글로벌 이벤트 파이프라인 및 하이브리드 워커 구현
 *링크: [./conductor/tracks/global_pipeline_20260114/](./conductor/tracks/global_pipeline_20260114/)*
 
----
 
-## [x] 트랙: 커스텀 린트 규칙 강화 (Color, TextStyle)
-*링크: [./conductor/tracks/enhance_lint_rules_20260117/](./conductor/tracks/enhance_lint_rules_20260117/)*
