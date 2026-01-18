@@ -5,6 +5,11 @@
 
 ---
 
+## [ ] 트랙: 실시간 파티 매칭 시스템 (Party Matching System)
+*링크: [./conductor/tracks/party_matching_system_20260118/](./conductor/tracks/party_matching_system_20260118/)*
+
+---
+
 ## [x] 트랙: 범용 소셜 그래프 시스템 (Universal Social Graph)
 *링크: [./conductor/tracks/universal_social_graph_20260118/](./conductor/tracks/universal_social_graph_20260118/)*
 
