@@ -6,8 +6,9 @@ part 'event_admission_controller.g.dart';
 enum EventAdmissionStatus {
   guest, // 로그인 필요
   identityRequired, // 본인인증 필요 (기본 신뢰)
+  qualificationRequired, // 자격 심사 필요 (직장, 학력 등)
   notEligible, // 나이/성별 조건 미달 (이 이벤트의 모든 티켓에 대해)
-  eligible, // 조건 만족 (티켓 구매 가능) -> 티켓 선택 시 추가 심사 여부 판별
+  eligible, // 조건 만족 (티켓 구매 가능)
   applied, // 이미 신청함/참여중
 }
 
@@ -19,11 +20,13 @@ class AdmissionState {
     required this.status,
     this.user,
     this.ineligibleReason,
+    this.missingVerificationIds = const [],
   });
 
   final EventAdmissionStatus status;
   final User? user;
   final String? ineligibleReason;
+  final List<String> missingVerificationIds;
 }
 
 @riverpod
@@ -52,7 +55,6 @@ class EventAdmissionController extends _$EventAdmissionController {
     }
 
     // 3. Fetch User Profile (Identity Check)
-    // We need birth_date and gender from user_profiles.
     final userProfile = await _fetchUserProfile(currentUser.id);
 
     if (userProfile == null || !userProfile.isVerified) {
@@ -62,14 +64,17 @@ class EventAdmissionController extends _$EventAdmissionController {
       );
     }
 
-    // 4. Check Eligibility (Age/Gender)
-    // Event has multiple tickets, each linked to EntryGroups.
-    // User is eligible if they match AT LEAST ONE ticket's condition.
+    // 4. Fetch User's Approved Verifications
+    final userVerifIds = await _fetchUserVerifications(
+      currentUser.id,
+      event.party?.partnerId,
+    );
+
+    // 5. Check Eligibility & Qualifications
     final tickets = event.tickets ?? [];
     final entryGroups = event.entryGroups ?? [];
 
     if (tickets.isEmpty) {
-      // No tickets? Should not happen for active event.
       return AdmissionState(
         status: EventAdmissionStatus.eligible,
         user: currentUser,
@@ -77,50 +82,66 @@ class EventAdmissionController extends _$EventAdmissionController {
     }
 
     var isAnyEligible = false;
-    String? firstReason;
+    var isAnyQualificationNeeded = false;
+    String? firstIneligibleReason;
+    final allMissingIds = <String>{};
 
     for (final ticket in tickets) {
-      // Find linked groups
       final groups = entryGroups
           .where((g) => ticket.targetEntryGroupIds.contains(g.id))
           .toList();
 
-      // If no groups linked, it means "Open to All" (or misconfig).
-      // Assume open.
       if (groups.isEmpty) {
         isAnyEligible = true;
         break;
       }
 
-      // Check each group condition
       for (final group in groups) {
+        // A. Basic Condition Check (Age/Gender)
         final reason = _checkGroupCondition(group, userProfile);
         if (reason == null) {
-          isAnyEligible = true;
-          break; // Matches this ticket
+          // B. Qualification Check
+          final missingIds = group.requiredVerificationIds
+              .where((id) => !userVerifIds.contains(id))
+              .toList();
+
+          if (missingIds.isEmpty) {
+            isAnyEligible = true;
+            break;
+          } else {
+            isAnyQualificationNeeded = true;
+            allMissingIds.addAll(missingIds);
+          }
         } else {
-          firstReason ??= reason;
+          firstIneligibleReason ??= reason;
         }
       }
       if (isAnyEligible) break;
     }
-    if (!isAnyEligible) {
+
+    if (isAnyEligible) {
       return AdmissionState(
-        status: EventAdmissionStatus.notEligible,
+        status: EventAdmissionStatus.eligible,
         user: currentUser,
-        ineligibleReason: firstReason ?? '참여 조건이 맞지 않습니다.',
       );
     }
 
-    // 5. Eligible
+    if (isAnyQualificationNeeded) {
+      return AdmissionState(
+        status: EventAdmissionStatus.qualificationRequired,
+        user: currentUser,
+        missingVerificationIds: allMissingIds.toList(),
+      );
+    }
+
     return AdmissionState(
-      status: EventAdmissionStatus.eligible,
+      status: EventAdmissionStatus.notEligible,
       user: currentUser,
+      ineligibleReason: firstIneligibleReason ?? '참여 조건이 맞지 않습니다.',
     );
   }
 
   Future<UserProfile?> _fetchUserProfile(String userId) async {
-    // Ideally this should be in a Repository
     final supabase = ref.read(supabaseClientProvider);
     try {
       final data = await supabase
@@ -131,6 +152,31 @@ class EventAdmissionController extends _$EventAdmissionController {
       return UserProfile.fromJson(data);
     } on Object {
       return null;
+    }
+  }
+
+  Future<List<String>> _fetchUserVerifications(
+    String userId,
+    String? partnerId,
+  ) async {
+    final supabase = ref.read(supabaseClientProvider);
+    try {
+      // Identity is already checked. Now fetch approved qualifications.
+      // We check partner_verified_users for approvals.
+      final query = supabase
+          .from('partner_verified_users')
+          .select('verification_id')
+          .eq('user_id', userId);
+
+      // If event is linked to a partner, we might check partner-specific ones.
+      // But global verifications also end up here if approved.
+      final data = await query;
+      return (data as List).map((dynamic e) {
+        final map = e as Map<String, dynamic>;
+        return map['verification_id'] as String;
+      }).toList();
+    } on Object {
+      return [];
     }
   }
 

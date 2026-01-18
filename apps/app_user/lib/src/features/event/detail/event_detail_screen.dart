@@ -406,6 +406,18 @@ class _BottomTicketBar extends ConsumerWidget {
             ref.invalidate(eventAdmissionControllerProvider(event));
           }
         };
+      case EventAdmissionStatus.qualificationRequired:
+        text = '자격 심사 신청하기';
+        onPressed = () {
+          // Open Ticket Sheet, it will show which ticket requires qualification
+          unawaited(
+            showModalBottomSheet<void>(
+              context: context,
+              isScrollControlled: true,
+              builder: (_) => TicketSelectionSheet(event: event),
+            ),
+          );
+        };
       case EventAdmissionStatus.notEligible:
         text = state.ineligibleReason ?? '참여 조건 미달';
         onPressed = null; // Disabled
