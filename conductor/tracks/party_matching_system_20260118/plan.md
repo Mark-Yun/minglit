@@ -1,7 +1,7 @@
 # Implementation Plan: Party Matching System
 
 ## Phase 1: Database Migration (Supabase)
-- [ ] **Task: Create Migration File `08_matching.sql`**
+- [~] **Task: Create Migration File `08_matching.sql`**
     - `match_rules` 테이블 생성: `event_id`, `source_group_id`, `target_group_id`.
     - `match_votes` 테이블 생성: `event_id`, `voter_id`, `candidate_id`.
     - `match_results` 테이블 생성: `event_id`, `user_a_id`, `user_b_id`.

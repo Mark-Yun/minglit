@@ -5,7 +5,7 @@
 
 ---
 
-## [ ] 트랙: 실시간 파티 매칭 시스템 (Party Matching System)
+## [~] 트랙: 실시간 파티 매칭 시스템 (Party Matching System)
 *링크: [./conductor/tracks/party_matching_system_20260118/](./conductor/tracks/party_matching_system_20260118/)*
 
 ---
