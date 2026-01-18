@@ -60,7 +60,7 @@
 
 ---
 
-## [x] 트랙: 글로벌 이벤트 파이프라인 및 하이브리드 워커 구현
-*링크: [./conductor/tracks/global_pipeline_20260114/](./conductor/tracks/global_pipeline_20260114/)*
+## [ ] 트랙: 범용 파일 피커 (MinglitFilePicker) 구현 및 통합
+*링크: [./conductor/tracks/file_picker_implementation_20260117/](./conductor/tracks/file_picker_implementation_20260117/)*
 
 
