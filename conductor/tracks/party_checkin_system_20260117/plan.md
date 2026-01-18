@@ -9,19 +9,19 @@
     - [x] `verify_ticket`: 서명 검증 및 `event_participants` 상태 업데이트. (Implemented via CheckinRepository simulation)
 - [x] Task: Conductor - 사용자 수동 검증 'Phase 1: 서명 및 검증 로직' (Protocol in workflow.md) (765ab6e)
 
-## Phase 2: 유저 앱 (QR Wallet) 구현 (`app_user`)
-- [ ] Task: 티켓 로컬 저장소 구현
-    - [ ] `FlutterSecureStorage`를 이용해 발권된 티켓 토큰 캐싱 로직 작성.
-- [ ] Task: QR 코드 뷰어 위젯 구현
-    - [ ] `qr_flutter` 적용 및 데이터 바인딩.
-    - [ ] 캡처 방지용 **스캔 라인 애니메이션** 구현.
-    - [ ] 화면 밝기 제어 연동.
-- [ ] Task: Conductor - 사용자 수동 검증 'Phase 2: 오프라인 QR 생성' (Protocol in workflow.md)
+## Phase 2: 유저 앱 (QR Wallet) 구현 (`app_user`) [checkpoint: 765ab6e]
+- [x] Task: 티켓 로컬 저장소 구현 (765ab6e)
+    - [x] `FlutterSecureStorage`를 이용해 발권된 티켓 토큰 캐싱 로직 작성.
+- [x] Task: QR 코드 뷰어 위젯 구현 (765ab6e)
+    - [x] `qr_flutter` 적용 및 데이터 바인딩.
+    - [x] 캡처 방지용 **스캔 라인 애니메이션** 구현.
+    - [x] 화면 밝기 제어 연동.
+- [x] Task: Conductor - User Manual Verification 'Phase 2: 오프라인 QR 생성' (Protocol in workflow.md) (765ab6e)
 
-## Phase 3: 파트너 앱 (Scanner) 구현 (`app_partner`)
-- [ ] Task: QR 스캐너 화면 구현
-    - [ ] `mobile_scanner` 적용 및 카메라 권한 처리.
-- [ ] Task: 체크인 로직 연동 및 피드백 UI 구현
-    - [ ] 스캔 후 서버 API 호출.
-    - [ ] **성공/실패/중복**에 따른 명확한 **풀스크린 색상 피드백(초록/빨강)** 및 사운드/진동 효과.
-- [ ] Task: Conductor - 사용자 수동 검증 'Phase 3: 체크인 통합 테스트' (Protocol in workflow.md)
+## Phase 3: 파트너 앱 (Scanner) 구현 (`app_partner`) [checkpoint: 765ab6e]
+- [x] Task: QR 스캐너 화면 구현 (765ab6e)
+    - [x] `mobile_scanner` 적용 및 카메라 권한 처리.
+- [x] Task: 체크인 로직 연동 및 피드백 UI 구현 (765ab6e)
+    - [x] 스캔 후 서버 API 호출.
+    - [x] **성공/실패/중복**에 따른 명확한 **풀스크린 색상 피드백(초록/빨강)** 및 사운드/진동 효과.
+- [x] Task: Conductor - User Manual Verification 'Phase 3: 체크인 통합 테스트' (Protocol in workflow.md) (765ab6e)

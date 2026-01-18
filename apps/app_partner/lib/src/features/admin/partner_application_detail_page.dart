@@ -68,7 +68,9 @@ class _PartnerApplicationDetailPageState
           );
       if (!mounted) return;
 
-      context.showMinglitSuccess(context.l10n.appDetail_message_processed(status));
+      context.showMinglitSuccess(
+        context.l10n.appDetail_message_processed(status),
+      );
       // Refresh the provider to show updated status
       ref.invalidate(
         partnerApplicationProvider(applicationId: widget.applicationId),
@@ -260,7 +262,9 @@ class _PartnerApplicationDetailPageState
             label: Text(context.l10n.appDetail_label_download),
             onPressed: () {
               // TODO(application_review_system_20260117): Implement file download logic.
-              context.showMinglitInfo(context.l10n.appDetail_message_downloadNotImpl);
+              context.showMinglitInfo(
+                context.l10n.appDetail_message_downloadNotImpl,
+              );
             },
           ),
         ],

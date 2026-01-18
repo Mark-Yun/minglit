@@ -68,7 +68,9 @@ class _PartnerApplicationPageState
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
     if (_bizRegFile == null || _bankbookFile == null) {
-      context.showMinglitWarning(context.l10n.partnerApplication_message_missingFiles);
+      context.showMinglitWarning(
+        context.l10n.partnerApplication_message_missingFiles,
+      );
       return;
     }
     setState(() => _isLoading = true);

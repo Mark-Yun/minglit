@@ -116,7 +116,9 @@ class PartyDetailOperationTab extends ConsumerWidget {
         ref.invalidate(partyTicketsProvider(party.id));
 
         if (context.mounted) {
-          context.showMinglitSuccess(context.l10n.partyDetail_message_ticketAdded);
+          context.showMinglitSuccess(
+            context.l10n.partyDetail_message_ticketAdded,
+          );
         }
       } on Exception catch (e, st) {
         if (context.mounted) {

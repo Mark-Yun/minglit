@@ -11,7 +11,7 @@ class PartnerLoginPage extends ConsumerWidget {
     // Listen for AuthController errors
     ref.listen(authControllerProvider, (previous, next) {
       if (next is AsyncError) {
-        handleMinglitError(context, next.error!, next.stackTrace);
+        handleMinglitError(context, next.error, next.stackTrace);
       }
     });
 

@@ -32,3 +32,5 @@ export 'src/data/repositories/storage_repository.dart';
 export 'src/data/repositories/ticket_repository.dart';
 export 'src/data/repositories/user_repository.dart';
 export 'src/data/repositories/verification_repository.dart';
+// Utils
+export 'src/utils/ticket_crypto.dart';

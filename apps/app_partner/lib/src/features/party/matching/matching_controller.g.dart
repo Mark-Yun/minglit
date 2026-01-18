@@ -34,7 +34,7 @@ final class MatchingControllerProvider
 }
 
 String _$matchingControllerHash() =>
-    r'fc7a5e1ec1afafdd4395ae5725245615605020d1';
+    r'57fdb1abe9eb6fb3cbdd65ab2b230b5cb0dce04d';
 
 abstract class _$MatchingController extends $AsyncNotifier<void> {
   FutureOr<void> build();

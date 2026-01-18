@@ -61,7 +61,9 @@ class PartyDetailCoordinator {
           .updatePartyStatus(partyId, 'closed');
       _ref.invalidate(partyDetailProvider(partyId));
       if (context.mounted) {
-        context.showMinglitSuccess(context.l10n.partyDetail_message_deactivated);
+        context.showMinglitSuccess(
+          context.l10n.partyDetail_message_deactivated,
+        );
       }
     } on Object catch (e, st) {
       if (context.mounted) {

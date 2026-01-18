@@ -226,7 +226,9 @@ class PartyDetailInfoTab extends ConsumerWidget {
       }
 
       if (context.mounted) {
-        context.showMinglitSuccess(context.l10n.partyDetail_message_locationUpdated);
+        context.showMinglitSuccess(
+          context.l10n.partyDetail_message_locationUpdated,
+        );
       }
     } on Exception catch (e, st) {
       Log.e('Failed to update location', e, st);

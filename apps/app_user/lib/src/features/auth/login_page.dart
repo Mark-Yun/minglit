@@ -16,7 +16,7 @@ class LoginPage extends ConsumerWidget {
     // Listen for AuthController changes
     ref.listen(authControllerProvider, (previous, next) {
       if (next is AsyncError) {
-        handleMinglitError(context, next.error!, next.stackTrace);
+        handleMinglitError(context, next.error, next.stackTrace);
       } else if (next is AsyncData && !next.isLoading) {
         // Login Success
         Log.d('🔑 [Auth] Login Success! from: $from');
