@@ -229,8 +229,7 @@ class _VerificationStep extends ConsumerWidget {
 
     // Fetch the verification definition
     final sortedIds = List<String>.from(verifIds)..sort();
-    final idsString = sortedIds.join(',');
-    final verifAsync = ref.watch(verificationsByIdsProvider(idsString));
+    final verifAsync = ref.watch(verificationsByIdsProvider(sortedIds));
 
     return MinglitAsyncValueWidget(
       value: verifAsync,
