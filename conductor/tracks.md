@@ -83,4 +83,14 @@
 ## [ ] 트랙: 실명 본인인증 시스템 연동 (PASS/SMS)
 *링크: [./conductor/tracks/identity_verification_integration_20260117/](./conductor/tracks/identity_verification_integration_20260117/)*
 
+---
+
+## [ ] 트랙: 결제 서버 검증 및 웹훅 처리 (Payment Verification System)
+*링크: [./conductor/tracks/payment_verification_system_20260117/](./conductor/tracks/payment_verification_system_20260117/)*
+
+---
+
+## [ ] 트랙: 파트너 파티/티켓 관리 시스템 (Partner Party Management)
+*링크: [./conductor/tracks/partner_party_management_20260117/](./conductor/tracks/partner_party_management_20260117/)*
+
 
