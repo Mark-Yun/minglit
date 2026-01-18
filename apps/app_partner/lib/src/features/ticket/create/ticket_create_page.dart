@@ -40,9 +40,7 @@ class TicketCreatePage extends ConsumerWidget {
       final state = ref.read(ticketControllerProvider);
       if (!state.hasError && context.mounted) {
         context.pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.ticket_message_created)),
-        );
+        context.showMinglitSuccess(context.l10n.ticket_message_created);
         if (eventId.isNotEmpty) {
           ref.invalidate(eventTicketsProvider(eventId));
         } else {

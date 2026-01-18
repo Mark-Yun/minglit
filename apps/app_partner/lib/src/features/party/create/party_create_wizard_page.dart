@@ -80,11 +80,7 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
         next.whenOrNull(
           data: (_) {
             if (prev?.isLoading ?? false) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(context.l10n.wizard_review_successMessage),
-                ),
-              );
+              context.showMinglitSuccess(context.l10n.wizard_review_successMessage);
               context.pop(); // Return to Party List
             }
           },

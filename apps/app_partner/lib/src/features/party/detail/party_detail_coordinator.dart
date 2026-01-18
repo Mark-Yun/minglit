@@ -42,9 +42,7 @@ class PartyDetailCoordinator {
           .updatePartyStatus(partyId, 'active');
       _ref.invalidate(partyDetailProvider(partyId));
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.partyDetail_message_activated)),
-        );
+        context.showMinglitSuccess(context.l10n.partyDetail_message_activated);
       }
     } on Object catch (e, st) {
       if (context.mounted) {
@@ -63,9 +61,7 @@ class PartyDetailCoordinator {
           .updatePartyStatus(partyId, 'closed');
       _ref.invalidate(partyDetailProvider(partyId));
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.partyDetail_message_deactivated)),
-        );
+        context.showMinglitSuccess(context.l10n.partyDetail_message_deactivated);
       }
     } on Object catch (e, st) {
       if (context.mounted) {
@@ -100,9 +96,7 @@ class PartyDetailCoordinator {
 
       _ref.invalidate(partyDetailProvider(partyId));
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('입장 그룹이 수정되었습니다.')));
+        context.showMinglitSuccess('입장 그룹이 수정되었습니다.');
       }
     } on Object catch (e, st) {
       if (context.mounted) {
@@ -136,9 +130,7 @@ class PartyDetailCoordinator {
 
       _ref.invalidate(partyDetailProvider(partyId));
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.common_message_saved)),
-        );
+        context.showMinglitSuccess(context.l10n.common_message_saved);
       }
     } on Object catch (e, st) {
       if (context.mounted) {

@@ -44,9 +44,7 @@ class _CreateVerificationScreenState
         .submit(widget.partnerId);
 
     if (success && mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('인증이 생성되었습니다.')));
+      context.showMinglitSuccess('인증이 생성되었습니다.');
       Navigator.pop(context, true);
     }
   }
@@ -62,9 +60,7 @@ class _CreateVerificationScreenState
     // Listen for errors
     ref.listen(createVerificationControllerProvider, (prev, next) {
       if (prev?.error != next.error && next.error != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: ${next.error}')));
+        handleMinglitError(context, next.error!, next.stackTrace);
       }
     });
 

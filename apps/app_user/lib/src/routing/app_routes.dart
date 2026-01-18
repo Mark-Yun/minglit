@@ -104,16 +104,12 @@ class CertificationRoute extends GoRouteData with $CertificationRoute {
       onSuccess: (uid) {
         Log.i('Certification Success: $uid');
         context.pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('인증 성공! UID: $uid')),
-        );
+        context.showMinglitSuccess('인증 성공! UID: $uid');
       },
       onFail: (msg) {
         Log.e('Certification Failed: $msg');
         context.pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('인증 실패: $msg')),
-        );
+        context.showMinglitWarning('인증 실패: $msg');
       },
     );
   }

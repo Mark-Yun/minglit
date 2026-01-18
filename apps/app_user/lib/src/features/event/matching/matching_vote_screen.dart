@@ -20,11 +20,8 @@ class MatchingVoteScreen extends ConsumerWidget {
       if (state.hasError) {
         handleMinglitError(context, state.error!, state.stackTrace);
       } else if (!state.isLoading && state.hasValue) {
-        // Void async value technically has null value,
-        // but let's check !hasError
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('투표가 완료되었습니다.')),
-        );
+        // Void async value technically has null value, but let's check !hasError
+        context.showMinglitSuccess('투표가 완료되었습니다.');
       }
     });
 
@@ -241,11 +238,10 @@ class MatchingVoteScreen extends ConsumerWidget {
     WidgetRef ref,
     UserProfile candidate,
   ) async {
-    final confirmed = await MinglitAlert.showConfirm(
-      context: context,
+    final confirmed = await context.showMinglitConfirm(
       title: '투표 확인',
-      content: '${candidate.name}님에게 투표하시겠습니까?',
-      confirmText: '투표하기',
+      message: '${candidate.name}님에게 투표하시겠습니까?',
+      confirmLabel: '투표하기',
     );
 
     if (confirmed) {

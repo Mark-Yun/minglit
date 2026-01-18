@@ -70,9 +70,7 @@ class _TicketFormState extends State<TicketForm> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedGroupIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.ticket_error_minOneGroup)),
-      );
+      context.showMinglitWarning(context.l10n.ticket_error_minOneGroup);
       return;
     }
 

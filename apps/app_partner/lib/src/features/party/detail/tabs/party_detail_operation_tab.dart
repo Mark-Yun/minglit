@@ -116,17 +116,11 @@ class PartyDetailOperationTab extends ConsumerWidget {
         ref.invalidate(partyTicketsProvider(party.id));
 
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(context.l10n.partyDetail_message_ticketAdded),
-            ),
-          );
+          context.showMinglitSuccess(context.l10n.partyDetail_message_ticketAdded);
         }
-      } on Exception catch (_) {
+      } on Exception catch (e, st) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.common_error_system)),
-          );
+          handleMinglitError(context, e, st);
         }
       } finally {
         loading.hide();

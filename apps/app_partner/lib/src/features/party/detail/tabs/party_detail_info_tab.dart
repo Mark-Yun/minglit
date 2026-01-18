@@ -226,18 +226,12 @@ class PartyDetailInfoTab extends ConsumerWidget {
       }
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.partyDetail_message_locationUpdated),
-          ),
-        );
+        context.showMinglitSuccess(context.l10n.partyDetail_message_locationUpdated);
       }
     } on Exception catch (e, st) {
       Log.e('Failed to update location', e, st);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.common_error_system)),
-        );
+        handleMinglitError(context, e, st);
       }
     } finally {
       loading.hide();
@@ -270,9 +264,7 @@ class PartyDetailInfoTab extends ConsumerWidget {
       ref.invalidate(partyDetailProvider(party.id));
 
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('기본 정보가 수정되었습니다.')));
+        context.showMinglitSuccess('기본 정보가 수정되었습니다.');
       }
     } on Exception catch (e, st) {
       if (context.mounted) handleMinglitError(context, e, st);

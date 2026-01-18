@@ -16,21 +16,7 @@ class LoginPage extends ConsumerWidget {
     // Listen for AuthController changes
     ref.listen(authControllerProvider, (previous, next) {
       if (next is AsyncError) {
-        unawaited(
-          showDialog<void>(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('로그인 실패'),
-              content: SelectableText('Error: ${next.error}'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('확인'),
-                ),
-              ],
-            ),
-          ),
-        );
+        handleMinglitError(context, next.error!, next.stackTrace);
       } else if (next is AsyncData && !next.isLoading) {
         // Login Success
         Log.d('🔑 [Auth] Login Success! from: $from');

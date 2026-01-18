@@ -45,7 +45,7 @@
 
 ---
 
-## [ ] 트랙: UI/UX 피드백 시스템 표준화 (Minglit Feedback System)
+## [~] 트랙: UI/UX 피드백 시스템 표준화 (Minglit Feedback System)
 *링크: [./conductor/tracks/feedback_system_standardization_20260117/](./conductor/tracks/feedback_system_standardization_20260117/)*
 
 ---

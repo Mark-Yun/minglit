@@ -154,8 +154,6 @@ class PartnerMemberListPage extends ConsumerWidget {
   }
 
   void _showInviteDialog(BuildContext context) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('준비 중입니다.')));
+    context.showMinglitInfo('준비 중입니다.');
   }
 }

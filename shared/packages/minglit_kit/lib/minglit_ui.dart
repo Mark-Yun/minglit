@@ -42,4 +42,5 @@ export 'src/ui/widgets/party/event_card.dart';
 export 'src/ui/widgets/party/location_map_view.dart';
 // Utilities
 export 'src/utils/dev_screen_list.dart';
+export 'src/utils/feedback_ext.dart';
 export 'src/utils/splash_screen.dart';

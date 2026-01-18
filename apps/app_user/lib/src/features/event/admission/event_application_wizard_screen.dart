@@ -77,9 +77,7 @@ class _WizardBodyState extends ConsumerState<_WizardBody> {
     ref.listen(eventApplicationControllerProvider(widget.event), (_, next) {
       if (next.status == EventApplicationStatus.success) {
         context.pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('신청이 완료되었습니다! 파트너 심사 후 알려드릴게요.')),
-        );
+        context.showMinglitSuccess('신청이 완료되었습니다! 파트너 심사 후 알려드릴게요.');
       }
       if (next.status == EventApplicationStatus.error) {
         handleMinglitError(context, next.errorMessage!);

@@ -146,9 +146,7 @@ class _MemberPermissionFormState extends ConsumerState<_MemberPermissionForm> {
         );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.memberPermission_message_saved)),
-        );
+        context.showMinglitSuccess(context.l10n.memberPermission_message_saved);
         Navigator.pop(context);
       }
     } on Object catch (e, st) {

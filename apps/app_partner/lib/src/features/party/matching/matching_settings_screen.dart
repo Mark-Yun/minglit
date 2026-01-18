@@ -165,9 +165,7 @@ class _MatchingSettingsScreenState
 
     final state = ref.read(matchingControllerProvider);
     if (!state.hasError && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('매칭 규칙이 저장되었습니다.')),
-      );
+      context.showMinglitSuccess('매칭 규칙이 저장되었습니다.');
       ref.invalidate(eventMatchRulesProvider(widget.eventId));
     } else if (state.hasError && mounted) {
       handleMinglitError(context, state.error!, state.stackTrace);

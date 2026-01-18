@@ -45,21 +45,9 @@ class _PartnerApplicationPageState
   }
 
   Future<void> _showStatusDialog(String status) async {
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.partnerApplication_status_dialogTitle),
-        content: Text(
-          context.l10n.partnerApplication_status_dialogContent(status),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.common_button_confirm),
-          ),
-        ],
-      ),
+    await context.showMinglitAlert(
+      title: context.l10n.partnerApplication_status_dialogTitle,
+      message: context.l10n.partnerApplication_status_dialogContent(status),
     );
   }
 
@@ -78,16 +66,11 @@ class _PartnerApplicationPageState
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    _formKey.currentState!.save();
     if (_bizRegFile == null || _bankbookFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.partnerApplication_message_missingFiles),
-        ),
-      );
+      context.showMinglitWarning(context.l10n.partnerApplication_message_missingFiles);
       return;
     }
-
-    _formKey.currentState!.save();
     setState(() => _isLoading = true);
 
     try {
@@ -98,14 +81,9 @@ class _PartnerApplicationPageState
         bankbookFile: _bankbookFile!,
       );
       if (mounted) {
-        await showDialog<void>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text(context.l10n.partnerApplication_dialog_successTitle),
-            content: Text(
-              context.l10n.partnerApplication_dialog_successContent,
-            ),
-          ),
+        await context.showMinglitAlert(
+          title: context.l10n.partnerApplication_dialog_successTitle,
+          message: context.l10n.partnerApplication_dialog_successContent,
         );
       }
     } on Object catch (e, st) {

@@ -66,12 +66,8 @@ class _ReviewVerificationScreenState
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.l10n.reviewVerification_message_processComplete,
-          ),
-        ),
+      context.showMinglitSuccess(
+        context.l10n.reviewVerification_message_processComplete,
       );
       unawaited(_loadRequests());
     } on Object catch (e, st) {
@@ -86,7 +82,7 @@ class _ReviewVerificationScreenState
     final reasonController = TextEditingController();
     final commentController = TextEditingController();
 
-    await showDialog<void>(
+    await showDialog<void>( // TODO: Migrate to MinglitDialog with custom content (TextFields) or make a specialized dialog
       context: context,
       builder: (context) => AlertDialog(
         title: Text(context.l10n.reviewVerification_dialog_correction_title),
@@ -162,7 +158,7 @@ class _ReviewVerificationScreenState
           .from('verification-proofs')
           .createSignedUrl(path, 600);
       if (!mounted) return;
-      await showDialog<void>(
+      await showDialog<void>( // Keep custom dialog for image viewer
         context: context,
         builder: (context) => Dialog(
           backgroundColor: Colors.transparent,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/src/utils/exceptions.dart';
+import 'package:minglit_kit/src/utils/feedback_ext.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 
 /// **Handle Minglit Error (UI)**
@@ -37,18 +38,19 @@ void handleMinglitError(
     Log.d('ℹ️ [ErrorUI] User Feedback: $message');
   }
 
-  // 4. Show Feedback (SnackBar)
+  // 4. Show Feedback using Standard System
   if (context.mounted) {
-    final theme = Theme.of(context);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isSystemError
-            ? theme.colorScheme.error
-            : theme.colorScheme.secondary,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    if (isSystemError) {
+      // Important errors get a Dialog
+      // Use ignore to avoid awaiting in a sync void function
+      // ignore: discarded_futures
+      context.showMinglitAlert(
+        title: '오류 발생',
+        message: message,
+      );
+    } else {
+      // Minor feedback gets a SnackBar
+      context.showMinglitWarning(message);
+    }
   }
 }
