@@ -14,11 +14,6 @@
 
 ---
 
-## [x] 트랙: 시딩 데이터 다양화 및 시나리오 강화
-*링크: [./conductor/tracks/enhance_seed_scenarios_20260117/](./conductor/tracks/enhance_seed_scenarios_20260117/)*
-
----
-
 ## [x] 트랙: 백엔드 통합 테스트 강화 (보안, 무결성, 로직)
 *링크: [./conductor/tracks/backend_test_enhancement_20260117/](./conductor/tracks/backend_test_enhancement_20260117/)*
 
