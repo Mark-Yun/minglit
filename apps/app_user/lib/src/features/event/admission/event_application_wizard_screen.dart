@@ -286,24 +286,23 @@ class _VerificationStep extends ConsumerWidget {
             MinglitFilePicker(
               label: field.label,
               hint: field.placeholder ?? '증빙 서류를 업로드해주세요',
-              fileType: FileType.any, // or custom based on field
+              fileType: FileType.any,
               autoUpload: true,
-              uploadBucket: 'verification-proofs',
-              onFilesSelected: (files) {
-                if (files.isEmpty) {
-                  // Handle clear
+              uploadBucket: 'verification_docs',
+              uploadPathPrefix: 'applications/${event.id}',
+              onUploadComplete: (urls) {
+                if (urls.isNotEmpty) {
+                  ref
+                      .read(eventApplicationControllerProvider(event).notifier)
+                      .updateVerificationData(field.key, urls.first);
+                } else {
                   ref
                       .read(eventApplicationControllerProvider(event).notifier)
                       .updateVerificationData(field.key, null);
                 }
               },
-              onUploadComplete: (urls) {
-                if (urls.isNotEmpty) {
-                  // Save the first uploaded storage URL to the form data
-                  ref
-                      .read(eventApplicationControllerProvider(event).notifier)
-                      .updateVerificationData(field.key, urls.first);
-                }
+              onFilesSelected: (files) {
+                // Handle local preview or validation if needed
               },
             )
           else

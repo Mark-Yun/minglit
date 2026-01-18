@@ -103,4 +103,7 @@
 ## [x] 트랙: 앱 단위 테스트 및 CI 파이프라인 구축 (App Unit Test & CI)
 *링크: [./conductor/tracks/app_unit_test_ci_20260117/](./conductor/tracks/app_unit_test_ci_20260117/)*
 
+---
 
+## [ ] 트랙: 공유하기 시스템 (Sharing System)
+*링크: [./tracks/sharing_system_20260118/](./tracks/sharing_system_20260118/)*
