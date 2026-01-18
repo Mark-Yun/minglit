@@ -14,12 +14,22 @@ class RequirePublicDocsRule extends DartLintRule {
   @override
   void run(
     CustomLintResolver resolver,
-    ErrorReporter reporter,
+    DiagnosticReporter reporter,
     CustomLintContext context,
   ) {
     context.registry.addDeclaration((node) {
       // 1. Private members are excluded
-      final name = node.declaredElement?.name;
+      // Note: 'declaredElement' getter might be deprecated or missing on Declaration interface in newer analyzer versions.
+      // Casting to specific types that have it, or using 'declaredFragment' if applicable.
+      // For now, let's try casting to NamedCompilationUnitMember which definitely has it.
+      
+      String? name;
+      if (node is NamedCompilationUnitMember) {
+        name = node.name.lexeme;
+      } else if (node is VariableDeclaration) {
+        name = node.name.lexeme;
+      }
+      
       if (name == null || name.startsWith('_')) return;
 
       // 2. Already documented members are excluded
@@ -42,7 +52,6 @@ class RequirePublicDocsRule extends DartLintRule {
         'didChangeDependencies',
         'deactivate',
         'reassemble',
-        'createState',
       };
       
       // Check if it's a method declaration and matches lifecycle methods

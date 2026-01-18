@@ -1,4 +1,3 @@
-import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/error/listener.dart';
 import 'package:custom_lint_builder/custom_lint_builder.dart';
 
@@ -6,16 +5,15 @@ class NoHardcodedColorsRule extends DartLintRule {
   const NoHardcodedColorsRule() : super(code: _code);
 
   static const _code = LintCode(
-    name: 'no_hardcoded_colors',
-    problemMessage:
-        'Avoid hardcoded colors. Use MinglitTheme or design tokens instead.',
-    correctionMessage: 'Replace with a design token color.',
+    name: 'minglit_no_hardcoded_colors',
+    problemMessage: 'Hardcoded colors are not allowed. Use MinglitColors.',
+    correctionMessage: 'Use MinglitColors from minglit_theme.dart.',
   );
 
   @override
   void run(
     CustomLintResolver resolver,
-    ErrorReporter reporter,
+    DiagnosticReporter reporter,
     CustomLintContext context,
   ) {
     context.registry.addInstanceCreationExpression((node) {

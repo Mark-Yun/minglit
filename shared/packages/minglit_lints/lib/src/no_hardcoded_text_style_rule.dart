@@ -1,4 +1,3 @@
-import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/error/listener.dart';
 import 'package:custom_lint_builder/custom_lint_builder.dart';
 
@@ -6,16 +5,15 @@ class NoHardcodedTextStyleRule extends DartLintRule {
   const NoHardcodedTextStyleRule() : super(code: _code);
 
   static const _code = LintCode(
-    name: 'no_hardcoded_text_style',
-    problemMessage:
-        'Avoid hardcoded TextStyle. Use Theme.of(context).textTheme or design tokens.',
-    correctionMessage: 'Use a theme text style.',
+    name: 'minglit_no_hardcoded_text_style',
+    problemMessage: 'Hardcoded TextStyle is discouraged.',
+    correctionMessage: 'Use Theme.of(context).textTheme or MinglitTextStyles.',
   );
 
   @override
   void run(
     CustomLintResolver resolver,
-    ErrorReporter reporter,
+    DiagnosticReporter reporter,
     CustomLintContext context,
   ) {
     context.registry.addInstanceCreationExpression((node) {
