@@ -78,4 +78,9 @@
 ## [ ] 트랙: 파티 참여자 심사 및 환불 관리 시스템 (Application Review System)
 *링크: [./conductor/tracks/application_review_system_20260117/](./conductor/tracks/application_review_system_20260117/)*
 
+---
+
+## [ ] 트랙: 실명 본인인증 시스템 연동 (PASS/SMS)
+*링크: [./conductor/tracks/identity_verification_integration_20260117/](./conductor/tracks/identity_verification_integration_20260117/)*
+
 

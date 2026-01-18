@@ -25,7 +25,7 @@ class IdentityRepository {
     final user = _supabase.auth.currentUser;
     if (user == null) throw const MinglitAuthException('User not logged in');
 
-    // TODO(Identity): Integrate with real PASS/SMS API provider here.
+    // TODO(identity_verification_integration_20260117): Integrate with real PASS/SMS API provider here.
     // 1. Send request to provider
     // 2. Receive CI/DI and verified info
 
