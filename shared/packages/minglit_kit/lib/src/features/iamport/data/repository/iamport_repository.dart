@@ -9,8 +9,7 @@ IamportRepository iamportRepository(Ref ref) {
 
 class IamportRepository {
   Future<void> verifyCertification(String impUid) async {
-    // TODO(payment_verification_system_20260117): Implement server-side verification via Edge Function.
-    // await supabase.functions.invoke(
+    // TODO(Payment): Implement server-side verification via Edge Function.    // await supabase.functions.invoke(
     //   'verify-certification',
     //   body: {'imp_uid': impUid},
     // );
