@@ -8,8 +8,8 @@
 - [x] Task: Conductor - 사용자 수동 검증 'Phase 1: 데이터 및 상태 관리' (workflow.md의 프로토콜 따름)
 
 ## Phase 2: 입장 로직 통합
-- [~] Task: EventAdmissionController 통합 구현
-  - [ ] Subtask: `EventDetailScreen` 로직에 `EventAdmissionController` 연결
+- [x] Task: EventAdmissionController 통합 구현 (41dbf70)
+  - [x] Subtask: `EventDetailScreen` 로직에 `EventAdmissionController` 연결
 - [ ] Task: Conductor - 사용자 수동 검증 'Phase 2: 입장 로직 통합' (workflow.md의 프로토콜 따름)
 
 ## Phase 3: UI 구현
