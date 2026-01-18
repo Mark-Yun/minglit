@@ -1,7 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:minglit_kit/src/data/models/partner.dart';
+import 'package:minglit_kit/src/data/models/party.dart';
+import 'package:minglit_kit/src/data/repositories/party_repository.dart';
+import 'package:minglit_kit/src/features/dev/widgets/party_detail_view.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'partner_detail_view.g.dart';
@@ -18,7 +24,7 @@ class PartnerDetailView extends ConsumerWidget {
   final Partner partner;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(MinglitSpacing.large),
@@ -37,7 +43,11 @@ class PartnerDetailView extends ConsumerWidget {
                 CircleAvatar(
                   radius: MinglitRadius.card + MinglitRadius.button, // 40
                   backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                  child: Icon(Icons.store, size: MinglitIconSize.xlarge * 1.25, color: theme.colorScheme.outline),
+                  child: Icon(
+                    Icons.store,
+                    size: MinglitIconSize.xlarge * 1.25,
+                    color: theme.colorScheme.outline,
+                  ),
                 ),
               const SizedBox(width: MinglitSpacing.medium),
               Expanded(
@@ -53,7 +63,9 @@ class PartnerDetailView extends ConsumerWidget {
                     if (partner.address != null)
                       Text(
                         partner.address!,
-                        style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                   ],
                 ),
@@ -97,7 +109,9 @@ class PartnerDetailView extends ConsumerWidget {
       children: [
         Text(
           '진행 중인 파티',
-          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: MinglitSpacing.medium),
         partiesAsync.when(
@@ -105,7 +119,9 @@ class PartnerDetailView extends ConsumerWidget {
             if (parties.isEmpty) {
               return Text(
                 '등록된 파티가 없습니다.',
-                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.outline),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.outline,
+                ),
               );
             }
             return Column(
@@ -167,11 +183,16 @@ class PartnerDetailView extends ConsumerWidget {
       children: [
         Text(
           title,
-          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         if (content.isNotEmpty) ...[
           const SizedBox(height: MinglitSpacing.small),
-          Text(content, style: theme.textTheme.bodyMedium?.copyWith(height: 1.5)),
+          Text(
+            content,
+            style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+          ),
         ],
       ],
     );
@@ -185,12 +206,19 @@ class PartnerDetailView extends ConsumerWidget {
         children: [
           SizedBox(
             width: 100,
-            child: Text(label, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.outline)),
+            child: Text(
+              label,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.outline,
+              ),
+            ),
           ),
           Expanded(
             child: Text(
               value ?? '-',
-              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],

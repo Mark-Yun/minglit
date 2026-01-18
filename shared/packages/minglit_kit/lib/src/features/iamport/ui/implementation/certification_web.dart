@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/config/iamport_config.dart';
+import 'package:minglit_kit/src/features/iamport/logic/iamport_controller.dart';
 import 'package:minglit_kit/src/features/iamport/logic/iamport_helper_web.dart';
+import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 
 class MinglitIamportCertification extends ConsumerStatefulWidget {
   const MinglitIamportCertification({
@@ -92,10 +94,7 @@ class _MinglitIamportCertificationState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-          if (isLoading)
-            const Positioned.fill(
-              child: MinglitCircularProgressIndicator(),
-            ),
+            MinglitCircularProgressIndicator(),
             SizedBox(height: 16),
             Text('본인인증 창을 띄우고 있습니다...'),
           ],

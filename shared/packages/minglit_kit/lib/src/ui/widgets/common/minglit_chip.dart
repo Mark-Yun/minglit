@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
 enum MinglitChipSize {
   small,

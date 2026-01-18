@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/config/iamport_config.dart';
 import 'package:minglit_kit/src/features/iamport/logic/iamport_controller.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 import 'package:portone_flutter/iamport_certification.dart';
 import 'package:portone_flutter/model/certification_data.dart';
 

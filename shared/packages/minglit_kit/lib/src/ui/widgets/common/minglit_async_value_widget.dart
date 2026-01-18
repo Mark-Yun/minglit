@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 /// **Minglit Async Value Widget**
@@ -22,7 +21,8 @@ class MinglitAsyncValueWidget<T> extends StatelessWidget {
   /// The widget to display when data is available.
   final Widget Function(T) data;
 
-  /// Optional custom loading widget. Defaults to [MinglitCircularProgressIndicator].
+  /// Optional custom loading widget.
+  /// Defaults to [MinglitCircularProgressIndicator].
   final Widget Function()? loading;
 
   /// Optional custom error widget.
@@ -36,12 +36,13 @@ class MinglitAsyncValueWidget<T> extends StatelessWidget {
     return value.when(
       data: data,
       loading: loading ?? () => const MinglitCircularProgressIndicator(),
-      error: error ??
+      error:
+          error ??
           (err, stack) => _DefaultErrorView(
-                error: err,
-                stackTrace: stack,
-                showDetails: showErrorDetails,
-              ),
+            error: err,
+            stackTrace: stack,
+            showDetails: showErrorDetails,
+          ),
     );
   }
 }

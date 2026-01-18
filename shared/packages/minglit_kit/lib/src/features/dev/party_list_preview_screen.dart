@@ -1,7 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:minglit_kit/src/data/models/party.dart';
+import 'package:minglit_kit/src/data/repositories/party_repository.dart';
+import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'party_list_preview_screen.g.dart';
@@ -11,6 +14,26 @@ part 'party_list_preview_screen.g.dart';
 /// Development screen to preview all available parties in the database.
 class PartyListPreviewScreen extends ConsumerWidget {
   const PartyListPreviewScreen({super.key});
+
+  void _showDetail(BuildContext context, Party party) {
+    unawaited(
+      showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(party.title),
+          content: SingleChildScrollView(
+            child: Text(party.toString()),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

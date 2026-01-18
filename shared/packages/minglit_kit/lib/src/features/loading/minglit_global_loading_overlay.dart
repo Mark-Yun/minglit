@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/features/loading/global_loading_controller.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 
 /// **Minglit Global Loading Overlay**
 ///
@@ -48,7 +49,8 @@ class MinglitGlobalLoadingOverlay extends ConsumerWidget {
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.54),
                 child: const ModalBarrier(
                   dismissible: false,
-                  color: Colors.transparent, // ignore: no_hardcoded_colors
+                  // ignore: no_hardcoded_colors -- Transparent barrier needed
+                  color: Colors.transparent,
                 ),
               ),
             ),

@@ -1,7 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:minglit_kit/src/data/repositories/identity_repository.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
+import 'package:minglit_kit/src/utils/error_ui_handler.dart';
+import 'package:minglit_kit/src/utils/exceptions.dart';
 
 /// **Identity Verification Screen (Mock)**
 ///
@@ -224,11 +229,11 @@ class _IdentityVerificationScreenState
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                onPressed: _isSubmitting ? null : _submit,
-                child: _isSubmitting
-                    ? const MinglitCircularProgressIndicator(size: 20, strokeWidth: 2)
-                    : const Text('본인인증 완료'),
-              ),
+                  onPressed: _isLoading ? null : _submit,
+                  child: _isLoading
+                      ? const MinglitCircularProgressIndicator(size: 20)
+                      : const Text('본인인증 완료'),
+                ),
               ),
             ],
           ),

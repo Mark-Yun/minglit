@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:minglit_kit/src/features/auth/logic/auth_controller.dart';
+import 'package:minglit_kit/src/features/dev/dev_config.dart';
+import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
+import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'dev_user_switch_screen.g.dart';
@@ -78,9 +82,12 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
           ),
         ],
       ),
-      body: userListAsync.when(
-        data: (users) => _buildUserList(context, ref, users),
-        loading: () => const MinglitCircularProgressIndicator(),
+      body: usersAsync.when(
+        data: (users) {
+          if (users.isEmpty) return _buildEmptyState();
+          return _buildUserList(users);
+        },
+        loading: () => const Center(child: MinglitCircularProgressIndicator()),
         error: (e, st) => Center(child: Text('Error: $e')),
       ),
     );
@@ -153,6 +160,7 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
     );
   }
 }
+
 
 // Internal provider to fetch test users
 @riverpod
