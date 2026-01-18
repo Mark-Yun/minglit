@@ -111,9 +111,10 @@ class _VerificationBadges extends ConsumerWidget {
     // Sort and join IDs to ensure provider cache stability
     // (List equality issue)
     final sortedIds = List<String>.from(verifIds)..sort();
+    final idsString = sortedIds.join(',');
 
     final verificationsAsync = ref.watch(
-      verificationsByIdsProvider(sortedIds),
+      verificationsByIdsProvider(idsString),
     );
 
     return MinglitAsyncValueWidget(

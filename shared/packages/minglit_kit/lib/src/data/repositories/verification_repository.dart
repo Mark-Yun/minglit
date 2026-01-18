@@ -12,12 +12,13 @@ VerificationRepository verificationRepository(Ref ref) {
   return SupabaseVerificationRepository();
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<List<Verification>> verificationsByIds(
   Ref ref,
-  List<String> ids,
+  String commaSeparatedIds,
 ) async {
-  if (ids.isEmpty) return [];
+  if (commaSeparatedIds.isEmpty) return [];
+  final ids = commaSeparatedIds.split(',');
   final repo = ref.watch(verificationRepositoryProvider);
   return repo.getVerificationsByIds(ids);
 }

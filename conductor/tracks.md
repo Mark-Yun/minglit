@@ -70,7 +70,7 @@
 
 ---
 
-## [ ] 트랙: 범용 파일 피커 (MinglitFilePicker) 구현 및 통합
+## [~] 트랙: 범용 파일 피커 (MinglitFilePicker) 구현 및 통합
 *링크: [./conductor/tracks/file_picker_implementation_20260117/](./conductor/tracks/file_picker_implementation_20260117/)*
 
 ---
