@@ -26,5 +26,6 @@ export 'src/data/repositories/matching_repository.dart';
 export 'src/data/repositories/partner_repository.dart';
 export 'src/data/repositories/party_repository.dart';
 export 'src/data/repositories/social_repository.dart';
+export 'src/data/repositories/storage_repository.dart';
 export 'src/data/repositories/ticket_repository.dart';
 export 'src/data/repositories/verification_repository.dart';

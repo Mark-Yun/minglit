@@ -15,7 +15,7 @@ abstract class UserRepository {
 }
 
 class SupabaseUserRepository implements UserRepository {
-  final _supabase = Supabase.instance.client;
+  final SupabaseClient _supabase = Supabase.instance.client;
 
   @override
   Future<UserProfile?> getUserProfile(String userId) async {

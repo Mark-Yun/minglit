@@ -6,13 +6,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
 /// **Minglit File Picker**
 ///
 /// A universal file picker widget supporting Images and Documents (PDF).
 /// Handles platform differences (Web/Native) and input sources.
-class MinglitFilePicker extends StatefulWidget {
+/// Optionally supports automatic uploading to Supabase Storage.
+class MinglitFilePicker extends ConsumerStatefulWidget {
   const MinglitFilePicker({
     required this.onFilesSelected,
     super.key,
@@ -22,6 +22,10 @@ class MinglitFilePicker extends StatefulWidget {
     this.maxFileSizeMb = 10,
     this.label = '파일 업로드',
     this.hint = '이미지 또는 PDF 파일을 선택해주세요',
+    this.autoUpload = false,
+    this.uploadBucket,
+    this.uploadPathPrefix,
+    this.onUploadComplete,
   });
 
   final void Function(List<PlatformFile> files) onFilesSelected;
@@ -32,13 +36,27 @@ class MinglitFilePicker extends StatefulWidget {
   final String label;
   final String hint;
 
+  // Auto-Upload Options
+  final bool autoUpload;
+  final String? uploadBucket;
+  final String? uploadPathPrefix;
+  final void Function(List<String> urls)? onUploadComplete;
+
   @override
-  State<MinglitFilePicker> createState() => _MinglitFilePickerState();
+  ConsumerState<MinglitFilePicker> createState() => _MinglitFilePickerState();
 }
 
-class _MinglitFilePickerState extends State<MinglitFilePicker> {
+class _MinglitFilePickerState extends ConsumerState<MinglitFilePicker> {
   final List<PlatformFile> _selectedFiles = [];
+  final List<String> _uploadedUrls = [];
   final ImagePicker _imagePicker = ImagePicker();
+  bool _isUploading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _uploadedUrls.addAll(widget.initialUrls);
+  }
 
   Future<void> _pickFiles() async {
     // If specific image picker is requested on Mobile
@@ -56,10 +74,9 @@ class _MinglitFilePickerState extends State<MinglitFilePicker> {
       );
 
       if (result != null) {
-        _addFiles(result.files);
+        await _processFiles(result.files);
       }
     } on Exception catch (e) {
-      // Handle permission errors etc.
       debugPrint('FilePicker Error: $e');
     }
   }
@@ -107,7 +124,7 @@ class _MinglitFilePickerState extends State<MinglitFilePicker> {
                 ),
               )
               .toList();
-          _addFiles(files);
+          await _processFiles(files);
         }
       } else {
         final image = await _imagePicker.pickImage(source: source);
@@ -117,7 +134,7 @@ class _MinglitFilePickerState extends State<MinglitFilePicker> {
             size: 0,
             path: image.path,
           );
-          _addFiles([file]);
+          await _processFiles([file]);
         }
       }
     } on Exception catch (e) {
@@ -125,21 +142,70 @@ class _MinglitFilePickerState extends State<MinglitFilePicker> {
     }
   }
 
-  void _addFiles(List<PlatformFile> newFiles) {
+  Future<void> _processFiles(List<PlatformFile> newFiles) async {
     setState(() {
       if (!widget.allowMultiple) {
         _selectedFiles.clear();
+        _uploadedUrls.clear(); // Clear old urls for single mode
       }
       _selectedFiles.addAll(newFiles);
     });
     widget.onFilesSelected(_selectedFiles);
+
+    if (widget.autoUpload && widget.uploadBucket != null) {
+      await _uploadFiles(newFiles);
+    }
+  }
+
+  Future<void> _uploadFiles(List<PlatformFile> files) async {
+    setState(() => _isUploading = true);
+    try {
+      final repo = ref.read(storageRepositoryProvider);
+      final newUrls = <String>[];
+
+      for (final file in files) {
+        // Convert PlatformFile to XFile for compatibility
+        XFile xFile;
+        if (kIsWeb) {
+          xFile = XFile.fromData(file.bytes!, name: file.name);
+        } else {
+          xFile = XFile(file.path!);
+        }
+
+        final url = await repo.uploadFile(
+          file: xFile,
+          bucket: widget.uploadBucket!,
+          pathPrefix: widget.uploadPathPrefix,
+        );
+        newUrls.add(url);
+      }
+
+      setState(() {
+        _uploadedUrls.addAll(newUrls);
+      });
+      widget.onUploadComplete?.call(_uploadedUrls);
+    } on Object catch (e) {
+      debugPrint('Auto-upload failed: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('파일 업로드 실패: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
+    }
   }
 
   void _removeFile(int index) {
     setState(() {
       _selectedFiles.removeAt(index);
+      // If we have matching URLs (assuming ordered list), remove them too
+      if (index < _uploadedUrls.length) {
+        _uploadedUrls.removeAt(index);
+      }
     });
     widget.onFilesSelected(_selectedFiles);
+    widget.onUploadComplete?.call(_uploadedUrls);
   }
 
   @override
@@ -148,6 +214,10 @@ class _MinglitFilePickerState extends State<MinglitFilePicker> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildUploadButton(context),
+        if (_isUploading) ...[
+          const SizedBox(height: MinglitSpacing.small),
+          const LinearProgressIndicator(),
+        ],
         if (_selectedFiles.isNotEmpty) ...[
           const SizedBox(height: MinglitSpacing.medium),
           _buildPreviewList(context),
@@ -159,7 +229,7 @@ class _MinglitFilePickerState extends State<MinglitFilePicker> {
   Widget _buildUploadButton(BuildContext context) {
     final theme = Theme.of(context);
     return InkWell(
-      onTap: _pickFiles,
+      onTap: _isUploading ? null : _pickFiles,
       borderRadius: BorderRadius.circular(MinglitRadius.small),
       child: Container(
         height: 120,
@@ -211,9 +281,29 @@ class _MinglitFilePickerState extends State<MinglitFilePicker> {
             const SizedBox(width: MinglitSpacing.small),
         itemBuilder: (context, index) {
           final file = _selectedFiles[index];
+          // Check if this specific file is uploaded (naive check by index)
+          final isUploaded = index < _uploadedUrls.length;
+
           return Stack(
             children: [
               _buildFileThumbnail(context, file),
+              if (isUploaded && widget.autoUpload)
+                Positioned(
+                  bottom: 4,
+                  right: 4,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               Positioned(
                 top: 4,
                 right: 4,

@@ -12,7 +12,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: 파일 선택 및 UI 확인' (Protocol in workflow.md) (1ecea72)
 
 ## Phase 2: Supabase Storage 연동 및 자동 업로드
-- [ ] Task: `StorageRepository` 확장
+- [~] Task: `StorageRepository` 확장
     - [ ] 범용 파일 업로드 메서드 구현 (버킷 지정, 유니크 파일명 생성).
 - [ ] Task: 자동 업로드 상태 관리 (Riverpod)
     - [ ] 선택된 파일의 업로드 상태(`pending`, `uploading`, `success`, `error`) 추적.
