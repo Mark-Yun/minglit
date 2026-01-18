@@ -5,7 +5,7 @@
 
 ---
 
-## [~] 트랙: 클라이언트 시나리오 통합 테스트 환경 구축 (Integration Scenario Tester)
+## [x] 트랙: 클라이언트 시나리오 통합 테스트 환경 구축 (Integration Scenario Tester)
 *링크: [./conductor/tracks/integration_scenario_tester_setup_20260118/](./conductor/tracks/integration_scenario_tester_setup_20260118/)*
 
 ---

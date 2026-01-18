@@ -1,8 +1,7 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:test_data_seeder/test_data_seeder.dart';
+import 'package:test_data_seeder/database_seeder.dart';
 
 /// **TestHelper**
 ///
@@ -26,7 +25,7 @@ class TestHelper {
       anonKey: supabaseAnonKey,
     );
 
-    // Create a provider container for logic-only testing (no pumpWidget needed for logic)
+    // Create a provider container for logic-only testing
     final container = ProviderContainer();
     return container;
   }
@@ -38,13 +37,15 @@ class TestHelper {
 class SeederHelper {
   SeederHelper()
       : _seeder = DatabaseSeeder(
-          url: const String.fromEnvironment(
-            'SUPABASE_URL',
-            defaultValue: 'http://127.0.0.1:54321',
-          ),
-          serviceRoleKey: const String.fromEnvironment(
-            'SUPABASE_SERVICE_ROLE_KEY',
-            defaultValue: 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz',
+          SupabaseClient(
+            const String.fromEnvironment(
+              'SUPABASE_URL',
+              defaultValue: 'http://127.0.0.1:54321',
+            ),
+            const String.fromEnvironment(
+              'SUPABASE_SERVICE_ROLE_KEY',
+              defaultValue: 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz',
+            ),
           ),
         );
 
@@ -53,9 +54,7 @@ class SeederHelper {
   /// Resets the database and seeds basic data for scenarios.
   Future<void> prepareBaseData() async {
     Log.i('🧪 [SeederHelper] Preparing base data...');
-    // For safety, we might not want to reset the whole DB every time,
-    // but for integration tests, isolation is key.
-    // await _seeder.seedAll(); 
+    await _seeder.seed();
     Log.i('🧪 [SeederHelper] Base data ready.');
   }
 
