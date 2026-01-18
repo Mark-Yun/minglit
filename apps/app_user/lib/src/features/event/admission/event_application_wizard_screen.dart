@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app_user/src/features/event/admission/event_application_controller.dart';
 import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -283,22 +284,24 @@ class _VerificationStep extends ConsumerWidget {
           ),
           const SizedBox(height: MinglitSpacing.small),
           if (field.type == 'file')
-            OutlinedButton.icon(
-              onPressed: () {
-                // Mock File Pick (TODO: Implement real file picker)
-                ref
-                    .read(eventApplicationControllerProvider(event).notifier)
-                    .updateVerificationData(field.key, 'mock_proof_file.jpg');
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('파일이 첨부되었습니다. (Mock)')),
-                );
+            MinglitFilePicker(
+              label: field.label,
+              hint: field.placeholder ?? '증빙 서류를 업로드해주세요',
+              fileType: FileType.any, // or custom based on field
+              onFilesSelected: (files) {
+                if (files.isNotEmpty) {
+                  // TODO(Storage): Upload file and get URL.
+                  // For now, save local path to simulate valid input.
+                  ref
+                      .read(eventApplicationControllerProvider(event).notifier)
+                      .updateVerificationData(field.key, files.first.path);
+                } else {
+                  // Handle clear
+                  ref
+                      .read(eventApplicationControllerProvider(event).notifier)
+                      .updateVerificationData(field.key, null);
+                }
               },
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.all(MinglitSpacing.medium),
-                alignment: Alignment.centerLeft,
-              ),
-              icon: const Icon(Icons.upload_file),
-              label: const Text('파일 선택 (터치 시 Mock 업로드)'),
             )
           else
             TextFormField(
