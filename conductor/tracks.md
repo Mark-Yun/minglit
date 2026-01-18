@@ -1,6 +1,6 @@
 ---
 
-## [~] 트랙: 범용 소셜 그래프 시스템 (Universal Social Graph)
+## [x] 트랙: 범용 소셜 그래프 시스템 (Universal Social Graph)
 *링크: [./conductor/tracks/universal_social_graph_20260118/](./conductor/tracks/universal_social_graph_20260118/)*
 
 ---
@@ -10,7 +10,7 @@
 
 ---
 
-## [ ] 트랙: 선언적 비동기 처리 위젯 (MinglitAsync) 구현
+## [x] 트랙: 선언적 비동기 처리 위젯 (MinglitAsync) 구현
 *링크: [./conductor/tracks/minglit_async_widget_20260118/](./conductor/tracks/minglit_async_widget_20260118/)*
 
 ---
