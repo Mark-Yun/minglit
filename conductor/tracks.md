@@ -34,5 +34,5 @@
 
 ---
 
-## [~] 트랙: 커스텀 린트 규칙 강화 (Color, TextStyle)
+## [x] 트랙: 커스텀 린트 규칙 강화 (Color, TextStyle)
 *링크: [./conductor/tracks/enhance_lint_rules_20260117/](./conductor/tracks/enhance_lint_rules_20260117/)*
