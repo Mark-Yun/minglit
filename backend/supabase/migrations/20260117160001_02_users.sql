@@ -54,8 +54,24 @@ $$ language sql security definer;
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.user_profiles (id, username, name, phone_number)
-  values (new.id, new.raw_user_meta_data->>'username', new.raw_user_meta_data->>'name', new.raw_user_meta_data->>'phone_number');
+  insert into public.user_profiles (
+    id, 
+    username, 
+    name, 
+    phone_number,
+    birth_date,
+    gender,
+    is_verified
+  )
+  values (
+    new.id, 
+    new.raw_user_meta_data->>'username', 
+    new.raw_user_meta_data->>'name', 
+    new.raw_user_meta_data->>'phone_number',
+    (new.raw_user_meta_data->>'birth_date')::date,
+    (new.raw_user_meta_data->>'gender')::public.gender,
+    (new.raw_user_meta_data->>'is_verified')::boolean
+  );
   return new;
 end;
 $$ language plpgsql security definer;
