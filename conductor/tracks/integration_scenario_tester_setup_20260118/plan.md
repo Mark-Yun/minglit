@@ -1,10 +1,8 @@
 # Implementation Plan: Client Scenario Integration Test Setup
 
-## Phase 1: Strategy Documentation
-- [~] **Task: Create `tests/TESTING.md`**
-    - 테스트 피라미드 및 계층별 역할 명세 (Infra vs Scenario vs UI).
-    - 각 테스트 폴더의 위치와 실행 방법 가이드 작성.
-- [ ] Task: Conductor - User Manual Verification 'Strategy Docs' (Protocol in workflow.md)
+## Phase 1: Strategy Documentation [checkpoint: 9907e20]
+- [x] **Task: Create `tests/TESTING.md`** [9907e20]
+- [x] Task: Conductor - User Manual Verification 'Strategy Docs' (Protocol in workflow.md)
 
 ## Phase 2: Project Scaffolding
 - [ ] **Task: Initialize `apps/integration_scenario_tester`**
