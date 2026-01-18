@@ -15,12 +15,12 @@
     - `getMatchResults(eventId)`: 성사된 매칭 리스트 조회.
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Domain Layer' (Protocol in workflow.md)
 
-## Phase 3: Partner Interface (Setting & Control)
-- [ ] **Task: Matching Setup UI**
+## Phase 3: Partner Interface (Setting & Control) [checkpoint: 8062ca4]
+- [x] **Task: Matching Setup UI** [8062ca4]
     - 이벤트 생성/수정 화면에 매칭 규칙 설정 UI 추가.
-- [ ] **Task: Matching Controller**
+- [x] **Task: Matching Controller** [8062ca4]
     - 매칭 세션 수동 활성화 버튼 및 상태 관리.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Partner UI' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Partner UI' (Protocol in workflow.md)
 
 ## Phase 4: User Experience (Voting & Matching)
 - [ ] **Task: Voting Screen**
