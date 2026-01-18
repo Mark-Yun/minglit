@@ -287,18 +287,22 @@ class _VerificationStep extends ConsumerWidget {
               label: field.label,
               hint: field.placeholder ?? '증빙 서류를 업로드해주세요',
               fileType: FileType.any, // or custom based on field
+              autoUpload: true,
+              uploadBucket: 'verification-proofs',
               onFilesSelected: (files) {
-                if (files.isNotEmpty) {
-                  // TODO(Storage): Upload file and get URL.
-                  // For now, save local path to simulate valid input.
-                  ref
-                      .read(eventApplicationControllerProvider(event).notifier)
-                      .updateVerificationData(field.key, files.first.path);
-                } else {
+                if (files.isEmpty) {
                   // Handle clear
                   ref
                       .read(eventApplicationControllerProvider(event).notifier)
                       .updateVerificationData(field.key, null);
+                }
+              },
+              onUploadComplete: (urls) {
+                if (urls.isNotEmpty) {
+                  // Save the first uploaded storage URL to the form data
+                  ref
+                      .read(eventApplicationControllerProvider(event).notifier)
+                      .updateVerificationData(field.key, urls.first);
                 }
               },
             )
