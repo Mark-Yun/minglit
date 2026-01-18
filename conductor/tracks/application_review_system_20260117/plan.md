@@ -1,11 +1,11 @@
 # 계획: 파티 참여자 심사 및 환불 관리 시스템
 
 ## Phase 1: 백엔드 환불 로직 및 트리거 구현
-- [ ] Task: Portone 결제 취소 Edge Function 구현
-    - [ ] `cancel_payment(payment_id, reason)` 함수 작성 (Portone REST API 연동).
-- [ ] Task: 거절 시 자동 환불 트리거 구현
-    - [ ] `event_applications` 상태가 `rejected`로 변경될 때 Edge Function을 호출하는 Database Webhook 또는 PG Trigger 작성.
-    - [ ] 환불 결과(`refund_status`) 업데이트 로직 구현.
+- [x] Task: Portone 결제 취소 Edge Function 구현 e1d2bf7
+    - [x] `cancel_payment(payment_id, reason)` 함수 작성 (Portone REST API 연동).
+- [x] Task: 거절 시 자동 환불 트리거 구현 e1d2bf7
+    - [x] `event_applications` 상태가 `rejected`로 변경될 때 Edge Function을 호출하는 Database Webhook 또는 PG Trigger 작성.
+    - [x] 환불 결과(`refund_status`) 업데이트 로직 구현.
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: 환불 로직 테스트' (Protocol in workflow.md)
 
 ## Phase 2: 파트너 앱 심사 UI 구현 (`app_partner`)
