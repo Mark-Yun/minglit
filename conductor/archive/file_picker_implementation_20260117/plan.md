@@ -19,9 +19,9 @@
     - [x] 업로드 진행률(%) 표시 UI 연동.
 - [x] Task: Conductor - User Manual Verification 'Phase 2: 스토리지 업로드 확인' (Protocol in workflow.md)
 
-## Phase 3: 기존 위젯 통합 및 마이그레이션
-- [ ] Task: `MinglitImagePicker` 리팩토링
-    - [ ] `MinglitFilePicker`를 내부적으로 사용하도록 수정하여 코드 중복 제거.
-- [ ] Task: 프로젝트 전체 마이그레이션
-    - [ ] `app_partner` (파티 생성) 및 `app_user` (인증 신청) 화면에 적용.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: 전체 통합 확인' (Protocol in workflow.md)
+## Phase 3: 기존 위젯 통합 및 마이그레이션 [checkpoint: 3e8426d]
+- [x] Task: `MinglitImagePicker` 리팩토링 [3e8426d]
+    - [x] `MinglitFilePicker`를 내부적으로 사용하도록 수정하여 코드 중복 제거 (삭제로 대체).
+- [x] Task: 프로젝트 전체 마이그레이션 [3e8426d]
+    - [x] `app_partner` (파티 생성) 및 `app_user` (인증 신청) 화면에 적용.
+- [x] Task: Conductor - User Manual Verification 'Phase 3: 전체 통합 확인' (Protocol in workflow.md)
