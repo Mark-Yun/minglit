@@ -7,6 +7,9 @@ analyzer:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
 
-linter:
+custom_lint:
   rules:
-    public_member_api_docs: false
+    - no_hardcoded_padding
+    - use_minglit_progress_indicator
+    - no_hardcoded_colors
+    - no_hardcoded_text_style

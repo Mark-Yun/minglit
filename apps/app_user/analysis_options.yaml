@@ -15,3 +15,5 @@ custom_lint:
   rules:
     - no_hardcoded_padding
     - use_minglit_progress_indicator
+    - no_hardcoded_colors
+    - no_hardcoded_text_style
