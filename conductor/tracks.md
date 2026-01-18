@@ -15,7 +15,7 @@
 
 ---
 
-## [~] 트랙: 유저 앱 이벤트 상세 화면 구현
+## [x] 트랙: 유저 앱 이벤트 상세 화면 구현
 *링크: [./conductor/tracks/event_detail_screen_20260112/](./conductor/tracks/event_detail_screen_20260112/)*
 
 ---
