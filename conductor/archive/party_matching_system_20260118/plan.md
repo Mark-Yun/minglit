@@ -22,9 +22,9 @@
     - 매칭 세션 수동 활성화 버튼 및 상태 관리.
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Partner UI' (Protocol in workflow.md)
 
-## Phase 4: User Experience (Voting & Matching)
-- [ ] **Task: Voting Screen**
+## Phase 4: User Experience (Voting & Matching) [checkpoint: 2a59d97]
+- [x] **Task: Voting Screen** [2a59d97]
     - 파티 종료 후 접근 가능한 매칭 투표 화면 구현.
-- [ ] **Task: Result UI**
+- [x] **Task: Result UI** [2a59d97]
     - 매칭 성공 시 화려한 애니메이션과 함께 연락처 노출.
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: User UI' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 4: User UI' (Protocol in workflow.md)
