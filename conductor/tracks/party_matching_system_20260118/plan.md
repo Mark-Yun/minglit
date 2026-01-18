@@ -1,20 +1,19 @@
 # Implementation Plan: Party Matching System
 
-## Phase 1: Database Migration (Supabase) [checkpoint: b21b080]
-- [x] **Task: Create Migration File `08_matching.sql`** [b21b080]
-- [x] **Task: Implement Real-time Matching Trigger** [b21b080]
-- [x] **Task: Secure Phone Number Exposure** [b21b080]
-- [~] Task: Conductor - User Manual Verification 'Phase 1: DB Migration' (Protocol in workflow.md)
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: DB Migration' (Protocol in workflow.md)
+## Phase 1: Database Migration (Supabase) [checkpoint: 576ad7c]
+- [x] **Task: Create Migration File `08_matching.sql`** [df9b36e]
+- [x] **Task: Implement Real-time Matching Trigger** [df9b36e]
+- [x] **Task: Secure Phone Number Exposure** [df9b36e]
+- [x] Task: Conductor - User Manual Verification 'Phase 1: DB Migration' (Protocol in workflow.md)
 
-## Phase 2: Domain & Data Layer (`minglit_kit`)
-- [ ] **Task: Data Models**
-    - `MatchRule`, `MatchVote`, `MatchResult` 모델 구현 (Freezed).
-- [ ] **Task: MatchingRepository**
+## Phase 2: Domain & Data Layer (`minglit_kit`) [checkpoint: 3b36e4b]
+- [x] **Task: Data Models** [df9b36e]
+    - `MatchRule`, `MatchVote`, `MatchPair` 모델 구현 (Freezed).
+- [x] **Task: MatchingRepository** [df9b36e]
     - `getMatchingCandidates(eventId)`: 규칙에 맞는 후보 리스트 조회.
     - `castVote(eventId, candidateId)`: 투표 수행.
     - `getMatchResults(eventId)`: 성사된 매칭 리스트 조회.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Domain Layer' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Domain Layer' (Protocol in workflow.md)
 
 ## Phase 3: Partner Interface (Setting & Control)
 - [ ] **Task: Matching Setup UI**

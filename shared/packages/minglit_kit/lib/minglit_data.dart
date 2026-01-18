@@ -7,6 +7,7 @@ export 'src/core/error/error_handler.dart';
 // Models
 export 'src/data/models/event.dart';
 export 'src/data/models/event_feed_type.dart';
+export 'src/data/models/matching.dart';
 export 'src/data/models/partner.dart';
 export 'src/data/models/partner_application.dart';
 export 'src/data/models/party.dart';
@@ -21,6 +22,7 @@ export 'src/data/repositories/event_repository.dart';
 export 'src/data/repositories/identity_repository.dart';
 export 'src/data/repositories/kakao_location_repository.dart';
 export 'src/data/repositories/location_repository.dart';
+export 'src/data/repositories/matching_repository.dart';
 export 'src/data/repositories/partner_repository.dart';
 export 'src/data/repositories/party_repository.dart';
 export 'src/data/repositories/social_repository.dart';
