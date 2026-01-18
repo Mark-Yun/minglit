@@ -1,6 +1,6 @@
 ---
 
-## [ ] 트랙: 린트 위반 사항 수정 및 디자인 시스템 적용
+## [x] 트랙: 린트 위반 사항 수정 및 디자인 시스템 적용
 *링크: [./conductor/tracks/fix_lint_violations_20260117/](./conductor/tracks/fix_lint_violations_20260117/)*
 
 ---
