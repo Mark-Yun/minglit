@@ -1,9 +1,6 @@
 ---
 
-## [x] 트랙: 똑똑한 공개 멤버 문서화 규칙 (Smart Public Docs)
-*링크: [./conductor/tracks/smart_public_docs_20260118/](./conductor/tracks/smart_public_docs_20260118/)*
 
----
 
 ## [x] 트랙: 린트 위반 사항 수정 및 디자인 시스템 적용
 *링크: [./conductor/tracks/fix_lint_violations_20260117/](./conductor/tracks/fix_lint_violations_20260117/)*
