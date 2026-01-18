@@ -142,7 +142,9 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
           }
           roleColor = Colors.blue[100];
         } else if (username.startsWith('user_')) {
-          email = 'user${username.split('_')[1]}@test.com';
+          // New seeding pattern: username is like 'user_25_m_ok'
+          // Email is simply 'username@test.com'
+          email = '$username@test.com';
           roleColor = Colors.grey[100];
         }
 
