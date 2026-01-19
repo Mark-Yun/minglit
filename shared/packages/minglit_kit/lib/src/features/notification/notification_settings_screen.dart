@@ -95,8 +95,7 @@ class _NotificationSettingsScreenState
         children: [
           SwitchListTile(
             title: const Text('서비스 알림'),
-            subtitle:
-                const Text('예약, 매칭 등 서비스 이용에 필수적인 알림을 받습니다.'),
+            subtitle: const Text('예약, 매칭 등 서비스 이용에 필수적인 알림을 받습니다.'),
             value: _serviceNotification,
             onChanged: (value) => _updateSetting('service_notification', value),
           ),

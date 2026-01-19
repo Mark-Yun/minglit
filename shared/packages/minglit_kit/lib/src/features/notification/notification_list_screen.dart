@@ -72,8 +72,9 @@ class NotificationListScreen extends ConsumerWidget {
                     title: Text(
                       title,
                       style: TextStyle(
-                        fontWeight:
-                            isRead ? FontWeight.normal : FontWeight.bold,
+                        fontWeight: isRead
+                            ? FontWeight.normal
+                            : FontWeight.bold,
                       ),
                     ),
                     subtitle: Column(
@@ -84,8 +85,9 @@ class NotificationListScreen extends ConsumerWidget {
                         const SizedBox(height: 4),
                         Text(
                           DateFormat('MM/dd HH:mm').format(createdAt),
-                          style: theme.textTheme.labelSmall
-                              ?.copyWith(color: Colors.grey),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: Colors.grey,
+                          ),
                         ),
                       ],
                     ),

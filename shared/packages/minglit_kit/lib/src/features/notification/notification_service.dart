@@ -41,12 +41,14 @@ class NotificationService {
     }
 
     // 2. Setup Local Notifications (for foreground display)
-    const initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const initializationSettingsAndroid = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
 
     // TODO(Notification): Add iOS settings
-    const initializationSettings =
-        InitializationSettings(android: initializationSettingsAndroid);
+    const initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+    );
 
     await _localNotifications.initialize(
       initializationSettings,

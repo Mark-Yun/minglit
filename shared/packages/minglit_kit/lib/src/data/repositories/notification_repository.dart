@@ -1,7 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NotificationRepository {
-
   NotificationRepository(this._client);
   final SupabaseClient _client;
 
@@ -43,14 +42,16 @@ class NotificationRepository {
   Future<void> markAsRead(String notificationId) async {
     await _client
         .from('user_notifications')
-        .update({'is_read': true}).eq('id', notificationId);
+        .update({'is_read': true})
+        .eq('id', notificationId);
   }
 
   /// 모든 알림 읽음 처리
   Future<void> markAllAsRead(String userId) async {
     await _client
         .from('user_notifications')
-        .update({'is_read': true}).eq('user_id', userId);
+        .update({'is_read': true})
+        .eq('user_id', userId);
   }
 
   /// 알림 삭제
@@ -69,11 +70,13 @@ class NotificationRepository {
 
   /// 유저 알림 설정 업데이트
   Future<void> updateSettings(
-      String userId, Map<String, dynamic> updates) async {
+    String userId,
+    Map<String, dynamic> updates,
+  ) async {
     await _client.from('user_settings').upsert({
       'user_id': userId,
       ...updates,
-      'updated_at': DateTime.now().toIso8601String()
+      'updated_at': DateTime.now().toIso8601String(),
     });
   }
 }
