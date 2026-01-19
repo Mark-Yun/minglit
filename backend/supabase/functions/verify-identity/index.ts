@@ -17,6 +17,20 @@ serve(async (req) => {
       });
     }
 
+    // --- MOCK FOR TESTING ---
+    if (identity_verification_id === 'TEST_VERIFICATION_ID') {
+      console.log("Mock verification triggered.");
+      return new Response(JSON.stringify({
+        success: true,
+        user: "mock_user_id",
+        mocked: true 
+      }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    // ------------------------
+
     // 1. 포트원 V2 API를 통해 인증 정보 조회
     // V2 인증 방식: Authorization: PortOne <API_SECRET>
     const response = await fetch(`${PORTONE_API_URL}/identity-verifications/${identity_verification_id}`, {
