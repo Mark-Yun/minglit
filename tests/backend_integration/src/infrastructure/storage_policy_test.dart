@@ -81,5 +81,28 @@ void main() {
         } catch (_) {}
       }
     });
+    test('authenticated user should be able to upload PDF file', () async {
+      final userClient = createUserClient(userId);
+      final pdfData = Uint8List.fromList([37, 80, 68, 70, 45]); // %PDF- header
+      final filePath = '$userId/test_doc.pdf';
+
+      try {
+        await userClient.storage.from('verification-proofs').uploadBinary(
+              filePath,
+              pdfData,
+              fileOptions: const FileOptions(
+                upsert: true,
+                contentType: 'application/pdf',
+              ),
+            );
+        print('✅ PDF Upload successful');
+      } on StorageException catch (e) {
+        fail('PDF Upload failed: ${e.message} (Status: ${e.statusCode})');
+      } finally {
+        try {
+          await adminClient.storage.from('verification-proofs').remove([filePath]);
+        } catch (_) {}
+      }
+    });
   });
 }
