@@ -28,6 +28,8 @@ dependencies:
   json_annotation: ^4.9.0
   kakao_map_plugin: ^0.3.7
   logger: ^2.6.2
+  minglit_identification:
+    path: ../minglit_identification
   path: ^1.9.1
   portone_flutter: ^0.12.1
   riverpod_annotation: ^3.0.3

@@ -1,0 +1,23 @@
+name: minglit_identification
+description: "Platform-agnostic identity verification package for Minglit."
+version: 0.0.1
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: ">=3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # IO Dependencies (Mobile)
+  portone_flutter: ^0.12.1
+  
+  # Web Dependencies
+  # js: ^0.6.7 (Usually included in flutter_web or web package)
+  web: ^1.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
