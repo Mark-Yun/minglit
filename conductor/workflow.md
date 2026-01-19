@@ -173,14 +173,16 @@
 
 ### Before Committing
 ```bash
-# 예시: 커밋 전 실행할 모든 검사 명령어
-# 1. 린트 및 포맷팅 (전체 프로젝트)
+# 커밋 전 반드시 실행해야 할 명령어들
+# 1. 자동 수정, 포맷팅 및 린트 (Zero Warning 필수)
 dart fix --apply && dart format .
-# 2. 정적 분석 (Zero Warning 필수)
-flutter analyze
-# 3. 빌드 검증 (각 앱 폴더에서)
-# cd apps/app_partner && flutter build web
-# cd apps/app_user && flutter build web
+flutter analyze --fatal-infos --fatal-warnings
+
+# 2. 빌드 검증 (CI Build Break 방지)
+# 아래 명령어가 성공해야만 푸시할 수 있습니다.
+# (시간 절약을 위해 --no-pub 옵션 사용 가능)
+(cd apps/app_user && flutter build appbundle --debug --no-pub)
+(cd apps/app_partner && flutter build appbundle --debug --no-pub)
 ```
 
 ## 테스트 요구사항
