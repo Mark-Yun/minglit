@@ -10,6 +10,7 @@ enum EventAdmissionStatus {
   notEligible, // 나이/성별 조건 미달 (이 이벤트의 모든 티켓에 대해)
   eligible, // 조건 만족 (티켓 구매 가능)
   applied, // 이미 신청함/참여중
+  rejected, // 심사 거절됨 (재신청 가능하도록 유도)
 }
 
 /// **Admission State**
@@ -20,12 +21,14 @@ class AdmissionState {
     required this.status,
     this.user,
     this.ineligibleReason,
+    this.rejectionReason,
     this.missingVerificationIds = const [],
   });
 
   final EventAdmissionStatus status;
   final User? user;
   final String? ineligibleReason;
+  final String? rejectionReason;
   final List<String> missingVerificationIds;
 }
 
@@ -43,16 +46,25 @@ class EventAdmissionController extends _$EventAdmissionController {
     }
 
     // 2. Check Existing Application (DB Check)
-    final hasApplied = await repository.checkApplicationStatus(
+    final existingApp = await repository.getApplication(
       eventId: event.id,
       userId: currentUser.id,
     );
 
-    if (hasApplied) {
-      return AdmissionState(
-        status: EventAdmissionStatus.applied,
-        user: currentUser,
-      );
+    if (existingApp != null) {
+      if (existingApp.status == 'rejected') {
+        return AdmissionState(
+          status: EventAdmissionStatus.rejected,
+          user: currentUser,
+          rejectionReason: existingApp.rejectionReason,
+        );
+      }
+      if (existingApp.status != 'cancelled') {
+        return AdmissionState(
+          status: EventAdmissionStatus.applied,
+          user: currentUser,
+        );
+      }
     }
 
     // 3. Fetch User Profile (Identity Check)

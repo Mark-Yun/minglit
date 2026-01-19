@@ -2,7 +2,6 @@ import 'package:app_user/src/features/ticket/data/ticket_wallet_repository.dart'
 import 'package:app_user/src/features/ticket/ui/widgets/ticket_qr_viewer.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:riverpod/src/providers/future_provider.dart';
 
 /// **Ticket QR Screen**
 ///
@@ -41,7 +40,10 @@ class TicketQRScreen extends ConsumerWidget {
   }
 }
 
-final FutureProviderFamily<TicketToken?, String> _ticketTokenProvider =
-    FutureProvider.family<TicketToken?, String>((ref, id) {
-      return ref.watch(ticketWalletRepositoryProvider).getTicket(id);
-    });
+// ignore: specify_nonobvious_property_types
+final _ticketTokenProvider = FutureProvider.family<TicketToken?, String>((
+  ref,
+  id,
+) {
+  return ref.watch(ticketWalletRepositoryProvider).getTicket(id);
+});

@@ -48,6 +48,25 @@ class EventRepository {
     }
   }
 
+  /// Deletes an application record.
+  Future<void> deleteApplication({
+    required String eventId,
+    required String userId,
+  }) async {
+    Log.d('deleteApplication called | event: $eventId, user: $userId');
+    try {
+      await _supabase
+          .from('event_applications')
+          .delete()
+          .eq('event_id', eventId)
+          .eq('user_id', userId);
+      Log.i('✅ [EventRepo] Application deleted.');
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] deleteApplication Error', e, st);
+      rethrow;
+    }
+  }
+
   /// Fetches events based on a specific curation type.
   Future<List<Event>> getEventsByType({
     required EventFeedType type,
@@ -135,25 +154,35 @@ class EventRepository {
     }
   }
 
+  /// Fetches the application record for a specific user and event.
+  Future<EventApplication?> getApplication({
+    required String eventId,
+    required String userId,
+  }) async {
+    Log.d('getApplication called | event: $eventId, user: $userId');
+    try {
+      final response = await _supabase
+          .from('event_applications')
+          .select()
+          .eq('event_id', eventId)
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (response == null) return null;
+      return EventApplication.fromJson(response);
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] getApplication Error', e, st);
+      rethrow;
+    }
+  }
+
   /// Checks if a user has already applied for an event.
   Future<bool> checkApplicationStatus({
     required String eventId,
     required String userId,
   }) async {
-    Log.d('checkApplicationStatus called | event: $eventId, user: $userId');
-    try {
-      final response = await _supabase
-          .from('event_applications')
-          .select('id')
-          .eq('event_id', eventId)
-          .eq('user_id', userId)
-          .maybeSingle();
-
-      return response != null;
-    } catch (e, st) {
-      Log.e('❌ [EventRepo] checkApplicationStatus Error', e, st);
-      rethrow;
-    }
+    final app = await getApplication(eventId: eventId, userId: userId);
+    return app != null && app.status != 'rejected' && app.status != 'cancelled';
   }
 
   /// Submits an event application (One-Shot Flow).

@@ -83,7 +83,7 @@ class _ReviewVerificationScreenState
     final commentController = TextEditingController();
 
     await showDialog<void>(
-      // TODO: Migrate to MinglitDialog with custom content (TextFields)
+      // TODO(developer): Migrate to MinglitDialog with custom content (TextFields)
       // or make a specialized dialog
       context: context,
       builder: (context) => AlertDialog(
