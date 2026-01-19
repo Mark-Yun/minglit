@@ -18,11 +18,36 @@ serve(async (req) => {
     }
 
     // --- MOCK FOR TESTING ---
-    if (identity_verification_id === 'TEST_VERIFICATION_ID') {
-      console.log("Mock verification triggered.");
+    if (identity_verification_id === 'TEST_VERIFICATION_ID' || identity_verification_id.startsWith('IDV_')) {
+      console.log("Mock verification triggered for ID:", identity_verification_id);
+      
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      );
+
+      const authHeader = req.headers.get("Authorization");
+      const userRes = await supabase.auth.getUser(authHeader?.replace("Bearer ", ""));
+      const userId = userRes.data.user?.id;
+
+      if (userId) {
+        // Mock DB Update
+        await supabase
+          .from("user_profiles")
+          .update({
+            name: "테스트유저",
+            birth_date: "1990-01-01",
+            gender: "male",
+            phone_number: "01012345678",
+            is_verified: true,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", userId);
+      }
+
       return new Response(JSON.stringify({
         success: true,
-        user: "mock_user_id",
+        user: userId || "mock_user_id",
         mocked: true 
       }), {
         status: 200,
