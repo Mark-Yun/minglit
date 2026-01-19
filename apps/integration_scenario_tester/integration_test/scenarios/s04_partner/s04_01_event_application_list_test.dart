@@ -14,27 +14,37 @@ void main() {
       eventRepo = container.read(eventRepositoryProvider);
     });
 
-    testWidgets('Should fetch event applications without Type Error', (tester) async {
+    testWidgets('Should fetch event applications without Type Error', (
+      tester,
+    ) async {
       // 1. Fetch any event
-      final events = await eventRepo.getEventsByType(type: EventFeedType.newArrivals);
+      final events = await eventRepo.getEventsByType(
+        type: EventFeedType.newArrivals,
+      );
       if (events.isEmpty) {
         Log.w('No events found to test application list');
         return;
       }
-      
+
       final targetEvent = events.first;
       Log.i('Testing with event: ${targetEvent.title} (${targetEvent.id})');
 
       try {
-        final applications = await eventRepo.getApplicationsByEventId(targetEvent.id);
+        final applications = await eventRepo.getApplicationsByEventId(
+          targetEvent.id,
+        );
         Log.i('Successfully fetched ${applications.length} applications');
-        
+
         // Validation
         if (applications.isNotEmpty) {
           final firstApp = applications.first;
           // The bug is often that relations are Lists instead of Maps (single: true missing?)
           // Checking runtime type indirectly via model access
-          expect(firstApp.user, isNotNull, reason: 'User relation should be loaded');
+          expect(
+            firstApp.user,
+            isNotNull,
+            reason: 'User relation should be loaded',
+          );
         }
       } catch (e) {
         Log.e('Failed to fetch applications: $e');

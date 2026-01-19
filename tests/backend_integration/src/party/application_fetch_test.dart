@@ -1,4 +1,3 @@
-import 'package:minglit_kit/minglit_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:test/test.dart';
 
@@ -26,12 +25,21 @@ void main() {
 
       // 1.5 Create a dummy application if needed (or assume seed data)
       // Let's create one to be sure
-      final userId = (await adminClient.from('user_profiles').select('id').limit(1).single())['id'];
+      final userId = (await adminClient
+          .from('user_profiles')
+          .select('id')
+          .limit(1)
+          .single())['id'];
       try {
         await adminClient.from('event_applications').insert({
           'event_id': eventId,
           'user_id': userId,
-          'ticket_id': (await adminClient.from('tickets').select('id').eq('event_id', eventId).limit(1).single())['id'],
+          'ticket_id': (await adminClient
+              .from('tickets')
+              .select('id')
+              .eq('event_id', eventId)
+              .limit(1)
+              .single())['id'],
           'payment_id': 'dummy_payment',
           'payment_amount': 1000,
           'status': 'pending_review'
@@ -49,14 +57,14 @@ void main() {
           .eq('event_id', eventId);
 
       print('Data type: ${data.runtimeType}');
-      if (data is List && data.isNotEmpty) {
+      if (data.isNotEmpty) {
         final firstItem = data.first;
         print('First item type: ${firstItem.runtimeType}');
         print('User field type: ${firstItem['user']?.runtimeType}');
-        
+
         // Assertions
         expect(firstItem, isA<Map<String, dynamic>>());
-        
+
         // If user is List, that's the bug!
         if (firstItem['user'] is List) {
           fail('BUG DETECTED: "user" field is a List, expected Map (Object).');

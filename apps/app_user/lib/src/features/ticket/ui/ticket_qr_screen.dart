@@ -40,7 +40,7 @@ class TicketQRScreen extends ConsumerWidget {
   }
 }
 
-// ignore: specify_nonobvious_property_types
+// ignore: specify_nonobvious_property_types, Reason: FutureProviderFamily is hard to type precisely here
 final _ticketTokenProvider = FutureProvider.family<TicketToken?, String>((
   ref,
   id,

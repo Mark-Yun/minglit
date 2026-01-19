@@ -49,11 +49,13 @@ void main() {
 
     test('verification-proofs bucket should exist', () async {
       try {
-        final bucket = await adminClient.storage.getBucket('verification-proofs');
+        final bucket =
+            await adminClient.storage.getBucket('verification-proofs');
         expect(bucket.id, equals('verification-proofs'));
       } on StorageException catch (e) {
         if (e.statusCode == '404' || e.message.contains('not found')) {
-          fail('Bucket "verification-proofs" not found. This is the detected bug.');
+          fail(
+              'Bucket "verification-proofs" not found. This is the detected bug.');
         }
         rethrow;
       }
@@ -70,14 +72,16 @@ void main() {
               fileData,
               fileOptions: const FileOptions(upsert: true),
             );
-        
+
         print('✅ Upload successful');
       } on StorageException catch (e) {
         fail('Upload failed: ${e.message} (Status: ${e.statusCode})');
       } finally {
         // Clean up
         try {
-          await adminClient.storage.from('verification-proofs').remove([filePath]);
+          await adminClient.storage
+              .from('verification-proofs')
+              .remove([filePath]);
         } catch (_) {}
       }
     });
@@ -100,7 +104,9 @@ void main() {
         fail('PDF Upload failed: ${e.message} (Status: ${e.statusCode})');
       } finally {
         try {
-          await adminClient.storage.from('verification-proofs').remove([filePath]);
+          await adminClient.storage
+              .from('verification-proofs')
+              .remove([filePath]);
         } catch (_) {}
       }
     });

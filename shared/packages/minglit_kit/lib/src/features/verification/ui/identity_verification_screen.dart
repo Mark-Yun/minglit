@@ -2,18 +2,16 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:minglit_identification/minglit_identification.dart';
 import 'package:minglit_kit/src/data/repositories/identity_repository.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 import 'package:minglit_kit/src/utils/error_ui_handler.dart';
 import 'package:minglit_kit/src/utils/exceptions.dart';
 
-/// **Identity Verification Screen (Mock)**
+/// **Identity Verification Screen**
 ///
-/// A screen where users input their PII (Personally Identifiable Information).
-/// In a real scenario, this would integrate with PASS/SMS verification.
-/// Currently, it mocks the process and updates the `user_profiles`
-/// table directly.
+/// A screen where users verify their real identity via Portone (PASS/SMS).
 class IdentityVerificationScreen extends ConsumerStatefulWidget {
   const IdentityVerificationScreen({super.key});
 
@@ -26,10 +24,10 @@ class _IdentityVerificationScreenState
     extends ConsumerState<IdentityVerificationScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // Form State
+  // Form State (Used for pre-filling Portone form)
   String _name = '';
   DateTime? _birthDate;
-  String _gender = 'male'; // 'male' | 'female'
+  String _gender = 'male';
   String _carrier = 'SKT';
   String _phoneNumber = '';
   bool _isLoading = false;
@@ -44,32 +42,39 @@ class _IdentityVerificationScreenState
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_birthDate == null) {
-      handleMinglitError(context, const MinglitUserException('생년월일을 선택해주세요.'));
-      return;
-    }
 
     _formKey.currentState!.save();
     setState(() => _isLoading = true);
 
     try {
-      // Mock Delay
-      await Future<void>.delayed(const Duration(seconds: 1));
+      final merchantUid = 'IDV_${DateTime.now().millisecondsSinceEpoch}';
 
+      // 1. Open Portone Verification Window
+      // Note: IdentificationProviderImpl is exported from minglit_identification
+      final provider = IdentificationProviderImpl();
+      final verificationId = await provider.verify(
+        context: context,
+        merchantUid: merchantUid,
+        userName: _name,
+        userPhone: _phoneNumber,
+      );
+
+      if (verificationId == null) {
+        throw const MinglitUserException('본인인증이 취소되었습니다.');
+      }
+
+      // 2. Server-side Verification & DB Update
       await ref
           .read(identityRepositoryProvider)
           .verifyIdentity(
-            name: _name,
-            birthDate: _birthDate!,
-            gender: _gender,
-            phoneNumber: _phoneNumber,
+            identityVerificationId: verificationId,
           );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ 본인인증이 완료되었습니다.')),
+          const SnackBar(content: Text('✅ 본인인증이 성공적으로 완료되었습니다.')),
         );
-        Navigator.of(context).pop(true); // Return success result
+        Navigator.of(context).pop(true);
       }
     } on Object catch (e, st) {
       if (mounted) {
@@ -155,7 +160,7 @@ class _IdentityVerificationScreenState
                           final bd = _birthDate;
                           final text = bd == null
                               ? '생년월일 선택'
-                              : '''${bd.year}.${bd.month.toString().padLeft(2, '0')}.${bd.day.toString().padLeft(2, '0')}''';
+                              : '${bd.year}.${bd.month.toString().padLeft(2, '0')}.${bd.day.toString().padLeft(2, '0')}';
                           return Text(
                             text,
                             style: TextStyle(

@@ -4,8 +4,6 @@
 library minglit_identification;
 
 export 'src/interface/identification_provider.dart';
-
-// Conditional Import
 export 'src/implementation/identification_stub.dart'
     if (dart.library.io) 'src/implementation/identification_io.dart'
     if (dart.library.js_interop) 'src/implementation/identification_web.dart';

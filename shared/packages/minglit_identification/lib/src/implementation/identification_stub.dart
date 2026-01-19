@@ -9,6 +9,7 @@ class IdentificationProviderImpl implements IdentificationProvider {
     String? userPhone,
     String? userName,
   }) async {
-    throw UnimplementedError('Identity verification not implemented for this platform.');
+    throw UnimplementedError(
+        'Identity verification not implemented for this platform.');
   }
 }

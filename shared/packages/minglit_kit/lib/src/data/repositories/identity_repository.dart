@@ -22,20 +22,21 @@ class IdentityRepository {
 
     try {
       Log.d('Calling verify-identity edge function...');
-      
+
       final response = await _supabase.functions.invoke(
         'verify-identity',
         body: {'identity_verification_id': identityVerificationId},
       );
 
       if (response.status != 200) {
-        throw MinglitException('인증 검증 실패: ${response.data}');
+        throw MinglitUserException('인증 검증 실패: ${response.data}');
       }
 
       Log.d('✅ Identity Verified successfully via Edge Function.');
     } on Object catch (e, st) {
       Log.e('❌ [IdentityRepo] verifyIdentity Error', e, st);
-      throw MinglitException.from(e, st);
+      // Use handleMinglitError or rethrow a concrete exception
+      rethrow;
     }
   }
 

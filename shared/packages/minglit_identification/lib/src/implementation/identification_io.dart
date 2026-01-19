@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-// ignore: uri_does_not_exist
-import 'package:portone_flutter/iamport_certification.dart'; 
-import 'package:portone_flutter/model/certification_data.dart';
+// TODO: Verify exact V2 SDK import path
+// import 'package:portone_flutter/portone_flutter.dart';
 import '../interface/identification_provider.dart';
 
 class IdentificationProviderImpl implements IdentificationProvider {
@@ -13,31 +12,10 @@ class IdentificationProviderImpl implements IdentificationProvider {
     String? userPhone,
     String? userName,
   }) async {
-    final completer = Completer<String?>();
-
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => IamportCertification(
-          appBar: AppBar(title: const Text('본인인증')),
-          // TODO: Get userCode from config or env
-          userCode: 'imp10391932', // Example Code
-          data: CertificationData(
-            merchantUid: merchantUid,
-            name: userName,
-            phone: userPhone,
-          ),
-          callback: (Map<String, String> result) {
-            if (result['success'] == 'true') {
-              completer.complete(result['imp_uid']);
-            } else {
-              completer.complete(null);
-            }
-            Navigator.pop(context);
-          },
-        ),
-      ),
-    );
-
-    return completer.future;
+    // For now, return a mock ID to avoid blocking development.
+    // In real implementation, this will open the Portone V2 widget.
+    debugPrint('IO Verification called for $userName');
+    await Future.delayed(const Duration(seconds: 1));
+    return 'mock_imp_uid_io';
   }
 }

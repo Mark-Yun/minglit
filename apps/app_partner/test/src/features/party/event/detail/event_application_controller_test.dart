@@ -1,9 +1,8 @@
 import 'package:app_partner/src/features/party/event/detail/event_application_controller.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:riverpod/riverpod.dart'; // Explicit import
+// Explicit import
 
 /// Local helper
 ProviderContainer createContainer({
@@ -30,24 +29,28 @@ void main() {
   });
 
   group('EventApplicationController Tests', () {
-    test('Should throw TypeError if repository returns malformed list', () async {
-      final exception = TypeError(); // Simulating the exact TypeError
-      
-      when(() => mockRepo.getApplicationsByEventId('event_1'))
-          .thenThrow(exception);
+    test(
+      'Should throw TypeError if repository returns malformed list',
+      () async {
+        final exception = TypeError(); // Simulating the exact TypeError
 
-      final container = createContainer(
-        overrides: [
-          eventRepositoryProvider.overrideWithValue(mockRepo),
-        ],
-      );
+        when(
+          () => mockRepo.getApplicationsByEventId('event_1'),
+        ).thenThrow(exception);
 
-      // Verify that reading the provider rethrows the error
-      expect(
-        () => container.read(eventApplicationsProvider('event_1').future),
-        throwsA(isA<TypeError>()),
-      );
-    });
+        final container = createContainer(
+          overrides: [
+            eventRepositoryProvider.overrideWithValue(mockRepo),
+          ],
+        );
+
+        // Verify that reading the provider rethrows the error
+        expect(
+          () => container.read(eventApplicationsProvider('event_1').future),
+          throwsA(isA<TypeError>()),
+        );
+      },
+    );
 
     test('Should return parsed list when data is correct', () async {
       final validData = [
@@ -63,8 +66,9 @@ void main() {
         ),
       ];
 
-      when(() => mockRepo.getApplicationsByEventId('event_1'))
-          .thenAnswer((_) async => validData);
+      when(
+        () => mockRepo.getApplicationsByEventId('event_1'),
+      ).thenAnswer((_) async => validData);
 
       final container = createContainer(
         overrides: [
@@ -72,7 +76,9 @@ void main() {
         ],
       );
 
-      final result = await container.read(eventApplicationsProvider('event_1').future);
+      final result = await container.read(
+        eventApplicationsProvider('event_1').future,
+      );
       expect(result, isA<List<EventApplication>>());
       expect(result.length, 1);
       expect(result.first.id, 'app_1');
