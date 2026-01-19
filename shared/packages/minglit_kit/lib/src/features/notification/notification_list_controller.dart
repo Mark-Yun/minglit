@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:minglit_kit/src/data/repositories/auth_repository.dart';
 import 'package:minglit_kit/src/data/repositories/notification_repository.dart';
 import 'package:minglit_kit/src/features/notification/notification_service.dart';
@@ -30,7 +31,7 @@ class NotificationList extends _$NotificationList {
     state = state.whenData((notifications) {
       return notifications.map((n) {
         if (n['id'] == id) {
-          return Map<String, dynamic>.from(n)..[ 'is_read' ] = true;
+          return Map<String, dynamic>.from(n)..['is_read'] = true;
         }
         return n;
       }).toList();
@@ -40,9 +41,9 @@ class NotificationList extends _$NotificationList {
   Future<void> markAllAsRead() async {
     final user = ref.read(currentUserProvider);
     if (user == null) return;
-    
+
     await _repository.markAllAsRead(user.id);
-    refresh();
+    unawaited(refresh());
   }
 
   Future<void> deleteNotification(String id) async {
@@ -53,5 +54,7 @@ class NotificationList extends _$NotificationList {
     });
   }
 }
+
+
 
 

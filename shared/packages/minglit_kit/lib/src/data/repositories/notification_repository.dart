@@ -70,8 +70,10 @@ class NotificationRepository {
   /// 유저 알림 설정 업데이트
   Future<void> updateSettings(
       String userId, Map<String, dynamic> updates) async {
-    await _client
-        .from('user_settings')
-        .upsert({'user_id': userId, ...updates, 'updated_at': DateTime.now().toIso8601String()});
+    await _client.from('user_settings').upsert({
+      'user_id': userId,
+      ...updates,
+      'updated_at': DateTime.now().toIso8601String()
+    });
   }
 }

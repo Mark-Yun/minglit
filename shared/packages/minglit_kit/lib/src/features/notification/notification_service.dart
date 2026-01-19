@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -19,8 +20,8 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
 });
 
 class NotificationService {
-
   NotificationService(this._repository, this._ref);
+
   final NotificationRepository _repository;
   final Ref _ref;
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
@@ -30,9 +31,7 @@ class NotificationService {
 
   Future<void> initialize() async {
     // 1. Request Permission
-    final settings = await _fcm.requestPermission(
-      
-    );
+    final settings = await _fcm.requestPermission();
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
       _logger.i('User granted permission');
@@ -44,15 +43,14 @@ class NotificationService {
     // 2. Setup Local Notifications (for foreground display)
     const initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
-    
-    // TODO: Add iOS settings
+
+    // TODO(Notification): Add iOS settings
     const initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
 
     await _localNotifications.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse details) {
-        // Handle foreground notification tap (deep link)
         _handleDeepLink(details.payload);
       },
     );
@@ -60,27 +58,30 @@ class NotificationService {
     // 3. Get Token & Register
     final token = await _fcm.getToken();
     if (token != null) {
-      await _registerToken(token);
+      unawaited(_registerToken(token));
     }
 
     // 4. Listen for Token Refresh
-    _fcm.onTokenRefresh.listen(_registerToken);
+    _fcm.onTokenRefresh.listen((token) {
+      unawaited(_registerToken(token));
+    });
 
     // 5. Foreground Message Handler
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      _logger.d('Got a message whilst in the foreground!');
-      _logger.d('Message data: ${message.data}');
+      _logger
+        ..d('Got a message whilst in the foreground!')
+        ..d('Message data: ${message.data}');
 
       if (message.notification != null) {
-        _showLocalNotification(message);
+        unawaited(_showLocalNotification(message));
       }
     });
 
     // 6. Background Message Tap Handler
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-       _handleDeepLink(message.data['deep_link'] as String?);
+      _handleDeepLink(message.data['deep_link'] as String?);
     });
-    
+
     // 7. Terminated State Message Check
     final initialMessage = await _fcm.getInitialMessage();
     if (initialMessage != null) {
@@ -90,12 +91,11 @@ class NotificationService {
 
   Future<void> _registerToken(String token) async {
     final user = _ref.read(currentUserProvider);
-    if (user == null) return; // 로그인 상태가 아니면 등록하지 않음 (로그인 시 다시 호출 필요)
+    if (user == null) return;
 
     try {
       final deviceType = Platform.isAndroid ? 'android' : 'ios';
-      // Web 처리는 별도 필요
-      
+
       await _repository.upsertToken(
         userId: user.id,
         token: token,
@@ -118,8 +118,8 @@ class NotificationService {
         notification.body,
         const NotificationDetails(
           android: AndroidNotificationDetails(
-            'minglit_channel_default', // Channel ID
-            '기본 알림', // Channel Name
+            'minglit_channel_default',
+            '기본 알림',
             channelDescription: '중요한 알림을 받습니다.',
             importance: Importance.max,
             priority: Priority.high,
@@ -133,18 +133,16 @@ class NotificationService {
 
   void _handleDeepLink(String? link) {
     if (link != null) {
-      // TODO: Use GoRouter to navigate
+      // TODO(Notification): Use GoRouter to navigate
       _logger.i('Navigate to deep link: $link');
-      // ref.read(routerProvider).push(link); 
-      // Router 접근이 어려울 수 있으므로, 별도 StreamController나 Listener 패턴 사용 권장
     }
   }
-  
+
   // 로그인 성공 시 호출할 메서드
   Future<void> onUserLogin() async {
     final token = await _fcm.getToken();
     if (token != null) {
-      await _registerToken(token);
+      unawaited(_registerToken(token));
     }
   }
 }
