@@ -1,4 +1,3 @@
-import 'package:minglit_kit/minglit_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:test/test.dart';
 
@@ -49,7 +48,7 @@ void main() {
           .eq('event_id', eventId);
 
       print('Data type: ${data.runtimeType}');
-      if (data is List && data.isNotEmpty) {
+      if (data.isNotEmpty) {
         final firstItem = data.first;
         print('First item type: ${firstItem.runtimeType}');
         print('User field type: ${firstItem['user']?.runtimeType}');
