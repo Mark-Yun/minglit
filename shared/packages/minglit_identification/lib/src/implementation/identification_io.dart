@@ -12,10 +12,19 @@ class IdentificationProviderImpl implements IdentificationProvider {
     String? userPhone,
     String? userName,
   }) async {
-    // For now, return a mock ID to avoid blocking development.
-    // In real implementation, this will open the Portone V2 widget.
-    debugPrint('IO Verification called for $userName');
-    await Future.delayed(const Duration(seconds: 1));
-    return 'mock_imp_uid_io';
+    try {
+      final customer = <String, dynamic>{};
+      if (userName != null && userName.isNotEmpty) customer['name'] = userName;
+      if (userPhone != null && userPhone.isNotEmpty) customer['phoneNumber'] = userPhone;
+
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => PortoneCheck(
+            storeId: storeId,
+            channelKey: channelKey,
+            paymentId: merchantUid,
+            customer: customer.isEmpty ? null : customer,
+            onResult: (result) {
+
   }
 }

@@ -30,15 +30,21 @@ class IdentificationProviderImpl implements IdentificationProvider {
     }
 
     try {
-      final options = {
+      final customer = <String, dynamic>{};
+      if (userName != null && userName.isNotEmpty) customer['name'] = userName;
+      if (userPhone != null && userPhone.isNotEmpty) customer['phoneNumber'] = userPhone;
+
+      final optionsMap = {
         'storeId': storeId,
         'channelKey': channelKey,
         'identityVerificationId': merchantUid,
-        'customer': {
-          'name': userName,
-          'phoneNumber': userPhone,
-        },
-      }.jsify();
+      };
+      
+      if (customer.isNotEmpty) {
+        optionsMap['customer'] = customer;
+      }
+
+      final options = optionsMap.jsify();
 
       // 2. Call requestIdentityVerification manually using callMethod
       // This bypasses static binding issues.
