@@ -25,6 +25,7 @@
   - **큐:** PGMQ (Postgres Message Queue) - 비동기 처리용
   - **스케줄러:** pg_cron - 주기적 워커 실행용
   - **트랜잭션 로직:** PL/pgSQL 기반 RPC (`apply_event`)를 통한 원자적 신청 처리
+  - **비즈니스 자동화:** DB 트리거 및 Edge Function을 활용한 자동 환불 및 상태 동기화 시스템 (Portone 연동)
   - **소셜 그래프:** 다형성(Polymorphic) 기반 인터랙션 시스템 (좋아요, 구독, 북마크)
   - **매칭 시스템:** 실시간 상호 투표 및 보안 연락처 교환 (Normalized Table + View)
 
