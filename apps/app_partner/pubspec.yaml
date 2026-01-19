@@ -49,6 +49,7 @@ dependencies:
     path: ../../shared/packages/minglit_kit
   mobile_scanner: ^7.1.4
   portone_flutter: ^0.12.1
+  riverpod: ^3.0.3
   riverpod_annotation: ^3.0.3
   shared_preferences: ^2.5.4
   supabase_flutter: ^2.12.0

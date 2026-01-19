@@ -34,11 +34,23 @@ class EventRepository {
           .eq('event_id', eventId)
           .order('created_at', ascending: false);
 
-      final result = (data as List)
-          .map(
-            (json) => EventApplication.fromJson(json as Map<String, dynamic>),
-          )
-          .toList();
+      final result = (data as List).map((json) {
+        final map = json as Map<String, dynamic>;
+        
+        // Fix: If 'user' is a List (due to some Supabase quirk), take the first item or null
+        if (map['user'] is List) {
+          final list = map['user'] as List;
+          map['user'] = list.isNotEmpty ? list.first : null;
+        }
+        
+        // Fix: If 'submission' is a List
+        if (map['submission'] is List) {
+          final list = map['submission'] as List;
+          map['submission'] = list.isNotEmpty ? list.first : null;
+        }
+
+        return EventApplication.fromJson(map);
+      }).toList();
 
       Log.d('getApplicationsByEventId success | count: ${result.length}');
       return result;

@@ -10,8 +10,7 @@ Future<List<EventApplication>> eventApplications(
   String eventId,
 ) async {
   final repo = ref.watch(eventRepositoryProvider);
-  final result = await repo.getApplicationsByEventId(eventId);
-  return result.cast<EventApplication>();
+  return repo.getApplicationsByEventId(eventId);
 }
 
 @riverpod

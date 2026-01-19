@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
+import 'package:app_partner/src/features/party/event/detail/event_application_controller.dart';
 import 'package:app_partner/src/features/party/event/detail/event_detail_controller.dart';
 import 'package:app_partner/src/features/party/event/widgets/event_application_list_view.dart';
 import 'package:app_partner/src/features/party/event/widgets/ticket_list_item.dart';
@@ -60,7 +61,7 @@ class EventDetailPage extends ConsumerWidget {
   }
 }
 
-class _EventInfoTab extends StatelessWidget {
+class _EventInfoTab extends ConsumerWidget {
   const _EventInfoTab({
     required this.event,
     required this.ticketsAsync,
@@ -72,11 +73,16 @@ class _EventInfoTab extends StatelessWidget {
   final List<PartyEntryGroup> entryGroups;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final dateFormat = DateFormat('yyyy년 MM월 dd일 (E)', 'ko');
     final timeFormat = DateFormat('a h:mm', 'ko');
+    
+    // Watch applications to show count
+    final appsAsync = ref.watch(eventApplicationsProvider(event.id));
+    final appCount = appsAsync.asData?.value.length ?? 0;
+    final pendingCount = appsAsync.asData?.value.where((a) => a.status == 'pending_review').length ?? 0;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(MinglitSpacing.medium),
@@ -128,10 +134,9 @@ class _EventInfoTab extends StatelessWidget {
                 ),
                 _DetailRow(
                   icon: Icons.people_outline,
-                  label: context.l10n.eventDetail_label_capacity,
+                  label: '참가 현황', // Changed label
                   value:
-                      '${event.currentParticipants} / '
-                      '${event.maxParticipants}명',
+                      '확정 ${event.currentParticipants}명 / 신청 $appCount명 (대기 $pendingCount)',
                 ),
                 const Padding(
                   padding: EdgeInsets.symmetric(
