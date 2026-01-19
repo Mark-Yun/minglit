@@ -25,17 +25,27 @@ class IdentityVerificationScreen extends ConsumerStatefulWidget {
 
 class _IdentityVerificationScreenState
     extends ConsumerState<IdentityVerificationScreen> {
-  bool _isLoading = false;
+  bool _isLoading = true; // Start with loading state
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-start verification after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startVerification();
+    });
+  }
 
   Future<void> _startVerification() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
     try {
-      // Unique Merchant UID for this transaction
       final merchantUid = 'IDV_${DateTime.now().millisecondsSinceEpoch}';
 
-      // 1. Open Portone Verification Window
-      // Note: IdentificationProviderImpl is exported from minglit_identification
       final provider = IdentificationProviderImpl();
       final verificationId = await provider.verify(
         context: context,
@@ -43,10 +53,13 @@ class _IdentityVerificationScreenState
       );
 
       if (verificationId == null) {
-        throw const MinglitUserException('본인인증이 취소되었습니다.');
+        // User cancelled or window blocked
+        setState(() {
+          _errorMessage = '인증이 취소되었거나 창이 열리지 않았습니다.';
+        });
+        return;
       }
 
-      // 2. Server-side Verification & DB Update
       await ref.read(identityRepositoryProvider).verifyIdentity(
             identityVerificationId: verificationId,
           );
@@ -57,9 +70,10 @@ class _IdentityVerificationScreenState
         );
         Navigator.of(context).pop(true);
       }
-    } on Object catch (e, st) {
+    } on Object catch (e) {
       if (mounted) {
-        handleMinglitError(context, e, st);
+        setState(() => _errorMessage = '인증 중 오류가 발생했습니다.');
+        handleMinglitError(context, e);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -78,38 +92,35 @@ class _IdentityVerificationScreenState
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.verified_user_outlined,
-                size: 64,
-                color: Colors.grey,
-              ),
-              const SizedBox(height: MinglitSpacing.large),
-              Text(
-                '안전한 만남을 위해\n본인인증이 필요합니다.',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
+              if (_isLoading) ...[
+                const MinglitCircularProgressIndicator(size: 48),
+                const SizedBox(height: MinglitSpacing.xlarge),
+                Text(
+                  '본인인증 창을 불러오는 중입니다...',
+                  style: theme.textTheme.titleMedium,
                 ),
-              ),
-              const SizedBox(height: MinglitSpacing.medium),
-              Text(
-                '타인의 명의를 도용할 경우\n관련 법령에 따라 처벌받을 수 있습니다.',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+              ] else ...[
+                const Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: Colors.orange,
                 ),
-              ),
-              const SizedBox(height: MinglitSpacing.xlarge * 2),
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _startVerification,
-                  child: _isLoading
-                      ? const MinglitCircularProgressIndicator(size: 20)
-                      : const Text('본인인증 시작하기'),
+                const SizedBox(height: MinglitSpacing.large),
+                Text(
+                  _errorMessage ?? '인증을 진행해주세요.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium,
                 ),
-              ),
+                const SizedBox(height: MinglitSpacing.xlarge),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: _startVerification,
+                    child: const Text('본인인증 다시 시도하기'),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
