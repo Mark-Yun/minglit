@@ -26,7 +26,7 @@ void main() {
 
         // 2. Perform verification (Mock data)
         try {
-      await container.read(identityRepositoryProvider).verifyIdentity(
+          await identityRepo.verifyIdentity(
             identityVerificationId: 'TEST_VERIFICATION_ID',
           );
 

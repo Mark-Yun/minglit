@@ -85,7 +85,7 @@
 
 ---
 
-## [ ] 트랙: 실명 본인인증 시스템 연동 (PASS/SMS)
+## [x] 트랙: 실명 본인인증 시스템 연동 (PASS/SMS)
 *링크: [./conductor/tracks/identity_verification_integration_20260117/](./conductor/tracks/identity_verification_integration_20260117/)*
 
 ---
