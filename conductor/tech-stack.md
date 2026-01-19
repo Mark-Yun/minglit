@@ -22,6 +22,7 @@
   - **Web:** Vercel (Next.js 및 Flutter 웹)
   - **Android:** Google Play Store (Main), Firebase App Distribution (Dev)
   - **CI/CD:** GitHub Actions (자동 빌드 및 배포 파이프라인)
+- **알림:** Firebase Cloud Messaging (FCM) - Supabase Edge Function을 통한 발송
 - **AI 및 벡터 검색:**
   - **임베딩:** OpenAI Text Embedding 3 Small
   - **벡터 DB:** pgvector (Supabase)

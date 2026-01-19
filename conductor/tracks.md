@@ -60,7 +60,7 @@
 
 ---
 
-## [ ] 트랙: 통합 알림 시스템 및 센터 (Unified Notification System)
+## [x] 트랙: 통합 알림 시스템 및 센터 (Unified Notification System)
 *링크: [./conductor/tracks/unified_notification_system_20260117/](./conductor/tracks/unified_notification_system_20260117/)*
 
 ---
@@ -103,10 +103,17 @@
 ## [x] 트랙: 앱 단위 테스트 및 CI 파이프라인 구축 (App Unit Test & CI)
 *링크: [./conductor/tracks/app_unit_test_ci_20260117/](./conductor/tracks/app_unit_test_ci_20260117/)*
 
+## [x] 트랙: 안드로이드 앱 빌드 및 CI/CD 설정
+*링크: [./conductor/archive/android_build_cicd_20260118/](./conductor/archive/android_build_cicd_20260118/)*
+
+---
+
+## [ ] 트랙: iOS 앱 빌드 및 CI/CD 환경 구축
+*링크: [./conductor/tracks/ios_build_cicd_20260119/](./conductor/tracks/ios_build_cicd_20260119/)*
+
 ---
 
 ## [ ] 트랙: 공유하기 시스템 (Sharing System)
-*링크: [./tracks/sharing_system_20260118/](./tracks/sharing_system_20260118/)*
 
 ---
 
