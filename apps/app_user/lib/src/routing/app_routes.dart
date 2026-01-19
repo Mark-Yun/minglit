@@ -100,20 +100,7 @@ class CertificationRoute extends GoRouteData with $CertificationRoute {
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return MinglitIamportCertification(
-      onSuccess: (uid) {
-        Log.i('Certification Success: $uid');
-        context
-          ..pop()
-          ..showMinglitSuccess('인증 성공! UID: $uid');
-      },
-      onFail: (msg) {
-        Log.e('Certification Failed: $msg');
-        context
-          ..pop()
-          ..showMinglitWarning('인증 실패: $msg');
-      },
-    );
+    return const IdentityVerificationScreen();
   }
 }
 
