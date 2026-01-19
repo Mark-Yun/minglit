@@ -122,3 +122,8 @@
 
 ## [x] 트랙: 주요 버그 수정: 파티 신청 및 디테일 데이터 오류
 *링크: [./conductor/tracks/bugfix_event_applications_20260118/](./conductor/tracks/bugfix_event_applications_20260118/)*
+
+---
+
+## [ ] 트랙: 파티 상세 페이지 이미지 다중 업로드 및 뷰어 구현
+*링크: [./conductor/tracks/party_image_multiupload_20260118/](./conductor/tracks/party_image_multiupload_20260118/)*
