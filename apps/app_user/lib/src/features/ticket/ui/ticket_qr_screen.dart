@@ -40,7 +40,7 @@ class TicketQRScreen extends ConsumerWidget {
   }
 }
 
-// ignore: specify_nonobvious_property_types
+// ignore: specify_nonobvious_property_types, Reason: Type is inferred correctly by riverpod_generator logic compatibility
 final _ticketTokenProvider = FutureProvider.family<TicketToken?, String>((
   ref,
   id,

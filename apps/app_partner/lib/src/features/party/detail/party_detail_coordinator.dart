@@ -21,7 +21,7 @@ class PartyDetailCoordinator {
   final Ref _ref;
 
   void goToEditParty(String partyId) {
-    // TODO(partner_party_management_20260117): Implement Party Edit Route
+    // TODO(Detail): Implement Party Edit Route
     Log.d(r'Coordinator: Edit Party $partyId');
   }
 

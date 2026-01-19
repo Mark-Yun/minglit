@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "687100681844",
+    "project_id": "minglit-main-13375",
+    "storage_bucket": "minglit-main-13375.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:687100681844:android:b9b92b523955912486fb21",
+        "android_client_info": {
+          "package_name": "com.minglit.app_user"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCRLBXsd3ksbPo2QpMaSRnJYbD1gZOovpk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

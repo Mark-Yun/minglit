@@ -31,15 +31,13 @@ class _TicketQRViewerState extends State<TicketQRViewer>
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
 
-    // ignore: discarded_futures, Reason: Brightness is non-critical side effect
-    _maximizeBrightness();
+    unawaited(_maximizeBrightness());
   }
 
   @override
   void dispose() {
     _animationController.dispose();
-    // ignore: discarded_futures, Reason: Brightness is non-critical side effect
-    _restoreBrightness();
+    unawaited(_restoreBrightness());
     super.dispose();
   }
 

@@ -78,11 +78,15 @@ class _EventInfoTab extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
     final dateFormat = DateFormat('yyyy년 MM월 dd일 (E)', 'ko');
     final timeFormat = DateFormat('a h:mm', 'ko');
-    
+
     // Watch applications to show count
     final appsAsync = ref.watch(eventApplicationsProvider(event.id));
     final appCount = appsAsync.asData?.value.length ?? 0;
-    final pendingCount = appsAsync.asData?.value.where((a) => a.status == 'pending_review').length ?? 0;
+    final pendingCount =
+        appsAsync.asData?.value
+            .where((a) => a.status == 'pending_review')
+            .length ??
+        0;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(MinglitSpacing.medium),
