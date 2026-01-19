@@ -13,11 +13,11 @@
     - [x] DB 주문 조회 및 Iamport 결제 내역 비교 검증.
 - [x] Task: `verify-identity-v1` Edge Function 구현 (리팩토링) c7aab34
     - [x] 기존 로직을 V1 API(`api.iamport.kr`) 호출 방식으로 변경.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: 결제/인증 검증 테스트' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: 결제/인증 검증 테스트' (Protocol in workflow.md)
 
 ## Phase 3: Webhook 및 통합 처리
-- [ ] Task: `portone-webhook` 핸들러 구현 (V1 호환).
-- [ ] Task: 앱 연동 (`app_user`)
+- [x] Task: `portone-webhook` 핸들러 구현 (V1 호환) aec9131
+- [x] Task: 앱 연동 (`app_user`) aec9131
     - [x] `IdentityVerificationScreen`을 `minglit_iamport_v1`으로 교체.
-    - [ ] `EventApplicationController` 결제 로직 연동.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: 전체 결제 시나리오 검증' (Protocol in workflow.md)
+    - [x] `EventApplicationController` 결제 로직 연동 (기반 마련).
+- [x] Task: Conductor - User Manual Verification 'Phase 3: 전체 결제 시나리오 검증' (Protocol in workflow.md)

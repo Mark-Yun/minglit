@@ -95,8 +95,8 @@
 
 ---
 
-## [ ] 트랙: 결제 서버 검증 및 웹훅 처리 (Payment Verification System)
-*링크: [./conductor/tracks/payment_verification_system_20260117/](./conductor/tracks/payment_verification_system_20260117/)*
+## [x] 트랙: 결제 서버 검증 및 웹훅 처리 (Payment Verification System)
+*링크: [./conductor/archive/payment_verification_system_20260117/](./conductor/archive/payment_verification_system_20260117/)*
 
 ---
 
