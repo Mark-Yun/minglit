@@ -61,7 +61,12 @@
 ---
 
 ## [x] 트랙: 통합 알림 시스템 및 센터 (Unified Notification System)
-*링크: [./conductor/tracks/unified_notification_system_20260117/](./conductor/tracks/unified_notification_system_20260117/)*
+*링크: [./conductor/archive/unified_notification_system_20260117/](./conductor/archive/unified_notification_system_20260117/)*
+
+---
+
+## [x] 트랙: 이벤트 업데이트 알림 자동화 (Event Update Notification)
+*링크: [./conductor/tracks/event_update_notification_20260119/](./conductor/tracks/event_update_notification_20260119/)*
 
 ---
 
