@@ -2,10 +2,10 @@ import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:minglit_kit/src/data/repositories/notification_repository.dart';
-import 'package:minglit_kit/src/logic/providers/auth_provider.dart';
-import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 import 'package:logger/logger.dart';
+import 'package:minglit_kit/src/data/repositories/auth_repository.dart';
+import 'package:minglit_kit/src/data/repositories/notification_repository.dart';
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 
 final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
   return NotificationRepository(ref.watch(supabaseClientProvider));
@@ -19,6 +19,8 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
 });
 
 class NotificationService {
+
+  NotificationService(this._repository, this._ref);
   final NotificationRepository _repository;
   final Ref _ref;
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
@@ -26,14 +28,10 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
   final Logger _logger = Logger();
 
-  NotificationService(this._repository, this._ref);
-
   Future<void> initialize() async {
     // 1. Request Permission
-    NotificationSettings settings = await _fcm.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
+    final settings = await _fcm.requestPermission(
+      
     );
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
@@ -44,23 +42,23 @@ class NotificationService {
     }
 
     // 2. Setup Local Notifications (for foreground display)
-    const AndroidInitializationSettings initializationSettingsAndroid =
+    const initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
     
     // TODO: Add iOS settings
-    const InitializationSettings initializationSettings =
+    const initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
 
     await _localNotifications.initialize(
       initializationSettings,
-      onDidReceiveNotificationResponse: (details) {
-        // TODO: Handle foreground notification tap (deep link)
+      onDidReceiveNotificationResponse: (NotificationResponse details) {
+        // Handle foreground notification tap (deep link)
         _handleDeepLink(details.payload);
       },
     );
 
     // 3. Get Token & Register
-    String? token = await _fcm.getToken();
+    final token = await _fcm.getToken();
     if (token != null) {
       await _registerToken(token);
     }
@@ -80,13 +78,13 @@ class NotificationService {
 
     // 6. Background Message Tap Handler
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-       _handleDeepLink(message.data['deep_link']);
+       _handleDeepLink(message.data['deep_link'] as String?);
     });
     
     // 7. Terminated State Message Check
-    RemoteMessage? initialMessage = await _fcm.getInitialMessage();
+    final initialMessage = await _fcm.getInitialMessage();
     if (initialMessage != null) {
-      _handleDeepLink(initialMessage.data['deep_link']);
+      _handleDeepLink(initialMessage.data['deep_link'] as String?);
     }
   }
 
@@ -95,7 +93,7 @@ class NotificationService {
     if (user == null) return; // 로그인 상태가 아니면 등록하지 않음 (로그인 시 다시 호출 필요)
 
     try {
-      String deviceType = Platform.isAndroid ? 'android' : 'ios';
+      final deviceType = Platform.isAndroid ? 'android' : 'ios';
       // Web 처리는 별도 필요
       
       await _repository.upsertToken(
@@ -104,21 +102,21 @@ class NotificationService {
         deviceType: deviceType,
       );
       _logger.i('FCM Token registered: $token');
-    } catch (e) {
+    } on Object catch (e) {
       _logger.e('Failed to register FCM token', error: e);
     }
   }
 
   Future<void> _showLocalNotification(RemoteMessage message) async {
-    RemoteNotification? notification = message.notification;
-    AndroidNotification? android = message.notification?.android;
+    final notification = message.notification;
+    final android = message.notification?.android;
 
     if (notification != null && android != null) {
       await _localNotifications.show(
         notification.hashCode,
         notification.title,
         notification.body,
-        NotificationDetails(
+        const NotificationDetails(
           android: AndroidNotificationDetails(
             'minglit_channel_default', // Channel ID
             '기본 알림', // Channel Name
@@ -128,7 +126,7 @@ class NotificationService {
             icon: '@mipmap/ic_launcher',
           ),
         ),
-        payload: message.data['deep_link'],
+        payload: message.data['deep_link'] as String?,
       );
     }
   }
@@ -144,7 +142,7 @@ class NotificationService {
   
   // 로그인 성공 시 호출할 메서드
   Future<void> onUserLogin() async {
-    String? token = await _fcm.getToken();
+    final token = await _fcm.getToken();
     if (token != null) {
       await _registerToken(token);
     }

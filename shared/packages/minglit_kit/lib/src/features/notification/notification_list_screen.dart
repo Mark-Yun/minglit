@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:minglit_kit/src/features/notification/notification_list_controller.dart';
-import 'package:minglit_kit/src/ui/theme/minglit_theme.dart';
 import 'package:intl/intl.dart';
+import 'package:minglit_kit/src/features/notification/notification_list_controller.dart';
 
 class NotificationListScreen extends ConsumerWidget {
   const NotificationListScreen({super.key});
@@ -38,11 +37,16 @@ class NotificationListScreen extends ConsumerWidget {
               separatorBuilder: (_, __) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final notification = notifications[index];
-                final isRead = notification['is_read'] as bool;
-                final createdAt = DateTime.parse(notification['created_at']).toLocal();
+                final id = notification['id'] as String;
+                final isRead = notification['is_read'] as bool? ?? false;
+                final title = notification['title'] as String? ?? '';
+                final body = notification['body'] as String? ?? '';
+                final createdAtStr = notification['created_at'] as String;
+                final createdAt = DateTime.parse(createdAtStr).toLocal();
+                final deepLink = notification['deep_link'] as String?;
 
                 return Dismissible(
-                  key: Key(notification['id']),
+                  key: Key(id),
                   direction: DismissDirection.endToStart,
                   background: Container(
                     color: Colors.red,
@@ -52,12 +56,12 @@ class NotificationListScreen extends ConsumerWidget {
                   ),
                   onDismissed: (_) {
                     ref.read(notificationListProvider.notifier)
-                        .deleteNotification(notification['id']);
+                        .deleteNotification(id);
                   },
                   child: ListTile(
                     tileColor: isRead ? null : theme.colorScheme.primary.withOpacity(0.05),
                     title: Text(
-                      notification['title'] ?? '',
+                      title,
                       style: TextStyle(
                         fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
                       ),
@@ -66,7 +70,7 @@ class NotificationListScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 4),
-                        Text(notification['body'] ?? ''),
+                        Text(body),
                         const SizedBox(height: 4),
                         Text(
                           DateFormat('MM/dd HH:mm').format(createdAt),
@@ -76,9 +80,8 @@ class NotificationListScreen extends ConsumerWidget {
                     ),
                     onTap: () {
                       ref.read(notificationListProvider.notifier)
-                          .markAsRead(notification['id']);
+                          .markAsRead(id);
                       
-                      final deepLink = notification['deep_link'];
                       if (deepLink != null && deepLink.isNotEmpty) {
                         // TODO: Use Coordinator or Router to navigate
                         ScaffoldMessenger.of(context).showSnackBar(

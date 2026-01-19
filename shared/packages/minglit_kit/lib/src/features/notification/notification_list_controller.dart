@@ -1,15 +1,12 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:minglit_kit/src/data/repositories/auth_repository.dart';
 import 'package:minglit_kit/src/data/repositories/notification_repository.dart';
 import 'package:minglit_kit/src/features/notification/notification_service.dart';
-import 'package:minglit_kit/src/logic/providers/auth_provider.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-final notificationListProvider = AsyncNotifierProvider.autoDispose<
-    NotificationListController, List<Map<String, dynamic>>>(() {
-  return NotificationListController();
-});
+part 'notification_list_controller.g.dart';
 
-class NotificationListController
-    extends AutoDisposeAsyncNotifier<List<Map<String, dynamic>>> {
+@riverpod
+class NotificationList extends _$NotificationList {
   late final NotificationRepository _repository;
 
   @override
@@ -19,12 +16,12 @@ class NotificationListController
   }
 
   Future<List<Map<String, dynamic>>> _fetchNotifications() async {
-    return await _repository.getNotifications();
+    return _repository.getNotifications();
   }
 
   Future<void> refresh() async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _fetchNotifications());
+    state = await AsyncValue.guard(_fetchNotifications);
   }
 
   Future<void> markAsRead(String id) async {
@@ -33,7 +30,7 @@ class NotificationListController
     state = state.whenData((notifications) {
       return notifications.map((n) {
         if (n['id'] == id) {
-          return {...n, 'is_read': true};
+          return Map<String, dynamic>.from(n)..[ 'is_read' ] = true;
         }
         return n;
       }).toList();
@@ -56,3 +53,5 @@ class NotificationListController
     });
   }
 }
+
+

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:minglit_kit/src/data/repositories/auth_repository.dart';
 import 'package:minglit_kit/src/features/notification/notification_service.dart';
-import 'package:minglit_kit/src/logic/providers/auth_provider.dart';
 
 class NotificationSettingsScreen extends ConsumerStatefulWidget {
   const NotificationSettingsScreen({super.key});
@@ -34,8 +34,8 @@ class _NotificationSettingsScreenState
       if (settings != null) {
         if (mounted) {
           setState(() {
-            _marketingConsent = settings['marketing_consent'] ?? false;
-            _serviceNotification = settings['service_notification'] ?? true;
+            _marketingConsent = (settings['marketing_consent'] as bool?) ?? false;
+            _serviceNotification = (settings['service_notification'] as bool?) ?? true;
             _isLoading = false;
           });
         }
@@ -43,7 +43,7 @@ class _NotificationSettingsScreenState
          // 설정이 없으면 기본값 유지 (이미 user_settings는 트리거로 생성되겠지만, 예외 처리)
          if (mounted) setState(() => _isLoading = false);
       }
-    } catch (e) {
+    } on Object {
       if (mounted) setState(() => _isLoading = false);
       // 에러 처리
     }
@@ -62,7 +62,7 @@ class _NotificationSettingsScreenState
     try {
       final repository = ref.read(notificationRepositoryProvider);
       await repository.updateSettings(user.id, {key: value});
-    } catch (e) {
+    } on Object {
       // Revert on error
       if (mounted) {
         setState(() {

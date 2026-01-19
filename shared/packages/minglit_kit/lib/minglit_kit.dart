@@ -13,6 +13,6 @@ export 'minglit_domain.dart';
 export 'minglit_logic.dart';
 export 'minglit_ui.dart';
 export 'src/features/iamport/iamport.dart';
-export 'src/features/notification/notification_service.dart';
 export 'src/features/notification/notification_list_screen.dart';
+export 'src/features/notification/notification_service.dart';
 export 'src/features/notification/notification_settings_screen.dart';

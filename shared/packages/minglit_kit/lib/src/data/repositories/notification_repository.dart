@@ -1,9 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NotificationRepository {
-  final SupabaseClient _client;
 
   NotificationRepository(this._client);
+  final SupabaseClient _client;
 
   /// FCM 토큰을 서버에 등록하거나 갱신합니다.
   Future<void> upsertToken({
