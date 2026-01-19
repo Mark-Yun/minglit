@@ -1,0 +1,8 @@
+{
+  "track_id": "ticket_recommendation_20260118",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-18T21:40:00+09:00",
+  "updated_at": "2026-01-18T21:40:00+09:00",
+  "description": "파티 입장 조건에 맞는 최적 티켓 자동 추천 및 구매 제한"
+}
