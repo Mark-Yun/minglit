@@ -16,6 +16,7 @@ dependencies:
   # Local Packages
   minglit_kit:
     path: ../../shared/packages/minglit_kit
+  image_picker: ^1.2.1
 
 dev_dependencies:
   flutter_test:

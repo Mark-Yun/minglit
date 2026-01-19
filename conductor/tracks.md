@@ -80,7 +80,7 @@
 
 ---
 
-## [~] 트랙: 파티 참여자 심사 및 환불 관리 시스템 (Application Review System)
+## [ ] 트랙: 파티 참여자 심사 및 환불 관리 시스템 (Application Review System)
 *링크: [./conductor/tracks/application_review_system_20260117/](./conductor/tracks/application_review_system_20260117/)*
 
 ---
@@ -112,3 +112,13 @@
 
 ## [ ] 트랙: 공유하기 시스템 (Sharing System)
 *링크: [./tracks/sharing_system_20260118/](./tracks/sharing_system_20260118/)*
+
+---
+
+## [~] 트랙: 주요 버그 수정: 인증 파일 업로드 에러 (Storage Bucket)
+*링크: [./conductor/tracks/bugfix_storage_bucket_20260118/](./conductor/tracks/bugfix_storage_bucket_20260118/)*
+
+---
+
+## [ ] 트랙: 주요 버그 수정: 파티 신청 및 디테일 데이터 오류
+*링크: [./conductor/tracks/bugfix_event_applications_20260118/](./conductor/tracks/bugfix_event_applications_20260118/)*

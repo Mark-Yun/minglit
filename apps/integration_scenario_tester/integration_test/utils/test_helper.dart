@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -11,10 +12,17 @@ class TestHelper {
   static Future<ProviderContainer> initialize() async {
     IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-    const supabaseUrl = String.fromEnvironment(
+    final defaultUrl = kIsWeb
+        ? 'http://127.0.0.1:54321'
+        : (defaultTargetPlatform == TargetPlatform.android
+            ? 'http://10.0.2.2:54321'
+            : 'http://127.0.0.1:54321');
+
+    final supabaseUrl = const String.fromEnvironment(
       'SUPABASE_URL',
-      defaultValue: 'http://127.0.0.1:54321',
-    );
+    ).isNotEmpty
+        ? const String.fromEnvironment('SUPABASE_URL')
+        : defaultUrl;
     const supabaseAnonKey = String.fromEnvironment(
       'SUPABASE_PUBLISHABLE_KEY',
       defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
