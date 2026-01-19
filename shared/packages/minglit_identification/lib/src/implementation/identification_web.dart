@@ -18,7 +18,7 @@ class IdentificationProviderImpl implements IdentificationProvider {
     String? userPhone,
     String? userName,
   }) async {
-    const storeId = 'MIIiasTest';
+    const storeId = 'store-290628b6-7f96-455d-8856-ae4477d42d5c';
     const channelKey = 'channel-key-dc706c2c-ee6e-4efd-87c6-43729a69ea4a';
 
     // 1. Get Portone object from window (globalContext)
@@ -34,7 +34,7 @@ class IdentificationProviderImpl implements IdentificationProvider {
       if (userName != null && userName.isNotEmpty) customer['name'] = userName;
       if (userPhone != null && userPhone.isNotEmpty) customer['phoneNumber'] = userPhone;
 
-      final optionsMap = {
+      final Map<String, dynamic> optionsMap = {
         'storeId': storeId,
         'channelKey': channelKey,
         'identityVerificationId': merchantUid,

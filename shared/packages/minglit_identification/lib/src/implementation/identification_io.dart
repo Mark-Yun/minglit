@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-// TODO: Verify exact V2 SDK import path
-// import 'package:portone_flutter/portone_flutter.dart';
+// import 'package:portone_flutter/portone_flutter.dart'; // TODO: Verify exact path
 import '../interface/identification_provider.dart';
 
 class IdentificationProviderImpl implements IdentificationProvider {
@@ -12,19 +11,22 @@ class IdentificationProviderImpl implements IdentificationProvider {
     String? userPhone,
     String? userName,
   }) async {
+    // For now, return a mock ID to avoid blocking development.
+    // In real implementation, this will open the Portone V2 widget.
+    debugPrint('IO Verification called for $userName');
+    
+    // Example of how it should look once SDK is verified:
+    /*
+    const channelKey = 'channel-key-dc706c2c-ee6e-4efd-87c6-43729a69ea4a';
+    const storeId = 'store-290628b6-7f96-455d-8856-ae4477d42d5c';
     try {
-      final customer = <String, dynamic>{};
-      if (userName != null && userName.isNotEmpty) customer['name'] = userName;
-      if (userPhone != null && userPhone.isNotEmpty) customer['phoneNumber'] = userPhone;
+       // Open Portone SDK here
+    } catch (e) {
+       debugPrint('Error: $e');
+    }
+    */
 
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => PortoneCheck(
-            storeId: storeId,
-            channelKey: channelKey,
-            paymentId: merchantUid,
-            customer: customer.isEmpty ? null : customer,
-            onResult: (result) {
-
+    await Future.delayed(const Duration(seconds: 1));
+    return 'mock_imp_uid_io';
   }
 }
