@@ -40,7 +40,8 @@ class EventRepository {
       final result = (data as List).map((json) {
         final map = json as Map<String, dynamic>;
 
-        // Fix: If 'user' is a List (due to some Supabase quirk), take the first item or null
+        // Fix: If 'user' is a List (due to some Supabase quirk),
+        // take the first item or null
         if (map['user'] is List) {
           final list = map['user'] as List;
           map['user'] = list.isNotEmpty ? list.first : null;

@@ -47,7 +47,6 @@ dependencies:
   kakao_map_plugin: ^0.3.7
   minglit_kit:
     path: ../../shared/packages/minglit_kit
-  portone_flutter: ^0.12.1
   qr_flutter: ^4.1.0
   riverpod: any
   riverpod_annotation: ^3.0.3

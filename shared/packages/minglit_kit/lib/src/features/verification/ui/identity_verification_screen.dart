@@ -2,19 +2,15 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:minglit_identification/minglit_identification.dart';
-import 'package:minglit_identification/src/implementation/identification_stub.dart'
-    if (dart.library.io) 'package:minglit_identification/src/implementation/identification_io.dart'
-    if (dart.library.js_interop) 'package:minglit_identification/src/implementation/identification_web.dart';
+import 'package:minglit_iamport_v1/minglit_iamport_v1.dart';
 import 'package:minglit_kit/src/data/repositories/identity_repository.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 import 'package:minglit_kit/src/utils/error_ui_handler.dart';
-import 'package:minglit_kit/src/utils/exceptions.dart';
 
 /// **Identity Verification Screen**
 ///
-/// A screen where users verify their real identity via Portone (PASS/SMS).
+/// A screen where users verify their real identity via Iamport (V1).
 class IdentityVerificationScreen extends ConsumerStatefulWidget {
   const IdentityVerificationScreen({super.key});
 
@@ -33,7 +29,7 @@ class _IdentityVerificationScreenState
     super.initState();
     // Auto-start verification after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startVerification();
+      unawaited(_startVerification());
     });
   }
 
@@ -45,10 +41,12 @@ class _IdentityVerificationScreenState
 
     try {
       final merchantUid = 'IDV_${DateTime.now().millisecondsSinceEpoch}';
+      const userCode = 'imp80716769';
 
-      final provider = IdentificationProviderImpl();
-      final verificationId = await provider.verify(
+      final service = getCertificationService();
+      final verificationId = await service.verify(
         context: context,
+        userCode: userCode,
         merchantUid: merchantUid,
       );
 
@@ -60,7 +58,9 @@ class _IdentityVerificationScreenState
         return;
       }
 
-      await ref.read(identityRepositoryProvider).verifyIdentity(
+      await ref
+          .read(identityRepositoryProvider)
+          .verifyIdentity(
             identityVerificationId: verificationId,
           );
 
