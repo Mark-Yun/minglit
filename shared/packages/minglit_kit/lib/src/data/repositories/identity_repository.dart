@@ -13,7 +13,8 @@ class IdentityRepository {
 
   final SupabaseClient _supabase;
 
-  /// Verifies user identity using the Edge Function which interacts with Portone V2.
+  /// Verifies user identity using the Edge Function which interacts
+  /// with Portone V2.
   Future<void> verifyIdentity({
     required String identityVerificationId,
   }) async {

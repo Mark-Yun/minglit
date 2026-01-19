@@ -57,7 +57,8 @@ class CheckinController extends _$CheckinController {
       // 2. Verify with Repository
       final repo = ref.read(checkinRepositoryProvider);
 
-      // TODO(party_checkin_system_20260117): Get actual public key from server
+      // TODO(party_checkin_system_20260117): Get actual public key
+      // from server
       final success = await repo.verifyAndCheckin(
         token: token,
         serverPublicKey: await (await TicketCrypto().generateKeyPair())

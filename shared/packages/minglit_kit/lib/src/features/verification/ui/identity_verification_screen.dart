@@ -50,7 +50,8 @@ class _IdentityVerificationScreenState
       final merchantUid = 'IDV_${DateTime.now().millisecondsSinceEpoch}';
 
       // 1. Open Portone Verification Window
-      // Note: IdentificationProviderImpl is exported from minglit_identification
+      // Note: IdentificationProviderImpl is exported from
+      // minglit_identification
       final provider = IdentificationProviderImpl();
       final verificationId = await provider.verify(
         context: context,
@@ -160,7 +161,7 @@ class _IdentityVerificationScreenState
                           final bd = _birthDate;
                           final text = bd == null
                               ? '생년월일 선택'
-                              : '${bd.year}.${bd.month.toString().padLeft(2, '0')}.${bd.day.toString().padLeft(2, '0')}';
+                              : '''${bd.year}.${bd.month.toString().padLeft(2, '0')}.${bd.day.toString().padLeft(2, '0')}''';
                           return Text(
                             text,
                             style: TextStyle(

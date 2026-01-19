@@ -261,7 +261,8 @@ class _PartnerApplicationDetailPageState
             icon: const Icon(Icons.download, size: MinglitIconSize.small),
             label: Text(context.l10n.appDetail_label_download),
             onPressed: () {
-              // TODO(application_review_system_20260117): Implement file download logic.
+              // TODO(application_review_system_20260117):
+              // Implement file download logic.
             },
           ),
         ],
