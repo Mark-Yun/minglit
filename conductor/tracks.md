@@ -51,7 +51,7 @@
 ---
 
 ## [x] 트랙: 파티 체크인 및 오프라인 QR 시스템 (Party Check-in System)
-*링크: [./conductor/tracks/party_checkin_system_20260117/](./conductor/tracks/party_checkin_system_20260117/)*
+*링크: [./conductor/archive/party_checkin_system_20260117/](./conductor/archive/party_checkin_system_20260117/)*
 
 ---
 
@@ -105,11 +105,6 @@
 
 ---
 
-## [ ] 트랙: 안드로이드 앱 빌드 및 CI/CD 설정
-*링크: [./conductor/tracks/android_build_cicd_20260118/](./conductor/tracks/android_build_cicd_20260118/)*
-
----
-
 ## [ ] 트랙: 공유하기 시스템 (Sharing System)
 *링크: [./tracks/sharing_system_20260118/](./tracks/sharing_system_20260118/)*
 
@@ -127,3 +122,13 @@
 
 ## [ ] 트랙: 파티 상세 페이지 이미지 다중 업로드 및 뷰어 구현
 *링크: [./conductor/tracks/party_image_multiupload_20260118/](./conductor/tracks/party_image_multiupload_20260118/)*
+
+---
+
+## [ ] 트랙: 파티 입장 조건에 맞는 최적 티켓 자동 추천 및 구매 제한
+*링크: [./conductor/tracks/ticket_recommendation_20260118/](./conductor/tracks/ticket_recommendation_20260118/)*
+
+---
+
+## [ ] 트랙: 파티 생성 시 최대 인원 로직 개선 및 티켓 수량 통합
+*링크: [./conductor/tracks/party_creation_logic_refactor_20260118/](./conductor/tracks/party_creation_logic_refactor_20260118/)*

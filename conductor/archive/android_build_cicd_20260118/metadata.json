@@ -1,0 +1,8 @@
+{
+  "track_id": "android_build_cicd_20260118",
+  "type": "chore",
+  "status": "new",
+  "created_at": "2026-01-18T16:00:00+09:00",
+  "updated_at": "2026-01-18T16:00:00+09:00",
+  "description": "안드로이드 앱 빌드 및 cicd 설정"
+}
