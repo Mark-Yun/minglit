@@ -18,7 +18,10 @@
 - **데이터베이스:** PostgreSQL (관계형)
 - **인증:** Supabase Auth (OTP, 본인 확인 기관)
 - **스토리지:** Supabase Storage (유저 에셋, 검증 서류)
-- **배포:** Vercel (Next.js 및 Flutter 웹), GitHub Actions (CI/CD)
+- **배포:**
+  - **Web:** Vercel (Next.js 및 Flutter 웹)
+  - **Android:** Google Play Store (Main), Firebase App Distribution (Dev)
+  - **CI/CD:** GitHub Actions (자동 빌드 및 배포 파이프라인)
 - **AI 및 벡터 검색:**
   - **임베딩:** OpenAI Text Embedding 3 Small
   - **벡터 DB:** pgvector (Supabase)
