@@ -29,7 +29,8 @@ class _TicketQRViewerState extends State<TicketQRViewer>
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
+    );
+    unawaited(_animationController.repeat(reverse: true));
 
     unawaited(_maximizeBrightness());
   }
