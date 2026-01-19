@@ -115,7 +115,7 @@
 
 ---
 
-## [~] 트랙: 주요 버그 수정: 인증 파일 업로드 에러 (Storage Bucket)
+## [x] 트랙: 주요 버그 수정: 인증 파일 업로드 에러 (Storage Bucket)
 *링크: [./conductor/tracks/bugfix_storage_bucket_20260118/](./conductor/tracks/bugfix_storage_bucket_20260118/)*
 
 ---
