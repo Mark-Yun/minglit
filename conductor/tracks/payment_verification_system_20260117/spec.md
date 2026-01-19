@@ -25,9 +25,13 @@
 - PortOne API Key 및 Secret을 Supabase Secret으로 안전하게 관리.
 - 멱등성(Idempotency) 보장: 중복된 Webhook 요청이 와도 안전하게 처리.
 
-## 3. 기술 스택
-- **Server:** Supabase Edge Function (`Deno`).
-- **Payment:** PortOne API V2.
+## 3. 기술 스택 및 아키텍처
+- **Client Package:** `minglit_iamport_v1` (신규)
+    - **Dependency:** `iamport_flutter` (V1).
+    - **Role:** 결제 및 본인인증 창 호출.
+- **Server:** Supabase Edge Function (`verify-payment-v1`).
+- **Payment API:** Iamport API V1 (`api.iamport.kr`).
+    - 인증 방식: Access Token 발급 (`/users/getToken`) 후 Bearer Token 사용.
 
 ## 4. 수락 기준
 - [ ] 클라이언트 결제 후 서버 검증 API가 호출되어야 함.
