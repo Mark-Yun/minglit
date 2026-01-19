@@ -13,41 +13,28 @@ class IdentityRepository {
 
   final SupabaseClient _supabase;
 
-  /// Verifies user identity using mock data for now.
-  ///
-  /// In the future, this will integrate with PASS/SMS verification providers.
+  /// Verifies user identity using the Edge Function which interacts with Portone V2.
   Future<void> verifyIdentity({
-    required String name,
-    required DateTime birthDate,
-    required String gender, // 'male' or 'female'
-    required String phoneNumber,
+    required String identityVerificationId,
   }) async {
     final user = _supabase.auth.currentUser;
     if (user == null) throw const MinglitAuthException('User not logged in');
 
-    // TODO(user): Integrate with real PASS/SMS API provider here.
-    // 1. Send request to provider
-    // 2. Receive CI/DI and verified info
-
-    // For now, we simulate a successful verification by directly updating
-    // the profile.
     try {
-      await _supabase
-          .from('user_profiles')
-          .update({
-            'name': name,
-            'birth_date': birthDate.toIso8601String().split(
-              'T',
-            )[0], // YYYY-MM-DD
-            'gender': gender,
-            'phone_number': phoneNumber,
-            'is_verified': true,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', user.id);
+      Log.d('Calling verify-identity edge function...');
+      
+      final response = await _supabase.functions.invoke(
+        'verify-identity',
+        body: {'identity_verification_id': identityVerificationId},
+      );
 
-      Log.d('✅ Identity Verified for user: ${user.id}');
-    } on PostgrestException catch (e, st) {
+      if (response.status != 200) {
+        throw MinglitException('인증 검증 실패: ${response.data}');
+      }
+
+      Log.d('✅ Identity Verified successfully via Edge Function.');
+    } on Object catch (e, st) {
+      Log.e('❌ [IdentityRepo] verifyIdentity Error', e, st);
       throw MinglitException.from(e, st);
     }
   }
