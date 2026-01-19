@@ -3,6 +3,7 @@ import 'package:minglit_kit/src/data/models/event.dart';
 import 'package:minglit_kit/src/data/models/party.dart';
 import 'package:minglit_kit/src/data/models/party_entry_group.dart';
 import 'package:minglit_kit/src/data/models/ticket.dart';
+import 'package:minglit_kit/src/data/models/ticket_template.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:path/path.dart' as p;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -23,6 +24,30 @@ class PartyRepository {
 
   final SupabaseClient _supabase;
 
+  /// Uploads multiple party images and returns the list of public URLs.
+  Future<List<String>> uploadPartyImages(
+    List<XFile> files,
+    String partnerId,
+  ) async {
+    Log.d(
+      'uploadPartyImages called | partnerId: $partnerId, count: ${files.length}',
+    );
+    try {
+      final urls = <String>[];
+      for (final file in files) {
+        // Reuse single upload logic or inline it
+        // To keep it simple and parallel:
+        final url = await uploadPartyImage(file, partnerId);
+        urls.add(url);
+      }
+      Log.d('uploadPartyImages success | urls: $urls');
+      return urls;
+    } catch (e, st) {
+      Log.e('❌ [PartyRepo] uploadPartyImages Error', e, st);
+      rethrow;
+    }
+  }
+
   /// Uploads a party image and returns the public URL.
   Future<String> uploadPartyImage(XFile file, String partnerId) async {
     Log.d(
@@ -32,7 +57,9 @@ class PartyRepository {
       final extension = p.extension(file.name);
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       // Structure: partner_id/timestamp_filename
-      final path = '$partnerId/$timestamp$extension';
+      // Using a random part to avoid collision if multiple files have same timestamp
+      final random = DateTime.now().microsecond; 
+      final path = '$partnerId/${timestamp}_$random$extension';
       final bytes = await file.readAsBytes();
 
       await _supabase.storage
@@ -47,7 +74,6 @@ class PartyRepository {
           );
 
       final url = _supabase.storage.from('party-assets').getPublicUrl(path);
-      Log.d('uploadPartyImage success | url: $url');
       return url;
     } catch (e, st) {
       Log.e('❌ [PartyRepo] uploadPartyImage Error', e, st);
@@ -55,146 +81,60 @@ class PartyRepository {
     }
   }
 
-  /// Fetches a single party by ID.
-  Future<Party> getPartyById(String partyId) async {
-    Log.d('getPartyById called | partyId: $partyId');
-    try {
-      final data = await _supabase
-          .from('parties')
-          .select(
-            '''*, ticketTemplates:ticket_templates(*), entryGroups:entry_group_templates(*)''',
-          )
-          .eq('id', partyId)
-          .single();
-
-      final result = Party.fromJson(data);
-      Log.d('getPartyById success | title: ${result.title}');
-      return result;
-    } catch (e, st) {
-      Log.e('❌ [PartyRepo] getPartyById Error', e, st);
-      rethrow;
-    }
-  }
-
-  /// Fetches all active parties.
-  Future<List<Party>> getParties() async {
-    Log.d('getParties called');
-    try {
-      final data = await _supabase
-          .from('parties')
-          .select(
-            '''*, location:locations(*), ticketTemplates:ticket_templates(*), entryGroups:entry_group_templates(*)''',
-          )
-          .eq('status', 'active')
-          .order('created_at', ascending: false);
-
-      final result = (data as List<dynamic>)
-          .map((json) => Party.fromJson(json as Map<String, dynamic>))
-          .toList();
-
-      Log.d('getParties success | count: ${result.length}');
-      return result;
-    } catch (e, st) {
-      Log.e('❌ [PartyRepo] getParties Error', e, st);
-      rethrow;
-    }
-  }
-
-  /// Fetches parties for a specific partner.
-  Future<List<Party>> getPartiesByPartnerId(String partnerId) async {
-    Log.d('getPartiesByPartnerId called | partnerId: $partnerId');
-    try {
-      final data = await _supabase
-          .from('parties')
-          .select(
-            '''*, location:locations(*), ticketTemplates:ticket_templates(*), entryGroups:entry_group_templates(*)''',
-          )
-          .eq('partner_id', partnerId)
-          .order('created_at', ascending: false);
-
-      final result = (data as List<dynamic>)
-          .map((json) => Party.fromJson(json as Map<String, dynamic>))
-          .toList();
-
-      Log.d('getPartiesByPartnerId success | count: ${result.length}');
-      return result;
-    } catch (e, st) {
-      Log.e('❌ [PartyRepo] getPartiesByPartnerId Error', e, st);
-      rethrow;
-    }
-  }
-
-  /// Fetches upcoming events for a specific party.
-  Future<List<Event>> getEventsByPartyId(String partyId) async {
-    Log.d('getEventsByPartyId called | partyId: $partyId');
-    try {
-      final data = await _supabase
-          .from('events')
-          .select('*, entryGroups:entry_groups(*)')
-          .eq('party_id', partyId)
-          .gte(
-            'start_time',
-            DateTime.now().toIso8601String(),
-          ) // Future events only
-          .order('start_time', ascending: true);
-
-      final result = (data as List<dynamic>)
-          .map((json) => Event.fromJson(json as Map<String, dynamic>))
-          .toList();
-
-      Log.d('getEventsByPartyId success | count: ${result.length}');
-      return result;
-    } catch (e, st) {
-      Log.e('❌ [PartyRepo] getEventsByPartyId Error', e, st);
-      rethrow;
-    }
-  }
-
-  /// Fetches a single event by ID.
-  Future<Event> getEventById(String eventId) async {
-    Log.d('getEventById called | eventId: $eventId');
-    try {
-      final data = await _supabase
-          .from('events')
-          .select('*, entryGroups:entry_groups(*)')
-          .eq('id', eventId)
-          .single();
-
-      final result = Event.fromJson(data);
-      Log.d('getEventById success | id: ${result.id}');
-      return result;
-    } catch (e, st) {
-      Log.e('❌ [PartyRepo] getEventById Error', e, st);
-      rethrow;
-    }
-  }
-
   /// Creates a new party.
   Future<Party> createParty(Party party) async {
-    Log.d('createParty called | title: ${party.title}');
+    Log.d('createParty called | partnerId: ${party.partnerId}');
     try {
-      final json = party.toDbJson();
+      final partyJson = party.toDbJson();
 
       final data = await _supabase
           .from('parties')
-          .insert(json)
+          .insert(partyJson)
           .select()
           .single();
 
       final createdParty = Party.fromJson(data);
 
-      // Create entry group templates
+      // Create associated ticket templates if provided
+      if (party.ticketTemplates != null && party.ticketTemplates!.isNotEmpty) {
+        final templatesJson = party.ticketTemplates!
+            .map((t) => t.copyWith(partyId: createdParty.id).toDbJson())
+            .toList();
+        await _supabase.from('ticket_templates').insert(templatesJson);
+      }
+
+      // Create associated entry groups if provided
       if (party.entryGroups != null && party.entryGroups!.isNotEmpty) {
         final groupsJson = party.entryGroups!
             .map((g) => g.copyWith(partyId: createdParty.id).toDbJson())
             .toList();
-        await _supabase.from('entry_group_templates').insert(groupsJson);
+        await _supabase.from('entry_groups').insert(groupsJson);
       }
 
       Log.d('createParty success | id: ${createdParty.id}');
       return createdParty;
     } catch (e, st) {
       Log.e('❌ [PartyRepo] createParty Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// Retrieves a party by its ID.
+  Future<Party?> getPartyById(String partyId) async {
+    try {
+      final data = await _supabase
+          .from('parties')
+          .select(
+            '*, location:locations(*), ticket_templates(*), entry_groups(*)',
+          )
+          .eq('id', partyId)
+          .maybeSingle();
+
+      if (data == null) return null;
+
+      return Party.fromJson(data);
+    } catch (e, st) {
+      Log.e('❌ [PartyRepo] getPartyById Error', e, st);
       rethrow;
     }
   }
@@ -221,12 +161,69 @@ class PartyRepository {
     }
   }
 
+  /// Retrieves all parties for a specific partner.
+  Future<List<Party>> getPartiesByPartnerId(String partnerId) async {
+    try {
+      final data = await _supabase
+          .from('parties')
+          .select(
+            '*, location:locations(*), ticket_templates(*), entry_groups(*)',
+          )
+          .eq('partner_id', partnerId)
+          .order('created_at', ascending: false);
+
+      return (data as List)
+          .map((e) => Party.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e, st) {
+      Log.e('❌ [PartyRepo] getPartiesByPartnerId Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// Retrieves all parties (e.g. for admin or dev list).
+  Future<List<Party>> getParties() async {
+    try {
+      final data = await _supabase
+          .from('parties')
+          .select(
+            '*, location:locations(*), ticket_templates(*), entry_groups(*)',
+          )
+          .order('created_at', ascending: false);
+
+      return (data as List)
+          .map((e) => Party.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e, st) {
+      Log.e('❌ [PartyRepo] getParties Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// Retrieves events for a specific party.
+  Future<List<Event>> getEventsByPartyId(String partyId) async {
+    try {
+      final data = await _supabase
+          .from('events')
+          .select('*, entry_groups(*), tickets(*)')
+          .eq('party_id', partyId)
+          .order('start_at', ascending: false);
+
+      return (data as List)
+          .map((e) => Event.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e, st) {
+      Log.e('❌ [PartyRepo] getEventsByPartyId Error', e, st);
+      rethrow;
+    }
+  }
+
   /// Updates basic information of a party.
   Future<void> updatePartyBasicInfo({
     required String partyId,
     required String title,
     required Map<String, dynamic> description,
-    String? imageUrl,
+    List<String>? imageUrls,
   }) async {
     Log.d('updatePartyBasicInfo called | partyId: $partyId, title: $title');
     try {
@@ -235,7 +232,7 @@ class PartyRepository {
           .update({
             'title': title,
             'description': description,
-            'image_url': imageUrl,
+            'image_urls': imageUrls,
             'updated_at': DateTime.now().toIso8601String(),
           })
           .eq('id', partyId);

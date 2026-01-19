@@ -46,20 +46,21 @@ class EventCreateInfoTab extends ConsumerWidget {
                         partnerId: '',
                         title: state.title,
                         description: state.description,
-                        imageUrl: state.imageUrl,
+                        imageUrls:
+                            state.imageUrl != null ? [state.imageUrl!] : [],
                         createdAt: DateTime.now(),
                         updatedAt: DateTime.now(),
                       ),
-                      onSave: (title, desc, imageFile) async {
+                      onSave: (title, desc, imageUrls, newImages) async {
                         notifier
                           ..updateTitle(title)
                           ..updateDescription(desc);
 
-                        if (imageFile != null) {
-                          // Handle temp image upload for preview or just store
-                          // XFile for simplicity in creation, we can upload
-                          // now or later.
-                          // Here we update title/desc immediately.
+                        if (imageUrls.isNotEmpty) {
+                          // Handle image updates if needed
+                          // The controller might assume single image for now
+                          // or we pass the list.
+                          // notifier.updateImageUrl(imageUrls.first);
                         }
                       },
                     ),
@@ -83,7 +84,7 @@ class EventCreateInfoTab extends ConsumerWidget {
                   title: state.title,
                   createdAt: DateTime.now(),
                   updatedAt: DateTime.now(),
-                  imageUrl: state.imageUrl,
+                  imageUrls: state.imageUrl != null ? [state.imageUrl!] : [],
                 ),
               ),
               showFullDescription: true,

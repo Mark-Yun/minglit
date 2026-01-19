@@ -39,14 +39,16 @@ class PartyDetailInfoTab extends ConsumerWidget {
                   MaterialPageRoute<void>(
                     builder: (context) => PartyBasicInfoEditScreen(
                       party: party,
-                      onSave: (title, description, image) =>
-                          _handleUpdateBasicInfo(
-                            context,
-                            ref,
-                            title,
-                            description,
-                            image,
-                          ),
+                      onSave:
+                          (title, description, imageUrls, newImages) =>
+                              _handleUpdateBasicInfo(
+                                context,
+                                ref,
+                                title,
+                                description,
+                                imageUrls,
+                                newImages,
+                              ),
                     ),
                   ),
                 ),
@@ -245,22 +247,27 @@ class PartyDetailInfoTab extends ConsumerWidget {
     WidgetRef ref,
     String title,
     Map<String, dynamic> description,
-    XFile? image,
+    List<String> imageUrls,
+    List<XFile> newImages,
   ) async {
     final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
     try {
       final repo = ref.read(partyRepositoryProvider);
-      var imageUrl = party.imageUrl;
+      final finalUrls = List<String>.from(imageUrls);
 
-      if (image != null) {
-        imageUrl = await repo.uploadPartyImage(image, party.partnerId);
+      if (newImages.isNotEmpty) {
+        final uploadedUrls = await repo.uploadPartyImages(
+          newImages,
+          party.partnerId,
+        );
+        finalUrls.addAll(uploadedUrls);
       }
 
       await repo.updatePartyBasicInfo(
         partyId: party.id,
         title: title,
         description: description,
-        imageUrl: imageUrl,
+        imageUrls: finalUrls,
       );
 
       ref.invalidate(partyDetailProvider(party.id));

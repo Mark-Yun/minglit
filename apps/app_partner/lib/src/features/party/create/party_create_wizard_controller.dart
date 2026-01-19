@@ -26,7 +26,7 @@ abstract class PartyCreateWizardState with _$PartyCreateWizardState {
     // Step 1: Basic Info
     @Default('') String title,
     @Default({}) Map<String, dynamic> description,
-    XFile? imageFile,
+    @Default([]) List<XFile> imageFiles,
 
     // Step 2: Location
     Location? selectedLocation,
@@ -81,7 +81,7 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
   void updateTitle(String value) => state = state.copyWith(title: value);
   void updateDescription(Map<String, dynamic> value) =>
       state = state.copyWith(description: value);
-  void updateImage(XFile? file) => state = state.copyWith(imageFile: file);
+  void updateImages(List<XFile> files) => state = state.copyWith(imageFiles: files);
 
   void updateLocation(Location? loc) =>
       state = state.copyWith(selectedLocation: loc);
@@ -232,12 +232,12 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
         final partyRepo = ref.read(partyRepositoryProvider);
         final locationRepo = ref.read(locationRepositoryProvider);
         final ticketRepo = ref.read(ticketRepositoryProvider);
-        String? imageUrl;
+        List<String> imageUrls = [];
 
-        // 2. Upload Image
-        if (state.imageFile != null) {
-          imageUrl = await partyRepo.uploadPartyImage(
-            state.imageFile!,
+        // 2. Upload Images
+        if (state.imageFiles.isNotEmpty) {
+          imageUrls = await partyRepo.uploadPartyImages(
+            state.imageFiles,
             partnerId,
           );
         }
@@ -290,7 +290,7 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
           maxParticipants: state.maxParticipants,
           contactOptions: contactOptions,
           entryGroups: state.entryGroups,
-          imageUrl: imageUrl,
+          imageUrls: imageUrls,
           requiredVerificationIds: allVerifIds,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),

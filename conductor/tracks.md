@@ -152,7 +152,7 @@
 
 ---
 
-## [ ] 트랙: 파티 상세 페이지 이미지 다중 업로드 및 뷰어 구현
+## [~] 트랙: 파티 상세 페이지 이미지 다중 업로드 및 뷰어 구현
 *링크: [./conductor/tracks/party_image_multiupload_20260118/](./conductor/tracks/party_image_multiupload_20260118/)*
 
 ---

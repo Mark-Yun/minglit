@@ -1,4 +1,5 @@
 import 'package:app_partner/src/features/party/widgets/party_description_input.dart';
+import 'package:app_partner/src/features/party/widgets/party_image_editor.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
@@ -16,7 +17,8 @@ class PartyBasicInfoEditScreen extends ConsumerStatefulWidget {
   final void Function(
     String title,
     Map<String, dynamic> description,
-    XFile? image,
+    List<String> imageUrls,
+    List<XFile> newImages,
   )
   onSave;
 
@@ -30,12 +32,16 @@ class _PartyBasicInfoEditScreenState
   late final TextEditingController _titleController;
   late final quill.QuillController _quillController;
   final _quillFocusNode = FocusNode();
-  XFile? _selectedImage;
+  
+  late List<String> _currentImageUrls;
+  List<XFile> _newImages = [];
 
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.party.title);
+    _currentImageUrls = List<String>.from(widget.party.imageUrls);
+    
     final ops = widget.party.description?['ops'] as List<dynamic>?;
     _quillController = ops != null
         ? quill.QuillController(
@@ -64,7 +70,7 @@ class _PartyBasicInfoEditScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. Image Picker
+            // 1. Image Editor
             Text(
               context.l10n.partyCreate_label_coverImage,
               style: Theme.of(
@@ -72,20 +78,11 @@ class _PartyBasicInfoEditScreenState
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: MinglitSpacing.medium),
-            MinglitFilePicker(
-              label: '이미지 선택',
-              hint: '파티 대표 이미지를 선택해주세요',
-              initialUrls: widget.party.imageUrl != null
-                  ? [widget.party.imageUrl!]
-                  : [],
-              onFilesSelected: (files) {
-                if (files.isNotEmpty) {
-                  setState(() {
-                    _selectedImage = XFile(files.first.path!);
-                  });
-                } else {
-                  setState(() => _selectedImage = null);
-                }
+            PartyImageEditor(
+              imageUrls: _currentImageUrls,
+              onChanged: (urls, files) {
+                _currentImageUrls = urls;
+                _newImages = files;
               },
             ),
             const SizedBox(height: MinglitSpacing.xlarge),
@@ -121,9 +118,14 @@ class _PartyBasicInfoEditScreenState
 
             ElevatedButton(
               onPressed: () {
-                widget.onSave(_titleController.text, {
-                  'ops': _quillController.document.toDelta().toJson(),
-                }, _selectedImage);
+                widget.onSave(
+                  _titleController.text, 
+                  {
+                    'ops': _quillController.document.toDelta().toJson(),
+                  }, 
+                  _currentImageUrls,
+                  _newImages,
+                );
                 Navigator.pop(context);
               },
               child: Text(context.l10n.common_button_save),

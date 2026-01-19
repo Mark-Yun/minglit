@@ -34,7 +34,7 @@ final class NotificationListProvider
   NotificationList create() => NotificationList();
 }
 
-String _$notificationListHash() => r'815fe3ddd882bcd2b0cf9764806633ed4d4b91db';
+String _$notificationListHash() => r'39a78e4fbb4e8bde91cdca2bf4d82e7d53da7c51';
 
 abstract class _$NotificationList
     extends $AsyncNotifier<List<Map<String, dynamic>>> {

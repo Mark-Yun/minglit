@@ -604,6 +604,7 @@ class DatabaseSeeder {
       'location_id': locationId,
       'title': partyData['title'],
       'description': partyData['description'],
+      'image_urls': partyData['image_url'] != null ? [partyData['image_url']] : [],
       'min_confirmed_count': 5,
       'max_participants': 20,
       'required_verification_ids': allVerifIds,

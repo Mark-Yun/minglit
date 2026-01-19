@@ -39,7 +39,7 @@ final class VerificationManageControllerProvider
 }
 
 String _$verificationManageControllerHash() =>
-    r'fd26b42892bf98a4b606018df8cf18a4731c0ea9';
+    r'e5820505429a0b7bdae37f2ecce7d2f65f1f798b';
 
 abstract class _$VerificationManageController
     extends $AsyncNotifier<VerificationManageState> {

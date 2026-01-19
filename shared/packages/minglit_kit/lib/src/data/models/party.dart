@@ -49,6 +49,8 @@ extension LocationDbX on Location {
 /// Represents a party concept/template.
 @freezed
 abstract class Party with _$Party {
+  const Party._();
+
   const factory Party({
     required String id,
     @JsonKey(name: 'partner_id') required String partnerId,
@@ -58,7 +60,7 @@ abstract class Party with _$Party {
     @JsonKey(name: 'location_id') String? locationId,
     @JsonKey(includeToJson: false) Location? location,
     Map<String, dynamic>? description, // Quill Delta JSON
-    @JsonKey(name: 'image_url') String? imageUrl,
+    @JsonKey(name: 'image_urls') @Default([]) List<String> imageUrls,
     @JsonKey(name: 'contact_options')
     @Default({})
     Map<String, dynamic> contactOptions,
@@ -74,6 +76,8 @@ abstract class Party with _$Party {
   }) = _Party;
 
   factory Party.fromJson(Map<String, dynamic> json) => _$PartyFromJson(json);
+
+  String? get imageUrl => imageUrls.firstOrNull;
 }
 
 extension PartyX on Party {

@@ -11,6 +11,8 @@ part 'event.g.dart';
 /// Represents an actual instance of a party.
 @freezed
 abstract class Event with _$Event {
+  const Event._();
+
   const factory Event({
     required String id,
     @JsonKey(name: 'party_id') required String partyId,
@@ -21,6 +23,7 @@ abstract class Event with _$Event {
     @JsonKey(name: 'location_id') String? locationId,
     String? title,
     Map<String, dynamic>? description,
+    @JsonKey(name: 'image_urls') List<String>? imageUrls,
     @JsonKey(name: 'contact_options')
     @Default({})
     Map<String, dynamic> contactOptions,
@@ -54,6 +57,7 @@ abstract class Event with _$Event {
       description: party.description != null
           ? Map<String, dynamic>.from(party.description!)
           : null,
+      imageUrls: null, // Inherit by default
       contactOptions: Map<String, dynamic>.from(party.contactOptions),
       maxParticipants: party.maxParticipants,
       entryGroups: party.entryGroups
@@ -61,6 +65,15 @@ abstract class Event with _$Event {
           .toList(),
     );
   }
+
+  List<String> get effectiveImageUrls {
+    if (imageUrls != null && imageUrls!.isNotEmpty) {
+      return imageUrls!;
+    }
+    return party?.imageUrls ?? [];
+  }
+
+  String? get imageUrl => effectiveImageUrls.firstOrNull;
 }
 
 extension EventX on Event {

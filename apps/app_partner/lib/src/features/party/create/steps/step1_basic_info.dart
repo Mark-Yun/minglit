@@ -1,9 +1,9 @@
 import 'package:app_partner/src/features/party/create/party_create_wizard_controller.dart';
 import 'package:app_partner/src/features/party/widgets/party_description_input.dart';
+import 'package:app_partner/src/features/party/widgets/party_image_editor.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
-import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class Step1BasicInfo extends ConsumerStatefulWidget {
@@ -98,20 +98,12 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
             ),
           ),
           const SizedBox(height: MinglitSpacing.medium),
-          MinglitFilePicker(
-            label: '이미지 선택',
-            hint: '파티 대표 이미지를 선택해주세요',
-            onFilesSelected: (files) {
-              if (files.isNotEmpty) {
-                final file = files.first;
-                ref
-                    .read(partyCreateWizardControllerProvider.notifier)
-                    .updateImage(XFile(file.path!));
-              } else {
-                ref
-                    .read(partyCreateWizardControllerProvider.notifier)
-                    .updateImage(null);
-              }
+          PartyImageEditor(
+            imageUrls: const [], // New parties have no remote URLs
+            onChanged: (urls, files) {
+              ref
+                  .read(partyCreateWizardControllerProvider.notifier)
+                  .updateImages(files);
             },
           ),
         ],

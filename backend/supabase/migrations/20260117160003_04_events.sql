@@ -7,7 +7,7 @@ create table public.parties (
   location_id uuid references public.locations(id) on delete set null,
   title text not null,
   description jsonb,
-  image_url text,
+  image_urls text[] not null default '{}',
   contact_options jsonb default '{}'::jsonb,
   required_verification_ids uuid[] default '{}',
   min_confirmed_count integer not null default 0,
@@ -31,6 +31,7 @@ create table public.events (
   location_id uuid references public.locations(id) on delete set null,
   title text, 
   description jsonb,
+  image_urls text[] default null, -- Null means inherit from party
   contact_options jsonb default '{}'::jsonb,
   start_time timestamptz not null,
   end_time timestamptz not null,

@@ -6,7 +6,11 @@ part 'party_detail_controller.g.dart';
 @riverpod
 Future<Party> partyDetail(Ref ref, String partyId) async {
   final repo = ref.watch(partyRepositoryProvider);
-  return repo.getPartyById(partyId);
+  final party = await repo.getPartyById(partyId);
+  if (party == null) {
+    throw Exception('Party not found: $partyId');
+  }
+  return party;
 }
 
 @riverpod
