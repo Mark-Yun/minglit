@@ -54,7 +54,3 @@ class NotificationList extends _$NotificationList {
     });
   }
 }
-
-
-
-

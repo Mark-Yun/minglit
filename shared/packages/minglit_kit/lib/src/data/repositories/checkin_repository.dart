@@ -64,8 +64,8 @@ class CheckinRepository {
     if (token.expiresAt.isBefore(DateTime.now())) return false;
 
     // 4. Update DB (Simulated)
-    // TODO(party_checkin_system_20260117): Update verification logic
-    // when real server integration is ready.
+    // TODO(Checkin): Update verification logic when real server integration
+    // is ready.
     return true;
   }
 }

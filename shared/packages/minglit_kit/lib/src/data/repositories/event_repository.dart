@@ -29,7 +29,10 @@ class EventRepository {
       final data = await _supabase
           .from('event_applications')
           .select(
-            '*, user:user_profiles(*), submission:verification_submissions(*)',
+            '*, '
+            'user:user_profiles(*), '
+            'submission:'
+            'verification_submissions(*)',
           )
           .eq('event_id', eventId)
           .order('created_at', ascending: false);
