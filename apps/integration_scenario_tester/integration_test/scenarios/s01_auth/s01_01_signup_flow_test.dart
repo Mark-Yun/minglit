@@ -27,10 +27,7 @@ void main() {
         // 2. Perform verification (Mock data)
         try {
           await identityRepo.verifyIdentity(
-            name: 'Test User',
-            birthDate: DateTime(1995, 1, 1),
-            gender: 'male',
-            phoneNumber: '01012345678',
+            identityVerificationId: 'TEST_VERIFICATION_ID',
           );
 
           // 3. Verify success

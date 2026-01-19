@@ -19,21 +19,28 @@ void main() {
       storageRepo = container.read(storageRepositoryProvider);
     });
 
-    testWidgets('Should fail to upload file to missing bucket verification-proofs', (tester) async {
-      final fileData = Uint8List.fromList([1, 2, 3, 4]);
-      final xFile = XFile.fromData(fileData, name: 'test.png', mimeType: 'image/png');
-
-      try {
-        await storageRepo.uploadFile(
-          file: xFile,
-          bucket: 'verification-proofs',
-          pathPrefix: 'test-user-id',
+    testWidgets(
+      'Should fail to upload file to missing bucket verification-proofs',
+      (tester) async {
+        final fileData = Uint8List.fromList([1, 2, 3, 4]);
+        final xFile = XFile.fromData(
+          fileData,
+          name: 'test.png',
+          mimeType: 'image/png',
         );
-        fail('Upload should have failed with 404 Bucket not found');
-      } catch (e) {
-        Log.i('Caught expected error: $e');
-        expect(e.toString(), contains('Bucket not found'));
-      }
-    });
+
+        try {
+          await storageRepo.uploadFile(
+            file: xFile,
+            bucket: 'verification-proofs',
+            pathPrefix: 'test-user-id',
+          );
+          fail('Upload should have failed with 404 Bucket not found');
+        } catch (e) {
+          Log.i('Caught expected error: $e');
+          expect(e.toString(), contains('Bucket not found'));
+        }
+      },
+    );
   });
 }

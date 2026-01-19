@@ -30,10 +30,13 @@
 - **인증 화면:** `IdentityVerificationScreen`을 실제 연동 로직으로 교체.
 - **결과 처리:** 성공 시 스낵바/토스트 피드백 후 화면 닫기.
 
-## 3. 기술 스택
-- **Client:** `portone_flutter` 패키지.
+## 3. 기술 스택 및 아키텍처
+- **Client Package:** `minglit_identification` (신규 패키지)
+    - **Interface:** `IdentificationProvider`
+    - **Implementation:** 조건부 임포트(`dart.library.io` / `dart.library.js`)를 통해 플랫폼별 의존성 분리.
+    - **Dependencies:** `portone_flutter` (IO), `webview_flutter` (IO), `js` (Web).
 - **Server:** Supabase Edge Function (`verify-identity`).
-- **External:** PortOne API.
+- **External:** PortOne API V2.
 
 ## 4. 수락 기준
 - [ ] 유저가 본인인증 버튼을 누르면 PASS/SMS 인증 창이 떠야 함.

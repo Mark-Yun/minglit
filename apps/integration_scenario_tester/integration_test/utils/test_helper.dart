@@ -12,17 +12,17 @@ class TestHelper {
   static Future<ProviderContainer> initialize() async {
     IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-    final defaultUrl = kIsWeb
-        ? 'http://127.0.0.1:54321'
-        : (defaultTargetPlatform == TargetPlatform.android
-            ? 'http://10.0.2.2:54321'
-            : 'http://127.0.0.1:54321');
+    final defaultUrl =
+        kIsWeb
+            ? 'http://127.0.0.1:54321'
+            : (defaultTargetPlatform == TargetPlatform.android
+                ? 'http://10.0.2.2:54321'
+                : 'http://127.0.0.1:54321');
 
-    final supabaseUrl = const String.fromEnvironment(
-      'SUPABASE_URL',
-    ).isNotEmpty
-        ? const String.fromEnvironment('SUPABASE_URL')
-        : defaultUrl;
+    final supabaseUrl =
+        const String.fromEnvironment('SUPABASE_URL').isNotEmpty
+            ? const String.fromEnvironment('SUPABASE_URL')
+            : defaultUrl;
     const supabaseAnonKey = String.fromEnvironment(
       'SUPABASE_PUBLISHABLE_KEY',
       defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',

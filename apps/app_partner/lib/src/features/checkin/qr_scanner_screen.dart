@@ -19,8 +19,8 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
   final MobileScannerController _scannerController = MobileScannerController();
 
   @override
-  void dispose() {
-    _scannerController.dispose();
+  Future<void> dispose() async {
+    await _scannerController.dispose();
     super.dispose();
   }
 
