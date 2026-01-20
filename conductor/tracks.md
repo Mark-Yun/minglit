@@ -100,7 +100,7 @@
 
 ---
 
-## [ ] 트랙: 파일 관리 및 보안 접근 시스템 (Secure File Management System)
+## [x] 트랙: 파일 관리 및 보안 접근 시스템 (Secure File Management System)
 *링크: [./conductor/tracks/secure_file_management_system_20260119/](./conductor/tracks/secure_file_management_system_20260119/)*
 
 ---
@@ -110,7 +110,7 @@
 
 ---
 
-## [ ] 트랙: 유저 앱 결제 UX 및 티켓 발권 흐름 (User Payment & Ticketing Flow)
+## [x] 트랙: 유저 앱 결제 UX 및 티켓 발권 흐름 (User Payment & Ticketing Flow)
 *링크: [./conductor/tracks/user_payment_ticketing_flow_20260119/](./conductor/tracks/user_payment_ticketing_flow_20260119/)*
 
 ---
