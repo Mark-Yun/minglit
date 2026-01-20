@@ -289,7 +289,7 @@ class _VerificationStep extends ConsumerWidget {
               hint: field.placeholder ?? '증빙 서류를 업로드해주세요',
               fileType: FileType.any,
               autoUpload: true,
-              uploadBucket: 'verification_docs',
+              uploadBucket: 'verification-proofs',
               uploadPathPrefix: 'applications/${event.id}',
               onUploadComplete: (urls) {
                 if (urls.isNotEmpty) {
