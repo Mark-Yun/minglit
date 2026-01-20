@@ -6,6 +6,7 @@ import 'package:supabase/supabase.dart';
 import 'package:test/test.dart';
 
 import '../utils/test_config.dart';
+import '../utils/test_helpers.dart';
 
 void main() {
   const testBucket = 'verification-proofs';
@@ -56,50 +57,18 @@ void main() {
   setUpAll(() async {
     print('🚀 [Setup] Fetching seeded data for storage tests...');
 
-    // 1. Find a Normal User (25yo, Male, Verified) by attributes
-    final targetBirthYear = DateTime.now().year - 25 + 1;
-    final userRes = await adminClient
-        .from('user_profiles')
-        .select()
-        .eq('gender', 'male')
-        .eq('birth_date', '$targetBirthYear-01-01')
-        .like('username', '%_ok')
-        .limit(1)
-        .single();
-    testUserId = userRes['id'];
+    // 1. Find a Normal User via Helper
+    testUserId = await getMale25VerifiedUserId(adminClient);
 
-    // 2. Find a Scheduled Event with its Partner Owner
-    final eventRes = await adminClient
-        .from('events')
-        .select('*, tickets(*), party:parties(*, partner:partners(*))')
-        .eq('status', 'scheduled')
-        .limit(1)
-        .single();
-    
-    testEventId = eventRes['id'];
-    testTicketId = (eventRes['tickets'] as List)[0]['id'];
-    
-    final party = eventRes['party'] as Map<String, dynamic>;
-    final partner = party['partner'] as Map<String, dynamic>;
-    testPartnerId = partner['id'];
+    // 2. Find a Scheduled Event via Helper
+    final eventCtx = await findScheduledEvent(adminClient);
+    testEventId = eventCtx.eventId;
+    testTicketId = eventCtx.ticketId;
+    testPartnerId = eventCtx.partnerId;
+    testPartnerOwnerId = eventCtx.ownerId;
 
-    // Find Partner Owner
-    final ownerRes = await adminClient
-        .from('partner_member_permissions')
-        .select('user_id')
-        .eq('partner_id', testPartnerId)
-        .eq('role', 'owner')
-        .single();
-    testPartnerOwnerId = ownerRes['user_id'];
-
-    // 3. Find a Verification ID (Career)
-    final verifRes = await adminClient
-        .from('verifications')
-        .select('id')
-        .eq('category', 'career')
-        .limit(1)
-        .single();
-    testVerificationId = verifRes['id'];
+    // 3. Find a Verification ID
+    testVerificationId = await getCareerVerificationId(adminClient);
 
     // 4. Initialize Clients
     userClient = createUserClient(testUserId);
@@ -219,6 +188,58 @@ void main() {
         reason: 'Random user should be blocked by RLS',
       );
       print('✅ [Test] RLS blocked unauthorized access.');
+    });
+
+    test('SC3: Event Reschedule updates Grant Expiration', () async {
+      // Note: Relies on SC2 having created a grant.
+      // Fetch the grant created in SC2
+      final grantRes = await adminClient
+          .from('file_access_grants')
+          .select('*, file:minglit_files!inner(file_path)')
+          .eq('viewer_id', testPartnerOwnerId)
+          .like('file.file_path', '%/applications/$testEventId/%')
+          .limit(1)
+          .maybeSingle();
+
+      if (grantRes == null) {
+        print('⚠️ SC3 Skipped: No grant found from SC2.');
+        return;
+      }
+
+      final grantId = grantRes['id'];
+      final initialExpires = DateTime.parse(grantRes['expires_at']);
+      print('📅 [Test] Initial Expires: $initialExpires');
+
+      // 1. Reschedule Event (Add 7 days)
+      print('📅 [Test] Rescheduling event (adding 7 days)...');
+      final eventRes =
+          await adminClient.from('events').select('end_time').eq('id', testEventId).single();
+      final currentEnd = DateTime.parse(eventRes['end_time']);
+      final newEnd = currentEnd.add(const Duration(days: 7));
+
+      await adminClient
+          .from('events')
+          .update({'end_time': newEnd.toIso8601String()})
+          .eq('id', testEventId);
+
+      // Wait for trigger
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+
+      // 2. Verify Grant Expiration Updated
+      final updatedGrant = await adminClient
+          .from('file_access_grants')
+          .select('expires_at')
+          .eq('id', grantId)
+          .single();
+      
+      final updatedExpires = DateTime.parse(updatedGrant['expires_at']);
+      print('📅 [Test] Updated Expires: $updatedExpires');
+
+      // Check if updated (should be roughly initial + 7 days)
+      final diff = updatedExpires.difference(initialExpires).inDays;
+      expect(diff, closeTo(7, 1), reason: 'Expiration should be extended by ~7 days');
+      
+      print('✅ [Test] Grant expiration updated successfully.');
     });
   });
 }
