@@ -120,8 +120,8 @@
 
 ---
 
-## [ ] 트랙: 파트너 신청 서류 뷰어 구현 (Partner Application File Viewer)
-*링크: [./conductor/tracks/partner_application_file_viewer_20260119/](./conductor/tracks/partner_application_file_viewer_20260119/)*
+## [x] 트랙: 파트너 신청 서류 뷰어 구현 (Partner Application File Viewer)
+*링크: [./conductor/archive/partner_application_file_viewer_20260119/](./conductor/archive/partner_application_file_viewer_20260119/)*
 
 ---
 

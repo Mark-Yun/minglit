@@ -8,11 +8,13 @@ on conflict (id) do nothing;
 -- 2. RLS Policies for verification-proofs
 
 -- Allow users to upload their own proofs
+-- Path structure: applications/{event_id}/{user_id}/{filename}
 create policy "Users can upload own verification proofs"
 on storage.objects for insert
 with check (
   bucket_id = 'verification-proofs' 
-  and (auth.uid())::text = (storage.foldername(name))[1]
+  and (storage.foldername(name))[1] = 'applications'
+  and (storage.foldername(name))[3] = (auth.uid())::text
 );
 
 -- Allow users to view their own proofs
@@ -20,7 +22,8 @@ create policy "Users can view own verification proofs"
 on storage.objects for select
 using (
   bucket_id = 'verification-proofs' 
-  and (auth.uid())::text = (storage.foldername(name))[1]
+  and (storage.foldername(name))[1] = 'applications'
+  and (storage.foldername(name))[3] = (auth.uid())::text
 );
 
 -- Allow admins/partners to view proofs
