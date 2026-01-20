@@ -46,8 +46,9 @@ class EventCreateInfoTab extends ConsumerWidget {
                         partnerId: '',
                         title: state.title,
                         description: state.description,
-                        imageUrls:
-                            state.imageUrl != null ? [state.imageUrl!] : [],
+                        imageUrls: state.imageUrl != null
+                            ? [state.imageUrl!]
+                            : [],
                         createdAt: DateTime.now(),
                         updatedAt: DateTime.now(),
                       ),

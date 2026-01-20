@@ -30,7 +30,8 @@ class PartyRepository {
     String partnerId,
   ) async {
     Log.d(
-      'uploadPartyImages called | partnerId: $partnerId, count: ${files.length}',
+      'uploadPartyImages called | partnerId: $partnerId, '
+      'count: ${files.length}',
     );
     try {
       final urls = <String>[];
@@ -51,14 +52,16 @@ class PartyRepository {
   /// Uploads a party image and returns the public URL.
   Future<String> uploadPartyImage(XFile file, String partnerId) async {
     Log.d(
-      'uploadPartyImage called | partnerId: $partnerId, file: ${file.name}',
+      'uploadPartyImage called | partnerId: $partnerId, '
+      'file: ${file.name}',
     );
     try {
       final extension = p.extension(file.name);
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       // Structure: partner_id/timestamp_filename
-      // Using a random part to avoid collision if multiple files have same timestamp
-      final random = DateTime.now().microsecond; 
+      // Using a random part to avoid collision if multiple files have 
+      // same timestamp
+      final random = DateTime.now().microsecond;
       final path = '$partnerId/${timestamp}_$random$extension';
       final bytes = await file.readAsBytes();
 

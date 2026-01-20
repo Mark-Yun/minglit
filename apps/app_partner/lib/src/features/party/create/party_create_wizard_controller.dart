@@ -81,7 +81,8 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
   void updateTitle(String value) => state = state.copyWith(title: value);
   void updateDescription(Map<String, dynamic> value) =>
       state = state.copyWith(description: value);
-  void updateImages(List<XFile> files) => state = state.copyWith(imageFiles: files);
+  void updateImages(List<XFile> files) =>
+      state = state.copyWith(imageFiles: files);
 
   void updateLocation(Location? loc) =>
       state = state.copyWith(selectedLocation: loc);
@@ -232,7 +233,7 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
         final partyRepo = ref.read(partyRepositoryProvider);
         final locationRepo = ref.read(locationRepositoryProvider);
         final ticketRepo = ref.read(ticketRepositoryProvider);
-        List<String> imageUrls = [];
+        var imageUrls = <String>[];
 
         // 2. Upload Images
         if (state.imageFiles.isNotEmpty) {

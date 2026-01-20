@@ -49,8 +49,6 @@ extension LocationDbX on Location {
 /// Represents a party concept/template.
 @freezed
 abstract class Party with _$Party {
-  const Party._();
-
   const factory Party({
     required String id,
     @JsonKey(name: 'partner_id') required String partnerId,
@@ -74,6 +72,7 @@ abstract class Party with _$Party {
     @JsonKey(includeToJson: false) Partner? partner,
     @JsonKey(includeToJson: false) List<EntryGroupTemplate>? entryGroups,
   }) = _Party;
+  const Party._();
 
   factory Party.fromJson(Map<String, dynamic> json) => _$PartyFromJson(json);
 

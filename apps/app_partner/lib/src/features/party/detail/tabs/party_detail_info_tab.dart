@@ -39,16 +39,15 @@ class PartyDetailInfoTab extends ConsumerWidget {
                   MaterialPageRoute<void>(
                     builder: (context) => PartyBasicInfoEditScreen(
                       party: party,
-                      onSave:
-                          (title, description, imageUrls, newImages) =>
-                              _handleUpdateBasicInfo(
-                                context,
-                                ref,
-                                title,
-                                description,
-                                imageUrls,
-                                newImages,
-                              ),
+                      onSave: (title, description, imageUrls, newImages) =>
+                          _handleUpdateBasicInfo(
+                            context,
+                            ref,
+                            title,
+                            description,
+                            imageUrls,
+                            newImages,
+                          ),
                     ),
                   ),
                 ),

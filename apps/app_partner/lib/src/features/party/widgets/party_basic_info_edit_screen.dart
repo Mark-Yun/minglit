@@ -32,7 +32,7 @@ class _PartyBasicInfoEditScreenState
   late final TextEditingController _titleController;
   late final quill.QuillController _quillController;
   final _quillFocusNode = FocusNode();
-  
+
   late List<String> _currentImageUrls;
   List<XFile> _newImages = [];
 
@@ -41,7 +41,7 @@ class _PartyBasicInfoEditScreenState
     super.initState();
     _titleController = TextEditingController(text: widget.party.title);
     _currentImageUrls = List<String>.from(widget.party.imageUrls);
-    
+
     final ops = widget.party.description?['ops'] as List<dynamic>?;
     _quillController = ops != null
         ? quill.QuillController(
@@ -119,10 +119,10 @@ class _PartyBasicInfoEditScreenState
             ElevatedButton(
               onPressed: () {
                 widget.onSave(
-                  _titleController.text, 
+                  _titleController.text,
                   {
                     'ops': _quillController.document.toDelta().toJson(),
-                  }, 
+                  },
                   _currentImageUrls,
                   _newImages,
                 );

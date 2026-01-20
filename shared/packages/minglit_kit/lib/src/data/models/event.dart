@@ -11,8 +11,6 @@ part 'event.g.dart';
 /// Represents an actual instance of a party.
 @freezed
 abstract class Event with _$Event {
-  const Event._();
-
   const factory Event({
     required String id,
     @JsonKey(name: 'party_id') required String partyId,
@@ -35,6 +33,7 @@ abstract class Event with _$Event {
     @JsonKey(includeToJson: false) List<Ticket>? tickets,
     @JsonKey(includeToJson: false) List<EntryGroup>? entryGroups,
   }) = _Event;
+  const Event._();
 
   factory Event.fromJson(Map<String, dynamic> json) => _$EventFromJson(json);
 
@@ -57,7 +56,6 @@ abstract class Event with _$Event {
       description: party.description != null
           ? Map<String, dynamic>.from(party.description!)
           : null,
-      imageUrls: null, // Inherit by default
       contactOptions: Map<String, dynamic>.from(party.contactOptions),
       maxParticipants: party.maxParticipants,
       entryGroups: party.entryGroups
