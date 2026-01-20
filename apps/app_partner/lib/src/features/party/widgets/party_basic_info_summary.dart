@@ -8,8 +8,8 @@ class PartyBasicInfoSummary extends StatefulWidget {
   const PartyBasicInfoSummary({
     required this.title,
     required this.description,
-    this.imageFile,
-    this.imageUrl,
+    this.imageFiles = const [],
+    this.imageUrls = const [],
     this.showFullDescription = false,
     this.showTitle = true,
     this.viewOnly = true,
@@ -19,8 +19,8 @@ class PartyBasicInfoSummary extends StatefulWidget {
 
   final String title;
   final Map<String, dynamic> description;
-  final XFile? imageFile;
-  final String? imageUrl;
+  final List<XFile> imageFiles;
+  final List<String> imageUrls;
   final bool showFullDescription;
   final bool showTitle;
   final bool viewOnly;
@@ -65,21 +65,22 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
         ops.isEmpty ||
         (ops.length == 1 && (ops[0] as Map<String, dynamic>)['insert'] == '\n');
 
-    final imagePath = widget.imageFile?.path ?? widget.imageUrl;
+    final combinedPaths = [
+      ...widget.imageUrls,
+      ...widget.imageFiles.map((f) => f.path),
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (imagePath != null && imagePath.isNotEmpty)
+        if (combinedPaths.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(bottom: MinglitSpacing.medium),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(MinglitRadius.card),
-              child: MinglitImage(
-                path: imagePath,
-                height: 160,
-                width: double.infinity,
-                fit: BoxFit.cover,
+              child: MinglitImageCarousel(
+                imageUrls: combinedPaths,
+                height: 200,
               ),
             ),
           ),

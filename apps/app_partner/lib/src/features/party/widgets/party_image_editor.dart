@@ -177,14 +177,12 @@ class _PartyImageEditorState extends State<PartyImageEditor> {
     if (url != null) {
       imageProvider = NetworkImage(url);
     } else {
+      // In Web, XFile.path is a blob URL. In Mobile, it's a local path.
+      // Image.network works for blob URLs on Web.
+      // For Mobile, we'd usually use FileImage, but since we are web-first,
+      // let's handle it gracefully.
       if (kIsWeb) {
-        // Handle web bytes if needed, for now use name placeholder or
-        // assuming file.path works in some configs
-        // Actually XFile.path works for previews in many cases but
-        // let's be safe.
-        imageProvider = const NetworkImage(
-          'https://via.placeholder.com/100',
-        ); // Fallback
+        imageProvider = NetworkImage(file!.path);
       } else {
         imageProvider = FileImage(File(file!.path));
       }
@@ -198,6 +196,7 @@ class _PartyImageEditorState extends State<PartyImageEditor> {
             width: 100,
             height: 100,
             decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(MinglitRadius.small),
               image: DecorationImage(
                 image: imageProvider,

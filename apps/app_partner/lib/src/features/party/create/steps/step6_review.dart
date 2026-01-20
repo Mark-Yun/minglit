@@ -50,7 +50,7 @@ class Step6Review extends ConsumerWidget {
             child: PartyBasicInfoSummary(
               title: state.title,
               description: state.description,
-              imageFile: state.imageFiles.firstOrNull,
+              imageFiles: state.imageFiles,
               collapsible: true,
             ),
           ),

@@ -56,7 +56,7 @@ class PartyDetailInfoTab extends ConsumerWidget {
             child: PartyBasicInfoSummary(
               title: party.title,
               description: party.description ?? {},
-              imageUrl: party.imageUrl,
+              imageUrls: party.imageUrls,
               showFullDescription: true,
             ),
           ),

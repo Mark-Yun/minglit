@@ -61,22 +61,9 @@ class _EventDetailContent extends ConsumerWidget {
             expandedHeight: 300,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
-              background:
-                  (party?.imageUrl != null && party!.imageUrl!.isNotEmpty)
-                  ? MinglitImage(
-                      path: party.imageUrl!,
-                      fit: BoxFit.cover,
-                    )
-                  : ColoredBox(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      child: Center(
-                        child: Icon(
-                          Icons.image_not_supported_outlined,
-                          size: 48,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
+              background: MinglitImageCarousel(
+                imageUrls: party?.imageUrls ?? [],
+              ),
             ),
             leading: BackButton(color: theme.colorScheme.onPrimary),
             actions: [
