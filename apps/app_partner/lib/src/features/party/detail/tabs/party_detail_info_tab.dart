@@ -39,15 +39,17 @@ class PartyDetailInfoTab extends ConsumerWidget {
                   MaterialPageRoute<void>(
                     builder: (context) => PartyBasicInfoEditScreen(
                       party: party,
-                      onSave: (title, description, imageUrls, newImages) =>
-                          _handleUpdateBasicInfo(
-                            context,
-                            ref,
-                            title,
-                            description,
-                            imageUrls,
-                            newImages,
-                          ),
+                      onSave:
+                          (title, description, imageUrls, newImages, status) =>
+                              _handleUpdateBasicInfo(
+                                context,
+                                ref,
+                                title,
+                                description,
+                                imageUrls,
+                                newImages,
+                                status,
+                              ),
                     ),
                   ),
                 ),
@@ -57,6 +59,7 @@ class PartyDetailInfoTab extends ConsumerWidget {
               title: party.title,
               description: party.description ?? {},
               imageUrls: party.imageUrls,
+              status: party.status,
               showFullDescription: true,
             ),
           ),
@@ -106,7 +109,7 @@ class PartyDetailInfoTab extends ConsumerWidget {
           ),
           const SizedBox(height: MinglitSpacing.large),
 
-          // 3. Entrance Conditions
+          // 4. Entrance Conditions
           MinglitEditableSection(
             title: context.l10n.partyDetail_section_entranceCondition,
             onTap: () => _showEntranceConditionsEdit(context, ref, party),
@@ -116,7 +119,7 @@ class PartyDetailInfoTab extends ConsumerWidget {
           ),
           const SizedBox(height: MinglitSpacing.large),
 
-          // 4. Location Summary
+          // 6. Location Summary
           MinglitEditableSection(
             title: context.l10n.partyDetail_section_location,
             onTap: () {
@@ -248,6 +251,7 @@ class PartyDetailInfoTab extends ConsumerWidget {
     Map<String, dynamic> description,
     List<String> imageUrls,
     List<XFile> newImages,
+    String status,
   ) async {
     final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
     try {
@@ -267,6 +271,7 @@ class PartyDetailInfoTab extends ConsumerWidget {
         title: title,
         description: description,
         imageUrls: finalUrls,
+        status: status,
       );
 
       ref.invalidate(partyDetailProvider(party.id));

@@ -58,7 +58,7 @@ final class PartyDetailProvider
   }
 }
 
-String _$partyDetailHash() => r'ab0009671554222be57d7b0fd571773c3245cb2c';
+String _$partyDetailHash() => r'f5472e03f166441d62e902e46f9652f8fbba70fb';
 
 final class PartyDetailFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Party>, String> {

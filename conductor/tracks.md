@@ -105,7 +105,7 @@
 
 ---
 
-## [ ] 트랙: 파트너 파티/티켓 관리 시스템 (Partner Party Management)
+## [~] 트랙: 파트너 파티/티켓 관리 시스템 (Partner Party Management)
 *링크: [./conductor/tracks/partner_party_management_20260117/](./conductor/tracks/partner_party_management_20260117/)*
 
 ---

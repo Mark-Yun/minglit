@@ -21,24 +21,37 @@ class TicketEditPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isTemplate = eventId.isEmpty;
     final partyAsync = ref.watch(partyDetailProvider(partyId));
-    final ticketAsync = ref.watch(ticketDetailProvider(ticketId));
+
+    // Dynamic AsyncValue based on mode
+    final ticketAsync =
+        isTemplate
+            ? ref.watch(ticketTemplateDetailProvider(ticketId)).whenData(
+              (TicketTemplate template) =>
+                  Ticket.createFromTemplate(template, id: template.id),
+            )
+            : ref.watch(ticketDetailProvider(ticketId));
 
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(title: context.l10n.ticket_title_edit),
       body: MinglitAsyncValueWidget(
         value: ticketAsync,
-        error: (Object e, StackTrace s) => Center(
-          child: Text(context.l10n.partyDetail_error_ticketLoad(e.toString())),
-        ),
+        error:
+            (Object e, StackTrace s) => Center(
+              child: Text(
+                context.l10n.partyDetail_error_ticketLoad(e.toString()),
+              ),
+            ),
         data: (Ticket ticket) {
           return MinglitAsyncValueWidget(
             value: partyAsync,
-            error: (Object e, StackTrace s) => Center(
-              child: Text(
-                context.l10n.partyDetail_error_partyLoad(e.toString()),
-              ),
-            ),
+            error:
+                (Object e, StackTrace s) => Center(
+                  child: Text(
+                    context.l10n.partyDetail_error_partyLoad(e.toString()),
+                  ),
+                ),
             data: (Party party) {
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(MinglitSpacing.medium),
@@ -46,44 +59,65 @@ class TicketEditPage extends ConsumerWidget {
                   initialTicket: ticket,
                   entryGroups: party.entryGroups ?? [],
                   submitButtonLabel: context.l10n.ticket_button_edit,
-                  onSaved:
-                      ({
-                        required String name,
-                        required int price,
-                        required int quantity,
-                        required List<String> targetEntryGroupIds,
-                      }) async {
-                        await ref
-                            .read(ticketControllerProvider.notifier)
-                            .updateTicket(
-                              ticket: ticket,
-                              name: name,
-                              price: price,
-                              quantity: quantity,
-                              targetEntryGroupIds: targetEntryGroupIds,
-                            );
+                  onSaved: ({
+                    required String name,
+                    required int price,
+                    required int quantity,
+                    required List<String> targetEntryGroupIds,
+                  }) async {
+                    if (isTemplate) {
+                      // Update Template
+                      final template =
+                          ref
+                              .read(ticketTemplateDetailProvider(ticketId))
+                              .value!;
 
-                        final updatedState = ref.read(ticketControllerProvider);
-                        if (!updatedState.hasError && context.mounted) {
-                          context
-                            ..pop()
-                            ..showMinglitSuccess(
-                              context.l10n.ticket_message_updated,
-                            );
-                          ref.invalidate(ticketDetailProvider(ticketId));
-                          if (eventId.isNotEmpty) {
-                            ref.invalidate(eventTicketsProvider(eventId));
-                          } else {
-                            ref.invalidate(partyTicketsProvider(partyId));
-                          }
-                        } else if (updatedState.hasError && context.mounted) {
-                          handleMinglitError(
-                            context,
-                            updatedState.error!,
-                            updatedState.stackTrace,
+                      await ref
+                          .read(ticketControllerProvider.notifier)
+                          .updateTicketTemplate(
+                            template: template,
+                            name: name,
+                            price: price,
+                            quantity: quantity,
+                            targetEntryGroupIds: targetEntryGroupIds,
                           );
-                        }
-                      },
+                    } else {
+                      // Update Ticket Instance
+                      await ref
+                          .read(ticketControllerProvider.notifier)
+                          .updateTicket(
+                            ticket: ticket,
+                            name: name,
+                            price: price,
+                            quantity: quantity,
+                            targetEntryGroupIds: targetEntryGroupIds,
+                          );
+                    }
+
+                    final updatedState = ref.read(ticketControllerProvider);
+                    if (!updatedState.hasError && context.mounted) {
+                      context
+                        ..pop()
+                        ..showMinglitSuccess(
+                          context.l10n.ticket_message_updated,
+                        );
+
+                                                if (isTemplate) {
+                                                  ref
+                                                    ..invalidate(ticketTemplateDetailProvider(ticketId))
+                                                    ..invalidate(partyTicketsProvider(partyId));
+                                                } else {
+                                                  ref
+                                                    ..invalidate(ticketDetailProvider(ticketId))
+                                                    ..invalidate(eventTicketsProvider(eventId));
+                                                }                    } else if (updatedState.hasError && context.mounted) {
+                      handleMinglitError(
+                        context,
+                        updatedState.error!,
+                        updatedState.stackTrace,
+                      );
+                    }
+                  },
                 ),
               );
             },

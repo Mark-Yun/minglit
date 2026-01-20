@@ -59,7 +59,7 @@ class PartyRepository {
       final extension = p.extension(file.name);
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       // Structure: partner_id/timestamp_filename
-      // Using a random part to avoid collision if multiple files have 
+      // Using a random part to avoid collision if multiple files have
       // same timestamp
       final random = DateTime.now().microsecond;
       final path = '$partnerId/${timestamp}_$random$extension';
@@ -128,7 +128,8 @@ class PartyRepository {
       final data = await _supabase
           .from('parties')
           .select(
-            '*, location:locations(*), ticket_templates(*), entry_groups(*)',
+            '*, location:locations(*), '
+            'ticket_templates(*), entry_group_templates(*)',
           )
           .eq('id', partyId)
           .maybeSingle();
@@ -170,7 +171,8 @@ class PartyRepository {
       final data = await _supabase
           .from('parties')
           .select(
-            '*, location:locations(*), ticket_templates(*), entry_groups(*)',
+            '*, location:locations(*), '
+            'ticket_templates(*), entry_group_templates(*)',
           )
           .eq('partner_id', partnerId)
           .order('created_at', ascending: false);
@@ -190,7 +192,8 @@ class PartyRepository {
       final data = await _supabase
           .from('parties')
           .select(
-            '*, location:locations(*), ticket_templates(*), entry_groups(*)',
+            '*, location:locations(*), '
+            'ticket_templates(*), entry_group_templates(*)',
           )
           .order('created_at', ascending: false);
 
@@ -210,7 +213,7 @@ class PartyRepository {
           .from('events')
           .select('*, entry_groups(*), tickets(*)')
           .eq('party_id', partyId)
-          .order('start_at', ascending: false);
+          .order('start_time', ascending: false);
 
       return (data as List)
           .map((e) => Event.fromJson(e as Map<String, dynamic>))
@@ -227,18 +230,22 @@ class PartyRepository {
     required String title,
     required Map<String, dynamic> description,
     List<String>? imageUrls,
+    String? status,
   }) async {
     Log.d('updatePartyBasicInfo called | partyId: $partyId, title: $title');
     try {
-      await _supabase
-          .from('parties')
-          .update({
-            'title': title,
-            'description': description,
-            'image_urls': imageUrls,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', partyId);
+      final updates = {
+        'title': title,
+        'description': description,
+        'image_urls': imageUrls,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      if (status != null) {
+        updates['status'] = status;
+      }
+
+      await _supabase.from('parties').update(updates).eq('id', partyId);
       Log.d('updatePartyBasicInfo success');
     } catch (e, st) {
       Log.e('❌ [PartyRepo] updatePartyBasicInfo Error', e, st);

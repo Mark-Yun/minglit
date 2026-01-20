@@ -68,10 +68,45 @@ class TicketController extends _$TicketController {
       loading.hide();
     }
   }
+
+  Future<void> updateTicketTemplate({
+    required TicketTemplate template,
+    String? name,
+    int? price,
+    int? quantity,
+    List<String>? targetEntryGroupIds,
+  }) async {
+    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
+    try {
+      final repo = ref.read(ticketRepositoryProvider);
+
+      final updatedTemplate = template.copyWith(
+        name: name ?? template.name,
+        price: price ?? template.price,
+        quantity: quantity ?? template.quantity,
+        targetEntryGroupIds:
+            targetEntryGroupIds ?? template.targetEntryGroupIds,
+        updatedAt: DateTime.now(),
+      );
+
+      await repo.updateTicketTemplate(updatedTemplate);
+      state = const AsyncData(null);
+    } on Object catch (e, st) {
+      state = AsyncError(e, st);
+    } finally {
+      loading.hide();
+    }
+  }
 }
 
 @riverpod
 Future<Ticket> ticketDetail(Ref ref, String ticketId) async {
   final repo = ref.watch(ticketRepositoryProvider);
   return repo.getTicketById(ticketId);
+}
+
+@riverpod
+Future<TicketTemplate> ticketTemplateDetail(Ref ref, String templateId) async {
+  final repo = ref.watch(ticketRepositoryProvider);
+  return repo.getTicketTemplateById(templateId);
 }

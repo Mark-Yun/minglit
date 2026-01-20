@@ -46,23 +46,16 @@ class EventCreateInfoTab extends ConsumerWidget {
                         partnerId: '',
                         title: state.title,
                         description: state.description,
-                        imageUrls: state.imageUrl != null
-                            ? [state.imageUrl!]
-                            : [],
+                        // Default for event creation
+                        imageUrls:
+                            state.imageUrl != null ? [state.imageUrl!] : [],
                         createdAt: DateTime.now(),
                         updatedAt: DateTime.now(),
                       ),
-                      onSave: (title, desc, imageUrls, newImages) async {
+                      onSave: (title, desc, imageUrls, newImages, status) {
                         notifier
                           ..updateTitle(title)
                           ..updateDescription(desc);
-
-                        if (imageUrls.isNotEmpty) {
-                          // Handle image updates if needed
-                          // The controller might assume single image for now
-                          // or we pass the list.
-                          // notifier.updateImageUrl(imageUrls.first);
-                        }
                       },
                     ),
                   ),
@@ -88,7 +81,6 @@ class EventCreateInfoTab extends ConsumerWidget {
                   imageUrls: state.imageUrl != null ? [state.imageUrl!] : [],
                 ),
               ),
-              showFullDescription: true,
             ),
           ),
           const SizedBox(height: MinglitSpacing.large),
@@ -168,9 +160,8 @@ class EventCreateInfoTab extends ConsumerWidget {
             title: context.l10n.partyDetail_section_entranceCondition,
             onTap: () {}, // Event Entry Groups are read-only for now
             child: PartyEntranceConditionSummary(
-              entryGroups: state.entryGroups
-                  .map((e) => e.toTemplate())
-                  .toList(),
+              entryGroups:
+                  state.entryGroups.map((e) => e.toTemplate()).toList(),
             ),
           ),
         ],

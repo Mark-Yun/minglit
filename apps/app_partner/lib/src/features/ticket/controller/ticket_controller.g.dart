@@ -33,7 +33,7 @@ final class TicketControllerProvider
   TicketController create() => TicketController();
 }
 
-String _$ticketControllerHash() => r'd56796440a462caf994405d18fd4a504eb8221ed';
+String _$ticketControllerHash() => r'e8bb8985c60c5dd93c52daf6a7e61fa7fbe1556e';
 
 abstract class _$TicketController extends $AsyncNotifier<void> {
   FutureOr<void> build();
@@ -121,4 +121,80 @@ final class TicketDetailFamily extends $Family
 
   @override
   String toString() => r'ticketDetailProvider';
+}
+
+@ProviderFor(ticketTemplateDetail)
+const ticketTemplateDetailProvider = TicketTemplateDetailFamily._();
+
+final class TicketTemplateDetailProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<TicketTemplate>,
+          TicketTemplate,
+          FutureOr<TicketTemplate>
+        >
+    with $FutureModifier<TicketTemplate>, $FutureProvider<TicketTemplate> {
+  const TicketTemplateDetailProvider._({
+    required TicketTemplateDetailFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'ticketTemplateDetailProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$ticketTemplateDetailHash();
+
+  @override
+  String toString() {
+    return r'ticketTemplateDetailProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<TicketTemplate> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<TicketTemplate> create(Ref ref) {
+    final argument = this.argument as String;
+    return ticketTemplateDetail(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is TicketTemplateDetailProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$ticketTemplateDetailHash() =>
+    r'8e1899257ae0a44a4abf58ca478576dfa2a8bdb0';
+
+final class TicketTemplateDetailFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<TicketTemplate>, String> {
+  const TicketTemplateDetailFamily._()
+    : super(
+        retry: null,
+        name: r'ticketTemplateDetailProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  TicketTemplateDetailProvider call(String templateId) =>
+      TicketTemplateDetailProvider._(argument: templateId, from: this);
+
+  @override
+  String toString() => r'ticketTemplateDetailProvider';
 }

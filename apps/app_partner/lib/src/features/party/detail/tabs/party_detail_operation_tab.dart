@@ -72,7 +72,10 @@ class PartyDetailOperationTab extends ConsumerWidget {
             child: MinglitAsyncValueWidget(
               value: ticketsAsync,
               data: (templates) => PartyTicketsSummary(
-                tickets: templates.map(Ticket.createFromTemplate).toList(),
+                tickets:
+                    templates
+                        .map((t) => Ticket.createFromTemplate(t, id: t.id))
+                        .toList(),
                 entryGroups: party.entryGroups ?? [],
                 maxCapacity: party.maxParticipants,
                 showStats: false,

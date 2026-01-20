@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-/// A standardized dialog widget for Minglit applications that supports custom content.
+/// A standardized dialog widget for Minglit applications 
+/// that supports custom content.
 class MinglitDialog extends StatelessWidget {
   const MinglitDialog({
     required this.title,

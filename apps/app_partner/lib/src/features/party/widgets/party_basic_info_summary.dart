@@ -10,6 +10,7 @@ class PartyBasicInfoSummary extends StatefulWidget {
     required this.description,
     this.imageFiles = const [],
     this.imageUrls = const [],
+    this.status,
     this.showFullDescription = false,
     this.showTitle = true,
     this.viewOnly = true,
@@ -21,6 +22,7 @@ class PartyBasicInfoSummary extends StatefulWidget {
   final Map<String, dynamic> description;
   final List<XFile> imageFiles;
   final List<String> imageUrls;
+  final String? status;
   final bool showFullDescription;
   final bool showTitle;
   final bool viewOnly;
@@ -70,6 +72,22 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
       ...widget.imageFiles.map((f) => f.path),
     ];
 
+    String? statusLabel;
+    Color? statusColor;
+    if (widget.status != null) {
+      switch (widget.status) {
+        case 'active':
+          statusLabel = '운영중';
+          statusColor = MinglitColors.primary;
+        case 'draft':
+          statusLabel = '임시저장';
+          statusColor = colorScheme.outline;
+        case 'closed':
+          statusLabel = '종료됨';
+          statusColor = MinglitColors.error;
+      }
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -84,15 +102,49 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
               ),
             ),
           ),
+
         if (widget.showTitle)
-          Text(
-            widget.title.isEmpty
-                ? context.l10n.wizard_review_noTitle
-                : widget.title,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: widget.title.isEmpty ? colorScheme.onSurfaceVariant : null,
-            ),
+          Row(
+            children: [
+              if (statusLabel != null)
+                Padding(
+                  padding: const EdgeInsets.only(right: MinglitSpacing.small),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: statusColor!.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(MinglitRadius.small),
+                      border: Border.all(
+                        color: statusColor.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Text(
+                      statusLabel,
+                      style: TextStyle(
+                        color: statusColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              Expanded(
+                child: Text(
+                  widget.title.isEmpty
+                      ? context.l10n.wizard_review_noTitle
+                      : widget.title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: widget.title.isEmpty
+                        ? colorScheme.onSurfaceVariant
+                        : null,
+                  ),
+                ),
+              ),
+            ],
           ),
         if (widget.showTitle) const SizedBox(height: MinglitSpacing.small),
 
