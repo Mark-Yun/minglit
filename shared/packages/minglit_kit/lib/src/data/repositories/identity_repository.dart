@@ -14,7 +14,7 @@ class IdentityRepository {
   final SupabaseClient _supabase;
 
   /// Verifies user identity using the Edge Function which interacts
-  /// with Portone V2.
+  /// with Iamport V1.
   Future<void> verifyIdentity({
     required String identityVerificationId,
   }) async {
@@ -22,10 +22,10 @@ class IdentityRepository {
     if (user == null) throw const MinglitAuthException('User not logged in');
 
     try {
-      Log.d('Calling verify-identity edge function...');
+      Log.d('Calling verify-identity-v1 edge function...');
 
       final response = await _supabase.functions.invoke(
-        'verify-identity',
+        'verify-identity-v1',
         body: {'identity_verification_id': identityVerificationId},
       );
 
