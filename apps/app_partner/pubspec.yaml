@@ -47,6 +47,8 @@ dependencies:
   kakao_map_plugin: ^0.3.7
   minglit_kit:
     path: ../../shared/packages/minglit_kit
+  mobile_scanner: any
+  path: any
   riverpod: ^3.0.3
   riverpod_annotation: ^3.0.3
   shared_preferences: ^2.5.4
@@ -55,7 +57,6 @@ dependencies:
   uuid: ^4.5.2
   web: ^1.1.1
 
-  mobile_scanner: any
 dev_dependencies:
   build_runner: ^2.10.4
   custom_lint: ^0.8.1

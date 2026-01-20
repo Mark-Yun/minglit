@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:path/path.dart' as p;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 part 'partner_application_detail_page.g.dart';
 
@@ -58,6 +60,7 @@ class _PartnerApplicationDetailPageState
   final TextEditingController _commentController = TextEditingController();
 
   Future<void> _processReview({required String status, String? comment}) async {
+    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
     try {
       await ref
           .read(partnerRepositoryProvider)
@@ -71,13 +74,69 @@ class _PartnerApplicationDetailPageState
       context.showMinglitSuccess(
         context.l10n.appDetail_message_processed(status),
       );
-      // Refresh the provider to show updated status
       ref.invalidate(
         partnerApplicationProvider(applicationId: widget.applicationId),
       );
     } on Object catch (e, st) {
       if (!mounted) return;
       handleMinglitError(context, e, st);
+    } finally {
+      loading.hide();
+    }
+  }
+
+  Future<void> _openFile(String path) async {
+    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
+    try {
+      final signedUrl = await ref
+          .read(partnerRepositoryProvider)
+          .getSignedUrl(path);
+      final extension = p.extension(path).toLowerCase();
+
+      if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].contains(extension)) {
+        if (!mounted) return;
+        await showDialog<void>(
+          context: context,
+          builder: (context) => Dialog(
+            backgroundColor: Colors.black,
+            insetPadding: EdgeInsets.zero,
+            child: Stack(
+              children: [
+                InteractiveViewer(
+                  minScale: 0.5,
+                  maxScale: 4,
+                  child: Center(child: Image.network(signedUrl)),
+                ),
+                Positioned(
+                  top: 40,
+                  right: 20,
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 32,
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      } else {
+        final uri = Uri.parse(signedUrl);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          throw Exception('Could not launch $signedUrl');
+        }
+      }
+    } on Object catch (e, st) {
+      if (mounted) {
+        handleMinglitError(context, e, st);
+      }
+    } finally {
+      loading.hide();
     }
   }
 
@@ -258,11 +317,12 @@ class _PartnerApplicationDetailPageState
             ),
           ),
           TextButton.icon(
-            icon: const Icon(Icons.download, size: MinglitIconSize.small),
+            icon: const Icon(
+              Icons.visibility_outlined,
+              size: MinglitIconSize.small,
+            ),
             label: Text(context.l10n.appDetail_label_download),
-            onPressed: () {
-              // TODO(Admin): Implement file download logic.
-            },
+            onPressed: () => unawaited(_openFile(path)),
           ),
         ],
       ),

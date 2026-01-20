@@ -318,6 +318,21 @@ class PartnerRepository {
     }
   }
 
+  /// Generates a signed URL for a file in the partner-proofs bucket.
+  Future<String> getSignedUrl(String path) async {
+    Log.d('getSignedUrl called | path: $path');
+    try {
+      // Create a signed URL valid for 10 minutes (600 seconds)
+      final signedUrl = await _supabase.storage
+          .from('partner-proofs')
+          .createSignedUrl(path, 600);
+      return signedUrl;
+    } catch (e, st) {
+      Log.e('❌ [PartnerRepo] getSignedUrl Error', e, st);
+      rethrow;
+    }
+  }
+
   /// Fetches a specific partner by ID.
   Future<Partner?> getPartnerById(String partnerId) async {
     Log.d('getPartnerById called | partnerId: $partnerId');
