@@ -21,10 +21,17 @@ class PaymentServiceImpl implements PaymentService {
     final options = data.jsify();
 
     final callback = (JSObject result) {
-      final res = result as Map;
-      if (res['success'] == true) {
-        completer.complete(res['imp_uid'] as String?);
+      final success = result.getProperty('success'.toJS);
+      final impUid = result.getProperty('imp_uid'.toJS);
+      final errorMsg = result.getProperty('error_msg'.toJS);
+
+      // success can be boolean or string 'true' depending on SDK version
+      final isSuccess = success == true.toJS || success.toString() == 'true';
+
+      if (isSuccess) {
+        completer.complete(impUid?.toString());
       } else {
+        debugPrint('Payment Failed: ${errorMsg?.toString()}');
         completer.complete(null);
       }
     }.toJS;
