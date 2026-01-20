@@ -15,10 +15,11 @@ void main() {
       connection = await TestDatabase.createConnection();
 
       // Find Seeded Data
+      final targetBirthYear = DateTime.now().year - 25 + 1;
       final userRes = await connection.execute(
-        "SELECT id FROM public.user_profiles WHERE username = 'user_25_m_ok' LIMIT 1",
+        "SELECT id FROM public.user_profiles WHERE gender = 'male' AND birth_date = '$targetBirthYear-01-01' AND username LIKE '%_ok' LIMIT 1",
       );
-      if (userRes.isEmpty) throw Exception('Seeded user_25_m_ok not found');
+      if (userRes.isEmpty) throw Exception('Seeded user (25/Male/Verified) not found');
       userId = userRes.first[0] as String;
 
       final partyRes = await connection.execute(

@@ -14,15 +14,12 @@ begin
   -- 1. Check significant changes
   if (
     new.title is distinct from old.title or
-    new.event_date is distinct from old.event_date or
-    new.address is distinct from old.address or
+    new.start_time is distinct from old.start_time or
+    new.location_id is distinct from old.location_id or
     new.status is distinct from old.status
   ) then
     
     -- 2. Loop through applicants (approved or pending)
-    -- Assuming 'event_applications' table exists and has 'user_id', 'event_id', 'status'
-    -- Check table name in 04_events.sql if unsure. Usually event_applications or tickets.
-    -- Based on context, likely 'event_applications'.
     for applicant in 
       select user_id 
       from public.event_applications 
@@ -34,7 +31,7 @@ begin
       payload := jsonb_build_object(
         'type', 'event_update',
         'user_id', applicant.user_id,
-        'title', '[이벤트 업데이트] ' || new.title,
+        'title', '[이벤트 업데이트] ' || coalesce(new.title, '이벤트'),
         'body', '주최자가 이벤트 정보를 변경했습니다. 탭하여 확인해보세요.',
         'category', 'service',
         'data', jsonb_build_object(
@@ -47,8 +44,6 @@ begin
       );
 
       -- 4. Send to PGMQ
-      -- Assuming pgmq extension is enabled and queue 'q_notifications' exists.
-      -- If not, this might fail. Ideally wrapped in exception block or ensure queue exists.
       perform pgmq.send(
         queue_name := 'q_notifications',
         msg := payload

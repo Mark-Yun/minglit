@@ -1,11 +1,11 @@
 import 'dart:math';
 
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
-import 'package:minglit_kit/src/data/repositories/event_repository.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase/supabase.dart';
 import 'package:test/test.dart';
 
 import '../utils/test_config.dart';
+import '../utils/test_helpers.dart';
 
 void main() {
   // 1. Admin Client (RLS Bypass for Setup/Query)
@@ -50,18 +50,8 @@ void main() {
   setUpAll(() async {
     print('🚀 [Setup] Fetching seeded data...');
 
-    // 1. Fetch a Normal User (user_25_m_ok)
-    final userRes = await adminClient
-        .from('user_profiles')
-        .select()
-        .eq('username', 'user_25_m_ok')
-        .maybeSingle();
-
-    if (userRes == null) {
-      throw Exception(
-          '🚨 User user_25_m_ok not found! Did you run the seeder?');
-    }
-    testUserId = userRes['id'];
+    // 1. Fetch a Normal User via Helper
+    testUserId = await getMale25VerifiedUserId(adminClient);
     print('👤 [Setup] Using User: $testUserId');
 
     // 2. Fetch an Event and Ticket
@@ -123,23 +113,22 @@ void main() {
       'One-Shot Application Flow Test (Apply -> Pending -> Approve -> Confirmed)',
       () async {
     final userClient = createUserClient(testUserId);
-    final eventRepo = EventRepository(supabase: userClient);
 
     print('📝 [Test] Starting One-Shot Application...');
 
     // 1. Apply Event (Atomic RPC Call)
-    final appId = await eventRepo.applyEvent(
-      eventId: testEventId,
-      ticketId: testTicketId,
-      userId: testUserId,
-      paymentId: 'PAY_${Random().nextInt(9999)}',
-      paymentAmount: 1000,
-      verificationData: {
+    final appId = await userClient.rpc('apply_event', params: {
+      'p_event_id': testEventId,
+      'p_ticket_id': testTicketId,
+      'p_user_id': testUserId,
+      'p_payment_id': 'PAY_${Random().nextInt(9999)}',
+      'p_payment_amount': 1000,
+      'p_verification_data': {
         'partner_id': testPartnerId,
         'verification_id': testVerificationId,
         'data': {'company': 'Google', 'position': 'Dev'},
       },
-    );
+    });
 
     expect(appId, isNotNull);
     print('✅ [Test] Applied successfully. AppID: $appId');

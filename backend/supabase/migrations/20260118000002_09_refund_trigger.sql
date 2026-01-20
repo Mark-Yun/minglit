@@ -2,7 +2,7 @@
 
 -- 1. Add rejection_reason to event_applications
 alter table public.event_applications
-add column rejection_reason text;
+add column if not exists rejection_reason text;
 
 -- 2. Enhance Verification Status Sync (Handle Rejection)
 create or replace function public.handle_verification_approval()
@@ -10,23 +10,24 @@ returns trigger
 set search_path = public
 as $$
 begin
-  if (new.status = 'approved' and old.status != 'approved') then
-    -- 1. Create Partner Verified User
+  -- 1. Handling Approval (Insert/Update Verified User)
+  if (new.status = 'approved' and old.status is distinct from 'approved') then
     insert into public.partner_verified_users (partner_id, user_id, verification_id, submission_id, verified_at)
     values (new.partner_id, new.user_id, new.verification_id, new.id, now())
     on conflict (partner_id, user_id, verification_id) 
     do update set submission_id = new.id, verified_at = now(), valid_until = null; 
 
-    -- 2. Auto-approve linked Event Application
+    -- Auto-approve linked Event Application
     if (new.application_id is not null) then
       update public.event_applications
       set status = 'approved', updated_at = now()
       where id = new.application_id
       and status in ('pending', 'pending_review');
     end if;
+  end if;
 
-  elsif (new.status = 'rejected' and old.status != 'rejected') then
-    -- Handle Rejection: Sync to Application
+  -- 2. Handling Rejection (Sync to Application)
+  if (new.status = 'rejected' and old.status is distinct from 'rejected') then
     if (new.application_id is not null) then
       update public.event_applications
       set 
@@ -35,12 +36,15 @@ begin
         updated_at = now()
       where id = new.application_id;
     end if;
+  end if;
 
-  elsif (new.status != 'approved' and old.status = 'approved') then
-    -- Revoke verification if status changes back
+  -- 3. Revoking Status (Delete from Verified Users)
+  -- If status changes FROM approved TO anything else, remove from verified list.
+  if (old.status = 'approved' and new.status is distinct from 'approved') then
     delete from public.partner_verified_users
     where submission_id = new.id;
   end if;
+
   return new;
 end;
 $$ language plpgsql security definer;
@@ -93,6 +97,7 @@ end;
 $$;
 
 -- 4. Create Trigger on event_applications
+drop trigger if exists on_application_rejected on public.event_applications;
 create trigger on_application_rejected
   before update on public.event_applications
   for each row

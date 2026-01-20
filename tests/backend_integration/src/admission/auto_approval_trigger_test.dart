@@ -1,9 +1,10 @@
 import 'dart:math';
 
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase/supabase.dart';
 import 'package:test/test.dart';
 
 import '../utils/test_config.dart';
+import '../utils/test_helpers.dart';
 
 void main() {
   final adminClient = SupabaseClient(
@@ -25,13 +26,8 @@ void main() {
     setUpAll(() async {
       print('🚀 [Setup] Fetching seeded data...');
 
-      // Get user_25_m_ok
-      final u1 = await adminClient
-          .from('user_profiles')
-          .select()
-          .eq('username', 'user_25_m_ok')
-          .single();
-      testUserId = u1['id'];
+      // Get Test User via Helper
+      testUserId = await getMale25VerifiedUserId(adminClient);
 
       // Get Event & Ticket
       final event = await adminClient
@@ -48,21 +44,17 @@ void main() {
           await adminClient.from('verifications').select().limit(1).single();
       testVerificationId = verif['id'];
 
-      // Cleanup existing data
-      try {
-        await adminClient
-            .from('event_participants')
-            .delete()
-            .eq('user_id', testUserId)
-            .eq('event_id', testEventId);
-        await adminClient
-            .from('event_applications')
-            .delete()
-            .eq('user_id', testUserId)
-            .eq('event_id', testEventId);
-      } catch (e) {
-        print('⚠️ Cleanup warning: $e');
-      }
+      // Cleanup existing data for idempotency
+      await adminClient
+          .from('event_participants')
+          .delete()
+          .eq('user_id', testUserId)
+          .eq('event_id', testEventId);
+      await adminClient
+          .from('event_applications')
+          .delete()
+          .eq('user_id', testUserId)
+          .eq('event_id', testEventId);
     });
 
     test(

@@ -1,8 +1,9 @@
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase/supabase.dart';
 import 'package:test/test.dart';
 
 import '../utils/test_config.dart';
+import '../utils/test_helpers.dart';
 
 void main() {
   final adminClient = SupabaseClient(
@@ -42,19 +43,9 @@ void main() {
     setUpAll(() async {
       print('🚀 [Setup] Fetching users and creating test applications...');
 
-      // 1. Get user_25_m_ok and user_25_f_ok
-      final u1 = await adminClient
-          .from('user_profiles')
-          .select()
-          .eq('username', 'user_25_m_ok')
-          .single();
-      final u2 = await adminClient
-          .from('user_profiles')
-          .select()
-          .eq('username', 'user_25_f_ok')
-          .single();
-      user1Id = u1['id'];
-      user2Id = u2['id'];
+      // 1. Get User 1 (Male) and User 2 (Female) via Helpers
+      user1Id = await getMale25VerifiedUserId(adminClient);
+      user2Id = await getFemale25VerifiedUserId(adminClient);
 
       // 2. Get shared event and ticket
       final event = await adminClient

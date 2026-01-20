@@ -1,8 +1,9 @@
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase/supabase.dart';
 import 'package:test/test.dart';
 
 import '../utils/test_config.dart';
+import '../utils/test_helpers.dart';
 
 void main() {
   final adminClient = SupabaseClient(
@@ -42,13 +43,8 @@ void main() {
     setUpAll(() async {
       print('🚀 [Setup] Fetching data for Party RLS...');
 
-      // Get user_25_m_ok as Guest
-      final u1 = await adminClient
-          .from('user_profiles')
-          .select()
-          .eq('username', 'user_25_m_ok')
-          .single();
-      guestId = u1['id'];
+      // Get Test User as Guest via Helper
+      guestId = await getMale25VerifiedUserId(adminClient);
 
       // Get Owner (from Partner)
       final p1 = await adminClient

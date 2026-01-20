@@ -1,8 +1,9 @@
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase/supabase.dart';
 import 'package:test/test.dart';
 
 import '../utils/test_config.dart';
+import '../utils/test_helpers.dart';
 
 void main() {
   final adminClient = SupabaseClient(
@@ -48,13 +49,8 @@ void main() {
       partnerId = p1['id'];
       ownerId = (p1['partner_member_permissions'] as List).first['user_id'];
 
-      // Get unrelated user
-      final u = await adminClient
-          .from('user_profiles')
-          .select()
-          .eq('username', 'user_25_m_ok')
-          .single();
-      otherUserId = u['id'];
+      // Get unrelated user (Male, 25, Verified)
+      otherUserId = await getMale25VerifiedUserId(adminClient);
     });
 
     test('Owner should be able to update partner info', () async {
