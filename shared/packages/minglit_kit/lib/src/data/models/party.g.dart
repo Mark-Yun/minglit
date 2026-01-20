@@ -71,7 +71,7 @@ _Party _$PartyFromJson(Map<String, dynamic> json) => _Party(
   partner: json['partner'] == null
       ? null
       : Partner.fromJson(json['partner'] as Map<String, dynamic>),
-  entryGroups: (json['entryGroups'] as List<dynamic>?)
+  entryGroups: (json['entry_group_templates'] as List<dynamic>?)
       ?.map((e) => EntryGroupTemplate.fromJson(e as Map<String, dynamic>))
       .toList(),
 );

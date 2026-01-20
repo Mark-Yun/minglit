@@ -70,7 +70,8 @@ abstract class Party with _$Party {
     @Default('active') String status,
     @JsonKey(includeToJson: false) List<TicketTemplate>? ticketTemplates,
     @JsonKey(includeToJson: false) Partner? partner,
-    @JsonKey(includeToJson: false) List<EntryGroupTemplate>? entryGroups,
+    @JsonKey(name: 'entry_group_templates', includeToJson: false)
+    List<EntryGroupTemplate>? entryGroups,
   }) = _Party;
   const Party._();
 

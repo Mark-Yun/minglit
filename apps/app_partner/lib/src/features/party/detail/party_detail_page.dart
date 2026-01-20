@@ -101,12 +101,10 @@ class PartyDetailPage extends ConsumerWidget {
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      TabBar(
+                      const TabBar(
                         indicatorWeight: 3,
-                        labelPadding: const EdgeInsets.symmetric(horizontal: 12),
-                        isScrollable: false,
-                        tabAlignment: TabAlignment.fill,
-                        tabs: const [
+                        labelPadding: EdgeInsets.symmetric(horizontal: 12),
+                        tabs: [
                           Tab(text: '이벤트 관리'),
                           Tab(text: '파티 정보'),
                           Tab(text: '입장 그룹 및 티켓'),
