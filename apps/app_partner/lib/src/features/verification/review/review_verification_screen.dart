@@ -82,64 +82,57 @@ class _ReviewVerificationScreenState
     final reasonController = TextEditingController();
     final commentController = TextEditingController();
 
-    await showDialog<void>(
-      // TODO(developer): Migrate to MinglitDialog with custom content
-      // (TextFields) or make a specialized dialog
+    await MinglitDialog.show<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.reviewVerification_dialog_correction_title),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: reasonController,
-              decoration: InputDecoration(
-                labelText: context
-                    .l10n
-                    .reviewVerification_dialog_correction_reasonLabel,
-                hintText: context
-                    .l10n
-                    .reviewVerification_dialog_correction_reasonHint,
-              ),
+      title: context.l10n.reviewVerification_dialog_correction_title,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: reasonController,
+            decoration: InputDecoration(
+              labelText:
+                  context.l10n.reviewVerification_dialog_correction_reasonLabel,
+              hintText:
+                  context.l10n.reviewVerification_dialog_correction_reasonHint,
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: commentController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                labelText: context
-                    .l10n
-                    .reviewVerification_dialog_correction_commentLabel,
-                hintText: context
-                    .l10n
-                    .reviewVerification_dialog_correction_commentHint,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.common_button_cancel),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              unawaited(
-                _reviewRequest(
-                  submissionId,
-                  VerificationStatus.needsCorrection,
-                  reason: reasonController.text,
-                  comment: commentController.text,
-                ),
-              );
-            },
-            child: Text(context.l10n.reviewVerification_dialog_correction_send),
+          const SizedBox(height: 16),
+          TextField(
+            controller: commentController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              labelText: context
+                  .l10n.reviewVerification_dialog_correction_commentLabel,
+              hintText: context
+                  .l10n.reviewVerification_dialog_correction_commentHint,
+            ),
           ),
         ],
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(context.l10n.common_button_cancel),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.pop(context);
+            unawaited(
+              _reviewRequest(
+                submissionId,
+                VerificationStatus.needsCorrection,
+                reason: reasonController.text,
+                comment: commentController.text,
+              ),
+            );
+          },
+          child: Text(context.l10n.reviewVerification_dialog_correction_send),
+        ),
+      ],
     );
   }
+
 
   Future<void> _showCommentsModal(String submissionId) async {
     await showModalBottomSheet<void>(
