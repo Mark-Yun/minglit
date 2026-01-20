@@ -284,26 +284,33 @@ class _VerificationStep extends ConsumerWidget {
           ),
           const SizedBox(height: MinglitSpacing.small),
           if (field.type == 'file')
-            MinglitFilePicker(
-              label: field.label,
-              hint: field.placeholder ?? '증빙 서류를 업로드해주세요',
-              fileType: FileType.any,
-              autoUpload: true,
-              uploadBucket: 'verification-proofs',
-              uploadPathPrefix: 'applications/${event.id}',
-              onUploadComplete: (urls) {
-                if (urls.isNotEmpty) {
-                  ref
-                      .read(eventApplicationControllerProvider(event).notifier)
-                      .updateVerificationData(field.key, urls.first);
-                } else {
-                  ref
-                      .read(eventApplicationControllerProvider(event).notifier)
-                      .updateVerificationData(field.key, null);
-                }
-              },
-              onFilesSelected: (files) {
-                // Handle local preview or validation if needed
+            Builder(
+              builder: (context) {
+                final userId = ref.read(currentUserProvider)!.id;
+                final pathPrefix = '$userId/applications/${event.id}';
+                Log.d('📂 [Wizard] FilePicker pathPrefix: $pathPrefix');
+                return MinglitFilePicker(
+                  label: field.label,
+                  hint: field.placeholder ?? '증빙 서류를 업로드해주세요',
+                  fileType: FileType.any,
+                  autoUpload: true,
+                  uploadBucket: 'verification-proofs',
+                  uploadPathPrefix: pathPrefix,
+                  onUploadComplete: (urls) {
+                    if (urls.isNotEmpty) {
+                      ref
+                          .read(eventApplicationControllerProvider(event).notifier)
+                          .updateVerificationData(field.key, urls.first);
+                    } else {
+                      ref
+                          .read(eventApplicationControllerProvider(event).notifier)
+                          .updateVerificationData(field.key, null);
+                    }
+                  },
+                  onFilesSelected: (files) {
+                    // Handle local preview or validation if needed
+                  },
+                );
               },
             )
           else
