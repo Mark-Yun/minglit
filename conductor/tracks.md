@@ -172,5 +172,5 @@
 
 ---
 
-- [~] **Track: 파트너 앱 파티 상세 탭 구조 재구성**
+- [x] **Track: 파트너 앱 파티 상세 탭 구조 재구성**
 *Link: [./conductor/tracks/partner_party_detail_tab_reorg_20260120/](./conductor/tracks/partner_party_detail_tab_reorg_20260120/)*
