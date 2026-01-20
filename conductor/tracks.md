@@ -105,7 +105,7 @@
 
 ---
 
-## [~] 트랙: 파트너 파티/티켓 관리 시스템 (Partner Party Management)
+## [x] 트랙: 파트너 파티/티켓 관리 시스템 (Partner Party Management)
 *링크: [./conductor/tracks/partner_party_management_20260117/](./conductor/tracks/partner_party_management_20260117/)*
 
 ---
@@ -157,7 +157,7 @@
 
 ---
 
-## [~] 트랙: 파티 상세 페이지 이미지 다중 업로드 및 뷰어 구현
+## [x] 트랙: 파티 상세 페이지 이미지 다중 업로드 및 뷰어 구현
 *링크: [./conductor/tracks/party_image_multiupload_20260118/](./conductor/tracks/party_image_multiupload_20260118/)*
 
 ---
