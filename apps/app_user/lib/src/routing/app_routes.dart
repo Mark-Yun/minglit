@@ -1,6 +1,3 @@
-import 'package:app_user/src/features/auth/login_page.dart';
-import 'package:app_user/src/features/auth/ui/auth_callback_screen.dart';
-import 'package:app_user/src/features/dev/user_dev_map.dart';
 import 'package:app_user/src/features/event/admission/event_application_wizard_screen.dart';
 import 'package:app_user/src/features/event/detail/event_detail_screen.dart';
 import 'package:app_user/src/features/home/home_page.dart';

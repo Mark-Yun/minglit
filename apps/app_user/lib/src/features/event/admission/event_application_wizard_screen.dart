@@ -105,7 +105,7 @@ class _WizardBodyState extends ConsumerState<_WizardBody> {
           state: state,
           onPrev: controller.previousStep,
           onNext: controller.nextStep,
-          onSubmit: controller.submitApplication,
+          onSubmit: () => controller.processPayment(context),
         ),
       ],
     );

@@ -201,6 +201,68 @@ class EventRepository {
     return app != null && app.status != 'rejected' && app.status != 'cancelled';
   }
 
+  /// Creates a pending order for payment processing.
+  /// Returns the application ID (merchant_uid).
+  Future<String> createOrder({
+    required String eventId,
+    required String ticketId,
+    required String userId,
+    required int amount,
+    Map<String, dynamic>? verificationData,
+  }) async {
+    Log.d('createOrder called | event: $eventId');
+    try {
+      // 1. Create Application
+      final res = await _supabase
+          .from('event_applications')
+          .insert({
+            'event_id': eventId,
+            'ticket_id': ticketId,
+            'user_id': userId,
+            'payment_amount': amount,
+            'status': 'pending', // Pending payment
+          })
+          .select('id')
+          .single();
+      final appId = res['id'] as String;
+
+      // 2. Create Submission (if verification data provided)
+      if (verificationData != null) {
+        await _supabase.from('verification_submissions').insert({
+          'application_id': appId,
+          'partner_id': verificationData['partner_id'],
+          'verification_id': verificationData['verification_id'],
+          'user_id': userId,
+          'status': 'pending',
+          'snapshot_data': verificationData['data'],
+        });
+      }
+
+      return appId;
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] createOrder Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// Verifies the payment with the backend.
+  Future<void> confirmPayment({
+    required String impUid,
+    required String merchantUid,
+  }) async {
+    Log.d('confirmPayment called | impUid: $impUid');
+    try {
+      await _supabase.functions.invoke(
+        'verify-payment-v1',
+        body: {'imp_uid': impUid, 'merchant_uid': merchantUid},
+      );
+      Log.i('✅ [EventRepo] Payment verified.');
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] confirmPayment Error', e, st);
+      rethrow;
+    }
+  }
+
   /// Submits an event application (One-Shot Flow).
   /// Handles application creation and verification submission in one trans.
   Future<String> applyEvent({
