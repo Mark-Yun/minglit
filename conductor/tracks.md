@@ -110,11 +110,6 @@
 
 ---
 
-## [x] 트랙: 유저 앱 결제 UX 및 티켓 발권 흐름 (User Payment & Ticketing Flow)
-*링크: [./conductor/tracks/user_payment_ticketing_flow_20260119/](./conductor/tracks/user_payment_ticketing_flow_20260119/)*
-
----
-
 ## [ ] 트랙: 유저 환불 정책 및 취소 시스템 (User Refund & Cancellation System)
 *링크: [./conductor/tracks/user_refund_cancellation_system_20260119/](./conductor/tracks/user_refund_cancellation_system_20260119/)*
 
