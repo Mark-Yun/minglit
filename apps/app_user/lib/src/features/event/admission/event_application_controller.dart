@@ -118,12 +118,16 @@ class EventApplicationController extends _$EventApplicationController {
       );
 
       // 2. Request Payment (Iamport)
+      if (!context.mounted) return;
+
       final impUid = await ref
           .read(iamportControllerProvider.notifier)
           .startPayment(
             context: context,
-            userCode: 'imp47373200', // TODO: Get from config/env
+            userCode: 'imp80716769', // Combined User Code
             data: {
+              'pg': 'html5_inicis', // KG Inicis
+              'pay_method': 'card', // Credit Card
               'merchant_uid': merchantUid,
               'name': ticket.name,
               'amount': ticket.price,

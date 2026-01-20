@@ -299,11 +299,15 @@ class _VerificationStep extends ConsumerWidget {
                   onUploadComplete: (urls) {
                     if (urls.isNotEmpty) {
                       ref
-                          .read(eventApplicationControllerProvider(event).notifier)
+                          .read(
+                            eventApplicationControllerProvider(event).notifier,
+                          )
                           .updateVerificationData(field.key, urls.first);
                     } else {
                       ref
-                          .read(eventApplicationControllerProvider(event).notifier)
+                          .read(
+                            eventApplicationControllerProvider(event).notifier,
+                          )
                           .updateVerificationData(field.key, null);
                     }
                   },

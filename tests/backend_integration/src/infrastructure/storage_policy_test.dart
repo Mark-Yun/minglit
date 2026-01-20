@@ -52,7 +52,6 @@ void main() {
 
   // Shared Clients
   late SupabaseClient userClient;
-  late SupabaseClient partnerClient;
 
   setUpAll(() async {
     print('🚀 [Setup] Fetching seeded data for storage tests...');
@@ -72,7 +71,6 @@ void main() {
 
     // 4. Initialize Clients
     userClient = createUserClient(testUserId);
-    partnerClient = createUserClient(testPartnerOwnerId);
 
     print(
         '✅ [Setup] User: $testUserId, Partner: $testPartnerId, Owner: $testPartnerOwnerId');
@@ -212,15 +210,17 @@ void main() {
 
       // 1. Reschedule Event (Add 7 days)
       print('📅 [Test] Rescheduling event (adding 7 days)...');
-      final eventRes =
-          await adminClient.from('events').select('end_time').eq('id', testEventId).single();
+      final eventRes = await adminClient
+          .from('events')
+          .select('end_time')
+          .eq('id', testEventId)
+          .single();
       final currentEnd = DateTime.parse(eventRes['end_time']);
       final newEnd = currentEnd.add(const Duration(days: 7));
 
       await adminClient
           .from('events')
-          .update({'end_time': newEnd.toIso8601String()})
-          .eq('id', testEventId);
+          .update({'end_time': newEnd.toIso8601String()}).eq('id', testEventId);
 
       // Wait for trigger
       await Future<void>.delayed(const Duration(milliseconds: 500));
@@ -231,14 +231,15 @@ void main() {
           .select('expires_at')
           .eq('id', grantId)
           .single();
-      
+
       final updatedExpires = DateTime.parse(updatedGrant['expires_at']);
       print('📅 [Test] Updated Expires: $updatedExpires');
 
       // Check if updated (should be roughly initial + 7 days)
       final diff = updatedExpires.difference(initialExpires).inDays;
-      expect(diff, closeTo(7, 1), reason: 'Expiration should be extended by ~7 days');
-      
+      expect(diff, closeTo(7, 1),
+          reason: 'Expiration should be extended by ~7 days');
+
       print('✅ [Test] Grant expiration updated successfully.');
     });
   });

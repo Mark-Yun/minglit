@@ -420,6 +420,17 @@ class _BottomTicketBar extends ConsumerWidget {
             ),
           );
         };
+      case EventAdmissionStatus.pendingPayment:
+        text = '결제 계속하기';
+        onPressed = () {
+          unawaited(
+            showModalBottomSheet<void>(
+              context: context,
+              isScrollControlled: true,
+              builder: (_) => TicketSelectionSheet(event: event),
+            ),
+          );
+        };
       case EventAdmissionStatus.applied:
         text = '이미 신청한 이벤트';
         onPressed = () {
