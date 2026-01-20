@@ -100,6 +100,11 @@
 
 ---
 
+## [ ] 트랙: 파일 관리 및 보안 접근 시스템 (Secure File Management System)
+*링크: [./conductor/tracks/secure_file_management_system_20260119/](./conductor/tracks/secure_file_management_system_20260119/)*
+
+---
+
 ## [ ] 트랙: 파트너 파티/티켓 관리 시스템 (Partner Party Management)
 *링크: [./conductor/tracks/partner_party_management_20260117/](./conductor/tracks/partner_party_management_20260117/)*
 
