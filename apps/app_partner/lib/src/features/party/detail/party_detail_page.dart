@@ -2,8 +2,9 @@ import 'dart:async';
 
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
-import 'package:app_partner/src/features/party/detail/tabs/party_detail_info_tab.dart';
-import 'package:app_partner/src/features/party/detail/tabs/party_detail_operation_tab.dart';
+import 'package:app_partner/src/features/party/detail/tabs/party_event_management_tab.dart';
+import 'package:app_partner/src/features/party/detail/tabs/party_info_tab.dart';
+import 'package:app_partner/src/features/party/detail/tabs/party_rule_management_tab.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -21,7 +22,7 @@ class PartyDetailPage extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
 
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         body: MinglitAsyncValueWidget(
           value: partyAsync,
@@ -102,9 +103,13 @@ class PartyDetailPage extends ConsumerWidget {
                     children: [
                       TabBar(
                         indicatorWeight: 3,
-                        tabs: [
-                          Tab(text: context.l10n.partyDetail_tab_operation),
-                          Tab(text: context.l10n.partyDetail_tab_info),
+                        labelPadding: const EdgeInsets.symmetric(horizontal: 12),
+                        isScrollable: false,
+                        tabAlignment: TabAlignment.fill,
+                        tabs: const [
+                          Tab(text: '이벤트 관리'),
+                          Tab(text: '파티 정보'),
+                          Tab(text: '입장 그룹 및 티켓'),
                         ],
                       ),
                       Divider(
@@ -121,10 +126,12 @@ class PartyDetailPage extends ConsumerWidget {
             ],
             body: TabBarView(
               children: [
-                // Tab 1: 운영 관리 (회차 및 티켓)
-                PartyDetailOperationTab(party: party),
-                // Tab 2: 파티 정보 (기획 상세)
-                PartyDetailInfoTab(party: party),
+                // Tab 1: 이벤트 관리
+                PartyEventManagementTab(party: party),
+                // Tab 2: 파티 정보
+                PartyInfoTab(party: party),
+                // Tab 3: 입장 그룹 및 티켓
+                PartyRuleManagementTab(party: party),
               ],
             ),
           ),

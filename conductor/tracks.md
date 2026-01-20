@@ -169,3 +169,8 @@
 
 ## [ ] 트랙: 파티 생성 시 최대 인원 로직 개선 및 티켓 수량 통합
 *링크: [./conductor/tracks/party_creation_logic_refactor_20260118/](./conductor/tracks/party_creation_logic_refactor_20260118/)*
+
+---
+
+- [~] **Track: 파트너 앱 파티 상세 탭 구조 재구성**
+*Link: [./conductor/tracks/partner_party_detail_tab_reorg_20260120/](./conductor/tracks/partner_party_detail_tab_reorg_20260120/)*
