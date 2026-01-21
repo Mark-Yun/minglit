@@ -174,8 +174,3 @@
 
 - [ ] **Track: Backend/Supabase/Functions 테스트 코드 만들기**
 *Link: [./conductor/tracks/backend_supabase_functions_test_20260120/](./conductor/tracks/backend_supabase_functions_test_20260120/)*
-
----
-
-- [~] **Track: 유저 앱 알림 설정 화면 연동**
-*Link: [./conductor/tracks/user_notification_settings_20260120/](./conductor/tracks/user_notification_settings_20260120/)*
