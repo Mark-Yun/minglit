@@ -51,16 +51,19 @@ void main() {
           .order('created_at', ascending: false);
 
       expect(data, isNotEmpty);
-      
-      final app = data.first as Map<String, dynamic>;
+
+      final app = data.first;
       expect(app['user_id'], testUserId);
-      
+
       // Verify Joins
-      expect(app['event'], isNotNull, reason: 'Event relation should be joined');
+      expect(app['event'], isNotNull,
+          reason: 'Event relation should be joined');
       final event = app['event'] as Map<String, dynamic>;
-      expect(event['party'], isNotNull, reason: 'Party relation should be joined via Event');
-      expect(app['ticket'], isNotNull, reason: 'Ticket relation should be joined');
-      
+      expect(event['party'], isNotNull,
+          reason: 'Party relation should be joined via Event');
+      expect(app['ticket'], isNotNull,
+          reason: 'Ticket relation should be joined');
+
       print('✅ History Count: ${data.length}');
       print('📍 First Event: ${event['title'] ?? event['party']['title']}');
     });

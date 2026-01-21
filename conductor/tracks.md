@@ -164,7 +164,3 @@
 
 ## [ ] 트랙: 파티 생성 시 최대 인원 로직 개선 및 티켓 수량 통합
 *링크: [./conductor/tracks/party_creation_logic_refactor_20260118/](./conductor/tracks/party_creation_logic_refactor_20260118/)*
-
----
-
-\n---\n\n- [x] **Track: 유저 앱 구매 내역 구현**\n*Link: [./conductor/tracks/user_purchase_history_20260120/](./conductor/tracks/user_purchase_history_20260120/)*

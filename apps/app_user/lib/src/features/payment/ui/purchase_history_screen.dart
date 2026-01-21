@@ -18,8 +18,13 @@ class PurchaseHistoryScreen extends ConsumerWidget {
         value: historyAsync,
         data: (history) {
           if (history.isEmpty) {
-            return const Center(
-              child: Text('구매 내역이 없습니다.'),
+            return Center(
+              child: Text(
+                '구매 내역이 없습니다.',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+              ),
             );
           }
 
