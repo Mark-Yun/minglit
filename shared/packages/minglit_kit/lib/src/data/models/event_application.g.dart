@@ -27,6 +27,12 @@ _EventApplication _$EventApplicationFromJson(Map<String, dynamic> json) =>
           : VerificationSubmission.fromJson(
               json['submission'] as Map<String, dynamic>,
             ),
+      event: json['event'] == null
+          ? null
+          : Event.fromJson(json['event'] as Map<String, dynamic>),
+      ticket: json['ticket'] == null
+          ? null
+          : Ticket.fromJson(json['ticket'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$EventApplicationToJson(_EventApplication instance) =>
@@ -44,4 +50,6 @@ Map<String, dynamic> _$EventApplicationToJson(_EventApplication instance) =>
       'rejection_reason': instance.rejectionReason,
       'user': instance.user,
       'submission': instance.submission,
+      'event': instance.event,
+      'ticket': instance.ticket,
     };

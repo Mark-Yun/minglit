@@ -201,6 +201,32 @@ class EventRepository {
     return app != null && app.status != 'rejected' && app.status != 'cancelled';
   }
 
+  /// Fetches the current user's purchase history.
+  Future<List<EventApplication>> getMyPurchaseHistory(String userId) async {
+    Log.d('getMyPurchaseHistory called | userId: $userId');
+    try {
+      final data = await _supabase
+          .from('event_applications')
+          .select(
+            '*, '
+            'event:events(*, party:parties(*, location:locations(*))), '
+            'ticket:tickets(*)',
+          )
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+
+      final result = (data as List).map((json) {
+        return EventApplication.fromJson(json as Map<String, dynamic>);
+      }).toList();
+
+      Log.d('getMyPurchaseHistory success | count: ${result.length}');
+      return result;
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] getMyPurchaseHistory Error', e, st);
+      rethrow;
+    }
+  }
+
   /// Creates a pending order for payment processing.
   /// Returns the application ID (merchant_uid).
   Future<String> createOrder({

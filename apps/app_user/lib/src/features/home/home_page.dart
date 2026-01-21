@@ -1,3 +1,4 @@
+import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -9,7 +10,15 @@ class HomePage extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Minglit Home')),
+      appBar: AppBar(
+        title: const Text('Minglit Home'),
+        actions: [
+          IconButton(
+            onPressed: () => const MyPageRoute().push<void>(context),
+            icon: const Icon(Icons.person_outline),
+          ),
+        ],
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

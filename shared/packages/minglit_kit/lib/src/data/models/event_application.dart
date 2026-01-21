@@ -1,4 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:minglit_kit/src/data/models/event.dart';
+import 'package:minglit_kit/src/data/models/ticket.dart';
 import 'package:minglit_kit/src/data/models/user_profile.dart';
 import 'package:minglit_kit/src/data/models/verification_submission.dart';
 
@@ -23,6 +25,8 @@ abstract class EventApplication with _$EventApplication {
     // Relations (Nullable)
     UserProfile? user,
     VerificationSubmission? submission,
+    Event? event,
+    Ticket? ticket,
   }) = _EventApplication;
 
   factory EventApplication.fromJson(Map<String, dynamic> json) =>

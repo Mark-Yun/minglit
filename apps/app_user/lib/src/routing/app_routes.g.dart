@@ -12,10 +12,12 @@ List<RouteBase> get $appRoutes => [
   $loginRoute,
   $authCallbackRoute,
   $homeRoute,
+  $myPageRoute,
   $eventCurationRoute,
   $eventDetailRoute,
   $certificationRoute,
   $eventApplicationRoute,
+  $purchaseHistoryRoute,
 ];
 
 RouteBase get $devRoute =>
@@ -130,6 +132,29 @@ mixin $HomeRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $myPageRoute =>
+    GoRouteData.$route(path: '/my', factory: $MyPageRoute._fromState);
+
+mixin $MyPageRoute on GoRouteData {
+  static MyPageRoute _fromState(GoRouterState state) => const MyPageRoute();
+
+  @override
+  String get location => GoRouteData.$location('/my');
 
   @override
   void go(BuildContext context) => context.go(location);
@@ -282,6 +307,32 @@ mixin $EventApplicationRoute on GoRouteData {
     '/events/${Uri.encodeComponent(_self.eventId)}/apply',
     queryParams: {if (_self.ticketId != null) 'ticket-id': _self.ticketId},
   );
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $purchaseHistoryRoute => GoRouteData.$route(
+  path: '/purchase-history',
+  factory: $PurchaseHistoryRoute._fromState,
+);
+
+mixin $PurchaseHistoryRoute on GoRouteData {
+  static PurchaseHistoryRoute _fromState(GoRouterState state) =>
+      const PurchaseHistoryRoute();
+
+  @override
+  String get location => GoRouteData.$location('/purchase-history');
 
   @override
   void go(BuildContext context) => context.go(location);

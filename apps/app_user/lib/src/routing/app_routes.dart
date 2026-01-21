@@ -4,7 +4,9 @@ import 'package:app_user/src/features/dev/user_dev_map.dart';
 import 'package:app_user/src/features/event/admission/event_application_wizard_screen.dart';
 import 'package:app_user/src/features/event/detail/event_detail_screen.dart';
 import 'package:app_user/src/features/home/home_page.dart';
+import 'package:app_user/src/features/home/my_page_screen.dart';
 import 'package:app_user/src/features/party/party_curation_screen.dart';
+import 'package:app_user/src/features/payment/ui/purchase_history_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -66,6 +68,17 @@ class HomeRoute extends GoRouteData with $HomeRoute {
   Widget build(BuildContext context, GoRouterState state) => const HomePage();
 }
 
+/// **My Page Route**
+/// Path: `/my`
+@TypedGoRoute<MyPageRoute>(path: '/my')
+class MyPageRoute extends GoRouteData with $MyPageRoute {
+  const MyPageRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const MyPageScreen();
+}
+
 /// **Event Curation Route**: Paginated curation list.
 /// Path: `/curation`
 @TypedGoRoute<EventCurationRoute>(path: '/curation')
@@ -116,4 +129,15 @@ class EventApplicationRoute extends GoRouteData with $EventApplicationRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       EventApplicationWizardScreen(eventId: eventId, ticketId: ticketId);
+}
+
+/// **Purchase History Route**
+/// Path: `/purchase-history`
+@TypedGoRoute<PurchaseHistoryRoute>(path: '/purchase-history')
+class PurchaseHistoryRoute extends GoRouteData with $PurchaseHistoryRoute {
+  const PurchaseHistoryRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const PurchaseHistoryScreen();
 }

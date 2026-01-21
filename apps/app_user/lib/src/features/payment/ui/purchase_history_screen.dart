@@ -1,0 +1,241 @@
+import 'package:app_user/src/features/payment/logic/purchase_history_controller.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:minglit_kit/minglit_kit.dart';
+
+class PurchaseHistoryScreen extends ConsumerWidget {
+  const PurchaseHistoryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final historyAsync = ref.watch(purchaseHistoryControllerProvider);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('구매 내역'),
+      ),
+      body: MinglitAsyncValueWidget(
+        value: historyAsync,
+        data: (history) {
+          if (history.isEmpty) {
+            return const Center(
+              child: Text('구매 내역이 없습니다.'),
+            );
+          }
+
+          return ListView.separated(
+            padding: const EdgeInsets.all(MinglitSpacing.medium),
+            itemCount: history.length,
+            separatorBuilder: (context, index) =>
+                const SizedBox(height: MinglitSpacing.medium),
+            itemBuilder: (context, index) {
+              return PurchaseHistoryCard(application: history[index]);
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class PurchaseHistoryCard extends StatelessWidget {
+  const PurchaseHistoryCard({required this.application, super.key});
+
+  final EventApplication application;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final event = application.event;
+    final ticket = application.ticket;
+    final party = event?.party;
+    final location = event?.location ?? party?.location;
+
+    final formatter = NumberFormat('#,###');
+    final dateLabel = event != null
+        ? DateFormat('M월 d일 (E) HH:mm', 'ko_KR').format(event.startTime)
+        : '-';
+
+    return Container(
+      padding: const EdgeInsets.all(MinglitSpacing.medium),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(MinglitRadius.card),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 1. Header: Date & Status
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                DateFormat('yyyy.MM.dd').format(application.createdAt),
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              _StatusBadge(status: application.status),
+            ],
+          ),
+          const SizedBox(height: MinglitSpacing.medium),
+
+          // 2. Event Info Row
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Thumbnail
+              ClipRRect(
+                borderRadius: BorderRadius.circular(MinglitRadius.small),
+                child: SizedBox(
+                  width: 80,
+                  height: 80,
+                  child: MinglitImage(
+                    path: event?.imageUrl ?? '',
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              const SizedBox(width: MinglitSpacing.medium),
+              // Text Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      event?.title ?? party?.title ?? '제목 없음',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      dateLabel,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                    Text(
+                      location?.name ?? '장소 정보 없음',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const Divider(height: MinglitSpacing.xlarge),
+
+          // 3. Ticket & Price
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                ticket?.name ?? '티켓 정보 없음',
+                style: theme.textTheme.bodyMedium,
+              ),
+              Text(
+                '${formatter.format(application.paymentAmount ?? 0)}원',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: MinglitSpacing.medium),
+
+          // 4. Actions
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {
+                    // TODO(UI): 영수증 보기
+                  },
+                  child: const Text('영수증'),
+                ),
+              ),
+              const SizedBox(width: MinglitSpacing.small),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {
+                    // TODO(UI): 주최자 문의
+                  },
+                  child: const Text('문의하기'),
+                ),
+              ),
+              if (application.status == 'paid' ||
+                  application.status == 'approved') ...[
+                const SizedBox(width: MinglitSpacing.small),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // TODO(UI): 환불 신청
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.errorContainer,
+                      foregroundColor: theme.colorScheme.onErrorContainer,
+                    ),
+                    child: const Text('환불신청'),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.status});
+
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    String label;
+    Color color;
+
+    switch (status) {
+      case 'pending':
+        label = '결제대기';
+        color = theme.colorScheme.outline;
+      case 'pending_review':
+        label = '심사중';
+        color = theme.colorScheme.tertiary;
+      case 'approved':
+        label = '승인됨';
+        color = theme.colorScheme.primary;
+      case 'paid':
+        label = '결제완료';
+        color = theme.colorScheme.primary;
+      case 'rejected':
+        label = '반려됨';
+        color = theme.colorScheme.error;
+      case 'cancelled':
+        label = '취소됨';
+        color = theme.colorScheme.error;
+      default:
+        label = '알수없음';
+        color = theme.colorScheme.outline;
+    }
+
+    return MinglitChip(
+      label: label,
+      color: color,
+    );
+  }
+}
