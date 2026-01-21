@@ -45,6 +45,12 @@ class UserDevMap extends StatelessWidget {
             onTap: (context, ref) => const HomeRoute().push<void>(context),
           ),
           DevScreenItem(
+            category: 'Home',
+            title: 'My Page',
+            description: '마이페이지 (구매 내역 등)',
+            onTap: (context, ref) => const MyPageRoute().push<void>(context),
+          ),
+          DevScreenItem(
             category: 'Curation',
             title: 'New Arrivals',
             description: '신규 오픈 파티 목록',
