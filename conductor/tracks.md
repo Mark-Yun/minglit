@@ -165,10 +165,6 @@
 ## [ ] 트랙: 파티 입장 조건에 맞는 최적 티켓 자동 추천 및 구매 제한
 *링크: [./conductor/tracks/ticket_recommendation_20260118/](./conductor/tracks/ticket_recommendation_20260118/)*
 
----
-
-## [x] 트랙: 파티 생성 시 최대 인원 로직 개선 및 티켓 수량 통합
-*링크: [./conductor/tracks/party_creation_logic_refactor_20260118/](./conductor/tracks/party_creation_logic_refactor_20260118/)*
 
 ---
 
