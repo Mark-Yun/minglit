@@ -84,7 +84,6 @@ class _PartyCapacityContactEditScreenState
               minCount: _minCount,
               maxCount: _maxCount,
               onMinChanged: (val) => setState(() => _minCount = val),
-              onMaxChanged: (val) => setState(() => _maxCount = val),
             ),
             const SizedBox(height: MinglitSpacing.xlarge),
 

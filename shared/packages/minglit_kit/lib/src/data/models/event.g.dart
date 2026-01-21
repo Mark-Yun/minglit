@@ -20,6 +20,7 @@ _Event _$EventFromJson(Map<String, dynamic> json) => _Event(
       ?.map((e) => e as String)
       .toList(),
   contactOptions: json['contact_options'] as Map<String, dynamic>? ?? const {},
+  minConfirmedCount: (json['min_confirmed_count'] as num?)?.toInt() ?? 0,
   maxParticipants: (json['max_participants'] as num?)?.toInt() ?? 20,
   currentParticipants: (json['current_participants'] as num?)?.toInt() ?? 0,
   status: json['status'] as String? ?? 'scheduled',
@@ -49,6 +50,7 @@ Map<String, dynamic> _$EventToJson(_Event instance) => <String, dynamic>{
   'description': instance.description,
   'image_urls': instance.imageUrls,
   'contact_options': instance.contactOptions,
+  'min_confirmed_count': instance.minConfirmedCount,
   'max_participants': instance.maxParticipants,
   'current_participants': instance.currentParticipants,
   'status': instance.status,

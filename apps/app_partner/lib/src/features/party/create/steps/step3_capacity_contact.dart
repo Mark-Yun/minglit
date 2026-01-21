@@ -86,7 +86,6 @@ class _Step3CapacityContactState extends ConsumerState<Step3CapacityContact> {
             minCount: state.minConfirmedCount,
             maxCount: state.maxParticipants,
             onMinChanged: (val) => notifier.updateCapacity(min: val),
-            onMaxChanged: (val) => notifier.updateCapacity(max: val),
           ),
           const SizedBox(height: MinglitSpacing.large),
           Text(

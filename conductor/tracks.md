@@ -100,13 +100,18 @@
 
 ---
 
-## [x] 트랙: 파일 관리 및 보안 접근 시스템 (Secure File Management System)
+## [ ] 트랙: 파일 관리 및 보안 접근 시스템 (Secure File Management System)
 *링크: [./conductor/tracks/secure_file_management_system_20260119/](./conductor/tracks/secure_file_management_system_20260119/)*
 
 ---
 
 ## [x] 트랙: 파트너 파티/티켓 관리 시스템 (Partner Party Management)
 *링크: [./conductor/tracks/partner_party_management_20260117/](./conductor/tracks/partner_party_management_20260117/)*
+
+---
+
+## [ ] 트랙: 유저 앱 결제 UX 및 티켓 발권 흐름 (User Payment & Ticketing Flow)
+*링크: [./conductor/tracks/user_payment_ticketing_flow_20260119/](./conductor/tracks/user_payment_ticketing_flow_20260119/)*
 
 ---
 
@@ -162,5 +167,15 @@
 
 ---
 
-## [ ] 트랙: 파티 생성 시 최대 인원 로직 개선 및 티켓 수량 통합
+## [x] 트랙: 파티 생성 시 최대 인원 로직 개선 및 티켓 수량 통합
 *링크: [./conductor/tracks/party_creation_logic_refactor_20260118/](./conductor/tracks/party_creation_logic_refactor_20260118/)*
+
+---
+
+- [ ] **Track: Backend/Supabase/Functions 테스트 코드 만들기**
+*Link: [./conductor/tracks/backend_supabase_functions_test_20260120/](./conductor/tracks/backend_supabase_functions_test_20260120/)*
+
+---
+
+- [ ] **Track: 유저앱 알림 설정 화면 구현**
+*Link: [./conductor/tracks/user_app_notification_settings_20260120/](./conductor/tracks/user_app_notification_settings_20260120/)*

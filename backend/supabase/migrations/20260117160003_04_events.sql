@@ -35,6 +35,7 @@ create table public.events (
   contact_options jsonb default '{}'::jsonb,
   start_time timestamptz not null,
   end_time timestamptz not null,
+  min_confirmed_count integer not null default 0,
   max_participants int not null default 20,
   current_participants int not null default 0,
   status text not null default 'scheduled' check (status in ('scheduled', 'cancelled', 'completed')),
@@ -116,6 +117,57 @@ create trigger handle_updated_at before update on public.entry_groups for each r
 create trigger handle_updated_at before update on public.ticket_templates for each row execute procedure moddatetime (updated_at);
 create trigger handle_updated_at before update on public.tickets for each row execute procedure moddatetime (updated_at);
 create trigger handle_updated_at before update on public.party_embeddings for each row execute procedure moddatetime (updated_at);
+
+-- 3.1. Capacity Synchronization Logic
+-- Function to sync max_participants from tickets to events/parties
+create or replace function public.sync_max_participants()
+returns trigger as $$
+begin
+  -- Case 1: Change in 'tickets' table -> Update 'events'
+  if (TG_TABLE_NAME = 'tickets') then
+    update public.events
+    set max_participants = (
+      select coalesce(sum(quantity), 0)
+      from public.tickets
+      where event_id = coalesce(new.event_id, old.event_id)
+    )
+    where id = coalesce(new.event_id, old.event_id);
+    return null;
+  end if;
+
+  -- Case 2: Change in 'ticket_templates' table -> Update 'parties'
+  if (TG_TABLE_NAME = 'ticket_templates') then
+    update public.parties
+    set max_participants = (
+      select coalesce(sum(quantity), 0)
+      from public.ticket_templates
+      where party_id = coalesce(new.party_id, old.party_id)
+    )
+    where id = coalesce(new.party_id, old.party_id);
+    return null;
+  end if;
+
+  return null;
+end;
+$$ language plpgsql security definer;
+
+-- Trigger for tickets (Events)
+create trigger on_ticket_change
+after insert or update of quantity or delete on public.tickets
+for each row execute procedure public.sync_max_participants();
+
+-- Trigger for ticket_templates (Parties)
+create trigger on_ticket_template_change
+after insert or update of quantity or delete on public.ticket_templates
+for each row execute procedure public.sync_max_participants();
+
+-- 3.2. Constraints
+-- Ensure min_confirmed_count <= max_participants in parties and events
+alter table public.parties add constraint check_min_max_participants 
+  check (min_confirmed_count <= max_participants);
+
+alter table public.events add constraint check_min_max_participants 
+  check (min_confirmed_count <= max_participants);
 
 -- 4. RLS Policies
 alter table public.parties enable row level security;

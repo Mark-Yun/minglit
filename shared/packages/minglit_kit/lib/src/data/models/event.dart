@@ -25,6 +25,7 @@ abstract class Event with _$Event {
     @JsonKey(name: 'contact_options')
     @Default({})
     Map<String, dynamic> contactOptions,
+    @JsonKey(name: 'min_confirmed_count') @Default(0) int minConfirmedCount,
     @JsonKey(name: 'max_participants') @Default(20) int maxParticipants,
     @JsonKey(name: 'current_participants') @Default(0) int currentParticipants,
     @Default('scheduled') String status,
@@ -57,6 +58,7 @@ abstract class Event with _$Event {
           ? Map<String, dynamic>.from(party.description!)
           : null,
       contactOptions: Map<String, dynamic>.from(party.contactOptions),
+      minConfirmedCount: party.minConfirmedCount,
       maxParticipants: party.maxParticipants,
       entryGroups: party.entryGroups
           ?.map(EntryGroup.createFromTemplate)

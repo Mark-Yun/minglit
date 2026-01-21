@@ -30,12 +30,12 @@ abstract class PartyCreateWizardState with _$PartyCreateWizardState {
 
     // Step 2: Location
     Location? selectedLocation,
-    String? addressDetail,
-    String? directionsGuide,
+    @Default('') String addressDetail,
+    @Default('') String directionsGuide,
 
     // Step 3: Capacity & Contact
     @Default(5) int minConfirmedCount,
-    @Default(20) int maxParticipants,
+    @Default(0) int maxParticipants,
     @Default('') String contactPhone,
     @Default('') String contactEmail,
     String? contactKakao,
@@ -77,24 +77,25 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
     state = state.copyWith(currentStep: step);
   }
 
-  // Update Methods for each field...
+  // --- Step 1: Basic Info ---
   void updateTitle(String value) => state = state.copyWith(title: value);
   void updateDescription(Map<String, dynamic> value) =>
       state = state.copyWith(description: value);
   void updateImages(List<XFile> files) =>
       state = state.copyWith(imageFiles: files);
 
+  // --- Step 2: Location ---
   void updateLocation(Location? loc) =>
       state = state.copyWith(selectedLocation: loc);
-  void updateAddressDetail(String? val) =>
+  void updateAddressDetail(String val) =>
       state = state.copyWith(addressDetail: val);
-  void updateDirections(String? val) =>
+  void updateDirections(String val) =>
       state = state.copyWith(directionsGuide: val);
 
-  void updateCapacity({int? min, int? max}) {
+  // --- Step 3: Capacity & Contact ---
+  void updateCapacity({int? min}) {
     state = state.copyWith(
       minConfirmedCount: min ?? state.minConfirmedCount,
-      maxParticipants: max ?? state.maxParticipants,
     );
   }
 
@@ -115,6 +116,7 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
     state = state.copyWith(enabledContactMethods: current);
   }
 
+  // --- Step 4: Entry Groups ---
   void addEntryGroup(EntryGroupTemplate group) {
     state = state.copyWith(entryGroups: [...state.entryGroups, group]);
   }
@@ -133,21 +135,31 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
     );
   }
 
+  // --- Step 5: Tickets ---
+  void _updateMaxParticipants() {
+    final total = state.tickets.fold<int>(0, (sum, t) => sum + t.quantity);
+    state = state.copyWith(maxParticipants: total);
+  }
+
   void addTicket(TicketTemplate ticket) {
     state = state.copyWith(tickets: [...state.tickets, ticket]);
+    _updateMaxParticipants();
   }
 
   void updateTicket(int index, TicketTemplate ticket) {
     final list = List<TicketTemplate>.from(state.tickets);
     list[index] = ticket;
     state = state.copyWith(tickets: list);
+    _updateMaxParticipants();
   }
 
   void removeTicket(int index) {
     final list = List<TicketTemplate>.from(state.tickets)..removeAt(index);
     state = state.copyWith(tickets: list);
+    _updateMaxParticipants();
   }
 
+  // --- Validation ---
   List<String> get validationErrors {
     final errors = <String>[];
 
@@ -180,47 +192,27 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
       errors.add('최소 한 개의 티켓을 생성해야 합니다.');
     }
 
-    // Capacity Check
-    final totalIssued = state.tickets.fold(0, (sum, t) => sum + t.quantity);
-    if (totalIssued < state.maxParticipants) {
+    // Capacity Check: Ensure min is not more than current total max
+    if (state.minConfirmedCount > state.maxParticipants) {
       errors.add(
-        '총 발행 티켓 수($totalIssued매)가 정원(${state.maxParticipants}명)보다 적습니다.',
+        '최소 확정 인원(${state.minConfirmedCount}명)이 '
+        '최대 정원(${state.maxParticipants}명)보다 많습니다.',
       );
     }
 
     return errors;
   }
 
+  // --- Final Submission ---
   Future<void> submit() async {
     state = state.copyWith(status: const AsyncValue.loading());
 
     final result = await AsyncValue.guard(() async {
       try {
-        // 1. Business Validation
-        if (state.selectedLocation == null) {
-          throw const MinglitUserException('파티 장소를 선택해주세요.');
-        }
-
-        if (state.enabledContactMethods.isEmpty) {
-          throw const MinglitUserException('최소 한 개의 문의 연락처를 선택해야 합니다.');
-        }
-
-        if (state.entryGroups.isEmpty) {
-          throw const MinglitUserException('최소 한 개의 입장 그룹을 생성해야 합니다.');
-        }
-
-        if (state.tickets.isEmpty) {
-          throw const MinglitUserException('최소 한 개의 티켓 템플릿을 생성해야 합니다.');
-        }
-
-        final ops = state.description['ops'] as List?;
-        if (ops == null ||
-            ops.isEmpty ||
-            (ops.length == 1 &&
-                (ops[0] as Map<String, dynamic>)['insert'] == '\n')) {
-          // Description is basically required
-          // We can add error state to Step1 if needed, or just toast
-          throw const MinglitUserException('파티 설명을 입력해주세요.');
+        // Business Validation
+        final errors = validationErrors;
+        if (errors.isNotEmpty) {
+          throw MinglitUserException(errors.first);
         }
 
         final partnerRepo = ref.read(partnerRepositoryProvider);
@@ -235,7 +227,7 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
         final ticketRepo = ref.read(ticketRepositoryProvider);
         var imageUrls = <String>[];
 
-        // 2. Upload Images
+        // 1. Upload Images
         if (state.imageFiles.isNotEmpty) {
           imageUrls = await partyRepo.uploadPartyImages(
             state.imageFiles,
@@ -243,7 +235,7 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
           );
         }
 
-        // 3. Prepare Contact Options
+        // 2. Prepare Contact Options
         final contactOptions = <String, dynamic>{};
         if (state.enabledContactMethods.contains('phone') &&
             state.contactPhone.isNotEmpty) {
@@ -259,7 +251,7 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
           contactOptions['kakao_open_chat'] = state.contactKakao;
         }
 
-        // 4. Create Location (if selected)
+        // 3. Create Location
         String? locationId;
         if (state.selectedLocation != null) {
           final loc = state.selectedLocation!;
@@ -273,9 +265,7 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
           locationId = newLocation.id;
         }
 
-        // 5. Create Party
-        // Collect all required verification IDs from entry groups for
-        // legacy compatibility
+        // 4. Create Party
         final allVerifIds = state.entryGroups
             .expand((e) => e.requiredVerificationIds)
             .toSet()
@@ -299,7 +289,7 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
 
         final createdParty = await partyRepo.createParty(newParty);
 
-        // 6. Create Ticket Templates linked to Party
+        // 5. Create Ticket Templates
         for (final template in state.tickets) {
           await ticketRepo.createTicketTemplate(
             template.copyWith(partyId: createdParty.id),

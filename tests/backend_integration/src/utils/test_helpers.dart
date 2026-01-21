@@ -1,4 +1,35 @@
 import 'package:supabase/supabase.dart';
+import 'package:test_data_seeder/database_seeder.dart';
+
+/// Ensures the database is seeded with initial data.
+/// Returns a valid partner ID.
+Future<String> ensureDatabaseSeeded(SupabaseClient adminClient) async {
+  // 1. Check if partner exists
+  var partnerRes = await adminClient
+      .from('partners')
+      .select('id')
+      .limit(1)
+      .maybeSingle();
+
+  if (partnerRes == null) {
+    // 2. Run Seeder if no data
+    print('🌱 Seeding database for test...');
+    final seeder = DatabaseSeeder(adminClient);
+    await seeder.seed();
+
+    // 3. Get partner again
+    partnerRes = await adminClient
+        .from('partners')
+        .select('id')
+        .limit(1)
+        .maybeSingle();
+  }
+
+  if (partnerRes == null) {
+    throw Exception('🚨 Test Error: Seeder failed to create a partner.');
+  }
+  return partnerRes['id'] as String;
+}
 
 /// Finds a Male user, Age 25 (approx), Verified.
 Future<String> getMale25VerifiedUserId(SupabaseClient client) async {
