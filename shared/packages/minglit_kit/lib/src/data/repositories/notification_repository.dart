@@ -1,3 +1,4 @@
+import 'package:minglit_kit/src/data/models/user_settings.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NotificationRepository {
@@ -60,12 +61,15 @@ class NotificationRepository {
   }
 
   /// 유저 알림 설정 조회
-  Future<Map<String, dynamic>?> getSettings(String userId) async {
-    return await _client
+  Future<UserSettings?> getSettings(String userId) async {
+    final response = await _client
         .from('user_settings')
         .select()
         .eq('user_id', userId)
         .maybeSingle();
+    
+    if (response == null) return null;
+    return UserSettings.fromJson(response);
   }
 
   /// 유저 알림 설정 업데이트

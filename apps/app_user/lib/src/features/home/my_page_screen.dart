@@ -82,7 +82,7 @@ class MyPageScreen extends ConsumerWidget {
             title: const Text('알림 설정'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              // TODO(UI): 알림 설정으로 이동
+              unawaited(const NotificationSettingsRoute().push<void>(context));
             },
           ),
           const Divider(),

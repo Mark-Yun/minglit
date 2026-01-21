@@ -16,4 +16,6 @@ export 'src/features/iamport/iamport.dart';
 export 'src/features/notification/notification_list_screen.dart';
 export 'src/features/notification/notification_service.dart';
 export 'src/features/notification/notification_settings_screen.dart';
+export 'src/data/repositories/notification_repository.dart';
+export 'src/data/models/user_settings.dart';
 export 'src/features/verification/ui/identity_verification_screen.dart';

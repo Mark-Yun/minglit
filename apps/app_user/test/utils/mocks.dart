@@ -19,6 +19,9 @@ class MockVerificationRepository extends Mock
 
 class MockUserRepository extends Mock implements UserRepository {}
 
+class MockNotificationRepository extends Mock
+    implements NotificationRepository {}
+
 // --- Model Mocks (Optional, usually better to use real models) ---
 // But sometimes we need to mock complex objects
 class MockUser extends Mock implements User {}

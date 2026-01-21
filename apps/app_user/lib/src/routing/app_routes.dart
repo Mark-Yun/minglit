@@ -141,3 +141,15 @@ class PurchaseHistoryRoute extends GoRouteData with $PurchaseHistoryRoute {
   Widget build(BuildContext context, GoRouterState state) =>
       const PurchaseHistoryScreen();
 }
+
+/// **Notification Settings Route**
+/// Path: `/my/notification-settings`
+@TypedGoRoute<NotificationSettingsRoute>(path: '/my/notification-settings')
+class NotificationSettingsRoute extends GoRouteData
+    with $NotificationSettingsRoute {
+  const NotificationSettingsRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const NotificationSettingsScreen();
+}
