@@ -173,4 +173,4 @@
 ---
 
 - [ ] **Track: Backend/Supabase/Functions 테스트 코드 만들기**
-*Link: [./conductor/tracks/backend_supabase_functions_test_20260120/](./conductor/tracks/backend_supabase_functions_test_20260120/)*
+*Link: [./conductor/tracks/backend_supabase_functions_test_20260120/](./conductor/tracks/backend_supabase_functions_test_20260120/)*\n---\n\n- [ ] **Track: pg_tap 도입 및 DB 통합 테스트 마이그레이션**\n*Link: [./conductor/tracks/backend_pg_tap_migration_20260120/](./conductor/tracks/backend_pg_tap_migration_20260120/)*
