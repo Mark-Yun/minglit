@@ -43,7 +43,7 @@ class RevenueSummaryCard extends StatelessWidget {
               const SizedBox(height: 8),
               // TODO(developer): Bind real data
               Text(
-                '₩ 0', 
+                '₩ 0',
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: colorScheme.primary,

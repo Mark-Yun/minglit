@@ -68,9 +68,8 @@ class PartnerRepository {
 
       Log.d('🔍 [PartnerRepo] Found permissions raw data: $permissions');
 
-      final partnerIds = permissions
-          .map((e) => e['partner_id'] as String)
-          .toList();
+      final partnerIds =
+          permissions.map((e) => e['partner_id'] as String).toList();
 
       if (partnerIds.isEmpty) {
         Log.w('⚠️ [PartnerRepo] No managed partners found for user');
@@ -129,11 +128,9 @@ class PartnerRepository {
       Log.e('❌ [PartnerRepo] Application Failed', e, stackTrace);
       // Attempt cleanup (Best effort)
       try {
-        await _supabase.storage
-            .from('partner-proofs')
-            .remove(
-              [bizRegPath, bankbookPath].whereType<String>().toList(),
-            );
+        await _supabase.storage.from('partner-proofs').remove(
+          [bizRegPath, bankbookPath].whereType<String>().toList(),
+        );
       } on Exception catch (_) {
         // Ignore cleanup errors
       }
@@ -148,13 +145,11 @@ class PartnerRepository {
     final path = '$userId/${type}_$timestamp$extension';
     final bytes = await file.readAsBytes();
 
-    await _supabase.storage
-        .from('partner-proofs')
-        .uploadBinary(
-          path,
-          bytes,
-          fileOptions: FileOptions(contentType: file.mimeType),
-        );
+    await _supabase.storage.from('partner-proofs').uploadBinary(
+      path,
+      bytes,
+      fileOptions: FileOptions(contentType: file.mimeType),
+    );
     Log.d('_uploadFile success | path: $path');
     return path;
   }
@@ -375,4 +370,3 @@ class PartnerRepository {
     }
   }
 }
-

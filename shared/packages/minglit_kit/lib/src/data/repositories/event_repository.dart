@@ -341,16 +341,17 @@ class EventRepository {
   /// Counts pending review applications for a specific partner.
   Future<int> getPendingApplicationCount(String partnerId) async {
     try {
-      // Query verification_submissions joined with applications -> events -> parties
+      // Query verification_submissions joined with applications -> events
       // But RLS might restrict access. Assuming Partner has permission.
-      final count = await _supabase
+      final res = await _supabase
           .from('verification_submissions')
-          .select('id', const FetchOptions(count: CountOption.exact, head: true))
+          .select('id')
           .eq('partner_id', partnerId)
-          .eq('status', 'pending');
+          .eq('status', 'pending')
+          .count(CountOption.exact);
 
-      return count.count;
-    } catch (e, st) {
+      return res.count;
+    } on Exception catch (e, st) {
       Log.e('❌ [EventRepo] getPendingApplicationCount Error', e, st);
       return 0; // Fail safe
     }
@@ -361,8 +362,10 @@ class EventRepository {
   Future<List<Event>> getTodayEvents(String partnerId) async {
     try {
       final now = DateTime.now();
-      final startOfDay = DateTime(now.year, now.month, now.day).toIso8601String();
-      final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59).toIso8601String();
+      final startOfDay =
+          DateTime(now.year, now.month, now.day).toIso8601String();
+      final endOfDay =
+          DateTime(now.year, now.month, now.day, 23, 59, 59).toIso8601String();
 
       final data = await _supabase
           .from('events')
@@ -372,11 +375,12 @@ class EventRepository {
           .lte('start_time', endOfDay)
           .order('start_time');
 
-      return (data as List).map((json) => Event.fromJson(json)).toList();
+      return (data as List)
+          .map((dynamic json) => Event.fromJson(json as Map<String, dynamic>))
+          .toList();
     } catch (e, st) {
       Log.e('❌ [EventRepo] getTodayEvents Error', e, st);
       rethrow;
     }
   }
 }
-

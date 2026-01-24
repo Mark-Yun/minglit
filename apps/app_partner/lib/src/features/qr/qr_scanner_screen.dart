@@ -18,7 +18,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    unawaited(_controller.dispose());
     super.dispose();
   }
 
@@ -49,7 +49,6 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // final colorScheme = theme.colorScheme;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -137,7 +136,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                   color: Colors.white,
                   size: 30,
                 ),
-                onPressed: () => _controller.toggleTorch(),
+                onPressed: _controller.toggleTorch,
               ),
             ),
           ),
