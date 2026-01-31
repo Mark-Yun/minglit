@@ -103,9 +103,10 @@ class _ReviewVerificationScreenState
             maxLines: 3,
             decoration: InputDecoration(
               labelText: context
-                  .l10n.reviewVerification_dialog_correction_commentLabel,
-              hintText: context
-                  .l10n.reviewVerification_dialog_correction_commentHint,
+                  .l10n
+                  .reviewVerification_dialog_correction_commentLabel,
+              hintText:
+                  context.l10n.reviewVerification_dialog_correction_commentHint,
             ),
           ),
         ],
@@ -132,7 +133,6 @@ class _ReviewVerificationScreenState
       ],
     );
   }
-
 
   Future<void> _showCommentsModal(String submissionId) async {
     await showModalBottomSheet<void>(

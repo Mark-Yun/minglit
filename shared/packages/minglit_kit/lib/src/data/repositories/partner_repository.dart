@@ -355,4 +355,24 @@ class PartnerRepository {
       rethrow;
     }
   }
+
+  /// Fetches the current user's role and permissions for a specific partner.
+  Future<Map<String, dynamic>?> getMyMemberRole(String partnerId) async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) return null;
+
+    try {
+      final data = await _supabase
+          .from('partner_member_permissions')
+          .select('role, permissions')
+          .match({'partner_id': partnerId, 'user_id': userId})
+          .maybeSingle();
+
+      return data;
+    } catch (e, st) {
+      Log.e('❌ [PartnerRepo] getMyMemberRole Error', e, st);
+      rethrow;
+    }
+  }
 }
+

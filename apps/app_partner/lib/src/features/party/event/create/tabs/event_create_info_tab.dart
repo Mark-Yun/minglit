@@ -47,8 +47,9 @@ class EventCreateInfoTab extends ConsumerWidget {
                         title: state.title,
                         description: state.description,
                         // Default for event creation
-                        imageUrls:
-                            state.imageUrl != null ? [state.imageUrl!] : [],
+                        imageUrls: state.imageUrl != null
+                            ? [state.imageUrl!]
+                            : [],
                         createdAt: DateTime.now(),
                         updatedAt: DateTime.now(),
                       ),
@@ -160,8 +161,9 @@ class EventCreateInfoTab extends ConsumerWidget {
             title: context.l10n.partyDetail_section_entranceCondition,
             onTap: () {}, // Event Entry Groups are read-only for now
             child: PartyEntranceConditionSummary(
-              entryGroups:
-                  state.entryGroups.map((e) => e.toTemplate()).toList(),
+              entryGroups: state.entryGroups
+                  .map((e) => e.toTemplate())
+                  .toList(),
             ),
           ),
         ],

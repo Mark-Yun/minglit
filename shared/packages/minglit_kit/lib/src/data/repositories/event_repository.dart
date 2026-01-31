@@ -336,4 +336,47 @@ class EventRepository {
       rethrow;
     }
   }
+
+  /// [Partner Dashboard]
+  /// Counts pending review applications for a specific partner.
+  Future<int> getPendingApplicationCount(String partnerId) async {
+    try {
+      // Query verification_submissions joined with applications -> events -> parties
+      // But RLS might restrict access. Assuming Partner has permission.
+      final count = await _supabase
+          .from('verification_submissions')
+          .select('id', const FetchOptions(count: CountOption.exact, head: true))
+          .eq('partner_id', partnerId)
+          .eq('status', 'pending');
+
+      return count.count;
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] getPendingApplicationCount Error', e, st);
+      return 0; // Fail safe
+    }
+  }
+
+  /// [Partner Dashboard]
+  /// Fetches events scheduled for today for a specific partner.
+  Future<List<Event>> getTodayEvents(String partnerId) async {
+    try {
+      final now = DateTime.now();
+      final startOfDay = DateTime(now.year, now.month, now.day).toIso8601String();
+      final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59).toIso8601String();
+
+      final data = await _supabase
+          .from('events')
+          .select('*, party:parties!inner(*)')
+          .eq('party.partner_id', partnerId)
+          .gte('start_time', startOfDay)
+          .lte('start_time', endOfDay)
+          .order('start_time');
+
+      return (data as List).map((json) => Event.fromJson(json)).toList();
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] getTodayEvents Error', e, st);
+      rethrow;
+    }
+  }
 }
+

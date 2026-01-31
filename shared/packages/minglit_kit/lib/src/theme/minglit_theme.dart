@@ -196,10 +196,12 @@ class MinglitTheme {
     required String title,
     List<Widget>? actions,
     bool centerTitle = true,
+    bool showBackButton = true,
   }) {
     return AppBar(
       title: Text(title),
       centerTitle: centerTitle,
+      automaticallyImplyLeading: showBackButton,
       actions: actions,
       backgroundColor: MinglitColors.background,
       surfaceTintColor: Colors.transparent,

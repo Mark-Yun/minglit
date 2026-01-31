@@ -173,4 +173,19 @@
 ---
 
 - [ ] **Track: Backend/Supabase/Functions 테스트 코드 만들기**
-*Link: [./conductor/tracks/backend_supabase_functions_test_20260120/](./conductor/tracks/backend_supabase_functions_test_20260120/)*\n---\n\n- [ ] **Track: pg_tap 도입 및 DB 통합 테스트 마이그레이션**\n*Link: [./conductor/tracks/backend_pg_tap_migration_20260120/](./conductor/tracks/backend_pg_tap_migration_20260120/)*
+*Link: [./conductor/tracks/backend_supabase_functions_test_20260120/](./conductor/tracks/backend_supabase_functions_test_20260120/)*
+
+---
+
+- [ ] **Track: pg_tap 도입 및 DB 통합 테스트 마이그레이션**
+*Link: [./conductor/tracks/backend_pg_tap_migration_20260120/](./conductor/tracks/backend_pg_tap_migration_20260120/)*
+
+---
+
+- [ ] **Track: 유저앱 알림 설정 화면 구현**
+*Link: [./conductor/tracks/user_app_notification_settings_20260120/](./conductor/tracks/user_app_notification_settings_20260120/)*
+
+---
+
+- [ ] **Track: 유저 앱 메인 화면 및 하단 네비게이션 구조 구현**
+*Link: [./conductor/tracks/user_app_home_navigation_20260120/](./conductor/tracks/user_app_home_navigation_20260120/)*
