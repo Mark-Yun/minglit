@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -16,6 +18,34 @@ class TicketSelectionSheet extends ConsumerStatefulWidget {
 class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
   String? _selectedTicketId;
   int _quantity = 1;
+  Map<String, bool> _balanceStatus = {};
+  bool _isBalanceStatusLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_fetchBalanceStatus());
+  }
+
+  Future<void> _fetchBalanceStatus() async {
+    try {
+      final repository = ref.read(eventRepositoryProvider);
+      final status = await repository.getTicketBalanceStatus(widget.event.id);
+      if (!mounted) return;
+      setState(() {
+        _balanceStatus = status;
+        _isBalanceStatusLoading = false;
+        if (_selectedTicketId != null &&
+            !_isTicketAllowedById(_selectedTicketId!)) {
+          _selectedTicketId = null;
+          _quantity = 1;
+        }
+      });
+    } on Exception catch (_) {
+      if (!mounted) return;
+      setState(() => _isBalanceStatusLoading = false);
+    }
+  }
 
   void _onNext() {
     if (_selectedTicketId == null) return;
@@ -68,7 +98,12 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
               ),
             )
           else
-            ...tickets.map(_buildTicketOption),
+            ...tickets.map(
+              (ticket) => _buildTicketOption(
+                ticket,
+                isLocked: !_isBalanceStatusLoading && !_isTicketAllowed(ticket),
+              ),
+            ),
           const SizedBox(height: MinglitSpacing.large),
 
           // Quantity (Only if ticket selected)
@@ -122,68 +157,119 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
     );
   }
 
-  Widget _buildTicketOption(Ticket ticket) {
+  Widget _buildTicketOption(Ticket ticket, {required bool isLocked}) {
     final isSelected = _selectedTicketId == ticket.id;
     final theme = Theme.of(context);
     final formatter = NumberFormat('#,###');
+    final nameColor = isLocked
+        ? theme.colorScheme.onSurfaceVariant
+        : isSelected
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurface;
+    final priceColor = isLocked ? theme.colorScheme.onSurfaceVariant : null;
 
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedTicketId = ticket.id;
-          _quantity = 1; // Reset quantity on change
-        });
-      },
+      onTap: isLocked
+          ? null
+          : () {
+              setState(() {
+                _selectedTicketId = ticket.id;
+                _quantity = 1; // Reset quantity on change
+              });
+            },
       child: Container(
         margin: const EdgeInsets.only(bottom: MinglitSpacing.small),
-        padding: const EdgeInsets.all(MinglitSpacing.medium),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: isSelected
-                ? theme.colorScheme.primary
-                : theme.colorScheme.outlineVariant,
-            width: isSelected ? 2 : 1,
-          ),
-          borderRadius: BorderRadius.circular(MinglitRadius.input),
-          color: isSelected
-              ? theme.colorScheme.primary.withValues(alpha: 0.05)
-              : theme.colorScheme.surface,
-        ),
-        child: Row(
+        child: Stack(
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    ticket.name,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: isSelected
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurface,
-                    ),
+            Opacity(
+              opacity: isLocked ? 0.5 : 1,
+              child: Container(
+                padding: const EdgeInsets.all(MinglitSpacing.medium),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: isSelected
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.outlineVariant,
+                    width: isSelected ? 2 : 1,
                   ),
-                  if (ticket.description != null)
-                    Text(
-                      ticket.description!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                  borderRadius: BorderRadius.circular(MinglitRadius.input),
+                  color: isSelected
+                      ? theme.colorScheme.primary.withValues(alpha: 0.05)
+                      : theme.colorScheme.surface,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            ticket.name,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: nameColor,
+                            ),
+                          ),
+                          if (ticket.description != null)
+                            Text(
+                              ticket.description!,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                ],
+                    Text(
+                      '${formatter.format(ticket.price)}원',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: priceColor,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            Text(
-              '${formatter.format(ticket.price)}원',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+            if (isLocked)
+              Positioned(
+                top: MinglitSpacing.small,
+                right: MinglitSpacing.small,
+                child: _buildBalanceBadge(theme),
               ),
-            ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildBalanceBadge(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: MinglitSpacing.small,
+        vertical: MinglitSpacing.xsmall,
+      ),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(MinglitRadius.small),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Text(
+        '성비 조절 중',
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  bool _isTicketAllowed(Ticket ticket) {
+    return _isTicketAllowedById(ticket.id);
+  }
+
+  bool _isTicketAllowedById(String ticketId) {
+    return _balanceStatus[ticketId] ?? true;
   }
 
   Widget _buildQuantityStepper() {

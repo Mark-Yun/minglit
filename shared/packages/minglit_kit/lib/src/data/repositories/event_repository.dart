@@ -170,6 +170,35 @@ class EventRepository {
     }
   }
 
+  /// Fetches ticket balance status for a specific event.
+  Future<Map<String, bool>> getTicketBalanceStatus(String eventId) async {
+    Log.d('getTicketBalanceStatus called | eventId: $eventId');
+    try {
+      final response = await _supabase.rpc(
+        'get_event_ticket_balance_status',
+        params: {'p_event_id': eventId},
+      );
+
+      if (response == null) return {};
+
+      final result = <String, bool>{};
+      for (final item in response as List<dynamic>) {
+        final data = item as Map<String, dynamic>;
+        final ticketId = data['ticket_id'] as String?;
+        final allowed = data['allowed'] as bool?;
+        if (ticketId != null && allowed != null) {
+          result[ticketId] = allowed;
+        }
+      }
+
+      Log.d('getTicketBalanceStatus success | count: ${result.length}');
+      return result;
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] getTicketBalanceStatus Error', e, st);
+      rethrow;
+    }
+  }
+
   /// Fetches the application record for a specific user and event.
   Future<EventApplication?> getApplication({
     required String eventId,
@@ -362,10 +391,19 @@ class EventRepository {
   Future<List<Event>> getTodayEvents(String partnerId) async {
     try {
       final now = DateTime.now();
-      final startOfDay =
-          DateTime(now.year, now.month, now.day).toIso8601String();
-      final endOfDay =
-          DateTime(now.year, now.month, now.day, 23, 59, 59).toIso8601String();
+      final startOfDay = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).toIso8601String();
+      final endOfDay = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        23,
+        59,
+        59,
+      ).toIso8601String();
 
       final data = await _supabase
           .from('events')

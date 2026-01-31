@@ -40,6 +40,8 @@ abstract class PartyCreateWizardState with _$PartyCreateWizardState {
     @Default('') String contactEmail,
     String? contactKakao,
     @Default({}) Set<String> enabledContactMethods,
+    @Default(false) bool balanceEnabled,
+    @Default(2) int balanceTolerance,
 
     // Step 4: Entry Rules (Entry Groups)
     @Default([]) List<EntryGroupTemplate> entryGroups,
@@ -105,6 +107,11 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
       state = state.copyWith(contactEmail: val);
   void updateContactKakao(String val) =>
       state = state.copyWith(contactKakao: val);
+
+  void toggleBalance() =>
+      state = state.copyWith(balanceEnabled: !state.balanceEnabled);
+  void updateBalanceTolerance(int val) =>
+      state = state.copyWith(balanceTolerance: val);
 
   void toggleContactMethod(String method) {
     final current = Set<String>.from(state.enabledContactMethods);
@@ -271,6 +278,11 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
             .toSet()
             .toList();
 
+        final balanceConfig = <String, dynamic>{
+          'enabled': state.balanceEnabled,
+          'tolerance': state.balanceTolerance,
+        };
+
         final newParty = Party(
           id: '', // Server generated
           partnerId: partnerId,
@@ -287,7 +299,10 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
           updatedAt: DateTime.now(),
         );
 
-        final createdParty = await partyRepo.createParty(newParty);
+        final createdParty = await partyRepo.createParty(
+          newParty,
+          extraFields: {'balance_config': balanceConfig},
+        );
 
         // 5. Create Ticket Templates
         for (final template in state.tickets) {

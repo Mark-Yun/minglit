@@ -85,10 +85,13 @@ class PartyRepository {
   }
 
   /// Creates a new party.
-  Future<Party> createParty(Party party) async {
+  Future<Party> createParty(
+    Party party, {
+    Map<String, dynamic>? extraFields,
+  }) async {
     Log.d('createParty called | partnerId: ${party.partnerId}');
     try {
-      final partyJson = party.toDbJson();
+      final partyJson = party.toDbJson()..addAll(extraFields ?? {});
 
       final data = await _supabase
           .from('parties')

@@ -89,6 +89,31 @@ class _Step3CapacityContactState extends ConsumerState<Step3CapacityContact> {
           ),
           const SizedBox(height: MinglitSpacing.large),
           Text(
+            '성비 균형 관리',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.medium),
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('성비 균형 자동 관리'),
+            value: state.balanceEnabled,
+            onChanged: (_) => notifier.toggleBalance(),
+          ),
+          if (state.balanceEnabled) ...[
+            const SizedBox(height: MinglitSpacing.small),
+            NumberStepperInput(
+              label: '허용 오차',
+              value: state.balanceTolerance,
+              onChanged: notifier.updateBalanceTolerance,
+              suffixText: '명',
+              min: 0,
+              max: 10,
+            ),
+          ],
+          const SizedBox(height: MinglitSpacing.large),
+          Text(
             context.l10n.partyCreate_label_contact,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
