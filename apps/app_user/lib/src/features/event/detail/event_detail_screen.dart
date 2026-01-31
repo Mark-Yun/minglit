@@ -4,6 +4,7 @@ import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/event/admission/event_admission_controller.dart';
 import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
 import 'package:app_user/src/features/ticket/ui/ticket_selection_sheet.dart';
+import 'package:app_user/src/utils/share_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:go_router/go_router.dart';
@@ -43,6 +44,7 @@ class _EventDetailContent extends ConsumerWidget {
     final party = event.party;
     final partner = party?.partner;
     final location = event.location ?? party?.location;
+    final eventTitle = party?.title ?? event.title ?? '제목 없음';
 
     // Date Format
     final dateLabel = DateFormat(
@@ -67,6 +69,21 @@ class _EventDetailContent extends ConsumerWidget {
             ),
             leading: BackButton(color: theme.colorScheme.onPrimary),
             actions: [
+              IconButton(
+                onPressed: () {
+                  unawaited(
+                    ShareUtils.shareEvent(
+                      eventTitle: eventTitle,
+                      eventId: event.id,
+                    ),
+                  );
+                },
+                icon: Icon(
+                  Icons.share_outlined,
+                  color: theme.colorScheme.onPrimary,
+                ),
+                tooltip: '공유하기',
+              ),
               Padding(
                 padding: const EdgeInsets.only(right: MinglitSpacing.small),
                 child: MinglitSocialButton(
@@ -120,7 +137,7 @@ class _EventDetailContent extends ConsumerWidget {
 
                   // Title
                   Text(
-                    party?.title ?? event.title ?? '제목 없음',
+                    eventTitle,
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
