@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:app_user/src/features/event/admission/event_application_controller.dart';
 import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
+import 'package:app_user/src/features/payment/ui/payment_success_screen.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -76,12 +76,21 @@ class _WizardBodyState extends ConsumerState<_WizardBody> {
     // Listen for success
     ref.listen(eventApplicationControllerProvider(widget.event), (_, next) {
       if (next.status == EventApplicationStatus.success) {
-        context
-          ..pop()
-          ..showMinglitSuccess('신청이 완료되었습니다! 파트너 심사 후 알려드릴게요.');
+        final ticket = next.selectedTicket;
+        if (ticket == null) return;
+        unawaited(
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute<void>(
+              builder: (_) => PaymentSuccessScreen(
+                eventId: widget.event.id,
+                ticketId: ticket.id,
+              ),
+            ),
+          ),
+        );
       }
       if (next.status == EventApplicationStatus.error) {
-        handleMinglitError(context, next.errorMessage!);
+        unawaited(_handlePaymentError(context, next.errorMessage));
       }
     });
 
@@ -109,6 +118,33 @@ class _WizardBodyState extends ConsumerState<_WizardBody> {
         ),
       ],
     );
+  }
+
+  Future<void> _handlePaymentError(
+    BuildContext context,
+    String? errorMessage,
+  ) async {
+    final message = errorMessage ?? '결제를 완료하지 못했습니다.';
+    final retry = await context.showMinglitConfirm(
+      title: '결제 실패',
+      message: '$message\n\n다시 시도하시겠어요?',
+      confirmLabel: '다시 시도',
+      cancelLabel: '닫기',
+    );
+
+    if (!mounted) return;
+    ref
+        .read(eventApplicationControllerProvider(widget.event).notifier)
+        .resetStatus();
+
+    if (!context.mounted) return;
+    if (retry) {
+      unawaited(
+        ref
+            .read(eventApplicationControllerProvider(widget.event).notifier)
+            .processPayment(context),
+      );
+    }
   }
 }
 
@@ -459,7 +495,7 @@ class _Footer extends StatelessWidget {
                     ? const MinglitCircularProgressIndicator(
                         size: 20,
                       )
-                    : Text(isFirstStep ? '다음' : '결제하고 신청하기'),
+                    : Text(isFirstStep ? '다음' : '결제하기'),
               ),
             ),
           ],

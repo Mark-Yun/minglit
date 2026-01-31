@@ -267,47 +267,73 @@ class EventRepository {
   }) async {
     Log.d('createOrder called | event: $eventId');
     try {
-      // 1. Create or Update Application (Upsert)
-      // If a pending application exists, update it with new details
-      // (e.g. retrying with different ticket).
-      final res = await _supabase
-          .from('event_applications')
-          .upsert(
-            {
-              'event_id': eventId,
-              'ticket_id': ticketId,
-              'user_id': userId,
-              'payment_amount': amount,
-              'status': 'pending', // Reset to pending if retrying
-              'updated_at': DateTime.now().toIso8601String(),
-            },
-            onConflict: 'event_id, user_id',
-          )
-          .select('id')
-          .single();
-      final appId = res['id'] as String;
+      final pendingPaymentId =
+          'PENDING_${DateTime.now().millisecondsSinceEpoch}';
+      final existingApp = await getApplication(
+        eventId: eventId,
+        userId: userId,
+      );
 
-      // 2. Create Submission (if verification data provided)
-      if (verificationData != null) {
-        // Retry Handling: Delete existing pending submission
-        // for this application so we don't duplicate or have stale data.
+      if (existingApp == null) {
+        final appId = await applyEvent(
+          eventId: eventId,
+          ticketId: ticketId,
+          userId: userId,
+          paymentId: pendingPaymentId,
+          paymentAmount: amount,
+          verificationData: verificationData,
+        );
+
+        await _supabase
+            .from('event_applications')
+            .update({
+              'status': 'pending',
+              'payment_id': pendingPaymentId,
+              'ticket_id': ticketId,
+              'payment_amount': amount,
+              'updated_at': DateTime.now().toIso8601String(),
+            })
+            .eq('id', appId);
+
+        return appId;
+      }
+
+      await _supabase
+          .from('event_applications')
+          .update({
+            'ticket_id': ticketId,
+            'payment_id': pendingPaymentId,
+            'payment_amount': amount,
+            'status': 'pending',
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', existingApp.id);
+
+      if (verificationData == null) {
         await _supabase
             .from('verification_submissions')
             .delete()
-            .eq('application_id', appId)
+            .eq('application_id', existingApp.id)
             .eq('status', 'pending');
-
-        await _supabase.from('verification_submissions').insert({
-          'application_id': appId,
-          'partner_id': verificationData['partner_id'],
-          'verification_id': verificationData['verification_id'],
-          'user_id': userId,
-          'status': 'pending',
-          'snapshot_data': verificationData['data'],
-        });
+        return existingApp.id;
       }
 
-      return appId;
+      await _supabase
+          .from('verification_submissions')
+          .delete()
+          .eq('application_id', existingApp.id)
+          .eq('status', 'pending');
+
+      await _supabase.from('verification_submissions').insert({
+        'application_id': existingApp.id,
+        'partner_id': verificationData['partner_id'],
+        'verification_id': verificationData['verification_id'],
+        'user_id': userId,
+        'status': 'pending',
+        'snapshot_data': verificationData['data'],
+      });
+
+      return existingApp.id;
     } catch (e, st) {
       Log.e('❌ [EventRepo] createOrder Error', e, st);
       rethrow;
