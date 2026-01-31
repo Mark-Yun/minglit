@@ -38,6 +38,7 @@ jobs:
             - 'apps/landing_partner/**'
             - 'shared/web/**'
           supabase:
+            - 'backend/**'
             - 'backend/supabase/**'
 
   # App User CI
@@ -55,8 +56,13 @@ jobs:
           channel: 'stable'
           cache: true
       - run: flutter pub get
+      - run: flutter format --set-exit-if-changed .
       - run: flutter analyze
-      - run: flutter test
+      - run: flutter test --coverage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-user-coverage
+          path: apps/app_user/coverage
 
   # App Partner CI
   test-app-partner:
@@ -73,8 +79,13 @@ jobs:
           channel: 'stable'
           cache: true
       - run: flutter pub get
+      - run: flutter format --set-exit-if-changed .
       - run: flutter analyze
-      - run: flutter test
+      - run: flutter test --coverage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-partner-coverage
+          path: apps/app_partner/coverage
 
   # Landing User CI
   lint-landing-user:
@@ -93,6 +104,7 @@ jobs:
           cache-dependency-path: ./apps/landing_user/package-lock.json
       - run: npm ci
       - run: npm run lint
+      - run: npm run build
 
   # Landing Partner CI
   lint-landing-partner:
@@ -111,6 +123,7 @@ jobs:
           cache-dependency-path: ./apps/landing_partner/package-lock.json
       - run: npm ci
       - run: npm run lint
+      - run: npm run build
 
   # Supabase Check
   check-supabase:
@@ -123,3 +136,20 @@ jobs:
         with:
           version: latest
       - run: supabase -v # CLI 설치 확인
+      - name: Start Supabase
+        run: supabase start
+        working-directory: backend
+      - name: Run pgTAP Database Tests
+        run: supabase test db
+        working-directory: backend
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Run Edge Function Tests
+        run: deno test --allow-all functions/
+        working-directory: backend/supabase
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop
+        working-directory: backend
