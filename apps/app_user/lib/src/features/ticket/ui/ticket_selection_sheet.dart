@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_user/src/features/event/admission/event_admission_controller.dart';
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -18,13 +19,19 @@ class TicketSelectionSheet extends ConsumerStatefulWidget {
 class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
   String? _selectedTicketId;
   int _quantity = 1;
-  Map<String, bool> _balanceStatus = {};
+  var _balanceStatus = <String, bool>{};
   bool _isBalanceStatusLoading = true;
+  bool _isUserDataLoading = true;
+  UserProfile? _userProfile;
+  List<String> _approvedVerificationIds = [];
+  TicketRecommendationResult? _recommendation;
+  bool _hasAutoSelected = false;
 
   @override
   void initState() {
     super.initState();
     unawaited(_fetchBalanceStatus());
+    unawaited(_fetchUserData());
   }
 
   Future<void> _fetchBalanceStatus() async {
@@ -35,16 +42,67 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
       setState(() {
         _balanceStatus = status;
         _isBalanceStatusLoading = false;
-        if (_selectedTicketId != null &&
-            !_isTicketAllowedById(_selectedTicketId!)) {
-          _selectedTicketId = null;
-          _quantity = 1;
-        }
       });
+      _updateRecommendation();
     } on Exception catch (_) {
       if (!mounted) return;
       setState(() => _isBalanceStatusLoading = false);
+      _updateRecommendation();
     }
+  }
+
+  Future<void> _fetchUserData() async {
+    final user = ref.read(currentUserProvider);
+    if (user == null) {
+      if (!mounted) return;
+      setState(() => _isUserDataLoading = false);
+      _updateRecommendation();
+      return;
+    }
+
+    final userRepository = ref.read(userRepositoryProvider);
+    final profile = await userRepository.getUserProfile(user.id);
+    final verificationIds = await userRepository.getApprovedVerificationIds(
+      user.id,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _userProfile = profile;
+      _approvedVerificationIds = verificationIds;
+      _isUserDataLoading = false;
+    });
+    _updateRecommendation();
+  }
+
+  void _updateRecommendation() {
+    if (!mounted) return;
+    if (_isBalanceStatusLoading || _isUserDataLoading) return;
+    final recommendation = TicketRecommendationUtil.recommend(
+      event: widget.event,
+      userProfile: _userProfile,
+      approvedVerificationIds: _approvedVerificationIds,
+      balanceStatus: _balanceStatus,
+    );
+
+    final recommendedTicket = recommendation.recommendedTicket;
+    final selectedIsEligible =
+        _selectedTicketId != null &&
+        recommendation.eligibleTickets.any(
+          (ticket) => ticket.id == _selectedTicketId,
+        );
+
+    setState(() {
+      _recommendation = recommendation;
+      if (!_hasAutoSelected) {
+        _selectedTicketId = recommendedTicket?.id;
+        _quantity = 1;
+        _hasAutoSelected = true;
+      } else if (!selectedIsEligible) {
+        _selectedTicketId = recommendedTicket?.id;
+        _quantity = 1;
+      }
+    });
   }
 
   void _onNext() {
@@ -67,6 +125,15 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final tickets = widget.event.tickets ?? [];
+    final recommendation = _recommendation;
+    final recommendedTicket = recommendation?.recommendedTicket;
+    final eligibleTickets = recommendation?.eligibleTickets ?? [];
+    final ineligibleReasons = recommendation?.ineligibleReasons ?? {};
+    final otherTickets = tickets
+        .where(
+          (ticket) => ticket.id != recommendedTicket?.id,
+        )
+        .toList();
 
     return Container(
       padding: const EdgeInsets.all(MinglitSpacing.large),
@@ -87,23 +154,80 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
             ),
           ),
           const SizedBox(height: MinglitSpacing.medium),
-          if (tickets.isEmpty)
+          if (_isBalanceStatusLoading || _isUserDataLoading)
             Padding(
               padding: const EdgeInsets.symmetric(
                 vertical: MinglitSpacing.large,
               ),
               child: Text(
-                '구매 가능한 티켓이 없습니다.',
+                '추천 티켓을 확인 중입니다.',
                 style: theme.textTheme.bodyMedium,
               ),
             )
-          else
+          else if (tickets.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: MinglitSpacing.large,
+              ),
+              child: Text(
+                '현재 구매 가능한 티켓이 없습니다.',
+                style: theme.textTheme.bodyMedium,
+              ),
+            )
+          else if (recommendedTicket == null) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: MinglitSpacing.medium,
+              ),
+              child: Text(
+                '현재 구매 가능한 티켓이 없습니다.',
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
             ...tickets.map(
               (ticket) => _buildTicketOption(
                 ticket,
-                isLocked: !_isBalanceStatusLoading && !_isTicketAllowed(ticket),
+                isLocked: true,
+                isRecommended: false,
+                ineligibleReason: ineligibleReasons[ticket.id],
               ),
             ),
+          ] else ...[
+            Text(
+              '추천 티켓',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: MinglitSpacing.small),
+            _buildTicketOption(
+              recommendedTicket,
+              isLocked: false,
+              isRecommended: true,
+              ineligibleReason: null,
+            ),
+            if (otherTickets.isNotEmpty) ...[
+              const SizedBox(height: MinglitSpacing.medium),
+              Text(
+                '다른 티켓',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: MinglitSpacing.small),
+              ...otherTickets.map((ticket) {
+                final isEligible = eligibleTickets.any(
+                  (eligible) => eligible.id == ticket.id,
+                );
+                return _buildTicketOption(
+                  ticket,
+                  isLocked: !isEligible,
+                  isRecommended: false,
+                  ineligibleReason: ineligibleReasons[ticket.id],
+                );
+              }),
+            ],
+          ],
           const SizedBox(height: MinglitSpacing.large),
 
           // Quantity (Only if ticket selected)
@@ -157,7 +281,12 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
     );
   }
 
-  Widget _buildTicketOption(Ticket ticket, {required bool isLocked}) {
+  Widget _buildTicketOption(
+    Ticket ticket, {
+    required bool isLocked,
+    required bool isRecommended,
+    required String? ineligibleReason,
+  }) {
     final isSelected = _selectedTicketId == ticket.id;
     final theme = Theme.of(context);
     final formatter = NumberFormat('#,###');
@@ -217,6 +346,18 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
                             ),
+                          if (isLocked && ineligibleReason != null)
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                top: MinglitSpacing.xsmall,
+                              ),
+                              child: Text(
+                                ineligibleReason,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -236,6 +377,12 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
                 top: MinglitSpacing.small,
                 right: MinglitSpacing.small,
                 child: _buildBalanceBadge(theme),
+              ),
+            if (!isLocked && isRecommended)
+              Positioned(
+                top: MinglitSpacing.small,
+                right: MinglitSpacing.small,
+                child: _buildRecommendedBadge(theme),
               ),
           ],
         ),
@@ -264,12 +411,25 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
     );
   }
 
-  bool _isTicketAllowed(Ticket ticket) {
-    return _isTicketAllowedById(ticket.id);
-  }
-
-  bool _isTicketAllowedById(String ticketId) {
-    return _balanceStatus[ticketId] ?? true;
+  Widget _buildRecommendedBadge(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: MinglitSpacing.small,
+        vertical: MinglitSpacing.xsmall,
+      ),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(MinglitRadius.small),
+        border: Border.all(color: theme.colorScheme.primary),
+      ),
+      child: Text(
+        '추천',
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: theme.colorScheme.onPrimaryContainer,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
   }
 
   Widget _buildQuantityStepper() {
@@ -281,11 +441,11 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
       ),
       child: Row(
         children: [
-          IconButton(
-            onPressed: _quantity > 1 ? () => setState(() => _quantity--) : null,
-            icon: const Icon(Icons.remove, size: MinglitIconSize.xsmall),
+          const IconButton(
+            onPressed: null,
+            icon: Icon(Icons.remove, size: MinglitIconSize.xsmall),
             padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            constraints: BoxConstraints(minWidth: 32, minHeight: 32),
           ),
           Text(
             '$_quantity',
@@ -294,7 +454,8 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
             ),
           ),
           IconButton(
-            onPressed: () => setState(() => _quantity++),
+            onPressed: () =>
+                context.showMinglitInfo('친구와 함께 참가하기 기능은 준비 중입니다.'),
             icon: const Icon(Icons.add, size: MinglitIconSize.xsmall),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
