@@ -1,0 +1,147 @@
+name: iOS Deploy (Requires Secrets)
+
+on:
+  push:
+    branches: ["dev", "main"]
+    paths:
+      - "apps/app_user/**"
+      - "shared/packages/minglit_kit/**"
+  workflow_dispatch:
+
+jobs:
+  ios-deploy:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: ./apps/app_user
+    env:
+      BUNDLE_ID: com.minglit.appUser
+      EXPORT_OPTIONS_PLIST: ios/ExportOptions.plist
+      KEYCHAIN_NAME: ci-signing.keychain-db
+      DERIVED_DATA_PATH: ~/Library/Developer/Xcode/DerivedData
+
+    steps:
+      # This workflow is a template. It requires secrets configuration.
+      # Required secrets:
+      # - APPLE_CERTIFICATE_BASE64
+      # - APPLE_CERTIFICATE_PASSWORD
+      # - APPLE_PROVISION_PROFILE_BASE64
+      # - APP_STORE_CONNECT_API_KEY_ID
+      # - APP_STORE_CONNECT_ISSUER_ID
+      # - APP_STORE_CONNECT_API_KEY_BASE64
+      # Optional (Fastlane match instead of manual cert/profile steps):
+      # - MATCH_GIT_URL
+      # - FASTLANE_USER
+      # - MATCH_PASSWORD
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          cache: true
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: |
+            apps/app_user/ios/Pods
+            ~/Library/Caches/CocoaPods
+          key: ${{ runner.os }}-cocoapods-${{ hashFiles('apps/app_user/ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cocoapods-
+
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.DERIVED_DATA_PATH }}
+          key: ${{ runner.os }}-deriveddata-${{ hashFiles('apps/app_user/ios/Podfile.lock', 'apps/app_user/ios/Runner.xcodeproj/project.pbxproj') }}
+          restore-keys: |
+            ${{ runner.os }}-deriveddata-
+
+      - name: Install CocoaPods
+        run: pod install
+        working-directory: ./apps/app_user/ios
+
+      # Optional: Fastlane match (requires secrets above).
+      # - name: Install Fastlane
+      #   if: ${{ secrets.MATCH_GIT_URL != '' }}
+      #   run: sudo gem install fastlane -N
+      # - name: Sync signing via match
+      #   if: ${{ secrets.MATCH_GIT_URL != '' }}
+      #   run: fastlane match appstore --readonly --git_url "$MATCH_GIT_URL"
+      #   env:
+      #     MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+      #     FASTLANE_USER: ${{ secrets.FASTLANE_USER }}
+      #     MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+
+      - name: Generate keychain password
+        run: echo "KEYCHAIN_PASSWORD=$(uuidgen)" >> $GITHUB_ENV
+
+      - name: Create keychain
+        run: |
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_NAME"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+          security list-keychains -d user -s "$KEYCHAIN_NAME"
+
+      - name: Import signing certificate
+        run: |
+          echo "$APPLE_CERTIFICATE_BASE64" | base64 --decode > signing.p12
+          security import signing.p12 -k "$KEYCHAIN_NAME" -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+          rm -f signing.p12
+        env:
+          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+
+      - name: Install provisioning profile
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "$APPLE_PROVISION_PROFILE_BASE64" | base64 --decode > profile.mobileprovision
+          profile_uuid=$(security cms -D -i profile.mobileprovision | /usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin)
+          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$profile_uuid.mobileprovision
+          rm -f profile.mobileprovision
+        env:
+          APPLE_PROVISION_PROFILE_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_BASE64 }}
+
+      - name: Create App Store Connect API key
+        run: |
+          mkdir -p ~/private_keys
+          echo "$APP_STORE_CONNECT_API_KEY_BASE64" | base64 --decode > ~/private_keys/AuthKey_$APP_STORE_CONNECT_API_KEY_ID.p8
+        env:
+          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+
+      - name: Build IPA
+        run: flutter build ipa --release --export-options-plist="$EXPORT_OPTIONS_PLIST"
+
+      - name: Upload to TestFlight (dev)
+        if: ${{ github.ref == 'refs/heads/dev' }}
+        run: |
+          xcrun altool --upload-app --type ios --file build/ios/ipa/*.ipa \
+            --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+
+      - name: Upload to App Store (main)
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          xcrun altool --upload-app --type ios --file build/ios/ipa/*.ipa \
+            --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+
+      - name: Cleanup keychain
+        if: ${{ always() }}
+        run: security delete-keychain "$KEYCHAIN_NAME"
