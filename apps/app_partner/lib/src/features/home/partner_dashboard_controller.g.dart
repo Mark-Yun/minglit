@@ -44,7 +44,7 @@ final class PartnerDashboardControllerProvider
 }
 
 String _$partnerDashboardControllerHash() =>
-    r'5749a6f7a9cdedade7fcb1f709887320e2047e1b';
+    r'e55ba89f0a8a765b258f99c9f19d3c3bc59f35f3';
 
 abstract class _$PartnerDashboardController
     extends $Notifier<PartnerDashboardState> {

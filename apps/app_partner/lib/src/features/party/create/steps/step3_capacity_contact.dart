@@ -108,7 +108,6 @@ class _Step3CapacityContactState extends ConsumerState<Step3CapacityContact> {
               value: state.balanceTolerance,
               onChanged: notifier.updateBalanceTolerance,
               suffixText: '명',
-              min: 0,
               max: 10,
             ),
           ],

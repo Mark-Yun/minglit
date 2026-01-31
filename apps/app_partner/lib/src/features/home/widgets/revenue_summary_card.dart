@@ -1,14 +1,27 @@
+import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-class RevenueSummaryCard extends StatelessWidget {
+class RevenueSummaryCard extends ConsumerWidget {
   const RevenueSummaryCard({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final state = ref.watch(partnerDashboardControllerProvider);
+    final formatter = NumberFormat.currency(locale: 'ko_KR', symbol: '₩');
+    final now = DateTime.now();
+
+    var currentMonthNet = 0;
+    for (final entry in state.monthlyRevenue) {
+      if (entry.month.year == now.year && entry.month.month == now.month) {
+        currentMonthNet = entry.netAmount;
+        break;
+      }
+    }
 
     return Card(
       elevation: 0,
@@ -43,7 +56,7 @@ class RevenueSummaryCard extends StatelessWidget {
               const SizedBox(height: 8),
               // TODO(developer): Bind real data
               Text(
-                '₩ 0',
+                formatter.format(currentMonthNet),
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: colorScheme.primary,
