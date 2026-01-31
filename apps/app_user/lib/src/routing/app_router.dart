@@ -33,14 +33,18 @@ GoRouter goRouter(Ref ref) {
       }
 
       // 2. 보호된 경로 정의 (로그인 필수)
-      // 이 경로로 시작하는 모든 진입은 로그인을 요구함
-      const protectedPaths = [
-        '/my', // 마이페이지 (프로필, 설정 등)
+      // prefix-match: 이 경로로 시작하는 모든 진입은 로그인을 요구함
+      const protectedPrefixes = [
+        '/my', // 마이페이지, 알림 설정 (/my/notification-settings)
         '/tickets/my', // 내 티켓 목록
         '/payment', // 결제 관련
+        '/purchase-history', // 구매 내역
+        '/certification', // 본인인증
       ];
 
-      final isProtected = protectedPaths.any(path.startsWith);
+      // suffix-match: 경로 끝이 /apply 인 경우 (이벤트 신청)
+      final isProtected =
+          protectedPrefixes.any(path.startsWith) || path.endsWith('/apply');
 
       // 3. 비로그인 상태에서 보호된 경로 진입 시 -> 로그인 페이지로
       if (!isLoggedIn && isProtected) {
