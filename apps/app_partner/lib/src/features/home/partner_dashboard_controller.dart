@@ -22,8 +22,11 @@ abstract class PartnerDashboardState with _$PartnerDashboardState {
 class PartnerDashboardController extends _$PartnerDashboardController {
   @override
   PartnerDashboardState build() {
-    // Automatically load data when the provider is built
-    unawaited(loadDashboardData());
+    // Schedule loading after build() returns so that `state` is initialized.
+    // unawaited() runs synchronously until the first await, which would
+    // access `state` before build() has returned — causing
+    // "Tried to read the state of an uninitialized provider".
+    Future.microtask(loadDashboardData);
     return const PartnerDashboardState();
   }
 
@@ -46,8 +49,9 @@ class PartnerDashboardController extends _$PartnerDashboardController {
       final partnerRepo = ref.read(partnerRepositoryProvider);
 
       // 1. Pending Count
-      final pendingCount =
-          await eventRepo.getPendingApplicationCount(partner.id);
+      final pendingCount = await eventRepo.getPendingApplicationCount(
+        partner.id,
+      );
 
       // 2. Today's Events
       final todayEvents = await eventRepo.getTodayEvents(partner.id);
