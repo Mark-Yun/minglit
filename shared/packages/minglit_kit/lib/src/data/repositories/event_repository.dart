@@ -1,6 +1,7 @@
 import 'package:minglit_kit/src/data/models/event.dart';
 import 'package:minglit_kit/src/data/models/event_application.dart';
 import 'package:minglit_kit/src/data/models/event_feed_type.dart';
+import 'package:minglit_kit/src/utils/exceptions.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -354,6 +355,36 @@ class EventRepository {
       Log.i('✅ [EventRepo] Payment verified.');
     } catch (e, st) {
       Log.e('❌ [EventRepo] confirmPayment Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// Cancels a payment using the Edge Function.
+  Future<void> cancelPayment({
+    required String paymentId,
+    required int refundAmount,
+    String? reason,
+  }) async {
+    Log.d(
+      'cancelPayment called | paymentId: $paymentId, amount: $refundAmount',
+    );
+    try {
+      final response = await _supabase.functions.invoke(
+        'cancel-payment',
+        body: {
+          'payment_id': paymentId,
+          'amount': refundAmount,
+          if (reason != null) 'reason': reason,
+        },
+      );
+
+      if (response.status != 200) {
+        throw const MinglitUserException('환불 요청에 실패했습니다.');
+      }
+
+      Log.i('✅ [EventRepo] Payment cancellation requested.');
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] cancelPayment Error', e, st);
       rethrow;
     }
   }

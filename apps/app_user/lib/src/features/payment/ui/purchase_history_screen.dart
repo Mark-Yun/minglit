@@ -22,8 +22,8 @@ class PurchaseHistoryScreen extends ConsumerWidget {
               child: Text(
                 '구매 내역이 없습니다.',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
             );
           }
@@ -43,23 +43,34 @@ class PurchaseHistoryScreen extends ConsumerWidget {
   }
 }
 
-class PurchaseHistoryCard extends StatelessWidget {
+class PurchaseHistoryCard extends ConsumerWidget {
   const PurchaseHistoryCard({required this.application, super.key});
 
   final EventApplication application;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final event = application.event;
     final ticket = application.ticket;
     final party = event?.party;
     final location = event?.location ?? party?.location;
+    final eventName = event?.title ?? party?.title ?? '제목 없음';
+    final paymentAmount = application.paymentAmount;
+    final paymentId = application.paymentId;
+    final eventStartTime = event?.startTime;
 
     final formatter = NumberFormat('#,###');
     final dateLabel = event != null
         ? DateFormat('M월 d일 (E) HH:mm', 'ko_KR').format(event.startTime)
         : '-';
+
+    final isActiveTicket =
+        application.status == 'paid' || application.status == 'approved';
+    final isRefundReady =
+        paymentId != null && paymentAmount != null && eventStartTime != null;
+    final canCancel =
+        isActiveTicket && isRefundReady && application.refundStatus == 'none';
 
     return Container(
       padding: const EdgeInsets.all(MinglitSpacing.medium),
@@ -116,7 +127,7 @@ class PurchaseHistoryCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      event?.title ?? party?.title ?? '제목 없음',
+                      eventName,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -150,7 +161,7 @@ class PurchaseHistoryCard extends StatelessWidget {
                 style: theme.textTheme.bodyMedium,
               ),
               Text(
-                '${formatter.format(application.paymentAmount ?? 0)}원',
+                '${formatter.format(paymentAmount ?? 0)}원',
                 style: theme.textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -179,23 +190,230 @@ class PurchaseHistoryCard extends StatelessWidget {
                   child: const Text('문의하기'),
                 ),
               ),
-              if (application.status == 'paid' ||
-                  application.status == 'approved') ...[
+              if (canCancel) ...[
                 const SizedBox(width: MinglitSpacing.small),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {
-                      // TODO(UI): 환불 신청
-                    },
+                    onPressed: () => _onCancelPressed(
+                      context: context,
+                      ref: ref,
+                      eventName: eventName,
+                      paymentId: paymentId,
+                      paymentAmount: paymentAmount,
+                      eventStartTime: eventStartTime,
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: theme.colorScheme.errorContainer,
                       foregroundColor: theme.colorScheme.onErrorContainer,
                     ),
-                    child: const Text('환불신청'),
+                    child: const Text('예매 취소'),
                   ),
                 ),
               ],
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _onCancelPressed({
+    required BuildContext context,
+    required WidgetRef ref,
+    required String eventName,
+    required String? paymentId,
+    required int? paymentAmount,
+    required DateTime? eventStartTime,
+  }) async {
+    if (paymentId == null || paymentAmount == null || eventStartTime == null) {
+      await context.showMinglitAlert(
+        title: '환불 정보를 확인할 수 없습니다',
+        message: '결제 정보를 다시 확인해주세요.',
+      );
+      return;
+    }
+
+    final calculation = RefundCalculator.calculate(
+      eventStartTime: eventStartTime,
+      paymentAmount: paymentAmount,
+    );
+
+    final confirmed = await _showRefundConfirmDialog(
+      context: context,
+      eventName: eventName,
+      paymentAmount: paymentAmount,
+      calculation: calculation,
+    );
+
+    if (!confirmed || !context.mounted) return;
+
+    await _requestRefund(
+      context: context,
+      ref: ref,
+      paymentId: paymentId,
+      calculation: calculation,
+    );
+  }
+
+  Future<void> _requestRefund({
+    required BuildContext context,
+    required WidgetRef ref,
+    required String paymentId,
+    required RefundCalculation calculation,
+  }) async {
+    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
+    try {
+      await ref
+          .read(eventRepositoryProvider)
+          .cancelPayment(
+            paymentId: paymentId,
+            refundAmount: calculation.refundAmount,
+            reason: '사용자 예매 취소',
+          );
+
+      ref.invalidate(purchaseHistoryControllerProvider);
+      if (!context.mounted) return;
+      context.showMinglitSuccess('예매가 취소되었습니다.');
+      await Navigator.of(context).maybePop();
+    } on Object catch (e, st) {
+      if (!context.mounted) return;
+      final exception = MinglitException.from(e, st);
+      final message = exception is MinglitSystemException
+          ? exception.userMessage
+          : exception.message;
+      final retry = await _showRefundErrorDialog(
+        context: context,
+        message: message,
+      );
+      if (retry && context.mounted) {
+        await _requestRefund(
+          context: context,
+          ref: ref,
+          paymentId: paymentId,
+          calculation: calculation,
+        );
+      }
+    } finally {
+      loading.hide();
+    }
+  }
+
+  Future<bool> _showRefundConfirmDialog({
+    required BuildContext context,
+    required String eventName,
+    required int paymentAmount,
+    required RefundCalculation calculation,
+  }) async {
+    final theme = Theme.of(context);
+    final formatter = NumberFormat('#,###');
+
+    final result = await MinglitDialog.show<bool>(
+      context: context,
+      title: '예매 취소 확인',
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            eventName,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.medium),
+          _RefundRow(
+            label: '결제 금액',
+            value: '${formatter.format(paymentAmount)}원',
+          ),
+          _RefundRow(
+            label: '환불 비율',
+            value: '${calculation.refundPercentage}%',
+          ),
+          _RefundRow(
+            label: '환불 금액',
+            value: '${formatter.format(calculation.refundAmount)}원',
+          ),
+          _RefundRow(
+            label: '수수료',
+            value: '${formatter.format(calculation.feeAmount)}원',
+          ),
+          const SizedBox(height: MinglitSpacing.small),
+          Text(
+            '환불 수수료는 취소 시점에 따라 달라집니다.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: const Text('닫기'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: theme.colorScheme.errorContainer,
+            foregroundColor: theme.colorScheme.onErrorContainer,
+          ),
+          child: const Text('예매 취소'),
+        ),
+      ],
+    );
+
+    return result ?? false;
+  }
+
+  Future<bool> _showRefundErrorDialog({
+    required BuildContext context,
+    required String message,
+  }) async {
+    final result = await MinglitDialog.show<bool>(
+      context: context,
+      title: '환불 처리 실패',
+      content: Text(message),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: const Text('닫기'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: const Text('다시 시도'),
+        ),
+      ],
+    );
+
+    return result ?? false;
+  }
+}
+
+class _RefundRow extends StatelessWidget {
+  const _RefundRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: MinglitSpacing.xsmall),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          Text(
+            value,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
