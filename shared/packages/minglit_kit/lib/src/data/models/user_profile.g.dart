@@ -18,6 +18,7 @@ _UserProfile _$UserProfileFromJson(Map<String, dynamic> json) => _UserProfile(
   isVerified: json['is_verified'] as bool? ?? false,
   birthYear: (json['birth_year'] as num?)?.toInt(),
   avatarUrl: json['avatar_url'] as String?,
+  profileImageUrl: json['profile_image_url'] as String?,
   createdAt: json['created_at'] == null
       ? null
       : DateTime.parse(json['created_at'] as String),
@@ -37,6 +38,7 @@ Map<String, dynamic> _$UserProfileToJson(_UserProfile instance) =>
       'is_verified': instance.isVerified,
       'birth_year': instance.birthYear,
       'avatar_url': instance.avatarUrl,
+      'profile_image_url': instance.profileImageUrl,
       'created_at': instance.createdAt?.toIso8601String(),
       'updated_at': instance.updatedAt?.toIso8601String(),
     };

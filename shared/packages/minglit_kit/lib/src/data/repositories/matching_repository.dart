@@ -128,8 +128,7 @@ class MatchingRepository {
 
           return m.copyWith(
             partnerName: profileMap['name'] as String?,
-            // TODO(user): Add profile image field to user_profiles
-            partnerProfileImage: null,
+            partnerProfileImage: profileMap['profile_image_url'] as String?,
             partnerContact: contact,
           );
         }),
@@ -153,18 +152,74 @@ class MatchingRepository {
     if (userId == null) return [];
 
     try {
-      // 1. Find my group ID (via EventParticipant -> Ticket -> TicketTemplate
-      // -> targetEntryGroupIds)
-      // This is complex. Simplified approach:
-      // Assuming we have a way to know user's group.
-      // For MVP: Fetch ALL participants excluding self.
-      // TODO(user): Implement strict group filtering based on tickets.
+      // 1. 내 티켓의 타겟 그룹 확인
+      // 2. 매칭 룰이 있으면 타겟 그룹으로 필터링
+      // 3. 룰이 없으면 성별 반대 그룹으로 필터링
+
+      final myParticipant = await _supabase
+          .from('event_participants')
+          .select('ticket:ticket_id(target_entry_group_ids)')
+          .eq('event_id', eventId)
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (myParticipant == null) return [];
+
+      final ticketMap = myParticipant['ticket'] as Map<String, dynamic>?;
+      final myGroupIds = List<String>.from(
+        ticketMap?['target_entry_group_ids'] as List<dynamic>? ?? const [],
+      );
+      if (myGroupIds.isEmpty) return [];
+
+      final rules = await _supabase
+          .from('match_rules')
+          .select('target_group_id')
+          .eq('event_id', eventId)
+          .inFilter('source_group_id', myGroupIds);
+
+      final ruleList = (rules as List).cast<Map<String, dynamic>>();
+      final targetGroupIds = ruleList
+          .map((rule) => rule['target_group_id'] as String)
+          .toSet()
+          .toList();
+
+      if (targetGroupIds.isEmpty) {
+        final myGroups = await _supabase
+            .from('entry_groups')
+            .select('id, gender')
+            .inFilter('id', myGroupIds);
+
+        final myGender = (myGroups as List)
+            .cast<Map<String, dynamic>>()
+            .map((group) => group['gender'] as String?)
+            .firstWhere((gender) => gender != null, orElse: () => null);
+
+        if (myGender != null) {
+          final oppositeGroups = await _supabase
+              .from('entry_groups')
+              .select('id')
+              .eq('event_id', eventId)
+              .neq('gender', myGender);
+
+          final oppositeGroupList = (oppositeGroups as List)
+              .cast<Map<String, dynamic>>();
+          targetGroupIds.addAll(
+            oppositeGroupList.map((group) => group['id'] as String),
+          );
+        }
+      }
+
+      if (targetGroupIds.isEmpty) return [];
 
       final participants = await _supabase
           .from('event_participants')
-          .select('user_id, user:user_profiles(*)')
+          .select(
+            'user_id, user:user_profiles(*), '
+            'ticket:ticket_id(target_entry_group_ids)',
+          )
           .eq('event_id', eventId)
-          .neq('user_id', userId); // Exclude self
+          .neq('user_id', userId)
+          .filter('ticket.target_entry_group_ids', 'ov', targetGroupIds);
 
       final candidates = (participants as List).map((dynamic p) {
         final pMap = p as Map<String, dynamic>;

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -240,7 +242,7 @@ class PartyDetailView extends ConsumerWidget {
               child: OutlinedButton(
                 onPressed: () {
                   final url = 'https://minglit.app/parties/${party.id}';
-                  Clipboard.setData(ClipboardData(text: url));
+                  unawaited(Clipboard.setData(ClipboardData(text: url)));
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('링크가 복사되었습니다')),
                   );

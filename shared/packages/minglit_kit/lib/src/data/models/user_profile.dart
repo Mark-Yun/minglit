@@ -15,6 +15,7 @@ abstract class UserProfile with _$UserProfile {
     @Default(false) @JsonKey(name: 'is_verified') bool isVerified,
     @JsonKey(name: 'birth_year') int? birthYear,
     @JsonKey(name: 'avatar_url') String? avatarUrl,
+    @JsonKey(name: 'profile_image_url') String? profileImageUrl,
     @JsonKey(name: 'created_at') DateTime? createdAt,
     @JsonKey(name: 'updated_at') DateTime? updatedAt,
   }) = _UserProfile;

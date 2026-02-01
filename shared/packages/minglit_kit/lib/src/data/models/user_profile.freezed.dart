@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UserProfile {
 
- String get id; String get name; String get username;@JsonKey(name: 'phone_number') String? get phoneNumber; String? get gender;@JsonKey(name: 'birth_date') DateTime? get birthDate;@JsonKey(name: 'is_verified') bool get isVerified;@JsonKey(name: 'birth_year') int? get birthYear;@JsonKey(name: 'avatar_url') String? get avatarUrl;@JsonKey(name: 'created_at') DateTime? get createdAt;@JsonKey(name: 'updated_at') DateTime? get updatedAt;
+ String get id; String get name; String get username;@JsonKey(name: 'phone_number') String? get phoneNumber; String? get gender;@JsonKey(name: 'birth_date') DateTime? get birthDate;@JsonKey(name: 'is_verified') bool get isVerified;@JsonKey(name: 'birth_year') int? get birthYear;@JsonKey(name: 'avatar_url') String? get avatarUrl;@JsonKey(name: 'profile_image_url') String? get profileImageUrl;@JsonKey(name: 'created_at') DateTime? get createdAt;@JsonKey(name: 'updated_at') DateTime? get updatedAt;
 /// Create a copy of UserProfile
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $UserProfileCopyWith<UserProfile> get copyWith => _$UserProfileCopyWithImpl<User
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserProfile&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.username, username) || other.username == username)&&(identical(other.phoneNumber, phoneNumber) || other.phoneNumber == phoneNumber)&&(identical(other.gender, gender) || other.gender == gender)&&(identical(other.birthDate, birthDate) || other.birthDate == birthDate)&&(identical(other.isVerified, isVerified) || other.isVerified == isVerified)&&(identical(other.birthYear, birthYear) || other.birthYear == birthYear)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserProfile&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.username, username) || other.username == username)&&(identical(other.phoneNumber, phoneNumber) || other.phoneNumber == phoneNumber)&&(identical(other.gender, gender) || other.gender == gender)&&(identical(other.birthDate, birthDate) || other.birthDate == birthDate)&&(identical(other.isVerified, isVerified) || other.isVerified == isVerified)&&(identical(other.birthYear, birthYear) || other.birthYear == birthYear)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.profileImageUrl, profileImageUrl) || other.profileImageUrl == profileImageUrl)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,username,phoneNumber,gender,birthDate,isVerified,birthYear,avatarUrl,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,name,username,phoneNumber,gender,birthDate,isVerified,birthYear,avatarUrl,profileImageUrl,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'UserProfile(id: $id, name: $name, username: $username, phoneNumber: $phoneNumber, gender: $gender, birthDate: $birthDate, isVerified: $isVerified, birthYear: $birthYear, avatarUrl: $avatarUrl, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'UserProfile(id: $id, name: $name, username: $username, phoneNumber: $phoneNumber, gender: $gender, birthDate: $birthDate, isVerified: $isVerified, birthYear: $birthYear, avatarUrl: $avatarUrl, profileImageUrl: $profileImageUrl, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $UserProfileCopyWith<$Res>  {
   factory $UserProfileCopyWith(UserProfile value, $Res Function(UserProfile) _then) = _$UserProfileCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String username,@JsonKey(name: 'phone_number') String? phoneNumber, String? gender,@JsonKey(name: 'birth_date') DateTime? birthDate,@JsonKey(name: 'is_verified') bool isVerified,@JsonKey(name: 'birth_year') int? birthYear,@JsonKey(name: 'avatar_url') String? avatarUrl,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'updated_at') DateTime? updatedAt
+ String id, String name, String username,@JsonKey(name: 'phone_number') String? phoneNumber, String? gender,@JsonKey(name: 'birth_date') DateTime? birthDate,@JsonKey(name: 'is_verified') bool isVerified,@JsonKey(name: 'birth_year') int? birthYear,@JsonKey(name: 'avatar_url') String? avatarUrl,@JsonKey(name: 'profile_image_url') String? profileImageUrl,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'updated_at') DateTime? updatedAt
 });
 
 
@@ -65,7 +65,7 @@ class _$UserProfileCopyWithImpl<$Res>
 
 /// Create a copy of UserProfile
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? username = null,Object? phoneNumber = freezed,Object? gender = freezed,Object? birthDate = freezed,Object? isVerified = null,Object? birthYear = freezed,Object? avatarUrl = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? username = null,Object? phoneNumber = freezed,Object? gender = freezed,Object? birthDate = freezed,Object? isVerified = null,Object? birthYear = freezed,Object? avatarUrl = freezed,Object? profileImageUrl = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -76,6 +76,7 @@ as String?,birthDate: freezed == birthDate ? _self.birthDate : birthDate // igno
 as DateTime?,isVerified: null == isVerified ? _self.isVerified : isVerified // ignore: cast_nullable_to_non_nullable
 as bool,birthYear: freezed == birthYear ? _self.birthYear : birthYear // ignore: cast_nullable_to_non_nullable
 as int?,avatarUrl: freezed == avatarUrl ? _self.avatarUrl : avatarUrl // ignore: cast_nullable_to_non_nullable
+as String?,profileImageUrl: freezed == profileImageUrl ? _self.profileImageUrl : profileImageUrl // ignore: cast_nullable_to_non_nullable
 as String?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
@@ -163,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String username, @JsonKey(name: 'phone_number')  String? phoneNumber,  String? gender, @JsonKey(name: 'birth_date')  DateTime? birthDate, @JsonKey(name: 'is_verified')  bool isVerified, @JsonKey(name: 'birth_year')  int? birthYear, @JsonKey(name: 'avatar_url')  String? avatarUrl, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String username, @JsonKey(name: 'phone_number')  String? phoneNumber,  String? gender, @JsonKey(name: 'birth_date')  DateTime? birthDate, @JsonKey(name: 'is_verified')  bool isVerified, @JsonKey(name: 'birth_year')  int? birthYear, @JsonKey(name: 'avatar_url')  String? avatarUrl, @JsonKey(name: 'profile_image_url')  String? profileImageUrl, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserProfile() when $default != null:
-return $default(_that.id,_that.name,_that.username,_that.phoneNumber,_that.gender,_that.birthDate,_that.isVerified,_that.birthYear,_that.avatarUrl,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.name,_that.username,_that.phoneNumber,_that.gender,_that.birthDate,_that.isVerified,_that.birthYear,_that.avatarUrl,_that.profileImageUrl,_that.createdAt,_that.updatedAt);case _:
   return orElse();
 
 }
@@ -184,10 +185,10 @@ return $default(_that.id,_that.name,_that.username,_that.phoneNumber,_that.gende
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String username, @JsonKey(name: 'phone_number')  String? phoneNumber,  String? gender, @JsonKey(name: 'birth_date')  DateTime? birthDate, @JsonKey(name: 'is_verified')  bool isVerified, @JsonKey(name: 'birth_year')  int? birthYear, @JsonKey(name: 'avatar_url')  String? avatarUrl, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String username, @JsonKey(name: 'phone_number')  String? phoneNumber,  String? gender, @JsonKey(name: 'birth_date')  DateTime? birthDate, @JsonKey(name: 'is_verified')  bool isVerified, @JsonKey(name: 'birth_year')  int? birthYear, @JsonKey(name: 'avatar_url')  String? avatarUrl, @JsonKey(name: 'profile_image_url')  String? profileImageUrl, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _UserProfile():
-return $default(_that.id,_that.name,_that.username,_that.phoneNumber,_that.gender,_that.birthDate,_that.isVerified,_that.birthYear,_that.avatarUrl,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.name,_that.username,_that.phoneNumber,_that.gender,_that.birthDate,_that.isVerified,_that.birthYear,_that.avatarUrl,_that.profileImageUrl,_that.createdAt,_that.updatedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -204,10 +205,10 @@ return $default(_that.id,_that.name,_that.username,_that.phoneNumber,_that.gende
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String username, @JsonKey(name: 'phone_number')  String? phoneNumber,  String? gender, @JsonKey(name: 'birth_date')  DateTime? birthDate, @JsonKey(name: 'is_verified')  bool isVerified, @JsonKey(name: 'birth_year')  int? birthYear, @JsonKey(name: 'avatar_url')  String? avatarUrl, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String username, @JsonKey(name: 'phone_number')  String? phoneNumber,  String? gender, @JsonKey(name: 'birth_date')  DateTime? birthDate, @JsonKey(name: 'is_verified')  bool isVerified, @JsonKey(name: 'birth_year')  int? birthYear, @JsonKey(name: 'avatar_url')  String? avatarUrl, @JsonKey(name: 'profile_image_url')  String? profileImageUrl, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _UserProfile() when $default != null:
-return $default(_that.id,_that.name,_that.username,_that.phoneNumber,_that.gender,_that.birthDate,_that.isVerified,_that.birthYear,_that.avatarUrl,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.name,_that.username,_that.phoneNumber,_that.gender,_that.birthDate,_that.isVerified,_that.birthYear,_that.avatarUrl,_that.profileImageUrl,_that.createdAt,_that.updatedAt);case _:
   return null;
 
 }
@@ -219,7 +220,7 @@ return $default(_that.id,_that.name,_that.username,_that.phoneNumber,_that.gende
 @JsonSerializable()
 
 class _UserProfile implements UserProfile {
-  const _UserProfile({required this.id, required this.name, required this.username, @JsonKey(name: 'phone_number') this.phoneNumber, this.gender, @JsonKey(name: 'birth_date') this.birthDate, @JsonKey(name: 'is_verified') this.isVerified = false, @JsonKey(name: 'birth_year') this.birthYear, @JsonKey(name: 'avatar_url') this.avatarUrl, @JsonKey(name: 'created_at') this.createdAt, @JsonKey(name: 'updated_at') this.updatedAt});
+  const _UserProfile({required this.id, required this.name, required this.username, @JsonKey(name: 'phone_number') this.phoneNumber, this.gender, @JsonKey(name: 'birth_date') this.birthDate, @JsonKey(name: 'is_verified') this.isVerified = false, @JsonKey(name: 'birth_year') this.birthYear, @JsonKey(name: 'avatar_url') this.avatarUrl, @JsonKey(name: 'profile_image_url') this.profileImageUrl, @JsonKey(name: 'created_at') this.createdAt, @JsonKey(name: 'updated_at') this.updatedAt});
   factory _UserProfile.fromJson(Map<String, dynamic> json) => _$UserProfileFromJson(json);
 
 @override final  String id;
@@ -231,6 +232,7 @@ class _UserProfile implements UserProfile {
 @override@JsonKey(name: 'is_verified') final  bool isVerified;
 @override@JsonKey(name: 'birth_year') final  int? birthYear;
 @override@JsonKey(name: 'avatar_url') final  String? avatarUrl;
+@override@JsonKey(name: 'profile_image_url') final  String? profileImageUrl;
 @override@JsonKey(name: 'created_at') final  DateTime? createdAt;
 @override@JsonKey(name: 'updated_at') final  DateTime? updatedAt;
 
@@ -247,16 +249,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserProfile&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.username, username) || other.username == username)&&(identical(other.phoneNumber, phoneNumber) || other.phoneNumber == phoneNumber)&&(identical(other.gender, gender) || other.gender == gender)&&(identical(other.birthDate, birthDate) || other.birthDate == birthDate)&&(identical(other.isVerified, isVerified) || other.isVerified == isVerified)&&(identical(other.birthYear, birthYear) || other.birthYear == birthYear)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserProfile&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.username, username) || other.username == username)&&(identical(other.phoneNumber, phoneNumber) || other.phoneNumber == phoneNumber)&&(identical(other.gender, gender) || other.gender == gender)&&(identical(other.birthDate, birthDate) || other.birthDate == birthDate)&&(identical(other.isVerified, isVerified) || other.isVerified == isVerified)&&(identical(other.birthYear, birthYear) || other.birthYear == birthYear)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.profileImageUrl, profileImageUrl) || other.profileImageUrl == profileImageUrl)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,username,phoneNumber,gender,birthDate,isVerified,birthYear,avatarUrl,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,name,username,phoneNumber,gender,birthDate,isVerified,birthYear,avatarUrl,profileImageUrl,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'UserProfile(id: $id, name: $name, username: $username, phoneNumber: $phoneNumber, gender: $gender, birthDate: $birthDate, isVerified: $isVerified, birthYear: $birthYear, avatarUrl: $avatarUrl, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'UserProfile(id: $id, name: $name, username: $username, phoneNumber: $phoneNumber, gender: $gender, birthDate: $birthDate, isVerified: $isVerified, birthYear: $birthYear, avatarUrl: $avatarUrl, profileImageUrl: $profileImageUrl, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -267,7 +269,7 @@ abstract mixin class _$UserProfileCopyWith<$Res> implements $UserProfileCopyWith
   factory _$UserProfileCopyWith(_UserProfile value, $Res Function(_UserProfile) _then) = __$UserProfileCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String username,@JsonKey(name: 'phone_number') String? phoneNumber, String? gender,@JsonKey(name: 'birth_date') DateTime? birthDate,@JsonKey(name: 'is_verified') bool isVerified,@JsonKey(name: 'birth_year') int? birthYear,@JsonKey(name: 'avatar_url') String? avatarUrl,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'updated_at') DateTime? updatedAt
+ String id, String name, String username,@JsonKey(name: 'phone_number') String? phoneNumber, String? gender,@JsonKey(name: 'birth_date') DateTime? birthDate,@JsonKey(name: 'is_verified') bool isVerified,@JsonKey(name: 'birth_year') int? birthYear,@JsonKey(name: 'avatar_url') String? avatarUrl,@JsonKey(name: 'profile_image_url') String? profileImageUrl,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'updated_at') DateTime? updatedAt
 });
 
 
@@ -284,7 +286,7 @@ class __$UserProfileCopyWithImpl<$Res>
 
 /// Create a copy of UserProfile
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? username = null,Object? phoneNumber = freezed,Object? gender = freezed,Object? birthDate = freezed,Object? isVerified = null,Object? birthYear = freezed,Object? avatarUrl = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? username = null,Object? phoneNumber = freezed,Object? gender = freezed,Object? birthDate = freezed,Object? isVerified = null,Object? birthYear = freezed,Object? avatarUrl = freezed,Object? profileImageUrl = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
   return _then(_UserProfile(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -295,6 +297,7 @@ as String?,birthDate: freezed == birthDate ? _self.birthDate : birthDate // igno
 as DateTime?,isVerified: null == isVerified ? _self.isVerified : isVerified // ignore: cast_nullable_to_non_nullable
 as bool,birthYear: freezed == birthYear ? _self.birthYear : birthYear // ignore: cast_nullable_to_non_nullable
 as int?,avatarUrl: freezed == avatarUrl ? _self.avatarUrl : avatarUrl // ignore: cast_nullable_to_non_nullable
+as String?,profileImageUrl: freezed == profileImageUrl ? _self.profileImageUrl : profileImageUrl // ignore: cast_nullable_to_non_nullable
 as String?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
