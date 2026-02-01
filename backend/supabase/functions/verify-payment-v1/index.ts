@@ -2,8 +2,55 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { IamportClient } from "../_shared/iamport_client.ts";
 
+const PORTONE_API_URL = "https://api.iamport.kr";
 const IMP_KEY = "3353907223007704";
 const IMP_SECRET = "Qs5lIRl4bQs6Waiavkcc6hBVhj4V2LSTdYeWPz01qs7mDqx8LJlS0XOigSdjE6cR4qNU0OWrh4NUuk3f";
+
+const cancelPayment = async (impUid: string, reason: string) => {
+  try {
+    const impKey = Deno.env.get("PORTONE_API_KEY");
+    const impSecret = Deno.env.get("PORTONE_API_SECRET");
+
+    if (!impKey || !impSecret) {
+      console.error("Missing Portone credentials for cancel-payment");
+      return;
+    }
+
+    const tokenRes = await fetch(`${PORTONE_API_URL}/users/getToken`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ imp_key: impKey, imp_secret: impSecret }),
+    });
+
+    const tokenData = await tokenRes.json();
+    if (tokenData.code !== 0) {
+      console.error("Failed to get Portone token:", tokenData.message);
+      return;
+    }
+
+    const accessToken = tokenData.response.access_token;
+
+    const cancelRes = await fetch(`${PORTONE_API_URL}/payments/cancel`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": accessToken,
+      },
+      body: JSON.stringify({
+        imp_uid: impUid,
+        reason,
+      }),
+    });
+
+    const cancelData = await cancelRes.json();
+    if (cancelData.code !== 0) {
+      console.error("Failed to cancel payment:", cancelData.message);
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Cancel payment error:", message);
+  }
+};
 
 serve(async (req) => {
   try {
@@ -57,7 +104,7 @@ serve(async (req) => {
     }
 
     if (payment.amount !== order.payment_amount) {
-      // TODO: 금액 위변조 시 결제 취소 API 자동 호출 로직 추가 가능
+      await cancelPayment(imp_uid, "결제 금액 위변조로 자동 취소");
       return new Response(JSON.stringify({ 
         error: "Amount mismatch", 
         expected: order.payment_amount, 
@@ -97,9 +144,10 @@ serve(async (req) => {
     });
 
 
-  } catch (e) {
-    console.error("Error in verify-payment-v1:", e);
-    return new Response(JSON.stringify({ error: e.message }), {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Error in verify-payment-v1:", message);
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });

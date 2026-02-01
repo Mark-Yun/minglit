@@ -2,6 +2,7 @@ import 'package:app_user/src/features/payment/logic/purchase_history_controller.
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PurchaseHistoryScreen extends ConsumerWidget {
   const PurchaseHistoryScreen({super.key});
@@ -59,6 +60,9 @@ class PurchaseHistoryCard extends ConsumerWidget {
     final paymentAmount = application.paymentAmount;
     final paymentId = application.paymentId;
     final eventStartTime = event?.startTime;
+    final contactOptions = (event?.contactOptions.isNotEmpty ?? false)
+        ? event!.contactOptions
+        : party?.contactOptions ?? <String, dynamic>{};
 
     final formatter = NumberFormat('#,###');
     final dateLabel = event != null
@@ -175,8 +179,24 @@ class PurchaseHistoryCard extends ConsumerWidget {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () {
-                    // TODO(UI): 영수증 보기
+                  onPressed: () async {
+                    if (paymentId == null || paymentId.isEmpty) {
+                      context.showMinglitWarning('영수증 정보를 확인할 수 없습니다.');
+                      return;
+                    }
+
+                    final receiptUrl = Uri.parse(
+                      'https://service.iamport.kr/payments/detail/$paymentId',
+                    );
+
+                    final launched = await launchUrl(
+                      receiptUrl,
+                      mode: LaunchMode.externalApplication,
+                    );
+
+                    if (!launched && context.mounted) {
+                      context.showMinglitWarning('영수증 페이지를 열 수 없습니다.');
+                    }
                   },
                   child: const Text('영수증'),
                 ),
@@ -184,8 +204,40 @@ class PurchaseHistoryCard extends ConsumerWidget {
               const SizedBox(width: MinglitSpacing.small),
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () {
-                    // TODO(UI): 주최자 문의
+                  onPressed: () async {
+                    final phone =
+                        _resolveContactValue(
+                          contactOptions,
+                          'phone',
+                        ) ??
+                        party?.partner?.contactPhone;
+                    final email =
+                        _resolveContactValue(
+                          contactOptions,
+                          'email',
+                        ) ??
+                        party?.partner?.contactEmail;
+
+                    Uri? uri;
+                    if (phone != null && phone.isNotEmpty) {
+                      uri = Uri.parse('tel:$phone');
+                    } else if (email != null && email.isNotEmpty) {
+                      uri = Uri.parse('mailto:$email');
+                    }
+
+                    if (uri == null) {
+                      context.showMinglitWarning('연락처 정보가 없습니다.');
+                      return;
+                    }
+
+                    final launched = await launchUrl(
+                      uri,
+                      mode: LaunchMode.externalApplication,
+                    );
+
+                    if (!launched && context.mounted) {
+                      context.showMinglitWarning('연락처를 열 수 없습니다.');
+                    }
                   },
                   child: const Text('문의하기'),
                 ),
@@ -215,6 +267,20 @@ class PurchaseHistoryCard extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  String? _resolveContactValue(
+    Map<String, dynamic> contactOptions,
+    String key,
+  ) {
+    final value = contactOptions[key];
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isNotEmpty) {
+        return trimmed;
+      }
+    }
+    return null;
   }
 
   Future<void> _onCancelPressed({
