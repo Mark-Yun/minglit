@@ -6,6 +6,7 @@ on:
     paths:
       - "apps/app_user/**"
       - "shared/packages/minglit_kit/**"
+      - "pubspec.yaml"
   workflow_dispatch:
 
 jobs:
