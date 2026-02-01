@@ -10,6 +10,7 @@ List<RouteBase> get $appRoutes => [
   $devMapRoute,
   $devUserSwitchRoute,
   $loginRoute,
+  $notificationCenterRoute,
   $partnerShellRoute,
 ];
 
@@ -85,6 +86,32 @@ mixin $LoginRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
+RouteBase get $notificationCenterRoute => GoRouteData.$route(
+  path: '/notifications',
+  factory: $NotificationCenterRoute._fromState,
+);
+
+mixin $NotificationCenterRoute on GoRouteData {
+  static NotificationCenterRoute _fromState(GoRouterState state) =>
+      const NotificationCenterRoute();
+
+  @override
+  String get location => GoRouteData.$location('/notifications');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
 RouteBase get $partnerShellRoute => StatefulShellRouteData.$route(
   factory: $PartnerShellRouteExtension._fromState,
   branches: [
@@ -122,6 +149,10 @@ RouteBase get $partnerShellRoute => StatefulShellRouteData.$route(
               path: ':partyId',
               factory: $PartyDetailRoute._fromState,
               routes: [
+                GoRouteData.$route(
+                  path: 'edit',
+                  factory: $PartyEditRoute._fromState,
+                ),
                 GoRouteData.$route(
                   path: 'tickets/:ticketId/edit',
                   factory: $PartyTicketEditRoute._fromState,
@@ -313,6 +344,31 @@ mixin $PartyDetailRoute on GoRouteData {
   @override
   String get location =>
       GoRouteData.$location('/parties/${Uri.encodeComponent(_self.partyId)}');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $PartyEditRoute on GoRouteData {
+  static PartyEditRoute _fromState(GoRouterState state) =>
+      PartyEditRoute(partyId: state.pathParameters['partyId']!);
+
+  PartyEditRoute get _self => this as PartyEditRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/parties/${Uri.encodeComponent(_self.partyId)}/edit',
+  );
 
   @override
   void go(BuildContext context) => context.go(location);

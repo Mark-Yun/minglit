@@ -175,15 +175,13 @@ class EventRepository {
   Future<Map<String, bool>> getTicketBalanceStatus(String eventId) async {
     Log.d('getTicketBalanceStatus called | eventId: $eventId');
     try {
-      final response = await _supabase.rpc(
+      final response = await _supabase.rpc<List<dynamic>?>(
         'get_event_ticket_balance_status',
         params: {'p_event_id': eventId},
       );
 
-      if (response == null) return {};
-
       final result = <String, bool>{};
-      for (final item in response as List<dynamic>) {
+      for (final item in response ?? const []) {
         final data = item as Map<String, dynamic>;
         final ticketId = data['ticket_id'] as String?;
         final allowed = data['allowed'] as bool?;
@@ -374,7 +372,7 @@ class EventRepository {
         body: {
           'payment_id': paymentId,
           'amount': refundAmount,
-          if (reason != null) 'reason': reason,
+          ...?reason == null ? null : {'reason': reason},
         },
       );
 

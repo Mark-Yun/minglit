@@ -51,6 +51,18 @@ class LoginRoute extends GoRouteData with $LoginRoute {
       const PartnerLoginPage();
 }
 
+/// **Notification Center Route**
+/// Path: `/notifications`
+@TypedGoRoute<NotificationCenterRoute>(path: '/notifications')
+class NotificationCenterRoute extends GoRouteData
+    with $NotificationCenterRoute {
+  const NotificationCenterRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const NotificationListScreen();
+}
+
 // --- Stateful Shell Route (Bottom Navigation) ---
 
 @TypedStatefulShellRoute<PartnerShellRoute>(
@@ -82,6 +94,7 @@ class LoginRoute extends GoRouteData with $LoginRoute {
             TypedGoRoute<PartyDetailRoute>(
               path: ':partyId',
               routes: [
+                TypedGoRoute<PartyEditRoute>(path: 'edit'),
                 TypedGoRoute<PartyTicketEditRoute>(
                   path: 'tickets/:ticketId/edit',
                 ),
@@ -211,6 +224,14 @@ class PartyDetailRoute extends GoRouteData with $PartyDetailRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       PartyDetailPage(partyId: partyId);
+}
+
+class PartyEditRoute extends GoRouteData with $PartyEditRoute {
+  const PartyEditRoute({required this.partyId});
+  final String partyId;
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      PartyCreateWizardPage(partyId: partyId);
 }
 
 class PartyTicketEditRoute extends GoRouteData with $PartyTicketEditRoute {

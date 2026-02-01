@@ -1,3 +1,5 @@
+import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
+import 'package:app_partner/src/features/party/ticket/ticket_template_create_page.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -20,6 +22,7 @@ class TicketTemplateManageScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final templatesAsync = ref.watch(partyTicketTemplatesProvider(partyId));
+    final partyAsync = ref.watch(partyDetailProvider(partyId));
 
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(title: '티켓 템플릿 관리'),
@@ -41,11 +44,42 @@ class TicketTemplateManageScreen extends ConsumerWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO(mark): Implement Create Template Flow
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('템플릿 추가 기능은 준비 중입니다.')),
+        onPressed: () async {
+          if (!partyAsync.hasValue) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('파티 정보를 불러오는 중입니다.')),
+            );
+            return;
+          }
+
+          final party = partyAsync.value!;
+          final template = await Navigator.of(context).push<TicketTemplate>(
+            MaterialPageRoute(
+              builder: (_) => TicketTemplateCreatePage(
+                entryGroups: party.entryGroups ?? [],
+              ),
+            ),
           );
+
+          if (template == null || !context.mounted) return;
+
+          final loading = ref.read(globalLoadingControllerProvider.notifier)
+            ..show();
+          try {
+            await ref
+                .read(ticketRepositoryProvider)
+                .createTicketTemplate(
+                  template.copyWith(partyId: partyId),
+                );
+            ref.invalidate(partyTicketTemplatesProvider(partyId));
+            if (context.mounted) {
+              context.showMinglitSuccess('티켓 템플릿이 추가되었습니다.');
+            }
+          } on Exception catch (e, st) {
+            if (context.mounted) handleMinglitError(context, e, st);
+          } finally {
+            loading.hide();
+          }
         },
         child: const Icon(Icons.add),
       ),

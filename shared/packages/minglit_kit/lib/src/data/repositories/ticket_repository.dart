@@ -172,6 +172,18 @@ class TicketRepository {
     }
   }
 
+  /// Deletes a ticket template by ID.
+  Future<void> deleteTicketTemplate(String id) async {
+    Log.d('deleteTicketTemplate called | id: $id');
+    try {
+      await _supabase.from('ticket_templates').delete().eq('id', id);
+      Log.d('deleteTicketTemplate success | id: $id');
+    } catch (e, st) {
+      Log.e('deleteTicketTemplate failed: $id', e, st);
+      rethrow;
+    }
+  }
+
   /// Creates a new ticket.
   Future<Ticket> createTicket(Ticket ticket) async {
     Log.d('createTicket called | ticket: ${ticket.name}');

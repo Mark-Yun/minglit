@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/list/party_list_controller.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:image_picker/image_picker.dart';
@@ -22,10 +23,13 @@ enum PartyCreateStep {
 abstract class PartyCreateWizardState with _$PartyCreateWizardState {
   const factory PartyCreateWizardState({
     @Default(PartyCreateStep.basicInfo) PartyCreateStep currentStep,
+    @Default(true) bool isPrefilled,
+    String? editingPartyId,
 
     // Step 1: Basic Info
     @Default('') String title,
     @Default({}) Map<String, dynamic> description,
+    @Default([]) List<String> imageUrls,
     @Default([]) List<XFile> imageFiles,
 
     // Step 2: Location
@@ -61,6 +65,53 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
     return const PartyCreateWizardState();
   }
 
+  Future<void> loadForEdit(String partyId) async {
+    state = state.copyWith(editingPartyId: partyId, isPrefilled: false);
+
+    final partyRepo = ref.read(partyRepositoryProvider);
+    final ticketRepo = ref.read(ticketRepositoryProvider);
+    final locationRepo = ref.read(locationRepositoryProvider);
+
+    final party = await partyRepo.getPartyById(partyId);
+    if (party == null) {
+      throw const MinglitSystemException('파티 정보를 찾을 수 없습니다.');
+    }
+
+    final templates = await ticketRepo.getTicketTemplatesByPartyId(partyId);
+    Location? location;
+    if (party.locationId != null && party.locationId!.isNotEmpty) {
+      location = await locationRepo.getLocationById(party.locationId!);
+    }
+
+    final contactOptions = party.contactOptions;
+    final enabledMethods = <String>{};
+    final phone = (contactOptions['phone'] ?? '').toString();
+    if (phone.isNotEmpty) enabledMethods.add('phone');
+    final email = (contactOptions['email'] ?? '').toString();
+    if (email.isNotEmpty) enabledMethods.add('email');
+    final kakao = (contactOptions['kakao_open_chat'] ?? '').toString();
+    if (kakao.isNotEmpty) enabledMethods.add('kakao');
+
+    state = state.copyWith(
+      title: party.title,
+      description: party.description ?? {},
+      imageUrls: party.imageUrls,
+      imageFiles: [],
+      selectedLocation: location,
+      addressDetail: location?.addressDetail ?? '',
+      directionsGuide: location?.directionsGuide ?? '',
+      minConfirmedCount: party.minConfirmedCount,
+      maxParticipants: party.maxParticipants,
+      contactPhone: phone,
+      contactEmail: email,
+      contactKakao: kakao.isEmpty ? null : kakao,
+      enabledContactMethods: enabledMethods,
+      entryGroups: party.entryGroups ?? [],
+      tickets: templates,
+      isPrefilled: true,
+    );
+  }
+
   void nextStep() {
     final nextIndex = state.currentStep.index + 1;
     if (nextIndex < PartyCreateStep.values.length) {
@@ -83,8 +134,10 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
   void updateTitle(String value) => state = state.copyWith(title: value);
   void updateDescription(Map<String, dynamic> value) =>
       state = state.copyWith(description: value);
-  void updateImages(List<XFile> files) =>
-      state = state.copyWith(imageFiles: files);
+  void updateImages({
+    required List<String> imageUrls,
+    required List<XFile> newFiles,
+  }) => state = state.copyWith(imageUrls: imageUrls, imageFiles: newFiles);
 
   // --- Step 2: Location ---
   void updateLocation(Location? loc) =>
@@ -222,6 +275,11 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
           throw MinglitUserException(errors.first);
         }
 
+        if (state.editingPartyId != null) {
+          await _submitEdit();
+          return;
+        }
+
         final partnerRepo = ref.read(partnerRepositoryProvider);
         final myPartners = await partnerRepo.getMyManagedPartners();
         if (myPartners.isEmpty) {
@@ -324,5 +382,123 @@ class PartyCreateWizardController extends _$PartyCreateWizardController {
     });
 
     state = state.copyWith(status: result);
+  }
+
+  Future<void> _submitEdit() async {
+    final partyId = state.editingPartyId;
+    if (partyId == null) return;
+
+    final partyRepo = ref.read(partyRepositoryProvider);
+    final ticketRepo = ref.read(ticketRepositoryProvider);
+    final locationRepo = ref.read(locationRepositoryProvider);
+
+    final party = await partyRepo.getPartyById(partyId);
+    if (party == null) {
+      throw const MinglitSystemException('수정할 파티 정보를 찾을 수 없습니다.');
+    }
+
+    final imageUrls = [...state.imageUrls];
+    if (state.imageFiles.isNotEmpty) {
+      final uploaded = await partyRepo.uploadPartyImages(
+        state.imageFiles,
+        party.partnerId,
+      );
+      imageUrls.addAll(uploaded);
+    }
+
+    final contactOptions = <String, dynamic>{};
+    if (state.enabledContactMethods.contains('phone') &&
+        state.contactPhone.isNotEmpty) {
+      contactOptions['phone'] = state.contactPhone;
+    }
+    if (state.enabledContactMethods.contains('email') &&
+        state.contactEmail.isNotEmpty) {
+      contactOptions['email'] = state.contactEmail;
+    }
+    if (state.enabledContactMethods.contains('kakao') &&
+        state.contactKakao != null &&
+        state.contactKakao!.isNotEmpty) {
+      contactOptions['kakao_open_chat'] = state.contactKakao;
+    }
+
+    if (state.selectedLocation != null) {
+      final currentLocation = party.locationId != null
+          ? await locationRepo.getLocationById(party.locationId!)
+          : null;
+
+      final newLocation = state.selectedLocation!;
+      final isSameSpot =
+          currentLocation != null &&
+          currentLocation.latitude == newLocation.latitude &&
+          currentLocation.longitude == newLocation.longitude;
+
+      if (isSameSpot) {
+        await locationRepo.updateLocationDetails(
+          locationId: currentLocation.id,
+          addressDetail: state.addressDetail,
+          directionsGuide: state.directionsGuide,
+        );
+      } else {
+        final savedLocation = await locationRepo.createLocation(
+          newLocation.copyWith(
+            partnerId: party.partnerId,
+            addressDetail: state.addressDetail,
+            directionsGuide: state.directionsGuide,
+          ),
+        );
+        await partyRepo.updatePartyLocation(party.id, savedLocation.id);
+      }
+    }
+
+    final allVerifIds = state.entryGroups
+        .expand((e) => e.requiredVerificationIds)
+        .toSet()
+        .toList();
+
+    await partyRepo.updateParty(
+      party.copyWith(
+        title: state.title,
+        description: state.description,
+        minConfirmedCount: state.minConfirmedCount,
+        maxParticipants: state.maxParticipants,
+        contactOptions: contactOptions,
+        imageUrls: imageUrls,
+        requiredVerificationIds: allVerifIds,
+        updatedAt: DateTime.now(),
+      ),
+    );
+
+    await partyRepo.replaceEntryGroupTemplates(partyId, state.entryGroups);
+
+    final existingTemplates = await ticketRepo.getTicketTemplatesByPartyId(
+      partyId,
+    );
+    final incomingIds = state.tickets
+        .where((template) => template.id.isNotEmpty)
+        .map((template) => template.id)
+        .toSet();
+
+    for (final template in existingTemplates) {
+      if (!incomingIds.contains(template.id)) {
+        await ticketRepo.deleteTicketTemplate(template.id);
+      }
+    }
+
+    for (final template in state.tickets) {
+      if (template.id.isEmpty) {
+        await ticketRepo.createTicketTemplate(
+          template.copyWith(partyId: partyId),
+        );
+      } else {
+        await ticketRepo.updateTicketTemplate(
+          template.copyWith(partyId: partyId, updatedAt: DateTime.now()),
+        );
+      }
+    }
+
+    ref
+      ..invalidate(partyDetailProvider(partyId))
+      ..invalidate(partyTicketsProvider(partyId))
+      ..invalidate(partyListProvider);
   }
 }

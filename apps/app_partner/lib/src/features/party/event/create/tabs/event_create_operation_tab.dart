@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:app_partner/src/features/party/event/create/event_create_controller.dart';
 import 'package:app_partner/src/features/party/event/widgets/event_date_time_input.dart';
+import 'package:app_partner/src/features/party/ticket/ui/ticket_template_manage_screen.dart';
 import 'package:app_partner/src/features/party/ticket/widgets/party_tickets_summary.dart';
 import 'package:app_partner/src/ui/widgets/common/minglit_editable_section.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
@@ -42,7 +45,15 @@ class EventCreateOperationTab extends StatelessWidget {
           MinglitEditableSection(
             title: context.l10n.wizard_review_tickets,
             onTap: () {
-              // TODO(EventCreate): Manage tickets
+              unawaited(
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => TicketTemplateManageScreen(
+                      partyId: state.partyId,
+                    ),
+                  ),
+                ),
+              );
             },
             child: PartyTicketsSummary(
               tickets: state.tickets,

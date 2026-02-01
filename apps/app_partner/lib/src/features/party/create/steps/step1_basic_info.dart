@@ -55,6 +55,7 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(partyCreateWizardControllerProvider);
     final theme = Theme.of(context);
 
     return SingleChildScrollView(
@@ -99,11 +100,11 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
           ),
           const SizedBox(height: MinglitSpacing.medium),
           PartyImageEditor(
-            imageUrls: const [], // New parties have no remote URLs
+            imageUrls: state.imageUrls,
             onChanged: (urls, files) {
               ref
                   .read(partyCreateWizardControllerProvider.notifier)
-                  .updateImages(files);
+                  .updateImages(imageUrls: urls, newFiles: files);
             },
           ),
         ],

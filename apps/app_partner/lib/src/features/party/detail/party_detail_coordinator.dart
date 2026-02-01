@@ -21,8 +21,13 @@ class PartyDetailCoordinator {
   final Ref _ref;
 
   void goToEditParty(String partyId) {
-    // TODO(Detail): Implement Party Edit Route
-    Log.d(r'Coordinator: Edit Party $partyId');
+    unawaited(
+      _ref
+          .read(goRouterProvider)
+          .push(
+            PartyEditRoute(partyId: partyId).location,
+          ),
+    );
   }
 
   Future<Location?> goToLocationSearch(BuildContext context) async {
