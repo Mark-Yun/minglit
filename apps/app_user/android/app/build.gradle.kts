@@ -61,7 +61,7 @@ android {
             applicationIdSuffix = ".dev"
             resValue("string", "app_name", "Minglit Dev")
         }
-        create("main") {
+        create("prod") {
             dimension = "env"
             resValue("string", "app_name", "Minglit")
         }

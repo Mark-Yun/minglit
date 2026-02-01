@@ -53,7 +53,7 @@ jobs:
 
       - name: Build AAB (Main)
         if: github.ref == 'refs/heads/main'
-        run: flutter build appbundle --flavor main --release
+        run: flutter build appbundle --flavor prod --release
 
       - name: Upload Artifact (Dev APK)
         if: github.ref == 'refs/heads/dev'
@@ -62,12 +62,12 @@ jobs:
           name: app-dev-release.apk
           path: apps/app_user/build/app/outputs/flutter-apk/app-dev-release.apk
 
-      - name: Upload Artifact (Main AAB)
+      - name: Upload Artifact (Prod AAB)
         if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
-          name: app-main-release.aab
-          path: apps/app_user/build/app/outputs/bundle/mainRelease/app-main-release.aab
+          name: app-prod-release.aab
+          path: apps/app_user/build/app/outputs/bundle/prodRelease/app-prod-release.aab
 
       - name: Upload to Firebase App Distribution (Dev)
         if: github.ref == 'refs/heads/dev'
@@ -77,12 +77,12 @@ jobs:
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
 
-      - name: Upload to Google Play (Main)
+      - name: Upload to Google Play (Prod)
         if: github.ref == 'refs/heads/main'
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.minglit.app_user
-          releaseFiles: apps/app_user/build/app/outputs/bundle/mainRelease/app-main-release.aab
+          releaseFiles: apps/app_user/build/app/outputs/bundle/prodRelease/app-prod-release.aab
           track: internal
           status: draft

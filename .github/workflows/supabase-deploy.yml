@@ -32,13 +32,13 @@ jobs:
           supabase link --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD
           
           # Set Secrets
-          supabase secrets set --password $SUPABASE_DB_PASSWORD OPENAI_API_KEY=$OPENAI_API_KEY
+          supabase secrets set OPENAI_API_KEY=$OPENAI_API_KEY
 
           # Dev 환경은 스키마 충돌 방지를 위해 리셋 후 적용
-          supabase db reset --linked --password $SUPABASE_DB_PASSWORD
+          supabase db reset --linked
 
           # Deploy Edge Functions
-          supabase functions deploy --password $SUPABASE_DB_PASSWORD
+          supabase functions deploy
 
       # Main 환경 배포
       - name: Deploy to Main Supabase
@@ -53,9 +53,9 @@ jobs:
           supabase link --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD
           
           # Set Secrets
-          supabase secrets set --password $SUPABASE_DB_PASSWORD OPENAI_API_KEY=$OPENAI_API_KEY
+          supabase secrets set OPENAI_API_KEY=$OPENAI_API_KEY
 
           supabase db push --password $SUPABASE_DB_PASSWORD
 
           # Deploy Edge Functions
-          supabase functions deploy --password $SUPABASE_DB_PASSWORD
+          supabase functions deploy

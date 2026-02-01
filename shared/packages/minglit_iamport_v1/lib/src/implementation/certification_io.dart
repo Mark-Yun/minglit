@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:iamport_flutter/iamport_certification.dart';
+import 'package:iamport_flutter/Iamport_certification.dart';
 import 'package:iamport_flutter/model/certification_data.dart';
 import '../service/certification_service.dart';
 
