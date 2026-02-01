@@ -9,3 +9,6 @@ workspace:
   - shared/packages/minglit_kit
   - tests/test_data_seeder
   - tests/backend_integration
+
+dependency_overrides:
+  iamport_webview_flutter: 3.1.0
