@@ -16,116 +16,117 @@ jobs:
     defaults:
       run:
         working-directory: ./apps/app_partner
+    env:
+      BUNDLE_ID: com.minglit.appPartner
+      KEYCHAIN_NAME: ci-signing.keychain-db
+      DERIVED_DATA_PATH: ~/Library/Developer/Xcode/DerivedData
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          cache: true
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: |
+            apps/app_partner/ios/Pods
+            ~/Library/Caches/CocoaPods
+          key: ${{ runner.os }}-cocoapods-${{ hashFiles('apps/app_partner/ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cocoapods-
+
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.DERIVED_DATA_PATH }}
+          key: ${{ runner.os }}-deriveddata-${{ hashFiles('apps/app_partner/ios/Podfile.lock', 'apps/app_partner/ios/Runner.xcodeproj/project.pbxproj') }}
+          restore-keys: |
+            ${{ runner.os }}-deriveddata-
+
+      - name: Install CocoaPods
+        run: pod install
+        working-directory: ./apps/app_partner/ios
+
+      - name: Set Dev Bundle ID
+        if: ${{ github.ref == 'refs/heads/dev' }}
+        run: |
+          sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = com.minglit.appPartner;/PRODUCT_BUNDLE_IDENTIFIER = com.minglit.appPartner.dev;/g" ios/Runner.xcodeproj/project.pbxproj
+
+      - name: Generate keychain password
+        run: echo "KEYCHAIN_PASSWORD=$(uuidgen)" >> $GITHUB_ENV
+
+      - name: Create keychain
+        run: |
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_NAME"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+          security list-keychains -d user -s "$KEYCHAIN_NAME"
+
+      - name: Import signing certificate
+        run: |
+          echo "$APPLE_CERTIFICATE_BASE64" | base64 --decode > signing.p12
+          security import signing.p12 -k "$KEYCHAIN_NAME" -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+          rm -f signing.p12
         env:
-          BUNDLE_ID: com.minglit.appPartner
-          KEYCHAIN_NAME: ci-signing.keychain-db
-          DERIVED_DATA_PATH: ~/Library/Developer/Xcode/DerivedData
-    
-        steps:
-          - name: Checkout
-            uses: actions/checkout@v4
-    
-          - name: Setup Flutter
-            uses: subosito/flutter-action@v2
-            with:
-              channel: "stable"
-              cache: true
-    
-          - name: Flutter pub get
-            run: flutter pub get
-    
-          - name: Cache CocoaPods
-            uses: actions/cache@v4
-            with:
-              path: |
-                apps/app_partner/ios/Pods
-                ~/Library/Caches/CocoaPods
-              key: ${{ runner.os }}-cocoapods-${{ hashFiles('apps/app_partner/ios/Podfile.lock') }}
-              restore-keys: |
-                ${{ runner.os }}-cocoapods-
-    
-          - name: Cache DerivedData
-            uses: actions/cache@v4
-            with:
-              path: ${{ env.DERIVED_DATA_PATH }}
-              key: ${{ runner.os }}-deriveddata-${{ hashFiles('apps/app_partner/ios/Podfile.lock', 'apps/app_partner/ios/Runner.xcodeproj/project.pbxproj') }}
-              restore-keys: |
-                ${{ runner.os }}-deriveddata-
-    
-          - name: Install CocoaPods
-            run: pod install
-            working-directory: ./apps/app_partner/ios
-    
-          - name: Set Dev Bundle ID
-            if: ${{ github.ref == 'refs/heads/dev' }}
-            run: |
-              sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = com.minglit.appPartner;/PRODUCT_BUNDLE_IDENTIFIER = com.minglit.appPartner.dev;/g" ios/Runner.xcodeproj/project.pbxproj
-    
-          - name: Generate keychain password
-            run: echo "KEYCHAIN_PASSWORD=$(uuidgen)" >> $GITHUB_ENV
-    
-          - name: Create keychain
-            run: |
-              security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
-              security set-keychain-settings -lut 21600 "$KEYCHAIN_NAME"
-              security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
-              security list-keychains -d user -s "$KEYCHAIN_NAME"
-    
-          - name: Import signing certificate
-            run: |
-              echo "$APPLE_CERTIFICATE_BASE64" | base64 --decode > signing.p12
-              security import signing.p12 -k "$KEYCHAIN_NAME" -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
-              security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
-              rm -f signing.p12
-            env:
-              APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
-              APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-    
-          - name: Install provisioning profile (Dev)
-            if: ${{ github.ref == 'refs/heads/dev' }}
-            run: |
-              mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-              echo "$APPLE_PROVISION_PROFILE_PARTNER_DEV_BASE64" | base64 --decode > profile.mobileprovision
-              profile_uuid=$(security cms -D -i profile.mobileprovision | /usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin)
-              cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$profile_uuid.mobileprovision
-              rm -f profile.mobileprovision
-            env:
-              APPLE_PROVISION_PROFILE_PARTNER_DEV_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_PARTNER_DEV_BASE64 }}
-    
-          - name: Install provisioning profile (Main)
-            if: ${{ github.ref == 'refs/heads/main' }}
-            run: |
-              mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-              echo "$APPLE_PROVISION_PROFILE_PARTNER_BASE64" | base64 --decode > profile.mobileprovision
-              profile_uuid=$(security cms -D -i profile.mobileprovision | /usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin)
-              cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$profile_uuid.mobileprovision
-              rm -f profile.mobileprovision
-            env:
-              APPLE_PROVISION_PROFILE_PARTNER_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_PARTNER_BASE64 }}
-    
-          - name: Create App Store Connect API key
-            run: |
-              mkdir -p ~/private_keys
-              echo "$APP_STORE_CONNECT_API_KEY_BASE64" | base64 --decode > ~/private_keys/AuthKey_$APP_STORE_CONNECT_API_KEY_ID.p8
-            env:
-              APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
-              APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-    
-          - name: Build IPA (Dev)
-            if: ${{ github.ref == 'refs/heads/dev' }}
-            run: |
-              flutter build ipa --release --export-options-plist=ios/ExportOptions-dev.plist \
-                --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL_DEV }} \
-                --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY_DEV }} \
-                --dart-define=KAKAO_LOCAL_REST_API_KEY=${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
-    
-          - name: Build IPA (Main)
-            if: ${{ github.ref == 'refs/heads/main' }}
-            run: |
-              flutter build ipa --release --export-options-plist=ios/ExportOptions.plist \
-                --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL_PROD }} \
-                --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY_PROD }} \
-                --dart-define=KAKAO_LOCAL_REST_API_KEY=${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
+          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+
+      - name: Install provisioning profile (Dev)
+        if: ${{ github.ref == 'refs/heads/dev' }}
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "$APPLE_PROVISION_PROFILE_PARTNER_DEV_BASE64" | base64 --decode > profile.mobileprovision
+          profile_uuid=$(security cms -D -i profile.mobileprovision | /usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin)
+          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$profile_uuid.mobileprovision
+          rm -f profile.mobileprovision
+        env:
+          APPLE_PROVISION_PROFILE_PARTNER_DEV_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_PARTNER_DEV_BASE64 }}
+
+      - name: Install provisioning profile (Main)
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "$APPLE_PROVISION_PROFILE_PARTNER_BASE64" | base64 --decode > profile.mobileprovision
+          profile_uuid=$(security cms -D -i profile.mobileprovision | /usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin)
+          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$profile_uuid.mobileprovision
+          rm -f profile.mobileprovision
+        env:
+          APPLE_PROVISION_PROFILE_PARTNER_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_PARTNER_BASE64 }}
+
+      - name: Create App Store Connect API key
+        run: |
+          mkdir -p ~/private_keys
+          echo "$APP_STORE_CONNECT_API_KEY_BASE64" | base64 --decode > ~/private_keys/AuthKey_$APP_STORE_CONNECT_API_KEY_ID.p8
+        env:
+          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+
+      - name: Build IPA (Dev)
+        if: ${{ github.ref == 'refs/heads/dev' }}
+        run: |
+          flutter build ipa --release --export-options-plist=ios/ExportOptions-dev.plist \
+            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL_DEV }} \
+            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY_DEV }} \
+            --dart-define=KAKAO_LOCAL_REST_API_KEY=${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
+
+      - name: Build IPA (Main)
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist \
+            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL_PROD }} \
+            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY_PROD }} \
+            --dart-define=KAKAO_LOCAL_REST_API_KEY=${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
+
       - name: Upload to App Store Connect (TestFlight/App Store)
         run: |
           xcrun altool --upload-app --type ios --file build/ios/ipa/*.ipa \
