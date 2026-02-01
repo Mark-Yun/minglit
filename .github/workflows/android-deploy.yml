@@ -75,7 +75,7 @@ jobs:
         with:
           args: upload --app ${{ secrets.FIREBASE_APP_ID_ANDROID_DEV }} --release-notes "Dev Build ${GITHUB_RUN_NUMBER}" --groups "testers" apps/app_user/build/app/outputs/flutter-apk/app-dev-release.apk
         env:
-          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_DEV }}
 
       - name: Upload to Google Play (Prod)
         if: github.ref == 'refs/heads/main'
