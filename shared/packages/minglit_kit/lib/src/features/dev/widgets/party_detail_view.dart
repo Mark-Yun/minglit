@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/src/data/models/event.dart';
@@ -237,7 +238,13 @@ class PartyDetailView extends ConsumerWidget {
           children: [
             Expanded(
               child: OutlinedButton(
-                onPressed: () {}, // TODO(dev): Share
+                onPressed: () {
+                  final url = 'https://minglit.app/parties/${party.id}';
+                  Clipboard.setData(ClipboardData(text: url));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('링크가 복사되었습니다')),
+                  );
+                },
                 child: const Text('공유하기'),
               ),
             ),

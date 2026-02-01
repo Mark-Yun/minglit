@@ -73,9 +73,9 @@ class MyPageScreen extends ConsumerWidget {
             leading: const Icon(Icons.confirmation_number_outlined),
             title: const Text('내 티켓'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              // TODO(UI): 내 티켓 목록으로 이동
-            },
+            onTap: () => unawaited(
+              const PurchaseHistoryRoute().push<void>(context),
+            ),
           ),
           ListTile(
             leading: const Icon(Icons.notifications_outlined),

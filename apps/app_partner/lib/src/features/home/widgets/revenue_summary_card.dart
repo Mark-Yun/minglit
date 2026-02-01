@@ -54,7 +54,6 @@ class RevenueSummaryCard extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              // TODO(developer): Bind real data
               Text(
                 formatter.format(currentMonthNet),
                 style: theme.textTheme.headlineSmall?.copyWith(

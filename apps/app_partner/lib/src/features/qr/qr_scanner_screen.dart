@@ -1,20 +1,57 @@
 import 'dart:async';
 
+import 'package:app_partner/src/features/checkin/checkin_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
-class QRScannerScreen extends StatefulWidget {
+class QRScannerScreen extends ConsumerStatefulWidget {
   const QRScannerScreen({super.key});
 
   @override
-  State<QRScannerScreen> createState() => _QRScannerScreenState();
+  ConsumerState<QRScannerScreen> createState() => _QRScannerScreenState();
 }
 
-class _QRScannerScreenState extends State<QRScannerScreen> {
+class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
   final MobileScannerController _controller = MobileScannerController();
   bool _isProcessing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    ref.listenManual(checkinControllerProvider, (prev, next) {
+      if (!mounted) return;
+      switch (next.result) {
+        case CheckinResult.success:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('✅ 입장 확인: ${next.userName ?? ""}'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        case CheckinResult.invalid:
+        case CheckinResult.error:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(next.message ?? '처리 실패'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        case CheckinResult.alreadyCheckedIn:
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('이미 입장 처리된 티켓입니다'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        case CheckinResult.idle:
+          setState(() => _isProcessing = false);
+        case CheckinResult.processing:
+          break;
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -32,18 +69,9 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     if (code == null) return;
 
     setState(() => _isProcessing = true);
-
-    // TODO(developer): Implement Check-in logic with scanned code
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Scanned: $code')),
+    unawaited(
+      ref.read(checkinControllerProvider.notifier).processQR(code),
     );
-
-    // Resume scanning after delay (for testing)
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-      }
-    });
   }
 
   @override
