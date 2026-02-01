@@ -81,11 +81,21 @@ void main() {
 
     test('State is applied when already applied', () async {
       when(
-        () => mockEventRepo.checkApplicationStatus(
+        () => mockEventRepo.getApplication(
           eventId: any(named: 'eventId'),
           userId: any(named: 'userId'),
         ),
-      ).thenAnswer((_) async => true);
+      ).thenAnswer(
+        (_) async => EventApplication(
+          id: 'app_1',
+          eventId: 'event_1',
+          ticketId: 'ticket_1',
+          userId: 'user_1',
+          status: 'confirmed',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      );
 
       final container = createContainer(
         overrides: [
@@ -103,11 +113,11 @@ void main() {
 
     test('State is identityRequired when user is not verified', () async {
       when(
-        () => mockEventRepo.checkApplicationStatus(
+        () => mockEventRepo.getApplication(
           eventId: any(named: 'eventId'),
           userId: any(named: 'userId'),
         ),
-      ).thenAnswer((_) async => false);
+      ).thenAnswer((_) async => null);
 
       when(() => mockUserRepo.getUserProfile('user_1')).thenAnswer(
         (_) async => const UserProfile(
@@ -133,11 +143,11 @@ void main() {
 
     test('State is notEligible when gender does not match', () async {
       when(
-        () => mockEventRepo.checkApplicationStatus(
+        () => mockEventRepo.getApplication(
           eventId: any(named: 'eventId'),
           userId: any(named: 'userId'),
         ),
-      ).thenAnswer((_) async => false);
+      ).thenAnswer((_) async => null);
 
       when(() => mockUserRepo.getUserProfile('user_1')).thenAnswer(
         (_) async => UserProfile(
@@ -171,11 +181,11 @@ void main() {
       'State is qualificationRequired when qualification is missing',
       () async {
         when(
-          () => mockEventRepo.checkApplicationStatus(
+          () => mockEventRepo.getApplication(
             eventId: any(named: 'eventId'),
             userId: any(named: 'userId'),
           ),
-        ).thenAnswer((_) async => false);
+        ).thenAnswer((_) async => null);
 
         when(() => mockUserRepo.getUserProfile('user_1')).thenAnswer(
           (_) async => UserProfile(
@@ -210,11 +220,11 @@ void main() {
 
     test('State is eligible when all conditions match', () async {
       when(
-        () => mockEventRepo.checkApplicationStatus(
+        () => mockEventRepo.getApplication(
           eventId: any(named: 'eventId'),
           userId: any(named: 'userId'),
         ),
-      ).thenAnswer((_) async => false);
+      ).thenAnswer((_) async => null);
 
       when(() => mockUserRepo.getUserProfile('user_1')).thenAnswer(
         (_) async => UserProfile(
