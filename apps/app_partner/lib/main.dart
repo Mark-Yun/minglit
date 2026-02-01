@@ -26,6 +26,10 @@ Future<void> main() async {
             defaultRedirectUrl: 'http://localhost:3001',
           ),
         ),
+        notificationDeepLinkHandlerProvider.overrideWith((ref) {
+          final router = ref.read(goRouterProvider);
+          return router.go;
+        }),
       ],
       child: const MinglitPartnerApp(),
     ),

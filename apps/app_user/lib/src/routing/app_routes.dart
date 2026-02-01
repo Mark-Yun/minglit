@@ -142,6 +142,18 @@ class PurchaseHistoryRoute extends GoRouteData with $PurchaseHistoryRoute {
       const PurchaseHistoryScreen();
 }
 
+/// **Notification Center Route**
+/// Path: `/notifications`
+@TypedGoRoute<NotificationCenterRoute>(path: '/notifications')
+class NotificationCenterRoute extends GoRouteData
+    with $NotificationCenterRoute {
+  const NotificationCenterRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const NotificationListScreen();
+}
+
 /// **Notification Settings Route**
 /// Path: `/my/notification-settings`
 @TypedGoRoute<NotificationSettingsRoute>(path: '/my/notification-settings')

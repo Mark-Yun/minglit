@@ -24,8 +24,9 @@ void main() {
         updatedAt: DateTime.now(),
       );
 
-      when(() => mockRepo.getSettings('user1'))
-          .thenAnswer((_) async => mockSettings);
+      when(
+        () => mockRepo.getSettings('user1'),
+      ).thenAnswer((_) async => mockSettings);
 
       final container = ProviderContainer(
         overrides: [
@@ -35,8 +36,9 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      final result =
-          await container.read(notificationSettingsControllerProvider.future);
+      final result = await container.read(
+        notificationSettingsControllerProvider.future,
+      );
       expect(result, mockSettings);
     });
 
@@ -49,8 +51,9 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      final result =
-          await container.read(notificationSettingsControllerProvider.future);
+      final result = await container.read(
+        notificationSettingsControllerProvider.future,
+      );
       expect(result, isNull);
     });
 
@@ -60,10 +63,12 @@ void main() {
         updatedAt: DateTime.now(),
       );
 
-      when(() => mockRepo.getSettings('user1'))
-          .thenAnswer((_) async => initialSettings);
-      when(() => mockRepo.updateSettings(any(), any()))
-          .thenAnswer((_) async => {});
+      when(
+        () => mockRepo.getSettings('user1'),
+      ).thenAnswer((_) async => initialSettings);
+      when(
+        () => mockRepo.updateSettings(any(), any()),
+      ).thenAnswer((_) async => {});
 
       final container = ProviderContainer(
         overrides: [
@@ -79,11 +84,12 @@ void main() {
       // Update
       await container
           .read(notificationSettingsControllerProvider.notifier)
-          .updateSetting('marketing_consent', true);
+          .updateSetting(key: 'marketing_consent', value: true);
 
       // Check State
-      final newState =
-          await container.read(notificationSettingsControllerProvider.future);
+      final newState = await container.read(
+        notificationSettingsControllerProvider.future,
+      );
       expect(newState!.marketingConsent, true);
 
       // Check Repo Call

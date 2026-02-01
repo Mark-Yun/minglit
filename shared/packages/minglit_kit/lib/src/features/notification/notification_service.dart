@@ -12,6 +12,13 @@ final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
   return NotificationRepository(ref.watch(supabaseClientProvider));
 });
 
+typedef NotificationDeepLinkHandler = void Function(String link);
+
+final notificationDeepLinkHandlerProvider =
+    Provider<NotificationDeepLinkHandler>((_) {
+      return (_) {};
+    });
+
 final notificationServiceProvider = Provider<NotificationService>((ref) {
   return NotificationService(
     ref.watch(notificationRepositoryProvider),
@@ -134,10 +141,19 @@ class NotificationService {
   }
 
   void _handleDeepLink(String? link) {
-    if (link != null) {
-      // TODO(Notification): Use GoRouter to navigate
-      _logger.i('Navigate to deep link: $link');
+    final trimmed = link?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      _logger.w('딥링크가 비어 있습니다.');
+      return;
     }
+
+    if (!trimmed.startsWith('/')) {
+      _logger.w('딥링크 형식이 올바르지 않습니다: $trimmed');
+      return;
+    }
+
+    final handler = _ref.read(notificationDeepLinkHandlerProvider);
+    handler(trimmed);
   }
 
   // 로그인 성공 시 호출할 메서드

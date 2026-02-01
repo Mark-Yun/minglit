@@ -1,5 +1,4 @@
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:minglit_kit/src/data/models/user_settings.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'notification_settings_controller.g.dart';
@@ -13,21 +12,15 @@ class NotificationSettingsController extends _$NotificationSettingsController {
 
     final repository = ref.watch(notificationRepositoryProvider);
     final settings = await repository.getSettings(user.id);
-    
-    // If settings don't exist, we might return a default object or null.
-    // The backend trigger creates it, so it should exist.
-    // If it returns null (e.g. trigger failed or new user before trigger), 
-    // we return a default object without ID (or handle gracefully).
-    // Let's assume default if null.
-    
-    return settings ?? UserSettings(
-        userId: user.id, 
-        updatedAt: DateTime.now(),
-        // Defaults: marketing=false, service=true
-    );
+
+    return settings ??
+        UserSettings(
+          userId: user.id,
+          updatedAt: DateTime.now(),
+        );
   }
 
-  Future<void> updateSetting(String key, bool value) async {
+  Future<void> updateSetting({required String key, required bool value}) async {
     final user = ref.read(currentUserProvider);
     if (user == null) return;
 
@@ -37,7 +30,7 @@ class NotificationSettingsController extends _$NotificationSettingsController {
     // 1. Optimistic Update
     final currentSettings = previousState.value!;
     UserSettings newSettings;
-    
+
     if (key == 'marketing_consent') {
       newSettings = currentSettings.copyWith(marketingConsent: value);
     } else if (key == 'service_notification') {
@@ -52,12 +45,9 @@ class NotificationSettingsController extends _$NotificationSettingsController {
       // 2. Server Update
       final repository = ref.read(notificationRepositoryProvider);
       await repository.updateSettings(user.id, {key: value});
-    } catch (e, st) {
+    } on Object catch (e, st) {
       // 3. Revert on Error
       state = previousState;
-      // Or set AsyncError but keep data? 
-      // Usually revert is better for toggles.
-      // We can also rethrow to let UI handle error message.
       state = AsyncError(e, st); // This will show error state in UI
     }
   }

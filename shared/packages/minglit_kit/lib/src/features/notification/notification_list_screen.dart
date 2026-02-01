@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/src/features/notification/notification_list_controller.dart';
 
@@ -98,12 +99,22 @@ class NotificationListScreen extends ConsumerWidget {
                             .markAsRead(id),
                       );
 
-                      if (deepLink != null && deepLink.isNotEmpty) {
-                        // TODO(Notification): Use Coordinator or Router
+                      final trimmed = deepLink?.trim();
+                      if (trimmed == null || trimmed.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('이동: $deepLink')),
+                          const SnackBar(content: Text('이동할 링크가 없습니다.')),
                         );
+                        return;
                       }
+
+                      if (!trimmed.startsWith('/')) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('올바르지 않은 링크입니다.')),
+                        );
+                        return;
+                      }
+
+                      unawaited(context.push(trimmed));
                     },
                   ),
                 );

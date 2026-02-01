@@ -67,7 +67,7 @@ class NotificationRepository {
         .select()
         .eq('user_id', userId)
         .maybeSingle();
-    
+
     if (response == null) return null;
     return UserSettings.fromJson(response);
   }

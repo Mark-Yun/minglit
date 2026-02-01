@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/features/notification/logic/notification_settings_controller.dart';
@@ -26,9 +28,14 @@ class NotificationSettingsScreen extends ConsumerWidget {
                 subtitle: const Text('예약, 매칭 등 서비스 이용에 필수적인 알림을 받습니다.'),
                 value: settings.serviceNotification,
                 onChanged: (value) {
-                  ref
-                      .read(notificationSettingsControllerProvider.notifier)
-                      .updateSetting('service_notification', value);
+                  unawaited(
+                    ref
+                        .read(notificationSettingsControllerProvider.notifier)
+                        .updateSetting(
+                          key: 'service_notification',
+                          value: value,
+                        ),
+                  );
                 },
               ),
               const Divider(),
@@ -37,9 +44,14 @@ class NotificationSettingsScreen extends ConsumerWidget {
                 subtitle: const Text('이벤트, 할인 혜택 등 유용한 소식을 받습니다.'),
                 value: settings.marketingConsent,
                 onChanged: (value) {
-                  ref
-                      .read(notificationSettingsControllerProvider.notifier)
-                      .updateSetting('marketing_consent', value);
+                  unawaited(
+                    ref
+                        .read(notificationSettingsControllerProvider.notifier)
+                        .updateSetting(
+                          key: 'marketing_consent',
+                          value: value,
+                        ),
+                  );
                 },
               ),
             ],
