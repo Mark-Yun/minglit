@@ -10,8 +10,8 @@
   <string>manual</string>
   <key>provisioningProfiles</key>
   <dict>
-    <key>com.minglit.appUser</key>
-    <string>Minglit User App Store Profile</string>
+    <key>com.minglit.appPartner.dev</key>
+    <string>Minglit Partner App DEV Profile</string>
   </dict>
 </dict>
 </plist>

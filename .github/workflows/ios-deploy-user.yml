@@ -1,4 +1,4 @@
-name: iOS Deploy (Requires Secrets)
+name: iOS User App Deploy
 
 on:
   push:
@@ -12,30 +12,16 @@ on:
 jobs:
   ios-deploy:
     runs-on: macos-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     defaults:
       run:
         working-directory: ./apps/app_user
     env:
       BUNDLE_ID: com.minglit.appUser
-      EXPORT_OPTIONS_PLIST: ios/ExportOptions.plist
       KEYCHAIN_NAME: ci-signing.keychain-db
       DERIVED_DATA_PATH: ~/Library/Developer/Xcode/DerivedData
 
     steps:
-      # This workflow is a template. It requires secrets configuration.
-      # Required secrets:
-      # - APPLE_CERTIFICATE_BASE64
-      # - APPLE_CERTIFICATE_PASSWORD
-      # - APPLE_PROVISION_PROFILE_BASE64
-      # - APP_STORE_CONNECT_API_KEY_ID
-      # - APP_STORE_CONNECT_ISSUER_ID
-      # - APP_STORE_CONNECT_API_KEY_BASE64
-      # Optional (Fastlane match instead of manual cert/profile steps):
-      # - MATCH_GIT_URL
-      # - FASTLANE_USER
-      # - MATCH_PASSWORD
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -70,17 +56,10 @@ jobs:
         run: pod install
         working-directory: ./apps/app_user/ios
 
-      # Optional: Fastlane match (requires secrets above).
-      # - name: Install Fastlane
-      #   if: ${{ secrets.MATCH_GIT_URL != '' }}
-      #   run: sudo gem install fastlane -N
-      # - name: Sync signing via match
-      #   if: ${{ secrets.MATCH_GIT_URL != '' }}
-      #   run: fastlane match appstore --readonly --git_url "$MATCH_GIT_URL"
-      #   env:
-      #     MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
-      #     FASTLANE_USER: ${{ secrets.FASTLANE_USER }}
-      #     MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+      - name: Set Dev Bundle ID
+        if: ${{ github.ref == 'refs/heads/dev' }}
+        run: |
+          sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = com.minglit.appUser;/PRODUCT_BUNDLE_IDENTIFIER = com.minglit.appUser.dev;/g" ios/Runner.xcodeproj/project.pbxproj
 
       - name: Generate keychain password
         run: echo "KEYCHAIN_PASSWORD=$(uuidgen)" >> $GITHUB_ENV
@@ -102,15 +81,27 @@ jobs:
           APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
 
-      - name: Install provisioning profile
+      - name: Install provisioning profile (Dev)
+        if: ${{ github.ref == 'refs/heads/dev' }}
         run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "$APPLE_PROVISION_PROFILE_BASE64" | base64 --decode > profile.mobileprovision
+          echo "$APPLE_PROVISION_PROFILE_USER_DEV_BASE64" | base64 --decode > profile.mobileprovision
           profile_uuid=$(security cms -D -i profile.mobileprovision | /usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin)
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$profile_uuid.mobileprovision
           rm -f profile.mobileprovision
         env:
-          APPLE_PROVISION_PROFILE_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_BASE64 }}
+          APPLE_PROVISION_PROFILE_USER_DEV_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_USER_DEV_BASE64 }}
+
+      - name: Install provisioning profile (Main)
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "$APPLE_PROVISION_PROFILE_USER_BASE64" | base64 --decode > profile.mobileprovision
+          profile_uuid=$(security cms -D -i profile.mobileprovision | /usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin)
+          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$profile_uuid.mobileprovision
+          rm -f profile.mobileprovision
+        env:
+          APPLE_PROVISION_PROFILE_USER_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_USER_BASE64 }}
 
       - name: Create App Store Connect API key
         run: |
@@ -120,21 +111,23 @@ jobs:
           APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
 
-      - name: Build IPA
-        run: flutter build ipa --release --export-options-plist="$EXPORT_OPTIONS_PLIST"
-
-      - name: Upload to TestFlight (dev)
+      - name: Build IPA (Dev)
         if: ${{ github.ref == 'refs/heads/dev' }}
         run: |
-          xcrun altool --upload-app --type ios --file build/ios/ipa/*.ipa \
-            --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
-            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
-        env:
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          flutter build ipa --release --export-options-plist=ios/ExportOptions-dev.plist \
+            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL_DEV }} \
+            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY_DEV }} \
+            --dart-define=KAKAO_LOCAL_REST_API_KEY=${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
 
-      - name: Upload to App Store (main)
+      - name: Build IPA (Main)
         if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist \
+            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL_PROD }} \
+            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY_PROD }} \
+            --dart-define=KAKAO_LOCAL_REST_API_KEY=${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
+
+      - name: Upload to App Store Connect (TestFlight/App Store)
         run: |
           xcrun altool --upload-app --type ios --file build/ios/ipa/*.ipa \
             --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \

@@ -68,3 +68,5 @@ shared/assets/images/*.zip
 # Misc
 .env*.local
 .pnpm-store/
+# Secrets directory
+minglit_secret/
