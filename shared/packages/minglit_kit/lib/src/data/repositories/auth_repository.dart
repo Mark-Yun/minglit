@@ -1,7 +1,12 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart'
+    show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'auth_repository.g.dart';
@@ -105,6 +110,80 @@ class AuthRepository {
       Log.i('🎉 [AuthRepo] Supabase Sign-In successful!');
     } on Exception catch (e, stackTrace) {
       Log.e('❌ [AuthRepo] Sign-In Error', e, stackTrace);
+      rethrow;
+    }
+  }
+
+  /// Initiates Apple Sign-In process.
+  Future<void> signInWithApple({String? redirectTo}) async {
+    Log.d('🍎 [AuthRepo] Apple Sign-In started (Web=$kIsWeb)');
+    try {
+      if (kIsWeb) {
+        final targetRedirect =
+            redirectTo ?? _defaultRedirectUrl ?? Uri.base.origin;
+        Log.d('🌐 [AuthRepo] Apple OAuth redirect to: $targetRedirect');
+        await _supabase.auth.signInWithOAuth(
+          OAuthProvider.apple,
+          redirectTo: targetRedirect,
+        );
+        return;
+      }
+
+      final isAppleNative =
+          defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.macOS;
+
+      if (!isAppleNative) {
+        throw const AuthException(
+          'Apple sign-in is supported on iOS/macOS and web only.',
+        );
+      }
+
+      final rawNonce = _supabase.auth.generateRawNonce();
+      final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
+
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: hashedNonce,
+      );
+
+      final idToken = credential.identityToken;
+      if (idToken == null) {
+        throw const AuthException('No ID Token found from Apple.');
+      }
+
+      await _supabase.auth.signInWithIdToken(
+        provider: OAuthProvider.apple,
+        idToken: idToken,
+        nonce: rawNonce,
+      );
+
+      if (credential.givenName != null || credential.familyName != null) {
+        final nameParts = <String>[];
+        if (credential.givenName != null) {
+          nameParts.add(credential.givenName!);
+        }
+        if (credential.familyName != null) {
+          nameParts.add(credential.familyName!);
+        }
+
+        await _supabase.auth.updateUser(
+          UserAttributes(
+            data: {
+              'full_name': nameParts.join(' '),
+              'given_name': credential.givenName ?? '',
+              'family_name': credential.familyName ?? '',
+            },
+          ),
+        );
+      }
+
+      Log.i('🎉 [AuthRepo] Apple Sign-In successful!');
+    } on Exception catch (e, stackTrace) {
+      Log.e('❌ [AuthRepo] Apple Sign-In Error', e, stackTrace);
       rethrow;
     }
   }

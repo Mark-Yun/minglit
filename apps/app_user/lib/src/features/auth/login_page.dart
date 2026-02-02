@@ -27,6 +27,10 @@ class LoginPage extends ConsumerWidget {
     });
 
     final authState = ref.watch(authControllerProvider);
+    final isAppleSignInAvailable =
+        kIsWeb ||
+        defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS;
 
     if (authState.isLoading) {
       return const Scaffold(body: MinglitCircularProgressIndicator());
@@ -62,6 +66,32 @@ class LoginPage extends ConsumerWidget {
           );
         }
       },
+      onAppleSignIn: isAppleSignInAvailable
+          ? () async {
+              if (from != null) {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setString('auth_return_url', from!);
+                Log.d('💾 [Auth] Saved return URL: $from');
+              }
+
+              if (context.mounted) {
+                String? redirectTo;
+                if (kIsWeb) {
+                  final origin = Uri.base.origin;
+                  redirectTo = '$origin/#/auth/callback';
+                  Log.d('🌐 [Auth] Apple redirectTo set: $redirectTo');
+                }
+
+                unawaited(
+                  ref
+                      .read(authControllerProvider.notifier)
+                      .signInWithApple(
+                        redirectTo: redirectTo,
+                      ),
+                );
+              }
+            }
+          : null,
     );
   }
 }
