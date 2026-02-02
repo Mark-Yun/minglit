@@ -1,30 +1,39 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:app_user/src/features/home/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:minglit_kit/minglit_kit.dart';
+import 'package:mocktail/mocktail.dart';
 
-import 'package:app_user/main.dart';
+import 'utils/mocks.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('App smoke test - HomePage renders', (tester) async {
+    final mockEventRepository = MockEventRepository();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    for (final type in EventFeedType.values) {
+      when(
+        () => mockEventRepository.getEventsByType(
+          type: type,
+          latitude: any(named: 'latitude'),
+          longitude: any(named: 'longitude'),
+          limit: any(named: 'limit'),
+        ),
+      ).thenAnswer((_) async => []);
+    }
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          eventRepositoryProvider.overrideWithValue(mockEventRepository),
+        ],
+        child: MaterialApp(
+          theme: MinglitTheme.materialTheme,
+          home: const HomePage(),
+        ),
+      ),
+    );
+
     await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.byType(HomePage), findsOneWidget);
   });
 }
