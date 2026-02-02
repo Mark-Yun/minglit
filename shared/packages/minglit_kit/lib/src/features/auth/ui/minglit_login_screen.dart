@@ -9,6 +9,7 @@ class MinglitLoginScreen extends ConsumerWidget {
   const MinglitLoginScreen({
     super.key,
     this.onGoogleSignIn,
+    this.onAppleSignIn,
     this.onKakaoSignIn,
     this.onVerifyIdentity,
     this.isPartner = false,
@@ -16,6 +17,9 @@ class MinglitLoginScreen extends ConsumerWidget {
 
   /// Callback when Google sign-in is pressed.
   final VoidCallback? onGoogleSignIn;
+
+  /// Callback when Apple sign-in is pressed.
+  final VoidCallback? onAppleSignIn;
 
   /// Callback when Kakao sign-in is pressed.
   final VoidCallback? onKakaoSignIn;
@@ -87,6 +91,18 @@ class MinglitLoginScreen extends ConsumerWidget {
                   side: BorderSide(color: Colors.grey[300]!),
                 ),
               ),
+              if (onAppleSignIn != null) ...[
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: onAppleSignIn,
+                  icon: const Icon(Icons.apple, size: 18),
+                  label: const Text('Apple로 시작하기'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
               const SizedBox(height: 12),
               ElevatedButton.icon(
                 onPressed: onKakaoSignIn,

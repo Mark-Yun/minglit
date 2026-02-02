@@ -56,6 +56,25 @@ class AuthController extends _$AuthController {
     }
   }
 
+  /// Trigger Apple Sign-In
+  Future<void> signInWithApple({String? redirectTo}) async {
+    state = const AsyncLoading();
+    try {
+      await ref
+          .read(authRepositoryProvider)
+          .signInWithApple(
+            redirectTo: redirectTo,
+          );
+      if (!kIsWeb) {
+        state = const AsyncData(null);
+      }
+    } on Object catch (e, st) {
+      try {
+        state = AsyncError(e, st);
+      } on Object catch (_) {}
+    }
+  }
+
   /// Trigger Sign-Out
   Future<void> signOut() async {
     state = const AsyncLoading();

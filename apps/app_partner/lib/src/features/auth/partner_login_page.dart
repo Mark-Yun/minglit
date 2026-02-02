@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -16,6 +17,10 @@ class PartnerLoginPage extends ConsumerWidget {
     });
 
     final authState = ref.watch(authControllerProvider);
+    final isAppleSignInAvailable =
+        kIsWeb ||
+        defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS;
 
     if (authState.isLoading) {
       return const Scaffold(body: MinglitCircularProgressIndicator());
@@ -26,6 +31,13 @@ class PartnerLoginPage extends ConsumerWidget {
       onGoogleSignIn: () {
         unawaited(ref.read(authControllerProvider.notifier).signInWithGoogle());
       },
+      onAppleSignIn: isAppleSignInAvailable
+          ? () {
+              unawaited(
+                ref.read(authControllerProvider.notifier).signInWithApple(),
+              );
+            }
+          : null,
     );
   }
 }
