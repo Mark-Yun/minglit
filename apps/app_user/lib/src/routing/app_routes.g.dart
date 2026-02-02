@@ -11,15 +11,13 @@ List<RouteBase> get $appRoutes => [
   $devUserSwitchRoute,
   $loginRoute,
   $authCallbackRoute,
-  $homeRoute,
-  $myPageRoute,
-  $eventCurationRoute,
   $eventDetailRoute,
   $certificationRoute,
   $eventApplicationRoute,
   $purchaseHistoryRoute,
   $notificationCenterRoute,
   $notificationSettingsRoute,
+  $userShellRoute,
 ];
 
 RouteBase get $devRoute =>
@@ -124,115 +122,6 @@ mixin $AuthCallbackRoute on GoRouteData {
 
   @override
   void replace(BuildContext context) => context.replace(location);
-}
-
-RouteBase get $homeRoute =>
-    GoRouteData.$route(path: '/', factory: $HomeRoute._fromState);
-
-mixin $HomeRoute on GoRouteData {
-  static HomeRoute _fromState(GoRouterState state) => const HomeRoute();
-
-  @override
-  String get location => GoRouteData.$location('/');
-
-  @override
-  void go(BuildContext context) => context.go(location);
-
-  @override
-  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
-
-  @override
-  void pushReplacement(BuildContext context) =>
-      context.pushReplacement(location);
-
-  @override
-  void replace(BuildContext context) => context.replace(location);
-}
-
-RouteBase get $myPageRoute =>
-    GoRouteData.$route(path: '/my', factory: $MyPageRoute._fromState);
-
-mixin $MyPageRoute on GoRouteData {
-  static MyPageRoute _fromState(GoRouterState state) => const MyPageRoute();
-
-  @override
-  String get location => GoRouteData.$location('/my');
-
-  @override
-  void go(BuildContext context) => context.go(location);
-
-  @override
-  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
-
-  @override
-  void pushReplacement(BuildContext context) =>
-      context.pushReplacement(location);
-
-  @override
-  void replace(BuildContext context) => context.replace(location);
-}
-
-RouteBase get $eventCurationRoute => GoRouteData.$route(
-  path: '/curation',
-  factory: $EventCurationRoute._fromState,
-);
-
-mixin $EventCurationRoute on GoRouteData {
-  static EventCurationRoute _fromState(GoRouterState state) =>
-      EventCurationRoute(
-        type:
-            _$convertMapValue(
-              'type',
-              state.uri.queryParameters,
-              _$EventFeedTypeEnumMap._$fromName,
-            ) ??
-            EventFeedType.newArrivals,
-      );
-
-  EventCurationRoute get _self => this as EventCurationRoute;
-
-  @override
-  String get location => GoRouteData.$location(
-    '/curation',
-    queryParams: {
-      if (_self.type != EventFeedType.newArrivals)
-        'type': _$EventFeedTypeEnumMap[_self.type],
-    },
-  );
-
-  @override
-  void go(BuildContext context) => context.go(location);
-
-  @override
-  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
-
-  @override
-  void pushReplacement(BuildContext context) =>
-      context.pushReplacement(location);
-
-  @override
-  void replace(BuildContext context) => context.replace(location);
-}
-
-const _$EventFeedTypeEnumMap = {
-  EventFeedType.nearest: 'nearest',
-  EventFeedType.newArrivals: 'new-arrivals',
-  EventFeedType.closingSoon: 'closing-soon',
-  EventFeedType.earlyBird: 'early-bird',
-};
-
-T? _$convertMapValue<T>(
-  String key,
-  Map<String, String> map,
-  T? Function(String) converter,
-) {
-  final value = map[key];
-  return value == null ? null : converter(value);
-}
-
-extension<T extends Enum> on Map<T, String> {
-  T? _$fromName(String? value) =>
-      entries.where((element) => element.value == value).firstOrNull?.key;
 }
 
 RouteBase get $eventDetailRoute => GoRouteData.$route(
@@ -400,4 +289,155 @@ mixin $NotificationSettingsRoute on GoRouteData {
 
   @override
   void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $userShellRoute => StatefulShellRouteData.$route(
+  factory: $UserShellRouteExtension._fromState,
+  branches: [
+    StatefulShellBranchData.$branch(
+      routes: [GoRouteData.$route(path: '/', factory: $HomeRoute._fromState)],
+    ),
+    StatefulShellBranchData.$branch(
+      routes: [
+        GoRouteData.$route(
+          path: '/explore',
+          factory: $ExploreRoute._fromState,
+          routes: [
+            GoRouteData.$route(
+              path: 'curation',
+              factory: $EventCurationRoute._fromState,
+            ),
+          ],
+        ),
+      ],
+    ),
+    StatefulShellBranchData.$branch(
+      routes: [
+        GoRouteData.$route(path: '/my', factory: $MyPageRoute._fromState),
+      ],
+    ),
+  ],
+);
+
+extension $UserShellRouteExtension on UserShellRoute {
+  static UserShellRoute _fromState(GoRouterState state) =>
+      const UserShellRoute();
+}
+
+mixin $HomeRoute on GoRouteData {
+  static HomeRoute _fromState(GoRouterState state) => const HomeRoute();
+
+  @override
+  String get location => GoRouteData.$location('/');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $ExploreRoute on GoRouteData {
+  static ExploreRoute _fromState(GoRouterState state) => const ExploreRoute();
+
+  @override
+  String get location => GoRouteData.$location('/explore');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $EventCurationRoute on GoRouteData {
+  static EventCurationRoute _fromState(GoRouterState state) =>
+      EventCurationRoute(
+        type:
+            _$convertMapValue(
+              'type',
+              state.uri.queryParameters,
+              _$EventFeedTypeEnumMap._$fromName,
+            ) ??
+            EventFeedType.newArrivals,
+      );
+
+  EventCurationRoute get _self => this as EventCurationRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/explore/curation',
+    queryParams: {
+      if (_self.type != EventFeedType.newArrivals)
+        'type': _$EventFeedTypeEnumMap[_self.type],
+    },
+  );
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+const _$EventFeedTypeEnumMap = {
+  EventFeedType.nearest: 'nearest',
+  EventFeedType.newArrivals: 'new-arrivals',
+  EventFeedType.closingSoon: 'closing-soon',
+  EventFeedType.earlyBird: 'early-bird',
+};
+
+mixin $MyPageRoute on GoRouteData {
+  static MyPageRoute _fromState(GoRouterState state) => const MyPageRoute();
+
+  @override
+  String get location => GoRouteData.$location('/my');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+T? _$convertMapValue<T>(
+  String key,
+  Map<String, String> map,
+  T? Function(String) converter,
+) {
+  final value = map[key];
+  return value == null ? null : converter(value);
+}
+
+extension<T extends Enum> on Map<T, String> {
+  T? _$fromName(String? value) =>
+      entries.where((element) => element.value == value).firstOrNull?.key;
 }
