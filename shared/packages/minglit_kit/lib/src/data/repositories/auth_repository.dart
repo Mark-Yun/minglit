@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart'
-    show kIsWeb, defaultTargetPlatform, TargetPlatform;
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
