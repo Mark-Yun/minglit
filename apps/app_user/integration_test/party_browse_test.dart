@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:app_user/src/features/party/party_curation_screen.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -24,7 +24,7 @@ void main() {
               type: EventFeedType.newArrivals,
             ).overrideWith((ref) async => <Event>[]),
           ],
-          child: MaterialApp(
+          child: const MaterialApp(
             home: PartyCurationScreen(type: EventFeedType.newArrivals),
           ),
         ),
