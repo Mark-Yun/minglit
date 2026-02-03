@@ -41,7 +41,7 @@ class _PartyCurationScreenState extends ConsumerState<PartyCurationScreen> {
         },
         child: MinglitAsyncValueWidget(
           value: eventsAsync,
-          data: (List<Event> events) {
+          data: (events) {
             if (events.isEmpty) {
               return Stack(
                 children: [

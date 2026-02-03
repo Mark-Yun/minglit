@@ -46,7 +46,7 @@ class EventFeedSection extends ConsumerWidget {
           height: 280,
           child: MinglitAsyncValueWidget(
             value: eventsAsync,
-            data: (List<Event> events) {
+            data: (events) {
               if (events.isEmpty) {
                 return Center(
                   child: Text(
