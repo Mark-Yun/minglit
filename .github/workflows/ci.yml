@@ -46,19 +46,30 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.app_user == 'true' }}
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./apps/app_user
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
-      - run: flutter pub get
-      - run: dart format --set-exit-if-changed .
-      - run: flutter analyze
-      - run: flutter test --coverage
+      - name: Minglit Kit - Pub Get
+        run: flutter pub get
+        working-directory: shared/packages/minglit_kit
+      - name: Minglit Kit - Analyze
+        run: flutter analyze
+        working-directory: shared/packages/minglit_kit
+      - name: App User - Pub Get
+        run: flutter pub get
+        working-directory: apps/app_user
+      - name: App User - Format
+        run: dart format --set-exit-if-changed .
+        working-directory: apps/app_user
+      - name: App User - Analyze
+        run: flutter analyze
+        working-directory: apps/app_user
+      - name: App User - Tests
+        run: flutter test --coverage
+        working-directory: apps/app_user
       - uses: actions/upload-artifact@v4
         with:
           name: app-user-coverage
@@ -69,19 +80,30 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.app_partner == 'true' }}
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./apps/app_partner
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
-      - run: flutter pub get
-      - run: dart format --set-exit-if-changed .
-      - run: flutter analyze
-      - run: flutter test --coverage
+      - name: Minglit Kit - Pub Get
+        run: flutter pub get
+        working-directory: shared/packages/minglit_kit
+      - name: Minglit Kit - Analyze
+        run: flutter analyze
+        working-directory: shared/packages/minglit_kit
+      - name: App Partner - Pub Get
+        run: flutter pub get
+        working-directory: apps/app_partner
+      - name: App Partner - Format
+        run: dart format --set-exit-if-changed .
+        working-directory: apps/app_partner
+      - name: App Partner - Analyze
+        run: flutter analyze
+        working-directory: apps/app_partner
+      - name: App Partner - Tests
+        run: flutter test --coverage
+        working-directory: apps/app_partner
       - uses: actions/upload-artifact@v4
         with:
           name: app-partner-coverage
