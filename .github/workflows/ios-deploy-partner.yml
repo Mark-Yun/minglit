@@ -86,7 +86,8 @@ jobs:
         run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "$APPLE_PROVISION_PROFILE_PARTNER_DEV_BASE64" | base64 --decode > profile.mobileprovision
-          profile_uuid=$(security cms -D -i profile.mobileprovision | /usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin)
+          profile_uuid=$(grep -a -A1 UUID profile.mobileprovision | grep -o '[-a-f0-9]\{36\}')
+          echo "Provisioning Profile UUID: $profile_uuid"
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$profile_uuid.mobileprovision
           rm -f profile.mobileprovision
         env:
@@ -97,7 +98,8 @@ jobs:
         run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "$APPLE_PROVISION_PROFILE_PARTNER_BASE64" | base64 --decode > profile.mobileprovision
-          profile_uuid=$(security cms -D -i profile.mobileprovision | /usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin)
+          profile_uuid=$(grep -a -A1 UUID profile.mobileprovision | grep -o '[-a-f0-9]\{36\}')
+          echo "Provisioning Profile UUID: $profile_uuid"
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$profile_uuid.mobileprovision
           rm -f profile.mobileprovision
         env:
