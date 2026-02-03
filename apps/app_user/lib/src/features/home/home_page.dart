@@ -1,38 +1,65 @@
+import 'dart:async';
+
+import 'package:app_user/src/features/home/widgets/category_chip_bar.dart';
+import 'package:app_user/src/features/home/widgets/event_feed_section.dart';
+import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
+/// Main home dashboard with category chips and event feed sections.
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(currentUserProvider);
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Minglit Home')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (user?.userMetadata?['avatar_url'] != null)
-              CircleAvatar(
-                backgroundImage: NetworkImage(
-                  user!.userMetadata!['avatar_url'] as String,
-                ),
-                radius: MinglitSpacing.xlarge + MinglitSpacing.small, // 40
+      body: RefreshIndicator(
+        onRefresh: () async {
+          // Invalidate all feed providers to force re-fetch
+          for (final type in [
+            EventFeedType.newArrivals,
+            EventFeedType.closingSoon,
+            EventFeedType.earlyBird,
+          ]) {
+            ref.invalidate(fetchEventFeedProvider(type: type));
+          }
+        },
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              floating: true,
+              snap: true,
+              titleSpacing: 0,
+              title: Row(
+                children: [
+                  const SizedBox(width: MinglitSpacing.medium),
+                  MinglitTheme.appBarLogo(height: 36),
+                ],
               ),
-            const SizedBox(height: MinglitSpacing.large),
-            Text(
-              '안녕하세요, ${user?.userMetadata?['full_name'] ?? user?.email}님!',
-              style: Theme.of(context).textTheme.bodyLarge,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.notifications_outlined),
+                  onPressed: () {
+                    unawaited(
+                      const NotificationCenterRoute().push<void>(context),
+                    );
+                  },
+                ),
+                const SizedBox(width: MinglitSpacing.small),
+              ],
+              backgroundColor: MinglitColors.background,
+              surfaceTintColor: Colors.transparent,
             ),
-            const SizedBox(
-              height: MinglitSpacing.xlarge + MinglitSpacing.small,
-            ), // 40
-            ElevatedButton(
-              onPressed: () =>
-                  ref.read(authControllerProvider.notifier).signOut(),
-              child: const Text('로그아웃'),
+            const SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  CategoryChipBar(),
+                  EventFeedSection(type: EventFeedType.newArrivals),
+                  EventFeedSection(type: EventFeedType.closingSoon),
+                  EventFeedSection(type: EventFeedType.earlyBird),
+                  SizedBox(height: MinglitSpacing.xlarge),
+                ],
+              ),
             ),
           ],
         ),

@@ -3,15 +3,21 @@ import 'package:app_user/src/features/auth/ui/auth_callback_screen.dart';
 import 'package:app_user/src/features/dev/user_dev_map.dart';
 import 'package:app_user/src/features/event/admission/event_application_wizard_screen.dart';
 import 'package:app_user/src/features/event/detail/event_detail_screen.dart';
+import 'package:app_user/src/features/explore/explore_page.dart';
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/features/home/my_page_screen.dart';
 import 'package:app_user/src/features/party/party_curation_screen.dart';
 import 'package:app_user/src/features/payment/ui/purchase_history_screen.dart';
+import 'package:app_user/src/ui/shell/user_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 part 'app_routes.g.dart';
+
+// ---------------------------------------------------------------------------
+// Top-Level Routes (outside the shell)
+// ---------------------------------------------------------------------------
 
 /// **Dev Route**: Development Tools.
 /// Path: `/dev`
@@ -56,40 +62,6 @@ class AuthCallbackRoute extends GoRouteData with $AuthCallbackRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const AuthCallbackScreen();
-}
-
-/// **Home Route**: Main Dashboard.
-/// Path: `/`
-@TypedGoRoute<HomeRoute>(path: '/')
-class HomeRoute extends GoRouteData with $HomeRoute {
-  const HomeRoute();
-
-  @override
-  Widget build(BuildContext context, GoRouterState state) => const HomePage();
-}
-
-/// **My Page Route**
-/// Path: `/my`
-@TypedGoRoute<MyPageRoute>(path: '/my')
-class MyPageRoute extends GoRouteData with $MyPageRoute {
-  const MyPageRoute();
-
-  @override
-  Widget build(BuildContext context, GoRouterState state) =>
-      const MyPageScreen();
-}
-
-/// **Event Curation Route**: Paginated curation list.
-/// Path: `/curation`
-@TypedGoRoute<EventCurationRoute>(path: '/curation')
-class EventCurationRoute extends GoRouteData with $EventCurationRoute {
-  const EventCurationRoute({this.type = EventFeedType.newArrivals});
-
-  final EventFeedType type;
-
-  @override
-  Widget build(BuildContext context, GoRouterState state) =>
-      PartyCurationScreen(type: type);
 }
 
 /// **Event Detail Route**: Detailed information about a specific event.
@@ -164,4 +136,105 @@ class NotificationSettingsRoute extends GoRouteData
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const NotificationSettingsScreen();
+}
+
+// ---------------------------------------------------------------------------
+// Stateful Shell Route (Bottom Navigation)
+// ---------------------------------------------------------------------------
+
+@TypedStatefulShellRoute<UserShellRoute>(
+  branches: [
+    // 1. Home Branch
+    TypedStatefulShellBranch<HomeBranch>(
+      routes: [
+        TypedGoRoute<HomeRoute>(path: '/'),
+      ],
+    ),
+    // 2. Explore Branch
+    TypedStatefulShellBranch<ExploreBranch>(
+      routes: [
+        TypedGoRoute<ExploreRoute>(
+          path: '/explore',
+          routes: [
+            TypedGoRoute<EventCurationRoute>(path: 'curation'),
+          ],
+        ),
+      ],
+    ),
+    // 3. My Page Branch
+    TypedStatefulShellBranch<MyPageBranch>(
+      routes: [
+        TypedGoRoute<MyPageRoute>(path: '/my'),
+      ],
+    ),
+  ],
+)
+class UserShellRoute extends StatefulShellRouteData {
+  const UserShellRoute();
+
+  @override
+  Widget builder(
+    BuildContext context,
+    GoRouterState state,
+    StatefulNavigationShell navigationShell,
+  ) {
+    return UserScaffold(navigationShell: navigationShell);
+  }
+}
+
+// --- Branches ---
+
+class HomeBranch extends StatefulShellBranchData {
+  const HomeBranch();
+}
+
+class ExploreBranch extends StatefulShellBranchData {
+  const ExploreBranch();
+}
+
+class MyPageBranch extends StatefulShellBranchData {
+  const MyPageBranch();
+}
+
+// --- Route Data Classes ---
+
+/// **Home Route**: Main Dashboard.
+/// Path: `/`
+class HomeRoute extends GoRouteData with $HomeRoute {
+  const HomeRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) => const HomePage();
+}
+
+/// **Explore Route**: Explore tab landing page.
+/// Path: `/explore`
+class ExploreRoute extends GoRouteData with $ExploreRoute {
+  const ExploreRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const ExplorePage();
+}
+
+/// **Event Curation Route**: Paginated curation list.
+/// Path: `/explore/curation`
+class EventCurationRoute extends GoRouteData with $EventCurationRoute {
+  const EventCurationRoute({this.type = EventFeedType.newArrivals});
+
+  final EventFeedType type;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      PartyCurationScreen(type: type);
+}
+
+/// **My Page Route**
+/// Path: `/my`
+class MyPageRoute extends GoRouteData with $MyPageRoute {
+  const MyPageRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const MyPageScreen();
 }
