@@ -116,12 +116,28 @@ jobs:
       - name: Configure manual signing
         run: |
           PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PBXPROJ"
-          sed -i '' 's/"iPhone Developer"/"Apple Distribution"/g' "$PBXPROJ"
-          sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = TAY59SLH9F;/g' "$PBXPROJ"
-          sed -i '' '/CODE_SIGN_STYLE = Manual;/a\'$'\n''				DEVELOPMENT_TEAM = TAY59SLH9F;' "$PBXPROJ"
-          echo "=== CODE_SIGN settings after modification ==="
-          grep -E "CODE_SIGN|DEVELOPMENT_TEAM" "$PBXPROJ" | head -20
+          
+          # Remove conflicting settings from project.pbxproj to let xcconfig take precedence
+          sed -i '' '/CODE_SIGN_IDENTITY/d' "$PBXPROJ"
+          sed -i '' '/CODE_SIGN_STYLE/d' "$PBXPROJ"
+          sed -i '' '/DEVELOPMENT_TEAM/d' "$PBXPROJ"
+          sed -i '' '/PROVISIONING_PROFILE_SPECIFIER/d' "$PBXPROJ"
+          
+          # Create xcconfig with correct settings
+          cat > ios/CI.xcconfig << 'EOF'
+          CODE_SIGN_STYLE = Manual
+          CODE_SIGN_IDENTITY = Apple Distribution
+          DEVELOPMENT_TEAM = TAY59SLH9F
+          PROVISIONING_PROFILE_SPECIFIER = Minglit Partner App DEV Profile
+          EOF
+          
+          # Include in Release.xcconfig
+          echo '#include "../CI.xcconfig"' >> ios/Flutter/Release.xcconfig
+          
+          echo "=== Verify project.pbxproj cleaned ==="
+          grep -E "CODE_SIGN|DEVELOPMENT_TEAM" "$PBXPROJ" || echo "Cleaned successfully"
+          echo "=== CI.xcconfig content ==="
+          cat ios/CI.xcconfig
 
       - name: Build IPA (Dev)
         if: ${{ github.ref == 'refs/heads/dev' }}
