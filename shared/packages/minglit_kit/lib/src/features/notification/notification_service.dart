@@ -59,7 +59,7 @@ class NotificationService {
 
     await _localNotifications.initialize(
       initializationSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse details) {
+      onDidReceiveNotificationResponse: (details) {
         _handleDeepLink(details.payload);
       },
     );
@@ -76,7 +76,7 @@ class NotificationService {
     });
 
     // 5. Foreground Message Handler
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    FirebaseMessaging.onMessage.listen((message) {
       _logger
         ..d('Got a message whilst in the foreground!')
         ..d('Message data: ${message.data}');
@@ -87,7 +87,7 @@ class NotificationService {
     });
 
     // 6. Background Message Tap Handler
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+    FirebaseMessaging.onMessageOpenedApp.listen((message) {
       _handleDeepLink(message.data['deep_link'] as String?);
     });
 
