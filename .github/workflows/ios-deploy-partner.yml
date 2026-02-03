@@ -115,8 +115,13 @@ jobs:
 
       - name: Configure manual signing
         run: |
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/"CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]" = "iPhone Developer";/CODE_SIGN_IDENTITY = "Apple Distribution";/g' ios/Runner.xcodeproj/project.pbxproj
+          PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PBXPROJ"
+          sed -i '' 's/"iPhone Developer"/"Apple Distribution"/g' "$PBXPROJ"
+          sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = TAY59SLH9F;/g' "$PBXPROJ"
+          sed -i '' '/CODE_SIGN_STYLE = Manual;/a\'$'\n''				DEVELOPMENT_TEAM = TAY59SLH9F;' "$PBXPROJ"
+          echo "=== CODE_SIGN settings after modification ==="
+          grep -E "CODE_SIGN|DEVELOPMENT_TEAM" "$PBXPROJ" | head -20
 
       - name: Build IPA (Dev)
         if: ${{ github.ref == 'refs/heads/dev' }}
