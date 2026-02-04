@@ -23,6 +23,7 @@ export 'src/data/models/verification.dart';
 export 'src/data/models/verification_submission.dart';
 // Repositories
 export 'src/data/repositories/auth_repository.dart';
+export 'src/data/repositories/bug_report_repository.dart';
 export 'src/data/repositories/checkin_repository.dart';
 export 'src/data/repositories/event_repository.dart';
 export 'src/data/repositories/identity_repository.dart';

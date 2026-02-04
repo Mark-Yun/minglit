@@ -35,6 +35,7 @@ export 'src/ui/widgets/common/verification_card.dart';
 export 'src/ui/widgets/common/verification_select_card.dart';
 // Debug Widgets
 export 'src/ui/widgets/debug/user_session_info.dart';
+export 'src/ui/widgets/bug_reporter_wrapper.dart';
 // Maps
 export 'src/ui/widgets/map/location_map.dart'
     if (dart.library.html) 'src/ui/widgets/map/location_map_web.dart'
