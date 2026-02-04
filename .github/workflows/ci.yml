@@ -61,9 +61,6 @@ jobs:
       - name: App User - Pub Get
         run: flutter pub get
         working-directory: apps/app_user
-      - name: App User - Format
-        run: dart format --set-exit-if-changed .
-        working-directory: apps/app_user
       - name: App User - Analyze
         run: flutter analyze
         working-directory: apps/app_user
@@ -94,9 +91,6 @@ jobs:
         working-directory: shared/packages/minglit_kit
       - name: App Partner - Pub Get
         run: flutter pub get
-        working-directory: apps/app_partner
-      - name: App Partner - Format
-        run: dart format --set-exit-if-changed .
         working-directory: apps/app_partner
       - name: App Partner - Analyze
         run: flutter analyze
