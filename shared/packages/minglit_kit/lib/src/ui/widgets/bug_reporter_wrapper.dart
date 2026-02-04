@@ -32,7 +32,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
         (defaultTargetPlatform == TargetPlatform.iOS ||
             defaultTargetPlatform == TargetPlatform.android)) {
       _detector = ShakeDetector.autoStart(
-        onPhoneShake: (ShakeEvent event) {
+        onPhoneShake: (event) {
           unawaited(_showReportDialog());
         },
       );
