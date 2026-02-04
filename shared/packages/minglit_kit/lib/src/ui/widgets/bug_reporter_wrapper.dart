@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/src/data/repositories/bug_report_repository.dart';
@@ -7,9 +9,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class BugReporterWrapper extends StatefulWidget {
   const BugReporterWrapper({
-    super.key,
     required this.child,
-    this.enabled = !kReleaseMode, // Default: enabled in debug/profile only
+    this.enabled = !kReleaseMode,
+    super.key,
   });
 
   final Widget child;
@@ -25,20 +27,14 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
   @override
   void initState() {
     super.initState();
-    // Only init shake detector on mobile
     if (widget.enabled &&
         !kIsWeb &&
         (defaultTargetPlatform == TargetPlatform.iOS ||
             defaultTargetPlatform == TargetPlatform.android)) {
       _detector = ShakeDetector.autoStart(
-        // ignore: unnecessary_lambdas
-        onPhoneShake: () {
-          _showReportDialog();
+        onPhoneShake: (ShakeEvent event) {
+          unawaited(_showReportDialog());
         },
-        minimumShakeCount: 1,
-        shakeSlopTimeMS: 500,
-        shakeCountResetTime: 3000,
-        shakeThresholdGravity: 2.7,
       );
     }
   }
@@ -49,16 +45,15 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
     super.dispose();
   }
 
-  void _showReportDialog() {
+  Future<void> _showReportDialog() async {
     final titleController = TextEditingController();
     final descController = TextEditingController();
+    var isLoading = false;
 
-    showDialog(
+    await showDialog<void>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
-          bool isLoading = false;
-
           return AlertDialog(
             title: const Text('🐞 Bug Report'),
             content: Column(
@@ -103,7 +98,6 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                           final repo = BugReportRepository(
                             Supabase.instance.client,
                           );
-
                           await repo.reportBug(
                             title: titleController.text.isEmpty
                                 ? 'User Report'
@@ -112,28 +106,27 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                             logs: logs,
                           );
 
-                          if (context.mounted) {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Bug reported successfully! 🚀'),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
+                          if (!context.mounted) {
+                            return;
                           }
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Failed to report: $e'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Bug reported successfully! 🚀'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        } on Exception catch (e) {
+                          if (!context.mounted) {
+                            return;
                           }
-                        } finally {
-                          if (context.mounted && Navigator.canPop(context)) {
-                            // Ensure dialog logic is handled by pop above
-                          }
+                          setState(() => isLoading = false);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Failed to report: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
                         }
                       },
                 child: const Text('Send Report'),
@@ -150,7 +143,6 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
     return Stack(
       children: [
         widget.child,
-        // FAB for Web or Desktop where shake is not available
         if (widget.enabled &&
             (kIsWeb ||
                 defaultTargetPlatform == TargetPlatform.macOS ||

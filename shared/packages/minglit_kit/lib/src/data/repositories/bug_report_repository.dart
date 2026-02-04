@@ -1,10 +1,10 @@
+import 'package:minglit_kit/src/utils/log.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../utils/log.dart';
 
 class BugReportRepository {
-  final SupabaseClient _supabase;
-
   BugReportRepository(this._supabase);
+
+  final SupabaseClient _supabase;
 
   Future<void> reportBug({
     required String title,

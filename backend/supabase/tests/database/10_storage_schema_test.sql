@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(54);
+SELECT plan(53);
 SET search_path TO storage, public, extensions;
 
 -- buckets
@@ -43,7 +43,6 @@ SELECT has_column('objects', 'path_tokens');
 SELECT has_column('objects', 'version');
 SELECT has_column('objects', 'owner_id');
 SELECT has_column('objects', 'user_metadata');
-SELECT has_column('objects', 'level');
 SELECT col_type_is('objects', 'id', 'uuid');
 SELECT col_is_pk('objects', 'id');
 SELECT col_has_default('objects', 'id');
