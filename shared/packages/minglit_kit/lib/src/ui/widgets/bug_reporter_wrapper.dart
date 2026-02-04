@@ -1,19 +1,19 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/src/data/repositories/bug_report_repository.dart';
+import 'package:minglit_kit/src/utils/log.dart';
 import 'package:shake/shake.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../utils/log.dart';
-import '../../data/repositories/bug_report_repository.dart';
 
 class BugReporterWrapper extends StatefulWidget {
-  final Widget child;
-  final bool enabled;
-
   const BugReporterWrapper({
     super.key,
     required this.child,
     this.enabled = !kReleaseMode, // Default: enabled in debug/profile only
   });
+
+  final Widget child;
+  final bool enabled;
 
   @override
   State<BugReporterWrapper> createState() => _BugReporterWrapperState();
@@ -31,7 +31,10 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
         (defaultTargetPlatform == TargetPlatform.iOS ||
             defaultTargetPlatform == TargetPlatform.android)) {
       _detector = ShakeDetector.autoStart(
-        onPhoneShake: () => _showReportDialog(),
+        // ignore: unnecessary_lambdas
+        onPhoneShake: () {
+          _showReportDialog();
+        },
         minimumShakeCount: 1,
         shakeSlopTimeMS: 500,
         shakeCountResetTime: 3000,
@@ -49,9 +52,6 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
   void _showReportDialog() {
     final titleController = TextEditingController();
     final descController = TextEditingController();
-
-    // Auto-fill title with current route or context if possible
-    // For now, leave empty
 
     showDialog(
       context: context,

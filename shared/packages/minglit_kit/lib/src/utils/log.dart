@@ -60,16 +60,12 @@ class _MemoryLogOutput extends LogOutput {
   @override
   void output(OutputEvent event) {
     // 1. Write to memory (History) - ALWAYS
-    // With SimplePrinter, event.lines usually contains one formatted line per log
-    for (var line in event.lines) {
-      Log._addToHistory(line);
-    }
+    event.lines.forEach(Log._addToHistory);
 
     // 2. Write to console - ONLY if NOT Release Mode
     if (!kReleaseMode) {
-      for (var line in event.lines) {
-        debugPrint(line);
-      }
+      // Using debugPrint to avoid truncation in Android
+      event.lines.forEach(debugPrint);
     }
   }
 }
