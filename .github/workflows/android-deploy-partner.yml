@@ -1,0 +1,92 @@
+name: Android Partner App Build & Deploy
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+    paths:
+      - "apps/app_partner/**"
+      - "shared/packages/minglit_kit/**"
+      - "pubspec.yaml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./apps/app_partner
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Decode Keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          echo $ANDROID_KEYSTORE_BASE64 | base64 --decode > android/app/upload-keystore.jks
+
+      - name: Create key.properties
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          echo "storePassword=$ANDROID_KEYSTORE_PASSWORD" > android/key.properties
+          echo "keyPassword=$ANDROID_KEY_PASSWORD" >> android/key.properties
+          echo "keyAlias=$ANDROID_KEY_ALIAS" >> android/key.properties
+          echo "storeFile=upload-keystore.jks" >> android/key.properties
+
+      - name: Build APK (Dev)
+        if: github.ref == 'refs/heads/dev'
+        run: flutter build apk --flavor dev --release
+
+      - name: Build AAB (Main)
+        if: github.ref == 'refs/heads/main'
+        run: flutter build appbundle --flavor prod --release
+
+      - name: Upload Artifact (Dev APK)
+        if: github.ref == 'refs/heads/dev'
+        uses: actions/upload-artifact@v4
+        with:
+          name: partner-app-dev-release.apk
+          path: apps/app_partner/build/app/outputs/flutter-apk/app-dev-release.apk
+
+      - name: Upload Artifact (Prod AAB)
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: partner-app-prod-release.aab
+          path: apps/app_partner/build/app/outputs/bundle/prodRelease/app-prod-release.aab
+
+      - name: Upload to Firebase App Distribution (Dev)
+        if: github.ref == 'refs/heads/dev'
+        uses: w9jds/firebase-action@master
+        with:
+          args: appdistribution:distribute apps/app_partner/build/app/outputs/flutter-apk/app-dev-release.apk --app ${{ secrets.FIREBASE_APP_ID_ANDROID_PARTNER_DEV }} --release-notes Dev-Build-${{ github.run_number }} --groups testers
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_DEV }}
+
+      - name: Upload to Google Play (Prod)
+        if: github.ref == 'refs/heads/main'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.minglit.app_partner
+          releaseFiles: apps/app_partner/build/app/outputs/bundle/prodRelease/app-prod-release.aab
+          track: internal
+          status: draft
