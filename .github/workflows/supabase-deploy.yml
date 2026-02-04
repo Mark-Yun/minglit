@@ -28,11 +28,13 @@ jobs:
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DEV_DB_PASSWORD }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_DEV_PROJECT_ID }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_ACCESS_TOKEN: ${{ secrets.GH_PAT_FOR_BUG_REPORT }}
         run: |
           supabase link --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD
           
           # Set Secrets
           supabase secrets set OPENAI_API_KEY=$OPENAI_API_KEY
+          supabase secrets set GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN
 
           # Dev 환경은 스키마 충돌 방지를 위해 리셋 후 적용
           supabase db reset --linked
@@ -49,11 +51,13 @@ jobs:
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_MAIN_DB_PASSWORD }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_MAIN_PROJECT_ID }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_ACCESS_TOKEN: ${{ secrets.GH_PAT_FOR_BUG_REPORT }}
         run: |
           supabase link --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD
           
           # Set Secrets
           supabase secrets set OPENAI_API_KEY=$OPENAI_API_KEY
+          supabase secrets set GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN
 
           supabase db push --password $SUPABASE_DB_PASSWORD
 
