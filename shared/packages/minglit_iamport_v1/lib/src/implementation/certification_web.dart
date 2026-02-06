@@ -1,7 +1,9 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
+
+import 'package:flutter/material.dart';
+
 import '../service/certification_service.dart';
 
 class CertificationServiceImpl implements CertificationService {

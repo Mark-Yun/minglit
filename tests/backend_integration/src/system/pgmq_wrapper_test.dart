@@ -1,8 +1,8 @@
 // ignore_for_file: lines_longer_than_80_chars, avoid_dynamic_calls
 
+import 'package:minglit_kit/minglit_core.dart';
 import 'package:postgres/postgres.dart';
 import 'package:test/test.dart';
-import 'package:minglit_kit/minglit_core.dart';
 
 import '../utils/test_database.dart';
 
