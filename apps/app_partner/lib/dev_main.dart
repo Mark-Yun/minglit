@@ -115,7 +115,6 @@ Future<void> appStartup(Ref ref) async {
   );
   const supabaseServiceRoleKey = String.fromEnvironment(
     'SUPABASE_SERVICE_ROLE_KEY',
-    defaultValue: 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz',
   );
 
   try {

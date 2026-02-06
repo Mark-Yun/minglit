@@ -21,5 +21,99 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
     return repository.getMyPurchaseHistory(user.id);
   }
 
+  bool isActiveTicket(EventApplication application) {
+    return application.status == 'paid' || application.status == 'approved';
+  }
+
+  bool isRefundReady(EventApplication application) {
+    final eventStartTime = application.event?.startTime;
+    return application.paymentId != null &&
+        application.paymentAmount != null &&
+        eventStartTime != null;
+  }
+
+  bool canCancel(EventApplication application) {
+    return isActiveTicket(application) &&
+        isRefundReady(application) &&
+        application.refundStatus == 'none';
+  }
+
+  RefundCalculation calculateRefund({
+    required DateTime eventStartTime,
+    required int paymentAmount,
+  }) {
+    return RefundCalculator.calculate(
+      eventStartTime: eventStartTime,
+      paymentAmount: paymentAmount,
+    );
+  }
+
+  Future<void> runRefundFlow({
+    required String? paymentId,
+    required int? paymentAmount,
+    required DateTime? eventStartTime,
+    required Future<void> Function() showMissingInfo,
+    required Future<bool> Function(RefundCalculation calculation) confirmRefund,
+    required Future<bool> Function(String message) showError,
+    required Future<void> Function() onSuccess,
+  }) async {
+    if (paymentId == null || paymentAmount == null || eventStartTime == null) {
+      await showMissingInfo();
+      return;
+    }
+
+    final calculation = calculateRefund(
+      eventStartTime: eventStartTime,
+      paymentAmount: paymentAmount,
+    );
+
+    final confirmed = await confirmRefund(calculation);
+    if (!confirmed) return;
+
+    await _requestRefund(
+      paymentId: paymentId,
+      calculation: calculation,
+      showError: showError,
+      onSuccess: onSuccess,
+    );
+  }
+
+  Future<void> _requestRefund({
+    required String paymentId,
+    required RefundCalculation calculation,
+    required Future<bool> Function(String message) showError,
+    required Future<void> Function() onSuccess,
+  }) async {
+    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
+    try {
+      await ref
+          .read(eventRepositoryProvider)
+          .cancelPayment(
+            paymentId: paymentId,
+            refundAmount: calculation.refundAmount,
+            reason: '사용자 예매 취소',
+          );
+
+      ref.invalidate(purchaseHistoryControllerProvider);
+      await onSuccess();
+    } on Object catch (e, st) {
+      final exception = MinglitException.from(e, st);
+      final message = exception is MinglitSystemException
+          ? exception.userMessage
+          : exception.message;
+      final retry = await showError(message);
+      if (retry) {
+        await _requestRefund(
+          paymentId: paymentId,
+          calculation: calculation,
+          showError: showError,
+          onSuccess: onSuccess,
+        );
+      }
+    } finally {
+      loading.hide();
+    }
+  }
+
   // Future features: infinite scroll, filtering, etc.
 }

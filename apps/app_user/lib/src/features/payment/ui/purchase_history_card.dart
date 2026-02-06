@@ -8,6 +8,7 @@ class PurchaseHistoryCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final controller = ref.read(purchaseHistoryControllerProvider.notifier);
     final event = application.event;
     final ticket = application.ticket;
     final party = event?.party;
@@ -25,12 +26,7 @@ class PurchaseHistoryCard extends ConsumerWidget {
         ? DateFormat('M월 d일 (E) HH:mm', 'ko_KR').format(event.startTime)
         : '-';
 
-    final isActiveTicket =
-        application.status == 'paid' || application.status == 'approved';
-    final isRefundReady =
-        paymentId != null && paymentAmount != null && eventStartTime != null;
-    final canCancel =
-        isActiveTicket && isRefundReady && application.refundStatus == 'none';
+    final canCancel = controller.canCancel(application);
 
     return Container(
       padding: const EdgeInsets.all(MinglitSpacing.medium),
@@ -247,77 +243,42 @@ class PurchaseHistoryCard extends ConsumerWidget {
     required int? paymentAmount,
     required DateTime? eventStartTime,
   }) async {
-    if (paymentId == null || paymentAmount == null || eventStartTime == null) {
-      await context.showMinglitAlert(
-        title: '환불 정보를 확인할 수 없습니다',
-        message: '결제 정보를 다시 확인해주세요.',
-      );
-      return;
-    }
-
-    final calculation = RefundCalculator.calculate(
-      eventStartTime: eventStartTime,
-      paymentAmount: paymentAmount,
-    );
-
-    final confirmed = await _showRefundConfirmDialog(
-      context: context,
-      eventName: eventName,
-      paymentAmount: paymentAmount,
-      calculation: calculation,
-    );
-
-    if (!confirmed || !context.mounted) return;
-
-    await _requestRefund(
-      context: context,
-      ref: ref,
+    final controller = ref.read(purchaseHistoryControllerProvider.notifier);
+    await controller.runRefundFlow(
       paymentId: paymentId,
-      calculation: calculation,
-    );
-  }
-
-  Future<void> _requestRefund({
-    required BuildContext context,
-    required WidgetRef ref,
-    required String paymentId,
-    required RefundCalculation calculation,
-  }) async {
-    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
-    try {
-      await ref
-          .read(eventRepositoryProvider)
-          .cancelPayment(
-            paymentId: paymentId,
-            refundAmount: calculation.refundAmount,
-            reason: '사용자 예매 취소',
-          );
-
-      ref.invalidate(purchaseHistoryControllerProvider);
-      if (!context.mounted) return;
-      context.showMinglitSuccess('예매가 취소되었습니다.');
-      await Navigator.of(context).maybePop();
-    } on Object catch (e, st) {
-      if (!context.mounted) return;
-      final exception = MinglitException.from(e, st);
-      final message = exception is MinglitSystemException
-          ? exception.userMessage
-          : exception.message;
-      final retry = await _showRefundErrorDialog(
-        context: context,
-        message: message,
-      );
-      if (retry && context.mounted) {
-        await _requestRefund(
+      paymentAmount: paymentAmount,
+      eventStartTime: eventStartTime,
+      showMissingInfo: () async {
+        if (!context.mounted) return;
+        await context.showMinglitAlert(
+          title: '환불 정보를 확인할 수 없습니다',
+          message: '결제 정보를 다시 확인해주세요.',
+        );
+      },
+      confirmRefund: (calculation) async {
+        if (!context.mounted) return false;
+        final confirmed = await _showRefundConfirmDialog(
           context: context,
-          ref: ref,
-          paymentId: paymentId,
+          eventName: eventName,
+          paymentAmount: paymentAmount!,
           calculation: calculation,
         );
-      }
-    } finally {
-      loading.hide();
-    }
+        if (!context.mounted) return false;
+        return confirmed;
+      },
+      showError: (message) async {
+        if (!context.mounted) return false;
+        return _showRefundErrorDialog(
+          context: context,
+          message: message,
+        );
+      },
+      onSuccess: () async {
+        if (!context.mounted) return;
+        context.showMinglitSuccess('예매가 취소되었습니다.');
+        await Navigator.of(context).maybePop();
+      },
+    );
   }
 
   Future<bool> _showRefundConfirmDialog({
