@@ -16,6 +16,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'dev_main.g.dart';
 
+const _kDevStartScreen = 'dev_start_screen';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -29,7 +31,9 @@ Future<void> main() async {
     defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
   );
 
-  // Initialize Supabase immediately for StaffGuard access
+  final prefs = await SharedPreferences.getInstance();
+  final startWithDashboard = prefs.getBool(_kDevStartScreen) ?? false;
+
   try {
     await Supabase.initialize(
       url: supabaseUrl,
@@ -38,7 +42,6 @@ Future<void> main() async {
   } catch (e) {
     if (e.toString().contains('Invalid Refresh Token') ||
         (e is AuthApiException && e.code == 'refresh_token_not_found')) {
-      final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
       Log.w('⚠️ Invalid Refresh Token detected during init. Storage cleared.');
 
@@ -75,6 +78,7 @@ Future<void> main() async {
             navigatorKey: rootNavigatorKey,
             refreshListenable: authState,
             debugLogDiagnostics: true,
+            initialLocation: startWithDashboard ? '/' : '/dev',
             redirect: (context, state) {
               final isLoggedIn = ref.read(currentUserProvider) != null;
               final isLoggingIn = state.uri.path == '/login';
@@ -87,15 +91,8 @@ Future<void> main() async {
                 'isLoggingIn: $isLoggingIn | isDevPage: $isDevPage',
               );
 
-              // 0. Callback route should always be accessible
               if (isCallback) return null;
 
-              // 1. Root redirect
-              if (path == '/') {
-                return '/dev';
-              }
-
-              // 2. Auth logic
               if (isDevPage) return null;
 
               if (isLoggedIn && isLoggingIn) {

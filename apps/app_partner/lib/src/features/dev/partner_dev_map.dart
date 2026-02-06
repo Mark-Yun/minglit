@@ -4,6 +4,9 @@ import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_dev.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+const _kDevStartScreen = 'dev_start_screen';
 
 class PartnerDevMap extends StatelessWidget {
   const PartnerDevMap({super.key});
@@ -11,6 +14,12 @@ class PartnerDevMap extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Minglit Partner Dev'),
+        actions: [
+          _StartScreenToggle(),
+        ],
+      ),
       body: DevScreenList(
         appName: 'Minglit Partner',
         items: [
@@ -110,12 +119,60 @@ class PartnerDevMap extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navigation result is not used
           // ignore: discarded_futures
           const DevUserSwitchRoute().push<void>(context);
         },
         child: const Icon(Icons.people_alt),
       ),
+    );
+  }
+}
+
+class _StartScreenToggle extends StatefulWidget {
+  @override
+  State<_StartScreenToggle> createState() => _StartScreenToggleState();
+}
+
+class _StartScreenToggleState extends State<_StartScreenToggle> {
+  bool _startWithDashboard = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _startWithDashboard = prefs.getBool(_kDevStartScreen) ?? false;
+    });
+  }
+
+  Future<void> _toggle() async {
+    final prefs = await SharedPreferences.getInstance();
+    final newValue = !_startWithDashboard;
+    await prefs.setBool(_kDevStartScreen, newValue);
+    setState(() => _startWithDashboard = newValue);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          newValue ? 'Dashboard' : 'DevMap',
+        ),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: _toggle,
+      icon: Icon(
+        _startWithDashboard ? Icons.dashboard : Icons.developer_mode,
+      ),
+      tooltip: _startWithDashboard ? 'Dashboard' : 'DevMap',
     );
   }
 }

@@ -19,6 +19,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'dev_main.g.dart';
 
+const _kDevStartScreen = 'dev_start_screen';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -32,21 +34,20 @@ Future<void> main() async {
     defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
   );
 
-  // Initialize Supabase immediately for StaffGuard access
+  final prefs = await SharedPreferences.getInstance();
+  final startWithDashboard = prefs.getBool(_kDevStartScreen) ?? false;
+
   try {
     await Supabase.initialize(
       url: supabaseUrl,
       anonKey: supabasePublishableKey,
     );
   } catch (e) {
-    // Handle "Invalid Refresh Token" error by clearing storage and retrying
     if (e.toString().contains('Invalid Refresh Token') ||
         (e is AuthApiException && e.code == 'refresh_token_not_found')) {
-      final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
       Log.w('⚠️ Invalid Refresh Token detected during init. Storage cleared.');
 
-      // Retry initialization
       await Supabase.initialize(
         url: supabaseUrl,
         anonKey: supabasePublishableKey,
@@ -65,9 +66,7 @@ Future<void> main() async {
             defaultRedirectUrl: 'http://localhost:3001',
           ),
         ),
-        // Set environment domains to Dev
         minglitDomainsProvider.overrideWithValue(const MinglitDomains.dev()),
-        // Override goRouter to start at /dev for dev_main
         goRouterProvider.overrideWith((ref) {
           final rootNavigatorKey = GlobalKey<NavigatorState>();
           final authState = ValueNotifier<AuthState?>(null);
@@ -80,7 +79,7 @@ Future<void> main() async {
 
           return GoRouter(
             navigatorKey: rootNavigatorKey,
-            initialLocation: '/dev',
+            initialLocation: startWithDashboard ? '/' : '/dev',
             refreshListenable: authState,
             redirect: (context, state) {
               final isLoggedIn = ref.read(currentUserProvider) != null;
