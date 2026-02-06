@@ -24,7 +24,8 @@ void main() {
   });
 
   group('Capacity Synchronization', () {
-    test('1. Party max_participants should sync with ticket templates', () async {
+    test('1. Party max_participants should sync with ticket templates',
+        () async {
       // 1. Create Party (Initially max=0)
       final partyRes = await adminClient
           .from('parties')
@@ -79,9 +80,10 @@ void main() {
           .insert({
             'party_id': partyId,
             'start_time': DateTime.now().toIso8601String(),
-            'end_time': DateTime.now().add(const Duration(hours: 2)).toIso8601String(),
+            'end_time':
+                DateTime.now().add(const Duration(hours: 2)).toIso8601String(),
             'min_confirmed_count': 0,
-            'max_participants': 1, 
+            'max_participants': 1,
           })
           .select()
           .single();
@@ -107,8 +109,7 @@ void main() {
       // 4. Update Ticket Quantity (5 -> 15)
       await adminClient
           .from('tickets')
-          .update({'quantity': 15})
-          .eq('event_id', eventId);
+          .update({'quantity': 15}).eq('event_id', eventId);
 
       // 5. Verify Event Updated
       final eventFinal = await adminClient
@@ -119,13 +120,13 @@ void main() {
       expect(eventFinal['max_participants'], 15);
     });
 
-    test('3. Constraint check: min_confirmed > max_participants should fail', () async {
+    test('3. Constraint check: min_confirmed > max_participants should fail',
+        () async {
       // Current Max is 30 for Party
       try {
         await adminClient
             .from('parties')
-            .update({'min_confirmed_count': 31})
-            .eq('id', partyId);
+            .update({'min_confirmed_count': 31}).eq('id', partyId);
         fail('Should have thrown check constraint violation');
       } catch (e) {
         expect(e.toString(), contains('check_min_max_participants'));
@@ -135,8 +136,7 @@ void main() {
       try {
         await adminClient
             .from('events')
-            .update({'min_confirmed_count': 16})
-            .eq('id', eventId);
+            .update({'min_confirmed_count': 16}).eq('id', eventId);
         fail('Should have thrown check constraint violation for event');
       } catch (e) {
         expect(e.toString(), contains('check_min_max_participants'));
