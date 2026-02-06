@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:iamport_flutter/iamport_payment.dart';
 import 'package:iamport_flutter/model/payment_data.dart';
-import '../service/payment_service.dart';
+import 'package:minglit_iamport_v1/src/service/payment_service.dart';
 
 class PaymentServiceImpl implements PaymentService {
   @override

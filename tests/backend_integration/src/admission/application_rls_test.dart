@@ -106,7 +106,7 @@ void main() {
       expect(data!['id'], equals(app1Id));
     });
 
-    test('User 1 should NOT see User 2\'s application', () async {
+    test("User 1 should NOT see User 2's application", () async {
       final client1 = createUserClient(user1Id);
       final data = await client1
           .from('event_applications')
@@ -117,7 +117,7 @@ void main() {
       expect(data, isNull, reason: 'RLS should hide other users applications');
     });
 
-    test('User 1 should NOT be able to update User 2\'s application', () async {
+    test("User 1 should NOT be able to update User 2's application", () async {
       final client1 = createUserClient(user1Id);
 
       // Attempt to change status of User 2's app

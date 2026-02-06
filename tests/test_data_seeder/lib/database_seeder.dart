@@ -16,7 +16,7 @@ part 'seeder_events.dart';
 /// Handles programmatic data seeding using JSON assets for local development.
 class DatabaseSeeder extends _SeederContextBase
     with SeederBase, SeederUsers, SeederEvents, SeederParties {
-  DatabaseSeeder(SupabaseClient adminClient) : super(adminClient);
+  DatabaseSeeder(super.adminClient);
 
   /// Runs the full seeding process.
   Future<void> seed() async {

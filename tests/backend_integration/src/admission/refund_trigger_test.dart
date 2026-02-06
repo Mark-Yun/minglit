@@ -95,7 +95,7 @@ void main() {
       print('📝 Created Application ($appId) and Submission ($subId)');
 
       // 3. Update Submission Status to 'rejected' with comment
-      final rejectionReason = 'Invalid ID Proof';
+      const rejectionReason = 'Invalid ID Proof';
       print('🚫 Rejecting submission with reason: $rejectionReason');
 
       await adminClient

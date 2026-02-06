@@ -20,13 +20,13 @@ void main() {
         "SELECT id FROM public.user_profiles WHERE gender = 'male' AND birth_date = '$targetBirthYear-01-01' AND username LIKE '%_ok' LIMIT 1",
       );
       if (userRes.isEmpty) throw Exception('Seeded user (25/Male/Verified) not found');
-      userId = userRes.first[0] as String;
+      userId = userRes.first[0]! as String;
 
       final partyRes = await connection.execute(
         'SELECT id FROM public.parties LIMIT 1',
       );
       if (partyRes.isEmpty) throw Exception('Seeded party not found');
-      partyId = partyRes.first[0] as String;
+      partyId = partyRes.first[0]! as String;
     });
 
     tearDownAll(() async {

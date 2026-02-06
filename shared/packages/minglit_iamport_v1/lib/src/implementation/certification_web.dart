@@ -4,7 +4,7 @@ import 'dart:js_interop_unsafe';
 
 import 'package:flutter/material.dart';
 
-import '../service/certification_service.dart';
+import 'package:minglit_iamport_v1/src/service/certification_service.dart';
 
 class CertificationServiceImpl implements CertificationService {
   @override
@@ -52,7 +52,7 @@ class CertificationServiceImpl implements CertificationService {
 
           } else {
 
-            debugPrint('Certification Failed: ${errorMsg?.toString()}');
+            debugPrint('Certification Failed: $errorMsg');
 
             completer.complete(null);
 
@@ -60,7 +60,7 @@ class CertificationServiceImpl implements CertificationService {
 
         }.toJS;
 
-    (imp).callMethod('certification'.toJS, options, callback);
+    imp.callMethod('certification'.toJS, options, callback);
 
     return completer.future;
   }

@@ -94,7 +94,7 @@ mixin SeederParties on _SeederContext, SeederBase, SeederEvents {
 
   // --- Helper Methods ---
 
-  final _hotPlaces = [
+  final List<Map<String, Object>> _hotPlaces = [
     {'name': '서울 강남', 'lat': 37.4979, 'lng': 127.0276},
     {'name': '서울 홍대', 'lat': 37.5575, 'lng': 126.9245},
     {'name': '서울 성수', 'lat': 37.5445, 'lng': 127.0559},
@@ -107,7 +107,7 @@ mixin SeederParties on _SeederContext, SeederBase, SeederEvents {
   ];
 
   Future<void> _seedScenarioParties(List<String> globalVerifIds) async {
-    int partnerCounter = 100; // Start from 100 to avoid conflict with JSON
+    var partnerCounter = 100; // Start from 100 to avoid conflict with JSON
 
     // Find indices for verifications
     // Assuming the order from seed.sql insert or using known IDs would be safer.
@@ -226,9 +226,9 @@ mixin SeederParties on _SeederContext, SeederBase, SeederEvents {
     ];
 
     for (final place in _hotPlaces) {
-      final placeName = place['name'] as String;
-      final lat = place['lat'] as double;
-      final lng = place['lng'] as double;
+      final placeName = place['name']! as String;
+      final lat = place['lat']! as double;
+      final lng = place['lng']! as double;
 
       // Create 1 Partner per Hot Place (Simplified from 3)
       partnerCounter++;
@@ -267,9 +267,9 @@ mixin SeederParties on _SeederContext, SeederBase, SeederEvents {
 
       // Create 5 Parties (One for each scenario)
       for (final scenario in scenarios) {
-        final titles = scenario['titles'] as List<String>;
+        final titles = scenario['titles']! as List<String>;
         final title = '[$placeName] ${titles[partnerCounter % titles.length]}';
-        final groups = scenario['groups'] as List<Map<String, dynamic>>;
+        final groups = scenario['groups']! as List<Map<String, dynamic>>;
 
         final entryGroups = <Map<String, dynamic>>[];
         final tickets = <Map<String, dynamic>>[];

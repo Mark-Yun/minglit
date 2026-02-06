@@ -4,7 +4,7 @@ import 'dart:js_interop_unsafe';
 
 import 'package:flutter/material.dart';
 
-import '../service/payment_service.dart';
+import 'package:minglit_iamport_v1/src/service/payment_service.dart';
 
 class PaymentServiceImpl implements PaymentService {
   @override
@@ -33,12 +33,12 @@ class PaymentServiceImpl implements PaymentService {
       if (isSuccess) {
         completer.complete(impUid?.toString());
       } else {
-        debugPrint('Payment Failed: ${errorMsg?.toString()}');
+        debugPrint('Payment Failed: $errorMsg');
         completer.complete(null);
       }
     }.toJS;
 
-    (imp).callMethod('request_pay'.toJS, options, callback);
+    imp.callMethod('request_pay'.toJS, options, callback);
 
     return completer.future;
   }

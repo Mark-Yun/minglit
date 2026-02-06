@@ -175,7 +175,7 @@ void main() {
       }
 
       // 5. Verify: Other user is BLOCKED (RLS Check)
-      final otherUserId =
+      const otherUserId =
           '00000000-0000-0000-0000-000000000000'; // Non-existent or dummy
       final otherClient = createUserClient(otherUserId);
       print('🚫 [Test] Other user trying to read file...');

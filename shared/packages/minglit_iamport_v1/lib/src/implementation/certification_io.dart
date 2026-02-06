@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:iamport_flutter/Iamport_certification.dart';
 import 'package:iamport_flutter/model/certification_data.dart';
-import '../service/certification_service.dart';
+import 'package:minglit_iamport_v1/src/service/certification_service.dart';
 
 class CertificationServiceImpl implements CertificationService {
   @override

@@ -26,14 +26,14 @@ mixin SeederUsers on _SeederContext, SeederBase {
       ];
 
       for (final p in personas) {
-        final gender = p['gender'] as String;
-        final verified = p['verified'] as bool;
-        final suffix = p['suffix'] as String;
+        final gender = p['gender']! as String;
+        final verified = p['verified']! as bool;
+        final suffix = p['suffix']! as String;
         final genderKr = gender == 'male' ? '남' : '여';
         final genderShort = gender == 'male' ? 'm' : 'f';
         final verifShort = verified ? 'ok' : 'no';
 
-        final name = '${age}${genderKr}_$suffix';
+        final name = '$age${genderKr}_$suffix';
         final username = 'user_${age}_${genderShort}_$verifShort';
         final email = '$username@test.com';
 
@@ -83,7 +83,7 @@ mixin SeederUsers on _SeederContext, SeederBase {
     ];
 
     for (final ec in edgeCases) {
-      final age = ec['age'] as int;
+      final age = ec['age']! as int;
       final birthYear = currentYear - age + 1;
       final metadata = <String, dynamic>{
         'name': ec['name'],
