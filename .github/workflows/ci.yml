@@ -53,22 +53,22 @@ jobs:
         with:
           channel: 'stable'
           cache: true
-      - name: Pub Get (workspace root)
+      - name: Install dependencies
         run: flutter pub get
-      - name: Minglit Kit - Analyze
+      - name: Analyze (minglit_kit)
         run: flutter analyze
         working-directory: shared/packages/minglit_kit
-      - name: App User - Analyze
+      - name: Analyze
         run: flutter analyze
         working-directory: apps/app_user
-      - name: App User - Tests
+      - name: Test
         run: flutter test --coverage
         working-directory: apps/app_user
       - uses: actions/upload-artifact@v4
         with:
           name: app-user-coverage
           path: apps/app_user/coverage
-      - name: Upload Coverage to Codecov
+      - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
           file: apps/app_user/coverage/lcov.info
@@ -87,22 +87,22 @@ jobs:
         with:
           channel: 'stable'
           cache: true
-      - name: Pub Get (workspace root)
+      - name: Install dependencies
         run: flutter pub get
-      - name: Minglit Kit - Analyze
+      - name: Analyze (minglit_kit)
         run: flutter analyze
         working-directory: shared/packages/minglit_kit
-      - name: App Partner - Analyze
+      - name: Analyze
         run: flutter analyze
         working-directory: apps/app_partner
-      - name: App Partner - Tests
+      - name: Test
         run: flutter test --coverage
         working-directory: apps/app_partner
       - uses: actions/upload-artifact@v4
         with:
           name: app-partner-coverage
           path: apps/app_partner/coverage
-      - name: Upload Coverage to Codecov
+      - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
           file: apps/app_partner/coverage/lcov.info
@@ -162,7 +162,7 @@ jobs:
       - name: Start Supabase
         run: supabase start
         working-directory: backend
-      - name: Run pgTAP Database Tests
+      - name: Test (pgTAP)
         run: supabase test db
         working-directory: backend
       - name: Setup Flutter
@@ -170,10 +170,10 @@ jobs:
         with:
           channel: 'stable'
           cache: true
-      - name: Backend Integration Tests - Pub Get
+      - name: Install dependencies (integration)
         run: flutter pub get
         working-directory: tests/backend_integration
-      - name: Backend Integration Tests - Run
+      - name: Test (integration)
         run: dart test
         working-directory: tests/backend_integration
         env:
@@ -183,7 +183,7 @@ jobs:
         uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
-      - name: Run Edge Function Tests
+      - name: Test (edge functions)
         run: deno test --allow-all functions/
         working-directory: backend/supabase
       - name: Stop Supabase

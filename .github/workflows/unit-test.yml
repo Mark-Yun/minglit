@@ -25,17 +25,17 @@ jobs:
           channel: "stable"
           cache: true
 
-      - name: Pub Get (workspace root)
+      - name: Install dependencies
         run: flutter pub get
 
-      - name: Minglit Kit - Analyze
+      - name: Analyze (minglit_kit)
         run: flutter analyze
         working-directory: shared/packages/minglit_kit
 
-      - name: App User - Analyze
+      - name: Analyze
         run: flutter analyze
         working-directory: apps/app_user
 
-      - name: App User - Unit Tests
+      - name: Test
         run: flutter test
         working-directory: apps/app_user
