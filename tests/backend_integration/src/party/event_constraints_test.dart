@@ -49,7 +49,7 @@ void main() {
           'quantity': 10,
         });
         fail('Should have thrown constraint error');
-      } catch (e) {
+      } on Exception catch (e) {
         expect(e.toString(), contains('violates check constraint'));
       }
 
@@ -68,7 +68,7 @@ void main() {
           'max_participants': -1, // Invalid
         });
         fail('Should have thrown constraint error');
-      } catch (e) {
+      } on Exception {
         // Postgres error code 23514 usually
         // Note: Supabase Dart might wrap it.
         // Assuming we rely on implicit checks or explicit constraints.

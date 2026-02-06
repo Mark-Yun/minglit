@@ -125,7 +125,7 @@ void main() {
         await client1
             .from('user_profiles')
             .update({'is_verified': true}).eq('id', user1Id);
-      } catch (e) {
+      } on Exception {
         // If error thrown (e.g. by trigger), that's good.
       }
 

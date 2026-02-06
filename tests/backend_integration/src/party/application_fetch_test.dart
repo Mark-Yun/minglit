@@ -45,7 +45,7 @@ void main() {
           'payment_amount': 1000,
           'status': 'pending_review',
         });
-      } catch (e) {
+      } on Exception {
         // Ignore duplicate key error if already exists
       }
 

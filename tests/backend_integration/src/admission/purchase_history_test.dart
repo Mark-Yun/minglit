@@ -79,9 +79,8 @@ void main() {
 
       Log.i('✅ History Count: ${data.length}');
       final party = event['party'] as Map<String, dynamic>?;
-      Log.i(
-        '📍 First Event: ${event['title'] ?? (party != null ? party['title'] : 'N/A')}',
-      );
+      final title = event['title'] ?? (party != null ? party['title'] : 'N/A');
+      Log.i('📍 First Event: $title');
     });
   });
 }

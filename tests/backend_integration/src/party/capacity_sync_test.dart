@@ -128,7 +128,7 @@ void main() {
             .from('parties')
             .update({'min_confirmed_count': 31}).eq('id', partyId);
         fail('Should have thrown check constraint violation');
-      } catch (e) {
+      } on Exception catch (e) {
         expect(e.toString(), contains('check_min_max_participants'));
       }
 
@@ -138,7 +138,7 @@ void main() {
             .from('events')
             .update({'min_confirmed_count': 16}).eq('id', eventId);
         fail('Should have thrown check constraint violation for event');
-      } catch (e) {
+      } on Exception catch (e) {
         expect(e.toString(), contains('check_min_max_participants'));
       }
     });

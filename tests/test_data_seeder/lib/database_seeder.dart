@@ -29,13 +29,14 @@ class DatabaseSeeder extends _SeederContextBase
         jsonStr = await rootBundle.loadString(
           'packages/test_data_seeder/assets/seed_data.json',
         );
-      } catch (_) {
+      } on Exception {
         _Log.i(
           '⚠️ rootBundle failed, '
           'trying direct file access (Test environment)...',
         );
         // Fallback for tests: path depends on where the test is run
         final file = File('../../tests/test_data_seeder/assets/seed_data.json');
+        // ignore: avoid_slow_async_io - Seeder runs infrequently, clarity over performance
         if (!await file.exists()) {
           // Try alternative path (if run from project root)
           final altFile = File('tests/test_data_seeder/assets/seed_data.json');

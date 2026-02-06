@@ -105,7 +105,7 @@ void main() {
           .delete()
           .eq('user_id', testUserId)
           .eq('event_id', testEventId);
-    } catch (e) {
+    } on Exception catch (e) {
       Log.w('⚠️ Cleanup warning: $e');
     }
   });
@@ -149,7 +149,7 @@ void main() {
     Log.i('👮 [Test] Admin approving verification...');
     await adminClient
         .from('verification_submissions')
-        .update({'status': 'approved'}).eq('application_id', appId as Object);
+        .update({'status': 'approved'}).eq('application_id', appId);
 
     // 4. Final Verification (Trigger Check)
     await Future<void>.delayed(const Duration(milliseconds: 500));
@@ -157,14 +157,14 @@ void main() {
     final updatedApp = await adminClient
         .from('event_applications')
         .select()
-        .eq('id', appId as Object)
+        .eq('id', appId)
         .single();
     expect(updatedApp['status'], equals('approved'));
 
     final participant = await adminClient
         .from('event_participants')
         .select()
-        .eq('application_id', appId as Object)
+        .eq('application_id', appId)
         .maybeSingle();
     expect(participant, isNotNull);
     expect(participant!['ticket_code'], isNotNull);

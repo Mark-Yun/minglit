@@ -112,7 +112,7 @@ void main() {
       final verifiedUser = await adminClient
           .from('partner_verified_users')
           .select()
-          .eq('submission_id', subId as Object)
+          .eq('submission_id', subId)
           .maybeSingle();
       expect(
         verifiedUser,
@@ -136,7 +136,7 @@ void main() {
       final participant = await adminClient
           .from('event_participants')
           .select()
-          .eq('application_id', appId as Object)
+          .eq('application_id', appId)
           .maybeSingle();
       expect(
         participant,
@@ -177,7 +177,7 @@ void main() {
       final verifiedUser = await adminClient
           .from('partner_verified_users')
           .select()
-          .eq('submission_id', subId as Object)
+          .eq('submission_id', subId)
           .maybeSingle();
       expect(
         verifiedUser,
