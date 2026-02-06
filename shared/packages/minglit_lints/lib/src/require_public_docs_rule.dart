@@ -1,66 +1,111 @@
+import 'package:analyzer/analysis_rule/analysis_rule.dart';
+import 'package:analyzer/analysis_rule/rule_context.dart';
+import 'package:analyzer/analysis_rule/rule_visitor_registry.dart';
 import 'package:analyzer/dart/ast/ast.dart';
-import 'package:analyzer/error/listener.dart';
-import 'package:custom_lint_builder/custom_lint_builder.dart';
+import 'package:analyzer/dart/ast/visitor.dart';
+import 'package:analyzer/error/error.dart';
 
-class RequirePublicDocsRule extends DartLintRule {
-  const RequirePublicDocsRule() : super(code: _code);
+class RequirePublicDocsRule extends AnalysisRule {
+  RequirePublicDocsRule()
+    : super(
+        name: 'minglit_require_public_docs',
+        description: 'Public members must be documented.',
+      );
 
-  static const _code = LintCode(
-    name: 'minglit_require_public_docs',
-    problemMessage: 'Public members must be documented.',
+  static const LintCode code = LintCode(
+    'minglit_require_public_docs',
+    'Public members must be documented.',
     correctionMessage: 'Add a documentation comment (///).',
   );
 
   @override
-  void run(
-    CustomLintResolver resolver,
-    DiagnosticReporter reporter,
-    CustomLintContext context,
+  DiagnosticCode get diagnosticCode => code;
+
+  @override
+  void registerNodeProcessors(
+    RuleVisitorRegistry registry,
+    RuleContext context,
   ) {
-    context.registry.addDeclaration((node) {
-      // 1. Private members are excluded
-      // Note: 'declaredElement' getter might be deprecated or missing on Declaration interface in newer analyzer versions.
-      // Casting to specific types that have it, or using 'declaredFragment' if applicable.
-      // For now, let's try casting to NamedCompilationUnitMember which definitely has it.
+    final visitor = _Visitor(this);
+    registry
+      ..addClassDeclaration(this, visitor)
+      ..addMethodDeclaration(this, visitor)
+      ..addFunctionDeclaration(this, visitor)
+      ..addEnumDeclaration(this, visitor)
+      ..addMixinDeclaration(this, visitor)
+      ..addExtensionTypeDeclaration(this, visitor)
+      ..addTopLevelVariableDeclaration(this, visitor);
+  }
+}
 
-      String? name;
-      if (node is NamedCompilationUnitMember) {
-        name = node.name.lexeme;
-      } else if (node is VariableDeclaration) {
-        name = node.name.lexeme;
-      }
+class _Visitor extends SimpleAstVisitor<void> {
+  _Visitor(this.rule);
 
-      if (name == null || name.startsWith('_')) return;
+  final RequirePublicDocsRule rule;
 
-      // 2. Already documented members are excluded
-      if (node.documentationComment != null) return;
+  static const _flutterLifecycleMethods = {
+    'build',
+    'createState',
+    'initState',
+    'dispose',
+    'didUpdateWidget',
+    'didChangeDependencies',
+    'deactivate',
+    'reassemble',
+  };
 
-      // 3. Overridden members are excluded
-      final metadata = node.metadata;
-      final isOverride = metadata.any(
-        (annotation) => annotation.name.name == 'override',
-      );
-      if (isOverride) return;
+  @override
+  void visitClassDeclaration(ClassDeclaration node) {
+    _checkNamedDeclaration(node, node.name.lexeme);
+  }
 
-      // 4. Flutter lifecycle methods are excluded
-      const flutterLifecycleMethods = {
-        'build',
-        'createState',
-        'initState',
-        'dispose',
-        'didUpdateWidget',
-        'didChangeDependencies',
-        'deactivate',
-        'reassemble',
-      };
+  @override
+  void visitMethodDeclaration(MethodDeclaration node) {
+    final name = node.name.lexeme;
+    if (_flutterLifecycleMethods.contains(name)) return;
+    _checkNamedDeclaration(node, name);
+  }
 
-      // Check if it's a method declaration and matches lifecycle methods
-      if (node is MethodDeclaration) {
-        if (flutterLifecycleMethods.contains(name)) return;
-      }
+  @override
+  void visitFunctionDeclaration(FunctionDeclaration node) {
+    _checkNamedDeclaration(node, node.name.lexeme);
+  }
 
-      // Report lint
-      reporter.atNode(node, _code);
-    });
+  @override
+  void visitEnumDeclaration(EnumDeclaration node) {
+    _checkNamedDeclaration(node, node.name.lexeme);
+  }
+
+  @override
+  void visitMixinDeclaration(MixinDeclaration node) {
+    _checkNamedDeclaration(node, node.name.lexeme);
+  }
+
+  @override
+  void visitExtensionTypeDeclaration(ExtensionTypeDeclaration node) {
+    _checkNamedDeclaration(node, node.name.lexeme);
+  }
+
+  @override
+  void visitTopLevelVariableDeclaration(TopLevelVariableDeclaration node) {
+    for (final variable in node.variables.variables) {
+      _checkNamedDeclaration(node, variable.name.lexeme);
+    }
+  }
+
+  void _checkNamedDeclaration(AnnotatedNode node, String name) {
+    // Private members are excluded
+    if (name.startsWith('_')) return;
+
+    // Already documented members are excluded
+    if (node.documentationComment != null) return;
+
+    // Overridden members are excluded
+    final isOverride = node.metadata.any(
+      (annotation) => annotation.name.name == 'override',
+    );
+    if (isOverride) return;
+
+    rule.reportAtNode(node);
   }
 }
