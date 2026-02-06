@@ -2,6 +2,7 @@ import 'package:app_partner/src/features/admin/partner_application_detail_page.d
 import 'package:app_partner/src/features/verification/review/review_verification_screen.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/minglit_dev.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class PartnerDevMap extends StatelessWidget {

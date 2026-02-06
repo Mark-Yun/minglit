@@ -171,9 +171,10 @@ class EventAdmissionController extends _$EventAdmissionController {
     }
 
     // 2. Age Check
-    if (user.birthDate == null) return '생년월일 정보가 없습니다.';
+    final birthDate = user.birthDate;
+    if (birthDate == null) return '생년월일 정보가 없습니다.';
 
-    final birthYear = user.birthDate!.year;
+    final birthYear = birthDate.year;
     if (group.birthYearMin != null && birthYear < group.birthYearMin!) {
       return '${group.birthYearMin}년생 이상만 참여 가능합니다.';
     }

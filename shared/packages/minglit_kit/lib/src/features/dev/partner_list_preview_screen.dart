@@ -1,7 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:minglit_kit/src/data/models/partner.dart';
+import 'package:minglit_kit/src/data/repositories/partner_repository.dart';
+import 'package:minglit_kit/src/features/dev/widgets/partner_detail_view.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'partner_list_preview_screen.g.dart';

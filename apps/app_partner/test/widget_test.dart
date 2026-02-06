@@ -12,8 +12,8 @@ import 'package:minglit_kit/minglit_kit.dart';
 void main() {
   testWidgets('Partner login screen renders', (WidgetTester tester) async {
     await tester.pumpWidget(
-      ProviderScope(
-        child: const MaterialApp(
+      const ProviderScope(
+        child: MaterialApp(
           home: MinglitLoginScreen(isPartner: true),
         ),
       ),

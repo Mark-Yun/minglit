@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
 /// A standardized dialog widget for Minglit applications.
 /// Use [show] or [showConfirm] for easier usage.

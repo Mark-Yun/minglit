@@ -1,5 +1,6 @@
 import 'package:cryptography/cryptography.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/data/models/ticket_token.dart';
+import 'package:minglit_kit/src/utils/ticket_crypto.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'checkin_repository.g.dart';

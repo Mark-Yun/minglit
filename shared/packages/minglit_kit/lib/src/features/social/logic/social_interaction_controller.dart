@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/data/models/social_interaction.dart';
+import 'package:minglit_kit/src/data/repositories/social_repository.dart';
+import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'social_interaction_controller.freezed.dart';

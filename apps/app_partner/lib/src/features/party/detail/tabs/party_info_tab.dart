@@ -1,13 +1,8 @@
-import 'dart:async';
-
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
-import 'package:app_partner/src/features/party/widgets/party_basic_info_edit_screen.dart';
 import 'package:app_partner/src/features/party/widgets/party_basic_info_summary.dart';
-import 'package:app_partner/src/features/party/widgets/party_capacity_contact_edit_screen.dart';
 import 'package:app_partner/src/features/party/widgets/party_capacity_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_contact_summary.dart';
-import 'package:app_partner/src/features/party/widgets/party_location_edit_screen.dart';
 import 'package:app_partner/src/features/party/widgets/party_location_summary.dart';
 import 'package:app_partner/src/ui/widgets/common/minglit_editable_section.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
@@ -23,6 +18,7 @@ class PartyInfoTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final locationAsync = ref.watch(locationDetailProvider(party.locationId));
+    final coordinator = ref.read(partyDetailCoordinatorProvider);
 
     return SingleChildScrollView(
       child: Column(
@@ -32,26 +28,19 @@ class PartyInfoTab extends ConsumerWidget {
           MinglitEditableSection(
             title: context.l10n.wizard_review_basicInfo,
             onTap: () {
-              unawaited(
-                Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (context) => PartyBasicInfoEditScreen(
-                      party: party,
-                      onSave:
-                          (title, description, imageUrls, newImages, status) =>
-                              _handleUpdateBasicInfo(
-                                context,
-                                ref,
-                                title,
-                                description,
-                                imageUrls,
-                                newImages,
-                                status,
-                              ),
+              coordinator.openBasicInfoEdit(
+                context,
+                party: party,
+                onSave: (title, description, imageUrls, newImages, status) =>
+                    _handleUpdateBasicInfo(
+                      context,
+                      ref,
+                      title,
+                      description,
+                      imageUrls,
+                      newImages,
+                      status,
                     ),
-                  ),
-                ),
               );
             },
             child: PartyBasicInfoSummary(
@@ -68,22 +57,15 @@ class PartyInfoTab extends ConsumerWidget {
           MinglitEditableSection(
             title: '인원 및 연락처 설정',
             onTap: () {
-              unawaited(
-                Navigator.push(
+              coordinator.openCapacityContactEdit(
+                context,
+                party: party,
+                onSave: (min, max, options) => _handleUpdateCapacityContact(
                   context,
-                  MaterialPageRoute<void>(
-                    builder: (context) => PartyCapacityContactEditScreen(
-                      party: party,
-                      onSave: (min, max, options) =>
-                          _handleUpdateCapacityContact(
-                            context,
-                            ref,
-                            min,
-                            max,
-                            options,
-                          ),
-                    ),
-                  ),
+                  ref,
+                  min,
+                  max,
+                  options,
                 ),
               );
             },
@@ -113,24 +95,17 @@ class PartyInfoTab extends ConsumerWidget {
             title: context.l10n.partyDetail_section_location,
             onTap: () {
               final loc = locationAsync.value;
-              unawaited(
-                Navigator.push(
+              coordinator.openLocationEdit(
+                context,
+                initialLocation: loc,
+                initialAddressDetail: loc?.addressDetail,
+                initialDirectionsGuide: loc?.directionsGuide,
+                onSave: (newLoc, detail, directions) => _handleUpdateLocation(
                   context,
-                  MaterialPageRoute<void>(
-                    builder: (context) => PartyLocationEditScreen(
-                      initialLocation: loc,
-                      initialAddressDetail: loc?.addressDetail,
-                      initialDirectionsGuide: loc?.directionsGuide,
-                      onSave: (newLoc, detail, directions) =>
-                          _handleUpdateLocation(
-                            context,
-                            ref,
-                            newLoc,
-                            detail,
-                            directions,
-                          ),
-                    ),
-                  ),
+                  ref,
+                  newLoc,
+                  detail,
+                  directions,
                 ),
               );
             },

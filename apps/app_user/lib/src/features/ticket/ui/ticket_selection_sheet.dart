@@ -115,7 +115,6 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
     ref
         .read(eventCoordinatorProvider)
         .goToApplicationWizard(
-          context,
           widget.event.id,
           ticketId: _selectedTicketId,
         );

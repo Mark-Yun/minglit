@@ -1,4 +1,6 @@
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/data/models/user_settings.dart';
+import 'package:minglit_kit/src/data/repositories/auth_repository.dart';
+import 'package:minglit_kit/src/features/notification/notification_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'notification_settings_controller.g.dart';

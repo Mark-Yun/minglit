@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/data/models/event.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_chip.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_image.dart';
 
 /// **Minglit Event Card**
 ///

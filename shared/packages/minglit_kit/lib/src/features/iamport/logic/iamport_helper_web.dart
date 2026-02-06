@@ -4,7 +4,7 @@
 import 'dart:convert';
 import 'dart:js' as js;
 
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/utils/log.dart';
 
 /// Web implementation using dart:js.
 void requestCertificationWeb({

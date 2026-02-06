@@ -1,8 +1,6 @@
-import 'dart:async';
-
+import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:app_user/src/features/home/widgets/category_chip_bar.dart';
 import 'package:app_user/src/features/home/widgets/event_feed_section.dart';
-import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -12,6 +10,8 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final homeCoordinator = ref.read(homeCoordinatorProvider);
+
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () async {
@@ -39,11 +39,7 @@ class HomePage extends ConsumerWidget {
               actions: [
                 IconButton(
                   icon: const Icon(Icons.notifications_outlined),
-                  onPressed: () {
-                    unawaited(
-                      const NotificationCenterRoute().push<void>(context),
-                    );
-                  },
+                  onPressed: homeCoordinator.pushNotificationCenter,
                 ),
                 const SizedBox(width: MinglitSpacing.small),
               ],

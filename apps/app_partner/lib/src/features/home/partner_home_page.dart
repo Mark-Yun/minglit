@@ -1,11 +1,9 @@
-import 'dart:async';
-
 import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
+import 'package:app_partner/src/features/home/partner_home_coordinator.dart';
 import 'package:app_partner/src/features/home/widgets/approval_waiting_card.dart';
 import 'package:app_partner/src/features/home/widgets/revenue_summary_card.dart';
 import 'package:app_partner/src/features/home/widgets/today_party_card.dart';
 import 'package:app_partner/src/features/party/party_providers.dart';
-import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -24,6 +22,7 @@ class PartnerHomePage extends ConsumerWidget {
               .length,
           orElse: () => 0,
         );
+    final coordinator = ref.read(partnerHomeCoordinatorProvider);
 
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(
@@ -36,9 +35,7 @@ class PartnerHomePage extends ConsumerWidget {
               IconButton(
                 icon: const Icon(Icons.notifications_outlined),
                 tooltip: '알림 센터',
-                onPressed: () {
-                  unawaited(const NotificationCenterRoute().push(context));
-                },
+                onPressed: coordinator.pushNotificationCenter,
               ),
               if (unreadCount > 0)
                 Positioned(
@@ -83,7 +80,10 @@ class PartnerHomePage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // 1. Approval Waiting
-                ApprovalWaitingCard(count: state.pendingReviewCount),
+                ApprovalWaitingCard(
+                  count: state.pendingReviewCount,
+                  onTap: coordinator.pushApplicationList,
+                ),
                 const SizedBox(height: MinglitSpacing.large),
 
                 // 2. Revenue (If permitted)

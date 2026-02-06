@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:minglit_kit/src/data/repositories/auth_repository.dart';
+import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'auth_controller.g.dart';
@@ -28,9 +29,16 @@ class AuthController extends _$AuthController {
         state = const AsyncData(null);
       }
     } on Object catch (e, st) {
+      Log.e('AuthController signInWithGoogle failed', e, st);
       try {
         state = AsyncError(e, st);
-      } on Object catch (_) {}
+      } on Object catch (stateError, stateStackTrace) {
+        Log.e(
+          'AuthController failed to update signInWithGoogle state',
+          stateError,
+          stateStackTrace,
+        );
+      }
     }
   }
 
@@ -50,9 +58,16 @@ class AuthController extends _$AuthController {
       // Success: Do nothing. Auth state change will trigger UI updates/redirects.
       // Setting state here causes 'disposed' error if redirect happens fast.
     } on Object catch (e, st) {
+      Log.e('AuthController signInWithEmail failed', e, st);
       try {
         state = AsyncError(e, st);
-      } on Object catch (_) {}
+      } on Object catch (stateError, stateStackTrace) {
+        Log.e(
+          'AuthController failed to update signInWithEmail state',
+          stateError,
+          stateStackTrace,
+        );
+      }
     }
   }
 
@@ -69,9 +84,16 @@ class AuthController extends _$AuthController {
         state = const AsyncData(null);
       }
     } on Object catch (e, st) {
+      Log.e('AuthController signInWithApple failed', e, st);
       try {
         state = AsyncError(e, st);
-      } on Object catch (_) {}
+      } on Object catch (stateError, stateStackTrace) {
+        Log.e(
+          'AuthController failed to update signInWithApple state',
+          stateError,
+          stateStackTrace,
+        );
+      }
     }
   }
 
@@ -82,9 +104,16 @@ class AuthController extends _$AuthController {
       await ref.read(authRepositoryProvider).signOut();
       state = const AsyncData(null);
     } on Object catch (e, st) {
+      Log.e('AuthController signOut failed', e, st);
       try {
         state = AsyncError(e, st);
-      } on Object catch (_) {}
+      } on Object catch (stateError, stateStackTrace) {
+        Log.e(
+          'AuthController failed to update signOut state',
+          stateError,
+          stateStackTrace,
+        );
+      }
     }
   }
 }

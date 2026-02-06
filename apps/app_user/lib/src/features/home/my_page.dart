@@ -1,17 +1,18 @@
-import 'dart:async';
-
-import 'package:app_user/src/routing/app_routes.dart';
+import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
+import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-class MyPageScreen extends ConsumerWidget {
-  const MyPageScreen({super.key});
+class MyPage extends ConsumerWidget {
+  const MyPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
     final theme = Theme.of(context);
+    final avatarUrl = user?.userMetadata?['avatar_url'] as String?;
+    final displayName = user?.userMetadata?['full_name'] as String? ?? '유저';
+    final homeCoordinator = ref.read(homeCoordinatorProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -26,12 +27,10 @@ class MyPageScreen extends ConsumerWidget {
               children: [
                 CircleAvatar(
                   radius: 32,
-                  backgroundImage: user?.userMetadata?['avatar_url'] != null
-                      ? NetworkImage(
-                          user!.userMetadata!['avatar_url'] as String,
-                        )
+                  backgroundImage: avatarUrl != null
+                      ? NetworkImage(avatarUrl)
                       : null,
-                  child: user?.userMetadata?['avatar_url'] == null
+                  child: avatarUrl == null
                       ? const Icon(Icons.person, size: 32)
                       : null,
                 ),
@@ -41,7 +40,7 @@ class MyPageScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        user?.userMetadata?['full_name'] as String? ?? '유저',
+                        displayName,
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -65,25 +64,19 @@ class MyPageScreen extends ConsumerWidget {
             leading: const Icon(Icons.receipt_long_outlined),
             title: const Text('구매 내역'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              unawaited(const PurchaseHistoryRoute().push<void>(context));
-            },
+            onTap: homeCoordinator.pushPurchaseHistory,
           ),
           ListTile(
             leading: const Icon(Icons.confirmation_number_outlined),
             title: const Text('내 티켓'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => unawaited(
-              const PurchaseHistoryRoute().push<void>(context),
-            ),
+            onTap: homeCoordinator.pushPurchaseHistory,
           ),
           ListTile(
             leading: const Icon(Icons.notifications_outlined),
             title: const Text('알림 설정'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              unawaited(const NotificationSettingsRoute().push<void>(context));
-            },
+            onTap: homeCoordinator.pushNotificationSettings,
           ),
           const Divider(),
           ListTile(
@@ -92,7 +85,7 @@ class MyPageScreen extends ConsumerWidget {
             onTap: () async {
               await ref.read(authControllerProvider.notifier).signOut();
               if (context.mounted) {
-                context.go('/login');
+                ref.read(authCoordinatorProvider).goToLogin();
               }
             },
           ),

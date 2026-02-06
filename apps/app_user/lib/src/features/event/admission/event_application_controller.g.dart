@@ -61,7 +61,7 @@ final class EventApplicationControllerProvider
 }
 
 String _$eventApplicationControllerHash() =>
-    r'efc6c0c48af20df3aede1bce628f310a80354d8b';
+    r'85766dc121922cac2f2357d3435a42d31bfa473b';
 
 final class EventApplicationControllerFamily extends $Family
     with

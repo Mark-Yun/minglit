@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/data/models/party.dart';
+import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'kakao_location_repository.g.dart';

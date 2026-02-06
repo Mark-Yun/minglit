@@ -39,11 +39,6 @@ class MemberCoordinator extends _$MemberCoordinator {
     );
 
     // Push the route onto the stack
-    // Note: Uses global navigator key from RouterProvider to access context.
-    unawaited(
-      route.push<void>(
-        ref.read(goRouterProvider).routerDelegate.navigatorKey.currentContext!,
-      ),
-    );
+    unawaited(ref.read(goRouterProvider).push(route.location));
   }
 }

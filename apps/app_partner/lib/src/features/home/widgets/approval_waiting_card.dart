@@ -1,13 +1,15 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class ApprovalWaitingCard extends StatelessWidget {
-  const ApprovalWaitingCard({required this.count, super.key});
+  const ApprovalWaitingCard({
+    required this.count,
+    required this.onTap,
+    super.key,
+  });
 
   final int count;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -21,11 +23,7 @@ class ApprovalWaitingCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(MinglitRadius.card),
       ),
       child: InkWell(
-        onTap: () {
-          // Navigate to Application List (Admin/Manager view)
-          // Using path to ensure correct stack navigation
-          unawaited(context.push('/applications'));
-        },
+        onTap: onTap,
         borderRadius: BorderRadius.circular(MinglitRadius.card),
         child: Padding(
           padding: const EdgeInsets.all(MinglitSpacing.large),
@@ -37,8 +35,10 @@ class ApprovalWaitingCard extends StatelessWidget {
                   color: colorScheme.surface,
                   shape: BoxShape.circle,
                 ),
-                child:
-                    Icon(Icons.notifications_active, color: colorScheme.error),
+                child: Icon(
+                  Icons.notifications_active,
+                  color: colorScheme.error,
+                ),
               ),
               const SizedBox(width: MinglitSpacing.medium),
               Expanded(

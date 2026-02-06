@@ -8,8 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-class EventApplicationWizardScreen extends ConsumerWidget {
-  const EventApplicationWizardScreen({
+class EventApplicationWizardPage extends ConsumerWidget {
+  const EventApplicationWizardPage({
     required this.eventId,
     this.ticketId,
     super.key,
@@ -58,7 +58,9 @@ class _WizardBodyState extends ConsumerState<_WizardBody> {
         unawaited(
           Future.microtask(() {
             ref
-                .read(eventApplicationControllerProvider(widget.event).notifier)
+                .read(
+                  eventApplicationControllerProvider(widget.event).notifier,
+                )
                 .selectTicket(ticket);
           }),
         );
@@ -68,31 +70,36 @@ class _WizardBodyState extends ConsumerState<_WizardBody> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(eventApplicationControllerProvider(widget.event));
+    final state = ref.watch(
+      eventApplicationControllerProvider(widget.event),
+    );
     final controller = ref.read(
       eventApplicationControllerProvider(widget.event).notifier,
     );
 
     // Listen for success
-    ref.listen(eventApplicationControllerProvider(widget.event), (_, next) {
-      if (next.status == EventApplicationStatus.success) {
-        final ticket = next.selectedTicket;
-        if (ticket == null) return;
-        unawaited(
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute<void>(
-              builder: (_) => PaymentSuccessScreen(
-                eventId: widget.event.id,
-                ticketId: ticket.id,
+    ref.listen(
+      eventApplicationControllerProvider(widget.event),
+      (_, next) {
+        if (next.status == EventApplicationStatus.success) {
+          final ticket = next.selectedTicket;
+          if (ticket == null) return;
+          unawaited(
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute<void>(
+                builder: (_) => PaymentSuccessScreen(
+                  eventId: widget.event.id,
+                  ticketId: ticket.id,
+                ),
               ),
             ),
-          ),
-        );
-      }
-      if (next.status == EventApplicationStatus.error) {
-        unawaited(_handlePaymentError(context, next.errorMessage));
-      }
-    });
+          );
+        }
+        if (next.status == EventApplicationStatus.error) {
+          unawaited(_handlePaymentError(context, next.errorMessage));
+        }
+      },
+    );
 
     return Column(
       children: [
@@ -141,7 +148,9 @@ class _WizardBodyState extends ConsumerState<_WizardBody> {
     if (retry) {
       unawaited(
         ref
-            .read(eventApplicationControllerProvider(widget.event).notifier)
+            .read(
+              eventApplicationControllerProvider(widget.event).notifier,
+            )
             .processPayment(context),
       );
     }
@@ -322,7 +331,11 @@ class _VerificationStep extends ConsumerWidget {
           if (field.type == 'file')
             Builder(
               builder: (context) {
-                final userId = ref.read(currentUserProvider)!.id;
+                final user = ref.read(currentUserProvider);
+                final userId = user?.id;
+                if (userId == null) {
+                  return const Text('로그인이 필요합니다.');
+                }
                 final pathPrefix = '$userId/applications/${event.id}';
                 Log.d('📂 [Wizard] FilePicker pathPrefix: $pathPrefix');
                 return MinglitFilePicker(
@@ -336,13 +349,17 @@ class _VerificationStep extends ConsumerWidget {
                     if (urls.isNotEmpty) {
                       ref
                           .read(
-                            eventApplicationControllerProvider(event).notifier,
+                            eventApplicationControllerProvider(
+                              event,
+                            ).notifier,
                           )
                           .updateVerificationData(field.key, urls.first);
                     } else {
                       ref
                           .read(
-                            eventApplicationControllerProvider(event).notifier,
+                            eventApplicationControllerProvider(
+                              event,
+                            ).notifier,
                           )
                           .updateVerificationData(field.key, null);
                     }
@@ -361,7 +378,9 @@ class _VerificationStep extends ConsumerWidget {
               ),
               onChanged: (value) {
                 ref
-                    .read(eventApplicationControllerProvider(event).notifier)
+                    .read(
+                      eventApplicationControllerProvider(event).notifier,
+                    )
                     .updateVerificationData(field.key, value);
               },
             ),

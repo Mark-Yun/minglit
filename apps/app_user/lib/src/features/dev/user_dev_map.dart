@@ -1,6 +1,7 @@
 import 'package:app_user/src/features/auth/auth_wrapper.dart';
 import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/minglit_dev.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class UserDevMap extends StatelessWidget {

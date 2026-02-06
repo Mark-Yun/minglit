@@ -1,18 +1,18 @@
 import 'dart:async';
 
+import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class AuthCallbackScreen extends ConsumerStatefulWidget {
-  const AuthCallbackScreen({super.key});
+class AuthCallbackPage extends ConsumerStatefulWidget {
+  const AuthCallbackPage({super.key});
 
   @override
-  ConsumerState<AuthCallbackScreen> createState() => _AuthCallbackScreenState();
+  ConsumerState<AuthCallbackPage> createState() => _AuthCallbackPageState();
 }
 
-class _AuthCallbackScreenState extends ConsumerState<AuthCallbackScreen> {
+class _AuthCallbackPageState extends ConsumerState<AuthCallbackPage> {
   String _statusMessage = '로그인 처리 중입니다...';
   bool _isProcessing = true;
 
@@ -60,7 +60,7 @@ class _AuthCallbackScreenState extends ConsumerState<AuthCallbackScreen> {
     if (!mounted) return;
 
     Log.d('✅ [AuthCallback] Redirecting to: ${returnUrl ?? "/"}');
-    context.go(returnUrl ?? '/');
+    ref.read(authCoordinatorProvider).goToReturnLocation(returnUrl ?? '/');
   }
 
   @override
@@ -97,7 +97,7 @@ class _AuthCallbackScreenState extends ConsumerState<AuthCallbackScreen> {
             if (!_isProcessing) ...[
               const SizedBox(height: MinglitSpacing.large),
               ElevatedButton(
-                onPressed: () => context.go('/login'),
+                onPressed: () => ref.read(authCoordinatorProvider).goToLogin(),
                 child: const Text('로그인 화면으로 돌아가기'),
               ),
             ],

@@ -1,4 +1,4 @@
-import 'package:app_user/src/features/payment/ui/purchase_history_screen.dart';
+import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -25,12 +25,12 @@ void main() {
     return ProviderScope(
       overrides: overrides.cast(),
       child: const MaterialApp(
-        home: PurchaseHistoryScreen(),
+        home: PurchaseHistoryPage(),
       ),
     );
   }
 
-  group('PurchaseHistoryScreen', () {
+  group('PurchaseHistoryPage', () {
     testWidgets('renders history cards when data is available', (tester) async {
       final mockHistory = [
         EventApplication(

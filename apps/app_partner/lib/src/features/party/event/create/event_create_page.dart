@@ -9,16 +9,16 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-class EventCreateScreen extends ConsumerStatefulWidget {
-  const EventCreateScreen({required this.partyId, super.key});
+class EventCreatePage extends ConsumerStatefulWidget {
+  const EventCreatePage({required this.partyId, super.key});
 
   final String partyId;
 
   @override
-  ConsumerState<EventCreateScreen> createState() => _EventCreateScreenState();
+  ConsumerState<EventCreatePage> createState() => _EventCreatePageState();
 }
 
-class _EventCreateScreenState extends ConsumerState<EventCreateScreen> {
+class _EventCreatePageState extends ConsumerState<EventCreatePage> {
   @override
   void initState() {
     super.initState();

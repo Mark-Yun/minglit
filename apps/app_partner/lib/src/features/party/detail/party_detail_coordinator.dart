@@ -1,10 +1,14 @@
 import 'dart:async';
 
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
+import 'package:app_partner/src/features/party/widgets/party_basic_info_edit_screen.dart';
+import 'package:app_partner/src/features/party/widgets/party_capacity_contact_edit_screen.dart';
+import 'package:app_partner/src/features/party/widgets/party_location_edit_screen.dart';
 import 'package:app_partner/src/routing/app_router.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -27,6 +31,78 @@ class PartyDetailCoordinator {
           .push(
             PartyEditRoute(partyId: partyId).location,
           ),
+    );
+  }
+
+  void openBasicInfoEdit(
+    BuildContext context, {
+    required Party party,
+    required void Function(
+      String title,
+      Map<String, dynamic> description,
+      List<String> imageUrls,
+      List<XFile> newImages,
+      String status,
+    )
+    onSave,
+  }) {
+    unawaited(
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => PartyBasicInfoEditScreen(
+            party: party,
+            onSave: onSave,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void openCapacityContactEdit(
+    BuildContext context, {
+    required Party party,
+    required void Function(
+      int min,
+      int max,
+      Map<String, String> options,
+    )
+    onSave,
+  }) {
+    unawaited(
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => PartyCapacityContactEditScreen(
+            party: party,
+            onSave: onSave,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void openLocationEdit(
+    BuildContext context, {
+    required Location? initialLocation,
+    required String? initialAddressDetail,
+    required String? initialDirectionsGuide,
+    required void Function(
+      Location? newLoc,
+      String addressDetail,
+      String directions,
+    )
+    onSave,
+  }) {
+    unawaited(
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => PartyLocationEditScreen(
+            initialLocation: initialLocation,
+            initialAddressDetail: initialAddressDetail,
+            initialDirectionsGuide: initialDirectionsGuide,
+            onSave: onSave,
+          ),
+        ),
+      ),
     );
   }
 

@@ -67,8 +67,9 @@ abstract class Event with _$Event {
   }
 
   List<String> get effectiveImageUrls {
-    if (imageUrls != null && imageUrls!.isNotEmpty) {
-      return imageUrls!;
+    final urls = imageUrls;
+    if (urls != null && urls.isNotEmpty) {
+      return urls;
     }
     return party?.imageUrls ?? [];
   }
@@ -115,11 +116,12 @@ extension EventX on Event {
       }
 
       // Handle label (e.g., "Student Group (Male (1997~2006))")
-      if (group.label != null && group.label!.isNotEmpty) {
+      final label = group.label;
+      if (label != null && label.isNotEmpty) {
         if (base == '조건 없음') {
-          base = group.label!;
+          base = label;
         } else {
-          base = '${group.label} ($base)';
+          base = '$label ($base)';
         }
       }
 

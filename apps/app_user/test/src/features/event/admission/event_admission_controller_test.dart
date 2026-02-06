@@ -61,6 +61,9 @@ void main() {
     mockUserRepo = MockUserRepository();
     mockUser = MockUser();
     when(() => mockUser.id).thenReturn('user_1');
+    when(() => mockEventRepo.getEventById(any())).thenAnswer(
+      (_) async => testEvent,
+    );
   });
 
   group('EventAdmissionController', () {
@@ -201,6 +204,9 @@ void main() {
         when(
           () => mockUserRepo.getApprovedVerificationIds('user_1'),
         ).thenAnswer((_) async => []);
+        when(() => mockEventRepo.getEventById(any())).thenAnswer(
+          (_) async => testEventWithQualification,
+        );
 
         final container = createContainer(
           overrides: [
@@ -211,7 +217,9 @@ void main() {
         );
 
         final state = await container.read(
-          eventAdmissionControllerProvider(testEventWithQualification).future,
+          eventAdmissionControllerProvider(
+            testEventWithQualification,
+          ).future,
         );
         expect(state.status, EventAdmissionStatus.qualificationRequired);
         expect(state.missingVerificationIds, contains('verif_career'));
@@ -239,6 +247,9 @@ void main() {
       when(
         () => mockUserRepo.getApprovedVerificationIds('user_1'),
       ).thenAnswer((_) async => ['verif_career']);
+      when(() => mockEventRepo.getEventById(any())).thenAnswer(
+        (_) async => testEventWithQualification,
+      );
 
       final container = createContainer(
         overrides: [

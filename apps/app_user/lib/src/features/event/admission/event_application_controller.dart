@@ -1,3 +1,4 @@
+import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
 import 'package:flutter/widgets.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -50,8 +51,11 @@ class EventApplicationState {
 
 @riverpod
 class EventApplicationController extends _$EventApplicationController {
+  late final Event _event;
+
   @override
   EventApplicationState build(Event event) {
+    _event = event;
     return const EventApplicationState(
       step: EventApplicationStep.verification,
       status: EventApplicationStatus.initial,
@@ -90,7 +94,8 @@ class EventApplicationController extends _$EventApplicationController {
     try {
       final repository = ref.read(eventRepositoryProvider);
       final ticket = state.selectedTicket!;
-      final verificationData = _buildVerificationPayload(ticket);
+      final event = await _loadEvent();
+      final verificationData = _buildVerificationPayload(event, ticket);
       final merchantUid = await _createOrder(
         repository: repository,
         ticket: ticket,
@@ -132,7 +137,7 @@ class EventApplicationController extends _$EventApplicationController {
     Map<String, dynamic>? verificationData,
   }) async {
     return repository.createOrder(
-      eventId: event.id,
+      eventId: _event.id,
       ticketId: ticket.id,
       userId: userId,
       amount: ticket.price,
@@ -203,10 +208,11 @@ class EventApplicationController extends _$EventApplicationController {
     try {
       final repository = ref.read(eventRepositoryProvider);
       final ticket = state.selectedTicket!;
-      final vData = _buildVerificationPayload(ticket);
+      final event = await _loadEvent();
+      final vData = _buildVerificationPayload(event, ticket);
 
       await repository.applyEvent(
-        eventId: event.id,
+        eventId: _event.id,
         ticketId: ticket.id,
         userId: user.id,
         paymentId: 'MOCK_PAY_${DateTime.now().millisecondsSinceEpoch}',
@@ -223,7 +229,7 @@ class EventApplicationController extends _$EventApplicationController {
     }
   }
 
-  Map<String, dynamic>? _buildVerificationPayload(Ticket ticket) {
+  Map<String, dynamic>? _buildVerificationPayload(Event event, Ticket ticket) {
     final entryGroups = event.entryGroups ?? [];
     final reqIds = entryGroups
         .where((g) => ticket.targetEntryGroupIds.contains(g.id))
@@ -237,6 +243,12 @@ class EventApplicationController extends _$EventApplicationController {
       'verification_id': reqIds.first,
       'data': state.verificationData,
     };
+  }
+
+  Future<Event> _loadEvent() async {
+    final cached = ref.read(eventDetailControllerProvider(_event.id)).value;
+    if (cached != null) return cached;
+    return ref.read(eventRepositoryProvider).getEventById(_event.id);
   }
 
   void resetStatus() {

@@ -87,6 +87,7 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
           statusColor = MinglitColors.error;
       }
     }
+    final resolvedStatusColor = statusColor;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,7 +107,7 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
         if (widget.showTitle)
           Row(
             children: [
-              if (statusLabel != null)
+              if (statusLabel != null && resolvedStatusColor != null)
                 Padding(
                   padding: const EdgeInsets.only(right: MinglitSpacing.small),
                   child: Container(
@@ -115,16 +116,16 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: statusColor!.withValues(alpha: 0.1),
+                      color: resolvedStatusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(MinglitRadius.small),
                       border: Border.all(
-                        color: statusColor.withValues(alpha: 0.3),
+                        color: resolvedStatusColor.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Text(
                       statusLabel,
                       style: TextStyle(
-                        color: statusColor,
+                        color: resolvedStatusColor,
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                       ),

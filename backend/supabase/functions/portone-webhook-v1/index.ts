@@ -11,6 +11,9 @@ const ALLOWED_IPS = ["52.78.100.19", "52.78.48.223", "52.78.17.128", "127.0.0.1"
 serve(async (req) => {
   try {
     // 1. IP Validation
+    // SECURITY: x-forwarded-for can be spoofed unless set by a trusted proxy.
+    // TODO: Verify a PortOne webhook signature (HMAC header) when available and
+    // prefer trusted proxy/edge-provided client IP over raw headers.
     const forwardedFor = req.headers.get("x-forwarded-for");
     const clientIp = forwardedFor ? forwardedFor.split(",")[0].trim() : "";
     
@@ -85,7 +88,8 @@ serve(async (req) => {
     return new Response("OK", { status: 200 });
 
   } catch (e) {
-    console.error("Webhook Error:", e);
-    return new Response(e.message, { status: 500 });
+    const errorMessage = e instanceof Error ? e.message : String(e);
+    console.error("Webhook Error:", errorMessage);
+    return new Response(errorMessage, { status: 500 });
   }
 });

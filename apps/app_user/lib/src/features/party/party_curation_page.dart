@@ -1,20 +1,19 @@
 import 'dart:async';
 
-import 'package:app_user/src/routing/app_routes.dart';
+import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-class PartyCurationScreen extends ConsumerStatefulWidget {
-  const PartyCurationScreen({required this.type, super.key});
+class PartyCurationPage extends ConsumerStatefulWidget {
+  const PartyCurationPage({required this.type, super.key});
 
   final EventFeedType type;
 
   @override
-  ConsumerState<PartyCurationScreen> createState() =>
-      _PartyCurationScreenState();
+  ConsumerState<PartyCurationPage> createState() => _PartyCurationPageState();
 }
 
-class _PartyCurationScreenState extends ConsumerState<PartyCurationScreen> {
+class _PartyCurationPageState extends ConsumerState<PartyCurationPage> {
   @override
   void initState() {
     super.initState();
@@ -29,6 +28,7 @@ class _PartyCurationScreenState extends ConsumerState<PartyCurationScreen> {
   @override
   Widget build(BuildContext context) {
     final eventsAsync = ref.watch(eventFeedProvider(type: widget.type));
+    final eventCoordinator = ref.read(eventCoordinatorProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.type.title), centerTitle: true),
@@ -61,9 +61,7 @@ class _PartyCurationScreenState extends ConsumerState<PartyCurationScreen> {
                   event: event,
                   width: double.infinity,
                   onTap: () {
-                    unawaited(
-                      EventDetailRoute(eventId: event.id).push<void>(context),
-                    );
+                    eventCoordinator.pushEventDetail(event.id);
                   },
                 );
               },

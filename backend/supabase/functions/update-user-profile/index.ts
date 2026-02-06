@@ -1,3 +1,6 @@
+// NOTE: This worker is currently unused; the `recommendation_updates` queue
+// is not created by migrations. Keep for reference, but clean up when the
+// queue is removed or renamed.
 import { createClient } from '@supabase/supabase-js'
 import { HybridCalculator } from './calculator.ts'
 

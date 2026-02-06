@@ -2,18 +2,18 @@ import 'package:app_partner/src/features/verification/create/create_verification
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-class CreateVerificationScreen extends ConsumerStatefulWidget {
-  const CreateVerificationScreen({super.key, this.partnerId});
+class CreateVerificationPage extends ConsumerStatefulWidget {
+  const CreateVerificationPage({super.key, this.partnerId});
 
   final String? partnerId;
 
   @override
-  ConsumerState<CreateVerificationScreen> createState() =>
-      _CreateVerificationScreenState();
+  ConsumerState<CreateVerificationPage> createState() =>
+      _CreateVerificationPageState();
 }
 
-class _CreateVerificationScreenState
-    extends ConsumerState<CreateVerificationScreen> {
+class _CreateVerificationPageState
+    extends ConsumerState<CreateVerificationPage> {
   final _formKey = GlobalKey<FormState>();
 
   late TextEditingController _displayNameController;

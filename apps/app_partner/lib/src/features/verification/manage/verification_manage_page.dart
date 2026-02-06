@@ -3,8 +3,8 @@ import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-class VerificationManageScreen extends ConsumerWidget {
-  const VerificationManageScreen({super.key});
+class VerificationManagePage extends ConsumerWidget {
+  const VerificationManagePage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

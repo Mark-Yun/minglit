@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/data/models/party.dart';
+import 'package:minglit_kit/src/data/repositories/kakao_location_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'location_search_controller.g.dart';

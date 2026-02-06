@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_partner/src/features/party/ticket/entry_group_editor_screen.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -28,6 +29,20 @@ class PartyCreateCoordinator {
       MaterialPageRoute(
         builder: (_) => const LocationSearchScreen(),
         fullscreenDialog: true,
+      ),
+    );
+  }
+
+  Future<void> goToEntryGroupEditor({
+    required void Function(PartyEntryGroup group) onSaved,
+    PartyEntryGroup? initialGroup,
+  }) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => EntryGroupEditorScreen(
+          initialGroup: initialGroup,
+          onSaved: onSaved,
+        ),
       ),
     );
   }

@@ -1,9 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/features/auth/logic/staff_guard_provider.dart';
+import 'package:minglit_kit/src/features/auth/ui/staff_gate_screen.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/utils/platform_utils.dart';
+import 'package:minglit_kit/src/utils/splash_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class StaffGuardWrapper extends ConsumerStatefulWidget {

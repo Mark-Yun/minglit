@@ -1,4 +1,7 @@
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/data/models/ticket.dart';
+import 'package:minglit_kit/src/data/models/ticket_template.dart';
+import 'package:minglit_kit/src/utils/exceptions.dart';
+import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 

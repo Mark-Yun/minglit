@@ -136,11 +136,12 @@ extension PartyX on Party {
       }
 
       // Handle label
-      if (group.label != null && group.label!.isNotEmpty) {
+      final label = group.label;
+      if (label != null && label.isNotEmpty) {
         if (base == '조건 없음') {
-          base = group.label!;
+          base = label;
         } else {
-          base = '${group.label} ($base)';
+          base = '$label ($base)';
         }
       }
 

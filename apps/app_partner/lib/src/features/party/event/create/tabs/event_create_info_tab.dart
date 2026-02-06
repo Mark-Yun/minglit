@@ -1,14 +1,10 @@
-import 'dart:async';
-
 import 'package:app_partner/src/features/party/event/create/event_create_controller.dart';
+import 'package:app_partner/src/features/party/event/create/event_create_coordinator.dart';
 import 'package:app_partner/src/features/party/event/widgets/event_basic_info_summary.dart';
 import 'package:app_partner/src/features/party/event/widgets/event_capacity_summary.dart';
 import 'package:app_partner/src/features/party/event/widgets/event_contact_summary.dart';
 import 'package:app_partner/src/features/party/event/widgets/event_location_summary.dart';
-import 'package:app_partner/src/features/party/widgets/party_basic_info_edit_screen.dart';
-import 'package:app_partner/src/features/party/widgets/party_capacity_contact_edit_screen.dart';
 import 'package:app_partner/src/features/party/widgets/party_entrance_condition_summary.dart';
-import 'package:app_partner/src/features/party/widgets/party_location_edit_screen.dart';
 import 'package:app_partner/src/ui/widgets/common/minglit_editable_section.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
@@ -28,6 +24,8 @@ class EventCreateInfoTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final coordinator = EventCreateCoordinator(context);
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -36,31 +34,22 @@ class EventCreateInfoTab extends ConsumerWidget {
           MinglitEditableSection(
             title: context.l10n.wizard_review_basicInfo,
             onTap: () {
-              unawaited(
-                Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (context) => PartyBasicInfoEditScreen(
-                      party: Party(
-                        id: '',
-                        partnerId: '',
-                        title: state.title,
-                        description: state.description,
-                        // Default for event creation
-                        imageUrls: state.imageUrl != null
-                            ? [state.imageUrl!]
-                            : [],
-                        createdAt: DateTime.now(),
-                        updatedAt: DateTime.now(),
-                      ),
-                      onSave: (title, desc, imageUrls, newImages, status) {
-                        notifier
-                          ..updateTitle(title)
-                          ..updateDescription(desc);
-                      },
-                    ),
-                  ),
+              coordinator.openBasicInfoEdit(
+                party: Party(
+                  id: '',
+                  partnerId: '',
+                  title: state.title,
+                  description: state.description,
+                  // Default for event creation
+                  imageUrls: state.imageUrl != null ? [state.imageUrl!] : [],
+                  createdAt: DateTime.now(),
+                  updatedAt: DateTime.now(),
                 ),
+                onSave: (title, desc, imageUrls, newImages, status) {
+                  notifier
+                    ..updateTitle(title)
+                    ..updateDescription(desc);
+                },
               );
             },
             child: EventBasicInfoSummary(
@@ -90,28 +79,21 @@ class EventCreateInfoTab extends ConsumerWidget {
           MinglitEditableSection(
             title: '인원 및 연락처',
             onTap: () {
-              unawaited(
-                Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (context) => PartyCapacityContactEditScreen(
-                      party: Party(
-                        id: '',
-                        partnerId: '',
-                        title: state.title,
-                        maxParticipants: state.maxParticipants,
-                        contactOptions: state.contactOptions,
-                        createdAt: DateTime.now(),
-                        updatedAt: DateTime.now(),
-                      ),
-                      onSave: (min, max, options) {
-                        notifier
-                          ..updateMaxParticipants(max)
-                          ..updateContactOptions(options);
-                      },
-                    ),
-                  ),
+              coordinator.openCapacityContactEdit(
+                party: Party(
+                  id: '',
+                  partnerId: '',
+                  title: state.title,
+                  maxParticipants: state.maxParticipants,
+                  contactOptions: state.contactOptions,
+                  createdAt: DateTime.now(),
+                  updatedAt: DateTime.now(),
                 ),
+                onSave: (min, max, options) {
+                  notifier
+                    ..updateMaxParticipants(max)
+                    ..updateContactOptions(options);
+                },
               );
             },
             child: Column(
@@ -129,23 +111,16 @@ class EventCreateInfoTab extends ConsumerWidget {
           MinglitEditableSection(
             title: context.l10n.partyDetail_section_location,
             onTap: () {
-              unawaited(
-                Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (context) => PartyLocationEditScreen(
-                      initialLocation: state.selectedLocation,
-                      initialAddressDetail: state.addressDetail,
-                      initialDirectionsGuide: state.directionsGuide,
-                      onSave: (newLoc, detail, directions) {
-                        notifier
-                          ..updateLocation(newLoc)
-                          ..updateAddressDetail(detail)
-                          ..updateDirections(directions);
-                      },
-                    ),
-                  ),
-                ),
+              coordinator.openLocationEdit(
+                initialLocation: state.selectedLocation,
+                initialAddressDetail: state.addressDetail,
+                initialDirectionsGuide: state.directionsGuide,
+                onSave: (newLoc, detail, directions) {
+                  notifier
+                    ..updateLocation(newLoc)
+                    ..updateAddressDetail(detail)
+                    ..updateDirections(directions);
+                },
               );
             },
             child: EventLocationSummary(
