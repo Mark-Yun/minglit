@@ -17,6 +17,7 @@ dependencies:
   minglit_kit:
     path: ../../shared/packages/minglit_kit
   postgres: ^3.1.0
+  supabase: ^2.3.0
   supabase_flutter: ^2.3.0
   test_data_seeder:
     path: ../test_data_seeder
