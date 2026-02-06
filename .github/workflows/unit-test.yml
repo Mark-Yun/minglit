@@ -25,19 +25,12 @@ jobs:
           channel: "stable"
           cache: true
 
-      # 1. Minglit Kit (Dependency)
-      - name: Minglit Kit - Pub Get
+      - name: Pub Get (workspace root)
         run: flutter pub get
-        working-directory: shared/packages/minglit_kit
 
       - name: Minglit Kit - Analyze
         run: flutter analyze
         working-directory: shared/packages/minglit_kit
-
-      # 2. App User
-      - name: App User - Pub Get
-        run: flutter pub get
-        working-directory: apps/app_user
 
       - name: App User - Analyze
         run: flutter analyze
