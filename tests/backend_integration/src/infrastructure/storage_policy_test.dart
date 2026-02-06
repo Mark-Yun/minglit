@@ -133,7 +133,7 @@ void main() {
 
       // 2. User Submits Application
       print('📝 [Test] Submitting application to trigger grant...');
-      await adminClient.rpc(
+      await adminClient.rpc<dynamic>(
         'apply_event',
         params: {
           'p_event_id': testEventId,

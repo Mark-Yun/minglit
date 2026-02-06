@@ -139,13 +139,13 @@ mixin _SeederParties on _SeederContext, _SeederBase, _SeederEvents {
             'label': '대학생(남)',
             'gender': 'male',
             'birth_year_range': {'min': 2001, 'max': 2006}, // 20~25
-            'use_global_ids': academicIdx != -1 ? [academicIdx] : [],
+            'use_global_ids': academicIdx != -1 ? <int>[academicIdx] : <int>[],
           },
           {
             'label': '대학생(여)',
             'gender': 'female',
             'birth_year_range': {'min': 2001, 'max': 2006},
-            'use_global_ids': academicIdx != -1 ? [academicIdx] : [],
+            'use_global_ids': academicIdx != -1 ? <int>[academicIdx] : <int>[],
           },
         ],
       },
@@ -159,13 +159,13 @@ mixin _SeederParties on _SeederContext, _SeederBase, _SeederEvents {
             'label': '직장인(남)',
             'gender': 'male',
             'birth_year_range': {'min': 1987, 'max': 1998}, // 28~39
-            'use_global_ids': careerIdx != -1 ? [careerIdx] : [],
+            'use_global_ids': careerIdx != -1 ? <int>[careerIdx] : <int>[],
           },
           {
             'label': '직장인(여)',
             'gender': 'female',
             'birth_year_range': {'min': 1987, 'max': 1998},
-            'use_global_ids': careerIdx != -1 ? [careerIdx] : [],
+            'use_global_ids': careerIdx != -1 ? <int>[careerIdx] : <int>[],
           },
         ],
       },
@@ -179,13 +179,13 @@ mixin _SeederParties on _SeederContext, _SeederBase, _SeederEvents {
             'label': '노블레스(남)',
             'gender': 'male',
             'birth_year_range': null, // All ages
-            'use_global_ids': assetIdx != -1 ? [assetIdx] : [],
+            'use_global_ids': assetIdx != -1 ? <int>[assetIdx] : <int>[],
           },
           {
             'label': '노블레스(여)',
             'gender': 'female',
             'birth_year_range': null,
-            'use_global_ids': assetIdx != -1 ? [assetIdx] : [],
+            'use_global_ids': assetIdx != -1 ? <int>[assetIdx] : <int>[],
           },
         ],
       },
@@ -199,7 +199,7 @@ mixin _SeederParties on _SeederContext, _SeederBase, _SeederEvents {
             'label': '누구나 환영',
             'gender': null,
             'birth_year_range': {'min': 1980, 'max': 2006}, // Adult
-            'use_global_ids': [], // No extra verification needed
+            'use_global_ids': <int>[], // No extra verification needed
           },
         ],
       },
@@ -213,13 +213,13 @@ mixin _SeederParties on _SeederContext, _SeederBase, _SeederEvents {
             'label': '전문직 남성',
             'gender': 'male',
             'birth_year_range': {'min': 1987, 'max': 1996}, // 30s
-            'use_global_ids': careerIdx != -1 ? [careerIdx] : [],
+            'use_global_ids': careerIdx != -1 ? <int>[careerIdx] : <int>[],
           },
           {
             'label': '매력적인 20대 여성',
             'gender': 'female',
             'birth_year_range': {'min': 1997, 'max': 2006}, // 20s
-            'use_global_ids': [], // No extra verification
+            'use_global_ids': <int>[], // No extra verification
           },
         ],
       },

@@ -14,7 +14,7 @@ class PaymentServiceImpl implements PaymentService {
     final completer = Completer<String?>();
 
     await Navigator.of(context).push(
-      MaterialPageRoute(
+      MaterialPageRoute<void>(
         builder: (context) => IamportPayment(
           appBar: AppBar(title: const Text('결제')),
           userCode: userCode,

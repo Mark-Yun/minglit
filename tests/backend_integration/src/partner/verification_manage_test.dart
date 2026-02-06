@@ -57,7 +57,7 @@ void main() {
             'category': 'etc',
             'internal_name': 'test_verify',
             'display_name': 'Test Verification',
-            'form_schema': [],
+            'form_schema': <dynamic>[],
           })
           .select()
           .single();

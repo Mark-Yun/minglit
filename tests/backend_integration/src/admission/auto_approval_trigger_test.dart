@@ -101,7 +101,7 @@ void main() {
           .update({'status': 'approved'}).eq('id', subId as Object);
 
       // Allow trigger propagation
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
 
       // 4. Verify Chain Reaction
 
@@ -168,7 +168,7 @@ void main() {
           .from('verification_submissions')
           .update({'status': 'rejected'}).eq('id', subId as Object);
 
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
 
       // 3. Verify partner_verified_users removed
       final verifiedUser = await adminClient

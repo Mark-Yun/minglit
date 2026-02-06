@@ -108,7 +108,7 @@ void main() {
       // Allow trigger propagation (DB trigger is sync, but net call is async/blocking inside trigger?
       // pg_net is async, but update to refund_status happens in trigger.
       // Wait a bit just in case.)
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
 
       // 4. Verify Application State
       final updatedApp = await adminClient

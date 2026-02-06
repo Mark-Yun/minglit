@@ -16,7 +16,7 @@ class CertificationServiceImpl implements CertificationService {
     final completer = Completer<String?>();
 
     await Navigator.of(context).push(
-      MaterialPageRoute(
+      MaterialPageRoute<void>(
         builder: (context) => IamportCertification(
           appBar: AppBar(title: const Text('본인인증')),
           userCode: userCode,

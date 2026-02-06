@@ -117,7 +117,7 @@ void main() {
     print('📝 [Test] Starting One-Shot Application...');
 
     // 1. Apply Event (Atomic RPC Call)
-    final appId = await userClient.rpc(
+    final appId = await userClient.rpc<dynamic>(
       'apply_event',
       params: {
         'p_event_id': testEventId,
@@ -151,7 +151,7 @@ void main() {
         .update({'status': 'approved'}).eq('application_id', appId as Object);
 
     // 4. Final Verification (Trigger Check)
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future<void>.delayed(const Duration(milliseconds: 500));
 
     final updatedApp = await adminClient
         .from('event_applications')

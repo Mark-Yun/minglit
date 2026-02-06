@@ -33,8 +33,8 @@ mixin _SeederEvents on _SeederContext {
       'title': partyData['title'],
       'description': partyData['description'],
       'image_urls': partyData['image_url'] != null
-          ? [partyData['image_url']]
-          : [],
+          ? <dynamic>[partyData['image_url']]
+          : <dynamic>[],
       'min_confirmed_count': (partyMaxParticipants * 0.2).floor(), // 20% of max
       'max_participants': partyMaxParticipants,
       'required_verification_ids': allVerifIds,
