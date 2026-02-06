@@ -23,7 +23,7 @@ void main() {
       userId = userRes.first[0] as String;
 
       final partyRes = await connection.execute(
-        "SELECT id FROM public.parties LIMIT 1",
+        'SELECT id FROM public.parties LIMIT 1',
       );
       if (partyRes.isEmpty) throw Exception('Seeded party not found');
       partyId = partyRes.first[0] as String;
