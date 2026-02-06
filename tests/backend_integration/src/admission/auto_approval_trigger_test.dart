@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:minglit_kit/minglit_core.dart';
 import 'package:supabase/supabase.dart';
 import 'package:test/test.dart';
 
@@ -24,7 +25,7 @@ void main() {
     late String testTicketId;
 
     setUpAll(() async {
-      print('🚀 [Setup] Fetching seeded data...');
+      Log.i('🚀 [Setup] Fetching seeded data...');
 
       // Get Test User via Helper
       testUserId = await getMale25VerifiedUserId(adminClient);
@@ -92,10 +93,10 @@ void main() {
           .single();
       final subId = subRes['id'];
 
-      print('📝 Created Application ($appId) and Submission ($subId)');
+      Log.i('📝 Created Application ($appId) and Submission ($subId)');
 
       // 3. Update Submission Status to 'approved'
-      print('👮 Approving submission...');
+      Log.i('👮 Approving submission...');
       await adminClient
           .from('verification_submissions')
           .update({'status': 'approved'}).eq('id', subId as Object);
@@ -142,7 +143,7 @@ void main() {
       );
       expect(participant!['ticket_code'], isNotNull);
 
-      print('🎉 Chain reaction verified successfully!');
+      Log.i('🎉 Chain reaction verified successfully!');
     });
 
     test('Revoke: Changing submission to rejected should remove verified_user',
@@ -157,13 +158,13 @@ void main() {
           .maybeSingle();
 
       if (subRes == null) {
-        print('⚠️ No approved submission found, skipping revoke test.');
+        Log.w('⚠️ No approved submission found, skipping revoke test.');
         return;
       }
       final subId = subRes['id'];
 
       // 2. Revoke approval
-      print('👮 Revoking approval for $subId...');
+      Log.i('👮 Revoking approval for $subId...');
       await adminClient
           .from('verification_submissions')
           .update({'status': 'rejected'}).eq('id', subId as Object);
@@ -182,7 +183,7 @@ void main() {
         reason: 'partner_verified_users should be removed on revoke',
       );
 
-      print('✅ Revoke verified successfully!');
+      Log.i('✅ Revoke verified successfully!');
     });
   });
 }

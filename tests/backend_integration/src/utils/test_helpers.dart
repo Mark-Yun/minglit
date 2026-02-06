@@ -1,3 +1,4 @@
+import 'package:minglit_kit/minglit_core.dart';
 import 'package:supabase/supabase.dart';
 import 'package:test_data_seeder/database_seeder.dart';
 
@@ -10,7 +11,7 @@ Future<String> ensureDatabaseSeeded(SupabaseClient adminClient) async {
 
   if (partnerRes == null) {
     // 2. Run Seeder if no data
-    print('🌱 Seeding database for test...');
+    Log.i('🌱 Seeding database for test...');
     final seeder = DatabaseSeeder(adminClient);
     await seeder.seed();
 

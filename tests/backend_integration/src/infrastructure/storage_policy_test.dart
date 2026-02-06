@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
+import 'package:minglit_kit/minglit_core.dart';
 import 'package:supabase/supabase.dart';
 import 'package:test/test.dart';
 
@@ -54,7 +55,7 @@ void main() {
   late SupabaseClient userClient;
 
   setUpAll(() async {
-    print('🚀 [Setup] Fetching seeded data for storage tests...');
+    Log.i('🚀 [Setup] Fetching seeded data for storage tests...');
 
     // 1. Find a Normal User via Helper
     testUserId = await getMale25VerifiedUserId(adminClient);
@@ -72,7 +73,7 @@ void main() {
     // 4. Initialize Clients
     userClient = createUserClient(testUserId);
 
-    print(
+    Log.i(
       '✅ [Setup] User: $testUserId, Partner: $testPartnerId, Owner: $testPartnerOwnerId',
     );
   });
@@ -84,7 +85,7 @@ void main() {
       final path = '$testUserId/applications/$testEventId/$fileName';
       final fileData = Uint8List.fromList('Test Content'.codeUnits);
 
-      print('📤 [Test] Uploading file to $path...');
+      Log.i('📤 [Test] Uploading file to $path...');
       await userClient.storage.from(testBucket).uploadBinary(path, fileData);
 
       // Wait for trigger
@@ -104,7 +105,7 @@ void main() {
         reason: 'minglit_files record should be created by trigger',
       );
       expect(metadata!['owner_id'], testUserId);
-      print('✅ [Test] Metadata verified.');
+      Log.i('✅ [Test] Metadata verified.');
     });
 
     test(
@@ -132,7 +133,7 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 500));
 
       // 2. User Submits Application
-      print('📝 [Test] Submitting application to trigger grant...');
+      Log.i('📝 [Test] Submitting application to trigger grant...');
       await adminClient.rpc<dynamic>(
         'apply_event',
         params: {
@@ -171,15 +172,15 @@ void main() {
         isNotNull,
         reason: 'Grant should be created for partner owner',
       );
-      print('✅ [Test] Grant record verified in DB.');
+      Log.i('✅ [Test] Grant record verified in DB.');
 
       // 4. Verify: Partner can actually READ the file via Storage API (RLS Check)
-      print('🔍 [Test] Partner trying to read file via Storage API...');
+      Log.i('🔍 [Test] Partner trying to read file via Storage API...');
       try {
         final downloaded =
             await partnerClient.storage.from(testBucket).download(path);
         expect(downloaded, isNotNull);
-        print('✅ [Test] RLS allowed partner access.');
+        Log.i('✅ [Test] RLS allowed partner access.');
       } catch (e) {
         fail('Partner should have access but failed: $e');
       }
@@ -188,14 +189,14 @@ void main() {
       const otherUserId =
           '00000000-0000-0000-0000-000000000000'; // Non-existent or dummy
       final otherClient = createUserClient(otherUserId);
-      print('🚫 [Test] Other user trying to read file...');
+      Log.i('🚫 [Test] Other user trying to read file...');
 
       expect(
         () => otherClient.storage.from(testBucket).download(path),
         throwsA(isA<StorageException>()),
         reason: 'Random user should be blocked by RLS',
       );
-      print('✅ [Test] RLS blocked unauthorized access.');
+      Log.i('✅ [Test] RLS blocked unauthorized access.');
     });
 
     test('SC3: Event Reschedule updates Grant Expiration', () async {
@@ -210,16 +211,16 @@ void main() {
           .maybeSingle();
 
       if (grantRes == null) {
-        print('⚠️ SC3 Skipped: No grant found from SC2.');
+        Log.w('⚠️ SC3 Skipped: No grant found from SC2.');
         return;
       }
 
       final grantId = grantRes['id'];
       final initialExpires = DateTime.parse(grantRes['expires_at'] as String);
-      print('📅 [Test] Initial Expires: $initialExpires');
+      Log.i('📅 [Test] Initial Expires: $initialExpires');
 
       // 1. Reschedule Event (Add 7 days)
-      print('📅 [Test] Rescheduling event (adding 7 days)...');
+      Log.i('📅 [Test] Rescheduling event (adding 7 days)...');
       final eventRes = await adminClient
           .from('events')
           .select('end_time')
@@ -244,7 +245,7 @@ void main() {
 
       final updatedExpires =
           DateTime.parse(updatedGrant['expires_at'] as String);
-      print('📅 [Test] Updated Expires: $updatedExpires');
+      Log.i('📅 [Test] Updated Expires: $updatedExpires');
 
       // Check if updated (should be roughly initial + 7 days)
       final diff = updatedExpires.difference(initialExpires).inDays;
@@ -254,7 +255,7 @@ void main() {
         reason: 'Expiration should be extended by ~7 days',
       );
 
-      print('✅ [Test] Grant expiration updated successfully.');
+      Log.i('✅ [Test] Grant expiration updated successfully.');
     });
   });
 }

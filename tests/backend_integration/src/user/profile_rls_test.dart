@@ -1,4 +1,5 @@
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
+import 'package:minglit_kit/minglit_core.dart';
 import 'package:supabase/supabase.dart';
 import 'package:test/test.dart';
 
@@ -39,8 +40,8 @@ void main() {
     late String user2Id;
 
     setUpAll(() async {
-      print('🚀 [Setup] Fetching users...');
-      
+      Log.i('🚀 [Setup] Fetching users...');
+
       // User 1 (Male) & User 2 (Female) via Helpers
       user1Id = await getMale25VerifiedUserId(adminClient);
       user2Id = await getFemale25VerifiedUserId(adminClient);
@@ -134,8 +135,11 @@ void main() {
 
       // If verify['is_verified'] is true, we have a security hole.
       // We expect it to be false.
-      expect(verify['is_verified'], isFalse,
-          reason: 'Security Hole: User was able to update is_verified!',);
+      expect(
+        verify['is_verified'],
+        isFalse,
+        reason: 'Security Hole: User was able to update is_verified!',
+      );
     });
   });
 }

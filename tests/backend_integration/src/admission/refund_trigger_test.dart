@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:minglit_kit/minglit_core.dart';
 import 'package:supabase/supabase.dart';
 import 'package:test/test.dart';
 
@@ -24,7 +25,7 @@ void main() {
     late String testTicketId;
 
     setUpAll(() async {
-      print('🚀 [Setup] Fetching seeded data...');
+      Log.i('🚀 [Setup] Fetching seeded data...');
 
       // Get Test User via Helper
       testUserId = await getMale25VerifiedUserId(adminClient);
@@ -92,11 +93,11 @@ void main() {
           .single();
       final subId = subRes['id'];
 
-      print('📝 Created Application ($appId) and Submission ($subId)');
+      Log.i('📝 Created Application ($appId) and Submission ($subId)');
 
       // 3. Update Submission Status to 'rejected' with comment
       const rejectionReason = 'Invalid ID Proof';
-      print('🚫 Rejecting submission with reason: $rejectionReason');
+      Log.i('🚫 Rejecting submission with reason: $rejectionReason');
 
       await adminClient
           .from('verification_submissions')
@@ -143,7 +144,7 @@ void main() {
         reason: 'Refund status should be requested',
       );
 
-      print('✅ Refund trigger verified successfully!');
+      Log.i('✅ Refund trigger verified successfully!');
     });
   });
 }

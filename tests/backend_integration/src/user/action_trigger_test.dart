@@ -1,5 +1,6 @@
 // ignore_for_file: lines_longer_than_80_chars, avoid_dynamic_calls -- Long lines needed for SQL queries; dynamic calls required for postgres library
 
+import 'package:minglit_kit/minglit_core.dart';
 import 'package:postgres/postgres.dart';
 import 'package:test/test.dart';
 
@@ -36,7 +37,7 @@ void main() {
 
     test('Trigger on user_actions should dispatch event to q_vectors',
         () async {
-      print('🧪 Testing Trigger with User: $userId, Party: $partyId');
+      Log.i('🧪 Testing Trigger with User: $userId, Party: $partyId');
 
       // 0. Enable Routing
       await connection.execute(

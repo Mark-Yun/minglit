@@ -174,12 +174,14 @@ class _Log {
   static void i(String message) {
     // print(message); // Simple print for CLI output
     dev.log(message, name: 'Seeder');
+    // ignore: avoid_print - Seeder tool needs stdout for CI visibility
     print(message); // Also print to stdout for CI visibility
   }
 
   static void e(String message, Object error, StackTrace? stackTrace) {
     // print('$message\n$error\n$stackTrace');
     dev.log(message, name: 'Seeder', error: error, stackTrace: stackTrace);
+    // ignore: avoid_print - Seeder tool needs stdout for CI visibility
     print('$message\n$error\n$stackTrace');
   }
 }

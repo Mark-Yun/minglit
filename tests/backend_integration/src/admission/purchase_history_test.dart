@@ -1,3 +1,4 @@
+import 'package:minglit_kit/minglit_core.dart';
 import 'package:supabase/supabase.dart';
 import 'package:test/test.dart';
 
@@ -29,13 +30,16 @@ void main() {
       testTicketId = eventCtx.ticketId;
 
       // 3. Ensure an application exists (status: paid)
-      await adminClient.from('event_applications').upsert({
-        'event_id': testEventId,
-        'user_id': testUserId,
-        'ticket_id': testTicketId,
-        'status': 'paid',
-        'payment_amount': 10000,
-      }, onConflict: 'event_id, user_id',);
+      await adminClient.from('event_applications').upsert(
+        {
+          'event_id': testEventId,
+          'user_id': testUserId,
+          'ticket_id': testTicketId,
+          'status': 'paid',
+          'payment_amount': 10000,
+        },
+        onConflict: 'event_id, user_id',
+      );
     });
 
     test('Query returns list with joined event and ticket data', () async {
@@ -56,16 +60,25 @@ void main() {
       expect(app['user_id'], testUserId);
 
       // Verify Joins
-      expect(app['event'], isNotNull,
-          reason: 'Event relation should be joined',);
+      expect(
+        app['event'],
+        isNotNull,
+        reason: 'Event relation should be joined',
+      );
       final event = app['event'] as Map<String, dynamic>;
-      expect(event['party'], isNotNull,
-          reason: 'Party relation should be joined via Event',);
-      expect(app['ticket'], isNotNull,
-          reason: 'Ticket relation should be joined',);
+      expect(
+        event['party'],
+        isNotNull,
+        reason: 'Party relation should be joined via Event',
+      );
+      expect(
+        app['ticket'],
+        isNotNull,
+        reason: 'Ticket relation should be joined',
+      );
 
-      print('✅ History Count: ${data.length}');
-      print('📍 First Event: ${event['title'] ?? event['party']['title']}');
+      Log.i('✅ History Count: ${data.length}');
+      Log.i('📍 First Event: ${event['title'] ?? event['party']['title']}');
     });
   });
 }

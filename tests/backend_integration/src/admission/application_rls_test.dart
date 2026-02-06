@@ -1,4 +1,5 @@
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
+import 'package:minglit_kit/minglit_core.dart';
 import 'package:supabase/supabase.dart';
 import 'package:test/test.dart';
 
@@ -41,7 +42,7 @@ void main() {
     late String app2Id;
 
     setUpAll(() async {
-      print('🚀 [Setup] Fetching users and creating test applications...');
+      Log.i('🚀 [Setup] Fetching users and creating test applications...');
 
       // 1. Get User 1 (Male) and User 2 (Female) via Helpers
       user1Id = await getMale25VerifiedUserId(adminClient);
@@ -91,7 +92,7 @@ void main() {
           .single();
       app2Id = res2['id'] as String;
 
-      print('✅ [Setup] Ready. App1: $app1Id (User1), App2: $app2Id (User2)');
+      Log.i('✅ [Setup] Ready. App1: $app1Id (User1), App2: $app2Id (User2)');
     });
 
     test('User 1 should see their own application', () async {
