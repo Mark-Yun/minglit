@@ -23,8 +23,8 @@ void main() {
           .select('id, location_id')
           .limit(1)
           .single();
-      testPartyId = party['id'];
-      testLocationId = party['location_id'];
+      testPartyId = party['id'] as String;
+      testLocationId = party['location_id'] as String;
     });
 
     test('Should reject negative ticket price', () async {

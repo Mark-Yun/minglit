@@ -65,15 +65,15 @@ void main() {
     if (eventRes == null) {
       throw Exception('🚨 No scheduled events found!');
     }
-    testEventId = eventRes['id'];
+    testEventId = eventRes['id'] as String;
     final party = eventRes['party'] as Map<String, dynamic>;
-    testPartnerId = party['partner_id'];
+    testPartnerId = party['partner_id'] as String;
 
     final tickets = eventRes['tickets'] as List;
     if (tickets.isEmpty) {
       throw Exception('🚨 Event has no tickets!');
     }
-    testTicketId = tickets[0]['id'];
+    testTicketId = tickets[0]['id'] as String;
     print('🎫 [Setup] Using Event: $testEventId, Ticket: $testTicketId');
 
     // 3. Fetch a Verification
@@ -84,12 +84,12 @@ void main() {
         .limit(1)
         .maybeSingle();
 
-    testVerificationId = verifRes?['id'] ??
+    testVerificationId = (verifRes?['id'] ??
         (await adminClient
             .from('verifications')
             .select()
             .limit(1)
-            .single())['id'];
+            .single())['id']) as String;
     print('✅ [Setup] Using Verification: $testVerificationId');
 
     // 4. Cleanup existing data (Unique Constraint)
@@ -117,18 +117,21 @@ void main() {
     print('📝 [Test] Starting One-Shot Application...');
 
     // 1. Apply Event (Atomic RPC Call)
-    final appId = await userClient.rpc('apply_event', params: {
-      'p_event_id': testEventId,
-      'p_ticket_id': testTicketId,
-      'p_user_id': testUserId,
-      'p_payment_id': 'PAY_${Random().nextInt(9999)}',
-      'p_payment_amount': 1000,
-      'p_verification_data': {
-        'partner_id': testPartnerId,
-        'verification_id': testVerificationId,
-        'data': {'company': 'Google', 'position': 'Dev'},
+    final appId = await userClient.rpc(
+      'apply_event',
+      params: {
+        'p_event_id': testEventId,
+        'p_ticket_id': testTicketId,
+        'p_user_id': testUserId,
+        'p_payment_id': 'PAY_${Random().nextInt(9999)}',
+        'p_payment_amount': 1000,
+        'p_verification_data': {
+          'partner_id': testPartnerId,
+          'verification_id': testVerificationId,
+          'data': {'company': 'Google', 'position': 'Dev'},
+        },
       },
-    },);
+    );
 
     expect(appId, isNotNull);
     print('✅ [Test] Applied successfully. AppID: $appId');

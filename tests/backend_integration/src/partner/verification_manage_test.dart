@@ -43,8 +43,9 @@ void main() {
           .select('id, partner_member_permissions(user_id)')
           .limit(1)
           .single();
-      partnerId = p1['id'];
-      ownerId = (p1['partner_member_permissions'] as List).first['user_id'];
+      partnerId = p1['id'] as String;
+      ownerId =
+          (p1['partner_member_permissions'] as List).first['user_id'] as String;
     });
 
     test('Owner should be able to create verification', () async {

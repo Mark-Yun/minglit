@@ -35,14 +35,14 @@ void main() {
           .select('id, tickets(id), party:parties(partner_id)')
           .limit(1)
           .single();
-      testEventId = event['id'];
-      testTicketId = event['tickets'][0]['id'];
-      testPartnerId = event['party']['partner_id'];
+      testEventId = event['id'] as String;
+      testTicketId = event['tickets'][0]['id'] as String;
+      testPartnerId = event['party']['partner_id'] as String;
 
       // Get Verification
       final verif =
           await adminClient.from('verifications').select().limit(1).single();
-      testVerificationId = verif['id'];
+      testVerificationId = verif['id'] as String;
 
       // Cleanup existing data for idempotency
       await adminClient
@@ -111,8 +111,11 @@ void main() {
           .select()
           .eq('submission_id', subId)
           .maybeSingle();
-      expect(verifiedUser, isNotNull,
-          reason: 'partner_verified_users should be created via trigger',);
+      expect(
+        verifiedUser,
+        isNotNull,
+        reason: 'partner_verified_users should be created via trigger',
+      );
 
       // B. event_applications status changed?
       final updatedApp = await adminClient
@@ -120,8 +123,11 @@ void main() {
           .select('status')
           .eq('id', appId)
           .single();
-      expect(updatedApp['status'], equals('approved'),
-          reason: 'Application should be auto-approved',);
+      expect(
+        updatedApp['status'],
+        equals('approved'),
+        reason: 'Application should be auto-approved',
+      );
 
       // C. event_participants ticket issued?
       final participant = await adminClient
@@ -129,8 +135,11 @@ void main() {
           .select()
           .eq('application_id', appId)
           .maybeSingle();
-      expect(participant, isNotNull,
-          reason: 'Ticket should be issued automatically',);
+      expect(
+        participant,
+        isNotNull,
+        reason: 'Ticket should be issued automatically',
+      );
       expect(participant!['ticket_code'], isNotNull);
 
       print('🎉 Chain reaction verified successfully!');
@@ -167,8 +176,11 @@ void main() {
           .select()
           .eq('submission_id', subId)
           .maybeSingle();
-      expect(verifiedUser, isNull,
-          reason: 'partner_verified_users should be removed on revoke',);
+      expect(
+        verifiedUser,
+        isNull,
+        reason: 'partner_verified_users should be removed on revoke',
+      );
 
       print('✅ Revoke verified successfully!');
     });

@@ -52,8 +52,9 @@ void main() {
           .select('id, partner_member_permissions(user_id)')
           .limit(1)
           .single();
-      partnerId = p1['id'];
-      ownerId = (p1['partner_member_permissions'] as List).first['user_id'];
+      partnerId = p1['id'] as String;
+      ownerId =
+          (p1['partner_member_permissions'] as List).first['user_id'] as String;
 
       // Get a Party owned by this partner
       final party = await adminClient
@@ -62,7 +63,7 @@ void main() {
           .eq('partner_id', partnerId)
           .limit(1)
           .single();
-      partyId = party['id'];
+      partyId = party['id'] as String;
 
       print('✅ [Setup] Owner: $ownerId, Guest: $guestId, Party: $partyId');
     });

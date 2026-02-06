@@ -37,7 +37,7 @@ void main() {
           })
           .select()
           .single();
-      partyId = partyRes['id'];
+      partyId = partyRes['id'] as String;
       expect(partyRes['max_participants'], 0);
 
       // 2. Add Ticket Template (Qty: 10)
@@ -87,7 +87,7 @@ void main() {
           })
           .select()
           .single();
-      eventId = eventRes['id'];
+      eventId = eventRes['id'] as String;
       expect(eventRes['max_participants'], 1);
 
       // 2. Add Ticket (Qty: 5)

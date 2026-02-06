@@ -77,7 +77,7 @@ void main() {
           })
           .select()
           .single();
-      app1Id = res1['id'];
+      app1Id = res1['id'] as String;
 
       final res2 = await adminClient
           .from('event_applications')
@@ -89,7 +89,7 @@ void main() {
           })
           .select()
           .single();
-      app2Id = res2['id'];
+      app2Id = res2['id'] as String;
 
       print('✅ [Setup] Ready. App1: $app1Id (User1), App2: $app2Id (User2)');
     });
@@ -127,8 +127,11 @@ void main() {
           .eq('id', app2Id)
           .select();
 
-      expect(res, isEmpty,
-          reason: 'RLS should prevent updating other users data',);
+      expect(
+        res,
+        isEmpty,
+        reason: 'RLS should prevent updating other users data',
+      );
 
       // Verify via admin that it remains pending
       final verify = await adminClient
