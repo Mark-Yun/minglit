@@ -1,4 +1,4 @@
-// ignore_for_file: lines_longer_than_80_chars, avoid_dynamic_calls
+// ignore_for_file: lines_longer_than_80_chars, avoid_dynamic_calls -- Long lines needed for SQL queries; dynamic calls required for postgres library
 
 import 'package:postgres/postgres.dart';
 import 'package:test/test.dart';
@@ -19,7 +19,8 @@ void main() {
       final userRes = await connection.execute(
         "SELECT id FROM public.user_profiles WHERE gender = 'male' AND birth_date = '$targetBirthYear-01-01' AND username LIKE '%_ok' LIMIT 1",
       );
-      if (userRes.isEmpty) throw Exception('Seeded user (25/Male/Verified) not found');
+      if (userRes.isEmpty)
+        throw Exception('Seeded user (25/Male/Verified) not found');
       userId = userRes.first[0]! as String;
 
       final partyRes = await connection.execute(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-// ignore: one_member_abstracts
+// ignore: one_member_abstracts -- Service interface with single method is intentional for dependency injection
 abstract class CertificationService {
   /// Initiates Iamport V1 Identity Verification.
   /// Returns imp_uid if successful, null otherwise.
