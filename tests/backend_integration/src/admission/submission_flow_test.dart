@@ -140,7 +140,7 @@ void main() {
     final app = await userClient
         .from('event_applications')
         .select()
-        .eq('id', appId)
+        .eq('id', appId as Object)
         .single();
     expect(app['status'], equals('pending_review'));
 
@@ -148,7 +148,7 @@ void main() {
     print('👮 [Test] Admin approving verification...');
     await adminClient
         .from('verification_submissions')
-        .update({'status': 'approved'}).eq('application_id', appId);
+        .update({'status': 'approved'}).eq('application_id', appId as Object);
 
     // 4. Final Verification (Trigger Check)
     await Future.delayed(const Duration(milliseconds: 500));
@@ -156,14 +156,14 @@ void main() {
     final updatedApp = await adminClient
         .from('event_applications')
         .select()
-        .eq('id', appId)
+        .eq('id', appId as Object)
         .single();
     expect(updatedApp['status'], equals('approved'));
 
     final participant = await adminClient
         .from('event_participants')
         .select()
-        .eq('application_id', appId)
+        .eq('application_id', appId as Object)
         .maybeSingle();
     expect(participant, isNotNull);
     expect(participant!['ticket_code'], isNotNull);

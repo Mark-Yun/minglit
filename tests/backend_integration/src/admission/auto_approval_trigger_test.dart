@@ -98,7 +98,7 @@ void main() {
       print('👮 Approving submission...');
       await adminClient
           .from('verification_submissions')
-          .update({'status': 'approved'}).eq('id', subId);
+          .update({'status': 'approved'}).eq('id', subId as Object);
 
       // Allow trigger propagation
       await Future.delayed(const Duration(milliseconds: 500));
@@ -109,7 +109,7 @@ void main() {
       final verifiedUser = await adminClient
           .from('partner_verified_users')
           .select()
-          .eq('submission_id', subId)
+          .eq('submission_id', subId as Object)
           .maybeSingle();
       expect(
         verifiedUser,
@@ -121,7 +121,7 @@ void main() {
       final updatedApp = await adminClient
           .from('event_applications')
           .select('status')
-          .eq('id', appId)
+          .eq('id', appId as Object)
           .single();
       expect(
         updatedApp['status'],
@@ -133,7 +133,7 @@ void main() {
       final participant = await adminClient
           .from('event_participants')
           .select()
-          .eq('application_id', appId)
+          .eq('application_id', appId as Object)
           .maybeSingle();
       expect(
         participant,
@@ -166,7 +166,7 @@ void main() {
       print('👮 Revoking approval for $subId...');
       await adminClient
           .from('verification_submissions')
-          .update({'status': 'rejected'}).eq('id', subId);
+          .update({'status': 'rejected'}).eq('id', subId as Object);
 
       await Future.delayed(const Duration(milliseconds: 500));
 
@@ -174,7 +174,7 @@ void main() {
       final verifiedUser = await adminClient
           .from('partner_verified_users')
           .select()
-          .eq('submission_id', subId)
+          .eq('submission_id', subId as Object)
           .maybeSingle();
       expect(
         verifiedUser,

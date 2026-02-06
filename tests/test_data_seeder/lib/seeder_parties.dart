@@ -32,9 +32,9 @@ mixin _SeederParties on _SeederContext, _SeederBase, _SeederEvents {
       final partnerId = await _createPartner(
         ownerId,
         partnerName,
-        pData['introduction'] ?? 'Premium Store',
-        pData['biz_name'],
-        pData['biz_number'],
+        pData['introduction'] as String? ?? 'Premium Store',
+        pData['biz_name'] as String,
+        pData['biz_number'] as String,
         email,
       );
 

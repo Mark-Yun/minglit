@@ -102,7 +102,7 @@ void main() {
           .from('verification_submissions')
           .update({'status': 'rejected', 'admin_comment': rejectionReason}).eq(
         'id',
-        subId,
+        subId as Object,
       );
 
       // Allow trigger propagation (DB trigger is sync, but net call is async/blocking inside trigger?
@@ -114,7 +114,7 @@ void main() {
       final updatedApp = await adminClient
           .from('event_applications')
           .select()
-          .eq('id', appId)
+          .eq('id', appId as Object)
           .single();
 
       // A. Status Rejected?

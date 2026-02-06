@@ -65,7 +65,10 @@ void main() {
       expect(res['partner_id'], equals(partnerId));
 
       // Cleanup
-      await adminClient.from('verifications').delete().eq('id', res['id']);
+      await adminClient
+          .from('verifications')
+          .delete()
+          .eq('id', res['id'] as Object);
     });
   });
 }

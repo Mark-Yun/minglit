@@ -54,7 +54,7 @@ void main() {
       }
 
       // Cleanup
-      await adminClient.from('events').delete().eq('id', eventId);
+      await adminClient.from('events').delete().eq('id', eventId as Object);
     });
 
     test('Should reject max_participants < 0', () async {

@@ -73,7 +73,8 @@ void main() {
     userClient = createUserClient(testUserId);
 
     print(
-        '✅ [Setup] User: $testUserId, Partner: $testPartnerId, Owner: $testPartnerOwnerId',);
+      '✅ [Setup] User: $testUserId, Partner: $testPartnerId, Owner: $testPartnerOwnerId',
+    );
   });
 
   group('Infrastructure: Secure File Management System', () {
@@ -97,8 +98,11 @@ void main() {
           .eq('bucket_id', testBucket)
           .maybeSingle();
 
-      expect(metadata, isNotNull,
-          reason: 'minglit_files record should be created by trigger',);
+      expect(
+        metadata,
+        isNotNull,
+        reason: 'minglit_files record should be created by trigger',
+      );
       expect(metadata!['owner_id'], testUserId);
       print('✅ [Test] Metadata verified.');
     });
@@ -129,18 +133,21 @@ void main() {
 
       // 2. User Submits Application
       print('📝 [Test] Submitting application to trigger grant...');
-      await adminClient.rpc('apply_event', params: {
-        'p_event_id': testEventId,
-        'p_ticket_id': testTicketId,
-        'p_user_id': testUserId,
-        'p_payment_id': 'PAY_MOCK_${Random().nextInt(1000)}',
-        'p_payment_amount': 1000,
-        'p_verification_data': {
-          'partner_id': testPartnerId,
-          'verification_id': testVerificationId,
-          'data': {'proof': path},
+      await adminClient.rpc(
+        'apply_event',
+        params: {
+          'p_event_id': testEventId,
+          'p_ticket_id': testTicketId,
+          'p_user_id': testUserId,
+          'p_payment_id': 'PAY_MOCK_${Random().nextInt(1000)}',
+          'p_payment_amount': 1000,
+          'p_verification_data': {
+            'partner_id': testPartnerId,
+            'verification_id': testVerificationId,
+            'data': {'proof': path},
+          },
         },
-      },);
+      );
 
       await Future<void>.delayed(const Duration(milliseconds: 500));
 
@@ -155,12 +162,15 @@ void main() {
       final grant = await adminClient
           .from('file_access_grants')
           .select()
-          .eq('file_id', fileId)
-          .eq('viewer_id', testPartnerOwnerId)
+          .eq('file_id', fileId as Object)
+          .eq('viewer_id', testPartnerOwnerId as Object)
           .maybeSingle();
 
-      expect(grant, isNotNull,
-          reason: 'Grant should be created for partner owner',);
+      expect(
+        grant,
+        isNotNull,
+        reason: 'Grant should be created for partner owner',
+      );
       print('✅ [Test] Grant record verified in DB.');
 
       // 4. Verify: Partner can actually READ the file via Storage API (RLS Check)
@@ -205,7 +215,7 @@ void main() {
       }
 
       final grantId = grantRes['id'];
-      final initialExpires = DateTime.parse(grantRes['expires_at']);
+      final initialExpires = DateTime.parse(grantRes['expires_at'] as String);
       print('📅 [Test] Initial Expires: $initialExpires');
 
       // 1. Reschedule Event (Add 7 days)
@@ -215,7 +225,7 @@ void main() {
           .select('end_time')
           .eq('id', testEventId)
           .single();
-      final currentEnd = DateTime.parse(eventRes['end_time']);
+      final currentEnd = DateTime.parse(eventRes['end_time'] as String);
       final newEnd = currentEnd.add(const Duration(days: 7));
 
       await adminClient
@@ -229,16 +239,20 @@ void main() {
       final updatedGrant = await adminClient
           .from('file_access_grants')
           .select('expires_at')
-          .eq('id', grantId)
+          .eq('id', grantId as Object)
           .single();
 
-      final updatedExpires = DateTime.parse(updatedGrant['expires_at']);
+      final updatedExpires =
+          DateTime.parse(updatedGrant['expires_at'] as String);
       print('📅 [Test] Updated Expires: $updatedExpires');
 
       // Check if updated (should be roughly initial + 7 days)
       final diff = updatedExpires.difference(initialExpires).inDays;
-      expect(diff, closeTo(7, 1),
-          reason: 'Expiration should be extended by ~7 days',);
+      expect(
+        diff,
+        closeTo(7, 1),
+        reason: 'Expiration should be extended by ~7 days',
+      );
 
       print('✅ [Test] Grant expiration updated successfully.');
     });
