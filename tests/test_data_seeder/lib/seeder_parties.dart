@@ -1,6 +1,6 @@
 part of 'database_seeder.dart';
 
-mixin SeederParties on _SeederContext, SeederBase, SeederEvents {
+mixin _SeederParties on _SeederContext, _SeederBase, _SeederEvents {
   Future<void> _processSeedData(
     Map<String, dynamic> seedData,
     List<String> globalVerifIds,

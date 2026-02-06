@@ -1,6 +1,6 @@
 part of 'database_seeder.dart';
 
-mixin SeederEvents on _SeederContext {
+mixin _SeederEvents on _SeederContext {
   Future<void> _createPartyAndEvents(
     String partnerId,
     String locationId,

@@ -1,6 +1,6 @@
 part of 'database_seeder.dart';
 
-mixin SeederUsers on _SeederContext, SeederBase {
+mixin _SeederUsers on _SeederContext, _SeederBase {
   /// Generates 124+ detailed user personas for testing diverse scenarios.
   ///
   /// Scenarios:

@@ -1,6 +1,6 @@
 part of 'database_seeder.dart';
 
-mixin SeederBase on _SeederContext {
+mixin _SeederBase on _SeederContext {
   Future<List<String>> _getGlobalVerificationIds() async {
     final result = await adminClient
         .from('verifications')
