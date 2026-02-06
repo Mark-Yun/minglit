@@ -75,6 +75,7 @@ Future<List<Event>> eventFeed(
 }
 
 @riverpod
+/// Fetches detailed event data by [eventId].
 Future<Event> eventDetail(Ref ref, String eventId) {
   // Cache detail for 5 minutes
   final link = ref.keepAlive();
@@ -87,6 +88,7 @@ Future<Event> eventDetail(Ref ref, String eventId) {
 }
 
 @riverpod
+/// Fetches events associated with the given [partyId].
 Future<List<Event>> partyEvents(Ref ref, String partyId) {
   // Cache party events for 5 minutes
   final link = ref.keepAlive();

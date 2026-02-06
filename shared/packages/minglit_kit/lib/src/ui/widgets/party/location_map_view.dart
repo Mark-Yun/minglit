@@ -12,6 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 /// A reusable widget that displays a map with a floating info card overlay.
 /// The overlay card contains the location name and address.
 class LocationMapView extends StatelessWidget {
+  /// Creates a map view with an address overlay.
   const LocationMapView({
     required this.location,
     this.height = 200,
@@ -21,10 +22,19 @@ class LocationMapView extends StatelessWidget {
     super.key,
   });
 
+  /// Location data to display.
   final Location location;
+
+  /// Height of the map container.
   final double height;
+
+  /// Whether to show a button to open external maps.
   final bool showExternalMapButton;
+
+  /// Whether to show a copy-to-clipboard button.
   final bool showCopyButton;
+
+  /// Optional trailing widget in the overlay.
   final Widget? trailing;
 
   Future<void> _openInKakaoMap() async {

@@ -13,6 +13,7 @@ part 'party_list_preview_screen.g.dart';
 ///
 /// Development screen to preview all available parties in the database.
 class PartyListPreviewScreen extends ConsumerWidget {
+  /// Creates a party list preview screen.
   const PartyListPreviewScreen({super.key});
 
   void _showDetail(BuildContext context, Party party) {
@@ -35,6 +36,7 @@ class PartyListPreviewScreen extends ConsumerWidget {
     );
   }
 
+  /// Builds the party list preview UI.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final partiesAsync = ref.watch(previewPartiesProvider);
@@ -60,6 +62,7 @@ class PartyListPreviewScreen extends ConsumerWidget {
   }
 }
 
+/// Fetches parties for the preview list.
 @riverpod
 Future<List<Party>> previewParties(Ref ref) {
   return ref.read(partyRepositoryProvider).getParties();

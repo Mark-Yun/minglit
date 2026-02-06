@@ -6,12 +6,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'matching_repository.g.dart';
 
+/// Provides the [MatchingRepository].
 @Riverpod(keepAlive: true)
 MatchingRepository matchingRepository(Ref ref) {
   return MatchingRepository();
 }
 
+/// Repository for matching rules and votes.
 class MatchingRepository {
+  /// Creates a [MatchingRepository] with a Supabase client.
   MatchingRepository({SupabaseClient? supabase})
     : _supabase = supabase ?? Supabase.instance.client;
 

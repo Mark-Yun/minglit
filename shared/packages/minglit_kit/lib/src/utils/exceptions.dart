@@ -4,9 +4,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Base class for all Minglit exceptions.
 abstract class MinglitException implements Exception {
+  /// Creates a base exception with a human-readable [message].
   const MinglitException(this.message);
+
+  /// Developer-facing message describing the error.
   final String message;
 
+  /// Returns the [message] as the exception string.
   @override
   String toString() => message;
 
@@ -68,6 +72,7 @@ abstract class MinglitException implements Exception {
 /// An exception caused by user action or invalid input.
 /// The [message] is safe to display to the user directly.
 class MinglitUserException extends MinglitException {
+  /// Creates a user-facing exception with a safe [message].
   const MinglitUserException(super.message);
 }
 
@@ -75,12 +80,17 @@ class MinglitUserException extends MinglitException {
 ///
 /// Authentication specific errors (Login, Token expire, etc).
 class MinglitAuthException extends MinglitException {
+  /// Creates an authentication exception with optional details.
   const MinglitAuthException(
     super.message, {
     this.originalError,
     this.stackTrace,
   });
+
+  /// Original error object for debugging.
   final dynamic originalError;
+
+  /// Stack trace associated with the failure.
   final StackTrace? stackTrace;
 }
 
@@ -89,6 +99,7 @@ class MinglitAuthException extends MinglitException {
 /// An unexpected internal error (e.g., DB failure, Network error).
 /// The [message] is for debugging, and [userMessage] is for the UI.
 class MinglitSystemException extends MinglitException {
+  /// Creates a system exception with optional user message and details.
   const MinglitSystemException(
     super.message, {
     this.userMessage = '일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
@@ -96,10 +107,16 @@ class MinglitSystemException extends MinglitException {
     this.stackTrace,
   });
 
+  /// User-safe message suitable for UI display.
   final String userMessage;
+
+  /// Original error object for debugging.
   final dynamic originalError;
+
+  /// Stack trace associated with the failure.
   final StackTrace? stackTrace;
 
+  /// Returns a detailed string for debugging.
   @override
   String toString() =>
       'MinglitSystemException: $message (Original: $originalError)';

@@ -11,6 +11,7 @@ import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dar
 /// A standardized button for social interactions (Like, Subscribe, Bookmark).
 /// Handles optimistic updates and displays counts.
 class MinglitSocialButton extends ConsumerWidget {
+  /// Creates a social interaction button.
   const MinglitSocialButton({
     required this.targetId,
     required this.targetType,
@@ -22,14 +23,28 @@ class MinglitSocialButton extends ConsumerWidget {
     super.key,
   });
 
+  /// The target identifier for the interaction.
   final String targetId;
+
+  /// The target type for the interaction.
   final SocialTargetType targetType;
+
+  /// The interaction type represented by this button.
   final SocialInteractionType interactionType;
+
+  /// Whether to display the interaction count.
   final bool showCount;
+
+  /// Color used when the interaction is active.
   final Color? activeColor;
+
+  /// Color used when the interaction is inactive.
   final Color? inactiveColor;
+
+  /// Size of the interaction icon.
   final double iconSize;
 
+  /// Builds the social interaction button UI.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncState = ref.watch(

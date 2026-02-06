@@ -13,6 +13,7 @@ SocialRepository socialRepository(Ref ref) {
 
 /// Repository for handling social interactions (Like, Subscribe, Bookmark).
 class SocialRepository {
+  /// Creates a [SocialRepository] with a Supabase client.
   SocialRepository({SupabaseClient? supabase})
     : _supabase = supabase ?? Supabase.instance.client;
 

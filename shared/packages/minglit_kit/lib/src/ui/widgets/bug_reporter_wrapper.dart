@@ -7,14 +7,19 @@ import 'package:minglit_kit/src/utils/log.dart';
 import 'package:shake/shake.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// Wraps [child] with bug reporting UI and shake detection.
 class BugReporterWrapper extends StatefulWidget {
+  /// Creates a bug reporter wrapper.
   const BugReporterWrapper({
     required this.child,
     this.enabled = !kReleaseMode,
     super.key,
   });
 
+  /// The widget subtree to wrap.
   final Widget child;
+
+  /// Whether bug reporting is enabled.
   final bool enabled;
 
   @override

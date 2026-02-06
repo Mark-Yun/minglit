@@ -12,6 +12,7 @@ import 'package:minglit_kit/src/ui/widgets/common/minglit_skeleton.dart';
 /// A minimal widget that displays the details of a single [PartyEntryGroup].
 /// Adheres strictly to the Minglit design system using themed text styles.
 class EntryGroupDetail extends StatelessWidget {
+  /// Creates a detail view for a [PartyEntryGroup].
   const EntryGroupDetail({
     required this.group,
     this.genderLabel = '성별',
@@ -21,10 +22,19 @@ class EntryGroupDetail extends StatelessWidget {
     super.key,
   });
 
+  /// Entry group data to render.
   final PartyEntryGroup group;
+
+  /// Label displayed for the gender row.
   final String genderLabel;
+
+  /// Label displayed for the birth year row.
   final String birthYearLabel;
+
+  /// Label used when gender is not restricted.
   final String anyLabel;
+
+  /// Label used when birth year is not restricted.
   final String anyYearLabel;
 
   @override

@@ -5,9 +5,12 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/src/features/notification/notification_list_controller.dart';
 
+/// Displays the list of user notifications.
 class NotificationListScreen extends ConsumerWidget {
+  /// Creates a notification list screen.
   const NotificationListScreen({super.key});
 
+  /// Builds the notification list UI.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notificationState = ref.watch(notificationListProvider);

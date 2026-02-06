@@ -9,11 +9,15 @@ import 'package:minglit_kit/src/utils/platform_utils.dart';
 import 'package:minglit_kit/src/utils/splash_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// Wraps [child] with staff-only access checks.
 class StaffGuardWrapper extends ConsumerStatefulWidget {
+  /// Creates a wrapper that enforces staff verification.
   const StaffGuardWrapper({required this.child, super.key});
 
+  /// The widget displayed once staff access is verified.
   final Widget child;
 
+  /// Creates the state for the staff guard wrapper.
   @override
   ConsumerState<StaffGuardWrapper> createState() => _StaffGuardWrapperState();
 }

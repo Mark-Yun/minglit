@@ -5,6 +5,7 @@ part 'url_config.g.dart';
 
 /// Defines base domains for different environments.
 class MinglitDomains {
+  /// Creates a [MinglitDomains] set for custom environments.
   const MinglitDomains({
     required this.userWeb,
     required this.partnerWeb,
@@ -33,17 +34,28 @@ class MinglitDomains {
       userApp = 'http://localhost:3000',
       partnerApp = 'http://localhost:3001';
 
+  /// Base domain for the user-facing website.
   final String userWeb;
+
+  /// Base domain for the partner-facing website.
   final String partnerWeb;
+
+  /// Base domain for the user app.
   final String userApp;
+
+  /// Base domain for the partner app.
   final String partnerApp;
 }
 
 /// Provides specific URLs based on the current [MinglitDomains].
 class MinglitUrlConfig {
+  /// Creates a [MinglitUrlConfig] for the given domains.
   const MinglitUrlConfig(this._domains, {this.currentOrigin});
 
+  /// Domains used to compose URLs.
   final MinglitDomains _domains;
+
+  /// Current web origin, if available.
   final String? currentOrigin;
 
   // --- User Side (Landing) URLs ---

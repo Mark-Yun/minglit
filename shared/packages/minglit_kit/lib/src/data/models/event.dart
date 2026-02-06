@@ -11,6 +11,7 @@ part 'event.g.dart';
 /// Represents an actual instance of a party.
 @freezed
 abstract class Event with _$Event {
+  /// Creates an [Event] with core scheduling and capacity data.
   const factory Event({
     required String id,
     @JsonKey(name: 'party_id') required String partyId,
@@ -36,6 +37,7 @@ abstract class Event with _$Event {
   }) = _Event;
   const Event._();
 
+  /// Creates an [Event] from a JSON map.
   factory Event.fromJson(Map<String, dynamic> json) => _$EventFromJson(json);
 
   /// Creates a fresh Event instance from a Party template.
@@ -66,6 +68,7 @@ abstract class Event with _$Event {
     );
   }
 
+  /// Returns image URLs from the event or its party template.
   List<String> get effectiveImageUrls {
     final urls = imageUrls;
     if (urls != null && urls.isNotEmpty) {
@@ -74,10 +77,13 @@ abstract class Event with _$Event {
     return party?.imageUrls ?? [];
   }
 
+  /// Returns the first available image URL, if any.
   String? get imageUrl => effectiveImageUrls.firstOrNull;
 }
 
+/// Convenience helpers for rendering [Event] conditions.
 extension EventX on Event {
+  /// Summarizes entry conditions for display.
   List<String> get conditionSummaries {
     final groups = entryGroups ?? [];
     if (groups.isEmpty) return ['조건 없음'];
@@ -134,7 +140,9 @@ extension EventX on Event {
   }
 }
 
+/// Database-specific helpers for [Event].
 extension EventDbX on Event {
+  /// Returns JSON suitable for insert/update operations.
   Map<String, dynamic> toDbJson() {
     return toJson()
       ..remove('id')

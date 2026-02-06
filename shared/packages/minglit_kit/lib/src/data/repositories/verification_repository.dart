@@ -14,6 +14,7 @@ VerificationRepository verificationRepository(Ref ref) {
   return SupabaseVerificationRepository();
 }
 
+/// Fetches verifications by a comma-separated list of IDs.
 @Riverpod(keepAlive: true)
 Future<List<Verification>> verificationsByIds(
   Ref ref,

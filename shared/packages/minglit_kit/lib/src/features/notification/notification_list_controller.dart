@@ -6,10 +6,12 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'notification_list_controller.g.dart';
 
+/// Controls the notification list state and actions.
 @riverpod
 class NotificationList extends _$NotificationList {
   late final NotificationRepository _repository;
 
+  /// Loads the initial notification list.
   @override
   Future<List<Map<String, dynamic>>> build() async {
     _repository = ref.watch(notificationRepositoryProvider);
@@ -20,11 +22,13 @@ class NotificationList extends _$NotificationList {
     return _repository.getNotifications();
   }
 
+  /// Refreshes the notification list from the repository.
   Future<void> refresh() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(_fetchNotifications);
   }
 
+  /// Marks the notification with [id] as read.
   Future<void> markAsRead(String id) async {
     await _repository.markAsRead(id);
     // Optimistic Update
@@ -38,6 +42,7 @@ class NotificationList extends _$NotificationList {
     });
   }
 
+  /// Marks all notifications for the current user as read.
   Future<void> markAllAsRead() async {
     final user = ref.read(currentUserProvider);
     if (user == null) return;
@@ -46,6 +51,7 @@ class NotificationList extends _$NotificationList {
     unawaited(refresh());
   }
 
+  /// Deletes the notification with [id].
   Future<void> deleteNotification(String id) async {
     await _repository.deleteNotification(id);
     // Optimistic Update

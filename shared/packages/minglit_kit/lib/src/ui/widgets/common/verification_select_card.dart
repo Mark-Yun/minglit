@@ -5,6 +5,7 @@ import 'package:minglit_kit/src/ui/widgets/common/verification_card.dart';
 
 /// A wrapper around [VerificationCard] that adds selection logic (checkbox).
 class VerificationSelectCard extends StatelessWidget {
+  /// Creates a selectable wrapper around [VerificationCard].
   const VerificationSelectCard({
     required this.verification,
     required this.isSelected,
@@ -13,9 +14,16 @@ class VerificationSelectCard extends StatelessWidget {
     super.key,
   });
 
+  /// Verification data to display.
   final Verification verification;
+
+  /// Whether the card is currently selected.
   final bool isSelected;
+
+  /// Optional tap handler for selection.
   final VoidCallback? onTap;
+
+  /// Whether selection is disabled.
   final bool isReadOnly;
 
   @override

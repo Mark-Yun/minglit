@@ -8,6 +8,7 @@ import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 /// A standardized wrapper for Riverpod's [AsyncValue].
 /// Automatically handles `loading` and `error` states with Minglit UI tokens.
 class MinglitAsyncValueWidget<T> extends StatelessWidget {
+  /// Creates a wrapper that handles [AsyncValue] states.
   const MinglitAsyncValueWidget({
     required this.value,
     required this.data,

@@ -6,6 +6,7 @@ import 'package:shimmer/shimmer.dart';
 /// A smart image widget that shows a shimmer effect while loading.
 /// Handles network URLs, assets, and local file paths (including Web blobs).
 class MinglitImage extends StatelessWidget {
+  /// Creates an image widget that supports network, assets, and local paths.
   const MinglitImage({
     required this.path,
     super.key,
@@ -14,9 +15,16 @@ class MinglitImage extends StatelessWidget {
     this.fit = BoxFit.contain,
   });
 
+  /// Image source path or URL.
   final String path;
+
+  /// Optional fixed height for the image.
   final double? height;
+
+  /// Optional fixed width for the image.
   final double? width;
+
+  /// How the image should be inscribed into the space.
   final BoxFit fit;
 
   bool get _isNetwork => path.startsWith('http');

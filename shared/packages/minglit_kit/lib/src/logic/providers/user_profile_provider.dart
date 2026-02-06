@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 part 'user_profile_provider.g.dart';
 
 @Riverpod(keepAlive: true)
+/// Provides the current signed-in user's profile, if available.
 Future<UserProfile?> currentUserProfile(Ref ref) async {
   final user = ref.watch(currentUserProvider);
   if (user == null) return null;

@@ -12,10 +12,13 @@ import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dar
 
 /// A detailed view of a Party.
 class PartyDetailView extends ConsumerWidget {
+  /// Creates a detailed view for [party].
   const PartyDetailView({required this.party, super.key});
 
+  /// The party displayed by this view.
   final Party party;
 
+  /// Builds the party detail UI.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);

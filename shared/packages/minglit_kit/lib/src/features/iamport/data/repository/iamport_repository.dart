@@ -5,16 +5,20 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'iamport_repository.g.dart';
 
+/// Provides the [IamportRepository] instance.
 @Riverpod(keepAlive: true)
 IamportRepository iamportRepository(Ref ref) {
   return IamportRepository(Supabase.instance.client);
 }
 
+/// Handles Iamport certification verification requests.
 class IamportRepository {
+  /// Creates a repository backed by the given Supabase client.
   IamportRepository(this._supabase);
 
   final SupabaseClient _supabase;
 
+  /// Verifies a certification using the provided [impUid].
   Future<Map<String, dynamic>> verifyCertification(String impUid) async {
     final user = _supabase.auth.currentUser;
     if (user == null) {

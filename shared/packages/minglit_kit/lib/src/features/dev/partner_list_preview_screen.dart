@@ -15,8 +15,10 @@ part 'partner_list_preview_screen.g.dart';
 /// Displays a list of all active partners for development preview.
 /// Tapping an item opens the [PartnerDetailView].
 class PartnerListPreviewScreen extends ConsumerWidget {
+  /// Creates a partner list preview screen.
   const PartnerListPreviewScreen({super.key});
 
+  /// Builds the partner list preview UI.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final partnersAsync = ref.watch(previewPartnersProvider);

@@ -10,6 +10,7 @@ part 'identity_repository.g.dart';
 /// Handles Identity Verification (PASS/SMS) to verify user's real name,
 /// birth date, and gender. This is the "Base Layer" of trust.
 class IdentityRepository {
+  /// Creates an [IdentityRepository] with a Supabase client.
   IdentityRepository(this._supabase);
 
   final SupabaseClient _supabase;
@@ -60,6 +61,7 @@ class IdentityRepository {
   }
 }
 
+/// Provides the [IdentityRepository].
 @riverpod
 IdentityRepository identityRepository(Ref ref) {
   return IdentityRepository(Supabase.instance.client);

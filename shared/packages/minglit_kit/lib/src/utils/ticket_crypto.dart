@@ -7,6 +7,7 @@ import 'package:cryptography/cryptography.dart';
 /// This allows offline QR code display on user apps and secure online
 /// validation on partner apps.
 class TicketCrypto {
+  /// Ed25519 signing algorithm instance.
   final algorithm = Ed25519();
 
   /// Generates a new Ed25519 KeyPair.
@@ -46,7 +47,12 @@ class TicketCrypto {
 /// **Ticket KeyPair Result**
 /// Used to keep private and public keys together during generation.
 class TicketKeyPair {
+  /// Creates a key pair container.
   TicketKeyPair({required this.privateKey, required this.publicKey});
+
+  /// Private key used for signing.
   final SimpleKeyPairData privateKey;
+
+  /// Public key used for verification.
   final SimplePublicKey publicKey;
 }

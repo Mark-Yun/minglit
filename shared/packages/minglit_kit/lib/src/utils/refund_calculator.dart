@@ -1,16 +1,25 @@
+/// Holds refund calculation results.
 class RefundCalculation {
+  /// Creates a refund calculation result.
   const RefundCalculation({
     required this.refundPercentage,
     required this.refundAmount,
     required this.feeAmount,
   });
 
+  /// Percentage of the payment to refund.
   final int refundPercentage;
+
+  /// Amount to refund in currency units.
   final int refundAmount;
+
+  /// Amount retained as a fee.
   final int feeAmount;
 }
 
+/// Calculates refund amounts based on event timing.
 class RefundCalculator {
+  /// Calculates refund results for a payment.
   static RefundCalculation calculate({
     required DateTime eventStartTime,
     required int paymentAmount,

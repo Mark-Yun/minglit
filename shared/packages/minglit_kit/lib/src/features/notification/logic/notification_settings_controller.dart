@@ -5,8 +5,10 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'notification_settings_controller.g.dart';
 
+/// Manages notification settings for the current user.
 @riverpod
 class NotificationSettingsController extends _$NotificationSettingsController {
+  /// Loads the current user's notification settings.
   @override
   FutureOr<UserSettings?> build() async {
     final user = ref.watch(currentUserProvider);
@@ -22,6 +24,7 @@ class NotificationSettingsController extends _$NotificationSettingsController {
         );
   }
 
+  /// Updates the setting [key] with the provided [value].
   Future<void> updateSetting({required String key, required bool value}) async {
     final user = ref.read(currentUserProvider);
     if (user == null) return;

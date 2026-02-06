@@ -19,6 +19,7 @@ PartyRepository partyRepository(Ref ref) {
 
 /// Repository for Party-related data operations.
 class PartyRepository {
+  /// Creates a [PartyRepository] with a Supabase client.
   PartyRepository({SupabaseClient? supabase})
     : _supabase = supabase ?? Supabase.instance.client;
 

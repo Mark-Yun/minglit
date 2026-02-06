@@ -12,8 +12,10 @@ import 'package:minglit_kit/src/utils/error_ui_handler.dart';
 ///
 /// A screen where users verify their real identity via Iamport (V1).
 class IdentityVerificationScreen extends ConsumerStatefulWidget {
+  /// Creates an identity verification screen.
   const IdentityVerificationScreen({super.key});
 
+  /// Creates the state for the identity verification screen.
   @override
   ConsumerState<IdentityVerificationScreen> createState() =>
       _IdentityVerificationScreenState();

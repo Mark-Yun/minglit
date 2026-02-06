@@ -20,10 +20,13 @@ import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 /// );
 /// ```
 class MinglitGlobalLoadingOverlay extends ConsumerWidget {
+  /// Creates a global loading overlay wrapper.
   const MinglitGlobalLoadingOverlay({required this.child, super.key});
 
+  /// The app content to wrap with the overlay.
   final Widget child;
 
+  /// Builds the overlay around [child].
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);

@@ -7,8 +7,10 @@ import 'package:minglit_kit/src/data/models/verification_submission.dart';
 part 'event_application.freezed.dart';
 part 'event_application.g.dart';
 
+/// Represents a user's application to join an event.
 @freezed
 abstract class EventApplication with _$EventApplication {
+  /// Creates an [EventApplication] with related metadata.
   const factory EventApplication({
     required String id,
     @JsonKey(name: 'event_id') required String eventId,
@@ -29,6 +31,7 @@ abstract class EventApplication with _$EventApplication {
     Ticket? ticket,
   }) = _EventApplication;
 
+  /// Creates an [EventApplication] from a JSON map.
   factory EventApplication.fromJson(Map<String, dynamic> json) =>
       _$EventApplicationFromJson(json);
 }

@@ -1,11 +1,14 @@
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// Repository for reporting client-side bugs.
 class BugReportRepository {
+  /// Creates a [BugReportRepository] with a Supabase client.
   BugReportRepository(this._supabase);
 
   final SupabaseClient _supabase;
 
+  /// Sends a bug report to the backend.
   Future<void> reportBug({
     required String title,
     required String description,

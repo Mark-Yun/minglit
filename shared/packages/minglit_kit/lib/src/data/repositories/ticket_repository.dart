@@ -7,12 +7,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'ticket_repository.g.dart';
 
+/// Provides the [TicketRepository].
 @Riverpod(keepAlive: true)
 TicketRepository ticketRepository(Ref ref) {
   return TicketRepository();
 }
 
+/// Repository for ticket and ticket template records.
 class TicketRepository {
+  /// Creates a [TicketRepository] with a Supabase client.
   TicketRepository({SupabaseClient? supabase})
     : _supabase = supabase ?? Supabase.instance.client;
 

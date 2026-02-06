@@ -6,6 +6,7 @@ part 'party_entry_group.g.dart';
 /// **Entry Group Template** (For Parties)
 @freezed
 abstract class EntryGroupTemplate with _$EntryGroupTemplate {
+  /// Creates an [EntryGroupTemplate] for party conditions.
   const factory EntryGroupTemplate({
     required String id,
     @JsonKey(name: 'party_id') required String partyId,
@@ -20,11 +21,14 @@ abstract class EntryGroupTemplate with _$EntryGroupTemplate {
     @JsonKey(name: 'updated_at') DateTime? updatedAt,
   }) = _EntryGroupTemplate;
 
+  /// Creates an [EntryGroupTemplate] from a JSON map.
   factory EntryGroupTemplate.fromJson(Map<String, dynamic> json) =>
       _$EntryGroupTemplateFromJson(json);
 }
 
+/// Database-specific helpers for [EntryGroupTemplate].
 extension EntryGroupTemplateDbX on EntryGroupTemplate {
+  /// Returns JSON suitable for database inserts or updates.
   Map<String, dynamic> toDbJson() {
     return toJson()
       ..remove('id')
@@ -36,6 +40,7 @@ extension EntryGroupTemplateDbX on EntryGroupTemplate {
 /// **Entry Group Instance** (For Events)
 @freezed
 abstract class EntryGroup with _$EntryGroup {
+  /// Creates an [EntryGroup] for event-specific conditions.
   const factory EntryGroup({
     required String id,
     @JsonKey(name: 'event_id') required String eventId,
@@ -50,10 +55,11 @@ abstract class EntryGroup with _$EntryGroup {
     @JsonKey(name: 'updated_at') DateTime? updatedAt,
   }) = _EntryGroup;
 
+  /// Creates an [EntryGroup] from a JSON map.
   factory EntryGroup.fromJson(Map<String, dynamic> json) =>
       _$EntryGroupFromJson(json);
 
-  /// Creates a fresh EntryGroup instance from a Template.
+  /// Creates a fresh [EntryGroup] instance from a template.
   factory EntryGroup.createFromTemplate(
     EntryGroupTemplate template, {
     String eventId = '',
@@ -73,7 +79,9 @@ abstract class EntryGroup with _$EntryGroup {
   }
 }
 
+/// Convenience helpers for [EntryGroup].
 extension EntryGroupX on EntryGroup {
+  /// Converts this entry group to a party template.
   EntryGroupTemplate toTemplate() {
     return EntryGroupTemplate(
       id: id,
@@ -89,7 +97,9 @@ extension EntryGroupX on EntryGroup {
   }
 }
 
+/// Database-specific helpers for [EntryGroup].
 extension EntryGroupDbX on EntryGroup {
+  /// Returns JSON suitable for database inserts or updates.
   Map<String, dynamic> toDbJson({String? eventId}) {
     final json = toJson()
       ..remove('id')
@@ -103,5 +113,5 @@ extension EntryGroupDbX on EntryGroup {
   }
 }
 
-/// Legacy compatibility (Optional, can be removed after full refactor)
+/// Legacy alias retained for compatibility.
 typedef PartyEntryGroup = EntryGroupTemplate;

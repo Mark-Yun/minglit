@@ -6,6 +6,7 @@ part 'event_participant.g.dart';
 /// **Event Participant Model** (Confirmed)
 @freezed
 abstract class EventParticipant with _$EventParticipant {
+  /// Creates an [EventParticipant] record for confirmed attendance.
   const factory EventParticipant({
     required String id,
     @JsonKey(name: 'event_id') required String eventId,
@@ -18,6 +19,7 @@ abstract class EventParticipant with _$EventParticipant {
     @JsonKey(name: 'ticket_code') String? ticketCode,
   }) = _EventParticipant;
 
+  /// Creates an [EventParticipant] from a JSON map.
   factory EventParticipant.fromJson(Map<String, dynamic> json) =>
       _$EventParticipantFromJson(json);
 }

@@ -9,6 +9,7 @@ import 'package:minglit_kit/src/ui/widgets/common/minglit_image.dart';
 ///
 /// A reusable card widget to display event information.
 class MinglitEventCard extends StatelessWidget {
+  /// Creates an event card for the given [event].
   const MinglitEventCard({
     required this.event,
     super.key,
@@ -16,8 +17,13 @@ class MinglitEventCard extends StatelessWidget {
     this.width = 240,
   });
 
+  /// Event data to render.
   final Event event;
+
+  /// Optional tap handler for the card.
   final VoidCallback? onTap;
+
+  /// Fixed width of the card.
   final double width;
 
   @override

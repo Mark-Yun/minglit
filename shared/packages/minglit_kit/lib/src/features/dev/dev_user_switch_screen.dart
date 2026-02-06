@@ -18,8 +18,10 @@ part 'dev_user_switch_screen.g.dart';
 /// Use `flutter test apps/app_user/test/setup_test_data.dart` or
 /// `flutter test shared/packages/minglit_seeder` CLI commands instead.
 class DevUserSwitchScreen extends ConsumerStatefulWidget {
+  /// Creates a dev-only user switch screen.
   const DevUserSwitchScreen({super.key});
 
+  /// Creates the state for the dev user switch screen.
   @override
   ConsumerState<DevUserSwitchScreen> createState() =>
       _DevUserSwitchScreenState();
@@ -163,7 +165,7 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
   }
 }
 
-// Internal provider to fetch test users
+/// Fetches test user profiles for the dev user switcher.
 @riverpod
 Future<List<Map<String, dynamic>>> devUserProfiles(Ref ref) async {
   // Use Admin Client to bypass RLS policies and fetch all test users

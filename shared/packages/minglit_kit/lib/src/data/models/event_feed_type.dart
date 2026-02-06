@@ -17,6 +17,9 @@ enum EventFeedType {
 
   const EventFeedType(this.title, this.sortLabel);
 
+  /// Display title for this feed type.
   final String title;
+
+  /// Sort label used for UI descriptions.
   final String sortLabel;
 }

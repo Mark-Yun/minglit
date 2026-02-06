@@ -6,27 +6,48 @@ part 'verification.g.dart';
 
 /// Categories for different types of verification.
 enum VerificationCategory {
+  /// Career-related verification.
   career,
+
+  /// Asset-related verification.
   asset,
+
+  /// Marriage-related verification.
   marriage,
+
+  /// Academic background verification.
   academic,
+
+  /// Vehicle ownership verification.
   vehicle,
+
+  /// Miscellaneous or other verification.
   etc,
 }
 
 /// Status of a verification request.
 enum VerificationStatus {
+  /// Submission is pending review.
   pending,
+
+  /// Submission was approved.
   approved,
+
+  /// Submission was rejected.
   rejected,
+
+  /// Submission requires user corrections.
   @JsonValue('needs_correction')
   needsCorrection,
+
+  /// Submission was cancelled.
   cancelled,
 }
 
 /// Represents a single field definition in the dynamic form schema.
 @freezed
 abstract class VerificationFormField with _$VerificationFormField {
+  /// Creates a [VerificationFormField] definition.
   const factory VerificationFormField({
     /// Unique key for the field (e.g., 'company_name').
     required String key,
@@ -47,6 +68,7 @@ abstract class VerificationFormField with _$VerificationFormField {
     List<String>? options,
   }) = _VerificationFormField;
 
+  /// Creates a [VerificationFormField] from a JSON map.
   factory VerificationFormField.fromJson(Map<String, dynamic> json) =>
       _$VerificationFormFieldFromJson(json);
 }
@@ -54,6 +76,7 @@ abstract class VerificationFormField with _$VerificationFormField {
 /// The main Verification definition model.
 @freezed
 abstract class Verification with _$Verification {
+  /// Creates a [Verification] definition and metadata.
   const factory Verification({
     required String id,
     required VerificationCategory category,
@@ -80,11 +103,14 @@ abstract class Verification with _$Verification {
     @JsonKey(name: 'created_at') DateTime? createdAt,
   }) = _Verification;
 
+  /// Creates a [Verification] from a JSON map.
   factory Verification.fromJson(Map<String, dynamic> json) =>
       _$VerificationFromJson(json);
 }
 
+/// Database-specific helpers for [Verification].
 extension VerificationDbX on Verification {
+  /// Returns JSON suitable for database inserts or updates.
   Map<String, dynamic> toDbJson() {
     return toJson()
       ..remove('id')
@@ -96,6 +122,7 @@ extension VerificationDbX on Verification {
 @freezed
 abstract class VerificationRequirementStatus
     with _$VerificationRequirementStatus {
+  /// Creates a [VerificationRequirementStatus] wrapper.
   const factory VerificationRequirementStatus({
     required Verification master,
 
@@ -112,12 +139,16 @@ abstract class VerificationRequirementStatus
 
   const VerificationRequirementStatus._();
 
+  /// Creates a [VerificationRequirementStatus] from a JSON map.
   factory VerificationRequirementStatus.fromJson(Map<String, dynamic> json) =>
       _$VerificationRequirementStatusFromJson(json);
 
+  /// Whether the verification has been approved.
   bool get isApproved => verifiedResult != null;
 
+  /// Whether there is an active submission.
   bool get hasActiveRequest => activeSubmission != null;
 
+  /// Current status of the active submission.
   VerificationStatus? get status => activeSubmission?.status;
 }

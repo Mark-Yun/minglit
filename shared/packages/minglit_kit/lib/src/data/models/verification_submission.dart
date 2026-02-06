@@ -9,6 +9,7 @@ part 'verification_submission.g.dart';
 /// Represents a snapshot of user data submitted for review.
 @freezed
 abstract class VerificationSubmission with _$VerificationSubmission {
+  /// Creates a [VerificationSubmission] for review tracking.
   const factory VerificationSubmission({
     required String id,
     @JsonKey(name: 'partner_id') required String partnerId,
@@ -24,6 +25,7 @@ abstract class VerificationSubmission with _$VerificationSubmission {
     @JsonKey(name: 'reviewed_by') String? reviewedBy,
   }) = _VerificationSubmission;
 
+  /// Creates a [VerificationSubmission] from a JSON map.
   factory VerificationSubmission.fromJson(Map<String, dynamic> json) =>
       _$VerificationSubmissionFromJson(json);
 }

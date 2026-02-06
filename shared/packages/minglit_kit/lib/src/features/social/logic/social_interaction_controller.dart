@@ -7,16 +7,23 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'social_interaction_controller.freezed.dart';
 part 'social_interaction_controller.g.dart';
 
+/// Represents a social interaction state and count.
 @freezed
 abstract class InteractionState with _$InteractionState {
+  /// Creates an interaction state.
   const factory InteractionState({
+    /// Whether the current user has the interaction active.
     required bool isActive,
+
+    /// Total count for this interaction type.
     required int count,
   }) = _InteractionState;
 }
 
+/// Manages social interaction state for a target.
 @riverpod
 class SocialInteractionController extends _$SocialInteractionController {
+  /// Loads the interaction state for the given target and type.
   @override
   FutureOr<InteractionState> build({
     required String targetId,

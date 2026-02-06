@@ -4,6 +4,7 @@ import 'package:minglit_kit/src/theme/minglit_theme.dart';
 /// A standardized dialog widget for Minglit applications
 /// that supports custom content.
 class MinglitDialog extends StatelessWidget {
+  /// Creates a standardized dialog with custom content.
   const MinglitDialog({
     required this.title,
     required this.content,
@@ -11,8 +12,13 @@ class MinglitDialog extends StatelessWidget {
     super.key,
   });
 
+  /// Dialog title text.
   final String title;
+
+  /// Main content widget displayed in the dialog.
   final Widget content;
+
+  /// Optional action buttons for the dialog.
   final List<Widget>? actions;
 
   /// Shows a standardized dialog with custom content.

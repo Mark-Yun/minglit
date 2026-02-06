@@ -6,10 +6,12 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'location_search_controller.g.dart';
 
+/// Handles location search with debounce and async results.
 @riverpod
 class LocationSearchController extends _$LocationSearchController {
   Timer? _debounce;
 
+  /// Initializes the search state with an empty list.
   @override
   FutureOr<List<Location>> build() {
     ref.onDispose(() {
@@ -19,6 +21,7 @@ class LocationSearchController extends _$LocationSearchController {
     return [];
   }
 
+  /// Debounces and searches locations for the given [query].
   void onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
 

@@ -9,6 +9,7 @@ part 'ticket.g.dart';
 /// Represents a ticket configuration for an event or a party template.
 @freezed
 abstract class Ticket with _$Ticket {
+  /// Creates a [Ticket] with pricing and quantity settings.
   const factory Ticket({
     required String id,
     required String name,
@@ -28,6 +29,7 @@ abstract class Ticket with _$Ticket {
     @Default('on_sale') String status,
   }) = _Ticket;
 
+  /// Creates a [Ticket] from a JSON map.
   factory Ticket.fromJson(Map<String, dynamic> json) => _$TicketFromJson(json);
 
   /// Creates a fresh Ticket instance from a TicketTemplate.
@@ -53,13 +55,16 @@ abstract class Ticket with _$Ticket {
   }
 }
 
+/// Convenience helpers for [Ticket].
 extension TicketX on Ticket {
   // TicketX previously had gender/age label getters based on conditions.
   // Since conditions are removed, these are no longer relevant here.
   // They should be moved to PartyEntryGroup if not already there.
 }
 
+/// Database-specific helpers for [Ticket].
 extension TicketDbX on Ticket {
+  /// Returns JSON suitable for database inserts or updates.
   Map<String, dynamic> toDbJson({String? eventId}) {
     final json = toJson()
       ..remove('id')
