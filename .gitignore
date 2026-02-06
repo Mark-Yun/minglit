@@ -6,6 +6,9 @@
 *.lock
 *.log
 
+# AI agent workspace
+.sisyphus/
+
 # Local scripts
 **/run_local.sh
 
