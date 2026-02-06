@@ -74,7 +74,8 @@ void main() {
     userClient = createUserClient(testUserId);
 
     Log.i(
-      '✅ [Setup] User: $testUserId, Partner: $testPartnerId, Owner: $testPartnerOwnerId',
+      '✅ [Setup] User: $testUserId, Partner: $testPartnerId, '
+      'Owner: $testPartnerOwnerId',
     );
   });
 
@@ -109,8 +110,8 @@ void main() {
     });
 
     test(
-        'SC2: Access Grant is auto-created on Application and RLS allows access',
-        () async {
+        'SC2: Access Grant is auto-created on Application '
+        'and RLS allows access', () async {
       final userClient = createUserClient(testUserId);
       final partnerClient = createUserClient(testPartnerOwnerId);
 
@@ -174,7 +175,8 @@ void main() {
       );
       Log.i('✅ [Test] Grant record verified in DB.');
 
-      // 4. Verify: Partner can actually READ the file via Storage API (RLS Check)
+      // 4. Verify: Partner can actually READ the file via Storage API
+      // (RLS Check)
       Log.i('🔍 [Test] Partner trying to read file via Storage API...');
       try {
         final downloaded =

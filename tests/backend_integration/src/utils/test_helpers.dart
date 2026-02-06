@@ -66,7 +66,8 @@ Future<String> getFemale25VerifiedUserId(SupabaseClient client) async {
   return res['id'] as String;
 }
 
-/// Finds a scheduled event and returns its context (Event, Ticket, Partner, Owner).
+/// Finds a scheduled event and returns its context
+/// (Event, Ticket, Partner, Owner).
 Future<({String eventId, String ticketId, String partnerId, String ownerId})>
     findScheduledEvent(SupabaseClient client) async {
   final eventRes = await client

@@ -28,37 +28,27 @@ class CertificationServiceImpl implements CertificationService {
       'phone': phone,
     }.jsify();
 
-        final callback = (JSObject result) {
+    final callback = (JSObject result) {
+      // Use getProperty to access JS object fields safely
 
-          // Use getProperty to access JS object fields safely
+      final success = result.getProperty('success'.toJS);
 
-          final success = result.getProperty('success'.toJS);
+      final impUid = result.getProperty('imp_uid'.toJS);
 
-          final impUid = result.getProperty('imp_uid'.toJS);
+      final errorMsg = result.getProperty('error_msg'.toJS);
 
-          final errorMsg = result.getProperty('error_msg'.toJS);
+      // success can be boolean or string 'true' depending on SDK version
 
-    
+      final isSuccess = success == true.toJS || success.toString() == 'true';
 
-          // success can be boolean or string 'true' depending on SDK version
+      if (isSuccess) {
+        completer.complete(impUid?.toString());
+      } else {
+        debugPrint('Certification Failed: $errorMsg');
 
-          final isSuccess = success == true.toJS || success.toString() == 'true';
-
-    
-
-          if (isSuccess) {
-
-            completer.complete(impUid?.toString());
-
-          } else {
-
-            debugPrint('Certification Failed: $errorMsg');
-
-            completer.complete(null);
-
-          }
-
-        }.toJS;
+        completer.complete(null);
+      }
+    }.toJS;
 
     imp.callMethod('certification'.toJS, options, callback);
 

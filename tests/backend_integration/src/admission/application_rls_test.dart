@@ -58,7 +58,8 @@ void main() {
       final ticketId = event['tickets'][0]['id'];
 
       // 3. Create Applications via Admin (Bypass RLS)
-      // Delete existing to avoid unique constraint (Delete participants first due to FK)
+      // Delete existing to avoid unique constraint
+      // (Delete participants first due to FK)
       await adminClient
           .from('event_participants')
           .delete()

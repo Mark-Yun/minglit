@@ -111,8 +111,8 @@ void main() {
   });
 
   test(
-      'One-Shot Application Flow Test (Apply -> Pending -> Approve -> Confirmed)',
-      () async {
+      'One-Shot Application Flow Test '
+      '(Apply -> Pending -> Approve -> Confirmed)', () async {
     final userClient = createUserClient(testUserId);
 
     Log.i('📝 [Test] Starting One-Shot Application...');

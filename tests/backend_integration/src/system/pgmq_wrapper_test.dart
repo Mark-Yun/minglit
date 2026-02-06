@@ -1,4 +1,5 @@
-// ignore_for_file: avoid_dynamic_calls -- PGMQ library returns dynamic types that require dynamic calls for testing
+// ignore_for_file: avoid_dynamic_calls -- PGMQ library returns dynamic types
+// that require dynamic calls for testing
 
 import 'package:minglit_kit/minglit_core.dart';
 import 'package:postgres/postgres.dart';

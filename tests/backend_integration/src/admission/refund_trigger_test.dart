@@ -59,8 +59,8 @@ void main() {
     });
 
     test(
-        'Rejection Cascade: Submission Rejected -> App Rejected + Reason + Refund Requested',
-        () async {
+        'Rejection Cascade: Submission Rejected -> '
+        'App Rejected + Reason + Refund Requested', () async {
       final paymentId = 'REFUND_TEST_${Random().nextInt(9999)}';
 
       // 1. Create Application (Pending Review)
@@ -133,10 +133,14 @@ void main() {
       );
 
       // C. Refund Requested?
-      // Note: 'refund_status' is updated by 'on_application_rejected' trigger which fires AFTER 'handle_verification_approval' updates 'event_applications'.
+      // Note: 'refund_status' is updated by 'on_application_rejected'
+      // trigger which fires AFTER 'handle_verification_approval' updates
+      // 'event_applications'.
       // Order:
-      // 1. verification update -> trigger 'on_submission_status_change' -> updates 'event_applications'
-      // 2. 'event_applications' update -> trigger 'on_application_rejected' -> calls net.http_post AND updates 'refund_status'.
+      // 1. verification update -> trigger 'on_submission_status_change' ->
+      //    updates 'event_applications'
+      // 2. 'event_applications' update -> trigger 'on_application_rejected'
+      //    -> calls net.http_post AND updates 'refund_status'.
 
       expect(
         updatedApp['refund_status'],

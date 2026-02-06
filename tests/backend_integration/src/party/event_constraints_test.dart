@@ -72,10 +72,10 @@ void main() {
         // Postgres error code 23514 usually
         // Note: Supabase Dart might wrap it.
         // Assuming we rely on implicit checks or explicit constraints.
-        // Actually, schema definition: max_participants int not null default 20
-        // It doesn't have explicit CHECK constraint in schema.sql!
-        // This test might FAIL (Security Hole found) if we didn't add CHECK (max > 0).
-        // Let's see.
+        // Actually, schema definition: max_participants int not null
+        // default 20. It doesn't have explicit CHECK constraint in schema.sql!
+        // This test might FAIL (Security Hole found) if we didn't add
+        // CHECK (max > 0). Let's see.
       }
     });
   });

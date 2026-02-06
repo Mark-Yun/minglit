@@ -59,8 +59,8 @@ void main() {
     });
 
     test(
-        'Chain Reaction: Verify Approved -> Application Approved -> Ticket Issued',
-        () async {
+        'Chain Reaction: Verify Approved -> '
+        'Application Approved -> Ticket Issued', () async {
       final paymentId = 'TRG_${Random().nextInt(9999)}';
 
       // 1. Create Application (Pending Review)

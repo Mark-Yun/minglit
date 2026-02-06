@@ -28,7 +28,8 @@ void main() {
     Log.i('   URL: $url');
     // Don't print the key (security)
 
-    // Initialize Client (AuthFlowType.implicit prevents persistent session issues in CLI)
+    // Initialize Client (AuthFlowType.implicit prevents persistent session
+    // issues in CLI)
     final client = SupabaseClient(
       url,
       key,

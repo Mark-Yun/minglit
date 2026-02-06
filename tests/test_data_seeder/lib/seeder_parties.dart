@@ -12,8 +12,10 @@ mixin _SeederParties on _SeederContext, _SeederBase, _SeederEvents {
 
     // 1. Process Defined Partners (JSON)
     for (final dynamic p in partners) {
-      // ... (Existing logic for fixed JSON data, maybe refactor to reuse _createPartnerAndContent)
-      // For simplicity, keeping existing logic for JSON data but updating ticket table
+      // ... (Existing logic for fixed JSON data, maybe refactor to reuse
+      // _createPartnerAndContent)
+      // For simplicity, keeping existing logic for JSON data but updating
+      // ticket table
       final pData = p as Map<String, dynamic>;
       final index = pData['index'] as int;
       final partnerName = pData['name'] as String;
@@ -107,16 +109,21 @@ mixin _SeederParties on _SeederContext, _SeederBase, _SeederEvents {
   ];
 
   Future<void> _seedScenarioParties(List<String> globalVerifIds) async {
-    var partnerCounter = 100; // Start from 100 to avoid conflict with JSON
+    // Start from 100 to avoid conflict with JSON
+    var partnerCounter = 100;
 
     // Find indices for verifications
-    // Assuming the order from seed.sql insert or using known IDs would be safer.
-    // For now, let's rely on IDs if possible, or assume typical order if fetching all.
-    // Let's find index by checking against known IDs from seed.sql if available,
-    // OR we can just fetch them by name in _getGlobalVerificationIds.
-    // Given current helper just returns list, let's map them manually based on what we know.
+    // Assuming the order from seed.sql insert or using known IDs would be
+    // safer. For now, let's rely on IDs if possible, or assume typical order
+    // if fetching all.
+    // Let's find index by checking against known IDs from seed.sql if
+    // available, OR we can just fetch them by name in
+    // _getGlobalVerificationIds.
+    // Given current helper just returns list, let's map them manually based
+    // on what we know.
     // But since we don't have the map, let's do a best effort or fetch map.
-    // To be safe, let's just use the IDs directly in the scenarios and update helper later if needed.
+    // To be safe, let's just use the IDs directly in the scenarios and update
+    // helper later if needed.
 
     // Hardcoded IDs from seed.sql (minus identity)
     const careerId = '00000000-0000-0000-0000-000000000002';

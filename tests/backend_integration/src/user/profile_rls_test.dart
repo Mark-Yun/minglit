@@ -116,8 +116,10 @@ void main() {
 
       // Attempt to self-verify
       // Note: RLS allows update if (auth.uid() = id).
-      // It does NOT check columns by default unless we use column-level privileges or check triggers.
-      // So this test is EXPECTED TO FAIL (Security Hole) initially if we haven't protected the column.
+      // It does NOT check columns by default unless we use column-level
+      // privileges or check triggers.
+      // So this test is EXPECTED TO FAIL (Security Hole) initially if we
+      // haven't protected the column.
 
       try {
         await client1

@@ -31,7 +31,8 @@ class DatabaseSeeder extends _SeederContextBase
         );
       } catch (_) {
         _Log.i(
-          '⚠️ rootBundle failed, trying direct file access (Test environment)...',
+          '⚠️ rootBundle failed, '
+          'trying direct file access (Test environment)...',
         );
         // Fallback for tests: path depends on where the test is run
         final file = File('../../tests/test_data_seeder/assets/seed_data.json');
