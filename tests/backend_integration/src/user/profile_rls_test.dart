@@ -135,7 +135,7 @@ void main() {
       // If verify['is_verified'] is true, we have a security hole.
       // We expect it to be false.
       expect(verify['is_verified'], isFalse,
-          reason: 'Security Hole: User was able to update is_verified!');
+          reason: 'Security Hole: User was able to update is_verified!',);
     });
   });
 }

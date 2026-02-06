@@ -35,7 +35,7 @@ void main() {
         'ticket_id': testTicketId,
         'status': 'paid',
         'payment_amount': 10000,
-      }, onConflict: 'event_id, user_id');
+      }, onConflict: 'event_id, user_id',);
     });
 
     test('Query returns list with joined event and ticket data', () async {
@@ -57,12 +57,12 @@ void main() {
 
       // Verify Joins
       expect(app['event'], isNotNull,
-          reason: 'Event relation should be joined');
+          reason: 'Event relation should be joined',);
       final event = app['event'] as Map<String, dynamic>;
       expect(event['party'], isNotNull,
-          reason: 'Party relation should be joined via Event');
+          reason: 'Party relation should be joined via Event',);
       expect(app['ticket'], isNotNull,
-          reason: 'Ticket relation should be joined');
+          reason: 'Ticket relation should be joined',);
 
       print('✅ History Count: ${data.length}');
       print('📍 First Event: ${event['title'] ?? event['party']['title']}');

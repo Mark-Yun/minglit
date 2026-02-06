@@ -45,7 +45,7 @@ Future<String> getMale25VerifiedUserId(SupabaseClient client) async {
 
   if (res == null) {
     throw Exception(
-        '🚨 Helper Error: Male/25/Verified user not found. Run seeder?');
+        '🚨 Helper Error: Male/25/Verified user not found. Run seeder?',);
   }
   return res['id'] as String;
 }
@@ -64,7 +64,7 @@ Future<String> getFemale25VerifiedUserId(SupabaseClient client) async {
 
   if (res == null) {
     throw Exception(
-        '🚨 Helper Error: Female/25/Verified user not found. Run seeder?');
+        '🚨 Helper Error: Female/25/Verified user not found. Run seeder?',);
   }
   return res['id'] as String;
 }

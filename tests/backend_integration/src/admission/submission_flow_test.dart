@@ -128,7 +128,7 @@ void main() {
         'verification_id': testVerificationId,
         'data': {'company': 'Google', 'position': 'Dev'},
       },
-    });
+    },);
 
     expect(appId, isNotNull);
     print('✅ [Test] Applied successfully. AppID: $appId');

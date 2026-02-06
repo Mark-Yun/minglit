@@ -101,7 +101,7 @@ void main() {
       await adminClient
           .from('verification_submissions')
           .update({'status': 'rejected', 'admin_comment': rejectionReason}).eq(
-              'id', subId);
+              'id', subId,);
 
       // Allow trigger propagation (DB trigger is sync, but net call is async/blocking inside trigger?
       // pg_net is async, but update to refund_status happens in trigger.
@@ -117,11 +117,11 @@ void main() {
 
       // A. Status Rejected?
       expect(updatedApp['status'], equals('rejected'),
-          reason: 'Application should be rejected');
+          reason: 'Application should be rejected',);
 
       // B. Reason Synced?
       expect(updatedApp['rejection_reason'], equals(rejectionReason),
-          reason: 'Rejection reason should be synced');
+          reason: 'Rejection reason should be synced',);
 
       // C. Refund Requested?
       // Note: 'refund_status' is updated by 'on_application_rejected' trigger which fires AFTER 'handle_verification_approval' updates 'event_applications'.
@@ -130,7 +130,7 @@ void main() {
       // 2. 'event_applications' update -> trigger 'on_application_rejected' -> calls net.http_post AND updates 'refund_status'.
 
       expect(updatedApp['refund_status'], equals('requested'),
-          reason: 'Refund status should be requested');
+          reason: 'Refund status should be requested',);
 
       print('✅ Refund trigger verified successfully!');
     });

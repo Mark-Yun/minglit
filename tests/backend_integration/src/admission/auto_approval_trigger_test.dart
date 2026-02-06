@@ -112,7 +112,7 @@ void main() {
           .eq('submission_id', subId)
           .maybeSingle();
       expect(verifiedUser, isNotNull,
-          reason: 'partner_verified_users should be created via trigger');
+          reason: 'partner_verified_users should be created via trigger',);
 
       // B. event_applications status changed?
       final updatedApp = await adminClient
@@ -121,7 +121,7 @@ void main() {
           .eq('id', appId)
           .single();
       expect(updatedApp['status'], equals('approved'),
-          reason: 'Application should be auto-approved');
+          reason: 'Application should be auto-approved',);
 
       // C. event_participants ticket issued?
       final participant = await adminClient
@@ -130,7 +130,7 @@ void main() {
           .eq('application_id', appId)
           .maybeSingle();
       expect(participant, isNotNull,
-          reason: 'Ticket should be issued automatically');
+          reason: 'Ticket should be issued automatically',);
       expect(participant!['ticket_code'], isNotNull);
 
       print('🎉 Chain reaction verified successfully!');
@@ -168,7 +168,7 @@ void main() {
           .eq('submission_id', subId)
           .maybeSingle();
       expect(verifiedUser, isNull,
-          reason: 'partner_verified_users should be removed on revoke');
+          reason: 'partner_verified_users should be removed on revoke',);
 
       print('✅ Revoke verified successfully!');
     });

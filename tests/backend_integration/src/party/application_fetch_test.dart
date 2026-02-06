@@ -42,7 +42,7 @@ void main() {
               .single())['id'],
           'payment_id': 'dummy_payment',
           'payment_amount': 1000,
-          'status': 'pending_review'
+          'status': 'pending_review',
         });
       } catch (e) {
         // Ignore duplicate key error if already exists

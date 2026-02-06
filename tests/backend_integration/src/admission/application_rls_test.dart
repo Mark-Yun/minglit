@@ -128,7 +128,7 @@ void main() {
           .select();
 
       expect(res, isEmpty,
-          reason: 'RLS should prevent updating other users data');
+          reason: 'RLS should prevent updating other users data',);
 
       // Verify via admin that it remains pending
       final verify = await adminClient

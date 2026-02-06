@@ -73,7 +73,7 @@ void main() {
     userClient = createUserClient(testUserId);
 
     print(
-        '✅ [Setup] User: $testUserId, Partner: $testPartnerId, Owner: $testPartnerOwnerId');
+        '✅ [Setup] User: $testUserId, Partner: $testPartnerId, Owner: $testPartnerOwnerId',);
   });
 
   group('Infrastructure: Secure File Management System', () {
@@ -98,7 +98,7 @@ void main() {
           .maybeSingle();
 
       expect(metadata, isNotNull,
-          reason: 'minglit_files record should be created by trigger');
+          reason: 'minglit_files record should be created by trigger',);
       expect(metadata!['owner_id'], testUserId);
       print('✅ [Test] Metadata verified.');
     });
@@ -138,9 +138,9 @@ void main() {
         'p_verification_data': {
           'partner_id': testPartnerId,
           'verification_id': testVerificationId,
-          'data': {'proof': path}
+          'data': {'proof': path},
         },
-      });
+      },);
 
       await Future<void>.delayed(const Duration(milliseconds: 500));
 
@@ -160,7 +160,7 @@ void main() {
           .maybeSingle();
 
       expect(grant, isNotNull,
-          reason: 'Grant should be created for partner owner');
+          reason: 'Grant should be created for partner owner',);
       print('✅ [Test] Grant record verified in DB.');
 
       // 4. Verify: Partner can actually READ the file via Storage API (RLS Check)
@@ -238,7 +238,7 @@ void main() {
       // Check if updated (should be roughly initial + 7 days)
       final diff = updatedExpires.difference(initialExpires).inDays;
       expect(diff, closeTo(7, 1),
-          reason: 'Expiration should be extended by ~7 days');
+          reason: 'Expiration should be extended by ~7 days',);
 
       print('✅ [Test] Grant expiration updated successfully.');
     });
