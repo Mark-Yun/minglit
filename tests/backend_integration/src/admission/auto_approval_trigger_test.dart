@@ -37,8 +37,10 @@ void main() {
           .limit(1)
           .single();
       testEventId = event['id'] as String;
-      testTicketId = event['tickets'][0]['id'] as String;
-      testPartnerId = event['party']['partner_id'] as String;
+      final tickets = event['tickets'] as List<dynamic>;
+      testTicketId = (tickets.first as Map<String, dynamic>)['id'] as String;
+      testPartnerId =
+          (event['party'] as Map<String, dynamic>)['partner_id'] as String;
 
       // Get Verification
       final verif =

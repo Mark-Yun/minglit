@@ -23,7 +23,7 @@ mixin _SeederEvents on _SeederContext {
     // Calculate max participants based on ticket quantities
     final partyMaxParticipants = ticketsList.fold<int>(
       0,
-      (sum, t) => sum + (t['quantity'] as int),
+      (sum, t) => sum + ((t as Map<String, dynamic>)['quantity'] as int),
     );
 
     await adminClient.from('parties').insert({
@@ -76,15 +76,17 @@ mixin _SeederEvents on _SeederContext {
                 'event_id': eventId,
                 'label': gMap['label'],
                 'gender': gMap['gender'],
-                'birth_year_min': gMap['birth_year_range']?['min'],
-                'birth_year_max': gMap['birth_year_range']?['max'],
+                'birth_year_min':
+                    (gMap['birth_year_range'] as Map<String, dynamic>?)?['min'],
+                'birth_year_max':
+                    (gMap['birth_year_range'] as Map<String, dynamic>?)?['max'],
                 'required_verification_ids': reqIds,
               };
             }).toList(),
           )
           .select('id');
       final eventGroupIds = (eventGroupsRes as List)
-          .map((e) => e['id'] as String)
+          .map((e) => (e as Map<String, dynamic>)['id'] as String)
           .toList();
 
       // 2. Create Event Tickets

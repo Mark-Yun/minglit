@@ -86,7 +86,7 @@ Future<({String eventId, String ticketId, String partnerId, String ownerId})>
   if (tickets.isEmpty) {
     throw Exception('🚨 Helper Error: Event $eventId has no tickets.');
   }
-  final ticketId = tickets[0]['id'] as String;
+  final ticketId = (tickets.first as Map<String, dynamic>)['id'] as String;
 
   final party = eventRes['party'] as Map<String, dynamic>;
   final partner = party['partner'] as Map<String, dynamic>;

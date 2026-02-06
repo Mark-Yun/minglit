@@ -54,8 +54,9 @@ void main() {
           .select('id, tickets(id)')
           .limit(1)
           .single();
-      final eventId = event['id'];
-      final ticketId = event['tickets'][0]['id'];
+      final eventId = event['id'] as String;
+      final tickets = event['tickets'] as List<dynamic>;
+      final ticketId = (tickets.first as Map<String, dynamic>)['id'] as String;
 
       // 3. Create Applications via Admin (Bypass RLS)
       // Delete existing to avoid unique constraint

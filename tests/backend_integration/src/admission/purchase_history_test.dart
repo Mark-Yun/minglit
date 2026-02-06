@@ -78,7 +78,10 @@ void main() {
       );
 
       Log.i('✅ History Count: ${data.length}');
-      Log.i('📍 First Event: ${event['title'] ?? event['party']['title']}');
+      final party = event['party'] as Map<String, dynamic>?;
+      Log.i(
+        '📍 First Event: ${event['title'] ?? (party != null ? party['title'] : 'N/A')}',
+      );
     });
   });
 }

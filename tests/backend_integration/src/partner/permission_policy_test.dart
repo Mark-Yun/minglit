@@ -47,8 +47,9 @@ void main() {
           .limit(1)
           .single();
       partnerId = p1['id'] as String;
-      ownerId =
-          (p1['partner_member_permissions'] as List).first['user_id'] as String;
+      final perms = (p1['partner_member_permissions'] as List).first
+          as Map<String, dynamic>;
+      ownerId = perms['user_id'] as String;
 
       // Get unrelated user (Male, 25, Verified)
       otherUserId = await getMale25VerifiedUserId(adminClient);

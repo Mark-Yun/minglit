@@ -74,7 +74,7 @@ void main() {
     if (tickets.isEmpty) {
       throw Exception('🚨 Event has no tickets!');
     }
-    testTicketId = tickets[0]['id'] as String;
+    testTicketId = (tickets.first as Map<String, dynamic>)['id'] as String;
     Log.i('🎫 [Setup] Using Event: $testEventId, Ticket: $testTicketId');
 
     // 3. Fetch a Verification
