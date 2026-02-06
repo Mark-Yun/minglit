@@ -13,6 +13,7 @@ jobs:
   ios-deploy:
     runs-on: macos-latest
     timeout-minutes: 60
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
     defaults:
       run:
         working-directory: ./apps/app_partner

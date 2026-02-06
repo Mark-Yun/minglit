@@ -40,6 +40,7 @@ jobs:
           supabase:
             - 'backend/**'
             - 'backend/supabase/**'
+            - 'tests/backend_integration/**'
 
   # App User CI
   test-app-user:
@@ -71,6 +72,13 @@ jobs:
         with:
           name: app-user-coverage
           path: apps/app_user/coverage
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: apps/app_user/coverage/lcov.info
+          flags: app-user
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
 
   # App Partner CI
   test-app-partner:
@@ -102,6 +110,13 @@ jobs:
         with:
           name: app-partner-coverage
           path: apps/app_partner/coverage
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: apps/app_partner/coverage/lcov.info
+          flags: app-partner
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
 
   # Landing User CI
   lint-landing-user:
@@ -158,6 +173,20 @@ jobs:
       - name: Run pgTAP Database Tests
         run: supabase test db
         working-directory: backend
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      - name: Backend Integration Tests - Pub Get
+        run: flutter pub get
+        working-directory: tests/backend_integration
+      - name: Backend Integration Tests - Run
+        run: dart test
+        working-directory: tests/backend_integration
+        env:
+          SUPABASE_URL: http://127.0.0.1:54321
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_LOCAL_SERVICE_ROLE_KEY }}
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
