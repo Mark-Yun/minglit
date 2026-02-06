@@ -38,7 +38,7 @@
 *   `lib/src/ui`: 공용 위젯 및 디자인 토큰 (`MinglitTheme`, `MinglitImage` 등).
 *   `lib/src/features`: 앱 간 공유되는 대형 기능 단위 (Auth, Search).
 
-### 3. Backend (`/backend/supabase`)
+### 3. Backend (`/supabase`)
 *   `migrations/`: SQL 스키마 및 데이터 무결성을 위한 트리거 로직.
 *   `seed.sql`: 개발용 초기 데이터 세팅.
 

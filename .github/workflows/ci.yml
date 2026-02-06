@@ -38,8 +38,7 @@ jobs:
             - 'apps/landing_partner/**'
             - 'shared/web/**'
           supabase:
-            - 'backend/**'
-            - 'backend/supabase/**'
+            - 'supabase/**'
             - 'tests/backend_integration/**'
 
   # App User CI
@@ -161,10 +160,8 @@ jobs:
       - run: supabase -v # CLI 설치 확인
       - name: Start Supabase
         run: supabase start
-        working-directory: backend
       - name: Test (pgTAP)
         run: supabase test db
-        working-directory: backend
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -185,8 +182,7 @@ jobs:
           deno-version: v2.x
       - name: Test (edge functions)
         run: deno test --allow-all functions/
-        working-directory: backend/supabase
+        working-directory: supabase
       - name: Stop Supabase
         if: always()
         run: supabase stop
-        working-directory: backend

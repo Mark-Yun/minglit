@@ -2,10 +2,10 @@
 
 ## Phase 1: 인프라 및 환경 설정
 - [ ] Task: `pgtap` 확장 활성화
-    - [ ] `backend/supabase/migrations`에 `pgtap` extension 생성 스크립트 추가 (dev only?).
-    - [ ] `backend/supabase/config.toml` 확인 (test db config).
+    - [ ] `supabase/migrations`에 `pgtap` extension 생성 스크립트 추가 (dev only?).
+    - [ ] `supabase/config.toml` 확인 (test db config).
 - [ ] Task: 테스트 디렉토리 구성
-    - [ ] `backend/supabase/tests` 폴더 및 `database.spec.sql` (메인 엔트리) 생성.
+    - [ ] `supabase/tests` 폴더 및 `database.spec.sql` (메인 엔트리) 생성.
     - [ ] `tests/test_helpers.sql` (공통 유틸리티) 생성.
 - [ ] Task: CI/CD 파이프라인 수정 (`.github/workflows/ci.yml`)
     - [ ] `check-supabase` Job에 `supabase db start` (or `link`) 및 `supabase db test` 추가.

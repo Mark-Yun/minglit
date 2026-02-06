@@ -6,8 +6,8 @@ on:
       - dev
       - main
     paths:
-      - 'backend/supabase/migrations/**'
-      - 'backend/supabase/functions/**'
+      - 'supabase/migrations/**'
+      - 'supabase/functions/**'
 
 jobs:
   deploy:
@@ -22,7 +22,6 @@ jobs:
       # Dev 환경 배포
       - name: Deploy to Dev Supabase
         if: github.ref == 'refs/heads/dev'
-        working-directory: ./backend
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DEV_DB_PASSWORD }}
@@ -45,7 +44,6 @@ jobs:
       # Main 환경 배포
       - name: Deploy to Main Supabase
         if: github.ref == 'refs/heads/main'
-        working-directory: ./backend
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_MAIN_DB_PASSWORD }}

@@ -9,6 +9,6 @@
     "dev:user": "npm run dev --workspace=landing_user",
     "dev:partner": "npm run dev --workspace=landing_partner",
     "dev:web": "npx concurrently \"npm run dev:user\" \"npm run dev:partner\"",
-    "seed:local": "cd backend/supabase && supabase db reset --yes && cd ../../tests/test_data_seeder && flutter pub get && flutter test test/runner.dart"
+    "seed:local": "cd supabase && supabase db reset --yes && cd ../tests/test_data_seeder && flutter pub get && flutter test test/runner.dart"
   }
 }

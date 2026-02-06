@@ -10,7 +10,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: 테스트 실패 확인 (Bug Detection)' (Protocol in workflow.md) (70e8d57)
 
 ## Phase 2: 스토리지 설정 및 마이그레이션 적용 [checkpoint: 70e8d57]
-- [x] Task: SQL 마이그레이션 파일 작성 (`backend/supabase/migrations/`) (70e8d57)
+- [x] Task: SQL 마이그레이션 파일 작성 (`supabase/migrations/`) (70e8d57)
     - [x] 버킷 생성 SQL (`storage.buckets` 삽입).
     - [x] 스토리지 RLS 정책 정의 (업로드/조회 권한 분리).
 - [x] Task: 로컬 환경 반영 및 테스트 검증 (70e8d57)

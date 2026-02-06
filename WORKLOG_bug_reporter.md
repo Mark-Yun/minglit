@@ -17,8 +17,8 @@ PR: #11 (bug reporter + CI changes + supabase secrets)
 - shared/packages/minglit_kit/lib/src/utils/log.dart
 - shared/packages/minglit_kit/lib/src/data/repositories/bug_report_repository.dart
 - shared/packages/minglit_kit/lib/minglit_ui.dart
-- backend/supabase/functions/report-bug/index.ts
-- backend/supabase/tests/database/10_storage_schema_test.sql
+- supabase/functions/report-bug/index.ts
+- supabase/tests/database/10_storage_schema_test.sql
 - .github/workflows/ci.yml
 - .github/workflows/auto-format.yml
 - .github/workflows/supabase-deploy.yml
@@ -29,10 +29,10 @@ PR: #11 (bug reporter + CI changes + supabase secrets)
 
 ## Security Findings (non-.env)
 Hardcoded PortOne/Iamport credentials:
-- backend/supabase/functions/verify-payment-v1/index.ts (IMP_KEY, IMP_SECRET)
-- backend/supabase/functions/portone-webhook-v1/index.ts (IMP_KEY, IMP_SECRET)
-- backend/supabase/functions/verify-identity-v1/index.ts (IMP_KEY, IMP_SECRET)
-- backend/supabase/functions/verify-identity-v2/index.ts (PORTONE_API_KEY)
+- supabase/functions/verify-payment-v1/index.ts (IMP_KEY, IMP_SECRET)
+- supabase/functions/portone-webhook-v1/index.ts (IMP_KEY, IMP_SECRET)
+- supabase/functions/verify-identity-v1/index.ts (IMP_KEY, IMP_SECRET)
+- supabase/functions/verify-identity-v2/index.ts (PORTONE_API_KEY)
 
 Private key files present in repo:
 - minglit_secret/ios_distribution.key

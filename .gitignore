@@ -41,8 +41,8 @@ logs/
 **/web/index.html.tmp
 
 # Supabase
-backend/supabase/.temp/
-backend/supabase/functions/.well-known/
+supabase/.temp/
+supabase/functions/.well-known/
 # Supabase secrets (if any local .env)
 .env
 .env.*

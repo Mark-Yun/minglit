@@ -2,7 +2,7 @@
 
 ## Phase 1: 데이터베이스 트리거 및 제약조건 구현
 - [ ] Task: 최대 인원 자동 동기화 트리거 작성
-    - [ ] `backend/supabase/migrations/`에 `tickets` 테이블 변경 시 `parties` 및 `events`의 `max_participants`를 합산 업데이트하는 PL/pgSQL 함수 및 트리거 추가.
+    - [ ] `supabase/migrations/`에 `tickets` 테이블 변경 시 `parties` 및 `events`의 `max_participants`를 합산 업데이트하는 PL/pgSQL 함수 및 트리거 추가.
 - [ ] Task: 최소/최대 인원 정합성 제약조건 추가
     - [ ] `min_confirmed_count`가 `max_participants`를 초과할 수 없도록 하는 체크 제약조건(Check Constraint) 추가.
 - [ ] Task: 백엔드 통합 테스트 작성 및 검증 (`backend_integration`)
