@@ -71,5 +71,9 @@ shared/assets/images/*.zip
 # Misc
 .env*.local
 .pnpm-store/
-# Secrets directory
-minglit_secret/
+
+# Environment files with real values
+apps/**/.env.local
+apps/**/.env.dev
+supabase/**/.env.local
+supabase/**/.env.dev

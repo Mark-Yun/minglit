@@ -2,8 +2,12 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { IamportClient } from "../_shared/iamport_client.ts";
 
-const IMP_KEY = "3353907223007704";
-const IMP_SECRET = "Qs5lIRl4bQs6Waiavkcc6hBVhj4V2LSTdYeWPz01qs7mDqx8LJlS0XOigSdjE6cR4qNU0OWrh4NUuk3f";
+const IMP_KEY = Deno.env.get("PORTONE_IMP_KEY");
+const IMP_SECRET = Deno.env.get("PORTONE_IMP_SECRET");
+
+if (!IMP_KEY || !IMP_SECRET) {
+  throw new Error("Missing required environment variables: PORTONE_IMP_KEY, PORTONE_IMP_SECRET");
+}
 
 // Portone (Iamport V1) Webhook IP Whitelist
 const ALLOWED_IPS = ["52.78.100.19", "52.78.48.223", "52.78.17.128", "127.0.0.1"];

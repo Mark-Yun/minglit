@@ -1,0 +1,3 @@
+[submodule "minglit_env"]
+	path = minglit_env
+	url = https://github.com/Mark-Yun/minglit_env.git
