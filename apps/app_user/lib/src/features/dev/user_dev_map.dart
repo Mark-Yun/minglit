@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_user/src/features/auth/auth_wrapper.dart';
 import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
@@ -144,7 +146,7 @@ class UserDevMap extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // ignore: discarded_futures
+          // ignore: discarded_futures - fire-and-forget navigation
           const DevUserSwitchRoute().push<void>(context);
         },
         child: const Icon(Icons.people_alt),
@@ -164,7 +166,7 @@ class _StartScreenToggleState extends State<_StartScreenToggle> {
   @override
   void initState() {
     super.initState();
-    _load();
+    unawaited(_load());
   }
 
   Future<void> _load() async {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -93,7 +94,8 @@ class _MinglitSplashScreenState extends State<MinglitSplashScreen>
     _orbCtrl = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 6),
-    )..repeat();
+    );
+    unawaited(_orbCtrl.repeat());
 
     _revealCtrl = AnimationController(
       vsync: this,
@@ -120,9 +122,11 @@ class _MinglitSplashScreenState extends State<MinglitSplashScreen>
     );
 
     // Phase 1 plays for 1.5 s, then Phase 2 reveal begins.
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (mounted) _revealCtrl.forward();
-    });
+    unawaited(
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted) unawaited(_revealCtrl.forward());
+      }),
+    );
   }
 
   @override
@@ -219,7 +223,7 @@ class _MinglitSplashScreenState extends State<MinglitSplashScreen>
                     opacity: logoAlpha,
                     child: Transform.scale(
                       scale: logoS,
-                      child: const MinglitTextLogo(fontSize: 48),
+                      child: const MinglitTextLogo(),
                     ),
                   ),
                 ),

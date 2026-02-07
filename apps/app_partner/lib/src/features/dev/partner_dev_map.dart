@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_partner/src/features/admin/partner_application_detail_page.dart';
 import 'package:app_partner/src/features/verification/review/review_verification_screen.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
@@ -119,7 +121,7 @@ class PartnerDevMap extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // ignore: discarded_futures
+          // ignore: discarded_futures - fire-and-forget navigation
           const DevUserSwitchRoute().push<void>(context);
         },
         child: const Icon(Icons.people_alt),
@@ -139,7 +141,7 @@ class _StartScreenToggleState extends State<_StartScreenToggle> {
   @override
   void initState() {
     super.initState();
-    _load();
+    unawaited(_load());
   }
 
   Future<void> _load() async {
