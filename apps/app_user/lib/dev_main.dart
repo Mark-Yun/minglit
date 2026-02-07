@@ -167,13 +167,22 @@ class MinglitDevApp extends ConsumerWidget {
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
         // ignore: use_minglit_async_value_widget - This is the app entry point, MaterialApp is not yet available.
-        return startupState.when(
-          data: (_) => StaffGuardWrapper(
-            child: MinglitGlobalLoadingOverlay(child: child!),
-          ),
-          loading: () => const MinglitSplashScreen(appName: 'User Dev'),
-          error: (e, st) => Scaffold(
-            body: Center(child: Text('Startup Error: $e')),
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 600),
+          transitionBuilder: MinglitSplashTransition.build,
+          child: startupState.when(
+            data: (_) => StaffGuardWrapper(
+              key: const ValueKey('app'),
+              child: MinglitGlobalLoadingOverlay(child: child!),
+            ),
+            loading: () => const MinglitSplashScreen(
+              key: ValueKey('splash'),
+              appName: 'User Dev',
+            ),
+            error: (e, st) => Scaffold(
+              key: const ValueKey('error'),
+              body: Center(child: Text('Startup Error: $e')),
+            ),
           ),
         );
       },

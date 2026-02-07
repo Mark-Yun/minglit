@@ -205,23 +205,27 @@ class _AppView extends ConsumerWidget {
     );
 
     // ignore: use_minglit_async_value_widget - This is the app entry point, MaterialApp is not yet available.
-    return startupState.when(
-      // Case 1: Initializing - Show Splash immediately
-      loading: () =>
-          const MinglitSplashScreen(appName: 'Partner Dev', isPartner: true),
-
-      // Case 2: Error - Show Error UI
-      error: (e, st) =>
-          Scaffold(body: Center(child: Text('Startup Error: $e'))),
-
-      // Case 3: Ready - Show the Real App using GoRouter
-      data: (_) => const _AuthenticatedApp(),
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 600),
+      transitionBuilder: MinglitSplashTransition.build,
+      child: startupState.when(
+        loading: () => const MinglitSplashScreen(
+          key: ValueKey('splash'),
+          appName: 'Partner Dev',
+          isPartner: true,
+        ),
+        error: (e, st) => Scaffold(
+          key: const ValueKey('error'),
+          body: Center(child: Text('Startup Error: $e')),
+        ),
+        data: (_) => const _AuthenticatedApp(key: ValueKey('app')),
+      ),
     );
   }
 }
 
 class _AuthenticatedApp extends ConsumerWidget {
-  const _AuthenticatedApp();
+  const _AuthenticatedApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
