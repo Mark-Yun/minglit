@@ -8,14 +8,17 @@ part of 'social_interaction_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Manages social interaction state for a target.
 
 @ProviderFor(SocialInteractionController)
 const socialInteractionControllerProvider =
     SocialInteractionControllerFamily._();
 
+/// Manages social interaction state for a target.
 final class SocialInteractionControllerProvider
     extends
         $AsyncNotifierProvider<SocialInteractionController, InteractionState> {
+  /// Manages social interaction state for a target.
   const SocialInteractionControllerProvider._({
     required SocialInteractionControllerFamily super.from,
     required ({
@@ -61,6 +64,8 @@ final class SocialInteractionControllerProvider
 String _$socialInteractionControllerHash() =>
     r'0df98172a836fb63cfc1bb1166d6ef069d1b8ef5';
 
+/// Manages social interaction state for a target.
+
 final class SocialInteractionControllerFamily extends $Family
     with
         $ClassFamilyOverride<
@@ -83,6 +88,8 @@ final class SocialInteractionControllerFamily extends $Family
         isAutoDispose: true,
       );
 
+  /// Manages social interaction state for a target.
+
   SocialInteractionControllerProvider call({
     required String targetId,
     required SocialTargetType targetType,
@@ -99,6 +106,8 @@ final class SocialInteractionControllerFamily extends $Family
   @override
   String toString() => r'socialInteractionControllerProvider';
 }
+
+/// Manages social interaction state for a target.
 
 abstract class _$SocialInteractionController
     extends $AsyncNotifier<InteractionState> {

@@ -271,12 +271,17 @@ final class EventFeedFamily extends $Family
   String toString() => r'eventFeedProvider';
 }
 
+/// Fetches detailed event data by [eventId].
+
 @ProviderFor(eventDetail)
 const eventDetailProvider = EventDetailFamily._();
+
+/// Fetches detailed event data by [eventId].
 
 final class EventDetailProvider
     extends $FunctionalProvider<AsyncValue<Event>, Event, FutureOr<Event>>
     with $FutureModifier<Event>, $FutureProvider<Event> {
+  /// Fetches detailed event data by [eventId].
   const EventDetailProvider._({
     required EventDetailFamily super.from,
     required String super.argument,
@@ -322,6 +327,8 @@ final class EventDetailProvider
 
 String _$eventDetailHash() => r'309f8f2a23dc3be0a8f3b3ef3833f2d4d3c710b4';
 
+/// Fetches detailed event data by [eventId].
+
 final class EventDetailFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Event>, String> {
   const EventDetailFamily._()
@@ -333,6 +340,8 @@ final class EventDetailFamily extends $Family
         isAutoDispose: true,
       );
 
+  /// Fetches detailed event data by [eventId].
+
   EventDetailProvider call(String eventId) =>
       EventDetailProvider._(argument: eventId, from: this);
 
@@ -340,8 +349,12 @@ final class EventDetailFamily extends $Family
   String toString() => r'eventDetailProvider';
 }
 
+/// Fetches events associated with the given [partyId].
+
 @ProviderFor(partyEvents)
 const partyEventsProvider = PartyEventsFamily._();
+
+/// Fetches events associated with the given [partyId].
 
 final class PartyEventsProvider
     extends
@@ -351,6 +364,7 @@ final class PartyEventsProvider
           FutureOr<List<Event>>
         >
     with $FutureModifier<List<Event>>, $FutureProvider<List<Event>> {
+  /// Fetches events associated with the given [partyId].
   const PartyEventsProvider._({
     required PartyEventsFamily super.from,
     required String super.argument,
@@ -397,6 +411,8 @@ final class PartyEventsProvider
 
 String _$partyEventsHash() => r'a6f719e6d540a85291cc3127fbd914b7413861a0';
 
+/// Fetches events associated with the given [partyId].
+
 final class PartyEventsFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<Event>>, String> {
   const PartyEventsFamily._()
@@ -407,6 +423,8 @@ final class PartyEventsFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
+
+  /// Fetches events associated with the given [partyId].
 
   PartyEventsProvider call(String partyId) =>
       PartyEventsProvider._(argument: partyId, from: this);

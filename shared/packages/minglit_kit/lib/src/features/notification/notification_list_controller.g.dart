@@ -8,13 +8,16 @@ part of 'notification_list_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Controls the notification list state and actions.
 
 @ProviderFor(NotificationList)
 const notificationListProvider = NotificationListProvider._();
 
+/// Controls the notification list state and actions.
 final class NotificationListProvider
     extends
         $AsyncNotifierProvider<NotificationList, List<Map<String, dynamic>>> {
+  /// Controls the notification list state and actions.
   const NotificationListProvider._()
     : super(
         from: null,
@@ -35,6 +38,8 @@ final class NotificationListProvider
 }
 
 String _$notificationListHash() => r'39a78e4fbb4e8bde91cdca2bf4d82e7d53da7c51';
+
+/// Controls the notification list state and actions.
 
 abstract class _$NotificationList
     extends $AsyncNotifier<List<Map<String, dynamic>>> {

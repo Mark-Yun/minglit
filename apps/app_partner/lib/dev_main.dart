@@ -11,7 +11,6 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kakao_map_plugin/kakao_map_plugin.dart' as kakao;
-import 'package:minglit_kit/minglit_dev.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -108,14 +107,6 @@ Future<void> main() async {
 
 @riverpod
 Future<void> appStartup(Ref ref) async {
-  const supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: 'http://127.0.0.1:54321',
-  );
-  const supabaseServiceRoleKey = String.fromEnvironment(
-    'SUPABASE_SERVICE_ROLE_KEY',
-  );
-
   try {
     // 1. Load Asset Manifest
     final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
@@ -152,10 +143,7 @@ Future<void> appStartup(Ref ref) async {
       }
     }
 
-    // 4. Initialize Dev Config
-    DevConfig.init(supabaseUrl, supabaseServiceRoleKey);
-
-    // 5. Engine Stabilization Delay
+    // 4. Engine Stabilization Delay
     // Give 200ms for the engine to finish font mapping and image decoding
     await Future<void>.delayed(const Duration(milliseconds: 200));
   } on AuthApiException catch (e) {

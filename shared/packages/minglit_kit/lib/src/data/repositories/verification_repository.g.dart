@@ -61,8 +61,12 @@ final class VerificationRepositoryProvider
 String _$verificationRepositoryHash() =>
     r'7565991339f4129a3120544fa7c5468fd021b418';
 
+/// Fetches verifications by a comma-separated list of IDs.
+
 @ProviderFor(verificationsByIds)
 const verificationsByIdsProvider = VerificationsByIdsFamily._();
+
+/// Fetches verifications by a comma-separated list of IDs.
 
 final class VerificationsByIdsProvider
     extends
@@ -74,6 +78,7 @@ final class VerificationsByIdsProvider
     with
         $FutureModifier<List<Verification>>,
         $FutureProvider<List<Verification>> {
+  /// Fetches verifications by a comma-separated list of IDs.
   const VerificationsByIdsProvider._({
     required VerificationsByIdsFamily super.from,
     required String super.argument,
@@ -121,6 +126,8 @@ final class VerificationsByIdsProvider
 String _$verificationsByIdsHash() =>
     r'f7d02f8e6aaa43f625615a141696ebd8f27e7da9';
 
+/// Fetches verifications by a comma-separated list of IDs.
+
 final class VerificationsByIdsFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<Verification>>, String> {
   const VerificationsByIdsFamily._()
@@ -131,6 +138,8 @@ final class VerificationsByIdsFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: false,
       );
+
+  /// Fetches verifications by a comma-separated list of IDs.
 
   VerificationsByIdsProvider call(String commaSeparatedIds) =>
       VerificationsByIdsProvider._(argument: commaSeparatedIds, from: this);

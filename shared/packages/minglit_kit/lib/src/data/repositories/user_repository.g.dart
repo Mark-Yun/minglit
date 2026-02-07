@@ -8,13 +8,17 @@ part of 'user_repository.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provides the [UserRepository].
 
 @ProviderFor(userRepository)
 const userRepositoryProvider = UserRepositoryProvider._();
 
+/// Provides the [UserRepository].
+
 final class UserRepositoryProvider
     extends $FunctionalProvider<UserRepository, UserRepository, UserRepository>
     with $Provider<UserRepository> {
+  /// Provides the [UserRepository].
   const UserRepositoryProvider._()
     : super(
         from: null,

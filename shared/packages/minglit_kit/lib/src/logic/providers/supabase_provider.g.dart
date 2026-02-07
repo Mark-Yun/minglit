@@ -8,13 +8,17 @@ part of 'supabase_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provides the shared [SupabaseClient] instance.
 
 @ProviderFor(supabaseClient)
 const supabaseClientProvider = SupabaseClientProvider._();
 
+/// Provides the shared [SupabaseClient] instance.
+
 final class SupabaseClientProvider
     extends $FunctionalProvider<SupabaseClient, SupabaseClient, SupabaseClient>
     with $Provider<SupabaseClient> {
+  /// Provides the shared [SupabaseClient] instance.
   const SupabaseClientProvider._()
     : super(
         from: null,

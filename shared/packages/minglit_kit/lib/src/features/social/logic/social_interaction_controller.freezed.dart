@@ -14,7 +14,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$InteractionState {
 
- bool get isActive; int get count;
+/// Whether the current user has the interaction active.
+ bool get isActive;/// Total count for this interaction type.
+ int get count;
 /// Create a copy of InteractionState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -210,7 +212,9 @@ class _InteractionState implements InteractionState {
   const _InteractionState({required this.isActive, required this.count});
   
 
+/// Whether the current user has the interaction active.
 @override final  bool isActive;
+/// Total count for this interaction type.
 @override final  int count;
 
 /// Create a copy of InteractionState

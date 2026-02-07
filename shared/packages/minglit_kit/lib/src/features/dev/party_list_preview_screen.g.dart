@@ -8,9 +8,12 @@ part of 'party_list_preview_screen.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Fetches parties for the preview list.
 
 @ProviderFor(previewParties)
 const previewPartiesProvider = PreviewPartiesProvider._();
+
+/// Fetches parties for the preview list.
 
 final class PreviewPartiesProvider
     extends
@@ -20,6 +23,7 @@ final class PreviewPartiesProvider
           FutureOr<List<Party>>
         >
     with $FutureModifier<List<Party>>, $FutureProvider<List<Party>> {
+  /// Fetches parties for the preview list.
   const PreviewPartiesProvider._()
     : super(
         from: null,

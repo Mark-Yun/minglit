@@ -8,9 +8,12 @@ part of 'iamport_repository.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provides the [IamportRepository] instance.
 
 @ProviderFor(iamportRepository)
 const iamportRepositoryProvider = IamportRepositoryProvider._();
+
+/// Provides the [IamportRepository] instance.
 
 final class IamportRepositoryProvider
     extends
@@ -20,6 +23,7 @@ final class IamportRepositoryProvider
           IamportRepository
         >
     with $Provider<IamportRepository> {
+  /// Provides the [IamportRepository] instance.
   const IamportRepositoryProvider._()
     : super(
         from: null,
