@@ -8,9 +8,12 @@ part of 'identity_repository.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provides the [IdentityRepository].
 
 @ProviderFor(identityRepository)
 const identityRepositoryProvider = IdentityRepositoryProvider._();
+
+/// Provides the [IdentityRepository].
 
 final class IdentityRepositoryProvider
     extends
@@ -20,6 +23,7 @@ final class IdentityRepositoryProvider
           IdentityRepository
         >
     with $Provider<IdentityRepository> {
+  /// Provides the [IdentityRepository].
   const IdentityRepositoryProvider._()
     : super(
         from: null,

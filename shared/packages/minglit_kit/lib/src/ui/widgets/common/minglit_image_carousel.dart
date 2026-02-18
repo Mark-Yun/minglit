@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_image.dart';
 
 /// **Minglit Image Carousel**
 ///
 /// A reusable carousel widget for displaying multiple images.
 /// Used in Party/Event detail screens.
 class MinglitImageCarousel extends StatefulWidget {
+  /// Creates an image carousel for a list of URLs.
   const MinglitImageCarousel({
     required this.imageUrls,
     super.key,
@@ -14,9 +16,16 @@ class MinglitImageCarousel extends StatefulWidget {
     this.onImageTap,
   });
 
+  /// Image URLs to display in the carousel.
   final List<String> imageUrls;
+
+  /// Height of the carousel viewport.
   final double height;
+
+  /// BoxFit used for each image.
   final BoxFit fit;
+
+  /// Callback invoked when an image is tapped.
   final void Function(int index)? onImageTap;
 
   @override

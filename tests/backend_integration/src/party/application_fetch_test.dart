@@ -1,3 +1,4 @@
+import 'package:minglit_kit/minglit_core.dart';
 import 'package:supabase/supabase.dart';
 import 'package:test/test.dart';
 
@@ -18,7 +19,7 @@ void main() {
       // 1. Get any event id
       final events = await adminClient.from('events').select('id').limit(1);
       if (events.isEmpty) {
-        print('No events found, skipping test');
+        Log.w('No events found, skipping test');
         return;
       }
       final eventId = events.first['id'] as String;
@@ -42,9 +43,9 @@ void main() {
               .single())['id'],
           'payment_id': 'dummy_payment',
           'payment_amount': 1000,
-          'status': 'pending_review'
+          'status': 'pending_review',
         });
-      } catch (e) {
+      } on Exception {
         // Ignore duplicate key error if already exists
       }
 
@@ -56,11 +57,11 @@ void main() {
           )
           .eq('event_id', eventId);
 
-      print('Data type: ${data.runtimeType}');
+      Log.i('Data type: ${data.runtimeType}');
       if (data.isNotEmpty) {
         final firstItem = data.first;
-        print('First item type: ${firstItem.runtimeType}');
-        print('User field type: ${firstItem['user']?.runtimeType}');
+        Log.i('First item type: ${firstItem.runtimeType}');
+        Log.i('User field type: ${firstItem['user']?.runtimeType}');
 
         // Assertions
         expect(firstItem, isA<Map<String, dynamic>>());

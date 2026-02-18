@@ -1,8 +1,10 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
-import '../service/certification_service.dart';
+
+import 'package:flutter/material.dart';
+
+import 'package:minglit_iamport_v1/src/service/certification_service.dart';
 
 class CertificationServiceImpl implements CertificationService {
   @override
@@ -26,39 +28,29 @@ class CertificationServiceImpl implements CertificationService {
       'phone': phone,
     }.jsify();
 
-        final callback = (JSObject result) {
+    final callback = (JSObject result) {
+      // Use getProperty to access JS object fields safely
 
-          // Use getProperty to access JS object fields safely
+      final success = result.getProperty('success'.toJS);
 
-          final success = result.getProperty('success'.toJS);
+      final impUid = result.getProperty('imp_uid'.toJS);
 
-          final impUid = result.getProperty('imp_uid'.toJS);
+      final errorMsg = result.getProperty('error_msg'.toJS);
 
-          final errorMsg = result.getProperty('error_msg'.toJS);
+      // success can be boolean or string 'true' depending on SDK version
 
-    
+      final isSuccess = success == true.toJS || success.toString() == 'true';
 
-          // success can be boolean or string 'true' depending on SDK version
+      if (isSuccess) {
+        completer.complete(impUid?.toString());
+      } else {
+        debugPrint('Certification Failed: $errorMsg');
 
-          final isSuccess = success == true.toJS || success.toString() == 'true';
+        completer.complete(null);
+      }
+    }.toJS;
 
-    
-
-          if (isSuccess) {
-
-            completer.complete(impUid?.toString());
-
-          } else {
-
-            debugPrint('Certification Failed: ${errorMsg?.toString()}');
-
-            completer.complete(null);
-
-          }
-
-        }.toJS;
-
-    (imp).callMethod('certification'.toJS, options, callback);
+    imp.callMethod('certification'.toJS, options, callback);
 
     return completer.future;
   }

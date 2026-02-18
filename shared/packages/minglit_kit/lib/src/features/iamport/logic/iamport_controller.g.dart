@@ -8,13 +8,16 @@ part of 'iamport_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Controls Iamport payment and certification state.
 
 @ProviderFor(IamportController)
 const iamportControllerProvider = IamportControllerProvider._();
 
+/// Controls Iamport payment and certification state.
 final class IamportControllerProvider
     extends
         $NotifierProvider<IamportController, AsyncValue<IamportResultModel?>> {
+  /// Controls Iamport payment and certification state.
   const IamportControllerProvider._()
     : super(
         from: null,
@@ -45,6 +48,8 @@ final class IamportControllerProvider
 }
 
 String _$iamportControllerHash() => r'f45d925fe45305d65720f6bf65bd8bd46bda2120';
+
+/// Controls Iamport payment and certification state.
 
 abstract class _$IamportController
     extends $Notifier<AsyncValue<IamportResultModel?>> {

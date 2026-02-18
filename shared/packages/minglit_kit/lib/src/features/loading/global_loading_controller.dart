@@ -6,10 +6,15 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'global_loading_controller.freezed.dart';
 part 'global_loading_controller.g.dart';
 
+/// Represents the global loading overlay state.
 @freezed
 abstract class GlobalLoadingState with _$GlobalLoadingState {
+  /// Creates a loading state value.
   const factory GlobalLoadingState({
+    /// Whether the overlay is visible.
     @Default(false) bool isVisible,
+
+    /// Optional callback invoked when the user cancels.
     VoidCallback? onCancel,
   }) = _GlobalLoadingState;
 }
@@ -31,15 +36,18 @@ abstract class GlobalLoadingState with _$GlobalLoadingState {
 /// ```
 @Riverpod(keepAlive: true)
 class GlobalLoadingController extends _$GlobalLoadingController {
+  /// Builds the initial loading state.
   @override
   GlobalLoadingState build() {
     return const GlobalLoadingState();
   }
 
+  /// Shows the global loading overlay.
   void show({VoidCallback? onCancel}) {
     state = GlobalLoadingState(isVisible: true, onCancel: onCancel);
   }
 
+  /// Hides the global loading overlay.
   void hide() {
     state = const GlobalLoadingState();
   }

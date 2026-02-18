@@ -49,4 +49,4 @@ final class AuthCoordinatorProvider
   }
 }
 
-String _$authCoordinatorHash() => r'6fd827ba5d5beca3d502ed21e34c9d84ee4daec8';
+String _$authCoordinatorHash() => r'58b0bcf69bf1277fc3da13d8ef2b5bc1b337feaa';

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:iamport_flutter/Iamport_certification.dart';
 import 'package:iamport_flutter/model/certification_data.dart';
-import '../service/certification_service.dart';
+import 'package:minglit_iamport_v1/src/service/certification_service.dart';
 
 class CertificationServiceImpl implements CertificationService {
   @override
@@ -16,7 +16,7 @@ class CertificationServiceImpl implements CertificationService {
     final completer = Completer<String?>();
 
     await Navigator.of(context).push(
-      MaterialPageRoute(
+      MaterialPageRoute<void>(
         builder: (context) => IamportCertification(
           appBar: AppBar(title: const Text('본인인증')),
           userCode: userCode,

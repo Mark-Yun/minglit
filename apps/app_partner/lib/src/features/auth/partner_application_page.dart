@@ -67,7 +67,9 @@ class _PartnerApplicationPageState
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
-    if (_bizRegFile == null || _bankbookFile == null) {
+    final bizRegFile = _bizRegFile;
+    final bankbookFile = _bankbookFile;
+    if (bizRegFile == null || bankbookFile == null) {
       context.showMinglitWarning(
         context.l10n.partnerApplication_message_missingFiles,
       );
@@ -79,8 +81,8 @@ class _PartnerApplicationPageState
       final repository = ref.read(partnerRepositoryProvider);
       await repository.submitApplication(
         applicationData: _data,
-        bizRegistrationFile: _bizRegFile!,
-        bankbookFile: _bankbookFile!,
+        bizRegistrationFile: bizRegFile,
+        bankbookFile: bankbookFile,
       );
       if (mounted) {
         await context.showMinglitAlert(

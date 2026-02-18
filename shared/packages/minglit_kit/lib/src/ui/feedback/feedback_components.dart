@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
+/// Feedback categories used to style UI messages.
 enum MinglitFeedbackType {
+  /// Indicates a successful action.
   success,
+
+  /// Neutral informational feedback.
   info,
+
+  /// Warning feedback for attention.
   warning,
+
+  /// Error feedback for failures.
   error,
 }
 
@@ -12,6 +20,7 @@ enum MinglitFeedbackType {
 ///
 /// Provides standardized SnackBar and Dialog configurations.
 class MinglitFeedbackUI {
+  /// Builds a standardized [SnackBar] for the given [type].
   static SnackBar buildSnackBar({
     required BuildContext context,
     required String message,
@@ -67,6 +76,7 @@ class MinglitFeedbackUI {
     );
   }
 
+  /// Builds a standardized dialog widget for feedback.
   static Widget buildDialog({
     required BuildContext context,
     required String title,
@@ -105,6 +115,7 @@ class MinglitFeedbackUI {
     );
   }
 
+  /// Builds a [MaterialBanner] with an action button.
   static MaterialBanner buildBanner({
     required BuildContext context,
     required String message,

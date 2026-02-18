@@ -1,4 +1,5 @@
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
+import 'package:minglit_kit/minglit_core.dart';
 import 'package:supabase/supabase.dart';
 import 'package:test/test.dart';
 
@@ -41,7 +42,7 @@ void main() {
     late String app2Id;
 
     setUpAll(() async {
-      print('🚀 [Setup] Fetching users and creating test applications...');
+      Log.i('🚀 [Setup] Fetching users and creating test applications...');
 
       // 1. Get User 1 (Male) and User 2 (Female) via Helpers
       user1Id = await getMale25VerifiedUserId(adminClient);
@@ -53,11 +54,13 @@ void main() {
           .select('id, tickets(id)')
           .limit(1)
           .single();
-      final eventId = event['id'];
-      final ticketId = event['tickets'][0]['id'];
+      final eventId = event['id'] as String;
+      final tickets = event['tickets'] as List<dynamic>;
+      final ticketId = (tickets.first as Map<String, dynamic>)['id'] as String;
 
       // 3. Create Applications via Admin (Bypass RLS)
-      // Delete existing to avoid unique constraint (Delete participants first due to FK)
+      // Delete existing to avoid unique constraint
+      // (Delete participants first due to FK)
       await adminClient
           .from('event_participants')
           .delete()
@@ -77,7 +80,7 @@ void main() {
           })
           .select()
           .single();
-      app1Id = res1['id'];
+      app1Id = res1['id'] as String;
 
       final res2 = await adminClient
           .from('event_applications')
@@ -89,9 +92,9 @@ void main() {
           })
           .select()
           .single();
-      app2Id = res2['id'];
+      app2Id = res2['id'] as String;
 
-      print('✅ [Setup] Ready. App1: $app1Id (User1), App2: $app2Id (User2)');
+      Log.i('✅ [Setup] Ready. App1: $app1Id (User1), App2: $app2Id (User2)');
     });
 
     test('User 1 should see their own application', () async {
@@ -106,7 +109,7 @@ void main() {
       expect(data!['id'], equals(app1Id));
     });
 
-    test('User 1 should NOT see User 2\'s application', () async {
+    test("User 1 should NOT see User 2's application", () async {
       final client1 = createUserClient(user1Id);
       final data = await client1
           .from('event_applications')
@@ -117,7 +120,7 @@ void main() {
       expect(data, isNull, reason: 'RLS should hide other users applications');
     });
 
-    test('User 1 should NOT be able to update User 2\'s application', () async {
+    test("User 1 should NOT be able to update User 2's application", () async {
       final client1 = createUserClient(user1Id);
 
       // Attempt to change status of User 2's app
@@ -127,8 +130,11 @@ void main() {
           .eq('id', app2Id)
           .select();
 
-      expect(res, isEmpty,
-          reason: 'RLS should prevent updating other users data');
+      expect(
+        res,
+        isEmpty,
+        reason: 'RLS should prevent updating other users data',
+      );
 
       // Verify via admin that it remains pending
       final verify = await adminClient

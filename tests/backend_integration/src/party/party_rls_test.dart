@@ -1,4 +1,5 @@
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
+import 'package:minglit_kit/minglit_core.dart';
 import 'package:supabase/supabase.dart';
 import 'package:test/test.dart';
 
@@ -41,7 +42,7 @@ void main() {
     late String partyId;
 
     setUpAll(() async {
-      print('🚀 [Setup] Fetching data for Party RLS...');
+      Log.i('🚀 [Setup] Fetching data for Party RLS...');
 
       // Get Test User as Guest via Helper
       guestId = await getMale25VerifiedUserId(adminClient);
@@ -52,8 +53,10 @@ void main() {
           .select('id, partner_member_permissions(user_id)')
           .limit(1)
           .single();
-      partnerId = p1['id'];
-      ownerId = (p1['partner_member_permissions'] as List).first['user_id'];
+      partnerId = p1['id'] as String;
+      final perms = (p1['partner_member_permissions'] as List).first
+          as Map<String, dynamic>;
+      ownerId = perms['user_id'] as String;
 
       // Get a Party owned by this partner
       final party = await adminClient
@@ -62,9 +65,9 @@ void main() {
           .eq('partner_id', partnerId)
           .limit(1)
           .single();
-      partyId = party['id'];
+      partyId = party['id'] as String;
 
-      print('✅ [Setup] Owner: $ownerId, Guest: $guestId, Party: $partyId');
+      Log.i('✅ [Setup] Owner: $ownerId, Guest: $guestId, Party: $partyId');
     });
 
     test('Owner should be able to update party', () async {

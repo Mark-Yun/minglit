@@ -1,5 +1,7 @@
-// ignore_for_file: lines_longer_than_80_chars, avoid_dynamic_calls
+// ignore_for_file: avoid_dynamic_calls -- PGMQ library returns dynamic types
+// that require dynamic calls for testing
 
+import 'package:minglit_kit/minglit_core.dart';
 import 'package:postgres/postgres.dart';
 import 'package:test/test.dart';
 
@@ -25,7 +27,9 @@ void main() {
     tearDown(() async {
       try {
         await connection.execute("SELECT pgmq.drop_queue('$testQueue')");
-      } catch (_) {}
+      } on Object catch (e, st) {
+        Log.e('Failed to drop PGMQ queue: $testQueue', e, st);
+      }
     });
 
     test('should send and read message using wrappers', () async {

@@ -5,9 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/features/notification/logic/notification_settings_controller.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
 
+/// Displays notification settings and toggles.
 class NotificationSettingsScreen extends ConsumerWidget {
+  /// Creates a notification settings screen.
   const NotificationSettingsScreen({super.key});
 
+  /// Builds the notification settings UI.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settingsAsync = ref.watch(notificationSettingsControllerProvider);

@@ -8,17 +8,21 @@ import 'package:minglit_kit/src/data/repositories/auth_repository.dart';
 import 'package:minglit_kit/src/data/repositories/notification_repository.dart';
 import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 
+/// Provides the notification repository instance.
 final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
   return NotificationRepository(ref.watch(supabaseClientProvider));
 });
 
+/// Handles deep links triggered by notifications.
 typedef NotificationDeepLinkHandler = void Function(String link);
 
+/// Provides the notification deep link handler.
 final notificationDeepLinkHandlerProvider =
     Provider<NotificationDeepLinkHandler>((_) {
       return (_) {};
     });
 
+/// Provides the notification service instance.
 final notificationServiceProvider = Provider<NotificationService>((ref) {
   return NotificationService(
     ref.watch(notificationRepositoryProvider),
@@ -26,7 +30,9 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
   );
 });
 
+/// Manages FCM registration, local notifications, and deep links.
 class NotificationService {
+  /// Creates a notification service bound to [NotificationRepository].
   NotificationService(this._repository, this._ref);
 
   final NotificationRepository _repository;
@@ -36,6 +42,7 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
   final Logger _logger = Logger();
 
+  /// Initializes permissions, token registration, and handlers.
   Future<void> initialize() async {
     // 1. Request Permission
     final settings = await _fcm.requestPermission();
@@ -157,6 +164,7 @@ class NotificationService {
   }
 
   // 로그인 성공 시 호출할 메서드
+  /// Registers the token after a successful user login.
   Future<void> onUserLogin() async {
     final token = await _fcm.getToken();
     if (token != null) {

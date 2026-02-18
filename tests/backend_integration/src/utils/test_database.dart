@@ -10,7 +10,7 @@ class TestDatabase {
 
   /// Creates a new connection to the local Postgres instance.
   static Future<Connection> createConnection() async {
-    return await Connection.open(
+    return Connection.open(
       Endpoint(
         host: _host,
         port: _port,

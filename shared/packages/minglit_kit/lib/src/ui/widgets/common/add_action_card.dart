@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
 /// A reusable card-style button for add/create actions.
 /// Uses the tertiary (mint/lime) color scheme.
 class AddActionCard extends StatelessWidget {
+  /// Creates a card-style add action button.
   const AddActionCard({
     required this.title,
     required this.onTap,
@@ -12,9 +13,16 @@ class AddActionCard extends StatelessWidget {
     super.key,
   });
 
+  /// The primary label displayed on the card.
   final String title;
+
+  /// Optional secondary label displayed under [title].
   final String? subtitle;
+
+  /// Callback invoked when the card is tapped.
   final VoidCallback onTap;
+
+  /// Icon displayed at the leading edge of the card.
   final IconData iconData;
 
   @override

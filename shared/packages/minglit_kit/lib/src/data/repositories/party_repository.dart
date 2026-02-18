@@ -19,6 +19,7 @@ PartyRepository partyRepository(Ref ref) {
 
 /// Repository for Party-related data operations.
 class PartyRepository {
+  /// Creates a [PartyRepository] with a Supabase client.
   PartyRepository({SupabaseClient? supabase})
     : _supabase = supabase ?? Supabase.instance.client;
 
@@ -102,16 +103,18 @@ class PartyRepository {
       final createdParty = Party.fromJson(data);
 
       // Create associated ticket templates if provided
-      if (party.ticketTemplates != null && party.ticketTemplates!.isNotEmpty) {
-        final templatesJson = party.ticketTemplates!
+      final templates = party.ticketTemplates;
+      if (templates != null && templates.isNotEmpty) {
+        final templatesJson = templates
             .map((t) => t.copyWith(partyId: createdParty.id).toDbJson())
             .toList();
         await _supabase.from('ticket_templates').insert(templatesJson);
       }
 
       // Create associated entry groups if provided
-      if (party.entryGroups != null && party.entryGroups!.isNotEmpty) {
-        final groupsJson = party.entryGroups!
+      final entryGroups = party.entryGroups;
+      if (entryGroups != null && entryGroups.isNotEmpty) {
+        final groupsJson = entryGroups
             .map((g) => g.copyWith(partyId: createdParty.id).toDbJson())
             .toList();
         await _supabase.from('entry_groups').insert(groupsJson);
@@ -171,18 +174,19 @@ class PartyRepository {
   /// Retrieves all parties for a specific partner.
   Future<List<Party>> getPartiesByPartnerId(String partnerId) async {
     try {
-      final data = await _supabase
-          .from('parties')
-          .select(
-            '*, location:locations(*), '
-            'ticket_templates(*), entry_group_templates(*)',
-          )
-          .eq('partner_id', partnerId)
-          .order('created_at', ascending: false);
-
-      return (data as List)
-          .map((e) => Party.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final data =
+          await _supabase
+                  .from('parties')
+                  .select(
+                    '*, location:locations(*), '
+                    'ticket_templates(*), entry_group_templates(*)',
+                  )
+                  .eq('partner_id', partnerId)
+                  .order('created_at', ascending: false)
+              as List;
+      return data.map((e) {
+        return Party.fromJson(e as Map<String, dynamic>);
+      }).toList();
     } catch (e, st) {
       Log.e('❌ [PartyRepo] getPartiesByPartnerId Error', e, st);
       rethrow;
@@ -192,17 +196,18 @@ class PartyRepository {
   /// Retrieves all parties (e.g. for admin or dev list).
   Future<List<Party>> getParties() async {
     try {
-      final data = await _supabase
-          .from('parties')
-          .select(
-            '*, location:locations(*), '
-            'ticket_templates(*), entry_group_templates(*)',
-          )
-          .order('created_at', ascending: false);
-
-      return (data as List)
-          .map((e) => Party.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final data =
+          await _supabase
+                  .from('parties')
+                  .select(
+                    '*, location:locations(*), '
+                    'ticket_templates(*), entry_group_templates(*)',
+                  )
+                  .order('created_at', ascending: false)
+              as List;
+      return data.map((e) {
+        return Party.fromJson(e as Map<String, dynamic>);
+      }).toList();
     } catch (e, st) {
       Log.e('❌ [PartyRepo] getParties Error', e, st);
       rethrow;
@@ -212,15 +217,16 @@ class PartyRepository {
   /// Retrieves events for a specific party.
   Future<List<Event>> getEventsByPartyId(String partyId) async {
     try {
-      final data = await _supabase
-          .from('events')
-          .select('*, entry_groups(*), tickets(*)')
-          .eq('party_id', partyId)
-          .order('start_time', ascending: false);
-
-      return (data as List)
-          .map((e) => Event.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final data =
+          await _supabase
+                  .from('events')
+                  .select('*, entry_groups(*), tickets(*)')
+                  .eq('party_id', partyId)
+                  .order('start_time', ascending: false)
+              as List;
+      return data.map((e) {
+        return Event.fromJson(e as Map<String, dynamic>);
+      }).toList();
     } catch (e, st) {
       Log.e('❌ [PartyRepo] getEventsByPartyId Error', e, st);
       rethrow;
@@ -303,16 +309,18 @@ class PartyRepository {
       final createdEvent = Event.fromJson(data);
 
       // Create associated entry groups if provided
-      if (event.entryGroups != null && event.entryGroups!.isNotEmpty) {
-        final groupsJson = event.entryGroups!
+      final eventGroups = event.entryGroups;
+      if (eventGroups != null && eventGroups.isNotEmpty) {
+        final groupsJson = eventGroups
             .map((g) => g.copyWith(eventId: createdEvent.id).toDbJson())
             .toList();
         await _supabase.from('entry_groups').insert(groupsJson);
       }
 
       // Create associated tickets if provided
-      if (event.tickets != null && event.tickets!.isNotEmpty) {
-        final ticketsJson = event.tickets!
+      final eventTickets = event.tickets;
+      if (eventTickets != null && eventTickets.isNotEmpty) {
+        final ticketsJson = eventTickets
             .map((t) => t.toDbJson(eventId: createdEvent.id))
             .toList();
 

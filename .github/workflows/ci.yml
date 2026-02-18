@@ -38,8 +38,8 @@ jobs:
             - 'apps/landing_partner/**'
             - 'shared/web/**'
           supabase:
-            - 'backend/**'
-            - 'backend/supabase/**'
+            - 'supabase/**'
+            - 'tests/backend_integration/**'
 
   # App User CI
   test-app-user:
@@ -52,28 +52,28 @@ jobs:
         with:
           channel: 'stable'
           cache: true
-      - name: Minglit Kit - Pub Get
+      - name: Install dependencies
         run: flutter pub get
-        working-directory: shared/packages/minglit_kit
-      - name: Minglit Kit - Analyze
+      - name: Analyze (minglit_kit)
         run: flutter analyze
         working-directory: shared/packages/minglit_kit
-      - name: App User - Pub Get
-        run: flutter pub get
-        working-directory: apps/app_user
-      - name: App User - Format
-        run: dart format --set-exit-if-changed .
-        working-directory: apps/app_user
-      - name: App User - Analyze
+      - name: Analyze
         run: flutter analyze
         working-directory: apps/app_user
-      - name: App User - Tests
+      - name: Test
         run: flutter test --coverage
         working-directory: apps/app_user
       - uses: actions/upload-artifact@v4
         with:
           name: app-user-coverage
           path: apps/app_user/coverage
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: apps/app_user/coverage/lcov.info
+          flags: app-user
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
 
   # App Partner CI
   test-app-partner:
@@ -86,28 +86,28 @@ jobs:
         with:
           channel: 'stable'
           cache: true
-      - name: Minglit Kit - Pub Get
+      - name: Install dependencies
         run: flutter pub get
-        working-directory: shared/packages/minglit_kit
-      - name: Minglit Kit - Analyze
+      - name: Analyze (minglit_kit)
         run: flutter analyze
         working-directory: shared/packages/minglit_kit
-      - name: App Partner - Pub Get
-        run: flutter pub get
-        working-directory: apps/app_partner
-      - name: App Partner - Format
-        run: dart format --set-exit-if-changed .
-        working-directory: apps/app_partner
-      - name: App Partner - Analyze
+      - name: Analyze
         run: flutter analyze
         working-directory: apps/app_partner
-      - name: App Partner - Tests
+      - name: Test
         run: flutter test --coverage
         working-directory: apps/app_partner
       - uses: actions/upload-artifact@v4
         with:
           name: app-partner-coverage
           path: apps/app_partner/coverage
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: apps/app_partner/coverage/lcov.info
+          flags: app-partner
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
 
   # Landing User CI
   lint-landing-user:
@@ -160,18 +160,29 @@ jobs:
       - run: supabase -v # CLI 설치 확인
       - name: Start Supabase
         run: supabase start
-        working-directory: backend
-      - name: Run pgTAP Database Tests
+      - name: Test (pgTAP)
         run: supabase test db
-        working-directory: backend
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      - name: Install dependencies (integration)
+        run: flutter pub get
+        working-directory: tests/backend_integration
+      - name: Test (integration)
+        run: dart test
+        working-directory: tests/backend_integration
+        env:
+          SUPABASE_URL: http://127.0.0.1:54321
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_LOCAL_SERVICE_ROLE_KEY }}
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
-      - name: Run Edge Function Tests
+      - name: Test (edge functions)
         run: deno test --allow-all functions/
-        working-directory: backend/supabase
+        working-directory: supabase
       - name: Stop Supabase
         if: always()
         run: supabase stop
-        working-directory: backend

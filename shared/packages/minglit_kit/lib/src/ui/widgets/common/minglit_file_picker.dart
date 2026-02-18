@@ -4,8 +4,10 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/data/repositories/storage_repository.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
 /// **Minglit File Picker**
 ///
@@ -13,6 +15,7 @@ import 'package:minglit_kit/minglit_kit.dart';
 /// Handles platform differences (Web/Native) and input sources.
 /// Optionally supports automatic uploading to Supabase Storage.
 class MinglitFilePicker extends ConsumerStatefulWidget {
+  /// Creates a file picker with optional auto-upload support.
   const MinglitFilePicker({
     required this.onFilesSelected,
     super.key,
@@ -28,18 +31,38 @@ class MinglitFilePicker extends ConsumerStatefulWidget {
     this.onUploadComplete,
   });
 
+  /// Callback invoked when files are selected.
   final void Function(List<PlatformFile> files) onFilesSelected;
+
+  /// URLs to show as already uploaded selections.
   final List<String> initialUrls;
+
+  /// Whether to allow selecting multiple files.
   final bool allowMultiple;
+
+  /// File type filter for the picker.
   final FileType fileType;
+
+  /// Maximum file size in megabytes.
   final int maxFileSizeMb;
+
+  /// Title shown in the upload button area.
   final String label;
+
+  /// Helper text shown under the upload title.
   final String hint;
 
   // Auto-Upload Options
+  /// Whether selected files should upload automatically.
   final bool autoUpload;
+
+  /// Storage bucket used for auto-upload.
   final String? uploadBucket;
+
+  /// Optional path prefix to prepend on upload.
   final String? uploadPathPrefix;
+
+  /// Callback invoked when uploads complete.
   final void Function(List<String> urls)? onUploadComplete;
 
   @override

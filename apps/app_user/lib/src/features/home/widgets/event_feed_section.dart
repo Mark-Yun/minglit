@@ -1,6 +1,4 @@
-import 'dart:async';
-
-import 'package:app_user/src/routing/app_routes.dart';
+import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -14,6 +12,7 @@ class EventFeedSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final eventsAsync = ref.watch(eventFeedProvider(type: type));
     final theme = Theme.of(context);
+    final eventCoordinator = ref.read(eventCoordinatorProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -32,9 +31,7 @@ class EventFeedSection extends ConsumerWidget {
               Text(type.title, style: theme.textTheme.titleLarge),
               TextButton(
                 onPressed: () {
-                  unawaited(
-                    EventCurationRoute(type: type).push<void>(context),
-                  );
+                  eventCoordinator.pushEventCuration(type);
                 },
                 child: const Text('더보기'),
               ),
@@ -70,9 +67,7 @@ class EventFeedSection extends ConsumerWidget {
                   return MinglitEventCard(
                     event: event,
                     onTap: () {
-                      unawaited(
-                        EventDetailRoute(eventId: event.id).push<void>(context),
-                      );
+                      eventCoordinator.pushEventDetail(event.id);
                     },
                   );
                 },

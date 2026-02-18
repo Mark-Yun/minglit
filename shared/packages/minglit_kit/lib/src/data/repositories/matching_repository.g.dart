@@ -8,9 +8,12 @@ part of 'matching_repository.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provides the [MatchingRepository].
 
 @ProviderFor(matchingRepository)
 const matchingRepositoryProvider = MatchingRepositoryProvider._();
+
+/// Provides the [MatchingRepository].
 
 final class MatchingRepositoryProvider
     extends
@@ -20,6 +23,7 @@ final class MatchingRepositoryProvider
           MatchingRepository
         >
     with $Provider<MatchingRepository> {
+  /// Provides the [MatchingRepository].
   const MatchingRepositoryProvider._()
     : super(
         from: null,

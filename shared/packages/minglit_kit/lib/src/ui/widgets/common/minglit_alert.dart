@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
 /// A standardized dialog widget for Minglit applications.
 /// Use [show] or [showConfirm] for easier usage.
 class MinglitAlert extends StatelessWidget {
+  /// Creates a standardized alert dialog.
   const MinglitAlert({
     required this.title,
     this.content,
@@ -12,9 +13,16 @@ class MinglitAlert extends StatelessWidget {
     super.key,
   });
 
+  /// Dialog title text.
   final String title;
+
+  /// Optional dialog body text.
   final String? content;
+
+  /// Optional action buttons for the dialog.
   final List<Widget>? actions;
+
+  /// Visual style for the alert.
   final MinglitAlertType type;
 
   /// Shows a generic dialog.
@@ -141,7 +149,11 @@ class MinglitAlert extends StatelessWidget {
   }
 }
 
+/// Visual variants for [MinglitAlert].
 enum MinglitAlertType {
+  /// Neutral informational alert.
   info,
+
+  /// Destructive alert with warning emphasis.
   destructive,
 }

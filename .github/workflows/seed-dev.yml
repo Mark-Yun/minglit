@@ -53,9 +53,8 @@ jobs:
           echo "✅ Safety Check Passed: Target Project ($TARGET_PROJECT_ID) is NOT Main DB."
 
       # Step 1: DB Reset (Link -> Reset -> Seed.sql)
-      # This resets the remote DB, applies migrations, and runs backend/supabase/seed.sql
+      # This resets the remote DB, applies migrations, and runs supabase/seed.sql
       - name: Reset Remote Dev Database
-        working-directory: backend
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DEV_DB_PASSWORD }}

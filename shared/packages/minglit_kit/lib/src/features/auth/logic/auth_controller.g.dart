@@ -39,7 +39,7 @@ final class AuthControllerProvider
   AuthController create() => AuthController();
 }
 
-String _$authControllerHash() => r'cd25f74b5fb8ebcdedb66bfe45b9d08e0b882748';
+String _$authControllerHash() => r'a2163e387bc457de59725d1baec2187b75d60bd1';
 
 /// Controller for authentication actions (Sign In, Sign Out).
 /// Handles the state of the *request* (loading, error, success).

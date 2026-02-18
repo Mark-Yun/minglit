@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:minglit_kit/src/data/models/party_entry_group.dart';
+import 'package:minglit_kit/src/data/repositories/verification_repository.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_chip.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_skeleton.dart';
 
 /// **Entry Group Detail**
 ///
 /// A minimal widget that displays the details of a single [PartyEntryGroup].
 /// Adheres strictly to the Minglit design system using themed text styles.
 class EntryGroupDetail extends StatelessWidget {
+  /// Creates a detail view for a [PartyEntryGroup].
   const EntryGroupDetail({
     required this.group,
     this.genderLabel = '성별',
@@ -15,10 +22,19 @@ class EntryGroupDetail extends StatelessWidget {
     super.key,
   });
 
+  /// Entry group data to render.
   final PartyEntryGroup group;
+
+  /// Label displayed for the gender row.
   final String genderLabel;
+
+  /// Label displayed for the birth year row.
   final String birthYearLabel;
+
+  /// Label used when gender is not restricted.
   final String anyLabel;
+
+  /// Label used when birth year is not restricted.
   final String anyYearLabel;
 
   @override

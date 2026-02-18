@@ -10,6 +10,7 @@ part 'ticket_token.g.dart';
 /// and online verification.
 @freezed
 abstract class TicketToken with _$TicketToken {
+  /// Creates a [TicketToken] for QR-based verification.
   const factory TicketToken({
     required String ticketId,
     required String eventId,
@@ -18,6 +19,7 @@ abstract class TicketToken with _$TicketToken {
     required DateTime expiresAt,
   }) = _TicketToken;
 
+  /// Creates a [TicketToken] from a JSON map.
   factory TicketToken.fromJson(Map<String, dynamic> json) =>
       _$TicketTokenFromJson(json);
 }

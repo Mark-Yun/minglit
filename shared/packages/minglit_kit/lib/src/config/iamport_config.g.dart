@@ -8,13 +8,17 @@ part of 'iamport_config.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provides the current [IamportConfig].
 
 @ProviderFor(iamportConfig)
 const iamportConfigProvider = IamportConfigProvider._();
 
+/// Provides the current [IamportConfig].
+
 final class IamportConfigProvider
     extends $FunctionalProvider<IamportConfig, IamportConfig, IamportConfig>
     with $Provider<IamportConfig> {
+  /// Provides the current [IamportConfig].
   const IamportConfigProvider._()
     : super(
         from: null,

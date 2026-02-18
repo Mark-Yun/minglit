@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+/// A centered circular progress indicator with configurable size.
 class MinglitCircularProgressIndicator extends StatelessWidget {
+  /// Creates a circular progress indicator.
   const MinglitCircularProgressIndicator({
     super.key,
     this.size = 24,
@@ -8,8 +10,13 @@ class MinglitCircularProgressIndicator extends StatelessWidget {
     this.color,
   });
 
+  /// The width and height of the indicator.
   final double size;
+
+  /// The stroke width of the progress ring.
   final double strokeWidth;
+
+  /// Optional color override for the indicator.
   final Color? color;
 
   @override
@@ -30,7 +37,9 @@ class MinglitCircularProgressIndicator extends StatelessWidget {
   }
 }
 
+/// A linear progress indicator with optional value and colors.
 class MinglitLinearProgressIndicator extends StatelessWidget {
+  /// Creates a linear progress indicator.
   const MinglitLinearProgressIndicator({
     super.key,
     this.value,
@@ -38,8 +47,13 @@ class MinglitLinearProgressIndicator extends StatelessWidget {
     this.backgroundColor,
   });
 
+  /// Current progress value from 0.0 to 1.0.
   final double? value;
+
+  /// The indicator color.
   final Color? color;
+
+  /// The background track color.
   final Color? backgroundColor;
 
   @override

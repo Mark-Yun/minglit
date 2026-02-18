@@ -1,3 +1,9 @@
+import 'dart:async';
+
+import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
+import 'package:app_user/src/features/ticket/ui/ticket_selection_sheet.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -31,6 +37,24 @@ class AdmissionState {
   final String? ineligibleReason;
   final String? rejectionReason;
   final List<String> missingVerificationIds;
+}
+
+enum AdmissionButtonStyle {
+  normal,
+  disabled,
+  destructive,
+}
+
+class AdmissionButtonConfig {
+  const AdmissionButtonConfig({
+    required this.label,
+    this.enabled = true,
+    this.style = AdmissionButtonStyle.normal,
+  });
+
+  final String label;
+  final bool enabled;
+  final AdmissionButtonStyle style;
 }
 
 @riverpod
@@ -171,9 +195,10 @@ class EventAdmissionController extends _$EventAdmissionController {
     }
 
     // 2. Age Check
-    if (user.birthDate == null) return '생년월일 정보가 없습니다.';
+    final birthDate = user.birthDate;
+    if (birthDate == null) return '생년월일 정보가 없습니다.';
 
-    final birthYear = user.birthDate!.year;
+    final birthYear = birthDate.year;
     if (group.birthYearMin != null && birthYear < group.birthYearMin!) {
       return '${group.birthYearMin}년생 이상만 참여 가능합니다.';
     }
@@ -182,6 +207,130 @@ class EventAdmissionController extends _$EventAdmissionController {
     }
 
     return null; // OK
+  }
+
+  AdmissionButtonConfig buttonConfig(AdmissionState state) {
+    switch (state.status) {
+      case EventAdmissionStatus.guest:
+        return const AdmissionButtonConfig(label: '로그인하고 신청하기');
+      case EventAdmissionStatus.identityRequired:
+        return const AdmissionButtonConfig(label: '본인인증 후 신청하기');
+      case EventAdmissionStatus.qualificationRequired:
+        return const AdmissionButtonConfig(label: '신청하기');
+      case EventAdmissionStatus.notEligible:
+        return AdmissionButtonConfig(
+          label: state.ineligibleReason ?? '참여 조건 미달',
+          enabled: false,
+          style: AdmissionButtonStyle.disabled,
+        );
+      case EventAdmissionStatus.eligible:
+        return const AdmissionButtonConfig(label: '참가 신청하기');
+      case EventAdmissionStatus.pendingPayment:
+        return const AdmissionButtonConfig(label: '결제 계속하기');
+      case EventAdmissionStatus.applied:
+        return const AdmissionButtonConfig(label: '이미 신청한 이벤트');
+      case EventAdmissionStatus.rejected:
+        return const AdmissionButtonConfig(
+          label: '심사 반려 (사유 확인)',
+          style: AdmissionButtonStyle.destructive,
+        );
+    }
+  }
+
+  Future<void> handleAction({
+    required BuildContext context,
+    required AdmissionState state,
+  }) async {
+    switch (state.status) {
+      case EventAdmissionStatus.guest:
+        final currentPath = GoRouterState.of(context).uri.toString();
+        ref.read(authCoordinatorProvider).goToLogin(from: currentPath);
+        return;
+      case EventAdmissionStatus.identityRequired:
+        final success = await Navigator.of(context).push<bool>(
+          MaterialPageRoute(
+            builder: (_) => const IdentityVerificationScreen(),
+            fullscreenDialog: true,
+          ),
+        );
+        if (success ?? false) {
+          ref.invalidate(eventAdmissionControllerProvider(event));
+        }
+        return;
+      case EventAdmissionStatus.qualificationRequired:
+        await showModalBottomSheet<void>(
+          context: context,
+          isScrollControlled: true,
+          builder: (_) => TicketSelectionSheet(event: event),
+        );
+        ref.invalidate(eventAdmissionControllerProvider(event));
+        return;
+      case EventAdmissionStatus.notEligible:
+        return;
+      case EventAdmissionStatus.eligible:
+        unawaited(
+          showModalBottomSheet<void>(
+            context: context,
+            isScrollControlled: true,
+            builder: (_) => TicketSelectionSheet(event: event),
+          ),
+        );
+        return;
+      case EventAdmissionStatus.pendingPayment:
+        unawaited(
+          showModalBottomSheet<void>(
+            context: context,
+            isScrollControlled: true,
+            builder: (_) => TicketSelectionSheet(event: event),
+          ),
+        );
+        return;
+      case EventAdmissionStatus.applied:
+        handleMinglitError(
+          context,
+          const MinglitUserException(
+            '이미 신청이 완료된 이벤트입니다.\n마이페이지에서 티켓을 확인해주세요.',
+          ),
+        );
+        return;
+      case EventAdmissionStatus.rejected:
+        final confirmed = await context.showMinglitConfirm(
+          title: '심사 결과 안내',
+          message:
+              '반려 사유: ${state.rejectionReason ?? "정보 부족"}\n\n'
+              '기존 신청을 취소하고 다시 신청하시겠습니까?',
+          confirmLabel: '다시 신청하기',
+          cancelLabel: '닫기',
+        );
+
+        if (confirmed && context.mounted) {
+          final user = state.user;
+          if (user == null) return;
+          final loading = ref.read(globalLoadingControllerProvider.notifier)
+            ..show();
+          try {
+            await ref
+                .read(eventRepositoryProvider)
+                .deleteApplication(
+                  eventId: event.id,
+                  userId: user.id,
+                );
+            ref.invalidate(eventAdmissionControllerProvider(event));
+            if (context.mounted) {
+              unawaited(
+                showModalBottomSheet<void>(
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (_) => TicketSelectionSheet(event: event),
+                ),
+              );
+            }
+          } finally {
+            loading.hide();
+          }
+        }
+        return;
+    }
   }
 }
 

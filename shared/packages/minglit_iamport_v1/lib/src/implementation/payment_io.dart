@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:iamport_flutter/iamport_payment.dart';
 import 'package:iamport_flutter/model/payment_data.dart';
-import '../service/payment_service.dart';
+import 'package:minglit_iamport_v1/src/service/payment_service.dart';
 
 class PaymentServiceImpl implements PaymentService {
   @override
@@ -14,7 +14,7 @@ class PaymentServiceImpl implements PaymentService {
     final completer = Completer<String?>();
 
     await Navigator.of(context).push(
-      MaterialPageRoute(
+      MaterialPageRoute<void>(
         builder: (context) => IamportPayment(
           appBar: AppBar(title: const Text('결제')),
           userCode: userCode,

@@ -1,14 +1,17 @@
 import 'dart:async';
 
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/data/models/party.dart';
+import 'package:minglit_kit/src/data/repositories/kakao_location_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'location_search_controller.g.dart';
 
+/// Handles location search with debounce and async results.
 @riverpod
 class LocationSearchController extends _$LocationSearchController {
   Timer? _debounce;
 
+  /// Initializes the search state with an empty list.
   @override
   FutureOr<List<Location>> build() {
     ref.onDispose(() {
@@ -18,6 +21,7 @@ class LocationSearchController extends _$LocationSearchController {
     return [];
   }
 
+  /// Debounces and searches locations for the given [query].
   void onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
 

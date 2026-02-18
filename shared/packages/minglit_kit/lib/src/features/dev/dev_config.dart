@@ -19,5 +19,6 @@ class DevConfig {
     return _adminClient!;
   }
 
+  /// Whether the admin client has been initialized.
   static bool get isInitialized => _adminClient != null;
 }

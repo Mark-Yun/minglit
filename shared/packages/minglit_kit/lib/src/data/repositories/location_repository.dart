@@ -5,12 +5,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'location_repository.g.dart';
 
+/// Provides the [LocationRepository].
 @Riverpod(keepAlive: true)
 LocationRepository locationRepository(Ref ref) {
   return LocationRepository();
 }
 
+/// Repository for location records and metadata.
 class LocationRepository {
+  /// Creates a [LocationRepository] with a Supabase client.
   LocationRepository({SupabaseClient? supabase})
     : _supabase = supabase ?? Supabase.instance.client;
 

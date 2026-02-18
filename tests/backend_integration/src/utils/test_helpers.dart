@@ -1,3 +1,4 @@
+import 'package:minglit_kit/minglit_core.dart';
 import 'package:supabase/supabase.dart';
 import 'package:test_data_seeder/database_seeder.dart';
 
@@ -5,24 +6,18 @@ import 'package:test_data_seeder/database_seeder.dart';
 /// Returns a valid partner ID.
 Future<String> ensureDatabaseSeeded(SupabaseClient adminClient) async {
   // 1. Check if partner exists
-  var partnerRes = await adminClient
-      .from('partners')
-      .select('id')
-      .limit(1)
-      .maybeSingle();
+  var partnerRes =
+      await adminClient.from('partners').select('id').limit(1).maybeSingle();
 
   if (partnerRes == null) {
     // 2. Run Seeder if no data
-    print('🌱 Seeding database for test...');
+    Log.i('🌱 Seeding database for test...');
     final seeder = DatabaseSeeder(adminClient);
     await seeder.seed();
 
     // 3. Get partner again
-    partnerRes = await adminClient
-        .from('partners')
-        .select('id')
-        .limit(1)
-        .maybeSingle();
+    partnerRes =
+        await adminClient.from('partners').select('id').limit(1).maybeSingle();
   }
 
   if (partnerRes == null) {
@@ -45,7 +40,8 @@ Future<String> getMale25VerifiedUserId(SupabaseClient client) async {
 
   if (res == null) {
     throw Exception(
-        '🚨 Helper Error: Male/25/Verified user not found. Run seeder?');
+      '🚨 Helper Error: Male/25/Verified user not found. Run seeder?',
+    );
   }
   return res['id'] as String;
 }
@@ -64,12 +60,14 @@ Future<String> getFemale25VerifiedUserId(SupabaseClient client) async {
 
   if (res == null) {
     throw Exception(
-        '🚨 Helper Error: Female/25/Verified user not found. Run seeder?');
+      '🚨 Helper Error: Female/25/Verified user not found. Run seeder?',
+    );
   }
   return res['id'] as String;
 }
 
-/// Finds a scheduled event and returns its context (Event, Ticket, Partner, Owner).
+/// Finds a scheduled event and returns its context
+/// (Event, Ticket, Partner, Owner).
 Future<({String eventId, String ticketId, String partnerId, String ownerId})>
     findScheduledEvent(SupabaseClient client) async {
   final eventRes = await client
@@ -88,7 +86,7 @@ Future<({String eventId, String ticketId, String partnerId, String ownerId})>
   if (tickets.isEmpty) {
     throw Exception('🚨 Helper Error: Event $eventId has no tickets.');
   }
-  final ticketId = tickets[0]['id'] as String;
+  final ticketId = (tickets.first as Map<String, dynamic>)['id'] as String;
 
   final party = eventRes['party'] as Map<String, dynamic>;
   final partner = party['partner'] as Map<String, dynamic>;
@@ -121,7 +119,8 @@ Future<String> getCareerVerificationId(SupabaseClient client) async {
 
   if (res == null) {
     // Fallback to any if specific type not found
-    final any = await client.from('verifications').select('id').limit(1).single();
+    final any =
+        await client.from('verifications').select('id').limit(1).single();
     return any['id'] as String;
   }
   return res['id'] as String;

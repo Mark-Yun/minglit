@@ -1,6 +1,10 @@
 import 'dart:async';
 
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/data/models/event.dart';
+import 'package:minglit_kit/src/data/models/event_feed_type.dart';
+import 'package:minglit_kit/src/data/repositories/event_repository.dart';
+import 'package:minglit_kit/src/data/repositories/party_repository.dart';
+import 'package:minglit_kit/src/logic/providers/user_profile_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'event_feed_provider.g.dart';
@@ -71,6 +75,7 @@ Future<List<Event>> eventFeed(
 }
 
 @riverpod
+/// Fetches detailed event data by [eventId].
 Future<Event> eventDetail(Ref ref, String eventId) {
   // Cache detail for 5 minutes
   final link = ref.keepAlive();
@@ -83,6 +88,7 @@ Future<Event> eventDetail(Ref ref, String eventId) {
 }
 
 @riverpod
+/// Fetches events associated with the given [partyId].
 Future<List<Event>> partyEvents(Ref ref, String partyId) {
   // Cache party events for 5 minutes
   final link = ref.keepAlive();

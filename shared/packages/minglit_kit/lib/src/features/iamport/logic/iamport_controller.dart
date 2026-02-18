@@ -6,13 +6,16 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'iamport_controller.g.dart';
 
+/// Controls Iamport payment and certification state.
 @riverpod
 class IamportController extends _$IamportController {
+  /// Initializes the controller state.
   @override
   AsyncValue<IamportResultModel?> build() {
     return const AsyncData(null);
   }
 
+  /// Starts a payment flow and returns the Iamport UID.
   Future<String?> startPayment({
     required BuildContext context,
     required String userCode,
@@ -28,6 +31,7 @@ class IamportController extends _$IamportController {
     return impUid;
   }
 
+  /// Handles certification callback [result] and updates state.
   Future<void> onCertificationResult(Map<String, String> result) async {
     state = const AsyncLoading();
 
@@ -54,6 +58,7 @@ class IamportController extends _$IamportController {
     }
   }
 
+  /// Resets the controller state to its initial value.
   void reset() {
     state = const AsyncData(null);
   }

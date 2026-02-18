@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:minglit_kit/minglit_core.dart';
 import 'package:supabase/supabase.dart';
 import 'package:test/test.dart';
 
@@ -24,7 +25,7 @@ void main() {
     late String testTicketId;
 
     setUpAll(() async {
-      print('🚀 [Setup] Fetching seeded data...');
+      Log.i('🚀 [Setup] Fetching seeded data...');
 
       // Get Test User via Helper
       testUserId = await getMale25VerifiedUserId(adminClient);
@@ -35,14 +36,16 @@ void main() {
           .select('id, tickets(id), party:parties(partner_id)')
           .limit(1)
           .single();
-      testEventId = event['id'];
-      testTicketId = event['tickets'][0]['id'];
-      testPartnerId = event['party']['partner_id'];
+      testEventId = event['id'] as String;
+      final tickets = event['tickets'] as List<dynamic>;
+      testTicketId = (tickets.first as Map<String, dynamic>)['id'] as String;
+      testPartnerId =
+          (event['party'] as Map<String, dynamic>)['partner_id'] as String;
 
       // Get Verification
       final verif =
           await adminClient.from('verifications').select().limit(1).single();
-      testVerificationId = verif['id'];
+      testVerificationId = verif['id'] as String;
 
       // Cleanup existing data for clean state
       await adminClient
@@ -58,8 +61,8 @@ void main() {
     });
 
     test(
-        'Rejection Cascade: Submission Rejected -> App Rejected + Reason + Refund Requested',
-        () async {
+        'Rejection Cascade: Submission Rejected -> '
+        'App Rejected + Reason + Refund Requested', () async {
       final paymentId = 'REFUND_TEST_${Random().nextInt(9999)}';
 
       // 1. Create Application (Pending Review)
@@ -92,47 +95,62 @@ void main() {
           .single();
       final subId = subRes['id'];
 
-      print('📝 Created Application ($appId) and Submission ($subId)');
+      Log.i('📝 Created Application ($appId) and Submission ($subId)');
 
       // 3. Update Submission Status to 'rejected' with comment
-      final rejectionReason = 'Invalid ID Proof';
-      print('🚫 Rejecting submission with reason: $rejectionReason');
+      const rejectionReason = 'Invalid ID Proof';
+      Log.i('🚫 Rejecting submission with reason: $rejectionReason');
 
       await adminClient
           .from('verification_submissions')
           .update({'status': 'rejected', 'admin_comment': rejectionReason}).eq(
-              'id', subId);
+        'id',
+        subId as Object,
+      );
 
       // Allow trigger propagation (DB trigger is sync, but net call is async/blocking inside trigger?
       // pg_net is async, but update to refund_status happens in trigger.
       // Wait a bit just in case.)
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
 
       // 4. Verify Application State
       final updatedApp = await adminClient
           .from('event_applications')
           .select()
-          .eq('id', appId)
+          .eq('id', appId as Object)
           .single();
 
       // A. Status Rejected?
-      expect(updatedApp['status'], equals('rejected'),
-          reason: 'Application should be rejected');
+      expect(
+        updatedApp['status'],
+        equals('rejected'),
+        reason: 'Application should be rejected',
+      );
 
       // B. Reason Synced?
-      expect(updatedApp['rejection_reason'], equals(rejectionReason),
-          reason: 'Rejection reason should be synced');
+      expect(
+        updatedApp['rejection_reason'],
+        equals(rejectionReason),
+        reason: 'Rejection reason should be synced',
+      );
 
       // C. Refund Requested?
-      // Note: 'refund_status' is updated by 'on_application_rejected' trigger which fires AFTER 'handle_verification_approval' updates 'event_applications'.
+      // Note: 'refund_status' is updated by 'on_application_rejected'
+      // trigger which fires AFTER 'handle_verification_approval' updates
+      // 'event_applications'.
       // Order:
-      // 1. verification update -> trigger 'on_submission_status_change' -> updates 'event_applications'
-      // 2. 'event_applications' update -> trigger 'on_application_rejected' -> calls net.http_post AND updates 'refund_status'.
+      // 1. verification update -> trigger 'on_submission_status_change' ->
+      //    updates 'event_applications'
+      // 2. 'event_applications' update -> trigger 'on_application_rejected'
+      //    -> calls net.http_post AND updates 'refund_status'.
 
-      expect(updatedApp['refund_status'], equals('requested'),
-          reason: 'Refund status should be requested');
+      expect(
+        updatedApp['refund_status'],
+        equals('requested'),
+        reason: 'Refund status should be requested',
+      );
 
-      print('✅ Refund trigger verified successfully!');
+      Log.i('✅ Refund trigger verified successfully!');
     });
   });
 }

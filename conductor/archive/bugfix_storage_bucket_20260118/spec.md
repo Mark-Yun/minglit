@@ -10,7 +10,7 @@
 ## 3. 해결 방안 (Scope)
 
 ### 3.1. 스토리지 버킷 생성 및 정책 설정
-- **Migration 파일 작성:** `backend/supabase/migrations/` 경로에 SQL 마이그레이션 파일을 추가하여 다음을 수행합니다:
+- **Migration 파일 작성:** `supabase/migrations/` 경로에 SQL 마이그레이션 파일을 추가하여 다음을 수행합니다:
     1.  `verification-proofs` 버킷 생성 (존재하지 않을 경우).
     2.  버킷을 `private`으로 설정 (보안 강화).
     3.  **RLS 정책 추가:**

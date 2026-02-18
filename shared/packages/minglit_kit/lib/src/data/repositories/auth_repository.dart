@@ -13,8 +13,13 @@ part 'auth_repository.g.dart';
 
 /// Configuration for AuthRepository.
 class AuthConfig {
+  /// Creates an [AuthConfig] with optional client settings.
   const AuthConfig({this.webClientId, this.defaultRedirectUrl});
+
+  /// OAuth client ID used for web sign-in.
   final String? webClientId;
+
+  /// Default redirect URL for OAuth flows.
   final String? defaultRedirectUrl;
 }
 

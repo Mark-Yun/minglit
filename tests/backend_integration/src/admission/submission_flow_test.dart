@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
+import 'package:minglit_kit/minglit_core.dart';
 import 'package:supabase/supabase.dart';
 import 'package:test/test.dart';
 
@@ -48,11 +49,11 @@ void main() {
   late String testTicketId;
 
   setUpAll(() async {
-    print('🚀 [Setup] Fetching seeded data...');
+    Log.i('🚀 [Setup] Fetching seeded data...');
 
     // 1. Fetch a Normal User via Helper
     testUserId = await getMale25VerifiedUserId(adminClient);
-    print('👤 [Setup] Using User: $testUserId');
+    Log.i('👤 [Setup] Using User: $testUserId');
 
     // 2. Fetch an Event and Ticket
     final eventRes = await adminClient
@@ -65,16 +66,16 @@ void main() {
     if (eventRes == null) {
       throw Exception('🚨 No scheduled events found!');
     }
-    testEventId = eventRes['id'];
+    testEventId = eventRes['id'] as String;
     final party = eventRes['party'] as Map<String, dynamic>;
-    testPartnerId = party['partner_id'];
+    testPartnerId = party['partner_id'] as String;
 
     final tickets = eventRes['tickets'] as List;
     if (tickets.isEmpty) {
       throw Exception('🚨 Event has no tickets!');
     }
-    testTicketId = tickets[0]['id'];
-    print('🎫 [Setup] Using Event: $testEventId, Ticket: $testTicketId');
+    testTicketId = (tickets.first as Map<String, dynamic>)['id'] as String;
+    Log.i('🎫 [Setup] Using Event: $testEventId, Ticket: $testTicketId');
 
     // 3. Fetch a Verification
     final verifRes = await adminClient
@@ -84,13 +85,13 @@ void main() {
         .limit(1)
         .maybeSingle();
 
-    testVerificationId = verifRes?['id'] ??
+    testVerificationId = (verifRes?['id'] ??
         (await adminClient
             .from('verifications')
             .select()
             .limit(1)
-            .single())['id'];
-    print('✅ [Setup] Using Verification: $testVerificationId');
+            .single())['id']) as String;
+    Log.i('✅ [Setup] Using Verification: $testVerificationId');
 
     // 4. Cleanup existing data (Unique Constraint)
     try {
@@ -104,51 +105,54 @@ void main() {
           .delete()
           .eq('user_id', testUserId)
           .eq('event_id', testEventId);
-    } catch (e) {
-      print('⚠️ Cleanup warning: $e');
+    } on Exception catch (e) {
+      Log.w('⚠️ Cleanup warning: $e');
     }
   });
 
   test(
-      'One-Shot Application Flow Test (Apply -> Pending -> Approve -> Confirmed)',
-      () async {
+      'One-Shot Application Flow Test '
+      '(Apply -> Pending -> Approve -> Confirmed)', () async {
     final userClient = createUserClient(testUserId);
 
-    print('📝 [Test] Starting One-Shot Application...');
+    Log.i('📝 [Test] Starting One-Shot Application...');
 
     // 1. Apply Event (Atomic RPC Call)
-    final appId = await userClient.rpc('apply_event', params: {
-      'p_event_id': testEventId,
-      'p_ticket_id': testTicketId,
-      'p_user_id': testUserId,
-      'p_payment_id': 'PAY_${Random().nextInt(9999)}',
-      'p_payment_amount': 1000,
-      'p_verification_data': {
-        'partner_id': testPartnerId,
-        'verification_id': testVerificationId,
-        'data': {'company': 'Google', 'position': 'Dev'},
+    final appId = await userClient.rpc<dynamic>(
+      'apply_event',
+      params: {
+        'p_event_id': testEventId,
+        'p_ticket_id': testTicketId,
+        'p_user_id': testUserId,
+        'p_payment_id': 'PAY_${Random().nextInt(9999)}',
+        'p_payment_amount': 1000,
+        'p_verification_data': {
+          'partner_id': testPartnerId,
+          'verification_id': testVerificationId,
+          'data': {'company': 'Google', 'position': 'Dev'},
+        },
       },
-    });
+    );
 
     expect(appId, isNotNull);
-    print('✅ [Test] Applied successfully. AppID: $appId');
+    Log.i('✅ [Test] Applied successfully. AppID: $appId');
 
     // 2. Verify Status
     final app = await userClient
         .from('event_applications')
         .select()
-        .eq('id', appId)
+        .eq('id', appId as Object)
         .single();
     expect(app['status'], equals('pending_review'));
 
     // 3. Partner Approval (via Admin Client)
-    print('👮 [Test] Admin approving verification...');
+    Log.i('👮 [Test] Admin approving verification...');
     await adminClient
         .from('verification_submissions')
         .update({'status': 'approved'}).eq('application_id', appId);
 
     // 4. Final Verification (Trigger Check)
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future<void>.delayed(const Duration(milliseconds: 500));
 
     final updatedApp = await adminClient
         .from('event_applications')
@@ -165,6 +169,6 @@ void main() {
     expect(participant, isNotNull);
     expect(participant!['ticket_code'], isNotNull);
 
-    print('🎉 [Test] ONE-SHOT FLOW VERIFIED!');
+    Log.i('🎉 [Test] ONE-SHOT FLOW VERIFIED!');
   });
 }

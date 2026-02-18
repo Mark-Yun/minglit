@@ -1,4 +1,5 @@
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/utils/exceptions.dart';
+import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -9,6 +10,7 @@ part 'identity_repository.g.dart';
 /// Handles Identity Verification (PASS/SMS) to verify user's real name,
 /// birth date, and gender. This is the "Base Layer" of trust.
 class IdentityRepository {
+  /// Creates an [IdentityRepository] with a Supabase client.
   IdentityRepository(this._supabase);
 
   final SupabaseClient _supabase;
@@ -59,6 +61,7 @@ class IdentityRepository {
   }
 }
 
+/// Provides the [IdentityRepository].
 @riverpod
 IdentityRepository identityRepository(Ref ref) {
   return IdentityRepository(Supabase.instance.client);

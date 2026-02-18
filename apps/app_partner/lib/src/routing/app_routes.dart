@@ -8,17 +8,18 @@ import 'package:app_partner/src/features/member/partner_member_permission_page.d
 import 'package:app_partner/src/features/more/more_page.dart';
 import 'package:app_partner/src/features/party/create/party_create_wizard_page.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_page.dart';
-import 'package:app_partner/src/features/party/event/create/event_create_screen.dart';
+import 'package:app_partner/src/features/party/event/create/event_create_page.dart';
 import 'package:app_partner/src/features/party/event/detail/event_detail_page.dart';
 import 'package:app_partner/src/features/party/list/party_list_page.dart';
 import 'package:app_partner/src/features/settlement/settlement_page.dart';
 import 'package:app_partner/src/features/ticket/create/ticket_create_page.dart';
 import 'package:app_partner/src/features/ticket/edit/ticket_edit_page.dart';
-import 'package:app_partner/src/features/verification/create/create_verification_screen.dart';
-import 'package:app_partner/src/features/verification/manage/verification_manage_screen.dart';
+import 'package:app_partner/src/features/verification/create/create_verification_page.dart';
+import 'package:app_partner/src/features/verification/manage/verification_manage_page.dart';
 import 'package:app_partner/src/ui/shell/partner_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:minglit_kit/minglit_dev.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 part 'app_routes.g.dart';
@@ -248,7 +249,7 @@ class EventCreateRoute extends GoRouteData with $EventCreateRoute {
   final String partyId;
   @override
   Widget build(BuildContext context, GoRouterState state) =>
-      EventCreateScreen(partyId: partyId);
+      EventCreatePage(partyId: partyId);
 }
 
 class EventDetailRoute extends GoRouteData with $EventDetailRoute {
@@ -303,7 +304,7 @@ class VerificationManageRoute extends GoRouteData
   const VerificationManageRoute();
   @override
   Widget build(BuildContext context, GoRouterState state) =>
-      const VerificationManageScreen();
+      const VerificationManagePage();
 }
 
 class CreateVerificationRoute extends GoRouteData
@@ -312,7 +313,7 @@ class CreateVerificationRoute extends GoRouteData
   final String? partnerId;
   @override
   Widget build(BuildContext context, GoRouterState state) =>
-      CreateVerificationScreen(partnerId: partnerId);
+      CreateVerificationPage(partnerId: partnerId);
 }
 
 class MemberListRoute extends GoRouteData with $MemberListRoute {

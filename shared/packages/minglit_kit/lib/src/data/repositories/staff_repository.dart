@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'staff_repository.g.dart';
 
+/// Provides the [StaffRepository].
 @Riverpod(keepAlive: true)
 StaffRepository staffRepository(Ref ref) {
   final urlConfig = ref.watch(minglitUrlConfigProvider);
@@ -14,7 +15,9 @@ StaffRepository staffRepository(Ref ref) {
   );
 }
 
+/// Repository for staff authentication and proof tokens.
 class StaffRepository {
+  /// Creates a [StaffRepository] with a Supabase client.
   StaffRepository({SupabaseClient? supabase, String? redirectUrl})
     : _supabase = supabase ?? Supabase.instance.client,
       _redirectUrl = redirectUrl;

@@ -53,4 +53,4 @@ final class EventCoordinatorProvider
   }
 }
 
-String _$eventCoordinatorHash() => r'f13ac22817c04e5735413426b452825d1bc1b28c';
+String _$eventCoordinatorHash() => r'b9f6bca82f6e387e73589115caec92a23d119c6c';

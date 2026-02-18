@@ -1,5 +1,7 @@
 name: Deploy to Vercel
 
+# NOTE: Consider adding status badges to README.
+
 on:
   push:
     branches: [ "main", "dev" ]
@@ -38,6 +40,7 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.app_user == 'true' }}
     runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
     steps:
       - uses: actions/checkout@v4
       - name: Deploy User App
@@ -60,6 +63,7 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.landing_user == 'true' }}
     runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
     steps:
       - uses: actions/checkout@v4
       - name: Deploy User Landing
@@ -74,6 +78,7 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.landing_partner == 'true' }}
     runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
     steps:
       - uses: actions/checkout@v4
       - name: Deploy Partner Landing
@@ -88,6 +93,7 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.app_partner == 'true' }}
     runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
     steps:
       - uses: actions/checkout@v4
       - name: Deploy Partner App

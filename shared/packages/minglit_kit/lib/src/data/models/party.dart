@@ -11,6 +11,7 @@ part 'party.g.dart';
 /// Represents a physical venue managed by a partner.
 @freezed
 abstract class Location with _$Location {
+  /// Creates a [Location] with address and coordinates.
   const factory Location({
     required String id,
     @JsonKey(name: 'partner_id') required String partnerId,
@@ -31,11 +32,14 @@ abstract class Location with _$Location {
     @JsonKey(name: 'lng') @Default(0.0) double longitude,
   }) = _Location;
 
+  /// Creates a [Location] from a JSON map.
   factory Location.fromJson(Map<String, dynamic> json) =>
       _$LocationFromJson(json);
 }
 
+/// Database-specific helpers for [Location].
 extension LocationDbX on Location {
+  /// Returns JSON suitable for database inserts or updates.
   Map<String, dynamic> toDbJson() {
     return toJson()
       ..remove('id')
@@ -49,6 +53,7 @@ extension LocationDbX on Location {
 /// Represents a party concept/template.
 @freezed
 abstract class Party with _$Party {
+  /// Creates a [Party] template with scheduling rules.
   const factory Party({
     required String id,
     @JsonKey(name: 'partner_id') required String partnerId,
@@ -75,12 +80,16 @@ abstract class Party with _$Party {
   }) = _Party;
   const Party._();
 
+  /// Creates a [Party] from a JSON map.
   factory Party.fromJson(Map<String, dynamic> json) => _$PartyFromJson(json);
 
+  /// Returns the first available image URL, if any.
   String? get imageUrl => imageUrls.firstOrNull;
 }
 
+/// Convenience helpers for [Party].
 extension PartyX on Party {
+  /// Returns the localized status label.
   String get statusLabel {
     switch (status) {
       case 'active':
@@ -94,10 +103,16 @@ extension PartyX on Party {
     }
   }
 
+  /// Whether the party is active.
   bool get isActive => status == 'active';
+
+  /// Whether the party is closed.
   bool get isClosed => status == 'closed';
+
+  /// Whether the party is in draft state.
   bool get isDraft => status == 'draft';
 
+  /// Summarizes entry conditions for display.
   List<String> get conditionSummaries {
     final groups = entryGroups ?? [];
     if (groups.isEmpty) return ['조건 없음'];
@@ -136,11 +151,12 @@ extension PartyX on Party {
       }
 
       // Handle label
-      if (group.label != null && group.label!.isNotEmpty) {
+      final label = group.label;
+      if (label != null && label.isNotEmpty) {
         if (base == '조건 없음') {
-          base = group.label!;
+          base = label;
         } else {
-          base = '${group.label} ($base)';
+          base = '$label ($base)';
         }
       }
 
@@ -153,7 +169,9 @@ extension PartyX on Party {
   }
 }
 
+/// Database-specific helpers for [Party].
 extension PartyDbX on Party {
+  /// Returns JSON suitable for database inserts or updates.
   Map<String, dynamic> toDbJson() {
     return toJson()
       ..remove('id')

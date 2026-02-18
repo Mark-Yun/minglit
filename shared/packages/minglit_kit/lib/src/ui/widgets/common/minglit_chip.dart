@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
+/// Size variants for [MinglitChip].
 enum MinglitChipSize {
+  /// Compact chip size.
   small,
+
+  /// Default chip size.
   medium,
+
+  /// Large chip size.
   large,
 }
 
@@ -12,6 +18,7 @@ enum MinglitChipSize {
 /// A standardized chip component for the Minglit design system.
 /// Supports multiple sizes and color themes.
 class MinglitChip extends StatelessWidget {
+  /// Creates a standardized chip.
   const MinglitChip({
     required this.label,
     this.icon,
@@ -21,10 +28,19 @@ class MinglitChip extends StatelessWidget {
     super.key,
   });
 
+  /// Text label displayed inside the chip.
   final String label;
+
+  /// Optional leading icon.
   final IconData? icon;
+
+  /// Chip size variant.
   final MinglitChipSize size;
+
+  /// Optional background color override.
   final Color? color;
+
+  /// Optional tap handler for interactive chips.
   final VoidCallback? onTap;
 
   @override

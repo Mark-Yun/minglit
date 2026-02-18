@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:minglit_kit/minglit_core.dart';
 import 'package:supabase/supabase.dart';
 import 'package:test/test.dart';
 
@@ -24,7 +25,7 @@ void main() {
     late String testTicketId;
 
     setUpAll(() async {
-      print('🚀 [Setup] Fetching seeded data...');
+      Log.i('🚀 [Setup] Fetching seeded data...');
 
       // Get Test User via Helper
       testUserId = await getMale25VerifiedUserId(adminClient);
@@ -35,14 +36,16 @@ void main() {
           .select('id, tickets(id), party:parties(partner_id)')
           .limit(1)
           .single();
-      testEventId = event['id'];
-      testTicketId = event['tickets'][0]['id'];
-      testPartnerId = event['party']['partner_id'];
+      testEventId = event['id'] as String;
+      final tickets = event['tickets'] as List<dynamic>;
+      testTicketId = (tickets.first as Map<String, dynamic>)['id'] as String;
+      testPartnerId =
+          (event['party'] as Map<String, dynamic>)['partner_id'] as String;
 
       // Get Verification
       final verif =
           await adminClient.from('verifications').select().limit(1).single();
-      testVerificationId = verif['id'];
+      testVerificationId = verif['id'] as String;
 
       // Cleanup existing data for idempotency
       await adminClient
@@ -58,8 +61,8 @@ void main() {
     });
 
     test(
-        'Chain Reaction: Verify Approved -> Application Approved -> Ticket Issued',
-        () async {
+        'Chain Reaction: Verify Approved -> '
+        'Application Approved -> Ticket Issued', () async {
       final paymentId = 'TRG_${Random().nextInt(9999)}';
 
       // 1. Create Application (Pending Review)
@@ -92,16 +95,16 @@ void main() {
           .single();
       final subId = subRes['id'];
 
-      print('📝 Created Application ($appId) and Submission ($subId)');
+      Log.i('📝 Created Application ($appId) and Submission ($subId)');
 
       // 3. Update Submission Status to 'approved'
-      print('👮 Approving submission...');
+      Log.i('👮 Approving submission...');
       await adminClient
           .from('verification_submissions')
-          .update({'status': 'approved'}).eq('id', subId);
+          .update({'status': 'approved'}).eq('id', subId as Object);
 
       // Allow trigger propagation
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
 
       // 4. Verify Chain Reaction
 
@@ -111,17 +114,23 @@ void main() {
           .select()
           .eq('submission_id', subId)
           .maybeSingle();
-      expect(verifiedUser, isNotNull,
-          reason: 'partner_verified_users should be created via trigger');
+      expect(
+        verifiedUser,
+        isNotNull,
+        reason: 'partner_verified_users should be created via trigger',
+      );
 
       // B. event_applications status changed?
       final updatedApp = await adminClient
           .from('event_applications')
           .select('status')
-          .eq('id', appId)
+          .eq('id', appId as Object)
           .single();
-      expect(updatedApp['status'], equals('approved'),
-          reason: 'Application should be auto-approved');
+      expect(
+        updatedApp['status'],
+        equals('approved'),
+        reason: 'Application should be auto-approved',
+      );
 
       // C. event_participants ticket issued?
       final participant = await adminClient
@@ -129,11 +138,14 @@ void main() {
           .select()
           .eq('application_id', appId)
           .maybeSingle();
-      expect(participant, isNotNull,
-          reason: 'Ticket should be issued automatically');
+      expect(
+        participant,
+        isNotNull,
+        reason: 'Ticket should be issued automatically',
+      );
       expect(participant!['ticket_code'], isNotNull);
 
-      print('🎉 Chain reaction verified successfully!');
+      Log.i('🎉 Chain reaction verified successfully!');
     });
 
     test('Revoke: Changing submission to rejected should remove verified_user',
@@ -148,18 +160,18 @@ void main() {
           .maybeSingle();
 
       if (subRes == null) {
-        print('⚠️ No approved submission found, skipping revoke test.');
+        Log.w('⚠️ No approved submission found, skipping revoke test.');
         return;
       }
       final subId = subRes['id'];
 
       // 2. Revoke approval
-      print('👮 Revoking approval for $subId...');
+      Log.i('👮 Revoking approval for $subId...');
       await adminClient
           .from('verification_submissions')
-          .update({'status': 'rejected'}).eq('id', subId);
+          .update({'status': 'rejected'}).eq('id', subId as Object);
 
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
 
       // 3. Verify partner_verified_users removed
       final verifiedUser = await adminClient
@@ -167,10 +179,13 @@ void main() {
           .select()
           .eq('submission_id', subId)
           .maybeSingle();
-      expect(verifiedUser, isNull,
-          reason: 'partner_verified_users should be removed on revoke');
+      expect(
+        verifiedUser,
+        isNull,
+        reason: 'partner_verified_users should be removed on revoke',
+      );
 
-      print('✅ Revoke verified successfully!');
+      Log.i('✅ Revoke verified successfully!');
     });
   });
 }

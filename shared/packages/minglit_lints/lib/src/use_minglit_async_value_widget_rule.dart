@@ -1,39 +1,59 @@
-import 'package:analyzer/error/listener.dart';
-import 'package:custom_lint_builder/custom_lint_builder.dart';
+import 'package:analyzer/analysis_rule/analysis_rule.dart';
+import 'package:analyzer/analysis_rule/rule_context.dart';
+import 'package:analyzer/analysis_rule/rule_visitor_registry.dart';
+import 'package:analyzer/dart/ast/ast.dart';
+import 'package:analyzer/dart/ast/visitor.dart';
+import 'package:analyzer/error/error.dart';
 
-class UseMinglitAsyncValueWidgetRule extends DartLintRule {
-  const UseMinglitAsyncValueWidgetRule() : super(code: _code);
+class UseMinglitAsyncValueWidgetRule extends AnalysisRule {
+  UseMinglitAsyncValueWidgetRule()
+    : super(
+        name: 'use_minglit_async_value_widget',
+        description:
+            'Avoid using AsyncValue.when/maybeWhen directly. '
+            'Use MinglitAsyncValueWidget instead.',
+      );
 
-  static const _code = LintCode(
-    name: 'use_minglit_async_value_widget',
-    problemMessage:
-        'Avoid using AsyncValue.when/maybeWhen directly. Use MinglitAsyncValueWidget instead for consistent loading and error states.',
+  static const LintCode code = LintCode(
+    'use_minglit_async_value_widget',
+    'Avoid using AsyncValue.when/maybeWhen directly. '
+        'Use MinglitAsyncValueWidget instead for consistent '
+        'loading and error states.',
     correctionMessage: 'Replace with MinglitAsyncValueWidget.',
   );
 
   @override
-  void run(
-    CustomLintResolver resolver,
-    DiagnosticReporter reporter,
-    CustomLintContext context,
+  DiagnosticCode get diagnosticCode => code;
+
+  @override
+  void registerNodeProcessors(
+    RuleVisitorRegistry registry,
+    RuleContext context,
   ) {
-    context.registry.addMethodInvocation((node) {
-      final methodName = node.methodName.name;
-      if (methodName != 'when' && methodName != 'maybeWhen') return;
+    final visitor = _Visitor(this);
+    registry.addMethodInvocation(this, visitor);
+  }
+}
 
-      final target = node.target;
-      if (target == null) return;
+class _Visitor extends SimpleAstVisitor<void> {
+  _Visitor(this.rule);
 
-      final type = target.staticType;
-      if (type == null) return;
+  final UseMinglitAsyncValueWidgetRule rule;
 
-      // Check if the target type is AsyncValue
-      // We check for 'AsyncValue' in the display string.
-      // A more robust check would involve checking the element's library,
-      // but this is usually sufficient for project-specific lints.
-      if (type.getDisplayString().contains('AsyncValue')) {
-        reporter.atNode(node.methodName, _code);
-      }
-    });
+  @override
+  void visitMethodInvocation(MethodInvocation node) {
+    final methodName = node.methodName.name;
+    if (methodName != 'when' && methodName != 'maybeWhen') return;
+
+    final target = node.target;
+    if (target == null) return;
+
+    final type = target.staticType;
+    if (type == null) return;
+
+    // Check if the target type is AsyncValue
+    if (type.getDisplayString().contains('AsyncValue')) {
+      rule.reportAtNode(node.methodName);
+    }
   }
 }

@@ -1,8 +1,8 @@
 import 'dart:async';
 
+import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,7 +21,7 @@ class LoginPage extends ConsumerWidget {
         // Login Success
         Log.d('🔑 [Auth] Login Success! from: $from');
         if (from != null) {
-          context.go(from!);
+          ref.read(authCoordinatorProvider).goToReturnLocation(from!);
         }
       }
     });

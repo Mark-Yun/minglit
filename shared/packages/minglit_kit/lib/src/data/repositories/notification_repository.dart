@@ -1,7 +1,9 @@
 import 'package:minglit_kit/src/data/models/user_settings.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// Repository for user notification data and settings.
 class NotificationRepository {
+  /// Creates a [NotificationRepository] with a Supabase client.
   NotificationRepository(this._client);
   final SupabaseClient _client;
 

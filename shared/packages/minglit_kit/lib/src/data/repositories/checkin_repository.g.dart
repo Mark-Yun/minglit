@@ -8,9 +8,12 @@ part of 'checkin_repository.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provides the [CheckinRepository].
 
 @ProviderFor(checkinRepository)
 const checkinRepositoryProvider = CheckinRepositoryProvider._();
+
+/// Provides the [CheckinRepository].
 
 final class CheckinRepositoryProvider
     extends
@@ -20,6 +23,7 @@ final class CheckinRepositoryProvider
           CheckinRepository
         >
     with $Provider<CheckinRepository> {
+  /// Provides the [CheckinRepository].
   const CheckinRepositoryProvider._()
     : super(
         from: null,

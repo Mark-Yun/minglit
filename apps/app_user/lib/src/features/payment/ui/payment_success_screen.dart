@@ -1,5 +1,6 @@
+import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
-import 'package:app_user/src/routing/app_routes.dart';
+import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -18,6 +19,8 @@ class PaymentSuccessScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final eventAsync = ref.watch(eventDetailControllerProvider(eventId));
+    final eventCoordinator = ref.read(eventCoordinatorProvider);
+    final homeCoordinator = ref.read(homeCoordinatorProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -122,9 +125,7 @@ class PaymentSuccessScreen extends ConsumerWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      const PurchaseHistoryRoute().go(context);
-                    },
+                    onPressed: homeCoordinator.goToPurchaseHistory,
                     child: const Text('내 티켓 보기'),
                   ),
                 ),
@@ -133,7 +134,7 @@ class PaymentSuccessScreen extends ConsumerWidget {
                   width: double.infinity,
                   child: OutlinedButton(
                     onPressed: () {
-                      EventDetailRoute(eventId: eventId).go(context);
+                      eventCoordinator.goToEventDetail(eventId);
                     },
                     child: const Text('이벤트로 돌아가기'),
                   ),

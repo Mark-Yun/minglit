@@ -8,9 +8,12 @@ part of 'location_repository.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provides the [LocationRepository].
 
 @ProviderFor(locationRepository)
 const locationRepositoryProvider = LocationRepositoryProvider._();
+
+/// Provides the [LocationRepository].
 
 final class LocationRepositoryProvider
     extends
@@ -20,6 +23,7 @@ final class LocationRepositoryProvider
           LocationRepository
         >
     with $Provider<LocationRepository> {
+  /// Provides the [LocationRepository].
   const LocationRepositoryProvider._()
     : super(
         from: null,

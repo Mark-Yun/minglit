@@ -6,6 +6,9 @@
 *.lock
 *.log
 
+# AI agent workspace
+.sisyphus/
+
 # Local scripts
 **/run_local.sh
 
@@ -38,8 +41,8 @@ logs/
 **/web/index.html.tmp
 
 # Supabase
-backend/supabase/.temp/
-backend/supabase/functions/.well-known/
+supabase/.temp/
+supabase/functions/.well-known/
 # Supabase secrets (if any local .env)
 .env
 .env.*
@@ -68,5 +71,9 @@ shared/assets/images/*.zip
 # Misc
 .env*.local
 .pnpm-store/
-# Secrets directory
-minglit_secret/
+
+# Environment files with real values
+apps/**/.env.local
+apps/**/.env.dev
+supabase/**/.env.local
+supabase/**/.env.dev

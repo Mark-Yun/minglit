@@ -1,6 +1,9 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/data/models/user_settings.dart';
+import 'package:minglit_kit/src/data/repositories/auth_repository.dart';
 import 'package:minglit_kit/src/features/notification/logic/notification_settings_controller.dart';
+import 'package:minglit_kit/src/features/notification/notification_service.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../utils/mocks.dart';

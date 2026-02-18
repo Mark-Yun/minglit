@@ -18,6 +18,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'dev_main.g.dart';
 
+const _kDevStartScreen = 'dev_start_screen';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -31,21 +33,20 @@ Future<void> main() async {
     defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
   );
 
-  // Initialize Supabase immediately for StaffGuard access
+  final prefs = await SharedPreferences.getInstance();
+  final startWithDashboard = prefs.getBool(_kDevStartScreen) ?? false;
+
   try {
     await Supabase.initialize(
       url: supabaseUrl,
       anonKey: supabasePublishableKey,
     );
   } catch (e) {
-    // Handle "Invalid Refresh Token" error by clearing storage and retrying
     if (e.toString().contains('Invalid Refresh Token') ||
         (e is AuthApiException && e.code == 'refresh_token_not_found')) {
-      final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
       Log.w('⚠️ Invalid Refresh Token detected during init. Storage cleared.');
 
-      // Retry initialization
       await Supabase.initialize(
         url: supabaseUrl,
         anonKey: supabasePublishableKey,
@@ -64,9 +65,7 @@ Future<void> main() async {
             defaultRedirectUrl: 'http://localhost:3001',
           ),
         ),
-        // Set environment domains to Dev
         minglitDomainsProvider.overrideWithValue(const MinglitDomains.dev()),
-        // Override goRouter to start at /dev for dev_main
         goRouterProvider.overrideWith((ref) {
           final rootNavigatorKey = GlobalKey<NavigatorState>();
           final authState = ValueNotifier<AuthState?>(null);
@@ -79,7 +78,7 @@ Future<void> main() async {
 
           return GoRouter(
             navigatorKey: rootNavigatorKey,
-            initialLocation: '/dev',
+            initialLocation: startWithDashboard ? '/' : '/dev',
             refreshListenable: authState,
             redirect: (context, state) {
               final isLoggedIn = ref.read(currentUserProvider) != null;
@@ -108,15 +107,6 @@ Future<void> main() async {
 
 @riverpod
 Future<void> appStartup(Ref ref) async {
-  const supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: 'http://127.0.0.1:54321',
-  );
-  const supabaseServiceRoleKey = String.fromEnvironment(
-    'SUPABASE_SERVICE_ROLE_KEY',
-    defaultValue: 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz',
-  );
-
   try {
     // 1. Load Asset Manifest
     final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
@@ -153,10 +143,7 @@ Future<void> appStartup(Ref ref) async {
       }
     }
 
-    // 4. Initialize Dev Config
-    DevConfig.init(supabaseUrl, supabaseServiceRoleKey);
-
-    // 5. Engine Stabilization Delay
+    // 4. Engine Stabilization Delay
     // Give 200ms for the engine to finish font mapping and image decoding
     await Future<void>.delayed(const Duration(milliseconds: 200));
   } on AuthApiException catch (e) {
@@ -206,23 +193,27 @@ class _AppView extends ConsumerWidget {
     );
 
     // ignore: use_minglit_async_value_widget - This is the app entry point, MaterialApp is not yet available.
-    return startupState.when(
-      // Case 1: Initializing - Show Splash immediately
-      loading: () =>
-          const MinglitSplashScreen(appName: 'Partner Dev', isPartner: true),
-
-      // Case 2: Error - Show Error UI
-      error: (e, st) =>
-          Scaffold(body: Center(child: Text('Startup Error: $e'))),
-
-      // Case 3: Ready - Show the Real App using GoRouter
-      data: (_) => const _AuthenticatedApp(),
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 600),
+      transitionBuilder: MinglitSplashTransition.build,
+      child: startupState.when(
+        loading: () => const MinglitSplashScreen(
+          key: ValueKey('splash'),
+          appName: 'Partner Dev',
+          isPartner: true,
+        ),
+        error: (e, st) => Scaffold(
+          key: const ValueKey('error'),
+          body: Center(child: Text('Startup Error: $e')),
+        ),
+        data: (_) => const _AuthenticatedApp(key: ValueKey('app')),
+      ),
     );
   }
 }
 
 class _AuthenticatedApp extends ConsumerWidget {
-  const _AuthenticatedApp();
+  const _AuthenticatedApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

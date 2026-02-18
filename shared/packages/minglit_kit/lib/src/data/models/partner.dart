@@ -26,7 +26,9 @@ abstract class Partner with _$Partner {
       _$PartnerFromJson(json);
 }
 
+/// Database-specific helpers for [Partner].
 extension PartnerDbX on Partner {
+  /// Returns JSON suitable for database inserts or updates.
   Map<String, dynamic> toDbJson() {
     return toJson()
       ..remove('id')

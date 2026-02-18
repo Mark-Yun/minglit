@@ -13,10 +13,6 @@ class AdminCoordinator extends _$AdminCoordinator {
 
   void goToApplicationDetail(String applicationId) {
     final route = ApplicationDetailRoute(applicationId: applicationId);
-    unawaited(
-      route.push<void>(
-        ref.read(goRouterProvider).routerDelegate.navigatorKey.currentContext!,
-      ),
-    );
+    unawaited(ref.read(goRouterProvider).push(route.location));
   }
 }

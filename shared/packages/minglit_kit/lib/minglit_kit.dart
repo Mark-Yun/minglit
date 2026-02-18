@@ -2,22 +2,13 @@
 library;
 
 /// This package is modularized into:
-/// - minglit_domain
 /// - minglit_data
 /// - minglit_logic
 /// - minglit_ui
 /// - minglit_core
 export 'minglit_core.dart';
 export 'minglit_data.dart';
-export 'minglit_domain.dart';
 export 'minglit_logic.dart';
 export 'minglit_ui.dart';
-export 'src/config/iamport_config.dart';
-export 'src/data/models/user_settings.dart';
-export 'src/data/repositories/notification_repository.dart';
-export 'src/features/iamport/iamport.dart';
-export 'src/features/notification/notification_list_controller.dart';
-export 'src/features/notification/notification_list_screen.dart';
-export 'src/features/notification/notification_service.dart';
-export 'src/features/notification/notification_settings_screen.dart';
-export 'src/features/verification/ui/identity_verification_screen.dart';
+
+// Dev-only exports live in minglit_dev.dart (import explicitly when needed).

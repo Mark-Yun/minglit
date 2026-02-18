@@ -14,7 +14,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$GlobalLoadingState {
 
- bool get isVisible; VoidCallback? get onCancel;
+/// Whether the overlay is visible.
+ bool get isVisible;/// Optional callback invoked when the user cancels.
+ VoidCallback? get onCancel;
 /// Create a copy of GlobalLoadingState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -210,7 +212,9 @@ class _GlobalLoadingState implements GlobalLoadingState {
   const _GlobalLoadingState({this.isVisible = false, this.onCancel});
   
 
+/// Whether the overlay is visible.
 @override@JsonKey() final  bool isVisible;
+/// Optional callback invoked when the user cancels.
 @override final  VoidCallback? onCancel;
 
 /// Create a copy of GlobalLoadingState

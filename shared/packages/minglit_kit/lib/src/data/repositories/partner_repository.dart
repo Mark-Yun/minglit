@@ -31,15 +31,16 @@ class PartnerRepository {
   Future<List<Partner>> getPartners() async {
     Log.d('getPartners called');
     try {
-      final data = await _supabase
-          .from('partners')
-          .select()
-          .eq('is_active', true)
-          .order('created_at', ascending: false);
-
-      final result = (data as List<dynamic>)
-          .map((json) => Partner.fromJson(json as Map<String, dynamic>))
-          .toList();
+      final data =
+          await _supabase
+                  .from('partners')
+                  .select()
+                  .eq('is_active', true)
+                  .order('created_at', ascending: false)
+              as List;
+      final result = data.map((json) {
+        return Partner.fromJson(json as Map<String, dynamic>);
+      }).toList();
 
       Log.d('getPartners success | count: ${result.length}');
       return result;
@@ -61,15 +62,19 @@ class PartnerRepository {
 
     // 1. Get partner_ids from permissions
     try {
-      final permissions = await _supabase
-          .from('partner_member_permissions')
-          .select('partner_id')
-          .eq('user_id', userId);
+      final permissions =
+          await _supabase
+                  .from('partner_member_permissions')
+                  .select('partner_id')
+                  .eq('user_id', userId)
+              as List;
 
       Log.d('🔍 [PartnerRepo] Found permissions raw data: $permissions');
-
       final partnerIds = permissions
-          .map((e) => e['partner_id'] as String)
+          .map((e) {
+            return (e as Map<String, dynamic>)['partner_id'] as String?;
+          })
+          .whereType<String>()
           .toList();
 
       if (partnerIds.isEmpty) {
@@ -78,13 +83,16 @@ class PartnerRepository {
       }
 
       // 2. Get partners details
-      final data = await _supabase
-          .from('partners')
-          .select()
-          .inFilter('id', partnerIds)
-          .eq('is_active', true);
-
-      final result = data.map(Partner.fromJson).toList();
+      final data =
+          await _supabase
+                  .from('partners')
+                  .select()
+                  .inFilter('id', partnerIds)
+                  .eq('is_active', true)
+              as List;
+      final result = data.map((json) {
+        return Partner.fromJson(json as Map<String, dynamic>);
+      }).toList();
       Log.d('getMyManagedPartners success | count: ${result.length}');
       return result;
     } catch (e, st) {
@@ -209,15 +217,10 @@ class PartnerRepository {
         );
       }
 
-      final data =
-          await query.order('created_at', ascending: false) as List<dynamic>;
-
-      final result = data
-          .map(
-            (dynamic json) =>
-                PartnerApplication.fromJson(json as Map<String, dynamic>),
-          )
-          .toList();
+      final data = await query.order('created_at', ascending: false) as List;
+      final result = data.map((json) {
+        return PartnerApplication.fromJson(json as Map<String, dynamic>);
+      }).toList();
 
       Log.d('getAllApplications success | count: ${result.length}');
       return result;
@@ -256,12 +259,16 @@ class PartnerRepository {
   Future<List<Map<String, dynamic>>> getPartnerMembers(String partnerId) async {
     Log.d('getPartnerMembers called | partnerId: $partnerId');
     try {
-      final data = await _supabase
-          .from('partner_member_permissions')
-          .select('*, user:user_profiles(*)')
-          .eq('partner_id', partnerId)
-          .order('joined_at', ascending: true);
-      final result = (data as List<dynamic>).cast<Map<String, dynamic>>();
+      final data =
+          await _supabase
+                  .from('partner_member_permissions')
+                  .select('*, user:user_profiles(*)')
+                  .eq('partner_id', partnerId)
+                  .order('joined_at', ascending: true)
+              as List;
+      final result = data.map((entry) {
+        return entry as Map<String, dynamic>;
+      }).toList();
       Log.d('getPartnerMembers success | count: ${result.length}');
       return result;
     } catch (e, st) {
@@ -406,13 +413,16 @@ class PartnerRepository {
   ) async {
     Log.d('getPartnerMonthlyRevenue called | partnerId: $partnerId');
     try {
-      final data = await _supabase
-          .from('partner_monthly_revenue')
-          .select()
-          .eq('partner_id', partnerId)
-          .order('month', ascending: true);
-
-      return (data as List<dynamic>).cast<Map<String, dynamic>>();
+      final data =
+          await _supabase
+                  .from('partner_monthly_revenue')
+                  .select()
+                  .eq('partner_id', partnerId)
+                  .order('month', ascending: true)
+              as List;
+      return data.map((entry) {
+        return entry as Map<String, dynamic>;
+      }).toList();
     } catch (e, st) {
       Log.e('❌ [PartnerRepo] getPartnerMonthlyRevenue Error', e, st);
       rethrow;
@@ -425,13 +435,16 @@ class PartnerRepository {
   ) async {
     Log.d('getPartnerSettlements called | partnerId: $partnerId');
     try {
-      final data = await _supabase
-          .from('settlements')
-          .select()
-          .eq('partner_id', partnerId)
-          .order('event_date', ascending: false);
-
-      return (data as List<dynamic>).cast<Map<String, dynamic>>();
+      final data =
+          await _supabase
+                  .from('settlements')
+                  .select()
+                  .eq('partner_id', partnerId)
+                  .order('event_date', ascending: false)
+              as List;
+      return data.map((entry) {
+        return entry as Map<String, dynamic>;
+      }).toList();
     } catch (e, st) {
       Log.e('❌ [PartnerRepo] getPartnerSettlements Error', e, st);
       rethrow;

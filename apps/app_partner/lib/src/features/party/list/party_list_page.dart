@@ -2,7 +2,6 @@ import 'package:app_partner/src/features/party/list/party_list_controller.dart';
 import 'package:app_partner/src/features/party/list/party_list_coordinator.dart';
 import 'package:app_partner/src/features/party/list/widgets/party_list_item.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class PartyListPage extends ConsumerWidget {
@@ -19,7 +18,7 @@ class PartyListPage extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () => context.push('/parties/create'),
+            onPressed: coordinator.goToCreate,
           ),
         ],
       ),

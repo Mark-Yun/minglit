@@ -8,19 +8,20 @@ environment:
   sdk: '>=3.5.0 <4.0.0'
 
 dependencies:
+  collection: ^1.18.0
+  dart_jsonwebtoken: ^2.4.2
   flutter:
     sdk: flutter
+  http: ^1.2.0 # Added for Edge Function testing
+  intl: ^0.20.2
   minglit_kit:
     path: ../../shared/packages/minglit_kit
+  postgres: ^3.1.0
+  supabase: ^2.3.0
+  supabase_flutter: ^2.3.0
   test_data_seeder:
     path: ../test_data_seeder
-  supabase_flutter: ^2.3.0
-  collection: ^1.18.0
-  intl: ^0.20.2
-  dart_jsonwebtoken: ^2.4.2
-  postgres: ^3.1.0
   uuid: ^4.0.0
-  http: ^1.2.0 # Added for Edge Function testing
 
 dev_dependencies:
   flutter_test:

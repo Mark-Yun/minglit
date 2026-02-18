@@ -8,9 +8,12 @@ part of 'storage_repository.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provides the [StorageRepository].
 
 @ProviderFor(storageRepository)
 const storageRepositoryProvider = StorageRepositoryProvider._();
+
+/// Provides the [StorageRepository].
 
 final class StorageRepositoryProvider
     extends
@@ -20,6 +23,7 @@ final class StorageRepositoryProvider
           StorageRepository
         >
     with $Provider<StorageRepository> {
+  /// Provides the [StorageRepository].
   const StorageRepositoryProvider._()
     : super(
         from: null,

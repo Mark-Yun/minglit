@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/features/auth/logic/auth_controller.dart';
-import 'package:minglit_kit/src/features/dev/dev_config.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'dev_user_switch_screen.g.dart';
 
@@ -18,8 +18,10 @@ part 'dev_user_switch_screen.g.dart';
 /// Use `flutter test apps/app_user/test/setup_test_data.dart` or
 /// `flutter test shared/packages/minglit_seeder` CLI commands instead.
 class DevUserSwitchScreen extends ConsumerStatefulWidget {
+  /// Creates a dev-only user switch screen.
   const DevUserSwitchScreen({super.key});
 
+  /// Creates the state for the dev user switch screen.
   @override
   ConsumerState<DevUserSwitchScreen> createState() =>
       _DevUserSwitchScreenState();
@@ -163,18 +165,18 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
   }
 }
 
-// Internal provider to fetch test users
+/// Fetches test user profiles for the dev user switcher.
 @riverpod
 Future<List<Map<String, dynamic>>> devUserProfiles(Ref ref) async {
-  // Use Admin Client to bypass RLS policies and fetch all test users
-  if (!DevConfig.isInitialized) {
-    throw StateError('DevConfig not initialized. Cannot fetch user profiles.');
+  // Call the dev-session-switch Edge Function via Supabase client
+  final supabase = Supabase.instance.client;
+  final response = await supabase.functions.invoke('dev-session-switch');
+
+  if (response.status != 200) {
+    throw Exception('Failed to fetch users: ${response.status}');
   }
 
-  final supabase = DevConfig.adminClient;
-  final data = await supabase
-      .from('user_profiles')
-      .select('id, name, username')
-      .order('username', ascending: true); // Sort by username
-  return List<Map<String, dynamic>>.from(data);
+  final body = response.data as Map<String, dynamic>;
+  final users = body['users'] as List<dynamic>;
+  return users.cast<Map<String, dynamic>>();
 }

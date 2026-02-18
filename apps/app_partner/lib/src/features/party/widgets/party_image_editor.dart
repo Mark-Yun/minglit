@@ -177,14 +177,18 @@ class _PartyImageEditorState extends State<PartyImageEditor> {
     if (url != null) {
       imageProvider = NetworkImage(url);
     } else {
+      final localFile = file;
+      if (localFile == null) {
+        return const SizedBox.shrink();
+      }
       // In Web, XFile.path is a blob URL. In Mobile, it's a local path.
       // Image.network works for blob URLs on Web.
       // For Mobile, we'd usually use FileImage, but since we are web-first,
       // let's handle it gracefully.
       if (kIsWeb) {
-        imageProvider = NetworkImage(file!.path);
+        imageProvider = NetworkImage(localFile.path);
       } else {
-        imageProvider = FileImage(File(file!.path));
+        imageProvider = FileImage(File(localFile.path));
       }
     }
 

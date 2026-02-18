@@ -8,12 +8,15 @@ part of 'staff_guard_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Guards staff-only access and persists verification state.
 
 @ProviderFor(StaffGuard)
 const staffGuardProvider = StaffGuardProvider._();
 
+/// Guards staff-only access and persists verification state.
 final class StaffGuardProvider
     extends $AsyncNotifierProvider<StaffGuard, User?> {
+  /// Guards staff-only access and persists verification state.
   const StaffGuardProvider._()
     : super(
         from: null,
@@ -34,6 +37,8 @@ final class StaffGuardProvider
 }
 
 String _$staffGuardHash() => r'061cbb9a5316b56404a8eab8bbbb8449d9ae2ce5';
+
+/// Guards staff-only access and persists verification state.
 
 abstract class _$StaffGuard extends $AsyncNotifier<User?> {
   FutureOr<User?> build();

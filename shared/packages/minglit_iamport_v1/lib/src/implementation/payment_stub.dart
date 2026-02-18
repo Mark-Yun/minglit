@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../service/payment_service.dart';
+import 'package:minglit_iamport_v1/src/service/payment_service.dart';
 
 class PaymentServiceImpl implements PaymentService {
   @override

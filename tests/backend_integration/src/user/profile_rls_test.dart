@@ -1,4 +1,5 @@
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
+import 'package:minglit_kit/minglit_core.dart';
 import 'package:supabase/supabase.dart';
 import 'package:test/test.dart';
 
@@ -39,8 +40,8 @@ void main() {
     late String user2Id;
 
     setUpAll(() async {
-      print('🚀 [Setup] Fetching users...');
-      
+      Log.i('🚀 [Setup] Fetching users...');
+
       // User 1 (Male) & User 2 (Female) via Helpers
       user1Id = await getMale25VerifiedUserId(adminClient);
       user2Id = await getFemale25VerifiedUserId(adminClient);
@@ -115,14 +116,16 @@ void main() {
 
       // Attempt to self-verify
       // Note: RLS allows update if (auth.uid() = id).
-      // It does NOT check columns by default unless we use column-level privileges or check triggers.
-      // So this test is EXPECTED TO FAIL (Security Hole) initially if we haven't protected the column.
+      // It does NOT check columns by default unless we use column-level
+      // privileges or check triggers.
+      // So this test is EXPECTED TO FAIL (Security Hole) initially if we
+      // haven't protected the column.
 
       try {
         await client1
             .from('user_profiles')
             .update({'is_verified': true}).eq('id', user1Id);
-      } catch (e) {
+      } on Exception {
         // If error thrown (e.g. by trigger), that's good.
       }
 
@@ -134,8 +137,11 @@ void main() {
 
       // If verify['is_verified'] is true, we have a security hole.
       // We expect it to be false.
-      expect(verify['is_verified'], isFalse,
-          reason: 'Security Hole: User was able to update is_verified!');
+      expect(
+        verify['is_verified'],
+        isFalse,
+        reason: 'Security Hole: User was able to update is_verified!',
+      );
     });
   });
 }

@@ -43,8 +43,10 @@ void main() {
           .select('id, partner_member_permissions(user_id)')
           .limit(1)
           .single();
-      partnerId = p1['id'];
-      ownerId = (p1['partner_member_permissions'] as List).first['user_id'];
+      partnerId = p1['id'] as String;
+      final perms = (p1['partner_member_permissions'] as List).first
+          as Map<String, dynamic>;
+      ownerId = perms['user_id'] as String;
     });
 
     test('Owner should be able to create verification', () async {
@@ -56,7 +58,7 @@ void main() {
             'category': 'etc',
             'internal_name': 'test_verify',
             'display_name': 'Test Verification',
-            'form_schema': [],
+            'form_schema': <dynamic>[],
           })
           .select()
           .single();
@@ -64,7 +66,10 @@ void main() {
       expect(res['partner_id'], equals(partnerId));
 
       // Cleanup
-      await adminClient.from('verifications').delete().eq('id', res['id']);
+      await adminClient
+          .from('verifications')
+          .delete()
+          .eq('id', res['id'] as Object);
     });
   });
 }

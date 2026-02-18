@@ -83,31 +83,39 @@ class _AppView extends ConsumerWidget {
     final goRouter = ref.watch(goRouterProvider);
 
     // ignore: use_minglit_async_value_widget - This is the app entry point, MaterialApp is not yet available.
-    return startupState.when(
-      data: (_) => MaterialApp.router(
-        title: 'Minglit Partner',
-        debugShowCheckedModeBanner: false,
-        theme: MinglitTheme.materialTheme,
-        routerConfig: goRouter,
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: AppLocalizations.supportedLocales,
-        builder: (context, child) {
-          return MinglitGlobalLoadingOverlay(child: child!);
-        },
-      ),
-      loading: () => MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: MinglitTheme.materialTheme,
-        home: const MinglitSplashScreen(appName: 'Partner', isPartner: true),
-      ),
-      error: (e, st) => MaterialApp(
-        home: Scaffold(body: Center(child: Text('Error: $e'))),
-      ),
+    return MaterialApp.router(
+      title: 'Minglit Partner',
+      debugShowCheckedModeBanner: false,
+      theme: MinglitTheme.materialTheme,
+      routerConfig: goRouter,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: AppLocalizations.supportedLocales,
+      builder: (context, child) {
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 600),
+          transitionBuilder: MinglitSplashTransition.build,
+          child: startupState.when(
+            data: (_) => BugReporterWrapper(
+              key: const ValueKey('app'),
+              child: MinglitGlobalLoadingOverlay(child: child!),
+            ),
+            loading: () => const MinglitSplashScreen(
+              key: ValueKey('splash'),
+              appName: 'Partner',
+              isPartner: true,
+            ),
+            error: (e, st) => Scaffold(
+              key: const ValueKey('error'),
+              body: Center(child: Text('Error: $e')),
+            ),
+          ),
+        );
+      },
     );
   }
 }

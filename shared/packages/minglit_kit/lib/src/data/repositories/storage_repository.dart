@@ -1,5 +1,5 @@
 import 'package:image_picker/image_picker.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/utils/log.dart';
 import 'package:path/path.dart' as p;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 
 part 'storage_repository.g.dart';
 
+/// Provides the [StorageRepository].
 @Riverpod(keepAlive: true)
 StorageRepository storageRepository(Ref ref) {
   return StorageRepository();
@@ -16,6 +17,7 @@ StorageRepository storageRepository(Ref ref) {
 ///
 /// Handles generic file upload operations to Supabase Storage.
 class StorageRepository {
+  /// Creates a [StorageRepository] with a Supabase client.
   StorageRepository({SupabaseClient? supabase})
     : _supabase = supabase ?? Supabase.instance.client;
 

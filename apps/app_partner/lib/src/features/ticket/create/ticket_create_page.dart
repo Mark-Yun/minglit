@@ -1,6 +1,6 @@
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/event/detail/event_detail_controller.dart';
-import 'package:app_partner/src/features/ticket/controller/ticket_controller.dart';
+import 'package:app_partner/src/features/ticket/logic/ticket_controller.dart';
 import 'package:app_partner/src/features/ticket/widgets/ticket_form.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';

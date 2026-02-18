@@ -1,7 +1,7 @@
 # Implementation Plan: Universal Social Graph
 
 - [x] **Step 1: 데이터베이스 마이그레이션**
-  - `backend/supabase/migrations/20260118000000_07_social.sql` 생성.
+  - `supabase/migrations/20260118000000_07_social.sql` 생성.
   - Enum 및 `social_interactions` 테이블 정의.
   - RLS 정책 적용.
 

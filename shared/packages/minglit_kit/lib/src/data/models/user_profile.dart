@@ -3,8 +3,10 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'user_profile.freezed.dart';
 part 'user_profile.g.dart';
 
+/// Represents a user's public profile details.
 @freezed
 abstract class UserProfile with _$UserProfile {
+  /// Creates a [UserProfile] with identity information.
   const factory UserProfile({
     required String id,
     required String name,
@@ -20,6 +22,7 @@ abstract class UserProfile with _$UserProfile {
     @JsonKey(name: 'updated_at') DateTime? updatedAt,
   }) = _UserProfile;
 
+  /// Creates a [UserProfile] from a JSON map.
   factory UserProfile.fromJson(Map<String, dynamic> json) =>
       _$UserProfileFromJson(json);
 }

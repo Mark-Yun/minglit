@@ -8,14 +8,18 @@ part of 'staff_repository.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provides the [StaffRepository].
 
 @ProviderFor(staffRepository)
 const staffRepositoryProvider = StaffRepositoryProvider._();
+
+/// Provides the [StaffRepository].
 
 final class StaffRepositoryProvider
     extends
         $FunctionalProvider<StaffRepository, StaffRepository, StaffRepository>
     with $Provider<StaffRepository> {
+  /// Provides the [StaffRepository].
   const StaffRepositoryProvider._()
     : super(
         from: null,

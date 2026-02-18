@@ -4,7 +4,7 @@
 - [ ] Task: Deno 테스트 설정 확인 및 문서화
     - [ ] `deno.json` 설정 검토 및 테스트 태스크 추가.
 - [ ] Task: 공통 Mocking 유틸리티 작성
-    - [ ] `backend/supabase/functions/_shared/tests/` 폴더 생성.
+    - [ ] `supabase/functions/_shared/tests/` 폴더 생성.
     - [ ] Supabase Client Mock (`mockSupabaseClient.ts`) 구현: DB 쿼리 메서드(`from`, `select`, `eq`, `update` 등)를 체이닝할 수 있는 Mock 클래스 작성.
     - [ ] Fetch Mock 유틸리티 구현: 외부 API 호출 가로채기 위한 헬퍼 함수.
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: 테스트 실행 환경 확인' (Protocol in workflow.md)

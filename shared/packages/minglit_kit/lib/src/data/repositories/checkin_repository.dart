@@ -1,9 +1,11 @@
 import 'package:cryptography/cryptography.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/data/models/ticket_token.dart';
+import 'package:minglit_kit/src/utils/ticket_crypto.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'checkin_repository.g.dart';
 
+/// Provides the [CheckinRepository].
 @riverpod
 CheckinRepository checkinRepository(Ref ref) {
   return CheckinRepository(TicketCrypto());
@@ -15,6 +17,7 @@ CheckinRepository checkinRepository(Ref ref) {
 /// In production, minting happens on Edge Functions, but we provide
 /// a repository interface for consistent client-side access.
 class CheckinRepository {
+  /// Creates a [CheckinRepository] with ticket crypto helpers.
   CheckinRepository(this._crypto);
   final TicketCrypto _crypto;
 
