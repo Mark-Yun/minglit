@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/features/auth/logic/staff_guard_provider.dart';
@@ -53,8 +54,9 @@ class _StaffGuardWrapperState extends ConsumerState<StaffGuardWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    // Automatically bypass for local development
-    if (isLocalhost) {
+    // Staff guard only applies to web deployments.
+    // Mobile apps are not publicly distributed, so no protection needed.
+    if (!kIsWeb || isLocalhost) {
       return widget.child;
     }
 
