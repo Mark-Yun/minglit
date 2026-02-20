@@ -38,6 +38,11 @@ class PartnerLoginPage extends ConsumerWidget {
               );
             }
           : null,
+      onKakaoSignIn: () {
+        unawaited(
+          ref.read(authControllerProvider.notifier).signInWithKakao(),
+        );
+      },
     );
   }
 }

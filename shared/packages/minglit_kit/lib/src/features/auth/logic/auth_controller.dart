@@ -97,6 +97,34 @@ class AuthController extends _$AuthController {
     }
   }
 
+  /// Trigger Kakao Sign-In
+  Future<void> signInWithKakao({String? redirectTo}) async {
+    state = const AsyncLoading();
+    try {
+      await ref
+          .read(authRepositoryProvider)
+          .signInWithKakao(
+            redirectTo: redirectTo,
+          );
+      // Kakao always uses web OAuth redirect — skip AsyncData on web
+      // to avoid triggering navigation before page unloads.
+      if (!kIsWeb) {
+        state = const AsyncData(null);
+      }
+    } on Object catch (e, st) {
+      Log.e('AuthController signInWithKakao failed', e, st);
+      try {
+        state = AsyncError(e, st);
+      } on Object catch (stateError, stateStackTrace) {
+        Log.e(
+          'AuthController failed to update signInWithKakao state',
+          stateError,
+          stateStackTrace,
+        );
+      }
+    }
+  }
+
   /// Trigger Sign-Out
   Future<void> signOut() async {
     state = const AsyncLoading();

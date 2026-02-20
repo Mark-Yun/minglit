@@ -193,6 +193,27 @@ class AuthRepository {
     }
   }
 
+  /// Initiates Kakao Sign-In process via web OAuth redirect.
+  ///
+  /// Uses [signInWithOAuth] on all platforms to avoid audience mismatch
+  /// issues with native Kakao SDK tokens.
+  Future<void> signInWithKakao({String? redirectTo}) async {
+    Log.d('🟡 [AuthRepo] Kakao Sign-In started');
+    try {
+      final targetRedirect =
+          redirectTo ?? _defaultRedirectUrl ?? Uri.base.origin;
+      Log.d('🌐 [AuthRepo] Kakao OAuth redirect to: $targetRedirect');
+
+      await _supabase.auth.signInWithOAuth(
+        OAuthProvider.kakao,
+        redirectTo: targetRedirect,
+      );
+    } on Exception catch (e, stackTrace) {
+      Log.e('❌ [AuthRepo] Kakao Sign-In Error', e, stackTrace);
+      rethrow;
+    }
+  }
+
   /// Signs out from both Supabase and Google.
   Future<void> signOut() async {
     try {

@@ -92,6 +92,30 @@ class LoginPage extends ConsumerWidget {
               }
             }
           : null,
+      onKakaoSignIn: () async {
+        if (from != null) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('auth_return_url', from!);
+          Log.d('💾 [Auth] Saved return URL: $from');
+        }
+
+        if (context.mounted) {
+          String? redirectTo;
+          if (kIsWeb) {
+            final origin = Uri.base.origin;
+            redirectTo = '$origin/#/auth/callback';
+            Log.d('🌐 [Auth] Kakao redirectTo set: $redirectTo');
+          }
+
+          unawaited(
+            ref
+                .read(authControllerProvider.notifier)
+                .signInWithKakao(
+                  redirectTo: redirectTo,
+                ),
+          );
+        }
+      },
     );
   }
 }
