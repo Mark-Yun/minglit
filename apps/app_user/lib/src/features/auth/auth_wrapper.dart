@@ -1,5 +1,4 @@
 import 'package:app_user/src/features/auth/login_page.dart';
-import 'package:app_user/src/features/home/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -7,8 +6,13 @@ import 'package:minglit_kit/minglit_kit.dart';
 ///
 /// A widget that handles authentication state and displays the appropriate
 /// screen. Useful for 'DevMap' or isolated testing.
+///
+/// Pass [authenticatedChild] to specify the widget shown when logged in.
+/// Defaults to a placeholder; caller should provide the actual home widget.
 class AuthWrapper extends ConsumerWidget {
-  const AuthWrapper({super.key});
+  const AuthWrapper({required this.authenticatedChild, super.key});
+
+  final Widget authenticatedChild;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -18,7 +22,7 @@ class AuthWrapper extends ConsumerWidget {
       value: authState,
       data: (state) {
         if (state.session != null) {
-          return const HomePage();
+          return authenticatedChild;
         } else {
           return const LoginPage();
         }

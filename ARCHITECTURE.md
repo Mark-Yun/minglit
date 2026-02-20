@@ -78,9 +78,66 @@ Minglit은 **"신뢰(Trust)"**를 가장 중요한 자산으로 취급하며, �
 
 ---
 
-## 6. 🚨 Technical Standards
+## 6. 📦 Provider Organization Guidelines
 
-### 6.1 Error Handling
+### 6.1 Where Providers Live
+
+| Provider Type | Location | Example |
+|---|---|---|
+| **Shared Repository** | `minglit_kit/src/data/repositories/` | `partnerRepositoryProvider`, `eventRepositoryProvider` |
+| **Shared Logic** | `minglit_kit/src/logic/providers/` | `authStateChangesProvider`, `eventFeedProvider` |
+| **Feature-local Controller** | `apps/{app}/src/features/{feature}/logic/` | `purchaseHistoryControllerProvider` |
+| **Feature-local Provider** | `apps/{app}/src/features/{feature}/` | `currentPartnerInfoProvider` (in `party_providers.dart`) |
+| **Coordinator** | `apps/{app}/src/features/{feature}/logic/` or feature root | `eventCoordinatorProvider`, `adminCoordinatorProvider` |
+
+### 6.2 Decision Criteria
+
+**Put in `minglit_kit` (shared) when:**
+- Both `app_user` and `app_partner` need it
+- It wraps a Supabase table or RPC call
+- It's a data model or repository
+
+**Put in the app's feature folder when:**
+- Only one app needs it
+- It contains UI state (controllers, form state)
+- It's a coordinator (always app-specific, depends on app routes)
+
+### 6.3 Repository Split Pattern
+
+Large repositories (>300 lines) should be split using Dart's `part`/`mixin` pattern:
+
+```dart
+// main file: foo_repository.dart
+part 'foo_query_repository.dart';
+part 'foo_command_repository.dart';
+
+class FooRepository extends _SupabaseFooContextBase
+    with _FooQueryRepository, _FooCommandRepository { ... }
+
+// part file: foo_query_repository.dart
+part of 'foo_repository.dart';
+mixin _FooQueryRepository on _SupabaseFooContext { ... }
+```
+
+**References:**
+- `event_repository.dart` + `event_repository_queries.dart` + `event_repository_commands.dart`
+- `verification_repository.dart` + `verification_query_repository.dart` + `verification_command_repository.dart`
+- `partner_repository.dart` + `partner_member_repository.dart` + `partner_application_repository.dart`
+- `party_repository.dart` + `party_event_repository.dart` + `party_matching_repository.dart`
+
+### 6.4 Anti-patterns
+
+- **Don't** import from another feature's controller (cross-feature coupling)
+  - Bad: `settlement_page.dart` importing `home/partner_dashboard_controller.dart`
+  - Fix: Extract shared data models to a common location, create feature-local controllers
+- **Don't** place app-specific UI state in `minglit_kit`
+- **Don't** create providers without `@riverpod` annotation (prefer code-gen over manual)
+
+---
+
+## 7. 🚨 Technical Standards
+
+### 7.1 Error Handling
 *   **Centralization**: 모든 에러 처리는 `minglit_kit`의 `handleMinglitError`를 통해 수행합니다.
 *   **Classification**:
     *   `MinglitUserException`: 사용자에게 보여줄 친절한 메시지 (SnackBar: Secondary Color).

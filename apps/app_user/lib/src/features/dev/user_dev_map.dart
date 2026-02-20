@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_user/src/features/auth/auth_wrapper.dart';
+import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_dev.dart';
@@ -112,7 +113,8 @@ class UserDevMap extends StatelessWidget {
             category: 'App Flow',
             title: 'App Entry (Auth Wrapper)',
             description: '인증 상태에 따른 자동 분기 흐름',
-            screenBuilder: (_) => const AuthWrapper(),
+            screenBuilder: (_) =>
+                const AuthWrapper(authenticatedChild: HomePage()),
           ),
 
           // ── PREVIEW ──

@@ -1,4 +1,5 @@
-import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
+import 'package:app_partner/src/features/settlement/settlement_controller.dart';
+import 'package:app_partner/src/features/settlement/settlement_models.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -8,7 +9,7 @@ class SettlementPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(partnerDashboardControllerProvider);
+    final state = ref.watch(settlementControllerProvider);
 
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(title: '정산 관리'),
@@ -16,8 +17,8 @@ class SettlementPage extends ConsumerWidget {
         value: state.status,
         data: (_) => RefreshIndicator(
           onRefresh: () => ref
-              .read(partnerDashboardControllerProvider.notifier)
-              .loadDashboardData(),
+              .read(settlementControllerProvider.notifier)
+              .loadSettlementData(),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(MinglitSpacing.medium),
