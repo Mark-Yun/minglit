@@ -129,3 +129,32 @@ flutter analyze
 | `report-bug` | 버그 리포트 |
 
 dev-only 함수들은 프로덕션에서 403 반환 (`DENO_DEPLOYMENT_ID` guard clause).
+
+## Search (PGroonga)
+
+한글 전문 검색을 위해 [PGroonga](https://pgroonga.github.io/) extension 사용.
+
+### RPC Functions
+
+```sql
+-- 이벤트 제목 검색 (최대 20건)
+SELECT * FROM search_events_pgroonga('직장인');
+
+-- 파티 제목 검색 (최대 20건)
+SELECT * FROM search_parties_pgroonga('대학생');
+```
+
+### Dart (Supabase Client)
+
+```dart
+final events = await supabase.rpc('search_events_pgroonga', params: {'query': '강남'});
+final parties = await supabase.rpc('search_parties_pgroonga', params: {'query': '금요'});
+```
+
+### PGroonga Operators
+
+| Operator | 용도 | 예시 |
+|----------|------|------|
+| `&@~` | 전문 검색 (AND/OR) | `'직장인 강남'` (AND), `'직장인 OR 대학생'` (OR) |
+| `&@` | 단순 매칭 | `'직장인'` |
+| `&@*` | 정규식 검색 | `'직장.*밍글'` |
