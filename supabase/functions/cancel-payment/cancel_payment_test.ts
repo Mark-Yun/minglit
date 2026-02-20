@@ -97,7 +97,7 @@ Deno.test("cancel-payment - token failure returns 502", async () => {
   );
 });
 
-Deno.test("cancel-payment - malformed JSON returns 500", async () => {
+Deno.test("cancel-payment - malformed JSON returns 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([]);
@@ -113,8 +113,8 @@ Deno.test("cancel-payment - malformed JSON returns 500", async () => {
         const response = await handler(request);
         const payload = await readJson(response);
 
-        assertEquals(response.status, 500);
-        assertEquals(typeof payload.error, "string");
+        assertEquals(response.status, 400);
+        assertEquals(payload.error, "Invalid JSON body");
       });
     },
   );

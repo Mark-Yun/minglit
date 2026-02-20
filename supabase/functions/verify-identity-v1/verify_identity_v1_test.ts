@@ -13,33 +13,35 @@ import {
 import { mockCertification, mockUser } from "../_test_utils/fixtures.ts";
 
 Deno.test("verify-identity-v1 - happy path updates profile", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-
-  const { fetchMock } = createFetchMock([
-    {
-      matcher: "https://api.iamport.kr/users/getToken",
-      handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
-    },
-    {
-      matcher: "https://api.iamport.kr/certifications/cert_123",
-      handler: () => jsonResponse({ code: 0, response: mockCertification }),
-    },
-    {
-      matcher: (req) => req.url.includes("/auth/v1/user"),
-      handler: () => jsonResponse(mockUser),
-    },
-    {
-      matcher: (req) => req.url.includes("/rest/v1/user_profiles") && req.method === "PATCH",
-      handler: () => jsonResponse({}),
-    },
-  ]);
-
   await withEnv(
     {
+      PORTONE_IMP_KEY: "test-key",
+      PORTONE_IMP_SECRET: "test-secret",
       SUPABASE_URL: "https://supabase.test",
       SUPABASE_SERVICE_ROLE_KEY: "service-key",
     },
     async () => {
+      const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+      const { fetchMock } = createFetchMock([
+        {
+          matcher: "https://api.iamport.kr/users/getToken",
+          handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
+        },
+        {
+          matcher: "https://api.iamport.kr/certifications/cert_123",
+          handler: () => jsonResponse({ code: 0, response: mockCertification }),
+        },
+        {
+          matcher: (req) => req.url.includes("/auth/v1/user"),
+          handler: () => jsonResponse(mockUser),
+        },
+        {
+          matcher: (req) => req.url.includes("/rest/v1/user_profiles") && req.method === "PATCH",
+          handler: () => jsonResponse({}),
+        },
+      ]);
+
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
           const request = jsonRequest("http://localhost", {
@@ -59,15 +61,17 @@ Deno.test("verify-identity-v1 - happy path updates profile", async () => {
 });
 
 Deno.test("verify-identity-v1 - missing id returns 400", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-  const { fetchMock } = createFetchMock([]);
-
   await withEnv(
     {
+      PORTONE_IMP_KEY: "test-key",
+      PORTONE_IMP_SECRET: "test-secret",
       SUPABASE_URL: "https://supabase.test",
       SUPABASE_SERVICE_ROLE_KEY: "service-key",
     },
     async () => {
+      const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+      const { fetchMock } = createFetchMock([]);
+
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
           const request = jsonRequest("http://localhost", {});
@@ -83,28 +87,30 @@ Deno.test("verify-identity-v1 - missing id returns 400", async () => {
 });
 
 Deno.test("verify-identity-v1 - unauthorized returns 401", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-  const { fetchMock } = createFetchMock([
-    {
-      matcher: "https://api.iamport.kr/users/getToken",
-      handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
-    },
-    {
-      matcher: "https://api.iamport.kr/certifications/cert_123",
-      handler: () => jsonResponse({ code: 0, response: mockCertification }),
-    },
-    {
-      matcher: (req) => req.url.includes("/auth/v1/user"),
-      handler: () => jsonResponse({}),
-    },
-  ]);
-
   await withEnv(
     {
+      PORTONE_IMP_KEY: "test-key",
+      PORTONE_IMP_SECRET: "test-secret",
       SUPABASE_URL: "https://supabase.test",
       SUPABASE_SERVICE_ROLE_KEY: "service-key",
     },
     async () => {
+      const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+      const { fetchMock } = createFetchMock([
+        {
+          matcher: "https://api.iamport.kr/users/getToken",
+          handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
+        },
+        {
+          matcher: "https://api.iamport.kr/certifications/cert_123",
+          handler: () => jsonResponse({ code: 0, response: mockCertification }),
+        },
+        {
+          matcher: (req) => req.url.includes("/auth/v1/user"),
+          handler: () => jsonResponse({}),
+        },
+      ]);
+
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
           const request = jsonRequest("http://localhost", {
@@ -122,20 +128,22 @@ Deno.test("verify-identity-v1 - unauthorized returns 401", async () => {
 });
 
 Deno.test("verify-identity-v1 - iamport error returns 500", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-  const { fetchMock } = createFetchMock([
-    {
-      matcher: "https://api.iamport.kr/users/getToken",
-      handler: () => new Response("error", { status: 500 }),
-    },
-  ]);
-
   await withEnv(
     {
+      PORTONE_IMP_KEY: "test-key",
+      PORTONE_IMP_SECRET: "test-secret",
       SUPABASE_URL: "https://supabase.test",
       SUPABASE_SERVICE_ROLE_KEY: "service-key",
     },
     async () => {
+      const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+      const { fetchMock } = createFetchMock([
+        {
+          matcher: "https://api.iamport.kr/users/getToken",
+          handler: () => new Response("error", { status: 500 }),
+        },
+      ]);
+
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
           const request = jsonRequest("http://localhost", {
@@ -153,15 +161,17 @@ Deno.test("verify-identity-v1 - iamport error returns 500", async () => {
 });
 
 Deno.test("verify-identity-v1 - malformed JSON returns 500", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-  const { fetchMock } = createFetchMock([]);
-
   await withEnv(
     {
+      PORTONE_IMP_KEY: "test-key",
+      PORTONE_IMP_SECRET: "test-secret",
       SUPABASE_URL: "https://supabase.test",
       SUPABASE_SERVICE_ROLE_KEY: "service-key",
     },
     async () => {
+      const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+      const { fetchMock } = createFetchMock([]);
+
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
           const request = textRequest("http://localhost", "{bad-json");

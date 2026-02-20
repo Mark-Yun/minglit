@@ -13,28 +13,29 @@ import {
 import { mockPortoneVerification, mockUser } from "../_test_utils/fixtures.ts";
 
 Deno.test("verify-identity-v2 - happy path updates profile", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-  const { fetchMock } = createFetchMock([
-    {
-      matcher: "https://api.portone.io/identity-verifications/verify_123",
-      handler: () => jsonResponse(mockPortoneVerification),
-    },
-    {
-      matcher: (req) => req.url.includes("/auth/v1/user"),
-      handler: () => jsonResponse(mockUser),
-    },
-    {
-      matcher: (req) => req.url.includes("/rest/v1/user_profiles") && req.method === "PATCH",
-      handler: () => jsonResponse({}),
-    },
-  ]);
-
   await withEnv(
     {
+      PORTONE_V2_API_KEY: "test-key",
       SUPABASE_URL: "https://supabase.test",
       SUPABASE_SERVICE_ROLE_KEY: "service-key",
     },
     async () => {
+      const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+      const { fetchMock } = createFetchMock([
+        {
+          matcher: "https://api.portone.io/identity-verifications/verify_123",
+          handler: () => jsonResponse(mockPortoneVerification),
+        },
+        {
+          matcher: (req) => req.url.includes("/auth/v1/user"),
+          handler: () => jsonResponse(mockUser),
+        },
+        {
+          matcher: (req) => req.url.includes("/rest/v1/user_profiles") && req.method === "PATCH",
+          handler: () => jsonResponse({}),
+        },
+      ]);
+
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
           const request = jsonRequest(
@@ -55,15 +56,16 @@ Deno.test("verify-identity-v2 - happy path updates profile", async () => {
 });
 
 Deno.test("verify-identity-v2 - missing id returns 400", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-  const { fetchMock } = createFetchMock([]);
-
   await withEnv(
     {
+      PORTONE_V2_API_KEY: "test-key",
       SUPABASE_URL: "https://supabase.test",
       SUPABASE_SERVICE_ROLE_KEY: "service-key",
     },
     async () => {
+      const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+      const { fetchMock } = createFetchMock([]);
+
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
           const request = jsonRequest("http://localhost", {});
@@ -79,20 +81,21 @@ Deno.test("verify-identity-v2 - missing id returns 400", async () => {
 });
 
 Deno.test("verify-identity-v2 - external API error returns status", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-  const { fetchMock } = createFetchMock([
-    {
-      matcher: "https://api.portone.io/identity-verifications/verify_123",
-      handler: () => jsonResponse({ message: "failure" }, { status: 500 }),
-    },
-  ]);
-
   await withEnv(
     {
+      PORTONE_V2_API_KEY: "test-key",
       SUPABASE_URL: "https://supabase.test",
       SUPABASE_SERVICE_ROLE_KEY: "service-key",
     },
     async () => {
+      const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+      const { fetchMock } = createFetchMock([
+        {
+          matcher: "https://api.portone.io/identity-verifications/verify_123",
+          handler: () => jsonResponse({ message: "failure" }, { status: 500 }),
+        },
+      ]);
+
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
           const request = jsonRequest("http://localhost", {
@@ -101,7 +104,7 @@ Deno.test("verify-identity-v2 - external API error returns status", async () => 
           const response = await handler(request);
           const payload = await readJson(response);
 
-          assertEquals(response.status, 500);
+          assertEquals(response.status, 502);
           assertEquals(payload.error, "Failed to fetch verification info");
         });
       });
@@ -110,24 +113,25 @@ Deno.test("verify-identity-v2 - external API error returns status", async () => 
 });
 
 Deno.test("verify-identity-v2 - unauthorized returns 401", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-  const { fetchMock } = createFetchMock([
-    {
-      matcher: "https://api.portone.io/identity-verifications/verify_123",
-      handler: () => jsonResponse(mockPortoneVerification),
-    },
-    {
-      matcher: (req) => req.url.includes("/auth/v1/user"),
-      handler: () => jsonResponse({}),
-    },
-  ]);
-
   await withEnv(
     {
+      PORTONE_V2_API_KEY: "test-key",
       SUPABASE_URL: "https://supabase.test",
       SUPABASE_SERVICE_ROLE_KEY: "service-key",
     },
     async () => {
+      const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+      const { fetchMock } = createFetchMock([
+        {
+          matcher: "https://api.portone.io/identity-verifications/verify_123",
+          handler: () => jsonResponse(mockPortoneVerification),
+        },
+        {
+          matcher: (req) => req.url.includes("/auth/v1/user"),
+          handler: () => jsonResponse({}),
+        },
+      ]);
+
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
           const request = jsonRequest("http://localhost", {
@@ -145,15 +149,16 @@ Deno.test("verify-identity-v2 - unauthorized returns 401", async () => {
 });
 
 Deno.test("verify-identity-v2 - malformed JSON returns 500", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-  const { fetchMock } = createFetchMock([]);
-
   await withEnv(
     {
+      PORTONE_V2_API_KEY: "test-key",
       SUPABASE_URL: "https://supabase.test",
       SUPABASE_SERVICE_ROLE_KEY: "service-key",
     },
     async () => {
+      const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+      const { fetchMock } = createFetchMock([]);
+
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
           const request = textRequest("http://localhost", "{bad-json");
