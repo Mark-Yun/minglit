@@ -1,10 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// TODO: 실제 운영 환경에서는 아래 값들을 Supabase Vault 또는 환경 변수로 관리해야 합니다.
-// 현재는 테스트를 위해 하드코딩하며, 추후 GitHub Secrets를 통해 주입하도록 설정할 예정입니다.
-const PORTONE_API_KEY = "e94DAc1YxTkGSPuznRBcLwyQlYHmK59gu7mJaFQrUnnxbkWfsmtqW469rSKYBScQWDYT1NNZeweMzsmX";
+const PORTONE_API_KEY = Deno.env.get("PORTONE_V2_API_KEY");
 const PORTONE_API_URL = "https://api.portone.io";
+
+if (!PORTONE_API_KEY) {
+  throw new Error("Missing required environment variable: PORTONE_V2_API_KEY");
+}
 
 serve(async (req) => {
   try {
