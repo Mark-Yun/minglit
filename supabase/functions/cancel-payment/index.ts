@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { successResponse, errorResponse } from "../_shared/response_utils.ts";
 
 const PORTONE_API_URL = "https://api.iamport.kr";
 
@@ -8,10 +9,7 @@ serve(async (req) => {
     const { payment_id, reason } = await req.json();
 
     if (!payment_id) {
-      return new Response(JSON.stringify({ error: "Missing payment_id" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorResponse("Missing payment_id", 400);
     }
 
     // 2. Get Portone Access Token
@@ -20,10 +18,7 @@ serve(async (req) => {
 
     if (!impKey || !impSecret) {
       console.error("Missing Portone credentials");
-      return new Response(JSON.stringify({ error: "Server configuration error" }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorResponse("Server configuration error", 500);
     }
 
     const tokenRes = await fetch(`${PORTONE_API_URL}/users/getToken`, {
@@ -35,10 +30,7 @@ serve(async (req) => {
     const tokenData = await tokenRes.json();
     if (tokenData.code !== 0) {
       console.error("Failed to get Portone token:", tokenData.message);
-      return new Response(JSON.stringify({ error: "Payment provider error" }), {
-        status: 502,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorResponse("Payment provider error", 502);
     }
 
     const accessToken = tokenData.response.access_token;
@@ -60,24 +52,15 @@ serve(async (req) => {
 
     if (cancelData.code !== 0) {
       console.error("Failed to cancel payment:", cancelData.message);
-      return new Response(JSON.stringify({ error: cancelData.message }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorResponse(cancelData.message, 400);
     }
 
     // 4. Success
-    return new Response(JSON.stringify({ success: true, data: cancelData.response }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return successResponse({ success: true, data: cancelData.response });
 
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     console.error("Error in cancel-payment:", message);
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return errorResponse(message, 500);
   }
 });

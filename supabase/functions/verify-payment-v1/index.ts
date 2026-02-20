@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { IamportClient } from "../_shared/iamport_client.ts";
+import { successResponse, errorResponse } from "../_shared/response_utils.ts";
 
 const PORTONE_API_URL = "https://api.iamport.kr";
 const IMP_KEY = Deno.env.get("PORTONE_IMP_KEY");
@@ -61,10 +62,7 @@ serve(async (req) => {
     const { imp_uid, merchant_uid } = await req.json();
 
     if (!imp_uid || !merchant_uid) {
-      return new Response(JSON.stringify({ error: "Missing required parameters" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorResponse("Missing required parameters", 400);
     }
 
     // 0. Supabase Client 초기화
@@ -81,18 +79,12 @@ serve(async (req) => {
       .single();
 
     if (orderError || !order) {
-      return new Response(JSON.stringify({ error: "Order not found" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorResponse("Order not found", 404);
     }
 
     // 이미 처리된 주문인지 확인
     if (order.status === 'approved' || order.status === 'paid') {
-       return new Response(JSON.stringify({ success: true, message: "Already processed" }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
+      return successResponse({ success: true, message: "Already processed" });
     }
 
     // 2. Iamport V1 API 조회
@@ -101,21 +93,14 @@ serve(async (req) => {
 
     // 3. 결제 상태 및 금액 검증
     if (payment.status !== "paid") {
-      return new Response(JSON.stringify({ error: "Payment not completed", status: payment.status }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorResponse("Payment not completed", 400, { status: payment.status });
     }
 
     if (payment.amount !== order.payment_amount) {
       await cancelPayment(imp_uid, "결제 금액 위변조로 자동 취소");
-      return new Response(JSON.stringify({ 
-        error: "Amount mismatch", 
-        expected: order.payment_amount, 
-        actual: payment.amount 
-      }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
+      return errorResponse("Amount mismatch", 400, {
+        expected: order.payment_amount,
+        actual: payment.amount,
       });
     }
 
@@ -136,24 +121,15 @@ serve(async (req) => {
 
     if (updateError) {
       console.error("DB Update Error:", updateError);
-      return new Response(JSON.stringify({ error: "Failed to update order status" }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorResponse("Failed to update order status", 500);
     }
 
-    return new Response(JSON.stringify({ success: true, imp_uid }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return successResponse({ success: true, imp_uid });
 
 
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error("Error in verify-payment-v1:", message);
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return errorResponse(message, 500);
   }
 });

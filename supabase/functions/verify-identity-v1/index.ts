@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { IamportClient } from "../_shared/iamport_client.ts";
+import { successResponse, errorResponse } from "../_shared/response_utils.ts";
 
 const IMP_KEY = Deno.env.get("PORTONE_IMP_KEY");
 const IMP_SECRET = Deno.env.get("PORTONE_IMP_SECRET");
@@ -14,10 +15,7 @@ serve(async (req) => {
     const { identity_verification_id } = await req.json();
 
     if (!identity_verification_id) {
-      return new Response(JSON.stringify({ error: "Missing identity_verification_id" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorResponse("Missing identity_verification_id", 400);
     }
 
     // 1. Iamport V1 API 조회
@@ -28,10 +26,7 @@ serve(async (req) => {
     // Iamport V1 doesn't have a status field in response? Usually "certified" is implied if retrieval succeeds.
     // But we check `certified` boolean if available. Docs say response has `certified`.
     if (certification.certified !== true) {
-       return new Response(JSON.stringify({ error: "Identity not certified", details: certification }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorResponse("Identity not certified", 400, certification);
     }
 
     // 3. Supabase DB 업데이트
@@ -45,10 +40,7 @@ serve(async (req) => {
     const userId = userRes.data.user?.id;
 
     if (!userId) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorResponse("Unauthorized", 401);
     }
 
     // Convert Unix timestamp (seconds) to Date
@@ -71,23 +63,14 @@ serve(async (req) => {
 
     if (updateError) {
       console.error("DB Update Error:", updateError);
-      return new Response(JSON.stringify({ error: "Failed to update user profile" }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorResponse("Failed to update user profile", 500);
     }
 
-    return new Response(JSON.stringify({ success: true, user: userId }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return successResponse({ success: true, user: userId });
 
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     console.error("Error in verify-identity-v1:", message);
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return errorResponse(message, 500);
   }
 });

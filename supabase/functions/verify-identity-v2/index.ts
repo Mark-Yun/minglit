@@ -1,8 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { PortoneV2Client } from "../_shared/portone_client.ts";
+import { successResponse, errorResponse } from "../_shared/response_utils.ts";
 
 const PORTONE_API_KEY = Deno.env.get("PORTONE_V2_API_KEY");
-const PORTONE_API_URL = "https://api.portone.io";
 
 if (!PORTONE_API_KEY) {
   throw new Error("Missing required environment variable: PORTONE_V2_API_KEY");
@@ -13,45 +14,27 @@ serve(async (req) => {
     const { identity_verification_id } = await req.json();
 
     if (!identity_verification_id) {
-      return new Response(JSON.stringify({ error: "Missing identity_verification_id" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorResponse("Missing identity_verification_id", 400);
     }
 
     // 1. 포트원 V2 API를 통해 인증 정보 조회
-    const response = await fetch(`${PORTONE_API_URL}/identity-verifications/${identity_verification_id}`, {
-      method: "GET",
-      headers: {
-        "Authorization": `PortOne ${PORTONE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Portone V2 API Error:", errorData);
-      return new Response(JSON.stringify({ error: "Failed to fetch verification info", details: errorData }), {
-        status: response.status,
-        headers: { "Content-Type": "application/json" },
-      });
+    const portone = new PortoneV2Client(PORTONE_API_KEY);
+    let verification: Record<string, unknown>;
+    try {
+      verification = await portone.getIdentityVerification(identity_verification_id);
+    } catch (fetchError) {
+      const msg = fetchError instanceof Error ? fetchError.message : String(fetchError);
+      console.error("Portone V2 API Error:", msg);
+      return errorResponse("Failed to fetch verification info", 502, msg);
     }
-
-    const verification = await response.json();
 
     if (verification.status !== "VERIFIED") {
-      return new Response(JSON.stringify({ error: "Identity not verified", status: verification.status }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorResponse("Identity not verified", 400, { status: verification.status });
     }
 
-    const customer = verification.verifiedCustomer;
+    const customer = verification.verifiedCustomer as Record<string, unknown> | undefined;
     if (!customer) {
-      return new Response(JSON.stringify({ error: "Verified customer data missing" }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorResponse("Verified customer data missing", 500);
     }
 
     // 3. Supabase DB 업데이트
@@ -65,18 +48,17 @@ serve(async (req) => {
     const userId = userRes.data.user?.id;
 
     if (!userId) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorResponse("Unauthorized", 401);
     }
+
+    const gender = typeof customer.gender === "string" ? customer.gender.toLowerCase() : undefined;
 
     const { error: updateError } = await supabase
       .from("user_profiles")
       .update({
         name: customer.name,
         birth_date: customer.birthDate,
-        gender: customer.gender.toLowerCase(),
+        gender,
         phone_number: customer.phoneNumber,
         ci: customer.ci,
         di: customer.di,
@@ -87,23 +69,14 @@ serve(async (req) => {
 
     if (updateError) {
       console.error("DB Update Error:", updateError);
-      return new Response(JSON.stringify({ error: "Failed to update user profile" }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorResponse("Failed to update user profile", 500);
     }
 
-    return new Response(JSON.stringify({ success: true, user: userId }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return successResponse({ success: true, user: userId });
 
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     console.error("Error in verify-identity:", message);
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return errorResponse(message, 500);
   }
 });

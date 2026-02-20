@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { successResponse, errorResponse } from "../_shared/response_utils.ts";
 
 const GITHUB_TOKEN = Deno.env.get("GITHUB_ACCESS_TOKEN");
 const GITHUB_REPO = "Mark-Yun/minglit";
@@ -53,17 +54,11 @@ ${logs}
 
     const data = await response.json();
 
-    return new Response(
-      JSON.stringify({ success: true, url: data.html_url }),
-      { headers: { "Content-Type": "application/json" } }
-    );
+    return successResponse({ success: true, url: data.html_url });
 
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error("Internal Error:", message);
-    return new Response(
-      JSON.stringify({ success: false, error: message }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return errorResponse(message, 500);
   }
 });
