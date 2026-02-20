@@ -95,6 +95,9 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
         case EventFeedType.earlyBird:
           // ignore: avoid_dynamic_calls, Reason: Supabase builder chaining
           query = query.order('start_time', ascending: true);
+        case EventFeedType.aiRecommended:
+          // ignore: avoid_dynamic_calls, Reason: Supabase builder chaining
+          query = query.order('created_at', ascending: false);
       }
 
       final data =
@@ -236,6 +239,85 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
     } on Exception catch (e, st) {
       Log.e('❌ [EventRepo] getPendingApplicationCount Error', e, st);
       return 0; // Fail safe
+    }
+  }
+
+  /// Fetches AI-powered personalized event recommendations.
+  Future<List<Map<String, dynamic>>> getPersonalizedRecommendations({
+    required String userId,
+    int limit = 10,
+  }) async {
+    Log.d('getPersonalizedRecommendations called | userId: $userId');
+    try {
+      final response = await supabaseClient.rpc<List<dynamic>>(
+        'get_personalized_recommendations',
+        params: {'p_user_id': userId, 'p_limit': limit},
+      );
+
+      final result = response
+          .map((item) => item as Map<String, dynamic>)
+          .toList();
+
+      Log.d(
+        'getPersonalizedRecommendations success | count: ${result.length}',
+      );
+      return result;
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] getPersonalizedRecommendations Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// Fetches events within a geographic radius.
+  Future<List<Map<String, dynamic>>> getEventsWithinRadius({
+    required double latitude,
+    required double longitude,
+    int radiusMeters = 5000,
+    int limit = 20,
+  }) async {
+    Log.d(
+      'getEventsWithinRadius called | lat: $latitude, lng: $longitude, '
+      'radius: $radiusMeters',
+    );
+    try {
+      final response = await supabaseClient.rpc<List<dynamic>>(
+        'get_events_within_radius',
+        params: {
+          'p_lat': latitude,
+          'p_lng': longitude,
+          'p_radius_meters': radiusMeters,
+          'p_limit': limit,
+        },
+      );
+
+      final result = response
+          .map((item) => item as Map<String, dynamic>)
+          .toList();
+
+      Log.d('getEventsWithinRadius success | count: ${result.length}');
+      return result;
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] getEventsWithinRadius Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// Fetches bulk eligibility data for a user (profile + verified status).
+  Future<Map<String, dynamic>> getBulkEligibilityData({
+    required String userId,
+  }) async {
+    Log.d('getBulkEligibilityData called | userId: $userId');
+    try {
+      final response = await supabaseClient.rpc<Map<String, dynamic>>(
+        'get_bulk_eligibility_data',
+        params: {'p_user_id': userId},
+      );
+
+      Log.d('getBulkEligibilityData success');
+      return response;
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] getBulkEligibilityData Error', e, st);
+      rethrow;
     }
   }
 

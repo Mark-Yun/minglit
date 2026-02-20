@@ -406,6 +406,7 @@ const _$EventFeedTypeEnumMap = {
   EventFeedType.newArrivals: 'new-arrivals',
   EventFeedType.closingSoon: 'closing-soon',
   EventFeedType.earlyBird: 'early-bird',
+  EventFeedType.aiRecommended: 'ai-recommended',
 };
 
 mixin $MyPageRoute on GoRouteData {

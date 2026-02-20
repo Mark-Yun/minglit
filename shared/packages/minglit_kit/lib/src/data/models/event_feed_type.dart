@@ -12,7 +12,10 @@ enum EventFeedType {
   closingSoon('마감 임박', '마감순'),
 
   /// Early bird special offers.
-  earlyBird('얼리버드 특가', '가격순')
+  earlyBird('얼리버드 특가', '가격순'),
+
+  /// AI-powered personalized recommendations.
+  aiRecommended('AI 추천', '추천순')
   ;
 
   const EventFeedType(this.title, this.sortLabel);

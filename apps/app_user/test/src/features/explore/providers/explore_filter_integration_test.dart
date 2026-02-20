@@ -1,0 +1,399 @@
+import 'package:app_user/src/features/explore/providers/explore_state_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/services/location_service.dart';
+
+import '../../../../utils/test_utils.dart';
+
+void main() {
+  final now = DateTime.now();
+
+  Event makeEvent({
+    String id = 'e1',
+    List<Ticket>? tickets,
+    DateTime? startTime,
+    Location? location,
+    Party? party,
+  }) {
+    return Event(
+      id: id,
+      partyId: 'p1',
+      startTime: startTime ?? now.add(const Duration(days: 1)),
+      endTime: (startTime ?? now.add(const Duration(days: 1))).add(
+        const Duration(hours: 2),
+      ),
+      createdAt: now,
+      updatedAt: now,
+      tickets: tickets,
+      location: location,
+      party: party,
+    );
+  }
+
+  Ticket makeTicket({String id = 't1', int price = 10000}) {
+    return Ticket(
+      id: id,
+      name: 'Ticket $id',
+      createdAt: now,
+      updatedAt: now,
+      price: price,
+    );
+  }
+
+  Location makeLocation({
+    double lat = 37.5665,
+    double lng = 126.978,
+  }) {
+    return Location(
+      id: 'loc1',
+      partnerId: 'partner1',
+      name: 'Test Venue',
+      address: 'Seoul',
+      createdAt: now,
+      updatedAt: now,
+      latitude: lat,
+      longitude: lng,
+    );
+  }
+
+  group('ExploreFilters', () {
+    test('initial state has no active filters', () {
+      const filters = ExploreFilters();
+      expect(filters.hasActiveFilters, false);
+      expect(filters.activeFilterCount, 0);
+    });
+
+    test('tracks eligibility filter', () {
+      const filters = ExploreFilters(eligibilityEnabled: true);
+      expect(filters.hasActiveFilters, true);
+      expect(filters.activeFilterCount, 1);
+    });
+
+    test('tracks location filter', () {
+      const filters = ExploreFilters(locationRadiusMeters: 5000);
+      expect(filters.hasActiveFilters, true);
+      expect(filters.activeFilterCount, 1);
+    });
+
+    test('tracks price filter (min only)', () {
+      const filters = ExploreFilters(priceMin: 10000);
+      expect(filters.hasActiveFilters, true);
+      expect(filters.activeFilterCount, 1);
+    });
+
+    test('tracks date filter (start only)', () {
+      final filters = ExploreFilters(dateStart: now);
+      expect(filters.hasActiveFilters, true);
+      expect(filters.activeFilterCount, 1);
+    });
+
+    test('counts multiple active filters', () {
+      final filters = ExploreFilters(
+        eligibilityEnabled: true,
+        locationRadiusMeters: 3000,
+        priceMin: 0,
+        priceMax: 30000,
+        dateStart: now,
+      );
+      expect(filters.activeFilterCount, 4);
+    });
+
+    test('copyWith clears nullable fields', () {
+      const filters = ExploreFilters(
+        locationRadiusMeters: 5000,
+        priceMin: 10000,
+      );
+      final cleared = filters.copyWith(
+        locationRadiusMeters: () => null,
+        priceMin: () => null,
+      );
+      expect(cleared.locationRadiusMeters, isNull);
+      expect(cleared.priceMin, isNull);
+      expect(cleared.hasActiveFilters, false);
+    });
+  });
+
+  group('SearchQuery provider', () {
+    test('initial state is empty string', () {
+      final container = createContainer();
+      expect(container.read(searchQueryProvider), '');
+    });
+
+    test('update changes query', () {
+      final container = createContainer();
+      container.read(searchQueryProvider.notifier).update('직장인');
+      expect(container.read(searchQueryProvider), '직장인');
+    });
+
+    test('clear resets to empty', () {
+      final container = createContainer();
+      container.read(searchQueryProvider.notifier).update('test');
+      container.read(searchQueryProvider.notifier).clear();
+      expect(container.read(searchQueryProvider), '');
+    });
+  });
+
+  group('ActiveFilters provider', () {
+    test('initial state has no filters', () {
+      final container = createContainer();
+      final filters = container.read(activeFiltersProvider);
+      expect(filters.hasActiveFilters, false);
+    });
+
+    test('toggleEligibility flips the flag', () {
+      final container = createContainer();
+      container.read(activeFiltersProvider.notifier).toggleEligibility();
+      expect(
+        container.read(activeFiltersProvider).eligibilityEnabled,
+        true,
+      );
+      container.read(activeFiltersProvider.notifier).toggleEligibility();
+      expect(
+        container.read(activeFiltersProvider).eligibilityEnabled,
+        false,
+      );
+    });
+
+    test('setLocationRadius updates radius', () {
+      final container = createContainer();
+      container.read(activeFiltersProvider.notifier).setLocationRadius(5000);
+      expect(
+        container.read(activeFiltersProvider).locationRadiusMeters,
+        5000,
+      );
+    });
+
+    test('setPriceRange updates min and max', () {
+      final container = createContainer();
+      container
+          .read(activeFiltersProvider.notifier)
+          .setPriceRange(min: 10000, max: 50000);
+      final filters = container.read(activeFiltersProvider);
+      expect(filters.priceMin, 10000);
+      expect(filters.priceMax, 50000);
+    });
+
+    test('setDateRange updates start and end', () {
+      final container = createContainer();
+      final start = DateTime(2026, 3, 1);
+      final end = DateTime(2026, 3, 31);
+      container
+          .read(activeFiltersProvider.notifier)
+          .setDateRange(start: start, end: end);
+      final filters = container.read(activeFiltersProvider);
+      expect(filters.dateStart, start);
+      expect(filters.dateEnd, end);
+    });
+
+    test('clearAll resets all filters', () {
+      final container = createContainer();
+      container.read(activeFiltersProvider.notifier).toggleEligibility();
+      container.read(activeFiltersProvider.notifier).setLocationRadius(3000);
+      container
+          .read(activeFiltersProvider.notifier)
+          .setPriceRange(min: 0, max: 10000);
+      container.read(activeFiltersProvider.notifier).clearAll();
+
+      final filters = container.read(activeFiltersProvider);
+      expect(filters.hasActiveFilters, false);
+    });
+
+    test('removeFilter removes individual filter', () {
+      final container = createContainer();
+      container.read(activeFiltersProvider.notifier).toggleEligibility();
+      container.read(activeFiltersProvider.notifier).setLocationRadius(3000);
+      container
+          .read(activeFiltersProvider.notifier)
+          .setPriceRange(min: 0, max: 10000);
+
+      container
+          .read(activeFiltersProvider.notifier)
+          .removeFilter(ExploreFilterType.location);
+
+      final filters = container.read(activeFiltersProvider);
+      expect(filters.eligibilityEnabled, true);
+      expect(filters.locationRadiusMeters, isNull);
+      expect(filters.priceMin, 0);
+    });
+  });
+
+  group('filteredEventsProvider', () {
+    test('returns all events when no filters active', () {
+      final events = [
+        makeEvent(id: 'e1'),
+        makeEvent(id: 'e2'),
+      ];
+
+      final container = createContainer();
+      final result = container.read(
+        filteredEventsProvider(events: events),
+      );
+      expect(result, hasLength(2));
+    });
+
+    test('filters by price range', () {
+      final events = [
+        makeEvent(
+          id: 'cheap',
+          tickets: [makeTicket(id: 't1', price: 5000)],
+        ),
+        makeEvent(
+          id: 'expensive',
+          tickets: [makeTicket(id: 't2', price: 50000)],
+        ),
+        makeEvent(
+          id: 'mid',
+          tickets: [makeTicket(id: 't3', price: 20000)],
+        ),
+      ];
+
+      final container = createContainer();
+      container
+          .read(activeFiltersProvider.notifier)
+          .setPriceRange(min: 10000, max: 30000);
+
+      final result = container.read(
+        filteredEventsProvider(events: events),
+      );
+
+      expect(result, hasLength(1));
+      expect(result.first.id, 'mid');
+    });
+
+    test('filters free events with price range 0-0', () {
+      final events = [
+        makeEvent(id: 'free', tickets: null), // No tickets = free
+        makeEvent(
+          id: 'paid',
+          tickets: [makeTicket(id: 't1', price: 10000)],
+        ),
+      ];
+
+      final container = createContainer();
+      container
+          .read(activeFiltersProvider.notifier)
+          .setPriceRange(min: 0, max: 0);
+
+      final result = container.read(
+        filteredEventsProvider(events: events),
+      );
+
+      expect(result, hasLength(1));
+      expect(result.first.id, 'free');
+    });
+
+    test('filters by date range', () {
+      final events = [
+        makeEvent(
+          id: 'march',
+          startTime: DateTime(2026, 3, 15),
+        ),
+        makeEvent(
+          id: 'april',
+          startTime: DateTime(2026, 4, 10),
+        ),
+        makeEvent(
+          id: 'may',
+          startTime: DateTime(2026, 5, 1),
+        ),
+      ];
+
+      final container = createContainer();
+      container
+          .read(activeFiltersProvider.notifier)
+          .setDateRange(
+            start: DateTime(2026, 3, 1),
+            end: DateTime(2026, 3, 31),
+          );
+
+      final result = container.read(
+        filteredEventsProvider(events: events),
+      );
+
+      expect(result, hasLength(1));
+      expect(result.first.id, 'march');
+    });
+
+    test('filters by location radius', () async {
+      // Seoul City Hall: 37.5665, 126.978
+      // Gangnam Station: 37.498, 127.028 (~8km away)
+      // Incheon Airport: 37.469, 126.451 (~47km away)
+      final seoulLoc = makeLocation(lat: 37.5665, lng: 126.978);
+      final gangnamLoc = makeLocation(lat: 37.498, lng: 127.028);
+      final incheonLoc = makeLocation(lat: 37.469, lng: 126.451);
+
+      final events = [
+        makeEvent(id: 'seoul', location: seoulLoc),
+        makeEvent(id: 'gangnam', location: gangnamLoc),
+        makeEvent(id: 'incheon', location: incheonLoc),
+      ];
+
+      final container = createContainer(
+        overrides: [
+          // Mock user location at Seoul City Hall
+          userLocationProvider.overrideWith(
+            (ref) async => LocationResult(
+              latitude: 37.5665,
+              longitude: 126.978,
+            ),
+          ),
+        ],
+      );
+
+      container
+          .read(activeFiltersProvider.notifier)
+          .setLocationRadius(10000); // 10km
+
+      // Wait for the async userLocation provider to resolve
+      await container.read(userLocationProvider.future);
+
+      final result = container.read(
+        filteredEventsProvider(events: events),
+      );
+
+      // Seoul is 0km (at user location), Gangnam is ~8km, Incheon is ~47km
+      // Only Seoul and Gangnam should be within 10km
+      expect(result.map((e) => e.id), containsAll(['seoul', 'gangnam']));
+      expect(result.map((e) => e.id), isNot(contains('incheon')));
+    });
+
+    test('chains multiple filters (price + date)', () {
+      final events = [
+        makeEvent(
+          id: 'match',
+          startTime: DateTime(2026, 3, 15),
+          tickets: [makeTicket(id: 't1', price: 15000)],
+        ),
+        makeEvent(
+          id: 'wrong-price',
+          startTime: DateTime(2026, 3, 15),
+          tickets: [makeTicket(id: 't2', price: 50000)],
+        ),
+        makeEvent(
+          id: 'wrong-date',
+          startTime: DateTime(2026, 5, 1),
+          tickets: [makeTicket(id: 't3', price: 15000)],
+        ),
+      ];
+
+      final container = createContainer();
+      container
+          .read(activeFiltersProvider.notifier)
+          .setPriceRange(min: 10000, max: 30000);
+      container
+          .read(activeFiltersProvider.notifier)
+          .setDateRange(
+            start: DateTime(2026, 3, 1),
+            end: DateTime(2026, 3, 31),
+          );
+
+      final result = container.read(
+        filteredEventsProvider(events: events),
+      );
+
+      expect(result, hasLength(1));
+      expect(result.first.id, 'match');
+    });
+  });
+}
