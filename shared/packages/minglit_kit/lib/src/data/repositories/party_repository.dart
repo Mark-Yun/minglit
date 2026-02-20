@@ -10,6 +10,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'party_repository.g.dart';
+part 'party_event_repository.dart';
+part 'party_matching_repository.dart';
 
 /// Provider for PartyRepository.
 @Riverpod(keepAlive: true)
@@ -18,12 +20,26 @@ PartyRepository partyRepository(Ref ref) {
 }
 
 /// Repository for Party-related data operations.
-class PartyRepository {
+///
+/// Core party CRUD operations live here. Extended by:
+/// - [_PartyEventRepository] — Event CRUD within a party.
+/// - [_PartyMatchingRepository] — Entry group template management.
+class PartyRepository extends _SupabasePartyContextBase
+    with _PartyEventRepository, _PartyMatchingRepository {
   /// Creates a [PartyRepository] with a Supabase client.
   PartyRepository({SupabaseClient? supabase})
-    : _supabase = supabase ?? Supabase.instance.client;
+    : super(supabase ?? Supabase.instance.client);
+}
 
-  final SupabaseClient _supabase;
+abstract class _SupabasePartyContext {
+  SupabaseClient get supabaseClient;
+}
+
+abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
+  const _SupabasePartyContextBase(this.supabaseClient);
+
+  @override
+  final SupabaseClient supabaseClient;
 
   /// Uploads multiple party images and returns the list of public URLs.
   Future<List<String>> uploadPartyImages(
@@ -37,8 +53,6 @@ class PartyRepository {
     try {
       final urls = <String>[];
       for (final file in files) {
-        // Reuse single upload logic or inline it
-        // To keep it simple and parallel:
         final url = await uploadPartyImage(file, partnerId);
         urls.add(url);
       }
@@ -66,7 +80,7 @@ class PartyRepository {
       final path = '$partnerId/${timestamp}_$random$extension';
       final bytes = await file.readAsBytes();
 
-      await _supabase.storage
+      await supabaseClient.storage
           .from('party-assets')
           .uploadBinary(
             path,
@@ -77,7 +91,9 @@ class PartyRepository {
             ),
           );
 
-      final url = _supabase.storage.from('party-assets').getPublicUrl(path);
+      final url = supabaseClient.storage
+          .from('party-assets')
+          .getPublicUrl(path);
       return url;
     } catch (e, st) {
       Log.e('❌ [PartyRepo] uploadPartyImage Error', e, st);
@@ -94,7 +110,7 @@ class PartyRepository {
     try {
       final partyJson = party.toDbJson()..addAll(extraFields ?? {});
 
-      final data = await _supabase
+      final data = await supabaseClient
           .from('parties')
           .insert(partyJson)
           .select()
@@ -108,7 +124,7 @@ class PartyRepository {
         final templatesJson = templates
             .map((t) => t.copyWith(partyId: createdParty.id).toDbJson())
             .toList();
-        await _supabase.from('ticket_templates').insert(templatesJson);
+        await supabaseClient.from('ticket_templates').insert(templatesJson);
       }
 
       // Create associated entry groups if provided
@@ -117,7 +133,7 @@ class PartyRepository {
         final groupsJson = entryGroups
             .map((g) => g.copyWith(partyId: createdParty.id).toDbJson())
             .toList();
-        await _supabase.from('entry_groups').insert(groupsJson);
+        await supabaseClient.from('entry_groups').insert(groupsJson);
       }
 
       Log.d('createParty success | id: ${createdParty.id}');
@@ -131,7 +147,7 @@ class PartyRepository {
   /// Retrieves a party by its ID.
   Future<Party?> getPartyById(String partyId) async {
     try {
-      final data = await _supabase
+      final data = await supabaseClient
           .from('parties')
           .select(
             '*, location:locations(*), '
@@ -155,7 +171,7 @@ class PartyRepository {
     try {
       final json = party.toDbJson();
 
-      final data = await _supabase
+      final data = await supabaseClient
           .from('parties')
           .update(json)
           .eq('id', party.id)
@@ -175,7 +191,7 @@ class PartyRepository {
   Future<List<Party>> getPartiesByPartnerId(String partnerId) async {
     try {
       final data =
-          await _supabase
+          await supabaseClient
                   .from('parties')
                   .select(
                     '*, location:locations(*), '
@@ -197,7 +213,7 @@ class PartyRepository {
   Future<List<Party>> getParties() async {
     try {
       final data =
-          await _supabase
+          await supabaseClient
                   .from('parties')
                   .select(
                     '*, location:locations(*), '
@@ -210,25 +226,6 @@ class PartyRepository {
       }).toList();
     } catch (e, st) {
       Log.e('❌ [PartyRepo] getParties Error', e, st);
-      rethrow;
-    }
-  }
-
-  /// Retrieves events for a specific party.
-  Future<List<Event>> getEventsByPartyId(String partyId) async {
-    try {
-      final data =
-          await _supabase
-                  .from('events')
-                  .select('*, entry_groups(*), tickets(*)')
-                  .eq('party_id', partyId)
-                  .order('start_time', ascending: false)
-              as List;
-      return data.map((e) {
-        return Event.fromJson(e as Map<String, dynamic>);
-      }).toList();
-    } catch (e, st) {
-      Log.e('❌ [PartyRepo] getEventsByPartyId Error', e, st);
       rethrow;
     }
   }
@@ -254,7 +251,7 @@ class PartyRepository {
         updates['status'] = status;
       }
 
-      await _supabase.from('parties').update(updates).eq('id', partyId);
+      await supabaseClient.from('parties').update(updates).eq('id', partyId);
       Log.d('updatePartyBasicInfo success');
     } catch (e, st) {
       Log.e('❌ [PartyRepo] updatePartyBasicInfo Error', e, st);
@@ -266,7 +263,7 @@ class PartyRepository {
   Future<void> updatePartyStatus(String partyId, String status) async {
     Log.d('updatePartyStatus called | partyId: $partyId, status: $status');
     try {
-      await _supabase
+      await supabaseClient
           .from('parties')
           .update({'status': status})
           .eq('id', partyId);
@@ -283,121 +280,13 @@ class PartyRepository {
       'updatePartyLocation called | partyId: $partyId, locationId: $locationId',
     );
     try {
-      await _supabase
+      await supabaseClient
           .from('parties')
           .update({'location_id': locationId})
           .eq('id', partyId);
       Log.d('updatePartyLocation success');
     } catch (e, st) {
       Log.e('❌ [PartyRepo] updatePartyLocation Error', e, st);
-      rethrow;
-    }
-  }
-
-  /// Creates a new event for a party.
-  Future<Event> createEvent(Event event) async {
-    Log.d('createEvent called | partyId: ${event.partyId}');
-    try {
-      final eventJson = event.toDbJson();
-
-      final data = await _supabase
-          .from('events')
-          .insert(eventJson)
-          .select()
-          .single();
-
-      final createdEvent = Event.fromJson(data);
-
-      // Create associated entry groups if provided
-      final eventGroups = event.entryGroups;
-      if (eventGroups != null && eventGroups.isNotEmpty) {
-        final groupsJson = eventGroups
-            .map((g) => g.copyWith(eventId: createdEvent.id).toDbJson())
-            .toList();
-        await _supabase.from('entry_groups').insert(groupsJson);
-      }
-
-      // Create associated tickets if provided
-      final eventTickets = event.tickets;
-      if (eventTickets != null && eventTickets.isNotEmpty) {
-        final ticketsJson = eventTickets
-            .map((t) => t.toDbJson(eventId: createdEvent.id))
-            .toList();
-
-        await _supabase.from('tickets').insert(ticketsJson);
-      }
-
-      Log.d('createEvent success | id: ${createdEvent.id}');
-      return createdEvent;
-    } catch (e, st) {
-      Log.e('❌ [PartyRepo] createEvent Error', e, st);
-      rethrow;
-    }
-  }
-
-  /// Updates an existing event.
-  Future<Event> updateEvent(Event event) async {
-    Log.d('updateEvent called | id: ${event.id}');
-    try {
-      final json = event.toDbJson();
-
-      final data = await _supabase
-          .from('events')
-          .update(json)
-          .eq('id', event.id)
-          .select()
-          .single();
-
-      final result = Event.fromJson(data);
-      Log.d('updateEvent success | id: ${result.id}');
-      return result;
-    } catch (e, st) {
-      Log.e('❌ [PartyRepo] updateEvent Error', e, st);
-      rethrow;
-    }
-  }
-
-  /// Updates only the status of an event.
-  Future<void> updateEventStatus(String eventId, String status) async {
-    Log.d('updateEventStatus called | eventId: $eventId, status: $status');
-    try {
-      await _supabase
-          .from('events')
-          .update({'status': status})
-          .eq('id', eventId);
-      Log.d('updateEventStatus success');
-    } catch (e, st) {
-      Log.e('❌ [PartyRepo] updateEventStatus Error', e, st);
-      rethrow;
-    }
-  }
-
-  /// Replaces all entry group templates for a party.
-  Future<void> replaceEntryGroupTemplates(
-    String partyId,
-    List<EntryGroupTemplate> templates,
-  ) async {
-    Log.d(
-      'replaceEntryGroupTemplates called | partyId: $partyId, '
-      'count: ${templates.length}',
-    );
-    try {
-      await _supabase.from('entry_groups').delete().eq('party_id', partyId);
-
-      if (templates.isEmpty) return;
-
-      final groupsJson = templates
-          .map(
-            (group) => group.copyWith(partyId: partyId).toJson()
-              ..remove('created_at')
-              ..remove('updated_at'),
-          )
-          .toList();
-
-      await _supabase.from('entry_groups').insert(groupsJson);
-      Log.d('replaceEntryGroupTemplates success');
-    } catch (e, st) {
-      Log.e('❌ [PartyRepo] replaceEntryGroupTemplates Error', e, st);
       rethrow;
     }
   }
