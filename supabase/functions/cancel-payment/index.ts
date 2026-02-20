@@ -73,8 +73,9 @@ serve(async (req) => {
     });
 
   } catch (e) {
-    console.error("Error in cancel-payment:", e);
-    return new Response(JSON.stringify({ error: e.message }), {
+    const message = e instanceof Error ? e.message : String(e);
+    console.error("Error in cancel-payment:", message);
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });
