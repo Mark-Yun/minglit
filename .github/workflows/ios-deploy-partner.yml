@@ -144,6 +144,7 @@ jobs:
         if: ${{ github.ref == 'refs/heads/dev' }}
         run: |
           flutter build ipa --release --export-options-plist=ios/ExportOptions-dev.plist \
+            --build-number=${{ github.run_number }} \
             --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL_DEV }} \
             --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY_DEV }} \
             --dart-define=KAKAO_LOCAL_REST_API_KEY=${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
@@ -152,6 +153,7 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' }}
         run: |
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist \
+            --build-number=${{ github.run_number }} \
             --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL_PROD }} \
             --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY_PROD }} \
             --dart-define=KAKAO_LOCAL_REST_API_KEY=${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
