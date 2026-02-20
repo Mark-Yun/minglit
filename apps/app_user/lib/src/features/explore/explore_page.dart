@@ -1,15 +1,13 @@
-import 'dart:async';
-
-import 'package:app_user/src/routing/app_routes.dart';
+import 'package:app_user/src/features/explore/logic/explore_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 /// Explore tab landing page showing event feed categories.
-class ExplorePage extends StatelessWidget {
+class ExplorePage extends ConsumerWidget {
   const ExplorePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(title: '탐색', showBackButton: false),
       body: ListView(
@@ -24,9 +22,7 @@ class ExplorePage extends StatelessWidget {
                 subtitle: Text(type.sortLabel),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
-                  unawaited(
-                    EventCurationRoute(type: type).push<void>(context),
-                  );
+                  ref.read(exploreCoordinatorProvider).pushEventCuration(type);
                 },
               ),
             ),

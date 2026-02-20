@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'admin_coordinator.dart';
+part of 'verification_coordinator.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -9,28 +9,28 @@ part of 'admin_coordinator.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(AdminCoordinator)
-const adminCoordinatorProvider = AdminCoordinatorProvider._();
+@ProviderFor(VerificationCoordinator)
+const verificationCoordinatorProvider = VerificationCoordinatorProvider._();
 
-final class AdminCoordinatorProvider
-    extends $NotifierProvider<AdminCoordinator, void> {
-  const AdminCoordinatorProvider._()
+final class VerificationCoordinatorProvider
+    extends $NotifierProvider<VerificationCoordinator, void> {
+  const VerificationCoordinatorProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'adminCoordinatorProvider',
+        name: r'verificationCoordinatorProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$adminCoordinatorHash();
+  String debugGetCreateSourceHash() => _$verificationCoordinatorHash();
 
   @$internal
   @override
-  AdminCoordinator create() => AdminCoordinator();
+  VerificationCoordinator create() => VerificationCoordinator();
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(void value) {
@@ -41,9 +41,10 @@ final class AdminCoordinatorProvider
   }
 }
 
-String _$adminCoordinatorHash() => r'039f898b96fe8d398376be5cd401078ec7cfa0d5';
+String _$verificationCoordinatorHash() =>
+    r'2f6aec27b716262965a5c788c33d430e14b1c8d2';
 
-abstract class _$AdminCoordinator extends $Notifier<void> {
+abstract class _$VerificationCoordinator extends $Notifier<void> {
   void build();
   @$mustCallSuper
   @override

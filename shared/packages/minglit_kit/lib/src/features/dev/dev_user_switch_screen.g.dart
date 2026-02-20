@@ -52,4 +52,4 @@ final class DevUserProfilesProvider
   }
 }
 
-String _$devUserProfilesHash() => r'a102a91dc1c4c5265aa2bd7e8e95f9b6e9c1ea58';
+String _$devUserProfilesHash() => r'4e91e478bd48decba8005beca03d8be94ad9349b';
