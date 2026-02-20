@@ -1,5 +1,6 @@
 -- 14. Party Balance System
 -- Gender/group ratio balancing for event ticket purchases
+set search_path to public, extensions;
 
 -- 1. Add balance_config to parties table
 alter table public.parties 

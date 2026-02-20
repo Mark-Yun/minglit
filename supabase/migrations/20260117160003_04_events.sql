@@ -1,4 +1,5 @@
 -- 04. EVENTS: Parties, Events, Tickets, Entry Groups
+set search_path to public, extensions;
 
 -- 1. Tables
 create table public.parties (
@@ -20,7 +21,7 @@ create table public.parties (
 
 create table public.party_embeddings (
   party_id uuid not null references public.parties(id) on delete cascade primary key,
-  embedding vector(1536),
+  embedding extensions.vector(1536),
   updated_at timestamptz default now()
 );
 create index party_embeddings_embedding_idx on public.party_embeddings using hnsw (embedding vector_cosine_ops);

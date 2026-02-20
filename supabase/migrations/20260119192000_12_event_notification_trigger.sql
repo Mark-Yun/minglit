@@ -1,4 +1,5 @@
 -- 12. Event Update Notification Trigger
+set search_path to public, extensions;
 
 -- 1. Create Notification Function
 create or replace function public.notify_event_update()

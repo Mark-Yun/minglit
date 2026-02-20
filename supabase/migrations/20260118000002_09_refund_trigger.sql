@@ -1,4 +1,5 @@
 -- 09. REFUND TRIGGER & STATUS SYNC
+set search_path to public, extensions;
 
 -- 1. Add rejection_reason to event_applications
 alter table public.event_applications

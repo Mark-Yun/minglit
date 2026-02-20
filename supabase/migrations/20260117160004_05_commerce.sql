@@ -1,4 +1,5 @@
 -- 05. COMMERCE: Applications, Submissions, Verified Users, Participants
+set search_path to public, extensions;
 
 -- 1. Tables
 create table public.event_applications (

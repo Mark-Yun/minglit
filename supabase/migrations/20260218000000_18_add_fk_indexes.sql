@@ -1,4 +1,5 @@
 -- 18. Add Missing FK Indexes
+set search_path to public, extensions;
 -- Adds indexes on foreign key columns that lack them.
 -- Improves JOIN performance and CASCADE delete efficiency.
 -- All statements are idempotent (IF NOT EXISTS).

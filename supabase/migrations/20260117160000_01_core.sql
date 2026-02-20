@@ -1,5 +1,9 @@
 -- 01. CORE: Extensions, Enums, Utils
 
+-- Ensure extensions schema is in search_path for all subsequent migrations
+alter database postgres set search_path to public, extensions;
+set search_path to public, extensions;
+
 -- 1. Extensions
 create extension if not exists postgis;
 create extension if not exists moddatetime schema extensions;

@@ -1,4 +1,5 @@
 -- 15. SETTLEMENTS: Settlement Records, Revenue Views, Cron
+set search_path to public, extensions;
 
 -- 1. Tables
 create table public.settlements (

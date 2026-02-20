@@ -1,4 +1,5 @@
 -- 13. File Management System
+set search_path to public, extensions;
 
 -- 1. Create minglit_files table
 create table public.minglit_files (

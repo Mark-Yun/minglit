@@ -1,4 +1,5 @@
 -- 07. SOCIAL: Interactions, Subscriptions, Bookmarks
+set search_path to public, extensions;
 
 -- 1. Enum Types
 create type public.social_target_type as enum ('party', 'partner', 'review', 'comment');

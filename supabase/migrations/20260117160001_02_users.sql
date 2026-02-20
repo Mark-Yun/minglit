@@ -1,4 +1,6 @@
 -- 02. USERS: Profiles, Roles, Embeddings, Actions
+-- Ensure vector extension types are visible
+set search_path to public, extensions;
 
 -- 1. Tables
 create table public.user_profiles (
@@ -17,7 +19,7 @@ create table public.user_profiles (
 
 create table public.user_embeddings (
   user_id uuid not null references public.user_profiles(id) on delete cascade primary key,
-  embedding vector(1536),
+  embedding extensions.vector(1536),
   updated_at timestamptz default now()
 );
 create index user_embeddings_embedding_idx on public.user_embeddings using hnsw (embedding vector_cosine_ops);

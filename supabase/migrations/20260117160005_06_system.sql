@@ -1,4 +1,5 @@
 -- 06. SYSTEM: Pipeline, Queues, Cron, Logs
+set search_path to public, extensions;
 
 -- 1. PGMQ Queues
 select pgmq.create('q_global_events');

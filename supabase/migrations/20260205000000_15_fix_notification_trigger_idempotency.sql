@@ -1,4 +1,5 @@
 -- 15. Fix notification payload idempotency (add payload.id)
+set search_path to public, extensions;
 
 create or replace function public.notify_event_update()
 returns trigger

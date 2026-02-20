@@ -1,4 +1,5 @@
 -- 10. STORAGE: verification-proofs bucket and RLS policies
+set search_path to public, extensions;
 
 -- 1. Create Buckets
 insert into storage.buckets (id, name, public)

@@ -1,4 +1,5 @@
 -- 03. PARTNERS: Partners, Locations, Verifications, Settlements
+set search_path to public, extensions;
 
 -- 1. Tables
 create table public.partners (

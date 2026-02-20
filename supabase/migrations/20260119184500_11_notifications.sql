@@ -1,3 +1,6 @@
+-- 11. NOTIFICATIONS
+set search_path to public, extensions;
+
 -- 1. Create Enum for Notification Category
 create type public.notification_category as enum (
   'marketing',

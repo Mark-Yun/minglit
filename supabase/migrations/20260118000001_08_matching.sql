@@ -1,4 +1,5 @@
 -- 08. MATCHING: Real-time Party Matching System
+set search_path to public, extensions;
 
 -- 1. Tables
 
