@@ -1,9 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { IamportClient } from "../_shared/iamport_client.ts";
+import { verifyHmacSignature } from "./hmac_utils.ts";
 
 const IMP_KEY = Deno.env.get("PORTONE_IMP_KEY");
 const IMP_SECRET = Deno.env.get("PORTONE_IMP_SECRET");
+const WEBHOOK_SECRET = Deno.env.get("WEBHOOK_SECRET");
 
 if (!IMP_KEY || !IMP_SECRET) {
   throw new Error("Missing required environment variables: PORTONE_IMP_KEY, PORTONE_IMP_SECRET");
@@ -14,21 +16,31 @@ const ALLOWED_IPS = ["52.78.100.19", "52.78.48.223", "52.78.17.128", "127.0.0.1"
 
 serve(async (req) => {
   try {
-    // 1. IP Validation
-    // SECURITY: x-forwarded-for can be spoofed unless set by a trusted proxy.
-    // TODO: Verify a PortOne webhook signature (HMAC header) when available and
-    // prefer trusted proxy/edge-provided client IP over raw headers.
+    const rawBody = await req.text();
+    
+    // 1. HMAC Signature Verification (Primary Security Layer)
+    if (WEBHOOK_SECRET) {
+      const signature = req.headers.get("x-portone-signature");
+      if (signature) {
+        const isValid = await verifyHmacSignature(rawBody, signature, WEBHOOK_SECRET);
+        if (!isValid) {
+          console.warn("HMAC signature verification failed");
+          return new Response("Invalid signature", { status: 403 });
+        }
+        console.log("HMAC signature verified successfully");
+      }
+    }
+    
+    // 2. IP Validation (Defense-in-depth)
     const forwardedFor = req.headers.get("x-forwarded-for");
     const clientIp = forwardedFor ? forwardedFor.split(",")[0].trim() : "";
     
-    // In local development, clientIp might be null or loopback.
-    // For production, ensure this check is enabled.
     if (clientIp && !ALLOWED_IPS.includes(clientIp)) {
       console.warn(`Blocked Webhook Request from unauthorized IP: ${clientIp}`);
       return new Response("Unauthorized IP", { status: 403 });
     }
 
-    const body = await req.json();
+    const body = JSON.parse(rawBody);
     const { imp_uid, merchant_uid, status } = body;
     console.log(`Webhook V1 received: ${imp_uid} (${status})`);
 
@@ -36,7 +48,7 @@ serve(async (req) => {
       return new Response("Missing parameters", { status: 400 });
     }
 
-    // 2. Verify with Portone API (Cross-Check)
+    // 3. Verify with Portone API (Cross-Check)
     const client = new IamportClient(IMP_KEY, IMP_SECRET);
     const payment = await client.getPayment(imp_uid);
 
