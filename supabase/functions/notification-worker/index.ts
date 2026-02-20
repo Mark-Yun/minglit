@@ -184,15 +184,11 @@ Deno.serve(async (_req) => {
         });
 
       } catch (procError) {
-          console.error('Processing Failed:', procError);
-          // Don't mark processed, let PGMQ visibility timeout handle retry (or move to DLQ manually if fatal)
-          return true; // We return true to keep loop running, but we DO NOT delete the message here?
-          // Actually, if we throw, runWorkerLoop might crash? 
-          // Current logic: we catch, log, and...
-          // If it's a transient error, we should NOT delete the message.
-          // If we return true here, the loop continues to next iteration, but the message is NOT deleted.
-          // This is correct behavior for retry.
-          return true; 
+          const msg_ = procError instanceof Error ? procError.message : String(procError);
+          console.error(`[${traceId}] Processing Failed: ${msg_}`);
+          // Message is NOT deleted — PGMQ visibility timeout (30s) will make it
+          // available for retry. After 5 retries, DLQ check above moves it out.
+          return true;
       }
 
       // 5. Finalize (Success)
