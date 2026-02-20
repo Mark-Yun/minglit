@@ -8,6 +8,8 @@ import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'event_admission_controller.g.dart';
+part 'admission_action_handler.dart';
+part 'ticket_recommendation_util.dart';
 
 enum EventAdmissionStatus {
   guest, // 로그인 필요
@@ -184,59 +186,7 @@ class EventAdmissionController extends _$EventAdmissionController {
     );
   }
 
-  /// Returns reason if NOT eligible, null if eligible.
-  String? _checkGroupCondition(EntryGroup group, UserProfile user) {
-    // 1. Gender Check
-    if (group.gender != null) {
-      // group.gender is 'male'/'female'. user.gender is 'male'/'female'.
-      if (group.gender != user.gender) {
-        return '성별 조건이 맞지 않습니다.';
-      }
-    }
-
-    // 2. Age Check
-    final birthDate = user.birthDate;
-    if (birthDate == null) return '생년월일 정보가 없습니다.';
-
-    final birthYear = birthDate.year;
-    if (group.birthYearMin != null && birthYear < group.birthYearMin!) {
-      return '${group.birthYearMin}년생 이상만 참여 가능합니다.';
-    }
-    if (group.birthYearMax != null && birthYear > group.birthYearMax!) {
-      return '${group.birthYearMax}년생 이하만 참여 가능합니다.';
-    }
-
-    return null; // OK
-  }
-
-  AdmissionButtonConfig buttonConfig(AdmissionState state) {
-    switch (state.status) {
-      case EventAdmissionStatus.guest:
-        return const AdmissionButtonConfig(label: '로그인하고 신청하기');
-      case EventAdmissionStatus.identityRequired:
-        return const AdmissionButtonConfig(label: '본인인증 후 신청하기');
-      case EventAdmissionStatus.qualificationRequired:
-        return const AdmissionButtonConfig(label: '신청하기');
-      case EventAdmissionStatus.notEligible:
-        return AdmissionButtonConfig(
-          label: state.ineligibleReason ?? '참여 조건 미달',
-          enabled: false,
-          style: AdmissionButtonStyle.disabled,
-        );
-      case EventAdmissionStatus.eligible:
-        return const AdmissionButtonConfig(label: '참가 신청하기');
-      case EventAdmissionStatus.pendingPayment:
-        return const AdmissionButtonConfig(label: '결제 계속하기');
-      case EventAdmissionStatus.applied:
-        return const AdmissionButtonConfig(label: '이미 신청한 이벤트');
-      case EventAdmissionStatus.rejected:
-        return const AdmissionButtonConfig(
-          label: '심사 반려 (사유 확인)',
-          style: AdmissionButtonStyle.destructive,
-        );
-    }
-  }
-
+  /// Handles user action based on current admission state.
   Future<void> handleAction({
     required BuildContext context,
     required AdmissionState state,
@@ -332,175 +282,29 @@ class EventAdmissionController extends _$EventAdmissionController {
         return;
     }
   }
-}
 
-class TicketRecommendationResult {
-  const TicketRecommendationResult({
-    required this.recommendedTicket,
-    required this.eligibleTickets,
-    required this.ineligibleReasons,
-  });
-
-  final Ticket? recommendedTicket;
-  final List<Ticket> eligibleTickets;
-  final Map<String, String> ineligibleReasons;
-}
-
-class TicketRecommendationUtil {
-  static TicketRecommendationResult recommend({
-    required Event event,
-    required UserProfile? userProfile,
-    required List<String> approvedVerificationIds,
-    required Map<String, bool> balanceStatus,
-  }) {
-    final tickets = event.tickets ?? [];
-    final entryGroups = event.entryGroups ?? [];
-    final ineligibleReasons = <String, String>{};
-    final eligibleTickets = <Ticket>[];
-
-    for (final ticket in tickets) {
-      final evaluation = _evaluateTicket(
-        ticket: ticket,
-        entryGroups: entryGroups,
-        userProfile: userProfile,
-        approvedVerificationIds: approvedVerificationIds,
-        balanceStatus: balanceStatus,
-      );
-
-      if (evaluation.isEligible) {
-        eligibleTickets.add(ticket);
-      } else if (evaluation.reason != null) {
-        ineligibleReasons[ticket.id] = evaluation.reason!;
-      }
-    }
-
-    eligibleTickets.sort((a, b) {
-      final priceCompare = a.price.compareTo(b.price);
-      if (priceCompare != 0) return priceCompare;
-      return a.name.compareTo(b.name);
-    });
-
-    return TicketRecommendationResult(
-      recommendedTicket: eligibleTickets.isEmpty ? null : eligibleTickets.first,
-      eligibleTickets: eligibleTickets,
-      ineligibleReasons: ineligibleReasons,
-    );
-  }
-
-  static _TicketEligibility _evaluateTicket({
-    required Ticket ticket,
-    required List<EntryGroup> entryGroups,
-    required UserProfile? userProfile,
-    required List<String> approvedVerificationIds,
-    required Map<String, bool> balanceStatus,
-  }) {
-    if (balanceStatus[ticket.id] == false) {
-      return const _TicketEligibility.ineligible('성비 조절 중');
-    }
-
-    if (userProfile == null) {
-      return const _TicketEligibility.ineligible('회원 정보가 없습니다.');
-    }
-
-    if (!userProfile.isVerified) {
-      return const _TicketEligibility.ineligible('본인 인증이 필요합니다.');
-    }
-
-    final groups = entryGroups
-        .where((group) => ticket.targetEntryGroupIds.contains(group.id))
-        .toList();
-
-    if (groups.isEmpty) {
-      final missing = _missingVerificationIds(
-        ticket.requiredVerificationIds,
-        approvedVerificationIds,
-      );
-      if (missing.isNotEmpty) {
-        return const _TicketEligibility.ineligible('필수 인증이 필요합니다.');
-      }
-      return const _TicketEligibility.eligible();
-    }
-
-    String? firstReason;
-    for (final group in groups) {
-      final reason = _checkGroupCondition(group, userProfile);
-      if (reason != null) {
-        firstReason ??= reason;
-        continue;
-      }
-
-      final requiredIds = <String>{
-        ...ticket.requiredVerificationIds,
-        ...group.requiredVerificationIds,
-      };
-      final missing = _missingVerificationIds(
-        requiredIds.toList(),
-        approvedVerificationIds,
-      );
-      if (missing.isEmpty) {
-        return const _TicketEligibility.eligible();
-      }
-      firstReason ??= '필수 인증이 필요합니다.';
-    }
-
-    return _TicketEligibility.ineligible(
-      firstReason ?? '참여 조건이 맞지 않습니다.',
-    );
-  }
-
-  static List<String> _missingVerificationIds(
-    List<String> requiredIds,
-    List<String> approvedVerificationIds,
-  ) {
-    if (requiredIds.isEmpty) return [];
-    return requiredIds
-        .where((id) => !approvedVerificationIds.contains(id))
-        .toList();
-  }
-
-  static String? _checkGroupCondition(
-    EntryGroup group,
-    UserProfile userProfile,
-  ) {
+  /// Returns reason if NOT eligible, null if eligible.
+  String? _checkGroupCondition(EntryGroup group, UserProfile user) {
+    // 1. Gender Check
     if (group.gender != null) {
-      if (userProfile.gender == null) {
-        return '성별 정보가 없습니다.';
-      }
-      if (group.gender != userProfile.gender) {
+      // group.gender is 'male'/'female'. user.gender is 'male'/'female'.
+      if (group.gender != user.gender) {
         return '성별 조건이 맞지 않습니다.';
       }
     }
 
-    final birthYear = userProfile.birthYear ?? userProfile.birthDate?.year;
-    if ((group.birthYearMin != null || group.birthYearMax != null) &&
-        birthYear == null) {
-      return '출생 연도 정보가 없습니다.';
-    }
+    // 2. Age Check
+    final birthDate = user.birthDate;
+    if (birthDate == null) return '생년월일 정보가 없습니다.';
 
-    if (group.birthYearMin != null &&
-        birthYear != null &&
-        birthYear < group.birthYearMin!) {
+    final birthYear = birthDate.year;
+    if (group.birthYearMin != null && birthYear < group.birthYearMin!) {
       return '${group.birthYearMin}년생 이상만 참여 가능합니다.';
     }
-
-    if (group.birthYearMax != null &&
-        birthYear != null &&
-        birthYear > group.birthYearMax!) {
+    if (group.birthYearMax != null && birthYear > group.birthYearMax!) {
       return '${group.birthYearMax}년생 이하만 참여 가능합니다.';
     }
 
-    return null;
+    return null; // OK
   }
-}
-
-class _TicketEligibility {
-  const _TicketEligibility._({required this.isEligible, this.reason});
-
-  const _TicketEligibility.eligible() : this._(isEligible: true);
-
-  const _TicketEligibility.ineligible(String reason)
-    : this._(isEligible: false, reason: reason);
-
-  final bool isEligible;
-  final String? reason;
 }
