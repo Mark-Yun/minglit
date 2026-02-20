@@ -183,6 +183,16 @@ jobs:
       - name: Test (edge functions)
         run: deno test --allow-all functions/
         working-directory: supabase
+      - name: Install dependencies (e2e scenarios)
+        run: flutter pub get
+        working-directory: apps/integration_scenario_tester
+      - name: Test (e2e scenarios)
+        run: flutter test integration_test/
+        working-directory: apps/integration_scenario_tester
+        env:
+          SUPABASE_URL: http://127.0.0.1:54321
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_LOCAL_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_LOCAL_SERVICE_ROLE_KEY }}
       - name: Stop Supabase
         if: always()
         run: supabase stop
