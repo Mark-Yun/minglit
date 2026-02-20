@@ -6,7 +6,13 @@ const PORTONE_API_URL = "https://api.iamport.kr";
 serve(async (req) => {
   try {
     // 1. Parse Request
-    const { payment_id, reason } = await req.json();
+    let reqBody: Record<string, unknown>;
+    try {
+      reqBody = await req.json();
+    } catch {
+      return errorResponse("Invalid JSON body", 400);
+    }
+    const { payment_id, reason } = reqBody as { payment_id?: string; reason?: string };
 
     if (!payment_id) {
       return errorResponse("Missing payment_id", 400);

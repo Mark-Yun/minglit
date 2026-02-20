@@ -6,7 +6,24 @@ const GITHUB_REPO = "Mark-Yun/minglit";
 
 serve(async (req) => {
   try {
-    const { title, description, logs, timestamp, platform } = await req.json();
+    let reqBody: Record<string, unknown>;
+    try {
+      reqBody = await req.json();
+    } catch {
+      return errorResponse("Invalid JSON body", 400);
+    }
+
+    const { title, description, logs, timestamp, platform } = reqBody as {
+      title?: string;
+      description?: string;
+      logs?: string;
+      timestamp?: string;
+      platform?: string;
+    };
+
+    if (!title || !description) {
+      return errorResponse("Missing required fields: title, description", 400);
+    }
 
     if (!GITHUB_TOKEN) {
       throw new Error("GITHUB_ACCESS_TOKEN is not set");

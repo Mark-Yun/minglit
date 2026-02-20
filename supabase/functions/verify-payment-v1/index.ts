@@ -59,7 +59,13 @@ const cancelPayment = async (impUid: string, reason: string) => {
 
 serve(async (req) => {
   try {
-    const { imp_uid, merchant_uid } = await req.json();
+    let reqBody: Record<string, unknown>;
+    try {
+      reqBody = await req.json();
+    } catch {
+      return errorResponse("Invalid JSON body", 400);
+    }
+    const { imp_uid, merchant_uid } = reqBody as { imp_uid?: string; merchant_uid?: string };
 
     if (!imp_uid || !merchant_uid) {
       return errorResponse("Missing required parameters", 400);
