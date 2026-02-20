@@ -376,168 +376,203 @@ async function createPartyWithEvents(
 }
 
 async function ensureGlobalVerifications(sb: SupabaseClient): Promise<Record<string, string>> {
-  const globals = [
-    { category: 'career', internal_name: 'global_career', display_name: '직장인 인증', description: '재직증명서 기반 직장인 인증', icon_key: 'briefcase', form_schema: [{ type: 'image', label: '재직증명서' }] },
-    { category: 'academic', internal_name: 'global_academic', display_name: '대학생 인증', description: '학생증 기반 대학생 인증', icon_key: 'school', form_schema: [{ type: 'image', label: '학생증' }] },
-    { category: 'asset', internal_name: 'global_asset', display_name: '자산 인증', description: '자산 보유 인증', icon_key: 'diamond', form_schema: [{ type: 'text', label: '자산 정보' }] },
-  ]
+   const globals = [
+     { category: 'career', internal_name: 'global_career', display_name: '직장인 인증', description: '재직증명서 기반 직장인 인증', icon_key: 'briefcase', form_schema: [{ type: 'image', label: '재직증명서' }] },
+     { category: 'academic', internal_name: 'global_academic', display_name: '대학생 인증', description: '학생증 기반 대학생 인증', icon_key: 'school', form_schema: [{ type: 'image', label: '학생증' }] },
+     { category: 'asset', internal_name: 'global_asset', display_name: '자산 인증', description: '자산 보유 인증', icon_key: 'diamond', form_schema: [{ type: 'text', label: '자산 정보' }] },
+   ]
 
-  const result: Record<string, string> = {}
+   const result: Record<string, string> = {}
 
-  for (const g of globals) {
-    const { data: existing } = await sb.from('verifications')
-      .select('id')
-      .is('partner_id', null)
-      .eq('internal_name', g.internal_name)
-      .maybeSingle()
+   for (const g of globals) {
+     const { data: existing } = await sb.from('verifications')
+       .select('id')
+       .is('partner_id', null)
+       .eq('internal_name', g.internal_name)
+       .maybeSingle()
 
-    if (existing) {
-      result[g.category] = existing.id
-    } else {
-      const id = await createVerification(sb, null, g)
-      result[g.category] = id
-    }
-  }
+     if (existing) {
+       result[g.category] = existing.id
+     } else {
+       const id = await createVerification(sb, null, g)
+       result[g.category] = id
+     }
+   }
 
-  return result
-}
+   return result
+ }
+
+// ─── Domain Seeding Functions ───────────────────────────────────────
+
+async function seedUsers(supabase: SupabaseClient): Promise<number> {
+   const personas = generatePersonas()
+   let createdUsers = 0
+
+   for (const persona of personas) {
+     try {
+       await createAdminUser(supabase, persona)
+       createdUsers++
+     } catch (err) {
+       console.error(`Failed to create ${persona.email}:`, err)
+     }
+   }
+
+   return createdUsers
+ }
+
+async function seedGlobalVerifications(supabase: SupabaseClient): Promise<Record<string, string>> {
+   return await ensureGlobalVerifications(supabase)
+ }
+
+async function seedDefinedPartners(
+   supabase: SupabaseClient,
+   globalVerifs: Record<string, string>,
+ ): Promise<{ createdPartners: number; createdParties: number; createdEvents: number }> {
+   let createdPartners = 0
+   let createdParties = 0
+   let createdEvents = 0
+
+   for (const pDef of SEED_PARTNERS) {
+     const ownerPersona: UserPersona = {
+       email: pDef.ownerEmail,
+       password: 'password1234!',
+       metadata: {
+         name: `${pDef.name} 대표`,
+         username: pDef.ownerEmail.replace('@test.com', ''),
+         gender: 'male',
+         birth_date: '1990-01-01',
+         phone_number: '010-0000-0000',
+         is_verified: true,
+       },
+     }
+
+     let ownerId: string
+     try {
+       ownerId = await createAdminUser(supabase, ownerPersona)
+     } catch (err) {
+       console.error(`Failed to create partner owner ${pDef.ownerEmail}:`, err)
+       continue
+     }
+
+     const partnerId = await createPartner(supabase, ownerId, pDef)
+     createdPartners++
+
+     const locationId = await createLocation(supabase, partnerId, pDef.location)
+
+     const localVerifIds: Record<string, string> = {}
+     for (const lv of pDef.localVerifications) {
+       const vid = await createVerification(supabase, partnerId, lv)
+       localVerifIds[lv.category] = vid
+     }
+
+     const scenarioIdx = SEED_PARTNERS.indexOf(pDef)
+     const scenario = SCENARIOS[scenarioIdx % SCENARIOS.length]
+     const verifIds = scenario.verificationCategory
+       ? [localVerifIds[scenario.verificationCategory] ?? globalVerifs[scenario.verificationCategory]].filter(Boolean)
+       : []
+
+     const { eventIds } = await createPartyWithEvents(supabase, partnerId, locationId, scenario, verifIds)
+     createdParties++
+     createdEvents += eventIds.length
+   }
+
+   return { createdPartners, createdParties, createdEvents }
+ }
+
+async function seedHotPlacePartners(
+   supabase: SupabaseClient,
+   globalVerifs: Record<string, string>,
+ ): Promise<{ createdPartners: number; createdParties: number; createdEvents: number }> {
+   let createdPartners = 0
+   let createdParties = 0
+   let createdEvents = 0
+
+   for (const place of HOT_PLACES) {
+     const ownerEmail = `partner_${place.region_2.replace(/구$/, '').toLowerCase()}@test.com`
+     const ownerPersona: UserPersona = {
+       email: ownerEmail,
+       password: 'password1234!',
+       metadata: {
+         name: `${place.name} 파트너`,
+         username: ownerEmail.replace('@test.com', ''),
+         gender: 'male',
+         birth_date: '1988-01-01',
+         phone_number: '010-0000-0001',
+         is_verified: true,
+       },
+     }
+
+     let ownerId: string
+     try {
+       ownerId = await createAdminUser(supabase, ownerPersona)
+     } catch (err) {
+       console.error(`Failed to create hot-place partner owner ${ownerEmail}:`, err)
+       continue
+     }
+
+     const partnerId = await createPartner(supabase, ownerId, {
+       name: `${place.name} 소셜클럽`,
+       introduction: `${place.name} 지역 대표 소셜 클럽`,
+       biz_name: `${place.name}클럽`,
+       biz_number: `000-00-${String(HOT_PLACES.indexOf(place)).padStart(5, '0')}`,
+       contact_email: ownerEmail,
+     })
+     createdPartners++
+
+     const locationId = await createLocation(supabase, partnerId, place)
+
+     for (const scenario of SCENARIOS) {
+       const verifIds = scenario.verificationCategory
+         ? [globalVerifs[scenario.verificationCategory]].filter(Boolean)
+         : []
+
+       const { eventIds } = await createPartyWithEvents(supabase, partnerId, locationId, scenario, verifIds)
+       createdParties++
+       createdEvents += eventIds.length
+     }
+   }
+
+   return { createdPartners, createdParties, createdEvents }
+ }
 
 Deno.serve(async (_req) => {
-  if (isProduction()) {
-    return new Response(
-      JSON.stringify({ error: 'Dev-only function. Blocked in production.' }),
-      { status: 403, headers: { 'Content-Type': 'application/json' } },
-    )
-  }
+   if (isProduction()) {
+     return new Response(
+       JSON.stringify({ error: 'Dev-only function. Blocked in production.' }),
+       { status: 403, headers: { 'Content-Type': 'application/json' } },
+     )
+   }
 
-  try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const sb = createClient(supabaseUrl, serviceRoleKey)
+   try {
+     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+     const supabase = createClient(supabaseUrl, serviceRoleKey)
 
-    const personas = generatePersonas()
-    let createdUsers = 0
+     // Seed users
+     const createdUsers = await seedUsers(supabase)
 
-    for (const persona of personas) {
-      try {
-        await createAdminUser(sb, persona)
-        createdUsers++
-      } catch (err) {
-        console.error(`Failed to create ${persona.email}:`, err)
-      }
-    }
+     // Seed global verifications
+     const globalVerifs = await seedGlobalVerifications(supabase)
 
-    const globalVerifs = await ensureGlobalVerifications(sb)
+     // Seed defined partners with their locations, verifications, parties, and events
+     const definedPartnerStats = await seedDefinedPartners(supabase, globalVerifs)
 
-    let createdPartners = 0
-    let createdParties = 0
-    let createdEvents = 0
-    const partnerIds: string[] = []
+     // Seed hot-place partners with all scenarios
+     const hotPlaceStats = await seedHotPlacePartners(supabase, globalVerifs)
 
-    for (const pDef of SEED_PARTNERS) {
-      const ownerPersona: UserPersona = {
-        email: pDef.ownerEmail,
-        password: 'password1234!',
-        metadata: {
-          name: `${pDef.name} 대표`,
-          username: pDef.ownerEmail.replace('@test.com', ''),
-          gender: 'male',
-          birth_date: '1990-01-01',
-          phone_number: '010-0000-0000',
-          is_verified: true,
-        },
-      }
-
-      let ownerId: string
-      try {
-        ownerId = await createAdminUser(sb, ownerPersona)
-      } catch (err) {
-        console.error(`Failed to create partner owner ${pDef.ownerEmail}:`, err)
-        continue
-      }
-
-      const partnerId = await createPartner(sb, ownerId, pDef)
-      partnerIds.push(partnerId)
-      createdPartners++
-
-      const locationId = await createLocation(sb, partnerId, pDef.location)
-
-      const localVerifIds: Record<string, string> = {}
-      for (const lv of pDef.localVerifications) {
-        const vid = await createVerification(sb, partnerId, lv)
-        localVerifIds[lv.category] = vid
-      }
-
-      const scenarioIdx = SEED_PARTNERS.indexOf(pDef)
-      const scenario = SCENARIOS[scenarioIdx % SCENARIOS.length]
-      const verifIds = scenario.verificationCategory
-        ? [localVerifIds[scenario.verificationCategory] ?? globalVerifs[scenario.verificationCategory]].filter(Boolean)
-        : []
-
-      const { eventIds } = await createPartyWithEvents(sb, partnerId, locationId, scenario, verifIds)
-      createdParties++
-      createdEvents += eventIds.length
-    }
-
-    for (const place of HOT_PLACES) {
-      const ownerEmail = `partner_${place.region_2.replace(/구$/, '').toLowerCase()}@test.com`
-      const ownerPersona: UserPersona = {
-        email: ownerEmail,
-        password: 'password1234!',
-        metadata: {
-          name: `${place.name} 파트너`,
-          username: ownerEmail.replace('@test.com', ''),
-          gender: 'male',
-          birth_date: '1988-01-01',
-          phone_number: '010-0000-0001',
-          is_verified: true,
-        },
-      }
-
-      let ownerId: string
-      try {
-        ownerId = await createAdminUser(sb, ownerPersona)
-      } catch (err) {
-        console.error(`Failed to create hot-place partner owner ${ownerEmail}:`, err)
-        continue
-      }
-
-      const partnerId = await createPartner(sb, ownerId, {
-        name: `${place.name} 소셜클럽`,
-        introduction: `${place.name} 지역 대표 소셜 클럽`,
-        biz_name: `${place.name}클럽`,
-        biz_number: `000-00-${String(HOT_PLACES.indexOf(place)).padStart(5, '0')}`,
-        contact_email: ownerEmail,
-      })
-      partnerIds.push(partnerId)
-      createdPartners++
-
-      const locationId = await createLocation(sb, partnerId, place)
-
-      for (const scenario of SCENARIOS) {
-        const verifIds = scenario.verificationCategory
-          ? [globalVerifs[scenario.verificationCategory]].filter(Boolean)
-          : []
-
-        const { eventIds } = await createPartyWithEvents(sb, partnerId, locationId, scenario, verifIds)
-        createdParties++
-        createdEvents += eventIds.length
-      }
-    }
-
-    return new Response(
-      JSON.stringify({
-        created_users: createdUsers + SEED_PARTNERS.length + HOT_PLACES.length,
-        created_partners: createdPartners,
-        created_parties: createdParties,
-        created_events: createdEvents,
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } },
-    )
-  } catch (err) {
-    return new Response(
-      JSON.stringify({ error: (err as Error).message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } },
-    )
-  }
-})
+     return new Response(
+       JSON.stringify({
+         created_users: createdUsers + SEED_PARTNERS.length + HOT_PLACES.length,
+         created_partners: definedPartnerStats.createdPartners + hotPlaceStats.createdPartners,
+         created_parties: definedPartnerStats.createdParties + hotPlaceStats.createdParties,
+         created_events: definedPartnerStats.createdEvents + hotPlaceStats.createdEvents,
+       }),
+       { status: 200, headers: { 'Content-Type': 'application/json' } },
+     )
+   } catch (err) {
+     return new Response(
+       JSON.stringify({ error: (err as Error).message }),
+       { status: 500, headers: { 'Content-Type': 'application/json' } },
+     )
+   }
+ })
