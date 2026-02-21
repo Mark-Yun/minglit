@@ -12,21 +12,14 @@ class TestHelper {
   static Future<ProviderContainer> initialize() async {
     IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-    final defaultUrl =
-        kIsWeb
-            ? 'http://127.0.0.1:54321'
-            : (defaultTargetPlatform == TargetPlatform.android
-                ? 'http://10.0.2.2:54321'
-                : 'http://127.0.0.1:54321');
-
-    final supabaseUrl =
-        const String.fromEnvironment('SUPABASE_URL').isNotEmpty
-            ? const String.fromEnvironment('SUPABASE_URL')
-            : defaultUrl;
-    const supabaseAnonKey = String.fromEnvironment(
-      'SUPABASE_PUBLISHABLE_KEY',
-      defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
-    );
+    const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+    const supabaseAnonKey = String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
+    if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+      throw StateError(
+        'SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY must be set.\n'
+        'Run with: --dart-define-from-file=../../minglit_env/local/flutter.env',
+      );
+    }
 
     await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
 
@@ -43,14 +36,8 @@ class SeederHelper {
   SeederHelper()
     : _seeder = DatabaseSeeder(
         SupabaseClient(
-          const String.fromEnvironment(
-            'SUPABASE_URL',
-            defaultValue: 'http://127.0.0.1:54321',
-          ),
-          const String.fromEnvironment(
-            'SUPABASE_SERVICE_ROLE_KEY',
-            defaultValue: 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz',
-          ),
+          const String.fromEnvironment('SUPABASE_URL'),
+          const String.fromEnvironment('SUPABASE_SERVICE_ROLE_KEY'),
         ),
       );
 

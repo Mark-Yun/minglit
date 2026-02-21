@@ -68,14 +68,16 @@ Future<void> main() async {
 
 @riverpod
 Future<void> appStartup(Ref ref) async {
-  const supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: 'http://127.0.0.1:54321',
-  );
+  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   const supabasePublishableKey = String.fromEnvironment(
     'SUPABASE_PUBLISHABLE_KEY',
-    defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
   );
+  if (supabaseUrl.isEmpty || supabasePublishableKey.isEmpty) {
+    throw StateError(
+      'SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY must be set.\n'
+      'Run with: flutter run --dart-define-from-file=../../minglit_env/local/flutter.env',
+    );
+  }
 
   try {
     await Future.wait([

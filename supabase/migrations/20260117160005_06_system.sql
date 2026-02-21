@@ -1,7 +1,11 @@
 -- 06. SYSTEM: Pipeline, Queues, Cron, Logs
 set search_path to public, extensions;
 
--- 1. PGMQ Queues
+-- 1. PGMQ Queues (drop first to handle incomplete state during db reset)
+DO $$ BEGIN PERFORM pgmq.drop_queue('q_global_events'); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN PERFORM pgmq.drop_queue('q_notifications'); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN PERFORM pgmq.drop_queue('q_vectors'); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+
 select pgmq.create('q_global_events');
 select pgmq.create('q_notifications');
 select pgmq.create('q_vectors');

@@ -21,14 +21,16 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   const googleWebClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
-  const supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: 'http://127.0.0.1:54321',
-  );
+  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   const supabasePublishableKey = String.fromEnvironment(
     'SUPABASE_PUBLISHABLE_KEY',
-    defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
   );
+  if (supabaseUrl.isEmpty || supabasePublishableKey.isEmpty) {
+    throw StateError(
+      'SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY must be set.\n'
+      'Run with: flutter run -t lib/dev_main.dart --dart-define-from-file=../../minglit_env/local/flutter.env',
+    );
+  }
 
   final prefs = await SharedPreferences.getInstance();
   final startWithDashboard = prefs.getBool(_kDevStartScreen) ?? false;

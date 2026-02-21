@@ -1,12 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { IamportClient } from "../_shared/iamport_client.ts";
-import { verifyHmacSignature } from "./hmac_utils.ts";
 import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
 
 const IMP_KEY = Deno.env.get("PORTONE_IMP_KEY");
 const IMP_SECRET = Deno.env.get("PORTONE_IMP_SECRET");
-const WEBHOOK_SECRET = Deno.env.get("WEBHOOK_SECRET");
 
 if (!IMP_KEY || !IMP_SECRET) {
   throw new Error("Missing required environment variables: PORTONE_IMP_KEY, PORTONE_IMP_SECRET");
@@ -21,20 +19,7 @@ serve(withSentry(async (req) => {
   try {
     const rawBody = await req.text();
     
-    // 1. HMAC Signature Verification (Primary Security Layer)
-    if (WEBHOOK_SECRET) {
-      const signature = req.headers.get("x-portone-signature");
-      if (signature) {
-        const isValid = await verifyHmacSignature(rawBody, signature, WEBHOOK_SECRET);
-        if (!isValid) {
-          console.warn("HMAC signature verification failed");
-          return new Response("Invalid signature", { status: 403 });
-        }
-        console.log("HMAC signature verified successfully");
-      }
-    }
-    
-    // 2. IP Validation (Defense-in-depth)
+    // 1. IP Validation (Primary Security Layer for V1 — V1 has no HMAC signing)
     const forwardedFor = req.headers.get("x-forwarded-for");
     const clientIp = forwardedFor ? forwardedFor.split(",")[0].trim() : "";
     
@@ -51,7 +36,7 @@ serve(withSentry(async (req) => {
       return new Response("Missing parameters", { status: 400 });
     }
 
-    // 3. Verify with Portone API (Cross-Check)
+    // 2. Verify with Portone API (Cross-Check)
     const client = new IamportClient(IMP_KEY, IMP_SECRET);
     const payment = await client.getPayment(imp_uid);
 
@@ -61,7 +46,7 @@ serve(withSentry(async (req) => {
        return new Response("Merchant UID mismatch", { status: 400 });
     }
 
-    // 4. Update DB
+    // 4. Update DB (idempotent)
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
