@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { PortoneV2Client } from "../_shared/portone_client.ts";
 import { successResponse, errorResponse } from "../_shared/response_utils.ts";
+import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
 
 const PORTONE_API_KEY = Deno.env.get("PORTONE_V2_API_KEY");
 
@@ -9,7 +10,9 @@ if (!PORTONE_API_KEY) {
   throw new Error("Missing required environment variable: PORTONE_V2_API_KEY");
 }
 
-serve(async (req) => {
+initSentry();
+
+serve(withSentry(async (req) => {
   try {
     const { identity_verification_id } = await req.json();
 
@@ -79,4 +82,4 @@ serve(async (req) => {
     console.error("Error in verify-identity:", message);
     return errorResponse(message, 500);
   }
-});
+}));

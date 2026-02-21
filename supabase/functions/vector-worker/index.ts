@@ -3,6 +3,7 @@ import { OpenAIService } from './openai_service.ts'
 import { serializeParty } from './party_serializer.ts'
 import { HybridCalculator } from './calculator.ts'
 import { WorkerUtils } from '../_shared/worker_utils.ts'
+import { initSentry, withSentryHandler } from '../_shared/sentry_utils.ts'
 
 const WEIGHTS: Record<string, number> = {
   view: 0.1,
@@ -13,7 +14,9 @@ const WEIGHTS: Record<string, number> = {
 
 const calculator = new HybridCalculator({ decayRate: 0.05 });
 
-Deno.serve(async (req) => {
+initSentry();
+
+Deno.serve(withSentryHandler(async (req) => {
   console.log("🚀 [Vector Worker] Triggered! Checking environment and auth...");
   try {
     const payload = await req.json().catch(() => ({}));
@@ -192,4 +195,4 @@ Deno.serve(async (req) => {
       headers: { "Content-Type": "application/json" }
     });
   }
-})
+}))

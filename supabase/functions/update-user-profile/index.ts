@@ -3,6 +3,7 @@
 // queue is removed or renamed.
 import { createClient } from '@supabase/supabase-js'
 import { HybridCalculator } from './calculator.ts'
+import { initSentry, withSentryHandler } from '../_shared/sentry_utils.ts'
 
 const WEIGHTS: Record<string, number> = {
   view: 1,
@@ -13,7 +14,9 @@ const WEIGHTS: Record<string, number> = {
 
 const calculator = new HybridCalculator({ decayRate: 0.05 });
 
-Deno.serve(async (_req) => {
+initSentry();
+
+Deno.serve(withSentryHandler(async (_req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -79,4 +82,4 @@ Deno.serve(async (_req) => {
       headers: { "Content-Type": "application/json" }
     });
   }
-})
+}))

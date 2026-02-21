@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { runWorkerLoop } from './loop_worker.ts'
 import { WorkerUtils } from '../_shared/worker_utils.ts'
 import * as jose from 'https://deno.land/x/jose@v4.14.4/index.ts'
+import { initSentry, withSentryHandler } from '../_shared/sentry_utils.ts'
 
 // --- Helper: Google OAuth2 Access Token ---
 async function getAccessToken(serviceAccountJson: string) {
@@ -75,7 +76,9 @@ async function sendFCM(accessToken: string, projectId: string, fcmToken: string,
 }
 
 
-Deno.serve(async (_req) => {
+initSentry();
+
+Deno.serve(withSentryHandler(async (_req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -213,4 +216,4 @@ Deno.serve(async (_req) => {
       headers: { "Content-Type": "application/json" }
     })
   }
-})
+}))

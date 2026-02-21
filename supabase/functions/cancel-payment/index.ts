@@ -1,9 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { successResponse, errorResponse } from "../_shared/response_utils.ts";
+import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
 
 const PORTONE_API_URL = "https://api.iamport.kr";
 
-serve(async (req) => {
+initSentry();
+
+serve(withSentry(async (req) => {
   try {
     // 1. Parse Request
     let reqBody: Record<string, unknown>;
@@ -69,4 +72,4 @@ serve(async (req) => {
     console.error("Error in cancel-payment:", message);
     return errorResponse(message, 500);
   }
-});
+}));

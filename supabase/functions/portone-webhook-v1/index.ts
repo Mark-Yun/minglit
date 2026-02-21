@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { IamportClient } from "../_shared/iamport_client.ts";
 import { verifyHmacSignature } from "./hmac_utils.ts";
+import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
 
 const IMP_KEY = Deno.env.get("PORTONE_IMP_KEY");
 const IMP_SECRET = Deno.env.get("PORTONE_IMP_SECRET");
@@ -14,7 +15,9 @@ if (!IMP_KEY || !IMP_SECRET) {
 // Portone (Iamport V1) Webhook IP Whitelist
 const ALLOWED_IPS = ["52.78.100.19", "52.78.48.223", "52.78.17.128", "127.0.0.1"];
 
-serve(async (req) => {
+initSentry();
+
+serve(withSentry(async (req) => {
   try {
     const rawBody = await req.text();
     
@@ -108,4 +111,4 @@ serve(async (req) => {
     console.error("Webhook Error:", errorMessage);
     return new Response(errorMessage, { status: 500 });
   }
-});
+}));

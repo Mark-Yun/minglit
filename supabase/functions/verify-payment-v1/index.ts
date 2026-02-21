@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { IamportClient } from "../_shared/iamport_client.ts";
 import { successResponse, errorResponse } from "../_shared/response_utils.ts";
+import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
 
 const PORTONE_API_URL = "https://api.iamport.kr";
 const IMP_KEY = Deno.env.get("PORTONE_IMP_KEY");
@@ -57,7 +58,9 @@ const cancelPayment = async (impUid: string, reason: string) => {
   }
 };
 
-serve(async (req) => {
+initSentry();
+
+serve(withSentry(async (req) => {
   try {
     let reqBody: Record<string, unknown>;
     try {
@@ -138,4 +141,4 @@ serve(async (req) => {
     console.error("Error in verify-payment-v1:", message);
     return errorResponse(message, 500);
   }
-});
+}));

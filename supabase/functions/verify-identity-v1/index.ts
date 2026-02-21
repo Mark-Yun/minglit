@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { IamportClient } from "../_shared/iamport_client.ts";
 import { successResponse, errorResponse } from "../_shared/response_utils.ts";
+import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
 
 const IMP_KEY = Deno.env.get("PORTONE_IMP_KEY");
 const IMP_SECRET = Deno.env.get("PORTONE_IMP_SECRET");
@@ -10,7 +11,9 @@ if (!IMP_KEY || !IMP_SECRET) {
   throw new Error("Missing required environment variables: PORTONE_IMP_KEY, PORTONE_IMP_SECRET");
 }
 
-serve(async (req) => {
+initSentry();
+
+serve(withSentry(async (req) => {
   try {
     const { identity_verification_id } = await req.json();
 
@@ -73,4 +76,4 @@ serve(async (req) => {
     console.error("Error in verify-identity-v1:", message);
     return errorResponse(message, 500);
   }
-});
+}));
