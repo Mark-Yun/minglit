@@ -26,6 +26,7 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DEV_DB_PASSWORD }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_DEV_PROJECT_ID }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_DEV_SERVICE_ROLE_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_ACCESS_TOKEN: ${{ secrets.GH_PAT_FOR_BUG_REPORT }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN_EDGE_FUNCTIONS }}
@@ -43,6 +44,19 @@ jobs:
 
           # Deploy Edge Functions
           supabase functions deploy
+
+          # Seed test data (dev only)
+          SUPABASE_URL="https://${SUPABASE_PROJECT_ID}.supabase.co"
+          echo "🌱 Seeding test data..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST "${SUPABASE_URL}/functions/v1/dev-seed-database" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json")
+          if [ "$HTTP_STATUS" -eq 200 ]; then
+            echo "✅ Seed data created successfully"
+          else
+            echo "⚠️ Seed request returned HTTP ${HTTP_STATUS} (non-blocking)"
+          fi
 
       # Main 환경 배포
       - name: Deploy to Main Supabase
