@@ -40,7 +40,7 @@ jobs:
           supabase secrets set ENVIRONMENT=development
 
           # Dev 환경은 스키마 충돌 방지를 위해 리셋 후 적용
-          supabase db reset --linked
+          supabase db reset --linked --yes
 
           # Deploy Edge Functions
           supabase functions deploy
