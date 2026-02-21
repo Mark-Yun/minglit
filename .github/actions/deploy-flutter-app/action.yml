@@ -41,19 +41,23 @@ runs:
           SB_URL="$SUPABASE_MAIN_URL"
           SB_KEY="$SUPABASE_MAIN_KEY"
           G_ID="$GOOGLE_MAIN_ID"
+          APP_ENV="production"
           echo "🏗️ Building for Production (Main)..."
         else
           TARGET="lib/dev_main.dart"
           SB_URL="$SUPABASE_DEV_URL"
           SB_KEY="$SUPABASE_DEV_KEY"
           G_ID="$GOOGLE_DEV_ID"
+          APP_ENV="development"
           echo "🏗️ Building for Preview (Dev)..."
         fi
 
         flutter build web --release -t $TARGET \
           --dart-define=SUPABASE_URL=$SB_URL \
           --dart-define=SUPABASE_PUBLISHABLE_KEY=$SB_KEY \
-          --dart-define=GOOGLE_WEB_CLIENT_ID=$G_ID
+          --dart-define=GOOGLE_WEB_CLIENT_ID=$G_ID \
+          --dart-define=SENTRY_DSN=$SENTRY_DSN_FLUTTER \
+          --dart-define=ENVIRONMENT=$APP_ENV
 
     - name: Copy vercel.json
       shell: bash

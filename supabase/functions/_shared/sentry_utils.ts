@@ -34,7 +34,7 @@ export async function initSentry(dsn?: string): Promise<void> {
     Sentry.init({
       dsn: sentryDsn,
       environment: Deno.env.get("ENVIRONMENT") ?? "local",
-      tracesSampleRate: 0,
+      tracesSampleRate: 0.2,
       defaultIntegrations: false,
     });
     _Sentry = Sentry;
