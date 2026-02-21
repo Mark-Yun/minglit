@@ -438,6 +438,11 @@ entrypoint = "./functions/vector-worker/index.ts"
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/vector-worker/*.html" ]
 
+[functions.health]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/health/index.ts"
+
 [functions.dev-session-switch]
 enabled = true
 verify_jwt = false
