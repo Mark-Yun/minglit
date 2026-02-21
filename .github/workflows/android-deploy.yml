@@ -30,7 +30,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
           cache: 'gradle'
-          cache-dependency-path: apps/app_user/android/build.gradle
+          cache-dependency-path: apps/app_user/android/build.gradle.kts
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -45,7 +45,7 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
             apps/app_user/android/.gradle
-          key: ${{ runner.os }}-gradle-${{ hashFiles('apps/app_user/android/**/*.gradle*', 'apps/app_user/android/gradle/wrapper/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('apps/app_user/android/**/*.gradle.kts', 'apps/app_user/android/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
 
