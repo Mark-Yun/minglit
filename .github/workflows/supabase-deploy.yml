@@ -9,6 +9,10 @@ on:
       - 'supabase/migrations/**'
       - 'supabase/functions/**'
 
+concurrency:
+  group: supabase-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest

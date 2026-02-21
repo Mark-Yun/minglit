@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ "main", "dev" ]
 
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # 변경 사항 감지 Job
   changes:

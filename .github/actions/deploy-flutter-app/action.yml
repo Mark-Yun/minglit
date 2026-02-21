@@ -29,10 +29,6 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
-        echo "🧹 Cleaning..."
-        flutter clean
-
-        # Dart Workspaces: Run pub get at the monorepo root to resolve all dependencies
         echo "📦 Installing workspace dependencies..."
         (cd ../../ && flutter pub get)
 

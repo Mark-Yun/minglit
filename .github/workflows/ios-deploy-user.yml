@@ -9,6 +9,10 @@ on:
       - "pubspec.yaml"
   workflow_dispatch:
 
+concurrency:
+  group: ios-user-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   ios-deploy:
     runs-on: macos-latest
