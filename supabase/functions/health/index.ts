@@ -56,9 +56,12 @@ async function checkAuth(): Promise<CheckResult> {
   const start = performance.now();
   try {
     const url = Deno.env.get("SUPABASE_URL") ?? "";
+    const key = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 
     const res = await withTimeout(
-      () => fetch(`${url}/auth/v1/health`),
+      () => fetch(`${url}/auth/v1/health`, {
+        headers: { apikey: key },
+      }),
       TIMEOUT_MS,
     );
 
