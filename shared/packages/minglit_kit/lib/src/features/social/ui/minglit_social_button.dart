@@ -6,45 +6,24 @@ import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
 
-/// **Minglit Social Button**
-///
-/// A standardized button for social interactions (Like, Subscribe, Bookmark).
-/// Handles optimistic updates and displays counts.
 class MinglitSocialButton extends ConsumerWidget {
-  /// Creates a social interaction button.
   const MinglitSocialButton({
     required this.targetId,
     required this.targetType,
     required this.interactionType,
-    this.showCount = false,
     this.activeColor,
     this.inactiveColor,
     this.iconSize = MinglitIconSize.medium,
     super.key,
   });
 
-  /// The target identifier for the interaction.
   final String targetId;
-
-  /// The target type for the interaction.
   final SocialTargetType targetType;
-
-  /// The interaction type represented by this button.
   final SocialInteractionType interactionType;
-
-  /// Whether to display the interaction count.
-  final bool showCount;
-
-  /// Color used when the interaction is active.
   final Color? activeColor;
-
-  /// Color used when the interaction is inactive.
   final Color? inactiveColor;
-
-  /// Size of the interaction icon.
   final double iconSize;
 
-  /// Builds the social interaction button UI.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncState = ref.watch(
@@ -55,21 +34,21 @@ class MinglitSocialButton extends ConsumerWidget {
       ),
     );
 
-    return MinglitAsyncValueWidget(
+    return MinglitAsyncValueWidget<bool>(
       value: asyncState,
-      data: (state) => _buildButton(context, ref, state),
+      data: (isActive) => _buildButton(context, ref, isActive: isActive),
       loading: () => _buildLoading(context),
-      error: (e, s) => _buildError(context),
+      error: (e, s) => _buildInactive(context),
     );
   }
 
   Widget _buildButton(
     BuildContext context,
-    WidgetRef ref,
-    InteractionState state,
-  ) {
+    WidgetRef ref, {
+    required bool isActive,
+  }) {
     final theme = Theme.of(context);
-    final color = state.isActive
+    final color = isActive
         ? (activeColor ?? _getDefaultActiveColor(theme))
         : (inactiveColor ?? theme.colorScheme.onSurfaceVariant);
 
@@ -86,25 +65,10 @@ class MinglitSocialButton extends ConsumerWidget {
       borderRadius: BorderRadius.circular(MinglitRadius.small),
       child: Padding(
         padding: const EdgeInsets.all(MinglitSpacing.xxsmall),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              _getIcon(state.isActive),
-              color: color,
-              size: iconSize,
-            ),
-            if (showCount && state.count > 0) ...[
-              const SizedBox(width: MinglitSpacing.xxsmall),
-              Text(
-                '${state.count}',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: color,
-                  fontWeight: state.isActive ? FontWeight.bold : null,
-                ),
-              ),
-            ],
-          ],
+        child: Icon(
+          _getIcon(isActive),
+          color: color,
+          size: iconSize,
         ),
       ),
     );
@@ -118,11 +82,15 @@ class MinglitSocialButton extends ConsumerWidget {
     );
   }
 
-  Widget _buildError(BuildContext context) {
-    return Icon(
-      Icons.error_outline,
-      color: Theme.of(context).colorScheme.error,
-      size: iconSize,
+  Widget _buildInactive(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(MinglitSpacing.xxsmall),
+      child: Icon(
+        _getIcon(false),
+        color: inactiveColor ?? theme.colorScheme.onSurfaceVariant,
+        size: iconSize,
+      ),
     );
   }
 

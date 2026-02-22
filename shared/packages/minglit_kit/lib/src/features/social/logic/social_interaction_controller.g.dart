@@ -8,17 +8,13 @@ part of 'social_interaction_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Manages social interaction state for a target.
 
 @ProviderFor(SocialInteractionController)
 const socialInteractionControllerProvider =
     SocialInteractionControllerFamily._();
 
-/// Manages social interaction state for a target.
 final class SocialInteractionControllerProvider
-    extends
-        $AsyncNotifierProvider<SocialInteractionController, InteractionState> {
-  /// Manages social interaction state for a target.
+    extends $AsyncNotifierProvider<SocialInteractionController, bool> {
   const SocialInteractionControllerProvider._({
     required SocialInteractionControllerFamily super.from,
     required ({
@@ -62,17 +58,15 @@ final class SocialInteractionControllerProvider
 }
 
 String _$socialInteractionControllerHash() =>
-    r'0df98172a836fb63cfc1bb1166d6ef069d1b8ef5';
-
-/// Manages social interaction state for a target.
+    r'4a7d06244ed794a8f25ea553b0b0cc20eb602360';
 
 final class SocialInteractionControllerFamily extends $Family
     with
         $ClassFamilyOverride<
           SocialInteractionController,
-          AsyncValue<InteractionState>,
-          InteractionState,
-          FutureOr<InteractionState>,
+          AsyncValue<bool>,
+          bool,
+          FutureOr<bool>,
           ({
             String targetId,
             SocialTargetType targetType,
@@ -87,8 +81,6 @@ final class SocialInteractionControllerFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
-
-  /// Manages social interaction state for a target.
 
   SocialInteractionControllerProvider call({
     required String targetId,
@@ -107,10 +99,7 @@ final class SocialInteractionControllerFamily extends $Family
   String toString() => r'socialInteractionControllerProvider';
 }
 
-/// Manages social interaction state for a target.
-
-abstract class _$SocialInteractionController
-    extends $AsyncNotifier<InteractionState> {
+abstract class _$SocialInteractionController extends $AsyncNotifier<bool> {
   late final _$args =
       ref.$arg
           as ({
@@ -122,7 +111,7 @@ abstract class _$SocialInteractionController
   SocialTargetType get targetType => _$args.targetType;
   SocialInteractionType get interactionType => _$args.interactionType;
 
-  FutureOr<InteractionState> build({
+  FutureOr<bool> build({
     required String targetId,
     required SocialTargetType targetType,
     required SocialInteractionType interactionType,
@@ -135,13 +124,12 @@ abstract class _$SocialInteractionController
       targetType: _$args.targetType,
       interactionType: _$args.interactionType,
     );
-    final ref =
-        this.ref as $Ref<AsyncValue<InteractionState>, InteractionState>;
+    final ref = this.ref as $Ref<AsyncValue<bool>, bool>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<InteractionState>, InteractionState>,
-              AsyncValue<InteractionState>,
+              AnyNotifier<AsyncValue<bool>, bool>,
+              AsyncValue<bool>,
               Object?,
               Object?
             >;
