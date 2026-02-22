@@ -9,13 +9,13 @@ import {
 } from "../_test_utils/mock_http.ts";
 
 Deno.test({
-  name: "dev-session-switch - blocks in production (DENO_DEPLOYMENT_ID set)",
+  name: "dev-session-switch - blocks in production (ENVIRONMENT=production)",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     
-    await withEnv({ DENO_DEPLOYMENT_ID: "prod123" }, async () => {
+    await withEnv({ ENVIRONMENT: "production" }, async () => {
       const response = await handler(new Request("http://localhost"));
       assertEquals(response.status, 403);
       const body = await readJson(response);
@@ -44,7 +44,7 @@ Deno.test({
     ]);
     
     await withEnv({
-      DENO_DEPLOYMENT_ID: undefined,
+      ENVIRONMENT: "local",
       SUPABASE_URL: "http://localhost:54321",
       SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
     }, async () => {
@@ -74,7 +74,7 @@ Deno.test({
     ]);
     
     await withEnv({
-      DENO_DEPLOYMENT_ID: undefined,
+      ENVIRONMENT: "development",
       SUPABASE_URL: "http://localhost:54321",
       SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
     }, async () => {

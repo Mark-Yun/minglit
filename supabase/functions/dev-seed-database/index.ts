@@ -1,8 +1,8 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
-// ─── Guard Clause ───────────────────────────────────────────
 function isProduction(): boolean {
-  return !!Deno.env.get('DENO_DEPLOYMENT_ID')
+  const env = Deno.env.get('ENVIRONMENT')
+  return env !== 'local' && env !== 'development'
 }
 
 interface UserPersona {

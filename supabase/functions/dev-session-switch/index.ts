@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
 Deno.serve(async (_req) => {
-  // Guard clause: block in production
-  if (Deno.env.get('DENO_DEPLOYMENT_ID')) {
+  const env = Deno.env.get('ENVIRONMENT')
+  if (env !== 'local' && env !== 'development') {
     return new Response(
       JSON.stringify({ error: 'Dev-only function. Blocked in production.' }),
       { status: 403, headers: { 'Content-Type': 'application/json' } },
