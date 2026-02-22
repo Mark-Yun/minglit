@@ -128,9 +128,9 @@ Deno.serve(async (req) => {
     status: allUp ? "healthy" : "unhealthy",
     timestamp: new Date().toISOString(),
     checks: {
-      database: { status: database.status, latency_ms: database.latency_ms },
-      auth: { status: auth.status, latency_ms: auth.latency_ms },
-      storage: { status: storage.status, latency_ms: storage.latency_ms },
+      database: { status: database.status, latency_ms: database.latency_ms, ...(database.error && { error: database.error }) },
+      auth: { status: auth.status, latency_ms: auth.latency_ms, ...(auth.error && { error: auth.error }) },
+      storage: { status: storage.status, latency_ms: storage.latency_ms, ...(storage.error && { error: storage.error }) },
     },
   };
 
