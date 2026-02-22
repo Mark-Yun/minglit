@@ -126,29 +126,20 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
         final name = user['name'] as String? ?? 'No Name';
         final username = user['username'] as String? ?? '';
 
-        // Infer email based on our seed logic
-        var email = '';
-        Color? roleColor;
-        var roleLabel = 'User';
+        final email = '$username@test.com';
 
-        if (username.startsWith('owner_')) {
-          email = 'owner${username.split('_')[1]}@test.com';
-          roleColor = Colors.orange[100];
-          roleLabel = 'Owner';
-        } else if (username.startsWith('staff_')) {
-          // staff_{partnerIdx}_{staffIdx}
-          final parts = username.split('_');
-          if (parts.length >= 3) {
-            email = 'staff${parts[1]}-${parts[2]}@test.com';
-            roleLabel = 'Staff (P${parts[1]})';
-          }
-          roleColor = Colors.blue[100];
-        } else if (username.startsWith('user_')) {
-          // New seeding pattern: username is like 'user_25_m_ok'
-          // Email is simply 'username@test.com'
-          email = '$username@test.com';
-          roleColor = Colors.grey[100];
-        }
+        final (Color? roleColor, String roleLabel) = switch (username) {
+          String u when u.startsWith('partner_owner') => (
+            Colors.orange[100],
+            'Owner',
+          ),
+          String u when u.startsWith('partner_') => (
+            Colors.purple[100],
+            'Partner',
+          ),
+          String u when u.startsWith('staff_') => (Colors.blue[100], 'Staff'),
+          _ => (Colors.grey[100], 'User'),
+        };
 
         return ListTile(
           leading: CircleAvatar(
