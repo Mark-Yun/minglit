@@ -69,6 +69,7 @@ shared/assets/images/*.zip
 **/coverage/
 
 # Misc
+tmp/
 .env*.local
 .pnpm-store/
 
