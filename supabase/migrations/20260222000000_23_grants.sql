@@ -15,13 +15,13 @@ grant select on public.partners to anon, authenticated;
 grant select on public.locations to anon, authenticated;
 grant select on public.entry_groups to anon, authenticated;
 grant select on public.tickets to anon, authenticated;
+grant select on public.verifications to anon, authenticated;
 
 -- ============================================================
 -- 1b. AUTHENTICATED-ONLY READ (login required)
 -- ============================================================
 
 grant select on public.user_profiles to authenticated;
-grant select on public.verifications to authenticated;
 grant select on public.entry_group_templates to authenticated;
 grant select on public.ticket_templates to authenticated;
 grant select on public.social_interactions to authenticated;
