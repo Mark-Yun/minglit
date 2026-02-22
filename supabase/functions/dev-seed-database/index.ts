@@ -139,12 +139,14 @@ const SEED_PARTNERS = [
   },
 ]
 
-function generateDescription(title: string, summary: string): string {
-  return JSON.stringify([
-    { insert: `${title}\n`, attributes: { bold: true } },
-    { insert: '\n' },
-    { insert: `${summary}\n` },
-  ])
+function generateDescription(title: string, summary: string): { ops: object[] } {
+  return {
+    ops: [
+      { insert: `${title}\n`, attributes: { bold: true } },
+      { insert: '\n' },
+      { insert: `${summary}\n` },
+    ],
+  }
 }
 
 function generatePersonas(): UserPersona[] {
