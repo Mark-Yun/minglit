@@ -99,7 +99,7 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
 
   @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> update(
-    Map values, {
+    Map<dynamic, dynamic> values, {
     bool defaultToNull = false,
   }) {
     if (shouldThrow != null) throw shouldThrow!;

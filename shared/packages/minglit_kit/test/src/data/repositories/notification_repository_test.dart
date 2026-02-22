@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/repositories/notification_repository.dart';
 
@@ -18,7 +19,7 @@ void main() {
   group('NotificationRepository', () {
     group('upsertToken', () {
       test('completes without error', () async {
-        mockTable(mockClient, 'fcm_tokens');
+        unawaited(mockTable(mockClient, 'fcm_tokens'));
 
         await expectLater(
           repository.upsertToken(
@@ -33,7 +34,7 @@ void main() {
 
     group('deleteToken', () {
       test('completes without error', () async {
-        mockTable(mockClient, 'fcm_tokens');
+        unawaited(mockTable(mockClient, 'fcm_tokens'));
 
         await expectLater(
           repository.deleteToken('fcm_token_abc'),
@@ -53,11 +54,11 @@ void main() {
           'created_at': now.toIso8601String(),
         };
 
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'user_notifications',
           selectData: [notificationJson],
-        );
+        ));
 
         final result = await repository.getNotifications();
 
@@ -67,7 +68,7 @@ void main() {
       });
 
       test('supports pagination', () async {
-        mockTable(mockClient, 'user_notifications', selectData: []);
+        unawaited(mockTable(mockClient, 'user_notifications', selectData: []));
 
         final result = await repository.getNotifications(limit: 10, offset: 20);
         expect(result, isEmpty);
@@ -76,7 +77,7 @@ void main() {
 
     group('markAsRead', () {
       test('completes without error', () async {
-        mockTable(mockClient, 'user_notifications');
+        unawaited(mockTable(mockClient, 'user_notifications'));
 
         await expectLater(
           repository.markAsRead('notif_1'),
@@ -87,7 +88,7 @@ void main() {
 
     group('markAllAsRead', () {
       test('completes without error', () async {
-        mockTable(mockClient, 'user_notifications');
+        unawaited(mockTable(mockClient, 'user_notifications'));
 
         await expectLater(
           repository.markAllAsRead('user_1'),
@@ -98,7 +99,7 @@ void main() {
 
     group('deleteNotification', () {
       test('completes without error', () async {
-        mockTable(mockClient, 'user_notifications');
+        unawaited(mockTable(mockClient, 'user_notifications'));
 
         await expectLater(
           repository.deleteNotification('notif_1'),
@@ -117,11 +118,11 @@ void main() {
           'updated_at': now.toIso8601String(),
         };
 
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'user_settings',
           maybeSingleData: settingsJson,
-        );
+        ));
 
         final result = await repository.getSettings('user_1');
 
@@ -129,11 +130,10 @@ void main() {
       });
 
       test('returns null when not found', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'user_settings',
-          maybeSingleData: null,
-        );
+        ));
 
         final result = await repository.getSettings('user_unknown');
         expect(result, isNull);
@@ -142,7 +142,7 @@ void main() {
 
     group('updateSettings', () {
       test('completes without error', () async {
-        mockTable(mockClient, 'user_settings');
+        unawaited(mockTable(mockClient, 'user_settings'));
 
         await expectLater(
           repository.updateSettings(

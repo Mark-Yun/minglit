@@ -1,6 +1,8 @@
 part of 'minglit_theme.dart';
 
+/// Quill editor theme configuration for Minglit.
 class MinglitQuillTheme {
+  /// Returns the default toolbar configuration.
   static QuillSimpleToolbarConfig toolbarConfig(BuildContext context) {
     return const QuillSimpleToolbarConfig(
       showFontFamily: false,
@@ -15,6 +17,7 @@ class MinglitQuillTheme {
     );
   }
 
+  /// Returns the default editor configuration with the given [placeholder].
   static QuillEditorConfig editorConfig(
     BuildContext context, {
     required String placeholder,
@@ -25,6 +28,7 @@ class MinglitQuillTheme {
     );
   }
 
+  /// Returns the decoration for the editor container.
   static BoxDecoration editorDecoration(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return BoxDecoration(

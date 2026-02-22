@@ -5,7 +5,7 @@ import 'package:minglit_kit/src/data/models/verification.dart';
 import 'package:minglit_kit/src/data/models/verification_submission.dart';
 
 /// Deep-encodes a map through JSON codec to convert nested Freezed objects
-/// back to raw Map<String, dynamic>.
+/// back to raw `Map<String, dynamic>`.
 Map<String, dynamic> _deepEncode(Map<String, dynamic> map) {
   return jsonDecode(jsonEncode(map)) as Map<String, dynamic>;
 }

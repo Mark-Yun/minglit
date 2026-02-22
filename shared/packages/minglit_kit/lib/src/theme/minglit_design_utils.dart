@@ -1,6 +1,8 @@
 part of 'minglit_theme.dart';
 
+/// Shadow presets for Minglit UI components.
 class MinglitShadows {
+  /// Returns a card shadow using the given accent color.
   static List<BoxShadow> cardSelected(Color accentColor) => [
     BoxShadow(
       color: accentColor.withValues(alpha: 0.1),
@@ -10,14 +12,18 @@ class MinglitShadows {
   ];
 }
 
+/// Border presets for Minglit UI components.
 class MinglitBorders {
+  /// Returns a card border, highlighted when [isSelected].
   static Border card(ColorScheme colorScheme, {bool isSelected = false}) =>
       Border.all(
         color: isSelected ? colorScheme.secondary : colorScheme.outlineVariant,
       );
 }
 
+/// Decoration presets for Minglit UI components.
 class MinglitDecorations {
+  /// Returns a selectable card decoration based on selection state.
   static BoxDecoration selectableCard(
     BuildContext context, {
     required bool isSelected,
@@ -35,7 +41,9 @@ class MinglitDecorations {
   }
 }
 
+/// Text style presets for Minglit UI components.
 class MinglitTextStyles {
+  /// Returns a title style for selectable cards.
   static TextStyle selectableCardTitle(
     BuildContext context, {
     required bool isSelected,
@@ -46,6 +54,7 @@ class MinglitTextStyles {
     );
   }
 
+  /// Returns a subtitle style for selectable cards.
   static TextStyle selectableCardSubtitle(BuildContext context) {
     final theme = Theme.of(context);
     return theme.textTheme.bodySmall!.copyWith(
@@ -54,6 +63,7 @@ class MinglitTextStyles {
     );
   }
 
+  /// Returns a description style for selectable cards.
   static TextStyle selectableCardDescription(BuildContext context) {
     final theme = Theme.of(context);
     return theme.textTheme.bodySmall!.copyWith(
@@ -61,6 +71,7 @@ class MinglitTextStyles {
     );
   }
 
+  /// Returns an info text style.
   static TextStyle infoText(BuildContext context) {
     final theme = Theme.of(context);
     return theme.textTheme.bodySmall!.copyWith(

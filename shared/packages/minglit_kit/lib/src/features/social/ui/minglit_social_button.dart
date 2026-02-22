@@ -6,7 +6,9 @@ import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
 
+/// A button widget for social interactions (like, subscribe, bookmark, block).
 class MinglitSocialButton extends ConsumerWidget {
+  /// Creates a [MinglitSocialButton].
   const MinglitSocialButton({
     required this.targetId,
     required this.targetType,
@@ -17,11 +19,22 @@ class MinglitSocialButton extends ConsumerWidget {
     super.key,
   });
 
+  /// The ID of the target entity being interacted with.
   final String targetId;
+
+  /// The type of the target (event, party, etc.).
   final SocialTargetType targetType;
+
+  /// The type of interaction (like, subscribe, etc.).
   final SocialInteractionType interactionType;
+
+  /// Color shown when interaction is active.
   final Color? activeColor;
+
+  /// Color shown when interaction is inactive.
   final Color? inactiveColor;
+
+  /// Size of the interaction icon.
   final double iconSize;
 
   @override

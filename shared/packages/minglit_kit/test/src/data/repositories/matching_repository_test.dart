@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/repositories/matching_repository.dart';
 import 'package:mocktail/mocktail.dart';
@@ -20,7 +21,7 @@ void main() {
   group('MatchingRepository', () {
     group('getMatchRules', () {
       test('returns match rules for event', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'match_rules',
           selectData: [
@@ -32,7 +33,7 @@ void main() {
               'created_at': DateTime.now().toIso8601String(),
             },
           ],
-        );
+        ));
 
         final result = await repository.getMatchRules('event_1');
 
@@ -42,7 +43,7 @@ void main() {
       });
 
       test('returns empty list when no rules', () async {
-        mockTable(mockClient, 'match_rules', selectData: []);
+        unawaited(mockTable(mockClient, 'match_rules', selectData: []));
 
         final result = await repository.getMatchRules('event_none');
         expect(result, isEmpty);
@@ -51,7 +52,7 @@ void main() {
 
     group('updateMatchRules', () {
       test('completes without error', () async {
-        mockTable(mockClient, 'match_rules');
+        unawaited(mockTable(mockClient, 'match_rules'));
 
         await expectLater(
           repository.updateMatchRules(
@@ -68,7 +69,7 @@ void main() {
       });
 
       test('handles empty rules list', () async {
-        mockTable(mockClient, 'match_rules');
+        unawaited(mockTable(mockClient, 'match_rules'));
 
         await expectLater(
           repository.updateMatchRules(
@@ -82,7 +83,7 @@ void main() {
 
     group('castVote', () {
       test('completes when user is authenticated', () async {
-        mockTable(mockClient, 'match_votes');
+        unawaited(mockTable(mockClient, 'match_votes'));
 
         await expectLater(
           repository.castVote(
@@ -117,7 +118,7 @@ void main() {
       });
 
       test('returns empty when no matches', () async {
-        mockTable(mockClient, 'my_matches_view', selectData: []);
+        unawaited(mockTable(mockClient, 'my_matches_view', selectData: []));
 
         final result = await repository.getMyMatches('event_1');
         expect(result, isEmpty);
@@ -134,11 +135,10 @@ void main() {
       });
 
       test('returns empty when no participant record', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'event_participants',
-          maybeSingleData: null,
-        );
+        ));
 
         final result = await repository.getMatchingCandidates('event_1');
         expect(result, isEmpty);

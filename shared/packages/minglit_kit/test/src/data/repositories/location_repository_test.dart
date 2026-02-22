@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/repositories/location_repository.dart';
 
@@ -34,11 +35,11 @@ void main() {
   group('LocationRepository', () {
     group('getLocationById', () {
       test('returns location when found', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'locations_view',
           maybeSingleData: locationJson,
-        );
+        ));
 
         final result = await repository.getLocationById('loc_1');
 
@@ -50,11 +51,10 @@ void main() {
       });
 
       test('returns null when not found', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'locations_view',
-          maybeSingleData: null,
-        );
+        ));
 
         final result = await repository.getLocationById('loc_unknown');
         expect(result, isNull);
@@ -63,11 +63,11 @@ void main() {
 
     group('getLocations', () {
       test('returns locations for partner', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'locations_view',
           selectData: [locationJson],
-        );
+        ));
 
         final result = await repository.getLocations('partner_1');
 
@@ -77,7 +77,7 @@ void main() {
       });
 
       test('returns empty list when no locations', () async {
-        mockTable(mockClient, 'locations_view', selectData: []);
+        unawaited(mockTable(mockClient, 'locations_view', selectData: []));
 
         final result = await repository.getLocations('partner_none');
         expect(result, isEmpty);
@@ -101,20 +101,15 @@ void main() {
           'updated_at': now.toIso8601String(),
         };
 
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'locations',
           insertReturnData: createdJson,
-        );
+        ));
 
-        final location = (await (() async {
-          // Create a Location from the test JSON
-          // (uses locations_view for reads, locations for writes)
-          return locationJson;
-        })());
-
-        // Parse it manually since Location.fromJson expects locations_view format
-        mockTable(
+        // Parse it manually since Location.fromJson
+        // expects locations_view format
+        unawaited(mockTable(
           mockClient,
           'locations',
           insertReturnData: {
@@ -122,18 +117,18 @@ void main() {
             'lat': 37.5555,
             'lng': 126.9220,
           },
-        );
+        ));
 
         // We test that createLocation does not throw
         final newLoc = await repository.createLocation(
-          (await (() async {
-            mockTable(
+          await (() async {
+            unawaited(mockTable(
               mockClient,
               'locations_view',
               maybeSingleData: locationJson,
-            );
+            ));
             return (await repository.getLocationById('loc_1'))!;
-          })()),
+          })(),
         );
 
         expect(newLoc.id, isNotEmpty);
@@ -142,7 +137,7 @@ void main() {
 
     group('updateLocationDetails', () {
       test('completes without error', () async {
-        mockTable(mockClient, 'locations');
+        unawaited(mockTable(mockClient, 'locations'));
 
         await expectLater(
           repository.updateLocationDetails(

@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/models/ticket.dart';
 import 'package:minglit_kit/src/data/models/ticket_template.dart';
@@ -46,10 +47,12 @@ void main() {
   group('TicketRepository', () {
     group('getTicketsByEventId', () {
       test('returns list of tickets for event', () async {
-        mockTable(
-          mockClient,
-          'tickets',
-          selectData: [ticketJson],
+        unawaited(
+          mockTable(
+            mockClient,
+            'tickets',
+            selectData: [ticketJson],
+          ),
         );
 
         final result = await repository.getTicketsByEventId('event_1');
@@ -61,7 +64,7 @@ void main() {
       });
 
       test('returns empty list when no tickets', () async {
-        mockTable(mockClient, 'tickets', selectData: []);
+        unawaited(mockTable(mockClient, 'tickets', selectData: []));
 
         final result = await repository.getTicketsByEventId('event_none');
         expect(result, isEmpty);
@@ -70,7 +73,7 @@ void main() {
 
     group('getTicketsByPartyId', () {
       test('returns tickets for party', () async {
-        mockTable(mockClient, 'tickets', selectData: [ticketJson]);
+        unawaited(mockTable(mockClient, 'tickets', selectData: [ticketJson]));
 
         final result = await repository.getTicketsByPartyId('party_1');
 
@@ -81,7 +84,13 @@ void main() {
 
     group('getTicketTemplatesByPartyId', () {
       test('returns templates for party', () async {
-        mockTable(mockClient, 'ticket_templates', selectData: [templateJson]);
+        unawaited(
+          mockTable(
+            mockClient,
+            'ticket_templates',
+            selectData: [templateJson],
+          ),
+        );
 
         final result = await repository.getTicketTemplatesByPartyId('party_1');
 
@@ -94,7 +103,13 @@ void main() {
 
     group('getDefaultTicketsByPartyId', () {
       test('aliases getTicketTemplatesByPartyId', () async {
-        mockTable(mockClient, 'ticket_templates', selectData: [templateJson]);
+        unawaited(
+          mockTable(
+            mockClient,
+            'ticket_templates',
+            selectData: [templateJson],
+          ),
+        );
 
         final result = await repository.getDefaultTicketsByPartyId('party_1');
 
@@ -105,7 +120,7 @@ void main() {
 
     group('getTicketById', () {
       test('returns ticket by ID', () async {
-        mockTable(mockClient, 'tickets', singleData: ticketJson);
+        unawaited(mockTable(mockClient, 'tickets', singleData: ticketJson));
 
         final result = await repository.getTicketById('ticket_1');
 
@@ -117,7 +132,9 @@ void main() {
 
     group('getTicketTemplateById', () {
       test('returns template by ID', () async {
-        mockTable(mockClient, 'ticket_templates', singleData: templateJson);
+        unawaited(
+          mockTable(mockClient, 'ticket_templates', singleData: templateJson),
+        );
 
         final result = await repository.getTicketTemplateById('template_1');
 
@@ -128,12 +145,14 @@ void main() {
 
     group('createTicket', () {
       test('creates and returns new ticket', () async {
-        mockTable(
-          mockClient,
-          'tickets',
-          selectData: [ticketJson],
-          singleData: ticketJson,
-          insertReturnData: ticketJson,
+        unawaited(
+          mockTable(
+            mockClient,
+            'tickets',
+            selectData: [ticketJson],
+            singleData: ticketJson,
+            insertReturnData: ticketJson,
+          ),
         );
 
         final ticket = Ticket.fromJson(ticketJson);
@@ -146,12 +165,14 @@ void main() {
 
     group('createTicketTemplate', () {
       test('creates and returns new template', () async {
-        mockTable(
-          mockClient,
-          'ticket_templates',
-          selectData: [templateJson],
-          singleData: templateJson,
-          insertReturnData: templateJson,
+        unawaited(
+          mockTable(
+            mockClient,
+            'ticket_templates',
+            selectData: [templateJson],
+            singleData: templateJson,
+            insertReturnData: templateJson,
+          ),
         );
 
         final template = TicketTemplate.fromJson(templateJson);
@@ -165,7 +186,7 @@ void main() {
     group('updateTicket', () {
       test('throws MinglitUserException when quantity < sold_count', () async {
         // getTicketById returns ticket with soldCount=10
-        mockTable(mockClient, 'tickets', singleData: ticketJson);
+        unawaited(mockTable(mockClient, 'tickets', singleData: ticketJson));
 
         // Create a ticket with quantity less than sold count
         final ticket = (await repository.getTicketById(
@@ -173,7 +194,7 @@ void main() {
         )).copyWith(quantity: 5); // 5 < 10 (soldCount)
 
         // Re-setup for the update call's getTicketById
-        mockTable(mockClient, 'tickets', singleData: ticketJson);
+        unawaited(mockTable(mockClient, 'tickets', singleData: ticketJson));
 
         expect(
           () => repository.updateTicket(ticket),
@@ -188,14 +209,14 @@ void main() {
         };
 
         // First call: getTicketById (inside updateTicket)
-        mockTable(mockClient, 'tickets', singleData: ticketJson);
+        unawaited(mockTable(mockClient, 'tickets', singleData: ticketJson));
 
         final ticket = (await repository.getTicketById(
           'ticket_1',
         )).copyWith(quantity: 200); // 200 >= 10 (soldCount)
 
         // Re-setup: getTicketById + update chain
-        mockTable(mockClient, 'tickets', singleData: updatedJson);
+        unawaited(mockTable(mockClient, 'tickets', singleData: updatedJson));
 
         final result = await repository.updateTicket(ticket);
         expect(result.quantity, 200);
@@ -204,15 +225,19 @@ void main() {
 
     group('updateTicketTemplate', () {
       test('updates and returns template', () async {
-        mockTable(mockClient, 'ticket_templates', singleData: templateJson);
+        unawaited(
+          mockTable(mockClient, 'ticket_templates', singleData: templateJson),
+        );
 
         final template = await repository.getTicketTemplateById('template_1');
 
         final updatedJson = {...templateJson, 'name': '업데이트된 템플릿'};
-        mockTable(
-          mockClient,
-          'ticket_templates',
-          singleData: updatedJson,
+        unawaited(
+          mockTable(
+            mockClient,
+            'ticket_templates',
+            singleData: updatedJson,
+          ),
         );
 
         final result = await repository.updateTicketTemplate(
@@ -224,7 +249,7 @@ void main() {
 
     group('deleteTicketTemplate', () {
       test('completes without error', () async {
-        mockTable(mockClient, 'ticket_templates');
+        unawaited(mockTable(mockClient, 'ticket_templates'));
 
         await expectLater(
           repository.deleteTicketTemplate('template_1'),

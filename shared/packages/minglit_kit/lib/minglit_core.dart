@@ -1,4 +1,5 @@
 export 'src/config/url_config.dart';
+export 'src/services/location_service.dart';
 export 'src/utils/age_util.dart';
 export 'src/utils/error_ui_handler.dart';
 export 'src/utils/exceptions.dart';

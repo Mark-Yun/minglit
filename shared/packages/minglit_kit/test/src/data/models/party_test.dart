@@ -100,7 +100,7 @@ void main() {
       'title': 'Friday Mingle',
       'created_at': now.toIso8601String(),
       'updated_at': now.toIso8601String(),
-      'description': {'ops': []},
+      'description': {'ops': <Map<String, dynamic>>[]},
       'image_urls': ['https://img.com/1.jpg', 'https://img.com/2.jpg'],
       'contact_options': {'kakao': 'minglit'},
       'required_verification_ids': ['v1', 'v2'],

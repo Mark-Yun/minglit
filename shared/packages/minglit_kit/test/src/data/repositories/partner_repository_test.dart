@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/repositories/partner_repository.dart';
 import 'package:mocktail/mocktail.dart';
@@ -29,7 +30,7 @@ void main() {
   group('PartnerRepository', () {
     group('getPartners', () {
       test('returns all active partners', () async {
-        mockTable(mockClient, 'partners', selectData: [partnerJson]);
+        unawaited(mockTable(mockClient, 'partners', selectData: [partnerJson]));
 
         final result = await repository.getPartners();
 
@@ -39,7 +40,7 @@ void main() {
       });
 
       test('returns empty list when no partners', () async {
-        mockTable(mockClient, 'partners', selectData: []);
+        unawaited(mockTable(mockClient, 'partners', selectData: []));
 
         final result = await repository.getPartners();
         expect(result, isEmpty);
@@ -48,11 +49,11 @@ void main() {
 
     group('getPartnerById', () {
       test('returns partner when found', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'partners',
           maybeSingleData: partnerJson,
-        );
+        ));
 
         final result = await repository.getPartnerById('partner_1');
 
@@ -62,11 +63,10 @@ void main() {
       });
 
       test('returns null when not found', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'partners',
-          maybeSingleData: null,
-        );
+        ));
 
         final result = await repository.getPartnerById('partner_unknown');
         expect(result, isNull);
@@ -83,25 +83,25 @@ void main() {
       });
 
       test('returns empty when no permissions', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'partner_member_permissions',
           selectData: [],
-        );
+        ));
 
         final result = await repository.getMyManagedPartners();
         expect(result, isEmpty);
       });
 
       test('returns managed partners when permissions exist', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'partner_member_permissions',
           selectData: [
             {'partner_id': 'partner_1'},
           ],
-        );
-        mockTable(mockClient, 'partners', selectData: [partnerJson]);
+        ));
+        unawaited(mockTable(mockClient, 'partners', selectData: [partnerJson]));
 
         final result = await repository.getMyManagedPartners();
 
@@ -120,14 +120,14 @@ void main() {
       });
 
       test('returns role data when found', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'partner_member_permissions',
           maybeSingleData: {
             'role': 'owner',
             'permissions': ['all'],
           },
-        );
+        ));
 
         final result = await repository.getMyMemberRole('partner_1');
 
@@ -145,11 +145,11 @@ void main() {
           'net_amount': 470000,
         };
 
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'partner_revenue_stats',
           maybeSingleData: statsJson,
-        );
+        ));
 
         final result = await repository.getPartnerRevenueStats('partner_1');
 
@@ -158,11 +158,10 @@ void main() {
       });
 
       test('returns default values when no data', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'partner_revenue_stats',
-          maybeSingleData: null,
-        );
+        ));
 
         final result = await repository.getPartnerRevenueStats('partner_1');
 
@@ -173,14 +172,14 @@ void main() {
 
     group('getPartnerMonthlyRevenue', () {
       test('returns monthly revenue list', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'partner_monthly_revenue',
           selectData: [
             {'month': '2026-01', 'amount': 200000},
             {'month': '2026-02', 'amount': 300000},
           ],
-        );
+        ));
 
         final result = await repository.getPartnerMonthlyRevenue('partner_1');
 
@@ -191,7 +190,7 @@ void main() {
 
     group('getPartnerSettlements', () {
       test('returns settlement records', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'settlements',
           selectData: [
@@ -201,7 +200,7 @@ void main() {
               'amount': 150000,
             },
           ],
-        );
+        ));
 
         final result = await repository.getPartnerSettlements('partner_1');
 

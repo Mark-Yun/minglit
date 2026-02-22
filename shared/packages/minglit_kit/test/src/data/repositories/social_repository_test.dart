@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/models/social_interaction.dart';
 import 'package:minglit_kit/src/data/repositories/social_repository.dart';
@@ -22,7 +23,7 @@ void main() {
     group('toggleInteraction', () {
       test('removes existing interaction and returns false', () async {
         // existing record found
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'social_interactions',
           maybeSingleData: {
@@ -31,7 +32,7 @@ void main() {
             'target_id': 'party_1',
             'interaction_type': 'like',
           },
-        );
+        ));
 
         final result = await repository.toggleInteraction(
           targetId: 'party_1',
@@ -44,11 +45,10 @@ void main() {
 
       test('creates new interaction and returns true', () async {
         // no existing record
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'social_interactions',
-          maybeSingleData: null,
-        );
+        ));
 
         final result = await repository.toggleInteraction(
           targetId: 'party_1',
@@ -77,7 +77,7 @@ void main() {
 
     group('getInteractionState', () {
       test('returns true when interaction exists', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'social_interactions',
           maybeSingleData: {
@@ -86,7 +86,7 @@ void main() {
             'target_id': 'party_1',
             'interaction_type': 'like',
           },
-        );
+        ));
 
         final result = await repository.getInteractionState(
           targetId: 'party_1',
@@ -97,11 +97,10 @@ void main() {
       });
 
       test('returns false when interaction does not exist', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'social_interactions',
-          maybeSingleData: null,
-        );
+        ));
 
         final result = await repository.getInteractionState(
           targetId: 'party_1',
@@ -126,7 +125,7 @@ void main() {
 
     group('getInteractionCount', () {
       test('returns count of interactions', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'social_interactions',
           selectData: [
@@ -135,7 +134,7 @@ void main() {
             {'user_id': 'user_3'},
           ],
           countValue: 3,
-        );
+        ));
 
         final result = await repository.getInteractionCount(
           targetId: 'party_1',

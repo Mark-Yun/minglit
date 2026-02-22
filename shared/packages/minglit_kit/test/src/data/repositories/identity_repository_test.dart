@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/repositories/identity_repository.dart';
 import 'package:minglit_kit/src/utils/exceptions.dart';
@@ -79,22 +80,22 @@ void main() {
 
     group('isVerified', () {
       test('returns true when user is verified', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'user_profiles',
           singleData: {'is_verified': true},
-        );
+        ));
 
         final result = await repository.isVerified();
         expect(result, isTrue);
       });
 
       test('returns false when user is not verified', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'user_profiles',
           singleData: {'is_verified': false},
-        );
+        ));
 
         final result = await repository.isVerified();
         expect(result, isFalse);

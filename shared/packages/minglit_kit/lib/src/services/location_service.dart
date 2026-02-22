@@ -1,14 +1,21 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 
+/// Holds latitude and longitude from a location query.
 class LocationResult {
+  /// Creates a [LocationResult] with the given [latitude] and [longitude].
   const LocationResult({required this.latitude, required this.longitude});
 
+  /// The latitude coordinate.
   final double latitude;
+
+  /// The longitude coordinate.
   final double longitude;
 }
 
+/// Service for retrieving the device's current GPS position.
 class LocationService {
+  /// Returns the current position, or null if unavailable or permission denied.
   Future<LocationResult?> getCurrentPosition() async {
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -42,7 +49,7 @@ class LocationService {
         latitude: position.latitude,
         longitude: position.longitude,
       );
-    } catch (e, st) {
+    } on Exception catch (e, st) {
       Log.e('[LocationService] getCurrentPosition failed', e, st);
       return null;
     }

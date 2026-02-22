@@ -16,7 +16,7 @@ void main() {
       'created_at': now.toIso8601String(),
       'updated_at': now.toIso8601String(),
       'title': 'Friday Night',
-      'description': {'ops': []},
+      'description': {'ops': <Map<String, dynamic>>[]},
       'image_urls': ['https://img.com/a.jpg'],
       'contact_options': {'phone': '010-1234'},
       'min_confirmed_count': 3,

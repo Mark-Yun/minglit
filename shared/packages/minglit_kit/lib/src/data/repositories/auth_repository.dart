@@ -195,7 +195,7 @@ class AuthRepository {
 
   /// Initiates Kakao Sign-In process via web OAuth redirect.
   ///
-  /// Uses [signInWithOAuth] on all platforms to avoid audience mismatch
+  /// Uses `signInWithOAuth` on all platforms to avoid audience mismatch
   /// issues with native Kakao SDK tokens.
   Future<void> signInWithKakao({String? redirectTo}) async {
     Log.d('🟡 [AuthRepo] Kakao Sign-In started');

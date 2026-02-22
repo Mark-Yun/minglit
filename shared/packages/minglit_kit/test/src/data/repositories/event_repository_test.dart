@@ -1,5 +1,5 @@
+import 'dart:async' show unawaited;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:minglit_kit/src/data/models/event_feed_type.dart';
 import 'package:minglit_kit/src/data/repositories/event_repository.dart';
 import 'package:minglit_kit/src/utils/exceptions.dart';
 import 'package:mocktail/mocktail.dart';
@@ -50,7 +50,7 @@ void main() {
   group('EventRepository', () {
     group('getEventById', () {
       test('returns event with relations', () async {
-        mockTable(mockClient, 'events', singleData: eventJson);
+        unawaited(mockTable(mockClient, 'events', singleData: eventJson));
 
         final result = await repository.getEventById('event_1');
 
@@ -62,11 +62,11 @@ void main() {
 
     group('getApplication', () {
       test('returns application when found', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'event_applications',
           maybeSingleData: applicationJson,
-        );
+        ));
 
         final result = await repository.getApplication(
           eventId: 'event_1',
@@ -79,11 +79,10 @@ void main() {
       });
 
       test('returns null when not found', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'event_applications',
-          maybeSingleData: null,
-        );
+        ));
 
         final result = await repository.getApplication(
           eventId: 'event_1',
@@ -96,11 +95,11 @@ void main() {
 
     group('checkApplicationStatus', () {
       test('returns true for confirmed application', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'event_applications',
           maybeSingleData: applicationJson,
-        );
+        ));
 
         final result = await repository.checkApplicationStatus(
           eventId: 'event_1',
@@ -111,11 +110,10 @@ void main() {
       });
 
       test('returns false when no application', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'event_applications',
-          maybeSingleData: null,
-        );
+        ));
 
         final result = await repository.checkApplicationStatus(
           eventId: 'event_1',
@@ -126,11 +124,11 @@ void main() {
       });
 
       test('returns false for rejected application', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'event_applications',
           maybeSingleData: {...applicationJson, 'status': 'rejected'},
-        );
+        ));
 
         final result = await repository.checkApplicationStatus(
           eventId: 'event_1',
@@ -141,11 +139,11 @@ void main() {
       });
 
       test('returns false for cancelled application', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'event_applications',
           maybeSingleData: {...applicationJson, 'status': 'cancelled'},
-        );
+        ));
 
         final result = await repository.checkApplicationStatus(
           eventId: 'event_1',
@@ -158,7 +156,7 @@ void main() {
 
     group('deleteApplication', () {
       test('completes without error', () async {
-        mockTable(mockClient, 'event_applications');
+        unawaited(mockTable(mockClient, 'event_applications'));
 
         await expectLater(
           repository.deleteApplication(
@@ -234,11 +232,11 @@ void main() {
 
     group('getMyPurchaseHistory', () {
       test('returns purchase history for user', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'event_applications',
           selectData: [applicationJson],
-        );
+        ));
 
         final result = await repository.getMyPurchaseHistory('user_1');
 
@@ -249,7 +247,7 @@ void main() {
 
     group('getPendingApplicationCount', () {
       test('returns pending count', () async {
-        mockTable(
+        unawaited(mockTable(
           mockClient,
           'verification_submissions',
           selectData: [
@@ -257,7 +255,7 @@ void main() {
             {'id': 'sub_2'},
           ],
           countValue: 2,
-        );
+        ));
 
         final result = await repository.getPendingApplicationCount('partner_1');
         expect(result, 2);
