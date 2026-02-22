@@ -25,7 +25,7 @@ async function checkDatabase(): Promise<CheckResult> {
   const start = performance.now();
   try {
     const url = Deno.env.get("SUPABASE_URL") ?? "";
-    const key = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+    const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
     const res = await withTimeout(
       () =>
