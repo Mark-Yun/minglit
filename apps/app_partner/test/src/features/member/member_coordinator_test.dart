@@ -33,8 +33,9 @@ void main() {
         ],
       );
 
-      final notifier = container.read(memberCoordinatorProvider.notifier);
-      notifier.goToMemberPermission('partner_1', 'user_1');
+      container
+          .read(memberCoordinatorProvider.notifier)
+          .goToMemberPermission('partner_1', 'user_1');
 
       verify(() => mockRouter.push(any())).called(1);
     });

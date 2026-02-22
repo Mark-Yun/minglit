@@ -33,8 +33,9 @@ void main() {
         ],
       );
 
-      final notifier = container.read(adminCoordinatorProvider.notifier);
-      notifier.goToApplicationDetail('app_123');
+      container
+          .read(adminCoordinatorProvider.notifier)
+          .goToApplicationDetail('app_123');
 
       verify(
         () => mockRouter.push(any(that: contains('app_123'))),

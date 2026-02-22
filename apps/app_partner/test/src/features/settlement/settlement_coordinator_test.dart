@@ -35,10 +35,7 @@ void main() {
         ],
       );
 
-      final notifier = container.read(
-        settlementCoordinatorProvider.notifier,
-      );
-      notifier.goToSettlement();
+      container.read(settlementCoordinatorProvider.notifier).goToSettlement();
 
       verify(() => mockRouter.go(any())).called(1);
     });

@@ -35,10 +35,9 @@ void main() {
         ],
       );
 
-      final notifier = container.read(
-        verificationCoordinatorProvider.notifier,
-      );
-      notifier.pushVerificationManage();
+      container
+          .read(verificationCoordinatorProvider.notifier)
+          .pushVerificationManage();
 
       verify(() => mockRouter.push(any())).called(1);
     });
@@ -50,10 +49,9 @@ void main() {
         ],
       );
 
-      final notifier = container.read(
-        verificationCoordinatorProvider.notifier,
-      );
-      notifier.pushCreateVerification(partnerId: 'partner_1');
+      container
+          .read(verificationCoordinatorProvider.notifier)
+          .pushCreateVerification(partnerId: 'partner_1');
 
       verify(() => mockRouter.push(any())).called(1);
     });
@@ -65,10 +63,9 @@ void main() {
         ],
       );
 
-      final notifier = container.read(
-        verificationCoordinatorProvider.notifier,
-      );
-      notifier.pushCreateVerification();
+      container
+          .read(verificationCoordinatorProvider.notifier)
+          .pushCreateVerification();
 
       verify(() => mockRouter.push(any())).called(1);
     });
