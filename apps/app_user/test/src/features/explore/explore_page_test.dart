@@ -20,15 +20,7 @@ void main() {
 
     when(() => mockRouter.push(any())).thenAnswer((_) async => null);
 
-    // Mock getPersonalizedRecommendations for aiRecommendationsProvider
-    when(
-      () => mockEventRepository.getPersonalizedRecommendations(
-        userId: any(named: 'userId'),
-        limit: any(named: 'limit'),
-      ),
-    ).thenAnswer((_) async => []);
-
-    // Mock getEventsByType for all feed types
+    // Mock getEventsByType for all feed types (used by recommendationEventsProvider)
     for (final type in EventFeedType.values) {
       when(
         () => mockEventRepository.getEventsByType(
@@ -77,59 +69,57 @@ void main() {
       expect(find.text('이벤트 검색'), findsOneWidget);
     });
 
-    testWidgets('renders 4 filter chips', (tester) async {
+    testWidgets('renders sort chips in recommendation tab', (tester) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pump();
 
+      expect(find.text('추천순'), findsOneWidget);
+      expect(find.text('마감임박'), findsOneWidget);
+      expect(find.text('가까운날짜'), findsOneWidget);
+    });
+
+    testWidgets('renders toggle chips in recommendation tab', (tester) async {
+      await tester.pumpWidget(createTestWidget());
+      await tester.pump();
+
+      expect(find.text('가까운 거리'), findsOneWidget);
       expect(find.text('참여 가능'), findsOneWidget);
-      expect(find.text('위치'), findsOneWidget);
-      expect(find.text('가격'), findsOneWidget);
-      expect(find.text('날짜'), findsOneWidget);
     });
 
-    testWidgets('renders curation section with 4 categories', (tester) async {
+    testWidgets('does not render old filter chips', (tester) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pump();
 
-      expect(find.text('큐레이션'), findsOneWidget);
-      expect(find.text('내 주변 파티'), findsOneWidget);
-      expect(find.text('신규 오픈'), findsOneWidget);
-      expect(find.text('마감 임박'), findsOneWidget);
-      expect(find.text('얼리버드 특가'), findsOneWidget);
+      expect(find.text('위치'), findsNothing);
+      expect(find.text('가격'), findsNothing);
+      expect(find.text('날짜'), findsNothing);
     });
 
-    testWidgets('renders sort labels as subtitles', (tester) async {
+    testWidgets('does not render curation section', (tester) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pump();
 
-      expect(find.text('거리순'), findsOneWidget);
-      expect(find.text('최신순'), findsOneWidget);
-      expect(find.text('마감순'), findsOneWidget);
-      expect(find.text('가격순'), findsOneWidget);
+      expect(find.text('큐레이션'), findsNothing);
+      expect(find.text('내 주변 파티'), findsNothing);
+      expect(find.text('신규 오픈'), findsNothing);
+      expect(find.text('마감 임박'), findsNothing);
+      expect(find.text('얼리버드 특가'), findsNothing);
     });
 
-    testWidgets('renders category icons', (tester) async {
+    testWidgets('does not render AI 추천 section', (tester) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pump();
 
-      expect(find.byIcon(Icons.near_me), findsOneWidget);
-      expect(find.byIcon(Icons.fiber_new), findsOneWidget);
-      expect(find.byIcon(Icons.timer), findsOneWidget);
-      expect(find.byIcon(Icons.local_offer), findsOneWidget);
+      expect(find.text('AI 추천'), findsNothing);
     });
 
-    testWidgets('renders chevron icons for navigation', (tester) async {
+    testWidgets('shows empty state when no recommendation events', (
+      tester,
+    ) async {
       await tester.pumpWidget(createTestWidget());
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.chevron_right), findsNWidgets(4));
-    });
-
-    testWidgets('renders 4 Card widgets in curation grid', (tester) async {
-      await tester.pumpWidget(createTestWidget());
-      await tester.pump();
-
-      expect(find.byType(Card), findsNWidgets(4));
+      expect(find.text('추천 이벤트가 없습니다'), findsOneWidget);
     });
 
     testWidgets('shows search empty state on 검색 tab', (tester) async {
@@ -141,6 +131,19 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('검색어를 입력하세요'), findsOneWidget);
+    });
+
+    testWidgets('chip bar is not visible in 검색 tab', (tester) async {
+      await tester.pumpWidget(createTestWidget());
+      await tester.pump();
+
+      // Switch to 검색 tab
+      await tester.tap(find.text('검색'));
+      await tester.pumpAndSettle();
+
+      // Sort chips should not be visible in search tab
+      expect(find.text('추천순'), findsNothing);
+      expect(find.text('마감임박'), findsNothing);
     });
   });
 }

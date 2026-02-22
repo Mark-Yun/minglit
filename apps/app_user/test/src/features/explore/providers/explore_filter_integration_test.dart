@@ -70,47 +70,48 @@ void main() {
       expect(filters.activeFilterCount, 1);
     });
 
-    test('tracks location filter', () {
-      const filters = ExploreFilters(locationRadiusMeters: 5000);
+    test('tracks nearby filter', () {
+      const filters = ExploreFilters(nearbyEnabled: true);
       expect(filters.hasActiveFilters, true);
       expect(filters.activeFilterCount, 1);
     });
 
-    test('tracks price filter (min only)', () {
-      const filters = ExploreFilters(priceMin: 10000);
+    test('tracks sort filter when not recommended', () {
+      const filters = ExploreFilters(sortType: ExploreSortType.closingSoon);
       expect(filters.hasActiveFilters, true);
       expect(filters.activeFilterCount, 1);
     });
 
-    test('tracks date filter (start only)', () {
-      final filters = ExploreFilters(dateStart: now);
-      expect(filters.hasActiveFilters, true);
-      expect(filters.activeFilterCount, 1);
+    test('recommended sort type is not counted as active filter', () {
+      const filters = ExploreFilters(sortType: ExploreSortType.recommended);
+      expect(filters.hasActiveFilters, false);
+      expect(filters.activeFilterCount, 0);
     });
 
     test('counts multiple active filters', () {
-      final filters = ExploreFilters(
+      const filters = ExploreFilters(
         eligibilityEnabled: true,
-        locationRadiusMeters: 3000,
-        priceMin: 0,
-        priceMax: 30000,
-        dateStart: now,
+        nearbyEnabled: true,
+        sortType: ExploreSortType.closingSoon,
       );
-      expect(filters.activeFilterCount, 4);
+      expect(filters.activeFilterCount, 3);
     });
 
-    test('copyWith clears nullable fields', () {
+    test('copyWith updates fields correctly', () {
       const filters = ExploreFilters(
-        locationRadiusMeters: 5000,
-        priceMin: 10000,
+        eligibilityEnabled: true,
+        sortType: ExploreSortType.closingSoon,
+        nearbyEnabled: true,
       );
-      final cleared = filters.copyWith(
-        locationRadiusMeters: () => null,
-        priceMin: () => null,
+      final updated = filters.copyWith(
+        eligibilityEnabled: false,
+        sortType: ExploreSortType.recommended,
+        nearbyEnabled: false,
       );
-      expect(cleared.locationRadiusMeters, isNull);
-      expect(cleared.priceMin, isNull);
-      expect(cleared.hasActiveFilters, false);
+      expect(updated.eligibilityEnabled, false);
+      expect(updated.sortType, ExploreSortType.recommended);
+      expect(updated.nearbyEnabled, false);
+      expect(updated.hasActiveFilters, false);
     });
   });
 
@@ -155,66 +156,81 @@ void main() {
       );
     });
 
-    test('setLocationRadius updates radius', () {
+    test('setSortType updates sort type', () {
       final container = createContainer();
-      container.read(activeFiltersProvider.notifier).setLocationRadius(5000);
+      container
+          .read(activeFiltersProvider.notifier)
+          .setSortType(ExploreSortType.closingSoon);
       expect(
-        container.read(activeFiltersProvider).locationRadiusMeters,
-        5000,
+        container.read(activeFiltersProvider).sortType,
+        ExploreSortType.closingSoon,
       );
     });
 
-    test('setPriceRange updates min and max', () {
+    test('toggleNearby flips the flag', () {
       final container = createContainer();
-      container
-          .read(activeFiltersProvider.notifier)
-          .setPriceRange(min: 10000, max: 50000);
-      final filters = container.read(activeFiltersProvider);
-      expect(filters.priceMin, 10000);
-      expect(filters.priceMax, 50000);
-    });
-
-    test('setDateRange updates start and end', () {
-      final container = createContainer();
-      final start = DateTime(2026, 3, 1);
-      final end = DateTime(2026, 3, 31);
-      container
-          .read(activeFiltersProvider.notifier)
-          .setDateRange(start: start, end: end);
-      final filters = container.read(activeFiltersProvider);
-      expect(filters.dateStart, start);
-      expect(filters.dateEnd, end);
+      container.read(activeFiltersProvider.notifier).toggleNearby();
+      expect(container.read(activeFiltersProvider).nearbyEnabled, true);
+      container.read(activeFiltersProvider.notifier).toggleNearby();
+      expect(container.read(activeFiltersProvider).nearbyEnabled, false);
     });
 
     test('clearAll resets all filters', () {
       final container = createContainer();
       container.read(activeFiltersProvider.notifier).toggleEligibility();
-      container.read(activeFiltersProvider.notifier).setLocationRadius(3000);
       container
           .read(activeFiltersProvider.notifier)
-          .setPriceRange(min: 0, max: 10000);
+          .setSortType(ExploreSortType.closingSoon);
+      container.read(activeFiltersProvider.notifier).toggleNearby();
       container.read(activeFiltersProvider.notifier).clearAll();
 
       final filters = container.read(activeFiltersProvider);
       expect(filters.hasActiveFilters, false);
+      expect(filters.sortType, ExploreSortType.recommended);
     });
 
-    test('removeFilter removes individual filter', () {
+    test('removeFilter removes eligibility filter', () {
       final container = createContainer();
       container.read(activeFiltersProvider.notifier).toggleEligibility();
-      container.read(activeFiltersProvider.notifier).setLocationRadius(3000);
       container
           .read(activeFiltersProvider.notifier)
-          .setPriceRange(min: 0, max: 10000);
+          .setSortType(ExploreSortType.closingSoon);
 
       container
           .read(activeFiltersProvider.notifier)
-          .removeFilter(ExploreFilterType.location);
+          .removeFilter(ExploreFilterType.eligibility);
 
       final filters = container.read(activeFiltersProvider);
+      expect(filters.eligibilityEnabled, false);
+      expect(filters.sortType, ExploreSortType.closingSoon);
+    });
+
+    test('removeFilter removes nearby filter', () {
+      final container = createContainer();
+      container.read(activeFiltersProvider.notifier).toggleNearby();
+      container.read(activeFiltersProvider.notifier).toggleEligibility();
+
+      container
+          .read(activeFiltersProvider.notifier)
+          .removeFilter(ExploreFilterType.nearby);
+
+      final filters = container.read(activeFiltersProvider);
+      expect(filters.nearbyEnabled, false);
       expect(filters.eligibilityEnabled, true);
-      expect(filters.locationRadiusMeters, isNull);
-      expect(filters.priceMin, 0);
+    });
+
+    test('removeFilter resets sort to recommended', () {
+      final container = createContainer();
+      container
+          .read(activeFiltersProvider.notifier)
+          .setSortType(ExploreSortType.nearestDate);
+
+      container
+          .read(activeFiltersProvider.notifier)
+          .removeFilter(ExploreFilterType.sort);
+
+      final filters = container.read(activeFiltersProvider);
+      expect(filters.sortType, ExploreSortType.recommended);
     });
   });
 
@@ -232,90 +248,23 @@ void main() {
       expect(result, hasLength(2));
     });
 
-    test('filters by price range', () {
-      final events = [
-        makeEvent(
-          id: 'cheap',
-          tickets: [makeTicket(id: 't1', price: 5000)],
-        ),
-        makeEvent(
-          id: 'expensive',
-          tickets: [makeTicket(id: 't2', price: 50000)],
-        ),
-        makeEvent(
-          id: 'mid',
-          tickets: [makeTicket(id: 't3', price: 20000)],
-        ),
-      ];
+    test('filters by eligibility when enabled', () {
+      // Without eligibility data, filter returns empty list
+      final events = [makeEvent(id: 'e1'), makeEvent(id: 'e2')];
 
       final container = createContainer();
-      container
-          .read(activeFiltersProvider.notifier)
-          .setPriceRange(min: 10000, max: 30000);
+      container.read(activeFiltersProvider.notifier).toggleEligibility();
 
       final result = container.read(
         filteredEventsProvider(events: events),
       );
 
-      expect(result, hasLength(1));
-      expect(result.first.id, 'mid');
+      // bulkEligibilityData is null (no user), so eligibility filter returns
+      // the original list unchanged (guard: if eligibility == null, skip filter)
+      expect(result, hasLength(2));
     });
 
-    test('filters free events with price range 0-0', () {
-      final events = [
-        makeEvent(id: 'free', tickets: null), // No tickets = free
-        makeEvent(
-          id: 'paid',
-          tickets: [makeTicket(id: 't1', price: 10000)],
-        ),
-      ];
-
-      final container = createContainer();
-      container
-          .read(activeFiltersProvider.notifier)
-          .setPriceRange(min: 0, max: 0);
-
-      final result = container.read(
-        filteredEventsProvider(events: events),
-      );
-
-      expect(result, hasLength(1));
-      expect(result.first.id, 'free');
-    });
-
-    test('filters by date range', () {
-      final events = [
-        makeEvent(
-          id: 'march',
-          startTime: DateTime(2026, 3, 15),
-        ),
-        makeEvent(
-          id: 'april',
-          startTime: DateTime(2026, 4, 10),
-        ),
-        makeEvent(
-          id: 'may',
-          startTime: DateTime(2026, 5, 1),
-        ),
-      ];
-
-      final container = createContainer();
-      container
-          .read(activeFiltersProvider.notifier)
-          .setDateRange(
-            start: DateTime(2026, 3, 1),
-            end: DateTime(2026, 3, 31),
-          );
-
-      final result = container.read(
-        filteredEventsProvider(events: events),
-      );
-
-      expect(result, hasLength(1));
-      expect(result.first.id, 'march');
-    });
-
-    test('filters by location radius', () async {
+    test('sorts by nearby distance when nearbyEnabled', () async {
       // Seoul City Hall: 37.5665, 126.978
       // Gangnam Station: 37.498, 127.028 (~8km away)
       // Incheon Airport: 37.469, 126.451 (~47km away)
@@ -324,9 +273,9 @@ void main() {
       final incheonLoc = makeLocation(lat: 37.469, lng: 126.451);
 
       final events = [
-        makeEvent(id: 'seoul', location: seoulLoc),
-        makeEvent(id: 'gangnam', location: gangnamLoc),
         makeEvent(id: 'incheon', location: incheonLoc),
+        makeEvent(id: 'gangnam', location: gangnamLoc),
+        makeEvent(id: 'seoul', location: seoulLoc),
       ];
 
       final container = createContainer(
@@ -341,9 +290,7 @@ void main() {
         ],
       );
 
-      container
-          .read(activeFiltersProvider.notifier)
-          .setLocationRadius(10000); // 10km
+      container.read(activeFiltersProvider.notifier).toggleNearby();
 
       // Wait for the async userLocation provider to resolve
       await container.read(userLocationProvider.future);
@@ -352,48 +299,41 @@ void main() {
         filteredEventsProvider(events: events),
       );
 
-      // Seoul is 0km (at user location), Gangnam is ~8km, Incheon is ~47km
-      // Only Seoul and Gangnam should be within 10km
-      expect(result.map((e) => e.id), containsAll(['seoul', 'gangnam']));
-      expect(result.map((e) => e.id), isNot(contains('incheon')));
+      // Should be sorted: seoul (0km) → gangnam (~8km) → incheon (~47km)
+      expect(result[0].id, 'seoul');
+      expect(result[1].id, 'gangnam');
+      expect(result[2].id, 'incheon');
     });
 
-    test('chains multiple filters (price + date)', () {
+    test('events with lat==0 lng==0 go to end of nearby sort', () async {
+      final seoulLoc = makeLocation(lat: 37.5665, lng: 126.978);
+      final unknownLoc = makeLocation(lat: 0.0, lng: 0.0);
+
       final events = [
-        makeEvent(
-          id: 'match',
-          startTime: DateTime(2026, 3, 15),
-          tickets: [makeTicket(id: 't1', price: 15000)],
-        ),
-        makeEvent(
-          id: 'wrong-price',
-          startTime: DateTime(2026, 3, 15),
-          tickets: [makeTicket(id: 't2', price: 50000)],
-        ),
-        makeEvent(
-          id: 'wrong-date',
-          startTime: DateTime(2026, 5, 1),
-          tickets: [makeTicket(id: 't3', price: 15000)],
-        ),
+        makeEvent(id: 'unknown', location: unknownLoc),
+        makeEvent(id: 'seoul', location: seoulLoc),
       ];
 
-      final container = createContainer();
-      container
-          .read(activeFiltersProvider.notifier)
-          .setPriceRange(min: 10000, max: 30000);
-      container
-          .read(activeFiltersProvider.notifier)
-          .setDateRange(
-            start: DateTime(2026, 3, 1),
-            end: DateTime(2026, 3, 31),
-          );
+      final container = createContainer(
+        overrides: [
+          userLocationProvider.overrideWith(
+            (ref) async => LocationResult(
+              latitude: 37.5665,
+              longitude: 126.978,
+            ),
+          ),
+        ],
+      );
+
+      container.read(activeFiltersProvider.notifier).toggleNearby();
+      await container.read(userLocationProvider.future);
 
       final result = container.read(
         filteredEventsProvider(events: events),
       );
 
-      expect(result, hasLength(1));
-      expect(result.first.id, 'match');
+      expect(result[0].id, 'seoul');
+      expect(result[1].id, 'unknown');
     });
   });
 }
