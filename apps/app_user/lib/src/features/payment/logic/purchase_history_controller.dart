@@ -86,7 +86,9 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
   }) async {
     final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
     try {
-      await ref.read(eventRepositoryProvider).cancelPayment(
+      await ref
+          .read(eventRepositoryProvider)
+          .cancelPayment(
             paymentId: paymentId,
             refundAmount: calculation.refundAmount,
             reason: '사용자 예매 취소',

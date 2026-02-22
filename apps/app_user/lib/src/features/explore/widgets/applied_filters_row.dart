@@ -123,7 +123,7 @@ class _RemovableChip extends StatelessWidget {
           const SizedBox(width: 2),
           GestureDetector(
             onTap: onRemove,
-            child: Icon(
+            child: const Icon(
               Icons.close,
               size: 14,
               color: MinglitColors.primary,

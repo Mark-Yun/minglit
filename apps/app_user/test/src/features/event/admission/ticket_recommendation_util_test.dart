@@ -146,7 +146,7 @@ void main() {
     });
 
     test('marks ineligible when user is not verified', () {
-      final unverifiedProfile = const UserProfile(
+      const unverifiedProfile = UserProfile(
         id: 'user_1',
         name: 'Test User',
         username: 'test',

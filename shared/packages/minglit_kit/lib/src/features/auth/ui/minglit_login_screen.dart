@@ -84,36 +84,31 @@ class MinglitLoginScreen extends ConsumerWidget {
               const Spacer(),
 
               // 2. Login Buttons
-              OutlinedButton.icon(
+              _LoginButton(
                 onPressed: onGoogleSignIn,
-                icon: const Icon(Icons.g_mobiledata, size: 24),
-                label: const Text('Google로 시작하기'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.black87,
-                  side: BorderSide(color: Colors.grey[300]!),
-                ),
+                icon: Icons.g_mobiledata,
+                label: 'Google로 시작하기',
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black87,
+                borderColor: Colors.grey[300],
               ),
               if (onAppleSignIn != null) ...[
                 const SizedBox(height: 12),
-                ElevatedButton.icon(
+                _LoginButton(
                   onPressed: onAppleSignIn,
-                  icon: const Icon(Icons.apple, size: 18),
-                  label: const Text('Apple로 시작하기'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                  ),
+                  icon: Icons.apple,
+                  label: 'Apple로 시작하기',
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
                 ),
               ],
               const SizedBox(height: 12),
-              ElevatedButton.icon(
+              _LoginButton(
                 onPressed: onKakaoSignIn,
-                icon: const Icon(Icons.chat_bubble, size: 18),
-                label: const Text('Kakao로 시작하기'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFEE500),
-                  foregroundColor: Colors.black87,
-                ),
+                icon: Icons.chat_bubble,
+                label: 'Kakao로 시작하기',
+                backgroundColor: const Color(0xFFFEE500),
+                foregroundColor: Colors.black87,
               ),
               if (!isPartner && onVerifyIdentity != null) ...[
                 const SizedBox(height: 12),
@@ -170,5 +165,56 @@ class MinglitLoginScreen extends ConsumerWidget {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
+  }
+}
+
+class _LoginButton extends StatelessWidget {
+  const _LoginButton({
+    required this.icon,
+    required this.label,
+    required this.backgroundColor,
+    required this.foregroundColor,
+    this.borderColor,
+    this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color backgroundColor;
+  final Color foregroundColor;
+  final Color? borderColor;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: backgroundColor,
+          foregroundColor: foregroundColor,
+          side: BorderSide(color: borderColor ?? backgroundColor),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: Center(
+                child: Icon(icon, size: 20, color: foregroundColor),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(label, style: const TextStyle(fontSize: 14)),
+          ],
+        ),
+      ),
+    );
   }
 }

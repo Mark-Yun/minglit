@@ -63,7 +63,7 @@ class _ExploreSearchBarState extends ConsumerState<ExploreSearchBar> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
+          borderSide: const BorderSide(
             color: MinglitColors.primary,
             width: 2,
           ),

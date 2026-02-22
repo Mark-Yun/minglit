@@ -98,7 +98,7 @@ void main() {
     });
 
     test('keeps events without tickets (open events)', () {
-      final events = [makeEvent(tickets: null)];
+      final events = [makeEvent()];
       final data = BulkEligibilityData.fromJson({
         'user_profile': {
           'gender': 'male',
@@ -165,7 +165,7 @@ void main() {
             makeTicket(targetEntryGroupIds: ['g1']),
           ],
           entryGroups: [
-            EntryGroup(
+            const EntryGroup(
               id: 'g1',
               eventId: 'e1',
               gender: 'female',
@@ -195,7 +195,7 @@ void main() {
         // Eligible — no entry group restrictions
         makeEvent(
           id: 'eligible',
-          tickets: [makeTicket(id: 't1')],
+          tickets: [makeTicket()],
         ),
         // Not eligible — gender mismatch
         makeEvent(
@@ -204,11 +204,11 @@ void main() {
             makeTicket(id: 't2', targetEntryGroupIds: ['g1']),
           ],
           entryGroups: [
-            EntryGroup(id: 'g1', eventId: 'ineligible', gender: 'female'),
+            const EntryGroup(id: 'g1', eventId: 'ineligible', gender: 'female'),
           ],
         ),
         // Eligible — open event
-        makeEvent(id: 'open', tickets: null),
+        makeEvent(id: 'open'),
       ];
       final data = BulkEligibilityData.fromJson({
         'user_profile': {
@@ -231,8 +231,7 @@ void main() {
     test('respects balance status override', () {
       final events = [
         makeEvent(
-          id: 'e1',
-          tickets: [makeTicket(id: 't1')],
+          tickets: [makeTicket()],
         ),
       ];
       final data = BulkEligibilityData.fromJson({

@@ -14,7 +14,7 @@ void main() {
     });
 
     test('wraps AuthException into MinglitAuthException', () {
-      final authError = AuthException('some auth error');
+      const authError = AuthException('some auth error');
       final result = MinglitException.from(authError);
 
       expect(result, isA<MinglitAuthException>());
@@ -22,28 +22,28 @@ void main() {
     });
 
     test('maps invalid login credentials message', () {
-      final authError = AuthException('Invalid login credentials');
+      const authError = AuthException('Invalid login credentials');
       final result = MinglitException.from(authError);
 
       expect(result.message, '이메일 또는 비밀번호가 올바르지 않습니다.');
     });
 
     test('maps email not confirmed message', () {
-      final authError = AuthException('Email not confirmed');
+      const authError = AuthException('Email not confirmed');
       final result = MinglitException.from(authError);
 
       expect(result.message, '이메일 인증이 필요합니다.');
     });
 
     test('maps user already exists message', () {
-      final authError = AuthException('User already exists');
+      const authError = AuthException('User already exists');
       final result = MinglitException.from(authError);
 
       expect(result.message, '이미 가입된 이메일입니다.');
     });
 
     test('wraps PostgrestException into MinglitSystemException', () {
-      final pgError = PostgrestException(message: 'relation not found');
+      const pgError = PostgrestException(message: 'relation not found');
       final result = MinglitException.from(pgError);
 
       expect(result, isA<MinglitSystemException>());
