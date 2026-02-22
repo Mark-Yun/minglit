@@ -9,59 +9,43 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'explore_state_provider.g.dart';
 
-enum ExploreFilterType { eligibility, location, price, date }
+enum ExploreSortType { recommended, closingSoon, nearestDate }
+
+enum ExploreFilterType { eligibility, nearby, sort }
 
 class ExploreFilters {
   const ExploreFilters({
     this.eligibilityEnabled = false,
-    this.locationRadiusMeters,
-    this.priceMin,
-    this.priceMax,
-    this.dateStart,
-    this.dateEnd,
+    this.sortType = ExploreSortType.recommended,
+    this.nearbyEnabled = false,
   });
 
   final bool eligibilityEnabled;
-  final int? locationRadiusMeters;
-  final int? priceMin;
-  final int? priceMax;
-  final DateTime? dateStart;
-  final DateTime? dateEnd;
+  final ExploreSortType sortType;
+  final bool nearbyEnabled;
 
   bool get hasActiveFilters =>
       eligibilityEnabled ||
-      locationRadiusMeters != null ||
-      priceMin != null ||
-      priceMax != null ||
-      dateStart != null ||
-      dateEnd != null;
+      nearbyEnabled ||
+      sortType != ExploreSortType.recommended;
 
   int get activeFilterCount {
     var count = 0;
     if (eligibilityEnabled) count++;
-    if (locationRadiusMeters != null) count++;
-    if (priceMin != null || priceMax != null) count++;
-    if (dateStart != null || dateEnd != null) count++;
+    if (nearbyEnabled) count++;
+    if (sortType != ExploreSortType.recommended) count++;
     return count;
   }
 
   ExploreFilters copyWith({
     bool? eligibilityEnabled,
-    int? Function()? locationRadiusMeters,
-    int? Function()? priceMin,
-    int? Function()? priceMax,
-    DateTime? Function()? dateStart,
-    DateTime? Function()? dateEnd,
+    ExploreSortType? sortType,
+    bool? nearbyEnabled,
   }) {
     return ExploreFilters(
       eligibilityEnabled: eligibilityEnabled ?? this.eligibilityEnabled,
-      locationRadiusMeters: locationRadiusMeters != null
-          ? locationRadiusMeters()
-          : this.locationRadiusMeters,
-      priceMin: priceMin != null ? priceMin() : this.priceMin,
-      priceMax: priceMax != null ? priceMax() : this.priceMax,
-      dateStart: dateStart != null ? dateStart() : this.dateStart,
-      dateEnd: dateEnd != null ? dateEnd() : this.dateEnd,
+      sortType: sortType ?? this.sortType,
+      nearbyEnabled: nearbyEnabled ?? this.nearbyEnabled,
     );
   }
 }
@@ -87,16 +71,12 @@ class ActiveFilters extends _$ActiveFilters {
     state = state.copyWith(eligibilityEnabled: !state.eligibilityEnabled);
   }
 
-  void setLocationRadius(int? meters) {
-    state = state.copyWith(locationRadiusMeters: () => meters);
+  void setSortType(ExploreSortType type) {
+    state = state.copyWith(sortType: type);
   }
 
-  void setPriceRange({int? min, int? max}) {
-    state = state.copyWith(priceMin: () => min, priceMax: () => max);
-  }
-
-  void setDateRange({DateTime? start, DateTime? end}) {
-    state = state.copyWith(dateStart: () => start, dateEnd: () => end);
+  void toggleNearby() {
+    state = state.copyWith(nearbyEnabled: !state.nearbyEnabled);
   }
 
   void clearAll() => state = const ExploreFilters();
@@ -105,12 +85,10 @@ class ActiveFilters extends _$ActiveFilters {
     switch (type) {
       case ExploreFilterType.eligibility:
         state = state.copyWith(eligibilityEnabled: false);
-      case ExploreFilterType.location:
-        state = state.copyWith(locationRadiusMeters: () => null);
-      case ExploreFilterType.price:
-        state = state.copyWith(priceMin: () => null, priceMax: () => null);
-      case ExploreFilterType.date:
-        state = state.copyWith(dateStart: () => null, dateEnd: () => null);
+      case ExploreFilterType.nearby:
+        state = state.copyWith(nearbyEnabled: false);
+      case ExploreFilterType.sort:
+        state = state.copyWith(sortType: ExploreSortType.recommended);
     }
   }
 }
@@ -141,51 +119,6 @@ Future<List<Event>> searchResults(Ref ref) async {
       .toList();
 }
 
-@riverpod
-Future<List<Event>> aiRecommendations(Ref ref) async {
-  final link = ref.keepAlive();
-  final timer = Timer(const Duration(minutes: 5), link.close);
-  ref.onDispose(timer.cancel);
-
-  final user = ref.watch(currentUserProfileProvider).value;
-  if (user == null) return [];
-
-  final repository = ref.watch(eventRepositoryProvider);
-  final results = await repository.getPersonalizedRecommendations(
-    userId: user.id,
-    limit: 10,
-  );
-
-  return results.map((item) {
-    return Event.fromJson({
-      'id': item['event_id'],
-      'title': item['event_title'],
-      'description': item['event_description'],
-      'image_urls': item['event_image_urls'],
-      'start_time': item['event_start_time'],
-      'end_time': item['event_end_time'],
-      'status': item['event_status'],
-      'max_participants': item['event_max_participants'],
-      'current_participants': item['event_current_participants'],
-      'party': {
-        'id': item['party_id'],
-        'title': item['party_title'],
-        'image_urls': item['party_image_urls'],
-        'partner_id': '',
-        'location': item['location_id'] != null
-            ? {
-                'id': item['location_id'],
-                'name': item['location_name'],
-                'address': item['location_address'],
-                'partner_id': '',
-              }
-            : null,
-      },
-      'party_id': item['party_id'],
-    });
-  }).toList();
-}
-
 /// Fetches bulk eligibility data (user profile + verified status).
 @riverpod
 Future<BulkEligibilityData?> bulkEligibilityData(Ref ref) async {
@@ -197,9 +130,9 @@ Future<BulkEligibilityData?> bulkEligibilityData(Ref ref) async {
   return BulkEligibilityData.fromJson(response);
 }
 
-/// Applies all active filters to a list of events (client-side).
+/// Applies active filters and nearby sort to a list of events (client-side).
 ///
-/// Filter chain: eligibility → location → price → date
+/// Filter chain: eligibility → nearby sort
 @riverpod
 List<Event> filteredEvents(
   Ref ref, {
@@ -221,70 +154,71 @@ List<Event> filteredEvents(
     }
   }
 
-  // 2. Location filter
-  if (filters.locationRadiusMeters != null) {
+  // 2. Nearby sort — sort by haversine distance ascending.
+  // Events with lat==0.0 && lng==0.0 (unknown location) go to the end.
+  if (filters.nearbyEnabled) {
     final userLoc = ref.watch(userLocationProvider).value;
     if (userLoc != null) {
-      final radiusMeters = filters.locationRadiusMeters!;
-      result = result.where((event) {
-        final loc = event.location ?? event.party?.location;
-        if (loc == null) return false;
-        final distance = _haversineDistance(
-          userLoc.latitude,
-          userLoc.longitude,
-          loc.latitude,
-          loc.longitude,
-        );
-        return distance <= radiusMeters;
-      }).toList();
+      result = [...result]
+        ..sort((a, b) {
+          final locA = a.location ?? a.party?.location;
+          final locB = b.location ?? b.party?.location;
+          final distA =
+              (locA == null || (locA.latitude == 0.0 && locA.longitude == 0.0))
+              ? double.infinity
+              : _haversineDistance(
+                  userLoc.latitude,
+                  userLoc.longitude,
+                  locA.latitude,
+                  locA.longitude,
+                );
+          final distB =
+              (locB == null || (locB.latitude == 0.0 && locB.longitude == 0.0))
+              ? double.infinity
+              : _haversineDistance(
+                  userLoc.latitude,
+                  userLoc.longitude,
+                  locB.latitude,
+                  locB.longitude,
+                );
+          return distA.compareTo(distB);
+        });
     }
-  }
-
-  // 3. Price filter
-  if (filters.priceMin != null || filters.priceMax != null) {
-    result = result.where((event) {
-      final tickets = event.tickets;
-      if (tickets == null || tickets.isEmpty) {
-        // Events without tickets are treated as free (price = 0)
-        final price = 0;
-        return _priceInRange(price, filters.priceMin, filters.priceMax);
-      }
-      // Check if any ticket falls within the price range
-      return tickets.any(
-        (t) => _priceInRange(t.price, filters.priceMin, filters.priceMax),
-      );
-    }).toList();
-  }
-
-  // 4. Date filter
-  if (filters.dateStart != null || filters.dateEnd != null) {
-    result = result.where((event) {
-      if (filters.dateStart != null &&
-          event.startTime.isBefore(filters.dateStart!)) {
-        return false;
-      }
-      if (filters.dateEnd != null) {
-        final endOfDay = DateTime(
-          filters.dateEnd!.year,
-          filters.dateEnd!.month,
-          filters.dateEnd!.day,
-          23,
-          59,
-          59,
-        );
-        if (event.startTime.isAfter(endOfDay)) return false;
-      }
-      return true;
-    }).toList();
   }
 
   return result;
 }
 
-bool _priceInRange(int price, int? min, int? max) {
-  if (min != null && price < min) return false;
-  if (max != null && price > max) return false;
-  return true;
+/// Fetches and filters the unified recommendation event list.
+///
+/// Maps [ExploreSortType] to [EventFeedType]:
+/// - recommended → newArrivals
+/// - closingSoon → closingSoon
+/// - nearestDate → earlyBird
+@riverpod
+Future<List<Event>> recommendationEvents(Ref ref) async {
+  final filters = ref.watch(activeFiltersProvider);
+
+  final feedType = switch (filters.sortType) {
+    ExploreSortType.recommended => EventFeedType.newArrivals,
+    ExploreSortType.closingSoon => EventFeedType.closingSoon,
+    ExploreSortType.nearestDate => EventFeedType.earlyBird,
+  };
+
+  final link = ref.keepAlive();
+  final timer = Timer(const Duration(minutes: 5), link.close);
+  ref.onDispose(timer.cancel);
+
+  final events = await ref.watch(
+    fetchEventFeedProvider(type: feedType).future,
+  );
+
+  // Deduplicate by event ID (keep first occurrence)
+  final seen = <String>{};
+  final unique = events.where((e) => seen.add(e.id)).toList();
+
+  // Apply eligibility filter + nearby sort
+  return ref.watch(filteredEventsProvider(events: unique));
 }
 
 /// Haversine formula for distance between two GPS coordinates.

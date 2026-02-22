@@ -93,7 +93,7 @@ final class ActiveFiltersProvider
   }
 }
 
-String _$activeFiltersHash() => r'4726ac036536f4ec97b6e396714599c02ae8f725';
+String _$activeFiltersHash() => r'9a41bc70d3dd2f0dab24090e8f3c9726f3cf4112';
 
 abstract class _$ActiveFilters extends $Notifier<ExploreFilters> {
   ExploreFilters build();
@@ -192,45 +192,6 @@ final class SearchResultsProvider
 
 String _$searchResultsHash() => r'1e0ac41dea7e827a16504833246fcec7a0728f68';
 
-@ProviderFor(aiRecommendations)
-const aiRecommendationsProvider = AiRecommendationsProvider._();
-
-final class AiRecommendationsProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<Event>>,
-          List<Event>,
-          FutureOr<List<Event>>
-        >
-    with $FutureModifier<List<Event>>, $FutureProvider<List<Event>> {
-  const AiRecommendationsProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'aiRecommendationsProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$aiRecommendationsHash();
-
-  @$internal
-  @override
-  $FutureProviderElement<List<Event>> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<List<Event>> create(Ref ref) {
-    return aiRecommendations(ref);
-  }
-}
-
-String _$aiRecommendationsHash() => r'4149b662bc1f9fab1fb2791508b6f7c378ceb4be';
-
 /// Fetches bulk eligibility data (user profile + verified status).
 
 @ProviderFor(bulkEligibilityData)
@@ -278,23 +239,23 @@ final class BulkEligibilityDataProvider
 String _$bulkEligibilityDataHash() =>
     r'c4c2476bd082f1702a3351bb3225a8c46aad2837';
 
-/// Applies all active filters to a list of events (client-side).
+/// Applies active filters and nearby sort to a list of events (client-side).
 ///
-/// Filter chain: eligibility → location → price → date
+/// Filter chain: eligibility → nearby sort
 
 @ProviderFor(filteredEvents)
 const filteredEventsProvider = FilteredEventsFamily._();
 
-/// Applies all active filters to a list of events (client-side).
+/// Applies active filters and nearby sort to a list of events (client-side).
 ///
-/// Filter chain: eligibility → location → price → date
+/// Filter chain: eligibility → nearby sort
 
 final class FilteredEventsProvider
     extends $FunctionalProvider<List<Event>, List<Event>, List<Event>>
     with $Provider<List<Event>> {
-  /// Applies all active filters to a list of events (client-side).
+  /// Applies active filters and nearby sort to a list of events (client-side).
   ///
-  /// Filter chain: eligibility → location → price → date
+  /// Filter chain: eligibility → nearby sort
   const FilteredEventsProvider._({
     required FilteredEventsFamily super.from,
     required List<Event> super.argument,
@@ -346,11 +307,11 @@ final class FilteredEventsProvider
   }
 }
 
-String _$filteredEventsHash() => r'6ddb9127d1b16a00c6908cddb0fa23038093189a';
+String _$filteredEventsHash() => r'60b494fe0252f759ff0c3ec32ee461569c6733bc';
 
-/// Applies all active filters to a list of events (client-side).
+/// Applies active filters and nearby sort to a list of events (client-side).
 ///
-/// Filter chain: eligibility → location → price → date
+/// Filter chain: eligibility → nearby sort
 
 final class FilteredEventsFamily extends $Family
     with $FunctionalFamilyOverride<List<Event>, List<Event>> {
@@ -363,9 +324,9 @@ final class FilteredEventsFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// Applies all active filters to a list of events (client-side).
+  /// Applies active filters and nearby sort to a list of events (client-side).
   ///
-  /// Filter chain: eligibility → location → price → date
+  /// Filter chain: eligibility → nearby sort
 
   FilteredEventsProvider call({required List<Event> events}) =>
       FilteredEventsProvider._(argument: events, from: this);
@@ -373,3 +334,63 @@ final class FilteredEventsFamily extends $Family
   @override
   String toString() => r'filteredEventsProvider';
 }
+
+/// Fetches and filters the unified recommendation event list.
+///
+/// Maps [ExploreSortType] to [EventFeedType]:
+/// - recommended → newArrivals
+/// - closingSoon → closingSoon
+/// - nearestDate → earlyBird
+
+@ProviderFor(recommendationEvents)
+const recommendationEventsProvider = RecommendationEventsProvider._();
+
+/// Fetches and filters the unified recommendation event list.
+///
+/// Maps [ExploreSortType] to [EventFeedType]:
+/// - recommended → newArrivals
+/// - closingSoon → closingSoon
+/// - nearestDate → earlyBird
+
+final class RecommendationEventsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Event>>,
+          List<Event>,
+          FutureOr<List<Event>>
+        >
+    with $FutureModifier<List<Event>>, $FutureProvider<List<Event>> {
+  /// Fetches and filters the unified recommendation event list.
+  ///
+  /// Maps [ExploreSortType] to [EventFeedType]:
+  /// - recommended → newArrivals
+  /// - closingSoon → closingSoon
+  /// - nearestDate → earlyBird
+  const RecommendationEventsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'recommendationEventsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$recommendationEventsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<Event>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<Event>> create(Ref ref) {
+    return recommendationEvents(ref);
+  }
+}
+
+String _$recommendationEventsHash() =>
+    r'a11a53a26d96e01b4490433b05baef157ae6cafe';
