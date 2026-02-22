@@ -31,17 +31,13 @@ void main() {
     });
 
     test('pushEventDetail calls router.push', () {
-      final coordinator = ExploreCoordinator(mockRouter);
-
-      coordinator.pushEventDetail('event_123');
+      ExploreCoordinator(mockRouter).pushEventDetail('event_123');
 
       verify(() => mockRouter.push(any(that: contains('event_123')))).called(1);
     });
 
     test('pushEventCuration calls router.push', () {
-      final coordinator = ExploreCoordinator(mockRouter);
-
-      coordinator.pushEventCuration(EventFeedType.nearest);
+      ExploreCoordinator(mockRouter).pushEventCuration(EventFeedType.nearest);
 
       verify(() => mockRouter.push(any())).called(1);
     });

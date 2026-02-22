@@ -20,7 +20,8 @@ void main() {
 
     when(() => mockRouter.push(any())).thenAnswer((_) async => null);
 
-    // Mock getEventsByType for all feed types (used by recommendationEventsProvider)
+    // Mock getEventsByType for all feed types
+    // (used by recommendationEventsProvider)
     for (final type in EventFeedType.values) {
       when(
         () => mockEventRepository.getEventsByType(

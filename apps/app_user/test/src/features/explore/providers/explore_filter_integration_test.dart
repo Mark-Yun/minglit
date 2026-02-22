@@ -1,8 +1,6 @@
 import 'package:app_user/src/features/explore/providers/explore_state_provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:minglit_kit/src/services/location_service.dart';
 
 import '../../../../utils/test_utils.dart';
 
@@ -28,16 +26,6 @@ void main() {
       tickets: tickets,
       location: location,
       party: party,
-    );
-  }
-
-  Ticket makeTicket({String id = 't1', int price = 10000}) {
-    return Ticket(
-      id: id,
-      name: 'Ticket $id',
-      createdAt: now,
-      updatedAt: now,
-      price: price,
     );
   }
 
@@ -83,7 +71,7 @@ void main() {
     });
 
     test('recommended sort type is not counted as active filter', () {
-      const filters = ExploreFilters(sortType: ExploreSortType.recommended);
+      const filters = ExploreFilters();
       expect(filters.hasActiveFilters, false);
       expect(filters.activeFilterCount, 0);
     });
@@ -237,7 +225,7 @@ void main() {
   group('filteredEventsProvider', () {
     test('returns all events when no filters active', () {
       final events = [
-        makeEvent(id: 'e1'),
+        makeEvent(),
         makeEvent(id: 'e2'),
       ];
 
@@ -250,7 +238,7 @@ void main() {
 
     test('filters by eligibility when enabled', () {
       // Without eligibility data, filter returns empty list
-      final events = [makeEvent(id: 'e1'), makeEvent(id: 'e2')];
+      final events = [makeEvent(), makeEvent(id: 'e2')];
 
       final container = createContainer();
       container.read(activeFiltersProvider.notifier).toggleEligibility();
@@ -260,7 +248,8 @@ void main() {
       );
 
       // bulkEligibilityData is null (no user), so eligibility filter returns
-      // the original list unchanged (guard: if eligibility == null, skip filter)
+      // the original list unchanged
+      // (guard: if eligibility == null, skip filter)
       expect(result, hasLength(2));
     });
 
@@ -268,7 +257,7 @@ void main() {
       // Seoul City Hall: 37.5665, 126.978
       // Gangnam Station: 37.498, 127.028 (~8km away)
       // Incheon Airport: 37.469, 126.451 (~47km away)
-      final seoulLoc = makeLocation(lat: 37.5665, lng: 126.978);
+      final seoulLoc = makeLocation();
       final gangnamLoc = makeLocation(lat: 37.498, lng: 127.028);
       final incheonLoc = makeLocation(lat: 37.469, lng: 126.451);
 
@@ -282,7 +271,7 @@ void main() {
         overrides: [
           // Mock user location at Seoul City Hall
           userLocationProvider.overrideWith(
-            (ref) async => LocationResult(
+            (ref) async => const LocationResult(
               latitude: 37.5665,
               longitude: 126.978,
             ),
@@ -306,8 +295,8 @@ void main() {
     });
 
     test('events with lat==0 lng==0 go to end of nearby sort', () async {
-      final seoulLoc = makeLocation(lat: 37.5665, lng: 126.978);
-      final unknownLoc = makeLocation(lat: 0.0, lng: 0.0);
+      final seoulLoc = makeLocation();
+      final unknownLoc = makeLocation(lat: 0, lng: 0);
 
       final events = [
         makeEvent(id: 'unknown', location: unknownLoc),
@@ -317,7 +306,7 @@ void main() {
       final container = createContainer(
         overrides: [
           userLocationProvider.overrideWith(
-            (ref) async => LocationResult(
+            (ref) async => const LocationResult(
               latitude: 37.5665,
               longitude: 126.978,
             ),

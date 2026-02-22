@@ -50,9 +50,10 @@ Future<void> main() async {
   try {
     await SentryFlutter.init(
       (options) {
-        options.dsn = sentryDsn;
-        options.environment = environment;
-        options.tracesSampleRate = 0.2;
+        options
+          ..dsn = sentryDsn
+          ..environment = environment
+          ..tracesSampleRate = 0.2;
       },
       appRunner: () => runZonedGuarded(
         startApp,
@@ -60,7 +61,7 @@ Future<void> main() async {
             Sentry.captureException(error, stackTrace: stackTrace),
       ),
     );
-  } catch (_) {
+  } on Object catch (_) {
     startApp();
   }
 }

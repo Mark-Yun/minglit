@@ -50,7 +50,7 @@ class EligibilityFilter {
   /// Filters a list of events, keeping only those where the user
   /// has at least one eligible ticket.
   ///
-  /// [balanceStatus] maps ticket_id → allowed. If empty, all tickets
+  /// `balanceStatus` maps ticket_id → allowed. If empty, all tickets
   /// are assumed to be balance-allowed (no gender balance restriction).
   static List<Event> filter({
     required List<Event> events,

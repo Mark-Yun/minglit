@@ -3,8 +3,6 @@ import 'dart:math' as math;
 
 import 'package:app_user/src/features/explore/logic/eligibility_filter.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:minglit_kit/src/data/repositories/event_repository.dart';
-import 'package:minglit_kit/src/services/location_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'explore_state_provider.g.dart';
@@ -55,6 +53,8 @@ class SearchQuery extends _$SearchQuery {
   @override
   String build() => '';
 
+  // Riverpod notifier method — cannot use setter syntax with code generation.
+  // ignore: use_setters_to_change_properties
   void update(String query) => state = query;
 
   void clear() => state = '';
@@ -65,6 +65,8 @@ class ActiveFilters extends _$ActiveFilters {
   @override
   ExploreFilters build() => const ExploreFilters();
 
+  // Riverpod notifier method — cannot use setter syntax with code generation.
+  // ignore: use_setters_to_change_properties
   void update(ExploreFilters filters) => state = filters;
 
   void toggleEligibility() {

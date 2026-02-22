@@ -24,17 +24,17 @@ class ExplorePage extends ConsumerWidget {
             ],
           ),
         ),
-        body: Column(
+        body: const Column(
           children: [
-            const SizedBox(height: MinglitSpacing.small),
-            const Padding(
+            SizedBox(height: MinglitSpacing.small),
+            Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: MinglitSpacing.medium,
               ),
               child: ExploreSearchBar(),
             ),
-            const SizedBox(height: MinglitSpacing.small),
-            const Expanded(
+            SizedBox(height: MinglitSpacing.small),
+            Expanded(
               child: TabBarView(
                 children: [
                   _RecommendationTab(),
@@ -70,7 +70,7 @@ class _RecommendationTab extends ConsumerWidget {
               return ListView.separated(
                 padding: const EdgeInsets.all(MinglitSpacing.medium),
                 itemCount: events.length,
-                separatorBuilder: (_, __) =>
+                separatorBuilder: (_, _) =>
                     const SizedBox(height: MinglitSpacing.small),
                 itemBuilder: (context, index) {
                   final event = events[index];
@@ -82,7 +82,7 @@ class _RecommendationTab extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, __) => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
           ),
         ),
       ],
@@ -136,7 +136,7 @@ class _SearchResultsTab extends ConsumerWidget {
         return ListView.separated(
           padding: const EdgeInsets.all(MinglitSpacing.medium),
           itemCount: events.length,
-          separatorBuilder: (_, __) =>
+          separatorBuilder: (_, _) =>
               const SizedBox(height: MinglitSpacing.small),
           itemBuilder: (context, index) {
             final event = events[index];

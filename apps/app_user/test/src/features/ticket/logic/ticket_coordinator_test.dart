@@ -30,9 +30,7 @@ void main() {
     });
 
     test('pushEventDetail calls router.push with event ID', () {
-      final coordinator = TicketCoordinator(mockRouter);
-
-      coordinator.pushEventDetail('event_456');
+      TicketCoordinator(mockRouter).pushEventDetail('event_456');
 
       verify(() => mockRouter.push(any(that: contains('event_456')))).called(1);
     });

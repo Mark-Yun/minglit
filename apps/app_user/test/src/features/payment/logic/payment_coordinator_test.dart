@@ -31,17 +31,13 @@ void main() {
     });
 
     test('pushPurchaseHistory calls router.push', () {
-      final coordinator = PaymentCoordinator(mockRouter);
-
-      coordinator.pushPurchaseHistory();
+      PaymentCoordinator(mockRouter).pushPurchaseHistory();
 
       verify(() => mockRouter.push(any())).called(1);
     });
 
     test('goToPurchaseHistory calls router.go', () {
-      final coordinator = PaymentCoordinator(mockRouter);
-
-      coordinator.goToPurchaseHistory();
+      PaymentCoordinator(mockRouter).goToPurchaseHistory();
 
       verify(() => mockRouter.go(any())).called(1);
     });
