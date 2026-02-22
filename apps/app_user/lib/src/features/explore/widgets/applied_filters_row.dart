@@ -1,6 +1,5 @@
 import 'package:app_user/src/features/explore/providers/explore_state_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class AppliedFiltersRow extends ConsumerWidget {
@@ -25,52 +24,29 @@ class AppliedFiltersRow extends ConsumerWidget {
       );
     }
 
-    if (filters.locationRadiusMeters != null) {
-      final km = filters.locationRadiusMeters! >= 1000
-          ? '${filters.locationRadiusMeters! ~/ 1000}km'
-          : '${filters.locationRadiusMeters}m';
+    if (filters.nearbyEnabled) {
       chips.add(
         _RemovableChip(
-          label: '$km 이내',
+          label: '가까운 거리',
           onRemove: () => ref
               .read(activeFiltersProvider.notifier)
-              .removeFilter(ExploreFilterType.location),
+              .removeFilter(ExploreFilterType.nearby),
         ),
       );
     }
 
-    if (filters.priceMin != null || filters.priceMax != null) {
-      String priceLabel;
-      if (filters.priceMin == 0 && filters.priceMax == 0) {
-        priceLabel = '무료';
-      } else if (filters.priceMax == null) {
-        priceLabel = '${_formatPrice(filters.priceMin!)}+';
-      } else {
-        priceLabel =
-            '${_formatPrice(filters.priceMin ?? 0)}~${_formatPrice(filters.priceMax!)}';
-      }
+    if (filters.sortType != ExploreSortType.recommended) {
+      final sortLabel = switch (filters.sortType) {
+        ExploreSortType.closingSoon => '마감임박순',
+        ExploreSortType.nearestDate => '가까운날짜순',
+        ExploreSortType.recommended => '',
+      };
       chips.add(
         _RemovableChip(
-          label: priceLabel,
+          label: sortLabel,
           onRemove: () => ref
               .read(activeFiltersProvider.notifier)
-              .removeFilter(ExploreFilterType.price),
-        ),
-      );
-    }
-
-    if (filters.dateStart != null || filters.dateEnd != null) {
-      final fmt = DateFormat('M/d');
-      final start = filters.dateStart != null
-          ? fmt.format(filters.dateStart!)
-          : '';
-      final end = filters.dateEnd != null ? fmt.format(filters.dateEnd!) : '';
-      chips.add(
-        _RemovableChip(
-          label: '$start~$end',
-          onRemove: () => ref
-              .read(activeFiltersProvider.notifier)
-              .removeFilter(ExploreFilterType.date),
+              .removeFilter(ExploreFilterType.sort),
         ),
       );
     }
@@ -109,11 +85,6 @@ class AppliedFiltersRow extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  String _formatPrice(int won) {
-    if (won >= 10000) return '${won ~/ 10000}만원';
-    return '${NumberFormat('#,###').format(won)}원';
   }
 }
 

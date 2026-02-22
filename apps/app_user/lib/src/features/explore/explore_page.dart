@@ -34,8 +34,6 @@ class ExplorePage extends ConsumerWidget {
               child: ExploreSearchBar(),
             ),
             const SizedBox(height: MinglitSpacing.small),
-            const ExploreFilterChipBar(),
-            const AppliedFiltersRow(),
             const Expanded(
               child: TabBarView(
                 children: [
@@ -56,132 +54,39 @@ class _RecommendationTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final aiRecs = ref.watch(aiRecommendationsProvider);
+    final recommendationAsync = ref.watch(recommendationEventsProvider);
     final coordinator = ref.read(exploreCoordinatorProvider);
 
-    return CustomScrollView(
-      slivers: [
-        aiRecs.when(
-          data: (events) {
-            if (events.isEmpty) {
-              return const SliverToBoxAdapter(child: SizedBox.shrink());
-            }
-            return SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(MinglitSpacing.medium),
-                    child: Row(
-                      children: [
-                        const Text('✨'),
-                        const SizedBox(width: 4),
-                        Text(
-                          'AI 추천',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(
-                    height: 220,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: MinglitSpacing.medium,
-                      ),
-                      itemCount: events.length,
-                      separatorBuilder: (_, __) =>
-                          const SizedBox(width: MinglitSpacing.small),
-                      itemBuilder: (context, index) {
-                        final event = events[index];
-                        return _AiRecommendationCard(
-                          event: event,
-                          onTap: () => coordinator.pushEventDetail(event.id),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: MinglitSpacing.medium),
-                ],
-              ),
-            );
-          },
-          loading: () => const SliverToBoxAdapter(
-            child: Center(
-              child: Padding(
-                padding: EdgeInsets.all(MinglitSpacing.large),
-                child: CircularProgressIndicator(),
-              ),
-            ),
+    return Column(
+      children: [
+        const ExploreFilterChipBar(),
+        const AppliedFiltersRow(),
+        Expanded(
+          child: recommendationAsync.when(
+            data: (events) {
+              if (events.isEmpty) {
+                return const Center(child: Text('추천 이벤트가 없습니다'));
+              }
+              return ListView.separated(
+                padding: const EdgeInsets.all(MinglitSpacing.medium),
+                itemCount: events.length,
+                separatorBuilder: (_, __) =>
+                    const SizedBox(height: MinglitSpacing.small),
+                itemBuilder: (context, index) {
+                  final event = events[index];
+                  return MinglitEventCard(
+                    event: event,
+                    onTap: () => coordinator.pushEventDetail(event.id),
+                  );
+                },
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (_, __) => const SizedBox.shrink(),
           ),
-          error: (_, __) => const SliverToBoxAdapter(
-            child: SizedBox.shrink(),
-          ),
-        ),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: MinglitSpacing.medium,
-            ),
-            child: Text(
-              '큐레이션',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
-          ),
-        ),
-        const SliverPadding(
-          padding: EdgeInsets.all(MinglitSpacing.medium),
-          sliver: _CurationGrid(),
         ),
       ],
     );
-  }
-}
-
-class _CurationGrid extends ConsumerWidget {
-  const _CurationGrid();
-
-  static const _curationTypes = [
-    EventFeedType.nearest,
-    EventFeedType.newArrivals,
-    EventFeedType.closingSoon,
-    EventFeedType.earlyBird,
-  ];
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final coordinator = ref.read(exploreCoordinatorProvider);
-
-    return SliverList.separated(
-      itemCount: _curationTypes.length,
-      separatorBuilder: (_, __) => const SizedBox(height: MinglitSpacing.small),
-      itemBuilder: (context, index) {
-        final type = _curationTypes[index];
-        return Card(
-          child: ListTile(
-            leading: Icon(_iconFor(type), color: MinglitColors.primary),
-            title: Text(type.title),
-            subtitle: Text(type.sortLabel),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => coordinator.pushEventCuration(type),
-          ),
-        );
-      },
-    );
-  }
-
-  IconData _iconFor(EventFeedType type) {
-    return switch (type) {
-      EventFeedType.nearest => Icons.near_me,
-      EventFeedType.newArrivals => Icons.fiber_new,
-      EventFeedType.closingSoon => Icons.timer,
-      EventFeedType.earlyBird => Icons.local_offer,
-      EventFeedType.aiRecommended => Icons.auto_awesome,
-    };
   }
 }
 
@@ -243,133 +148,8 @@ class _SearchResultsTab extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(
+      error: (e, _) => const Center(
         child: Text('검색 중 오류가 발생했습니다'),
-      ),
-    );
-  }
-}
-
-class _AiRecommendationCard extends StatelessWidget {
-  const _AiRecommendationCard({
-    required this.event,
-    required this.onTap,
-  });
-
-  final Event event;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final imageUrl = event.effectiveImageUrls.isNotEmpty
-        ? event.effectiveImageUrls.first
-        : null;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 280,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Stack(
-            children: [
-              if (imageUrl != null)
-                Image.network(
-                  imageUrl,
-                  width: 280,
-                  height: 220,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    width: 280,
-                    height: 220,
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    child: const Icon(Icons.image, size: 48),
-                  ),
-                )
-              else
-                Container(
-                  width: 280,
-                  height: 220,
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  child: const Icon(Icons.image, size: 48),
-                ),
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: [
-                        Colors.black.withValues(alpha: 0.7),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        event.title ?? event.party?.title ?? '',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (event.party?.location != null)
-                        Text(
-                          event.party!.location!.name,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white70,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 8,
-                left: 8,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: MinglitColors.primary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '✨ AI 추천',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
