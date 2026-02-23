@@ -27,6 +27,9 @@ GoRouter goRouter(Ref ref) {
       final isLoggingIn = state.uri.path == '/login';
       final path = state.uri.path;
 
+      // Allow dev pages without authentication
+      if (path.startsWith('/dev')) return null;
+
       // 1. 이미 로그인 상태인데 로그인 페이지로 가려면 홈으로 보냄
       if (isLoggedIn && isLoggingIn) {
         return '/';

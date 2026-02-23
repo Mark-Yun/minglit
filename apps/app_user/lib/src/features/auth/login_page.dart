@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
+import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -35,6 +36,12 @@ class LoginPage extends ConsumerWidget {
     if (authState.isLoading) {
       return const Scaffold(body: MinglitCircularProgressIndicator());
     }
+
+    const environment = String.fromEnvironment(
+      'ENVIRONMENT',
+      defaultValue: 'production',
+    );
+    const isDevEnv = environment == 'local' || environment == 'development';
 
     return MinglitLoginScreen(
       onGoogleSignIn: () async {
@@ -116,6 +123,7 @@ class LoginPage extends ConsumerWidget {
           );
         }
       },
+      onDevMapTrigger: isDevEnv ? () => const DevRoute().go(context) : null,
     );
   }
 }
