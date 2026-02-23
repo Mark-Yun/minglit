@@ -8,29 +8,37 @@ import {
   textRequest,
   withEnv,
   withMockedFetch,
+  withNoIntervals,
 } from "../_test_utils/mock_http.ts";
 
-Deno.test("cancel-payment - happy path cancels payment", async () => {
+const ENV = {
+  PORTONE_API_KEY: "test-key",
+  PORTONE_API_SECRET: "test-secret",
+  SUPABASE_URL: "https://supabase.test",
+  SUPABASE_SERVICE_ROLE_KEY: "service-key",
+};
+
+Deno.test("cancel-payment - happy path cancels payment and updates DB", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
-  const { fetchMock } = createFetchMock([
+  const { fetchMock, calls } = createFetchMock([
     {
       matcher: "https://api.iamport.kr/users/getToken",
       handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
     },
     {
       matcher: "https://api.iamport.kr/payments/cancel",
-      handler: () => jsonResponse({ code: 0, response: { status: "cancelled" } }),
+      handler: () => jsonResponse({ code: 0, response: { status: "cancelled", amount: 15000 } }),
+    },
+    {
+      matcher: (req) => req.url.includes("/rest/v1/event_applications") && req.method === "PATCH",
+      handler: () => jsonResponse({}),
     },
   ]);
 
-  await withEnv(
-    {
-      PORTONE_API_KEY: "test-key",
-      PORTONE_API_SECRET: "test-secret",
-    },
-    async () => {
-      await withMockedFetch(fetchMock, async () => {
+  await withEnv(ENV, async () => {
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
         const request = jsonRequest("http://localhost", {
           payment_id: "imp_123",
           reason: "user requested",
@@ -41,32 +49,29 @@ Deno.test("cancel-payment - happy path cancels payment", async () => {
 
         assertEquals(response.status, 200);
         assertEquals(payload.success, true);
+
+        const dbCall = calls.find((c) => c.url.includes("/rest/v1/event_applications") && c.method === "PATCH");
+        const dbBody = JSON.parse(dbCall!.body!);
+        assertEquals(dbBody.refund_status, "completed");
       });
-    },
-  );
+    });
+  });
 });
 
 Deno.test("cancel-payment - missing payment_id returns 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-
   const { fetchMock } = createFetchMock([]);
 
-  await withEnv(
-    {
-      PORTONE_API_KEY: "test-key",
-      PORTONE_API_SECRET: "test-secret",
-    },
-    async () => {
-      await withMockedFetch(fetchMock, async () => {
-        const request = jsonRequest("http://localhost", { reason: "missing" });
-        const response = await handler(request);
-        const payload = await readJson(response);
+  await withEnv(ENV, async () => {
+    await withMockedFetch(fetchMock, async () => {
+      const request = jsonRequest("http://localhost", { reason: "missing" });
+      const response = await handler(request);
+      const payload = await readJson(response);
 
-        assertEquals(response.status, 400);
-        assertEquals(payload.error, "Missing payment_id");
-      });
-    },
-  );
+      assertEquals(response.status, 400);
+      assertEquals(payload.error, "Missing payment_id");
+    });
+  });
 });
 
 Deno.test("cancel-payment - token failure returns 502", async () => {
@@ -79,43 +84,107 @@ Deno.test("cancel-payment - token failure returns 502", async () => {
     },
   ]);
 
-  await withEnv(
-    {
-      PORTONE_API_KEY: "test-key",
-      PORTONE_API_SECRET: "test-secret",
-    },
-    async () => {
-      await withMockedFetch(fetchMock, async () => {
-        const request = jsonRequest("http://localhost", { payment_id: "imp_123" });
-        const response = await handler(request);
-        const payload = await readJson(response);
+  await withEnv(ENV, async () => {
+    await withMockedFetch(fetchMock, async () => {
+      const request = jsonRequest("http://localhost", { payment_id: "imp_123" });
+      const response = await handler(request);
+      const payload = await readJson(response);
 
-        assertEquals(response.status, 502);
-        assertEquals(payload.error, "Payment provider error");
-      });
-    },
-  );
+      assertEquals(response.status, 502);
+      assertEquals(payload.error, "Payment provider error");
+    });
+  });
 });
 
 Deno.test("cancel-payment - malformed JSON returns 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-
   const { fetchMock } = createFetchMock([]);
 
-  await withEnv(
+  await withEnv(ENV, async () => {
+    await withMockedFetch(fetchMock, async () => {
+      const request = textRequest("http://localhost", "{invalid-json");
+      const response = await handler(request);
+      const payload = await readJson(response);
+
+      assertEquals(response.status, 400);
+      assertEquals(payload.error, "Invalid JSON body");
+    });
+  });
+});
+
+Deno.test("cancel-payment - partial refund passes amount and checksum to iamport", async () => {
+  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+  const { fetchMock, calls } = createFetchMock([
     {
-      PORTONE_API_KEY: "test-key",
-      PORTONE_API_SECRET: "test-secret",
+      matcher: "https://api.iamport.kr/users/getToken",
+      handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
     },
-    async () => {
-      await withMockedFetch(fetchMock, async () => {
-        const request = textRequest("http://localhost", "{invalid-json");
+    {
+      matcher: "https://api.iamport.kr/payments/cancel",
+      handler: () => jsonResponse({ code: 0, response: { status: "cancelled", amount: 5000 } }),
+    },
+    {
+      matcher: (req) => req.url.includes("/rest/v1/event_applications") && req.method === "PATCH",
+      handler: () => jsonResponse({}),
+    },
+  ]);
+
+  await withEnv(ENV, async () => {
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = jsonRequest("http://localhost", {
+          payment_id: "imp_123",
+          reason: "partial refund",
+          amount: 5000,
+          checksum: 15000,
+        });
+
+        const response = await handler(request);
+        assertEquals(response.status, 200);
+
+        const cancelCall = calls.find((c) => c.url.includes("/payments/cancel"));
+        const cancelBody = JSON.parse(cancelCall!.body!);
+        assertEquals(cancelBody.amount, 5000);
+        assertEquals(cancelBody.checksum, 15000);
+
+        const dbCall = calls.find((c) => c.url.includes("/rest/v1/event_applications") && c.method === "PATCH");
+        const dbBody = JSON.parse(dbCall!.body!);
+        assertEquals(dbBody.refund_status, "completed");
+        assertEquals(dbBody.refund_amount, 5000);
+      });
+    });
+  });
+});
+
+Deno.test("cancel-payment - DB error is non-fatal, still returns 200", async () => {
+  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+  const { fetchMock } = createFetchMock([
+    {
+      matcher: "https://api.iamport.kr/users/getToken",
+      handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
+    },
+    {
+      matcher: "https://api.iamport.kr/payments/cancel",
+      handler: () => jsonResponse({ code: 0, response: { status: "cancelled" } }),
+    },
+    {
+      matcher: (req) => req.url.includes("/rest/v1/event_applications") && req.method === "PATCH",
+      handler: () => jsonResponse({ error: { message: "DB error" } }, { status: 500 }),
+    },
+  ]);
+
+  await withEnv(ENV, async () => {
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = jsonRequest("http://localhost", { payment_id: "imp_123" });
         const response = await handler(request);
         const payload = await readJson(response);
 
-        assertEquals(response.status, 400);
-        assertEquals(payload.error, "Invalid JSON body");
+        assertEquals(response.status, 200);
+        assertEquals(payload.success, true);
       });
-    },
-  );
+    });
+  });
 });

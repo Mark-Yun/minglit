@@ -161,3 +161,77 @@ Deno.test("portone-webhook-v1 - malformed JSON returns 500", async () => {
     });
   });
 });
+
+Deno.test("portone-webhook-v1 - cancelled status sets refund_status completed", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock, calls } = createFetchMock([
+      {
+        matcher: "https://api.iamport.kr/users/getToken",
+        handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
+      },
+      {
+        matcher: "https://api.iamport.kr/payments/imp_cancel",
+        handler: () => jsonResponse({ code: 0, response: { merchant_uid: "order-456", status: "cancelled" } }),
+      },
+      {
+        matcher: (req) => req.url.includes("/rest/v1/event_applications") && req.method === "PATCH",
+        handler: () => jsonResponse({}),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = jsonRequest(
+          "http://localhost",
+          { imp_uid: "imp_cancel", merchant_uid: "order-456", status: "cancelled" },
+          { headers: { "x-forwarded-for": "127.0.0.1" } },
+        );
+        const response = await handler(request);
+        assertEquals(response.status, 200);
+
+        const dbCall = calls.find((c) => c.url.includes("/rest/v1/event_applications") && c.method === "PATCH");
+        const dbBody = JSON.parse(dbCall!.body!);
+        assertEquals(dbBody.status, "cancelled");
+        assertEquals(dbBody.refund_status, "completed");
+      });
+    });
+  });
+});
+
+Deno.test("portone-webhook-v1 - paid status does not set refund_status", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock, calls } = createFetchMock([
+      {
+        matcher: "https://api.iamport.kr/users/getToken",
+        handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
+      },
+      {
+        matcher: "https://api.iamport.kr/payments/imp_paid",
+        handler: () => jsonResponse({ code: 0, response: { merchant_uid: "order-789", status: "paid" } }),
+      },
+      {
+        matcher: (req) => req.url.includes("/rest/v1/event_applications") && req.method === "PATCH",
+        handler: () => jsonResponse({}),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = jsonRequest(
+          "http://localhost",
+          { imp_uid: "imp_paid", merchant_uid: "order-789", status: "paid" },
+          { headers: { "x-forwarded-for": "127.0.0.1" } },
+        );
+        const response = await handler(request);
+        assertEquals(response.status, 200);
+
+        const dbCall = calls.find((c) => c.url.includes("/rest/v1/event_applications") && c.method === "PATCH");
+        const dbBody = JSON.parse(dbCall!.body!);
+        assertEquals(dbBody.status, "approved");
+        assertEquals(dbBody.refund_status, undefined);
+      });
+    });
+  });
+});

@@ -72,15 +72,17 @@ serve(withSentry(async (req) => {
     }
 
     // Update event_applications table
-    // Note: This update should be idempotent.
+    const updatePayload: Record<string, unknown> = {
+      status: dbStatus,
+      payment_id: imp_uid,
+      updated_at: new Date().toISOString(),
+    };
+    if (payment.status === "cancelled") {
+      updatePayload.refund_status = "completed";
+    }
     const { error } = await supabase
       .from("event_applications")
-      .update({
-        status: dbStatus,
-        payment_id: imp_uid,
-        updated_at: new Date().toISOString(),
-        // payment_data: payment, // Optional: Save full payment data if column exists
-      })
+      .update(updatePayload)
       .eq("id", merchant_uid);
 
     if (error) {
