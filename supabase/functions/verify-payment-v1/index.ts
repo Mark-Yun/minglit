@@ -4,59 +4,12 @@ import { IamportClient } from "../_shared/iamport_client.ts";
 import { successResponse, errorResponse } from "../_shared/response_utils.ts";
 import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
 
-const PORTONE_API_URL = "https://api.iamport.kr";
-const IMP_KEY = Deno.env.get("PORTONE_IMP_KEY");
-const IMP_SECRET = Deno.env.get("PORTONE_IMP_SECRET");
+const IMP_KEY = Deno.env.get("PORTONE_API_KEY");
+const IMP_SECRET = Deno.env.get("PORTONE_API_SECRET");
 
 if (!IMP_KEY || !IMP_SECRET) {
-  throw new Error("Missing required environment variables: PORTONE_IMP_KEY, PORTONE_IMP_SECRET");
+  throw new Error("Missing required environment variables: PORTONE_API_KEY, PORTONE_API_SECRET");
 }
-
-const cancelPayment = async (impUid: string, reason: string) => {
-  try {
-    const impKey = Deno.env.get("PORTONE_API_KEY");
-    const impSecret = Deno.env.get("PORTONE_API_SECRET");
-
-    if (!impKey || !impSecret) {
-      console.error("Missing Portone credentials for cancel-payment");
-      return;
-    }
-
-    const tokenRes = await fetch(`${PORTONE_API_URL}/users/getToken`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ imp_key: impKey, imp_secret: impSecret }),
-    });
-
-    const tokenData = await tokenRes.json();
-    if (tokenData.code !== 0) {
-      console.error("Failed to get Portone token:", tokenData.message);
-      return;
-    }
-
-    const accessToken = tokenData.response.access_token;
-
-    const cancelRes = await fetch(`${PORTONE_API_URL}/payments/cancel`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": accessToken,
-      },
-      body: JSON.stringify({
-        imp_uid: impUid,
-        reason,
-      }),
-    });
-
-    const cancelData = await cancelRes.json();
-    if (cancelData.code !== 0) {
-      console.error("Failed to cancel payment:", cancelData.message);
-    }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error("Cancel payment error:", message);
-  }
-};
 
 initSentry();
 
@@ -106,7 +59,10 @@ serve(withSentry(async (req) => {
     }
 
     if (payment.amount !== order.payment_amount) {
-      await cancelPayment(imp_uid, "결제 금액 위변조로 자동 취소");
+      client.cancelPayment(imp_uid, "결제 금액 위변조로 자동 취소").catch((e: unknown) => {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.error("Cancel on mismatch failed:", msg);
+      });
       return errorResponse("Amount mismatch", 400, {
         expected: order.payment_amount,
         actual: payment.amount,

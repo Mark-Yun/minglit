@@ -41,4 +41,23 @@ export class IamportClient {
     if (data.code !== 0) throw new Error(`Iamport Error: ${data.message}`);
     return data.response;
   }
+
+  async cancelPayment(impUid: string, reason: string, amount?: number, checksum?: number): Promise<any> {
+    const token = await this.getToken();
+    const body: Record<string, unknown> = { imp_uid: impUid, reason };
+    if (amount !== undefined) body.amount = amount;
+    if (checksum !== undefined) body.checksum = checksum;
+    const res = await fetch(`${this.baseUrl}/payments/cancel`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`Failed to cancel payment: ${await res.text()}`);
+    const data = await res.json();
+    if (data.code !== 0) throw new Error(`Iamport Error: ${data.message}`);
+    return data.response;
+  }
 }

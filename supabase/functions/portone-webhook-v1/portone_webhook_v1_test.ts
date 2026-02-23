@@ -11,8 +11,8 @@ import {
 } from "../_test_utils/mock_http.ts";
 
 const ENV = {
-  PORTONE_IMP_KEY: "test-key",
-  PORTONE_IMP_SECRET: "test-secret",
+  PORTONE_API_KEY: "test-key",
+  PORTONE_API_SECRET: "test-secret",
   SUPABASE_URL: "https://supabase.test",
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
 };

@@ -1,8 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { IamportClient } from "../_shared/iamport_client.ts";
 import { successResponse, errorResponse } from "../_shared/response_utils.ts";
 import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
-
-const PORTONE_API_URL = "https://api.iamport.kr";
 
 initSentry();
 
@@ -21,7 +20,7 @@ serve(withSentry(async (req) => {
       return errorResponse("Missing payment_id", 400);
     }
 
-    // 2. Get Portone Access Token
+    // 2. Init IamportClient
     const impKey = Deno.env.get("PORTONE_API_KEY");
     const impSecret = Deno.env.get("PORTONE_API_SECRET");
 
@@ -30,42 +29,25 @@ serve(withSentry(async (req) => {
       return errorResponse("Server configuration error", 500);
     }
 
-    const tokenRes = await fetch(`${PORTONE_API_URL}/users/getToken`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ imp_key: impKey, imp_secret: impSecret }),
-    });
-
-    const tokenData = await tokenRes.json();
-    if (tokenData.code !== 0) {
-      console.error("Failed to get Portone token:", tokenData.message);
-      return errorResponse("Payment provider error", 502);
-    }
-
-    const accessToken = tokenData.response.access_token;
-
-    // 3. Cancel Payment
-    const cancelRes = await fetch(`${PORTONE_API_URL}/payments/cancel`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": accessToken,
-      },
-      body: JSON.stringify({
-        imp_uid: payment_id,
-        reason: reason || "심사 반려로 인한 자동 환불",
-      }),
-    });
-
-    const cancelData = await cancelRes.json();
-
-    if (cancelData.code !== 0) {
-      console.error("Failed to cancel payment:", cancelData.message);
-      return errorResponse(cancelData.message, 400);
+    // 3. Cancel Payment via IamportClient
+    const client = new IamportClient(impKey, impSecret);
+    let cancelResponse: unknown;
+    try {
+      cancelResponse = await client.cancelPayment(
+        payment_id,
+        reason || "심사 반려로 인한 자동 환불",
+      );
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      console.error("Failed to cancel payment:", message);
+      if (message.startsWith("Failed to get token") || message.startsWith("Iamport Error")) {
+        return errorResponse("Payment provider error", 502);
+      }
+      return errorResponse(message, 400);
     }
 
     // 4. Success
-    return successResponse({ success: true, data: cancelData.response });
+    return successResponse({ success: true, data: cancelResponse });
 
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
