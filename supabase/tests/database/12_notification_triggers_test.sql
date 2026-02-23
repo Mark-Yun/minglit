@@ -110,14 +110,13 @@ CREATE TEMP TABLE t6_messages AS
 SELECT * FROM public.pgmq_read('q_notifications', 60, 1000) AS payload(payload);
 
 SELECT ok(
-  (SELECT count(*) > 0 FROM t6_messages WHERE payload->'message'->>'type' = 'new_application'),
+  (SELECT count(*) > 0 FROM t6_messages WHERE payload->'message'->>'event_type' = 'new_application'),
   'T6: INSERT into event_applications enqueues new_application notification'
 );
 
-SELECT is(
-  (SELECT payload->'message'->>'user_id' FROM t6_messages WHERE payload->'message'->>'type' = 'new_application' LIMIT 1),
-  (SELECT partner_user_id::text FROM trigger_test_setup),
-  'T6: new_application notification targets partner member'
+SELECT ok(
+  (SELECT count(*) > 0 FROM t6_messages WHERE payload->'message'->>'event_type' = 'new_application'),
+  'T6: new_application notification message enqueued (fan-out to partner handled by worker)'
 );
 
 DROP TABLE t6_messages;
@@ -141,12 +140,12 @@ CREATE TEMP TABLE t4_approved AS
 SELECT * FROM public.pgmq_read('q_notifications', 60, 1000) AS payload(payload);
 
 SELECT ok(
-  (SELECT count(*) > 0 FROM t4_approved WHERE payload->'message'->>'type' = 'application_approved'),
+  (SELECT count(*) > 0 FROM t4_approved WHERE payload->'message'->>'event_type' = 'application_approved'),
   'T4: Approving application enqueues application_approved notification'
 );
 
 SELECT is(
-  (SELECT payload->'message'->>'user_id' FROM t4_approved WHERE payload->'message'->>'type' = 'application_approved' LIMIT 1),
+  (SELECT payload->'message'->'data'->>'user_id' FROM t4_approved WHERE payload->'message'->>'event_type' = 'application_approved' LIMIT 1),
   (SELECT applicant_user_id::text FROM trigger_test_setup),
   'T4: application_approved targets the applicant user'
 );
@@ -167,7 +166,7 @@ CREATE TEMP TABLE t4_rejected AS
 SELECT * FROM public.pgmq_read('q_notifications', 60, 1000) AS payload(payload);
 
 SELECT ok(
-  (SELECT count(*) > 0 FROM t4_rejected WHERE payload->'message'->>'type' = 'application_rejected'),
+  (SELECT count(*) > 0 FROM t4_rejected WHERE payload->'message'->>'event_type' = 'application_rejected'),
   'T4: Rejecting application enqueues application_rejected notification'
 );
 
@@ -187,7 +186,7 @@ CREATE TEMP TABLE t4_noop AS
 SELECT * FROM public.pgmq_read('q_notifications', 60, 1000) AS payload(payload);
 
 SELECT is(
-  (SELECT count(*)::int FROM t4_noop WHERE payload->'message'->>'type' IN ('application_approved', 'application_rejected')),
+  (SELECT count(*)::int FROM t4_noop WHERE payload->'message'->>'event_type' IN ('application_approved', 'application_rejected')),
   0,
   'T4: Same-status update does not enqueue notification'
 );
@@ -217,7 +216,7 @@ CREATE TEMP TABLE t5_messages AS
 SELECT * FROM public.pgmq_read('q_notifications', 60, 1000) AS payload(payload);
 
 SELECT ok(
-  (SELECT count(*) > 0 FROM t5_messages WHERE payload->'message'->>'type' = 'event_cancelled'),
+  (SELECT count(*) > 0 FROM t5_messages WHERE payload->'message'->>'event_type' = 'event_cancelled'),
   'T5: Cancelling event enqueues event_cancelled notification'
 );
 
@@ -259,8 +258,8 @@ CREATE TEMP TABLE t7_approved AS
 SELECT * FROM public.pgmq_read('q_notifications', 60, 1000) AS payload(payload);
 
 SELECT ok(
-  (SELECT count(*) > 0 FROM t7_approved WHERE payload->'message'->>'type' = 'verification_approved'),
-  'T7: Approving verification enqueues verification_approved notification'
+  (SELECT count(*) > 0 FROM t7_approved WHERE payload->'message'->>'event_type' = 'verification_result'),
+  'T7: Approving verification enqueues verification_result notification'
 );
 
 DROP TABLE t7_approved;
@@ -279,8 +278,8 @@ CREATE TEMP TABLE t7_correction AS
 SELECT * FROM public.pgmq_read('q_notifications', 60, 1000) AS payload(payload);
 
 SELECT ok(
-  (SELECT count(*) > 0 FROM t7_correction WHERE payload->'message'->>'type' = 'verification_needs_correction'),
-  'T7: needs_correction enqueues verification_needs_correction notification'
+  (SELECT count(*) > 0 FROM t7_correction WHERE payload->'message'->>'event_type' = 'verification_result'),
+  'T7: needs_correction enqueues verification_result notification'
 );
 
 DROP TABLE t7_correction;

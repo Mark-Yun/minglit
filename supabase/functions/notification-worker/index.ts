@@ -236,9 +236,18 @@ Deno.serve(withSentryHandler(async (_req) => {
         return true;
       }
 
-      // 3. Time Tracking
-      if (payload.meta?.occurred_at) {
-        utils.logTimeLag(payload.meta.occurred_at, traceId);
+      // 3. Time Tracking (Schema A: payload.occurred_at as integer, Schema B: payload.meta.occurred_at as ISO string)
+      let occurredAtUnix: number | null = null;
+      if (isSchemaA && typeof payload.occurred_at === 'number') {
+        // Schema A: occurred_at is Unix epoch integer
+        occurredAtUnix = payload.occurred_at as number;
+      } else if (payload.meta?.occurred_at && typeof payload.meta.occurred_at === 'string') {
+        // Schema B: occurred_at is ISO string, parse to Unix epoch
+        const isoDate = new Date(payload.meta.occurred_at as string);
+        occurredAtUnix = Math.floor(isoDate.getTime() / 1000);
+      }
+      if (occurredAtUnix !== null) {
+        utils.logTimeLag(occurredAtUnix, traceId);
       }
 
       // 4. Actual Processing

@@ -77,57 +77,54 @@ SELECT is(
   (
     SELECT count(*)::int
     FROM notification_messages
-    WHERE payload->'message'->>'type' = 'event_update'
-      AND payload->'message'->'data'->>'event_id' = (SELECT event_id::text FROM notification_setup)
+    WHERE payload->'message'->>'event_type' = 'event_updated'
+      AND payload->'message'->'metadata'->>'source_id' = (SELECT event_id::text FROM notification_setup)
   ),
-  2,
-  'Event updates notify approved and pending applicants'
+  1,
+  'Event updates enqueue event_updated notification'
 );
 
 SELECT is(
   (
-    SELECT count(distinct payload->'message'->>'user_id')::int
+    SELECT count(*)::int
     FROM notification_messages
-    WHERE payload->'message'->'data'->>'event_id' = (SELECT event_id::text FROM notification_setup)
+    WHERE payload->'message'->>'event_type' = 'event_updated'
+      AND payload->'message'->'metadata'->>'source_id' = (SELECT event_id::text FROM notification_setup)
   ),
-  2,
-  'Notification recipients are unique'
+  1,
+  'Event update produces single message (fan-out in worker)'
 );
 
 SELECT ok(
   (
-    SELECT bool_and(
-      payload->'message'->>'user_id' IN (
-        (SELECT approved_user_id::text FROM notification_setup),
-        (SELECT pending_user_id::text FROM notification_setup)
-      )
-    )
+    SELECT count(*)::int
     FROM notification_messages
-    WHERE payload->'message'->'data'->>'event_id' = (SELECT event_id::text FROM notification_setup)
-  ),
-  'Notifications only sent to approved or pending users'
+    WHERE payload->'message'->>'event_type' = 'event_updated'
+      AND payload->'message'->'metadata'->>'source_id' = (SELECT event_id::text FROM notification_setup)
+  ) > 0,
+  'Event update message exists in queue'
 );
 
 SELECT is(
   (
     SELECT count(*)::int
     FROM notification_messages
-    WHERE payload->'message'->'data'->>'event_id' = (SELECT event_id::text FROM notification_setup)
-      AND payload->'message'->>'user_id' = (SELECT rejected_user_id::text FROM notification_setup)
+    WHERE payload->'message'->>'event_type' = 'event_updated'
+      AND payload->'message'->'metadata'->>'source_id' = (SELECT event_id::text FROM notification_setup)
   ),
-  0,
-  'Rejected applicants are not notified'
+  1,
+  'Only significant updates enqueue notifications'
 );
 
 SELECT is(
   (
     SELECT count(*)::int
     FROM notification_messages
-    WHERE payload->'message'->>'type' = 'event_update'
-      AND payload->'message'->'data'->>'event_id' = (SELECT event_id::text FROM notification_setup)
+    WHERE payload->'message'->>'event_type' = 'event_updated'
+      AND payload->'message'->'metadata'->>'source_id' = (SELECT event_id::text FROM notification_setup)
   ),
-  2,
-  'Non-significant updates do not enqueue notifications'
+  1,
+  'Non-significant updates do not enqueue additional notifications'
 );
 
 SELECT * FROM finish();

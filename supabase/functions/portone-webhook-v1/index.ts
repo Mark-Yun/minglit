@@ -102,6 +102,9 @@ serve(withSentry(async (req) => {
         .single();
 
       if (application) {
+        // TODO: Migrate to produce_event() pattern via q_global_events
+        // Currently sends directly to q_notifications, bypassing 2-tier architecture
+        // See: docs/architecture/global-event-pipeline.md
         await supabase.rpc("pgmq_send", {
           queue_name: "q_notifications",
           message: {
