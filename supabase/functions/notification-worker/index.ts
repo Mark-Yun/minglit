@@ -111,7 +111,7 @@ const NOTIFICATION_TEMPLATES: Record<string, (data: Record<string, unknown>) => 
   }),
   event_reminder: (d) => ({
     title: '[이벤트 리마인더]',
-    body: `${(d.title as string) || '이벤트'}이(가) 1시간 후 시작됩니다.`,
+    body: `${(d.event_title as string) || '이벤트'}이(가) 1시간 후 시작됩니다.`,
   }),
 };
 
