@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { IamportClient } from "../_shared/iamport_client.ts";
 import { successResponse, errorResponse } from "../_shared/response_utils.ts";
@@ -13,7 +13,7 @@ if (!IMP_KEY || !IMP_SECRET) {
 
 initSentry();
 
-serve(withSentry(async (req) => {
+Deno.serve(withSentry(async (req) => {
   try {
     let reqBody: Record<string, unknown>;
     try {

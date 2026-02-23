@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
 import { successResponse, errorResponse } from "../_shared/response_utils.ts";
 import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
 
@@ -7,7 +7,7 @@ const GITHUB_REPO = "Mark-Yun/minglit";
 
 initSentry();
 
-serve(withSentry(async (req) => {
+Deno.serve(withSentry(async (req) => {
   try {
     let reqBody: Record<string, unknown>;
     try {
