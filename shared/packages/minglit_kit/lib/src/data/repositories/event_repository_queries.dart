@@ -7,38 +7,39 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
   ) async {
     Log.d('getApplicationsByEventId called | id: $eventId');
     try {
-      final data =
-          await supabaseClient
-                  .from('event_applications')
-                  .select(
-                    '*, '
-                    'user:user_profiles(*), '
-                    'submission:'
-                    'verification_submissions(*)',
-                  )
-                  .eq('event_id', eventId)
-                  .order('created_at', ascending: false)
-              as List;
+      final data = await supabaseClient.rpc<dynamic>(
+        'get_event_applications_with_user',
+        params: {'p_event_id': eventId},
+      ) as List;
       final result = data.map((json) {
         final map = json as Map<String, dynamic>;
-
-        // Fix: If 'user' is a List (due to some Supabase quirk),
-        // take the first item or null
-        if (map['user'] is List) {
-          final list = map['user'] as List;
-          map['user'] = list.isNotEmpty ? list.first : null;
-        }
-
-        // Fix: If 'submission' is a List
-        if (map['submission'] is List) {
-          final list = map['submission'] as List;
-          map['submission'] = list.isNotEmpty ? list.first : null;
-        }
-
-        return EventApplication.fromJson(map);
+        // RPC returns flat columns: application_id, event_id, ticket_id, user_id,
+        // payment_id, payment_amount, status, created_at, updated_at, user_name, user_phone
+        // Map to EventApplication model format (which expects 'id' not 'application_id')
+        final appMap = <String, dynamic>{
+          'id': map['application_id'],
+          'event_id': map['event_id'],
+          'ticket_id': map['ticket_id'],
+          'user_id': map['user_id'],
+          'payment_id': map['payment_id'],
+          'payment_amount': map['payment_amount'],
+          'status': map['status'],
+          'created_at': map['created_at'],
+          'updated_at': map['updated_at'],
+          'refund_status': map['refund_status'] ?? 'none',
+          // Build nested 'user' object from flat RPC columns
+          'user': (map['user_name'] != null || map['user_phone'] != null)
+              ? {
+                  'id': map['user_id'],
+                  'name': map['user_name'],
+                  'username': '',
+                  'phone_number': map['user_phone'],
+                }
+              : null,
+          'submission': null, // Not returned by RPC
+        };
+        return EventApplication.fromJson(appMap);
       }).toList();
-
-      Log.d('getApplicationsByEventId success | count: ${result.length}');
       return result;
     } catch (e, st) {
       Log.e('❌ [EventRepo] getApplicationsByEventId Error', e, st);

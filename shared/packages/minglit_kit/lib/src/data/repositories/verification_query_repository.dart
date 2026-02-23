@@ -180,15 +180,30 @@ mixin _VerificationQueryRepository on _SupabaseVerificationContext {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getPendingRequests() async {
-    Log.d('getPendingRequests called');
+  Future<List<Map<String, dynamic>>> getPendingRequests(
+    String partnerId,
+  ) async {
+    Log.d('getPendingRequests called | partnerId: $partnerId');
     try {
-      final data = await supabaseClient
-          .from('verification_submissions')
-          .select('*, user:user_profiles(*)')
-          .eq('status', 'pending')
-          .order('created_at', ascending: true);
-      final result = (data as List<dynamic>).cast<Map<String, dynamic>>();
+      final data = await supabaseClient.rpc<dynamic>(
+        'get_pending_verification_requests_with_user',
+        params: {'p_partner_id': partnerId},
+      );
+      // RPC returns flat columns: submission_id, partner_id, user_id, verification_id,
+      // application_id, status, snapshot_data, created_at, user_name
+      // Map submission_id -> id and build nested user object for UI compatibility
+      final result = (data as List<dynamic>).map((item) {
+        final map = item as Map<String, dynamic>;
+        return <String, dynamic>{
+          ...map,
+          'id': map['submission_id'],
+          'user': {
+            'id': map['user_id'],
+            'name': map['user_name'],
+            'email': '',
+          },
+        };
+      }).toList().cast<Map<String, dynamic>>();
       Log.d('getPendingRequests success | count: ${result.length}');
       return result;
     } catch (e, st) {

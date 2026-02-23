@@ -105,38 +105,23 @@ class MatchingRepository {
 
       if (matches.isEmpty) return [];
 
-      // 2. Enrich with Partner Profile & Secure Contact
-      final partnerIds = matches.map((m) => m.partnerId).toList();
-      final profiles =
-          await _supabase
-                  .from('user_profiles')
-                  .select()
-                  .inFilter('id', partnerIds)
-              as List;
-
-      // 3. Fetch Secure Contact (One by one via RPC for security)
-      // Note: This could be optimized, but security is priority.
+      // 2. Enrich with Partner Profile & Contact via get_matched_user_info RPC
       final enrichedMatches = await Future.wait(
         matches.map((m) async {
-          final profileMap = profiles
-              .whereType<Map<String, dynamic>>()
-              .firstWhere(
-                (p) => p['id'] == m.partnerId,
-                orElse: () => <String, dynamic>{},
-              );
-
-          final contact = await _supabase.rpc<String?>(
-            'get_matched_user_contact',
+          final info = await _supabase.rpc<List<dynamic>>(
+            'get_matched_user_info',
             params: {
-              'target_user_id': m.partnerId,
-              'target_event_id': eventId,
+              'p_target_user_id': m.partnerId,
+              'p_target_event_id': eventId,
             },
-          );
-
+          ) as List?;
+          final userData = (info?.isNotEmpty ?? false)
+              ? info!.first as Map<String, dynamic>
+              : null;
           return m.copyWith(
-            partnerName: profileMap['name'] as String?,
-            partnerProfileImage: profileMap['profile_image_url'] as String?,
-            partnerContact: contact,
+            partnerName: userData?['user_name'] as String?,
+            partnerProfileImage: userData?['profile_image_url'] as String?,
+            partnerContact: userData?['phone_number'] as String?,
           );
         }),
       );
@@ -228,7 +213,7 @@ class MatchingRepository {
           await _supabase
                   .from('event_participants')
                   .select(
-                    'user_id, user:user_profiles(*), '
+                    'user_id, display_name, birth_year, '
                     'ticket:ticket_id(target_entry_group_ids)',
                   )
                   .eq('event_id', eventId)
@@ -237,8 +222,13 @@ class MatchingRepository {
               as List;
       final candidates = participants.map((p) {
         final pMap = p as Map<String, dynamic>;
-        final userJson = pMap['user'] as Map<String, dynamic>;
-        return UserProfile.fromJson(userJson);
+        // Build minimal UserProfile from event_participants blurred data
+        return UserProfile(
+          id: pMap['user_id'] as String,
+          name: (pMap['display_name'] as String?) ?? '',
+          username: '',
+          birthYear: pMap['birth_year'] as int?,
+        );
       }).toList();
 
       return candidates;

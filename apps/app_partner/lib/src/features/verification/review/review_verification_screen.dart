@@ -30,9 +30,18 @@ class _ReviewVerificationScreenState
   Future<void> _loadRequests() async {
     setState(() => _isLoading = true);
     try {
+      final myPartners = await ref
+          .read(partnerRepositoryProvider)
+          .getMyManagedPartners();
+      if (myPartners.isEmpty) {
+        if (!mounted) return;
+        setState(() => _pendingRequests = []);
+        return;
+      }
+      final partnerId = myPartners.first.id;
       final reqs = await ref
           .read(verificationRepositoryProvider)
-          .getPendingRequests();
+          .getPendingRequests(partnerId);
       if (!mounted) return;
       setState(() => _pendingRequests = reqs);
     } on Object catch (e, st) {

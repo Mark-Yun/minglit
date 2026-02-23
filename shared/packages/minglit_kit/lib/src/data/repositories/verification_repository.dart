@@ -85,7 +85,7 @@ abstract class VerificationRepository {
   // --- Partner Flow (Review) ---
 
   /// Partner 대기 중인 모든 요청 조회
-  Future<List<Map<String, dynamic>>> getPendingRequests();
+  Future<List<Map<String, dynamic>>> getPendingRequests(String partnerId);
 
   /// Partner 요청 심사 처리
   Future<void> reviewRequest({

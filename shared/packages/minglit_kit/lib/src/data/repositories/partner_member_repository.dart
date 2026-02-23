@@ -7,15 +7,24 @@ mixin _PartnerMemberRepository on _SupabasePartnerContext {
   ) async {
     Log.d('getPartnerMembers called | partnerId: $partnerId');
     try {
-      final data =
-          await supabaseClient
-                  .from('partner_member_permissions')
-                  .select('*, user:user_profiles(*)')
-                  .eq('partner_id', partnerId)
-                  .order('joined_at', ascending: true)
-              as List;
+      final data = await supabaseClient.rpc<dynamic>(
+        'get_partner_members_with_user',
+        params: {'p_partner_id': partnerId},
+      ) as List;
       final result = data.map((entry) {
-        return entry as Map<String, dynamic>;
+        final map = entry as Map<String, dynamic>;
+        // RPC returns flat columns: user_id, partner_id, role, permissions, joined_at,
+        // user_name, user_profile_image
+        // Build nested 'user' map to match caller expectations
+        return <String, dynamic>{
+          ...map,
+          'user': {
+            'id': map['user_id'],
+            'name': map['user_name'],
+            'email': '',
+            'profile_image': map['user_profile_image'],
+          },
+        };
       }).toList();
       Log.d('getPartnerMembers success | count: ${result.length}');
       return result;
