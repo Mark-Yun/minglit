@@ -116,6 +116,8 @@ class _AppView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final startupState = ref.watch(appStartupProvider);
     final goRouter = ref.watch(goRouterProvider);
+    // Activate notification initializer to listen for sign-in events
+    ref.watch(notificationInitializerProvider);
 
     // ignore: use_minglit_async_value_widget - This is the app entry point, MaterialApp is not yet available.
     return MaterialApp.router(
