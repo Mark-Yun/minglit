@@ -8,13 +8,19 @@ part of 'social_interaction_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Manages the state of a single social interaction
+/// (like, subscribe, bookmark, block).
 
 @ProviderFor(SocialInteractionController)
 const socialInteractionControllerProvider =
     SocialInteractionControllerFamily._();
 
+/// Manages the state of a single social interaction
+/// (like, subscribe, bookmark, block).
 final class SocialInteractionControllerProvider
     extends $AsyncNotifierProvider<SocialInteractionController, bool> {
+  /// Manages the state of a single social interaction
+  /// (like, subscribe, bookmark, block).
   const SocialInteractionControllerProvider._({
     required SocialInteractionControllerFamily super.from,
     required ({
@@ -60,6 +66,9 @@ final class SocialInteractionControllerProvider
 String _$socialInteractionControllerHash() =>
     r'4a7d06244ed794a8f25ea553b0b0cc20eb602360';
 
+/// Manages the state of a single social interaction
+/// (like, subscribe, bookmark, block).
+
 final class SocialInteractionControllerFamily extends $Family
     with
         $ClassFamilyOverride<
@@ -82,6 +91,9 @@ final class SocialInteractionControllerFamily extends $Family
         isAutoDispose: true,
       );
 
+  /// Manages the state of a single social interaction
+  /// (like, subscribe, bookmark, block).
+
   SocialInteractionControllerProvider call({
     required String targetId,
     required SocialTargetType targetType,
@@ -98,6 +110,9 @@ final class SocialInteractionControllerFamily extends $Family
   @override
   String toString() => r'socialInteractionControllerProvider';
 }
+
+/// Manages the state of a single social interaction
+/// (like, subscribe, bookmark, block).
 
 abstract class _$SocialInteractionController extends $AsyncNotifier<bool> {
   late final _$args =

@@ -189,8 +189,10 @@ Deno.serve(withSentryHandler(async (_req) => {
       } catch (procError) {
           const msg_ = procError instanceof Error ? procError.message : String(procError);
           console.error(`[${traceId}] Processing Failed: ${msg_}`);
-          // Message is NOT deleted — PGMQ visibility timeout (30s) will make it
-          // available for retry. After 5 retries, DLQ check above moves it out.
+          // DLQ Policy: On processing error, message is NOT deleted from queue.
+          // PGMQ visibility timeout (30s) will make it available for retry.
+          // After 5 retries (read_ct > 5), the DLQ check above moves it to dead_letter_queue.
+          // This ensures transient failures are retried while permanent failures are captured.
           return true;
       }
 

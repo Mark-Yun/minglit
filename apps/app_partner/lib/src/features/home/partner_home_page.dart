@@ -1,3 +1,5 @@
+import 'dart:async' show unawaited;
+
 import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/features/home/partner_home_coordinator.dart';
 import 'package:app_partner/src/features/home/widgets/active_party_summary_scroll.dart';
@@ -84,7 +86,9 @@ class PartnerHomePage extends ConsumerWidget {
             builder: (context) => _PartySelectionSheet(parties: parties),
           );
           if (selected != null && context.mounted) {
-            EventCreateRoute(partyId: selected.id).push<void>(context);
+            unawaited(
+              EventCreateRoute(partyId: selected.id).push<void>(context),
+            );
           }
         },
         icon: const Icon(Icons.add),
@@ -113,10 +117,10 @@ class PartnerHomePage extends ConsumerWidget {
                 UpcomingEventsCard(
                   events: state.upcomingEvents,
                   onEventTap: (event) {
-                    EventDetailRoute(
+                    unawaited(EventDetailRoute(
                       partyId: event.partyId,
                       eventId: event.id,
-                    ).push<void>(context);
+                    ).push<void>(context));
                   },
                 ),
                 const SizedBox(height: MinglitSpacing.large),
@@ -125,7 +129,9 @@ class PartnerHomePage extends ConsumerWidget {
                 ActivePartySummaryScroll(
                   parties: state.activeParties,
                   onPartyTap: (party) {
-                    PartyDetailRoute(partyId: party.id).push<void>(context);
+                    unawaited(
+                      PartyDetailRoute(partyId: party.id).push<void>(context),
+                    );
                   },
                 ),
                 const SizedBox(height: MinglitSpacing.large),
@@ -134,10 +140,10 @@ class PartnerHomePage extends ConsumerWidget {
                 ClosingSoonEventsCard(
                   events: state.closingSoonEvents,
                   onEventTap: (event) {
-                    EventDetailRoute(
+                    unawaited(EventDetailRoute(
                       partyId: event.partyId,
                       eventId: event.id,
-                    ).push<void>(context);
+                    ).push<void>(context));
                   },
                 ),
                 const SizedBox(height: MinglitSpacing.large),
