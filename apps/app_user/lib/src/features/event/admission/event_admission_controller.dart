@@ -79,92 +79,109 @@ class EventAdmissionController extends _$EventAdmissionController {
       );
     }
 
-    var isAnyEligible = false;
-    var isAnyQualificationNeeded = false;
-    String? firstIneligibleReason;
-    final allMissingIds = <String>{};
-
-    for (final ticket in tickets) {
-      final groups = entryGroups
-          .where((g) => ticket.targetEntryGroupIds.contains(g.id))
-          .toList();
-
-      if (groups.isEmpty) {
-        isAnyEligible = true;
-        break;
-      }
-
-      for (final group in groups) {
-        // A. Basic Condition Check (Age/Gender)
-        final reason = _checkGroupCondition(group, userProfile);
-        if (reason == null) {
-          // B. Qualification Check
-          final missingIds = group.requiredVerificationIds
-              .where((id) => !userVerifIds.contains(id))
-              .toList();
-
-          if (missingIds.isEmpty) {
-            isAnyEligible = true;
-            break;
-          } else {
-            isAnyQualificationNeeded = true;
-            allMissingIds.addAll(missingIds);
-          }
-        } else {
-          firstIneligibleReason ??= reason;
-        }
-      }
-      if (isAnyEligible) break;
-    }
-
-    if (isAnyEligible) {
-      return AdmissionState(
-        status: EventAdmissionStatus.eligible,
-        user: currentUser,
-      );
-    }
-
-    if (isAnyQualificationNeeded) {
-      return AdmissionState(
-        status: EventAdmissionStatus.qualificationRequired,
-        user: currentUser,
-        missingVerificationIds: allMissingIds.toList(),
-      );
-    }
-
-    return AdmissionState(
-      status: EventAdmissionStatus.notEligible,
-      user: currentUser,
-      ineligibleReason: firstIneligibleReason ?? '참여 조건이 맞지 않습니다.',
+    return _checkEligibility(
+      tickets: tickets,
+      entryGroups: entryGroups,
+      userProfile: userProfile,
+      userVerifIds: userVerifIds,
+      currentUser: currentUser,
     );
   }
 
+  /// Handles user action based on current admission state.
+  Future<void> handleAction({
+    required BuildContext context,
+    required AdmissionState state,
+  }) async {
+    switch (state.status) {
+      case EventAdmissionStatus.guest:
+        final currentPath = GoRouterState.of(context).uri.toString();
+        ref.read(authCoordinatorProvider).goToLogin(from: currentPath);
+        return;
+      case EventAdmissionStatus.identityRequired:
+        final success = await Navigator.of(context).push<bool>(
+          MaterialPageRoute(
+            builder: (_) => const IdentityVerificationScreen(),
+            fullscreenDialog: true,
+          ),
+        );
+        if (success ?? false) {
+          ref.invalidate(eventAdmissionControllerProvider(event));
+        }
+        return;
+      case EventAdmissionStatus.qualificationRequired:
+        await showModalBottomSheet<void>(
+          context: context,
+          isScrollControlled: true,
+          builder: (_) => TicketSelectionSheet(event: event),
+        );
+        ref.invalidate(eventAdmissionControllerProvider(event));
+        return;
+      case EventAdmissionStatus.notEligible:
+        return;
+      case EventAdmissionStatus.eligible:
+        unawaited(
+          showModalBottomSheet<void>(
+            context: context,
+            isScrollControlled: true,
+            builder: (_) => TicketSelectionSheet(event: event),
+          ),
+        );
+        return;
+      case EventAdmissionStatus.pendingPayment:
+        unawaited(
+          showModalBottomSheet<void>(
+            context: context,
+            isScrollControlled: true,
+            builder: (_) => TicketSelectionSheet(event: event),
+          ),
+        );
+        return;
+      case EventAdmissionStatus.applied:
+        handleMinglitError(
+          context,
+          const MinglitUserException(
+            '이미 신청이 완료된 이벤트입니다.\n마이페이지에서 티켓을 확인해주세요.',
+          ),
+        );
+        return;
+      case EventAdmissionStatus.rejected:
+        final confirmed = await context.showMinglitConfirm(
+          title: '심사 결과 안내',
+          message:
+              '반려 사유: ${state.rejectionReason ?? "정보 부족"}\n\n'
+              '기존 신청을 취소하고 다시 신청하시겠습니까?',
+          confirmLabel: '다시 신청하기',
+          cancelLabel: '닫기',
+        );
 
-
-
-
-  /// Returns reason if NOT eligible, null if eligible.
-  String? _checkGroupCondition(EntryGroup group, UserProfile user) {
-    // 1. Gender Check
-    if (group.gender != null) {
-      // group.gender is 'male'/'female'. user.gender is 'male'/'female'.
-      if (group.gender != user.gender) {
-        return '성별 조건이 맞지 않습니다.';
-      }
+        if (confirmed && context.mounted) {
+          final user = state.user;
+          if (user == null) return;
+          final loading =
+              ref.read(globalLoadingControllerProvider.notifier)..show();
+          try {
+            await ref
+                .read(eventRepositoryProvider)
+                .deleteApplication(
+                  eventId: event.id,
+                  userId: user.id,
+                );
+            ref.invalidate(eventAdmissionControllerProvider(event));
+            if (context.mounted) {
+              unawaited(
+                showModalBottomSheet<void>(
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (_) => TicketSelectionSheet(event: event),
+                ),
+              );
+            }
+          } finally {
+            loading.hide();
+          }
+        }
+        return;
     }
-
-    // 2. Age Check
-    final birthDate = user.birthDate;
-    if (birthDate == null) return '생년월일 정보가 없습니다.';
-
-    final birthYear = birthDate.year;
-    if (group.birthYearMin != null && birthYear < group.birthYearMin!) {
-      return '${group.birthYearMin}년생 이상만 참여 가능합니다.';
-    }
-    if (group.birthYearMax != null && birthYear > group.birthYearMax!) {
-      return '${group.birthYearMax}년생 이하만 참여 가능합니다.';
-    }
-
-    return null; // OK
   }
 }

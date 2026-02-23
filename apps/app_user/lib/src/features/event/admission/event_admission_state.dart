@@ -47,3 +47,98 @@ class AdmissionButtonConfig {
   final bool enabled;
   final AdmissionButtonStyle style;
 }
+
+/// Checks eligibility across all tickets and entry groups.
+///
+/// Returns an [AdmissionState] based on the user's profile and verifications.
+AdmissionState _checkEligibility({
+  required List<Ticket> tickets,
+  required List<EntryGroup> entryGroups,
+  required UserProfile userProfile,
+  required List<String> userVerifIds,
+  required User currentUser,
+}) {
+  var isAnyEligible = false;
+  var isAnyQualificationNeeded = false;
+  String? firstIneligibleReason;
+  final allMissingIds = <String>{};
+
+  for (final ticket in tickets) {
+    final groups = entryGroups
+        .where((g) => ticket.targetEntryGroupIds.contains(g.id))
+        .toList();
+
+    if (groups.isEmpty) {
+      isAnyEligible = true;
+      break;
+    }
+
+    for (final group in groups) {
+      // A. Basic Condition Check (Age/Gender)
+      final reason = _checkGroupCondition(group, userProfile);
+      if (reason == null) {
+        // B. Qualification Check
+        final missingIds = group.requiredVerificationIds
+            .where((id) => !userVerifIds.contains(id))
+            .toList();
+
+        if (missingIds.isEmpty) {
+          isAnyEligible = true;
+          break;
+        } else {
+          isAnyQualificationNeeded = true;
+          allMissingIds.addAll(missingIds);
+        }
+      } else {
+        firstIneligibleReason ??= reason;
+      }
+    }
+    if (isAnyEligible) break;
+  }
+
+  if (isAnyEligible) {
+    return AdmissionState(
+      status: EventAdmissionStatus.eligible,
+      user: currentUser,
+    );
+  }
+
+  if (isAnyQualificationNeeded) {
+    return AdmissionState(
+      status: EventAdmissionStatus.qualificationRequired,
+      user: currentUser,
+      missingVerificationIds: allMissingIds.toList(),
+    );
+  }
+
+  return AdmissionState(
+    status: EventAdmissionStatus.notEligible,
+    user: currentUser,
+    ineligibleReason: firstIneligibleReason ?? '참여 조건이 맞지 않습니다.',
+  );
+}
+
+/// Returns reason if NOT eligible, null if eligible.
+String? _checkGroupCondition(EntryGroup group, UserProfile user) {
+  // 1. Gender Check
+  if (group.gender != null) {
+    // group.gender is 'male'/'female'. user.gender is 'male'/'female'.
+    if (group.gender != user.gender) {
+      return '성별 조건이 맞지 않습니다.';
+    }
+  }
+
+  // 2. Age Check
+  final birthDate = user.birthDate;
+  if (birthDate == null) return '생년월일 정보가 없습니다.';
+
+  final birthYear = birthDate.year;
+  if (group.birthYearMin != null && birthYear < group.birthYearMin!) {
+    return '${group.birthYearMin}년생 이상만 참여 가능합니다.';
+  }
+  if (group.birthYearMax != null && birthYear > group.birthYearMax!) {
+    return '${group.birthYearMax}년생 이하만 참여 가능합니다.';
+  }
+
+  return null; // OK
+}
