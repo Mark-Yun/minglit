@@ -11,20 +11,7 @@ class PartnerScaffold extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
   int _calculateSelectedIndex() {
-    final branchIndex = navigationShell.currentIndex;
-    // Map Branch Index to UI Index
-    switch (branchIndex) {
-      case 0:
-        return 0; // Home
-      case 1:
-        return 1; // Party
-      case 2:
-        return 3; // Settlement
-      case 3:
-        return 4; // More
-      default:
-        return 0;
-    }
+    return navigationShell.currentIndex;
   }
 
   @override
@@ -43,49 +30,26 @@ class PartnerScaffold extends StatelessWidget {
         onDestinationSelected: coordinator.onItemTapped,
         indicatorColor: Colors.transparent,
         backgroundColor: colorScheme.surface,
-        destinations: [
-          const NavigationDestination(
+        destinations: const [
+          NavigationDestination(
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home),
             label: '홈',
           ),
-          const NavigationDestination(
+          NavigationDestination(
             icon: Icon(Icons.celebration_outlined),
             selectedIcon: Icon(Icons.celebration),
-            label: '파티',
+            label: '파티관리',
           ),
           NavigationDestination(
-            // Custom QR Button look
-            icon: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colorScheme.primary,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: colorScheme.primary.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Icon(
-                Icons.qr_code_scanner,
-                color: colorScheme.onPrimary,
-                size: 28,
-              ),
-            ),
-            label: '',
-            tooltip: 'QR 스캔',
+            icon: Icon(Icons.attach_money_outlined),
+            selectedIcon: Icon(Icons.attach_money),
+            label: '수익관리',
           ),
-          const NavigationDestination(
-            icon: Icon(Icons.calculate_outlined),
-            selectedIcon: Icon(Icons.calculate),
-            label: '정산',
-          ),
-          const NavigationDestination(
-            icon: Icon(Icons.menu),
-            label: '더보기',
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings),
+            label: '설정',
           ),
         ],
       ),
