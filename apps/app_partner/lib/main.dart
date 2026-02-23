@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:app_partner/firebase_options.dart';
 import 'package:app_partner/src/l10n/generated/app_localizations.dart';
 import 'package:app_partner/src/routing/app_router.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -10,7 +12,6 @@ import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
-
 part 'main.g.dart';
 
 Future<void> main() async {
@@ -84,6 +85,7 @@ Future<void> appStartup(Ref ref) async {
     await Future.wait([
       initializeDateFormatting('ko_KR'),
       Supabase.initialize(url: supabaseUrl, anonKey: supabasePublishableKey),
+      Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform),
     ]);
 
     // Initialize Kakao Map SDK
