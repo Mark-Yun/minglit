@@ -1,0 +1,21 @@
+Task 6: produce_event() 리팩토링 검증 결과
+Date: 2026-02-23
+
+Migration: supabase/migrations/20260225000002_31_refactor_produce_event.sql
+
+=== supabase db reset ===
+PASS - All migrations applied successfully
+
+=== produce_event('party_created') 호출 ===
+SELECT public.produce_event('party_created'::public.event_type_name, 'parties', gen_random_uuid(), '{"name":"test"}'::jsonb);
+Result: (1 row) - void return
+
+=== q_global_events 확인 ===
+ msg_id |  event_type   | schema_version 
+--------+---------------+----------------
+      1 | party_created | 1
+(1 row)
+
+페이로드 필드 확인: event_id, event_type, occurred_at, schema_version, data, metadata 모두 존재
+
+VERDICT: PASS

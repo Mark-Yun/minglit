@@ -75,6 +75,110 @@ async function sendFCM(accessToken: string, projectId: string, fcmToken: string,
   return 'SUCCESS';
 }
 
+// --- Schema A: event_type → Korean title/body template ---
+const NOTIFICATION_TEMPLATES: Record<string, (data: Record<string, unknown>) => { title: string; body: string }> = {
+  party_created: (_d) => ({
+    title: '[새 파티]',
+    body: '새로운 파티가 생성되었습니다.',
+  }),
+  user_interaction: (_d) => ({
+    title: '[프로필 업데이트]',
+    body: '프로필이 업데이트되었습니다.',
+  }),
+  application_approved: (d) => ({
+    title: '[이벤트 참가 확정]',
+    body: `${(d.event_title as string) || '이벤트'} 참가가 확정되었습니다.`,
+  }),
+  application_rejected: (d) => ({
+    title: '[이벤트 신청 결과]',
+    body: `${(d.event_title as string) || '이벤트'} 신청이 반려되었습니다.`,
+  }),
+  event_updated: (d) => ({
+    title: '[이벤트 업데이트]',
+    body: `${(d.title as string) || '이벤트'} 정보가 변경되었습니다.`,
+  }),
+  event_cancelled: (d) => ({
+    title: '[이벤트 취소]',
+    body: `${(d.title as string) || '이벤트'}이(가) 취소되었습니다.`,
+  }),
+  new_application: (d) => ({
+    title: '[새 이벤트 신청]',
+    body: `${(d.event_title as string) || '이벤트'}에 새로운 신청이 도착했습니다.`,
+  }),
+  verification_result: (_d) => ({
+    title: '[인증 결과]',
+    body: '인증 결과가 도착했습니다.',
+  }),
+  event_reminder: (d) => ({
+    title: '[이벤트 리마인더]',
+    body: `${(d.title as string) || '이벤트'}이(가) 1시간 후 시작됩니다.`,
+  }),
+};
+
+// --- Helper: Resolve affected user_id for Schema A events ---
+async function getAffectedUserId(supabase: any, eventType: string, data: Record<string, unknown>): Promise<string | null> {
+  // Most events: user_id is in data directly
+  if (data.user_id) return data.user_id as string;
+  // new_application: notify the event partner (via party)
+  if (eventType === 'new_application' && data.event_id) {
+    const { data: event } = await supabase
+      .from('events')
+      .select('parties(partner_id)')
+      .eq('id', data.event_id)
+      .single();
+    return event?.parties?.partner_id || null;
+  }
+  return null;
+}
+
+// --- Helper: Fan-out FCM + DB notification to all approved event participants ---
+async function sendToAllParticipants(
+  supabase: any,
+  eventId: string,
+  title: string,
+  body: string,
+  category: string,
+  accessToken: string,
+  projectId: string,
+) {
+  const { data: applications } = await supabase
+    .from('event_applications')
+    .select('user_id')
+    .eq('event_id', eventId)
+    .eq('status', 'approved');
+
+  if (!applications || applications.length === 0) {
+    console.log(`[fan-out] No approved participants for event ${eventId}`);
+    return;
+  }
+
+  console.log(`[fan-out] Sending to ${applications.length} participants for event ${eventId}`);
+
+  for (const app of applications) {
+    const { data: tokens } = await supabase
+      .from('fcm_tokens')
+      .select('token')
+      .eq('user_id', app.user_id);
+
+    if (tokens && tokens.length > 0) {
+      for (const t of tokens) {
+        const status = await sendFCM(accessToken, projectId, t.token, title, body);
+        if (status === 'INVALID') {
+          await supabase.from('fcm_tokens').delete().eq('token', t.token);
+          console.log(`Deleted invalid token: ${t.token}`);
+        }
+      }
+    }
+
+    await supabase.from('user_notifications').insert({
+      user_id: app.user_id,
+      title,
+      body,
+      category,
+    });
+  }
+}
+
 
 initSentry();
 
@@ -112,8 +216,12 @@ Deno.serve(withSentryHandler(async (_req) => {
 
       const msg = Array.isArray(msgs) ? msgs[0] : msgs;
       const payload = msg.message;
-      const traceId = payload.id; // Assuming payload has 'id' (UUID of the event or notification)
-      const userId = payload.user_id; // Target User
+
+      // --- Schema Detection ---
+      // Schema A: produced by produce_event() — has event_id / schema_version
+      // Schema B: produced by legacy DB triggers — has title directly
+      const isSchemaA = 'event_id' in payload || 'schema_version' in payload;
+      const traceId = isSchemaA ? (payload.event_id as string) : (payload.id as string);
 
       // 1. DLQ Check
       if (msg.read_ct > 5) {
@@ -134,9 +242,61 @@ Deno.serve(withSentryHandler(async (_req) => {
       }
 
       // 4. Actual Processing
-      console.log(`[Notification] Processing event: ${payload.type} (ID: ${traceId})`);
+      console.log(`[Notification] Processing ${isSchemaA ? 'Schema A' : 'Schema B'} event (ID: ${traceId})`);
       
       try {
+        let userId: string | null;
+        let title: string;
+        let body: string;
+        let category: string;
+        let deepLink: string | undefined;
+
+        if (isSchemaA) {
+          // --- Schema A: structured payload from produce_event() ---
+          const eventType = payload.event_type as string;
+          const data = (payload.data as Record<string, unknown>) || {};
+
+          const template = NOTIFICATION_TEMPLATES[eventType];
+          if (!template) {
+            console.warn(`[${traceId}] Unknown event_type: ${eventType}. Skipping.`);
+            await supabase.rpc('pgmq_delete', { queue_name: 'q_notifications', msg_id: msg.msg_id });
+            return true;
+          }
+
+          const { title: t, body: b } = template(data);
+          title = t;
+          body = b;
+          category = 'service';
+          deepLink = undefined;
+
+          userId = await getAffectedUserId(supabase, eventType, data);
+
+          // Per-user fan-out for multi-user events
+          if (eventType === 'event_cancelled' || eventType === 'event_updated') {
+            const eventId = (data.id as string) || (data.event_id as string);
+            if (eventId) {
+              const { token: accessToken, projectId } = await getAccessToken(firebaseServiceAccount);
+              await sendToAllParticipants(supabase, eventId, title, body, category, accessToken, projectId);
+              await utils.markProcessed(traceId);
+              await supabase.rpc('pgmq_delete', { queue_name: 'q_notifications', msg_id: msg.msg_id });
+              return true;
+            }
+          }
+        } else {
+          // --- Schema B: legacy direct payload (backward compat) ---
+          userId = payload.user_id as string;
+          title = payload.title as string;
+          body = payload.body as string;
+          category = (payload.category as string) || 'service';
+          deepLink = (payload.data as Record<string, unknown>)?.deep_link as string | undefined;
+        }
+
+        if (!userId) {
+          console.warn(`[${traceId}] No userId resolved. Skipping.`);
+          await supabase.rpc('pgmq_delete', { queue_name: 'q_notifications', msg_id: msg.msg_id });
+          return true;
+        }
+
         // A. Get Access Token
         const { token: accessToken, projectId } = await getAccessToken(firebaseServiceAccount);
 
@@ -158,9 +318,9 @@ Deno.serve(withSentryHandler(async (_req) => {
                     accessToken, 
                     projectId, 
                     t.token, 
-                    payload.title, 
-                    payload.body, 
-                    payload.data // deep_link, category etc
+                    title,
+                    body,
+                    payload.data // deep_link, category etc (Schema B compat)
                 );
 
                 if (status === 'INVALID') {
@@ -179,10 +339,10 @@ Deno.serve(withSentryHandler(async (_req) => {
         // D. Save to Notification History (DB)
         await supabase.from('user_notifications').insert({
             user_id: userId,
-            title: payload.title,
-            body: payload.body,
-            category: payload.category || 'service',
-            deep_link: payload.data?.deep_link,
+            title: title,
+            body: body,
+            category: category,
+            deep_link: deepLink,
             metadata: payload.data
         });
 
