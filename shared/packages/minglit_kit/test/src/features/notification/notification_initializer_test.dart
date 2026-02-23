@@ -23,8 +23,8 @@ void main() {
     when(() => mockNotificationService.initialize()).thenAnswer((_) async {});
   });
 
-  tearDown(() {
-    authStateController.close();
+  tearDown(() async {
+    await authStateController.close();
   });
 
   ProviderContainer createTestContainer() {
@@ -40,13 +40,12 @@ void main() {
 
   group('notificationInitializerProvider', () {
     test('calls initialize() on signedIn event', () async {
-      final container = createTestContainer();
-
-      // Use listen to keep the provider alive and active.
-      container.listen(notificationInitializerProvider, (_, __) {});
+      // ignore: unused_local_variable - Container must be held to keep provider alive.
+      final container = createTestContainer()
+        ..listen(notificationInitializerProvider, (_, _) {});
 
       authStateController.add(
-        AuthState(AuthChangeEvent.signedIn, null),
+        const AuthState(AuthChangeEvent.signedIn, null),
       );
 
       // Allow microtasks for stream + Riverpod propagation.
@@ -56,11 +55,12 @@ void main() {
     });
 
     test('does not call initialize() on signedOut event', () async {
-      final container = createTestContainer();
-      container.listen(notificationInitializerProvider, (_, __) {});
+      // ignore: unused_local_variable - Container must be held to keep provider alive.
+      final container = createTestContainer()
+        ..listen(notificationInitializerProvider, (_, _) {});
 
       authStateController.add(
-        AuthState(AuthChangeEvent.signedOut, null),
+        const AuthState(AuthChangeEvent.signedOut, null),
       );
 
       await pumpEventQueue();
@@ -69,11 +69,12 @@ void main() {
     });
 
     test('does not call initialize() on tokenRefreshed event', () async {
-      final container = createTestContainer();
-      container.listen(notificationInitializerProvider, (_, __) {});
+      // ignore: unused_local_variable - Container must be held to keep provider alive.
+      final container = createTestContainer()
+        ..listen(notificationInitializerProvider, (_, _) {});
 
       authStateController.add(
-        AuthState(AuthChangeEvent.tokenRefreshed, null),
+        const AuthState(AuthChangeEvent.tokenRefreshed, null),
       );
 
       await pumpEventQueue();
@@ -82,11 +83,12 @@ void main() {
     });
 
     test('does not call initialize() on passwordRecovery event', () async {
-      final container = createTestContainer();
-      container.listen(notificationInitializerProvider, (_, __) {});
+      // ignore: unused_local_variable - Container must be held to keep provider alive.
+      final container = createTestContainer()
+        ..listen(notificationInitializerProvider, (_, _) {});
 
       authStateController.add(
-        AuthState(AuthChangeEvent.passwordRecovery, null),
+        const AuthState(AuthChangeEvent.passwordRecovery, null),
       );
 
       await pumpEventQueue();
@@ -95,11 +97,14 @@ void main() {
     });
 
     test('calls initialize() for each signedIn event', () async {
-      final container = createTestContainer();
-      container.listen(notificationInitializerProvider, (_, __) {});
+      // ignore: unused_local_variable - Container must be held to keep provider alive.
+      final container = createTestContainer()
+        ..listen(notificationInitializerProvider, (_, _) {});
 
       authStateController
+        // ignore: prefer_const_constructors - Non-const needed for distinct stream events.
         ..add(AuthState(AuthChangeEvent.signedIn, null))
+        // ignore: prefer_const_constructors - Non-const needed for distinct stream events.
         ..add(AuthState(AuthChangeEvent.signedIn, null));
 
       await pumpEventQueue();
