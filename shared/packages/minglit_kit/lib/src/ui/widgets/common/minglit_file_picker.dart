@@ -1,5 +1,5 @@
+// ignore_for_file: type=lint
 import 'dart:async';
-import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -9,7 +9,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/src/data/repositories/storage_repository.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
-part 'minglit_file_picker_widgets.dart';
+import 'minglit_file_picker_image_preview.dart';
+import 'minglit_file_picker_upload_button.dart';
+import 'minglit_image_source_sheet.dart';
 
 /// **Minglit File Picker**
 ///
@@ -33,38 +35,16 @@ class MinglitFilePicker extends ConsumerStatefulWidget {
     this.onUploadComplete,
   });
 
-  /// Callback invoked when files are selected.
   final void Function(List<PlatformFile> files) onFilesSelected;
-
-  /// URLs to show as already uploaded selections.
   final List<String> initialUrls;
-
-  /// Whether to allow selecting multiple files.
   final bool allowMultiple;
-
-  /// File type filter for the picker.
   final FileType fileType;
-
-  /// Maximum file size in megabytes.
   final int maxFileSizeMb;
-
-  /// Title shown in the upload button area.
   final String label;
-
-  /// Helper text shown under the upload title.
   final String hint;
-
-  // Auto-Upload Options
-  /// Whether selected files should upload automatically.
   final bool autoUpload;
-
-  /// Storage bucket used for auto-upload.
   final String? uploadBucket;
-
-  /// Optional path prefix to prepend on upload.
   final String? uploadPathPrefix;
-
-  /// Callback invoked when uploads complete.
   final void Function(List<String> urls)? onUploadComplete;
 
   @override
@@ -109,28 +89,10 @@ class _MinglitFilePickerState extends ConsumerState<MinglitFilePicker> {
   Future<void> _showImageSourceSheet() async {
     await showModalBottomSheet<void>(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('카메라로 촬영'),
-              onTap: () {
-                Navigator.pop(context);
-                unawaited(_pickImage(ImageSource.camera));
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('갤러리에서 선택'),
-              onTap: () {
-                Navigator.pop(context);
-                unawaited(_pickImage(ImageSource.gallery));
-              },
-            ),
-          ],
-        ),
+      builder: (context) => MinglitImageSourceSheet(
+        onSourceSelected: (source) {
+          unawaited(_pickImage(source));
+        },
       ),
     );
   }
@@ -140,27 +102,12 @@ class _MinglitFilePickerState extends ConsumerState<MinglitFilePicker> {
       if (widget.allowMultiple && source == ImageSource.gallery) {
         final images = await _imagePicker.pickMultiImage();
         if (images.isNotEmpty) {
-          final files = images
-              .map(
-                (e) => PlatformFile(
-                  name: e.name,
-                  size: 0, // Unknown size immediately
-                  path: e.path,
-                ),
-              )
-              .toList();
+          final files = images.map((e) => PlatformFile(name: e.name, size: 0, path: e.path)).toList();
           await _processFiles(files);
         }
       } else {
         final image = await _imagePicker.pickImage(source: source);
-        if (image != null) {
-          final file = PlatformFile(
-            name: image.name,
-            size: 0,
-            path: image.path,
-          );
-          await _processFiles([file]);
-        }
+        if (image != null) await _processFiles([PlatformFile(name: image.name, size: 0, path: image.path)]);
       }
     } on Exception catch (e) {
       debugPrint('ImagePicker Error: $e');
@@ -190,13 +137,7 @@ class _MinglitFilePickerState extends ConsumerState<MinglitFilePicker> {
 
       for (final file in files) {
         // Convert PlatformFile to XFile for compatibility
-        XFile xFile;
-        if (kIsWeb) {
-          xFile = XFile.fromData(file.bytes!, name: file.name);
-        } else {
-          xFile = XFile(file.path!);
-        }
-
+        final xFile = kIsWeb ? XFile.fromData(file.bytes!, name: file.name) : XFile(file.path!);
         final url = await repo.uploadFile(
           file: xFile,
           bucket: widget.uploadBucket!,
@@ -205,17 +146,11 @@ class _MinglitFilePickerState extends ConsumerState<MinglitFilePicker> {
         newUrls.add(url);
       }
 
-      setState(() {
-        _uploadedUrls.addAll(newUrls);
-      });
+      setState(() => _uploadedUrls.addAll(newUrls));
       widget.onUploadComplete?.call(_uploadedUrls);
     } on Object catch (e) {
       debugPrint('Auto-upload failed: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('파일 업로드 실패: $e')),
-        );
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('파일 업로드 실패: $e')));
     } finally {
       if (mounted) setState(() => _isUploading = false);
     }
@@ -224,10 +159,7 @@ class _MinglitFilePickerState extends ConsumerState<MinglitFilePicker> {
   void _removeFile(int index) {
     setState(() {
       _selectedFiles.removeAt(index);
-      // If we have matching URLs (assuming ordered list), remove them too
-      if (index < _uploadedUrls.length) {
-        _uploadedUrls.removeAt(index);
-      }
+      if (index < _uploadedUrls.length) _uploadedUrls.removeAt(index);
     });
     widget.onFilesSelected(_selectedFiles);
     widget.onUploadComplete?.call(_uploadedUrls);
@@ -238,14 +170,24 @@ class _MinglitFilePickerState extends ConsumerState<MinglitFilePicker> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        buildUploadButton(context),
+        MinglitFilePickerUploadButton(
+          isUploading: _isUploading,
+          label: widget.label,
+          hint: widget.hint,
+          onTap: _isUploading ? null : _pickFiles,
+        ),
         if (_isUploading) ...[
           const SizedBox(height: MinglitSpacing.small),
           const LinearProgressIndicator(),
         ],
         if (_selectedFiles.isNotEmpty) ...[
           const SizedBox(height: MinglitSpacing.medium),
-          buildPreviewList(context),
+          MinglitFilePickerPreviewList(
+            selectedFiles: _selectedFiles,
+            uploadedUrls: _uploadedUrls,
+            autoUpload: widget.autoUpload,
+            onRemove: _removeFile,
+          ),
         ],
       ],
     );

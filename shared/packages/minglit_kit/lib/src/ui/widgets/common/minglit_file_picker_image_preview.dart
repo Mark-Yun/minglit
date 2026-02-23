@@ -1,68 +1,43 @@
-part of 'minglit_file_picker.dart';
+// ignore_for_file: type=lint
+import 'dart:io';
 
-extension _FilePickerUI on _MinglitFilePickerState {
-  Widget buildUploadButton(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: _isUploading ? null : _pickFiles,
-      borderRadius: BorderRadius.circular(MinglitRadius.small),
-      child: Container(
-        height: 120,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(
-            alpha: 0.3,
-          ),
-          borderRadius: BorderRadius.circular(MinglitRadius.small),
-          border: Border.all(
-            color: theme.colorScheme.outlineVariant,
-          ),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.cloud_upload_outlined,
-                size: 32,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(height: MinglitSpacing.small),
-              Text(
-                widget.label,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                widget.hint,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
-  Widget buildPreviewList(BuildContext context) {
+class MinglitFilePickerPreviewList extends StatelessWidget {
+  const MinglitFilePickerPreviewList({
+    required this.selectedFiles,
+    required this.uploadedUrls,
+    required this.autoUpload,
+    required this.onRemove,
+    super.key,
+  });
+
+  final List<PlatformFile> selectedFiles;
+  final List<String> uploadedUrls;
+  final bool autoUpload;
+  final void Function(int) onRemove;
+
+  @override
+  Widget build(BuildContext context) {
     return SizedBox(
       height: 100,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: _selectedFiles.length,
+        itemCount: selectedFiles.length,
         separatorBuilder: (context, index) =>
             const SizedBox(width: MinglitSpacing.small),
         itemBuilder: (context, index) {
-          final file = _selectedFiles[index];
+          final file = selectedFiles[index];
           // Check if this specific file is uploaded (naive check by index)
-          final isUploaded = index < _uploadedUrls.length;
+          final isUploaded = index < uploadedUrls.length;
 
           return Stack(
             children: [
-              _buildFileThumbnail(context, file),
-              if (isUploaded && widget.autoUpload)
+              MinglitFilePickerImagePreview(file: file),
+              if (isUploaded && autoUpload)
                 Positioned(
                   bottom: 4,
                   right: 4,
@@ -83,7 +58,7 @@ extension _FilePickerUI on _MinglitFilePickerState {
                 top: 4,
                 right: 4,
                 child: InkWell(
-                  onTap: () => _removeFile(index),
+                  onTap: () => onRemove(index),
                   child: Container(
                     padding: const EdgeInsets.all(2),
                     decoration: const BoxDecoration(
@@ -104,8 +79,18 @@ extension _FilePickerUI on _MinglitFilePickerState {
       ),
     );
   }
+}
 
-  Widget _buildFileThumbnail(BuildContext context, PlatformFile file) {
+class MinglitFilePickerImagePreview extends StatelessWidget {
+  const MinglitFilePickerImagePreview({
+    required this.file,
+    super.key,
+  });
+
+  final PlatformFile file;
+
+  @override
+  Widget build(BuildContext context) {
     final isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(
       file.extension?.toLowerCase(),
     );
