@@ -30,6 +30,10 @@ GoRouter goRouter(Ref ref) {
       final isLoggedIn = ref.read(currentUserProvider) != null;
       final isLoggingIn = state.uri.path == '/login';
 
+
+      // Allow dev pages without authentication
+      if (state.uri.path.startsWith('/dev')) return null;
+
       // 1. If not logged in and not on login page -> Redirect to Login
       if (!isLoggedIn && !isLoggingIn) {
         return '/login';
