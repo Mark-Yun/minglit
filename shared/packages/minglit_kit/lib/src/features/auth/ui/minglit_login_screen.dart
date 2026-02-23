@@ -15,6 +15,7 @@ class MinglitLoginScreen extends ConsumerWidget {
     this.onKakaoSignIn,
     this.onVerifyIdentity,
     this.isPartner = false,
+    this.onDevMapTrigger,
   });
 
   /// Callback when Google sign-in is pressed.
@@ -31,6 +32,9 @@ class MinglitLoginScreen extends ConsumerWidget {
 
   /// Whether this is for the Partner app (theme adjustment).
   final bool isPartner;
+
+  /// Callback to trigger DevMap (hidden gesture). Null in production.
+  final VoidCallback? onDevMapTrigger;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -57,11 +61,14 @@ class MinglitLoginScreen extends ConsumerWidget {
             children: [
               const Spacer(),
               // 1. Logo & Slogan
-              const MinglitImage(
-                path:
-                    'packages/minglit_kit/assets/images/minglit_app_bar_logo.png',
-                height: 64,
-              ),
+              if (onDevMapTrigger != null)
+                _DevTriggerLogo(onTrigger: onDevMapTrigger!)
+              else
+                const MinglitImage(
+                  path:
+                      'packages/minglit_kit/assets/images/minglit_app_bar_logo.png',
+                  height: 64,
+                ),
               if (isPartner)
                 const Text(
                   'PARTNER',
@@ -165,6 +172,59 @@ class MinglitLoginScreen extends ConsumerWidget {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
+  }
+}
+
+class _DevTriggerLogo extends StatefulWidget {
+  const _DevTriggerLogo({required this.onTrigger});
+
+  final VoidCallback onTrigger;
+
+  @override
+  State<_DevTriggerLogo> createState() => _DevTriggerLogoState();
+}
+
+class _DevTriggerLogoState extends State<_DevTriggerLogo> {
+  bool _isHolding = false;
+  int _tapCount = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final logo = GestureDetector(
+      onLongPressStart: (_) => setState(() => _isHolding = true),
+      onLongPressEnd: (_) => setState(() {
+        _isHolding = false;
+        _tapCount = 0;
+      }),
+      child: const MinglitImage(
+        path:
+            'packages/minglit_kit/assets/images/minglit_app_bar_logo.png',
+        height: 64,
+      ),
+    );
+
+    if (!_isHolding) return logo;
+
+    return Stack(
+      children: [
+        logo,
+        Positioned.fill(
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () {
+              setState(() => _tapCount++);
+              if (_tapCount >= 5) {
+                widget.onTrigger();
+                setState(() {
+                  _isHolding = false;
+                  _tapCount = 0;
+                });
+              }
+            },
+          ),
+        ),
+      ],
+    );
   }
 }
 
