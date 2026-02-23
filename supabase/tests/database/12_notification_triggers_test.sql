@@ -1,6 +1,6 @@
 -- Tests for notification triggers (T4-T7), CHECK constraint (T0), cron jobs (T3/T8), pgmq_send wrapper
 BEGIN;
-SELECT plan(18);
+SELECT plan(15);
 
 SELECT tests.authenticate_as_service_role();
 
@@ -12,18 +12,19 @@ SELECT tests.authenticate_as_service_role();
 SELECT has_function('pgmq_send');
 
 -- T3: process-notifications cron job registered
+SET ROLE postgres;
 SELECT is(
   (SELECT count(*)::int FROM cron.job WHERE jobname = 'process-notifications'),
   1,
   'process-notifications cron job is registered'
 );
-
 -- T8: send-event-reminders cron job registered
 SELECT is(
   (SELECT count(*)::int FROM cron.job WHERE jobname = 'send-event-reminders'),
   1,
   'send-event-reminders cron job is registered'
 );
+RESET ROLE;
 
 -- T8: reminder_sent_at column exists
 SELECT has_column('event_participants', 'reminder_sent_at');
