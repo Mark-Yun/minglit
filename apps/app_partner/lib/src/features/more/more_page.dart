@@ -8,8 +8,33 @@ class MorePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(title: '더보기'),
-      body: const Center(
-        child: Text('설정 및 프로필 관리 화면 (준비 중)'),
+      body: ListView(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.person_outline),
+            title: const Text('계정 관리'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {},
+          ),
+          ListTile(
+            leading: const Icon(Icons.store_outlined),
+            title: const Text('파트너 프로필'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {},
+          ),
+          ListTile(
+            leading: const Icon(Icons.notifications_outlined),
+            title: const Text('알림 설정'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {},
+          ),
+          ListTile(
+            leading: const Icon(Icons.people_outline),
+            title: const Text('멤버 관리'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {},
+          ),
+        ],
       ),
     );
   }

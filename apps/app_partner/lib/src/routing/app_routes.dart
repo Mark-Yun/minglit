@@ -2,6 +2,7 @@ import 'package:app_partner/src/features/admin/partner_application_detail_page.d
 import 'package:app_partner/src/features/admin/partner_application_list_page.dart';
 import 'package:app_partner/src/features/auth/partner_login_page.dart';
 import 'package:app_partner/src/features/dev/partner_dev_map.dart';
+import 'package:app_partner/src/features/home/guide/location_guide_page.dart';
 import 'package:app_partner/src/features/home/partner_home_page.dart';
 import 'package:app_partner/src/features/member/partner_member_list_page.dart';
 import 'package:app_partner/src/features/member/partner_member_permission_page.dart';
@@ -81,11 +82,12 @@ class NotificationCenterRoute extends GoRouteData
                 TypedGoRoute<ApplicationDetailRoute>(path: ':applicationId'),
               ],
             ),
+            TypedGoRoute<LocationGuideRoute>(path: 'guide/location'),
           ],
         ),
       ],
     ),
-    // 2. Party Branch
+    // 2. Party Management Branch
     TypedStatefulShellBranch<PartyBranch>(
       routes: [
         TypedGoRoute<PartyListRoute>(
@@ -115,13 +117,13 @@ class NotificationCenterRoute extends GoRouteData
         ),
       ],
     ),
-    // 3. Settlement Branch
+    // 3. Revenue Management Branch
     TypedStatefulShellBranch<SettlementBranch>(
       routes: [
         TypedGoRoute<SettlementRoute>(path: '/settlement'),
       ],
     ),
-    // 4. More Branch
+    // 4. Settings & Profile Branch
     TypedStatefulShellBranch<MoreBranch>(
       routes: [
         TypedGoRoute<MoreRoute>(
@@ -202,6 +204,13 @@ class ApplicationDetailRoute extends GoRouteData with $ApplicationDetailRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       PartnerApplicationDetailPage(applicationId: applicationId);
+}
+
+class LocationGuideRoute extends GoRouteData with $LocationGuideRoute {
+  const LocationGuideRoute();
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const LocationGuidePage();
 }
 
 // 2. Party
