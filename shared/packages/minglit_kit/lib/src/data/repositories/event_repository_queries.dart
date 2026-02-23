@@ -355,4 +355,53 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
       rethrow;
     }
   }
+
+  /// [Partner Dashboard]
+  /// Fetches events scheduled within the next 7 days for a specific partner.
+  Future<List<Event>> getUpcomingEvents(String partnerId) async {
+    try {
+      final now = DateTime.now();
+      final nowStr = now.toIso8601String();
+      final sevenDaysLater = now.add(const Duration(days: 7)).toIso8601String();
+
+      final data = await supabaseClient
+          .from('events')
+          .select('*, party:parties!inner(*)')
+          .eq('party.partner_id', partnerId)
+          .gte('start_time', nowStr)
+          .lte('start_time', sevenDaysLater)
+          .order('start_time');
+      return data.map((json) {
+        return Event.fromJson(json);
+      }).toList();
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] getUpcomingEvents Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// [Partner Dashboard]
+  /// Fetches events with start_time within the next 3 days for a specific
+  /// partner. Used for "마감임박" (closing soon) display on dashboard.
+  Future<List<Event>> getClosingSoonEvents(String partnerId) async {
+    try {
+      final now = DateTime.now();
+      final nowStr = now.toIso8601String();
+      final threeDaysLater = now.add(const Duration(days: 3)).toIso8601String();
+
+      final data = await supabaseClient
+          .from('events')
+          .select('*, party:parties!inner(*)')
+          .eq('party.partner_id', partnerId)
+          .gte('start_time', nowStr)
+          .lte('start_time', threeDaysLater)
+          .order('start_time');
+      return data.map((json) {
+        return Event.fromJson(json);
+      }).toList();
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] getClosingSoonEvents Error', e, st);
+      rethrow;
+    }
+  }
 }
