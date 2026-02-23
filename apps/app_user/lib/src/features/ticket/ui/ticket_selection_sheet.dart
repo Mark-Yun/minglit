@@ -138,9 +138,7 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
     final eligibleTickets = recommendation?.eligibleTickets ?? [];
     final ineligibleReasons = recommendation?.ineligibleReasons ?? {};
     final otherTickets = tickets
-        .where(
-          (ticket) => ticket.id != recommendedTicket?.id,
-        )
+        .where((ticket) => ticket.id != recommendedTicket?.id)
         .toList();
 
     return Container(
@@ -163,119 +161,21 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
           ),
           const SizedBox(height: MinglitSpacing.medium),
           if (_isBalanceStatusLoading || _isUserDataLoading)
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: MinglitSpacing.large,
-              ),
-              child: Text(
-                '추천 티켓을 확인 중입니다.',
-                style: theme.textTheme.bodyMedium,
-              ),
-            )
+            buildLoadingState(theme)
           else if (tickets.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: MinglitSpacing.large,
-              ),
-              child: Text(
-                '현재 구매 가능한 티켓이 없습니다.',
-                style: theme.textTheme.bodyMedium,
-              ),
-            )
-          else if (recommendedTicket == null) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: MinglitSpacing.medium,
-              ),
-              child: Text(
-                '현재 구매 가능한 티켓이 없습니다.',
-                style: theme.textTheme.bodyMedium,
-              ),
-            ),
-            ...tickets.map(
-              (ticket) => buildTicketOption(
-                ticket,
-                isLocked: true,
-                isRecommended: false,
-                ineligibleReason: ineligibleReasons[ticket.id],
-              ),
-            ),
-          ] else ...[
-            Text(
-              '추천 티켓',
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: MinglitSpacing.small),
-            buildTicketOption(
+            buildEmptyState(theme)
+          else if (recommendedTicket == null)
+            ...buildNoRecommendationState(theme, tickets, ineligibleReasons)
+          else
+            ...buildRecommendationState(
+              theme,
               recommendedTicket,
-              isLocked: false,
-              isRecommended: true,
-              ineligibleReason: null,
+              otherTickets,
+              eligibleTickets,
+              ineligibleReasons,
             ),
-            if (otherTickets.isNotEmpty) ...[
-              const SizedBox(height: MinglitSpacing.medium),
-              Text(
-                '다른 티켓',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: MinglitSpacing.small),
-              ...otherTickets.map((ticket) {
-                final isEligible = eligibleTickets.any(
-                  (eligible) => eligible.id == ticket.id,
-                );
-                return buildTicketOption(
-                  ticket,
-                  isLocked: !isEligible,
-                  isRecommended: false,
-                  ineligibleReason: ineligibleReasons[ticket.id],
-                );
-              }),
-            ],
-          ],
           const SizedBox(height: MinglitSpacing.large),
-
-          // Quantity (Only if ticket selected)
-          if (_selectedTicketId != null) ...[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '수량',
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                buildQuantityStepper(),
-              ],
-            ),
-            const SizedBox(height: MinglitSpacing.large),
-            const Divider(),
-            const SizedBox(height: MinglitSpacing.medium),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '총 결제 금액',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  calculateTotal(),
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: MinglitSpacing.large),
-          ],
-
+          if (_selectedTicketId != null) ...buildQuantitySection(theme),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(

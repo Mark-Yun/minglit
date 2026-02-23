@@ -185,4 +185,123 @@ extension _TicketSelectionWidgets on _TicketSelectionSheetState {
     );
     return '${NumberFormat('#,###').format(ticket.price * _quantity)}원';
   }
+
+  Widget buildLoadingState(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.large),
+      child: Text('추천 티켓을 확인 중입니다.', style: theme.textTheme.bodyMedium),
+    );
+  }
+
+  Widget buildEmptyState(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.large),
+      child: Text('현재 구매 가능한 티켓이 없습니다.', style: theme.textTheme.bodyMedium),
+    );
+  }
+
+  List<Widget> buildNoRecommendationState(
+    ThemeData theme,
+    List<Ticket> tickets,
+    Map<String, String> ineligibleReasons,
+  ) {
+    return [
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.medium),
+        child: Text('현재 구매 가능한 티켓이 없습니다.', style: theme.textTheme.bodyMedium),
+      ),
+      ...tickets.map(
+        (ticket) => buildTicketOption(
+          ticket,
+          isLocked: true,
+          isRecommended: false,
+          ineligibleReason: ineligibleReasons[ticket.id],
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> buildRecommendationState(
+    ThemeData theme,
+    Ticket recommendedTicket,
+    List<Ticket> otherTickets,
+    List<Ticket> eligibleTickets,
+    Map<String, String> ineligibleReasons,
+  ) {
+    return [
+      Text(
+        '추천 티켓',
+        style: theme.textTheme.titleSmall?.copyWith(
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      const SizedBox(height: MinglitSpacing.small),
+      buildTicketOption(
+        recommendedTicket,
+        isLocked: false,
+        isRecommended: true,
+        ineligibleReason: null,
+      ),
+      if (otherTickets.isNotEmpty) ...[
+        const SizedBox(height: MinglitSpacing.medium),
+        Text(
+          '다른 티켓',
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: MinglitSpacing.small),
+        ...otherTickets.map((ticket) {
+          final isEligible = eligibleTickets.any(
+            (eligible) => eligible.id == ticket.id,
+          );
+          return buildTicketOption(
+            ticket,
+            isLocked: !isEligible,
+            isRecommended: false,
+            ineligibleReason: ineligibleReasons[ticket.id],
+          );
+        }),
+      ],
+    ];
+  }
+
+  List<Widget> buildQuantitySection(ThemeData theme) {
+    return [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            '수량',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          buildQuantityStepper(),
+        ],
+      ),
+      const SizedBox(height: MinglitSpacing.large),
+      const Divider(),
+      const SizedBox(height: MinglitSpacing.medium),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            '총 결제 금액',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            calculateTotal(),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: MinglitSpacing.large),
+    ];
+  }
 }
