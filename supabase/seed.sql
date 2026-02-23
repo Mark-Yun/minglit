@@ -42,10 +42,3 @@ values
     '[{"key": "asset_type", "type": "text", "label": "자산 종류", "required": true}, {"key": "proof", "type": "file", "label": "증빙 서류", "required": true}]'::jsonb,
     null
   );
-
--- 2. Event Routes
-insert into public.event_routes (event_type, target_queue, is_active)
-values 
-  ('party_created', 'q_notifications', true),
-  ('party_created', 'q_vectors', false),
-  ('user_interaction', 'q_vectors', false);
