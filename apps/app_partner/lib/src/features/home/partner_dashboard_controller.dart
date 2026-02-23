@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:app_partner/src/features/party/party_providers.dart';
-import 'package:app_partner/src/features/settlement/settlement_models.dart';
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -13,11 +13,9 @@ part 'partner_dashboard_controller.g.dart';
 abstract class PartnerDashboardState with _$PartnerDashboardState {
   const factory PartnerDashboardState({
     @Default(0) int pendingReviewCount,
-    @Default([]) List<Event> todayEvents,
-    @Default(false) bool hasRevenuePermission,
-    @Default(PartnerRevenueSummary()) PartnerRevenueSummary revenueSummary,
-    @Default([]) List<PartnerMonthlyRevenue> monthlyRevenue,
-    @Default([]) List<PartnerSettlement> settlements,
+    @Default([]) List<Event> upcomingEvents,
+    @Default([]) List<Event> closingSoonEvents,
+    @Default([]) List<Party> activeParties,
     @Default(AsyncValue<void>.loading()) AsyncValue<void> status,
   }) = _PartnerDashboardState;
 }
@@ -36,72 +34,44 @@ class PartnerDashboardController extends _$PartnerDashboardController {
 
   Future<void> loadDashboardData() async {
     state = state.copyWith(status: const AsyncValue.loading());
-
     try {
       final partner = await ref.read(currentPartnerInfoProvider.future);
       if (partner == null) {
         state = state.copyWith(
           status: const AsyncValue.data(null),
           pendingReviewCount: 0,
-          todayEvents: [],
-          hasRevenuePermission: false,
+          upcomingEvents: [],
+          closingSoonEvents: [],
+          activeParties: [],
         );
         return;
       }
-
       final eventRepo = ref.read(eventRepositoryProvider);
-      final partnerRepo = ref.read(partnerRepositoryProvider);
-
+      final partyRepo = ref.read(partyRepositoryProvider);
       // 1. Pending Count
       final pendingCount = await eventRepo.getPendingApplicationCount(
         partner.id,
       );
 
-      // 2. Today's Events
-      final todayEvents = await eventRepo.getTodayEvents(partner.id);
+      // 2. Upcoming Events (next 7 days)
+      final upcomingEvents = await eventRepo.getUpcomingEvents(partner.id);
 
-      // 3. Permission Check
-      final memberInfo = await partnerRepo.getMyMemberRole(partner.id);
-      final role = memberInfo?['role'] as String?;
-      final permissions =
-          (memberInfo?['permissions'] as List?)?.cast<String>() ?? [];
+      // 3. Closing Soon Events (next 3 days)
+      final closingSoonEvents = await eventRepo.getClosingSoonEvents(
+        partner.id,
+      );
 
-      final hasPermission =
-          role == 'owner' || permissions.contains('SETTLEMENT_VIEW');
-
-      var revenueSummary = const PartnerRevenueSummary();
-      var monthlyRevenue = const <PartnerMonthlyRevenue>[];
-      var settlements = const <PartnerSettlement>[];
-
-      if (hasPermission) {
-        final revenueJson = await partnerRepo.getPartnerRevenueStats(
-          partner.id,
-        );
-        revenueSummary = PartnerRevenueSummary.fromJson(revenueJson);
-
-        final monthlyJson = await partnerRepo.getPartnerMonthlyRevenue(
-          partner.id,
-        );
-        monthlyRevenue = monthlyJson
-            .map(PartnerMonthlyRevenue.fromJson)
-            .toList(growable: false);
-
-        final settlementJson = await partnerRepo.getPartnerSettlements(
-          partner.id,
-        );
-        settlements = settlementJson
-            .map(PartnerSettlement.fromJson)
-            .toList(growable: false);
-      }
+      // 4. Active Parties
+      final activeParties = await partyRepo.getPartiesByPartnerId(
+        partner.id,
+      );
 
       state = state.copyWith(
         status: const AsyncValue.data(null),
         pendingReviewCount: pendingCount,
-        todayEvents: todayEvents,
-        hasRevenuePermission: hasPermission,
-        revenueSummary: revenueSummary,
-        monthlyRevenue: monthlyRevenue,
-        settlements: settlements,
+        upcomingEvents: upcomingEvents,
+        closingSoonEvents: closingSoonEvents,
+        activeParties: activeParties,
       );
     } on Exception catch (e, st) {
       state = state.copyWith(status: AsyncValue.error(e, st));

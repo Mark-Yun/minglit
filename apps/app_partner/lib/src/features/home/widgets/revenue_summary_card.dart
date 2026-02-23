@@ -1,27 +1,20 @@
-import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-class RevenueSummaryCard extends ConsumerWidget {
+/// Revenue summary card — retained for future use in revenue management tab.
+/// Currently not used in any page after dashboard redesign.
+class RevenueSummaryCard extends StatelessWidget {
   const RevenueSummaryCard({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final state = ref.watch(partnerDashboardControllerProvider);
     final formatter = NumberFormat.currency(locale: 'ko_KR', symbol: '₩');
-    final now = DateTime.now();
 
-    var currentMonthNet = 0;
-    for (final entry in state.monthlyRevenue) {
-      if (entry.month.year == now.year && entry.month.month == now.month) {
-        currentMonthNet = entry.netAmount;
-        break;
-      }
-    }
+    const currentMonthNet = 0;
 
     return Card(
       elevation: 0,
