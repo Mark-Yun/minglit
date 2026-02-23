@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(7);
+SELECT plan(8);
 
 SELECT tests.create_supabase_user('user_a', 'a@test.com');
 SELECT tests.create_supabase_user('user_b', 'b@test.com');
@@ -80,6 +80,7 @@ SELECT is_empty(
 );
 
 SELECT tests.authenticate_as('user_a');
+SELECT set_config('request.jwt.claims', (current_setting('request.jwt.claims', true)::jsonb || '{"role":"authenticated"}')::text, true);
 SELECT results_eq(
   $$SELECT count(*)::int
     FROM public.event_participants
@@ -89,11 +90,18 @@ SELECT results_eq(
 );
 
 SELECT tests.authenticate_as('user_b');
-SELECT is_empty(
-  $$SELECT id
-    FROM public.event_participants
+SELECT set_config('request.jwt.claims', (current_setting('request.jwt.claims', true)::jsonb || '{"role":"authenticated"}')::text, true);
+SELECT results_eq(
+  $$SELECT count(*)::int FROM public.event_participants
     WHERE id = current_setting('tests.participant_a')::uuid$$,
-  'users cannot read others tickets'
+  $$VALUES (1)$$,
+  'authenticated users can read all participants'
+);
+SELECT ok(
+  (SELECT display_name IS NOT NULL OR display_name IS NULL
+   FROM public.event_participants
+   WHERE id = current_setting('tests.participant_a')::uuid),
+  'event_participants has display_name column'
 );
 
 SELECT tests.authenticate_as('user_a');

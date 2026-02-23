@@ -29,12 +29,10 @@ SELECT results_eq(
   $$VALUES (1)$$,
   'users can read own profile'
 );
-SELECT results_eq(
-  $$SELECT count(*)::int
-    FROM public.user_profiles
+SELECT is_empty(
+  $$SELECT id FROM public.user_profiles
     WHERE id = tests.get_supabase_uid('user_b')$$,
-  $$VALUES (1)$$,
-  'profiles are publicly readable'
+  'users cannot read other profiles'
 );
 
 SELECT lives_ok(
@@ -59,12 +57,10 @@ SELECT is_empty(
       RETURNING id$$,
   'users cannot update other profiles'
 );
-SELECT results_eq(
-  $$SELECT name
-    FROM public.user_profiles
+SELECT is_empty(
+  $$SELECT id FROM public.user_profiles
     WHERE id = tests.get_supabase_uid('user_a')$$,
-  $$VALUES ('Updated User A')$$,
-  'other users cannot change profiles'
+  'user_b cannot read user_a profile (self-only RLS)'
 );
 
 SELECT * FROM finish();
