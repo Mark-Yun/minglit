@@ -189,9 +189,12 @@ mixin _VerificationQueryRepository on _SupabaseVerificationContext {
         'get_pending_verification_requests_with_user',
         params: {'p_partner_id': partnerId},
       );
-      // RPC returns flat columns: submission_id, partner_id, user_id, verification_id,
-      // application_id, status, snapshot_data, created_at, user_name
-      // Map submission_id -> id and build nested user object for UI compatibility
+      // RPC returns flat columns: submission_id, partner_id, user_id,
+      // verification_id, application_id, status, snapshot_data,
+      // created_at, user_name
+
+      // Map submission_id -> id and build nested user object
+      // for UI compatibility
       final result = (data as List<dynamic>).map((item) {
         final map = item as Map<String, dynamic>;
         return <String, dynamic>{

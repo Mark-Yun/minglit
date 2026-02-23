@@ -13,9 +13,12 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
       ) as List;
       final result = data.map((json) {
         final map = json as Map<String, dynamic>;
-        // RPC returns flat columns: application_id, event_id, ticket_id, user_id,
-        // payment_id, payment_amount, status, created_at, updated_at, user_name, user_phone
-        // Map to EventApplication model format (which expects 'id' not 'application_id')
+        // RPC returns flat columns: application_id, event_id, ticket_id,
+        // user_id, payment_id, payment_amount, status, created_at, updated_at,
+        // user_name, user_phone
+
+        // Map to EventApplication model format
+        // (which expects 'id' not 'application_id')
         final appMap = <String, dynamic>{
           'id': map['application_id'],
           'event_id': map['event_id'],

@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_dynamic_calls -- PGMQ and RPC return dynamic types
+
 
 import 'package:postgres/postgres.dart';
 import 'package:supabase/supabase.dart';
@@ -41,26 +41,26 @@ void main() {
       const testId = '00000000-0000-4000-8000-000000000001';
 
       // produce_event 호출 → q_global_events → fanout trigger → 두 큐로 분배
-      await adminClient.rpc('produce_event', params: {
+      await adminClient.rpc<dynamic>('produce_event', params: {
         'p_event_type': 'party_created',
         'p_source_table': 'parties',
         'p_source_id': testId,
         'p_row_data': {'id': testId, 'title': 'Test Party for Fan-out'},
-      });
+      },);
 
       // q_notifications 확인
-      final notifMsgs = await adminClient.rpc('pgmq_read', params: {
+      final notifMsgs = await adminClient.rpc<dynamic>('pgmq_read', params: {
         'queue_name': 'q_notifications',
         'vt': 30,
         'limit': 5,
-      });
+      },);
 
       // q_vectors 확인
-      final vectorMsgs = await adminClient.rpc('pgmq_read', params: {
+      final vectorMsgs = await adminClient.rpc<dynamic>('pgmq_read', params: {
         'queue_name': 'q_vectors',
         'vt': 30,
         'limit': 5,
-      });
+      },);
 
       expect(
         (notifMsgs as List).length,
@@ -80,24 +80,24 @@ void main() {
       const testId = '00000000-0000-4000-8000-000000000002';
 
       // produce_event 호출 → application_approved는 q_notifications만 라우팅
-      await adminClient.rpc('produce_event', params: {
+      await adminClient.rpc<dynamic>('produce_event', params: {
         'p_event_type': 'application_approved',
         'p_source_table': 'event_applications',
         'p_source_id': testId,
         'p_row_data': {'id': testId, 'user_id': testId},
-      });
+      },);
 
-      final notifMsgs = await adminClient.rpc('pgmq_read', params: {
+      final notifMsgs = await adminClient.rpc<dynamic>('pgmq_read', params: {
         'queue_name': 'q_notifications',
         'vt': 30,
         'limit': 5,
-      });
+      },);
 
-      final vectorMsgs = await adminClient.rpc('pgmq_read', params: {
+      final vectorMsgs = await adminClient.rpc<dynamic>('pgmq_read', params: {
         'queue_name': 'q_vectors',
         'vt': 30,
         'limit': 5,
-      });
+      },);
 
       expect(
         (notifMsgs as List).length,
@@ -116,8 +116,8 @@ void main() {
         "pgmq.send('q_notifications') 직접 호출 없음, produce_event 사용 확인", () async {
       // pg_get_functiondef로 함수 정의 검사
       final result = await connection.execute(
-        "SELECT pg_get_functiondef(oid) "
-        "FROM pg_proc "
+        'SELECT pg_get_functiondef(oid) '
+        'FROM pg_proc '
         "WHERE proname = 'send_event_reminders'",
       );
 

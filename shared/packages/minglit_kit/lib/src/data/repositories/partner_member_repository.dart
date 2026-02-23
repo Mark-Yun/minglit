@@ -13,8 +13,9 @@ mixin _PartnerMemberRepository on _SupabasePartnerContext {
       ) as List;
       final result = data.map((entry) {
         final map = entry as Map<String, dynamic>;
-        // RPC returns flat columns: user_id, partner_id, role, permissions, joined_at,
-        // user_name, user_profile_image
+        // RPC returns flat columns: user_id, partner_id, role,
+        // permissions, joined_at, user_name, user_profile_image
+
         // Build nested 'user' map to match caller expectations
         return <String, dynamic>{
           ...map,
