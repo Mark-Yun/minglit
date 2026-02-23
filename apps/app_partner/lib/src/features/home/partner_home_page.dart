@@ -1,9 +1,12 @@
 import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/features/home/partner_home_coordinator.dart';
-import 'package:app_partner/src/features/home/widgets/approval_waiting_card.dart';
-import 'package:app_partner/src/features/home/widgets/revenue_summary_card.dart';
-import 'package:app_partner/src/features/home/widgets/today_party_card.dart';
+import 'package:app_partner/src/features/home/widgets/active_party_summary_scroll.dart';
+import 'package:app_partner/src/features/home/widgets/closing_soon_events_card.dart';
+import 'package:app_partner/src/features/home/widgets/location_guide_banner.dart';
+import 'package:app_partner/src/features/home/widgets/pending_applicants_badge_card.dart';
+import 'package:app_partner/src/features/home/widgets/upcoming_events_card.dart';
 import 'package:app_partner/src/features/party/party_providers.dart';
+import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -67,6 +70,26 @@ class PartnerHomePage extends ConsumerWidget {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final parties = state.activeParties;
+          if (parties.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('먼저 파티를 생성해주세요')),
+            );
+            return;
+          }
+          final selected = await showModalBottomSheet<Party>(
+            context: context,
+            builder: (context) => _PartySelectionSheet(parties: parties),
+          );
+          if (selected != null && context.mounted) {
+            EventCreateRoute(partyId: selected.id).push<void>(context);
+          }
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('이벤트 생성'),
+      ),
       body: MinglitAsyncValueWidget(
         value: state.status,
         data: (_) => RefreshIndicator(
@@ -79,27 +102,87 @@ class PartnerHomePage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 1. Approval Waiting
-                ApprovalWaitingCard(
+                // 1. Pending Applicants
+                PendingApplicantsBadgeCard(
                   count: state.pendingReviewCount,
                   onTap: coordinator.pushApplicationList,
                 ),
                 const SizedBox(height: MinglitSpacing.large),
 
-                // 2. Revenue (If permitted)
-                if (state.hasRevenuePermission) ...[
-                  const RevenueSummaryCard(),
-                  const SizedBox(height: MinglitSpacing.large),
-                ],
+                // 2. Upcoming Events
+                UpcomingEventsCard(
+                  events: state.upcomingEvents,
+                  onEventTap: (event) {
+                    EventDetailRoute(
+                      partyId: event.partyId,
+                      eventId: event.id,
+                    ).push<void>(context);
+                  },
+                ),
+                const SizedBox(height: MinglitSpacing.large),
 
-                // 3. Today's Schedule
-                TodayPartyCard(events: state.todayEvents),
+                // 3. Active Party Summary
+                ActivePartySummaryScroll(
+                  parties: state.activeParties,
+                  onPartyTap: (party) {
+                    PartyDetailRoute(partyId: party.id).push<void>(context);
+                  },
+                ),
+                const SizedBox(height: MinglitSpacing.large),
+
+                // 4. Closing Soon Events
+                ClosingSoonEventsCard(
+                  events: state.closingSoonEvents,
+                  onEventTap: (event) {
+                    EventDetailRoute(
+                      partyId: event.partyId,
+                      eventId: event.id,
+                    ).push<void>(context);
+                  },
+                ),
+                const SizedBox(height: MinglitSpacing.large),
+
+                // 5. Location Guide Banner
+                LocationGuideBanner(
+                  onTap: () {
+                    const LocationGuideRoute().go(context);
+                  },
+                ),
 
                 const SizedBox(height: 100), // Bottom padding for FAB/Nav
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _PartySelectionSheet extends StatelessWidget {
+  const _PartySelectionSheet({required this.parties});
+  final List<Party> parties;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(MinglitSpacing.large),
+            child: Text(
+              '파티 선택',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          ...parties.map(
+            (party) => ListTile(
+              title: Text(party.title),
+              onTap: () => Navigator.of(context).pop(party),
+            ),
+          ),
+        ],
       ),
     );
   }
