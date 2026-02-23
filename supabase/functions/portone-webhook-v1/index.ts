@@ -91,6 +91,35 @@ serve(withSentry(async (req) => {
     }
 
     console.log(`Updated order ${merchant_uid} to status ${dbStatus}`);
+
+    // Send payment completion notification
+    if (payment.status === "paid") {
+      // Fetch user_id and event_id from the application
+      const { data: application } = await supabase
+        .from("event_applications")
+        .select("user_id, event_id")
+        .eq("id", merchant_uid)
+        .single();
+
+      if (application) {
+        await supabase.rpc("pgmq_send", {
+          queue_name: "q_notifications",
+          message: {
+            id: crypto.randomUUID(),
+            type: "payment_complete",
+            user_id: application.user_id,
+            title: "[결제 완료]",
+            body: "결제가 완료되었습니다.",
+            category: "service",
+            data: {
+              event_id: application.event_id,
+              deep_link: `/events/${application.event_id}`,
+            },
+            meta: { occurred_at: new Date().toISOString() },
+          },
+        });
+      }
+    }
     return new Response("OK", { status: 200 });
 
   } catch (e) {
