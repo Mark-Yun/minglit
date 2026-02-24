@@ -1,5 +1,6 @@
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:custom_lint_builder/custom_lint_builder.dart';
+import 'package:analyzer/error/listener.dart';
 
 class NoHardcodedTextStyleRule extends DartLintRule {
   const NoHardcodedTextStyleRule() : super(code: _code);
