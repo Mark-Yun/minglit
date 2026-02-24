@@ -31,6 +31,7 @@ Future<void> main() async {
             const AuthConfig(
               webClientId: googleWebClientId,
               defaultRedirectUrl: 'http://localhost:3000',
+              mobileRedirectScheme: 'com.minglit.app_user',
             ),
           ),
           notificationDeepLinkHandlerProvider.overrideWith((ref) {

@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:687100681844:android:c8dfa0ef0718ae8186fb21",
+        "android_client_info": {
+          "package_name": "com.minglit.app_partner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCRLBXsd3ksbPo2QpMaSRnJYbD1gZOovpk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:687100681844:android:b9b92b523955912486fb21",
         "android_client_info": {
           "package_name": "com.minglit.app_user"

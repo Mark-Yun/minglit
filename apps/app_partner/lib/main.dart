@@ -32,6 +32,7 @@ Future<void> main() async {
             const AuthConfig(
               webClientId: googleWebClientId,
               defaultRedirectUrl: 'http://localhost:3001',
+              mobileRedirectScheme: 'com.minglit.app_partner',
             ),
           ),
           notificationDeepLinkHandlerProvider.overrideWith((ref) {
@@ -86,15 +87,17 @@ Future<void> appStartup(Ref ref) async {
       initializeDateFormatting('ko_KR'),
       Supabase.initialize(url: supabaseUrl, anonKey: supabasePublishableKey),
       Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform),
-    ]);
 
-    // Initialize Kakao Map SDK
-    const kakaoMapKey = String.fromEnvironment('KAKAO_MAP_JAVASCRIPT_KEY');
-    if (kakaoMapKey.isNotEmpty) {
-      kakao.AuthRepository.initialize(appKey: kakaoMapKey);
-    } else {
-      Log.w('Kakao Map Key is missing in environment variables');
-    }
+      // Initialize Kakao Map SDK
+      () async {
+        const kakaoMapKey = String.fromEnvironment('KAKAO_MAP_JAVASCRIPT_KEY');
+        if (kakaoMapKey.isNotEmpty) {
+          kakao.AuthRepository.initialize(appKey: kakaoMapKey);
+        } else {
+          Log.w('Kakao Map Key is missing in environment variables');
+        }
+      }(),
+    ]);
   } on Exception catch (e) {
     Log.e('App startup warning', e);
   }

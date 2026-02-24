@@ -106,11 +106,8 @@ class AuthController extends _$AuthController {
           .signInWithKakao(
             redirectTo: redirectTo,
           );
-      // Kakao always uses web OAuth redirect — skip AsyncData on web
-      // to avoid triggering navigation before page unloads.
-      if (!kIsWeb) {
-        state = const AsyncData(null);
-      }
+      // Kakao uses web OAuth redirect on ALL platforms (mobile and web).
+      // Don't set AsyncData — onAuthStateChange triggers navigation after callback.
     } on Object catch (e, st) {
       Log.e('AuthController signInWithKakao failed', e, st);
       try {

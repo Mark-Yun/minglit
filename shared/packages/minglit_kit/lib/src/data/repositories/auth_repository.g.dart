@@ -98,7 +98,7 @@ final class AuthRepositoryProvider
   }
 }
 
-String _$authRepositoryHash() => r'47b91d6dad241ba42aefd4bb581bbed093f6dba7';
+String _$authRepositoryHash() => r'05583df814c0aa00c0adb5ae3b518847937fb75a';
 
 /// Provider for authentication state changes stream.
 

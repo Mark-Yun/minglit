@@ -8,19 +8,27 @@ import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart' show LaunchMode;
 
 part 'auth_repository.g.dart';
 
 /// Configuration for AuthRepository.
 class AuthConfig {
   /// Creates an [AuthConfig] with optional client settings.
-  const AuthConfig({this.webClientId, this.defaultRedirectUrl});
+  const AuthConfig({
+    this.webClientId,
+    this.defaultRedirectUrl,
+    this.mobileRedirectScheme,
+  });
 
   /// OAuth client ID used for web sign-in.
   final String? webClientId;
 
   /// Default redirect URL for OAuth flows.
   final String? defaultRedirectUrl;
+
+  /// Mobile deep link scheme for OAuth callbacks (e.g., 'com.minglit.app_user').
+  final String? mobileRedirectScheme;
 }
 
 /// Provider for AuthConfig. Must be overridden in main.dart.
@@ -36,6 +44,7 @@ AuthRepository authRepository(Ref ref) {
   return AuthRepository(
     webClientId: config.webClientId,
     defaultRedirectUrl: config.defaultRedirectUrl,
+    mobileRedirectScheme: config.mobileRedirectScheme,
   );
 }
 
@@ -61,15 +70,19 @@ class AuthRepository {
     SupabaseClient? supabase,
     String? webClientId,
     String? defaultRedirectUrl,
+    String? mobileRedirectScheme,
   }) : _supabase = supabase ?? Supabase.instance.client,
        _defaultRedirectUrl = defaultRedirectUrl,
+       _mobileRedirectScheme = mobileRedirectScheme,
        _googleSignIn = GoogleSignIn(
          clientId: kIsWeb ? webClientId : null,
+         serverClientId: kIsWeb ? null : webClientId,
        );
 
   final SupabaseClient _supabase;
   final GoogleSignIn _googleSignIn;
   final String? _defaultRedirectUrl;
+  final String? _mobileRedirectScheme;
 
   /// Returns the current logged-in user.
   User? get currentUser => _supabase.auth.currentUser;
@@ -201,12 +214,20 @@ class AuthRepository {
     Log.d('🟡 [AuthRepo] Kakao Sign-In started');
     try {
       final targetRedirect =
-          redirectTo ?? _defaultRedirectUrl ?? Uri.base.origin;
+          redirectTo ??
+          (kIsWeb
+              ? (_defaultRedirectUrl ?? Uri.base.origin)
+              : (_mobileRedirectScheme != null
+                    ? '$_mobileRedirectScheme://callback'
+                    : null));
       Log.d('🌐 [AuthRepo] Kakao OAuth redirect to: $targetRedirect');
 
       await _supabase.auth.signInWithOAuth(
         OAuthProvider.kakao,
         redirectTo: targetRedirect,
+        authScreenLaunchMode: kIsWeb
+            ? LaunchMode.platformDefault
+            : LaunchMode.externalApplication,
       );
     } on Exception catch (e, stackTrace) {
       Log.e('❌ [AuthRepo] Kakao Sign-In Error', e, stackTrace);
