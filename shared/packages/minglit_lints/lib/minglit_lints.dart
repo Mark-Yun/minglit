@@ -11,11 +11,11 @@ PluginBase createPlugin() => _MinglitLintsPlugin();
 class _MinglitLintsPlugin extends PluginBase {
   @override
   List<LintRule> getLintRules(CustomLintConfigs configs) => [
-        NoHardcodedColorsRule(),
-        NoHardcodedPaddingRule(),
-        NoHardcodedTextStyleRule(),
-        UseMinglitProgressIndicatorRule(),
-        UseMinglitAsyncValueWidgetRule(),
-        RequirePublicDocsRule(),
+        const NoHardcodedColorsRule(),
+        const NoHardcodedPaddingRule(),
+        const NoHardcodedTextStyleRule(),
+        const UseMinglitProgressIndicatorRule(),
+        const UseMinglitAsyncValueWidgetRule(),
+        const RequirePublicDocsRule(),
       ];
 }

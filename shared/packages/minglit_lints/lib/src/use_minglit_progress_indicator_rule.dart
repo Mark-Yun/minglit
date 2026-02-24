@@ -1,6 +1,5 @@
-import 'package:analyzer/dart/ast/ast.dart';
-import 'package:custom_lint_builder/custom_lint_builder.dart';
 import 'package:analyzer/error/listener.dart';
+import 'package:custom_lint_builder/custom_lint_builder.dart';
 
 class UseMinglitProgressIndicatorRule extends DartLintRule {
   const UseMinglitProgressIndicatorRule() : super(code: _code);

@@ -1,6 +1,6 @@
 import 'package:analyzer/dart/ast/ast.dart';
-import 'package:custom_lint_builder/custom_lint_builder.dart';
 import 'package:analyzer/error/listener.dart';
+import 'package:custom_lint_builder/custom_lint_builder.dart';
 
 class RequirePublicDocsRule extends DartLintRule {
   const RequirePublicDocsRule() : super(code: _code);
