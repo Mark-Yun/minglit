@@ -10,3 +10,7 @@ analyzer:
 linter:
   rules:
     public_member_api_docs: false
+
+custom_lint:
+  rules:
+    - minglit_require_public_docs: false
