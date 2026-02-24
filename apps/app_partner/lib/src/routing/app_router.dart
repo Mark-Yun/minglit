@@ -7,11 +7,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'app_router.g.dart';
 
+/// Root navigator key shared with [BugReporterWrapper] for dialog display.
+final rootNavigatorKey = GlobalKey<NavigatorState>();
+
 @riverpod
 GoRouter goRouter(Ref ref) {
-  // Global navigator key to allow context access.
-  final rootNavigatorKey = GlobalKey<NavigatorState>();
-
   // Listen to auth state changes to trigger router refresh.
   final authState = ValueNotifier<AuthState?>(null);
 
@@ -29,7 +29,6 @@ GoRouter goRouter(Ref ref) {
       // Access global auth state
       final isLoggedIn = ref.read(currentUserProvider) != null;
       final isLoggingIn = state.uri.path == '/login';
-
 
       // Allow dev pages without authentication
       if (state.uri.path.startsWith('/dev')) return null;

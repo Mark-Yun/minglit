@@ -12,12 +12,20 @@ class BugReporterWrapper extends StatefulWidget {
   /// Creates a bug reporter wrapper.
   const BugReporterWrapper({
     required this.child,
+    this.navigatorKey,
     this.enabled = !kReleaseMode,
     super.key,
   });
 
   /// The widget subtree to wrap.
   final Widget child;
+
+  /// Navigator key used to obtain a context below the [Navigator].
+  ///
+  /// Required on mobile because [BugReporterWrapper] sits above the
+  /// [Navigator] in the widget tree (inside [MaterialApp.builder]),
+  /// so its own [context] cannot reach a [Navigator] ancestor.
+  final GlobalKey<NavigatorState>? navigatorKey;
 
   /// Whether bug reporting is enabled.
   final bool enabled;
@@ -50,13 +58,25 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
     super.dispose();
   }
 
+  /// Returns a [BuildContext] that has a [Navigator] ancestor.
+  ///
+  /// Prefers the overlay context from [widget.navigatorKey] (which sits
+  /// below the [Navigator]), falling back to [context] for desktop/web
+  /// where the FAB already has a valid context.
+  BuildContext? get _dialogContext =>
+      widget.navigatorKey?.currentState?.overlay?.context ?? context;
+
   Future<void> _showReportDialog() async {
+    if (!mounted) return;
+    final ctx = _dialogContext;
+    if (ctx == null) return;
+
     final titleController = TextEditingController();
     final descController = TextEditingController();
     var isLoading = false;
 
     await showDialog<void>(
-      context: context,
+      context: ctx,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(

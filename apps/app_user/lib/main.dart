@@ -130,6 +130,7 @@ class _AppView extends ConsumerWidget {
           child: startupState.when(
             data: (_) => BugReporterWrapper(
               key: const ValueKey('app'),
+              navigatorKey: rootNavigatorKey,
               child: MinglitGlobalLoadingOverlay(child: child!),
             ),
             loading: () => const MinglitSplashScreen(

@@ -185,45 +185,31 @@ class _DevTriggerLogo extends StatefulWidget {
 }
 
 class _DevTriggerLogoState extends State<_DevTriggerLogo> {
-  bool _isHolding = false;
   int _tapCount = 0;
+  DateTime? _lastTap;
 
+  void _handleTap() {
+    final now = DateTime.now();
+    // Reset if more than 2 seconds since last tap.
+    if (_lastTap != null && now.difference(_lastTap!).inSeconds >= 2) {
+      _tapCount = 0;
+    }
+    _lastTap = now;
+    _tapCount++;
+    if (_tapCount >= 5) {
+      _tapCount = 0;
+      widget.onTrigger();
+    }
+  }
   @override
   Widget build(BuildContext context) {
-    final logo = GestureDetector(
-      onLongPressStart: (_) => setState(() => _isHolding = true),
-      onLongPressEnd: (_) => setState(() {
-        _isHolding = false;
-        _tapCount = 0;
-      }),
+    return GestureDetector(
+      onTap: _handleTap,
       child: const MinglitImage(
         path:
             'packages/minglit_kit/assets/images/minglit_app_bar_logo.png',
         height: 64,
       ),
-    );
-
-    if (!_isHolding) return logo;
-
-    return Stack(
-      children: [
-        logo,
-        Positioned.fill(
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onTap: () {
-              setState(() => _tapCount++);
-              if (_tapCount >= 5) {
-                widget.onTrigger();
-                setState(() {
-                  _isHolding = false;
-                  _tapCount = 0;
-                });
-              }
-            },
-          ),
-        ),
-      ],
     );
   }
 }

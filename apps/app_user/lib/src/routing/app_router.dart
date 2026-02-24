@@ -7,9 +7,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'app_router.g.dart';
 
+
+/// Root navigator key shared with [BugReporterWrapper] for dialog display.
+final rootNavigatorKey = GlobalKey<NavigatorState>();
 @riverpod
 GoRouter goRouter(Ref ref) {
-  final rootNavigatorKey = GlobalKey<NavigatorState>();
   final authState = ValueNotifier<AuthState?>(null);
 
   ref.listen(authStateChangesProvider, (_, next) {
