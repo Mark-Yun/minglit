@@ -1,75 +1,46 @@
-import 'package:analyzer/analysis_rule/analysis_rule.dart';
-import 'package:analyzer/analysis_rule/rule_context.dart';
-import 'package:analyzer/analysis_rule/rule_visitor_registry.dart';
 import 'package:analyzer/dart/ast/ast.dart';
-import 'package:analyzer/dart/ast/visitor.dart';
-import 'package:analyzer/error/error.dart';
+import 'package:custom_lint_builder/custom_lint_builder.dart';
 
-class NoHardcodedPaddingRule extends AnalysisRule {
-  NoHardcodedPaddingRule()
-    : super(
-        name: 'no_hardcoded_padding',
-        description:
-            'Avoid hardcoded padding values. Use design tokens instead.',
-      );
+class NoHardcodedPaddingRule extends DartLintRule {
+  const NoHardcodedPaddingRule() : super(code: _code);
 
-  static const LintCode code = LintCode(
-    'no_hardcoded_padding',
-    'Avoid hardcoded padding values. '
-        'Use design tokens (e.g., MinglitSpacing) instead.',
+  static const LintCode _code = LintCode(
+    name: 'no_hardcoded_padding',
+    problemMessage:
+        'Avoid hardcoded padding values. Use design tokens instead.',
     correctionMessage: 'Replace with a MinglitSpacing token.',
   );
 
   @override
-  DiagnosticCode get diagnosticCode => code;
-
-  @override
-  void registerNodeProcessors(
-    RuleVisitorRegistry registry,
-    RuleContext context,
+  void run(
+    CustomLintResolver resolver,
+    ErrorReporter reporter,
+    CustomLintContext context,
   ) {
-    final visitor = _Visitor(this);
-    registry.addInstanceCreationExpression(this, visitor);
-  }
-}
-
-class _Visitor extends SimpleAstVisitor<void> {
-  _Visitor(this.rule);
-
-  final NoHardcodedPaddingRule rule;
-
-  @override
-  void visitInstanceCreationExpression(InstanceCreationExpression node) {
-    final type = node.staticType;
-    if (type == null) return;
-
-    final typeName = type.getDisplayString();
-
-    // Check for Padding widget
-    if (typeName == 'Padding') {
-      final arguments = node.argumentList.arguments;
-      for (final arg in arguments) {
-        if (arg is NamedExpression && arg.name.label.name == 'padding') {
-          _checkExpression(arg.expression);
+    context.registry.addInstanceCreationExpression((node) {
+      final typeName = node.staticType?.getDisplayString();
+      if (typeName == 'Padding') {
+        for (final arg in node.argumentList.arguments) {
+          if (arg is NamedExpression && arg.name.label.name == 'padding') {
+            _checkExpression(arg.expression, reporter);
+          }
         }
       }
-    }
-
-    // Check for EdgeInsets constructors
-    if (typeName == 'EdgeInsets' || typeName == 'EdgeInsetsDirectional') {
-      for (final arg in node.argumentList.arguments) {
-        if (arg is NamedExpression) {
-          _checkExpression(arg.expression);
-        } else {
-          _checkExpression(arg);
+      if (typeName == 'EdgeInsets' || typeName == 'EdgeInsetsDirectional') {
+        for (final arg in node.argumentList.arguments) {
+          if (arg is NamedExpression) {
+            _checkExpression(arg.expression, reporter);
+          } else {
+            _checkExpression(arg, reporter);
+          }
         }
       }
-    }
+    });
   }
 
-  void _checkExpression(Expression expression) {
+  void _checkExpression(Expression expression, ErrorReporter reporter) {
     if (expression is DoubleLiteral || expression is IntegerLiteral) {
-      rule.reportAtNode(expression);
+      reporter.atNode(expression, _code);
     }
   }
 }
