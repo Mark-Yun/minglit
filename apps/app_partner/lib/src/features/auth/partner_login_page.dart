@@ -29,7 +29,7 @@ class PartnerLoginPage extends ConsumerWidget {
 
     return MinglitLoginScreen(
       isPartner: true,
-      onDevMapTrigger: isDevEnv ? () => const DevMapRoute().go(context) : null,
+      onDevMapTrigger: isDevEnv ? () => const DevMapRoute().push(context) : null,
       onGoogleSignIn: () {
         unawaited(ref.read(authControllerProvider.notifier).signInWithGoogle());
       },
