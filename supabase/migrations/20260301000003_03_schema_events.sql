@@ -177,8 +177,12 @@ for each row execute procedure public.sync_max_participants();
 -- 4. PGroonga Indexes
 -- ============================================================
 
-create index parties_title_pgroonga_idx on public.parties using pgroonga (title);
-create index events_title_pgroonga_idx on public.events using pgroonga (title);
+DO $$ BEGIN
+  CREATE INDEX parties_title_pgroonga_idx ON public.parties USING pgroonga (title);
+  CREATE INDEX events_title_pgroonga_idx ON public.events USING pgroonga (title);
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'pgroonga indexes not created (extension not available)';
+END $$;
 
 -- ============================================================
 -- 5. Enable RLS
