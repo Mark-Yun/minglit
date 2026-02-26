@@ -1,7 +1,11 @@
--- 04. EVENTS: Parties, Events, Tickets, Entry Groups
+-- 03. Events Schema: Parties, Events, Entry Groups, Tickets
+-- Squashed from: 04_events.sql, 14_party_balance.sql, 19_add_pgroonga_search.sql, 18_add_fk_indexes.sql
 set search_path to public, extensions;
 
+-- ============================================================
 -- 1. Tables
+-- ============================================================
+
 create table public.parties (
   id uuid not null default gen_random_uuid(),
   partner_id uuid not null references public.partners(id) on delete cascade,
@@ -13,11 +17,15 @@ create table public.parties (
   required_verification_ids uuid[] default '{}',
   min_confirmed_count integer not null default 0,
   max_participants integer not null default 20,
+  balance_config jsonb default null,
   status text not null default 'active' check (status in ('draft', 'active', 'closed')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   primary key (id)
 );
+
+comment on column public.parties.balance_config is 
+  'Balance configuration: {"enabled": true, "tolerance": 2, "target_groups": ["male", "female"]}';
 
 create table public.party_embeddings (
   party_id uuid not null references public.parties(id) on delete cascade primary key,
@@ -32,7 +40,7 @@ create table public.events (
   location_id uuid references public.locations(id) on delete set null,
   title text, 
   description jsonb,
-  image_urls text[] default null, -- Null means inherit from party
+  image_urls text[] default null,
   contact_options jsonb default '{}'::jsonb,
   start_time timestamptz not null,
   end_time timestamptz not null,
@@ -105,12 +113,20 @@ create table public.tickets (
   primary key (id)
 );
 
--- 2. Constraints (Refactored from 171000_add_constraints.sql)
+-- ============================================================
+-- 2. Constraints
+-- ============================================================
+
 alter table public.tickets add constraint tickets_price_check check (price >= 0);
 alter table public.tickets add constraint tickets_quantity_check check (quantity >= 0);
 alter table public.events add constraint events_max_participants_check check (max_participants > 0);
+alter table public.parties add constraint check_min_max_participants check (min_confirmed_count <= max_participants);
+alter table public.events add constraint check_min_max_participants check (min_confirmed_count <= max_participants);
 
+-- ============================================================
 -- 3. Triggers
+-- ============================================================
+
 create trigger handle_updated_at before update on public.parties for each row execute procedure moddatetime (updated_at);
 create trigger handle_updated_at before update on public.events for each row execute procedure moddatetime (updated_at);
 create trigger handle_updated_at before update on public.entry_group_templates for each row execute procedure moddatetime (updated_at);
@@ -119,12 +135,10 @@ create trigger handle_updated_at before update on public.ticket_templates for ea
 create trigger handle_updated_at before update on public.tickets for each row execute procedure moddatetime (updated_at);
 create trigger handle_updated_at before update on public.party_embeddings for each row execute procedure moddatetime (updated_at);
 
--- 3.1. Capacity Synchronization Logic
--- Function to sync max_participants from tickets to events/parties
+-- Capacity Synchronization
 create or replace function public.sync_max_participants()
 returns trigger as $$
 begin
-  -- Case 1: Change in 'tickets' table -> Update 'events'
   if (TG_TABLE_NAME = 'tickets') then
     update public.events
     set max_participants = (
@@ -136,7 +150,6 @@ begin
     return null;
   end if;
 
-  -- Case 2: Change in 'ticket_templates' table -> Update 'parties'
   if (TG_TABLE_NAME = 'ticket_templates') then
     update public.parties
     set max_participants = (
@@ -152,25 +165,25 @@ begin
 end;
 $$ language plpgsql security definer;
 
--- Trigger for tickets (Events)
 create trigger on_ticket_change
 after insert or update of quantity or delete on public.tickets
 for each row execute procedure public.sync_max_participants();
 
--- Trigger for ticket_templates (Parties)
 create trigger on_ticket_template_change
 after insert or update of quantity or delete on public.ticket_templates
 for each row execute procedure public.sync_max_participants();
 
--- 3.2. Constraints
--- Ensure min_confirmed_count <= max_participants in parties and events
-alter table public.parties add constraint check_min_max_participants 
-  check (min_confirmed_count <= max_participants);
+-- ============================================================
+-- 4. PGroonga Indexes
+-- ============================================================
 
-alter table public.events add constraint check_min_max_participants 
-  check (min_confirmed_count <= max_participants);
+create index parties_title_pgroonga_idx on public.parties using pgroonga (title);
+create index events_title_pgroonga_idx on public.events using pgroonga (title);
 
--- 4. RLS Policies
+-- ============================================================
+-- 5. Enable RLS
+-- ============================================================
+
 alter table public.parties enable row level security;
 alter table public.party_embeddings enable row level security;
 alter table public.events enable row level security;
@@ -179,66 +192,15 @@ alter table public.entry_groups enable row level security;
 alter table public.ticket_templates enable row level security;
 alter table public.tickets enable row level security;
 
--- Public Read
-create policy "Public read access" on public.parties for select using (true);
-create policy "Public read access" on public.events for select using (true);
-create policy "Public read access" on public.entry_group_templates for select using (true);
-create policy "Public read access" on public.entry_groups for select using (true);
-create policy "Public read access" on public.ticket_templates for select using (true);
-create policy "Public read access" on public.tickets for select using (true);
+-- ============================================================
+-- 6. FK Indexes
+-- ============================================================
 
--- Admin/Owner Write
-create policy "Admin/Owner parties all access" on public.parties for all 
-  using (public.is_super_admin() or public.has_partner_permission(partner_id, 'PARTY_MANAGE'));
-
-create policy "Admin/Owner events all access" on public.events for all 
-  using (
-    public.is_super_admin() or 
-    exists (
-      select 1 from public.parties p
-      where p.id = party_id
-      and public.has_partner_permission(p.partner_id, 'PARTY_MANAGE')
-    )
-  );
-
-create policy "Admin/Owner ticket_templates all access" on public.ticket_templates for all 
-  using (
-    public.is_super_admin() or 
-    exists (
-      select 1 from public.parties p
-      where p.id = party_id
-      and public.has_partner_permission(p.partner_id, 'PARTY_MANAGE')
-    )
-  );
-
-create policy "Admin/Owner entry_group_templates all access" on public.entry_group_templates for all 
-  using (
-    public.is_super_admin() or 
-    exists (
-      select 1 from public.parties p
-      where p.id = party_id
-      and public.has_partner_permission(p.partner_id, 'PARTY_MANAGE')
-    )
-  );
-
-create policy "Admin/Owner entry_groups all access" on public.entry_groups for all 
-  using (
-    public.is_super_admin() or 
-    exists (
-      select 1 from public.events e
-      join public.parties p on p.id = e.party_id
-      where e.id = event_id
-      and public.has_partner_permission(p.partner_id, 'PARTY_MANAGE')
-    )
-  );
-
-create policy "Admin/Owner tickets all access" on public.tickets for all 
-  using (
-    public.is_super_admin() or 
-    exists (
-      select 1 from public.events e
-      join public.parties p on p.id = e.party_id
-      where e.id = event_id
-      and public.has_partner_permission(p.partner_id, 'PARTY_MANAGE')
-    )
-  );
+CREATE INDEX IF NOT EXISTS idx_parties_partner_id ON public.parties(partner_id);
+CREATE INDEX IF NOT EXISTS idx_parties_location_id ON public.parties(location_id);
+CREATE INDEX IF NOT EXISTS idx_events_party_id ON public.events(party_id);
+CREATE INDEX IF NOT EXISTS idx_events_location_id ON public.events(location_id);
+CREATE INDEX IF NOT EXISTS idx_entry_group_templates_party_id ON public.entry_group_templates(party_id);
+CREATE INDEX IF NOT EXISTS idx_entry_groups_event_id ON public.entry_groups(event_id);
+CREATE INDEX IF NOT EXISTS idx_ticket_templates_party_id ON public.ticket_templates(party_id);
+CREATE INDEX IF NOT EXISTS idx_tickets_event_id ON public.tickets(event_id);
