@@ -81,27 +81,27 @@ class MinglitTheme {
       scaffoldBackgroundColor: MinglitColors.background,
       // Layer 1: 텍스트 통일성 (Using local fontFamily 'NotoSansKR')
       textTheme: const TextTheme(
-        displayLarge: TextStyle(
+        displayLarge: TextStyle( // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: MinglitColors.textPrimary,
         ),
-        titleLarge: TextStyle(
+        titleLarge: TextStyle( // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 20,
           fontWeight: FontWeight.bold,
           color: MinglitColors.textPrimary,
         ),
-        titleMedium: TextStyle(
+        titleMedium: TextStyle( // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 16,
           fontWeight: FontWeight.bold,
           color: MinglitColors.textPrimary,
         ),
-        titleSmall: TextStyle(
+        titleSmall: TextStyle( // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 14,
           fontWeight: FontWeight.bold,
           color: MinglitColors.textPrimary,
         ),
-        bodyMedium: TextStyle(
+        bodyMedium: TextStyle( // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 16,
           color: MinglitColors.textSecondary,
         ),

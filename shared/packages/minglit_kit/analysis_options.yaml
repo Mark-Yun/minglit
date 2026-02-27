@@ -6,7 +6,8 @@ analyzer:
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
-    - "lib/src/theme/minglit_theme.dart" # Exclude design tokens source
+    - "lib/src/theme/minglit_theme.dart"           # Theme definition - intentionally uses raw values
+    - "lib/src/theme/minglit_component_theme.dart" # Component theme - intentionally uses raw values
   errors:
     invalid_annotation_target: ignore
 

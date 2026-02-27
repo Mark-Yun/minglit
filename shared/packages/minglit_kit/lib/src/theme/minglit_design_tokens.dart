@@ -26,6 +26,12 @@ class MinglitColors {
 
   /// Secondary text color (dark gray).
   static const textSecondary = Color(0xFF4B5563);
+
+  /// Success green color.
+  static const success = Color(0xFF22C55E);
+
+  /// Warning amber color.
+  static const warning = Color(0xFFF59E0B);
 }
 
 /// Spacing scale constants for consistent layout.
@@ -36,8 +42,14 @@ class MinglitSpacing {
   /// 4px extra-small spacing.
   static const double xsmall = 4;
 
+  /// 6px extra-small-2 spacing.
+  static const double xsmall2 = 6;
+
   /// 8px small spacing.
   static const double small = 8;
+
+  /// 12px small-medium spacing.
+  static const double sm = 12;
 
   /// 16px medium spacing.
   static const double medium = 16;
