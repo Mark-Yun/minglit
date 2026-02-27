@@ -102,7 +102,7 @@ class _RemovableChip extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.small, vertical: MinglitSpacing.xsmall),
       decoration: BoxDecoration(
         color: MinglitColors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),

@@ -132,7 +132,7 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
             top: 50,
             left: 20,
             child: IconButton(
-              icon: Icon(Icons.close, color: MinglitColors.background, size: 30),
+              icon: const Icon(Icons.close, color: MinglitColors.background, size: 30),
               onPressed: () => context.pop(),
             ),
           ),

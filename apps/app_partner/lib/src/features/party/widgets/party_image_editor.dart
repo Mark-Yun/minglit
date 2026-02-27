@@ -238,7 +238,7 @@ class _PartyImageEditorState extends State<PartyImageEditor> {
                   color: MinglitColors.textPrimary.withValues(alpha: 0.54),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.close,
                   size: 16,
                   color: MinglitColors.background,

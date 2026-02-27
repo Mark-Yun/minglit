@@ -192,12 +192,12 @@ class MatchingVoteScreen extends ConsumerWidget {
             right: 0,
             child: Container(
               padding: const EdgeInsets.all(MinglitSpacing.small),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: [
-                    Colors.black87,
+                    MinglitColors.textPrimary.withValues(alpha: 0.87),
                     Colors.transparent,
                   ],
                 ),
@@ -208,7 +208,7 @@ class MatchingVoteScreen extends ConsumerWidget {
                   Text(
                     candidate.name,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.white,
+                      color: MinglitColors.background,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

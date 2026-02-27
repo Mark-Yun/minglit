@@ -103,7 +103,7 @@ class PartyDetailPage extends ConsumerWidget {
                     children: [
                       const TabBar(
                         indicatorWeight: 3,
-                        labelPadding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.sm),
+                        labelPadding: EdgeInsets.symmetric(horizontal: MinglitSpacing.sm),
                         tabs: [
                           Tab(text: '이벤트 관리'),
                           Tab(text: '파티 정보'),
