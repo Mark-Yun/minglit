@@ -3,11 +3,11 @@ import 'package:app_user/src/features/auth/ui/auth_callback_page.dart';
 import 'package:app_user/src/features/dev/user_dev_map.dart';
 import 'package:app_user/src/features/event/admission/event_application_wizard_page.dart';
 import 'package:app_user/src/features/event/detail/event_detail_page.dart';
-import 'package:app_user/src/features/explore/explore_page.dart';
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/features/home/my_page.dart';
 import 'package:app_user/src/features/party/party_curation_page.dart';
 import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
+import 'package:app_user/src/features/search/search_page.dart';
 import 'package:app_user/src/ui/shell/user_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -148,21 +148,15 @@ class NotificationSettingsRoute extends GoRouteData
     // 1. Home Branch
     TypedStatefulShellBranch<HomeBranch>(
       routes: [
-        TypedGoRoute<HomeRoute>(path: '/'),
-      ],
-    ),
-    // 2. Explore Branch
-    TypedStatefulShellBranch<ExploreBranch>(
-      routes: [
-        TypedGoRoute<ExploreRoute>(
-          path: '/explore',
+        TypedGoRoute<HomeRoute>(
+          path: '/',
           routes: [
             TypedGoRoute<EventCurationRoute>(path: 'curation'),
           ],
         ),
       ],
     ),
-    // 3. My Page Branch
+    // 2. My Page Branch
     TypedStatefulShellBranch<MyPageBranch>(
       routes: [
         TypedGoRoute<MyPageRoute>(path: '/my'),
@@ -189,10 +183,6 @@ class HomeBranch extends StatefulShellBranchData {
   const HomeBranch();
 }
 
-class ExploreBranch extends StatefulShellBranchData {
-  const ExploreBranch();
-}
-
 class MyPageBranch extends StatefulShellBranchData {
   const MyPageBranch();
 }
@@ -208,16 +198,6 @@ class HomeRoute extends GoRouteData with $HomeRoute {
   Widget build(BuildContext context, GoRouterState state) => const HomePage();
 }
 
-/// **Explore Route**: Explore tab landing page.
-/// Path: `/explore`
-class ExploreRoute extends GoRouteData with $ExploreRoute {
-  const ExploreRoute();
-
-  @override
-  Widget build(BuildContext context, GoRouterState state) =>
-      const ExplorePage();
-}
-
 /// **Event Curation Route**: Paginated curation list.
 /// Path: `/explore/curation`
 class EventCurationRoute extends GoRouteData with $EventCurationRoute {
@@ -228,6 +208,17 @@ class EventCurationRoute extends GoRouteData with $EventCurationRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       PartyCurationPage(type: type);
+}
+
+/// **Search Route**: Full-page search screen.
+/// Path: `/search`
+@TypedGoRoute<SearchRoute>(path: '/search')
+class SearchRoute extends GoRouteData with $SearchRoute {
+  const SearchRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const SearchPage();
 }
 
 /// **My Page Route**
