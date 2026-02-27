@@ -107,17 +107,15 @@ class MinglitAlert extends StatelessWidget {
         MinglitSpacing.large,
         MinglitSpacing.medium,
       ),
-      contentPadding: const EdgeInsets.fromLTRB(
-        MinglitSpacing.large,
-        0,
-        MinglitSpacing.large,
-        MinglitSpacing.large,
+      contentPadding: const EdgeInsets.only(
+        left: MinglitSpacing.large,
+        right: MinglitSpacing.large,
+        bottom: MinglitSpacing.large,
       ),
-      actionsPadding: const EdgeInsets.fromLTRB(
-        MinglitSpacing.medium,
-        0,
-        MinglitSpacing.medium,
-        MinglitSpacing.medium,
+      actionsPadding: const EdgeInsets.only(
+        left: MinglitSpacing.medium,
+        right: MinglitSpacing.medium,
+        bottom: MinglitSpacing.medium,
       ),
 
       title: Row(

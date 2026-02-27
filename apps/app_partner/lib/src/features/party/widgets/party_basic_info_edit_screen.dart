@@ -169,7 +169,7 @@ class _PartyBasicInfoEditScreenState
       case 'draft':
         label = '임시저장 (비공개)';
         icon = Icons.edit_document;
-        color = Colors.grey;
+        color = Theme.of(context).colorScheme.outline;
       case 'closed':
         label = '종료됨';
         icon = Icons.archive_outlined;
@@ -177,7 +177,7 @@ class _PartyBasicInfoEditScreenState
       default:
         label = _status;
         icon = Icons.help_outline;
-        color = Colors.grey;
+        color = Theme.of(context).colorScheme.outline;
     }
 
     return InkWell(
@@ -210,7 +210,7 @@ class _PartyBasicInfoEditScreenState
             const SizedBox(width: MinglitSpacing.medium),
             Text(
               label,
-              style: TextStyle(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontWeight: FontWeight.bold,
                 color: color,
               ),

@@ -216,13 +216,15 @@ class _PartyImageEditorState extends State<PartyImageEditor> {
               top: 0,
               left: 0,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: MinglitSpacing.xsmall2,
+                  vertical: MinglitSpacing.xxsmall,
+                ),
                 decoration: _getBadgeDecoration(theme),
-                child: const Text(
+                child: Text(
                   '대표',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
+                  style: theme.textTheme.bodySmall!.copyWith(
+                    color: MinglitColors.background,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -234,15 +236,15 @@ class _PartyImageEditorState extends State<PartyImageEditor> {
             child: InkWell(
               onTap: onDelete,
               child: Container(
-                padding: const EdgeInsets.all(2),
-                decoration: const BoxDecoration(
-                  color: Colors.black54,
+                padding: const EdgeInsets.all(MinglitSpacing.xxsmall),
+                decoration: BoxDecoration(
+                  color: MinglitColors.textPrimary.withValues(alpha: 0.54),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.close,
                   size: 16,
-                  color: Colors.white,
+                  color: MinglitColors.background,
                 ),
               ),
             ),

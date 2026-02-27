@@ -80,8 +80,13 @@ class MyPage extends ConsumerWidget {
           ),
           const Divider(),
           ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('로그아웃', style: TextStyle(color: Colors.red)),
+            leading: const Icon(Icons.logout, color: MinglitColors.error),
+            title: Text(
+              '로그아웃',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium!.copyWith(color: MinglitColors.error),
+            ),
             onTap: () async {
               await ref.read(authControllerProvider.notifier).signOut();
               if (context.mounted) {

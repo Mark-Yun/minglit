@@ -8,6 +8,7 @@ class _MinglitComponentThemes {
     centerTitle: true,
     iconTheme: IconThemeData(color: MinglitColors.textPrimary),
     titleTextStyle: TextStyle(
+      // ignore: minglit_no_hardcoded_text_style -- theme definition
       color: MinglitColors.textPrimary,
       fontSize: 18,
       fontWeight: FontWeight.w600,
@@ -18,13 +19,15 @@ class _MinglitComponentThemes {
   static ElevatedButtonThemeData get elevatedButton => ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
       backgroundColor: MinglitColors.primary,
-      foregroundColor: Colors.white,
+      foregroundColor: Colors
+          .white, // ignore: minglit_no_hardcoded_colors -- theme definition
       minimumSize: const Size(double.infinity, 56),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(MinglitRadius.button),
       ),
       elevation: 0,
       textStyle: const TextStyle(
+        // ignore: minglit_no_hardcoded_text_style -- theme definition
         fontSize: 16,
         fontWeight: FontWeight.bold,
       ),
@@ -40,6 +43,7 @@ class _MinglitComponentThemes {
       ),
       side: const BorderSide(color: MinglitColors.primary),
       textStyle: const TextStyle(
+        // ignore: minglit_no_hardcoded_text_style -- theme definition
         fontSize: 16,
         fontWeight: FontWeight.bold,
       ),
@@ -50,6 +54,7 @@ class _MinglitComponentThemes {
     style: TextButton.styleFrom(
       foregroundColor: MinglitColors.primary,
       textStyle: const TextStyle(
+        // ignore: minglit_no_hardcoded_text_style -- theme definition
         fontSize: 14,
         fontWeight: FontWeight.bold,
       ),
@@ -82,6 +87,7 @@ class _MinglitComponentThemes {
     ),
     contentPadding: const EdgeInsets.all(MinglitSpacing.medium),
     hintStyle: const TextStyle(
+      // ignore: minglit_no_hardcoded_text_style -- theme definition
       color: MinglitColors.textSecondary,
       fontSize: 14,
     ),
@@ -94,7 +100,9 @@ class _MinglitComponentThemes {
     side: BorderSide.none,
     backgroundColor: MinglitColors.surface,
     secondarySelectedColor: MinglitColors.primary,
-    labelStyle: const TextStyle(fontSize: 13),
+    labelStyle: const TextStyle(
+      fontSize: 13,
+    ), // ignore: minglit_no_hardcoded_text_style -- theme definition
   );
 
   static CheckboxThemeData get checkbox => CheckboxThemeData(
@@ -107,7 +115,10 @@ class _MinglitComponentThemes {
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(4),
     ),
-    side: const BorderSide(color: Colors.grey, width: 1.5),
+    side: const BorderSide(
+      color: Colors.grey,
+      width: 1.5,
+    ), // ignore: minglit_no_hardcoded_colors -- theme definition
   );
 
   static TabBarThemeData get tabBar => const TabBarThemeData(
@@ -117,11 +128,13 @@ class _MinglitComponentThemes {
     indicatorSize: TabBarIndicatorSize.tab,
     dividerColor: Colors.transparent,
     labelStyle: TextStyle(
+      // ignore: minglit_no_hardcoded_text_style -- theme definition
       fontSize: 14,
       fontWeight: FontWeight.bold,
       fontFamily: 'NotoSansKR',
     ),
     unselectedLabelStyle: TextStyle(
+      // ignore: minglit_no_hardcoded_text_style -- theme definition
       fontSize: 14,
       fontWeight: FontWeight.w500,
       fontFamily: 'NotoSansKR',
@@ -129,7 +142,9 @@ class _MinglitComponentThemes {
   );
 
   static DividerThemeData get divider => const DividerThemeData(
-    color: Color(0xFFE5E7EB),
+    color: Color(
+      0xFFE5E7EB,
+    ), // ignore: minglit_no_hardcoded_colors -- theme definition
     thickness: 1,
     space: MinglitSpacing.medium,
   );

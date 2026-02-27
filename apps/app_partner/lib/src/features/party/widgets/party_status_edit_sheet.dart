@@ -74,7 +74,7 @@ class PartyStatusEditSheet extends StatelessWidget {
       contentPadding: EdgeInsets.zero,
       title: Text(
         label,
-        style: TextStyle(
+        style: theme.textTheme.bodyMedium!.copyWith(
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           color: isSelected ? MinglitColors.primary : null,
         ),
@@ -86,7 +86,7 @@ class PartyStatusEditSheet extends StatelessWidget {
         ),
       ),
       leading: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(MinglitSpacing.small),
         decoration: BoxDecoration(
           color: isSelected
               ? MinglitColors.primary.withValues(alpha: 0.1)

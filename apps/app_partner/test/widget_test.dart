@@ -10,7 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 void main() {
-  testWidgets('Partner login screen renders', (WidgetTester tester) async {
+  testWidgets('Partner login screen renders', (tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: MaterialApp(

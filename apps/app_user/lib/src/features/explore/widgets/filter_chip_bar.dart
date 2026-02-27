@@ -43,7 +43,7 @@ class ExploreFilterChipBar extends ConsumerWidget {
           ),
           // Divider between sort and toggle chips
           const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8),
+            padding: EdgeInsets.symmetric(horizontal: MinglitSpacing.small),
             child: VerticalDivider(
               width: 1,
               thickness: 1,
@@ -107,7 +107,10 @@ class _SortChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.sm,
+          vertical: MinglitSpacing.xsmall2,
+        ),
         decoration: BoxDecoration(
           color: isSelected
               ? MinglitColors.primary.withValues(alpha: 0.1)
@@ -155,7 +158,10 @@ class _ToggleChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.sm,
+          vertical: MinglitSpacing.xsmall2,
+        ),
         decoration: BoxDecoration(
           color: isSelected
               ? MinglitColors.primary.withValues(alpha: 0.1)

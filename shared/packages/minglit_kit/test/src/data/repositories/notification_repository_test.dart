@@ -54,11 +54,13 @@ void main() {
           'created_at': now.toIso8601String(),
         };
 
-        unawaited(mockTable(
-          mockClient,
-          'user_notifications',
-          selectData: [notificationJson],
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'user_notifications',
+            selectData: [notificationJson],
+          ),
+        );
 
         final result = await repository.getNotifications();
 
@@ -118,11 +120,13 @@ void main() {
           'updated_at': now.toIso8601String(),
         };
 
-        unawaited(mockTable(
-          mockClient,
-          'user_settings',
-          maybeSingleData: settingsJson,
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'user_settings',
+            maybeSingleData: settingsJson,
+          ),
+        );
 
         final result = await repository.getSettings('user_1');
 
@@ -130,10 +134,12 @@ void main() {
       });
 
       test('returns null when not found', () async {
-        unawaited(mockTable(
-          mockClient,
-          'user_settings',
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'user_settings',
+          ),
+        );
 
         final result = await repository.getSettings('user_unknown');
         expect(result, isNull);

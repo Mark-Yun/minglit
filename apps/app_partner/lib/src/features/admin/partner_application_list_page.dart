@@ -46,7 +46,7 @@ class _PartnerApplicationListPageState
           Expanded(
             child: MinglitAsyncValueWidget(
               value: appsAsync,
-              data: (List<PartnerApplication> apps) {
+              data: (apps) {
                 if (apps.isEmpty) {
                   return const Center(child: Text('신청 내역이 없습니다.'));
                 }

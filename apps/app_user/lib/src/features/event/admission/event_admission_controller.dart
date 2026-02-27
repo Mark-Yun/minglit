@@ -158,8 +158,8 @@ class EventAdmissionController extends _$EventAdmissionController {
         if (confirmed && context.mounted) {
           final user = state.user;
           if (user == null) return;
-          final loading =
-              ref.read(globalLoadingControllerProvider.notifier)..show();
+          final loading = ref.read(globalLoadingControllerProvider.notifier)
+            ..show();
           try {
             await ref
                 .read(eventRepositoryProvider)

@@ -78,7 +78,7 @@ class _TicketQRViewerState extends State<TicketQRViewer>
             Container(
               padding: const EdgeInsets.all(MinglitSpacing.medium),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: MinglitColors.background,
                 borderRadius: BorderRadius.circular(MinglitRadius.card),
                 boxShadow: [
                   BoxShadow(

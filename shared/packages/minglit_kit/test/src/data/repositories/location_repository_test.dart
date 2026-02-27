@@ -35,11 +35,13 @@ void main() {
   group('LocationRepository', () {
     group('getLocationById', () {
       test('returns location when found', () async {
-        unawaited(mockTable(
-          mockClient,
-          'locations_view',
-          maybeSingleData: locationJson,
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'locations_view',
+            maybeSingleData: locationJson,
+          ),
+        );
 
         final result = await repository.getLocationById('loc_1');
 
@@ -51,10 +53,12 @@ void main() {
       });
 
       test('returns null when not found', () async {
-        unawaited(mockTable(
-          mockClient,
-          'locations_view',
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'locations_view',
+          ),
+        );
 
         final result = await repository.getLocationById('loc_unknown');
         expect(result, isNull);
@@ -63,11 +67,13 @@ void main() {
 
     group('getLocations', () {
       test('returns locations for partner', () async {
-        unawaited(mockTable(
-          mockClient,
-          'locations_view',
-          selectData: [locationJson],
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'locations_view',
+            selectData: [locationJson],
+          ),
+        );
 
         final result = await repository.getLocations('partner_1');
 
@@ -101,32 +107,38 @@ void main() {
           'updated_at': now.toIso8601String(),
         };
 
-        unawaited(mockTable(
-          mockClient,
-          'locations',
-          insertReturnData: createdJson,
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'locations',
+            insertReturnData: createdJson,
+          ),
+        );
 
         // Parse it manually since Location.fromJson
         // expects locations_view format
-        unawaited(mockTable(
-          mockClient,
-          'locations',
-          insertReturnData: {
-            ...createdJson,
-            'lat': 37.5555,
-            'lng': 126.9220,
-          },
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'locations',
+            insertReturnData: {
+              ...createdJson,
+              'lat': 37.5555,
+              'lng': 126.9220,
+            },
+          ),
+        );
 
         // We test that createLocation does not throw
         final newLoc = await repository.createLocation(
           await (() async {
-            unawaited(mockTable(
-              mockClient,
-              'locations_view',
-              maybeSingleData: locationJson,
-            ));
+            unawaited(
+              mockTable(
+                mockClient,
+                'locations_view',
+                maybeSingleData: locationJson,
+              ),
+            );
             return (await repository.getLocationById('loc_1'))!;
           })(),
         );

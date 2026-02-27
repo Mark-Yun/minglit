@@ -1,4 +1,5 @@
 part of 'event_admission_controller.dart';
+
 /// Extension methods for EventAdmissionController button configuration.
 ///
 /// Extracted from the controller to keep file sizes manageable.

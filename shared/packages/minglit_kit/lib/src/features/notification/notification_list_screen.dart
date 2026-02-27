@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/src/features/notification/notification_list_controller.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
 /// Displays the list of user notifications.
 class NotificationListScreen extends ConsumerWidget {
@@ -57,10 +58,13 @@ class NotificationListScreen extends ConsumerWidget {
                   key: Key(id),
                   direction: DismissDirection.endToStart,
                   background: Container(
-                    color: Colors.red,
+                    color: MinglitColors.error,
                     alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 20),
-                    child: const Icon(Icons.delete, color: Colors.white),
+                    padding: const EdgeInsets.only(right: MinglitSpacing.large),
+                    child: const Icon(
+                      Icons.delete,
+                      color: MinglitColors.background,
+                    ),
                   ),
                   onDismissed: (_) {
                     unawaited(
@@ -75,7 +79,7 @@ class NotificationListScreen extends ConsumerWidget {
                         : theme.colorScheme.primary.withValues(alpha: 0.05),
                     title: Text(
                       title,
-                      style: TextStyle(
+                      style: theme.textTheme.bodyMedium!.copyWith(
                         fontWeight: isRead
                             ? FontWeight.normal
                             : FontWeight.bold,
@@ -90,7 +94,7 @@ class NotificationListScreen extends ConsumerWidget {
                         Text(
                           DateFormat('MM/dd HH:mm').format(createdAt),
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: Colors.grey,
+                            color: theme.colorScheme.outline,
                           ),
                         ),
                       ],

@@ -85,7 +85,9 @@ class PartyDetailPage extends ConsumerWidget {
                               const SizedBox(width: MinglitSpacing.small),
                               Text(
                                 context.l10n.partyDetail_menu_deactivate,
-                                style: TextStyle(color: colorScheme.error),
+                                style: theme.textTheme.bodyMedium!.copyWith(
+                                  color: colorScheme.error,
+                                ),
                               ),
                             ],
                           ),
@@ -103,7 +105,9 @@ class PartyDetailPage extends ConsumerWidget {
                     children: [
                       const TabBar(
                         indicatorWeight: 3,
-                        labelPadding: EdgeInsets.symmetric(horizontal: 12),
+                        labelPadding: EdgeInsets.symmetric(
+                          horizontal: MinglitSpacing.sm,
+                        ),
                         tabs: [
                           Tab(text: '이벤트 관리'),
                           Tab(text: '파티 정보'),

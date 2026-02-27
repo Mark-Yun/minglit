@@ -48,11 +48,11 @@ class PartnerHomePage extends ConsumerWidget {
                   top: 6,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
+                      horizontal: MinglitSpacing.xsmall2,
+                      vertical: MinglitSpacing.xxsmall,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.red,
+                      color: MinglitColors.error,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
                         color: Theme.of(context).colorScheme.surface,
@@ -60,9 +60,8 @@ class PartnerHomePage extends ConsumerWidget {
                     ),
                     child: Text(
                       unreadCount > 99 ? '99+' : unreadCount.toString(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
+                      style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                        color: MinglitColors.background,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -117,10 +116,12 @@ class PartnerHomePage extends ConsumerWidget {
                 UpcomingEventsCard(
                   events: state.upcomingEvents,
                   onEventTap: (event) {
-                    unawaited(EventDetailRoute(
-                      partyId: event.partyId,
-                      eventId: event.id,
-                    ).push<void>(context));
+                    unawaited(
+                      EventDetailRoute(
+                        partyId: event.partyId,
+                        eventId: event.id,
+                      ).push<void>(context),
+                    );
                   },
                 ),
                 const SizedBox(height: MinglitSpacing.large),
@@ -140,10 +141,12 @@ class PartnerHomePage extends ConsumerWidget {
                 ClosingSoonEventsCard(
                   events: state.closingSoonEvents,
                   onEventTap: (event) {
-                    unawaited(EventDetailRoute(
-                      partyId: event.partyId,
-                      eventId: event.id,
-                    ).push<void>(context));
+                    unawaited(
+                      EventDetailRoute(
+                        partyId: event.partyId,
+                        eventId: event.id,
+                      ).push<void>(context),
+                    );
                   },
                 ),
                 const SizedBox(height: MinglitSpacing.large),

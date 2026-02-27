@@ -116,7 +116,9 @@ class _TicketManageCard extends ConsumerWidget {
                 onPressed: () => _showEditSheet(context, ref),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(80, 36),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: MinglitSpacing.sm,
+                  ),
                 ),
                 child: const Text('수정'),
               ),
@@ -139,15 +141,18 @@ class _TicketManageCard extends ConsumerWidget {
         color = MinglitColors.error;
         label = '매진';
       case 'hidden':
-        color = Colors.grey;
+        color = Theme.of(context).colorScheme.outline;
         label = '숨김';
       default:
-        color = Colors.grey;
+        color = Theme.of(context).colorScheme.outline;
         label = status;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: MinglitSpacing.small,
+        vertical: MinglitSpacing.xsmall,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(MinglitRadius.small),
@@ -155,9 +160,8 @@ class _TicketManageCard extends ConsumerWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: Theme.of(context).textTheme.bodySmall!.copyWith(
           color: color,
-          fontSize: 11,
           fontWeight: FontWeight.bold,
         ),
       ),

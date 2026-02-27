@@ -34,7 +34,7 @@ class PartyListPage extends ConsumerWidget {
       ),
       body: MinglitAsyncValueWidget(
         value: partiesAsync,
-        data: (List<Party> parties) {
+        data: (parties) {
           if (parties.isEmpty) {
             return Center(
               child: Column(
@@ -49,7 +49,7 @@ class PartyListPage extends ConsumerWidget {
                   Text(
                     '등록된 파티가 없습니다.\n새로운 파티를 기획해보세요!',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),

@@ -90,7 +90,9 @@ class _ApplicationCard extends ConsumerWidget {
           backgroundColor: theme.colorScheme.primaryContainer,
           child: Text(
             user?.name.characters.first ?? '?',
-            style: TextStyle(color: theme.colorScheme.onPrimaryContainer),
+            style: theme.textTheme.bodyMedium!.copyWith(
+              color: theme.colorScheme.onPrimaryContainer,
+            ),
           ),
         ),
         title: Text(user?.name ?? '익명 유저'),
@@ -135,10 +137,10 @@ class _StatusBadge extends StatelessWidget {
 
     switch (status) {
       case 'pending_review':
-        color = Colors.orange;
+        color = MinglitColors.warning;
         label = '심사 중';
       case 'approved':
-        color = Colors.green;
+        color = MinglitColors.success;
         label = '승인됨';
       case 'rejected':
         color = theme.colorScheme.error;

@@ -21,19 +21,21 @@ void main() {
   group('MatchingRepository', () {
     group('getMatchRules', () {
       test('returns match rules for event', () async {
-        unawaited(mockTable(
-          mockClient,
-          'match_rules',
-          selectData: [
-            {
-              'id': 'rule_1',
-              'event_id': 'event_1',
-              'source_group_id': 'group_m',
-              'target_group_id': 'group_f',
-              'created_at': DateTime.now().toIso8601String(),
-            },
-          ],
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'match_rules',
+            selectData: [
+              {
+                'id': 'rule_1',
+                'event_id': 'event_1',
+                'source_group_id': 'group_m',
+                'target_group_id': 'group_f',
+                'created_at': DateTime.now().toIso8601String(),
+              },
+            ],
+          ),
+        );
 
         final result = await repository.getMatchRules('event_1');
 
@@ -135,10 +137,12 @@ void main() {
       });
 
       test('returns empty when no participant record', () async {
-        unawaited(mockTable(
-          mockClient,
-          'event_participants',
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_participants',
+          ),
+        );
 
         final result = await repository.getMatchingCandidates('event_1');
         expect(result, isEmpty);

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/src/data/repositories/bug_report_repository.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:shake/shake.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -138,7 +139,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Bug reported successfully! 🚀'),
-                              backgroundColor: Colors.green,
+                              backgroundColor: MinglitColors.success,
                             ),
                           );
                         } on Exception catch (e) {
@@ -149,7 +150,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text('Failed to report: $e'),
-                              backgroundColor: Colors.red,
+                              backgroundColor: MinglitColors.error,
                             ),
                           );
                         }
@@ -180,7 +181,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
               child: FloatingActionButton(
                 mini: true,
                 onPressed: _showReportDialog,
-                backgroundColor: Colors.redAccent,
+                backgroundColor: MinglitColors.error,
                 child: const Icon(Icons.bug_report),
               ),
             ),

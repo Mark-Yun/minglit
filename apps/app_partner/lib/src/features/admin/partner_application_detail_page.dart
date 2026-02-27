@@ -98,7 +98,7 @@ class _PartnerApplicationDetailPageState
         await showDialog<void>(
           context: context,
           builder: (context) => Dialog(
-            backgroundColor: Colors.black,
+            backgroundColor: MinglitColors.textPrimary,
             insetPadding: EdgeInsets.zero,
             child: Stack(
               children: [
@@ -113,7 +113,7 @@ class _PartnerApplicationDetailPageState
                   child: IconButton(
                     icon: const Icon(
                       Icons.close,
-                      color: Colors.white,
+                      color: MinglitColors.background,
                       size: 32,
                     ),
                     onPressed: () => Navigator.pop(context),
@@ -150,7 +150,7 @@ class _PartnerApplicationDetailPageState
       appBar: MinglitTheme.simpleAppBar(title: context.l10n.appDetail_title),
       body: MinglitAsyncValueWidget(
         value: appAsync,
-        data: (PartnerApplication? app) {
+        data: (app) {
           if (app == null) {
             return Center(child: Text(context.l10n.appDetail_message_notFound));
           }

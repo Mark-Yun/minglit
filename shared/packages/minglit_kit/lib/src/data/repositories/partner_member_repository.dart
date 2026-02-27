@@ -7,10 +7,12 @@ mixin _PartnerMemberRepository on _SupabasePartnerContext {
   ) async {
     Log.d('getPartnerMembers called | partnerId: $partnerId');
     try {
-      final data = await supabaseClient.rpc<dynamic>(
-        'get_partner_members_with_user',
-        params: {'p_partner_id': partnerId},
-      ) as List;
+      final data =
+          await supabaseClient.rpc<dynamic>(
+                'get_partner_members_with_user',
+                params: {'p_partner_id': partnerId},
+              )
+              as List;
       final result = data.map((entry) {
         final map = entry as Map<String, dynamic>;
         // RPC returns flat columns: user_id, partner_id, role,

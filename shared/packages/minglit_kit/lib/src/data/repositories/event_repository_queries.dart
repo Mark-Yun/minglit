@@ -7,10 +7,12 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
   ) async {
     Log.d('getApplicationsByEventId called | id: $eventId');
     try {
-      final data = await supabaseClient.rpc<dynamic>(
-        'get_event_applications_with_user',
-        params: {'p_event_id': eventId},
-      ) as List;
+      final data =
+          await supabaseClient.rpc<dynamic>(
+                'get_event_applications_with_user',
+                params: {'p_event_id': eventId},
+              )
+              as List;
       final result = data.map((json) {
         final map = json as Map<String, dynamic>;
         // RPC returns flat columns: application_id, event_id, ticket_id,

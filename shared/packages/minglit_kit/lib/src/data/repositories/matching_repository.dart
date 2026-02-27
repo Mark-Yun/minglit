@@ -108,13 +108,15 @@ class MatchingRepository {
       // 2. Enrich with Partner Profile & Contact via get_matched_user_info RPC
       final enrichedMatches = await Future.wait(
         matches.map((m) async {
-          final info = await _supabase.rpc<List<dynamic>>(
-            'get_matched_user_info',
-            params: {
-              'p_target_user_id': m.partnerId,
-              'p_target_event_id': eventId,
-            },
-          ) as List?;
+          final info =
+              await _supabase.rpc<List<dynamic>>(
+                    'get_matched_user_info',
+                    params: {
+                      'p_target_user_id': m.partnerId,
+                      'p_target_event_id': eventId,
+                    },
+                  )
+                  as List?;
           final userData = (info?.isNotEmpty ?? false)
               ? info!.first as Map<String, dynamic>
               : null;

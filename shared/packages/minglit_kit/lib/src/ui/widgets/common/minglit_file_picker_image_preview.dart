@@ -42,15 +42,15 @@ class MinglitFilePickerPreviewList extends StatelessWidget {
                   bottom: 4,
                   right: 4,
                   child: Container(
-                    padding: const EdgeInsets.all(2),
+                    padding: const EdgeInsets.all(MinglitSpacing.xxsmall),
                     decoration: const BoxDecoration(
-                      color: Colors.green,
+                      color: MinglitColors.success,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       Icons.check,
                       size: 16,
-                      color: Colors.white,
+                      color: MinglitColors.background,
                     ),
                   ),
                 ),
@@ -60,15 +60,15 @@ class MinglitFilePickerPreviewList extends StatelessWidget {
                 child: InkWell(
                   onTap: () => onRemove(index),
                   child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      color: Colors.black54,
+                    padding: const EdgeInsets.all(MinglitSpacing.xxsmall),
+                    decoration: BoxDecoration(
+                      color: MinglitColors.textPrimary.withValues(alpha: 0.54),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       Icons.close,
                       size: 16,
-                      color: Colors.white,
+                      color: MinglitColors.background,
                     ),
                   ),
                 ),
@@ -115,22 +115,27 @@ class MinglitFilePickerImagePreview extends StatelessWidget {
         width: 100,
         height: 100,
         decoration: BoxDecoration(
-          color: Colors.grey[200],
+          color: Theme.of(context).colorScheme.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(MinglitRadius.small),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.insert_drive_file, color: Colors.grey),
+            Icon(
+              Icons.insert_drive_file,
+              color: Theme.of(context).colorScheme.outline,
+            ),
             const SizedBox(height: 4),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
+              padding: const EdgeInsets.symmetric(
+                horizontal: MinglitSpacing.xsmall,
+              ),
               child: Text(
                 file.name,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 10),
+                style: Theme.of(context).textTheme.bodySmall!,
               ),
             ),
           ],

@@ -102,7 +102,9 @@ class _NumberStepperInputState extends State<NumberStepperInput> {
           const SizedBox(height: MinglitSpacing.small),
         ],
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(
+            horizontal: MinglitSpacing.xsmall,
+          ),
           decoration: BoxDecoration(
             color: colorScheme.surface,
             borderRadius: BorderRadius.circular(MinglitRadius.input),
@@ -129,12 +131,13 @@ class _NumberStepperInputState extends State<NumberStepperInput> {
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: MinglitSpacing.sm,
+                    ),
                     isDense: true,
                     suffixText: widget.suffixText,
-                    suffixStyle: TextStyle(
+                    suffixStyle: theme.textTheme.titleSmall!.copyWith(
                       color: colorScheme.onSurfaceVariant,
-                      fontSize: 14,
                       fontWeight: FontWeight.normal,
                     ),
                   ),

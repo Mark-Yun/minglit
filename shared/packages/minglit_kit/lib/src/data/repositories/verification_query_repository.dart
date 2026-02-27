@@ -195,18 +195,21 @@ mixin _VerificationQueryRepository on _SupabaseVerificationContext {
 
       // Map submission_id -> id and build nested user object
       // for UI compatibility
-      final result = (data as List<dynamic>).map((item) {
-        final map = item as Map<String, dynamic>;
-        return <String, dynamic>{
-          ...map,
-          'id': map['submission_id'],
-          'user': {
-            'id': map['user_id'],
-            'name': map['user_name'],
-            'email': '',
-          },
-        };
-      }).toList().cast<Map<String, dynamic>>();
+      final result = (data as List<dynamic>)
+          .map((item) {
+            final map = item as Map<String, dynamic>;
+            return <String, dynamic>{
+              ...map,
+              'id': map['submission_id'],
+              'user': {
+                'id': map['user_id'],
+                'name': map['user_name'],
+                'email': '',
+              },
+            };
+          })
+          .toList()
+          .cast<Map<String, dynamic>>();
       Log.d('getPendingRequests success | count: ${result.length}');
       return result;
     } catch (e, st) {

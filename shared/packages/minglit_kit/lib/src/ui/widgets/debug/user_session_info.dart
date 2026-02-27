@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/data/repositories/auth_repository.dart';
 import 'package:minglit_kit/src/features/auth/logic/auth_controller.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
 /// A widget that displays the current user's session information.
 /// Useful for debugging and development screens.
@@ -14,19 +15,19 @@ class UserSessionInfo extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final user = ref.watch(currentUserProvider);
 
     if (user == null) {
       return Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(12),
-        color: Colors.red[50],
-        child: const Text(
+        padding: const EdgeInsets.all(MinglitSpacing.sm),
+        color: MinglitColors.error.withValues(alpha: 0.1),
+        child: Text(
           'No Active Session',
-          style: TextStyle(
-            color: Colors.red,
+          style: theme.textTheme.bodySmall!.copyWith(
+            color: MinglitColors.error,
             fontWeight: FontWeight.bold,
-            fontSize: 12,
           ),
           textAlign: TextAlign.center,
         ),
@@ -40,48 +41,57 @@ class UserSessionInfo extends ConsumerWidget {
 
     return Container(
       width: double.infinity,
-      color: Colors.blueGrey[50],
+      color: MinglitColors.surface,
       child: ExpansionTile(
         dense: true,
         title: Text(
           'Session: ${user.email ?? user.id}',
-          style: const TextStyle(
+          style: theme.textTheme.bodySmall!.copyWith(
             fontWeight: FontWeight.bold,
             fontSize: 13,
-            color: Colors.blueGrey,
+            color: MinglitColors.textSecondary,
           ),
         ),
-        subtitle: const Text(
+        subtitle: Text(
           'Tap to view full session JSON',
-          style: TextStyle(fontSize: 11),
+          style: theme.textTheme.bodySmall!.copyWith(fontSize: 11),
         ),
-        leading: const Icon(Icons.account_circle, color: Colors.blueGrey),
-        childrenPadding: const EdgeInsets.all(16),
+        leading: const Icon(
+          Icons.account_circle,
+          color: MinglitColors.textSecondary,
+        ),
+        childrenPadding: const EdgeInsets.all(MinglitSpacing.medium),
         expandedCrossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'User ID',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+            style: theme.textTheme.bodySmall!.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: 11,
+            ),
           ),
-          SelectableText(user.id, style: const TextStyle(fontSize: 12)),
+          SelectableText(user.id, style: theme.textTheme.bodySmall),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'Full Metadata (JSON)',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+            style: theme.textTheme.bodySmall!.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: 11,
+            ),
           ),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(MinglitSpacing.small),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: MinglitColors.textPrimary.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(4),
             ),
             child: SelectableText(
               prettyMetadata,
-              style: const TextStyle(
+              style: theme.textTheme.bodySmall!.copyWith(
                 fontFamily: 'monospace',
                 fontSize: 11,
-                color: Colors.blueGrey,
+                color: MinglitColors.textSecondary,
               ),
             ),
           ),

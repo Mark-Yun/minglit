@@ -30,7 +30,7 @@ class ApprovalWaitingCard extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(MinglitSpacing.sm),
                 decoration: BoxDecoration(
                   color: colorScheme.surface,
                   shape: BoxShape.circle,

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/config/iamport_config.dart';
 import 'package:minglit_kit/src/features/iamport/logic/iamport_controller.dart';
 import 'package:minglit_kit/src/features/iamport/logic/iamport_helper_web.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 
 /// Web implementation of Iamport certification.
@@ -107,7 +108,7 @@ class _MinglitIamportCertificationState
   Widget build(BuildContext context) {
     // Web: Render loading or empty (JS popup handles UI)
     return const Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: MinglitColors.background,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

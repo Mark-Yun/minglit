@@ -117,9 +117,8 @@ class PartyContactInput extends StatelessWidget {
                       ),
                       child: Text(
                         '최소 한 개의 연락처를 선택해야 합니다.',
-                        style: TextStyle(
+                        style: theme.textTheme.bodySmall!.copyWith(
                           color: theme.colorScheme.error,
-                          fontSize: 12,
                         ),
                       ),
                     ),

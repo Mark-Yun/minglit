@@ -23,16 +23,18 @@ void main() {
     group('toggleInteraction', () {
       test('removes existing interaction and returns false', () async {
         // existing record found
-        unawaited(mockTable(
-          mockClient,
-          'social_interactions',
-          maybeSingleData: {
-            'id': 'interaction_1',
-            'user_id': 'user_1',
-            'target_id': 'party_1',
-            'interaction_type': 'like',
-          },
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'social_interactions',
+            maybeSingleData: {
+              'id': 'interaction_1',
+              'user_id': 'user_1',
+              'target_id': 'party_1',
+              'interaction_type': 'like',
+            },
+          ),
+        );
 
         final result = await repository.toggleInteraction(
           targetId: 'party_1',
@@ -45,10 +47,12 @@ void main() {
 
       test('creates new interaction and returns true', () async {
         // no existing record
-        unawaited(mockTable(
-          mockClient,
-          'social_interactions',
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'social_interactions',
+          ),
+        );
 
         final result = await repository.toggleInteraction(
           targetId: 'party_1',
@@ -77,16 +81,18 @@ void main() {
 
     group('getInteractionState', () {
       test('returns true when interaction exists', () async {
-        unawaited(mockTable(
-          mockClient,
-          'social_interactions',
-          maybeSingleData: {
-            'id': 'interaction_1',
-            'user_id': 'user_1',
-            'target_id': 'party_1',
-            'interaction_type': 'like',
-          },
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'social_interactions',
+            maybeSingleData: {
+              'id': 'interaction_1',
+              'user_id': 'user_1',
+              'target_id': 'party_1',
+              'interaction_type': 'like',
+            },
+          ),
+        );
 
         final result = await repository.getInteractionState(
           targetId: 'party_1',
@@ -97,10 +103,12 @@ void main() {
       });
 
       test('returns false when interaction does not exist', () async {
-        unawaited(mockTable(
-          mockClient,
-          'social_interactions',
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'social_interactions',
+          ),
+        );
 
         final result = await repository.getInteractionState(
           targetId: 'party_1',
@@ -125,16 +133,18 @@ void main() {
 
     group('getInteractionCount', () {
       test('returns count of interactions', () async {
-        unawaited(mockTable(
-          mockClient,
-          'social_interactions',
-          selectData: [
-            {'user_id': 'user_1'},
-            {'user_id': 'user_2'},
-            {'user_id': 'user_3'},
-          ],
-          countValue: 3,
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'social_interactions',
+            selectData: [
+              {'user_id': 'user_1'},
+              {'user_id': 'user_2'},
+              {'user_id': 'user_3'},
+            ],
+            countValue: 3,
+          ),
+        );
 
         final result = await repository.getInteractionCount(
           targetId: 'party_1',

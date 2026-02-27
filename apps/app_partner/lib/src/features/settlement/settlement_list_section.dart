@@ -72,7 +72,7 @@ class _SettlementCard extends StatelessWidget {
           ],
         ),
         subtitle: Padding(
-          padding: const EdgeInsets.only(top: 6),
+          padding: const EdgeInsets.only(top: MinglitSpacing.xsmall2),
           child: Text(
             '${dateFormatter.format(settlement.eventDate)} '
             '· 정산 예정액 ${formatter.format(settlement.netAmount)}',
@@ -128,7 +128,7 @@ class _FeeRow extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.xsmall),
       child: Row(
         children: [
           Expanded(
@@ -165,7 +165,10 @@ class _StatusBadge extends StatelessWidget {
     final color = _statusColor(status, colorScheme);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: MinglitSpacing.small,
+        vertical: MinglitSpacing.xsmall,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(999),

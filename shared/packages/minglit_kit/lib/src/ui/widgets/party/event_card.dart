@@ -67,7 +67,7 @@ class MinglitEventCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(MinglitRadius.card),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: MinglitColors.textPrimary.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
