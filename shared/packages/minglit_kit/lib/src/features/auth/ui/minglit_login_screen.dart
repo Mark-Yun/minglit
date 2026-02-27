@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/config/url_config.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -39,11 +40,12 @@ class MinglitLoginScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Theme colors (User: Navy / Partner: Orange)
+    final theme = Theme.of(context);
     final slogan = isPartner
         ? 'Verified Vibe, Spark Your Business'
         : 'Verified Vibe, Spark Your Moment';
 
-    final textStyle = TextStyle(color: Colors.grey[500], fontSize: 12);
+    final textStyle = theme.textTheme.bodySmall!.copyWith(color: theme.colorScheme.outline);
     final linkStyle = textStyle.copyWith(
       decoration: TextDecoration.underline,
       fontWeight: FontWeight.bold,
@@ -52,10 +54,10 @@ class MinglitLoginScreen extends ConsumerWidget {
     final urlConfig = ref.watch(minglitUrlConfigProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: MinglitColors.background,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.large),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -70,12 +72,11 @@ class MinglitLoginScreen extends ConsumerWidget {
                   height: 64,
                 ),
               if (isPartner)
-                const Text(
+                Text(
                   'PARTNER',
-                  style: TextStyle(
-                    fontSize: 20,
+                  style: theme.textTheme.titleLarge!.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey,
+                    color: theme.colorScheme.outline,
                     letterSpacing: 2,
                   ),
                 ),
@@ -83,9 +84,8 @@ class MinglitLoginScreen extends ConsumerWidget {
               Text(
                 slogan,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
+                style: theme.textTheme.bodyMedium!.copyWith(
+                  color: theme.colorScheme.outline,
                 ),
               ),
               const Spacer(),
@@ -95,9 +95,9 @@ class MinglitLoginScreen extends ConsumerWidget {
                 onPressed: onGoogleSignIn,
                 icon: Icons.g_mobiledata,
                 label: 'Google로 시작하기',
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black87,
-                borderColor: Colors.grey[300],
+                backgroundColor: MinglitColors.background,
+                foregroundColor: MinglitColors.textPrimary.withValues(alpha: 0.87),
+                borderColor: theme.colorScheme.outlineVariant,
               ),
               if (onAppleSignIn != null) ...[
                 const SizedBox(height: 12),
@@ -105,8 +105,8 @@ class MinglitLoginScreen extends ConsumerWidget {
                   onPressed: onAppleSignIn,
                   icon: Icons.apple,
                   label: 'Apple로 시작하기',
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
+                  backgroundColor: MinglitColors.textPrimary,
+                  foregroundColor: MinglitColors.background,
                 ),
               ],
               const SizedBox(height: 12),
@@ -114,8 +114,8 @@ class MinglitLoginScreen extends ConsumerWidget {
                 onPressed: onKakaoSignIn,
                 icon: Icons.chat_bubble,
                 label: 'Kakao로 시작하기',
-                backgroundColor: const Color(0xFFFEE500),
-                foregroundColor: Colors.black87,
+                backgroundColor: MinglitColors.warning,
+                foregroundColor: MinglitColors.textPrimary.withValues(alpha: 0.87),
               ),
               if (!isPartner && onVerifyIdentity != null) ...[
                 const SizedBox(height: 12),
@@ -133,7 +133,9 @@ class MinglitLoginScreen extends ConsumerWidget {
                 ),
               ] else ...[
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: MinglitSpacing.sm,
+                  ),
                   child: Text.rich(
                     TextSpan(
                       text: '로그인 시 ',
@@ -257,7 +259,7 @@ class _LoginButton extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Text(label, style: const TextStyle(fontSize: 14)),
+            Text(label, style: Theme.of(context).textTheme.titleSmall),
           ],
         ),
       ),

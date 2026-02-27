@@ -105,7 +105,7 @@ class _IdentityVerificationScreenState
                 const Icon(
                   Icons.error_outline,
                   size: 64,
-                  color: Colors.orange,
+                  color: MinglitColors.warning,
                 ),
                 const SizedBox(height: MinglitSpacing.large),
                 Text(

@@ -41,8 +41,8 @@ class _MinglitSkeletonState extends State<MinglitSkeleton>
     unawaited(_controller.repeat(reverse: true));
 
     _colorAnimation = ColorTween(
-      begin: const Color(0xFFF3F4F6), // Gray-100
-      end: const Color(0xFFE5E7EB), // Gray-200
+      begin: MinglitColors.surface,
+      end: MinglitColors.textPrimary.withValues(alpha: 0.1),
     ).animate(_controller);
   }
 

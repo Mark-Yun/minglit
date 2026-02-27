@@ -145,7 +145,7 @@ class _StaffGateScreenState extends ConsumerState<StaffGateScreen> {
                     const SizedBox(width: 4),
                     Text(
                       'Internal Preview Environment',
-                      style: TextStyle(
+                      style: theme.textTheme.bodySmall!.copyWith(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                         color: colorScheme.onSurfaceVariant.withValues(

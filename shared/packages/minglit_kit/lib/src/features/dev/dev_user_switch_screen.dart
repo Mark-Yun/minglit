@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/features/auth/logic/auth_controller.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
 import 'package:minglit_kit/src/utils/log.dart';
@@ -96,22 +97,23 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
   }
 
   Widget _buildEmptyState() {
-    return const Center(
+    final theme = Theme.of(context);
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.storage_outlined, size: 64, color: Colors.grey),
-          SizedBox(height: 16),
+          Icon(Icons.storage_outlined, size: 64, color: theme.colorScheme.outline),
+          const SizedBox(height: 16),
           Text(
             'No Users Found',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleLarge!.copyWith(fontSize: 18),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'The database seems empty.\nPlease run the seeder from CLI:\n'
             'flutter test apps/app_user/test/setup_test_data.dart',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey),
+            style: theme.textTheme.bodyMedium!.copyWith(color: theme.colorScheme.outline),
           ),
         ],
       ),
@@ -122,6 +124,7 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
     return ListView.builder(
       itemCount: users.length,
       itemBuilder: (context, index) {
+        final theme = Theme.of(context);
         final user = users[index];
         final name = user['name'] as String? ?? 'No Name';
         final username = user['username'] as String? ?? '';
@@ -130,15 +133,18 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
 
         final (Color? roleColor, String roleLabel) = switch (username) {
           String u when u.startsWith('partner_owner') => (
-            Colors.orange[100],
+            MinglitColors.warning.withValues(alpha: 0.3),
             'Owner',
           ),
           String u when u.startsWith('partner_') => (
-            Colors.purple[100],
+            MinglitColors.primary.withValues(alpha: 0.2),
             'Partner',
           ),
-          String u when u.startsWith('staff_') => (Colors.blue[100], 'Staff'),
-          _ => (Colors.grey[100], 'User'),
+          String u when u.startsWith('staff_') => (
+            MinglitColors.tertiary.withValues(alpha: 0.5),
+            'Staff',
+          ),
+          _ => (theme.colorScheme.surfaceContainerLowest, 'User'),
         };
 
         return ListTile(

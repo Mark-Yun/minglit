@@ -34,7 +34,7 @@ class MinglitFeedbackUI {
       MinglitFeedbackType.success => (
         theme.colorScheme.primary,
         Icons.check_circle_outline,
-        Colors.white,
+        MinglitColors.background,
       ),
       MinglitFeedbackType.info => (
         theme.colorScheme.onSurface,
@@ -44,7 +44,7 @@ class MinglitFeedbackUI {
       MinglitFeedbackType.warning => (
         theme.colorScheme.secondary,
         Icons.warning_amber_rounded,
-        Colors.white,
+        MinglitColors.background,
       ),
       MinglitFeedbackType.error => (
         theme.colorScheme.error,
@@ -101,14 +101,14 @@ class MinglitFeedbackUI {
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(
               cancelLabel ?? '취소',
-              style: TextStyle(color: colorScheme.outline),
+              style: theme.textTheme.bodyMedium!.copyWith(color: colorScheme.outline),
             ),
           ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(true),
           child: Text(
             confirmLabel ?? '확인',
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: theme.textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.bold),
           ),
         ),
       ],

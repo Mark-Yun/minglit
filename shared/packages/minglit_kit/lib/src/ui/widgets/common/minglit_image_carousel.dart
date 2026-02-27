@@ -50,6 +50,7 @@ class _MinglitImageCarouselState extends State<MinglitImageCarousel> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     if (widget.imageUrls.isEmpty) {
       return Container(
         height: widget.height,
@@ -90,17 +91,16 @@ class _MinglitImageCarouselState extends State<MinglitImageCarousel> {
             child: Container(
               padding: const EdgeInsets.symmetric(
                 horizontal: MinglitSpacing.small,
-                vertical: 4,
+                vertical: MinglitSpacing.xsmall,
               ),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.5),
+                color: MinglitColors.textPrimary.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(MinglitRadius.card),
               ),
               child: Text(
                 '${_currentIndex + 1} / ${widget.imageUrls.length}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
+                style: theme.textTheme.bodySmall!.copyWith(
+                  color: MinglitColors.background,
                   fontWeight: FontWeight.bold,
                 ),
               ),

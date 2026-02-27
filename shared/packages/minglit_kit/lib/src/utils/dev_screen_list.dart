@@ -54,6 +54,7 @@ class DevScreenList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     // Group items by category
     final groupedItems = <String, List<DevScreenItem>>{};
     for (final item in items) {
@@ -82,16 +83,15 @@ class DevScreenList extends ConsumerWidget {
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
+                        horizontal: MinglitSpacing.medium,
+                        vertical: MinglitSpacing.sm,
                       ),
-                      color: Colors.grey[100],
+                      color: theme.colorScheme.surfaceContainerLowest,
                       child: Text(
                         category.toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 12,
+                        style: theme.textTheme.bodySmall!.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: Colors.grey[600],
+                          color: MinglitColors.textSecondary,
                           letterSpacing: 1.2,
                         ),
                       ),
@@ -102,20 +102,19 @@ class DevScreenList extends ConsumerWidget {
                         children: [
                           ListTile(
                             contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 4,
+                              horizontal: MinglitSpacing.large,
+                              vertical: MinglitSpacing.xsmall,
                             ),
                             title: Text(
                               item.title,
-                              style: const TextStyle(
+                              style: theme.textTheme.bodyMedium!.copyWith(
                                 fontWeight: FontWeight.w600,
-                                fontSize: 16,
                               ),
                             ),
                             subtitle: item.description != null
                                 ? Text(
                                     item.description!,
-                                    style: TextStyle(color: Colors.grey[600]),
+                                    style: theme.textTheme.bodyMedium!.copyWith(color: MinglitColors.textSecondary),
                                   )
                                 : null,
                             trailing: Icon(

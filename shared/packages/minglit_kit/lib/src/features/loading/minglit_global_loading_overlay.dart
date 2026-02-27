@@ -52,8 +52,6 @@ class MinglitGlobalLoadingOverlay extends ConsumerWidget {
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.54),
                 child: const ModalBarrier(
                   dismissible: false,
-                  // ignore: no_hardcoded_colors -- Transparent barrier needed
-                  color: Colors.transparent,
                 ),
               ),
             ),

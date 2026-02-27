@@ -8,6 +8,8 @@ analyzer:
     - "**/*.freezed.dart"
     - "lib/src/theme/minglit_theme.dart"           # Theme definition - intentionally uses raw values
     - "lib/src/theme/minglit_component_theme.dart" # Component theme - intentionally uses raw values
+    - "lib/src/theme/minglit_design_tokens.dart"   # Token definitions - intentionally uses raw Color values
+    - "lib/src/utils/splash_screen.dart"           # Animation brand colors - not tokenizable
   errors:
     invalid_annotation_target: ignore
 
