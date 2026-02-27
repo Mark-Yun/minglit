@@ -31,7 +31,7 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
 
     Color? overlayColor;
     if (state.result == CheckinResult.success) {
-      overlayColor = Colors.green.withValues(alpha: 0.8);
+      overlayColor = MinglitColors.success.withValues(alpha: 0.8);
     } else if (state.result != CheckinResult.idle) {
       overlayColor = theme.colorScheme.error.withValues(alpha: 0.8);
     }
@@ -41,8 +41,8 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: const CloseButton(color: Colors.white),
-        title: const Text('티켓 스캔', style: TextStyle(color: Colors.white)),
+        leading: const CloseButton(color: MinglitColors.background),
+        title: Text('티켓 스캔', style: theme.textTheme.bodyMedium!.copyWith(color: MinglitColors.background)),
       ),
       body: Stack(
         children: [
@@ -111,22 +111,20 @@ class _ResultFeedbackOverlay extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 100, color: Colors.white),
+          Icon(icon, size: 100, color: MinglitColors.background),
           const SizedBox(height: 24),
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+          style: Theme.of(context).textTheme.displayLarge!.copyWith(
+            color: MinglitColors.background,
+          ),
           ),
           if (subTitle.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(top: 16),
+            padding: const EdgeInsets.only(top: MinglitSpacing.medium),
               child: Text(
                 subTitle,
-                style: const TextStyle(fontSize: 20, color: Colors.white),
+                style: Theme.of(context).textTheme.titleLarge!.copyWith(color: MinglitColors.background),
               ),
             ),
         ],
@@ -138,7 +136,7 @@ class _ResultFeedbackOverlay extends StatelessWidget {
 // Helper class for QR Overlay shape
 class QrScannerOverlayShape extends ShapeBorder {
   const QrScannerOverlayShape({
-    this.borderColor = Colors.white,
+    this.borderColor = MinglitColors.background,
     this.borderWidth = 3.0,
     this.overlayColor = const Color.fromRGBO(0, 0, 0, 80),
     this.borderRadius = 0,
@@ -154,7 +152,7 @@ class QrScannerOverlayShape extends ShapeBorder {
   final double cutOutSize;
 
   @override
-  EdgeInsetsGeometry get dimensions => const EdgeInsets.all(10);
+  EdgeInsetsGeometry get dimensions => const EdgeInsets.all(MinglitSpacing.small);
 
   @override
   Path getInnerPath(Rect rect, {TextDirection? textDirection}) => Path();

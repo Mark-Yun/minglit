@@ -66,7 +66,7 @@ class PartyContactSummary extends StatelessWidget {
   ) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.xsmall),
       child: Row(
         children: [
           Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),

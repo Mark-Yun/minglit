@@ -49,7 +49,7 @@ class PartyVerificationInput extends StatelessWidget {
                 ),
                 child: Text(
                   '사용 가능한 인증이 없습니다.',
-                  style: TextStyle(color: colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodyMedium!.copyWith(color: colorScheme.onSurfaceVariant),
                 ),
               ),
 

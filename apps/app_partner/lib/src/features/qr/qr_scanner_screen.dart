@@ -27,7 +27,7 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('✅ 입장 확인: ${next.userName ?? ""}'),
-              backgroundColor: Colors.green,
+              backgroundColor: MinglitColors.success,
             ),
           );
         case CheckinResult.invalid:
@@ -35,14 +35,14 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(next.message ?? '처리 실패'),
-              backgroundColor: Colors.red,
+              backgroundColor: MinglitColors.error,
             ),
           );
         case CheckinResult.alreadyCheckedIn:
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('이미 입장 처리된 티켓입니다'),
-              backgroundColor: Colors.orange,
+              backgroundColor: MinglitColors.warning,
             ),
           );
         case CheckinResult.idle:
@@ -79,7 +79,7 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: MinglitColors.textPrimary,
       body: Stack(
         children: [
           MobileScanner(
@@ -89,15 +89,15 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
 
           // Custom Overlay
           ColorFiltered(
-            colorFilter: const ColorFilter.mode(
-              Colors.black54,
-              BlendMode.srcOut,
-            ),
+          colorFilter: ColorFilter.mode(
+            MinglitColors.textPrimary.withValues(alpha: 0.54),
+            BlendMode.srcOut,
+          ),
             child: Stack(
               children: [
                 Container(
                   decoration: const BoxDecoration(
-                    color: Colors.black,
+                    color: MinglitColors.textPrimary,
                     backgroundBlendMode: BlendMode.dstOut,
                   ),
                 ),
@@ -106,7 +106,7 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
                     width: 300,
                     height: 300,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: MinglitColors.background,
                       borderRadius: BorderRadius.circular(MinglitRadius.card),
                     ),
                   ),
@@ -121,7 +121,7 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
               width: 300,
               height: 300,
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.white, width: 2),
+                border: Border.all(color: MinglitColors.background, width: 2),
                 borderRadius: BorderRadius.circular(MinglitRadius.card),
               ),
             ),
@@ -132,7 +132,7 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
             top: 50,
             left: 20,
             child: IconButton(
-              icon: const Icon(Icons.close, color: Colors.white, size: 30),
+              icon: Icon(Icons.close, color: MinglitColors.background, size: 30),
               onPressed: () => context.pop(),
             ),
           ),
@@ -146,7 +146,7 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
               '입장 QR 스캔',
               textAlign: TextAlign.center,
               style: theme.textTheme.titleLarge?.copyWith(
-                color: Colors.white,
+                color: MinglitColors.background,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -161,7 +161,7 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
               child: IconButton(
                 icon: const Icon(
                   Icons.flash_on,
-                  color: Colors.white,
+                  color: MinglitColors.background,
                   size: 30,
                 ),
                 onPressed: _controller.toggleTorch,

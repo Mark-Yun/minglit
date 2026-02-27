@@ -103,7 +103,7 @@ class _EventApplicationReviewDialogState
                             errorBuilder: (context, error, stackTrace) =>
                                 Container(
                                   height: 100,
-                                  color: Colors.grey[200],
+                                  color: Theme.of(context).colorScheme.surfaceContainerLowest,
                                   child: const Icon(Icons.broken_image),
                                 ),
                           ),
@@ -149,7 +149,7 @@ class _EventApplicationReviewDialogState
               ),
             ),
             RadioListTile<bool>(
-              title: const Text('직접 입력', style: TextStyle(fontSize: 12)),
+              title: Text('직접 입력', style: theme.textTheme.bodySmall),
               value: true,
               // ignore: deprecated_member_use, Reason: Flutter 3.32
               groupValue: _isCustomReason,

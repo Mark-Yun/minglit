@@ -142,9 +142,8 @@ class TicketListItem extends StatelessWidget {
                             ),
                             child: Text(
                               g.label ?? _getGroupSummary(context, g),
-                              style: TextStyle(
+                              style: theme.textTheme.bodySmall!.copyWith(
                                 color: colorScheme.primary,
-                                fontSize: 9,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -183,10 +182,9 @@ class TicketListItem extends StatelessWidget {
                   children: [
                     Text(
                       context.l10n.ticketList_label_sold(ticket.soldCount),
-                      style: TextStyle(
+                      style: theme.textTheme.bodySmall!.copyWith(
                         fontWeight: FontWeight.w600,
                         color: colorScheme.primary,
-                        fontSize: 11,
                       ),
                     ),
                     const SizedBox(height: MinglitSpacing.xxsmall),
@@ -194,8 +192,7 @@ class TicketListItem extends StatelessWidget {
                       ticket.status == 'on_sale'
                           ? context.l10n.ticketList_status_onSale
                           : context.l10n.ticketList_status_soldOut,
-                      style: TextStyle(
-                        fontSize: 9,
+                      style: theme.textTheme.bodySmall!.copyWith(
                         color: ticket.status == 'on_sale'
                             ? colorScheme.outline
                             : colorScheme.error,

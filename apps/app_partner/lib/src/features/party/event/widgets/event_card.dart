@@ -72,9 +72,8 @@ class EventCard extends StatelessWidget {
                   ),
                   Text(
                     '신청중',
-                    style: TextStyle(
+                    style: theme.textTheme.bodySmall!.copyWith(
                       color: colorScheme.onSurfaceVariant,
-                      fontSize: 10,
                     ),
                   ),
                 ],

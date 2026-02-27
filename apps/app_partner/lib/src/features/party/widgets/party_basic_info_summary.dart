@@ -112,8 +112,8 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
                   padding: const EdgeInsets.only(right: MinglitSpacing.small),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                      horizontal: MinglitSpacing.small,
+                      vertical: MinglitSpacing.xsmall,
                     ),
                     decoration: BoxDecoration(
                       color: resolvedStatusColor.withValues(alpha: 0.1),
@@ -124,9 +124,8 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
                     ),
                     child: Text(
                       statusLabel,
-                      style: TextStyle(
+                      style: theme.textTheme.bodySmall!.copyWith(
                         color: resolvedStatusColor,
-                        fontSize: 11,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
