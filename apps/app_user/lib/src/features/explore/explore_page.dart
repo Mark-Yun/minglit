@@ -1,6 +1,5 @@
 import 'package:app_user/src/features/explore/logic/explore_coordinator.dart';
 import 'package:app_user/src/features/explore/providers/explore_state_provider.dart';
-import 'package:app_user/src/features/explore/widgets/applied_filters_row.dart';
 import 'package:app_user/src/features/explore/widgets/explore_search_bar.dart';
 import 'package:app_user/src/features/explore/widgets/filter_chip_bar.dart';
 import 'package:flutter/material.dart';
@@ -60,7 +59,6 @@ class _RecommendationTab extends ConsumerWidget {
     return Column(
       children: [
         const ExploreFilterChipBar(),
-        const AppliedFiltersRow(),
         Expanded(
           child: recommendationAsync.when(
             data: (events) {

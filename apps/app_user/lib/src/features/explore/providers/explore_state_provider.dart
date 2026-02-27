@@ -63,7 +63,10 @@ class SearchQuery extends _$SearchQuery {
 @riverpod
 class ActiveFilters extends _$ActiveFilters {
   @override
-  ExploreFilters build() => const ExploreFilters();
+  ExploreFilters build() => const ExploreFilters(
+        eligibilityEnabled: true,
+        nearbyEnabled: true,
+      );
 
   // Riverpod notifier method — cannot use setter syntax with code generation.
   // ignore: use_setters_to_change_properties
