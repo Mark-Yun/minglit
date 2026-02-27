@@ -165,7 +165,10 @@ class _StatusBadge extends StatelessWidget {
     final color = _statusColor(status, colorScheme);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.small, vertical: MinglitSpacing.xsmall),
+      padding: const EdgeInsets.symmetric(
+        horizontal: MinglitSpacing.small,
+        vertical: MinglitSpacing.xsmall,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(999),

@@ -90,7 +90,9 @@ class _ApplicationCard extends ConsumerWidget {
           backgroundColor: theme.colorScheme.primaryContainer,
           child: Text(
             user?.name.characters.first ?? '?',
-            style: theme.textTheme.bodyMedium!.copyWith(color: theme.colorScheme.onPrimaryContainer),
+            style: theme.textTheme.bodyMedium!.copyWith(
+              color: theme.colorScheme.onPrimaryContainer,
+            ),
           ),
         ),
         title: Text(user?.name ?? '익명 유저'),

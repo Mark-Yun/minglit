@@ -150,7 +150,7 @@ class _PartnerApplicationDetailPageState
       appBar: MinglitTheme.simpleAppBar(title: context.l10n.appDetail_title),
       body: MinglitAsyncValueWidget(
         value: appAsync,
-        data: (PartnerApplication? app) {
+        data: (app) {
           if (app == null) {
             return Center(child: Text(context.l10n.appDetail_message_notFound));
           }

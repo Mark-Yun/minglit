@@ -26,7 +26,11 @@ class TicketQRScreen extends ConsumerWidget {
               return const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 48, color: MinglitColors.error),
+                  Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: MinglitColors.error,
+                  ),
                   SizedBox(height: 16),
                   Text('티켓 정보를 찾을 수 없습니다.'),
                 ],

@@ -89,10 +89,10 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
 
           // Custom Overlay
           ColorFiltered(
-          colorFilter: ColorFilter.mode(
-            MinglitColors.textPrimary.withValues(alpha: 0.54),
-            BlendMode.srcOut,
-          ),
+            colorFilter: ColorFilter.mode(
+              MinglitColors.textPrimary.withValues(alpha: 0.54),
+              BlendMode.srcOut,
+            ),
             child: Stack(
               children: [
                 Container(
@@ -132,7 +132,11 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
             top: 50,
             left: 20,
             child: IconButton(
-              icon: const Icon(Icons.close, color: MinglitColors.background, size: 30),
+              icon: const Icon(
+                Icons.close,
+                color: MinglitColors.background,
+                size: 30,
+              ),
               onPressed: () => context.pop(),
             ),
           ),

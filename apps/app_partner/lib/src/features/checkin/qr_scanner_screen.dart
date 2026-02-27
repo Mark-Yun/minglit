@@ -42,7 +42,12 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: const CloseButton(color: MinglitColors.background),
-        title: Text('티켓 스캔', style: theme.textTheme.bodyMedium!.copyWith(color: MinglitColors.background)),
+        title: Text(
+          '티켓 스캔',
+          style: theme.textTheme.bodyMedium!.copyWith(
+            color: MinglitColors.background,
+          ),
+        ),
       ),
       body: Stack(
         children: [
@@ -115,16 +120,18 @@ class _ResultFeedbackOverlay extends StatelessWidget {
           const SizedBox(height: 24),
           Text(
             title,
-          style: Theme.of(context).textTheme.displayLarge!.copyWith(
-            color: MinglitColors.background,
-          ),
+            style: Theme.of(context).textTheme.displayLarge!.copyWith(
+              color: MinglitColors.background,
+            ),
           ),
           if (subTitle.isNotEmpty)
             Padding(
-            padding: const EdgeInsets.only(top: MinglitSpacing.medium),
+              padding: const EdgeInsets.only(top: MinglitSpacing.medium),
               child: Text(
                 subTitle,
-                style: Theme.of(context).textTheme.titleLarge!.copyWith(color: MinglitColors.background),
+                style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                  color: MinglitColors.background,
+                ),
               ),
             ),
         ],
@@ -152,7 +159,8 @@ class QrScannerOverlayShape extends ShapeBorder {
   final double cutOutSize;
 
   @override
-  EdgeInsetsGeometry get dimensions => const EdgeInsets.all(MinglitSpacing.small);
+  EdgeInsetsGeometry get dimensions =>
+      const EdgeInsets.all(MinglitSpacing.small);
 
   @override
   Path getInnerPath(Rect rect, {TextDirection? textDirection}) => Path();

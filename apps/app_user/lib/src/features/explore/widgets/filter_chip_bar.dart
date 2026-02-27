@@ -107,7 +107,10 @@ class _SortChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.sm, vertical: MinglitSpacing.xsmall2),
+        padding: const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.sm,
+          vertical: MinglitSpacing.xsmall2,
+        ),
         decoration: BoxDecoration(
           color: isSelected
               ? MinglitColors.primary.withValues(alpha: 0.1)
@@ -155,7 +158,10 @@ class _ToggleChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.sm, vertical: MinglitSpacing.xsmall2),
+        padding: const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.sm,
+          vertical: MinglitSpacing.xsmall2,
+        ),
         decoration: BoxDecoration(
           color: isSelected
               ? MinglitColors.primary.withValues(alpha: 0.1)

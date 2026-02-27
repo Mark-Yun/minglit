@@ -216,7 +216,10 @@ class _PartyImageEditorState extends State<PartyImageEditor> {
               top: 0,
               left: 0,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.xsmall2, vertical: MinglitSpacing.xxsmall),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: MinglitSpacing.xsmall2,
+                  vertical: MinglitSpacing.xxsmall,
+                ),
                 decoration: _getBadgeDecoration(theme),
                 child: Text(
                   '대표',

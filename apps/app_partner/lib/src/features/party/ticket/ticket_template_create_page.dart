@@ -30,10 +30,10 @@ class TicketTemplateCreatePage extends StatelessWidget {
           submitButtonLabel: template == null ? '추가하기' : '수정 완료',
           onSaved:
               ({
-                required String name,
-                required int price,
-                required int quantity,
-                required List<String> targetEntryGroupIds,
+                required name,
+                required price,
+                required quantity,
+                required targetEntryGroupIds,
               }) {
                 final result =
                     (template ??

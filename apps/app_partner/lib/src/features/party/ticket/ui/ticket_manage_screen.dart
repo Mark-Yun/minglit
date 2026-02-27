@@ -116,7 +116,9 @@ class _TicketManageCard extends ConsumerWidget {
                 onPressed: () => _showEditSheet(context, ref),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(80, 36),
-                  padding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.sm),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: MinglitSpacing.sm,
+                  ),
                 ),
                 child: const Text('수정'),
               ),
@@ -147,7 +149,10 @@ class _TicketManageCard extends ConsumerWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.small, vertical: MinglitSpacing.xsmall),
+      padding: const EdgeInsets.symmetric(
+        horizontal: MinglitSpacing.small,
+        vertical: MinglitSpacing.xsmall,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(MinglitRadius.small),

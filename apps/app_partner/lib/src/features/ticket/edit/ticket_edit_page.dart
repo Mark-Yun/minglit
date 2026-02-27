@@ -29,7 +29,7 @@ class TicketEditPage extends ConsumerWidget {
         ? ref
               .watch(ticketTemplateDetailProvider(ticketId))
               .whenData(
-                (TicketTemplate template) =>
+                (template) =>
                     Ticket.createFromTemplate(template, id: template.id),
               )
         : ref.watch(ticketDetailProvider(ticketId));
@@ -38,20 +38,20 @@ class TicketEditPage extends ConsumerWidget {
       appBar: MinglitTheme.simpleAppBar(title: context.l10n.ticket_title_edit),
       body: MinglitAsyncValueWidget(
         value: ticketAsync,
-        error: (Object e, StackTrace s) => Center(
+        error: (e, s) => Center(
           child: Text(
             context.l10n.partyDetail_error_ticketLoad(e.toString()),
           ),
         ),
-        data: (Ticket ticket) {
+        data: (ticket) {
           return MinglitAsyncValueWidget(
             value: partyAsync,
-            error: (Object e, StackTrace s) => Center(
+            error: (e, s) => Center(
               child: Text(
                 context.l10n.partyDetail_error_partyLoad(e.toString()),
               ),
             ),
-            data: (Party party) {
+            data: (party) {
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(MinglitSpacing.medium),
                 child: TicketForm(
@@ -60,10 +60,10 @@ class TicketEditPage extends ConsumerWidget {
                   submitButtonLabel: context.l10n.ticket_button_edit,
                   onSaved:
                       ({
-                        required String name,
-                        required int price,
-                        required int quantity,
-                        required List<String> targetEntryGroupIds,
+                        required name,
+                        required price,
+                        required quantity,
+                        required targetEntryGroupIds,
                       }) async {
                         if (isTemplate) {
                           // Update Template

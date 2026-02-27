@@ -55,7 +55,9 @@ class ClosingSoonEventsCard extends StatelessWidget {
                 onTap: () => onEventTap(event),
                 borderRadius: BorderRadius.circular(8),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.small),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: MinglitSpacing.small,
+                  ),
                   child: Row(
                     children: [
                       Expanded(
@@ -107,7 +109,10 @@ class _DayBadge extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.small, vertical: MinglitSpacing.xsmall),
+      padding: const EdgeInsets.symmetric(
+        horizontal: MinglitSpacing.small,
+        vertical: MinglitSpacing.xsmall,
+      ),
       decoration: BoxDecoration(
         color: colorScheme.error,
         borderRadius: BorderRadius.circular(12),

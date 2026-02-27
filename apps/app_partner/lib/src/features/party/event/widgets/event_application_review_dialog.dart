@@ -76,7 +76,7 @@ class _EventApplicationReviewDialogState
               ),
               const SizedBox(height: MinglitSpacing.small),
               ...submission.snapshotData.entries.map((
-                MapEntry<String, dynamic> entry,
+                entry,
               ) {
                 final key = entry.key;
                 final value = entry.value;
@@ -103,7 +103,9 @@ class _EventApplicationReviewDialogState
                             errorBuilder: (context, error, stackTrace) =>
                                 Container(
                                   height: 100,
-                                  color: Theme.of(context).colorScheme.surfaceContainerLowest,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainerLowest,
                                   child: const Icon(Icons.broken_image),
                                 ),
                           ),

@@ -80,22 +80,26 @@ void main() {
 
     group('isVerified', () {
       test('returns true when user is verified', () async {
-        unawaited(mockTable(
-          mockClient,
-          'user_profiles',
-          singleData: {'is_verified': true},
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'user_profiles',
+            singleData: {'is_verified': true},
+          ),
+        );
 
         final result = await repository.isVerified();
         expect(result, isTrue);
       });
 
       test('returns false when user is not verified', () async {
-        unawaited(mockTable(
-          mockClient,
-          'user_profiles',
-          singleData: {'is_verified': false},
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'user_profiles',
+            singleData: {'is_verified': false},
+          ),
+        );
 
         final result = await repository.isVerified();
         expect(result, isFalse);

@@ -116,10 +116,12 @@ class PartnerHomePage extends ConsumerWidget {
                 UpcomingEventsCard(
                   events: state.upcomingEvents,
                   onEventTap: (event) {
-                    unawaited(EventDetailRoute(
-                      partyId: event.partyId,
-                      eventId: event.id,
-                    ).push<void>(context));
+                    unawaited(
+                      EventDetailRoute(
+                        partyId: event.partyId,
+                        eventId: event.id,
+                      ).push<void>(context),
+                    );
                   },
                 ),
                 const SizedBox(height: MinglitSpacing.large),
@@ -139,10 +141,12 @@ class PartnerHomePage extends ConsumerWidget {
                 ClosingSoonEventsCard(
                   events: state.closingSoonEvents,
                   onEventTap: (event) {
-                    unawaited(EventDetailRoute(
-                      partyId: event.partyId,
-                      eventId: event.id,
-                    ).push<void>(context));
+                    unawaited(
+                      EventDetailRoute(
+                        partyId: event.partyId,
+                        eventId: event.id,
+                      ).push<void>(context),
+                    );
                   },
                 ),
                 const SizedBox(height: MinglitSpacing.large),

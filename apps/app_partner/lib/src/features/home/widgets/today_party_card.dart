@@ -165,7 +165,9 @@ class _EventItem extends StatelessWidget {
                 visualDensity: VisualDensity.compact,
                 padding: EdgeInsets.zero,
                 backgroundColor: colorScheme.primaryContainer,
-                labelStyle: theme.textTheme.bodyMedium!.copyWith(color: colorScheme.onPrimaryContainer),
+                labelStyle: theme.textTheme.bodyMedium!.copyWith(
+                  color: colorScheme.onPrimaryContainer,
+                ),
               ),
             ],
           ),

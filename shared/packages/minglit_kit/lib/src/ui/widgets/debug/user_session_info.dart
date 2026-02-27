@@ -56,7 +56,10 @@ class UserSessionInfo extends ConsumerWidget {
           'Tap to view full session JSON',
           style: theme.textTheme.bodySmall!.copyWith(fontSize: 11),
         ),
-        leading: const Icon(Icons.account_circle, color: MinglitColors.textSecondary),
+        leading: const Icon(
+          Icons.account_circle,
+          color: MinglitColors.textSecondary,
+        ),
         childrenPadding: const EdgeInsets.all(MinglitSpacing.medium),
         expandedCrossAxisAlignment: CrossAxisAlignment.start,
         children: [

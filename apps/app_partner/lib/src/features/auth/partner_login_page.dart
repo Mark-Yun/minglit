@@ -10,8 +10,10 @@ class PartnerLoginPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    const environment =
-        String.fromEnvironment('ENVIRONMENT', defaultValue: 'production');
+    const environment = String.fromEnvironment(
+      'ENVIRONMENT',
+      defaultValue: 'production',
+    );
     const isDevEnv = environment == 'local' || environment == 'development';
     ref.listen(authControllerProvider, (previous, next) {
       if (next is AsyncError) {
@@ -29,7 +31,9 @@ class PartnerLoginPage extends ConsumerWidget {
 
     return MinglitLoginScreen(
       isPartner: true,
-      onDevMapTrigger: isDevEnv ? () => const DevMapRoute().push(context) : null,
+      onDevMapTrigger: isDevEnv
+          ? () => const DevMapRoute().push(context)
+          : null,
       onGoogleSignIn: () {
         unawaited(ref.read(authControllerProvider.notifier).signInWithGoogle());
       },

@@ -61,7 +61,10 @@ class NotificationListScreen extends ConsumerWidget {
                     color: MinglitColors.error,
                     alignment: Alignment.centerRight,
                     padding: const EdgeInsets.only(right: MinglitSpacing.large),
-                    child: const Icon(Icons.delete, color: MinglitColors.background),
+                    child: const Icon(
+                      Icons.delete,
+                      color: MinglitColors.background,
+                    ),
                   ),
                   onDismissed: (_) {
                     unawaited(

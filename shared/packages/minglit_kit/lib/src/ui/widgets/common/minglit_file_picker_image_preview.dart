@@ -121,10 +121,15 @@ class MinglitFilePickerImagePreview extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.insert_drive_file, color: Theme.of(context).colorScheme.outline),
+            Icon(
+              Icons.insert_drive_file,
+              color: Theme.of(context).colorScheme.outline,
+            ),
             const SizedBox(height: 4),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.xsmall),
+              padding: const EdgeInsets.symmetric(
+                horizontal: MinglitSpacing.xsmall,
+              ),
               child: Text(
                 file.name,
                 maxLines: 2,

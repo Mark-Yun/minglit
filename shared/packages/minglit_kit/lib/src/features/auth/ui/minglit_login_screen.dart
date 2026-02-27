@@ -45,7 +45,9 @@ class MinglitLoginScreen extends ConsumerWidget {
         ? 'Verified Vibe, Spark Your Business'
         : 'Verified Vibe, Spark Your Moment';
 
-    final textStyle = theme.textTheme.bodySmall!.copyWith(color: theme.colorScheme.outline);
+    final textStyle = theme.textTheme.bodySmall!.copyWith(
+      color: theme.colorScheme.outline,
+    );
     final linkStyle = textStyle.copyWith(
       decoration: TextDecoration.underline,
       fontWeight: FontWeight.bold,
@@ -96,7 +98,9 @@ class MinglitLoginScreen extends ConsumerWidget {
                 icon: Icons.g_mobiledata,
                 label: 'Google로 시작하기',
                 backgroundColor: MinglitColors.background,
-                foregroundColor: MinglitColors.textPrimary.withValues(alpha: 0.87),
+                foregroundColor: MinglitColors.textPrimary.withValues(
+                  alpha: 0.87,
+                ),
                 borderColor: theme.colorScheme.outlineVariant,
               ),
               if (onAppleSignIn != null) ...[
@@ -115,7 +119,9 @@ class MinglitLoginScreen extends ConsumerWidget {
                 icon: Icons.chat_bubble,
                 label: 'Kakao로 시작하기',
                 backgroundColor: MinglitColors.warning,
-                foregroundColor: MinglitColors.textPrimary.withValues(alpha: 0.87),
+                foregroundColor: MinglitColors.textPrimary.withValues(
+                  alpha: 0.87,
+                ),
               ),
               if (!isPartner && onVerifyIdentity != null) ...[
                 const SizedBox(height: 12),
@@ -203,13 +209,13 @@ class _DevTriggerLogoState extends State<_DevTriggerLogo> {
       widget.onTrigger();
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: _handleTap,
       child: const MinglitImage(
-        path:
-            'packages/minglit_kit/assets/images/minglit_app_bar_logo.png',
+        path: 'packages/minglit_kit/assets/images/minglit_app_bar_logo.png',
         height: 64,
       ),
     );

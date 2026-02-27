@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/features/auth/logic/auth_controller.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -102,7 +102,11 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.storage_outlined, size: 64, color: theme.colorScheme.outline),
+          Icon(
+            Icons.storage_outlined,
+            size: 64,
+            color: theme.colorScheme.outline,
+          ),
           const SizedBox(height: 16),
           Text(
             'No Users Found',
@@ -113,7 +117,9 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
             'The database seems empty.\nPlease run the seeder from CLI:\n'
             'flutter test apps/app_user/test/setup_test_data.dart',
             textAlign: TextAlign.center,
-            style: theme.textTheme.bodyMedium!.copyWith(color: theme.colorScheme.outline),
+            style: theme.textTheme.bodyMedium!.copyWith(
+              color: theme.colorScheme.outline,
+            ),
           ),
         ],
       ),
@@ -131,7 +137,7 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
 
         final email = '$username@test.com';
 
-        final (Color? roleColor, String roleLabel) = switch (username) {
+        final (Color roleColor, String roleLabel) = switch (username) {
           String u when u.startsWith('partner_owner') => (
             MinglitColors.warning.withValues(alpha: 0.3),
             'Owner',

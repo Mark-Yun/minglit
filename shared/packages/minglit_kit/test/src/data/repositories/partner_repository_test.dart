@@ -49,11 +49,13 @@ void main() {
 
     group('getPartnerById', () {
       test('returns partner when found', () async {
-        unawaited(mockTable(
-          mockClient,
-          'partners',
-          maybeSingleData: partnerJson,
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'partners',
+            maybeSingleData: partnerJson,
+          ),
+        );
 
         final result = await repository.getPartnerById('partner_1');
 
@@ -63,10 +65,12 @@ void main() {
       });
 
       test('returns null when not found', () async {
-        unawaited(mockTable(
-          mockClient,
-          'partners',
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'partners',
+          ),
+        );
 
         final result = await repository.getPartnerById('partner_unknown');
         expect(result, isNull);
@@ -83,24 +87,28 @@ void main() {
       });
 
       test('returns empty when no permissions', () async {
-        unawaited(mockTable(
-          mockClient,
-          'partner_member_permissions',
-          selectData: [],
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'partner_member_permissions',
+            selectData: [],
+          ),
+        );
 
         final result = await repository.getMyManagedPartners();
         expect(result, isEmpty);
       });
 
       test('returns managed partners when permissions exist', () async {
-        unawaited(mockTable(
-          mockClient,
-          'partner_member_permissions',
-          selectData: [
-            {'partner_id': 'partner_1'},
-          ],
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'partner_member_permissions',
+            selectData: [
+              {'partner_id': 'partner_1'},
+            ],
+          ),
+        );
         unawaited(mockTable(mockClient, 'partners', selectData: [partnerJson]));
 
         final result = await repository.getMyManagedPartners();
@@ -120,14 +128,16 @@ void main() {
       });
 
       test('returns role data when found', () async {
-        unawaited(mockTable(
-          mockClient,
-          'partner_member_permissions',
-          maybeSingleData: {
-            'role': 'owner',
-            'permissions': ['all'],
-          },
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'partner_member_permissions',
+            maybeSingleData: {
+              'role': 'owner',
+              'permissions': ['all'],
+            },
+          ),
+        );
 
         final result = await repository.getMyMemberRole('partner_1');
 
@@ -145,11 +155,13 @@ void main() {
           'net_amount': 470000,
         };
 
-        unawaited(mockTable(
-          mockClient,
-          'partner_revenue_stats',
-          maybeSingleData: statsJson,
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'partner_revenue_stats',
+            maybeSingleData: statsJson,
+          ),
+        );
 
         final result = await repository.getPartnerRevenueStats('partner_1');
 
@@ -158,10 +170,12 @@ void main() {
       });
 
       test('returns default values when no data', () async {
-        unawaited(mockTable(
-          mockClient,
-          'partner_revenue_stats',
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'partner_revenue_stats',
+          ),
+        );
 
         final result = await repository.getPartnerRevenueStats('partner_1');
 
@@ -172,14 +186,16 @@ void main() {
 
     group('getPartnerMonthlyRevenue', () {
       test('returns monthly revenue list', () async {
-        unawaited(mockTable(
-          mockClient,
-          'partner_monthly_revenue',
-          selectData: [
-            {'month': '2026-01', 'amount': 200000},
-            {'month': '2026-02', 'amount': 300000},
-          ],
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'partner_monthly_revenue',
+            selectData: [
+              {'month': '2026-01', 'amount': 200000},
+              {'month': '2026-02', 'amount': 300000},
+            ],
+          ),
+        );
 
         final result = await repository.getPartnerMonthlyRevenue('partner_1');
 
@@ -190,17 +206,19 @@ void main() {
 
     group('getPartnerSettlements', () {
       test('returns settlement records', () async {
-        unawaited(mockTable(
-          mockClient,
-          'settlements',
-          selectData: [
-            {
-              'partner_id': 'partner_1',
-              'event_date': '2026-02-15',
-              'amount': 150000,
-            },
-          ],
-        ));
+        unawaited(
+          mockTable(
+            mockClient,
+            'settlements',
+            selectData: [
+              {
+                'partner_id': 'partner_1',
+                'event_date': '2026-02-15',
+                'amount': 150000,
+              },
+            ],
+          ),
+        );
 
         final result = await repository.getPartnerSettlements('partner_1');
 

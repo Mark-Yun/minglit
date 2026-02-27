@@ -34,7 +34,7 @@ class PartyListPage extends ConsumerWidget {
       ),
       body: MinglitAsyncValueWidget(
         value: partiesAsync,
-        data: (List<Party> parties) {
+        data: (parties) {
           if (parties.isEmpty) {
             return Center(
               child: Column(

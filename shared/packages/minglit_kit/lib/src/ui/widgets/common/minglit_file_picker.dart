@@ -102,12 +102,17 @@ class _MinglitFilePickerState extends ConsumerState<MinglitFilePicker> {
       if (widget.allowMultiple && source == ImageSource.gallery) {
         final images = await _imagePicker.pickMultiImage();
         if (images.isNotEmpty) {
-          final files = images.map((e) => PlatformFile(name: e.name, size: 0, path: e.path)).toList();
+          final files = images
+              .map((e) => PlatformFile(name: e.name, size: 0, path: e.path))
+              .toList();
           await _processFiles(files);
         }
       } else {
         final image = await _imagePicker.pickImage(source: source);
-        if (image != null) await _processFiles([PlatformFile(name: image.name, size: 0, path: image.path)]);
+        if (image != null)
+          await _processFiles([
+            PlatformFile(name: image.name, size: 0, path: image.path),
+          ]);
       }
     } on Exception catch (e) {
       debugPrint('ImagePicker Error: $e');
@@ -137,7 +142,9 @@ class _MinglitFilePickerState extends ConsumerState<MinglitFilePicker> {
 
       for (final file in files) {
         // Convert PlatformFile to XFile for compatibility
-        final xFile = kIsWeb ? XFile.fromData(file.bytes!, name: file.name) : XFile(file.path!);
+        final xFile = kIsWeb
+            ? XFile.fromData(file.bytes!, name: file.name)
+            : XFile(file.path!);
         final url = await repo.uploadFile(
           file: xFile,
           bucket: widget.uploadBucket!,
@@ -150,7 +157,10 @@ class _MinglitFilePickerState extends ConsumerState<MinglitFilePicker> {
       widget.onUploadComplete?.call(_uploadedUrls);
     } on Object catch (e) {
       debugPrint('Auto-upload failed: $e');
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('파일 업로드 실패: $e')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('파일 업로드 실패: $e')));
     } finally {
       if (mounted) setState(() => _isUploading = false);
     }

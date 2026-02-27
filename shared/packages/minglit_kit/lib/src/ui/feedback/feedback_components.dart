@@ -101,14 +101,18 @@ class MinglitFeedbackUI {
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(
               cancelLabel ?? '취소',
-              style: theme.textTheme.bodyMedium!.copyWith(color: colorScheme.outline),
+              style: theme.textTheme.bodyMedium!.copyWith(
+                color: colorScheme.outline,
+              ),
             ),
           ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(true),
           child: Text(
             confirmLabel ?? '확인',
-            style: theme.textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.bodyMedium!.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ],

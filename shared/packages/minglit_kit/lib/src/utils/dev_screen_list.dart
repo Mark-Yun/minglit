@@ -114,7 +114,9 @@ class DevScreenList extends ConsumerWidget {
                             subtitle: item.description != null
                                 ? Text(
                                     item.description!,
-                                    style: theme.textTheme.bodyMedium!.copyWith(color: MinglitColors.textSecondary),
+                                    style: theme.textTheme.bodyMedium!.copyWith(
+                                      color: MinglitColors.textSecondary,
+                                    ),
                                   )
                                 : null,
                             trailing: Icon(

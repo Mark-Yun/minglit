@@ -7,7 +7,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'app_router.g.dart';
 
-
 /// Root navigator key shared with [BugReporterWrapper] for dialog display.
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 @riverpod
