@@ -25,7 +25,7 @@ class BugReporterWrapper extends StatefulWidget {
   ///
   /// Required on mobile because [BugReporterWrapper] sits above the
   /// [Navigator] in the widget tree (inside [MaterialApp.builder]),
-  /// so its own [context] cannot reach a [Navigator] ancestor.
+  /// so its own `context` cannot reach a `Navigator` ancestor.
   final GlobalKey<NavigatorState>? navigatorKey;
 
   /// Whether bug reporting is enabled.
@@ -61,7 +61,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
 
   /// Returns a [BuildContext] that has a [Navigator] ancestor.
   ///
-  /// Prefers the overlay context from [widget.navigatorKey] (which sits
+  /// Prefers the overlay context from `widget.navigatorKey` (which sits
   /// below the [Navigator]), falling back to [context] for desktop/web
   /// where the FAB already has a valid context.
   BuildContext? get _dialogContext =>

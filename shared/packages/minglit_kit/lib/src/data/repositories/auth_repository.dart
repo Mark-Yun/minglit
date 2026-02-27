@@ -26,7 +26,8 @@ class AuthConfig {
   /// Default redirect URL for OAuth flows.
   final String? defaultRedirectUrl;
 
-  /// Mobile deep link scheme for OAuth callbacks (e.g., 'com.minglit.app_user').
+  /// Mobile deep link scheme for OAuth callbacks
+  /// (e.g., 'com.minglit.app_user').
   final String? mobileRedirectScheme;
 }
 

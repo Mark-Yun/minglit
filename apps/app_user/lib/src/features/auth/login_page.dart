@@ -129,7 +129,11 @@ class LoginPage extends ConsumerWidget {
             );
           }
         },
-        onDevMapTrigger: isDevEnv ? () => const DevRoute().push(context) : null,
+        onDevMapTrigger: isDevEnv
+            ? () => const DevRoute().push<void>(
+                context,
+              )
+            : null,
       ),
     );
   }

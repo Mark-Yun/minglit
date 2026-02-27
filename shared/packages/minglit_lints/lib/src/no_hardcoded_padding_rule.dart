@@ -15,7 +15,7 @@ class NoHardcodedPaddingRule extends DartLintRule {
   @override
   void run(
     CustomLintResolver resolver,
-    ErrorReporter reporter,
+    DiagnosticReporter reporter,
     CustomLintContext context,
   ) {
     context.registry.addInstanceCreationExpression((node) {
@@ -39,7 +39,7 @@ class NoHardcodedPaddingRule extends DartLintRule {
     });
   }
 
-  void _checkExpression(Expression expression, ErrorReporter reporter) {
+  void _checkExpression(Expression expression, DiagnosticReporter reporter) {
     if (expression is DoubleLiteral || expression is IntegerLiteral) {
       reporter.atNode(expression, _code);
     }
