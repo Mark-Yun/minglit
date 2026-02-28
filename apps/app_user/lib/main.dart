@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:app_user/firebase_options.dart';
 import 'package:app_user/src/l10n/generated/app_localizations.dart';
 import 'package:app_user/src/routing/app_router.dart';
@@ -14,7 +15,8 @@ import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 part 'main.g.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   const sentryDsn = String.fromEnvironment('SENTRY_DSN');
   const environment = String.fromEnvironment(
@@ -111,6 +113,11 @@ class _AppView extends ConsumerWidget {
     // Activate notification initializer to listen for sign-in events
     ref.watch(notificationInitializerProvider);
 
+    // Remove native splash when startup completes (or fails).
+    ref.listen(appStartupProvider, (prev, next) {
+      if (next is! AsyncLoading) FlutterNativeSplash.remove();
+    });
+
     // ignore: use_minglit_async_value_widget - This is the app entry point, MaterialApp is not yet available.
     return MaterialApp.router(
       title: 'Minglit User',
@@ -125,23 +132,15 @@ class _AppView extends ConsumerWidget {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
-        return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 600),
-          transitionBuilder: MinglitSplashTransition.build,
-          child: startupState.when(
-            data: (_) => BugReporterWrapper(
-              key: const ValueKey('app'),
-              navigatorKey: rootNavigatorKey,
-              child: MinglitGlobalLoadingOverlay(child: child!),
-            ),
-            loading: () => const MinglitSplashScreen(
-              key: ValueKey('splash'),
-              appName: 'User',
-            ),
-            error: (e, st) => Scaffold(
-              key: const ValueKey('error'),
-              body: Center(child: Text('Error: $e')),
-            ),
+        return startupState.when(
+          data: (_) => BugReporterWrapper(
+            navigatorKey: rootNavigatorKey,
+            child: MinglitGlobalLoadingOverlay(child: child!),
+          ),
+          // Hidden behind native splash — show nothing.
+          loading: () => const SizedBox.shrink(),
+          error: (e, st) => Scaffold(
+            body: Center(child: Text('Error: $e')),
           ),
         );
       },
