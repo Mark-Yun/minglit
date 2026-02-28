@@ -93,7 +93,7 @@ final class ActiveFiltersProvider
   }
 }
 
-String _$activeFiltersHash() => r'9a41bc70d3dd2f0dab24090e8f3c9726f3cf4112';
+String _$activeFiltersHash() => r'1993d5e37e4b5d2a9f5cd1926fe7898bf17c757f';
 
 abstract class _$ActiveFilters extends $Notifier<ExploreFilters> {
   ExploreFilters build();
