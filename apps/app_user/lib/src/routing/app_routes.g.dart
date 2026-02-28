@@ -18,6 +18,7 @@ List<RouteBase> get $appRoutes => [
   $notificationCenterRoute,
   $notificationSettingsRoute,
   $userShellRoute,
+  $searchRoute,
 ];
 
 RouteBase get $devRoute =>
@@ -295,13 +296,10 @@ RouteBase get $userShellRoute => StatefulShellRouteData.$route(
   factory: $UserShellRouteExtension._fromState,
   branches: [
     StatefulShellBranchData.$branch(
-      routes: [GoRouteData.$route(path: '/', factory: $HomeRoute._fromState)],
-    ),
-    StatefulShellBranchData.$branch(
       routes: [
         GoRouteData.$route(
-          path: '/explore',
-          factory: $ExploreRoute._fromState,
+          path: '/',
+          factory: $HomeRoute._fromState,
           routes: [
             GoRouteData.$route(
               path: 'curation',
@@ -344,26 +342,6 @@ mixin $HomeRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
-mixin $ExploreRoute on GoRouteData {
-  static ExploreRoute _fromState(GoRouterState state) => const ExploreRoute();
-
-  @override
-  String get location => GoRouteData.$location('/explore');
-
-  @override
-  void go(BuildContext context) => context.go(location);
-
-  @override
-  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
-
-  @override
-  void pushReplacement(BuildContext context) =>
-      context.pushReplacement(location);
-
-  @override
-  void replace(BuildContext context) => context.replace(location);
-}
-
 mixin $EventCurationRoute on GoRouteData {
   static EventCurationRoute _fromState(GoRouterState state) =>
       EventCurationRoute(
@@ -380,7 +358,7 @@ mixin $EventCurationRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location(
-    '/explore/curation',
+    '/curation',
     queryParams: {
       if (_self.type != EventFeedType.newArrivals)
         'type': _$EventFeedTypeEnumMap[_self.type],
@@ -441,4 +419,27 @@ T? _$convertMapValue<T>(
 extension<T extends Enum> on Map<T, String> {
   T? _$fromName(String? value) =>
       entries.where((element) => element.value == value).firstOrNull?.key;
+}
+
+RouteBase get $searchRoute =>
+    GoRouteData.$route(path: '/search', factory: $SearchRoute._fromState);
+
+mixin $SearchRoute on GoRouteData {
+  static SearchRoute _fromState(GoRouterState state) => const SearchRoute();
+
+  @override
+  String get location => GoRouteData.$location('/search');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
 }

@@ -28,6 +28,9 @@ GoRouter goRouter(Ref ref) {
       final isLoggingIn = state.uri.path == '/login';
       final path = state.uri.path;
 
+      // Redirect /explore deep links to home (backward compat)
+      if (path.startsWith('/explore')) return '/';
+
       // Allow dev pages without authentication
       if (path.startsWith('/dev')) return null;
 

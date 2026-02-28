@@ -17,6 +17,15 @@ class ExploreFilterChipBar extends ConsumerWidget {
           horizontal: MinglitSpacing.medium,
         ),
         children: [
+          // Sort icon prefix
+          Padding(
+            padding: const EdgeInsets.only(right: MinglitSpacing.xsmall),
+            child: Icon(
+              Icons.sort,
+              size: 18,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
           // Sort chips — single selection
           _SortChip(
             label: '추천순',
