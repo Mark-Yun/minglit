@@ -1,10 +1,12 @@
+import 'package:app_user/src/ui/shell/nav_visibility_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 /// Shell scaffold with bottom navigation for the User app.
 ///
 /// 2 tabs: 홈 / 마이
-class UserScaffold extends StatelessWidget {
+class UserScaffold extends ConsumerWidget {
   const UserScaffold({required this.navigationShell, super.key});
 
   final StatefulNavigationShell navigationShell;
@@ -17,26 +19,46 @@ class UserScaffold extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
+    final currentIndex = navigationShell.currentIndex;
+    final isVisible =
+        currentIndex != 0 || ref.watch(navVisibilityProvider);
 
     return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: _goBranch,
-        indicatorColor: Colors.transparent,
-        backgroundColor: colorScheme.surface,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: '홈',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: '마이',
+      body: Stack(
+        children: [
+          navigationShell,
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: AnimatedSlide(
+              offset: isVisible ? Offset.zero : const Offset(0, 1),
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              child: SafeArea(
+                top: false,
+                child: NavigationBar(
+                  selectedIndex: currentIndex,
+                  onDestinationSelected: _goBranch,
+                  indicatorColor: Colors.transparent,
+                  backgroundColor: colorScheme.surface,
+                  destinations: const [
+                    NavigationDestination(
+                      icon: Icon(Icons.home_outlined),
+                      selectedIcon: Icon(Icons.home),
+                      label: '홈',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.person_outline),
+                      selectedIcon: Icon(Icons.person),
+                      label: '마이',
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),
