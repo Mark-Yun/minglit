@@ -39,9 +39,7 @@ class MyPage extends ConsumerWidget {
               const SizedBox(height: MinglitSpacing.xlarge),
               FilledButton(
                 onPressed: () {
-                  ref
-                      .read(authCoordinatorProvider)
-                      .pushLogin(from: '/my');
+                  ref.read(authCoordinatorProvider).pushLogin(from: '/my');
                 },
                 child: const Text('로그인'),
               ),
@@ -52,8 +50,7 @@ class MyPage extends ConsumerWidget {
     }
 
     final avatarUrl = user.userMetadata?['avatar_url'] as String?;
-    final displayName =
-        user.userMetadata?['full_name'] as String? ?? '유저';
+    final displayName = user.userMetadata?['full_name'] as String? ?? '유저';
     final homeCoordinator = ref.read(homeCoordinatorProvider);
 
     return Scaffold(
@@ -69,8 +66,9 @@ class MyPage extends ConsumerWidget {
               children: [
                 CircleAvatar(
                   radius: 32,
-                  backgroundImage:
-                      avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                  backgroundImage: avatarUrl != null
+                      ? NetworkImage(avatarUrl)
+                      : null,
                   child: avatarUrl == null
                       ? const Icon(Icons.person, size: 32)
                       : null,

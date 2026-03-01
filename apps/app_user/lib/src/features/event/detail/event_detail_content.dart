@@ -14,7 +14,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
   final _scrollController = ScrollController();
   bool _showTitle = false;
 
-  static const _collapseThreshold = 300.0 - kToolbarHeight;
+  static const double _collapseThreshold = 300.0 - kToolbarHeight;
 
   @override
   void initState() {
@@ -98,7 +98,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
               ),
               if (user != null)
                 Padding(
-                padding: const EdgeInsets.only(right: MinglitSpacing.small),
+                  padding: const EdgeInsets.only(right: MinglitSpacing.small),
                   child: MinglitSocialButton(
                     targetId: event.partyId, // Like the party
                     targetType: SocialTargetType.party,
