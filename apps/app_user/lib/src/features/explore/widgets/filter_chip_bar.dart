@@ -10,7 +10,7 @@ class ExploreFilterChipBar extends ConsumerWidget {
     final filters = ref.watch(activeFiltersProvider);
 
     return SizedBox(
-      height: 40,
+      height: 36,
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(

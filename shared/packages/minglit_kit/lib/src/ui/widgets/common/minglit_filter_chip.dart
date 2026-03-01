@@ -42,37 +42,40 @@ class MinglitFilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
-    // YouTube-style: compact padding, clean sizing
+    // YouTube-style chip sizing
+    // YT: font-size 1.4rem(14px), line-height 2rem(20px), weight 500
     final (padding, fontSize, iconSize) = switch (size) {
       MinglitChipSize.small => (
-        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         12.0,
-        13.0,
+        12.0,
       ),
       MinglitChipSize.medium => (
-        const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+        13.0,
         14.0,
-        15.0,
       ),
       MinglitChipSize.large => (
-        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        14.0,
         15.0,
-        16.0,
       ),
     };
 
     // YouTube-style color inversion:
     // Unselected: light gray bg + dark text
     // Selected: dark bg + white text
+    // YouTube-style color inversion (light mode):
+    // Unselected: rgba(0,0,0,0.05) bg + #0f0f0f text
+    // Selected: #0f0f0f bg + #fff text
     final bgColor = isSelected
-        ? colorScheme.onSurface
-        : colorScheme.surfaceContainerHighest.withValues(alpha: 0.7);
+        ? const Color(0xFF0F0F0F)
+        : const Color(0x0D000000); // rgba(0,0,0,0.05)
 
     final fgColor = isSelected
-        ? colorScheme.surface
-        : colorScheme.onSurfaceVariant;
+        ? Colors.white
+        : const Color(0xFF606060); // yt-spec-grey-5
 
     final hasIcon = icon != null;
 
@@ -89,14 +92,15 @@ class MinglitFilterChip extends StatelessWidget {
           children: [
             if (hasIcon) ...[
               Icon(icon, size: iconSize, color: fgColor),
-              const SizedBox(width: MinglitSpacing.xxsmall),
+              const SizedBox(width: 4),
             ],
             Text(
               label,
               style: theme.textTheme.labelSmall?.copyWith(
                 fontSize: fontSize,
+                height: 20 / fontSize, // YT line-height: 2rem
                 color: fgColor,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
