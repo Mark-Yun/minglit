@@ -45,6 +45,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
     final location = event.location ?? party?.location;
     final partnerProfileImageUrl = partner?.profileImageUrl;
     final eventTitle = party?.title ?? event.title ?? '제목 없음';
+    final user = ref.watch(currentUserProvider);
 
     // Date Format
     final dateLabel = DateFormat(
@@ -95,18 +96,20 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                 ),
                 tooltip: '공유하기',
               ),
-              Padding(
+              if (user != null)
+                Padding(
                 padding: const EdgeInsets.only(right: MinglitSpacing.small),
-                child: MinglitSocialButton(
-                  targetId: event.partyId, // Like the party
-                  targetType: SocialTargetType.party,
-                  interactionType: SocialInteractionType.like,
-                  activeColor: theme.colorScheme.onPrimary,
-                  inactiveColor: theme.colorScheme.onPrimary.withValues(
-                    alpha: 0.7,
+                  child: MinglitSocialButton(
+                    targetId: event.partyId, // Like the party
+                    targetType: SocialTargetType.party,
+                    interactionType: SocialInteractionType.like,
+                    activeColor: theme.colorScheme.onPrimary,
+                    inactiveColor: theme.colorScheme.onPrimary.withValues(
+                      alpha: 0.7,
+                    ),
+                    tooltip: '좋아요',
                   ),
                 ),
-              ),
             ],
             backgroundColor: theme.colorScheme.primary,
           ),

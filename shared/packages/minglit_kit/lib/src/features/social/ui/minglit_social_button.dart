@@ -16,6 +16,7 @@ class MinglitSocialButton extends ConsumerWidget {
     this.activeColor,
     this.inactiveColor,
     this.iconSize = MinglitIconSize.medium,
+    this.tooltip,
     super.key,
   });
 
@@ -36,6 +37,9 @@ class MinglitSocialButton extends ConsumerWidget {
 
   /// Size of the interaction icon.
   final double iconSize;
+
+  /// Tooltip text shown on long press. Defaults to interaction type label.
+  final String? tooltip;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -65,8 +69,8 @@ class MinglitSocialButton extends ConsumerWidget {
         ? (activeColor ?? _getDefaultActiveColor(theme))
         : (inactiveColor ?? theme.colorScheme.onSurfaceVariant);
 
-    return InkWell(
-      onTap: () => ref
+    return IconButton(
+      onPressed: () => ref
           .read(
             socialInteractionControllerProvider(
               targetId: targetId,
@@ -75,15 +79,14 @@ class MinglitSocialButton extends ConsumerWidget {
             ).notifier,
           )
           .toggle(),
-      borderRadius: BorderRadius.circular(MinglitRadius.small),
-      child: Padding(
-        padding: const EdgeInsets.all(MinglitSpacing.xxsmall),
-        child: Icon(
-          _getIcon(isActive),
-          color: color,
-          size: iconSize,
-        ),
+      icon: Icon(
+        _getIcon(isActive),
+        color: color,
+        size: iconSize,
       ),
+      tooltip: tooltip ?? _getDefaultTooltip(),
+      constraints: const BoxConstraints(),
+      padding: const EdgeInsets.all(MinglitSpacing.xxsmall),
     );
   }
 
@@ -125,6 +128,15 @@ class MinglitSocialButton extends ConsumerWidget {
       SocialInteractionType.subscribe => theme.colorScheme.secondary,
       SocialInteractionType.bookmark => theme.colorScheme.primary,
       _ => theme.colorScheme.primary,
+    };
+  }
+
+  String _getDefaultTooltip() {
+    return switch (interactionType) {
+      SocialInteractionType.like => '좋아요',
+      SocialInteractionType.subscribe => '구독',
+      SocialInteractionType.bookmark => '저장',
+      SocialInteractionType.block => '차단',
     };
   }
 }
