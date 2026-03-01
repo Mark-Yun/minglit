@@ -22,8 +22,7 @@ class UserScaffold extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final currentIndex = navigationShell.currentIndex;
-    final isVisible =
-        currentIndex != 0 || ref.watch(navVisibilityProvider);
+    final isVisible = currentIndex != 0 || ref.watch(navVisibilityProvider);
 
     return Scaffold(
       body: Stack(

@@ -82,7 +82,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       final event = events[index];
                       return MinglitEventCard(
                         event: event,
-                      onTap: () => eventCoordinator.pushEventDetail(event.id),
+                        onTap: () => eventCoordinator.pushEventDetail(event.id),
                       );
                     },
                   ),
@@ -99,7 +99,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               padding: EdgeInsets.only(bottom: 80),
             ),
           ],
-      ),
+        ),
       ),
     );
   }
