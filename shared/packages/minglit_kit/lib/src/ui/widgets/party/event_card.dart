@@ -225,10 +225,10 @@ class _ParticipantOverlay extends StatelessWidget {
     final filledCount = ratio <= 0
         ? 0
         : ratio <= 0.33
-            ? 1
-            : ratio <= 0.66
-                ? 2
-                : 3;
+        ? 1
+        : ratio <= 0.66
+        ? 2
+        : 3;
     final segmentColor = switch (filledCount) {
       0 => Colors.white.withValues(alpha: 0.3),
       1 => MinglitColors.secondary,
