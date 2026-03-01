@@ -10,8 +10,50 @@ class MyPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
     final theme = Theme.of(context);
-    final avatarUrl = user?.userMetadata?['avatar_url'] as String?;
-    final displayName = user?.userMetadata?['full_name'] as String? ?? '유저';
+
+    // 비로그인 상태: 로그인 유도 placeholder
+    if (user == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('마이페이지')),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.person_outline,
+                size: 64,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(height: MinglitSpacing.medium),
+              Text(
+                '로그인이 필요합니다',
+                style: theme.textTheme.titleMedium,
+              ),
+              const SizedBox(height: MinglitSpacing.small),
+              Text(
+                '로그인하고 나의 정보를 확인해보세요',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: MinglitSpacing.xlarge),
+              FilledButton(
+                onPressed: () {
+                  ref
+                      .read(authCoordinatorProvider)
+                      .pushLogin(from: '/my');
+                },
+                child: const Text('로그인'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final avatarUrl = user.userMetadata?['avatar_url'] as String?;
+    final displayName =
+        user.userMetadata?['full_name'] as String? ?? '유저';
     final homeCoordinator = ref.read(homeCoordinatorProvider);
 
     return Scaffold(
@@ -27,9 +69,8 @@ class MyPage extends ConsumerWidget {
               children: [
                 CircleAvatar(
                   radius: 32,
-                  backgroundImage: avatarUrl != null
-                      ? NetworkImage(avatarUrl)
-                      : null,
+                  backgroundImage:
+                      avatarUrl != null ? NetworkImage(avatarUrl) : null,
                   child: avatarUrl == null
                       ? const Icon(Icons.person, size: 32)
                       : null,
@@ -46,7 +87,7 @@ class MyPage extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        user?.email ?? '',
+                        user.email ?? '',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),

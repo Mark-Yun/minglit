@@ -1,13 +1,45 @@
 part of 'event_detail_page.dart';
 
-class _EventDetailContent extends ConsumerWidget {
+class _EventDetailContent extends ConsumerStatefulWidget {
   const _EventDetailContent({required this.event});
 
   final Event event;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_EventDetailContent> createState() =>
+      _EventDetailContentState();
+}
+
+class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
+  final _scrollController = ScrollController();
+  bool _showTitle = false;
+
+  static const _collapseThreshold = 300.0 - kToolbarHeight;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    final collapsed = _scrollController.offset > _collapseThreshold;
+    if (collapsed != _showTitle) {
+      setState(() => _showTitle = collapsed);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final event = widget.event;
     final party = event.party;
     final partner = party?.partner;
     final location = event.location ?? party?.location;
@@ -25,11 +57,22 @@ class _EventDetailContent extends ConsumerWidget {
         return ref.refresh(eventDetailControllerProvider(event.id).future);
       },
       child: CustomScrollView(
+        controller: _scrollController,
         slivers: [
           // 1. Hero Image Header
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
+            title: _showTitle
+                ? Text(
+                    eventTitle,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  )
+                : null,
+            centerTitle: false,
             flexibleSpace: FlexibleSpaceBar(
               background: MinglitImageCarousel(
                 imageUrls: party?.imageUrls ?? [],
