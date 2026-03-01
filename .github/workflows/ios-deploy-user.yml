@@ -155,8 +155,8 @@ jobs:
         run: |
           flutter build ipa --release --export-options-plist=ios/ExportOptions-dev.plist \
             --build-number=${{ github.run_number }} \
-            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL_DEV }} \
-            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY_DEV }} \
+            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_DEV_URL }} \
+            --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }} \
             --dart-define=KAKAO_LOCAL_REST_API_KEY=${{ secrets.KAKAO_LOCAL_REST_API_KEY }} \
             --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} \
             --dart-define=ENVIRONMENT=development
@@ -166,8 +166,8 @@ jobs:
         run: |
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist \
             --build-number=${{ github.run_number }} \
-            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL_PROD }} \
-            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY_PROD }} \
+            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_MAIN_URL }} \
+            --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }} \
             --dart-define=KAKAO_LOCAL_REST_API_KEY=${{ secrets.KAKAO_LOCAL_REST_API_KEY }} \
             --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} \
             --dart-define=ENVIRONMENT=production

@@ -71,11 +71,11 @@ jobs:
 
       - name: Build APK (Dev)
         if: github.ref == 'refs/heads/dev'
-        run: flutter build apk --flavor dev --release --build-number=${{ github.run_number }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} --dart-define=ENVIRONMENT=development
+        run: flutter build apk --flavor dev --release --build-number=${{ github.run_number }} --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_DEV_URL }} --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} --dart-define=ENVIRONMENT=development
 
       - name: Build AAB (Main)
         if: github.ref == 'refs/heads/main'
-        run: flutter build appbundle --flavor prod --release --build-number=${{ github.run_number }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} --dart-define=ENVIRONMENT=production
+        run: flutter build appbundle --flavor prod --release --build-number=${{ github.run_number }} --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_MAIN_URL }} --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} --dart-define=ENVIRONMENT=production
 
       - name: Upload Artifact (Dev APK)
         if: github.ref == 'refs/heads/dev'
