@@ -45,7 +45,7 @@ class HomePage extends ConsumerWidget {
           ),
           const SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: MinglitSpacing.small),
+              padding: EdgeInsets.only(top: MinglitSpacing.small),
               child: ExploreFilterChipBar(),
             ),
           ),
