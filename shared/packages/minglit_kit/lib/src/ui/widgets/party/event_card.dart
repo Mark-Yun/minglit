@@ -124,31 +124,32 @@ class MinglitEventCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // D-Day chip (top-left)
-                Positioned(
-                  top: MinglitSpacing.small,
-                  left: MinglitSpacing.small,
-                  child: MinglitChip(
-                    label: dDayLabel,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-                // Participant overlay (top-right)
-                Positioned(
-                  top: MinglitSpacing.small,
-                  right: MinglitSpacing.small,
-                  child: _ParticipantOverlay(
-                    current: event!.currentParticipants,
-                    max: event!.maxParticipants,
-                  ),
-                ),
-                // Partner overlay (bottom-left) - only if partner exists
+                // Partner overlay (top-left) - only if partner exists
                 if (partner != null)
                   Positioned(
-                    bottom: MinglitSpacing.small,
+                    top: MinglitSpacing.small,
                     left: MinglitSpacing.small,
                     child: _PartnerOverlay(partner: partner),
                   ),
+                // D-Day chip + Participant overlay (top-right)
+                Positioned(
+                  top: MinglitSpacing.small,
+                  right: MinglitSpacing.small,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      MinglitChip(
+                        label: dDayLabel,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: MinglitSpacing.xsmall),
+                      _ParticipantOverlay(
+                        current: event!.currentParticipants,
+                        max: event!.maxParticipants,
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
 
