@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/src/data/models/event.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_chip.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_image.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_skeleton.dart';
 
 /// **Minglit Event Card**
 ///
@@ -173,6 +175,46 @@ class MinglitEventCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: MinglitSpacing.small),
+
+                  // Participation Progress
+                  if (event.maxParticipants == 0 &&
+                      event.currentParticipants == 0) ...[
+                    const MinglitSkeleton(height: 8, width: double.infinity),
+                    const SizedBox(height: MinglitSpacing.small),
+                  ] else if (event.maxParticipants > 0) ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(
+                              MinglitRadius.small / 2,
+                            ),
+                            child: MinglitLinearProgressIndicator(
+                              value:
+                                  (event.currentParticipants /
+                                          event.maxParticipants)
+                                      .clamp(0.0, 1.0),
+                              color:
+                                  event.currentParticipants >=
+                                      event.maxParticipants
+                                  ? theme.colorScheme.error
+                                  : MinglitColors.tertiary,
+                              backgroundColor:
+                                  theme.colorScheme.surfaceContainerHighest,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${event.currentParticipants}/${event.maxParticipants}',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: MinglitSpacing.small),
+                  ],
 
                   // Price
                   Text(
