@@ -1,3 +1,7 @@
+// TODO: verify_jwt=false 설정 후, 포트원 서버 호출자 검증 강화 필요
+// 현재: IP whitelist만 사용 (ALLOWED_IPS)
+// 추가 필요: 포트원 V1 webhook signature 검증 또는 HMAC 검증
+// 참고: V1은 HMAC 미지원이므로 IP whitelist가 1차 보안. 추가 보안 레이어 검토 필요.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { IamportClient } from "../_shared/iamport_client.ts";

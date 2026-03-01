@@ -1,12 +1,16 @@
-
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { IamportClient } from "../_shared/iamport_client.ts";
-import { successResponse, errorResponse } from "../_shared/response_utils.ts";
+import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
+import { requireAuth } from "../_shared/auth_utils.ts";
 import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
 
 initSentry();
 
 Deno.serve(withSentry(async (req) => {
+  if (req.method === "OPTIONS") return corsResponse();
+
+  const auth = await requireAuth(req);
+  if (auth instanceof Response) return auth;
   try {
     // 1. Parse Request
     let reqBody: Record<string, unknown>;

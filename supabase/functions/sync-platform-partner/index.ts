@@ -1,7 +1,7 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { PortoneV2Client } from "../_shared/portone_client.ts";
-import { successResponse, errorResponse } from "../_shared/response_utils.ts";
+import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
+import { requireAuth } from "../_shared/auth_utils.ts";
 import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
 
 const PORTONE_V2_API_KEY = Deno.env.get("PORTONE_V2_API_KEY");
@@ -12,7 +12,11 @@ if (!PORTONE_V2_API_KEY) {
 
 initSentry();
 
-serve(withSentry(async (req) => {
+Deno.serve(withSentry(async (req) => {
+  if (req.method === "OPTIONS") return corsResponse();
+
+  const auth = await requireAuth(req);
+  if (auth instanceof Response) return auth;
   try {
     let reqBody: Record<string, unknown>;
     try {

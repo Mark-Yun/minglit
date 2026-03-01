@@ -1,5 +1,5 @@
-
-import { successResponse, errorResponse } from "../_shared/response_utils.ts";
+import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
+import { requireAuth } from "../_shared/auth_utils.ts";
 import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
 
 const GITHUB_TOKEN = Deno.env.get("GITHUB_ACCESS_TOKEN");
@@ -8,6 +8,12 @@ const GITHUB_REPO = "Mark-Yun/minglit";
 initSentry();
 
 Deno.serve(withSentry(async (req) => {
+  if (req.method === "OPTIONS") return corsResponse();
+
+  // Verify JWT (ES256-compatible, via Auth server)
+  const auth = await requireAuth(req);
+  if (auth instanceof Response) return auth;
+
   try {
     let reqBody: Record<string, unknown>;
     try {

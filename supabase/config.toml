@@ -454,3 +454,52 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/dev-seed-database/deno.json"
 entrypoint = "./functions/dev-seed-database/index.ts"
+
+[functions.report-bug]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
+import_map = "./functions/report-bug/deno.json"
+entrypoint = "./functions/report-bug/index.ts"
+
+[functions.verify-identity-v1]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
+entrypoint = "./functions/verify-identity-v1/index.ts"
+
+[functions.verify-identity-v2]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
+entrypoint = "./functions/verify-identity-v2/index.ts"
+
+[functions.verify-payment-v1]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
+import_map = "./functions/verify-payment-v1/deno.json"
+entrypoint = "./functions/verify-payment-v1/index.ts"
+
+[functions.cancel-payment]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
+import_map = "./functions/cancel-payment/deno.json"
+entrypoint = "./functions/cancel-payment/index.ts"
+
+# TODO: 포트원 서버 호출자 검증 강화 필요 (현재 IP whitelist만 사용)
+[functions.portone-webhook-v1]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/portone-webhook-v1/index.ts"
+
+[functions.create-order-transfer]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
+entrypoint = "./functions/create-order-transfer/index.ts"
+
+[functions.query-settlements]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
+entrypoint = "./functions/query-settlements/index.ts"
+
+[functions.sync-platform-partner]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
+entrypoint = "./functions/sync-platform-partner/index.ts"

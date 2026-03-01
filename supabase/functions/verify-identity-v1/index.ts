@@ -1,7 +1,7 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { IamportClient } from "../_shared/iamport_client.ts";
-import { successResponse, errorResponse } from "../_shared/response_utils.ts";
+import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
+import { requireAuth } from "../_shared/auth_utils.ts";
 import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
 
 const IMP_KEY = Deno.env.get("PORTONE_IMP_KEY");
@@ -13,7 +13,12 @@ if (!IMP_KEY || !IMP_SECRET) {
 
 initSentry();
 
-serve(withSentry(async (req) => {
+Deno.serve(withSentry(async (req) => {
+  if (req.method === "OPTIONS") return corsResponse();
+
+  const auth = await requireAuth(req);
+  if (auth instanceof Response) return auth;
+  const userId = auth;
   try {
     const { identity_verification_id } = await req.json();
 
@@ -37,14 +42,6 @@ serve(withSentry(async (req) => {
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
-
-    const authHeader = req.headers.get("Authorization");
-    const userRes = await supabase.auth.getUser(authHeader?.replace("Bearer ", ""));
-    const userId = userRes.data.user?.id;
-
-    if (!userId) {
-      return errorResponse("Unauthorized", 401);
-    }
 
     // Convert Unix timestamp (seconds) to Date
     // Iamport birth is usually integer (e.g. 19990101)? No, response has `birth` (int/string) or `birthday`.
