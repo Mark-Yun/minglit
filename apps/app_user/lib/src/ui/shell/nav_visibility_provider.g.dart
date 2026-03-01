@@ -10,8 +10,8 @@ part of 'nav_visibility_provider.dart';
 // ignore_for_file: type=lint, type=warning
 /// Controls bottom navigation bar visibility.
 ///
-/// [false] = hidden (initial state on app launch).
-/// [true]  = visible (shown on upward scroll in home tab).
+/// `false` = hidden (initial state on app launch).
+/// `true` = visible (shown on upward scroll in home tab).
 ///
 /// Only the home tab (index == 0) drives this provider via scroll events.
 /// The my-page tab always shows the nav bar regardless of this value.
@@ -21,8 +21,8 @@ const navVisibilityProvider = NavVisibilityProvider._();
 
 /// Controls bottom navigation bar visibility.
 ///
-/// [false] = hidden (initial state on app launch).
-/// [true]  = visible (shown on upward scroll in home tab).
+/// `false` = hidden (initial state on app launch).
+/// `true` = visible (shown on upward scroll in home tab).
 ///
 /// Only the home tab (index == 0) drives this provider via scroll events.
 /// The my-page tab always shows the nav bar regardless of this value.
@@ -30,8 +30,8 @@ final class NavVisibilityProvider
     extends $NotifierProvider<NavVisibility, bool> {
   /// Controls bottom navigation bar visibility.
   ///
-  /// [false] = hidden (initial state on app launch).
-  /// [true]  = visible (shown on upward scroll in home tab).
+  /// `false` = hidden (initial state on app launch).
+  /// `true` = visible (shown on upward scroll in home tab).
   ///
   /// Only the home tab (index == 0) drives this provider via scroll events.
   /// The my-page tab always shows the nav bar regardless of this value.
@@ -66,8 +66,8 @@ String _$navVisibilityHash() => r'a9c4612d1c3dd086b17880f8bed5f5389961c0c1';
 
 /// Controls bottom navigation bar visibility.
 ///
-/// [false] = hidden (initial state on app launch).
-/// [true]  = visible (shown on upward scroll in home tab).
+/// `false` = hidden (initial state on app launch).
+/// `true` = visible (shown on upward scroll in home tab).
 ///
 /// Only the home tab (index == 0) drives this provider via scroll events.
 /// The my-page tab always shows the nav bar regardless of this value.
