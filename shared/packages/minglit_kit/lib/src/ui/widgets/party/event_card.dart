@@ -207,7 +207,12 @@ class MinglitEventCard extends StatelessWidget {
   }
 }
 
-/// Participant count overlay with progress bar.
+/// Participant count overlay with battery-style indicator.
+///
+/// Displays a 3-segment battery gauge based on participation ratio:
+/// - 0–33%: 1 filled segment (orange)
+/// - 34–66%: 2 filled segments (mint)
+/// - 67–100%: 3 filled segments (purple)
 class _ParticipantOverlay extends StatelessWidget {
   const _ParticipantOverlay({required this.current, required this.max});
 
@@ -217,6 +222,19 @@ class _ParticipantOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ratio = max > 0 ? (current / max).clamp(0.0, 1.0) : 0.0;
+    final filledCount = ratio <= 0
+        ? 0
+        : ratio <= 0.33
+        ? 1
+        : ratio <= 0.66
+        ? 2
+        : 3;
+    final segmentColor = switch (filledCount) {
+      0 => Colors.white.withValues(alpha: 0.3),
+      1 => MinglitColors.secondary,
+      2 => MinglitColors.tertiary,
+      _ => MinglitColors.primary,
+    };
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -227,20 +245,21 @@ class _ParticipantOverlay extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: 40,
-            child: LinearProgressIndicator(
-              // ignore: use_minglit_progress_indicator -- LinearProgressIndicator used for participant progress display
-              value: ratio,
-              color: MinglitColors.tertiary,
-              backgroundColor: Colors.white.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(2),
-              minHeight: 4,
+          // 3-segment battery gauge
+          for (var i = 0; i < 3; i++) ...[
+            if (i > 0) const SizedBox(width: 2),
+            Container(
+              width: 10,
+              height: 8,
+              decoration: BoxDecoration(
+                color: i < filledCount
+                    ? segmentColor
+                    : Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
+          ],
           const SizedBox(width: 6),
-          const Icon(Icons.people_outline, size: 11, color: Colors.white),
-          const SizedBox(width: 2),
           Text(
             '$current/$max',
             style: const TextStyle(
@@ -249,6 +268,8 @@ class _ParticipantOverlay extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
+          const SizedBox(width: 2),
+          const Icon(Icons.people_outline, size: 11, color: Colors.white),
         ],
       ),
     );
