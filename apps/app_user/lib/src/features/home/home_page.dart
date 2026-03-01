@@ -57,7 +57,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 const SizedBox(width: MinglitSpacing.small),
               ],
               backgroundColor: MinglitColors.background,
-              surfaceTintColor: Colors.transparent,
+              surfaceTintColor: MinglitColors.transparent,
             ),
             const SliverToBoxAdapter(
               child: Padding(
@@ -65,6 +65,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 child: ExploreFilterChipBar(),
               ),
             ),
+            // ignore: use_minglit_async_value_widget, returns Sliver which is incompatible with Widget-based MinglitAsyncValueWidget
             recommendationAsync.when(
               data: (events) {
                 if (events.isEmpty) {
@@ -89,14 +90,14 @@ class _HomePageState extends ConsumerState<HomePage> {
                 );
               },
               loading: () => const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator()),
+                child: Center(child: MinglitCircularProgressIndicator()),
               ),
               error: (_, _) => const SliverFillRemaining(
                 child: SizedBox.shrink(),
               ),
             ),
             const SliverPadding(
-              padding: EdgeInsets.only(bottom: 80),
+              padding: EdgeInsets.only(bottom: MinglitSpacing.xlarge),
             ),
           ],
         ),

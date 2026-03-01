@@ -116,8 +116,8 @@ class MinglitEventCard extends StatelessWidget {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.transparent,
-                          Colors.black.withValues(alpha: 0.45),
+                          MinglitColors.transparent,
+                          MinglitColors.textPrimary.withValues(alpha: 0.45),
                         ],
                         stops: const [0.45, 1.0],
                       ),
@@ -231,16 +231,19 @@ class _ParticipantOverlay extends StatelessWidget {
         ? 2
         : 3;
     final segmentColor = switch (filledCount) {
-      0 => Colors.white.withValues(alpha: 0.3),
+      0 => MinglitColors.background.withValues(alpha: 0.3),
       1 => MinglitColors.secondary,
       2 => MinglitColors.tertiary,
       _ => MinglitColors.primary,
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: MinglitSpacing.xsmall2,
+        vertical: MinglitSpacing.xxsmall,
+      ),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.45),
+        color: MinglitColors.textPrimary.withValues(alpha: 0.45),
         borderRadius: BorderRadius.circular(100),
       ),
       child: Row(
@@ -255,7 +258,7 @@ class _ParticipantOverlay extends StatelessWidget {
               decoration: BoxDecoration(
                 color: i < filledCount
                     ? segmentColor
-                    : Colors.white.withValues(alpha: 0.2),
+                    : MinglitColors.background.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -263,14 +266,18 @@ class _ParticipantOverlay extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             '$current/$max',
-            style: const TextStyle(
-              color: Colors.white,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: MinglitColors.background,
               fontSize: 11,
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(width: 2),
-          const Icon(Icons.people_outline, size: 11, color: Colors.white),
+          const Icon(
+            Icons.people_outline,
+            size: 11,
+            color: MinglitColors.background,
+          ),
         ],
       ),
     );
@@ -286,9 +293,12 @@ class _PartnerOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: MinglitSpacing.xsmall2,
+        vertical: MinglitSpacing.xxsmall,
+      ),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.45),
+        color: MinglitColors.textPrimary.withValues(alpha: 0.45),
         borderRadius: BorderRadius.circular(100),
       ),
       child: Row(
@@ -299,9 +309,13 @@ class _PartnerOverlay extends StatelessWidget {
             backgroundImage: partner.profileImageUrl != null
                 ? NetworkImage(partner.profileImageUrl!)
                 : null,
-            backgroundColor: Colors.white24,
+            backgroundColor: MinglitColors.background.withValues(alpha: 0.15),
             child: partner.profileImageUrl == null
-                ? const Icon(Icons.store, size: 12, color: Colors.white)
+                ? const Icon(
+                    Icons.store,
+                    size: 12,
+                    color: MinglitColors.background,
+                  )
                 : null,
           ),
           const SizedBox(width: 6),
@@ -309,8 +323,8 @@ class _PartnerOverlay extends StatelessWidget {
             constraints: const BoxConstraints(maxWidth: 90),
             child: Text(
               partner.name,
-              style: const TextStyle(
-                color: Colors.white,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: MinglitColors.background,
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),

@@ -32,10 +32,19 @@ class MinglitColors {
 
   /// Warning amber color.
   static const warning = Color(0xFFF59E0B);
+
+  /// Fully transparent color.
+  static const transparent = Color(0x00000000);
+
+  /// Semi-transparent black scrim for overlays.
+  static const scrim = Color(0x80000000);
 }
 
 /// Spacing scale constants for consistent layout.
 class MinglitSpacing {
+  /// 0px zero spacing.
+  static const double zero = 0;
+
   /// 2px extra-extra-small spacing.
   static const double xxsmall = 2;
 

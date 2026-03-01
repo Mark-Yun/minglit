@@ -21,6 +21,7 @@ class PartnerHomePage extends ConsumerWidget {
     final partner = ref.watch(currentPartnerInfoProvider).value;
     final unreadCount = ref
         .watch(notificationListProvider)
+        // ignore: use_minglit_async_value_widget, extracts int count not a Widget
         .maybeWhen(
           data: (notifications) => notifications
               .where((n) => !(n['is_read'] as bool? ?? false))

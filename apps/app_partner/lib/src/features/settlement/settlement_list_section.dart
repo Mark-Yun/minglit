@@ -24,7 +24,7 @@ class _SettlementListSection extends StatelessWidget {
         else
           ...settlements.map((settlement) {
             return Padding(
-              padding: const EdgeInsets.only(bottom: MinglitSpacing.medium),
+              padding: const EdgeInsets.only(bottom: MinglitSpacing.large),
               child: _SettlementCard(settlement: settlement),
             );
           }),
@@ -54,7 +54,7 @@ class _SettlementCard extends StatelessWidget {
         tilePadding: const EdgeInsets.all(MinglitSpacing.medium),
         childrenPadding: const EdgeInsets.fromLTRB(
           MinglitSpacing.medium,
-          0,
+          MinglitSpacing.zero,
           MinglitSpacing.medium,
           MinglitSpacing.medium,
         ),

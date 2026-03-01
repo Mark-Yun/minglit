@@ -90,7 +90,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             );
           }
 
-          return searchAsync.when(
+          return MinglitAsyncValueWidget(
+            value: searchAsync,
             data: (events) {
               if (events.isEmpty) {
                 return Center(
@@ -116,7 +117,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 },
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const Center(
+              child: MinglitCircularProgressIndicator(),
+            ),
             error: (e, _) => const Center(
               child: Text('검색 중 오류가 발생했습니다'),
             ),

@@ -1,6 +1,7 @@
 import 'package:app_partner/src/ui/shell/partner_shell_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 class PartnerScaffold extends StatelessWidget {
   const PartnerScaffold({
@@ -28,7 +29,7 @@ class PartnerScaffold extends StatelessWidget {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _calculateSelectedIndex(),
         onDestinationSelected: coordinator.onItemTapped,
-        indicatorColor: Colors.transparent,
+        indicatorColor: MinglitColors.transparent,
         backgroundColor: colorScheme.surface,
         destinations: const [
           NavigationDestination(

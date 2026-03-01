@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/src/features/notification/notification_list_controller.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
 
 /// Displays the list of user notifications.
 class NotificationListScreen extends ConsumerWidget {
@@ -32,7 +33,8 @@ class NotificationListScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: notificationState.when(
+      body: MinglitAsyncValueWidget(
+        value: notificationState,
         data: (notifications) {
           if (notifications.isEmpty) {
             return const Center(child: Text('알림이 없습니다.'));
@@ -129,7 +131,6 @@ class NotificationListScreen extends ConsumerWidget {
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('에러: $err')),
       ),
     );

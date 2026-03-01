@@ -123,12 +123,12 @@ class _AppView extends ConsumerWidget {
     final startupState = ref.watch(appStartupProvider);
     final goRouter = ref.watch(goRouterProvider);
     // Activate notification initializer to listen for sign-in events
-    ref.watch(notificationInitializerProvider);
-
-    // Remove native splash when startup completes (or fails).
-    ref.listen(appStartupProvider, (prev, next) {
-      if (next is! AsyncLoading) FlutterNativeSplash.remove();
-    });
+    ref
+      ..watch(notificationInitializerProvider)
+      // Remove native splash when startup completes (or fails).
+      ..listen(appStartupProvider, (prev, next) {
+        if (next is! AsyncLoading) FlutterNativeSplash.remove();
+      });
 
     // ignore: use_minglit_async_value_widget - This is the app entry point, MaterialApp is not yet available.
     return MaterialApp.router(
@@ -144,7 +144,8 @@ class _AppView extends ConsumerWidget {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
-        return startupState.when(
+        return MinglitAsyncValueWidget(
+          value: startupState,
           data: (_) => BugReporterWrapper(
             navigatorKey: rootNavigatorKey,
             child: MinglitGlobalLoadingOverlay(child: child!),

@@ -39,7 +39,7 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: theme.colorScheme.surface,
         elevation: 0,
         leading: const CloseButton(color: MinglitColors.background),
         title: Text(
@@ -145,7 +145,7 @@ class QrScannerOverlayShape extends ShapeBorder {
   const QrScannerOverlayShape({
     this.borderColor = MinglitColors.background,
     this.borderWidth = 3.0,
-    this.overlayColor = const Color.fromRGBO(0, 0, 0, 80),
+    this.overlayColor = MinglitColors.scrim,
     this.borderRadius = 0,
     this.borderLength = 40,
     this.cutOutSize = 250,

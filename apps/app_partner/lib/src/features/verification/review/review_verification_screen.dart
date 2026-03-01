@@ -166,7 +166,7 @@ class _ReviewVerificationScreenState
         // Keep custom dialog for image viewer
         context: context,
         builder: (context) => Dialog(
-          backgroundColor: Colors.transparent,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           child: InteractiveViewer(
             child: Image.network(signedUrl, fit: BoxFit.contain),
           ),

@@ -70,7 +70,7 @@ class UpcomingEventsCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                          vertical: 8,
+                          vertical: MinglitSpacing.small,
                         ),
                         child: Row(
                           children: [

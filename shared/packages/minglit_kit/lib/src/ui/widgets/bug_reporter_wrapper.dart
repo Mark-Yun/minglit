@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/src/data/repositories/bug_report_repository.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:shake/shake.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -105,7 +106,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                 ),
                 if (isLoading) ...[
                   const SizedBox(height: 16),
-                  const LinearProgressIndicator(),
+                  const MinglitCircularProgressIndicator(),
                 ],
               ],
             ),

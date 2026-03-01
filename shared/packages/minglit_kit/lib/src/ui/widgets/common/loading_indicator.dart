@@ -25,8 +25,8 @@ class MinglitCircularProgressIndicator extends StatelessWidget {
       child: SizedBox(
         width: size,
         height: size,
+        // ignore: use_minglit_progress_indicator, this IS the MinglitCircularProgressIndicator implementation
         child: CircularProgressIndicator(
-          // ignore: use_minglit_progress_indicator -- Implementation detail
           strokeWidth: strokeWidth,
           valueColor: color != null
               ? AlwaysStoppedAnimation<Color>(color!)
@@ -58,8 +58,8 @@ class MinglitLinearProgressIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ignore: use_minglit_progress_indicator, this IS the MinglitLinearProgressIndicator implementation
     return LinearProgressIndicator(
-      // ignore: use_minglit_progress_indicator -- Implementation detail
       value: value,
       color: color,
       backgroundColor: backgroundColor,

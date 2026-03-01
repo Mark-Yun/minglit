@@ -41,7 +41,7 @@ class UserScaffold extends ConsumerWidget {
                 child: NavigationBar(
                   selectedIndex: currentIndex,
                   onDestinationSelected: _goBranch,
-                  indicatorColor: Colors.transparent,
+                  indicatorColor: colorScheme.surface,
                   backgroundColor: colorScheme.surface,
                   destinations: const [
                     NavigationDestination(

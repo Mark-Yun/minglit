@@ -131,8 +131,8 @@ class TicketListItem extends StatelessWidget {
                         children: linkedGroups.map((g) {
                           return Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
-                              vertical: 1,
+                              horizontal: MinglitSpacing.xsmall,
+                              vertical: MinglitSpacing.xxsmall,
                             ),
                             decoration: BoxDecoration(
                               color: colorScheme.primaryContainer.withValues(

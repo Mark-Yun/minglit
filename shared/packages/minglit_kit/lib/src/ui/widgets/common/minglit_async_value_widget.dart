@@ -36,6 +36,7 @@ class MinglitAsyncValueWidget<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ignore: use_minglit_async_value_widget, this IS the MinglitAsyncValueWidget implementation
     return value.when(
       data: data,
       loading: loading ?? () => const MinglitCircularProgressIndicator(),

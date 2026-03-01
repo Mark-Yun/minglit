@@ -59,7 +59,7 @@ class PartyListPage extends ConsumerWidget {
           }
 
           return ListView.separated(
-            padding: const EdgeInsets.only(bottom: 80),
+            padding: const EdgeInsets.only(bottom: MinglitSpacing.large),
             itemCount: parties.length,
             separatorBuilder: (context, index) => Divider(
               height: 1,

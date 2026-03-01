@@ -198,7 +198,7 @@ class MatchingVoteScreen extends ConsumerWidget {
                   end: Alignment.topCenter,
                   colors: [
                     MinglitColors.textPrimary.withValues(alpha: 0.87),
-                    Colors.transparent,
+                    MinglitColors.transparent,
                   ],
                 ),
               ),

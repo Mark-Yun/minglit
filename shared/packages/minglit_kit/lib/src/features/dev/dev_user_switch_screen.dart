@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/features/auth/logic/auth_controller.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -75,7 +76,7 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
         bottom: _isActionRunning
             ? const PreferredSize(
                 preferredSize: Size.fromHeight(2),
-                child: LinearProgressIndicator(),
+                child: MinglitCircularProgressIndicator(),
               )
             : null,
         actions: [

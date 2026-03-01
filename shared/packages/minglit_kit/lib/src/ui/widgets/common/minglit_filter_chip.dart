@@ -47,17 +47,26 @@ class MinglitFilterChip extends StatelessWidget {
     // YT: font-size 1.4rem(14px), line-height 2rem(20px), weight 500
     final (padding, fontSize, iconSize) = switch (size) {
       MinglitChipSize.small => (
-        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.small,
+          vertical: MinglitSpacing.xxsmall,
+        ),
         12.0,
         12.0,
       ),
       MinglitChipSize.medium => (
-        const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+        const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.sm,
+          vertical: MinglitSpacing.xsmall2,
+        ),
         13.0,
         14.0,
       ),
       MinglitChipSize.large => (
-        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.sm,
+          vertical: MinglitSpacing.xsmall,
+        ),
         14.0,
         15.0,
       ),
@@ -70,12 +79,12 @@ class MinglitFilterChip extends StatelessWidget {
     // Unselected: rgba(0,0,0,0.05) bg + #0f0f0f text
     // Selected: #0f0f0f bg + #fff text
     final bgColor = isSelected
-        ? const Color(0xFF0F0F0F)
-        : const Color(0x0D000000); // rgba(0,0,0,0.05)
+        ? MinglitColors.textPrimary
+        : MinglitColors.textPrimary.withValues(alpha: 0.05);
 
     final fgColor = isSelected
-        ? Colors.white
-        : const Color(0xFF606060); // yt-spec-grey-5
+        ? MinglitColors.background
+        : MinglitColors.textSecondary;
 
     final hasIcon = icon != null;
 

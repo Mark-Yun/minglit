@@ -109,7 +109,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
-      expect(navBar.indicatorColor, Colors.transparent);
+      expect(navBar.indicatorColor, MinglitColors.transparent);
     });
   });
 }

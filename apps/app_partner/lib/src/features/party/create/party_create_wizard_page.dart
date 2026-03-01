@@ -114,7 +114,7 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
         appBar: MinglitTheme.simpleAppBar(
           title: context.l10n.partyDetail_menu_edit,
         ),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const Center(child: MinglitCircularProgressIndicator()),
       );
     }
 
