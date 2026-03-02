@@ -530,7 +530,8 @@ async function uploadSeedImages(supabase: SupabaseClient): Promise<string[]> {
 
   for (const filename of imageFiles) {
     try {
-      const bytes = await Deno.readFile(`./assets/${filename}`)
+      const fileUrl = new URL(`./assets/${filename}`, import.meta.url)
+      const bytes = await Deno.readFile(fileUrl)
       const path = `seed-images/${filename}`
 
       const { error } = await supabase.storage
@@ -589,7 +590,7 @@ async function seedDefinedPartners(
          username: pDef.ownerEmail.replace('@test.com', ''),
          gender: 'male',
          birth_date: '1990-01-01',
-         phone_number: '010-0000-0000',
+         phone_number: `010-0000-${String(SEED_PARTNERS.indexOf(pDef)).padStart(4, '0')}`,
          is_verified: true,
        },
      }
@@ -636,7 +637,7 @@ async function seedHotPlacePartners(
    let createdEvents = 0
 
    for (const place of HOT_PLACES) {
-     const ownerEmail = `partner_${place.region_2.replace(/구$/, '').toLowerCase()}@test.com`
+     const ownerEmail = `partner_hotplace_${HOT_PLACES.indexOf(place)}@test.com`
      const ownerPersona: UserPersona = {
        email: ownerEmail,
        password: 'password1234!',
@@ -645,7 +646,7 @@ async function seedHotPlacePartners(
          username: ownerEmail.replace('@test.com', ''),
          gender: 'male',
          birth_date: '1988-01-01',
-         phone_number: '010-0000-0001',
+         phone_number: `010-0001-${String(HOT_PLACES.indexOf(place)).padStart(4, '0')}`,
          is_verified: true,
        },
      }
