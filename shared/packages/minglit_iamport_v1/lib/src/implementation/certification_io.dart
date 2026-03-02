@@ -37,6 +37,12 @@ class CertificationServiceImpl implements CertificationService {
       ),
     );
 
+    // If the user pressed back and the callback never fired,
+    // complete with null so the caller doesn't hang.
+    if (!completer.isCompleted) {
+      completer.complete(null);
+    }
+
     return completer.future;
   }
 }
