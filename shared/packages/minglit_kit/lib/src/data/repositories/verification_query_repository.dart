@@ -17,9 +17,17 @@ mixin _VerificationQueryRepository on _SupabaseVerificationContext {
           .eq('is_active', isActive)
           .order('created_at', ascending: false);
 
-      final result = (data as List)
-          .map((e) => Verification.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final result = <Verification>[];
+      for (final e in data as List) {
+        try {
+          result.add(Verification.fromJson(e as Map<String, dynamic>));
+        } on Object catch (parseError) {
+          Log.w(
+            '⚠️ [VerificationRepo] Skipping invalid'
+            ' verification record: $parseError',
+          );
+        }
+      }
 
       Log.d('getPartnerVerifications success | count: ${result.length}');
       return result;
@@ -39,9 +47,17 @@ mixin _VerificationQueryRepository on _SupabaseVerificationContext {
           .eq('is_active', true)
           .order('display_name', ascending: true);
 
-      final result = (data as List)
-          .map((e) => Verification.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final result = <Verification>[];
+      for (final e in data as List) {
+        try {
+          result.add(Verification.fromJson(e as Map<String, dynamic>));
+        } on Object catch (parseError) {
+          Log.w(
+            '⚠️ [VerificationRepo] Skipping invalid'
+            ' verification record: $parseError',
+          );
+        }
+      }
 
       Log.d('getGlobalVerifications success | count: ${result.length}');
       return result;
@@ -82,9 +98,17 @@ mixin _VerificationQueryRepository on _SupabaseVerificationContext {
           .select()
           .inFilter('id', ids);
 
-      final result = (data as List)
-          .map((e) => Verification.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final result = <Verification>[];
+      for (final e in data as List) {
+        try {
+          result.add(Verification.fromJson(e as Map<String, dynamic>));
+        } on Object catch (parseError) {
+          Log.w(
+            '⚠️ [VerificationRepo] Skipping invalid'
+            ' verification record: $parseError',
+          );
+        }
+      }
 
       Log.d('getVerificationsByIds success | count: ${result.length}');
       return result;
@@ -135,42 +159,50 @@ mixin _VerificationQueryRepository on _SupabaseVerificationContext {
           .eq('partner_id', partnerId)
           .inFilter('verification_id', requiredVerificationIds);
 
-      final result = (masters as List).map((dynamic m) {
-        final map = m as Map<String, dynamic>;
-        final vId = map['id'];
+      final result = <VerificationRequirementStatus>[];
+      for (final dynamic m in masters as List) {
+        try {
+          final map = m as Map<String, dynamic>;
+          final vId = map['id'];
 
-        final original = (originalDatas as List)
-            .cast<Map<String, dynamic>?>()
-            .firstWhere(
-              (d) => d?['verification_id'] == vId,
-              orElse: () => null,
-            );
+          final original = (originalDatas as List)
+              .cast<Map<String, dynamic>?>()
+              .firstWhere(
+                (d) => d?['verification_id'] == vId,
+                orElse: () => null,
+              );
 
-        final submissionMap = (activeSubmissions as List)
-            .cast<Map<String, dynamic>?>()
-            .firstWhere(
-              (r) => r?['verification_id'] == vId,
-              orElse: () => null,
-            );
+          final submissionMap = (activeSubmissions as List)
+              .cast<Map<String, dynamic>?>()
+              .firstWhere(
+                (r) => r?['verification_id'] == vId,
+                orElse: () => null,
+              );
 
-        final submission = submissionMap != null
-            ? VerificationSubmission.fromJson(submissionMap)
-            : null;
+          final submission = submissionMap != null
+              ? VerificationSubmission.fromJson(submissionMap)
+              : null;
 
-        final result = (verifiedResults as List)
-            .cast<Map<String, dynamic>?>()
-            .firstWhere(
-              (res) => res?['verification_id'] == vId,
-              orElse: () => null,
-            );
+          final verifiedResult = (verifiedResults as List)
+              .cast<Map<String, dynamic>?>()
+              .firstWhere(
+                (res) => res?['verification_id'] == vId,
+                orElse: () => null,
+              );
 
-        return VerificationRequirementStatus(
-          master: Verification.fromJson(map),
-          userVerification: original,
-          activeSubmission: submission,
-          verifiedResult: result,
-        );
-      }).toList();
+          result.add(VerificationRequirementStatus(
+            master: Verification.fromJson(map),
+            userVerification: original,
+            activeSubmission: submission,
+            verifiedResult: verifiedResult,
+          ));
+        } on Object catch (parseError) {
+          Log.w(
+            '⚠️ [VerificationRepo] Skipping invalid'
+            ' requirement status: $parseError',
+          );
+        }
+      }
 
       Log.d('getPartnerRequirementsStatus success | count: ${result.length}');
       return result;

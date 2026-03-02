@@ -47,8 +47,9 @@ class SupabaseUserRepository implements UserRepository {
       return (data as List)
           .map(
             (dynamic e) =>
-                (e as Map<String, dynamic>)['verification_id'] as String,
+                (e as Map<String, dynamic>)['verification_id'] as String?,
           )
+          .whereType<String>()
           .toList();
     } on Object {
       return [];
