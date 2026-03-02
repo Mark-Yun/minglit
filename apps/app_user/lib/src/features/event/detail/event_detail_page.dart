@@ -28,10 +28,11 @@ class EventDetailPage extends ConsumerWidget {
         value: eventAsync,
         data: (event) => _EventDetailContent(event: event),
       ),
-      // ignore: use_minglit_async_value_widget, returns nullable Widget for conditional bottomNavigationBar
-      bottomNavigationBar: eventAsync.maybeWhen(
+      // ignore: use_minglit_async_value_widget, returns skeleton/shrink for bottomNavigationBar
+      bottomNavigationBar: eventAsync.when(
         data: (event) => _BottomTicketBar(event: event),
-        orElse: () => null,
+        loading: () => const _BottomTicketBarSkeleton(),
+        error: (_, _) => const SizedBox.shrink(),
       ),
     );
   }

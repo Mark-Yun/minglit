@@ -104,3 +104,47 @@ class _BottomTicketBar extends ConsumerWidget {
     );
   }
 }
+
+class _BottomTicketBarSkeleton extends StatelessWidget {
+  const _BottomTicketBarSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(MinglitSpacing.medium),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadowColor.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Row(
+          children: [
+            const Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                MinglitSkeleton(width: 40, height: 12),
+                SizedBox(height: MinglitSpacing.xsmall),
+                MinglitSkeleton(width: 100, height: 24),
+              ],
+            ),
+            const SizedBox(width: MinglitSpacing.large),
+            Expanded(
+              child: MinglitSkeleton(
+                height: 48,
+                borderRadius: BorderRadius.circular(MinglitRadius.card),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
