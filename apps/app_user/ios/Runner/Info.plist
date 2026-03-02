@@ -109,7 +109,7 @@
 			</dict>
 		</array>
 		<key>FlutterDeepLinkingEnabled</key>
-		<false/>
+		<true/>
 		<key>UIStatusBarHidden</key>
 		<false/>
 	</dict>
