@@ -40,7 +40,7 @@ runs:
           APP_ENV="production"
           echo "🏗️ Building for Production (Main)..."
         else
-          TARGET="lib/dev_main.dart"
+          TARGET="lib/main.dart"
           SB_URL="$SUPABASE_DEV_URL"
           SB_KEY="$SUPABASE_DEV_KEY"
           G_ID="$GOOGLE_DEV_ID"
