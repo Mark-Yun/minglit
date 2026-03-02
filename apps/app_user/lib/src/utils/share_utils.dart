@@ -2,8 +2,7 @@ import 'package:share_plus/share_plus.dart';
 
 class ShareUtils {
   const ShareUtils._();
-
-  static const String defaultBaseUrl = 'https://minglit.app';
+  static const String defaultBaseUrl = 'https://app.minglit.com';
 
   static Uri eventUrl({required String eventId, String? baseUrl}) {
     final origin = _normalizeBaseUrl(baseUrl);

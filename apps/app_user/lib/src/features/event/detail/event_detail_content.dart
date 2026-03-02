@@ -88,6 +88,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                     ShareUtils.shareEvent(
                       eventTitle: eventTitle,
                       eventId: event.id,
+                      baseUrl: ref.watch(minglitDomainsProvider).userApp,
                     ),
                   );
                 },
