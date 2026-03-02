@@ -715,6 +715,13 @@ Deno.serve(async (_req) => {
     const imageUrls = await uploadSeedImages(supabase)
     await updatePartyImages(supabase, imageUrls)
 
+    // Purge pgmq queues to avoid queue bloat after seeding
+    for (const queue of ['q_global_events', 'q_notifications', 'q_vectors']) {
+      await supabase.rpc('pgmq_purge', { queue_name: queue }).catch(() => {
+        // pgmq may not be available in all environments — ignore errors
+      })
+    }
+
      return new Response(
       JSON.stringify({
         created_users: createdUsers + SEED_PARTNERS.length + HOT_PLACES.length,
