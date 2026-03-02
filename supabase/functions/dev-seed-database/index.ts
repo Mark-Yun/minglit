@@ -109,6 +109,42 @@ const SCENARIOS: {
       { name: '30대 티켓', price: 25000, quantity: 6 },
     ],
   },
+  {
+    title: '자유 오픈 밍글',
+    summary: '누구나 참여 가능한 오픈 소셜 네트워킹',
+    minConfirmed: 4,
+    maxParticipants: 12,
+    verificationCategory: null,
+    entryGroups: [
+      { label: '남성', gender: 'male', birthYearMin: 1990, birthYearMax: 2005 },
+      { label: '여성', gender: 'female', birthYearMin: 1990, birthYearMax: 2005 },
+    ],
+    tickets: [{ name: '참가비', price: 12000, quantity: 12 }],
+  },
+  {
+    title: '직장인 애프터눈 라운지',
+    summary: '직장인 인증 필수 — 오후의 여유로운 네트워킹',
+    minConfirmed: 4,
+    maxParticipants: 10,
+    verificationCategory: 'career',
+    entryGroups: [
+      { label: '남성', gender: 'male', birthYearMin: 1988, birthYearMax: 2000 },
+      { label: '여성', gender: 'female', birthYearMin: 1988, birthYearMax: 2000 },
+    ],
+    tickets: [{ name: '라운지 티켓', price: 20000, quantity: 10 }],
+  },
+  {
+    title: 'VIP 멤버십 파티',
+    summary: '파트너 자체 인증 필수 — 엄선된 VIP 멤버십 파티',
+    minConfirmed: 4,
+    maxParticipants: 8,
+    verificationCategory: 'asset',
+    entryGroups: [
+      { label: '남성 VIP', gender: 'male', birthYearMin: 1985, birthYearMax: 2000 },
+      { label: '여성 VIP', gender: 'female', birthYearMin: 1985, birthYearMax: 2000 },
+    ],
+    tickets: [{ name: 'VIP 멤버십', price: 60000, quantity: 8 }],
+  },
 ]
 
 const SEED_PARTNERS = [
@@ -145,6 +181,18 @@ function generateDescription(title: string, summary: string): { ops: object[] } 
       { insert: `${title}\n`, attributes: { bold: true } },
       { insert: '\n' },
       { insert: `${summary}\n` },
+      { insert: '\n' },
+      { insert: '📍 장소 안내\n', attributes: { bold: true } },
+      { insert: '이벤트 장소는 신청 확정 후 안내드립니다. 대중교통 이용을 권장합니다.\n' },
+      { insert: '\n' },
+      { insert: '✅ 참가 조건\n', attributes: { bold: true } },
+      { insert: '본인 인증 완료 후 신청 가능합니다. 미성년자는 참여가 제한됩니다.\n' },
+      { insert: '\n' },
+      { insert: '🎁 포함 내용\n', attributes: { bold: true } },
+      { insert: '음료 1잔 제공, 네트워킹 프로그램 진행, 기념 사진 촬영.\n' },
+      { insert: '\n' },
+      { insert: '⚠️ 주의사항\n', attributes: { bold: true } },
+      { insert: '노쇼 시 패널티가 부과될 수 있습니다. 취소는 이벤트 24시간 전까지 가능합니다.\n' },
     ],
   }
 }
@@ -155,6 +203,44 @@ function generatePersonas(): UserPersona[] {
   const password = 'password1234!'
 
   for (let age = 20; age <= 24; age++) {
+    const birthYear = currentYear - age + 1
+    const birthDate = `${birthYear}-01-01`
+
+    const variants = [
+      { gender: 'male', verified: true, suffix: '인증O' },
+      { gender: 'male', verified: false, suffix: '인증X' },
+      { gender: 'female', verified: true, suffix: '인증O' },
+      { gender: 'female', verified: false, suffix: '인증X' },
+    ]
+
+    for (const v of variants) {
+      const genderKr = v.gender === 'male' ? '남' : '여'
+      const genderShort = v.gender === 'male' ? 'm' : 'f'
+      const verifShort = v.verified ? 'ok' : 'no'
+
+      const name = `${age}${genderKr}_${v.suffix}`
+      const username = `user_${age}_${genderShort}_${verifShort}`
+      const email = `${username}@test.com`
+      const last4 = `${v.verified ? '1' : '0'}${v.gender === 'male' ? '1' : '2'}00`
+      const phoneNumber = `010-${1000 + age}-${last4}`
+
+      personas.push({
+        email,
+        password,
+        metadata: { name, username, gender: v.gender, birth_date: birthDate, phone_number: phoneNumber, is_verified: v.verified },
+      })
+    }
+  }
+
+  return personas
+}
+
+function generate30sPersonas(): UserPersona[] {
+  const currentYear = new Date().getFullYear()
+  const personas: UserPersona[] = []
+  const password = 'password1234!'
+
+  for (let age = 25; age <= 34; age++) {
     const birthYear = currentYear - age + 1
     const birthDate = `${birthYear}-01-01`
 
@@ -422,6 +508,22 @@ async function seedUsers(supabase: SupabaseClient): Promise<number> {
    return createdUsers
  }
 
+async function seed30sUsers(supabase: SupabaseClient): Promise<number> {
+  const personas = generate30sPersonas()
+  let createdUsers = 0
+
+  for (const persona of personas) {
+    try {
+      await createAdminUser(supabase, persona)
+      createdUsers++
+    } catch (err) {
+      console.error(`Failed to create ${persona.email}:`, err)
+    }
+  }
+
+  return createdUsers
+}
+
 async function seedGlobalVerifications(supabase: SupabaseClient): Promise<Record<string, string>> {
    return await ensureGlobalVerifications(supabase)
  }
@@ -551,7 +653,11 @@ Deno.serve(async (_req) => {
      const supabase = createClient(supabaseUrl, serviceRoleKey)
 
      // Seed users
-     const createdUsers = await seedUsers(supabase)
+    // Seed users
+    const createdUsers = await seedUsers(supabase)
+
+    // Seed 30s users
+    const created30sUsers = await seed30sUsers(supabase)
 
      // Seed global verifications
      const globalVerifs = await seedGlobalVerifications(supabase)
@@ -563,12 +669,13 @@ Deno.serve(async (_req) => {
      const hotPlaceStats = await seedHotPlacePartners(supabase, globalVerifs)
 
      return new Response(
-       JSON.stringify({
-         created_users: createdUsers + SEED_PARTNERS.length + HOT_PLACES.length,
-         created_partners: definedPartnerStats.createdPartners + hotPlaceStats.createdPartners,
-         created_parties: definedPartnerStats.createdParties + hotPlaceStats.createdParties,
-         created_events: definedPartnerStats.createdEvents + hotPlaceStats.createdEvents,
-       }),
+      JSON.stringify({
+        created_users: createdUsers + SEED_PARTNERS.length + HOT_PLACES.length,
+        created_30s_users: created30sUsers,
+        created_partners: definedPartnerStats.createdPartners + hotPlaceStats.createdPartners,
+        created_parties: definedPartnerStats.createdParties + hotPlaceStats.createdParties,
+        created_events: definedPartnerStats.createdEvents + hotPlaceStats.createdEvents,
+      }),
        { status: 200, headers: { 'Content-Type': 'application/json' } },
      )
    } catch (err) {
