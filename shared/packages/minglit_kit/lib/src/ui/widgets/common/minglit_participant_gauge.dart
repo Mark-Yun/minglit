@@ -8,6 +8,7 @@ const double _kSegmentWidth = 10;
 const double _kGaugeTextSize = 11;
 const double _kLowThreshold = 0.33;
 const double _kMedThreshold = 0.66;
+const int _kSegmentCount = 3;
 
 /// A public widget that displays participant count as a 3-segment gauge.
 ///
@@ -63,7 +64,7 @@ class MinglitParticipantGauge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           // 3-segment battery gauge
-          for (var i = 0; i < 3; i++) ...[
+          for (var i = 0; i < _kSegmentCount; i++) ...[
             if (i > 0) const SizedBox(width: MinglitSpacing.xxsmall),
             Container(
               width: _kSegmentWidth,
