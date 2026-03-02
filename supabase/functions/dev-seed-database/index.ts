@@ -726,7 +726,12 @@ async function seedUserActivity(sb: SupabaseClient): Promise<void> {
   }
 
   // ── Step 3: Pick events for activity seeding ─────────────────────────
-  const scheduledEvents = events.filter((e: any) => e.status === 'scheduled').slice(0, 6)
+  // Pick 3 events WITH verification + 3 events WITHOUT to cover all application statuses
+  const allScheduled = events.filter((e: any) => e.status === 'scheduled')
+  const withVerif = allScheduled.filter((e: any) => ((e as any).parties?.required_verification_ids ?? []).length > 0).slice(0, 3)
+  const withoutVerif = allScheduled.filter((e: any) => ((e as any).parties?.required_verification_ids ?? []).length === 0).slice(0, 3)
+  const scheduledEvents = [...withVerif, ...withoutVerif]
+  if (scheduledEvents.length === 0) return
   if (scheduledEvents.length === 0) return
 
   // ── Step 4: Seed event_applications (ALL as 'pending' or 'pending_review' first) ──
