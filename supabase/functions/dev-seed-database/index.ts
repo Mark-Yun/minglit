@@ -742,14 +742,15 @@ async function seedUserActivity(sb: SupabaseClient): Promise<void> {
     const needsVerification = requiredVerifIds.length > 0
 
     // Pick users for this event (different users per event to avoid unique constraint)
-    const eventUsers = users.slice(ei * 4, ei * 4 + 4)
+    // Pick users for this event (5 per event to cover all scenarios)
+    const eventUsers = users.slice(ei * 5, ei * 5 + 5)
     if (eventUsers.length === 0) continue
 
     for (let ui = 0; ui < eventUsers.length; ui++) {
       const user = eventUsers[ui]
       const scenario = needsVerification
         ? (ui === 0 ? 'pending_review_approved' : ui === 1 ? 'pending_review_rejected' : ui === 2 ? 'pending_review_needs_correction' : 'pending_review_pending')
-        : (ui === 0 ? 'approved' : ui === 1 ? 'paid' : ui === 2 ? 'cancelled' : 'payment_failed')
+        : (ui === 0 ? 'approved' : ui === 1 ? 'paid' : ui === 2 ? 'cancelled' : ui === 3 ? 'payment_failed' : 'pending')
 
       const { data: app, error: appErr } = await sb.from('event_applications').insert({
         event_id: event.id,
@@ -861,15 +862,12 @@ async function seedUserActivity(sb: SupabaseClient): Promise<void> {
     await sb.from('events').update({ status: 'completed' }).eq('id', paidApps[0].event_id)
   }
 
-  const { data: cancelledApps } = await sb.from('event_applications')
-    .select('event_id')
-    .eq('status', 'cancelled')
-    .limit(1)
-
-  if (cancelledApps && cancelledApps.length > 0) {
-    const cancelEventId = cancelledApps[0].event_id
-    if (!paidApps || cancelEventId !== paidApps[0]?.event_id) {
-      await sb.from('events').update({ status: 'cancelled' }).eq('id', cancelEventId)
+  // Cancel a different event than the completed one
+  if (scheduledEvents.length >= 2) {
+    const completedEventId = paidApps?.[0]?.event_id
+    const cancelEvent = scheduledEvents.find((e: any) => e.id !== completedEventId)
+    if (cancelEvent) {
+      await sb.from('events').update({ status: 'cancelled' }).eq('id', cancelEvent.id)
     }
   }
 
