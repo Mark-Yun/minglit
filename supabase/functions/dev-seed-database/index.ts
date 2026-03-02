@@ -260,7 +260,7 @@ function generate30sPersonas(): UserPersona[] {
       const username = `user_${age}_${genderShort}_${verifShort}`
       const email = `${username}@test.com`
       const last4 = `${v.verified ? '1' : '0'}${v.gender === 'male' ? '1' : '2'}00`
-      const phoneNumber = `010-${1000 + age}-${last4}`
+      const phoneNumber = `010-${2000 + age}-${last4}`
 
       personas.push({
         email,
