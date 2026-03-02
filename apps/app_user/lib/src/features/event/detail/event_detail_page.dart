@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:app_user/src/features/event/admission/event_admission_controller.dart';
+import 'package:app_user/src/features/event/detail/open_in_app_dialog.dart';
 import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
 import 'package:app_user/src/utils/share_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+
 
 part 'event_detail_content.dart';
 part 'event_info_tile.dart';
