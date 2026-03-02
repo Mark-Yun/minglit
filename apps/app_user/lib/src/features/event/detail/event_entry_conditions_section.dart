@@ -61,8 +61,8 @@ class _EntryConditionsSection extends StatelessWidget {
                   ),
                   if (showGauge)
                     Positioned(
-                      top: 8,
-                      right: 8,
+                      top: MinglitSpacing.small,
+                      right: MinglitSpacing.small,
                       child: MinglitParticipantGauge(
                         current: soldCount,
                         max: totalQuantity,

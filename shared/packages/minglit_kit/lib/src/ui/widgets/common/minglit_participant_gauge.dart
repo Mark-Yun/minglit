@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
+// Private layout constants for the gauge widget.
+const double _kPillRadius = 100;
+const double _kSegmentRadius = 2;
+const double _kSegmentWidth = 10;
+const double _kGaugeTextSize = 11;
+const double _kLowThreshold = 0.33;
+const double _kMedThreshold = 0.66;
+
 /// A public widget that displays participant count as a 3-segment gauge.
 ///
 /// Renders a visual gauge with 3 segments that fill based on the ratio of
-/// [current] to [max] participants. Segments are colored:
+/// [MinglitParticipantGauge.current] to [MinglitParticipantGauge.max]
+/// Segments are colored:
 /// - 0-33%: Orange (secondary)
 /// - 34-66%: Mint (tertiary)
 /// - 67-100%: Purple (primary)
@@ -29,9 +38,9 @@ class MinglitParticipantGauge extends StatelessWidget {
     final ratio = max > 0 ? (current / max).clamp(0.0, 1.0) : 0.0;
     final filledCount = ratio <= 0
         ? 0
-        : ratio <= 0.33
+        : ratio <= _kLowThreshold
         ? 1
-        : ratio <= 0.66
+        : ratio <= _kMedThreshold
         ? 2
         : 3;
     final segmentColor = switch (filledCount) {
@@ -48,38 +57,38 @@ class MinglitParticipantGauge extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(100),
+        borderRadius: BorderRadius.circular(_kPillRadius),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           // 3-segment battery gauge
           for (var i = 0; i < 3; i++) ...[
-            if (i > 0) const SizedBox(width: 2),
+            if (i > 0) const SizedBox(width: MinglitSpacing.xxsmall),
             Container(
-              width: 10,
-              height: 8,
+              width: _kSegmentWidth,
+              height: MinglitSpacing.small,
               decoration: BoxDecoration(
                 color: i < filledCount
                     ? segmentColor
                     : Theme.of(context).colorScheme.outlineVariant,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(_kSegmentRadius),
               ),
             ),
           ],
-          const SizedBox(width: 6),
+          const SizedBox(width: MinglitSpacing.xsmall2),
           Text(
             '$current/$max',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 11,
+              fontSize: _kGaugeTextSize,
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(width: 2),
+          const SizedBox(width: MinglitSpacing.xxsmall),
           Icon(
             Icons.people_outline,
-            size: 11,
+            size: _kGaugeTextSize,
             color: Theme.of(context).colorScheme.onSurface,
           ),
         ],
