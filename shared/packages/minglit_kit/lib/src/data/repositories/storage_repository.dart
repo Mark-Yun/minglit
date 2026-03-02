@@ -26,7 +26,8 @@ class StorageRepository {
   /// Uploads a file to Supabase Storage and returns the public URL.
   ///
   /// [file]: The file to upload (XFile from image_picker/file_picker).
-  /// [bucket]: Target bucket name (e.g., 'party-assets', 'verification-docs').
+  /// [bucket]: Target bucket name
+  /// (e.g., 'party-assets', 'verification-proofs').
   /// [pathPrefix]: Optional folder path prefix (e.g., 'partner_123').
   /// If provided, the file will be saved as `bucket/pathPrefix/uuid.ext`.
   Future<String> uploadFile({

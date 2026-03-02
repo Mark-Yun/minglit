@@ -19,16 +19,16 @@ class _InfoTile extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(MinglitSpacing.small),
           decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+            color: theme.colorScheme.tertiary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(MinglitRadius.small),
           ),
           child: Icon(
             icon,
             size: MinglitIconSize.small,
-            color: theme.colorScheme.primary,
+            color: theme.colorScheme.tertiary,
           ),
         ),
-        const SizedBox(width: MinglitSpacing.medium),
+        const SizedBox(width: MinglitSpacing.small),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
