@@ -524,6 +524,50 @@ async function seed30sUsers(supabase: SupabaseClient): Promise<number> {
   return createdUsers
 }
 
+async function uploadSeedImages(supabase: SupabaseClient): Promise<string[]> {
+  const imageFiles = ['party_cafe_warm.jpg', 'party_lounge_bright.jpg', 'party_premium_lounge.jpg']
+  const urls: string[] = []
+
+  for (const filename of imageFiles) {
+    try {
+      const bytes = await Deno.readFile(`./assets/${filename}`)
+      const path = `seed-images/${filename}`
+
+      const { error } = await supabase.storage
+        .from('party-assets')
+        .upload(path, bytes, { contentType: 'image/jpeg', upsert: true })
+
+      if (error) {
+        console.error(`Failed to upload ${filename}:`, error.message)
+        continue
+      }
+
+      const { data } = supabase.storage.from('party-assets').getPublicUrl(path)
+      urls.push(data.publicUrl)
+    } catch (err) {
+      console.error(`Error uploading ${filename}:`, err)
+    }
+  }
+
+  return urls
+}
+
+async function updatePartyImages(supabase: SupabaseClient, imageUrls: string[]): Promise<void> {
+  if (imageUrls.length === 0) return
+
+  const { data: parties } = await supabase.from('parties').select('id').order('created_at')
+  if (!parties) return
+
+  for (let i = 0; i < parties.length; i++) {
+    const shuffled = [
+      imageUrls[i % imageUrls.length],
+      imageUrls[(i + 1) % imageUrls.length],
+      imageUrls[(i + 2) % imageUrls.length],
+    ]
+    await supabase.from('parties').update({ image_urls: shuffled }).eq('id', parties[i].id)
+  }
+}
+
 async function seedGlobalVerifications(supabase: SupabaseClient): Promise<Record<string, string>> {
    return await ensureGlobalVerifications(supabase)
  }
@@ -652,7 +696,6 @@ Deno.serve(async (_req) => {
      const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
      const supabase = createClient(supabaseUrl, serviceRoleKey)
 
-     // Seed users
     // Seed users
     const createdUsers = await seedUsers(supabase)
 
@@ -668,6 +711,10 @@ Deno.serve(async (_req) => {
      // Seed hot-place partners with all scenarios
      const hotPlaceStats = await seedHotPlacePartners(supabase, globalVerifs)
 
+    // Upload seed images and update party image_urls
+    const imageUrls = await uploadSeedImages(supabase)
+    await updatePartyImages(supabase, imageUrls)
+
      return new Response(
       JSON.stringify({
         created_users: createdUsers + SEED_PARTNERS.length + HOT_PLACES.length,
@@ -675,6 +722,7 @@ Deno.serve(async (_req) => {
         created_partners: definedPartnerStats.createdPartners + hotPlaceStats.createdPartners,
         created_parties: definedPartnerStats.createdParties + hotPlaceStats.createdParties,
         created_events: definedPartnerStats.createdEvents + hotPlaceStats.createdEvents,
+        uploaded_images: imageUrls.length,
       }),
        { status: 200, headers: { 'Content-Type': 'application/json' } },
      )
