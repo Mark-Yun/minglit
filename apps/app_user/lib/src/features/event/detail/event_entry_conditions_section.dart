@@ -31,14 +31,44 @@ class _EntryConditionsSection extends StatelessWidget {
                 const SizedBox(height: MinglitSpacing.medium),
             itemBuilder: (context, index) {
               final group = entryGroups[index];
-              return Container(
-                padding: const EdgeInsets.all(MinglitSpacing.small),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerLowest,
-                  borderRadius: BorderRadius.circular(MinglitRadius.small),
-                  border: Border.all(color: theme.colorScheme.outlineVariant),
-                ),
-                child: EntryGroupDetail(group: group.toTemplate()),
+              final matchingTickets = (event.tickets ?? []).where(
+                (t) =>
+                    t.targetEntryGroupIds.isNotEmpty &&
+                    t.targetEntryGroupIds.contains(group.id),
+              ).toList();
+              final soldCount = matchingTickets.fold<int>(
+                0,
+                (sum, t) => sum + t.soldCount,
+              );
+              final totalQuantity = matchingTickets.fold<int>(
+                0,
+                (sum, t) => sum + t.quantity,
+              );
+              final showGauge = matchingTickets.isNotEmpty && totalQuantity > 0;
+
+              return Stack(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(MinglitSpacing.small),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerLowest,
+                      borderRadius: BorderRadius.circular(MinglitRadius.small),
+                      border: Border.all(
+                        color: theme.colorScheme.outlineVariant,
+                      ),
+                    ),
+                    child: EntryGroupDetail(group: group.toTemplate()),
+                  ),
+                  if (showGauge)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: MinglitParticipantGauge(
+                        current: soldCount,
+                        max: totalQuantity,
+                      ),
+                    ),
+                ],
               );
             },
           ),

@@ -22,6 +22,7 @@ export 'src/ui/widgets/common/minglit_file_picker.dart';
 export 'src/ui/widgets/common/minglit_filter_chip.dart';
 export 'src/ui/widgets/common/minglit_image.dart';
 export 'src/ui/widgets/common/minglit_image_carousel.dart';
+export 'src/ui/widgets/common/minglit_participant_gauge.dart';
 export 'src/ui/widgets/common/minglit_skeleton.dart';
 export 'src/ui/widgets/common/number_stepper_input.dart';
 export 'src/ui/widgets/common/verification_card.dart';
