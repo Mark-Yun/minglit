@@ -683,6 +683,212 @@ async function seedHotPlacePartners(
    return { createdPartners, createdParties, createdEvents }
  }
 
+async function seedUserActivity(sb: SupabaseClient): Promise<void> {
+  // ── Step 0: Idempotency — clear previous activity data ──────────────
+  // CASCADE will delete event_participants, verification_submissions too
+  await sb.from('event_applications').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+  await sb.from('user_verifications').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+
+  // ── Step 1: Collect reference data ──────────────────────────────────
+  const { data: users } = await sb.from('user_profiles')
+    .select('id, username, gender, birth_date, is_verified')
+    .not('username', 'like', 'partner_%')
+  if (!users || users.length === 0) return
+
+  const { data: events } = await sb.from('events')
+    .select('id, party_id, status, max_participants, parties!inner(partner_id, required_verification_ids)')
+  if (!events || events.length === 0) return
+
+  const { data: allTickets } = await sb.from('tickets')
+    .select('id, event_id, price, quantity')
+  if (!allTickets || allTickets.length === 0) return
+
+  const { data: verifications } = await sb.from('verifications')
+    .select('id, partner_id, category, internal_name')
+  if (!verifications) return
+
+  // Helper: get tickets for an event
+  const ticketsForEvent = (eventId: string) => allTickets.filter((t: any) => t.event_id === eventId)
+
+  // ── Step 2: Seed user_verifications for verified users ───────────────
+  const verifiedUsers = users.filter((u: any) => u.is_verified)
+  const globalVerifs = verifications.filter((v: any) => v.partner_id === null)
+
+  for (const user of verifiedUsers.slice(0, 20)) {
+    for (const verif of globalVerifs) {
+      await sb.from('user_verifications').upsert({
+        user_id: user.id,
+        verification_id: verif.id,
+        data: { verified: true, source: 'seed' },
+      }, { onConflict: 'user_id,verification_id', ignoreDuplicates: true })
+    }
+  }
+
+  // ── Step 3: Pick events for activity seeding ─────────────────────────
+  const scheduledEvents = events.filter((e: any) => e.status === 'scheduled').slice(0, 6)
+  if (scheduledEvents.length === 0) return
+
+  // ── Step 4: Seed event_applications (ALL as 'pending' or 'pending_review' first) ──
+  const applicationIds: { id: string; eventId: string; userId: string; ticketId: string; scenario: string }[] = []
+
+  for (let ei = 0; ei < Math.min(scheduledEvents.length, 6); ei++) {
+    const event = scheduledEvents[ei]
+    const tickets = ticketsForEvent(event.id)
+    if (tickets.length === 0) continue
+
+    const ticket = tickets[0]
+    const requiredVerifIds: string[] = (event as any).parties?.required_verification_ids ?? []
+    const needsVerification = requiredVerifIds.length > 0
+
+    // Pick users for this event (different users per event to avoid unique constraint)
+    const eventUsers = users.slice(ei * 4, ei * 4 + 4)
+    if (eventUsers.length === 0) continue
+
+    for (let ui = 0; ui < eventUsers.length; ui++) {
+      const user = eventUsers[ui]
+      const scenario = needsVerification
+        ? (ui === 0 ? 'pending_review_approved' : ui === 1 ? 'pending_review_rejected' : ui === 2 ? 'pending_review_needs_correction' : 'pending_review_pending')
+        : (ui === 0 ? 'approved' : ui === 1 ? 'paid' : ui === 2 ? 'cancelled' : 'payment_failed')
+
+      const { data: app, error: appErr } = await sb.from('event_applications').insert({
+        event_id: event.id,
+        ticket_id: ticket.id,
+        user_id: user.id,
+        status: needsVerification ? 'pending_review' : 'pending',
+        message: `시드 데이터 신청 - ${scenario}`,
+      }).select('id').single()
+
+      if (appErr) {
+        console.error(`Failed to create application for user ${user.id} event ${event.id}: ${appErr.message}`)
+        continue
+      }
+
+      applicationIds.push({ id: app.id, eventId: event.id, userId: user.id, ticketId: ticket.id, scenario })
+    }
+  }
+
+  // ── Step 5: Seed verification_submissions (for pending_review apps) ──
+  const reviewApps = applicationIds.filter(a => a.scenario.startsWith('pending_review'))
+
+  for (const app of reviewApps) {
+    const event = scheduledEvents.find((e: any) => e.id === app.eventId)
+    if (!event) continue
+    const requiredVerifIds: string[] = (event as any).parties?.required_verification_ids ?? []
+    if (requiredVerifIds.length === 0) continue
+
+    const verifId = requiredVerifIds[0]
+    const partnerId = (event as any).parties?.partner_id
+    if (!partnerId) continue
+
+    const { data: sub, error: subErr } = await sb.from('verification_submissions').insert({
+      partner_id: partnerId,
+      user_id: app.userId,
+      verification_id: verifId,
+      application_id: app.id,
+      status: 'pending',
+      snapshot_data: { submitted_at: new Date().toISOString(), data: { note: 'seed data' } },
+    }).select('id').single()
+
+    if (subErr) {
+      console.error(`Failed to create verification_submission: ${subErr.message}`)
+      continue
+    }
+
+    // Update submission to target status (triggers handle cascade)
+    let targetStatus: string | null = null
+    if (app.scenario === 'pending_review_approved') targetStatus = 'approved'
+    else if (app.scenario === 'pending_review_rejected') targetStatus = 'rejected'
+    else if (app.scenario === 'pending_review_needs_correction') targetStatus = 'needs_correction'
+
+    if (targetStatus) {
+      await sb.from('verification_submissions').update({
+        status: targetStatus,
+        admin_comment: targetStatus === 'rejected' ? '인증 서류 불충분' : targetStatus === 'needs_correction' ? '추가 서류 필요' : null,
+        reviewed_at: new Date().toISOString(),
+      }).eq('id', sub.id)
+    }
+  }
+
+  // ── Step 6: Update non-verification event_applications to target statuses ──
+  const directApps = applicationIds.filter(a => !a.scenario.startsWith('pending_review'))
+
+  for (const app of directApps) {
+    const ticket = allTickets.find((t: any) => t.id === app.ticketId)
+    const ticketPrice = ticket?.price ?? 20000
+
+    if (app.scenario === 'approved') {
+      await sb.from('event_applications').update({ status: 'approved' }).eq('id', app.id)
+    } else if (app.scenario === 'paid') {
+      await sb.from('event_applications').update({ status: 'approved' }).eq('id', app.id)
+      await sb.from('event_applications').update({
+        status: 'paid',
+        payment_id: `seed_pay_${app.id.slice(0, 8)}`,
+        payment_amount: ticketPrice,
+      }).eq('id', app.id)
+    } else if (app.scenario === 'cancelled') {
+      await sb.from('event_applications').update({ status: 'cancelled' }).eq('id', app.id)
+    } else if (app.scenario === 'payment_failed') {
+      await sb.from('event_applications').update({ status: 'approved' }).eq('id', app.id)
+      await sb.from('event_applications').update({
+        status: 'payment_failed',
+        payment_id: null,
+        payment_amount: null,
+      }).eq('id', app.id)
+    }
+  }
+
+  // ── Step 7: Update event_participants to checked_in / no_show ────────
+  const { data: participants } = await sb.from('event_participants').select('id').limit(20)
+  if (participants && participants.length > 0) {
+    const checkinCount = Math.max(1, Math.floor(participants.length / 3))
+    for (let i = 0; i < checkinCount; i++) {
+      await sb.from('event_participants').update({ status: 'checked_in' }).eq('id', participants[i].id)
+    }
+    const noShowCount = Math.max(1, Math.floor(participants.length / 3))
+    for (let i = checkinCount; i < checkinCount + noShowCount && i < participants.length; i++) {
+      await sb.from('event_participants').update({ status: 'no_show' }).eq('id', participants[i].id)
+    }
+  }
+
+  // ── Step 8: Update 1-2 events to completed/cancelled ─────────────────
+  const { data: paidApps } = await sb.from('event_applications')
+    .select('event_id')
+    .eq('status', 'paid')
+    .limit(1)
+
+  if (paidApps && paidApps.length > 0) {
+    await sb.from('events').update({ status: 'completed' }).eq('id', paidApps[0].event_id)
+  }
+
+  const { data: cancelledApps } = await sb.from('event_applications')
+    .select('event_id')
+    .eq('status', 'cancelled')
+    .limit(1)
+
+  if (cancelledApps && cancelledApps.length > 0) {
+    const cancelEventId = cancelledApps[0].event_id
+    if (!paidApps || cancelEventId !== paidApps[0]?.event_id) {
+      await sb.from('events').update({ status: 'cancelled' }).eq('id', cancelEventId)
+    }
+  }
+
+  // ── Step 9: Refund scenarios ──────────────────────────────────────────
+  const { data: cancelledAppsList } = await sb.from('event_applications')
+    .select('id')
+    .eq('status', 'cancelled')
+    .limit(4)
+
+  if (cancelledAppsList && cancelledAppsList.length >= 1) {
+    await sb.from('event_applications').update({ refund_status: 'requested' }).eq('id', cancelledAppsList[0].id)
+    if (cancelledAppsList.length >= 2) {
+      await sb.from('event_applications').update({
+        refund_status: 'completed',
+        refund_amount: 10000,
+      }).eq('id', cancelledAppsList[1].id)
+    }
+  }
+}
+
 Deno.serve(async (_req) => {
    if (isProduction()) {
      return new Response(
@@ -715,11 +921,16 @@ Deno.serve(async (_req) => {
     const imageUrls = await uploadSeedImages(supabase)
     await updatePartyImages(supabase, imageUrls)
 
+    // Seed user activity (applications, verifications, participants)
+    await seedUserActivity(supabase)
+
     // Purge pgmq queues to avoid queue bloat after seeding
     for (const queue of ['q_global_events', 'q_notifications', 'q_vectors']) {
-      await supabase.rpc('pgmq_purge', { queue_name: queue }).catch(() => {
+      try {
+        await supabase.rpc('pgmq_purge', { queue_name: queue })
+      } catch {
         // pgmq may not be available in all environments — ignore errors
-      })
+      }
     }
 
      return new Response(
@@ -730,9 +941,10 @@ Deno.serve(async (_req) => {
         created_parties: definedPartnerStats.createdParties + hotPlaceStats.createdParties,
         created_events: definedPartnerStats.createdEvents + hotPlaceStats.createdEvents,
         uploaded_images: imageUrls.length,
+        seeded_activity: true,
       }),
-       { status: 200, headers: { 'Content-Type': 'application/json' } },
-     )
+      { status: 200, headers: { 'Content-Type': 'application/json' } },
+    )
    } catch (err) {
      return new Response(
        JSON.stringify({ error: (err as Error).message }),
