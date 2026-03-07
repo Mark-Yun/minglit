@@ -41,10 +41,13 @@ abstract class PartnerApplication with _$PartnerApplication {
 /// Database-specific helpers for [PartnerApplication].
 extension PartnerApplicationDbX on PartnerApplication {
   /// Returns JSON suitable for database inserts or updates.
+  /// Excludes server-managed fields (id, user_id, created_at, updated_at).
   Map<String, dynamic> toDbJson() {
     return toJson()
       ..remove('id')
+      ..remove('user_id')
       ..remove('created_at')
       ..remove('updated_at');
   }
+
 }
