@@ -15,7 +15,6 @@ class MinglitEventCard extends StatelessWidget {
     required this.event,
     super.key,
     this.onTap,
-    this.width = 240,
   }) : _isLoading = false;
 
   /// Named constructor for loading skeleton state.
@@ -23,7 +22,6 @@ class MinglitEventCard extends StatelessWidget {
     super.key,
     this.event,
     this.onTap,
-    this.width = 240,
   }) : _isLoading = true;
 
   /// Event data to render.
@@ -32,16 +30,13 @@ class MinglitEventCard extends StatelessWidget {
   /// Optional tap handler for the card.
   final VoidCallback? onTap;
 
-  /// Fixed width of the card.
-  final double width;
-
   /// Internal flag for loading state.
   final bool _isLoading;
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading || event == null) {
-      return _EventCardSkeleton(width: width);
+      return const _EventCardSkeleton();
     }
 
     final theme = Theme.of(context);
@@ -78,20 +73,8 @@ class MinglitEventCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: width,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(MinglitRadius.card),
-          boxShadow: [
-            BoxShadow(
-              color: MinglitColors.textPrimary.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
+      child: ColoredBox(
+        color: theme.colorScheme.surface,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -349,28 +332,14 @@ class _PartnerOverlay extends StatelessWidget {
 
 /// Skeleton loader for event card.
 class _EventCardSkeleton extends StatelessWidget {
-  const _EventCardSkeleton({required this.width});
-
-  final double width;
+  const _EventCardSkeleton();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      width: width,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(MinglitRadius.card),
-        boxShadow: [
-          BoxShadow(
-            color: MinglitColors.textPrimary.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
+    return ColoredBox(
+      color: theme.colorScheme.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -381,19 +350,24 @@ class _EventCardSkeleton extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.all(MinglitSpacing.medium),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                MinglitSkeleton(width: width * 0.8, height: 16),
-                const SizedBox(height: MinglitSpacing.xsmall),
-                Row(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final w = constraints.maxWidth;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    MinglitSkeleton(width: width * 0.5, height: 12),
-                    const Spacer(),
-                    MinglitSkeleton(width: width * 0.2, height: 12),
+                    MinglitSkeleton(width: w * 0.8, height: 16),
+                    const SizedBox(height: MinglitSpacing.xsmall),
+                    Row(
+                      children: [
+                        MinglitSkeleton(width: w * 0.5, height: 12),
+                        const Spacer(),
+                        MinglitSkeleton(width: w * 0.2, height: 12),
+                      ],
+                    ),
                   ],
-                ),
-              ],
+                );
+              },
             ),
           ),
         ],

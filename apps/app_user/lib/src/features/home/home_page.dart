@@ -74,7 +74,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                   );
                 }
                 return SliverPadding(
-                  padding: const EdgeInsets.all(MinglitSpacing.medium),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: MinglitSpacing.medium,
+                  ),
                   sliver: SliverList.separated(
                     itemCount: events.length,
                     separatorBuilder: (_, _) =>
