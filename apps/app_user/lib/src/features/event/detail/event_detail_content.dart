@@ -15,7 +15,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
   bool _showTitle = false;
   bool _bannerDismissed = false;
 
-  static const double _collapseThreshold = 300.0 - kToolbarHeight;
+  double _collapseThreshold = 0;
 
   @override
   void initState() {
@@ -41,6 +41,10 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final imageHeight = screenWidth * 9 / 16;
+    _collapseThreshold = imageHeight - kToolbarHeight;
+
     final event = widget.event;
     final party = event.party;
     final partner = party?.partner;
@@ -68,7 +72,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
             slivers: [
               // 1. Hero Image Header
               SliverAppBar(
-                expandedHeight: 300,
+                expandedHeight: imageHeight,
                 pinned: true,
                 title: _showTitle
                     ? Text(
