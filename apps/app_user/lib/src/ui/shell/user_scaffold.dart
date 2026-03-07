@@ -47,6 +47,7 @@ class UserScaffold extends ConsumerWidget {
                       top: false,
                       child: NavigationBar(
                         elevation: 0,
+                        height: 60,
                         surfaceTintColor: MinglitColors.transparent,
                         shadowColor: MinglitColors.transparent,
                         selectedIndex: currentIndex,
@@ -55,6 +56,22 @@ class UserScaffold extends ConsumerWidget {
                           alpha: 0.5,
                         ),
                         backgroundColor: MinglitColors.transparent,
+                        labelTextStyle: WidgetStateProperty.resolveWith((
+                          states,
+                        ) {
+                          if (states.contains(WidgetState.selected)) {
+                            return TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: colorScheme.onSurface,
+                            );
+                          }
+                          return TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: colorScheme.onSurfaceVariant,
+                          );
+                        }),
                         destinations: const [
                           NavigationDestination(
                             icon: Icon(Icons.home_outlined),
