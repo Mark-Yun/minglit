@@ -17,16 +17,15 @@ GoRouter goRouter(Ref ref) {
   final authState = ValueNotifier<AuthState?>(null);
   final onboardingRefresh = ValueNotifier<int>(0);
 
-  ref.listen(authStateChangesProvider, (_, next) {
-    next.whenData((state) {
-      authState.value = state;
+  ref
+    ..listen(authStateChangesProvider, (_, next) {
+      next.whenData((state) {
+        authState.value = state;
+      });
+    })
+    ..listen(onboardingStateProvider, (_, _) {
+      onboardingRefresh.value++;
     });
-  });
-
-  // Also refresh router when onboarding state changes
-  ref.listen(onboardingStateProvider, (_, _) {
-    onboardingRefresh.value++;
-  });
 
   return GoRouter(
     navigatorKey: rootNavigatorKey,
