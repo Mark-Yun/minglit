@@ -10,6 +10,8 @@ List<RouteBase> get $appRoutes => [
   $devMapRoute,
   $devUserSwitchRoute,
   $loginRoute,
+  $partnerApplyRoute,
+  $partnerApplyStatusRoute,
   $notificationCenterRoute,
   $partnerShellRoute,
 ];
@@ -71,6 +73,56 @@ mixin $LoginRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/login');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $partnerApplyRoute =>
+    GoRouteData.$route(path: '/apply', factory: $PartnerApplyRoute._fromState);
+
+mixin $PartnerApplyRoute on GoRouteData {
+  static PartnerApplyRoute _fromState(GoRouterState state) =>
+      const PartnerApplyRoute();
+
+  @override
+  String get location => GoRouteData.$location('/apply');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $partnerApplyStatusRoute => GoRouteData.$route(
+  path: '/apply/status',
+  factory: $PartnerApplyStatusRoute._fromState,
+);
+
+mixin $PartnerApplyStatusRoute on GoRouteData {
+  static PartnerApplyStatusRoute _fromState(GoRouterState state) =>
+      const PartnerApplyStatusRoute();
+
+  @override
+  String get location => GoRouteData.$location('/apply/status');
 
   @override
   void go(BuildContext context) => context.go(location);
