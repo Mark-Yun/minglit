@@ -42,12 +42,13 @@ class UserScaffold extends ConsumerWidget {
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                   child: ColoredBox(
-                    color: colorScheme.surface.withValues(alpha: 0.85),
-                    child: SafeArea(
-                      top: false,
+                    color: colorScheme.surface.withValues(alpha: 0.75),
+                    child: MediaQuery.removePadding(
+                      context: context,
+                      removeTop: true,
                       child: NavigationBar(
                         elevation: 0,
-                        height: 60,
+                        height: 64,
                         surfaceTintColor: MinglitColors.transparent,
                         shadowColor: MinglitColors.transparent,
                         selectedIndex: currentIndex,
