@@ -288,4 +288,26 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
     }
   }
 
+  /// **Upload Biz Registration**
+  ///
+  /// Uploads a business registration file to the partner-proofs storage
+  /// bucket. Returns the storage path string.
+  Future<String> uploadBizRegistration(XFile file) async {
+    final userId = supabaseClient.auth.currentUser?.id;
+    if (userId == null) throw const AuthException('User not authenticated');
+    Log.d('uploadBizRegistration called | file: ${file.name}');
+    return _uploadFile(userId, file, 'biz_reg');
+  }
+
+  /// **Upload Bankbook**
+  ///
+  /// Uploads a bankbook file to the partner-proofs storage bucket.
+  /// Returns the storage path string.
+  Future<String> uploadBankbook(XFile file) async {
+    final userId = supabaseClient.auth.currentUser?.id;
+    if (userId == null) throw const AuthException('User not authenticated');
+    Log.d('uploadBankbook called | file: ${file.name}');
+    return _uploadFile(userId, file, 'bankbook');
+  }
+
 }
