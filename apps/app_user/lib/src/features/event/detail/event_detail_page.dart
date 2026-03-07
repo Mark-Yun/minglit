@@ -9,7 +9,6 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-
 part 'event_detail_content.dart';
 part 'event_info_tile.dart';
 part 'event_quill_viewer.dart';

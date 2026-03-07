@@ -190,12 +190,14 @@ mixin _VerificationQueryRepository on _SupabaseVerificationContext {
                 orElse: () => null,
               );
 
-          result.add(VerificationRequirementStatus(
-            master: Verification.fromJson(map),
-            userVerification: original,
-            activeSubmission: submission,
-            verifiedResult: verifiedResult,
-          ));
+          result.add(
+            VerificationRequirementStatus(
+              master: Verification.fromJson(map),
+              userVerification: original,
+              activeSubmission: submission,
+              verifiedResult: verifiedResult,
+            ),
+          );
         } on Object catch (parseError) {
           Log.w(
             '⚠️ [VerificationRepo] Skipping invalid'
