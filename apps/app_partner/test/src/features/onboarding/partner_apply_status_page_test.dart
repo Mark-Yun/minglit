@@ -134,5 +134,68 @@ void main() {
         expect(find.text(adminComment), findsOneWidget);
       },
     );
+
+    testWidgets(
+      'shows edit button when state is needsCorrection',
+      (tester) async {
+        when(() => mockRepo.getMyApplication()).thenAnswer(
+          (_) => SynchronousFuture<PartnerApplication?>(
+            const PartnerApplication(
+              id: 'app_2',
+              userId: 'user_2',
+              status: 'needs_correction',
+              adminComment: '수정 필요',
+            ),
+          ),
+        );
+
+        await tester.pumpWidget(
+          buildWidget(
+            overrides: [
+              partnerRepositoryProvider.overrideWith((ref) => mockRepo),
+              onboardingStateProvider.overrideWith(
+                (ref) => SynchronousFuture(OnboardingState.needsCorrection),
+              ),
+            ],
+          ),
+        );
+
+        await tester.pump();
+        await tester.pump();
+
+        expect(find.text('신청서 수정하기'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'does not show edit button when state is pendingReview',
+      (tester) async {
+        when(() => mockRepo.getMyApplication()).thenAnswer(
+          (_) => SynchronousFuture<PartnerApplication?>(
+            const PartnerApplication(
+              id: 'app_1',
+              userId: 'user_1',
+              status: 'pending',
+            ),
+          ),
+        );
+
+        await tester.pumpWidget(
+          buildWidget(
+            overrides: [
+              partnerRepositoryProvider.overrideWith((ref) => mockRepo),
+              onboardingStateProvider.overrideWith(
+                (ref) => SynchronousFuture(OnboardingState.pendingReview),
+              ),
+            ],
+          ),
+        );
+
+        await tester.pump();
+        await tester.pump();
+
+        expect(find.text('신청서 수정하기'), findsNothing);
+      },
+    );
   });
 }

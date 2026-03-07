@@ -51,9 +51,9 @@ void main() {
 
     test('2. updateField brandName updates state.brandName', () {
       final container = buildContainer();
-      final notifier = container.read(partnerApplyControllerProvider.notifier);
-
-      notifier.updateField('brandName', 'Test Brand');
+      container
+          .read(partnerApplyControllerProvider.notifier)
+          .updateField('brandName', 'Test Brand');
 
       expect(
         container.read(partnerApplyControllerProvider).brandName,
@@ -63,26 +63,28 @@ void main() {
 
     test('3. validateStep(0) returns false when brandName is empty', () {
       final container = buildContainer();
-      final notifier = container.read(partnerApplyControllerProvider.notifier);
-
       // brand name is empty by default
-      expect(notifier.validateStep(0), isFalse);
+      expect(
+        container.read(partnerApplyControllerProvider.notifier).validateStep(0),
+        isFalse,
+      );
     });
 
     test('4. validateStep(0) returns true when brandName is non-empty', () {
       final container = buildContainer();
-      final notifier = container.read(partnerApplyControllerProvider.notifier);
+      container
+          .read(partnerApplyControllerProvider.notifier)
+          .updateField('brandName', 'My Café');
 
-      notifier.updateField('brandName', 'My Café');
-
-      expect(notifier.validateStep(0), isTrue);
+      expect(
+        container.read(partnerApplyControllerProvider.notifier).validateStep(0),
+        isTrue,
+      );
     });
 
     test('5. previousStep when currentStep==0 stays at 0', () {
       final container = buildContainer();
-      final notifier = container.read(partnerApplyControllerProvider.notifier);
-
-      notifier.previousStep();
+      container.read(partnerApplyControllerProvider.notifier).previousStep();
 
       expect(
         container.read(partnerApplyControllerProvider).currentStep,
@@ -92,9 +94,7 @@ void main() {
 
     test('6. setStep(2) sets currentStep to 2', () {
       final container = buildContainer();
-      final notifier = container.read(partnerApplyControllerProvider.notifier);
-
-      notifier.setStep(2);
+      container.read(partnerApplyControllerProvider.notifier).setStep(2);
 
       expect(
         container.read(partnerApplyControllerProvider).currentStep,
@@ -104,9 +104,9 @@ void main() {
 
     test('setStep out of range does not change currentStep', () {
       final container = buildContainer();
-      final notifier = container.read(partnerApplyControllerProvider.notifier);
-
-      notifier.setStep(10); // totalSteps = 5, so 10 is invalid
+      container
+          .read(partnerApplyControllerProvider.notifier)
+          .setStep(10); // totalSteps = 5, so 10 is invalid
 
       expect(
         container.read(partnerApplyControllerProvider).currentStep,
@@ -116,30 +116,30 @@ void main() {
 
     test('canProceed returns false when required fields are empty', () {
       final container = buildContainer();
-      final notifier = container.read(partnerApplyControllerProvider.notifier);
-
-      expect(notifier.canProceed(), isFalse);
+      expect(
+        container.read(partnerApplyControllerProvider.notifier).canProceed(),
+        isFalse,
+      );
     });
 
     test(
       'canProceed returns true after filling required fields for step 0',
       () {
         final container = buildContainer();
-        final notifier = container.read(
-          partnerApplyControllerProvider.notifier,
+        container
+            .read(partnerApplyControllerProvider.notifier)
+            .updateField('brandName', 'Brand X');
+
+        expect(
+          container.read(partnerApplyControllerProvider.notifier).canProceed(),
+          isTrue,
         );
-
-        notifier.updateField('brandName', 'Brand X');
-
-        expect(notifier.canProceed(), isTrue);
       },
     );
 
     test('multiple updateField calls update each field independently', () {
       final container = buildContainer();
-      final notifier = container.read(partnerApplyControllerProvider.notifier);
-
-      notifier
+      container.read(partnerApplyControllerProvider.notifier)
         ..updateField('brandName', 'Brand A')
         ..updateField('introduction', 'Hello world')
         ..updateField('contactEmail', 'test@test.com');
@@ -169,10 +169,9 @@ void main() {
 
     test('previousStep() decrements currentStep', () {
       final container = buildContainer();
-      final notifier = container.read(partnerApplyControllerProvider.notifier);
-      notifier.setStep(2);
-
-      notifier.previousStep();
+      container.read(partnerApplyControllerProvider.notifier)
+        ..setStep(2)
+        ..previousStep();
 
       expect(
         container.read(partnerApplyControllerProvider).currentStep,
@@ -183,7 +182,8 @@ void main() {
     test('nextStep() at last step stays at last step', () async {
       final container = buildContainer();
       final notifier = container.read(partnerApplyControllerProvider.notifier);
-      notifier.setStep(4);
+      // Set to last step before testing nextStep boundary
+      container.read(partnerApplyControllerProvider.notifier).setStep(4);
 
       await notifier.nextStep();
 

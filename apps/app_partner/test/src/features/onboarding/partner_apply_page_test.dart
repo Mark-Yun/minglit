@@ -2,7 +2,6 @@ import 'package:app_partner/src/features/onboarding/partner_apply_controller.dar
 import 'package:app_partner/src/features/onboarding/partner_apply_page.dart';
 import 'package:app_partner/src/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -29,10 +28,10 @@ void main() {
       overrides: [
         partnerRepositoryProvider.overrideWithValue(mockRepo),
       ],
-      child: MaterialApp(
+      child: const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const PartnerApplyPage(),
+        home: PartnerApplyPage(),
       ),
     );
   }
