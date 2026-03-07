@@ -169,4 +169,123 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
       rethrow;
     }
   }
+
+  /// **Save Draft**
+  ///
+  /// Inserts a new draft if application.id is empty, otherwise updates the
+  /// existing record. Returns the persisted PartnerApplication with its id.
+  Future<PartnerApplication> saveDraft(PartnerApplication application) async {
+    final userId = supabaseClient.auth.currentUser?.id;
+    if (userId == null) throw const AuthException('User not authenticated');
+
+    Log.d('saveDraft called | user: $userId, id: ${application.id}');
+
+    try {
+      final Map<String, dynamic> data;
+      if (application.id.isEmpty) {
+        data = await supabaseClient
+            .from('partner_applications')
+            .insert({'user_id': userId, ...application.toDbJson()})
+            .select()
+            .single();
+      } else {
+        data = await supabaseClient
+            .from('partner_applications')
+            .update(application.toDbJson())
+            .eq('id', application.id)
+            .select()
+            .single();
+      }
+      final result = PartnerApplication.fromJson(data);
+      Log.i('saveDraft success | id: ${result.id}');
+      return result;
+    } catch (e, st) {
+      Log.e('❌ [PartnerRepo] saveDraft Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// **Update Application**
+  ///
+  /// Updates an existing application by id. The RLS policy enforces that only
+  /// records in status 'draft' or 'needs_correction' can be updated.
+  /// Returns the updated [PartnerApplication].
+  Future<PartnerApplication> updateApplication(
+    PartnerApplication application,
+  ) async {
+    Log.d('updateApplication called | id: ${application.id}');
+    try {
+      final data = await supabaseClient
+          .from('partner_applications')
+          .update(application.toDbJson())
+          .eq('id', application.id)
+          .select()
+          .single();
+      final result = PartnerApplication.fromJson(data);
+      Log.i('updateApplication success | id: ${result.id}');
+      return result;
+    } catch (e, st) {
+      Log.e('❌ [PartnerRepo] updateApplication Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// **Submit Draft**
+  ///
+  /// Transitions the application status from 'draft'/'needs_correction' to
+  /// 'pending'. Returns the updated [PartnerApplication].
+  Future<PartnerApplication> submitDraft({
+    required String applicationId,
+  }) async {
+    Log.d('submitDraft called | id: $applicationId');
+    try {
+      final data = await supabaseClient
+          .from('partner_applications')
+          .update({'status': 'pending'})
+          .eq('id', applicationId)
+          .select()
+          .single();
+      final result = PartnerApplication.fromJson(data);
+      Log.i('submitDraft success | id: ${result.id}');
+      return result;
+    } catch (e, st) {
+      Log.e('❌ [PartnerRepo] submitDraft Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// **Upload Profile Image**
+  ///
+  /// Uploads a profile image for the current user to the partner-proofs
+  /// storage bucket. Returns the storage path string.
+  Future<String> uploadProfileImage(XFile file) async {
+    final userId = supabaseClient.auth.currentUser?.id;
+    if (userId == null) throw const AuthException('User not authenticated');
+
+    Log.d('uploadProfileImage called | user: $userId, file: ${file.name}');
+    try {
+      final path = await _uploadFile(userId, file, 'profile');
+      Log.i('uploadProfileImage success | path: $path');
+      return path;
+    } catch (e, st) {
+      Log.e('❌ [PartnerRepo] uploadProfileImage Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// **Delete Uploaded File**
+  ///
+  /// Removes a previously uploaded file from the partner-proofs storage
+  /// bucket by its [path].
+  Future<void> deleteUploadedFile(String path) async {
+    Log.d('deleteUploadedFile called | path: $path');
+    try {
+      await supabaseClient.storage.from('partner-proofs').remove([path]);
+      Log.i('deleteUploadedFile success | path: $path');
+    } catch (e, st) {
+      Log.e('❌ [PartnerRepo] deleteUploadedFile Error', e, st);
+      rethrow;
+    }
+  }
+
 }
