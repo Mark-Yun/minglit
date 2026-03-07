@@ -523,13 +523,13 @@ abstract class AppLocalizations {
   /// No description provided for @partnerApplication_field_brandName.
   ///
   /// In ko, this message translates to:
-  /// **'브랜드/매장명'**
+  /// **'브랜드명'**
   String get partnerApplication_field_brandName;
 
   /// No description provided for @partnerApplication_hint_brandName.
   ///
   /// In ko, this message translates to:
-  /// **'예: 밍글릿 강남점'**
+  /// **'고객에게 보여질 브랜드명을 입력하세요'**
   String get partnerApplication_hint_brandName;
 
   /// No description provided for @partnerApplication_field_intro.
@@ -1611,6 +1611,150 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'라벨 (질문 내용)'**
   String get verification_label_formLabel;
+
+  /// No description provided for @partnerApplication_wizard_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'파트너 입점 신청'**
+  String get partnerApplication_wizard_title;
+
+  /// No description provided for @partnerApplication_wizard_step1_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 정보'**
+  String get partnerApplication_wizard_step1_title;
+
+  /// No description provided for @partnerApplication_wizard_step2_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'사업자 정보'**
+  String get partnerApplication_wizard_step2_title;
+
+  /// No description provided for @partnerApplication_wizard_step3_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'연락처 및 정산'**
+  String get partnerApplication_wizard_step3_title;
+
+  /// No description provided for @partnerApplication_wizard_step4_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'서류 업로드'**
+  String get partnerApplication_wizard_step4_title;
+
+  /// No description provided for @partnerApplication_wizard_step5_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'최종 확인'**
+  String get partnerApplication_wizard_step5_title;
+
+  /// No description provided for @partnerApplication_wizard_next.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음'**
+  String get partnerApplication_wizard_next;
+
+  /// No description provided for @partnerApplication_wizard_prev.
+  ///
+  /// In ko, this message translates to:
+  /// **'이전'**
+  String get partnerApplication_wizard_prev;
+
+  /// No description provided for @partnerApplication_wizard_submit.
+  ///
+  /// In ko, this message translates to:
+  /// **'신청하기'**
+  String get partnerApplication_wizard_submit;
+
+  /// No description provided for @partnerApplication_draft_saved.
+  ///
+  /// In ko, this message translates to:
+  /// **'임시저장 완료'**
+  String get partnerApplication_draft_saved;
+
+  /// No description provided for @partnerApplication_draft_saving.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 중...'**
+  String get partnerApplication_draft_saving;
+
+  /// No description provided for @partnerApplication_status_pending.
+  ///
+  /// In ko, this message translates to:
+  /// **'심사 중입니다. 영업일 기준 3~5일 내에 결과를 알려드립니다.'**
+  String get partnerApplication_status_pending;
+
+  /// No description provided for @partnerApplication_status_needsCorrection.
+  ///
+  /// In ko, this message translates to:
+  /// **'보완이 필요합니다. 아래 내용을 확인하고 수정해주세요.'**
+  String get partnerApplication_status_needsCorrection;
+
+  /// No description provided for @partnerApplication_status_adminComment.
+  ///
+  /// In ko, this message translates to:
+  /// **'관리자 코멘트'**
+  String get partnerApplication_status_adminComment;
+
+  /// No description provided for @partnerApplication_validation_required.
+  ///
+  /// In ko, this message translates to:
+  /// **'필수 입력 항목입니다.'**
+  String get partnerApplication_validation_required;
+
+  /// No description provided for @partnerApplication_validation_invalidEmail.
+  ///
+  /// In ko, this message translates to:
+  /// **'올바른 이메일 형식이 아닙니다.'**
+  String get partnerApplication_validation_invalidEmail;
+
+  /// No description provided for @partnerApplication_field_taxEmail.
+  ///
+  /// In ko, this message translates to:
+  /// **'세금계산서 이메일'**
+  String get partnerApplication_field_taxEmail;
+
+  /// No description provided for @partnerApplication_hint_taxEmail.
+  ///
+  /// In ko, this message translates to:
+  /// **'세금계산서를 받을 이메일 주소를 입력하세요'**
+  String get partnerApplication_hint_taxEmail;
+
+  /// No description provided for @partnerApplication_field_introduction.
+  ///
+  /// In ko, this message translates to:
+  /// **'소개'**
+  String get partnerApplication_field_introduction;
+
+  /// No description provided for @partnerApplication_hint_introduction.
+  ///
+  /// In ko, this message translates to:
+  /// **'파트너 소개를 입력하세요'**
+  String get partnerApplication_hint_introduction;
+
+  /// No description provided for @partnerApplication_field_profileImage.
+  ///
+  /// In ko, this message translates to:
+  /// **'프로필 이미지'**
+  String get partnerApplication_field_profileImage;
+
+  /// No description provided for @partnerApplication_button_uploadImage.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미지 업로드'**
+  String get partnerApplication_button_uploadImage;
+
+  /// No description provided for @partnerApplication_button_editApplication.
+  ///
+  /// In ko, this message translates to:
+  /// **'신청서 수정하기'**
+  String get partnerApplication_button_editApplication;
+
+  /// No description provided for @partnerApplication_status_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'입점 신청 현황'**
+  String get partnerApplication_status_title;
 }
 
 class _AppLocalizationsDelegate
