@@ -89,7 +89,7 @@ class _PartnerApplyPageState extends ConsumerState<PartnerApplyPage> {
 
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(
-        title: context.l10n.partnerApplication_wizard_title,
+        title: _getStepTitle(context, state.currentStep),
       ),
       body: Stack(
         children: [
@@ -180,5 +180,16 @@ class _PartnerApplyPageState extends ConsumerState<PartnerApplyPage> {
         ),
       ),
     );
+  }
+
+  String _getStepTitle(BuildContext context, int step) {
+    return switch (step) {
+      0 => context.l10n.partnerApplication_wizard_step1_title,
+      1 => context.l10n.partnerApplication_wizard_step2_title,
+      2 => context.l10n.partnerApplication_wizard_step3_title,
+      3 => context.l10n.partnerApplication_wizard_step4_title,
+      4 => context.l10n.partnerApplication_wizard_step5_title,
+      _ => context.l10n.partnerApplication_wizard_title,
+    };
   }
 }
