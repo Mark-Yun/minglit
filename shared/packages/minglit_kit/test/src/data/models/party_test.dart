@@ -107,6 +107,7 @@ void main() {
       'min_confirmed_count': 5,
       'max_participants': 30,
       'status': 'active',
+      'metadata': <String, dynamic>{},
     };
 
     test('creates from JSON with all fields', () {
@@ -140,6 +141,7 @@ void main() {
       expect(party.status, 'active');
       expect(party.locationId, isNull);
       expect(party.description, isNull);
+      expect(party.metadata, isEmpty);
     });
 
     test('serializes to JSON and back', () {
@@ -158,6 +160,7 @@ void main() {
       expect(dbJson.containsKey('created_at'), isFalse);
       expect(dbJson.containsKey('updated_at'), isFalse);
       expect(dbJson.containsKey('partner_id'), isTrue);
+      expect(dbJson.containsKey('metadata'), isTrue);
     });
 
     test('imageUrl returns first URL or null', () {

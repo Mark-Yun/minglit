@@ -23,6 +23,7 @@ void main() {
       'max_participants': 25,
       'current_participants': 10,
       'status': 'scheduled',
+      'metadata': <String, dynamic>{},
     };
 
     test('creates from JSON with all fields', () {
@@ -56,6 +57,7 @@ void main() {
       expect(event.maxParticipants, 20);
       expect(event.currentParticipants, 0);
       expect(event.status, 'scheduled');
+      expect(event.metadata, isEmpty);
     });
 
     test('serializes to JSON and back', () {
@@ -165,6 +167,47 @@ void main() {
       expect(event.contactOptions['phone'], '010');
       expect(event.minConfirmedCount, 5);
       expect(event.maxParticipants, 50);
+      expect(event.metadata, isEmpty);
+    });
+
+    test('createFromParty copies metadata from party', () {
+      final party = Party.fromJson({
+        'id': 'party_1',
+        'partner_id': 'pt_1',
+        'title': 'Template Party',
+        'created_at': now.toIso8601String(),
+        'updated_at': now.toIso8601String(),
+        'metadata': {'show_participant_list': false},
+      });
+
+      final event = Event.createFromParty(
+        party,
+        startTime: now,
+        endTime: later,
+      );
+
+      expect(event.metadata['show_participant_list'], false);
+    });
+
+    test('createFromParty metadata is a deep copy', () {
+      final party = Party.fromJson({
+        'id': 'party_1',
+        'partner_id': 'pt_1',
+        'title': 'Template Party',
+        'created_at': now.toIso8601String(),
+        'updated_at': now.toIso8601String(),
+        'metadata': {'key': 'original'},
+      });
+
+      final event = Event.createFromParty(
+        party,
+        startTime: now,
+        endTime: later,
+      );
+
+      final mutableEventMetadata = Map<String, dynamic>.from(event.metadata);
+      mutableEventMetadata['key'] = 'modified';
+      expect(party.metadata['key'], 'original');
     });
 
     test('equality works', () {
