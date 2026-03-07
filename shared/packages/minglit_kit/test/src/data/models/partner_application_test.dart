@@ -63,14 +63,14 @@ void main() {
       expect(restored, equals(original));
     });
 
-    test('toDbJson removes id and timestamps', () {
+    test('toDbJson removes id, user_id and timestamps', () {
       final app = PartnerApplication.fromJson(appJson());
       final dbJson = app.toDbJson();
 
       expect(dbJson.containsKey('id'), isFalse);
       expect(dbJson.containsKey('created_at'), isFalse);
       expect(dbJson.containsKey('updated_at'), isFalse);
-      expect(dbJson.containsKey('user_id'), isTrue);
+      expect(dbJson.containsKey('user_id'), isFalse);
       expect(dbJson.containsKey('brand_name'), isTrue);
       expect(dbJson.containsKey('biz_number'), isTrue);
     });
