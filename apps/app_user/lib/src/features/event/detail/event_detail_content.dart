@@ -136,28 +136,41 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                     children: [
                       // Partner Row
                       if (partner != null) ...[
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              radius: MinglitRadius.input, // 12
-                              backgroundImage: partnerProfileImageUrl != null
-                                  ? NetworkImage(partnerProfileImageUrl)
-                                  : null,
-                              child: partnerProfileImageUrl == null
-                                  ? const Icon(
-                                      Icons.store,
-                                      size: MinglitIconSize.xsmall,
-                                    )
-                                  : null,
-                            ),
-                            const SizedBox(width: MinglitSpacing.small),
-                            Text(
-                              partner.name,
-                              style: theme.textTheme.titleSmall?.copyWith(
+                        GestureDetector(
+                          onTap: () => ref
+                              .read(eventCoordinatorProvider)
+                              .pushPartnerDetail(partner.id),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: MinglitRadius.input, // 12
+                                backgroundImage: partnerProfileImageUrl != null
+                                    ? NetworkImage(partnerProfileImageUrl)
+                                    : null,
+                                child: partnerProfileImageUrl == null
+                                    ? const Icon(
+                                        Icons.store,
+                                        size: MinglitIconSize.xsmall,
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: MinglitSpacing.small),
+                              Flexible(
+                                child: Text(
+                                  partner.name,
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: MinglitSpacing.xsmall),
+                              Icon(
+                                Icons.chevron_right,
+                                size: MinglitIconSize.small,
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                         const SizedBox(height: MinglitSpacing.small),
                       ],

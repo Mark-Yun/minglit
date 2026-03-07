@@ -12,6 +12,7 @@ List<RouteBase> get $appRoutes => [
   $loginRoute,
   $authCallbackRoute,
   $eventDetailRoute,
+  $partnerDetailRoute,
   $certificationRoute,
   $eventApplicationRoute,
   $purchaseHistoryRoute,
@@ -139,6 +140,36 @@ mixin $EventDetailRoute on GoRouteData {
   @override
   String get location =>
       GoRouteData.$location('/events/${Uri.encodeComponent(_self.eventId)}');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $partnerDetailRoute => GoRouteData.$route(
+  path: '/partners/:partnerId',
+  factory: $PartnerDetailRoute._fromState,
+);
+
+mixin $PartnerDetailRoute on GoRouteData {
+  static PartnerDetailRoute _fromState(GoRouterState state) =>
+      PartnerDetailRoute(partnerId: state.pathParameters['partnerId']!);
+
+  PartnerDetailRoute get _self => this as PartnerDetailRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/partners/${Uri.encodeComponent(_self.partnerId)}',
+  );
 
   @override
   void go(BuildContext context) => context.go(location);
