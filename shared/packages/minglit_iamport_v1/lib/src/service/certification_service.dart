@@ -10,5 +10,6 @@ abstract class CertificationService {
     required String merchantUid,
     String? name,
     String? phone,
+    String? mRedirectUrl,
   });
 }
