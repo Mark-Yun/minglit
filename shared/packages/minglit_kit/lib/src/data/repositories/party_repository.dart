@@ -274,6 +274,21 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
     }
   }
 
+  /// Updates the metadata of a party.
+  Future<void> updatePartyMetadata(
+      String partyId, Map<String, dynamic> metadata) async {
+    try {
+      await supabaseClient
+          .from('parties')
+          .update({'metadata': metadata})
+          .eq('id', partyId);
+      Log.d('updatePartyMetadata success');
+    } catch (e, st) {
+      Log.e('❌ [PartyRepo] updatePartyMetadata Error', e, st);
+      rethrow;
+    }
+  }
+
   /// Updates the location of a party.
   Future<void> updatePartyLocation(String partyId, String locationId) async {
     Log.d(
