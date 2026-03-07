@@ -11,7 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-
 class PartnerApplyPage extends ConsumerStatefulWidget {
   const PartnerApplyPage({super.key});
 
@@ -41,11 +40,13 @@ class _PartnerApplyPageState extends ConsumerState<PartnerApplyPage> {
 
   void _onStepChanged(int step) {
     if (_pageController.hasClients) {
-      unawaited(_pageController.animateToPage(
-        step,
-        duration: MinglitAnimation.medium,
-        curve: Curves.easeInOut,
-      ));
+      unawaited(
+        _pageController.animateToPage(
+          step,
+          duration: MinglitAnimation.medium,
+          curve: Curves.easeInOut,
+        ),
+      );
     }
   }
 

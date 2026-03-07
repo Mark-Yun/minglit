@@ -309,5 +309,4 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
     Log.d('uploadBankbook called | file: ${file.name}');
     return _uploadFile(userId, file, 'bankbook');
   }
-
 }

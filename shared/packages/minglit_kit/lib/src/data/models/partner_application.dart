@@ -49,5 +49,4 @@ extension PartnerApplicationDbX on PartnerApplication {
       ..remove('created_at')
       ..remove('updated_at');
   }
-
 }
