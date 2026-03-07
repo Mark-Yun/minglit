@@ -3,7 +3,6 @@ import 'package:intl/intl.dart';
 import 'package:minglit_kit/src/data/models/event.dart';
 import 'package:minglit_kit/src/data/models/partner.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_chip.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_image.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_skeleton.dart';
 
@@ -131,23 +130,14 @@ class MinglitEventCard extends StatelessWidget {
                     left: MinglitSpacing.small,
                     child: _PartnerOverlay(partner: partner),
                   ),
-                // D-Day chip + Participant overlay (top-right)
+                // D-Day + Participant overlay (top-right)
                 Positioned(
                   top: MinglitSpacing.small,
                   right: MinglitSpacing.small,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      MinglitChip(
-                        label: dDayLabel,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: MinglitSpacing.xsmall),
-                      _ParticipantOverlay(
-                        current: event!.currentParticipants,
-                        max: event!.maxParticipants,
-                      ),
-                    ],
+                  child: _ParticipantDDayOverlay(
+                    current: event!.currentParticipants,
+                    max: event!.maxParticipants,
+                    dDayLabel: dDayLabel,
                   ),
                 ),
               ],
@@ -208,17 +198,24 @@ class MinglitEventCard extends StatelessWidget {
   }
 }
 
-/// Participant count overlay with battery-style indicator.
+/// Participant count overlay with battery-style indicator and D-day label.
 ///
 /// Displays a 3-segment battery gauge based on participation ratio:
 /// - 0–33%: 1 filled segment (orange)
 /// - 34–66%: 2 filled segments (mint)
 /// - 67–100%: 3 filled segments (purple)
-class _ParticipantOverlay extends StatelessWidget {
-  const _ParticipantOverlay({required this.current, required this.max});
+///
+/// Also displays the D-day label (e.g., "오늘", "D-5", "종료").
+class _ParticipantDDayOverlay extends StatelessWidget {
+  const _ParticipantDDayOverlay({
+    required this.current,
+    required this.max,
+    required this.dDayLabel,
+  });
 
   final int current;
   final int max;
+  final String dDayLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -244,7 +241,7 @@ class _ParticipantOverlay extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: MinglitColors.textPrimary.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(100),
+        borderRadius: BorderRadius.circular(MinglitRadius.small),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -268,15 +265,27 @@ class _ParticipantOverlay extends StatelessWidget {
             '$current/$max',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: MinglitColors.background,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(width: 2),
-          const Icon(
-            Icons.people_outline,
-            size: 11,
-            color: MinglitColors.background,
+          const SizedBox(width: 4),
+          Text(
+            '·',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: MinglitColors.background.withValues(alpha: 0.6),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            dDayLabel,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: MinglitColors.background,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -299,7 +308,7 @@ class _PartnerOverlay extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: MinglitColors.textPrimary.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(100),
+        borderRadius: BorderRadius.circular(MinglitRadius.small),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -320,13 +329,13 @@ class _PartnerOverlay extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 90),
+            constraints: const BoxConstraints(maxWidth: 130),
             child: Text(
               partner.name,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: MinglitColors.background,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

@@ -31,11 +31,13 @@ class _EntryConditionsSection extends StatelessWidget {
                 const SizedBox(height: MinglitSpacing.medium),
             itemBuilder: (context, index) {
               final group = entryGroups[index];
-              final matchingTickets = (event.tickets ?? []).where(
-                (t) =>
-                    t.targetEntryGroupIds.isNotEmpty &&
-                    t.targetEntryGroupIds.contains(group.id),
-              ).toList();
+              final matchingTickets = (event.tickets ?? [])
+                  .where(
+                    (t) =>
+                        t.targetEntryGroupIds.isNotEmpty &&
+                        t.targetEntryGroupIds.contains(group.id),
+                  )
+                  .toList();
               final soldCount = matchingTickets.fold<int>(
                 0,
                 (sum, t) => sum + t.soldCount,
