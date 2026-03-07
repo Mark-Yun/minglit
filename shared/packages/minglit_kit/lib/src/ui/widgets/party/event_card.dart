@@ -128,7 +128,10 @@ class MinglitEventCard extends StatelessWidget {
 
             // Content area
             Padding(
-              padding: const EdgeInsets.all(MinglitSpacing.medium),
+              padding: const EdgeInsets.symmetric(
+                horizontal: MinglitSpacing.medium,
+                vertical: MinglitSpacing.small,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -141,7 +144,7 @@ class MinglitEventCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: MinglitSpacing.xsmall),
+                  const SizedBox(height: 2),
 
                   // Location & Date Row
                   Row(
@@ -349,7 +352,10 @@ class _EventCardSkeleton extends StatelessWidget {
             child: MinglitSkeleton(borderRadius: BorderRadius.zero),
           ),
           Padding(
-            padding: const EdgeInsets.all(MinglitSpacing.medium),
+            padding: const EdgeInsets.symmetric(
+              horizontal: MinglitSpacing.medium,
+              vertical: MinglitSpacing.small,
+            ),
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final w = constraints.maxWidth;

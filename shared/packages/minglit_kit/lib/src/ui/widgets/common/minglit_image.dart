@@ -34,6 +34,20 @@ class MinglitImage extends StatelessWidget {
       !path.contains('/');
   @override
   Widget build(BuildContext context) {
+    // Guard: empty or blank path → show placeholder immediately
+    if (path.trim().isEmpty) {
+      final theme = Theme.of(context);
+      return Container(
+        height: height,
+        width: width,
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(MinglitRadius.small),
+        ),
+        child: Icon(Icons.image, color: theme.colorScheme.outline),
+      );
+    }
+
     ImageProvider provider;
 
     if (_isNetwork) {

@@ -30,6 +30,7 @@ export 'src/ui/widgets/common/verification_select_card.dart';
 export 'src/ui/widgets/map/location_map.dart'
     if (dart.library.html) 'src/ui/widgets/map/location_map_web.dart'
     if (dart.library.io) 'src/ui/widgets/map/location_map_mobile.dart';
+export 'src/ui/widgets/partner/partner_detail_view.dart';
 export 'src/ui/widgets/party/event_card.dart';
 export 'src/ui/widgets/party/location_map_view.dart';
 export 'src/utils/feedback_ext.dart';

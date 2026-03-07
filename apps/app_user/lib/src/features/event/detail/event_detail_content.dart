@@ -42,7 +42,9 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.sizeOf(context).width;
+    final topPadding = MediaQuery.paddingOf(context).top;
     final imageHeight = screenWidth * 9 / 16;
+    final expandedHeight = imageHeight + topPadding;
     _collapseThreshold = imageHeight - kToolbarHeight;
 
     final event = widget.event;
@@ -72,7 +74,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
             slivers: [
               // 1. Hero Image Header
               SliverAppBar(
-                expandedHeight: imageHeight,
+                expandedHeight: expandedHeight,
                 pinned: true,
                 title: _showTitle
                     ? Text(
@@ -136,28 +138,41 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                     children: [
                       // Partner Row
                       if (partner != null) ...[
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              radius: MinglitRadius.input, // 12
-                              backgroundImage: partnerProfileImageUrl != null
-                                  ? NetworkImage(partnerProfileImageUrl)
-                                  : null,
-                              child: partnerProfileImageUrl == null
-                                  ? const Icon(
-                                      Icons.store,
-                                      size: MinglitIconSize.xsmall,
-                                    )
-                                  : null,
-                            ),
-                            const SizedBox(width: MinglitSpacing.small),
-                            Text(
-                              partner.name,
-                              style: theme.textTheme.titleSmall?.copyWith(
+                        GestureDetector(
+                          onTap: () => ref
+                              .read(eventCoordinatorProvider)
+                              .pushPartnerDetail(partner.id),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: MinglitRadius.input, // 12
+                                backgroundImage: partnerProfileImageUrl != null
+                                    ? NetworkImage(partnerProfileImageUrl)
+                                    : null,
+                                child: partnerProfileImageUrl == null
+                                    ? const Icon(
+                                        Icons.store,
+                                        size: MinglitIconSize.xsmall,
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: MinglitSpacing.small),
+                              Flexible(
+                                child: Text(
+                                  partner.name,
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: MinglitSpacing.xsmall),
+                              Icon(
+                                Icons.chevron_right,
+                                size: MinglitIconSize.small,
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                         const SizedBox(height: MinglitSpacing.small),
                       ],
