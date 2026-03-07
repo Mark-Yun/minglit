@@ -49,10 +49,10 @@ void main() {
       expect(app.adminComment, isNull);
     });
 
-    test('defaults status to pending', () {
+    test('defaults status to draft', () {
       final json = appJson()..remove('status');
       final app = PartnerApplication.fromJson(json);
-      expect(app.status, 'pending');
+      expect(app.status, 'draft');
     });
 
     test('serializes to JSON and back', () {

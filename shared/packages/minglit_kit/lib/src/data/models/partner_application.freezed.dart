@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PartnerApplication {
 
- String get id;@JsonKey(name: 'user_id') String get userId;@JsonKey(name: 'brand_name') String get brandName; String get introduction; String get address;@JsonKey(name: 'contact_phone') String get contactPhone;@JsonKey(name: 'contact_email') String get contactEmail;@JsonKey(name: 'biz_type') String get bizType;@JsonKey(name: 'biz_name') String get bizName;@JsonKey(name: 'biz_number') String get bizNumber;@JsonKey(name: 'representative_name') String get representativeName;@JsonKey(name: 'bank_name') String get bankName;@JsonKey(name: 'account_number') String get accountNumber;@JsonKey(name: 'account_holder') String get accountHolder;@JsonKey(name: 'biz_registration_path') String get bizRegistrationPath;@JsonKey(name: 'bankbook_path') String get bankbookPath; String get status;@JsonKey(name: 'admin_comment') String? get adminComment;@JsonKey(name: 'created_at') String? get createdAt;@JsonKey(name: 'updated_at') String? get updatedAt;
+ String get id;@JsonKey(name: 'user_id') String get userId;@JsonKey(name: 'contact_phone') String get contactPhone;@JsonKey(name: 'contact_email') String get contactEmail;@JsonKey(name: 'brand_name') String? get brandName; String? get introduction; String? get address;@JsonKey(name: 'biz_type') String? get bizType;@JsonKey(name: 'biz_name') String? get bizName;@JsonKey(name: 'biz_number') String? get bizNumber;@JsonKey(name: 'representative_name') String? get representativeName;@JsonKey(name: 'bank_name') String? get bankName;@JsonKey(name: 'account_number') String? get accountNumber;@JsonKey(name: 'account_holder') String? get accountHolder;@JsonKey(name: 'biz_registration_path') String? get bizRegistrationPath;@JsonKey(name: 'bankbook_path') String? get bankbookPath;@JsonKey(name: 'profile_image_path') String? get profileImagePath;@JsonKey(name: 'current_step') int get currentStep;@JsonKey(name: 'tax_email') String? get taxEmail; String get status;@JsonKey(name: 'admin_comment') String? get adminComment;@JsonKey(name: 'created_at') String? get createdAt;@JsonKey(name: 'updated_at') String? get updatedAt;
 /// Create a copy of PartnerApplication
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $PartnerApplicationCopyWith<PartnerApplication> get copyWith => _$PartnerApplica
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PartnerApplication&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.brandName, brandName) || other.brandName == brandName)&&(identical(other.introduction, introduction) || other.introduction == introduction)&&(identical(other.address, address) || other.address == address)&&(identical(other.contactPhone, contactPhone) || other.contactPhone == contactPhone)&&(identical(other.contactEmail, contactEmail) || other.contactEmail == contactEmail)&&(identical(other.bizType, bizType) || other.bizType == bizType)&&(identical(other.bizName, bizName) || other.bizName == bizName)&&(identical(other.bizNumber, bizNumber) || other.bizNumber == bizNumber)&&(identical(other.representativeName, representativeName) || other.representativeName == representativeName)&&(identical(other.bankName, bankName) || other.bankName == bankName)&&(identical(other.accountNumber, accountNumber) || other.accountNumber == accountNumber)&&(identical(other.accountHolder, accountHolder) || other.accountHolder == accountHolder)&&(identical(other.bizRegistrationPath, bizRegistrationPath) || other.bizRegistrationPath == bizRegistrationPath)&&(identical(other.bankbookPath, bankbookPath) || other.bankbookPath == bankbookPath)&&(identical(other.status, status) || other.status == status)&&(identical(other.adminComment, adminComment) || other.adminComment == adminComment)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PartnerApplication&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.contactPhone, contactPhone) || other.contactPhone == contactPhone)&&(identical(other.contactEmail, contactEmail) || other.contactEmail == contactEmail)&&(identical(other.brandName, brandName) || other.brandName == brandName)&&(identical(other.introduction, introduction) || other.introduction == introduction)&&(identical(other.address, address) || other.address == address)&&(identical(other.bizType, bizType) || other.bizType == bizType)&&(identical(other.bizName, bizName) || other.bizName == bizName)&&(identical(other.bizNumber, bizNumber) || other.bizNumber == bizNumber)&&(identical(other.representativeName, representativeName) || other.representativeName == representativeName)&&(identical(other.bankName, bankName) || other.bankName == bankName)&&(identical(other.accountNumber, accountNumber) || other.accountNumber == accountNumber)&&(identical(other.accountHolder, accountHolder) || other.accountHolder == accountHolder)&&(identical(other.bizRegistrationPath, bizRegistrationPath) || other.bizRegistrationPath == bizRegistrationPath)&&(identical(other.bankbookPath, bankbookPath) || other.bankbookPath == bankbookPath)&&(identical(other.profileImagePath, profileImagePath) || other.profileImagePath == profileImagePath)&&(identical(other.currentStep, currentStep) || other.currentStep == currentStep)&&(identical(other.taxEmail, taxEmail) || other.taxEmail == taxEmail)&&(identical(other.status, status) || other.status == status)&&(identical(other.adminComment, adminComment) || other.adminComment == adminComment)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,userId,brandName,introduction,address,contactPhone,contactEmail,bizType,bizName,bizNumber,representativeName,bankName,accountNumber,accountHolder,bizRegistrationPath,bankbookPath,status,adminComment,createdAt,updatedAt]);
+int get hashCode => Object.hashAll([runtimeType,id,userId,contactPhone,contactEmail,brandName,introduction,address,bizType,bizName,bizNumber,representativeName,bankName,accountNumber,accountHolder,bizRegistrationPath,bankbookPath,profileImagePath,currentStep,taxEmail,status,adminComment,createdAt,updatedAt]);
 
 @override
 String toString() {
-  return 'PartnerApplication(id: $id, userId: $userId, brandName: $brandName, introduction: $introduction, address: $address, contactPhone: $contactPhone, contactEmail: $contactEmail, bizType: $bizType, bizName: $bizName, bizNumber: $bizNumber, representativeName: $representativeName, bankName: $bankName, accountNumber: $accountNumber, accountHolder: $accountHolder, bizRegistrationPath: $bizRegistrationPath, bankbookPath: $bankbookPath, status: $status, adminComment: $adminComment, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'PartnerApplication(id: $id, userId: $userId, contactPhone: $contactPhone, contactEmail: $contactEmail, brandName: $brandName, introduction: $introduction, address: $address, bizType: $bizType, bizName: $bizName, bizNumber: $bizNumber, representativeName: $representativeName, bankName: $bankName, accountNumber: $accountNumber, accountHolder: $accountHolder, bizRegistrationPath: $bizRegistrationPath, bankbookPath: $bankbookPath, profileImagePath: $profileImagePath, currentStep: $currentStep, taxEmail: $taxEmail, status: $status, adminComment: $adminComment, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $PartnerApplicationCopyWith<$Res>  {
   factory $PartnerApplicationCopyWith(PartnerApplication value, $Res Function(PartnerApplication) _then) = _$PartnerApplicationCopyWithImpl;
 @useResult
 $Res call({
- String id,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'brand_name') String brandName, String introduction, String address,@JsonKey(name: 'contact_phone') String contactPhone,@JsonKey(name: 'contact_email') String contactEmail,@JsonKey(name: 'biz_type') String bizType,@JsonKey(name: 'biz_name') String bizName,@JsonKey(name: 'biz_number') String bizNumber,@JsonKey(name: 'representative_name') String representativeName,@JsonKey(name: 'bank_name') String bankName,@JsonKey(name: 'account_number') String accountNumber,@JsonKey(name: 'account_holder') String accountHolder,@JsonKey(name: 'biz_registration_path') String bizRegistrationPath,@JsonKey(name: 'bankbook_path') String bankbookPath, String status,@JsonKey(name: 'admin_comment') String? adminComment,@JsonKey(name: 'created_at') String? createdAt,@JsonKey(name: 'updated_at') String? updatedAt
+ String id,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'contact_phone') String contactPhone,@JsonKey(name: 'contact_email') String contactEmail,@JsonKey(name: 'brand_name') String? brandName, String? introduction, String? address,@JsonKey(name: 'biz_type') String? bizType,@JsonKey(name: 'biz_name') String? bizName,@JsonKey(name: 'biz_number') String? bizNumber,@JsonKey(name: 'representative_name') String? representativeName,@JsonKey(name: 'bank_name') String? bankName,@JsonKey(name: 'account_number') String? accountNumber,@JsonKey(name: 'account_holder') String? accountHolder,@JsonKey(name: 'biz_registration_path') String? bizRegistrationPath,@JsonKey(name: 'bankbook_path') String? bankbookPath,@JsonKey(name: 'profile_image_path') String? profileImagePath,@JsonKey(name: 'current_step') int currentStep,@JsonKey(name: 'tax_email') String? taxEmail, String status,@JsonKey(name: 'admin_comment') String? adminComment,@JsonKey(name: 'created_at') String? createdAt,@JsonKey(name: 'updated_at') String? updatedAt
 });
 
 
@@ -65,25 +65,28 @@ class _$PartnerApplicationCopyWithImpl<$Res>
 
 /// Create a copy of PartnerApplication
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userId = null,Object? brandName = null,Object? introduction = null,Object? address = null,Object? contactPhone = null,Object? contactEmail = null,Object? bizType = null,Object? bizName = null,Object? bizNumber = null,Object? representativeName = null,Object? bankName = null,Object? accountNumber = null,Object? accountHolder = null,Object? bizRegistrationPath = null,Object? bankbookPath = null,Object? status = null,Object? adminComment = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userId = null,Object? contactPhone = null,Object? contactEmail = null,Object? brandName = freezed,Object? introduction = freezed,Object? address = freezed,Object? bizType = freezed,Object? bizName = freezed,Object? bizNumber = freezed,Object? representativeName = freezed,Object? bankName = freezed,Object? accountNumber = freezed,Object? accountHolder = freezed,Object? bizRegistrationPath = freezed,Object? bankbookPath = freezed,Object? profileImagePath = freezed,Object? currentStep = null,Object? taxEmail = freezed,Object? status = null,Object? adminComment = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
-as String,brandName: null == brandName ? _self.brandName : brandName // ignore: cast_nullable_to_non_nullable
-as String,introduction: null == introduction ? _self.introduction : introduction // ignore: cast_nullable_to_non_nullable
-as String,address: null == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
 as String,contactPhone: null == contactPhone ? _self.contactPhone : contactPhone // ignore: cast_nullable_to_non_nullable
 as String,contactEmail: null == contactEmail ? _self.contactEmail : contactEmail // ignore: cast_nullable_to_non_nullable
-as String,bizType: null == bizType ? _self.bizType : bizType // ignore: cast_nullable_to_non_nullable
-as String,bizName: null == bizName ? _self.bizName : bizName // ignore: cast_nullable_to_non_nullable
-as String,bizNumber: null == bizNumber ? _self.bizNumber : bizNumber // ignore: cast_nullable_to_non_nullable
-as String,representativeName: null == representativeName ? _self.representativeName : representativeName // ignore: cast_nullable_to_non_nullable
-as String,bankName: null == bankName ? _self.bankName : bankName // ignore: cast_nullable_to_non_nullable
-as String,accountNumber: null == accountNumber ? _self.accountNumber : accountNumber // ignore: cast_nullable_to_non_nullable
-as String,accountHolder: null == accountHolder ? _self.accountHolder : accountHolder // ignore: cast_nullable_to_non_nullable
-as String,bizRegistrationPath: null == bizRegistrationPath ? _self.bizRegistrationPath : bizRegistrationPath // ignore: cast_nullable_to_non_nullable
-as String,bankbookPath: null == bankbookPath ? _self.bankbookPath : bankbookPath // ignore: cast_nullable_to_non_nullable
-as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String,brandName: freezed == brandName ? _self.brandName : brandName // ignore: cast_nullable_to_non_nullable
+as String?,introduction: freezed == introduction ? _self.introduction : introduction // ignore: cast_nullable_to_non_nullable
+as String?,address: freezed == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
+as String?,bizType: freezed == bizType ? _self.bizType : bizType // ignore: cast_nullable_to_non_nullable
+as String?,bizName: freezed == bizName ? _self.bizName : bizName // ignore: cast_nullable_to_non_nullable
+as String?,bizNumber: freezed == bizNumber ? _self.bizNumber : bizNumber // ignore: cast_nullable_to_non_nullable
+as String?,representativeName: freezed == representativeName ? _self.representativeName : representativeName // ignore: cast_nullable_to_non_nullable
+as String?,bankName: freezed == bankName ? _self.bankName : bankName // ignore: cast_nullable_to_non_nullable
+as String?,accountNumber: freezed == accountNumber ? _self.accountNumber : accountNumber // ignore: cast_nullable_to_non_nullable
+as String?,accountHolder: freezed == accountHolder ? _self.accountHolder : accountHolder // ignore: cast_nullable_to_non_nullable
+as String?,bizRegistrationPath: freezed == bizRegistrationPath ? _self.bizRegistrationPath : bizRegistrationPath // ignore: cast_nullable_to_non_nullable
+as String?,bankbookPath: freezed == bankbookPath ? _self.bankbookPath : bankbookPath // ignore: cast_nullable_to_non_nullable
+as String?,profileImagePath: freezed == profileImagePath ? _self.profileImagePath : profileImagePath // ignore: cast_nullable_to_non_nullable
+as String?,currentStep: null == currentStep ? _self.currentStep : currentStep // ignore: cast_nullable_to_non_nullable
+as int,taxEmail: freezed == taxEmail ? _self.taxEmail : taxEmail // ignore: cast_nullable_to_non_nullable
+as String?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,adminComment: freezed == adminComment ? _self.adminComment : adminComment // ignore: cast_nullable_to_non_nullable
 as String?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as String?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
@@ -172,10 +175,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'brand_name')  String brandName,  String introduction,  String address, @JsonKey(name: 'contact_phone')  String contactPhone, @JsonKey(name: 'contact_email')  String contactEmail, @JsonKey(name: 'biz_type')  String bizType, @JsonKey(name: 'biz_name')  String bizName, @JsonKey(name: 'biz_number')  String bizNumber, @JsonKey(name: 'representative_name')  String representativeName, @JsonKey(name: 'bank_name')  String bankName, @JsonKey(name: 'account_number')  String accountNumber, @JsonKey(name: 'account_holder')  String accountHolder, @JsonKey(name: 'biz_registration_path')  String bizRegistrationPath, @JsonKey(name: 'bankbook_path')  String bankbookPath,  String status, @JsonKey(name: 'admin_comment')  String? adminComment, @JsonKey(name: 'created_at')  String? createdAt, @JsonKey(name: 'updated_at')  String? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'contact_phone')  String contactPhone, @JsonKey(name: 'contact_email')  String contactEmail, @JsonKey(name: 'brand_name')  String? brandName,  String? introduction,  String? address, @JsonKey(name: 'biz_type')  String? bizType, @JsonKey(name: 'biz_name')  String? bizName, @JsonKey(name: 'biz_number')  String? bizNumber, @JsonKey(name: 'representative_name')  String? representativeName, @JsonKey(name: 'bank_name')  String? bankName, @JsonKey(name: 'account_number')  String? accountNumber, @JsonKey(name: 'account_holder')  String? accountHolder, @JsonKey(name: 'biz_registration_path')  String? bizRegistrationPath, @JsonKey(name: 'bankbook_path')  String? bankbookPath, @JsonKey(name: 'profile_image_path')  String? profileImagePath, @JsonKey(name: 'current_step')  int currentStep, @JsonKey(name: 'tax_email')  String? taxEmail,  String status, @JsonKey(name: 'admin_comment')  String? adminComment, @JsonKey(name: 'created_at')  String? createdAt, @JsonKey(name: 'updated_at')  String? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PartnerApplication() when $default != null:
-return $default(_that.id,_that.userId,_that.brandName,_that.introduction,_that.address,_that.contactPhone,_that.contactEmail,_that.bizType,_that.bizName,_that.bizNumber,_that.representativeName,_that.bankName,_that.accountNumber,_that.accountHolder,_that.bizRegistrationPath,_that.bankbookPath,_that.status,_that.adminComment,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.userId,_that.contactPhone,_that.contactEmail,_that.brandName,_that.introduction,_that.address,_that.bizType,_that.bizName,_that.bizNumber,_that.representativeName,_that.bankName,_that.accountNumber,_that.accountHolder,_that.bizRegistrationPath,_that.bankbookPath,_that.profileImagePath,_that.currentStep,_that.taxEmail,_that.status,_that.adminComment,_that.createdAt,_that.updatedAt);case _:
   return orElse();
 
 }
@@ -193,10 +196,10 @@ return $default(_that.id,_that.userId,_that.brandName,_that.introduction,_that.a
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'brand_name')  String brandName,  String introduction,  String address, @JsonKey(name: 'contact_phone')  String contactPhone, @JsonKey(name: 'contact_email')  String contactEmail, @JsonKey(name: 'biz_type')  String bizType, @JsonKey(name: 'biz_name')  String bizName, @JsonKey(name: 'biz_number')  String bizNumber, @JsonKey(name: 'representative_name')  String representativeName, @JsonKey(name: 'bank_name')  String bankName, @JsonKey(name: 'account_number')  String accountNumber, @JsonKey(name: 'account_holder')  String accountHolder, @JsonKey(name: 'biz_registration_path')  String bizRegistrationPath, @JsonKey(name: 'bankbook_path')  String bankbookPath,  String status, @JsonKey(name: 'admin_comment')  String? adminComment, @JsonKey(name: 'created_at')  String? createdAt, @JsonKey(name: 'updated_at')  String? updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'contact_phone')  String contactPhone, @JsonKey(name: 'contact_email')  String contactEmail, @JsonKey(name: 'brand_name')  String? brandName,  String? introduction,  String? address, @JsonKey(name: 'biz_type')  String? bizType, @JsonKey(name: 'biz_name')  String? bizName, @JsonKey(name: 'biz_number')  String? bizNumber, @JsonKey(name: 'representative_name')  String? representativeName, @JsonKey(name: 'bank_name')  String? bankName, @JsonKey(name: 'account_number')  String? accountNumber, @JsonKey(name: 'account_holder')  String? accountHolder, @JsonKey(name: 'biz_registration_path')  String? bizRegistrationPath, @JsonKey(name: 'bankbook_path')  String? bankbookPath, @JsonKey(name: 'profile_image_path')  String? profileImagePath, @JsonKey(name: 'current_step')  int currentStep, @JsonKey(name: 'tax_email')  String? taxEmail,  String status, @JsonKey(name: 'admin_comment')  String? adminComment, @JsonKey(name: 'created_at')  String? createdAt, @JsonKey(name: 'updated_at')  String? updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _PartnerApplication():
-return $default(_that.id,_that.userId,_that.brandName,_that.introduction,_that.address,_that.contactPhone,_that.contactEmail,_that.bizType,_that.bizName,_that.bizNumber,_that.representativeName,_that.bankName,_that.accountNumber,_that.accountHolder,_that.bizRegistrationPath,_that.bankbookPath,_that.status,_that.adminComment,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.userId,_that.contactPhone,_that.contactEmail,_that.brandName,_that.introduction,_that.address,_that.bizType,_that.bizName,_that.bizNumber,_that.representativeName,_that.bankName,_that.accountNumber,_that.accountHolder,_that.bizRegistrationPath,_that.bankbookPath,_that.profileImagePath,_that.currentStep,_that.taxEmail,_that.status,_that.adminComment,_that.createdAt,_that.updatedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -213,10 +216,10 @@ return $default(_that.id,_that.userId,_that.brandName,_that.introduction,_that.a
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'brand_name')  String brandName,  String introduction,  String address, @JsonKey(name: 'contact_phone')  String contactPhone, @JsonKey(name: 'contact_email')  String contactEmail, @JsonKey(name: 'biz_type')  String bizType, @JsonKey(name: 'biz_name')  String bizName, @JsonKey(name: 'biz_number')  String bizNumber, @JsonKey(name: 'representative_name')  String representativeName, @JsonKey(name: 'bank_name')  String bankName, @JsonKey(name: 'account_number')  String accountNumber, @JsonKey(name: 'account_holder')  String accountHolder, @JsonKey(name: 'biz_registration_path')  String bizRegistrationPath, @JsonKey(name: 'bankbook_path')  String bankbookPath,  String status, @JsonKey(name: 'admin_comment')  String? adminComment, @JsonKey(name: 'created_at')  String? createdAt, @JsonKey(name: 'updated_at')  String? updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'contact_phone')  String contactPhone, @JsonKey(name: 'contact_email')  String contactEmail, @JsonKey(name: 'brand_name')  String? brandName,  String? introduction,  String? address, @JsonKey(name: 'biz_type')  String? bizType, @JsonKey(name: 'biz_name')  String? bizName, @JsonKey(name: 'biz_number')  String? bizNumber, @JsonKey(name: 'representative_name')  String? representativeName, @JsonKey(name: 'bank_name')  String? bankName, @JsonKey(name: 'account_number')  String? accountNumber, @JsonKey(name: 'account_holder')  String? accountHolder, @JsonKey(name: 'biz_registration_path')  String? bizRegistrationPath, @JsonKey(name: 'bankbook_path')  String? bankbookPath, @JsonKey(name: 'profile_image_path')  String? profileImagePath, @JsonKey(name: 'current_step')  int currentStep, @JsonKey(name: 'tax_email')  String? taxEmail,  String status, @JsonKey(name: 'admin_comment')  String? adminComment, @JsonKey(name: 'created_at')  String? createdAt, @JsonKey(name: 'updated_at')  String? updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _PartnerApplication() when $default != null:
-return $default(_that.id,_that.userId,_that.brandName,_that.introduction,_that.address,_that.contactPhone,_that.contactEmail,_that.bizType,_that.bizName,_that.bizNumber,_that.representativeName,_that.bankName,_that.accountNumber,_that.accountHolder,_that.bizRegistrationPath,_that.bankbookPath,_that.status,_that.adminComment,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.userId,_that.contactPhone,_that.contactEmail,_that.brandName,_that.introduction,_that.address,_that.bizType,_that.bizName,_that.bizNumber,_that.representativeName,_that.bankName,_that.accountNumber,_that.accountHolder,_that.bizRegistrationPath,_that.bankbookPath,_that.profileImagePath,_that.currentStep,_that.taxEmail,_that.status,_that.adminComment,_that.createdAt,_that.updatedAt);case _:
   return null;
 
 }
@@ -228,25 +231,28 @@ return $default(_that.id,_that.userId,_that.brandName,_that.introduction,_that.a
 @JsonSerializable()
 
 class _PartnerApplication implements PartnerApplication {
-  const _PartnerApplication({required this.id, @JsonKey(name: 'user_id') required this.userId, @JsonKey(name: 'brand_name') required this.brandName, required this.introduction, required this.address, @JsonKey(name: 'contact_phone') required this.contactPhone, @JsonKey(name: 'contact_email') required this.contactEmail, @JsonKey(name: 'biz_type') required this.bizType, @JsonKey(name: 'biz_name') required this.bizName, @JsonKey(name: 'biz_number') required this.bizNumber, @JsonKey(name: 'representative_name') required this.representativeName, @JsonKey(name: 'bank_name') required this.bankName, @JsonKey(name: 'account_number') required this.accountNumber, @JsonKey(name: 'account_holder') required this.accountHolder, @JsonKey(name: 'biz_registration_path') required this.bizRegistrationPath, @JsonKey(name: 'bankbook_path') required this.bankbookPath, this.status = 'pending', @JsonKey(name: 'admin_comment') this.adminComment, @JsonKey(name: 'created_at') this.createdAt, @JsonKey(name: 'updated_at') this.updatedAt});
+  const _PartnerApplication({required this.id, @JsonKey(name: 'user_id') required this.userId, @JsonKey(name: 'contact_phone') required this.contactPhone, @JsonKey(name: 'contact_email') required this.contactEmail, @JsonKey(name: 'brand_name') this.brandName, this.introduction, this.address, @JsonKey(name: 'biz_type') this.bizType, @JsonKey(name: 'biz_name') this.bizName, @JsonKey(name: 'biz_number') this.bizNumber, @JsonKey(name: 'representative_name') this.representativeName, @JsonKey(name: 'bank_name') this.bankName, @JsonKey(name: 'account_number') this.accountNumber, @JsonKey(name: 'account_holder') this.accountHolder, @JsonKey(name: 'biz_registration_path') this.bizRegistrationPath, @JsonKey(name: 'bankbook_path') this.bankbookPath, @JsonKey(name: 'profile_image_path') this.profileImagePath, @JsonKey(name: 'current_step') this.currentStep = 0, @JsonKey(name: 'tax_email') this.taxEmail, this.status = 'draft', @JsonKey(name: 'admin_comment') this.adminComment, @JsonKey(name: 'created_at') this.createdAt, @JsonKey(name: 'updated_at') this.updatedAt});
   factory _PartnerApplication.fromJson(Map<String, dynamic> json) => _$PartnerApplicationFromJson(json);
 
 @override final  String id;
 @override@JsonKey(name: 'user_id') final  String userId;
-@override@JsonKey(name: 'brand_name') final  String brandName;
-@override final  String introduction;
-@override final  String address;
 @override@JsonKey(name: 'contact_phone') final  String contactPhone;
 @override@JsonKey(name: 'contact_email') final  String contactEmail;
-@override@JsonKey(name: 'biz_type') final  String bizType;
-@override@JsonKey(name: 'biz_name') final  String bizName;
-@override@JsonKey(name: 'biz_number') final  String bizNumber;
-@override@JsonKey(name: 'representative_name') final  String representativeName;
-@override@JsonKey(name: 'bank_name') final  String bankName;
-@override@JsonKey(name: 'account_number') final  String accountNumber;
-@override@JsonKey(name: 'account_holder') final  String accountHolder;
-@override@JsonKey(name: 'biz_registration_path') final  String bizRegistrationPath;
-@override@JsonKey(name: 'bankbook_path') final  String bankbookPath;
+@override@JsonKey(name: 'brand_name') final  String? brandName;
+@override final  String? introduction;
+@override final  String? address;
+@override@JsonKey(name: 'biz_type') final  String? bizType;
+@override@JsonKey(name: 'biz_name') final  String? bizName;
+@override@JsonKey(name: 'biz_number') final  String? bizNumber;
+@override@JsonKey(name: 'representative_name') final  String? representativeName;
+@override@JsonKey(name: 'bank_name') final  String? bankName;
+@override@JsonKey(name: 'account_number') final  String? accountNumber;
+@override@JsonKey(name: 'account_holder') final  String? accountHolder;
+@override@JsonKey(name: 'biz_registration_path') final  String? bizRegistrationPath;
+@override@JsonKey(name: 'bankbook_path') final  String? bankbookPath;
+@override@JsonKey(name: 'profile_image_path') final  String? profileImagePath;
+@override@JsonKey(name: 'current_step') final  int currentStep;
+@override@JsonKey(name: 'tax_email') final  String? taxEmail;
 @override@JsonKey() final  String status;
 @override@JsonKey(name: 'admin_comment') final  String? adminComment;
 @override@JsonKey(name: 'created_at') final  String? createdAt;
@@ -265,16 +271,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PartnerApplication&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.brandName, brandName) || other.brandName == brandName)&&(identical(other.introduction, introduction) || other.introduction == introduction)&&(identical(other.address, address) || other.address == address)&&(identical(other.contactPhone, contactPhone) || other.contactPhone == contactPhone)&&(identical(other.contactEmail, contactEmail) || other.contactEmail == contactEmail)&&(identical(other.bizType, bizType) || other.bizType == bizType)&&(identical(other.bizName, bizName) || other.bizName == bizName)&&(identical(other.bizNumber, bizNumber) || other.bizNumber == bizNumber)&&(identical(other.representativeName, representativeName) || other.representativeName == representativeName)&&(identical(other.bankName, bankName) || other.bankName == bankName)&&(identical(other.accountNumber, accountNumber) || other.accountNumber == accountNumber)&&(identical(other.accountHolder, accountHolder) || other.accountHolder == accountHolder)&&(identical(other.bizRegistrationPath, bizRegistrationPath) || other.bizRegistrationPath == bizRegistrationPath)&&(identical(other.bankbookPath, bankbookPath) || other.bankbookPath == bankbookPath)&&(identical(other.status, status) || other.status == status)&&(identical(other.adminComment, adminComment) || other.adminComment == adminComment)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PartnerApplication&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.contactPhone, contactPhone) || other.contactPhone == contactPhone)&&(identical(other.contactEmail, contactEmail) || other.contactEmail == contactEmail)&&(identical(other.brandName, brandName) || other.brandName == brandName)&&(identical(other.introduction, introduction) || other.introduction == introduction)&&(identical(other.address, address) || other.address == address)&&(identical(other.bizType, bizType) || other.bizType == bizType)&&(identical(other.bizName, bizName) || other.bizName == bizName)&&(identical(other.bizNumber, bizNumber) || other.bizNumber == bizNumber)&&(identical(other.representativeName, representativeName) || other.representativeName == representativeName)&&(identical(other.bankName, bankName) || other.bankName == bankName)&&(identical(other.accountNumber, accountNumber) || other.accountNumber == accountNumber)&&(identical(other.accountHolder, accountHolder) || other.accountHolder == accountHolder)&&(identical(other.bizRegistrationPath, bizRegistrationPath) || other.bizRegistrationPath == bizRegistrationPath)&&(identical(other.bankbookPath, bankbookPath) || other.bankbookPath == bankbookPath)&&(identical(other.profileImagePath, profileImagePath) || other.profileImagePath == profileImagePath)&&(identical(other.currentStep, currentStep) || other.currentStep == currentStep)&&(identical(other.taxEmail, taxEmail) || other.taxEmail == taxEmail)&&(identical(other.status, status) || other.status == status)&&(identical(other.adminComment, adminComment) || other.adminComment == adminComment)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,userId,brandName,introduction,address,contactPhone,contactEmail,bizType,bizName,bizNumber,representativeName,bankName,accountNumber,accountHolder,bizRegistrationPath,bankbookPath,status,adminComment,createdAt,updatedAt]);
+int get hashCode => Object.hashAll([runtimeType,id,userId,contactPhone,contactEmail,brandName,introduction,address,bizType,bizName,bizNumber,representativeName,bankName,accountNumber,accountHolder,bizRegistrationPath,bankbookPath,profileImagePath,currentStep,taxEmail,status,adminComment,createdAt,updatedAt]);
 
 @override
 String toString() {
-  return 'PartnerApplication(id: $id, userId: $userId, brandName: $brandName, introduction: $introduction, address: $address, contactPhone: $contactPhone, contactEmail: $contactEmail, bizType: $bizType, bizName: $bizName, bizNumber: $bizNumber, representativeName: $representativeName, bankName: $bankName, accountNumber: $accountNumber, accountHolder: $accountHolder, bizRegistrationPath: $bizRegistrationPath, bankbookPath: $bankbookPath, status: $status, adminComment: $adminComment, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'PartnerApplication(id: $id, userId: $userId, contactPhone: $contactPhone, contactEmail: $contactEmail, brandName: $brandName, introduction: $introduction, address: $address, bizType: $bizType, bizName: $bizName, bizNumber: $bizNumber, representativeName: $representativeName, bankName: $bankName, accountNumber: $accountNumber, accountHolder: $accountHolder, bizRegistrationPath: $bizRegistrationPath, bankbookPath: $bankbookPath, profileImagePath: $profileImagePath, currentStep: $currentStep, taxEmail: $taxEmail, status: $status, adminComment: $adminComment, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -285,7 +291,7 @@ abstract mixin class _$PartnerApplicationCopyWith<$Res> implements $PartnerAppli
   factory _$PartnerApplicationCopyWith(_PartnerApplication value, $Res Function(_PartnerApplication) _then) = __$PartnerApplicationCopyWithImpl;
 @override @useResult
 $Res call({
- String id,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'brand_name') String brandName, String introduction, String address,@JsonKey(name: 'contact_phone') String contactPhone,@JsonKey(name: 'contact_email') String contactEmail,@JsonKey(name: 'biz_type') String bizType,@JsonKey(name: 'biz_name') String bizName,@JsonKey(name: 'biz_number') String bizNumber,@JsonKey(name: 'representative_name') String representativeName,@JsonKey(name: 'bank_name') String bankName,@JsonKey(name: 'account_number') String accountNumber,@JsonKey(name: 'account_holder') String accountHolder,@JsonKey(name: 'biz_registration_path') String bizRegistrationPath,@JsonKey(name: 'bankbook_path') String bankbookPath, String status,@JsonKey(name: 'admin_comment') String? adminComment,@JsonKey(name: 'created_at') String? createdAt,@JsonKey(name: 'updated_at') String? updatedAt
+ String id,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'contact_phone') String contactPhone,@JsonKey(name: 'contact_email') String contactEmail,@JsonKey(name: 'brand_name') String? brandName, String? introduction, String? address,@JsonKey(name: 'biz_type') String? bizType,@JsonKey(name: 'biz_name') String? bizName,@JsonKey(name: 'biz_number') String? bizNumber,@JsonKey(name: 'representative_name') String? representativeName,@JsonKey(name: 'bank_name') String? bankName,@JsonKey(name: 'account_number') String? accountNumber,@JsonKey(name: 'account_holder') String? accountHolder,@JsonKey(name: 'biz_registration_path') String? bizRegistrationPath,@JsonKey(name: 'bankbook_path') String? bankbookPath,@JsonKey(name: 'profile_image_path') String? profileImagePath,@JsonKey(name: 'current_step') int currentStep,@JsonKey(name: 'tax_email') String? taxEmail, String status,@JsonKey(name: 'admin_comment') String? adminComment,@JsonKey(name: 'created_at') String? createdAt,@JsonKey(name: 'updated_at') String? updatedAt
 });
 
 
@@ -302,25 +308,28 @@ class __$PartnerApplicationCopyWithImpl<$Res>
 
 /// Create a copy of PartnerApplication
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userId = null,Object? brandName = null,Object? introduction = null,Object? address = null,Object? contactPhone = null,Object? contactEmail = null,Object? bizType = null,Object? bizName = null,Object? bizNumber = null,Object? representativeName = null,Object? bankName = null,Object? accountNumber = null,Object? accountHolder = null,Object? bizRegistrationPath = null,Object? bankbookPath = null,Object? status = null,Object? adminComment = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userId = null,Object? contactPhone = null,Object? contactEmail = null,Object? brandName = freezed,Object? introduction = freezed,Object? address = freezed,Object? bizType = freezed,Object? bizName = freezed,Object? bizNumber = freezed,Object? representativeName = freezed,Object? bankName = freezed,Object? accountNumber = freezed,Object? accountHolder = freezed,Object? bizRegistrationPath = freezed,Object? bankbookPath = freezed,Object? profileImagePath = freezed,Object? currentStep = null,Object? taxEmail = freezed,Object? status = null,Object? adminComment = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
   return _then(_PartnerApplication(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
-as String,brandName: null == brandName ? _self.brandName : brandName // ignore: cast_nullable_to_non_nullable
-as String,introduction: null == introduction ? _self.introduction : introduction // ignore: cast_nullable_to_non_nullable
-as String,address: null == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
 as String,contactPhone: null == contactPhone ? _self.contactPhone : contactPhone // ignore: cast_nullable_to_non_nullable
 as String,contactEmail: null == contactEmail ? _self.contactEmail : contactEmail // ignore: cast_nullable_to_non_nullable
-as String,bizType: null == bizType ? _self.bizType : bizType // ignore: cast_nullable_to_non_nullable
-as String,bizName: null == bizName ? _self.bizName : bizName // ignore: cast_nullable_to_non_nullable
-as String,bizNumber: null == bizNumber ? _self.bizNumber : bizNumber // ignore: cast_nullable_to_non_nullable
-as String,representativeName: null == representativeName ? _self.representativeName : representativeName // ignore: cast_nullable_to_non_nullable
-as String,bankName: null == bankName ? _self.bankName : bankName // ignore: cast_nullable_to_non_nullable
-as String,accountNumber: null == accountNumber ? _self.accountNumber : accountNumber // ignore: cast_nullable_to_non_nullable
-as String,accountHolder: null == accountHolder ? _self.accountHolder : accountHolder // ignore: cast_nullable_to_non_nullable
-as String,bizRegistrationPath: null == bizRegistrationPath ? _self.bizRegistrationPath : bizRegistrationPath // ignore: cast_nullable_to_non_nullable
-as String,bankbookPath: null == bankbookPath ? _self.bankbookPath : bankbookPath // ignore: cast_nullable_to_non_nullable
-as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String,brandName: freezed == brandName ? _self.brandName : brandName // ignore: cast_nullable_to_non_nullable
+as String?,introduction: freezed == introduction ? _self.introduction : introduction // ignore: cast_nullable_to_non_nullable
+as String?,address: freezed == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
+as String?,bizType: freezed == bizType ? _self.bizType : bizType // ignore: cast_nullable_to_non_nullable
+as String?,bizName: freezed == bizName ? _self.bizName : bizName // ignore: cast_nullable_to_non_nullable
+as String?,bizNumber: freezed == bizNumber ? _self.bizNumber : bizNumber // ignore: cast_nullable_to_non_nullable
+as String?,representativeName: freezed == representativeName ? _self.representativeName : representativeName // ignore: cast_nullable_to_non_nullable
+as String?,bankName: freezed == bankName ? _self.bankName : bankName // ignore: cast_nullable_to_non_nullable
+as String?,accountNumber: freezed == accountNumber ? _self.accountNumber : accountNumber // ignore: cast_nullable_to_non_nullable
+as String?,accountHolder: freezed == accountHolder ? _self.accountHolder : accountHolder // ignore: cast_nullable_to_non_nullable
+as String?,bizRegistrationPath: freezed == bizRegistrationPath ? _self.bizRegistrationPath : bizRegistrationPath // ignore: cast_nullable_to_non_nullable
+as String?,bankbookPath: freezed == bankbookPath ? _self.bankbookPath : bankbookPath // ignore: cast_nullable_to_non_nullable
+as String?,profileImagePath: freezed == profileImagePath ? _self.profileImagePath : profileImagePath // ignore: cast_nullable_to_non_nullable
+as String?,currentStep: null == currentStep ? _self.currentStep : currentStep // ignore: cast_nullable_to_non_nullable
+as int,taxEmail: freezed == taxEmail ? _self.taxEmail : taxEmail // ignore: cast_nullable_to_non_nullable
+as String?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,adminComment: freezed == adminComment ? _self.adminComment : adminComment // ignore: cast_nullable_to_non_nullable
 as String?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as String?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
