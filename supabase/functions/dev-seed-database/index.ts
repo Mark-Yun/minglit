@@ -528,13 +528,43 @@ async function uploadSeedImages(supabase: SupabaseClient): Promise<string[]> {
   const imageFiles = ['party_cafe_warm.jpg', 'party_lounge_bright.jpg', 'party_premium_lounge.jpg']
   const urls: string[] = []
 
+  // Check if images already exist in storage (uploaded externally or by a previous run)
+  const { data: existing } = await supabase.storage.from('party-assets').list('seed-images', { limit: 10 })
+  const existingNames = new Set((existing ?? []).map((f: { name: string }) => f.name))
+
+  // If all images already exist, just return their public URLs
+  const allExist = imageFiles.every(f => existingNames.has(f))
+  if (allExist) {
+    for (const filename of imageFiles) {
+      const { data } = supabase.storage.from('party-assets').getPublicUrl(`seed-images/${filename}`)
+      urls.push(data.publicUrl)
+    }
+    return urls
+  }
+
+  // Sign in as the first partner owner so storage trigger can set minglit_files.owner_id
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
+  const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+    email: SEED_PARTNERS[0].ownerEmail,
+    password: 'password1234!',
+  })
+  if (authError || !authData.session) {
+    console.error('Failed to sign in as partner owner for image upload:', authError?.message)
+    return urls
+  }
+
+  const authedClient = createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: `Bearer ${authData.session.access_token}` } },
+  })
+
   for (const filename of imageFiles) {
     try {
       const fileUrl = new URL(`./assets/${filename}`, import.meta.url)
       const bytes = await Deno.readFile(fileUrl)
       const path = `seed-images/${filename}`
 
-      const { error } = await supabase.storage
+      const { error } = await authedClient.storage
         .from('party-assets')
         .upload(path, bytes, { contentType: 'image/jpeg', upsert: true })
 
