@@ -42,7 +42,9 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.sizeOf(context).width;
+    final topPadding = MediaQuery.paddingOf(context).top;
     final imageHeight = screenWidth * 9 / 16;
+    final expandedHeight = imageHeight + topPadding;
     _collapseThreshold = imageHeight - kToolbarHeight;
 
     final event = widget.event;
@@ -72,7 +74,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
             slivers: [
               // 1. Hero Image Header
               SliverAppBar(
-                expandedHeight: imageHeight,
+                expandedHeight: expandedHeight,
                 pinned: true,
                 title: _showTitle
                     ? Text(
