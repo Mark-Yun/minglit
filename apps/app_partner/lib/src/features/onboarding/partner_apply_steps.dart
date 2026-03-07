@@ -1,12 +1,13 @@
 part of 'partner_apply_controller.dart';
 
-mixin _PartnerApplySteps on _$PartnerApplyController, _PartnerApplyValidation, _PartnerApplyDraft {
+mixin _PartnerApplySteps
+    on _$PartnerApplyController, _PartnerApplyValidation, _PartnerApplyDraft {
   static const int totalSteps = 5;
 
-  void nextStep() {
+  Future<void> nextStep() async {
     if (state.currentStep < totalSteps - 1) {
       state = state.copyWith(currentStep: state.currentStep + 1);
-      saveDraft();
+      await saveDraft();
     }
   }
 

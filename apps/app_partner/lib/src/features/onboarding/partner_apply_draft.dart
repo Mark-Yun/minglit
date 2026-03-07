@@ -6,8 +6,9 @@ mixin _PartnerApplyDraft on _$PartnerApplyController {
     final application = await repo.getMyApplication();
     if (application == null) return;
     if (application.status != 'draft' &&
-        application.status != 'needs_correction')
+        application.status != 'needs_correction') {
       return;
+    }
 
     state = state.copyWith(
       applicationId: application.id,
@@ -60,7 +61,7 @@ mixin _PartnerApplyDraft on _$PartnerApplyController {
       );
       final result = await repo.saveDraft(application);
       state = state.copyWith(applicationId: result.id, isSaving: false);
-    } catch (e, st) {
+    } on Exception catch (e, st) {
       state = state.copyWith(isSaving: false);
       Log.e('saveDraft error', e, st);
     }
@@ -75,7 +76,7 @@ mixin _PartnerApplyDraft on _$PartnerApplyController {
       final path = await repo.uploadProfileImage(file);
       state = state.copyWith(profileImagePath: path, profileImageFile: file);
       await saveDraft();
-    } catch (e, st) {
+    } on Exception catch (e, st) {
       Log.e('uploadProfileImage error', e, st);
     }
   }
@@ -92,7 +93,7 @@ mixin _PartnerApplyDraft on _$PartnerApplyController {
         bizRegistrationFile: file,
       );
       await saveDraft();
-    } catch (e, st) {
+    } on Exception catch (e, st) {
       Log.e('uploadBizRegistration error', e, st);
     }
   }
@@ -106,7 +107,7 @@ mixin _PartnerApplyDraft on _$PartnerApplyController {
       final path = await repo.uploadBankbook(file);
       state = state.copyWith(bankbookPath: path, bankbookFile: file);
       await saveDraft();
-    } catch (e, st) {
+    } on Exception catch (e, st) {
       Log.e('uploadBankbook error', e, st);
     }
   }
