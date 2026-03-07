@@ -139,12 +139,12 @@ class _PartnerApplicationListPageState
       margin: const EdgeInsets.only(bottom: MinglitSpacing.small),
       child: ListTile(
         title: Text(
-          app.brandName,
+          app.brandName ?? '-',
           style: theme.textTheme.bodyLarge?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
-        subtitle: Text('${app.bizName} / ${app.representativeName}'),
+        subtitle: Text('${app.bizName ?? '-'} / ${app.representativeName ?? '-'}'),
         trailing: _buildStatusBadge(app.status),
         onTap: () {
           ref
