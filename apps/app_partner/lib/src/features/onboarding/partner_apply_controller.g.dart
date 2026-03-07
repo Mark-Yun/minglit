@@ -42,7 +42,7 @@ final class PartnerApplyControllerProvider
 }
 
 String _$partnerApplyControllerHash() =>
-    r'61fe19b0ae166c933f70ecfde820a1256e28b9d0';
+    r'b638e933f5ca954d8303c0a36d01bee7c8dff6ec';
 
 abstract class _$PartnerApplyController extends $Notifier<PartnerApplyState> {
   PartnerApplyState build();
