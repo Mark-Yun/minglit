@@ -37,7 +37,8 @@ class BugReporterWrapper extends StatefulWidget {
 }
 
 class _BugReporterWrapperState extends State<BugReporterWrapper> {
-  ShakeDetector? _detector;
+ShakeDetector? _detector;
+  bool _isDialogShowing = false;
 
   @override
   void initState() {
@@ -68,8 +69,15 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
   BuildContext? get _dialogContext =>
       widget.navigatorKey?.currentState?.overlay?.context ?? context;
 
-  Future<void> _showReportDialog() async {
+Future<void> _showReportDialog() async {
     if (!mounted) return;
+    if (_isDialogShowing) {
+      // Dismiss existing dialog before showing a fresh one
+      final ctx = _dialogContext;
+      if (ctx != null && ctx.mounted) {
+        unawaited(Navigator.of(ctx).maybePop());
+      }
+    }
     final ctx = _dialogContext;
     if (ctx == null) return;
 
@@ -77,92 +85,97 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
     final descController = TextEditingController();
     var isLoading = false;
 
-    await showDialog<void>(
-      context: ctx,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: const Text('🐞 Bug Report'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Shake detected! Send logs to developers?'),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Title (Optional)',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: descController,
-                  decoration: const InputDecoration(
-                    labelText: 'Description (What happened?)',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 3,
-                ),
-                if (isLoading) ...[
+    _isDialogShowing = true;
+    try {
+      await showDialog<void>(
+        context: ctx,
+        builder: (context) => StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('🐞 Bug Report'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Shake detected! Send logs to developers?'),
                   const SizedBox(height: 16),
-                  const MinglitCircularProgressIndicator(),
+                  TextField(
+                    controller: titleController,
+                    decoration: const InputDecoration(
+                      labelText: 'Title (Optional)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: descController,
+                    decoration: const InputDecoration(
+                      labelText: 'Description (What happened?)',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                  ),
+                  if (isLoading) ...[
+                    const SizedBox(height: 16),
+                    const MinglitCircularProgressIndicator(),
+                  ],
                 ],
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
               ),
-              ElevatedButton(
-                onPressed: isLoading
-                    ? null
-                    : () async {
-                        setState(() => isLoading = true);
-                        try {
-                          final logs = Log.export();
-                          final repo = BugReportRepository(
-                            Supabase.instance.client,
-                          );
-                          await repo.reportBug(
-                            title: titleController.text.isEmpty
-                                ? 'User Report'
-                                : titleController.text,
-                            description: descController.text,
-                            logs: logs,
-                          );
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          setState(() => isLoading = true);
+                          try {
+                            final logs = Log.export();
+                            final repo = BugReportRepository(
+                              Supabase.instance.client,
+                            );
+                            await repo.reportBug(
+                              title: titleController.text.isEmpty
+                                  ? 'User Report'
+                                  : titleController.text,
+                              description: descController.text,
+                              logs: logs,
+                            );
 
-                          if (!context.mounted) {
-                            return;
+                            if (!context.mounted) {
+                              return;
+                            }
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Bug reported successfully! 🚀'),
+                                backgroundColor: MinglitColors.success,
+                              ),
+                            );
+                          } on Exception catch (e) {
+                            if (!context.mounted) {
+                              return;
+                            }
+                            setState(() => isLoading = false);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Failed to report: $e'),
+                                backgroundColor: MinglitColors.error,
+                              ),
+                            );
                           }
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Bug reported successfully! 🚀'),
-                              backgroundColor: MinglitColors.success,
-                            ),
-                          );
-                        } on Exception catch (e) {
-                          if (!context.mounted) {
-                            return;
-                          }
-                          setState(() => isLoading = false);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Failed to report: $e'),
-                              backgroundColor: MinglitColors.error,
-                            ),
-                          );
-                        }
-                      },
-                child: const Text('Send Report'),
-              ),
-            ],
-          );
-        },
-      ),
-    );
+                        },
+                  child: const Text('Send Report'),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+    } finally {
+      _isDialogShowing = false;
+    }
   }
 
   @override
