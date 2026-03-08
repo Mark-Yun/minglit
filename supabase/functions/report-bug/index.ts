@@ -22,17 +22,40 @@ Deno.serve(withSentry(async (req) => {
       return errorResponse("Invalid JSON body", 400);
     }
 
-    const { title, description, logs, timestamp, platform } = reqBody as {
+    const { title, description, logs, timestamp, platform, screenshotUrl, environment } = reqBody as {
       title?: string;
       description?: string;
       logs?: string;
       timestamp?: string;
       platform?: string;
+      screenshotUrl?: string;
+      environment?: Record<string, unknown>;
     };
 
     if (!title || !description) {
       return errorResponse("Missing required fields: title, description", 400);
     }
+
+    const MAX_BODY_LENGTH = 60000;
+    const logsStr = logs ?? '';
+    const truncatedLogs = logsStr.length > MAX_BODY_LENGTH
+      ? logsStr.substring(0, MAX_BODY_LENGTH) + '\n...[truncated]'
+      : logsStr;
+
+    // Screenshot section (only if screenshotUrl is truthy)
+    const screenshotSection = screenshotUrl
+      ? `\n\n## Screenshot\n![Screenshot](${screenshotUrl})\n`
+      : '';
+
+    // Environment section (only if environment is a non-null object)
+    const environmentSection = environment && typeof environment === 'object'
+      ? `\n\n## Environment\n| Key | Value |\n|-----|-------|\n${
+          Object.entries(environment)
+            .filter(([, v]) => v != null)
+            .map(([k, v]) => `| ${k} | ${v} |`)
+            .join('\n')
+        }\n`
+      : '';
 
     if (!GITHUB_TOKEN) {
       throw new Error("GITHUB_ACCESS_TOKEN is not set");
@@ -52,11 +75,11 @@ ${description}
 <summary>📋 Logs</summary>
 
 \`\`\`log
-${logs}
+${truncatedLogs}
 \`\`\`
 
 </details>
-`;
+${screenshotSection}${environmentSection}`;
 
     const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/issues`, {
       method: "POST",
