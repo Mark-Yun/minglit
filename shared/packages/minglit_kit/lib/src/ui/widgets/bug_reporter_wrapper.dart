@@ -110,14 +110,14 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
         unawaited(Navigator.of(ctx).maybePop());
       }
     }
+    // Capture context BEFORE async gap
+    final ctx = _dialogContext;
+    if (ctx == null) return;
 
     // Capture screenshot BEFORE opening dialog
     final screenshotUrl = await _captureScreenshot();
-    if (!mounted) return;
+    if (!mounted || !ctx.mounted) return;
     setState(() => _screenshotUrl = screenshotUrl);
-
-    final ctx = _dialogContext;
-    if (ctx == null) return;
 
     final titleController = TextEditingController();
     final descController = TextEditingController();
