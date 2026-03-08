@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:minglit_iamport_v1/minglit_iamport_v1.dart';
+import 'package:minglit_kit/src/config/iamport_config.dart';
 import 'package:minglit_kit/src/data/repositories/identity_repository.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
@@ -43,13 +45,14 @@ class _IdentityVerificationScreenState
 
     try {
       final merchantUid = 'IDV_${DateTime.now().millisecondsSinceEpoch}';
-      const userCode = 'imp80716769';
+      final config = ref.read(iamportConfigProvider);
 
       final service = getCertificationService();
       final verificationId = await service.verify(
         context: context,
-        userCode: userCode,
+        userCode: config.userCode,
         merchantUid: merchantUid,
+        mRedirectUrl: config.mobileRedirectUrl,
       );
 
       if (verificationId == null) {

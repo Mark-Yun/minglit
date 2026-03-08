@@ -9,6 +9,7 @@ class CertificationServiceImpl implements CertificationService {
     required String merchantUid,
     String? name,
     String? phone,
+    String? mRedirectUrl,
   }) {
     throw UnimplementedError();
   }

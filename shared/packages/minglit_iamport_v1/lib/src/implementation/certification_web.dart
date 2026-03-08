@@ -14,6 +14,7 @@ class CertificationServiceImpl implements CertificationService {
     required String merchantUid,
     String? name,
     String? phone,
+    String? mRedirectUrl,
   }) async {
     final imp = globalContext['IMP'];
     if (imp == null) throw Exception('Iamport SDK (IMP) not loaded.');
