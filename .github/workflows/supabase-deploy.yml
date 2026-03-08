@@ -17,6 +17,10 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -63,6 +67,18 @@ jobs:
             echo "⚠️ Seed request returned HTTP ${HTTP_STATUS} (non-blocking)"
           fi
 
+      - name: Create issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "🚨 Supabase deploy failed on ${{ github.ref_name }}" \
+            --body "**Commit**: ${{ github.sha }}
+          **Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          **Triggered by**: ${{ github.event.head_commit.message }}" \
+            --label "ci-failure"
+
       # Main 환경 배포
       - name: Deploy to Main Supabase
         if: github.ref == 'refs/heads/main'
@@ -86,3 +102,15 @@ jobs:
 
           # Deploy Edge Functions
           supabase functions deploy
+
+      - name: Create issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "🚨 Supabase deploy failed on ${{ github.ref_name }}" \
+            --body "**Commit**: ${{ github.sha }}
+          **Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          **Triggered by**: ${{ github.event.head_commit.message }}" \
+            --label "ci-failure"

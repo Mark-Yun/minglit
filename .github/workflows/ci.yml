@@ -11,6 +11,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Migration version 중복 검사 (항상 실행 — path filter 없음)
+  check-migration-versions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check duplicate migration versions
+        run: |
+          VERSIONS=$(ls supabase/migrations/*.sql 2>/dev/null | xargs -n1 basename | cut -c1-14 | sort)
+          DUPES=$(echo "$VERSIONS" | uniq -d)
+          if [ -n "$DUPES" ]; then
+            echo "❌ Duplicate migration versions found:"
+            echo "$DUPES"
+            exit 1
+          fi
+          echo "✅ All migration versions unique ($(echo "$VERSIONS" | wc -l | tr -d ' ') files checked)"
+
   # 변경 사항 감지 Job
   changes:
     runs-on: ubuntu-latest
