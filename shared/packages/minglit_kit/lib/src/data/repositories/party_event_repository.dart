@@ -100,7 +100,9 @@ mixin _PartyEventRepository on _SupabasePartyContext {
 
   /// Updates the metadata of an event.
   Future<void> updateEventMetadata(
-      String eventId, Map<String, dynamic> metadata) async {
+    String eventId,
+    Map<String, dynamic> metadata,
+  ) async {
     try {
       await supabaseClient
           .from('events')
