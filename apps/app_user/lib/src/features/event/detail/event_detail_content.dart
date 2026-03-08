@@ -87,8 +87,10 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                     : null,
                 centerTitle: false,
                 flexibleSpace: FlexibleSpaceBar(
+                  collapseMode: CollapseMode.pin,
                   background: MinglitImageCarousel(
                     imageUrls: party?.imageUrls ?? [],
+                    height: expandedHeight,
                   ),
                 ),
                 leading: BackButton(color: theme.colorScheme.onPrimary),
