@@ -12,3 +12,10 @@
   `git diff dev -- supabase/migrations/` 로 충돌 여부 확인.
 - 같은 날짜에 여러 migration 필요 시 순차 번호 사용 (예: 000001, 000002, 000003).
 - Migration 파일은 한번 dev/main에 머지되면 내용 수정 금지. 수정 필요 시 새 migration 추가.
+
+## Branch Protection
+
+- `dev` 브랜치는 direct push 금지. 반드시 feature branch에서 PR을 통해 머지.
+- PR 머지 전 `check-migration-versions` CI 체크 통과 필수 (migration version 중복 검사).
+- Approvals 불필요 (0개). self-merge 가능.
+- Admin은 긴급 시 bypass 가능하지만, 일반 작업은 항상 PR 사용.
