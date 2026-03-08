@@ -355,32 +355,22 @@ end;
 $$;
 
 -- ============================================================
--- 8. PGroonga Search RPCs (only if pgroonga extension is available)
+-- 8. PGroonga Search RPCs
 -- ============================================================
 
-DO $pgroonga_check$ BEGIN
-  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pgroonga') THEN
-    EXECUTE $exec$
-      CREATE OR REPLACE FUNCTION public.search_events_pgroonga(query text)
-      RETURNS SETOF public.events
-      LANGUAGE sql STABLE SECURITY INVOKER AS $fn$
-        SELECT e.* FROM public.events e
-        WHERE query <> '' AND e.title &@~ query LIMIT 20;
-      $fn$;
-    $exec$;
+CREATE OR REPLACE FUNCTION public.search_events_pgroonga(query text)
+RETURNS SETOF public.events
+LANGUAGE sql STABLE SECURITY INVOKER AS $$
+  SELECT e.* FROM public.events e
+  WHERE query <> '' AND e.title &@~ query LIMIT 20;
+$$;
 
-    EXECUTE $exec$
-      CREATE OR REPLACE FUNCTION public.search_parties_pgroonga(query text)
-      RETURNS SETOF public.parties
-      LANGUAGE sql STABLE SECURITY INVOKER AS $fn$
-        SELECT p.* FROM public.parties p
-        WHERE query <> '' AND p.title &@~ query LIMIT 20;
-      $fn$;
-    $exec$;
-  ELSE
-    RAISE NOTICE 'pgroonga not available, skipping search RPCs';
-  END IF;
-END $pgroonga_check$;
+CREATE OR REPLACE FUNCTION public.search_parties_pgroonga(query text)
+RETURNS SETOF public.parties
+LANGUAGE sql STABLE SECURITY INVOKER AS $$
+  SELECT p.* FROM public.parties p
+  WHERE query <> '' AND p.title &@~ query LIMIT 20;
+$$;
 
 -- ============================================================
 -- 9. Party Balance RPCs
