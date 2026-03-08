@@ -95,7 +95,10 @@ void main() {
         ).captured;
 
         final body = captured.first as Map<String, dynamic>;
-        expect(body['screenshotUrl'], equals('https://example.com/screenshot.png'));
+        expect(
+          body['screenshotUrl'],
+          equals('https://example.com/screenshot.png'),
+        );
         expect(body['environment'], equals({'os': 'iOS', 'version': '17.0'}));
         expect(body['platform'], equals('iOS'));
       });

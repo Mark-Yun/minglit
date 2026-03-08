@@ -189,15 +189,15 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
                               Container(
-                            height: 60,
-                            color: Colors.grey[200],
-                            child: const Center(
-                              child: Icon(
-                                Icons.broken_image,
-                                color: Colors.grey,
+                                height: 60,
+                                color: Colors.grey[200],
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.broken_image,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
                         ),
                       ),
                       const SizedBox(height: 4),

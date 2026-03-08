@@ -4,7 +4,6 @@ import 'package:minglit_kit/src/utils/environment_info.dart';
 void main() {
   setUpAll(TestWidgetsFlutterBinding.ensureInitialized);
 
-
   group('collectEnvironmentInfo', () {
     test('returns a map with all 8 expected keys', () async {
       final info = await collectEnvironmentInfo();
