@@ -180,24 +180,37 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                     // Screenshot preview (if available)
                     if (_screenshotUrl != null) ...[
                       const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          const Icon(Icons.image, size: 16),
-                          const SizedBox(width: 4),
-                          const Text(
-                            'Screenshot captured',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                          const Spacer(),
-                          TextButton(
-                            onPressed: () =>
-                                setSheetState(() => _screenshotUrl = null),
-                            child: const Text(
-                              'Remove',
-                              style: TextStyle(fontSize: 12),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          _screenshotUrl!,
+                          height: 150,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                            height: 60,
+                            color: Colors.grey[200],
+                            child: const Center(
+                              child: Icon(
+                                Icons.broken_image,
+                                color: Colors.grey,
+                              ),
                             ),
                           ),
-                        ],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () =>
+                              setSheetState(() => _screenshotUrl = null),
+                          child: const Text(
+                            'Remove screenshot',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
                       ),
                     ],
                     const SizedBox(height: 16),
