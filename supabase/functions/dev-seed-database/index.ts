@@ -32,6 +32,7 @@ const SCENARIOS: {
   verificationCategory: 'career' | 'academic' | 'asset' | null
   entryGroups: { label: string; gender: 'male' | 'female'; birthYearMin: number; birthYearMax: number }[]
   tickets: { name: string; price: number; quantity: number }[]
+  metadata: { show_participant_list: boolean; visibility: string }
 }[] = [
   {
     title: '대학생 소셜 밍글',
@@ -47,6 +48,7 @@ const SCENARIOS: {
       { name: '일반 티켓', price: 15000, quantity: 5 },
       { name: '얼리버드', price: 10000, quantity: 5 },
     ],
+    metadata: { show_participant_list: true, visibility: 'public' },
   },
   {
     title: '직장인 금요 밍글',
@@ -62,6 +64,7 @@ const SCENARIOS: {
       { name: '스탠다드', price: 25000, quantity: 8 },
       { name: '프리미엄 (음료 포함)', price: 35000, quantity: 8 },
     ],
+    metadata: { show_participant_list: true, visibility: 'public' },
   },
   {
     title: '프리미엄 라운지 밍글',
@@ -77,6 +80,7 @@ const SCENARIOS: {
       { name: 'VIP 티켓', price: 50000, quantity: 4 },
       { name: 'VVIP 티켓 (디너 포함)', price: 80000, quantity: 4 },
     ],
+    metadata: { show_participant_list: false, visibility: 'private' },
   },
   {
     title: '동네친구 보드게임',
@@ -91,6 +95,7 @@ const SCENARIOS: {
     tickets: [
       { name: '참가비', price: 10000, quantity: 8 },
     ],
+    metadata: { show_participant_list: true, visibility: 'public' },
   },
   {
     title: '복합조건 네트워킹',
@@ -108,6 +113,7 @@ const SCENARIOS: {
       { name: '20대 티켓', price: 20000, quantity: 6 },
       { name: '30대 티켓', price: 25000, quantity: 6 },
     ],
+    metadata: { show_participant_list: true, visibility: 'public' },
   },
   {
     title: '자유 오픈 밍글',
@@ -120,6 +126,7 @@ const SCENARIOS: {
       { label: '여성', gender: 'female', birthYearMin: 1990, birthYearMax: 2005 },
     ],
     tickets: [{ name: '참가비', price: 12000, quantity: 12 }],
+    metadata: { show_participant_list: true, visibility: 'public' },
   },
   {
     title: '직장인 애프터눈 라운지',
@@ -132,6 +139,7 @@ const SCENARIOS: {
       { label: '여성', gender: 'female', birthYearMin: 1988, birthYearMax: 2000 },
     ],
     tickets: [{ name: '라운지 티켓', price: 20000, quantity: 10 }],
+    metadata: { show_participant_list: true, visibility: 'public' },
   },
   {
     title: 'VIP 멤버십 파티',
@@ -144,6 +152,7 @@ const SCENARIOS: {
       { label: '여성 VIP', gender: 'female', birthYearMin: 1985, birthYearMax: 2000 },
     ],
     tickets: [{ name: 'VIP 멤버십', price: 60000, quantity: 8 }],
+    metadata: { show_participant_list: false, visibility: 'private' },
   },
 ]
 
@@ -379,6 +388,7 @@ async function createPartyWithEvents(
     min_confirmed_count: scenario.minConfirmed,
     max_participants: scenario.maxParticipants,
     status: 'active',
+    metadata: scenario.metadata,
   }).select('id').single()
 
   if (partyErr) throw new Error(`Failed to create party "${scenario.title}": ${partyErr.message}`)
@@ -428,6 +438,7 @@ async function createPartyWithEvents(
       min_confirmed_count: scenario.minConfirmed,
       max_participants: scenario.maxParticipants,
       status: 'scheduled',
+      metadata: scenario.metadata,
     }).select('id').single()
 
     if (eventErr) throw new Error(`Failed to create event: ${eventErr.message}`)

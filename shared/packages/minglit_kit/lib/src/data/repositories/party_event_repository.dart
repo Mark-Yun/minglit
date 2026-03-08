@@ -97,4 +97,21 @@ mixin _PartyEventRepository on _SupabasePartyContext {
       rethrow;
     }
   }
+
+  /// Updates the metadata of an event.
+  Future<void> updateEventMetadata(
+    String eventId,
+    Map<String, dynamic> metadata,
+  ) async {
+    try {
+      await supabaseClient
+          .from('events')
+          .update({'metadata': metadata})
+          .eq('id', eventId);
+      Log.d('updateEventMetadata success');
+    } catch (e, st) {
+      Log.e('❌ [PartyRepo] updateEventMetadata Error', e, st);
+      rethrow;
+    }
+  }
 }

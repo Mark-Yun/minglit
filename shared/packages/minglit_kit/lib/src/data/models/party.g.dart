@@ -57,6 +57,7 @@ _Party _$PartyFromJson(Map<String, dynamic> json) => _Party(
           .toList() ??
       const [],
   contactOptions: json['contact_options'] as Map<String, dynamic>? ?? const {},
+  metadata: json['metadata'] as Map<String, dynamic>? ?? const {},
   requiredVerificationIds:
       (json['required_verification_ids'] as List<dynamic>?)
           ?.map((e) => e as String)
@@ -86,6 +87,7 @@ Map<String, dynamic> _$PartyToJson(_Party instance) => <String, dynamic>{
   'description': instance.description,
   'image_urls': instance.imageUrls,
   'contact_options': instance.contactOptions,
+  'metadata': instance.metadata,
   'required_verification_ids': instance.requiredVerificationIds,
   'min_confirmed_count': instance.minConfirmedCount,
   'max_participants': instance.maxParticipants,
