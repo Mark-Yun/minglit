@@ -33,15 +33,13 @@ void main() {
       createdAt: now,
       updatedAt: now,
       price: price,
-      targetEntryGroupIds: const [],
-      requiredVerificationIds: const [],
     );
   }
 
   group('filteredEventsProvider — eligibility filter with verification check', () {
     test('unverified user with eligibilityEnabled: true sees all events', () {
       final events = [
-        makeEvent(id: 'e1', tickets: [makeTicket()]),
+        makeEvent(tickets: [makeTicket()]),
         makeEvent(
           id: 'e2',
           tickets: [makeTicket(id: 't2')],
@@ -76,13 +74,15 @@ void main() {
       expect(result.map((e) => e.id), containsAll(['e1', 'e2']));
     });
 
-
     test(
       'verified user with eligibilityEnabled: true sees filtered events',
       () async {
         final events = [
-          makeEvent(id: 'e1', tickets: [makeTicket()]),
-          makeEvent(id: 'e2', tickets: [makeTicket(id: 't2')]),
+          makeEvent(tickets: [makeTicket()]),
+          makeEvent(
+            id: 'e2',
+            tickets: [makeTicket(id: 't2')],
+          ),
         ];
 
         final container = createContainer(
@@ -125,7 +125,7 @@ void main() {
       'eligibilityEnabled: false shows all events regardless of verification',
       () {
         final events = [
-          makeEvent(id: 'e1', tickets: [makeTicket()]),
+          makeEvent(tickets: [makeTicket()]),
           makeEvent(
             id: 'e2',
             tickets: [makeTicket(id: 't2')],
@@ -163,7 +163,7 @@ void main() {
       'null eligibility data returns all events when eligibilityEnabled: true',
       () {
         final events = [
-          makeEvent(id: 'e1', tickets: [makeTicket()]),
+          makeEvent(tickets: [makeTicket()]),
           makeEvent(
             id: 'e2',
             tickets: [makeTicket(id: 't2')],
@@ -193,7 +193,7 @@ void main() {
 
     test('unverified user with null userProfile sees all events', () {
       final events = [
-        makeEvent(id: 'e1', tickets: [makeTicket()]),
+        makeEvent(tickets: [makeTicket()]),
         makeEvent(
           id: 'e2',
           tickets: [makeTicket(id: 't2')],
