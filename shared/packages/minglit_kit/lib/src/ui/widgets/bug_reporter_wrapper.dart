@@ -7,7 +7,8 @@ import 'package:flutter/rendering.dart';
 import 'package:minglit_kit/src/data/repositories/bug_report_repository.dart';
 import 'package:minglit_kit/src/data/repositories/storage_repository.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
+
+import 'package:minglit_kit/src/utils/environment_info.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:shake/shake.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -41,9 +42,10 @@ class BugReporterWrapper extends StatefulWidget {
 
 class _BugReporterWrapperState extends State<BugReporterWrapper> {
   ShakeDetector? _detector;
-  bool _isDialogShowing = false;
+  bool _isReportOpen = false;
   final GlobalKey _boundaryKey = GlobalKey();
   String? _screenshotUrl;
+  Map<String, dynamic>? _environmentInfo;
 
   @override
   void initState() {
@@ -81,12 +83,12 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
   Future<String?> _captureScreenshot() async {
     if (kIsWeb) return null;
     try {
-      final boundary = _boundaryKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
+      final boundary =
+          _boundaryKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
       if (boundary == null) return null;
       final image = await boundary.toImage();
-      final byteData =
-          await image.toByteData(format: ui.ImageByteFormat.png);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) return null;
       final bytes = byteData.buffer.asUint8List();
       final url = await StorageRepository().uploadBytes(
@@ -103,7 +105,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
 
   Future<void> _showReportDialog() async {
     if (!mounted) return;
-    if (_isDialogShowing) {
+    if (_isReportOpen) {
       // Dismiss existing dialog before showing a fresh one
       final ctx = _dialogContext;
       if (ctx != null && ctx.mounted) {
@@ -114,106 +116,190 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
     final ctx = _dialogContext;
     if (ctx == null) return;
 
-    // Capture screenshot BEFORE opening dialog
-    final screenshotUrl = await _captureScreenshot();
+    // Capture screenshot AND environment info in parallel BEFORE opening sheet
+    final results = await Future.wait([
+      _captureScreenshot(),
+      collectEnvironmentInfo(),
+    ]);
     if (!mounted || !ctx.mounted) return;
-    setState(() => _screenshotUrl = screenshotUrl);
+
+    final screenshotUrl = results[0] as String?;
+    final environment = results[1] as Map<String, dynamic>?;
+    setState(() {
+      _screenshotUrl = screenshotUrl;
+      _environmentInfo = environment;
+    });
 
     final titleController = TextEditingController();
     final descController = TextEditingController();
     var isLoading = false;
 
-    _isDialogShowing = true;
+    _isReportOpen = true;
     try {
-      await showDialog<void>(
+      await showModalBottomSheet<void>(
         context: ctx,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
         builder: (context) => StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('🐞 Bug Report'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('Shake detected! Send logs to developers?'),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: titleController,
-                    decoration: const InputDecoration(
-                      labelText: 'Title (Optional)',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: descController,
-                    decoration: const InputDecoration(
-                      labelText: 'Description (What happened?)',
-                      border: OutlineInputBorder(),
-                    ),
-                    maxLines: 3,
-                  ),
-                  if (isLoading) ...[
-                    const SizedBox(height: 16),
-                    const MinglitCircularProgressIndicator(),
-                  ],
-                ],
+          builder: (context, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Handle bar
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    // Title
+                    const Text(
+                      '🐞 Bug Report',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Screenshot preview (if available)
+                    if (_screenshotUrl != null) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.image, size: 16),
+                          const SizedBox(width: 4),
+                          const Text(
+                            'Screenshot captured',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                          const Spacer(),
+                          TextButton(
+                            onPressed: () =>
+                                setSheetState(() => _screenshotUrl = null),
+                            child: const Text(
+                              'Remove',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    // Title field
+                    TextField(
+                      controller: titleController,
+                      decoration: const InputDecoration(
+                        labelText: 'Title (Optional)',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Description field
+                    TextField(
+                      controller: descController,
+                      decoration: const InputDecoration(
+                        labelText: 'Description (What happened?)',
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 16),
+                    // Buttons row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Cancel'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: isLoading
+                                ? null
+                                : () async {
+                                    setSheetState(() => isLoading = true);
+                                    try {
+                                      final logs = Log.export();
+                                      final repo = BugReportRepository(
+                                        Supabase.instance.client,
+                                      );
+                                      await repo.reportBug(
+                                        title: titleController.text.isEmpty
+                                            ? 'User Report'
+                                            : titleController.text,
+                                        description: descController.text,
+                                        logs: logs,
+                                        screenshotUrl: _screenshotUrl,
+                                        environment: _environmentInfo,
+                                        platform: defaultTargetPlatform.name,
+                                      );
+                                      if (!context.mounted) return;
+                                      Navigator.pop(context);
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Bug reported successfully! 🚀',
+                                          ),
+                                          backgroundColor:
+                                              MinglitColors.success,
+                                        ),
+                                      );
+                                    } on Exception catch (e) {
+                                      if (!context.mounted) return;
+                                      setSheetState(() => isLoading = false);
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Failed to report: $e'),
+                                          backgroundColor: MinglitColors.error,
+                                        ),
+                                      );
+                                    }
+                                  },
+                            child: isLoading
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text('Send Report'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                  ],
                 ),
-                ElevatedButton(
-                  onPressed: isLoading
-                      ? null
-                      : () async {
-                          setState(() => isLoading = true);
-                          try {
-                            final logs = Log.export();
-                            final repo = BugReportRepository(
-                              Supabase.instance.client,
-                            );
-                            await repo.reportBug(
-                              title: titleController.text.isEmpty
-                                  ? 'User Report'
-                                  : titleController.text,
-                              description: descController.text,
-                              logs: logs,
-                              screenshotUrl: _screenshotUrl,
-                            );
-
-                            if (!context.mounted) {
-                              return;
-                            }
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Bug reported successfully! 🚀'),
-                                backgroundColor: MinglitColors.success,
-                              ),
-                            );
-                          } on Exception catch (e) {
-                            if (!context.mounted) {
-                              return;
-                            }
-                            setState(() => isLoading = false);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Failed to report: $e'),
-                                backgroundColor: MinglitColors.error,
-                              ),
-                            );
-                          }
-                        },
-                  child: const Text('Send Report'),
-                ),
-              ],
+              ),
             );
           },
         ),
       );
     } finally {
-      _isDialogShowing = false;
+      _isReportOpen = false;
     }
   }
 
@@ -222,10 +308,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
     return Stack(
       children: [
         RepaintBoundary(key: _boundaryKey, child: widget.child),
-        if (widget.enabled &&
-            (kIsWeb ||
-                defaultTargetPlatform == TargetPlatform.macOS ||
-                defaultTargetPlatform == TargetPlatform.windows))
+        if (widget.enabled)
           Positioned(
             right: 16,
             bottom: 16,
