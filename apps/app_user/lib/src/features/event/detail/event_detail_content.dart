@@ -121,9 +121,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                         targetType: SocialTargetType.party,
                         interactionType: SocialInteractionType.like,
                         activeColor: theme.colorScheme.onPrimary,
-                        inactiveColor: theme.colorScheme.onPrimary.withValues(
-                          alpha: 0.7,
-                        ),
+                        inactiveColor: theme.colorScheme.onPrimary,
                         tooltip: '좋아요',
                       ),
                     ),
