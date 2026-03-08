@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:minglit_kit/src/data/repositories/bug_report_repository.dart';
+import 'package:minglit_kit/src/data/repositories/storage_repository.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 import 'package:minglit_kit/src/utils/log.dart';
@@ -39,6 +42,8 @@ class BugReporterWrapper extends StatefulWidget {
 class _BugReporterWrapperState extends State<BugReporterWrapper> {
   ShakeDetector? _detector;
   bool _isDialogShowing = false;
+  final GlobalKey _boundaryKey = GlobalKey();
+  String? _screenshotUrl;
 
   @override
   void initState() {
@@ -69,6 +74,33 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
   BuildContext? get _dialogContext =>
       widget.navigatorKey?.currentState?.overlay?.context ?? context;
 
+  /// Captures a screenshot of the wrapped child and uploads it to Storage.
+  ///
+  /// Returns the public URL on success, or null on failure (best-effort).
+  /// Always returns null on web (not supported).
+  Future<String?> _captureScreenshot() async {
+    if (kIsWeb) return null;
+    try {
+      final boundary = _boundaryKey.currentContext?.findRenderObject()
+          as RenderRepaintBoundary?;
+      if (boundary == null) return null;
+      final image = await boundary.toImage();
+      final byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) return null;
+      final bytes = byteData.buffer.asUint8List();
+      final url = await StorageRepository().uploadBytes(
+        bytes: bytes,
+        bucket: 'bug-report-attachments',
+        pathPrefix: 'screenshots',
+      );
+      return url;
+    } on Exception catch (e) {
+      Log.e('Screenshot capture failed (best-effort)', e);
+      return null;
+    }
+  }
+
   Future<void> _showReportDialog() async {
     if (!mounted) return;
     if (_isDialogShowing) {
@@ -78,6 +110,12 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
         unawaited(Navigator.of(ctx).maybePop());
       }
     }
+
+    // Capture screenshot BEFORE opening dialog
+    final screenshotUrl = await _captureScreenshot();
+    if (!mounted) return;
+    setState(() => _screenshotUrl = screenshotUrl);
+
     final ctx = _dialogContext;
     if (ctx == null) return;
 
@@ -141,6 +179,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                                   : titleController.text,
                               description: descController.text,
                               logs: logs,
+                              screenshotUrl: _screenshotUrl,
                             );
 
                             if (!context.mounted) {
@@ -182,7 +221,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        widget.child,
+        RepaintBoundary(key: _boundaryKey, child: widget.child),
         if (widget.enabled &&
             (kIsWeb ||
                 defaultTargetPlatform == TargetPlatform.macOS ||
