@@ -9,13 +9,11 @@ part of 'app_routes.dart';
 List<RouteBase> get $appRoutes => [
   $devMapRoute,
   $devUserSwitchRoute,
-  $verificationManageRoute,
-  $createVerificationRoute,
-  $partyListRoute,
   $loginRoute,
-  $homeRoute,
-  $applicationListRoute,
-  $memberListRoute,
+  $partnerApplyRoute,
+  $partnerApplyStatusRoute,
+  $notificationCenterRoute,
+  $partnerShellRoute,
 ];
 
 RouteBase get $devMapRoute =>
@@ -67,17 +65,14 @@ mixin $DevUserSwitchRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
-RouteBase get $verificationManageRoute => GoRouteData.$route(
-  path: '/verifications/manage',
-  factory: $VerificationManageRoute._fromState,
-);
+RouteBase get $loginRoute =>
+    GoRouteData.$route(path: '/login', factory: $LoginRoute._fromState);
 
-mixin $VerificationManageRoute on GoRouteData {
-  static VerificationManageRoute _fromState(GoRouterState state) =>
-      const VerificationManageRoute();
+mixin $LoginRoute on GoRouteData {
+  static LoginRoute _fromState(GoRouterState state) => const LoginRoute();
 
   @override
-  String get location => GoRouteData.$location('/verifications/manage');
+  String get location => GoRouteData.$location('/login');
 
   @override
   void go(BuildContext context) => context.go(location);
@@ -93,23 +88,251 @@ mixin $VerificationManageRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
-RouteBase get $createVerificationRoute => GoRouteData.$route(
-  path: '/verifications/create',
-  factory: $CreateVerificationRoute._fromState,
+RouteBase get $partnerApplyRoute =>
+    GoRouteData.$route(path: '/apply', factory: $PartnerApplyRoute._fromState);
+
+mixin $PartnerApplyRoute on GoRouteData {
+  static PartnerApplyRoute _fromState(GoRouterState state) =>
+      const PartnerApplyRoute();
+
+  @override
+  String get location => GoRouteData.$location('/apply');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $partnerApplyStatusRoute => GoRouteData.$route(
+  path: '/apply/status',
+  factory: $PartnerApplyStatusRoute._fromState,
 );
 
-mixin $CreateVerificationRoute on GoRouteData {
-  static CreateVerificationRoute _fromState(GoRouterState state) =>
-      CreateVerificationRoute(
-        partnerId: state.uri.queryParameters['partner-id'],
+mixin $PartnerApplyStatusRoute on GoRouteData {
+  static PartnerApplyStatusRoute _fromState(GoRouterState state) =>
+      const PartnerApplyStatusRoute();
+
+  @override
+  String get location => GoRouteData.$location('/apply/status');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $notificationCenterRoute => GoRouteData.$route(
+  path: '/notifications',
+  factory: $NotificationCenterRoute._fromState,
+);
+
+mixin $NotificationCenterRoute on GoRouteData {
+  static NotificationCenterRoute _fromState(GoRouterState state) =>
+      const NotificationCenterRoute();
+
+  @override
+  String get location => GoRouteData.$location('/notifications');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $partnerShellRoute => StatefulShellRouteData.$route(
+  factory: $PartnerShellRouteExtension._fromState,
+  branches: [
+    StatefulShellBranchData.$branch(
+      routes: [
+        GoRouteData.$route(
+          path: '/',
+          factory: $HomeRoute._fromState,
+          routes: [
+            GoRouteData.$route(
+              path: 'applications',
+              factory: $ApplicationListRoute._fromState,
+              routes: [
+                GoRouteData.$route(
+                  path: ':applicationId',
+                  factory: $ApplicationDetailRoute._fromState,
+                ),
+              ],
+            ),
+            GoRouteData.$route(
+              path: 'guide/location',
+              factory: $LocationGuideRoute._fromState,
+            ),
+          ],
+        ),
+      ],
+    ),
+    StatefulShellBranchData.$branch(
+      routes: [
+        GoRouteData.$route(
+          path: '/parties',
+          factory: $PartyListRoute._fromState,
+          routes: [
+            GoRouteData.$route(
+              path: 'create',
+              factory: $PartyCreateRoute._fromState,
+            ),
+            GoRouteData.$route(
+              path: ':partyId',
+              factory: $PartyDetailRoute._fromState,
+              routes: [
+                GoRouteData.$route(
+                  path: 'edit',
+                  factory: $PartyEditRoute._fromState,
+                ),
+                GoRouteData.$route(
+                  path: 'tickets/:ticketId/edit',
+                  factory: $PartyTicketEditRoute._fromState,
+                ),
+                GoRouteData.$route(
+                  path: 'events/create',
+                  factory: $EventCreateRoute._fromState,
+                ),
+                GoRouteData.$route(
+                  path: 'events/:eventId',
+                  factory: $EventDetailRoute._fromState,
+                  routes: [
+                    GoRouteData.$route(
+                      path: 'tickets/create',
+                      factory: $TicketCreateRoute._fromState,
+                    ),
+                    GoRouteData.$route(
+                      path: 'tickets/:ticketId/edit',
+                      factory: $TicketEditRoute._fromState,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    ),
+    StatefulShellBranchData.$branch(
+      routes: [
+        GoRouteData.$route(
+          path: '/settlement',
+          factory: $SettlementRoute._fromState,
+        ),
+      ],
+    ),
+    StatefulShellBranchData.$branch(
+      routes: [
+        GoRouteData.$route(
+          path: '/more',
+          factory: $MoreRoute._fromState,
+          routes: [
+            GoRouteData.$route(
+              path: 'verifications/manage',
+              factory: $VerificationManageRoute._fromState,
+            ),
+            GoRouteData.$route(
+              path: 'verifications/create',
+              factory: $CreateVerificationRoute._fromState,
+            ),
+            GoRouteData.$route(
+              path: 'partners/:partnerId/members',
+              factory: $MemberListRoute._fromState,
+              routes: [
+                GoRouteData.$route(
+                  path: ':targetUserId/permission',
+                  factory: $MemberPermissionRoute._fromState,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    ),
+  ],
+);
+
+extension $PartnerShellRouteExtension on PartnerShellRoute {
+  static PartnerShellRoute _fromState(GoRouterState state) =>
+      const PartnerShellRoute();
+}
+
+mixin $HomeRoute on GoRouteData {
+  static HomeRoute _fromState(GoRouterState state) => const HomeRoute();
+
+  @override
+  String get location => GoRouteData.$location('/');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $ApplicationListRoute on GoRouteData {
+  static ApplicationListRoute _fromState(GoRouterState state) =>
+      const ApplicationListRoute();
+
+  @override
+  String get location => GoRouteData.$location('/applications');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $ApplicationDetailRoute on GoRouteData {
+  static ApplicationDetailRoute _fromState(GoRouterState state) =>
+      ApplicationDetailRoute(
+        applicationId: state.pathParameters['applicationId']!,
       );
 
-  CreateVerificationRoute get _self => this as CreateVerificationRoute;
+  ApplicationDetailRoute get _self => this as ApplicationDetailRoute;
 
   @override
   String get location => GoRouteData.$location(
-    '/verifications/create',
-    queryParams: {if (_self.partnerId != null) 'partner-id': _self.partnerId},
+    '/applications/${Uri.encodeComponent(_self.applicationId)}',
   );
 
   @override
@@ -126,41 +349,26 @@ mixin $CreateVerificationRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
-RouteBase get $partyListRoute => GoRouteData.$route(
-  path: '/parties',
-  factory: $PartyListRoute._fromState,
-  routes: [
-    GoRouteData.$route(path: 'create', factory: $PartyCreateRoute._fromState),
-    GoRouteData.$route(
-      path: ':partyId',
-      factory: $PartyDetailRoute._fromState,
-      routes: [
-        GoRouteData.$route(
-          path: 'tickets/:ticketId/edit',
-          factory: $PartyTicketEditRoute._fromState,
-        ),
-        GoRouteData.$route(
-          path: 'events/create',
-          factory: $EventCreateRoute._fromState,
-        ),
-        GoRouteData.$route(
-          path: 'events/:eventId',
-          factory: $EventDetailRoute._fromState,
-          routes: [
-            GoRouteData.$route(
-              path: 'tickets/create',
-              factory: $TicketCreateRoute._fromState,
-            ),
-            GoRouteData.$route(
-              path: 'tickets/:ticketId/edit',
-              factory: $TicketEditRoute._fromState,
-            ),
-          ],
-        ),
-      ],
-    ),
-  ],
-);
+mixin $LocationGuideRoute on GoRouteData {
+  static LocationGuideRoute _fromState(GoRouterState state) =>
+      const LocationGuideRoute();
+
+  @override
+  String get location => GoRouteData.$location('/guide/location');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
 
 mixin $PartyListRoute on GoRouteData {
   static PartyListRoute _fromState(GoRouterState state) =>
@@ -213,6 +421,31 @@ mixin $PartyDetailRoute on GoRouteData {
   @override
   String get location =>
       GoRouteData.$location('/parties/${Uri.encodeComponent(_self.partyId)}');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $PartyEditRoute on GoRouteData {
+  static PartyEditRoute _fromState(GoRouterState state) =>
+      PartyEditRoute(partyId: state.pathParameters['partyId']!);
+
+  PartyEditRoute get _self => this as PartyEditRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/parties/${Uri.encodeComponent(_self.partyId)}/edit',
+  );
 
   @override
   void go(BuildContext context) => context.go(location);
@@ -363,14 +596,12 @@ mixin $TicketEditRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
-RouteBase get $loginRoute =>
-    GoRouteData.$route(path: '/login', factory: $LoginRoute._fromState);
-
-mixin $LoginRoute on GoRouteData {
-  static LoginRoute _fromState(GoRouterState state) => const LoginRoute();
+mixin $SettlementRoute on GoRouteData {
+  static SettlementRoute _fromState(GoRouterState state) =>
+      const SettlementRoute();
 
   @override
-  String get location => GoRouteData.$location('/login');
+  String get location => GoRouteData.$location('/settlement');
 
   @override
   void go(BuildContext context) => context.go(location);
@@ -386,14 +617,11 @@ mixin $LoginRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
-RouteBase get $homeRoute =>
-    GoRouteData.$route(path: '/', factory: $HomeRoute._fromState);
-
-mixin $HomeRoute on GoRouteData {
-  static HomeRoute _fromState(GoRouterState state) => const HomeRoute();
+mixin $MoreRoute on GoRouteData {
+  static MoreRoute _fromState(GoRouterState state) => const MoreRoute();
 
   @override
-  String get location => GoRouteData.$location('/');
+  String get location => GoRouteData.$location('/more');
 
   @override
   void go(BuildContext context) => context.go(location);
@@ -409,23 +637,12 @@ mixin $HomeRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
-RouteBase get $applicationListRoute => GoRouteData.$route(
-  path: '/admin/applications',
-  factory: $ApplicationListRoute._fromState,
-  routes: [
-    GoRouteData.$route(
-      path: ':applicationId',
-      factory: $ApplicationDetailRoute._fromState,
-    ),
-  ],
-);
-
-mixin $ApplicationListRoute on GoRouteData {
-  static ApplicationListRoute _fromState(GoRouterState state) =>
-      const ApplicationListRoute();
+mixin $VerificationManageRoute on GoRouteData {
+  static VerificationManageRoute _fromState(GoRouterState state) =>
+      const VerificationManageRoute();
 
   @override
-  String get location => GoRouteData.$location('/admin/applications');
+  String get location => GoRouteData.$location('/more/verifications/manage');
 
   @override
   void go(BuildContext context) => context.go(location);
@@ -441,17 +658,18 @@ mixin $ApplicationListRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
-mixin $ApplicationDetailRoute on GoRouteData {
-  static ApplicationDetailRoute _fromState(GoRouterState state) =>
-      ApplicationDetailRoute(
-        applicationId: state.pathParameters['applicationId']!,
+mixin $CreateVerificationRoute on GoRouteData {
+  static CreateVerificationRoute _fromState(GoRouterState state) =>
+      CreateVerificationRoute(
+        partnerId: state.uri.queryParameters['partner-id'],
       );
 
-  ApplicationDetailRoute get _self => this as ApplicationDetailRoute;
+  CreateVerificationRoute get _self => this as CreateVerificationRoute;
 
   @override
   String get location => GoRouteData.$location(
-    '/admin/applications/${Uri.encodeComponent(_self.applicationId)}',
+    '/more/verifications/create',
+    queryParams: {if (_self.partnerId != null) 'partner-id': _self.partnerId},
   );
 
   @override
@@ -468,17 +686,6 @@ mixin $ApplicationDetailRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
-RouteBase get $memberListRoute => GoRouteData.$route(
-  path: '/partners/:partnerId/members',
-  factory: $MemberListRoute._fromState,
-  routes: [
-    GoRouteData.$route(
-      path: ':targetUserId/permission',
-      factory: $MemberPermissionRoute._fromState,
-    ),
-  ],
-);
-
 mixin $MemberListRoute on GoRouteData {
   static MemberListRoute _fromState(GoRouterState state) =>
       MemberListRoute(partnerId: state.pathParameters['partnerId']!);
@@ -487,7 +694,7 @@ mixin $MemberListRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location(
-    '/partners/${Uri.encodeComponent(_self.partnerId)}/members',
+    '/more/partners/${Uri.encodeComponent(_self.partnerId)}/members',
   );
 
   @override
@@ -515,7 +722,7 @@ mixin $MemberPermissionRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location(
-    '/partners/${Uri.encodeComponent(_self.partnerId)}/members/${Uri.encodeComponent(_self.targetUserId)}/permission',
+    '/more/partners/${Uri.encodeComponent(_self.partnerId)}/members/${Uri.encodeComponent(_self.targetUserId)}/permission',
   );
 
   @override

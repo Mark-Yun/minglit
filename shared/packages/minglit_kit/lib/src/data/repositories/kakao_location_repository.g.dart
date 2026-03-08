@@ -8,9 +8,12 @@ part of 'kakao_location_repository.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provides the [KakaoLocationRepository].
 
 @ProviderFor(kakaoLocationRepository)
 const kakaoLocationRepositoryProvider = KakaoLocationRepositoryProvider._();
+
+/// Provides the [KakaoLocationRepository].
 
 final class KakaoLocationRepositoryProvider
     extends
@@ -20,6 +23,7 @@ final class KakaoLocationRepositoryProvider
           KakaoLocationRepository
         >
     with $Provider<KakaoLocationRepository> {
+  /// Provides the [KakaoLocationRepository].
   const KakaoLocationRepositoryProvider._()
     : super(
         from: null,

@@ -1,0 +1,20 @@
+name: minglit_workspace
+description: Minglit Monorepo Workspace
+environment:
+  sdk: ^3.6.0
+
+workspace:
+  - apps/app_partner
+  - apps/app_user
+  - shared/packages/minglit_kit
+  - shared/packages/minglit_lints
+  - tests/test_data_seeder
+  - tests/backend_integration
+
+dependency_overrides:
+  iamport_webview_flutter: 3.1.0
+
+dev_dependencies:
+  custom_lint: 0.8.1
+  minglit_lints:
+    path: shared/packages/minglit_lints

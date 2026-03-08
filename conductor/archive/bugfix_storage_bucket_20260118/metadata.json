@@ -1,0 +1,8 @@
+{
+  "track_id": "bugfix_storage_bucket_20260118",
+  "type": "bug",
+  "status": "new",
+  "created_at": "2026-01-18T20:30:00+09:00",
+  "updated_at": "2026-01-18T20:30:00+09:00",
+  "description": "주요 버그 수정: 인증 파일 업로드 에러 (Storage Bucket)"
+}

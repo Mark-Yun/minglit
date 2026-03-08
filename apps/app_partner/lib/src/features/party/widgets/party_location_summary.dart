@@ -27,7 +27,9 @@ class PartyLocationSummary extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    if (location == null) {
+    final resolvedLocation = location;
+    if (resolvedLocation == null) {
+      final editLocation = onEditLocation;
       final emptyText = Text(
         context.l10n.partyDetail_empty_location,
         style: theme.textTheme.bodyMedium?.copyWith(
@@ -35,7 +37,7 @@ class PartyLocationSummary extends StatelessWidget {
         ),
       );
 
-      if (onEditLocation == null) {
+      if (editLocation == null) {
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.small),
           child: emptyText,
@@ -58,12 +60,16 @@ class PartyLocationSummary extends StatelessWidget {
             AddActionCard(
               title: context.l10n.common_button_edit,
               iconData: Icons.edit_location_alt_outlined,
-              onTap: onEditLocation!,
+              onTap: editLocation,
             ),
           ],
         ),
       );
     }
+
+    final detail = addressDetail;
+    final directions = directionsGuide;
+    final editAction = onEditLocation ?? onEditDetail;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,61 +78,45 @@ class PartyLocationSummary extends StatelessWidget {
         ClipRRect(
           borderRadius: BorderRadius.circular(MinglitRadius.card),
           child: LocationMapView(
-            location: location!,
+            location: resolvedLocation,
             showExternalMapButton: false, // Cleaner view for summary
             showCopyButton: false,
           ),
         ),
 
         // 2. Detail Info (Address Detail & Directions) - Shown below map
-        if (addressDetail != null && addressDetail!.isNotEmpty) ...[
+        if (detail != null && detail.isNotEmpty) ...[
           const SizedBox(height: MinglitSpacing.medium),
-          _buildDetailItem(
-            context,
-            Icons.apartment,
-            addressDetail!,
-          ),
+          _buildDetailItem(context, Icons.apartment, detail),
         ],
-        if (directionsGuide != null && directionsGuide!.isNotEmpty) ...[
+        if (directions != null && directions.isNotEmpty) ...[
           const SizedBox(height: MinglitSpacing.xxsmall),
-          _buildDetailItem(
-            context,
-            Icons.directions,
-            directionsGuide!,
-          ),
+          _buildDetailItem(context, Icons.directions, directions),
         ],
 
         // 3. Edit Action (Separated by divider)
-        if (onEditLocation != null || onEditDetail != null) ...[
+        if (editAction != null) ...[
           const SizedBox(height: MinglitSpacing.medium),
           const Divider(),
           const SizedBox(height: MinglitSpacing.xsmall),
           AddActionCard(
             title: '장소 정보 수정',
             iconData: Icons.map_outlined,
-            onTap: onEditLocation ?? onEditDetail!,
+            onTap: editAction,
           ),
         ],
       ],
     );
   }
 
-  Widget _buildDetailItem(
-    BuildContext context,
-    IconData icon,
-    String content,
-  ) {
+  Widget _buildDetailItem(BuildContext context, IconData icon, String content) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 14,
-          color: colorScheme.primary,
-        ),
+        Icon(icon, size: 14, color: colorScheme.primary),
         const SizedBox(width: 6),
         Expanded(
           child: Text(

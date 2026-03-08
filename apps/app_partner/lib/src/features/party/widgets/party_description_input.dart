@@ -72,9 +72,8 @@ class PartyDescriptionInput extends StatelessWidget {
             ),
             child: Text(
               errorText!,
-              style: TextStyle(
+              style: theme.textTheme.bodySmall!.copyWith(
                 color: theme.colorScheme.error,
-                fontSize: 12,
               ),
             ),
           ),

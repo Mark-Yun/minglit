@@ -6,7 +6,13 @@ on:
       - dev
       - main
     paths:
-      - 'backend/supabase/migrations/**'
+      - 'supabase/migrations/**'
+      - 'supabase/functions/**'
+  workflow_dispatch:
+
+concurrency:
+  group: supabase-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   deploy:
@@ -21,23 +27,62 @@ jobs:
       # Dev 환경 배포
       - name: Deploy to Dev Supabase
         if: github.ref == 'refs/heads/dev'
-        working-directory: ./backend
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DEV_DB_PASSWORD }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_DEV_PROJECT_ID }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_DEV_SECRET_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_ACCESS_TOKEN: ${{ secrets.GH_PAT_FOR_BUG_REPORT }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN_EDGE_FUNCTIONS }}
         run: |
           supabase link --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD
+          
+          # Set Secrets
+          supabase secrets set OPENAI_API_KEY=$OPENAI_API_KEY
+          supabase secrets set GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN
+          supabase secrets set SENTRY_DSN=$SENTRY_DSN
+          supabase secrets set ENVIRONMENT=development
+
+          # Dev 환경: 새 마이그레이션만 적용 (db reset은 WAL 비대화 유발)
           supabase db push --password $SUPABASE_DB_PASSWORD
+
+          # Deploy Edge Functions
+          supabase functions deploy
+
+          # Seed test data (dev only)
+          SUPABASE_URL="https://${SUPABASE_PROJECT_ID}.supabase.co"
+          echo "🌱 Seeding test data..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST "${SUPABASE_URL}/functions/v1/dev-seed-database" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json")
+          if [ "$HTTP_STATUS" -eq 200 ]; then
+            echo "✅ Seed data created successfully"
+          else
+            echo "⚠️ Seed request returned HTTP ${HTTP_STATUS} (non-blocking)"
+          fi
 
       # Main 환경 배포
       - name: Deploy to Main Supabase
         if: github.ref == 'refs/heads/main'
-        working-directory: ./backend
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_MAIN_DB_PASSWORD }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_MAIN_PROJECT_ID }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_ACCESS_TOKEN: ${{ secrets.GH_PAT_FOR_BUG_REPORT }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN_EDGE_FUNCTIONS }}
         run: |
           supabase link --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD
+          
+          # Set Secrets
+          supabase secrets set OPENAI_API_KEY=$OPENAI_API_KEY
+          supabase secrets set GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN
+          supabase secrets set SENTRY_DSN=$SENTRY_DSN
+          supabase secrets set ENVIRONMENT=production
+
           supabase db push --password $SUPABASE_DB_PASSWORD
+
+          # Deploy Edge Functions
+          supabase functions deploy

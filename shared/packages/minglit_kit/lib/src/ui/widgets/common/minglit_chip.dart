@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
+/// Size variants for [MinglitChip].
 enum MinglitChipSize {
+  /// Compact chip size.
   small,
+
+  /// Default chip size.
   medium,
+
+  /// Large chip size.
   large,
 }
 
@@ -11,6 +18,7 @@ enum MinglitChipSize {
 /// A standardized chip component for the Minglit design system.
 /// Supports multiple sizes and color themes.
 class MinglitChip extends StatelessWidget {
+  /// Creates a standardized chip.
   const MinglitChip({
     required this.label,
     this.icon,
@@ -20,10 +28,19 @@ class MinglitChip extends StatelessWidget {
     super.key,
   });
 
+  /// Text label displayed inside the chip.
   final String label;
+
+  /// Optional leading icon.
   final IconData? icon;
+
+  /// Chip size variant.
   final MinglitChipSize size;
+
+  /// Optional background color override.
   final Color? color;
+
+  /// Optional tap handler for interactive chips.
   final VoidCallback? onTap;
 
   @override
@@ -34,17 +51,26 @@ class MinglitChip extends StatelessWidget {
     // Determine padding and font size based on MinglitChipSize
     final (padding, fontSize, iconSize) = switch (size) {
       MinglitChipSize.small => (
-        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.small,
+          vertical: MinglitSpacing.xxsmall,
+        ),
         10.0,
         12.0,
       ),
       MinglitChipSize.medium => (
-        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.small,
+          vertical: MinglitSpacing.xsmall,
+        ),
         12.0,
         14.0,
       ),
       MinglitChipSize.large => (
-        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.sm,
+          vertical: MinglitSpacing.xsmall2,
+        ),
         14.0,
         16.0,
       ),
@@ -54,15 +80,15 @@ class MinglitChip extends StatelessWidget {
         color ?? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
     final textColor = color != null
         ? (ThemeData.estimateBrightnessForColor(color!) == Brightness.dark
-              ? Colors.white
-              : Colors.black87)
+              ? theme.colorScheme.onPrimary
+              : theme.colorScheme.onSurface)
         : colorScheme.onSurfaceVariant;
 
     final widget = Container(
       padding: padding,
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(100),
+        borderRadius: BorderRadius.circular(MinglitRadius.small),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.3),
           width: 0.5,
@@ -73,11 +99,11 @@ class MinglitChip extends StatelessWidget {
         children: [
           if (icon != null) ...[
             Icon(icon, size: iconSize, color: textColor),
-            const SizedBox(width: 4),
+            const SizedBox(width: MinglitSpacing.xxsmall),
           ],
           Text(
             label,
-            style: TextStyle(
+            style: theme.textTheme.labelSmall?.copyWith(
               fontSize: fontSize,
               color: textColor,
               fontWeight: FontWeight.w500,
@@ -90,7 +116,7 @@ class MinglitChip extends StatelessWidget {
     if (onTap != null) {
       return InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(100),
+        borderRadius: BorderRadius.circular(MinglitRadius.small),
         child: widget,
       );
     }

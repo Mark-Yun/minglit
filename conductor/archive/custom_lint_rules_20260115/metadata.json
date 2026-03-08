@@ -1,0 +1,8 @@
+{
+  "track_id": "custom_lint_rules_20260115",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-15T21:10:00Z",
+  "updated_at": "2026-01-15T21:10:00Z",
+  "description": "Implement custom lint rules for no hardcoded padding and common progress indicators."
+}

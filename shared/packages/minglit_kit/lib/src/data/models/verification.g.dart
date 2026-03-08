@@ -81,7 +81,11 @@ _VerificationRequirementStatus _$VerificationRequirementStatusFromJson(
 ) => _VerificationRequirementStatus(
   master: Verification.fromJson(json['master'] as Map<String, dynamic>),
   userVerification: json['user_verification'] as Map<String, dynamic>?,
-  activeSubmission: json['active_submission'] as Map<String, dynamic>?,
+  activeSubmission: json['active_submission'] == null
+      ? null
+      : VerificationSubmission.fromJson(
+          json['active_submission'] as Map<String, dynamic>,
+        ),
   verifiedResult: json['verified_result'] as Map<String, dynamic>?,
 );
 

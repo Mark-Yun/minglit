@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:kakao_map_plugin/kakao_map_plugin.dart';
 
+/// Kakao map widget for mobile platforms.
 class LocationMap extends StatefulWidget {
+  /// Creates a map centered on the provided coordinates.
   const LocationMap({
     required this.latitude,
     required this.longitude,
     super.key,
   });
 
+  /// Latitude for the map center.
   final double latitude;
+
+  /// Longitude for the map center.
   final double longitude;
 
   @override

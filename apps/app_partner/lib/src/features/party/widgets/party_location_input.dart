@@ -38,9 +38,7 @@ class _PartyLocationInputState extends State<PartyLocationInput> {
             borderRadius: BorderRadius.circular(MinglitRadius.card),
             child: widget.selectedLocation == null
                 ? _buildEmptyState(context)
-                : LocationMapView(
-                    location: widget.selectedLocation!,
-                  ),
+                : LocationMapView(location: widget.selectedLocation!),
           ),
         ),
         const SizedBox(height: MinglitSpacing.small),
@@ -95,15 +93,12 @@ class _PartyLocationInputState extends State<PartyLocationInput> {
           Icon(
             Icons.map_outlined,
             size: 48,
-            color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(
-              alpha: 0.5,
-            ),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
           ),
           const SizedBox(height: MinglitSpacing.small),
-          Text(
-            '파티가 열릴 장소를 선택하세요',
-            style: MinglitTextStyles.infoText(context),
-          ),
+          Text('파티가 열릴 장소를 선택하세요', style: MinglitTextStyles.infoText(context)),
         ],
       ),
     );

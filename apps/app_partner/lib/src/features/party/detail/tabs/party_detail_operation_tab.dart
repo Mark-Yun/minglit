@@ -8,7 +8,7 @@ import 'package:app_partner/src/features/party/widgets/party_event_list_summary.
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart' hide partyEventsProvider;
+import 'package:minglit_kit/minglit_kit.dart';
 
 class PartyDetailOperationTab extends ConsumerWidget {
   const PartyDetailOperationTab({required this.party, super.key});
@@ -39,17 +39,16 @@ class PartyDetailOperationTab extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(
               horizontal: MinglitSpacing.medium,
             ),
-            child: eventsAsync.when(
+            child: MinglitAsyncValueWidget(
+              value: eventsAsync,
               data: (events) => PartyEventListSummary(
                 events: events,
                 onEventTap: (event) =>
                     coordinator.goToEventDetail(party.id, event.id),
                 onCreatePressed: () => coordinator.goToCreateEvent(party.id),
               ),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, s) => Text(
-                context.l10n.partyDetail_error_eventLoad(e.toString()),
-              ),
+              error: (e, s) =>
+                  Text(context.l10n.partyDetail_error_eventLoad(e.toString())),
             ),
           ),
 
@@ -70,10 +69,13 @@ class PartyDetailOperationTab extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(
               horizontal: MinglitSpacing.medium,
             ),
-            child: ticketsAsync.when(
-              data: (tickets) => PartyTicketsSummary(
-                tickets: tickets,
-                entryGroups: party.entryGroups,
+            child: MinglitAsyncValueWidget(
+              value: ticketsAsync,
+              data: (templates) => PartyTicketsSummary(
+                tickets: templates
+                    .map((t) => Ticket.createFromTemplate(t, id: t.id))
+                    .toList(),
+                entryGroups: party.entryGroups ?? [],
                 maxCapacity: party.maxParticipants,
                 showStats: false,
                 onCreatePressed: () => _handleCreateTicket(context, ref),
@@ -86,10 +88,8 @@ class PartyDetailOperationTab extends ConsumerWidget {
                   );
                 },
               ),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, s) => Text(
-                context.l10n.partyDetail_error_ticketLoad(e.toString()),
-              ),
+              error: (e, s) =>
+                  Text(context.l10n.partyDetail_error_ticketLoad(e.toString())),
             ),
           ),
           const SizedBox(height: MinglitSpacing.xlarge),
@@ -99,38 +99,32 @@ class PartyDetailOperationTab extends ConsumerWidget {
   }
 
   Future<void> _handleCreateTicket(BuildContext context, WidgetRef ref) async {
-    final newTicket = await Navigator.of(context).push<Ticket>(
+    final newTemplate = await Navigator.of(context).push<TicketTemplate>(
       MaterialPageRoute(
         builder: (_) => TicketTemplateCreatePage(
-          entryGroups: party.entryGroups,
+          entryGroups: party.entryGroups ?? [],
         ),
       ),
     );
 
-    if (newTicket != null && context.mounted) {
+    if (newTemplate != null && context.mounted) {
       final loading = ref.read(globalLoadingControllerProvider.notifier)
         ..show();
       try {
         final repo = ref.read(ticketRepositoryProvider);
-        await repo.createTicket(
-          newTicket.copyWith(partyId: party.id, eventId: null),
+        await repo.createTicketTemplate(
+          newTemplate.copyWith(partyId: party.id),
         );
         ref.invalidate(partyTicketsProvider(party.id));
 
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(context.l10n.partyDetail_message_ticketAdded),
-            ),
+          context.showMinglitSuccess(
+            context.l10n.partyDetail_message_ticketAdded,
           );
         }
-      } on Exception catch (_) {
+      } on Exception catch (e, st) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(context.l10n.common_error_system),
-            ),
-          );
+          handleMinglitError(context, e, st);
         }
       } finally {
         loading.hide();

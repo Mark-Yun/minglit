@@ -1,20 +1,24 @@
 import 'package:dio/dio.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/data/models/party.dart';
+import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'kakao_location_repository.g.dart';
 
+/// Provides the [KakaoLocationRepository].
 @riverpod
 KakaoLocationRepository kakaoLocationRepository(Ref ref) {
   return KakaoLocationRepository();
 }
 
+/// Repository for Kakao local search APIs.
 class KakaoLocationRepository {
   final Dio _dio = Dio();
 
   // Load from --dart-define
   static const _restApiKey = String.fromEnvironment('KAKAO_LOCAL_REST_API_KEY');
 
+  /// Searches locations by keyword using Kakao Local APIs.
   Future<List<Location>> searchKeyword(String query) async {
     if (query.isEmpty) return [];
 

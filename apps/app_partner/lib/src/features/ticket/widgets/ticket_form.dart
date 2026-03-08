@@ -70,9 +70,7 @@ class _TicketFormState extends State<TicketForm> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedGroupIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.ticket_error_minOneGroup)),
-      );
+      context.showMinglitWarning(context.l10n.ticket_error_minOneGroup);
       return;
     }
 
@@ -117,7 +115,7 @@ class _TicketFormState extends State<TicketForm> {
                   value: _price,
                   step: 1000,
                   suffixText: '원',
-                  onChanged: (int val) => setState(() => _price = val),
+                  onChanged: (val) => setState(() => _price = val),
                 ),
               ),
               const SizedBox(width: MinglitSpacing.medium),
@@ -128,7 +126,7 @@ class _TicketFormState extends State<TicketForm> {
                   min: 1,
                   max: 999,
                   suffixText: '매',
-                  onChanged: (int val) => setState(() => _quantity = val),
+                  onChanged: (val) => setState(() => _quantity = val),
                 ),
               ),
             ],
@@ -187,10 +185,8 @@ class _TicketFormState extends State<TicketForm> {
             child: ElevatedButton(
               onPressed: widget.isLoading ? null : _handleSubmit,
               child: widget.isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                  ? const MinglitCircularProgressIndicator(
+                      size: 20,
                     )
                   : Text(widget.submitButtonLabel),
             ),
@@ -217,7 +213,8 @@ class _TicketFormState extends State<TicketForm> {
         : group.gender == 'female'
         ? context.l10n.entryGroup_option_female
         : context.l10n.entryGroup_option_any;
-    return '$gender (${_getAgeText(group.birthYearRange)})';
+    final ageText = _getAgeText(group.birthYearMin, group.birthYearMax);
+    return '$gender ($ageText)';
   }
 
   String _getGroupDetail(PartyEntryGroup group) {
@@ -225,10 +222,10 @@ class _TicketFormState extends State<TicketForm> {
     return '필수 인증 ${group.requiredVerificationIds.length}개';
   }
 
-  String _getAgeText(Map<String, dynamic>? range) {
-    if (range == null) return context.l10n.entryGroup_option_anyYear;
-    final min = range['min'];
-    final max = range['max'];
+  String _getAgeText(int? min, int? max) {
+    if (min == null && max == null) {
+      return context.l10n.entryGroup_option_anyYear;
+    }
     if (min != null && max != null) return '$min~$max년생';
     if (min != null) return '$min년생~';
     if (max != null) return '~$max년생';

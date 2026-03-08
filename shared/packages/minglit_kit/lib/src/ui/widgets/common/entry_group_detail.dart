@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:minglit_kit/src/data/models/party_entry_group.dart';
+import 'package:minglit_kit/src/data/repositories/verification_repository.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_chip.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_skeleton.dart';
 
 /// **Entry Group Detail**
 ///
 /// A minimal widget that displays the details of a single [PartyEntryGroup].
 /// Adheres strictly to the Minglit design system using themed text styles.
 class EntryGroupDetail extends StatelessWidget {
+  /// Creates a detail view for a [PartyEntryGroup].
   const EntryGroupDetail({
     required this.group,
     this.genderLabel = '성별',
@@ -15,10 +22,19 @@ class EntryGroupDetail extends StatelessWidget {
     super.key,
   });
 
+  /// Entry group data to render.
   final PartyEntryGroup group;
+
+  /// Label displayed for the gender row.
   final String genderLabel;
+
+  /// Label displayed for the birth year row.
   final String birthYearLabel;
+
+  /// Label used when gender is not restricted.
   final String anyLabel;
+
+  /// Label used when birth year is not restricted.
   final String anyYearLabel;
 
   @override
@@ -52,23 +68,20 @@ class EntryGroupDetail extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     final gender = group.gender;
-    final birthYearRange = group.birthYearRange;
+    final min = group.birthYearMin;
+    final max = group.birthYearMax;
 
     var genderText = anyLabel;
     if (gender == 'male') genderText = '남성';
     if (gender == 'female') genderText = '여성';
 
     var birthYearText = anyYearLabel;
-    if (birthYearRange != null) {
-      final min = birthYearRange['min'];
-      final max = birthYearRange['max'];
-      if (min != null && max != null) {
-        birthYearText = '$min~$max년생';
-      } else if (min != null) {
-        birthYearText = '$min년생 이후';
-      } else if (max != null) {
-        birthYearText = '$max년생 이전';
-      }
+    if (min != null && max != null) {
+      birthYearText = '$min~$max년생';
+    } else if (min != null) {
+      birthYearText = '$min년생 이후';
+    } else if (max != null) {
+      birthYearText = '$max년생 이전';
     }
 
     return Row(
@@ -111,12 +124,17 @@ class _VerificationBadges extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Fetch the verification definition
+    final sortedIds = List<String>.from(verifIds)..sort();
+    final idsString = sortedIds.join(',');
+
     final verificationsAsync = ref.watch(
-      verificationsByIdsProvider(verifIds),
+      verificationsByIdsProvider(idsString),
     );
 
-    return verificationsAsync.when(
-      data: (List<Verification> list) => Wrap(
+    return MinglitAsyncValueWidget(
+      value: verificationsAsync,
+      data: (list) => Wrap(
         spacing: MinglitSpacing.small,
         runSpacing: MinglitSpacing.small,
         children: list
@@ -129,7 +147,7 @@ class _VerificationBadges extends ConsumerWidget {
             .toList(),
       ),
       loading: () => const MinglitSkeleton(height: 32, width: 80),
-      error: (Object e, StackTrace s) => const SizedBox.shrink(),
+      error: (e, s) => const SizedBox.shrink(),
     );
   }
 }

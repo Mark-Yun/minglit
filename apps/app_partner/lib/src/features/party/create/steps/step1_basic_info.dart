@@ -1,9 +1,9 @@
 import 'package:app_partner/src/features/party/create/party_create_wizard_controller.dart';
 import 'package:app_partner/src/features/party/widgets/party_description_input.dart';
+import 'package:app_partner/src/features/party/widgets/party_image_editor.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
-import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class Step1BasicInfo extends ConsumerStatefulWidget {
@@ -53,14 +53,6 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      ref.read(partyCreateWizardControllerProvider.notifier).updateImage(image);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(partyCreateWizardControllerProvider);
@@ -107,9 +99,13 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
             ),
           ),
           const SizedBox(height: MinglitSpacing.medium),
-          MinglitImagePicker(
-            selectedImage: state.imageFile,
-            onPickImage: _pickImage,
+          PartyImageEditor(
+            imageUrls: state.imageUrls,
+            onChanged: (urls, files) {
+              ref
+                  .read(partyCreateWizardControllerProvider.notifier)
+                  .updateImages(imageUrls: urls, newFiles: files);
+            },
           ),
         ],
       ),

@@ -41,7 +41,7 @@ final class AdminCoordinatorProvider
   }
 }
 
-String _$adminCoordinatorHash() => r'60db6d986e33e8d61080ce8110433093733d10f5';
+String _$adminCoordinatorHash() => r'039f898b96fe8d398376be5cd401078ec7cfa0d5';
 
 abstract class _$AdminCoordinator extends $Notifier<void> {
   void build();

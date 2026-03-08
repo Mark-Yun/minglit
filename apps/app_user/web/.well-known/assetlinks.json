@@ -1,0 +1,18 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.minglit.app_user",
+      "sha256_cert_fingerprints": ["0DBD0A6ED7B120971FC2D57B8CF3E292E87D042A121C85AB063EBD936452FB4A"]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.minglit.app_user.dev",
+      "sha256_cert_fingerprints": ["0DBD0A6ED7B120971FC2D57B8CF3E292E87D042A121C85AB063EBD936452FB4A"]
+    }
+  }
+]

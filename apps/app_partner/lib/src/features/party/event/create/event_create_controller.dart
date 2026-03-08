@@ -1,6 +1,6 @@
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:minglit_kit/minglit_kit.dart' hide partyEventsProvider;
+import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'event_create_controller.freezed.dart';
@@ -21,7 +21,7 @@ abstract class EventCreateState with _$EventCreateState {
     String? addressDetail,
     String? directionsGuide,
     @Default({}) Map<String, dynamic> contactOptions,
-    @Default([]) List<PartyEntryGroup> entryGroups,
+    @Default([]) List<EntryGroup> entryGroups,
     @Default([]) List<Ticket> tickets,
     @Default(AsyncValue.data(null)) AsyncValue<void> status,
   }) = _EventCreateState;
@@ -43,18 +43,32 @@ class EventCreateController extends _$EventCreateController {
 
   void initWithParty({
     required Party party,
-    required List<Ticket> tickets,
+    required List<TicketTemplate> templates,
     Location? location,
   }) {
+    // 1. Create a base event from party template using the standardized factory
+    final baseEvent = Event.createFromParty(
+      party,
+      startTime: state.startTime,
+      endTime: state.endTime,
+    );
+
+    // 2. Map templates to instance-based tickets using the factory method
+    final initialTickets = templates.map(Ticket.createFromTemplate).toList();
+
+    // 3. Map entry group templates to instances
+    final initialEntryGroups =
+        party.entryGroups?.map(EntryGroup.createFromTemplate).toList() ?? [];
+
     state = state.copyWith(
-      title: party.title,
-      description: party.description ?? {},
+      title: baseEvent.title ?? '',
+      description: baseEvent.description ?? {},
       imageUrl: party.imageUrl,
-      maxParticipants: party.maxParticipants,
-      contactOptions: party.contactOptions,
-      entryGroups: party.entryGroups,
-      tickets: tickets,
-      locationId: party.locationId,
+      maxParticipants: baseEvent.maxParticipants,
+      contactOptions: baseEvent.contactOptions,
+      entryGroups: initialEntryGroups,
+      tickets: initialTickets,
+      locationId: baseEvent.locationId,
       selectedLocation: location,
       addressDetail: location?.addressDetail,
       directionsGuide: location?.directionsGuide,
@@ -142,6 +156,8 @@ class EventCreateController extends _$EventCreateController {
         title: state.title,
         description: state.description.isEmpty ? null : state.description,
         contactOptions: state.contactOptions,
+        entryGroups: state.entryGroups,
+        tickets: state.tickets, // Pass the tickets to repository
       );
 
       await repo.createEvent(event);

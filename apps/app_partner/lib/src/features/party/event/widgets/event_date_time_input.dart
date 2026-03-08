@@ -158,10 +158,7 @@ class EventDateTimeInput extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Text(
-              value,
-              style: theme.textTheme.titleMedium,
-            ),
+            Text(value, style: theme.textTheme.titleMedium),
           ],
         ),
       ),

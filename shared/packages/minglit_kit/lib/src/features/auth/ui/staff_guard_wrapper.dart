@@ -2,28 +2,30 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/features/auth/logic/staff_guard_provider.dart';
+import 'package:minglit_kit/src/features/auth/ui/staff_gate_screen.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
+import 'package:minglit_kit/src/utils/platform_utils.dart';
+import 'package:minglit_kit/src/utils/splash_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:web/web.dart' as web;
 
+/// Wraps [child] with staff-only access checks.
 class StaffGuardWrapper extends ConsumerStatefulWidget {
+  /// Creates a wrapper that enforces staff verification.
   const StaffGuardWrapper({required this.child, super.key});
 
+  /// The widget displayed once staff access is verified.
   final Widget child;
 
+  /// Creates the state for the staff guard wrapper.
   @override
   ConsumerState<StaffGuardWrapper> createState() => _StaffGuardWrapperState();
 }
 
 class _StaffGuardWrapperState extends ConsumerState<StaffGuardWrapper> {
   StreamSubscription<AuthState>? _authSubscription;
-
-  bool get _isLocalhost {
-    if (!kIsWeb) return false;
-    final hostname = web.window.location.hostname;
-    return hostname == 'localhost' || hostname == '127.0.0.1';
-  }
 
   @override
   void initState() {
@@ -53,14 +55,16 @@ class _StaffGuardWrapperState extends ConsumerState<StaffGuardWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    // Automatically bypass for local development
-    if (_isLocalhost) {
+    // Staff guard only applies to web deployments.
+    // Mobile apps are not publicly distributed, so no protection needed.
+    if (!kIsWeb || isLocalhost) {
       return widget.child;
     }
 
     final staffStatus = ref.watch(staffGuardProvider);
 
-    return staffStatus.when(
+    return MinglitAsyncValueWidget(
+      value: staffStatus,
       data: (user) {
         if (user != null) {
           // Staff verified! Show the actual app.

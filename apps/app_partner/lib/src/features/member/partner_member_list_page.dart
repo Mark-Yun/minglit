@@ -37,9 +37,9 @@ class PartnerMemberListPage extends ConsumerWidget {
           ),
         ],
       ),
-      body: membersAsync.when(
+      body: MinglitAsyncValueWidget(
+        value: membersAsync,
         data: (members) => _buildListView(context, ref, members),
-        loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => _buildErrorView(context, ref, err),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -55,16 +55,23 @@ class PartnerMemberListPage extends ConsumerWidget {
     WidgetRef ref,
     List<Map<String, dynamic>> members,
   ) {
+    final theme = Theme.of(context);
     if (members.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.people_outline, size: 64, color: Colors.grey),
-            const SizedBox(height: 16),
+            Icon(
+              Icons.people_outline,
+              size: MinglitIconSize.xlarge * 2,
+              color: theme.colorScheme.outline,
+            ),
+            const SizedBox(height: MinglitSpacing.medium),
             Text(
               context.l10n.memberList_empty,
-              style: const TextStyle(color: Colors.grey),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.outline,
+              ),
             ),
           ],
         ),
@@ -75,7 +82,7 @@ class PartnerMemberListPage extends ConsumerWidget {
       onRefresh: () =>
           ref.refresh(partnerMembersProvider(partnerId: partnerId).future),
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(MinglitSpacing.medium),
         itemCount: members.length,
         itemBuilder: (context, index) =>
             _buildMemberCard(context, ref, members[index]),
@@ -88,18 +95,21 @@ class PartnerMemberListPage extends ConsumerWidget {
     WidgetRef ref,
     Map<String, dynamic> member,
   ) {
+    final theme = Theme.of(context);
     final user = member['user'] as Map<String, dynamic>? ?? {};
     final userName = user['name'] as String? ?? 'Unknown';
     final userEmail = user['email'] as String? ?? '';
     final role = member['role'] as String? ?? 'staff';
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: MinglitSpacing.small),
       child: ListTile(
         leading: const CircleAvatar(child: Icon(Icons.person)),
         title: Text(
           userName,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: theme.textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         subtitle: Text(
           context.l10n.memberList_label_roleAndEmail(role, userEmail),
@@ -116,21 +126,26 @@ class PartnerMemberListPage extends ConsumerWidget {
   }
 
   Widget _buildErrorView(BuildContext context, WidgetRef ref, Object error) {
+    final theme = Theme.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 48, color: Colors.red),
-          const SizedBox(height: 16),
+          Icon(
+            Icons.error_outline,
+            size: MinglitIconSize.xlarge * 1.5,
+            color: theme.colorScheme.error,
+          ),
+          const SizedBox(height: MinglitSpacing.medium),
           Text(
             context.l10n.memberList_error_load(error.toString()),
             textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: MinglitSpacing.medium),
           ElevatedButton(
-            onPressed: () => ref.invalidate(
-              partnerMembersProvider(partnerId: partnerId),
-            ),
+            onPressed: () =>
+                ref.invalidate(partnerMembersProvider(partnerId: partnerId)),
             child: Text(context.l10n.common_button_retry),
           ),
         ],
@@ -139,8 +154,6 @@ class PartnerMemberListPage extends ConsumerWidget {
   }
 
   void _showInviteDialog(BuildContext context) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('준비 중입니다.')));
+    context.showMinglitInfo('준비 중입니다.');
   }
 }

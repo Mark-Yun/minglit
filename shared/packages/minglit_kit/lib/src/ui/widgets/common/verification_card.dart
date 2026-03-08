@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/data/models/verification.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
 /// A pure display component for Verification info.
 /// Can be composed into SelectCard, ManageCard, etc.
 class VerificationCard extends StatelessWidget {
+  /// Creates a card that displays [Verification] details.
   const VerificationCard({
     required this.verification,
     this.onTap,
@@ -14,11 +16,22 @@ class VerificationCard extends StatelessWidget {
     super.key,
   });
 
+  /// Verification data to display.
   final Verification verification;
+
+  /// Optional tap handler for the card.
   final VoidCallback? onTap;
+
+  /// Optional trailing widget shown at the end.
   final Widget? trailing;
+
+  /// Optional background color override.
   final Color? backgroundColor;
+
+  /// Optional border color override.
   final Color? borderColor;
+
+  /// Optional padding for the card content.
   final EdgeInsetsGeometry? contentPadding;
 
   @override
@@ -37,7 +50,9 @@ class VerificationCard extends StatelessWidget {
     };
 
     final iconWidget = Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(
+        MinglitSpacing.small + MinglitSpacing.xxsmall,
+      ), // 10
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         shape: BoxShape.circle,
@@ -60,7 +75,7 @@ class VerificationCard extends StatelessWidget {
         boxShadow: [
           if (backgroundColor == null || backgroundColor == colorScheme.surface)
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
+              color: theme.shadowColor.withValues(alpha: 0.03),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),

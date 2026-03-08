@@ -1,0 +1,8 @@
+{
+  "track_id": "backend_pg_tap_migration_20260120",
+  "type": "chore",
+  "status": "new",
+  "created_at": "2026-01-20T23:20:00Z",
+  "updated_at": "2026-01-20T23:20:00Z",
+  "description": "pg_tap 도입 및 DB 통합 테스트 마이그레이션"
+}

@@ -8,12 +8,15 @@ part of 'location_search_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Handles location search with debounce and async results.
 
 @ProviderFor(LocationSearchController)
 const locationSearchControllerProvider = LocationSearchControllerProvider._();
 
+/// Handles location search with debounce and async results.
 final class LocationSearchControllerProvider
     extends $AsyncNotifierProvider<LocationSearchController, List<Location>> {
+  /// Handles location search with debounce and async results.
   const LocationSearchControllerProvider._()
     : super(
         from: null,
@@ -35,6 +38,8 @@ final class LocationSearchControllerProvider
 
 String _$locationSearchControllerHash() =>
     r'e787fdd93fe8ee5ef3d61f2e0e8097d6b9fe77d9';
+
+/// Handles location search with debounce and async results.
 
 abstract class _$LocationSearchController
     extends $AsyncNotifier<List<Location>> {

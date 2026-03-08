@@ -1,0 +1,10 @@
+Task 7: fan-out 선택적 라우팅 검증 (application_approved → q_notifications만)
+Date: 2026-02-23
+
+=== application_approved 선택적 fan-out 검증 ===
+produce_event('application_approved', 'event_applications', uuid, '{"user_id":"..."}')
+
+q_notifications_count: 1 ✅
+q_vectors_count: 0 ✅
+
+VERDICT: PASS - application_approved fan-out to q_notifications ONLY (q_vectors = 0)

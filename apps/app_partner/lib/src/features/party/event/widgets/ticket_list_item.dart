@@ -80,10 +80,7 @@ class TicketListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final currencyFormat = NumberFormat.currency(
-      locale: 'ko_KR',
-      symbol: '₩',
-    );
+    final currencyFormat = NumberFormat.currency(locale: 'ko_KR', symbol: '₩');
 
     // Filter linked entry groups
     final linkedGroups = entryGroups
@@ -111,9 +108,7 @@ class TicketListItem extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(MinglitSpacing.small),
                 decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer.withValues(
-                    alpha: 0.5,
-                  ),
+                  color: colorScheme.primaryContainer.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(MinglitRadius.input),
                 ),
                 child: Icon(
@@ -136,8 +131,8 @@ class TicketListItem extends StatelessWidget {
                         children: linkedGroups.map((g) {
                           return Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
-                              vertical: 1,
+                              horizontal: MinglitSpacing.xsmall,
+                              vertical: MinglitSpacing.xxsmall,
                             ),
                             decoration: BoxDecoration(
                               color: colorScheme.primaryContainer.withValues(
@@ -147,9 +142,8 @@ class TicketListItem extends StatelessWidget {
                             ),
                             child: Text(
                               g.label ?? _getGroupSummary(context, g),
-                              style: TextStyle(
+                              style: theme.textTheme.bodySmall!.copyWith(
                                 color: colorScheme.primary,
-                                fontSize: 9,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -188,10 +182,9 @@ class TicketListItem extends StatelessWidget {
                   children: [
                     Text(
                       context.l10n.ticketList_label_sold(ticket.soldCount),
-                      style: TextStyle(
+                      style: theme.textTheme.bodySmall!.copyWith(
                         fontWeight: FontWeight.w600,
                         color: colorScheme.primary,
-                        fontSize: 11,
                       ),
                     ),
                     const SizedBox(height: MinglitSpacing.xxsmall),
@@ -199,8 +192,7 @@ class TicketListItem extends StatelessWidget {
                       ticket.status == 'on_sale'
                           ? context.l10n.ticketList_status_onSale
                           : context.l10n.ticketList_status_soldOut,
-                      style: TextStyle(
-                        fontSize: 9,
+                      style: theme.textTheme.bodySmall!.copyWith(
                         color: ticket.status == 'on_sale'
                             ? colorScheme.outline
                             : colorScheme.error,
@@ -217,19 +209,18 @@ class TicketListItem extends StatelessWidget {
   }
 
   String _getGroupSummary(BuildContext context, PartyEntryGroup group) {
-    final ageRange = group.birthYearRange;
+    final min = group.birthYearMin;
+    final max = group.birthYearMax;
     var ageText = context.l10n.entryGroup_option_anyYear;
-    if (ageRange != null) {
-      final min = ageRange['min'];
-      final max = ageRange['max'];
-      if (min != null && max != null) {
-        ageText = '$min~$max';
-      } else if (min != null) {
-        ageText = '$min~';
-      } else if (max != null) {
-        ageText = '~$max';
-      }
+
+    if (min != null && max != null) {
+      ageText = '$min~$max';
+    } else if (min != null) {
+      ageText = '$min~';
+    } else if (max != null) {
+      ageText = '~$max';
     }
+
     // Summary logic kept simple for list tags
     final gInitial = group.gender == 'male'
         ? '남'

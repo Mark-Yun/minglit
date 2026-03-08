@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:app_partner/src/utils/error_handler.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -31,9 +30,18 @@ class _ReviewVerificationScreenState
   Future<void> _loadRequests() async {
     setState(() => _isLoading = true);
     try {
+      final myPartners = await ref
+          .read(partnerRepositoryProvider)
+          .getMyManagedPartners();
+      if (myPartners.isEmpty) {
+        if (!mounted) return;
+        setState(() => _pendingRequests = []);
+        return;
+      }
+      final partnerId = myPartners.first.id;
       final reqs = await ref
           .read(verificationRepositoryProvider)
-          .getPendingRequests();
+          .getPendingRequests(partnerId);
       if (!mounted) return;
       setState(() => _pendingRequests = reqs);
     } on Object catch (e, st) {
@@ -63,21 +71,12 @@ class _ReviewVerificationScreenState
       if (comment != null) {
         await ref
             .read(verificationRepositoryProvider)
-            .submitComment(
-              submissionId: id,
-              content: {'text': comment},
-            );
+            .submitComment(submissionId: id, content: {'text': comment});
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.l10n.reviewVerification_message_processComplete,
-          ),
-        ),
+      context.showMinglitSuccess(
+        context.l10n.reviewVerification_message_processComplete,
       );
       unawaited(_loadRequests());
     } on Object catch (e, st) {
@@ -92,60 +91,55 @@ class _ReviewVerificationScreenState
     final reasonController = TextEditingController();
     final commentController = TextEditingController();
 
-    await showDialog<void>(
+    await MinglitDialog.show<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.reviewVerification_dialog_correction_title),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: reasonController,
-              decoration: InputDecoration(
-                labelText: context
-                    .l10n
-                    .reviewVerification_dialog_correction_reasonLabel,
-                hintText: context
-                    .l10n
-                    .reviewVerification_dialog_correction_reasonHint,
-              ),
+      title: context.l10n.reviewVerification_dialog_correction_title,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: reasonController,
+            decoration: InputDecoration(
+              labelText:
+                  context.l10n.reviewVerification_dialog_correction_reasonLabel,
+              hintText:
+                  context.l10n.reviewVerification_dialog_correction_reasonHint,
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: commentController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                labelText: context
-                    .l10n
-                    .reviewVerification_dialog_correction_commentLabel,
-                hintText: context
-                    .l10n
-                    .reviewVerification_dialog_correction_commentHint,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.common_button_cancel),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              unawaited(
-                _reviewRequest(
-                  submissionId,
-                  VerificationStatus.needsCorrection,
-                  reason: reasonController.text,
-                  comment: commentController.text,
-                ),
-              );
-            },
-            child: Text(context.l10n.reviewVerification_dialog_correction_send),
+          const SizedBox(height: 16),
+          TextField(
+            controller: commentController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              labelText: context
+                  .l10n
+                  .reviewVerification_dialog_correction_commentLabel,
+              hintText:
+                  context.l10n.reviewVerification_dialog_correction_commentHint,
+            ),
           ),
         ],
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(context.l10n.common_button_cancel),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.pop(context);
+            unawaited(
+              _reviewRequest(
+                submissionId,
+                VerificationStatus.needsCorrection,
+                reason: reasonController.text,
+                comment: commentController.text,
+              ),
+            );
+          },
+          child: Text(context.l10n.reviewVerification_dialog_correction_send),
+        ),
+      ],
     );
   }
 
@@ -154,7 +148,9 @@ class _ReviewVerificationScreenState
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(MinglitRadius.card),
+        ),
       ),
       builder: (context) => _CommentsView(submissionId: submissionId),
     );
@@ -167,9 +163,10 @@ class _ReviewVerificationScreenState
           .createSignedUrl(path, 600);
       if (!mounted) return;
       await showDialog<void>(
+        // Keep custom dialog for image viewer
         context: context,
         builder: (context) => Dialog(
-          backgroundColor: Colors.transparent,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           child: InteractiveViewer(
             child: Image.network(signedUrl, fit: BoxFit.contain),
           ),
@@ -192,13 +189,13 @@ class _ReviewVerificationScreenState
 
   Widget _buildContent() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const MinglitCircularProgressIndicator();
     }
     if (_pendingRequests.isEmpty) {
       return Center(child: Text(context.l10n.reviewVerification_message_empty));
     }
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(MinglitSpacing.medium),
       itemCount: _pendingRequests.length,
       itemBuilder: (context, index) =>
           _buildRequestCard(_pendingRequests[index]),
@@ -206,6 +203,7 @@ class _ReviewVerificationScreenState
   }
 
   Widget _buildRequestCard(Map<String, dynamic> req) {
+    final theme = Theme.of(context);
     final user = req['user'] as Map<String, dynamic>? ?? {};
     final claim = req['snapshot_data'] as Map<String, dynamic>? ?? {};
     final images = claim.values
@@ -214,9 +212,9 @@ class _ReviewVerificationScreenState
         .toList();
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: MinglitSpacing.medium),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(MinglitSpacing.medium),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -226,11 +224,13 @@ class _ReviewVerificationScreenState
                 const Chip(label: Text('VERIFICATION')),
                 Text(
                   (user['email'] as String?) ?? 'Unknown User',
-                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.outline,
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: MinglitSpacing.small),
             ...claim.entries
                 .where(
                   (e) =>
@@ -239,10 +239,12 @@ class _ReviewVerificationScreenState
                 .map(
                   (e) => Text(
                     '${e.key}: ${e.value}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-            const SizedBox(height: 16),
+            const SizedBox(height: MinglitSpacing.medium),
             if (images.isNotEmpty)
               SizedBox(
                 height: 80,
@@ -253,30 +255,33 @@ class _ReviewVerificationScreenState
                     onTap: () => unawaited(_showImageDialog(images[i])),
                     child: Container(
                       width: 80,
-                      margin: const EdgeInsets.only(right: 8),
+                      margin: const EdgeInsets.only(
+                        right: MinglitSpacing.small,
+                      ),
                       decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(8),
+                        color: theme.colorScheme.surfaceContainer,
+                        borderRadius: BorderRadius.circular(
+                          MinglitRadius.small,
+                        ),
                       ),
                       child: const Icon(Icons.image),
                     ),
                   ),
                 ),
               ),
-            const SizedBox(height: 20),
+            const SizedBox(height: MinglitSpacing.large),
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => unawaited(
-                      _showCorrectionDialog(req['id'] as String),
-                    ),
+                    onPressed: () =>
+                        unawaited(_showCorrectionDialog(req['id'] as String)),
                     child: Text(
                       context.l10n.reviewVerification_button_correction,
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: MinglitSpacing.small),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => unawaited(
@@ -296,7 +301,7 @@ class _ReviewVerificationScreenState
                     unawaited(_showCommentsModal(req['id'] as String)),
                 child: Text(
                   context.l10n.reviewVerification_button_chat,
-                  style: const TextStyle(fontSize: 12),
+                  style: theme.textTheme.labelSmall,
                 ),
               ),
             ),
@@ -313,15 +318,18 @@ class _CommentsView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final repository = ref.read(verificationRepositoryProvider);
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(MinglitSpacing.large),
       child: Column(
         children: [
           Text(
             context.l10n.reviewVerification_chat_title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const Divider(),
           Expanded(
@@ -329,7 +337,7 @@ class _CommentsView extends ConsumerWidget {
               future: repository.getVerificationComments(submissionId),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const MinglitCircularProgressIndicator();
                 }
                 final comments = snapshot.data!;
                 return ListView.builder(
@@ -347,13 +355,17 @@ class _CommentsView extends ConsumerWidget {
                           ? Alignment.centerRight
                           : Alignment.centerLeft,
                       child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 4),
-                        padding: const EdgeInsets.all(10),
+                        margin: const EdgeInsets.symmetric(
+                          vertical: MinglitSpacing.xxsmall,
+                        ),
+                        padding: const EdgeInsets.all(MinglitSpacing.small),
                         decoration: BoxDecoration(
                           color: isPartner
-                              ? Colors.orange[100]
-                              : Colors.grey[200],
-                          borderRadius: BorderRadius.circular(10),
+                              ? theme.colorScheme.secondaryContainer
+                              : theme.colorScheme.surfaceContainer,
+                          borderRadius: BorderRadius.circular(
+                            MinglitRadius.small,
+                          ),
                         ),
                         child: Text(text),
                       ),

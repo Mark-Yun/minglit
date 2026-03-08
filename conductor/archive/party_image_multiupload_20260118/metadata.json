@@ -1,0 +1,8 @@
+{
+  "track_id": "party_image_multiupload_20260118",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-18T21:30:00+09:00",
+  "updated_at": "2026-01-18T21:30:00+09:00",
+  "description": "파티 상세 페이지 이미지 다중 업로드 및 뷰어 구현"
+}

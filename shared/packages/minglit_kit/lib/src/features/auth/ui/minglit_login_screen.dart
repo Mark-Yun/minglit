@@ -1,6 +1,9 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:minglit_kit/src/config/url_config.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// A common login screen for both User and Partner apps.
@@ -9,27 +12,42 @@ class MinglitLoginScreen extends ConsumerWidget {
   const MinglitLoginScreen({
     super.key,
     this.onGoogleSignIn,
+    this.onAppleSignIn,
     this.onKakaoSignIn,
+    this.onVerifyIdentity,
     this.isPartner = false,
+    this.onDevMapTrigger,
   });
 
   /// Callback when Google sign-in is pressed.
   final VoidCallback? onGoogleSignIn;
 
+  /// Callback when Apple sign-in is pressed.
+  final VoidCallback? onAppleSignIn;
+
   /// Callback when Kakao sign-in is pressed.
   final VoidCallback? onKakaoSignIn;
+
+  /// Callback when Verify Identity is pressed (User only).
+  final VoidCallback? onVerifyIdentity;
 
   /// Whether this is for the Partner app (theme adjustment).
   final bool isPartner;
 
+  /// Callback to trigger DevMap (hidden gesture). Null in production.
+  final VoidCallback? onDevMapTrigger;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Theme colors (User: Navy / Partner: Orange)
+    final theme = Theme.of(context);
     final slogan = isPartner
         ? 'Verified Vibe, Spark Your Business'
         : 'Verified Vibe, Spark Your Moment';
 
-    final textStyle = TextStyle(color: Colors.grey[500], fontSize: 12);
+    final textStyle = theme.textTheme.bodySmall!.copyWith(
+      color: theme.colorScheme.outline,
+    );
     final linkStyle = textStyle.copyWith(
       decoration: TextDecoration.underline,
       fontWeight: FontWeight.bold,
@@ -38,27 +56,29 @@ class MinglitLoginScreen extends ConsumerWidget {
     final urlConfig = ref.watch(minglitUrlConfigProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: MinglitColors.background,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.large),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(),
               // 1. Logo & Slogan
-              const MinglitImage(
-                path:
-                    'packages/minglit_kit/assets/images/minglit_app_bar_logo.png',
-                height: 64,
-              ),
+              if (onDevMapTrigger != null)
+                _DevTriggerLogo(onTrigger: onDevMapTrigger!)
+              else
+                const MinglitImage(
+                  path:
+                      'packages/minglit_kit/assets/images/minglit_app_bar_logo.png',
+                  height: 64,
+                ),
               if (isPartner)
-                const Text(
+                Text(
                   'PARTNER',
-                  style: TextStyle(
-                    fontSize: 20,
+                  style: theme.textTheme.titleLarge!.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey,
+                    color: theme.colorScheme.outline,
                     letterSpacing: 2,
                   ),
                 ),
@@ -66,33 +86,51 @@ class MinglitLoginScreen extends ConsumerWidget {
               Text(
                 slogan,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
+                style: theme.textTheme.bodyMedium!.copyWith(
+                  color: theme.colorScheme.outline,
                 ),
               ),
               const Spacer(),
 
               // 2. Login Buttons
-              OutlinedButton.icon(
+              _LoginButton(
                 onPressed: onGoogleSignIn,
-                icon: const Icon(Icons.g_mobiledata, size: 24),
-                label: const Text('Google로 시작하기'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.black87,
-                  side: BorderSide(color: Colors.grey[300]!),
+                icon: Icons.g_mobiledata,
+                label: 'Google로 시작하기',
+                backgroundColor: MinglitColors.background,
+                foregroundColor: MinglitColors.textPrimary.withValues(
+                  alpha: 0.87,
                 ),
+                borderColor: theme.colorScheme.outlineVariant,
               ),
+              if (onAppleSignIn != null) ...[
+                const SizedBox(height: 12),
+                _LoginButton(
+                  onPressed: onAppleSignIn,
+                  icon: Icons.apple,
+                  label: 'Apple로 시작하기',
+                  backgroundColor: MinglitColors.textPrimary,
+                  foregroundColor: MinglitColors.background,
+                ),
+              ],
               const SizedBox(height: 12),
-              ElevatedButton.icon(
+              _LoginButton(
                 onPressed: onKakaoSignIn,
-                icon: const Icon(Icons.chat_bubble, size: 18),
-                label: const Text('Kakao로 시작하기'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFEE500),
-                  foregroundColor: Colors.black87,
+                icon: Icons.chat_bubble,
+                label: 'Kakao로 시작하기',
+                backgroundColor: MinglitColors.warning,
+                foregroundColor: MinglitColors.textPrimary.withValues(
+                  alpha: 0.87,
                 ),
               ),
+              if (!isPartner && onVerifyIdentity != null) ...[
+                const SizedBox(height: 12),
+                TextButton.icon(
+                  onPressed: onVerifyIdentity,
+                  icon: const Icon(Icons.verified_user_outlined, size: 18),
+                  label: const Text('본인인증 테스트'),
+                ),
+              ],
               const SizedBox(height: 12),
               if (isPartner) ...[
                 TextButton(
@@ -101,7 +139,9 @@ class MinglitLoginScreen extends ConsumerWidget {
                 ),
               ] else ...[
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: MinglitSpacing.sm,
+                  ),
                   child: Text.rich(
                     TextSpan(
                       text: '로그인 시 ',
@@ -140,5 +180,100 @@ class MinglitLoginScreen extends ConsumerWidget {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
+  }
+}
+
+class _DevTriggerLogo extends StatefulWidget {
+  const _DevTriggerLogo({required this.onTrigger});
+
+  final VoidCallback onTrigger;
+
+  @override
+  State<_DevTriggerLogo> createState() => _DevTriggerLogoState();
+}
+
+class _DevTriggerLogoState extends State<_DevTriggerLogo> {
+  int _tapCount = 0;
+  DateTime? _lastTap;
+
+  void _handleTap() {
+    final now = DateTime.now();
+    // Reset if more than 2 seconds since last tap.
+    if (_lastTap != null && now.difference(_lastTap!).inSeconds >= 2) {
+      _tapCount = 0;
+    }
+    _lastTap = now;
+    _tapCount++;
+    if (_tapCount >= 5) {
+      _tapCount = 0;
+      widget.onTrigger();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _handleTap,
+      child: const MinglitImage(
+        path: 'packages/minglit_kit/assets/images/minglit_app_bar_logo.png',
+        height: 64,
+      ),
+    );
+  }
+}
+
+class _LoginButton extends StatelessWidget {
+  const _LoginButton({
+    required this.icon,
+    required this.label,
+    required this.backgroundColor,
+    required this.foregroundColor,
+    this.borderColor,
+    this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color backgroundColor;
+  final Color foregroundColor;
+  final Color? borderColor;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: backgroundColor,
+          foregroundColor: foregroundColor,
+          side: BorderSide(color: borderColor ?? backgroundColor),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: Center(
+                child: Icon(icon, size: 20, color: foregroundColor),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: foregroundColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

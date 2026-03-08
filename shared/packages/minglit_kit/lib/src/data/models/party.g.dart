@@ -51,9 +51,12 @@ _Party _$PartyFromJson(Map<String, dynamic> json) => _Party(
       ? null
       : Location.fromJson(json['location'] as Map<String, dynamic>),
   description: json['description'] as Map<String, dynamic>?,
-  imageUrl: json['image_url'] as String?,
+  imageUrls:
+      (json['image_urls'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const [],
   contactOptions: json['contact_options'] as Map<String, dynamic>? ?? const {},
-  conditions: json['conditions'] as List<dynamic>? ?? const [],
   requiredVerificationIds:
       (json['required_verification_ids'] as List<dynamic>?)
           ?.map((e) => e as String)
@@ -62,6 +65,15 @@ _Party _$PartyFromJson(Map<String, dynamic> json) => _Party(
   minConfirmedCount: (json['min_confirmed_count'] as num?)?.toInt() ?? 0,
   maxParticipants: (json['max_participants'] as num?)?.toInt() ?? 20,
   status: json['status'] as String? ?? 'active',
+  ticketTemplates: (json['ticketTemplates'] as List<dynamic>?)
+      ?.map((e) => TicketTemplate.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  partner: json['partner'] == null
+      ? null
+      : Partner.fromJson(json['partner'] as Map<String, dynamic>),
+  entryGroups: (json['entry_group_templates'] as List<dynamic>?)
+      ?.map((e) => EntryGroupTemplate.fromJson(e as Map<String, dynamic>))
+      .toList(),
 );
 
 Map<String, dynamic> _$PartyToJson(_Party instance) => <String, dynamic>{
@@ -72,9 +84,8 @@ Map<String, dynamic> _$PartyToJson(_Party instance) => <String, dynamic>{
   'updated_at': instance.updatedAt.toIso8601String(),
   'location_id': instance.locationId,
   'description': instance.description,
-  'image_url': instance.imageUrl,
+  'image_urls': instance.imageUrls,
   'contact_options': instance.contactOptions,
-  'conditions': instance.conditions,
   'required_verification_ids': instance.requiredVerificationIds,
   'min_confirmed_count': instance.minConfirmedCount,
   'max_participants': instance.maxParticipants,

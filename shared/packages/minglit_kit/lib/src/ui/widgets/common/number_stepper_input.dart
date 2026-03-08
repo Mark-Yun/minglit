@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
+/// A numeric input with stepper controls and optional label.
 class NumberStepperInput extends StatefulWidget {
+  /// Creates a number stepper input.
   const NumberStepperInput({
     required this.value,
     required this.onChanged,
@@ -14,12 +16,25 @@ class NumberStepperInput extends StatefulWidget {
     super.key,
   });
 
+  /// Current value displayed by the input.
   final int value;
+
+  /// Called when the value changes.
   final ValueChanged<int> onChanged;
+
+  /// Optional label displayed above the input.
   final String? label;
+
+  /// Minimum allowed value.
   final int min;
+
+  /// Maximum allowed value.
   final int max;
+
+  /// Step size for increment and decrement actions.
   final int step;
+
+  /// Optional suffix text shown in the text field.
   final String? suffixText;
 
   @override
@@ -87,7 +102,9 @@ class _NumberStepperInputState extends State<NumberStepperInput> {
           const SizedBox(height: MinglitSpacing.small),
         ],
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(
+            horizontal: MinglitSpacing.xsmall,
+          ),
           decoration: BoxDecoration(
             color: colorScheme.surface,
             borderRadius: BorderRadius.circular(MinglitRadius.input),
@@ -114,12 +131,13 @@ class _NumberStepperInputState extends State<NumberStepperInput> {
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: MinglitSpacing.sm,
+                    ),
                     isDense: true,
                     suffixText: widget.suffixText,
-                    suffixStyle: TextStyle(
+                    suffixStyle: theme.textTheme.titleSmall!.copyWith(
                       color: colorScheme.onSurfaceVariant,
-                      fontSize: 14,
                       fontWeight: FontWeight.normal,
                     ),
                   ),

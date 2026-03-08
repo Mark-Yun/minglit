@@ -33,8 +33,8 @@ class _EntryGroupEditorScreenState
     super.initState();
     if (widget.initialGroup != null) {
       _gender = widget.initialGroup!.gender;
-      _minYear = widget.initialGroup!.birthYearRange?['min'] as int?;
-      _maxYear = widget.initialGroup!.birthYearRange?['max'] as int?;
+      _minYear = widget.initialGroup!.birthYearMin;
+      _maxYear = widget.initialGroup!.birthYearMax;
       _selectedVerificationIds = List<String>.from(
         widget.initialGroup!.requiredVerificationIds,
       );
@@ -45,19 +45,15 @@ class _EntryGroupEditorScreenState
   }
 
   void _submit() {
-    Map<String, dynamic>? birthYearRange;
-    if (_minYear != null || _maxYear != null) {
-      birthYearRange = {
-        'min': _minYear,
-        'max': _maxYear,
-      }..removeWhere((k, v) => v == null);
-    }
-
     final group = PartyEntryGroup(
       id: widget.initialGroup?.id ?? const Uuid().v4(),
+      partyId: '', // Will be set by controller/repo
       gender: _gender,
-      birthYearRange: birthYearRange,
+      birthYearMin: _minYear,
+      birthYearMax: _maxYear,
       requiredVerificationIds: _selectedVerificationIds,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
     );
 
     widget.onSaved(group);
@@ -149,7 +145,7 @@ class _EntryGroupEditorScreenState
                         value: _minYear ?? 1995,
                         min: 1950,
                         max: 2010,
-                        onChanged: (int val) => setState(() => _minYear = val),
+                        onChanged: (val) => setState(() => _minYear = val),
                         suffixText: context.l10n.entryGroup_suffix_year,
                       ),
                       const SizedBox(height: MinglitSpacing.xsmall),
@@ -172,7 +168,7 @@ class _EntryGroupEditorScreenState
                         value: _maxYear ?? 2005,
                         min: 1950,
                         max: 2010,
-                        onChanged: (int val) => setState(() => _maxYear = val),
+                        onChanged: (val) => setState(() => _maxYear = val),
                         suffixText: context.l10n.entryGroup_suffix_year,
                       ),
                       const SizedBox(height: MinglitSpacing.xsmall),

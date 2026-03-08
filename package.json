@@ -3,12 +3,19 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "apps/*",
-    "shared/web"
+    "apps/*"
   ],
   "scripts": {
     "dev:user": "npm run dev --workspace=landing_user",
     "dev:partner": "npm run dev --workspace=landing_partner",
-    "dev:web": "npx concurrently \"npm run dev:user\" \"npm run dev:partner\""
+    "dev:web": "npx concurrently \"npm run dev:user\" \"npm run dev:partner\"",
+    "dev:user:local": "dotenv -e minglit_env/local/nextjs.env -- npm run dev --workspace=landing_user",
+    "dev:user:dev": "dotenv -e minglit_env/dev/nextjs.env -- npm run dev --workspace=landing_user",
+    "dev:partner:local": "dotenv -e minglit_env/local/nextjs.env -- npm run dev --workspace=landing_partner",
+    "dev:partner:dev": "dotenv -e minglit_env/dev/nextjs.env -- npm run dev --workspace=landing_partner",
+    "seed:local": "cd supabase && supabase db reset --yes && cd ../tests/test_data_seeder && flutter pub get && flutter test test/runner.dart"
+  },
+  "devDependencies": {
+    "dotenv-cli": "^8.0.0"
   }
 }

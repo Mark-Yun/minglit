@@ -6,19 +6,17 @@ part 'party_detail_controller.g.dart';
 @riverpod
 Future<Party> partyDetail(Ref ref, String partyId) async {
   final repo = ref.watch(partyRepositoryProvider);
-  return repo.getPartyById(partyId);
+  final party = await repo.getPartyById(partyId);
+  if (party == null) {
+    throw Exception('Party not found: $partyId');
+  }
+  return party;
 }
 
 @riverpod
-Future<List<Event>> partyEvents(Ref ref, String partyId) async {
-  final repo = ref.watch(partyRepositoryProvider);
-  return repo.getEventsByPartyId(partyId);
-}
-
-@riverpod
-Future<List<Ticket>> partyTickets(Ref ref, String partyId) async {
+Future<List<TicketTemplate>> partyTickets(Ref ref, String partyId) async {
   final repo = ref.watch(ticketRepositoryProvider);
-  return repo.getDefaultTicketsByPartyId(partyId);
+  return repo.getTicketTemplatesByPartyId(partyId);
 }
 
 @riverpod

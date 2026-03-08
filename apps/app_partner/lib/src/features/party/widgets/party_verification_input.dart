@@ -22,7 +22,8 @@ class PartyVerificationInput extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return verificationsAsync.when(
+    return MinglitAsyncValueWidget(
+      value: verificationsAsync,
       data: (verifications) {
         return Column(
           children: [
@@ -48,7 +49,9 @@ class PartyVerificationInput extends StatelessWidget {
                 ),
                 child: Text(
                   '사용 가능한 인증이 없습니다.',
-                  style: TextStyle(color: colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodyMedium!.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
 
@@ -72,7 +75,9 @@ class PartyVerificationInput extends StatelessWidget {
                       children: [
                         // Icon Section
                         Container(
-                          padding: const EdgeInsets.all(10),
+                          padding: const EdgeInsets.all(
+                            MinglitSpacing.small + MinglitSpacing.xxsmall,
+                          ), // 10
                           decoration: BoxDecoration(
                             color: colorScheme.tertiary.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
@@ -102,9 +107,7 @@ class PartyVerificationInput extends StatelessWidget {
                                 '원하는 참가 자격이 없다면 직접 만들어보세요.',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: colorScheme.onSurfaceVariant
-                                      .withValues(
-                                        alpha: 0.8,
-                                      ),
+                                      .withValues(alpha: 0.8),
                                 ),
                               ),
                             ],
@@ -127,7 +130,6 @@ class PartyVerificationInput extends StatelessWidget {
           ],
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, s) => Text('인증 목록 로드 실패: $e'),
     );
   }

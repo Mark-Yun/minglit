@@ -20,8 +20,7 @@ class EventBasicInfoSummary extends StatelessWidget {
     return PartyBasicInfoSummary(
       title: event.title ?? event.party?.title ?? '',
       description: event.description ?? event.party?.description ?? {},
-      imageUrl:
-          event.party?.imageUrl, // Currently image is managed at party level
+      imageUrls: event.imageUrls ?? event.party?.imageUrls ?? [],
       showTitle: showTitle,
       showFullDescription: showFullDescription,
     );

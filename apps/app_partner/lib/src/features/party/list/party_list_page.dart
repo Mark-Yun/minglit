@@ -1,8 +1,8 @@
 import 'package:app_partner/src/features/party/list/party_list_controller.dart';
 import 'package:app_partner/src/features/party/list/party_list_coordinator.dart';
 import 'package:app_partner/src/features/party/list/widgets/party_list_item.dart';
+import 'package:app_partner/src/features/qr/qr_scanner_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class PartyListPage extends ConsumerWidget {
@@ -18,13 +18,23 @@ class PartyListPage extends ConsumerWidget {
         title: '파티 기획 관리',
         actions: [
           IconButton(
+            icon: const Icon(Icons.qr_code_scanner),
+            tooltip: 'QR 스캔',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const QRScannerScreen(),
+              ),
+            ),
+          ),
+          IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () => context.push('/parties/create'),
+            onPressed: coordinator.goToCreate,
           ),
         ],
       ),
-      body: partiesAsync.when(
-        data: (List<Party> parties) {
+      body: MinglitAsyncValueWidget(
+        value: partiesAsync,
+        data: (parties) {
           if (parties.isEmpty) {
             return Center(
               child: Column(
@@ -39,7 +49,7 @@ class PartyListPage extends ConsumerWidget {
                   Text(
                     '등록된 파티가 없습니다.\n새로운 파티를 기획해보세요!',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -49,7 +59,7 @@ class PartyListPage extends ConsumerWidget {
           }
 
           return ListView.separated(
-            padding: const EdgeInsets.only(bottom: 80),
+            padding: const EdgeInsets.only(bottom: MinglitSpacing.large),
             itemCount: parties.length,
             separatorBuilder: (context, index) => Divider(
               height: 1,
@@ -65,9 +75,6 @@ class PartyListPage extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (Object e, StackTrace s) =>
-            Center(child: Text('오류가 발생했습니다: $e')),
       ),
     );
   }

@@ -1,17 +1,11 @@
-import 'dart:async';
-
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
-import 'package:app_partner/src/features/party/widgets/party_basic_info_edit_screen.dart';
 import 'package:app_partner/src/features/party/widgets/party_basic_info_summary.dart';
-import 'package:app_partner/src/features/party/widgets/party_capacity_contact_edit_screen.dart';
 import 'package:app_partner/src/features/party/widgets/party_capacity_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_contact_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_entrance_condition_summary.dart';
-import 'package:app_partner/src/features/party/widgets/party_location_edit_screen.dart';
 import 'package:app_partner/src/features/party/widgets/party_location_summary.dart';
 import 'package:app_partner/src/ui/widgets/common/minglit_editable_section.dart';
-import 'package:app_partner/src/utils/error_handler.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -25,6 +19,7 @@ class PartyDetailInfoTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final locationAsync = ref.watch(locationDetailProvider(party.locationId));
+    final coordinator = ref.read(partyDetailCoordinatorProvider);
 
     return SingleChildScrollView(
       child: Column(
@@ -34,29 +29,26 @@ class PartyDetailInfoTab extends ConsumerWidget {
           MinglitEditableSection(
             title: context.l10n.wizard_review_basicInfo,
             onTap: () {
-              unawaited(
-                Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (context) => PartyBasicInfoEditScreen(
-                      party: party,
-                      onSave: (title, description, image) =>
-                          _handleUpdateBasicInfo(
-                            context,
-                            ref,
-                            title,
-                            description,
-                            image,
-                          ),
+              coordinator.openBasicInfoEdit(
+                context,
+                party: party,
+                onSave: (title, description, imageUrls, newImages, status) =>
+                    _handleUpdateBasicInfo(
+                      context,
+                      ref,
+                      title,
+                      description,
+                      imageUrls,
+                      newImages,
+                      status,
                     ),
-                  ),
-                ),
               );
             },
             child: PartyBasicInfoSummary(
               title: party.title,
               description: party.description ?? {},
-              imageUrl: party.imageUrl,
+              imageUrls: party.imageUrls,
+              status: party.status,
               showFullDescription: true,
             ),
           ),
@@ -66,22 +58,15 @@ class PartyDetailInfoTab extends ConsumerWidget {
           MinglitEditableSection(
             title: '인원 및 연락처 설정',
             onTap: () {
-              unawaited(
-                Navigator.push(
+              coordinator.openCapacityContactEdit(
+                context,
+                party: party,
+                onSave: (min, max, options) => _handleUpdateCapacityContact(
                   context,
-                  MaterialPageRoute<void>(
-                    builder: (context) => PartyCapacityContactEditScreen(
-                      party: party,
-                      onSave: (min, max, options) =>
-                          _handleUpdateCapacityContact(
-                            context,
-                            ref,
-                            min,
-                            max,
-                            options,
-                          ),
-                    ),
-                  ),
+                  ref,
+                  min,
+                  max,
+                  options,
                 ),
               );
             },
@@ -106,43 +91,37 @@ class PartyDetailInfoTab extends ConsumerWidget {
           ),
           const SizedBox(height: MinglitSpacing.large),
 
-          // 3. Entrance Conditions
+          // 4. Entrance Conditions
           MinglitEditableSection(
             title: context.l10n.partyDetail_section_entranceCondition,
             onTap: () => _showEntranceConditionsEdit(context, ref, party),
             child: PartyEntranceConditionSummary(
-              entryGroups: party.entryGroups,
+              entryGroups: party.entryGroups ?? [],
             ),
           ),
           const SizedBox(height: MinglitSpacing.large),
 
-          // 4. Location Summary
+          // 6. Location Summary
           MinglitEditableSection(
             title: context.l10n.partyDetail_section_location,
             onTap: () {
               final loc = locationAsync.value;
-              unawaited(
-                Navigator.push(
+              coordinator.openLocationEdit(
+                context,
+                initialLocation: loc,
+                initialAddressDetail: loc?.addressDetail,
+                initialDirectionsGuide: loc?.directionsGuide,
+                onSave: (newLoc, detail, directions) => _handleUpdateLocation(
                   context,
-                  MaterialPageRoute<void>(
-                    builder: (context) => PartyLocationEditScreen(
-                      initialLocation: loc,
-                      initialAddressDetail: loc?.addressDetail,
-                      initialDirectionsGuide: loc?.directionsGuide,
-                      onSave: (newLoc, detail, directions) =>
-                          _handleUpdateLocation(
-                            context,
-                            ref,
-                            newLoc,
-                            detail,
-                            directions,
-                          ),
-                    ),
-                  ),
+                  ref,
+                  newLoc,
+                  detail,
+                  directions,
                 ),
               );
             },
-            child: locationAsync.when(
+            child: MinglitAsyncValueWidget(
+              value: locationAsync,
               data: (loc) => PartyLocationSummary(
                 location: loc,
                 addressDetail: loc?.addressDetail,
@@ -226,18 +205,14 @@ class PartyDetailInfoTab extends ConsumerWidget {
       }
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.partyDetail_message_locationUpdated),
-          ),
+        context.showMinglitSuccess(
+          context.l10n.partyDetail_message_locationUpdated,
         );
       }
     } on Exception catch (e, st) {
       Log.e('Failed to update location', e, st);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.common_error_system)),
-        );
+        handleMinglitError(context, e, st);
       }
     } finally {
       loading.hide();
@@ -249,30 +224,35 @@ class PartyDetailInfoTab extends ConsumerWidget {
     WidgetRef ref,
     String title,
     Map<String, dynamic> description,
-    XFile? image,
+    List<String> imageUrls,
+    List<XFile> newImages,
+    String status,
   ) async {
     final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
     try {
       final repo = ref.read(partyRepositoryProvider);
-      var imageUrl = party.imageUrl;
+      final finalUrls = List<String>.from(imageUrls);
 
-      if (image != null) {
-        imageUrl = await repo.uploadPartyImage(image, party.partnerId);
+      if (newImages.isNotEmpty) {
+        final uploadedUrls = await repo.uploadPartyImages(
+          newImages,
+          party.partnerId,
+        );
+        finalUrls.addAll(uploadedUrls);
       }
 
       await repo.updatePartyBasicInfo(
         partyId: party.id,
         title: title,
         description: description,
-        imageUrl: imageUrl,
+        imageUrls: finalUrls,
+        status: status,
       );
 
       ref.invalidate(partyDetailProvider(party.id));
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('기본 정보가 수정되었습니다.')),
-        );
+        context.showMinglitSuccess('기본 정보가 수정되었습니다.');
       }
     } on Exception catch (e, st) {
       if (context.mounted) handleMinglitError(context, e, st);

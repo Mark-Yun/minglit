@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class EventEntranceConditionSummary extends StatelessWidget {
-  const EventEntranceConditionSummary({
-    required this.entryGroups,
-    super.key,
-  });
+  const EventEntranceConditionSummary({required this.entryGroups, super.key});
 
   final List<PartyEntryGroup> entryGroups;
 

@@ -8,9 +8,12 @@ part of 'dev_user_switch_screen.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Fetches test user profiles for the dev user switcher.
 
 @ProviderFor(devUserProfiles)
 const devUserProfilesProvider = DevUserProfilesProvider._();
+
+/// Fetches test user profiles for the dev user switcher.
 
 final class DevUserProfilesProvider
     extends
@@ -22,6 +25,7 @@ final class DevUserProfilesProvider
     with
         $FutureModifier<List<Map<String, dynamic>>>,
         $FutureProvider<List<Map<String, dynamic>>> {
+  /// Fetches test user profiles for the dev user switcher.
   const DevUserProfilesProvider._()
     : super(
         from: null,
@@ -48,4 +52,4 @@ final class DevUserProfilesProvider
   }
 }
 
-String _$devUserProfilesHash() => r'b90b998fec91b50c8f10cbcdc0b109a9cb79ff65';
+String _$devUserProfilesHash() => r'4e91e478bd48decba8005beca03d8be94ad9349b';

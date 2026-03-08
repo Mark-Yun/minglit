@@ -1,0 +1,8 @@
+{
+  "track_id": "user_app_notification_settings_20260120",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-20T23:45:00Z",
+  "updated_at": "2026-01-20T23:45:00Z",
+  "description": "유저앱 알림 설정 화면 구현 (파티 관련 알림, 이벤트/홍보성 알림)"
+}

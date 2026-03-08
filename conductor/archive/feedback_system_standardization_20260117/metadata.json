@@ -1,0 +1,8 @@
+{
+  "track_id": "feedback_system_standardization_20260117",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-17T17:30:00+09:00",
+  "updated_at": "2026-01-17T17:30:00+09:00",
+  "description": "Standardize UI/UX feedback system (SnackBar, Toast, Dialog) across apps"
+}

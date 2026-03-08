@@ -117,9 +117,8 @@ class PartyContactInput extends StatelessWidget {
                       ),
                       child: Text(
                         '최소 한 개의 연락처를 선택해야 합니다.',
-                        style: TextStyle(
+                        style: theme.textTheme.bodySmall!.copyWith(
                           color: theme.colorScheme.error,
-                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -155,10 +154,7 @@ class _ContactMethodRow extends StatelessWidget {
       inputDecorationTheme: theme.inputDecorationTheme.copyWith(
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(MinglitRadius.input),
-          borderSide: BorderSide(
-            color: colorScheme.secondary,
-            width: 2,
-          ),
+          borderSide: BorderSide(color: colorScheme.secondary, width: 2),
         ),
       ),
     );
@@ -171,10 +167,7 @@ class _ContactMethodRow extends StatelessWidget {
             child: AnimatedOpacity(
               duration: MinglitAnimation.fast,
               opacity: isSelected ? 1.0 : 0.5,
-              child: IgnorePointer(
-                ignoring: !isSelected,
-                child: child,
-              ),
+              child: IgnorePointer(ignoring: !isSelected, child: child),
             ),
           ),
         ),

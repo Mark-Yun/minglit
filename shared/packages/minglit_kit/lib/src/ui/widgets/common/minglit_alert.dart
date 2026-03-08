@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
 /// A standardized dialog widget for Minglit applications.
 /// Use [show] or [showConfirm] for easier usage.
 class MinglitAlert extends StatelessWidget {
+  /// Creates a standardized alert dialog.
   const MinglitAlert({
     required this.title,
     this.content,
@@ -12,9 +13,16 @@ class MinglitAlert extends StatelessWidget {
     super.key,
   });
 
+  /// Dialog title text.
   final String title;
+
+  /// Optional dialog body text.
   final String? content;
+
+  /// Optional action buttons for the dialog.
   final List<Widget>? actions;
+
+  /// Visual style for the alert.
   final MinglitAlertType type;
 
   /// Shows a generic dialog.
@@ -68,7 +76,9 @@ class MinglitAlert extends StatelessWidget {
               foregroundColor: isDestructive
                   ? Theme.of(context).colorScheme.error
                   : Theme.of(context).colorScheme.primary,
-              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+              textStyle: Theme.of(
+                context,
+              ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             child: Text(confirmText),
           ),
@@ -85,7 +95,9 @@ class MinglitAlert extends StatelessWidget {
 
     return AlertDialog(
       backgroundColor: colorScheme.surface,
-      surfaceTintColor: Colors.transparent, // Remove standardized tint
+      surfaceTintColor: colorScheme.surface.withValues(
+        alpha: 0,
+      ), // Remove standardized tint
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(MinglitRadius.card),
       ),
@@ -95,17 +107,15 @@ class MinglitAlert extends StatelessWidget {
         MinglitSpacing.large,
         MinglitSpacing.medium,
       ),
-      contentPadding: const EdgeInsets.fromLTRB(
-        MinglitSpacing.large,
-        0,
-        MinglitSpacing.large,
-        MinglitSpacing.large,
+      contentPadding: const EdgeInsets.only(
+        left: MinglitSpacing.large,
+        right: MinglitSpacing.large,
+        bottom: MinglitSpacing.large,
       ),
-      actionsPadding: const EdgeInsets.fromLTRB(
-        MinglitSpacing.medium,
-        0,
-        MinglitSpacing.medium,
-        MinglitSpacing.medium,
+      actionsPadding: const EdgeInsets.only(
+        left: MinglitSpacing.medium,
+        right: MinglitSpacing.medium,
+        bottom: MinglitSpacing.medium,
       ),
 
       title: Row(
@@ -137,7 +147,11 @@ class MinglitAlert extends StatelessWidget {
   }
 }
 
+/// Visual variants for [MinglitAlert].
 enum MinglitAlertType {
+  /// Neutral informational alert.
   info,
+
+  /// Destructive alert with warning emphasis.
   destructive,
 }

@@ -1,10 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
 /// A reusable skeleton loader with a subtle pulsing animation.
 class MinglitSkeleton extends StatefulWidget {
+  /// Creates a pulsing skeleton block.
   const MinglitSkeleton({
     super.key,
     this.width,
@@ -12,8 +13,13 @@ class MinglitSkeleton extends StatefulWidget {
     this.borderRadius,
   });
 
+  /// Optional fixed width of the skeleton.
   final double? width;
+
+  /// Optional fixed height of the skeleton.
   final double? height;
+
+  /// Optional custom border radius.
   final BorderRadiusGeometry? borderRadius;
 
   @override
@@ -35,8 +41,8 @@ class _MinglitSkeletonState extends State<MinglitSkeleton>
     unawaited(_controller.repeat(reverse: true));
 
     _colorAnimation = ColorTween(
-      begin: const Color(0xFFF3F4F6), // Gray-100
-      end: const Color(0xFFE5E7EB), // Gray-200
+      begin: MinglitColors.surface,
+      end: MinglitColors.textPrimary.withValues(alpha: 0.1),
     ).animate(_controller);
   }
 

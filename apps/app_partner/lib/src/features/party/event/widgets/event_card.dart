@@ -3,11 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class EventCard extends StatelessWidget {
-  const EventCard({
-    required this.event,
-    this.onTap,
-    super.key,
-  });
+  const EventCard({required this.event, this.onTap, super.key});
 
   final Event event;
   final VoidCallback? onTap;
@@ -16,9 +12,10 @@ class EventCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final timeStr = DateFormat('yyyy.MM.dd (E) HH:mm', 'ko_KR').format(
-      event.startTime,
-    );
+    final timeStr = DateFormat(
+      'yyyy.MM.dd (E) HH:mm',
+      'ko_KR',
+    ).format(event.startTime);
 
     return Card(
       margin: const EdgeInsets.only(bottom: MinglitSpacing.small),
@@ -75,18 +72,14 @@ class EventCard extends StatelessWidget {
                   ),
                   Text(
                     '신청중',
-                    style: TextStyle(
+                    style: theme.textTheme.bodySmall!.copyWith(
                       color: colorScheme.onSurfaceVariant,
-                      fontSize: 10,
                     ),
                   ),
                 ],
               ),
               const SizedBox(width: MinglitSpacing.small),
-              Icon(
-                Icons.chevron_right,
-                color: colorScheme.outlineVariant,
-              ),
+              Icon(Icons.chevron_right, color: colorScheme.outlineVariant),
             ],
           ),
         ),

@@ -1,7 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:minglit_kit/src/data/models/partner.dart';
+import 'package:minglit_kit/src/data/repositories/partner_repository.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
+import 'package:minglit_kit/src/ui/widgets/partner/partner_detail_view.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'partner_list_preview_screen.g.dart';
@@ -11,15 +15,18 @@ part 'partner_list_preview_screen.g.dart';
 /// Displays a list of all active partners for development preview.
 /// Tapping an item opens the [PartnerDetailView].
 class PartnerListPreviewScreen extends ConsumerWidget {
+  /// Creates a partner list preview screen.
   const PartnerListPreviewScreen({super.key});
 
+  /// Builds the partner list preview UI.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final partnersAsync = ref.watch(previewPartnersProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Partner Preview List')),
-      body: partnersAsync.when(
+      body: MinglitAsyncValueWidget(
+        value: partnersAsync,
         data: (partners) {
           if (partners.isEmpty) {
             return const Center(child: Text('No active partners found.'));
@@ -58,7 +65,6 @@ class PartnerListPreviewScreen extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('Error: $e')),
       ),
     );

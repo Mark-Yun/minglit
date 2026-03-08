@@ -1,4 +1,4 @@
-name: Seed Dev Database (Reset & Populate)
+name: Seed Dev Database
 
 on:
   workflow_dispatch: # Manual trigger
@@ -10,8 +10,8 @@ on:
       - dev
 
 jobs:
-  reset-and-seed:
-    name: Reset DB and Run Seeder
+  seed:
+    name: Run Seeder
     runs-on: ubuntu-latest
     # Safety Guard 1: Only run on dev branch, or if manually triggered.
     # Also ensures the triggering workflow (migrations) was successful.
@@ -28,7 +28,7 @@ jobs:
           channel: 'stable'
           cache: true
       
-      # Supabase CLI Setup (for DB Reset)
+      # Supabase CLI Setup (for linking)
       - uses: supabase/setup-cli@v1
         with:
           version: latest
@@ -52,34 +52,24 @@ jobs:
           fi
           echo "✅ Safety Check Passed: Target Project ($TARGET_PROJECT_ID) is NOT Main DB."
 
-      # Step 1: DB Reset (Link -> Reset -> Seed.sql)
-      # This resets the remote DB, applies migrations, and runs backend/supabase/seed.sql
-      - name: Reset Remote Dev Database
-        working-directory: backend
+      # Step 1: Link to remote project
+      - name: Link Remote Dev Database
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DEV_DB_PASSWORD }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_DEV_PROJECT_ID }}
         run: |
-          # 1. Link to Remote Project
           supabase link --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD
-          
-          # 2. Reset Database (Destructive)
-          # Piping 'yes' to handle any non-force confirmation prompts, though --linked usually implies remote.
-          # Note: Supabase CLI might require different flags depending on version, 
-          # but `db reset --linked` is the standard for remote reset.
-          # We assume 'backend/supabase' is the correct root for Supabase config.
-          yes | supabase db reset --linked
 
       # Step 2: Install Dart Dependencies
       - name: Install Dart Dependencies
         run: flutter pub get
-        working-directory: shared/packages/minglit_kit
+        working-directory: tests/test_data_seeder
 
       # Step 3: Run Dart Seeder (Dynamic Data)
       - name: Run Dart Seeder
-        working-directory: shared/packages/minglit_kit
+        working-directory: tests/test_data_seeder
         env:
-          SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
-          SUPABASE_DEV_SECRET_KEY: ${{ secrets.SUPABASE_DEV_SECRET_KEY }}
-        run: flutter test test/maintenance/seed_runner_test.dart
+          SUPABASE_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_DEV_SECRET_KEY }}
+        run: flutter test test/runner.dart

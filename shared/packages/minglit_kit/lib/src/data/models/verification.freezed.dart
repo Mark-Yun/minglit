@@ -623,7 +623,7 @@ mixin _$VerificationRequirementStatus {
 
  Verification get master;/// User's original data (내 서랍 데이터)
 @JsonKey(name: 'user_verification') Map<String, dynamic>? get userVerification;/// Active submission to a partner (제출 내역)
-@JsonKey(name: 'active_submission') Map<String, dynamic>? get activeSubmission;/// Final verified result (출입증)
+@JsonKey(name: 'active_submission') VerificationSubmission? get activeSubmission;/// Final verified result (출입증)
 @JsonKey(name: 'verified_result') Map<String, dynamic>? get verifiedResult;
 /// Create a copy of VerificationRequirementStatus
 /// with the given fields replaced by the non-null parameter values.
@@ -637,12 +637,12 @@ $VerificationRequirementStatusCopyWith<VerificationRequirementStatus> get copyWi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is VerificationRequirementStatus&&(identical(other.master, master) || other.master == master)&&const DeepCollectionEquality().equals(other.userVerification, userVerification)&&const DeepCollectionEquality().equals(other.activeSubmission, activeSubmission)&&const DeepCollectionEquality().equals(other.verifiedResult, verifiedResult));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is VerificationRequirementStatus&&(identical(other.master, master) || other.master == master)&&const DeepCollectionEquality().equals(other.userVerification, userVerification)&&(identical(other.activeSubmission, activeSubmission) || other.activeSubmission == activeSubmission)&&const DeepCollectionEquality().equals(other.verifiedResult, verifiedResult));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,master,const DeepCollectionEquality().hash(userVerification),const DeepCollectionEquality().hash(activeSubmission),const DeepCollectionEquality().hash(verifiedResult));
+int get hashCode => Object.hash(runtimeType,master,const DeepCollectionEquality().hash(userVerification),activeSubmission,const DeepCollectionEquality().hash(verifiedResult));
 
 @override
 String toString() {
@@ -657,11 +657,11 @@ abstract mixin class $VerificationRequirementStatusCopyWith<$Res>  {
   factory $VerificationRequirementStatusCopyWith(VerificationRequirementStatus value, $Res Function(VerificationRequirementStatus) _then) = _$VerificationRequirementStatusCopyWithImpl;
 @useResult
 $Res call({
- Verification master,@JsonKey(name: 'user_verification') Map<String, dynamic>? userVerification,@JsonKey(name: 'active_submission') Map<String, dynamic>? activeSubmission,@JsonKey(name: 'verified_result') Map<String, dynamic>? verifiedResult
+ Verification master,@JsonKey(name: 'user_verification') Map<String, dynamic>? userVerification,@JsonKey(name: 'active_submission') VerificationSubmission? activeSubmission,@JsonKey(name: 'verified_result') Map<String, dynamic>? verifiedResult
 });
 
 
-$VerificationCopyWith<$Res> get master;
+$VerificationCopyWith<$Res> get master;$VerificationSubmissionCopyWith<$Res>? get activeSubmission;
 
 }
 /// @nodoc
@@ -679,7 +679,7 @@ class _$VerificationRequirementStatusCopyWithImpl<$Res>
 master: null == master ? _self.master : master // ignore: cast_nullable_to_non_nullable
 as Verification,userVerification: freezed == userVerification ? _self.userVerification : userVerification // ignore: cast_nullable_to_non_nullable
 as Map<String, dynamic>?,activeSubmission: freezed == activeSubmission ? _self.activeSubmission : activeSubmission // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>?,verifiedResult: freezed == verifiedResult ? _self.verifiedResult : verifiedResult // ignore: cast_nullable_to_non_nullable
+as VerificationSubmission?,verifiedResult: freezed == verifiedResult ? _self.verifiedResult : verifiedResult // ignore: cast_nullable_to_non_nullable
 as Map<String, dynamic>?,
   ));
 }
@@ -691,6 +691,18 @@ $VerificationCopyWith<$Res> get master {
   
   return $VerificationCopyWith<$Res>(_self.master, (value) {
     return _then(_self.copyWith(master: value));
+  });
+}/// Create a copy of VerificationRequirementStatus
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$VerificationSubmissionCopyWith<$Res>? get activeSubmission {
+    if (_self.activeSubmission == null) {
+    return null;
+  }
+
+  return $VerificationSubmissionCopyWith<$Res>(_self.activeSubmission!, (value) {
+    return _then(_self.copyWith(activeSubmission: value));
   });
 }
 }
@@ -774,7 +786,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Verification master, @JsonKey(name: 'user_verification')  Map<String, dynamic>? userVerification, @JsonKey(name: 'active_submission')  Map<String, dynamic>? activeSubmission, @JsonKey(name: 'verified_result')  Map<String, dynamic>? verifiedResult)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Verification master, @JsonKey(name: 'user_verification')  Map<String, dynamic>? userVerification, @JsonKey(name: 'active_submission')  VerificationSubmission? activeSubmission, @JsonKey(name: 'verified_result')  Map<String, dynamic>? verifiedResult)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _VerificationRequirementStatus() when $default != null:
 return $default(_that.master,_that.userVerification,_that.activeSubmission,_that.verifiedResult);case _:
@@ -795,7 +807,7 @@ return $default(_that.master,_that.userVerification,_that.activeSubmission,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Verification master, @JsonKey(name: 'user_verification')  Map<String, dynamic>? userVerification, @JsonKey(name: 'active_submission')  Map<String, dynamic>? activeSubmission, @JsonKey(name: 'verified_result')  Map<String, dynamic>? verifiedResult)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Verification master, @JsonKey(name: 'user_verification')  Map<String, dynamic>? userVerification, @JsonKey(name: 'active_submission')  VerificationSubmission? activeSubmission, @JsonKey(name: 'verified_result')  Map<String, dynamic>? verifiedResult)  $default,) {final _that = this;
 switch (_that) {
 case _VerificationRequirementStatus():
 return $default(_that.master,_that.userVerification,_that.activeSubmission,_that.verifiedResult);case _:
@@ -815,7 +827,7 @@ return $default(_that.master,_that.userVerification,_that.activeSubmission,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Verification master, @JsonKey(name: 'user_verification')  Map<String, dynamic>? userVerification, @JsonKey(name: 'active_submission')  Map<String, dynamic>? activeSubmission, @JsonKey(name: 'verified_result')  Map<String, dynamic>? verifiedResult)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Verification master, @JsonKey(name: 'user_verification')  Map<String, dynamic>? userVerification, @JsonKey(name: 'active_submission')  VerificationSubmission? activeSubmission, @JsonKey(name: 'verified_result')  Map<String, dynamic>? verifiedResult)?  $default,) {final _that = this;
 switch (_that) {
 case _VerificationRequirementStatus() when $default != null:
 return $default(_that.master,_that.userVerification,_that.activeSubmission,_that.verifiedResult);case _:
@@ -830,7 +842,7 @@ return $default(_that.master,_that.userVerification,_that.activeSubmission,_that
 @JsonSerializable()
 
 class _VerificationRequirementStatus extends VerificationRequirementStatus {
-  const _VerificationRequirementStatus({required this.master, @JsonKey(name: 'user_verification') final  Map<String, dynamic>? userVerification, @JsonKey(name: 'active_submission') final  Map<String, dynamic>? activeSubmission, @JsonKey(name: 'verified_result') final  Map<String, dynamic>? verifiedResult}): _userVerification = userVerification,_activeSubmission = activeSubmission,_verifiedResult = verifiedResult,super._();
+  const _VerificationRequirementStatus({required this.master, @JsonKey(name: 'user_verification') final  Map<String, dynamic>? userVerification, @JsonKey(name: 'active_submission') this.activeSubmission, @JsonKey(name: 'verified_result') final  Map<String, dynamic>? verifiedResult}): _userVerification = userVerification,_verifiedResult = verifiedResult,super._();
   factory _VerificationRequirementStatus.fromJson(Map<String, dynamic> json) => _$VerificationRequirementStatusFromJson(json);
 
 @override final  Verification master;
@@ -846,16 +858,7 @@ class _VerificationRequirementStatus extends VerificationRequirementStatus {
 }
 
 /// Active submission to a partner (제출 내역)
- final  Map<String, dynamic>? _activeSubmission;
-/// Active submission to a partner (제출 내역)
-@override@JsonKey(name: 'active_submission') Map<String, dynamic>? get activeSubmission {
-  final value = _activeSubmission;
-  if (value == null) return null;
-  if (_activeSubmission is EqualUnmodifiableMapView) return _activeSubmission;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(value);
-}
-
+@override@JsonKey(name: 'active_submission') final  VerificationSubmission? activeSubmission;
 /// Final verified result (출입증)
  final  Map<String, dynamic>? _verifiedResult;
 /// Final verified result (출입증)
@@ -881,12 +884,12 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _VerificationRequirementStatus&&(identical(other.master, master) || other.master == master)&&const DeepCollectionEquality().equals(other._userVerification, _userVerification)&&const DeepCollectionEquality().equals(other._activeSubmission, _activeSubmission)&&const DeepCollectionEquality().equals(other._verifiedResult, _verifiedResult));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _VerificationRequirementStatus&&(identical(other.master, master) || other.master == master)&&const DeepCollectionEquality().equals(other._userVerification, _userVerification)&&(identical(other.activeSubmission, activeSubmission) || other.activeSubmission == activeSubmission)&&const DeepCollectionEquality().equals(other._verifiedResult, _verifiedResult));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,master,const DeepCollectionEquality().hash(_userVerification),const DeepCollectionEquality().hash(_activeSubmission),const DeepCollectionEquality().hash(_verifiedResult));
+int get hashCode => Object.hash(runtimeType,master,const DeepCollectionEquality().hash(_userVerification),activeSubmission,const DeepCollectionEquality().hash(_verifiedResult));
 
 @override
 String toString() {
@@ -901,11 +904,11 @@ abstract mixin class _$VerificationRequirementStatusCopyWith<$Res> implements $V
   factory _$VerificationRequirementStatusCopyWith(_VerificationRequirementStatus value, $Res Function(_VerificationRequirementStatus) _then) = __$VerificationRequirementStatusCopyWithImpl;
 @override @useResult
 $Res call({
- Verification master,@JsonKey(name: 'user_verification') Map<String, dynamic>? userVerification,@JsonKey(name: 'active_submission') Map<String, dynamic>? activeSubmission,@JsonKey(name: 'verified_result') Map<String, dynamic>? verifiedResult
+ Verification master,@JsonKey(name: 'user_verification') Map<String, dynamic>? userVerification,@JsonKey(name: 'active_submission') VerificationSubmission? activeSubmission,@JsonKey(name: 'verified_result') Map<String, dynamic>? verifiedResult
 });
 
 
-@override $VerificationCopyWith<$Res> get master;
+@override $VerificationCopyWith<$Res> get master;@override $VerificationSubmissionCopyWith<$Res>? get activeSubmission;
 
 }
 /// @nodoc
@@ -922,8 +925,8 @@ class __$VerificationRequirementStatusCopyWithImpl<$Res>
   return _then(_VerificationRequirementStatus(
 master: null == master ? _self.master : master // ignore: cast_nullable_to_non_nullable
 as Verification,userVerification: freezed == userVerification ? _self._userVerification : userVerification // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>?,activeSubmission: freezed == activeSubmission ? _self._activeSubmission : activeSubmission // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>?,verifiedResult: freezed == verifiedResult ? _self._verifiedResult : verifiedResult // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>?,activeSubmission: freezed == activeSubmission ? _self.activeSubmission : activeSubmission // ignore: cast_nullable_to_non_nullable
+as VerificationSubmission?,verifiedResult: freezed == verifiedResult ? _self._verifiedResult : verifiedResult // ignore: cast_nullable_to_non_nullable
 as Map<String, dynamic>?,
   ));
 }
@@ -936,6 +939,18 @@ $VerificationCopyWith<$Res> get master {
   
   return $VerificationCopyWith<$Res>(_self.master, (value) {
     return _then(_self.copyWith(master: value));
+  });
+}/// Create a copy of VerificationRequirementStatus
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$VerificationSubmissionCopyWith<$Res>? get activeSubmission {
+    if (_self.activeSubmission == null) {
+    return null;
+  }
+
+  return $VerificationSubmissionCopyWith<$Res>(_self.activeSubmission!, (value) {
+    return _then(_self.copyWith(activeSubmission: value));
   });
 }
 }

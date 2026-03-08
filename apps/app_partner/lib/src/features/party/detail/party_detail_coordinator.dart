@@ -1,11 +1,14 @@
 import 'dart:async';
 
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
+import 'package:app_partner/src/features/party/widgets/party_basic_info_edit_screen.dart';
+import 'package:app_partner/src/features/party/widgets/party_capacity_contact_edit_screen.dart';
+import 'package:app_partner/src/features/party/widgets/party_location_edit_screen.dart';
 import 'package:app_partner/src/routing/app_router.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
-import 'package:app_partner/src/utils/error_handler.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -22,8 +25,85 @@ class PartyDetailCoordinator {
   final Ref _ref;
 
   void goToEditParty(String partyId) {
-    // TODO(mark): Implement Party Edit Route
-    Log.d(r'Coordinator: Edit Party $partyId');
+    unawaited(
+      _ref
+          .read(goRouterProvider)
+          .push(
+            PartyEditRoute(partyId: partyId).location,
+          ),
+    );
+  }
+
+  void openBasicInfoEdit(
+    BuildContext context, {
+    required Party party,
+    required void Function(
+      String title,
+      Map<String, dynamic> description,
+      List<String> imageUrls,
+      List<XFile> newImages,
+      String status,
+    )
+    onSave,
+  }) {
+    unawaited(
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => PartyBasicInfoEditScreen(
+            party: party,
+            onSave: onSave,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void openCapacityContactEdit(
+    BuildContext context, {
+    required Party party,
+    required void Function(
+      int min,
+      int max,
+      Map<String, String> options,
+    )
+    onSave,
+  }) {
+    unawaited(
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => PartyCapacityContactEditScreen(
+            party: party,
+            onSave: onSave,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void openLocationEdit(
+    BuildContext context, {
+    required Location? initialLocation,
+    required String? initialAddressDetail,
+    required String? initialDirectionsGuide,
+    required void Function(
+      Location? newLoc,
+      String addressDetail,
+      String directions,
+    )
+    onSave,
+  }) {
+    unawaited(
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => PartyLocationEditScreen(
+            initialLocation: initialLocation,
+            initialAddressDetail: initialAddressDetail,
+            initialDirectionsGuide: initialDirectionsGuide,
+            onSave: onSave,
+          ),
+        ),
+      ),
+    );
   }
 
   Future<Location?> goToLocationSearch(BuildContext context) async {
@@ -43,9 +123,7 @@ class PartyDetailCoordinator {
           .updatePartyStatus(partyId, 'active');
       _ref.invalidate(partyDetailProvider(partyId));
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.partyDetail_message_activated)),
-        );
+        context.showMinglitSuccess(context.l10n.partyDetail_message_activated);
       }
     } on Object catch (e, st) {
       if (context.mounted) {
@@ -64,8 +142,8 @@ class PartyDetailCoordinator {
           .updatePartyStatus(partyId, 'closed');
       _ref.invalidate(partyDetailProvider(partyId));
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.partyDetail_message_deactivated)),
+        context.showMinglitSuccess(
+          context.l10n.partyDetail_message_deactivated,
         );
       }
     } on Object catch (e, st) {
@@ -87,7 +165,7 @@ class PartyDetailCoordinator {
       final party = await _ref.read(partyDetailProvider(partyId).future);
       final currentGroups = party.entryGroups;
 
-      final updatedGroups = currentGroups
+      final updatedGroups = (currentGroups ?? [])
           .map((g) => g.id == updatedGroup.id ? updatedGroup : g)
           .toList();
 
@@ -95,15 +173,13 @@ class PartyDetailCoordinator {
           .read(partyRepositoryProvider)
           .updateParty(
             party.copyWith(
-              conditions: updatedGroups.map((e) => e.toJson()).toList(),
+              entryGroups: updatedGroups,
             ),
           );
 
       _ref.invalidate(partyDetailProvider(partyId));
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('입장 그룹이 수정되었습니다.')),
-        );
+        context.showMinglitSuccess('입장 그룹이 수정되었습니다.');
       }
     } on Object catch (e, st) {
       if (context.mounted) {
@@ -137,9 +213,7 @@ class PartyDetailCoordinator {
 
       _ref.invalidate(partyDetailProvider(partyId));
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.common_message_saved)),
-        );
+        context.showMinglitSuccess(context.l10n.common_message_saved);
       }
     } on Object catch (e, st) {
       if (context.mounted) {
@@ -161,9 +235,7 @@ class PartyDetailCoordinator {
   void goToEventDetail(String partyId, String eventId) {
     _ref
         .read(goRouterProvider)
-        .go(
-          EventDetailRoute(partyId: partyId, eventId: eventId).location,
-        );
+        .go(EventDetailRoute(partyId: partyId, eventId: eventId).location);
   }
 
   void goToCreateTicket(String partyId, String eventId) {

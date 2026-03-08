@@ -21,7 +21,9 @@ class Step5Tickets extends ConsumerWidget {
         children: [
           Text(
             context.l10n.partyCreate_title_tickets,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: MinglitSpacing.small),
           Text(

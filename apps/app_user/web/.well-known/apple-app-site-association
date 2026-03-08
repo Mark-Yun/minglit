@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TAY59SLH9F.com.minglit.appUser",
+        "paths": ["/events/*"]
+      }
+    ]
+  }
+}

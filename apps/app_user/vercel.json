@@ -1,6 +1,17 @@
 {
   "version": 2,
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+  "routes": [
+    {
+      "src": "/.well-known/(.*)",
+      "headers": { "Content-Type": "application/json" },
+      "continue": true
+    },
+    {
+      "src": "/events/([^/]+)",
+      "has": [{ "type": "header", "key": "user-agent", "value": "(?i).*(facebookexternalhit|kakaotalk-scrap|Twitterbot|Slackbot|WhatsApp|Googlebot|LinkedInBot).*" }],
+      "dest": "/api/og?eventId=$1"
+    },
+    { "handle": "filesystem" },
+    { "src": "/.*", "dest": "/index.html" }
   ]
 }

@@ -16,8 +16,11 @@ _Event _$EventFromJson(Map<String, dynamic> json) => _Event(
   locationId: json['location_id'] as String?,
   title: json['title'] as String?,
   description: json['description'] as Map<String, dynamic>?,
+  imageUrls: (json['image_urls'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
   contactOptions: json['contact_options'] as Map<String, dynamic>? ?? const {},
-  conditions: json['conditions'] as Map<String, dynamic>? ?? const {},
+  minConfirmedCount: (json['min_confirmed_count'] as num?)?.toInt() ?? 0,
   maxParticipants: (json['max_participants'] as num?)?.toInt() ?? 20,
   currentParticipants: (json['current_participants'] as num?)?.toInt() ?? 0,
   status: json['status'] as String? ?? 'scheduled',
@@ -27,6 +30,12 @@ _Event _$EventFromJson(Map<String, dynamic> json) => _Event(
   party: json['party'] == null
       ? null
       : Party.fromJson(json['party'] as Map<String, dynamic>),
+  tickets: (json['tickets'] as List<dynamic>?)
+      ?.map((e) => Ticket.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  entryGroups: (json['entryGroups'] as List<dynamic>?)
+      ?.map((e) => EntryGroup.fromJson(e as Map<String, dynamic>))
+      .toList(),
 );
 
 Map<String, dynamic> _$EventToJson(_Event instance) => <String, dynamic>{
@@ -39,69 +48,10 @@ Map<String, dynamic> _$EventToJson(_Event instance) => <String, dynamic>{
   'location_id': instance.locationId,
   'title': instance.title,
   'description': instance.description,
+  'image_urls': instance.imageUrls,
   'contact_options': instance.contactOptions,
-  'conditions': instance.conditions,
+  'min_confirmed_count': instance.minConfirmedCount,
   'max_participants': instance.maxParticipants,
   'current_participants': instance.currentParticipants,
   'status': instance.status,
-  'location': instance.location,
-  'party': instance.party,
 };
-
-_EventApplication _$EventApplicationFromJson(Map<String, dynamic> json) =>
-    _EventApplication(
-      id: json['id'] as String,
-      eventId: json['event_id'] as String,
-      ticketId: json['ticket_id'] as String,
-      userId: json['user_id'] as String,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
-      status: json['status'] as String? ?? 'pending',
-      message: json['message'] as String?,
-      event: json['event'] == null
-          ? null
-          : Event.fromJson(json['event'] as Map<String, dynamic>),
-      ticket: json['ticket'] == null
-          ? null
-          : Ticket.fromJson(json['ticket'] as Map<String, dynamic>),
-    );
-
-Map<String, dynamic> _$EventApplicationToJson(_EventApplication instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'event_id': instance.eventId,
-      'ticket_id': instance.ticketId,
-      'user_id': instance.userId,
-      'created_at': instance.createdAt.toIso8601String(),
-      'updated_at': instance.updatedAt.toIso8601String(),
-      'status': instance.status,
-      'message': instance.message,
-      'event': instance.event,
-      'ticket': instance.ticket,
-    };
-
-_EventParticipant _$EventParticipantFromJson(Map<String, dynamic> json) =>
-    _EventParticipant(
-      id: json['id'] as String,
-      eventId: json['event_id'] as String,
-      ticketId: json['ticket_id'] as String,
-      userId: json['user_id'] as String,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
-      applicationId: json['application_id'] as String?,
-      status: json['status'] as String? ?? 'ticket_issued',
-      ticketCode: json['ticket_code'] as String?,
-    );
-
-Map<String, dynamic> _$EventParticipantToJson(_EventParticipant instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'event_id': instance.eventId,
-      'ticket_id': instance.ticketId,
-      'user_id': instance.userId,
-      'created_at': instance.createdAt.toIso8601String(),
-      'updated_at': instance.updatedAt.toIso8601String(),
-      'application_id': instance.applicationId,
-      'status': instance.status,
-      'ticket_code': instance.ticketCode,
-    };

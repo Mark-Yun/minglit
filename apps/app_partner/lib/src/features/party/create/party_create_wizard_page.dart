@@ -7,14 +7,15 @@ import 'package:app_partner/src/features/party/create/steps/step3_capacity_conta
 import 'package:app_partner/src/features/party/create/steps/step4_entry_rules.dart';
 import 'package:app_partner/src/features/party/create/steps/step5_tickets.dart';
 import 'package:app_partner/src/features/party/create/steps/step6_review.dart';
-import 'package:app_partner/src/utils/error_handler.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class PartyCreateWizardPage extends ConsumerStatefulWidget {
-  const PartyCreateWizardPage({super.key});
+  const PartyCreateWizardPage({this.partyId, super.key});
+
+  final String? partyId;
 
   @override
   ConsumerState<PartyCreateWizardPage> createState() =>
@@ -23,11 +24,22 @@ class PartyCreateWizardPage extends ConsumerStatefulWidget {
 
 class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
   late final PageController _pageController;
+  bool _didRequestPrefill = false;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+    if (widget.partyId != null && !_didRequestPrefill) {
+      _didRequestPrefill = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(
+          ref
+              .read(partyCreateWizardControllerProvider.notifier)
+              .loadForEdit(widget.partyId!),
+        );
+      });
+    }
   }
 
   @override
@@ -48,11 +60,11 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
 
   Future<void> _handleSubmit() async {
     final notifier = ref.read(partyCreateWizardControllerProvider.notifier);
-    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
+    ref.read(globalLoadingControllerProvider.notifier).show();
     try {
       await notifier.submit();
     } finally {
-      loading.hide();
+      ref.read(globalLoadingControllerProvider.notifier).hide();
     }
   }
 
@@ -60,6 +72,7 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(partyCreateWizardControllerProvider);
     final notifier = ref.read(partyCreateWizardControllerProvider.notifier);
+    final isEditing = state.editingPartyId != null;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -74,26 +87,36 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
         },
       )
       // Listen to submission status
-      ..listen(
-        partyCreateWizardControllerProvider.select((s) => s.status),
-        (prev, next) {
-          next.whenOrNull(
-            data: (_) {
-              if (prev?.isLoading ?? false) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(context.l10n.wizard_review_successMessage),
-                  ),
-                );
-                context.pop(); // Return to Party List
-              }
-            },
-            error: (error, st) {
-              handleMinglitError(context, error, st);
-            },
-          );
-        },
+      ..listen(partyCreateWizardControllerProvider.select((s) => s.status), (
+        prev,
+        next,
+      ) {
+        next.whenOrNull(
+          data: (_) {
+            if (prev?.isLoading ?? false) {
+              context
+                ..showMinglitSuccess(
+                  isEditing
+                      ? '파티 정보가 수정되었습니다.'
+                      : context.l10n.wizard_review_successMessage,
+                )
+                ..pop(); // Return to Party List
+            }
+          },
+          error: (error, st) {
+            handleMinglitError(context, error, st);
+          },
+        );
+      });
+
+    if (isEditing && !state.isPrefilled) {
+      return Scaffold(
+        appBar: MinglitTheme.simpleAppBar(
+          title: context.l10n.partyDetail_menu_edit,
+        ),
+        body: const Center(child: MinglitCircularProgressIndicator()),
       );
+    }
 
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(
@@ -102,12 +125,11 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
       body: Column(
         children: [
           // Styled Progress Indicator
-          LinearProgressIndicator(
+          MinglitLinearProgressIndicator(
             value:
                 (state.currentStep.index + 1) / PartyCreateStep.values.length,
             backgroundColor: colorScheme.surfaceContainerHighest,
-            valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
-            minHeight: 2,
+            color: colorScheme.primary,
           ),
           Expanded(
             child: PageView(
@@ -153,7 +175,9 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
                             : notifier.nextStep),
                   child: Text(
                     state.currentStep == PartyCreateStep.review
-                        ? context.l10n.wizard_button_complete
+                        ? (isEditing
+                              ? '수정 완료'
+                              : context.l10n.wizard_button_complete)
                         : context.l10n.wizard_button_next,
                   ),
                 ),

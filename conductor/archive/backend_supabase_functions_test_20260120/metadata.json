@@ -1,0 +1,8 @@
+{
+  "track_id": "backend_supabase_functions_test_20260120",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-20T23:30:00Z",
+  "updated_at": "2026-01-20T23:30:00Z",
+  "description": "supabase/functions 테스트 코드 만들기"
+}
