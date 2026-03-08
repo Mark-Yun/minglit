@@ -75,7 +75,8 @@ void main() {
         ),
       );
 
-      // Verify the BugReporterWrapper widget is used (which uses Stack internally)
+      // Verify the BugReporterWrapper widget is used (which uses Stack
+      // internally)
       expect(find.byType(BugReporterWrapper), findsOneWidget);
       expect(find.text('Stack Child'), findsOneWidget);
     });
