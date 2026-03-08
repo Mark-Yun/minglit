@@ -13,8 +13,9 @@ class _EventDetailContent extends ConsumerStatefulWidget {
 class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
   final _scrollController = ScrollController();
   bool _showTitle = false;
+  bool _bannerDismissed = false;
 
-  static const double _collapseThreshold = 300.0 - kToolbarHeight;
+  double _collapseThreshold = 0;
 
   @override
   void initState() {
@@ -40,6 +41,12 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final topPadding = MediaQuery.paddingOf(context).top;
+    final imageHeight = screenWidth * 9 / 16;
+    final expandedHeight = imageHeight + topPadding;
+    _collapseThreshold = imageHeight - kToolbarHeight;
+
     final event = widget.event;
     final party = event.party;
     final partner = party?.partner;
@@ -54,152 +61,181 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
       'ko_KR',
     ).format(event.startTime);
 
-    return RefreshIndicator(
-      onRefresh: () async {
-        return ref.refresh(eventDetailControllerProvider(event.id).future);
-      },
-      child: CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          // 1. Hero Image Header
-          SliverAppBar(
-            expandedHeight: 300,
-            pinned: true,
-            title: _showTitle
-                ? Text(
-                    eventTitle,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.onPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  )
-                : null,
-            centerTitle: false,
-            flexibleSpace: FlexibleSpaceBar(
-              background: MinglitImageCarousel(
-                imageUrls: party?.imageUrls ?? [],
-              ),
-            ),
-            leading: BackButton(color: theme.colorScheme.onPrimary),
-            actions: [
-              IconButton(
-                onPressed: () {
-                  unawaited(
-                    ShareUtils.shareEvent(
-                      eventTitle: eventTitle,
-                      eventId: event.id,
-                    ),
-                  );
-                },
-                icon: Icon(
-                  Icons.share_outlined,
-                  color: theme.colorScheme.onPrimary,
-                ),
-                tooltip: '공유하기',
-              ),
-              if (user != null)
-                Padding(
-                  padding: const EdgeInsets.only(right: MinglitSpacing.small),
-                  child: MinglitSocialButton(
-                    targetId: event.partyId, // Like the party
-                    targetType: SocialTargetType.party,
-                    interactionType: SocialInteractionType.like,
-                    activeColor: theme.colorScheme.onPrimary,
-                    inactiveColor: theme.colorScheme.onPrimary.withValues(
-                      alpha: 0.7,
-                    ),
-                    tooltip: '좋아요',
+    final durationHours = event.endTime.difference(event.startTime).inHours;
+
+    return Stack(
+      children: [
+        RefreshIndicator(
+          onRefresh: () async {
+            return ref.refresh(eventDetailControllerProvider(event.id).future);
+          },
+          child: CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              // 1. Hero Image Header
+              SliverAppBar(
+                expandedHeight: expandedHeight,
+                pinned: true,
+                title: _showTitle
+                    ? Text(
+                        eventTitle,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: theme.colorScheme.onPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      )
+                    : null,
+                centerTitle: false,
+                flexibleSpace: FlexibleSpaceBar(
+                  background: MinglitImageCarousel(
+                    imageUrls: party?.imageUrls ?? [],
                   ),
                 ),
-            ],
-            backgroundColor: theme.colorScheme.primary,
-          ),
-
-          // 2. Main Info
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(MinglitSpacing.medium),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Partner Row
-                  if (partner != null) ...[
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: MinglitRadius.input, // 12
-                          backgroundImage: partnerProfileImageUrl != null
-                              ? NetworkImage(partnerProfileImageUrl)
-                              : null,
-                          child: partnerProfileImageUrl == null
-                              ? const Icon(
-                                  Icons.store,
-                                  size: MinglitIconSize.xsmall,
-                                )
-                              : null,
+                leading: BackButton(color: theme.colorScheme.onPrimary),
+                actions: [
+                  IconButton(
+                    onPressed: () {
+                      unawaited(
+                        ShareUtils.shareEvent(
+                          eventTitle: eventTitle,
+                          eventId: event.id,
+                          baseUrl: ref.watch(minglitDomainsProvider).userApp,
                         ),
-                        const SizedBox(width: MinglitSpacing.small),
-                        Text(
-                          partner.name,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                      );
+                    },
+                    icon: Icon(
+                      Icons.share_outlined,
+                      color: theme.colorScheme.onPrimary,
+                    ),
+                    tooltip: '공유하기',
+                  ),
+                  if (user != null)
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        right: MinglitSpacing.small,
+                      ),
+                      child: MinglitSocialButton(
+                        targetId: event.partyId, // Like the party
+                        targetType: SocialTargetType.party,
+                        interactionType: SocialInteractionType.like,
+                        activeColor: theme.colorScheme.onPrimary,
+                        inactiveColor: theme.colorScheme.onPrimary.withValues(
+                          alpha: 0.7,
+                        ),
+                        tooltip: '좋아요',
+                      ),
+                    ),
+                ],
+                backgroundColor: theme.colorScheme.primary,
+              ),
+
+              // 2. Main Info
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(MinglitSpacing.medium),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Partner Row
+                      if (partner != null) ...[
+                        GestureDetector(
+                          onTap: () => ref
+                              .read(eventCoordinatorProvider)
+                              .pushPartnerDetail(partner.id),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: MinglitRadius.input, // 12
+                                backgroundImage: partnerProfileImageUrl != null
+                                    ? NetworkImage(partnerProfileImageUrl)
+                                    : null,
+                                child: partnerProfileImageUrl == null
+                                    ? const Icon(
+                                        Icons.store,
+                                        size: MinglitIconSize.xsmall,
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: MinglitSpacing.small),
+                              Flexible(
+                                child: Text(
+                                  partner.name,
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: MinglitSpacing.xsmall),
+                              Icon(
+                                Icons.chevron_right,
+                                size: MinglitIconSize.small,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ],
                           ),
                         ),
+                        const SizedBox(height: MinglitSpacing.small),
                       ],
-                    ),
-                    const SizedBox(height: MinglitSpacing.small),
-                  ],
 
-                  // Title
-                  Text(
-                    eventTitle,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                      // Title
+                      Text(
+                        eventTitle,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: MinglitSpacing.medium),
+
+                      // Info Cards
+                      _InfoTile(
+                        icon: Icons.calendar_today_outlined,
+                        title: dateLabel,
+                        subtitle: '$durationHours시간 진행',
+                      ),
+                      const SizedBox(height: MinglitSpacing.small),
+                      _InfoTile(
+                        icon: Icons.location_on_outlined,
+                        title: location?.name ?? '장소 미정',
+                        subtitle: location?.address ?? '주소 정보 없음',
+                      ),
+
+                      const Divider(height: MinglitSpacing.xlarge),
+
+                      // 3. Description (Rich Text)
+                      Text(
+                        '상세 소개',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: MinglitSpacing.medium),
+                      _QuillViewer(description: party?.description ?? {}),
+
+                      const SizedBox(height: MinglitSpacing.xlarge),
+
+                      // 4. Entry Conditions
+                      _EntryConditionsSection(event: event),
+
+                      const SizedBox(
+                        height: MinglitSpacing.xlarge * 4,
+                      ), // Bottom padding for FAB
+                    ],
                   ),
-                  const SizedBox(height: MinglitSpacing.medium),
-
-                  // Info Cards
-                  _InfoTile(
-                    icon: Icons.calendar_today_outlined,
-                    title: dateLabel,
-                    subtitle:
-                        '${event.endTime.difference(event.startTime).inHours}'
-                        '시간 진행',
-                  ),
-                  const SizedBox(height: MinglitSpacing.small),
-                  _InfoTile(
-                    icon: Icons.location_on_outlined,
-                    title: location?.name ?? '장소 미정',
-                    subtitle: location?.address ?? '주소 정보 없음',
-                  ),
-
-                  const Divider(height: MinglitSpacing.xlarge),
-
-                  // 3. Description (Rich Text)
-                  Text(
-                    '상세 소개',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: MinglitSpacing.medium),
-                  _QuillViewer(description: party?.description ?? {}),
-
-                  const SizedBox(height: MinglitSpacing.xlarge),
-
-                  // 4. Entry Conditions
-                  _EntryConditionsSection(event: event),
-
-                  const SizedBox(
-                    height: MinglitSpacing.xlarge * 4,
-                  ), // Bottom padding for FAB
-                ],
+                ),
               ),
+            ],
+          ),
+        ),
+        if (!_bannerDismissed)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: OpenInAppBanner(
+              onDismiss: () => setState(() => _bannerDismissed = true),
             ),
           ),
-        ],
-      ),
+      ],
     );
   }
 }

@@ -12,6 +12,7 @@ class CertificationServiceImpl implements CertificationService {
     required String merchantUid,
     String? name,
     String? phone,
+    String? mRedirectUrl,
   }) async {
     final completer = Completer<String?>();
 
@@ -24,6 +25,7 @@ class CertificationServiceImpl implements CertificationService {
             merchantUid: merchantUid,
             name: name,
             phone: phone,
+            mRedirectUrl: mRedirectUrl,
           ),
           callback: (Map<String, String> result) {
             if (result['success'] == 'true') {

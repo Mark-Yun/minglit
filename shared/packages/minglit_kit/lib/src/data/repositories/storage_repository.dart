@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:path/path.dart' as p;
@@ -61,6 +63,42 @@ class StorageRepository {
       return url;
     } catch (e, st) {
       Log.e('❌ [StorageRepo] Upload failed', e, st);
+      rethrow;
+    }
+  }
+
+  /// Uploads raw bytes to Supabase Storage and returns the public URL.
+  ///
+  /// [bytes]: The raw bytes to upload.
+  /// [bucket]: Target bucket name (e.g., 'bug-report-attachments').
+  /// [pathPrefix]: Optional folder path prefix.
+  /// [contentType]: MIME type of the content (default: 'image/png').
+  Future<String> uploadBytes({
+    required Uint8List bytes,
+    required String bucket,
+    String? pathPrefix,
+    String contentType = 'image/png',
+  }) async {
+    try {
+      const extension = '.png';
+      final filename = '${const Uuid().v4()}$extension';
+      final fullPath = pathPrefix != null ? '$pathPrefix/$filename' : filename;
+
+      Log.d('Uploading bytes to $bucket/$fullPath...');
+
+      await _supabase.storage
+          .from(bucket)
+          .uploadBinary(
+            fullPath,
+            bytes,
+            fileOptions: FileOptions(contentType: contentType),
+          );
+
+      final url = _supabase.storage.from(bucket).getPublicUrl(fullPath);
+      Log.d('✅ Upload bytes success: $url');
+      return url;
+    } catch (e, st) {
+      Log.e('❌ [StorageRepo] uploadBytes failed', e, st);
       rethrow;
     }
   }

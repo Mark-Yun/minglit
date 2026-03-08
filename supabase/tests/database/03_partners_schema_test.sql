@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(179);
+SELECT plan(171);
 
 -- partners
 SELECT has_table('partners');
@@ -102,6 +102,8 @@ SELECT has_column('partner_applications', 'account_holder');
 SELECT has_column('partner_applications', 'tax_email');
 SELECT has_column('partner_applications', 'biz_registration_path');
 SELECT has_column('partner_applications', 'bankbook_path');
+SELECT has_column('partner_applications', 'profile_image_path');
+SELECT has_column('partner_applications', 'current_step');
 SELECT has_column('partner_applications', 'admin_comment');
 SELECT has_column('partner_applications', 'created_at');
 SELECT has_column('partner_applications', 'updated_at');
@@ -115,17 +117,17 @@ SELECT col_not_null('partner_applications', 'user_id');
 SELECT col_type_is('partner_applications', 'status', 'partner_application_status');
 SELECT col_not_null('partner_applications', 'status');
 SELECT col_has_default('partner_applications', 'status');
-SELECT col_not_null('partner_applications', 'brand_name');
+-- brand_name is now nullable (draft support)
 SELECT col_type_is('partner_applications', 'biz_type', 'business_type');
-SELECT col_not_null('partner_applications', 'biz_type');
-SELECT col_not_null('partner_applications', 'biz_name');
-SELECT col_not_null('partner_applications', 'biz_number');
-SELECT col_not_null('partner_applications', 'representative_name');
-SELECT col_not_null('partner_applications', 'bank_name');
-SELECT col_not_null('partner_applications', 'account_number');
-SELECT col_not_null('partner_applications', 'account_holder');
-SELECT col_not_null('partner_applications', 'biz_registration_path');
-SELECT col_not_null('partner_applications', 'bankbook_path');
+-- biz_type is now nullable (draft support)
+-- biz_name is now nullable (draft support)
+-- biz_number is now nullable (draft support)
+-- representative_name is now nullable (draft support)
+-- bank_name is now nullable (draft support)
+-- account_number is now nullable (draft support)
+-- account_holder is now nullable (draft support)
+-- biz_registration_path is now nullable (draft support)
+-- bankbook_path is now nullable (draft support)
 SELECT col_type_is('partner_applications', 'created_at', 'timestamp with time zone');
 SELECT col_has_default('partner_applications', 'created_at');
 SELECT col_type_is('partner_applications', 'updated_at', 'timestamp with time zone');

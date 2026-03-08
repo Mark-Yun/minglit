@@ -51,7 +51,9 @@ class _PartyCurationPageState extends ConsumerState<PartyCurationPage> {
               );
             }
             return ListView.separated(
-              padding: const EdgeInsets.all(MinglitSpacing.medium),
+              padding: const EdgeInsets.symmetric(
+                vertical: MinglitSpacing.medium,
+              ),
               itemCount: events.length,
               separatorBuilder: (context, index) =>
                   const SizedBox(height: MinglitSpacing.medium),
@@ -59,7 +61,6 @@ class _PartyCurationPageState extends ConsumerState<PartyCurationPage> {
                 final event = events[index];
                 return MinglitEventCard(
                   event: event,
-                  width: double.infinity,
                   onTap: () {
                     eventCoordinator.pushEventDetail(event.id);
                   },

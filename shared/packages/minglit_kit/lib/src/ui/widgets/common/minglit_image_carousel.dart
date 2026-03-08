@@ -8,10 +8,14 @@ import 'package:minglit_kit/src/ui/widgets/common/minglit_image.dart';
 /// Used in Party/Event detail screens.
 class MinglitImageCarousel extends StatefulWidget {
   /// Creates an image carousel for a list of URLs.
+  ///
+  /// When [height] is provided, the carousel uses a fixed height.
+  /// When [height] is null, the carousel uses 16:9 aspect ratio
+  /// based on the available width (responsive layout).
   const MinglitImageCarousel({
     required this.imageUrls,
     super.key,
-    this.height = 300,
+    this.height,
     this.fit = BoxFit.cover,
     this.onImageTap,
   });
@@ -19,8 +23,9 @@ class MinglitImageCarousel extends StatefulWidget {
   /// Image URLs to display in the carousel.
   final List<String> imageUrls;
 
-  /// Height of the carousel viewport.
-  final double height;
+  /// Optional fixed height for the carousel viewport.
+  /// When null, uses 16:9 aspect ratio based on available width.
+  final double? height;
 
   /// BoxFit used for each image.
   final BoxFit fit;
@@ -51,37 +56,44 @@ class _MinglitImageCarouselState extends State<MinglitImageCarousel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final useFixedHeight = widget.height != null;
+
     if (widget.imageUrls.isEmpty) {
-      return Container(
-        height: widget.height,
+      final placeholder = Container(
         width: double.infinity,
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        color: theme.colorScheme.surfaceContainerHighest,
         child: const Icon(Icons.image_not_supported_outlined, size: 48),
       );
+      return useFixedHeight
+          ? SizedBox(height: widget.height, child: placeholder)
+          : AspectRatio(aspectRatio: 16 / 9, child: placeholder);
     }
+
+    Widget carousel = PageView.builder(
+      controller: _pageController,
+      itemCount: widget.imageUrls.length,
+      onPageChanged: (index) => setState(() => _currentIndex = index),
+      itemBuilder: (context, index) {
+        return GestureDetector(
+          onTap: () => widget.onImageTap?.call(index),
+          child: MinglitImage(
+            path: widget.imageUrls[index],
+            fit: widget.fit,
+            width: double.infinity,
+            height: widget.height,
+          ),
+        );
+      },
+    );
+
+    carousel = useFixedHeight
+        ? SizedBox(height: widget.height, child: carousel)
+        : AspectRatio(aspectRatio: 16 / 9, child: carousel);
 
     return Stack(
       children: [
         // 1. Carousel
-        SizedBox(
-          height: widget.height,
-          child: PageView.builder(
-            controller: _pageController,
-            itemCount: widget.imageUrls.length,
-            onPageChanged: (index) => setState(() => _currentIndex = index),
-            itemBuilder: (context, index) {
-              return GestureDetector(
-                onTap: () => widget.onImageTap?.call(index),
-                child: MinglitImage(
-                  path: widget.imageUrls[index],
-                  fit: widget.fit,
-                  width: double.infinity,
-                  height: widget.height,
-                ),
-              );
-            },
-          ),
-        ),
+        carousel,
 
         // 2. Indicator (Page count style)
         if (widget.imageUrls.length > 1)

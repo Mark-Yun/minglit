@@ -22,6 +22,10 @@ class EventCoordinator {
     unawaited(_router.push(EventDetailRoute(eventId: eventId).location));
   }
 
+  void pushPartnerDetail(String partnerId) {
+    unawaited(_router.push(PartnerDetailRoute(partnerId: partnerId).location));
+  }
+
   void goToEventDetail(String eventId) {
     _router.go(EventDetailRoute(eventId: eventId).location);
   }

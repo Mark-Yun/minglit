@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/src/features/auth/logic/auth_controller.dart';
+import 'package:minglit_kit/src/logic/providers/user_profile_provider.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
@@ -44,14 +46,8 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
           );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Switched to $email')),
-        );
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            Navigator.of(context).pop();
-          }
-        });
+        ref.invalidate(currentUserProfileProvider);
+        GoRouter.of(context).go('/');
       }
     } on Exception catch (e, st) {
       Log.e('❌ Failed to switch user to $email', e, st);

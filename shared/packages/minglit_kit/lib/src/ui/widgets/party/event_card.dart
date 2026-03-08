@@ -3,7 +3,6 @@ import 'package:intl/intl.dart';
 import 'package:minglit_kit/src/data/models/event.dart';
 import 'package:minglit_kit/src/data/models/partner.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_chip.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_image.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_skeleton.dart';
 
@@ -16,7 +15,6 @@ class MinglitEventCard extends StatelessWidget {
     required this.event,
     super.key,
     this.onTap,
-    this.width = 240,
   }) : _isLoading = false;
 
   /// Named constructor for loading skeleton state.
@@ -24,7 +22,6 @@ class MinglitEventCard extends StatelessWidget {
     super.key,
     this.event,
     this.onTap,
-    this.width = 240,
   }) : _isLoading = true;
 
   /// Event data to render.
@@ -33,16 +30,13 @@ class MinglitEventCard extends StatelessWidget {
   /// Optional tap handler for the card.
   final VoidCallback? onTap;
 
-  /// Fixed width of the card.
-  final double width;
-
   /// Internal flag for loading state.
   final bool _isLoading;
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading || event == null) {
-      return _EventCardSkeleton(width: width);
+      return const _EventCardSkeleton();
     }
 
     final theme = Theme.of(context);
@@ -79,20 +73,8 @@ class MinglitEventCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: width,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(MinglitRadius.card),
-          boxShadow: [
-            BoxShadow(
-              color: MinglitColors.textPrimary.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
+      child: ColoredBox(
+        color: theme.colorScheme.surface,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -131,23 +113,14 @@ class MinglitEventCard extends StatelessWidget {
                     left: MinglitSpacing.small,
                     child: _PartnerOverlay(partner: partner),
                   ),
-                // D-Day chip + Participant overlay (top-right)
+                // D-Day + Participant overlay (top-right)
                 Positioned(
                   top: MinglitSpacing.small,
                   right: MinglitSpacing.small,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      MinglitChip(
-                        label: dDayLabel,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: MinglitSpacing.xsmall),
-                      _ParticipantOverlay(
-                        current: event!.currentParticipants,
-                        max: event!.maxParticipants,
-                      ),
-                    ],
+                  child: _ParticipantDDayOverlay(
+                    current: event!.currentParticipants,
+                    max: event!.maxParticipants,
+                    dDayLabel: dDayLabel,
                   ),
                 ),
               ],
@@ -155,7 +128,10 @@ class MinglitEventCard extends StatelessWidget {
 
             // Content area
             Padding(
-              padding: const EdgeInsets.all(MinglitSpacing.medium),
+              padding: const EdgeInsets.symmetric(
+                horizontal: MinglitSpacing.medium,
+                vertical: MinglitSpacing.small,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -168,7 +144,7 @@ class MinglitEventCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: MinglitSpacing.xsmall),
+                  const SizedBox(height: 2),
 
                   // Location & Date Row
                   Row(
@@ -208,17 +184,24 @@ class MinglitEventCard extends StatelessWidget {
   }
 }
 
-/// Participant count overlay with battery-style indicator.
+/// Participant count overlay with battery-style indicator and D-day label.
 ///
 /// Displays a 3-segment battery gauge based on participation ratio:
 /// - 0–33%: 1 filled segment (orange)
 /// - 34–66%: 2 filled segments (mint)
 /// - 67–100%: 3 filled segments (purple)
-class _ParticipantOverlay extends StatelessWidget {
-  const _ParticipantOverlay({required this.current, required this.max});
+///
+/// Also displays the D-day label (e.g., "오늘", "D-5", "종료").
+class _ParticipantDDayOverlay extends StatelessWidget {
+  const _ParticipantDDayOverlay({
+    required this.current,
+    required this.max,
+    required this.dDayLabel,
+  });
 
   final int current;
   final int max;
+  final String dDayLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -244,7 +227,7 @@ class _ParticipantOverlay extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: MinglitColors.textPrimary.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(100),
+        borderRadius: BorderRadius.circular(MinglitRadius.small),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -268,15 +251,27 @@ class _ParticipantOverlay extends StatelessWidget {
             '$current/$max',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: MinglitColors.background,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(width: 2),
-          const Icon(
-            Icons.people_outline,
-            size: 11,
-            color: MinglitColors.background,
+          const SizedBox(width: 4),
+          Text(
+            '·',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: MinglitColors.background.withValues(alpha: 0.6),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            dDayLabel,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: MinglitColors.background,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -299,7 +294,7 @@ class _PartnerOverlay extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: MinglitColors.textPrimary.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(100),
+        borderRadius: BorderRadius.circular(MinglitRadius.small),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -320,13 +315,13 @@ class _PartnerOverlay extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 90),
+            constraints: const BoxConstraints(maxWidth: 130),
             child: Text(
               partner.name,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: MinglitColors.background,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -340,28 +335,14 @@ class _PartnerOverlay extends StatelessWidget {
 
 /// Skeleton loader for event card.
 class _EventCardSkeleton extends StatelessWidget {
-  const _EventCardSkeleton({required this.width});
-
-  final double width;
+  const _EventCardSkeleton();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      width: width,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(MinglitRadius.card),
-        boxShadow: [
-          BoxShadow(
-            color: MinglitColors.textPrimary.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
+    return ColoredBox(
+      color: theme.colorScheme.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -371,20 +352,28 @@ class _EventCardSkeleton extends StatelessWidget {
             child: MinglitSkeleton(borderRadius: BorderRadius.zero),
           ),
           Padding(
-            padding: const EdgeInsets.all(MinglitSpacing.medium),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                MinglitSkeleton(width: width * 0.8, height: 16),
-                const SizedBox(height: MinglitSpacing.xsmall),
-                Row(
+            padding: const EdgeInsets.symmetric(
+              horizontal: MinglitSpacing.medium,
+              vertical: MinglitSpacing.small,
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final w = constraints.maxWidth;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    MinglitSkeleton(width: width * 0.5, height: 12),
-                    const Spacer(),
-                    MinglitSkeleton(width: width * 0.2, height: 12),
+                    MinglitSkeleton(width: w * 0.8, height: 16),
+                    const SizedBox(height: MinglitSpacing.xsmall),
+                    Row(
+                      children: [
+                        MinglitSkeleton(width: w * 0.5, height: 12),
+                        const Spacer(),
+                        MinglitSkeleton(width: w * 0.2, height: 12),
+                      ],
+                    ),
                   ],
-                ),
-              ],
+                );
+              },
             ),
           ),
         ],

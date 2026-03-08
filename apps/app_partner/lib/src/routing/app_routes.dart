@@ -7,6 +7,8 @@ import 'package:app_partner/src/features/home/partner_home_page.dart';
 import 'package:app_partner/src/features/member/partner_member_list_page.dart';
 import 'package:app_partner/src/features/member/partner_member_permission_page.dart';
 import 'package:app_partner/src/features/more/more_page.dart';
+import 'package:app_partner/src/features/onboarding/partner_apply_page.dart';
+import 'package:app_partner/src/features/onboarding/partner_apply_status_page.dart';
 import 'package:app_partner/src/features/party/create/party_create_wizard_page.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_page.dart';
 import 'package:app_partner/src/features/party/event/create/event_create_page.dart';
@@ -51,6 +53,25 @@ class LoginRoute extends GoRouteData with $LoginRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const PartnerLoginPage();
+}
+
+/// **Partner Apply Route**: Wizard for partner application.
+@TypedGoRoute<PartnerApplyRoute>(path: '/apply')
+class PartnerApplyRoute extends GoRouteData with $PartnerApplyRoute {
+  const PartnerApplyRoute();
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const PartnerApplyPage();
+}
+
+/// **Partner Apply Status Route**: Application review status page.
+@TypedGoRoute<PartnerApplyStatusRoute>(path: '/apply/status')
+class PartnerApplyStatusRoute extends GoRouteData
+    with $PartnerApplyStatusRoute {
+  const PartnerApplyStatusRoute();
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const PartnerApplyStatusPage();
 }
 
 /// **Notification Center Route**

@@ -92,13 +92,13 @@ mixin _VerificationQueryRepository on _SupabaseVerificationContext {
   Future<List<Verification>> getVerificationsByIds(List<String> ids) async {
     Log.d('getVerificationsByIds called | ids: $ids');
     if (ids.isEmpty) return [];
+    final result = <Verification>[];
     try {
       final data = await supabaseClient
           .from('verifications')
           .select()
           .inFilter('id', ids);
 
-      final result = <Verification>[];
       for (final e in data as List) {
         try {
           result.add(Verification.fromJson(e as Map<String, dynamic>));
@@ -113,6 +113,13 @@ mixin _VerificationQueryRepository on _SupabaseVerificationContext {
       Log.d('getVerificationsByIds success | count: ${result.length}');
       return result;
     } catch (e, st) {
+      if (e is TypeError || e is FormatException) {
+        Log.w(
+          '⚠️ [VerificationRepo] getVerificationsByIds type/format error,'
+          ' returning partial results: $e',
+        );
+        return result;
+      }
       Log.e('❌ [VerificationRepo] getVerificationsByIds Error', e, st);
       rethrow;
     }
@@ -190,12 +197,14 @@ mixin _VerificationQueryRepository on _SupabaseVerificationContext {
                 orElse: () => null,
               );
 
-          result.add(VerificationRequirementStatus(
-            master: Verification.fromJson(map),
-            userVerification: original,
-            activeSubmission: submission,
-            verifiedResult: verifiedResult,
-          ));
+          result.add(
+            VerificationRequirementStatus(
+              master: Verification.fromJson(map),
+              userVerification: original,
+              activeSubmission: submission,
+              verifiedResult: verifiedResult,
+            ),
+          );
         } on Object catch (parseError) {
           Log.w(
             '⚠️ [VerificationRepo] Skipping invalid'

@@ -24,7 +24,8 @@ GoRouter goRouter(Ref ref) {
     initialLocation: '/',
     refreshListenable: authState,
     redirect: (context, state) {
-      final isLoggedIn = ref.read(currentUserProvider) != null;
+      // Supabase SDK에서 직접 읽음 — Riverpod 캐시 갱신 타이밍과 무관하게 정확
+      final isLoggedIn = Supabase.instance.client.auth.currentUser != null;
       final isLoggingIn = state.uri.path == '/login';
       final path = state.uri.path;
 
@@ -34,8 +35,16 @@ GoRouter goRouter(Ref ref) {
       // Allow dev pages without authentication
       if (path.startsWith('/dev')) return null;
 
-      // 1. 이미 로그인 상태인데 로그인 페이지로 가려면 홈으로 보냄
+      // 1. 이미 로그인 상태인데 로그인 페이지로 가려면 원래 목적지 또는 홈으로
       if (isLoggedIn && isLoggingIn) {
+        final from = state.uri.queryParameters['from'];
+        // from 검증: 내부 경로만 허용, 루프 방지
+        if (from != null &&
+            from.startsWith('/') &&
+            !from.startsWith('//') &&
+            !from.startsWith('/login')) {
+          return from;
+        }
         return '/';
       }
 

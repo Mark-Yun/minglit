@@ -162,27 +162,27 @@ class _PartnerApplicationDetailPageState
                 _buildSectionHeader(context.l10n.appDetail_section_basic),
                 _buildInfoRow(
                   context.l10n.partnerApplication_field_brandName,
-                  app.brandName,
+                  app.brandName ?? '-',
                 ),
                 _buildInfoRow(
                   context.l10n.partnerApplication_field_bizName,
-                  app.bizName,
+                  app.bizName ?? '-',
                 ),
                 _buildInfoRow(
                   context.l10n.partnerApplication_field_repName,
-                  app.representativeName,
+                  app.representativeName ?? '-',
                 ),
                 _buildInfoRow(
                   context.l10n.partnerApplication_field_bizNumber,
-                  app.bizNumber,
+                  app.bizNumber ?? '-',
                 ),
                 _buildInfoRow(
                   context.l10n.partnerApplication_field_phone,
-                  app.contactPhone,
+                  app.contactPhone ?? '-',
                 ),
                 _buildInfoRow(
                   context.l10n.partnerApplication_field_address,
-                  app.address,
+                  app.address ?? '-',
                 ),
                 const SizedBox(height: MinglitSpacing.large),
                 _buildSectionHeader(context.l10n.appDetail_section_files),

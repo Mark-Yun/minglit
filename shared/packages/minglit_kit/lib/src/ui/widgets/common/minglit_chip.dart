@@ -88,7 +88,7 @@ class MinglitChip extends StatelessWidget {
       padding: padding,
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(100),
+        borderRadius: BorderRadius.circular(MinglitRadius.small),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.3),
           width: 0.5,
@@ -116,7 +116,7 @@ class MinglitChip extends StatelessWidget {
     if (onTap != null) {
       return InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(100),
+        borderRadius: BorderRadius.circular(MinglitRadius.small),
         child: widget,
       );
     }

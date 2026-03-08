@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -15,16 +14,11 @@ class LoginPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Listen for AuthController changes
+    // Listen for AuthController error state only.
+    // Navigation is handled by GoRouter's refreshListenable + redirect.
     ref.listen(authControllerProvider, (previous, next) {
       if (next is AsyncError) {
         handleMinglitError(context, next.error, next.stackTrace);
-      } else if (next is AsyncData && !next.isLoading) {
-        // Login Success
-        Log.d('🔑 [Auth] Login Success! from: $from');
-        if (from != null) {
-          ref.read(authCoordinatorProvider).goToReturnLocation(from!);
-        }
       }
     });
 

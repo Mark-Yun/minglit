@@ -104,7 +104,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 );
               }
               return ListView.separated(
-                padding: const EdgeInsets.all(MinglitSpacing.medium),
+                padding: const EdgeInsets.symmetric(
+                  vertical: MinglitSpacing.medium,
+                ),
                 itemCount: events.length,
                 separatorBuilder: (_, _) =>
                     const SizedBox(height: MinglitSpacing.small),

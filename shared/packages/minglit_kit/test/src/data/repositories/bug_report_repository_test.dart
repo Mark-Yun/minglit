@@ -64,6 +64,76 @@ void main() {
           throwsA(isA<Exception>()),
         );
       });
+
+      test('includes optional parameters when provided', () async {
+        when(
+          () => mockFunctions.invoke(
+            'report-bug',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(status: 200, data: {'ok': true}),
+        );
+
+        await expectLater(
+          repository.reportBug(
+            title: '버그 제목',
+            description: '버그 설명',
+            logs: 'error log here',
+            screenshotUrl: 'https://example.com/screenshot.png',
+            environment: {'os': 'iOS', 'version': '17.0'},
+            platform: 'iOS',
+          ),
+          completes,
+        );
+
+        final captured = verify(
+          () => mockFunctions.invoke(
+            'report-bug',
+            body: captureAny(named: 'body'),
+          ),
+        ).captured;
+
+        final body = captured.first as Map<String, dynamic>;
+        expect(
+          body['screenshotUrl'],
+          equals('https://example.com/screenshot.png'),
+        );
+        expect(body['environment'], equals({'os': 'iOS', 'version': '17.0'}));
+        expect(body['platform'], equals('iOS'));
+      });
+
+      test('excludes optional parameters when not provided', () async {
+        when(
+          () => mockFunctions.invoke(
+            'report-bug',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(status: 200, data: {'ok': true}),
+        );
+
+        await expectLater(
+          repository.reportBug(
+            title: '버그 제목',
+            description: '버그 설명',
+            logs: 'error log here',
+          ),
+          completes,
+        );
+
+        final captured = verify(
+          () => mockFunctions.invoke(
+            'report-bug',
+            body: captureAny(named: 'body'),
+          ),
+        ).captured;
+
+        final body = captured.first as Map<String, dynamic>;
+        expect(body.containsKey('screenshotUrl'), isFalse);
+        expect(body.containsKey('environment'), isFalse);
+        expect(body.containsKey('platform'), isFalse);
+      });
     });
   });
 }

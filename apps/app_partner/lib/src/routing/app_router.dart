@@ -1,3 +1,4 @@
+import 'package:app_partner/src/logic/onboarding_state_provider.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -14,21 +15,27 @@ final rootNavigatorKey = GlobalKey<NavigatorState>();
 GoRouter goRouter(Ref ref) {
   // Listen to auth state changes to trigger router refresh.
   final authState = ValueNotifier<AuthState?>(null);
+  final onboardingRefresh = ValueNotifier<int>(0);
 
-  ref.listen(authStateChangesProvider, (_, next) {
-    next.whenData((state) {
-      authState.value = state;
+  ref
+    ..listen(authStateChangesProvider, (_, next) {
+      next.whenData((state) {
+        authState.value = state;
+      });
+    })
+    ..listen(onboardingStateProvider, (_, _) {
+      onboardingRefresh.value++;
     });
-  });
 
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: '/',
-    refreshListenable: authState,
+    refreshListenable: Listenable.merge([authState, onboardingRefresh]),
     redirect: (context, state) {
       // Access global auth state
       final isLoggedIn = ref.read(currentUserProvider) != null;
       final isLoggingIn = state.uri.path == '/login';
+      final isApplyPage = state.uri.path.startsWith('/apply');
 
       // Allow dev pages without authentication
       if (state.uri.path.startsWith('/dev')) return null;
@@ -41,6 +48,30 @@ GoRouter goRouter(Ref ref) {
       // 2. If logged in and trying to access login page -> Redirect to Home
       if (isLoggedIn && isLoggingIn) {
         return '/';
+      }
+
+      // 3. Check onboarding state for authenticated users
+      if (isLoggedIn) {
+        final onboarding = ref.read(onboardingStateProvider);
+        if (onboarding.hasValue) {
+          final onboardingState = onboarding.value!;
+          // Redirect to apply if needs application or has draft
+          if (!isApplyPage &&
+              (onboardingState == OnboardingState.needsApplication ||
+                  onboardingState == OnboardingState.draftInProgress)) {
+            return '/apply';
+          }
+          // Redirect to status if pending/needs_correction
+          if (!isApplyPage &&
+              (onboardingState == OnboardingState.pendingReview ||
+                  onboardingState == OnboardingState.needsCorrection)) {
+            return '/apply/status';
+          }
+          // If on apply page but already has partner, redirect to home
+          if (isApplyPage && onboardingState == OnboardingState.hasPartner) {
+            return '/';
+          }
+        }
       }
 
       // No redirect needed

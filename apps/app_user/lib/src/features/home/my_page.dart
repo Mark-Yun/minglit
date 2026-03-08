@@ -1,6 +1,7 @@
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class MyPage extends ConsumerWidget {
@@ -129,7 +130,7 @@ class MyPage extends ConsumerWidget {
             onTap: () async {
               await ref.read(authControllerProvider.notifier).signOut();
               if (context.mounted) {
-                ref.read(authCoordinatorProvider).goToLogin();
+                GoRouter.of(context).go('/');
               }
             },
           ),

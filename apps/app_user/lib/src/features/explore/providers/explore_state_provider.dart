@@ -148,10 +148,12 @@ List<Event> filteredEvents(
 
   var result = events;
 
-  // 1. Eligibility filter
+  // 1. Eligibility filter — only apply when user is identity-verified.
+  // Unverified users have no approved verifications, so the filter would
+  // return an empty list. Skip it to show the full event list instead.
   if (filters.eligibilityEnabled) {
     final eligibility = ref.watch(bulkEligibilityDataProvider).value;
-    if (eligibility != null) {
+    if (eligibility != null && (eligibility.userProfile?.isVerified ?? false)) {
       result = EligibilityFilter.filter(
         events: result,
         eligibilityData: eligibility,

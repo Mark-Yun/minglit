@@ -265,7 +265,12 @@ class _LoginButton extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Text(label, style: Theme.of(context).textTheme.titleSmall),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: foregroundColor,
+              ),
+            ),
           ],
         ),
       ),
