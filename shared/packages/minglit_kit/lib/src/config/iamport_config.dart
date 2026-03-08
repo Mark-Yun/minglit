@@ -16,6 +16,7 @@ class IamportConfig {
   /// Mobile redirect URL for Iamport certification cancel flow.
   final String? mobileRedirectUrl;
 }
+
 /// Provides the current [IamportConfig].
 @Riverpod(keepAlive: true)
 IamportConfig iamportConfig(Ref ref) {
@@ -30,6 +31,8 @@ IamportConfig iamportConfig(Ref ref) {
 
   return IamportConfig(
     userCode: userCode,
-    mobileRedirectUrl: mobileRedirectScheme.isEmpty ? null : '$mobileRedirectScheme://iamport',
+    mobileRedirectUrl: mobileRedirectScheme.isEmpty
+        ? null
+        : '$mobileRedirectScheme://iamport',
   );
 }
