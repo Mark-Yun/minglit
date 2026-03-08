@@ -37,7 +37,7 @@ class BugReporterWrapper extends StatefulWidget {
 }
 
 class _BugReporterWrapperState extends State<BugReporterWrapper> {
-ShakeDetector? _detector;
+  ShakeDetector? _detector;
   bool _isDialogShowing = false;
 
   @override
@@ -69,7 +69,7 @@ ShakeDetector? _detector;
   BuildContext? get _dialogContext =>
       widget.navigatorKey?.currentState?.overlay?.context ?? context;
 
-Future<void> _showReportDialog() async {
+  Future<void> _showReportDialog() async {
     if (!mounted) return;
     if (_isDialogShowing) {
       // Dismiss existing dialog before showing a fresh one

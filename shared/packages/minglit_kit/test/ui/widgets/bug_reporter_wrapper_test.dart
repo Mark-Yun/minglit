@@ -9,7 +9,7 @@ void main() {
       const testChild = Text('Test Child Widget');
 
       await tester.pumpWidget(
-        ProviderScope(
+        const ProviderScope(
           child: MaterialApp(
             home: Scaffold(
               body: BugReporterWrapper(
@@ -26,12 +26,12 @@ void main() {
 
     testWidgets('does not render FAB when disabled', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
+        const ProviderScope(
           child: MaterialApp(
             home: Scaffold(
               body: BugReporterWrapper(
                 enabled: false,
-                child: const Text('Test Content'),
+                child: Text('Test Content'),
               ),
             ),
           ),
@@ -44,12 +44,11 @@ void main() {
 
     testWidgets('widget builds without errors', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
+        const ProviderScope(
           child: MaterialApp(
             home: Scaffold(
               body: BugReporterWrapper(
-                enabled: true,
-                child: const Center(
+                child: Center(
                   child: Text('Main Content'),
                 ),
               ),
@@ -64,12 +63,12 @@ void main() {
 
     testWidgets('renders Stack with child and optional FAB', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
+        const ProviderScope(
           child: MaterialApp(
             home: Scaffold(
               body: BugReporterWrapper(
                 enabled: false,
-                child: const Text('Stack Child'),
+                child: Text('Stack Child'),
               ),
             ),
           ),
@@ -106,12 +105,11 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        ProviderScope(
+        const ProviderScope(
           child: MaterialApp(
             home: Scaffold(
               body: BugReporterWrapper(
-                enabled: true,
-                child: const Text('Always Visible'),
+                child: Text('Always Visible'),
               ),
             ),
           ),
