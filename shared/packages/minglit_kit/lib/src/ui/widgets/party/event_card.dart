@@ -222,11 +222,11 @@ class _ParticipantDDayOverlay extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: MinglitSpacing.xsmall2,
-        vertical: MinglitSpacing.xxsmall,
+        horizontal: 8,
+        vertical: 4,
       ),
       decoration: BoxDecoration(
-        color: MinglitColors.textPrimary.withValues(alpha: 0.45),
+        color: MinglitColors.textPrimary.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(MinglitRadius.small),
       ),
       child: Row(
@@ -252,7 +252,7 @@ class _ParticipantDDayOverlay extends StatelessWidget {
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: MinglitColors.background,
               fontSize: 13,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w400,
             ),
           ),
           const SizedBox(width: 4),
@@ -261,7 +261,7 @@ class _ParticipantDDayOverlay extends StatelessWidget {
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: MinglitColors.background.withValues(alpha: 0.6),
               fontSize: 13,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w400,
             ),
           ),
           const SizedBox(width: 4),
@@ -270,7 +270,7 @@ class _ParticipantDDayOverlay extends StatelessWidget {
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: MinglitColors.background,
               fontSize: 13,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w400,
             ),
           ),
         ],
@@ -289,11 +289,11 @@ class _PartnerOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: MinglitSpacing.xsmall2,
-        vertical: MinglitSpacing.xxsmall,
+        horizontal: 8,
+        vertical: 4,
       ),
       decoration: BoxDecoration(
-        color: MinglitColors.textPrimary.withValues(alpha: 0.45),
+        color: MinglitColors.textPrimary.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(MinglitRadius.small),
       ),
       child: Row(
@@ -321,7 +321,7 @@ class _PartnerOverlay extends StatelessWidget {
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: MinglitColors.background,
                 fontSize: 13,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w400,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
