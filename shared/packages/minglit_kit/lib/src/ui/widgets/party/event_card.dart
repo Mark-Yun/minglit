@@ -232,7 +232,7 @@ class _ParticipantDDayOverlay extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
+          const Icon(
             Icons.person,
             size: 13,
             color: MinglitColors.background,
@@ -271,7 +271,7 @@ class _ParticipantDDayOverlay extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 4),
-          Icon(
+          const Icon(
             Icons.calendar_today,
             size: 13,
             color: MinglitColors.background,
