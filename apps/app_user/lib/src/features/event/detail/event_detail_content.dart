@@ -55,7 +55,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
     final eventTitle = party?.title ?? event.title ?? '제목 없음';
     final user = ref.watch(currentUserProvider);
     final iconColor =
-        _showTitle ? theme.colorScheme.onSurface : Colors.white;
+        _showTitle ? theme.colorScheme.onPrimary : Colors.white;
 
     // Date Format
     final dateLabel = DateFormat(
@@ -82,7 +82,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                     ? Text(
                         eventTitle,
                         style: theme.textTheme.titleMedium?.copyWith(
-                          color: theme.colorScheme.onSurface,
+                          color: theme.colorScheme.onPrimary,
                           fontWeight: FontWeight.w600,
                         ),
                       )
@@ -151,7 +151,8 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                       ),
                     ),
                 ],
-                backgroundColor: theme.scaffoldBackgroundColor,
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: Colors.white,
               ),
 
               // 2. Main Info
