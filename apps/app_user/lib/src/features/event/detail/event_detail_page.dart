@@ -29,6 +29,7 @@ class EventDetailPage extends ConsumerWidget {
       body: MinglitAsyncValueWidget(
         value: eventAsync,
         data: (event) => _EventDetailContent(event: event),
+        loading: () => const _EventDetailContentSkeleton(),
       ),
       // ignore: use_minglit_async_value_widget, returns skeleton/shrink for bottomNavigationBar
       bottomNavigationBar: eventAsync.when(
