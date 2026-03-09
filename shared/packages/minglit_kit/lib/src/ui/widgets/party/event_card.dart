@@ -232,6 +232,12 @@ class _ParticipantDDayOverlay extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          Icon(
+            Icons.person,
+            size: 13,
+            color: MinglitColors.background,
+          ),
+          const SizedBox(width: 3),
           // 3-segment battery gauge
           for (var i = 0; i < 3; i++) ...[
             if (i > 0) const SizedBox(width: 2),
@@ -265,6 +271,12 @@ class _ParticipantDDayOverlay extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 4),
+          Icon(
+            Icons.calendar_today,
+            size: 13,
+            color: MinglitColors.background,
+          ),
+          const SizedBox(width: 3),
           Text(
             dDayLabel,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
