@@ -54,6 +54,8 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
     final partnerProfileImageUrl = partner?.profileImageUrl;
     final eventTitle = party?.title ?? event.title ?? '제목 없음';
     final user = ref.watch(currentUserProvider);
+    final iconColor =
+        _showTitle ? theme.colorScheme.onSurface : Colors.white;
 
     // Date Format
     final dateLabel = DateFormat(
@@ -80,7 +82,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                     ? Text(
                         eventTitle,
                         style: theme.textTheme.titleMedium?.copyWith(
-                          color: theme.colorScheme.onPrimary,
+                          color: theme.colorScheme.onSurface,
                           fontWeight: FontWeight.w600,
                         ),
                       )
@@ -88,12 +90,35 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                 centerTitle: false,
                 flexibleSpace: FlexibleSpaceBar(
                   collapseMode: CollapseMode.pin,
-                  background: MinglitImageCarousel(
-                    imageUrls: party?.imageUrls ?? [],
-                    height: expandedHeight,
+                  background: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      MinglitImageCarousel(
+                        imageUrls: party?.imageUrls ?? [],
+                        height: expandedHeight,
+                      ),
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: topPadding + kToolbarHeight + 16,
+                        child: const DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.black45,
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                leading: BackButton(color: theme.colorScheme.onPrimary),
+                leading: BackButton(color: iconColor),
                 actions: [
                   IconButton(
                     onPressed: () {
@@ -107,7 +132,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                     },
                     icon: Icon(
                       Icons.share_outlined,
-                      color: theme.colorScheme.onPrimary,
+                      color: iconColor,
                     ),
                     tooltip: '공유하기',
                   ),
@@ -120,13 +145,13 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                         targetId: event.partyId, // Like the party
                         targetType: SocialTargetType.party,
                         interactionType: SocialInteractionType.like,
-                        activeColor: theme.colorScheme.onPrimary,
-                        inactiveColor: theme.colorScheme.onPrimary,
+                        activeColor: iconColor,
+                        inactiveColor: iconColor,
                         tooltip: '좋아요',
                       ),
                     ),
                 ],
-                backgroundColor: theme.colorScheme.primary,
+                backgroundColor: theme.scaffoldBackgroundColor,
               ),
 
               // 2. Main Info
@@ -257,17 +282,39 @@ class _EventDetailContentSkeleton extends StatelessWidget {
         SliverAppBar(
           expandedHeight: expandedHeight,
           pinned: true,
-          leading: BackButton(color: theme.colorScheme.onPrimary),
-          backgroundColor: theme.colorScheme.primary,
+          leading: const BackButton(),
+          backgroundColor: theme.scaffoldBackgroundColor,
           flexibleSpace: FlexibleSpaceBar(
             collapseMode: CollapseMode.pin,
-            background: MinglitSkeleton(
-              width: double.infinity,
-              height: expandedHeight,
+            background: Stack(
+              fit: StackFit.expand,
+              children: [
+                MinglitSkeleton(
+                  width: double.infinity,
+                  height: expandedHeight,
+                ),
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: topPadding + kToolbarHeight + 16,
+                  child: const DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black26,
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-
         // 2. Main Info
         SliverToBoxAdapter(
           child: Padding(
