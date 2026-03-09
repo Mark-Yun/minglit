@@ -54,6 +54,8 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
     final partnerProfileImageUrl = partner?.profileImageUrl;
     final eventTitle = party?.title ?? event.title ?? '제목 없음';
     final user = ref.watch(currentUserProvider);
+    final iconColor =
+        _showTitle ? theme.colorScheme.onSurface : Colors.white;
 
     // Date Format
     final dateLabel = DateFormat(
@@ -80,7 +82,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                     ? Text(
                         eventTitle,
                         style: theme.textTheme.titleMedium?.copyWith(
-                          color: _showTitle ? theme.colorScheme.onSurface : theme.colorScheme.onPrimary,
+                          color: theme.colorScheme.onSurface,
                           fontWeight: FontWeight.w600,
                         ),
                       )
@@ -100,7 +102,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                         left: 0,
                         right: 0,
                         height: topPadding + kToolbarHeight + 16,
-                        child: DecoratedBox(
+                        child: const DecoratedBox(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
@@ -116,7 +118,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                     ],
                   ),
                 ),
-                leading: BackButton(color: _showTitle ? theme.colorScheme.onSurface : Colors.white),
+                leading: BackButton(color: iconColor),
                 actions: [
                   IconButton(
                     onPressed: () {
@@ -130,7 +132,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                     },
                     icon: Icon(
                       Icons.share_outlined,
-                      color: _showTitle ? theme.colorScheme.onSurface : Colors.white,
+                      color: iconColor,
                     ),
                     tooltip: '공유하기',
                   ),
@@ -143,8 +145,8 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                         targetId: event.partyId, // Like the party
                         targetType: SocialTargetType.party,
                         interactionType: SocialInteractionType.like,
-                        activeColor: _showTitle ? theme.colorScheme.onSurface : Colors.white,
-                        inactiveColor: _showTitle ? theme.colorScheme.onSurface : Colors.white,
+                        activeColor: iconColor,
+                        inactiveColor: iconColor,
                         tooltip: '좋아요',
                       ),
                     ),
