@@ -54,8 +54,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
     final partnerProfileImageUrl = partner?.profileImageUrl;
     final eventTitle = party?.title ?? event.title ?? '제목 없음';
     final user = ref.watch(currentUserProvider);
-    final iconColor =
-        _showTitle ? theme.colorScheme.onPrimary : Colors.white;
+    final iconColor = _showTitle ? theme.colorScheme.onSurface : Colors.white;
 
     // Date Format
     final dateLabel = DateFormat(
@@ -352,13 +351,13 @@ class _EventDetailContentSkeleton extends StatelessWidget {
                 const SizedBox(height: MinglitSpacing.medium),
 
                 // Info Cards
-                Row(
+                const Row(
                   children: [
-                    const MinglitSkeleton(width: 24, height: 24),
-                    const SizedBox(width: MinglitSpacing.small),
+                    MinglitSkeleton(width: 24, height: 24),
+                    SizedBox(width: MinglitSpacing.small),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         MinglitSkeleton(width: 120, height: 16),
                         SizedBox(height: MinglitSpacing.xsmall),
                         MinglitSkeleton(width: 80, height: 14),
@@ -367,13 +366,13 @@ class _EventDetailContentSkeleton extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: MinglitSpacing.small),
-                Row(
+                const Row(
                   children: [
-                    const MinglitSkeleton(width: 24, height: 24),
-                    const SizedBox(width: MinglitSpacing.small),
+                    MinglitSkeleton(width: 24, height: 24),
+                    SizedBox(width: MinglitSpacing.small),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         MinglitSkeleton(width: 140, height: 16),
                         SizedBox(height: MinglitSpacing.xsmall),
                         MinglitSkeleton(width: 100, height: 14),
