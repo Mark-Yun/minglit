@@ -26,9 +26,7 @@ class _PartnerApplyPageState extends ConsumerState<PartnerApplyPage> {
     super.initState();
     _pageController = PageController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      unawaited(
-        ref.read(partnerApplyControllerProvider.notifier).loadDraft(),
-      );
+      unawaited(ref.read(partnerApplyControllerProvider.notifier).loadDraft());
     });
   }
 
@@ -60,30 +58,30 @@ class _PartnerApplyPageState extends ConsumerState<PartnerApplyPage> {
 
     // Sync PageController with state
     ref
-      ..listen(
-        partnerApplyControllerProvider.select((s) => s.currentStep),
-        (prev, next) {
-          if (prev != next) {
-            _onStepChanged(next);
-          }
-        },
-      )
+      ..listen(partnerApplyControllerProvider.select((s) => s.currentStep), (
+        prev,
+        next,
+      ) {
+        if (prev != next) {
+          _onStepChanged(next);
+        }
+      })
       // Listen to submission status
-      ..listen(
-        partnerApplyControllerProvider.select((s) => s.status),
-        (prev, next) {
-          next.whenOrNull(
-            data: (_) {
-              if (prev?.isLoading ?? false) {
-                context.go('/apply/status');
-              }
-            },
-            error: (error, st) {
-              handleMinglitError(context, error, st);
-            },
-          );
-        },
-      );
+      ..listen(partnerApplyControllerProvider.select((s) => s.status), (
+        prev,
+        next,
+      ) {
+        next.whenOrNull(
+          data: (_) {
+            if (prev?.isLoading ?? false) {
+              context.go('/apply/status');
+            }
+          },
+          error: (error, st) {
+            handleMinglitError(context, error, st);
+          },
+        );
+      });
 
     final isLastStep = state.currentStep == totalSteps - 1;
     final isLoading = state.isSaving || state.isSubmitting;
@@ -91,6 +89,22 @@ class _PartnerApplyPageState extends ConsumerState<PartnerApplyPage> {
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(
         title: _getStepTitle(context, state.currentStep),
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              if (value == 'logout') {
+                _showLogoutDialog(context, ref);
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              PopupMenuItem<String>(
+                value: 'logout',
+                child: Text(context.l10n.home_button_logout),
+              ),
+            ],
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -120,9 +134,7 @@ class _PartnerApplyPageState extends ConsumerState<PartnerApplyPage> {
             const Positioned.fill(
               child: ColoredBox(
                 color: MinglitColors.scrim,
-                child: Center(
-                  child: MinglitCircularProgressIndicator(),
-                ),
+                child: Center(child: MinglitCircularProgressIndicator()),
               ),
             ),
         ],
@@ -180,6 +192,34 @@ class _PartnerApplyPageState extends ConsumerState<PartnerApplyPage> {
           ),
         ),
       ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(context.l10n.home_button_logout),
+          content: const Text('로그아웃 하시겠습니까?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(context.l10n.common_button_cancel),
+            ),
+            TextButton(
+              onPressed: () async {
+                final authRepo = ref.read(authRepositoryProvider);
+                await authRepo.signOut();
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text(context.l10n.home_button_logout),
+            ),
+          ],
+        );
+      },
     );
   }
 
