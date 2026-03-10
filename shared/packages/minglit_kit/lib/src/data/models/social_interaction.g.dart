@@ -42,4 +42,5 @@ const _$SocialInteractionTypeEnumMap = {
   SocialInteractionType.subscribe: 'subscribe',
   SocialInteractionType.bookmark: 'bookmark',
   SocialInteractionType.block: 'block',
+  SocialInteractionType.report: 'report',
 };

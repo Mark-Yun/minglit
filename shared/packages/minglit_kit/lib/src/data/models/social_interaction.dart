@@ -31,6 +31,9 @@ enum SocialInteractionType {
 
   /// Indicates a block action.
   block,
+
+  /// Indicates a report action.
+  report,
 }
 
 /// Represents a user interaction with a social target.
