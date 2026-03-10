@@ -173,10 +173,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.black45,
-                                Colors.transparent,
-                              ],
+                              colors: [Colors.black45, Colors.transparent],
                             ),
                           ),
                         ),
@@ -196,10 +193,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                         ),
                       );
                     },
-                    icon: Icon(
-                      Icons.share_outlined,
-                      color: iconColor,
-                    ),
+                    icon: Icon(Icons.share_outlined, color: iconColor),
                     tooltip: '공유하기',
                   ),
                   if (user != null)
@@ -323,13 +317,6 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        '상세 소개',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: MinglitSpacing.medium),
                       _QuillViewer(description: party?.description ?? {}),
                     ],
                   ),
@@ -495,10 +482,7 @@ class _EventDetailContentSkeleton extends StatelessWidget {
             background: Stack(
               fit: StackFit.expand,
               children: [
-                MinglitSkeleton(
-                  width: double.infinity,
-                  height: expandedHeight,
-                ),
+                MinglitSkeleton(width: double.infinity, height: expandedHeight),
                 Positioned(
                   top: 0,
                   left: 0,
@@ -509,10 +493,7 @@ class _EventDetailContentSkeleton extends StatelessWidget {
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.black26,
-                          Colors.transparent,
-                        ],
+                        colors: [Colors.black26, Colors.transparent],
                       ),
                     ),
                   ),
