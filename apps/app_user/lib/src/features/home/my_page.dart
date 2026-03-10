@@ -1,5 +1,6 @@
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
+import 'package:app_user/src/features/settings/blocked_partners_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -119,6 +120,17 @@ class MyPage extends ConsumerWidget {
             onTap: homeCoordinator.pushNotificationSettings,
           ),
           const ThemeSettingsTile(),
+          ListTile(
+            leading: const Icon(Icons.block),
+            title: const Text('차단 목록'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                builder: (_) => const BlockedPartnersPage(),
+              ),
+            ),
+          ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout, color: MinglitColors.error),
