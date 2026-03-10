@@ -58,7 +58,7 @@ class Step3ContactSettlement extends ConsumerWidget {
           const SizedBox(height: MinglitSpacing.large),
 
           Text(
-            context.l10n.partnerApplication_field_address,
+            '사업자 등록 주소',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -66,6 +66,7 @@ class Step3ContactSettlement extends ConsumerWidget {
           const SizedBox(height: MinglitSpacing.medium),
           TextFormField(
             initialValue: state.address,
+            readOnly: true,
             decoration: InputDecoration(
               hintText: context.l10n.partnerApplication_hint_address,
               border: OutlineInputBorder(
@@ -73,6 +74,13 @@ class Step3ContactSettlement extends ConsumerWidget {
               ),
             ),
             onChanged: (val) => notifier.updateField('address', val),
+          ),
+          const SizedBox(height: MinglitSpacing.small),
+          Text(
+            '등록된 주소는 파트너 정보에 공개됩니다',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
+            ),
           ),
           const SizedBox(height: MinglitSpacing.large),
 
