@@ -35,4 +35,5 @@ export 'src/ui/widgets/party/event_card.dart';
 export 'src/ui/widgets/party/location_map_view.dart';
 export 'src/utils/environment_info.dart';
 export 'src/utils/feedback_ext.dart';
+export 'src/utils/layout_dump.dart';
 export 'src/utils/splash_screen.dart';
