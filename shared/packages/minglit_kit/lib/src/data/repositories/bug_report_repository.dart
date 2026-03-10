@@ -16,6 +16,7 @@ class BugReportRepository {
     String? screenshotUrl,
     Map<String, dynamic>? environment,
     String? platform,
+    String? layoutDumpUrl,
   }) async {
     try {
       await _supabase.functions.invoke(
@@ -28,6 +29,7 @@ class BugReportRepository {
           ...?platform != null ? {'platform': platform} : null,
           ...?screenshotUrl != null ? {'screenshotUrl': screenshotUrl} : null,
           ...?environment != null ? {'environment': environment} : null,
+          ...?layoutDumpUrl != null ? {'layoutDumpUrl': layoutDumpUrl} : null,
         },
       );
       Log.i('Bug reported successfully via Edge Function');
