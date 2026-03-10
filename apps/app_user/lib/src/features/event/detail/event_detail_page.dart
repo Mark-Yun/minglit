@@ -26,16 +26,22 @@ class EventDetailPage extends ConsumerWidget {
     final eventAsync = ref.watch(eventDetailControllerProvider(eventId));
 
     return Scaffold(
-      body: MinglitAsyncValueWidget(
-        value: eventAsync,
-        data: (event) => _EventDetailContent(event: event),
-        loading: () => const _EventDetailContentSkeleton(),
-      ),
-      // ignore: use_minglit_async_value_widget, returns skeleton/shrink for bottomNavigationBar
-      bottomNavigationBar: eventAsync.when(
-        data: (event) => _BottomTicketBar(event: event),
-        loading: () => const _BottomTicketBarSkeleton(),
-        error: (_, _) => const SizedBox.shrink(),
+      body: Column(
+        children: [
+          Expanded(
+            child: MinglitAsyncValueWidget(
+              value: eventAsync,
+              data: (event) => _EventDetailContent(event: event),
+              loading: () => const _EventDetailContentSkeleton(),
+            ),
+          ),
+          // ignore: use_minglit_async_value_widget, returns skeleton/shrink for bottom bar
+          eventAsync.when(
+            data: (event) => _BottomTicketBar(event: event),
+            loading: () => const _BottomTicketBarSkeleton(),
+            error: (_, _) => const SizedBox.shrink(),
+          ),
+        ],
       ),
     );
   }

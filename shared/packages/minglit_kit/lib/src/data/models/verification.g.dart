@@ -9,9 +9,9 @@ part of 'verification.dart';
 _VerificationFormField _$VerificationFormFieldFromJson(
   Map<String, dynamic> json,
 ) => _VerificationFormField(
-  key: json['key'] as String,
   type: json['type'] as String,
   label: json['label'] as String,
+  key: json['key'] as String? ?? '',
   required: json['required'] as bool? ?? true,
   placeholder: json['placeholder'] as String?,
   options: (json['options'] as List<dynamic>?)
@@ -22,9 +22,9 @@ _VerificationFormField _$VerificationFormFieldFromJson(
 Map<String, dynamic> _$VerificationFormFieldToJson(
   _VerificationFormField instance,
 ) => <String, dynamic>{
-  'key': instance.key,
   'type': instance.type,
   'label': instance.label,
+  'key': instance.key,
   'required': instance.required,
   'placeholder': instance.placeholder,
   'options': instance.options,

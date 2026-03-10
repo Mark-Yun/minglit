@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -9,6 +10,7 @@ import 'package:minglit_kit/src/data/repositories/storage_repository.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
 import 'package:minglit_kit/src/utils/environment_info.dart';
+import 'package:minglit_kit/src/utils/layout_dump.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:shake/shake.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -46,6 +48,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
   final GlobalKey _boundaryKey = GlobalKey();
   String? _screenshotUrl;
   Map<String, dynamic>? _environmentInfo;
+  String? _layoutDumpUrl;
 
   @override
   void initState() {
@@ -120,14 +123,34 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
     final results = await Future.wait([
       _captureScreenshot(),
       collectEnvironmentInfo(),
+      captureLayoutDump(),
     ]);
     if (!mounted || !ctx.mounted) return;
 
     final screenshotUrl = results[0] as String?;
     final environment = results[1] as Map<String, dynamic>?;
+    final layoutDump = results[2] as String?;
+
+    // Upload layout dump to Storage (best-effort)
+    String? layoutDumpUrl;
+    if (layoutDump != null) {
+      try {
+        layoutDumpUrl = await StorageRepository().uploadBytes(
+          bytes: Uint8List.fromList(utf8.encode(layoutDump)),
+          bucket: 'bug-report-attachments',
+          pathPrefix: 'layout-dumps',
+          contentType: 'text/plain',
+          extension: '.txt',
+        );
+      } catch (e) {
+        Log.e('Layout dump upload failed (best-effort)', e);
+      }
+    }
+
     setState(() {
       _screenshotUrl = screenshotUrl;
       _environmentInfo = environment;
+      _layoutDumpUrl = layoutDumpUrl;
     });
 
     final titleController = TextEditingController();
@@ -263,6 +286,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                                         screenshotUrl: _screenshotUrl,
                                         environment: _environmentInfo,
                                         platform: defaultTargetPlatform.name,
+                                        layoutDumpUrl: _layoutDumpUrl,
                                       );
                                       if (!context.mounted) return;
                                       Navigator.pop(context);

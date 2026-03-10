@@ -22,7 +22,7 @@ Deno.serve(withSentry(async (req) => {
       return errorResponse("Invalid JSON body", 400);
     }
 
-    const { title, description, logs, timestamp, platform, screenshotUrl, environment } = reqBody as {
+    const { title, description, logs, timestamp, platform, screenshotUrl, environment, layoutDumpUrl } = reqBody as {
       title?: string;
       description?: string;
       logs?: string;
@@ -30,6 +30,7 @@ Deno.serve(withSentry(async (req) => {
       platform?: string;
       screenshotUrl?: string;
       environment?: Record<string, unknown>;
+      layoutDumpUrl?: string;
     };
 
     if (!title || !description) {
@@ -57,6 +58,11 @@ Deno.serve(withSentry(async (req) => {
         }\n`
       : '';
 
+    // Layout Dump section (only if layoutDumpUrl is truthy)
+    const layoutDumpSection = layoutDumpUrl
+      ? `\n\n## Layout Dump\n[📐 View Layout Dump](${layoutDumpUrl})\n`
+      : '';
+
     if (!GITHUB_TOKEN) {
       throw new Error("GITHUB_ACCESS_TOKEN is not set");
     }
@@ -79,7 +85,7 @@ ${truncatedLogs}
 \`\`\`
 
 </details>
-${screenshotSection}${environmentSection}`;
+${screenshotSection}${environmentSection}${layoutDumpSection}`;
 
     const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/issues`, {
       method: "POST",

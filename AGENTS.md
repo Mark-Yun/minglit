@@ -5,6 +5,19 @@
 - APK 빌드 요청 시 `--debug`가 디폴트. `--release`는 명시적으로 요청할 때만 사용.
 - Flutter 환경: dev 환경(`minglit_env/dev/flutter.env`)이 디폴트. local/prod는 명시적으로 요청할 때만.
 
+### Build Commands
+
+```bash
+# Debug APK (디폴트)
+cd apps/app_user && flutter build apk --flavor dev --debug --dart-define-from-file=../../minglit_env/dev/flutter.env
+
+# Release APK (명시적 요청 시만)
+cd apps/app_user && flutter build apk --flavor dev --release --dart-define-from-file=../../minglit_env/dev/flutter.env
+
+# ADB 설치 (wireless)
+adb -s adb-R3CX803P2ND-8btuuD._adb-tls-connect._tcp install -r build/app/outputs/flutter-apk/app-dev-debug.apk
+```
+
 ## Supabase Migration Rules
 
 - 새 migration 생성 시, 반드시 `ls supabase/migrations/` 로 기존 version 확인 후 다음 번호 사용.

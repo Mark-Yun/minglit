@@ -81,7 +81,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                     ? Text(
                         eventTitle,
                         style: theme.textTheme.titleMedium?.copyWith(
-                          color: theme.colorScheme.onSurface,
+                          color: theme.colorScheme.onPrimary,
                           fontWeight: FontWeight.w600,
                         ),
                       )
@@ -150,7 +150,8 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                       ),
                     ),
                 ],
-                backgroundColor: theme.scaffoldBackgroundColor,
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: Colors.white,
               ),
 
               // 2. Main Info
