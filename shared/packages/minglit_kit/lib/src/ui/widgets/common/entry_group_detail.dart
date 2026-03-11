@@ -59,7 +59,8 @@ class EntryGroupDetail extends StatelessWidget {
           const SizedBox(height: MinglitSpacing.xsmall),
         ],
         _buildConditionRow(context),
-        if (showVerificationBadges && group.requiredVerificationIds.isNotEmpty) ...[
+        if (showVerificationBadges &&
+            group.requiredVerificationIds.isNotEmpty) ...[
           const SizedBox(height: MinglitSpacing.medium),
           _VerificationBadges(verifIds: group.requiredVerificationIds),
         ],

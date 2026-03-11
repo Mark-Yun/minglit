@@ -17,7 +17,9 @@ class _ParticipationSection extends StatelessWidget {
         children: [
           Text(
             '참가 현황',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: MinglitSpacing.medium),
           if (max > 0) ...[

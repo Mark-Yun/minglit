@@ -221,7 +221,6 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
               ),
 
               // Tab Bar
-
               SliverPersistentHeader(
                 pinned: true,
                 delegate: _SliverTabBarDelegate(
@@ -525,7 +524,7 @@ class _EventDetailContentSkeleton extends StatelessWidget {
         const SliverPersistentHeader(
           pinned: true,
           delegate: _SkeletonTabBarDelegate(),
- ),
+        ),
         // 2. Main Info
         SliverToBoxAdapter(
           child: Padding(
