@@ -210,6 +210,73 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                         tooltip: '좋아요',
                       ),
                     ),
+                  if (partner != null && user != null)
+                    PopupMenuButton<String>(
+                      icon: Icon(Icons.more_vert, color: iconColor),
+                      onSelected: (value) async {
+                        switch (value) {
+                          case 'block':
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: const Text('차단하기'),
+                                content: const Text(
+                                  '이 파트너를 차단하시겠습니까?\n'
+                                  '이 파트너의 이벤트가 더 이상 표시되지 않습니다.',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, false),
+                                    child: const Text('취소'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    child: const Text('차단'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirmed == true && context.mounted) {
+                              await ref
+                                  .read(socialRepositoryProvider)
+                                  .blockPartner(partner.id);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('파트너가 차단되었습니다'),
+                                  ),
+                                );
+                              }
+                            }
+                          case 'report':
+                            if (context.mounted) {
+                              await showReportBottomSheet(
+                                context,
+                                ref,
+                                partner.id,
+                              );
+                            }
+                        }
+                      },
+                      itemBuilder: (_) => [
+                        const PopupMenuItem(
+                          value: 'block',
+                          child: ListTile(
+                            leading: Icon(Icons.block),
+                            title: Text('차단하기'),
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'report',
+                          child: ListTile(
+                            leading: Icon(Icons.flag),
+                            title: Text('신고하기'),
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                      ],
+                    ),
                 ],
                 backgroundColor: theme.colorScheme.primary,
                 foregroundColor: Colors.white,

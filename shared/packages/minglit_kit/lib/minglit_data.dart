@@ -16,6 +16,7 @@ export 'src/data/models/partner.dart';
 export 'src/data/models/partner_application.dart';
 export 'src/data/models/party.dart';
 export 'src/data/models/party_entry_group.dart';
+export 'src/data/models/report_detail.dart';
 export 'src/data/models/social_interaction.dart';
 export 'src/data/models/ticket.dart';
 export 'src/data/models/ticket_template.dart';
