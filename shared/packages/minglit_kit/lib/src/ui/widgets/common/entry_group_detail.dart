@@ -19,6 +19,7 @@ class EntryGroupDetail extends StatelessWidget {
     this.birthYearLabel = '나이',
     this.anyLabel = '제한 없음',
     this.anyYearLabel = '나이 제한 없음',
+    this.showVerificationBadges = true,
     super.key,
   });
 
@@ -36,6 +37,9 @@ class EntryGroupDetail extends StatelessWidget {
 
   /// Label used when birth year is not restricted.
   final String anyYearLabel;
+
+  /// Whether to show verification badges.
+  final bool showVerificationBadges;
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +59,7 @@ class EntryGroupDetail extends StatelessWidget {
           const SizedBox(height: MinglitSpacing.xsmall),
         ],
         _buildConditionRow(context),
-        if (group.requiredVerificationIds.isNotEmpty) ...[
+        if (showVerificationBadges && group.requiredVerificationIds.isNotEmpty) ...[
           const SizedBox(height: MinglitSpacing.medium),
           _VerificationBadges(verifIds: group.requiredVerificationIds),
         ],

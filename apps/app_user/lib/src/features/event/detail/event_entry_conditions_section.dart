@@ -59,7 +59,10 @@ class _EntryConditionsSection extends StatelessWidget {
                         color: theme.colorScheme.outlineVariant,
                       ),
                     ),
-                    child: EntryGroupDetail(group: group.toTemplate()),
+                    child: EntryGroupDetail(
+                      group: group.toTemplate(),
+                      showVerificationBadges: false,
+                    ),
                   ),
                   if (showGauge)
                     Positioned(
