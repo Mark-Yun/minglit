@@ -30,7 +30,8 @@ abstract class Event with _$Event {
     @JsonKey(name: 'min_confirmed_count') @Default(0) int minConfirmedCount,
     @JsonKey(name: 'max_participants') @Default(20) int maxParticipants,
     @JsonKey(name: 'current_participants') @Default(0) int currentParticipants,
-    @Default('scheduled') String status,
+@Default('scheduled') String status,
+String? visibility,
     @JsonKey(includeToJson: false) Location? location,
     @JsonKey(includeToJson: false) Party? party,
     @JsonKey(includeToJson: false) List<Ticket>? tickets,
@@ -81,6 +82,12 @@ abstract class Event with _$Event {
 
   /// Returns the first available image URL, if any.
   String? get imageUrl => effectiveImageUrls.firstOrNull;
+
+  /// Returns the effective visibility, inheriting from party if not set.
+  String get effectiveVisibility => visibility ?? party?.visibility ?? 'public';
+
+  /// Whether this event is effectively private.
+  bool get isEffectivelyPrivate => effectiveVisibility == 'private';
 }
 
 /// Convenience helpers for rendering [Event] conditions.

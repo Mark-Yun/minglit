@@ -23,6 +23,7 @@ abstract class EventCreateState with _$EventCreateState {
     @Default({}) Map<String, dynamic> contactOptions,
     @Default([]) List<EntryGroup> entryGroups,
     @Default([]) List<Ticket> tickets,
+    String? visibility,
     @Default(AsyncValue.data(null)) AsyncValue<void> status,
   }) = _EventCreateState;
 }
@@ -121,6 +122,10 @@ class EventCreateController extends _$EventCreateController {
     state = state.copyWith(directionsGuide: value);
   }
 
+  void setVisibility(String? value) {
+    state = state.copyWith(visibility: value);
+  }
+
   Future<void> submit() async {
     state = state.copyWith(status: const AsyncValue<void>.loading());
 
@@ -158,6 +163,7 @@ class EventCreateController extends _$EventCreateController {
         contactOptions: state.contactOptions,
         entryGroups: state.entryGroups,
         tickets: state.tickets, // Pass the tickets to repository
+        visibility: state.visibility,
       );
 
       await repo.createEvent(event);

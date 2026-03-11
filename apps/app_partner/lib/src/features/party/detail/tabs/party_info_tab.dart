@@ -43,15 +43,35 @@ class PartyInfoTab extends ConsumerWidget {
                     ),
               );
             },
-            child: PartyBasicInfoSummary(
-              title: party.title,
-              description: party.description ?? {},
-              imageUrls: party.imageUrls,
-              status: party.status,
-              showFullDescription: true,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                PartyBasicInfoSummary(
+                  title: party.title,
+                  description: party.description ?? {},
+                  imageUrls: party.imageUrls,
+                  status: party.status,
+                  showFullDescription: true,
+                ),
+                if (party.isPrivate)
+                  Padding(
+                    padding: const EdgeInsets.only(top: MinglitSpacing.small),
+                    child: Chip(
+                      label: const Text('비공개'),
+                      avatar: const Icon(Icons.lock, size: 16),
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.errorContainer,
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).colorScheme.onErrorContainer,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
           const SizedBox(height: MinglitSpacing.large),
+
 
           // 2. Capacity & Contact Section
           MinglitEditableSection(
