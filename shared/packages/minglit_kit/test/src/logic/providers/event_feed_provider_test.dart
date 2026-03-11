@@ -83,7 +83,9 @@ void main() {
 
       // Wait for the provider to settle into error state
       await expectLater(
-        container.read(fetchEventFeedProvider(type: EventFeedType.nearest).future),
+        container.read(
+          fetchEventFeedProvider(type: EventFeedType.nearest).future,
+        ),
         throwsA(anything),
       );
     });

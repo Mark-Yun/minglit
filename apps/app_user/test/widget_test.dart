@@ -29,7 +29,9 @@ void main() {
     final originalOnError = FlutterError.onError!;
     FlutterError.onError = (details) {
       if (details.exceptionAsString().contains('Unable to load asset') ||
-          details.exceptionAsString().contains('overflowed')) return;
+          details.exceptionAsString().contains('overflowed')) {
+        return;
+      }
       originalOnError(details);
     };
     addTearDown(() => FlutterError.onError = originalOnError);
@@ -59,7 +61,9 @@ void main() {
     final originalOnError = FlutterError.onError!;
     FlutterError.onError = (details) {
       if (details.exceptionAsString().contains('Unable to load asset') ||
-          details.exceptionAsString().contains('overflowed')) return;
+          details.exceptionAsString().contains('overflowed')) {
+        return;
+      }
       originalOnError(details);
     };
     addTearDown(() => FlutterError.onError = originalOnError);
@@ -102,7 +106,9 @@ void main() {
     final originalOnError = FlutterError.onError!;
     FlutterError.onError = (details) {
       if (details.exceptionAsString().contains('Unable to load asset') ||
-          details.exceptionAsString().contains('overflowed')) return;
+          details.exceptionAsString().contains('overflowed')) {
+        return;
+      }
       originalOnError(details);
     };
     addTearDown(() => FlutterError.onError = originalOnError);
@@ -146,7 +152,9 @@ void main() {
     final originalOnError = FlutterError.onError!;
     FlutterError.onError = (details) {
       if (details.exceptionAsString().contains('Unable to load asset') ||
-          details.exceptionAsString().contains('overflowed')) return;
+          details.exceptionAsString().contains('overflowed')) {
+        return;
+      }
       originalOnError(details);
     };
     addTearDown(() => FlutterError.onError = originalOnError);
@@ -187,7 +195,9 @@ void main() {
     final originalOnError = FlutterError.onError!;
     FlutterError.onError = (details) {
       if (details.exceptionAsString().contains('Unable to load asset') ||
-          details.exceptionAsString().contains('overflowed')) return;
+          details.exceptionAsString().contains('overflowed')) {
+        return;
+      }
       originalOnError(details);
     };
     addTearDown(() => FlutterError.onError = originalOnError);

@@ -73,7 +73,7 @@ void main() {
     await tester.pumpWidget(
       const ProviderScope(
         child: MaterialApp(
-          home: MinglitLoginScreen(isPartner: false),
+          home: MinglitLoginScreen(),
         ),
       ),
     );
@@ -87,7 +87,7 @@ void main() {
     await tester.pumpWidget(
       const ProviderScope(
         child: MaterialApp(
-          home: MinglitLoginScreen(isPartner: false),
+          home: MinglitLoginScreen(),
         ),
       ),
     );

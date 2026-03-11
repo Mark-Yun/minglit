@@ -249,7 +249,6 @@ void main() {
               body: MinglitFilePicker(
                 label: '문서 업로드',
                 hint: 'PDF 파일만 허용',
-                fileType: FileType.image,
                 onFilesSelected: (_) {},
               ),
             ),

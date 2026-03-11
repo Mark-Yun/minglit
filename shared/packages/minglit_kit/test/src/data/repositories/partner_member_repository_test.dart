@@ -12,7 +12,10 @@ class _FakeRpcResult extends Fake implements PostgrestFilterBuilder<dynamic> {
   final dynamic _data;
 
   @override
-  Future<U> then<U>(FutureOr<U> Function(dynamic) onValue, {Function? onError}) {
+  Future<U> then<U>(
+    FutureOr<U> Function(dynamic) onValue, {
+    Function? onError,
+  }) {
     return Future<dynamic>.value(_data).then(onValue, onError: onError);
   }
 }

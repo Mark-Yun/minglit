@@ -55,7 +55,6 @@ void main() {
           title: '주말 파티',
           createdAt: now,
           updatedAt: now,
-          maxParticipants: 20,
         ),
       ];
       await tester.pumpWidget(

@@ -159,7 +159,6 @@ void main() {
         const draftApp = PartnerApplication(
           id: '',
           userId: 'user_1',
-          status: 'draft',
           brandName: 'New Brand',
         );
 
@@ -180,7 +179,6 @@ void main() {
         const existingApp = PartnerApplication(
           id: 'app_1',
           userId: 'user_1',
-          status: 'draft',
           brandName: 'Existing Brand',
         );
 
@@ -203,7 +201,6 @@ void main() {
         const draftApp = PartnerApplication(
           id: '',
           userId: 'user_1',
-          status: 'draft',
         );
 
         await expectLater(
