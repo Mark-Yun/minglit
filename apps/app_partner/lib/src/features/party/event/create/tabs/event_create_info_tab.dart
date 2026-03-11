@@ -172,7 +172,6 @@ class EventCreateInfoTab extends ConsumerWidget {
                   ),
                   items: const [
                     DropdownMenuItem(
-                      value: null,
                       child: Text('파티 설정 따라가기'),
                     ),
                     DropdownMenuItem(
@@ -184,9 +183,7 @@ class EventCreateInfoTab extends ConsumerWidget {
                       child: Text('비공개'),
                     ),
                   ],
-                  onChanged: (value) {
-                    notifier.setVisibility(value);
-                  },
+                  onChanged: notifier.setVisibility,
                 ),
               ],
             ),

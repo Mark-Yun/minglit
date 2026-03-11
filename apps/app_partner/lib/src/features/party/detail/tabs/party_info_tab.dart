@@ -72,7 +72,6 @@ class PartyInfoTab extends ConsumerWidget {
           ),
           const SizedBox(height: MinglitSpacing.large),
 
-
           // 2. Capacity & Contact Section
           MinglitEditableSection(
             title: '인원 및 연락처 설정',

@@ -222,38 +222,38 @@ void main() {
       expect(party.conditionSummaries, ['조건 없음']);
     });
 
-test('creates from JSON with visibility = private', () {
-  final party = Party.fromJson({...partyJson(), 'visibility': 'private'});
-  expect(party.visibility, 'private');
-});
+    test('creates from JSON with visibility = private', () {
+      final party = Party.fromJson({...partyJson(), 'visibility': 'private'});
+      expect(party.visibility, 'private');
+    });
 
-test('creates from JSON without visibility defaults to public', () {
-  final party = Party.fromJson({
-    'id': 'p1',
-    'partner_id': 'pt1',
-    'title': 'Test',
-    'created_at': now.toIso8601String(),
-    'updated_at': now.toIso8601String(),
-  });
-  expect(party.visibility, 'public');
-});
+    test('creates from JSON without visibility defaults to public', () {
+      final party = Party.fromJson({
+        'id': 'p1',
+        'partner_id': 'pt1',
+        'title': 'Test',
+        'created_at': now.toIso8601String(),
+        'updated_at': now.toIso8601String(),
+      });
+      expect(party.visibility, 'public');
+    });
 
-test('isPrivate returns true for private visibility', () {
-  final party = Party.fromJson({...partyJson(), 'visibility': 'private'});
-  expect(party.isPrivate, isTrue);
-  expect(party.isPublic, isFalse);
-});
+    test('isPrivate returns true for private visibility', () {
+      final party = Party.fromJson({...partyJson(), 'visibility': 'private'});
+      expect(party.isPrivate, isTrue);
+      expect(party.isPublic, isFalse);
+    });
 
-test('isPublic returns true for public visibility', () {
-  final party = Party.fromJson(partyJson());
-  expect(party.isPublic, isTrue);
-  expect(party.isPrivate, isFalse);
-});
+    test('isPublic returns true for public visibility', () {
+      final party = Party.fromJson(partyJson());
+      expect(party.isPublic, isTrue);
+      expect(party.isPrivate, isFalse);
+    });
 
-test('toDbJson includes visibility', () {
-  final party = Party.fromJson({...partyJson(), 'visibility': 'private'});
-  final dbJson = party.toDbJson();
-  expect(dbJson['visibility'], 'private');
-});
+    test('toDbJson includes visibility', () {
+      final party = Party.fromJson({...partyJson(), 'visibility': 'private'});
+      final dbJson = party.toDbJson();
+      expect(dbJson['visibility'], 'private');
+    });
   });
 }

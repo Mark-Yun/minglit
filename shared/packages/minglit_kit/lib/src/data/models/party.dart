@@ -73,8 +73,8 @@ abstract class Party with _$Party {
     List<String> requiredVerificationIds,
     @JsonKey(name: 'min_confirmed_count') @Default(0) int minConfirmedCount,
     @JsonKey(name: 'max_participants') @Default(20) int maxParticipants,
-@Default('active') String status,
-@Default('public') String visibility,
+    @Default('active') String status,
+    @Default('public') String visibility,
     @JsonKey(includeToJson: false) List<TicketTemplate>? ticketTemplates,
     @JsonKey(includeToJson: false) Partner? partner,
     @JsonKey(name: 'entry_group_templates', includeToJson: false)
