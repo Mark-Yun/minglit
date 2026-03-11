@@ -97,7 +97,7 @@ class _PartnerApplyPageState extends ConsumerState<PartnerApplyPage> {
                 _showLogoutDialog(context, ref);
               }
             },
-            itemBuilder: (BuildContext context) => [
+            itemBuilder: (context) => [
               PopupMenuItem<String>(
                 value: 'logout',
                 child: Text(context.l10n.home_button_logout),
@@ -196,30 +196,32 @@ class _PartnerApplyPageState extends ConsumerState<PartnerApplyPage> {
   }
 
   void _showLogoutDialog(BuildContext context, WidgetRef ref) {
-    showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(context.l10n.home_button_logout),
-          content: const Text('로그아웃 하시겠습니까?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(context.l10n.common_button_cancel),
-            ),
-            TextButton(
-              onPressed: () async {
-                final authRepo = ref.read(authRepositoryProvider);
-                await authRepo.signOut();
-                if (context.mounted) {
-                  Navigator.of(context).pop();
-                }
-              },
-              child: Text(context.l10n.home_button_logout),
-            ),
-          ],
-        );
-      },
+    unawaited(
+      showDialog<void>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text(context.l10n.home_button_logout),
+            content: const Text('로그아웃 하시겠습니까?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(context.l10n.common_button_cancel),
+              ),
+              TextButton(
+                onPressed: () async {
+                  final authRepo = ref.read(authRepositoryProvider);
+                  await authRepo.signOut();
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                  }
+                },
+                child: Text(context.l10n.home_button_logout),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 

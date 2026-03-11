@@ -6,15 +6,6 @@ import 'package:minglit_kit/minglit_kit.dart';
 class Step2BizInfo extends ConsumerWidget {
   const Step2BizInfo({super.key});
 
-  /// Gets the localized display text for a bizType value
-  String _getBizTypeLabel(BuildContext context, String bizType) {
-    return switch (bizType) {
-      'individual' => context.l10n.partnerApplication_option_individual,
-      'corporate' => context.l10n.partnerApplication_option_corporate,
-      _ => bizType,
-    };
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(partnerApplyControllerProvider);
@@ -40,7 +31,6 @@ class Step2BizInfo extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(MinglitRadius.input),
               ),
             ),
-            hint: Text(_getBizTypeLabel(context, state.bizType)),
             items: [
               DropdownMenuItem(
                 value: 'individual',

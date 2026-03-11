@@ -282,6 +282,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get partnerApplication_field_bizType => '사업자 유형';
 
   @override
+  String get partnerApplication_hint_bizType => '사업자 유형 선택';
+
+  @override
   String get partnerApplication_option_individual => '개인 사업자';
 
   @override
