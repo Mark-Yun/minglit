@@ -186,7 +186,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                         height: 4,
                         margin: const EdgeInsets.only(bottom: 16),
                         decoration: BoxDecoration(
-                          color: Colors.grey[300],
+                          color: Theme.of(context).colorScheme.outlineVariant,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -213,11 +213,15 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                           errorBuilder: (context, error, stackTrace) =>
                               Container(
                                 height: 60,
-                                color: Colors.grey[200],
-                                child: const Center(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.surfaceContainerHighest,
+                                child: Center(
                                   child: Icon(
                                     Icons.broken_image,
-                                    color: Colors.grey,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                                   ),
                                 ),
                               ),
