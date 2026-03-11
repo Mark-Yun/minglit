@@ -110,7 +110,8 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
     final screenWidth = MediaQuery.sizeOf(context).width;
     final topPadding = MediaQuery.paddingOf(context).top;
     final imageHeight = screenWidth * 9 / 16;
-    final expandedHeight = imageHeight + topPadding;
+    // primary: true adds topPadding automatically — don't double-add it.
+    final expandedHeight = imageHeight;
     _collapseThreshold = imageHeight - kToolbarHeight;
 
     final event = widget.event;
@@ -160,7 +161,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                     children: [
                       MinglitImageCarousel(
                         imageUrls: party?.imageUrls ?? [],
-                        height: expandedHeight,
+                        height: imageHeight + topPadding,
                       ),
                       Positioned(
                         top: 0,
@@ -479,7 +480,7 @@ class _EventDetailContentSkeleton extends StatelessWidget {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final topPadding = MediaQuery.paddingOf(context).top;
     final imageHeight = screenWidth * 9 / 16;
-    final expandedHeight = imageHeight + topPadding;
+    final expandedHeight = imageHeight;
 
     return CustomScrollView(
       slivers: [
