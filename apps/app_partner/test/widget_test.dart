@@ -24,4 +24,109 @@ void main() {
     expect(find.text('Google로 시작하기'), findsOneWidget);
     expect(find.text('Kakao로 시작하기'), findsOneWidget);
   });
+
+  testWidgets('Partner login screen shows PARTNER label', (tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MaterialApp(
+          home: MinglitLoginScreen(isPartner: true),
+        ),
+      ),
+    );
+
+    await tester.pump();
+
+    expect(find.text('PARTNER'), findsOneWidget);
+  });
+
+  testWidgets('Partner login screen shows partner slogan', (tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MaterialApp(
+          home: MinglitLoginScreen(isPartner: true),
+        ),
+      ),
+    );
+
+    await tester.pump();
+
+    expect(find.text('Verified Vibe, Spark Your Business'), findsOneWidget);
+  });
+
+  testWidgets('Partner login screen shows partner inquiry button', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MaterialApp(
+          home: MinglitLoginScreen(isPartner: true),
+        ),
+      ),
+    );
+
+    await tester.pump();
+
+    expect(find.text('파트너 입점 문의'), findsOneWidget);
+  });
+
+  testWidgets('User login screen does not show PARTNER label', (tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MaterialApp(
+          home: MinglitLoginScreen(isPartner: false),
+        ),
+      ),
+    );
+
+    await tester.pump();
+
+    expect(find.text('PARTNER'), findsNothing);
+  });
+
+  testWidgets('User login screen shows user slogan', (tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MaterialApp(
+          home: MinglitLoginScreen(isPartner: false),
+        ),
+      ),
+    );
+
+    await tester.pump();
+
+    expect(find.text('Verified Vibe, Spark Your Moment'), findsOneWidget);
+  });
+
+  testWidgets('Apple sign-in button renders when callback provided', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: MinglitLoginScreen(
+            isPartner: true,
+            onAppleSignIn: () {},
+          ),
+        ),
+      ),
+    );
+
+    await tester.pump();
+
+    expect(find.text('Apple로 시작하기'), findsOneWidget);
+  });
+
+  testWidgets('Apple sign-in button hidden when no callback', (tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MaterialApp(
+          home: MinglitLoginScreen(isPartner: true),
+        ),
+      ),
+    );
+
+    await tester.pump();
+
+    expect(find.text('Apple로 시작하기'), findsNothing);
+  });
 }
