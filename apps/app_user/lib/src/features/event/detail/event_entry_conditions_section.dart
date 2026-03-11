@@ -46,7 +46,7 @@ class _EntryConditionsSection extends StatelessWidget {
                 0,
                 (sum, t) => sum + t.quantity,
               );
-              final showGauge = matchingTickets.isNotEmpty && totalQuantity > 0;
+              final showGauge = matchingTickets.isNotEmpty;
 
               return Stack(
                 children: [
