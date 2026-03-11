@@ -118,6 +118,7 @@ class MyPage extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: homeCoordinator.pushNotificationSettings,
           ),
+          const ThemeSettingsTile(),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout, color: MinglitColors.error),
@@ -130,8 +131,7 @@ class MyPage extends ConsumerWidget {
             onTap: () async {
               // 먼저 홈으로 이동 후 signOut — /my (protected) 에서 signOut하면
               // GoRouter redirect가 /login으로 보내는 race condition 방지
-              final router = GoRouter.of(context);
-              router.go('/');
+              GoRouter.of(context).go('/');
               // yield: 라우터가 위치를 '/' 로 업데이트한 뒤 signOut
               await Future<void>.delayed(Duration.zero);
               await ref.read(authControllerProvider.notifier).signOut();

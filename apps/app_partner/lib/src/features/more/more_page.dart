@@ -34,6 +34,7 @@ class MorePage extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () {},
           ),
+          const ThemeSettingsTile(),
         ],
       ),
     );
