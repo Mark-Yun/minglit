@@ -11,3 +11,17 @@ class EventDetailController extends _$EventDetailController {
     return repository.getEventById(eventId);
   }
 }
+
+@riverpod
+Future<Map<String, int>> entryGroupParticipantCounts(
+  Ref ref,
+  String eventId,
+) async {
+  final repo = ref.read(eventRepositoryProvider);
+  final list = await repo.getEntryGroupParticipantCounts(eventId);
+  return {
+    for (final item in list)
+      item['entry_group_id'] as String: (item['participant_count'] as num)
+          .toInt(),
+  };
+}

@@ -205,6 +205,24 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
     return app != null && app.status != 'rejected' && app.status != 'cancelled';
   }
 
+  /// Fetches entry group participant counts for a specific event.
+  Future<List<Map<String, dynamic>>> getEntryGroupParticipantCounts(
+    String eventId,
+  ) async {
+    try {
+      final data =
+          await supabaseClient.rpc(
+                'get_entry_group_participant_counts',
+                params: {'p_event_id': eventId},
+              )
+              as List<dynamic>;
+      return data.cast<Map<String, dynamic>>();
+    } on Exception catch (e, st) {
+      Log.e('getEntryGroupParticipantCounts Error', e, st);
+      rethrow;
+    }
+  }
+
   /// Fetches the current user's purchase history.
   Future<List<EventApplication>> getMyPurchaseHistory(String userId) async {
     Log.d('getMyPurchaseHistory called | userId: $userId');
@@ -266,9 +284,7 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
           .map((item) => item as Map<String, dynamic>)
           .toList();
 
-      Log.d(
-        'getPersonalizedRecommendations success | count: ${result.length}',
-      );
+      Log.d('getPersonalizedRecommendations success | count: ${result.length}');
       return result;
     } catch (e, st) {
       Log.e('❌ [EventRepo] getPersonalizedRecommendations Error', e, st);
