@@ -28,6 +28,8 @@ mixin _PartyCreateWizardSteps on _$PartyCreateWizardController {
     required List<XFile> newFiles,
   }) => state = state.copyWith(imageUrls: imageUrls, imageFiles: newFiles);
 
+  void setVisibility(String value) => state = state.copyWith(visibility: value);
+
   // --- Step 2: Location ---
   void updateLocation(Location? loc) =>
       state = state.copyWith(selectedLocation: loc);

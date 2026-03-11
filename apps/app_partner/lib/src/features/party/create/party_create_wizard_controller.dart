@@ -57,6 +57,7 @@ abstract class PartyCreateWizardState with _$PartyCreateWizardState {
 
     // Step 5: Ticket Templates
     @Default([]) List<TicketTemplate> tickets,
+    @Default('public') String visibility,
 
     // Global Status
     @Default(AsyncValue.data(null)) AsyncValue<void> status,

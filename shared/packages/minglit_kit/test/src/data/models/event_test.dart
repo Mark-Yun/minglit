@@ -215,6 +215,96 @@ void main() {
       final e2 = Event.fromJson(eventJson());
       expect(e1, equals(e2));
     });
+
+    test('creates from JSON with visibility = null', () {
+      final event = Event.fromJson({
+        'id': 'e1',
+        'party_id': 'p1',
+        'start_time': now.toIso8601String(),
+        'end_time': later.toIso8601String(),
+        'created_at': now.toIso8601String(),
+        'updated_at': later.toIso8601String(),
+      });
+      expect(event.visibility, isNull);
+    });
+
+    test('creates from JSON with visibility = private', () {
+      final event = Event.fromJson({
+        ...eventJson(),
+        'visibility': 'private',
+      });
+      expect(event.visibility, 'private');
+    });
+
+    test('createFromParty does not set visibility (inherits null)', () {
+      final party = Party.fromJson({
+        'id': 'party_1',
+        'partner_id': 'pt_1',
+        'title': 'Template',
+        'created_at': now.toIso8601String(),
+        'updated_at': now.toIso8601String(),
+        'visibility': 'private',
+      });
+      final event = Event.createFromParty(
+        party,
+        startTime: now,
+        endTime: later,
+      );
+      expect(event.visibility, isNull);
+    });
+
+    test('effectiveVisibility returns own visibility when set', () {
+      final event = Event.fromJson({
+        ...eventJson(),
+        'visibility': 'private',
+      });
+      expect(event.effectiveVisibility, 'private');
+    });
+
+    test('effectiveVisibility inherits from party when null', () {
+      final party = Party.fromJson({
+        'id': 'p1',
+        'partner_id': 'pt1',
+        'title': 'Test',
+        'created_at': now.toIso8601String(),
+        'updated_at': now.toIso8601String(),
+        'visibility': 'private',
+      });
+      final event = Event.fromJson({
+        'id': 'e1',
+        'party_id': 'p1',
+        'start_time': now.toIso8601String(),
+        'end_time': later.toIso8601String(),
+        'created_at': now.toIso8601String(),
+        'updated_at': later.toIso8601String(),
+      }).copyWith(party: party);
+      expect(event.effectiveVisibility, 'private');
+    });
+
+    test('effectiveVisibility defaults to public when no party', () {
+      final event = Event.fromJson({
+        'id': 'e1',
+        'party_id': 'p1',
+        'start_time': now.toIso8601String(),
+        'end_time': later.toIso8601String(),
+        'created_at': now.toIso8601String(),
+        'updated_at': later.toIso8601String(),
+      });
+      expect(event.effectiveVisibility, 'public');
+    });
+
+    test('isEffectivelyPrivate returns true when private', () {
+      final event = Event.fromJson({
+        ...eventJson(),
+        'visibility': 'private',
+      });
+      expect(event.isEffectivelyPrivate, isTrue);
+    });
+
+    test('isEffectivelyPrivate returns false when public', () {
+      final event = Event.fromJson(eventJson());
+      expect(event.isEffectivelyPrivate, isFalse);
+    });
   });
 
   group('Event conditionSummaries', () {

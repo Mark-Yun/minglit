@@ -154,6 +154,17 @@ class _EventInfoTab extends ConsumerWidget {
                   value: _getStatusLabel(context, event.status),
                   valueColor: _getStatusColor(event.status, colorScheme),
                 ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(
+                    vertical: MinglitSpacing.small,
+                  ),
+                  child: Divider(height: 1),
+                ),
+                _DetailRow(
+                  icon: Icons.visibility,
+                  label: '공개 설정',
+                  value: _getVisibilityLabel(event.visibility),
+                ),
               ],
             ),
           ),
@@ -241,6 +252,16 @@ class _EventInfoTab extends ConsumerWidget {
         return colorScheme.outline;
       default:
         return null;
+    }
+  }
+
+  String _getVisibilityLabel(String? visibility) {
+    if (visibility == 'private') {
+      return '비공개';
+    } else if (visibility == 'public') {
+      return '공개';
+    } else {
+      return '파티 설정 따라가기';
     }
   }
 }

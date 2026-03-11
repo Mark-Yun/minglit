@@ -63,13 +63,13 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
     try {
       // 1. Base Query with Relations
       var selectQuery =
-          '*, party:parties(*, location:locations(*), partner:partners(*)), '
+          '*, party:parties!inner(*, location:locations(*), partner:partners(*)), '
           'entryGroups:entry_groups(*), tickets(*)';
 
       // Special case for Early Bird: filter by ticket name
       if (type == EventFeedType.earlyBird) {
         selectQuery =
-            '*, party:parties(*, location:locations(*), partner:partners(*)), '
+            '*, party:parties!inner(*, location:locations(*), partner:partners(*)), '
             'entryGroups:entry_groups(*), tickets!inner(*)';
       }
 
@@ -80,6 +80,8 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
       query = query.eq('status', 'scheduled');
       // ignore: avoid_dynamic_calls, Reason: Supabase builder chaining
       query = query.gte('start_time', DateTime.now().toIso8601String());
+      // ignore: avoid_dynamic_calls, Reason: Supabase builder chaining
+      query = query.eq('party.visibility', 'public');
 
       // 3. Early Bird Filter
       if (type == EventFeedType.earlyBird) {

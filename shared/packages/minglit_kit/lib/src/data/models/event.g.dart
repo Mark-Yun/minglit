@@ -25,6 +25,7 @@ _Event _$EventFromJson(Map<String, dynamic> json) => _Event(
   maxParticipants: (json['max_participants'] as num?)?.toInt() ?? 20,
   currentParticipants: (json['current_participants'] as num?)?.toInt() ?? 0,
   status: json['status'] as String? ?? 'scheduled',
+  visibility: json['visibility'] as String?,
   location: json['location'] == null
       ? null
       : Location.fromJson(json['location'] as Map<String, dynamic>),
@@ -56,4 +57,5 @@ Map<String, dynamic> _$EventToJson(_Event instance) => <String, dynamic>{
   'max_participants': instance.maxParticipants,
   'current_participants': instance.currentParticipants,
   'status': instance.status,
+  'visibility': instance.visibility,
 };

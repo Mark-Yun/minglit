@@ -9,11 +9,15 @@ class PartyStatusEditSheet extends StatelessWidget {
   const PartyStatusEditSheet({
     required this.currentStatus,
     required this.onStatusSelected,
+    this.currentVisibility = 'public',
+    this.onVisibilityChanged,
     super.key,
   });
 
   final String currentStatus;
   final ValueChanged<String> onStatusSelected;
+  final String currentVisibility;
+  final ValueChanged<String>? onVisibilityChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +57,24 @@ class PartyStatusEditSheet extends StatelessWidget {
               value: 'closed',
               description: '모든 이벤트가 종료되었을 때 사용합니다.',
               icon: Icons.archive_outlined,
+            ),
+            const Divider(),
+            const SizedBox(height: MinglitSpacing.small),
+            Text(
+              '공개 범위',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: MinglitSpacing.small),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('비공개'),
+              subtitle: const Text('검색/피드에서 숨김'),
+              value: currentVisibility == 'private',
+              onChanged: (value) {
+                onVisibilityChanged?.call(value ? 'private' : 'public');
+              },
             ),
           ],
         ),
