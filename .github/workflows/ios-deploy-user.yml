@@ -184,3 +184,13 @@ jobs:
       - name: Cleanup keychain
         if: ${{ always() }}
         run: security delete-keychain "$KEYCHAIN_NAME"
+
+  notify-failure:
+    needs: [ios-deploy]
+    if: always()
+    permissions:
+      issues: write
+    uses: ./.github/workflows/notify-failure.yml
+    with:
+      success: ${{ needs.ios-deploy.result == 'success' }}
+      workflow_name: 'iOS Deploy User'

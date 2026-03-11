@@ -67,3 +67,13 @@ jobs:
           else
             echo "No formatting changes needed"
           fi
+
+  notify-failure:
+    needs: [auto-format]
+    if: always()
+    permissions:
+      issues: write
+    uses: ./.github/workflows/notify-failure.yml
+    with:
+      success: ${{ needs.auto-format.result == 'success' }}
+      workflow_name: 'Auto Format'

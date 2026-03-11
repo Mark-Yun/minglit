@@ -1,0 +1,46 @@
+name: Notify CI Failure
+
+on:
+  workflow_call:
+    inputs:
+      success:
+        type: boolean
+        required: true
+        description: Whether the workflow succeeded
+      workflow_name:
+        type: string
+        required: true
+        description: Name of the workflow that ran
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Create or comment on issue for CI failure
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+        run: |
+          TITLE="🚨 ${{ inputs.workflow_name }} failed on ${{ github.ref_name }}"
+          BODY="**Workflow**: ${{ inputs.workflow_name }}
+          **Branch**: ${{ github.ref_name }}
+          **Commit**: ${{ github.sha }}
+          **Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          **Triggered by**: ${{ github.event.head_commit.message || github.event.pull_request.title || 'N/A' }}
+          **Actor**: ${{ github.actor }}"
+          
+          if [ "${{ inputs.success }}" = "true" ]; then
+            echo "✅ Workflow succeeded, no issue needed."
+            exit 0
+          fi
+          
+          EXISTING=$(gh issue list --search "\"${TITLE}\" in:title" --state open --label ci-failure --json number --jq '.[0].number' 2>/dev/null || echo "")
+          if [ -n "$EXISTING" ]; then
+            echo "🔁 Found existing issue #$EXISTING, adding comment..."
+            gh issue comment "$EXISTING" --body "$BODY"
+          else
+            echo "🆕 Creating new issue..."
+            gh issue create --title "$TITLE" --body "$BODY" --label "ci-failure"
+          fi

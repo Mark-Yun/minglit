@@ -73,3 +73,14 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_DEV_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_DEV_SECRET_KEY }}
         run: flutter test test/runner.dart
+
+
+  notify-failure:
+    needs: [seed]
+    if: always()
+    permissions:
+      issues: write
+    uses: ./.github/workflows/notify-failure.yml
+    with:
+      success: ${{ needs.seed.result == 'success' }}
+      workflow_name: 'Seed Dev'
