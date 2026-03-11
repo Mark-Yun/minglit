@@ -10,21 +10,31 @@ class _EventDetailContent extends ConsumerStatefulWidget {
       _EventDetailContentState();
 }
 
-class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
+class _EventDetailContentState extends ConsumerState<_EventDetailContent>
+    with TickerProviderStateMixin {
   final _scrollController = ScrollController();
   bool _showTitle = false;
   bool _bannerDismissed = false;
+  late TabController _tabController;
+  final GlobalKey _section1Key = GlobalKey();
+  final GlobalKey _section2Key = GlobalKey();
+  final GlobalKey _section3Key = GlobalKey();
+  final GlobalKey _section4Key = GlobalKey();
+  final GlobalKey _section5Key = GlobalKey();
+  bool _isTabTapScroll = false;
 
   double _collapseThreshold = 0;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 5, vsync: this);
     _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
+    _tabController.dispose();
     _scrollController
       ..removeListener(_onScroll)
       ..dispose();
@@ -36,6 +46,62 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
     if (collapsed != _showTitle) {
       setState(() => _showTitle = collapsed);
     }
+
+    if (_isTabTapScroll) return;
+
+    // Update active tab based on section scroll positions
+    final keys = [
+      _section1Key,
+      _section2Key,
+      _section3Key,
+      _section4Key,
+      _section5Key,
+    ];
+    var activeIndex = 0;
+    for (var i = 0; i < keys.length; i++) {
+      final context = keys[i].currentContext;
+      if (context == null) continue;
+      final renderObject = context.findRenderObject();
+      if (renderObject == null || !renderObject.attached) continue;
+      final viewport = RenderAbstractViewport.maybeOf(renderObject);
+      if (viewport == null) continue;
+      final revealOffset = viewport.getOffsetToReveal(renderObject, 0).offset;
+      // Account for pinned headers (SliverAppBar collapsed + TabBar)
+      const pinnedHeight = kToolbarHeight + kTextTabBarHeight + 1;
+      if (_scrollController.offset >= revealOffset - pinnedHeight) {
+        activeIndex = i;
+      }
+    }
+    if (_tabController.index != activeIndex) {
+      _tabController.animateTo(activeIndex);
+    }
+  }
+
+  void _scrollToSection(GlobalKey key) {
+    final context = key.currentContext;
+    if (context == null) return;
+    final renderObject = context.findRenderObject();
+    if (renderObject == null || !renderObject.attached) return;
+    final viewport = RenderAbstractViewport.maybeOf(renderObject);
+    if (viewport == null) return;
+
+    const pinnedHeight = kToolbarHeight + kTextTabBarHeight + 1;
+    final revealOffset = viewport.getOffsetToReveal(renderObject, 0).offset;
+    final targetOffset = (revealOffset - pinnedHeight).clamp(
+      0.0,
+      _scrollController.position.maxScrollExtent,
+    );
+
+    _isTabTapScroll = true;
+    unawaited(
+      _scrollController
+          .animateTo(
+            targetOffset,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          )
+          .then((_) => _isTabTapScroll = false),
+    );
   }
 
   @override
@@ -154,8 +220,27 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                 foregroundColor: Colors.white,
               ),
 
-              // 2. Main Info
+              // Tab Bar
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _SliverTabBarDelegate(
+                  tabController: _tabController,
+                  onTabTap: (index) {
+                    final keys = [
+                      _section1Key,
+                      _section2Key,
+                      _section3Key,
+                      _section4Key,
+                      _section5Key,
+                    ];
+                    _scrollToSection(keys[index]);
+                  },
+                ),
+              ),
+
+              // Section 1: 기본 정보
               SliverToBoxAdapter(
+                key: _section1Key,
                 child: Padding(
                   padding: const EdgeInsets.all(MinglitSpacing.medium),
                   child: Column(
@@ -201,7 +286,6 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                         ),
                         const SizedBox(height: MinglitSpacing.small),
                       ],
-
                       // Title
                       Text(
                         eventTitle,
@@ -210,7 +294,6 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                         ),
                       ),
                       const SizedBox(height: MinglitSpacing.medium),
-
                       // Info Cards
                       _InfoTile(
                         icon: Icons.calendar_today_outlined,
@@ -223,10 +306,22 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                         title: location?.name ?? '장소 미정',
                         subtitle: location?.address ?? '주소 정보 없음',
                       ),
-
                       const Divider(height: MinglitSpacing.xlarge),
+                      // Entry Conditions (without verification badges)
+                      _EntryConditionsSection(event: event),
+                    ],
+                  ),
+                ),
+              ),
 
-                      // 3. Description (Rich Text)
+              // Section 2: 상세 소개
+              SliverToBoxAdapter(
+                key: _section2Key,
+                child: Padding(
+                  padding: const EdgeInsets.all(MinglitSpacing.medium),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
                         '상세 소개',
                         style: theme.textTheme.titleMedium?.copyWith(
@@ -235,17 +330,33 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                       ),
                       const SizedBox(height: MinglitSpacing.medium),
                       _QuillViewer(description: party?.description ?? {}),
-
-                      const SizedBox(height: MinglitSpacing.xlarge),
-
-                      // 4. Entry Conditions
-                      _EntryConditionsSection(event: event),
-
-                      const SizedBox(
-                        height: MinglitSpacing.xlarge * 4,
-                      ), // Bottom padding for FAB
                     ],
                   ),
+                ),
+              ),
+
+              // Section 3: 참가 현황
+              SliverToBoxAdapter(
+                key: _section3Key,
+                child: _ParticipationSection(event: event),
+              ),
+
+              // Section 4: 필요 인증
+              SliverToBoxAdapter(
+                key: _section4Key,
+                child: _VerificationSection(event: event),
+              ),
+
+              // Section 5: 환불 정책
+              SliverToBoxAdapter(
+                key: _section5Key,
+                child: const _RefundPolicySection(),
+              ),
+
+              // Bottom padding for last section scrollability
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: MediaQuery.sizeOf(context).height / 2,
                 ),
               ),
             ],
@@ -263,6 +374,100 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
       ],
     );
   }
+}
+
+class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
+  _SliverTabBarDelegate({required this.tabController, required this.onTabTap});
+
+  final TabController tabController;
+  final void Function(int) onTabTap;
+
+  @override
+  double get minExtent => kTextTabBarHeight + 1;
+
+  @override
+  double get maxExtent => kTextTabBarHeight + 1;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    final theme = Theme.of(context);
+    return ColoredBox(
+      color: theme.scaffoldBackgroundColor,
+      child: Column(
+        children: [
+          TabBar(
+            controller: tabController,
+            isScrollable: true,
+            onTap: onTabTap,
+            tabs: const [
+              Tab(text: '기본 정보'),
+              Tab(text: '상세 소개'),
+              Tab(text: '참가 현황'),
+              Tab(text: '필요 인증'),
+              Tab(text: '환불 정책'),
+            ],
+          ),
+          const Divider(height: 1),
+        ],
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(_SliverTabBarDelegate oldDelegate) => false;
+}
+
+class _SkeletonTabBarDelegate extends SliverPersistentHeaderDelegate {
+  const _SkeletonTabBarDelegate();
+
+  @override
+  double get minExtent => kTextTabBarHeight + 1;
+
+  @override
+  double get maxExtent => kTextTabBarHeight + 1;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    final theme = Theme.of(context);
+    return ColoredBox(
+      color: theme.scaffoldBackgroundColor,
+      child: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: kTextTabBarHeight,
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: MinglitSpacing.medium,
+                vertical: MinglitSpacing.small,
+              ),
+              child: Row(
+                children: [
+                  MinglitSkeleton(width: 60, height: 20),
+                  SizedBox(width: MinglitSpacing.medium),
+                  MinglitSkeleton(width: 60, height: 20),
+                  SizedBox(width: MinglitSpacing.medium),
+                  MinglitSkeleton(width: 60, height: 20),
+                ],
+              ),
+            ),
+          ),
+          Divider(height: 1),
+        ],
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(_SkeletonTabBarDelegate oldDelegate) => false;
 }
 
 class _EventDetailContentSkeleton extends StatelessWidget {
@@ -314,6 +519,11 @@ class _EventDetailContentSkeleton extends StatelessWidget {
               ],
             ),
           ),
+        ),
+        // Tab Bar Skeleton
+        const SliverPersistentHeader(
+          pinned: true,
+          delegate: _SkeletonTabBarDelegate(),
         ),
         // 2. Main Info
         SliverToBoxAdapter(

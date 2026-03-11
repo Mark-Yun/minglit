@@ -6,6 +6,7 @@ import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
 import 'package:app_user/src/utils/share_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -15,6 +16,9 @@ part 'event_info_tile.dart';
 part 'event_quill_viewer.dart';
 part 'event_entry_conditions_section.dart';
 part 'event_bottom_ticket_bar.dart';
+part 'event_participation_section.dart';
+part 'event_verification_section.dart';
+part 'event_refund_policy_section.dart';
 
 class EventDetailPage extends ConsumerWidget {
   const EventDetailPage({required this.eventId, super.key});
