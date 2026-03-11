@@ -135,6 +135,8 @@ class _AppView extends ConsumerWidget {
       title: 'Minglit Partner',
       debugShowCheckedModeBanner: false,
       theme: MinglitTheme.materialTheme,
+      darkTheme: MinglitTheme.materialThemeDark,
+      themeMode: ref.watch(themeControllerProvider),
       routerConfig: goRouter,
       localizationsDelegates: const [
         AppLocalizations.delegate,

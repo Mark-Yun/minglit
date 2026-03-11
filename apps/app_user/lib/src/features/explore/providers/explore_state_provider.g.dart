@@ -307,7 +307,7 @@ final class FilteredEventsProvider
   }
 }
 
-String _$filteredEventsHash() => r'711254eaf8fd916bec3faabbfe57fcf5b3f40b71';
+String _$filteredEventsHash() => r'ed17a50de476e0a95b2e441b680435c5e94bbbeb';
 
 /// Applies active filters and nearby sort to a list of events (client-side).
 ///
