@@ -40,6 +40,24 @@ class MinglitColors {
   static const scrim = Color(0x80000000);
 }
 
+class MinglitColorsDark {
+  // ignore: minglit_no_hardcoded_colors -- dark theme definition
+  static const background = Color(0xFF0F0F0F);
+  // ignore: minglit_no_hardcoded_colors -- dark theme definition
+  static const surface = Color(0xFF212121);
+  // ignore: minglit_no_hardcoded_colors -- dark theme definition
+  static const textPrimary = Color(0xFFFFFFFF);
+  // ignore: minglit_no_hardcoded_colors -- dark theme definition
+  static const textSecondary = Color(0xFFAAAAAA);
+  // ignore: minglit_no_hardcoded_colors -- dark theme definition
+  static const primary = Color(0xFFAA33FF);
+  static const secondary = MinglitColors.secondary;
+  static const tertiary = MinglitColors.tertiary;
+  static const error = MinglitColors.error;
+  // ignore: minglit_no_hardcoded_colors -- dark theme definition
+  static const divider = Color(0xFF3D3D3D);
+}
+
 /// Spacing scale constants for consistent layout.
 class MinglitSpacing {
   /// 0px zero spacing.
