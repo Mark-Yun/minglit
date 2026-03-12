@@ -209,5 +209,72 @@ void main() {
         );
       });
     });
+
+    group('updateApplication', () {
+      test('returns updated application on success', () async {
+        const app = PartnerApplication(
+          id: 'app_1',
+          userId: 'user_1',
+          status: 'draft',
+          brandName: 'Updated Brand',
+        );
+
+        unawaited(
+          mockTable(mockClient, 'partner_applications', singleData: applicationJson),
+        );
+
+        final result = await repository.updateApplication(app);
+        expect(result.id, 'app_1');
+      });
+
+      test('throws on error', () async {
+        const app = PartnerApplication(
+          id: 'app_1',
+          userId: 'user_1',
+          status: 'draft',
+        );
+
+        unawaited(
+          mockTable(
+            mockClient,
+            'partner_applications',
+            shouldThrow: Exception('update error'),
+          ),
+        );
+
+        await expectLater(
+          repository.updateApplication(app),
+          throwsA(isA<Exception>()),
+        );
+      });
+    });
+
+    group('submitDraft', () {
+      test('returns submitted application on success', () async {
+        final pendingJson = {...applicationJson, 'status': 'pending'};
+        unawaited(
+          mockTable(mockClient, 'partner_applications', singleData: pendingJson),
+        );
+
+        final result = await repository.submitDraft(applicationId: 'app_1');
+        expect(result.id, 'app_1');
+        expect(result.status, 'pending');
+      });
+
+      test('throws on error', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'partner_applications',
+            shouldThrow: Exception('submit error'),
+          ),
+        );
+
+        await expectLater(
+          repository.submitDraft(applicationId: 'app_1'),
+          throwsA(isA<Exception>()),
+        );
+      });
+    });
   });
 }

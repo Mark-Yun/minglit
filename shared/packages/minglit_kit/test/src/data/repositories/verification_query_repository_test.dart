@@ -118,5 +118,188 @@ void main() {
         );
       });
     });
+
+  group('getPartnerVerifications', () {
+    final verificationJson = {
+      'id': 'ver_1',
+      'category': 'career',
+      'internal_name': 'global_career',
+      'display_name': '직장 인증',
+      'partner_id': 'partner_1',
+      'description': 'Career verification',
+      'icon_key': 'briefcase',
+      'form_schema': <Map<String, dynamic>>[],
+      'is_active': true,
+      'created_at': now.toIso8601String(),
+    };
+
+    test('returns list of verifications for partner', () async {
+      unawaited(
+        mockTable(mockClient, 'verifications', selectData: [verificationJson]),
+      );
+
+      final result = await repository.getPartnerVerifications('partner_1');
+
+      expect(result, hasLength(1));
+      expect(result.first.id, 'ver_1');
+    });
+
+    test('returns empty list when no verifications', () async {
+      unawaited(mockTable(mockClient, 'verifications', selectData: []));
+
+      final result = await repository.getPartnerVerifications('partner_1');
+
+      expect(result, isEmpty);
+    });
+
+    test('throws on error', () async {
+      unawaited(
+        mockTable(mockClient, 'verifications', shouldThrow: Exception('error')),
+      );
+
+      await expectLater(
+        repository.getPartnerVerifications('partner_1'),
+        throwsA(anything),
+      );
+    });
   });
+
+  group('getGlobalVerifications', () {
+    final globalVerJson = {
+      'id': 'ver_global',
+      'category': 'career',
+      'internal_name': 'global_career',
+      'display_name': '직장 인증',
+      'partner_id': null,
+      'description': 'Global career verification',
+      'icon_key': 'briefcase',
+      'form_schema': <Map<String, dynamic>>[],
+      'is_active': true,
+      'created_at': now.toIso8601String(),
+    };
+
+    test('returns list of global verifications', () async {
+      unawaited(
+        mockTable(mockClient, 'verifications', selectData: [globalVerJson]),
+      );
+
+      final result = await repository.getGlobalVerifications();
+
+      expect(result, hasLength(1));
+      expect(result.first.id, 'ver_global');
+    });
+
+    test('returns empty list when no global verifications', () async {
+      unawaited(mockTable(mockClient, 'verifications', selectData: []));
+
+      final result = await repository.getGlobalVerifications();
+
+      expect(result, isEmpty);
+    });
+
+    test('throws on error', () async {
+      unawaited(
+        mockTable(mockClient, 'verifications', shouldThrow: Exception('error')),
+      );
+
+      await expectLater(
+        repository.getGlobalVerifications(),
+        throwsA(anything),
+      );
+    });
+  });
+
+  group('getVerificationById', () {
+    final verJson = {
+      'id': 'ver_1',
+      'category': 'career',
+      'internal_name': 'global_career',
+      'display_name': '직장 인증',
+      'partner_id': null,
+      'description': 'Career verification',
+      'icon_key': 'briefcase',
+      'form_schema': <Map<String, dynamic>>[],
+      'is_active': true,
+      'created_at': now.toIso8601String(),
+    };
+
+    test('returns verification when found', () async {
+      unawaited(
+        mockTable(mockClient, 'verifications', maybeSingleData: verJson),
+      );
+
+      final result = await repository.getVerificationById('ver_1');
+
+      expect(result, isNotNull);
+      expect(result!.id, 'ver_1');
+    });
+
+    test('returns null when not found', () async {
+      unawaited(mockTable(mockClient, 'verifications'));
+
+      final result = await repository.getVerificationById('unknown');
+
+      expect(result, isNull);
+    });
+
+    test('throws on error', () async {
+      unawaited(
+        mockTable(mockClient, 'verifications', shouldThrow: Exception('error')),
+      );
+
+      await expectLater(
+        repository.getVerificationById('ver_1'),
+        throwsA(anything),
+      );
+    });
+  });
+
+  group('getVerificationComments', () {
+    test('returns list of comments', () async {
+      final commentJson = {
+        'id': 'comment_1',
+        'submission_id': 'sub_1',
+        'content': '수정 필요',
+        'created_at': now.toIso8601String(),
+      };
+      unawaited(
+        mockTable(
+          mockClient,
+          'verification_comments',
+          selectData: [commentJson],
+        ),
+      );
+
+      final result = await repository.getVerificationComments('sub_1');
+
+      expect(result, hasLength(1));
+      expect(result.first['id'], 'comment_1');
+    });
+
+    test('returns empty list when no comments', () async {
+      unawaited(
+        mockTable(mockClient, 'verification_comments', selectData: []),
+      );
+
+      final result = await repository.getVerificationComments('sub_1');
+
+      expect(result, isEmpty);
+    });
+
+    test('throws on error', () async {
+      unawaited(
+        mockTable(
+          mockClient,
+          'verification_comments',
+          shouldThrow: Exception('error'),
+        ),
+      );
+
+      await expectLater(
+        repository.getVerificationComments('sub_1'),
+        throwsA(anything),
+      );
+    });
+  });
+});
 }
