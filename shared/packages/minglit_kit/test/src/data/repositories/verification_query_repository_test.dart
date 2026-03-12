@@ -1,6 +1,8 @@
 import 'dart:async' show unawaited;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:minglit_kit/src/data/models/verification.dart';
 import 'package:minglit_kit/src/data/repositories/verification_repository.dart';
+import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/mocks.dart';
 import '../../../helpers/supabase_mock_helpers.dart';
@@ -297,6 +299,47 @@ void main() {
 
       await expectLater(
         repository.getVerificationComments('sub_1'),
+        throwsA(anything),
+      );
+    });
+  });
+
+  group('getRequestsByStatus', () {
+    test('returns empty list when user not authenticated', () async {
+      // mockClient already has no currentUser (createMockSupabase() with no args)
+      final result = await repository.getRequestsByStatus(VerificationStatus.pending);
+      expect(result, isEmpty);
+    });
+
+    test('returns list of requests for authenticated user', () async {
+      final mockUser = MockUser();
+      when(() => mockUser.id).thenReturn('user_1');
+      final authedClient = createMockSupabase(currentUser: mockUser);
+      final authedRepo = SupabaseVerificationRepository(supabase: authedClient);
+
+      unawaited(
+        mockTable(authedClient, 'verification_submissions', selectData: [
+          {'id': 'sub_1', 'status': 'pending', 'user_id': 'user_1'},
+        ]),
+      );
+
+      final result = await authedRepo.getRequestsByStatus(VerificationStatus.pending);
+      expect(result, hasLength(1));
+      expect(result.first['id'], 'sub_1');
+    });
+
+    test('throws on error', () async {
+      final mockUser = MockUser();
+      when(() => mockUser.id).thenReturn('user_1');
+      final authedClient = createMockSupabase(currentUser: mockUser);
+      final authedRepo = SupabaseVerificationRepository(supabase: authedClient);
+
+      unawaited(
+        mockTable(authedClient, 'verification_submissions', shouldThrow: Exception('error')),
+      );
+
+      await expectLater(
+        authedRepo.getRequestsByStatus(VerificationStatus.pending),
         throwsA(anything),
       );
     });
