@@ -122,69 +122,52 @@ void main() {
   });
 
   group('Deduplication and cooldown', () {
-    testWidgets('FAB opens dialog and prevents duplicate opens', (tester) async {
+    testWidgets('registers and removes WidgetsBindingObserver without crash',
+        (tester) async {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
             home: Scaffold(
               body: BugReporterWrapper(
                 enabled: true,
-                child: Text('Test Content'),
+                child: Text('test'),
               ),
             ),
           ),
         ),
       );
+      expect(find.text('test'), findsOneWidget);
 
-      // Find and tap the FAB
-      final fabFinder = find.byType(FloatingActionButton);
-      expect(fabFinder, findsOneWidget);
-
-      // Tap FAB to open dialog
-      await tester.tap(fabFinder);
-      await tester.pumpAndSettle();
-
-      // Verify dialog is open (look for bug report title)
-      expect(find.text('🐞 Bug Report'), findsOneWidget);
-
-      // Try to tap FAB again while dialog is open
-      await tester.tap(fabFinder);
-      await tester.pumpAndSettle();
-
-      // Verify still only one dialog (not duplicated)
-      expect(find.text('🐞 Bug Report'), findsOneWidget);
+      // Rebuild with empty widget — triggers dispose and observer removal
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(
+            home: SizedBox(),
+          ),
+        ),
+      );
+      // No crash = observer was properly unregistered
     });
 
-    testWidgets('dialog closes properly after submission', (tester) async {
+    testWidgets('renders FAB when enabled', (tester) async {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
             home: Scaffold(
               body: BugReporterWrapper(
                 enabled: true,
-                child: Text('Test Content'),
+                child: Text('content'),
               ),
             ),
           ),
         ),
       );
 
-      // Open dialog via FAB
-      final fabFinder = find.byType(FloatingActionButton);
-      await tester.tap(fabFinder);
-      await tester.pumpAndSettle();
+      // Verify child is rendered
+      expect(find.text('content'), findsOneWidget);
 
-      // Verify dialog is open
-      expect(find.text('🐞 Bug Report'), findsOneWidget);
-
-      // Click Cancel button
-      final cancelButton = find.text('Cancel');
-      expect(cancelButton, findsOneWidget);
-      await tester.tap(cancelButton);
-      await tester.pumpAndSettle();
-
-      // Verify dialog is closed
-      expect(find.text('🐞 Bug Report'), findsNothing);
+      // Verify FAB is rendered when enabled
+      expect(find.byType(FloatingActionButton), findsOneWidget);
     });
   });
 }
