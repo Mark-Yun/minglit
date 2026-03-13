@@ -38,3 +38,21 @@ adb -s adb-R3CX803P2ND-8btuuD._adb-tls-connect._tcp install -r build/app/outputs
 - PR 생성 시 관련 GitHub Issue가 있으면 PR body에 `Closes #이슈번호`를 포함한다.
 - 여러 이슈: `Closes #53, closes #54, closes #55`
 - dev 브랜치에 머지되면 해당 이슈가 자동으로 닫힌다.
+
+## Bug Fix Conventions
+
+### 진단 프로세스
+- 버그 리포트에 포함된 스크린샷, UI dump(widget tree, render tree 등)를 반드시 먼저 분석한다.
+- 증상이 아닌 root cause를 찾아 수정한다. 표면적 증상만 막는 workaround 금지.
+- root cause 파악이 어려울 경우, 재현 경로를 먼저 확보한 뒤 디버깅한다.
+- debuggability, maintainability, readability를 고려한 수정을 한다. 급한 핫픽스라도 코드 품질을 떨어뜨리지 않는다.
+
+### 코드 이력 주석
+- 버그 픽스 코드에는 반드시 관련 Issue 번호와 수정 이유를 주석으로 남긴다.
+- 형식: `// Fix #이슈번호: 수정 이유 (한 줄 요약)`
+- 예시:
+  ```dart
+  // Fix #72: PartyStatusEditSheet에서 visibility가 null일 때 크래시 — default 값 보장
+  final visibility = party.visibility ?? 'public';
+  ```
+- 주석은 수정된 코드 바로 위에 작성한다. 파일 상단이나 먼 곳에 남기지 않는다.

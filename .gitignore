@@ -37,6 +37,9 @@ logs/
 **/ios/Pods/
 **/ios/.resort/
 
+# macOS
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+
 # Web
 **/web/index.html.tmp
 
