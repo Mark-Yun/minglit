@@ -90,6 +90,7 @@ abstract class Verification with _$Verification {
 
     /// Partner ID who owns this verification. Null means Global/System verification.
     @JsonKey(name: 'partner_id') String? partnerId,
+    // Fix #42: Handle nullable DB fields — description and icon_key can be null in verifications table
     String? description,
 
     /// Icon identifier (e.g., 'briefcase').
