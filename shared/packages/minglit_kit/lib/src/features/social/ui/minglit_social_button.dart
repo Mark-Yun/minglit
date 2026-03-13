@@ -119,6 +119,7 @@ class MinglitSocialButton extends ConsumerWidget {
       SocialInteractionType.bookmark =>
         isActive ? Icons.bookmark : Icons.bookmark_border,
       SocialInteractionType.block => Icons.block,
+      SocialInteractionType.report => Icons.flag,
     };
   }
 
@@ -137,6 +138,7 @@ class MinglitSocialButton extends ConsumerWidget {
       SocialInteractionType.subscribe => '구독',
       SocialInteractionType.bookmark => '저장',
       SocialInteractionType.block => '차단',
+      SocialInteractionType.report => '신고',
     };
   }
 }
