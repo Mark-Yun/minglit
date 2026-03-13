@@ -61,13 +61,17 @@ class UserScaffold extends ConsumerWidget {
                           states,
                         ) {
                           if (states.contains(WidgetState.selected)) {
-                            return TextStyle(
+                            return Theme.of(
+                              context,
+                            ).textTheme.labelSmall!.copyWith(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: colorScheme.onSurface,
                             );
                           }
-                          return TextStyle(
+                          return Theme.of(
+                            context,
+                          ).textTheme.labelSmall!.copyWith(
                             fontSize: 11,
                             fontWeight: FontWeight.w400,
                             color: colorScheme.onSurfaceVariant,

@@ -23,10 +23,14 @@ class _ParticipationSection extends StatelessWidget {
           ),
           const SizedBox(height: MinglitSpacing.medium),
           if (max > 0) ...[
-            LinearProgressIndicator(
-              value: (current / max).clamp(0.0, 1.0),
-              minHeight: 8,
+            ClipRRect(
               borderRadius: BorderRadius.circular(4),
+              child: SizedBox(
+                height: 8,
+                child: MinglitLinearProgressIndicator(
+                  value: (current / max).clamp(0.0, 1.0),
+                ),
+              ),
             ),
             const SizedBox(height: MinglitSpacing.small),
             Text(

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 class AddressSearchDialog extends StatefulWidget {
   const AddressSearchDialog({super.key});
@@ -105,7 +106,12 @@ class _AddressSearchDialogState extends State<AddressSearchDialog> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            padding: const EdgeInsets.fromLTRB(
+              MinglitSpacing.medium,
+              MinglitSpacing.sm,
+              MinglitSpacing.medium,
+              MinglitSpacing.sm,
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -131,28 +137,28 @@ class _AddressSearchDialogState extends State<AddressSearchDialog> {
           const Divider(height: 1),
           if (_isLoading)
             const Expanded(
-              child: Center(child: CircularProgressIndicator()),
+              child: Center(child: MinglitCircularProgressIndicator()),
             )
           else if (_errorMessage != null)
             Expanded(
               child: Center(
                 child: Text(
                   _errorMessage!,
-                  style: TextStyle(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.5),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
             )
           else if (_results.isEmpty)
-            const Expanded(
+            Expanded(
               child: Center(
                 child: Text(
                   '위 검색창에 주소를 입력하고 검색 버튼을 눌러주세요',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             )
@@ -169,7 +175,7 @@ class _AddressSearchDialogState extends State<AddressSearchDialog> {
                     title: Text(roadAddr),
                     subtitle: Text(
                       jibunAddr,
-                      style: const TextStyle(fontSize: 12),
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
                     onTap: () => Navigator.of(context).pop(roadAddr),
                   );

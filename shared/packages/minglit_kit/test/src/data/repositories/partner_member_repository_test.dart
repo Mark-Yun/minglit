@@ -2,7 +2,7 @@ import 'dart:async' show FutureOr, unawaited;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/repositories/partner_repository.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:postgrest/postgrest.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../helpers/mocks.dart';
 import '../../../helpers/supabase_mock_helpers.dart';
@@ -47,7 +47,7 @@ void main() {
     group('getPartnerMembers', () {
       test('returns list of members', () async {
         when(
-          () => mockClient.rpc(
+          () => mockClient.rpc<dynamic>(
             'get_partner_members_with_user',
             params: any(named: 'params'),
           ),
@@ -56,13 +56,14 @@ void main() {
         final result = await repository.getPartnerMembers('partner_1');
 
         expect(result, hasLength(1));
-        expect(result.first['user']['id'], 'user_1');
+        final user = result.first['user'] as Map<String, dynamic>;
+        expect(user['id'], 'user_1');
         expect(result.first['role'], 'member');
       });
 
       test('returns empty list when no members', () async {
         when(
-          () => mockClient.rpc(
+          () => mockClient.rpc<dynamic>(
             'get_partner_members_with_user',
             params: any(named: 'params'),
           ),
@@ -75,7 +76,7 @@ void main() {
 
       test('throws on rpc error', () async {
         when(
-          () => mockClient.rpc(
+          () => mockClient.rpc<dynamic>(
             'get_partner_members_with_user',
             params: any(named: 'params'),
           ),

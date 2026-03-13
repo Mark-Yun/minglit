@@ -222,8 +222,8 @@ class _ParticipantDDayOverlay extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 4,
+        horizontal: MinglitSpacing.small,
+        vertical: MinglitSpacing.xsmall,
       ),
       decoration: BoxDecoration(
         color: MinglitColors.textPrimary.withValues(alpha: 0.55),
@@ -301,8 +301,8 @@ class _PartnerOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 4,
+        horizontal: MinglitSpacing.small,
+        vertical: MinglitSpacing.xsmall,
       ),
       decoration: BoxDecoration(
         color: MinglitColors.textPrimary.withValues(alpha: 0.55),

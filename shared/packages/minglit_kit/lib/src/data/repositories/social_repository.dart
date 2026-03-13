@@ -93,6 +93,7 @@ class SocialRepository {
     }
   }
 
+  /// Blocks the given partner for the current user.
   Future<void> blockPartner(String partnerId) async {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) throw Exception('User not authenticated');
@@ -109,6 +110,7 @@ class SocialRepository {
     }
   }
 
+  /// Unblocks a previously blocked partner.
   Future<void> unblockPartner(String partnerId) async {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) throw Exception('User not authenticated');
@@ -125,6 +127,7 @@ class SocialRepository {
     }
   }
 
+  /// Reports a partner with a reason and optional description.
   Future<void> reportPartner({
     required String partnerId,
     required String reason,
@@ -153,6 +156,7 @@ class SocialRepository {
     }
   }
 
+  /// Returns the list of partner IDs blocked by the current user.
   Future<List<String>> getBlockedPartnerIds() async {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) return [];
@@ -170,6 +174,7 @@ class SocialRepository {
     }
   }
 
+  /// Returns profile data for all blocked partners.
   Future<List<Map<String, dynamic>>> getBlockedPartners() async {
     final ids = await getBlockedPartnerIds();
     if (ids.isEmpty) return [];

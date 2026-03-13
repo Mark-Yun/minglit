@@ -62,9 +62,12 @@ class PartyInfoTab extends ConsumerWidget {
                       backgroundColor: Theme.of(
                         context,
                       ).colorScheme.errorContainer,
-                      labelStyle: TextStyle(
-                        color: Theme.of(context).colorScheme.onErrorContainer,
-                      ),
+                      labelStyle: Theme.of(context).textTheme.labelSmall!
+                          .copyWith(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onErrorContainer,
+                          ),
                     ),
                   ),
               ],

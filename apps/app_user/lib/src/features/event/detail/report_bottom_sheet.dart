@@ -110,7 +110,9 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
             RadioListTile<ReportReason>(
               title: Text(_reasonLabels[reason] ?? reason.name),
               value: reason,
+              // ignore: deprecated_member_use, RadioGroup migration pending
               groupValue: _selectedReason,
+              // ignore: deprecated_member_use, RadioGroup migration pending
               onChanged: (v) => setState(() => _selectedReason = v),
             ),
           if (_selectedReason == ReportReason.other)
@@ -137,7 +139,7 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: MinglitCircularProgressIndicator(),
                     )
                   : const Text('신고하기'),
             ),

@@ -1,7 +1,0 @@
-{
-  "trackId": "ios_build_cicd_20260119",
-  "title": "iOS 앱 빌드 및 CI/CD 환경 구축",
-  "status": "pending",
-  "createdAt": "2026-01-19T18:30:00Z",
-  "tags": ["ios", "cicd", "apple-developer", "github-actions"]
-}
