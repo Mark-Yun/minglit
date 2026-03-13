@@ -12,7 +12,6 @@ class MockEventRepository extends Mock implements EventRepository {}
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
-class MockIdentityRepository extends Mock implements IdentityRepository {}
 
 class MockVerificationRepository extends Mock
     implements VerificationRepository {}
