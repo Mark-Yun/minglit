@@ -1,6 +1,6 @@
 # 밍글릿 결제/정산 시스템 아키텍처 기술서 (Architecture Description)
 
-- **버전**: 1.0
+- **버전**: 1.1
 - **작성일**: 2026. 03. 13.
 - **기반 문서**: SRS v2.0 (requirements.md)
 - **뷰 모델**: Kruchten 4+1 Architectural View Model
@@ -10,6 +10,7 @@
 | 버전 | 일자 | 작성자 | 변경 내용 |
 |------|------|--------|-----------|
 | 1.0 | 2026.03.13 | — | 초안 작성. SRS v2.0 기반 4+1 뷰 |
+| 1.1 | 2026.03.13 | — | 심층 리뷰 기반 수정. AS-IS/TO-BE 경계 명확화, 상태값 오류 수정(`paid`→`approved`), 웹훅 인증 3중 방어 반영, JWT 인증 위임 방식 정정, QStash/PGMQ 정리, 보안 Gap(계좌번호 평문) 식별, 환경변수 불일치 기록, `_shared/` 누락 모듈 추가, Gap 분석 5건 보강 |
 
 ---
 
@@ -113,22 +114,24 @@ sequenceDiagram
         U->>EF: POST /payment-verify {paymentId}
         EF->>PG: GET /payments/{paymentId}
         PG-->>EF: 결제 상세 (status, amount)
-        EF->>DB: UPDATE event_applications SET status='paid'
-        Note over DB: ON CONFLICT → 멱등 (이미 paid면 skip)
+        EF->>DB: UPDATE event_applications SET status='approved'
+        Note over DB: ON CONFLICT → 멱등 (이미 approved면 skip)
     and Track B: PG 웹훅
         PG->>WH: POST /payment-webhook {paymentId, status}
         WH->>PG: GET /payments/{paymentId} (검증)
         PG-->>WH: 결제 상세
-        WH->>DB: UPDATE event_applications SET status='paid'
-        Note over DB: ON CONFLICT → 멱등 (이미 paid면 skip)
+        WH->>DB: UPDATE event_applications SET status='approved'
+        Note over DB: ON CONFLICT → 멱등 (이미 approved면 skip)
     end
 
     Note over DB: 선착순 1건만 실제 처리 (REQ-3.1.1)
-    DB->>DB: TRIGGER on_event_completed → INSERT settlement_items (PENDING)
-    Note over DB: 요율 스냅샷 저장 (REQ-3.1.2)
+    DB->>DB: TRIGGER on_event_completed → INSERT settlements (pending)
+    Note over DB: AS-IS: 하드코딩 요율로 생성 / TO-BE: 요율 스냅샷 저장 (REQ-3.1.2)
 ```
 
-**텍스트 설명**: 유저가 PortOne으로 결제하면, (A) 앱이 payment-verify로 직접 확인하거나 (B) PG가 웹훅으로 알려준다. 두 경로 모두 PortOne API로 결제를 재검증한 뒤 `event_applications`를 `paid`로 업데이트한다. 멱등성으로 중복 처리를 방지하고, 이벤트 완료 시 트리거가 `settlement_items`에 PENDING 상태로 정산 원장을 적재한다.
+**텍스트 설명**: 유저가 PortOne으로 결제하면, (A) 앱이 payment-verify로 직접 확인하거나 (B) PG가 웹훅으로 알려준다. 두 경로 모두 PortOne API로 결제를 재검증한 뒤 `event_applications`를 `approved`로 업데이트한다. 멱등성으로 중복 처리를 방지하고, 이벤트 완료 시 트리거가 `settlements`에 `pending` 상태로 정산 레코드를 생성한다.
+
+> **AS-IS vs TO-BE 참고**: 현재 코드에서는 단일 `settlements` 테이블에 `pending` 상태로 생성된다. TO-BE에서는 `settlement_items` 테이블로 전환하여 `PENDING` 상태로 적재할 예정이다 (Phase 1~2 참조).
 
 ### 2.3 UC-02: 14일 보류 후 READY 확정
 
@@ -223,7 +226,7 @@ sequenceDiagram
     participant DB as PostgreSQL
 
     PG->>WH: 환불/차지백 웹훅
-    WH->>WH: HMAC-SHA256 서명 검증 (REQ-6.17~19)
+    WH->>WH: IP Allowlist + API 재검증 (AS-IS)
     WH->>DB: SELECT settlement_items WHERE source_id=paymentId
 
     alt 항목이 COMPLETED
@@ -237,13 +240,17 @@ sequenceDiagram
     end
 ```
 
-**텍스트 설명**: PG에서 환불/차지백 웹훅이 오면 HMAC 서명을 검증한다. 이미 COMPLETED된 항목은 원장 불변 원칙에 따라 수정하지 않고 `adjustment_items`로 음수 차감을 생성한다. 아직 PENDING/READY인 항목은 직접 CANCELED로 전환한다.
+**텍스트 설명**: PG에서 환불/차지백 웹훅이 오면 3중 방어로 검증한다: (1) IP Allowlist, (2) PortOne API 재검증, (3) merchant_uid 일치 확인. 이미 COMPLETED된 항목은 원장 불변 원칙에 따라 수정하지 않고 `adjustment_items`로 음수 차감을 생성한다. 아직 PENDING/READY인 항목은 직접 CANCELED로 전환한다.
+
+> **AS-IS vs TO-BE**: 현재 웹훅 인증은 IP Allowlist + API 재검증 + merchant_uid 일치 확인의 3중 방어 체계다. SRS REQ-6.17~19에서 요구하는 **HMAC-SHA256 서명 검증은 미구현** 상태이며, TO-BE에서 추가 적용 필요.
 
 ---
 
 ## 3. Logical View
 
 ### 3.1 도메인 모델 (Entity Relationship)
+
+> ⚠️ **이 ER 다이어그램은 TO-BE 목표 스키마다.** AS-IS에는 단일 `settlements` 테이블(4상태: pending/ready/requested/completed)만 존재한다. TO-BE 5개 테이블(`settlement_items`, `payouts`, `payout_transfers`, `settlement_histories`, `adjustment_items`)은 Phase 1~2에서 구현 예정이다. AS-IS 스키마는 [7.1 구조적 차이](#71-구조적-차이) 참조.
 
 ```mermaid
 erDiagram
@@ -376,6 +383,8 @@ erDiagram
 
 ### 3.3 상태 머신 (Settlement Item)
 
+> ⚠️ **이 상태 머신은 TO-BE 목표 설계다.** AS-IS에는 4단계(`pending` → `ready` → `requested` → `completed`)만 존재한다. TO-BE 7단계(PENDING, HOLD, CANCELED, READY, PROCESSING, COMPLETED, FAILED)는 Phase 2에서 구현 예정이다.
+
 ```mermaid
 stateDiagram-v2
     [*] --> PENDING: 원천거래 수집
@@ -421,7 +430,7 @@ flowchart LR
         B --> C{이중 승인}
         C -->|Track A| D[payment-verify]
         C -->|Track B| E[payment-webhook]
-        D --> F[event_applications.status = paid]
+        D --> F[event_applications.status = approved]
         E --> F
     end
 
@@ -459,6 +468,8 @@ flowchart LR
 
 ### 4.2 동시성 제어 패턴
 
+> ⚠️ **TO-BE 패턴.** AS-IS에는 `version` 컬럼과 CAS 패턴이 구현되어 있지 않다. 현재는 `ON CONFLICT`를 통한 부분적 멱등성만 사용 중이다.
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ Compare-And-Set (CAS) Pattern                               │
@@ -478,16 +489,17 @@ flowchart LR
 
 ### 4.3 배치 프로세스 스케줄
 
-| 프로세스 | 스케줄 | 대상 | 처리 방식 |
-|---------|--------|------|----------|
-| settlement-status-transition | 매일 03:00 KST | PENDING → READY | pg_cron → SQL 함수 |
-| payout-assembly | 매일 10:00 KST | READY → PROCESSING | Edge Function / Job |
-| payout-execution | 매일 11:00-14:00 KST | PortOne 정산 API 지급 | Edge Function (chunk 500건) |
-| retry-scheduler | 매 30분 | FAILED (retryable) | next_retry_at 기반 |
-| reconciliation-daily | 매일 22:00 KST | 3-way 대사 | PG report + bank statement |
-| reconciliation-payout | 지급 완료 후 1시간 | 당일 지급분 | 즉시 트리거 |
-| stuck-processing-check | 매 30분 | PROCESSING > 2h | 자동 FAILED 전환 |
-| data-retention-cleanup | 매일 01:00 KST | 만료 데이터 | 파기/마스킹 |
+| 프로세스 | 스케줄 | 대상 | 처리 방식 | 구현 상태 |
+|---------|--------|------|----------|----------|
+| settlement-status-transition | 매일 03:00 KST | pending → ready (7일 경과) | pg_cron → SQL 함수 | ✅ AS-IS |
+| notification-worker | 매 1분 | PGMQ 대기 알림 | pg_cron → Edge Function | ✅ AS-IS |
+| payout-assembly | 매일 10:00 KST | READY → PROCESSING | Edge Function / Job | ⬜ TO-BE (Phase 3) |
+| payout-execution | 매일 11:00-14:00 KST | PortOne 정산 API 지급 | Edge Function (chunk 500건) | ⬜ TO-BE (Phase 3) |
+| retry-scheduler | 매 30분 | FAILED (retryable) | next_retry_at 기반 | ⬜ TO-BE (Phase 3) |
+| reconciliation-daily | 매일 22:00 KST | 3-way 대사 | PG report + bank statement | ⬜ TO-BE (Phase 4) |
+| reconciliation-payout | 지급 완료 후 1시간 | 당일 지급분 | 즉시 트리거 | ⬜ TO-BE (Phase 4) |
+| stuck-processing-check | 매 30분 | PROCESSING > 2h | 자동 FAILED 전환 | ⬜ TO-BE (Phase 3) |
+| data-retention-cleanup | 매일 01:00 KST | 만료 데이터 | 파기/마스킹 | ⬜ TO-BE (Phase 4) |
 
 ### 4.4 알림 처리 흐름
 
@@ -504,11 +516,13 @@ flowchart TD
 
     D & E & F & G & H & I --> J[알림 멱등키 생성<br/>notif:event_type:entity_id:version]
     J --> K{중복?}
-    K -->|No| L[Email + In-app 발송]
+    K -->|No| L[FCM 푸시 + In-app 발송]
     K -->|Yes| M[Skip]
 ```
 
-**텍스트 설명**: 모든 알림은 상태 전이(settlement_histories INSERT)를 트리거로 발생한다. 각 알림에 멱등키를 부여해 중복 발송을 방지하고, Email + In-app 2개 채널로 발송한다.
+**텍스트 설명**: 모든 알림은 상태 전이를 트리거로 발생한다. 각 알림에 멱등키를 부여해 중복 발송을 방지하고, FCM 푸시 + In-app DB 2개 채널로 발송한다.
+
+> **AS-IS vs TO-BE**: 현재 notification-worker는 FCM 푸시 + In-app DB만 지원한다. SRS REQ-8.08에서 요구하는 **Email 채널은 미구현** 상태이며, TO-BE Phase 5에서 추가 예정이다.
 
 ---
 
@@ -547,8 +561,10 @@ minglit/
 │   ├── functions/                 # ★ Edge Functions (Deno/TypeScript)
 │   │   ├── _shared/              # 공통 유틸
 │   │   │   ├── portone_client.ts  # PortOne V2 API 클라이언트
-│   │   │   ├── auth_utils.ts      # JWT 인증
+│   │   │   ├── iamport_client.ts  # PortOne V1 (Iamport) API 클라이언트
+│   │   │   ├── auth_utils.ts      # Supabase Auth 인증 (JWT 토큰 검증 위임)
 │   │   │   ├── response_utils.ts  # 응답 포맷
+│   │   │   ├── worker_utils.ts    # 워커 유틸 (PGMQ, 알림 등)
 │   │   │   └── sentry_utils.ts    # 에러 모니터링
 │   │   ├── payment-verify/        # 결제 검증 (Track A)
 │   │   ├── payment-webhook/       # PG 웹훅 수신 (Track B)
@@ -588,7 +604,9 @@ minglit/
 │  Supabase Edge Functions (Deno/TypeScript)               │
 │  - REST endpoints                                        │
 │  - Webhook receivers                                     │
-│  - Auth (JWT) + CORS                                     │
+│  - Auth (Supabase Auth `getUser()` 위임) + CORS           │
+│    ※ config.toml에 verify_jwt=false인 함수 존재:          │
+│      웹훅 등 외부 호출은 함수 코드에서 자체 인증 처리        │
 ├─────────────────────────────────────────────────────────┤
 │                    Business Logic Layer                   │
 │  PostgreSQL Functions + Triggers                         │
@@ -620,7 +638,7 @@ minglit/
 | 랜딩 페이지 | Next.js (TypeScript) | — |
 | API / Serverless | Supabase Edge Functions (Deno) | TypeScript |
 | 데이터베이스 | PostgreSQL | Supabase managed |
-| 큐 | PGMQ (PostgreSQL) | event_routes + processed_events + DLQ |
+| 큐 | PGMQ (PostgreSQL) | AS-IS: event_routes + processed_events + DLQ. SRS에 QStash 언급이 있으나 코드베이스는 PGMQ 사용 중. TO-BE에서도 PGMQ 유지 결정 (외부 의존성 최소화) |
 | 크론 | pg_cron | Supabase built-in |
 | PG 연동 | PortOne V2 API | REST, API Key auth |
 | 검색 | PGroonga | 한글 전문 검색 |
@@ -646,7 +664,7 @@ flowchart TD
     subgraph Supabase["Supabase"]
         EF[Edge Functions]
         PG[PostgreSQL]
-        SH[_shared/<br/>portone_client<br/>auth_utils]
+        SH[_shared/<br/>portone_client<br/>iamport_client<br/>auth_utils<br/>worker_utils]
     end
 
     subgraph External["External"]
@@ -745,10 +763,10 @@ flowchart TB
 
 | 경로 | 프로토콜 | 인증 | 비고 |
 |------|---------|------|------|
-| 앱 → Supabase | HTTPS | JWT (GoTrue) | Supabase client SDK |
+| 앱 → Supabase | HTTPS | JWT (GoTrue) | Supabase client SDK. Edge Function 내부에서는 `auth.getUser(token)`으로 검증 위임 (자체 JWT 파싱 없음) |
 | Edge Function → PortOne V1 | HTTPS | API Key + Secret | PORTONE_API_KEY + PORTONE_API_SECRET (결제 검증/취소) |
 | Edge Function → PortOne V2 | HTTPS | API Key (Bearer) | PORTONE_V2_API_KEY (정산 조회/파트너 동기화) |
-| PortOne → webhook | HTTPS | IP Allowlist (AS-IS) | ⚠ HMAC-SHA256 미구현 — TO-BE에서 REQ-6.17~19 적용 필수 |
+| PortOne → webhook | HTTPS | 3중 방어 (AS-IS): IP Allowlist + PortOne API 재검증 + merchant_uid 일치 확인 | ⚠ HMAC-SHA256 서명 미구현 — TO-BE에서 REQ-6.17~19 적용 시 4중 방어로 강화 |
 | Edge Function → PortOne 정산 API | HTTPS | API Key (Bearer) | PORTONE_V2_API_KEY (지급 실행) |
 | Edge Function → Sentry | HTTPS | DSN | 자동 에러 리포트 |
 | pg_cron → Edge Function | HTTP (내부) | service_role_key | vault.decrypted_secrets |
@@ -764,6 +782,8 @@ flowchart TB
 | `SUPABASE_SERVICE_ROLE_KEY` | 내부 서비스 호출 | Supabase (vault에서 조회) |
 
 > **참고**: V1/V2 자격증명이 분리되어 있어 향후 V2 단일화 마이그레이션 필요.
+>
+> ⚠️ **네이밍 불일치**: 결제 검증/취소에는 `PORTONE_API_KEY` + `PORTONE_API_SECRET`을 사용하고, 본인인증에는 `PORTONE_IMP_KEY` + `PORTONE_IMP_SECRET`을 사용한다. 동일한 Iamport V1 API임에도 환경변수명이 다르다. V2 단일화 마이그레이션 시 통일 필요.
 
 ### 6.4 RLS 정책 (Row Level Security)
 
@@ -776,19 +796,26 @@ flowchart TB
 ### 6.5 데이터 보안
 
 ```
-┌─────────────────────────────────────────────────┐
-│ 데이터 보안 레이어                                │
-│                                                  │
-│ [전송 중]  TLS 1.2+ 강제                         │
-│ [저장 시]  계좌번호 → envelope encryption (KMS)   │
-│            account_last4만 평문                   │
-│            bank_account_snapshot → 암호문 only    │
-│ [접근]     RLS 정책 (partner_id 기반)             │
-│            RBAC (admin/partner/system 구분)       │
-│ [로그]     PII 마스킹 (account_last4만)           │
-│ [파기]     5년 보존 → crypto-shredding            │
-│ [감사]     계좌 조회 자체를 access log 기록        │
-└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ 데이터 보안 레이어                                                │
+│                                                                  │
+│ [전송 중]  TLS 1.2+ 강제                              ✅ AS-IS   │
+│ [저장 시]  계좌번호 → envelope encryption (KMS)        ⬜ TO-BE   │
+│            account_last4만 평문                        ⬜ TO-BE   │
+│            bank_account_snapshot → 암호문 only         ⬜ TO-BE   │
+│ [접근]     RLS 정책 (partner_id 기반)                  ✅ AS-IS   │
+│            RBAC (admin/partner/system 구분)            ⚠ 부분     │
+│              → AS-IS: partner_role enum만 존재                    │
+│              → TO-BE: admin/system role 추가 필요                 │
+│ [로그]     PII 마스킹 (account_last4만)               ⬜ TO-BE   │
+│ [파기]     5년 보존 → crypto-shredding                ⬜ TO-BE   │
+│ [감사]     계좌 조회 자체를 access log 기록             ⬜ TO-BE   │
+└─────────────────────────────────────────────────────────────────┘
+
+🔴 AS-IS 보안 위험: partner_settlements.account_number가 **평문**으로 저장되어 있음
+   (migration: 20260301000002_02_schema_core.sql:143).
+   KMS envelope encryption, account_last4 컬럼 모두 미구현.
+   Phase 2에서 우선 대응 필요.
 ```
 
 ---
@@ -812,11 +839,16 @@ flowchart TB
 | **대사** | 없음 | 3-way Reconciliation | 신규 구현 |
 | **지급 실행** | PortOne 위임 (AS-IS) | PortOne 정산 API + payout_transfers로 내부 추적 | 지급 추적 체계 신규 구현 |
 | **파트너 정산 조회** | PortOne API 프록시 | 내부 DB 직접 조회 | 쿼리 변경 |
-| **웹훅 인증** | IP Allowlist (V1) | HMAC-SHA256 서명 (REQ-6.17) | 보안 강화 필요 |
+| **웹훅 인증** | 3중 방어: IP Allowlist + API 재검증 + merchant_uid (V1) | + HMAC-SHA256 서명 (REQ-6.17) → 4중 방어 | 보안 강화 필요 |
 | **PG 버전** | V1(결제) + V2(정산) 혼용 | V2 단일화 | 자격증명 마이그레이션 |
 | **환불 처리** | 트리거 → HTTP → PG (비동기, 실패 시 gap) | 멱등 환불 + adjustment_items | 안정성 강화 |
-| **QStash** | 미구현 (PGMQ 사용) | QStash 비동기 처리 (SRS 명시) | 큐 시스템 결정 필요 |
+| **큐 시스템** | PGMQ (PostgreSQL 내장) | SRS에 QStash 언급 | AS-IS PGMQ 유지 결정. SRS의 QStash 언급은 초기 검토 사항으로, 외부 의존성 최소화를 위해 PGMQ 계속 사용. SRS 해당 문구 수정 필요 |
 | **파트너 UI** | 읽기 전용 (조회만) | 이의제기/재지급 요청/다운로드 | UI 확장 필요 |
+| **계좌번호 저장** | `partner_settlements.account_number` 평문 저장 | envelope encryption (KMS) + `account_last4`만 평문 | 🔴 보안 위험 — Phase 2 우선 대응 필요 |
+| **Email 알림** | 미구현 (FCM 푸시 + In-app만) | Email 채널 추가 (REQ-8.08) | Phase 5에서 구현 예정 |
+| **Kill Switch** | 미구현 | 지급 긴급 중단 메커니즘 (REQ-4.3.06) | Phase 4 운영 기능으로 구현 |
+| **Business Calendar** | 미구현 | 공휴일/점검시간 스케줄링 (REQ-4.3.04) | Phase 4 운영 기능으로 구현 |
+| **환경변수 네이밍** | V1: `PORTONE_API_KEY` / 본인인증: `PORTONE_IMP_KEY` 혼재 | 통일된 네이밍 컨벤션 | V2 단일화 마이그레이션 시 정리 |
 
 ### 7.2 마이그레이션 전략 (제안)
 
