@@ -111,6 +111,102 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'**
   String get common_error_system;
+
+  /// No description provided for @reportReasonSexualContent.
+  ///
+  /// In ko, this message translates to:
+  /// **'선정적인 콘텐츠'**
+  String get reportReasonSexualContent;
+
+  /// No description provided for @reportReasonFalseInformation.
+  ///
+  /// In ko, this message translates to:
+  /// **'허위 또는 과장된 정보'**
+  String get reportReasonFalseInformation;
+
+  /// No description provided for @reportReasonNoShow.
+  ///
+  /// In ko, this message translates to:
+  /// **'노쇼 / 이벤트 미진행'**
+  String get reportReasonNoShow;
+
+  /// No description provided for @reportReasonFraud.
+  ///
+  /// In ko, this message translates to:
+  /// **'사기 또는 부당 청구'**
+  String get reportReasonFraud;
+
+  /// No description provided for @reportReasonOther.
+  ///
+  /// In ko, this message translates to:
+  /// **'기타'**
+  String get reportReasonOther;
+
+  /// No description provided for @blockPartnerTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'차단하기'**
+  String get blockPartnerTitle;
+
+  /// No description provided for @blockPartnerConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 파트너를 차단하시겠습니까?\n이 파트너의 이벤트가 더 이상 표시되지 않습니다.'**
+  String get blockPartnerConfirm;
+
+  /// No description provided for @blockPartnerSuccess.
+  ///
+  /// In ko, this message translates to:
+  /// **'파트너가 차단되었습니다'**
+  String get blockPartnerSuccess;
+
+  /// No description provided for @reportPartnerTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'신고하기'**
+  String get reportPartnerTitle;
+
+  /// No description provided for @reportPartnerDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'신고 이유를 선택해주세요'**
+  String get reportPartnerDescription;
+
+  /// No description provided for @reportSuccess.
+  ///
+  /// In ko, this message translates to:
+  /// **'신고가 접수되었습니다'**
+  String get reportSuccess;
+
+  /// No description provided for @blockedPartnersTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'차단 목록'**
+  String get blockedPartnersTitle;
+
+  /// No description provided for @unblockPartner.
+  ///
+  /// In ko, this message translates to:
+  /// **'차단 해제'**
+  String get unblockPartner;
+
+  /// No description provided for @unblockPartnerConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 파트너의 차단을 해제하시겠습니까?'**
+  String get unblockPartnerConfirm;
+
+  /// No description provided for @blockedPartnersEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'차단된 파트너가 없습니다'**
+  String get blockedPartnersEmpty;
+
+  /// No description provided for @reportReasonOtherHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'상세 사유를 입력해주세요'**
+  String get reportReasonOtherHint;
 }
 
 class _AppLocalizationsDelegate

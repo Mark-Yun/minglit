@@ -9,7 +9,8 @@ enum ReportReason {
   falseInformation('false_information'),
   noShow('no_show'),
   fraud('fraud'),
-  other('other');
+  other('other')
+  ;
 
   const ReportReason(this.value);
   final String value;
@@ -23,8 +24,8 @@ abstract class ReportDetail with _$ReportDetail {
     @JsonKey(name: 'target_id') required String targetId,
     @JsonKey(name: 'target_type') required SocialTargetType targetType,
     required String reason,
-    String? description,
     @JsonKey(name: 'created_at') required DateTime createdAt,
+    String? description,
   }) = _ReportDetail;
 
   factory ReportDetail.fromJson(Map<String, dynamic> json) =>

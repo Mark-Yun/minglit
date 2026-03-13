@@ -26,7 +26,7 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
   final _descriptionController = TextEditingController();
   bool _submitting = false;
 
-  static const _reasonLabels = {
+  static const Map<ReportReason, String> _reasonLabels = {
     ReportReason.sexualContent: '선정적인 콘텐츠',
     ReportReason.falseInformation: '허위 또는 과장된 정보',
     ReportReason.noShow: '노쇼 / 이벤트 미진행',
