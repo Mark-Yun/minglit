@@ -178,6 +178,24 @@ void main() {
           completes,
         );
       });
+
+      test('throws on error', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
+            shouldThrow: Exception('delete error'),
+          ),
+        );
+
+        await expectLater(
+          repository.deleteApplication(
+            eventId: 'event_1',
+            userId: 'user_1',
+          ),
+          throwsA(anything),
+        );
+      });
     });
 
     group('confirmPayment', () {
@@ -257,6 +275,21 @@ void main() {
         expect(result, hasLength(1));
         expect(result.first.id, 'app_1');
       });
+
+      test('throws on error', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
+            shouldThrow: Exception('history error'),
+          ),
+        );
+
+        await expectLater(
+          repository.getMyPurchaseHistory('user_1'),
+          throwsA(anything),
+        );
+      });
     });
 
     group('getPendingApplicationCount', () {
@@ -275,6 +308,101 @@ void main() {
 
         final result = await repository.getPendingApplicationCount('partner_1');
         expect(result, 2);
+      });
+    });
+    group('getTodayEvents', () {
+      test('returns list of events for today', () async {
+        unawaited(
+          mockTable(mockClient, 'events', selectData: [eventJson]),
+        );
+
+        final result = await repository.getTodayEvents('partner_1');
+
+        expect(result, hasLength(1));
+        expect(result.first.id, 'event_1');
+      });
+
+      test('returns empty list when no events today', () async {
+        unawaited(mockTable(mockClient, 'events', selectData: []));
+
+        final result = await repository.getTodayEvents('partner_1');
+
+        expect(result, isEmpty);
+      });
+
+      test('throws on error', () async {
+        unawaited(
+          mockTable(mockClient, 'events', shouldThrow: Exception('error')),
+        );
+
+        await expectLater(
+          repository.getTodayEvents('partner_1'),
+          throwsA(anything),
+        );
+      });
+    });
+
+    group('getUpcomingEvents', () {
+      test('returns list of upcoming events', () async {
+        unawaited(
+          mockTable(mockClient, 'events', selectData: [eventJson]),
+        );
+
+        final result = await repository.getUpcomingEvents('partner_1');
+
+        expect(result, hasLength(1));
+        expect(result.first.id, 'event_1');
+      });
+
+      test('returns empty list when no upcoming events', () async {
+        unawaited(mockTable(mockClient, 'events', selectData: []));
+
+        final result = await repository.getUpcomingEvents('partner_1');
+
+        expect(result, isEmpty);
+      });
+
+      test('throws on error', () async {
+        unawaited(
+          mockTable(mockClient, 'events', shouldThrow: Exception('error')),
+        );
+
+        await expectLater(
+          repository.getUpcomingEvents('partner_1'),
+          throwsA(anything),
+        );
+      });
+    });
+
+    group('getClosingSoonEvents', () {
+      test('returns list of closing soon events', () async {
+        unawaited(
+          mockTable(mockClient, 'events', selectData: [eventJson]),
+        );
+
+        final result = await repository.getClosingSoonEvents('partner_1');
+
+        expect(result, hasLength(1));
+        expect(result.first.id, 'event_1');
+      });
+
+      test('returns empty list when no closing soon events', () async {
+        unawaited(mockTable(mockClient, 'events', selectData: []));
+
+        final result = await repository.getClosingSoonEvents('partner_1');
+
+        expect(result, isEmpty);
+      });
+
+      test('throws on error', () async {
+        unawaited(
+          mockTable(mockClient, 'events', shouldThrow: Exception('error')),
+        );
+
+        await expectLater(
+          repository.getClosingSoonEvents('partner_1'),
+          throwsA(anything),
+        );
       });
     });
   });
