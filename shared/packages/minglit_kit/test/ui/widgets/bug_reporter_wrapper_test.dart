@@ -122,14 +122,14 @@ void main() {
   });
 
   group('Deduplication and cooldown', () {
-    testWidgets('registers and removes WidgetsBindingObserver without crash',
-        (tester) async {
+    testWidgets('registers and removes WidgetsBindingObserver without crash', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
             home: Scaffold(
               body: BugReporterWrapper(
-                enabled: true,
                 child: Text('test'),
               ),
             ),
@@ -155,7 +155,6 @@ void main() {
           child: MaterialApp(
             home: Scaffold(
               body: BugReporterWrapper(
-                enabled: true,
                 child: Text('content'),
               ),
             ),
