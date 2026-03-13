@@ -11,7 +11,7 @@ import {
 import { mockQueueUpdateMessage } from "../_test_utils/fixtures.ts";
 
 Deno.test({
-  name: "update-user-profile - processes queue message",
+  name: "profile-update - processes queue message",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
@@ -60,7 +60,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "update-user-profile - queue empty returns 200",
+  name: "profile-update - queue empty returns 200",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
@@ -93,7 +93,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "update-user-profile - missing party embedding returns 404",
+  name: "profile-update - missing party embedding returns 404",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
@@ -135,7 +135,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "update-user-profile - queue error returns 500",
+  name: "profile-update - queue error returns 500",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {

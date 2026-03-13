@@ -86,7 +86,7 @@ Deno.serve(withSentry(async (req) => {
 
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    console.error("Error in cancel-payment:", message);
+    console.error("Error in payment-cancel:", message);
     return errorResponse(message, 500);
   }
 }));

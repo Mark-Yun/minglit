@@ -78,7 +78,7 @@ Deno.serve(withSentry(async (req) => {
 
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    console.error("Error in create-order-transfer:", message);
+    console.error("Error in settlement-transfer:", message);
     return errorResponse(message, 500);
   }
 }));

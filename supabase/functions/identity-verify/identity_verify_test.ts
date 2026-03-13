@@ -12,7 +12,7 @@ import {
 } from "../_test_utils/mock_http.ts";
 import { mockPortoneVerification, mockUser } from "../_test_utils/fixtures.ts";
 
-Deno.test("verify-identity-v2 - happy path updates profile", async () => {
+Deno.test("identity-verify - happy path updates profile", async () => {
   await withEnv(
     {
       PORTONE_V2_API_KEY: "test-key",
@@ -55,7 +55,7 @@ Deno.test("verify-identity-v2 - happy path updates profile", async () => {
   );
 });
 
-Deno.test("verify-identity-v2 - missing id returns 400", async () => {
+Deno.test("identity-verify - missing id returns 400", async () => {
   await withEnv(
     {
       PORTONE_V2_API_KEY: "test-key",
@@ -80,7 +80,7 @@ Deno.test("verify-identity-v2 - missing id returns 400", async () => {
   );
 });
 
-Deno.test("verify-identity-v2 - external API error returns status", async () => {
+Deno.test("identity-verify - external API error returns status", async () => {
   await withEnv(
     {
       PORTONE_V2_API_KEY: "test-key",
@@ -112,7 +112,7 @@ Deno.test("verify-identity-v2 - external API error returns status", async () => 
   );
 });
 
-Deno.test("verify-identity-v2 - unauthorized returns 401", async () => {
+Deno.test("identity-verify - unauthorized returns 401", async () => {
   await withEnv(
     {
       PORTONE_V2_API_KEY: "test-key",
@@ -148,7 +148,7 @@ Deno.test("verify-identity-v2 - unauthorized returns 401", async () => {
   );
 });
 
-Deno.test("verify-identity-v2 - malformed JSON returns 500", async () => {
+Deno.test("identity-verify - malformed JSON returns 500", async () => {
   await withEnv(
     {
       PORTONE_V2_API_KEY: "test-key",

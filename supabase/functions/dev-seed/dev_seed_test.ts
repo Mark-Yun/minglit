@@ -9,7 +9,7 @@ import {
 } from "../_test_utils/mock_http.ts";
 
 Deno.test({
-  name: "dev-seed-database - blocks in production (ENVIRONMENT=production)",
+  name: "dev-seed - blocks in production (ENVIRONMENT=production)",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
@@ -25,7 +25,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "dev-seed-database - seeds users, partners, parties, events",
+  name: "dev-seed - seeds users, partners, parties, events",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
@@ -98,7 +98,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "dev-seed-database - delete-and-retry on duplicate user",
+  name: "dev-seed - delete-and-retry on duplicate user",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {

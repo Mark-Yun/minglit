@@ -16,7 +16,7 @@ const ENV = {
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
 };
 
-Deno.test("query-settlements - settlements type returns settlement list", async () => {
+Deno.test("settlement-query - settlements type returns settlement list", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -42,7 +42,7 @@ Deno.test("query-settlements - settlements type returns settlement list", async 
   });
 });
 
-Deno.test("query-settlements - payouts type returns payout list", async () => {
+Deno.test("settlement-query - payouts type returns payout list", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -68,7 +68,7 @@ Deno.test("query-settlements - payouts type returns payout list", async () => {
   });
 });
 
-Deno.test("query-settlements - missing type returns 400", async () => {
+Deno.test("settlement-query - missing type returns 400", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([]);
@@ -86,7 +86,7 @@ Deno.test("query-settlements - missing type returns 400", async () => {
   });
 });
 
-Deno.test("query-settlements - PortOne API error returns 502", async () => {
+Deno.test("settlement-query - PortOne API error returns 502", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 

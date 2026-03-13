@@ -17,7 +17,7 @@ const ENV = {
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
 };
 
-Deno.test("portone-webhook-v1 - happy path updates status", async () => {
+Deno.test("payment-webhook - happy path updates status", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -50,7 +50,7 @@ Deno.test("portone-webhook-v1 - happy path updates status", async () => {
   });
 });
 
-Deno.test("portone-webhook-v1 - unauthorized IP returns 403", async () => {
+Deno.test("payment-webhook - unauthorized IP returns 403", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([]);
@@ -70,7 +70,7 @@ Deno.test("portone-webhook-v1 - unauthorized IP returns 403", async () => {
   });
 });
 
-Deno.test("portone-webhook-v1 - missing params returns 400", async () => {
+Deno.test("payment-webhook - missing params returns 400", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([]);
@@ -90,7 +90,7 @@ Deno.test("portone-webhook-v1 - missing params returns 400", async () => {
   });
 });
 
-Deno.test("portone-webhook-v1 - merchant UID mismatch returns 400", async () => {
+Deno.test("payment-webhook - merchant UID mismatch returns 400", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -119,7 +119,7 @@ Deno.test("portone-webhook-v1 - merchant UID mismatch returns 400", async () => 
   });
 });
 
-Deno.test("portone-webhook-v1 - iamport error returns 500", async () => {
+Deno.test("payment-webhook - iamport error returns 500", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -144,7 +144,7 @@ Deno.test("portone-webhook-v1 - iamport error returns 500", async () => {
   });
 });
 
-Deno.test("portone-webhook-v1 - malformed JSON returns 500", async () => {
+Deno.test("payment-webhook - malformed JSON returns 500", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([]);
@@ -162,7 +162,7 @@ Deno.test("portone-webhook-v1 - malformed JSON returns 500", async () => {
   });
 });
 
-Deno.test("portone-webhook-v1 - cancelled status sets refund_status completed", async () => {
+Deno.test("payment-webhook - cancelled status sets refund_status completed", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock, calls } = createFetchMock([
@@ -199,7 +199,7 @@ Deno.test("portone-webhook-v1 - cancelled status sets refund_status completed", 
   });
 });
 
-Deno.test("portone-webhook-v1 - paid status does not set refund_status", async () => {
+Deno.test("payment-webhook - paid status does not set refund_status", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock, calls } = createFetchMock([

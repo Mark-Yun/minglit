@@ -19,7 +19,7 @@ const ENV = {
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
 };
 
-Deno.test("verify-payment-v1 - happy path approves order", async () => {
+Deno.test("payment-verify - happy path approves order", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -58,7 +58,7 @@ Deno.test("verify-payment-v1 - happy path approves order", async () => {
   });
 });
 
-Deno.test("verify-payment-v1 - missing params returns 400", async () => {
+Deno.test("payment-verify - missing params returns 400", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([]);
@@ -76,7 +76,7 @@ Deno.test("verify-payment-v1 - missing params returns 400", async () => {
   });
 });
 
-Deno.test("verify-payment-v1 - payment not completed returns 400", async () => {
+Deno.test("payment-verify - payment not completed returns 400", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -110,7 +110,7 @@ Deno.test("verify-payment-v1 - payment not completed returns 400", async () => {
   });
 });
 
-Deno.test("verify-payment-v1 - amount mismatch returns 400", async () => {
+Deno.test("payment-verify - amount mismatch returns 400", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -144,7 +144,7 @@ Deno.test("verify-payment-v1 - amount mismatch returns 400", async () => {
   });
 });
 
-Deno.test("verify-payment-v1 - iamport failure returns 500", async () => {
+Deno.test("payment-verify - iamport failure returns 500", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -174,7 +174,7 @@ Deno.test("verify-payment-v1 - iamport failure returns 500", async () => {
   });
 });
 
-Deno.test("verify-payment-v1 - malformed JSON returns 400", async () => {
+Deno.test("payment-verify - malformed JSON returns 400", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([]);
