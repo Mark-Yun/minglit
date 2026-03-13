@@ -20,7 +20,7 @@ class BugReportRepository {
   }) async {
     try {
       await _supabase.functions.invoke(
-        'report-bug',
+        'bug-report',
         body: {
           'title': title,
           'description': description,

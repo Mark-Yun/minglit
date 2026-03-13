@@ -26,10 +26,10 @@ class IamportRepository {
     }
 
     try {
-      Log.d('Calling verify-identity-v2 edge function...');
+      Log.d('Calling identity-verify edge function...');
 
       final response = await _supabase.functions.invoke(
-        'verify-identity-v2',
+        'identity-verify',
         body: {'identity_verification_id': impUid},
       );
 
