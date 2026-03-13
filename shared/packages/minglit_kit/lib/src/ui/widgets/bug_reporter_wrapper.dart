@@ -43,24 +43,28 @@ class BugReporterWrapper extends StatefulWidget {
   State<BugReporterWrapper> createState() => _BugReporterWrapperState();
 }
 
-class _BugReporterWrapperState extends State<BugReporterWrapper> {
+class _BugReporterWrapperState extends State<BugReporterWrapper>
+    with WidgetsBindingObserver {
   ShakeDetector? _detector;
   bool _isReportOpen = false;
   final GlobalKey _boundaryKey = GlobalKey();
   String? _screenshotUrl;
   Map<String, dynamic>? _environmentInfo;
   String? _layoutDumpUrl;
+  DateTime? _lastShakeTime;
+  static const _shakeCooldown = Duration(seconds: 5);
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     if (widget.enabled &&
         !kIsWeb &&
         (defaultTargetPlatform == TargetPlatform.iOS ||
             defaultTargetPlatform == TargetPlatform.android)) {
       _detector = ShakeDetector.autoStart(
         onPhoneShake: (event) {
-          unawaited(_showReportDialog());
+          unawaited(_onShakeDetected());
         },
       );
     }
@@ -68,8 +72,24 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _detector?.stopListening();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!widget.enabled) return;
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.detached:
+        // Fix #51: pause shake detection when app is not in foreground
+        _detector?.stopListening();
+      case AppLifecycleState.resumed:
+        _detector?.startListening();
+    }
   }
 
   /// Returns a [BuildContext] that has a [Navigator] ancestor.
@@ -107,15 +127,21 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
     }
   }
 
+  /// Called when shake is detected. Applies cooldown before showing dialog.
+  Future<void> _onShakeDetected() async {
+    // Fix #51: cooldown prevents rapid shake from triggering multiple dialogs
+    if (_lastShakeTime != null &&
+        DateTime.now().difference(_lastShakeTime!) < _shakeCooldown) {
+      return;
+    }
+    _lastShakeTime = DateTime.now();
+    await _showReportDialog();
+  }
+
   Future<void> _showReportDialog() async {
     if (!mounted) return;
-    if (_isReportOpen) {
-      // Dismiss existing dialog before showing a fresh one
-      final ctx = _dialogContext;
-      if (ctx != null && ctx.mounted) {
-        unawaited(Navigator.of(ctx).maybePop());
-      }
-    }
+    // Fix #51: return early if dialog is already open — do not dismiss+reopen
+    if (_isReportOpen) return;
     // Capture context BEFORE async gap
     final ctx = _dialogContext;
     if (ctx == null) return;

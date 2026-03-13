@@ -120,4 +120,71 @@ void main() {
       expect(find.text('Always Visible'), findsOneWidget);
     });
   });
+
+  group('Deduplication and cooldown', () {
+    testWidgets('FAB opens dialog and prevents duplicate opens', (tester) async {
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: BugReporterWrapper(
+                enabled: true,
+                child: Text('Test Content'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Find and tap the FAB
+      final fabFinder = find.byType(FloatingActionButton);
+      expect(fabFinder, findsOneWidget);
+
+      // Tap FAB to open dialog
+      await tester.tap(fabFinder);
+      await tester.pumpAndSettle();
+
+      // Verify dialog is open (look for bug report title)
+      expect(find.text('🐞 Bug Report'), findsOneWidget);
+
+      // Try to tap FAB again while dialog is open
+      await tester.tap(fabFinder);
+      await tester.pumpAndSettle();
+
+      // Verify still only one dialog (not duplicated)
+      expect(find.text('🐞 Bug Report'), findsOneWidget);
+    });
+
+    testWidgets('dialog closes properly after submission', (tester) async {
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: BugReporterWrapper(
+                enabled: true,
+                child: Text('Test Content'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Open dialog via FAB
+      final fabFinder = find.byType(FloatingActionButton);
+      await tester.tap(fabFinder);
+      await tester.pumpAndSettle();
+
+      // Verify dialog is open
+      expect(find.text('🐞 Bug Report'), findsOneWidget);
+
+      // Click Cancel button
+      final cancelButton = find.text('Cancel');
+      expect(cancelButton, findsOneWidget);
+      await tester.tap(cancelButton);
+      await tester.pumpAndSettle();
+
+      // Verify dialog is closed
+      expect(find.text('🐞 Bug Report'), findsNothing);
+    });
+  });
 }
