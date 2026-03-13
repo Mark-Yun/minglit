@@ -32,3 +32,9 @@ adb -s adb-R3CX803P2ND-8btuuD._adb-tls-connect._tcp install -r build/app/outputs
 - PR 머지 전 `check-migration-versions` CI 체크 통과 필수 (migration version 중복 검사).
 - Approvals 불필요 (0개). self-merge 가능.
 - Admin은 긴급 시 bypass 가능하지만, 일반 작업은 항상 PR 사용.
+
+## PR Conventions
+
+- PR 생성 시 관련 GitHub Issue가 있으면 PR body에 `Closes #이슈번호`를 포함한다.
+- 여러 이슈: `Closes #53, closes #54, closes #55`
+- dev 브랜치에 머지되면 해당 이슈가 자동으로 닫힌다.
