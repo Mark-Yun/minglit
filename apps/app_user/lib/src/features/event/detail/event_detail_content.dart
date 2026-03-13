@@ -464,6 +464,8 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
           TabBar(
             controller: tabController,
             isScrollable: true,
+            // Fix #77: remove default 52dp left padding from scrollable TabBar
+            tabAlignment: TabAlignment.start,
             onTap: onTabTap,
             tabs: const [
               Tab(text: '기본 정보'),
