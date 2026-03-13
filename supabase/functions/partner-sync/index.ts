@@ -76,7 +76,7 @@ Deno.serve(withSentry(async (req) => {
 
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    console.error("Error in sync-platform-partner:", message);
+    console.error("Error in partner-sync:", message);
     return errorResponse(message, 500);
   }
 }));

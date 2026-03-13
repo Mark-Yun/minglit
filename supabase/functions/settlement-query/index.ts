@@ -66,7 +66,7 @@ Deno.serve(withSentry(async (req) => {
 
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    console.error("Error in query-settlements:", message);
+    console.error("Error in settlement-query:", message);
     return errorResponse(message, 500);
   }
 }));

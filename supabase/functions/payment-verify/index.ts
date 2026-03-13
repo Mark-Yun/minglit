@@ -98,7 +98,7 @@ Deno.serve(withSentry(async (req) => {
 
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error("Error in verify-payment-v1:", message);
+    console.error("Error in payment-verify:", message);
     return errorResponse(message, 500);
   }
 }));

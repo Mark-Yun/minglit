@@ -16,74 +16,73 @@ const ENV = {
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
 };
 
-Deno.test("create-order-transfer - happy path creates transfer", async () => {
+Deno.test("partner-sync - new partner creates PortOne partner and saves ID", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
     const { fetchMock, calls } = createFetchMock([
       {
         matcher: (req) => req.url.includes("/rest/v1/partners") && req.method === "GET",
-        handler: () => jsonResponse({ portone_partner_id: "portone-partner-123" }),
+        handler: () => jsonResponse({ id: "partner-uuid", name: "Test Partner", portone_partner_id: null }),
       },
       {
-        matcher: "https://api.portone.io/platform/transfers/order",
-        handler: () => jsonResponse({ transfer: { type: "ORDER", id: "transfer-abc", partnerId: "portone-partner-123" } }),
+        matcher: "https://api.portone.io/platform/partners",
+        handler: () => jsonResponse({ id: "partner-uuid", name: "Test Partner" }),
+      },
+      {
+        matcher: (req) => req.url.includes("/rest/v1/partners") && req.method === "PATCH",
+        handler: () => jsonResponse({}),
       },
     ]);
 
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", {
-          partner_id: "partner-uuid",
-          payment_id: "imp_123",
-          order_amount: 15000,
-        });
+        const request = jsonRequest("http://localhost", { partner_id: "partner-uuid" });
         const response = await handler(request);
         const payload = await readJson(response);
 
         assertEquals(response.status, 200);
         assertEquals(payload.success, true);
-        assertEquals(payload.transfer.transfer.id, "transfer-abc");
+        assertEquals(payload.portone_partner_id, "partner-uuid");
 
-        const transferCall = calls.find((c) => c.url.includes("/platform/transfers/order"));
-        const transferBody = JSON.parse(transferCall!.body!);
-        assertEquals(transferBody.partnerId, "portone-partner-123");
-        assertEquals(transferBody.paymentId, "imp_123");
-        assertEquals(transferBody.orderDetail.orderAmount, 15000);
+        const dbPatch = calls.find((c) => c.url.includes("/rest/v1/partners") && c.method === "PATCH");
+        const patchBody = JSON.parse(dbPatch!.body!);
+        assertEquals(patchBody.portone_partner_id, "partner-uuid");
       });
     });
   });
 });
 
-Deno.test("create-order-transfer - partner not synced returns 400", async () => {
+Deno.test("partner-sync - already synced partner is skipped", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
-    const { fetchMock } = createFetchMock([
+    const { fetchMock, calls } = createFetchMock([
       {
         matcher: (req) => req.url.includes("/rest/v1/partners") && req.method === "GET",
-        handler: () => jsonResponse({ portone_partner_id: null }),
+        handler: () => jsonResponse({ id: "partner-uuid", name: "Test Partner", portone_partner_id: "existing-portone-id" }),
       },
     ]);
 
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", {
-          partner_id: "partner-uuid",
-          payment_id: "imp_123",
-          order_amount: 15000,
-        });
+        const request = jsonRequest("http://localhost", { partner_id: "partner-uuid" });
         const response = await handler(request);
         const payload = await readJson(response);
 
-        assertEquals(response.status, 400);
-        assertEquals(payload.error, "Partner not synced with PortOne");
+        assertEquals(response.status, 200);
+        assertEquals(payload.success, true);
+        assertEquals(payload.skipped, true);
+        assertEquals(payload.portone_partner_id, "existing-portone-id");
+
+        const portoneCall = calls.find((c) => c.url.includes("api.portone.io/platform/partners"));
+        assertEquals(portoneCall, undefined);
       });
     });
   });
 });
 
-Deno.test("create-order-transfer - partner not found returns 404", async () => {
+Deno.test("partner-sync - partner not found returns 404", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -96,11 +95,7 @@ Deno.test("create-order-transfer - partner not found returns 404", async () => {
 
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", {
-          partner_id: "nonexistent",
-          payment_id: "imp_123",
-          order_amount: 15000,
-        });
+        const request = jsonRequest("http://localhost", { partner_id: "nonexistent" });
         const response = await handler(request);
         const payload = await readJson(response);
 
@@ -111,10 +106,20 @@ Deno.test("create-order-transfer - partner not found returns 404", async () => {
   });
 });
 
-Deno.test("create-order-transfer - missing required fields returns 400", async () => {
+Deno.test("partner-sync - PortOne API error returns 502", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    const { fetchMock } = createFetchMock([]);
+
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: (req) => req.url.includes("/rest/v1/partners") && req.method === "GET",
+        handler: () => jsonResponse({ id: "partner-uuid", name: "Test Partner", portone_partner_id: null }),
+      },
+      {
+        matcher: "https://api.portone.io/platform/partners",
+        handler: () => jsonResponse({ message: "unauthorized" }, { status: 401 }),
+      },
+    ]);
 
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
@@ -122,40 +127,26 @@ Deno.test("create-order-transfer - missing required fields returns 400", async (
         const response = await handler(request);
         const payload = await readJson(response);
 
-        assertEquals(response.status, 400);
-        assertEquals(payload.error, "Missing required fields: partner_id, payment_id, order_amount");
+        assertEquals(response.status, 502);
+        assertEquals(payload.error, "Failed to create PortOne partner");
       });
     });
   });
 });
 
-Deno.test("create-order-transfer - PortOne API error returns 502", async () => {
+Deno.test("partner-sync - missing partner_id returns 400", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-
-    const { fetchMock } = createFetchMock([
-      {
-        matcher: (req) => req.url.includes("/rest/v1/partners") && req.method === "GET",
-        handler: () => jsonResponse({ portone_partner_id: "portone-partner-123" }),
-      },
-      {
-        matcher: "https://api.portone.io/platform/transfers/order",
-        handler: () => jsonResponse({ message: "invalid payment" }, { status: 400 }),
-      },
-    ]);
+    const { fetchMock } = createFetchMock([]);
 
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", {
-          partner_id: "partner-uuid",
-          payment_id: "imp_123",
-          order_amount: 15000,
-        });
+        const request = jsonRequest("http://localhost", {});
         const response = await handler(request);
         const payload = await readJson(response);
 
-        assertEquals(response.status, 502);
-        assertEquals(payload.error, "Failed to create order transfer");
+        assertEquals(response.status, 400);
+        assertEquals(payload.error, "Missing partner_id");
       });
     });
   });

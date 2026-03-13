@@ -5,14 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:minglit_iamport_v1/minglit_iamport_v1.dart';
 import 'package:minglit_kit/src/config/iamport_config.dart';
-import 'package:minglit_kit/src/data/repositories/identity_repository.dart';
+import 'package:minglit_kit/src/features/iamport/data/repository/iamport_repository.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 import 'package:minglit_kit/src/utils/error_ui_handler.dart';
 
 /// **Identity Verification Screen**
 ///
-/// A screen where users verify their real identity via Iamport (V1).
+/// A screen where users verify their real identity via Iamport (V2).
 class IdentityVerificationScreen extends ConsumerStatefulWidget {
   /// Creates an identity verification screen.
   const IdentityVerificationScreen({super.key});
@@ -64,10 +64,8 @@ class _IdentityVerificationScreenState
       }
 
       await ref
-          .read(identityRepositoryProvider)
-          .verifyIdentity(
-            identityVerificationId: verificationId,
-          );
+          .read(iamportRepositoryProvider)
+          .verifyCertification(verificationId);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

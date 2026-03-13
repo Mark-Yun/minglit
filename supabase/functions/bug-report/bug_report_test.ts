@@ -48,7 +48,7 @@ function authedTextRequest(url: string, body: string): Request {
 // ---------------------------------------------------------------------------
 
 Deno.test({
-  name: "report-bug - happy path creates GitHub issue",
+  name: "bug-report - happy path creates GitHub issue",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
@@ -89,7 +89,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "report-bug - missing title returns 400",
+  name: "bug-report - missing title returns 400",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
@@ -117,7 +117,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "report-bug - missing description returns 400",
+  name: "bug-report - missing description returns 400",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
@@ -145,7 +145,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "report-bug - malformed JSON returns 400",
+  name: "bug-report - malformed JSON returns 400",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
@@ -171,7 +171,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "report-bug - missing GITHUB_ACCESS_TOKEN returns 500",
+  name: "bug-report - missing GITHUB_ACCESS_TOKEN returns 500",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
@@ -200,7 +200,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "report-bug - GitHub API failure returns 500",
+  name: "bug-report - GitHub API failure returns 500",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
@@ -235,7 +235,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "report-bug - backward compat: old payload has no undefined and no new sections",
+  name: "bug-report - backward compat: old payload has no undefined and no new sections",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
@@ -275,7 +275,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "report-bug - screenshot and environment sections are included when provided",
+  name: "bug-report - screenshot and environment sections are included when provided",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
@@ -317,7 +317,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "report-bug - null screenshotUrl and environment produce no undefined in body",
+  name: "bug-report - null screenshotUrl and environment produce no undefined in body",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {

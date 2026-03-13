@@ -101,22 +101,22 @@ C4Context
 ```mermaid
 sequenceDiagram
     participant U as 유저 앱
-    participant EF as verify-payment-v1
+    participant EF as payment-verify
     participant PG as PortOne API
-    participant WH as portone-webhook-v1
+    participant WH as payment-webhook
     participant DB as PostgreSQL
 
     U->>PG: 결제 요청
     PG-->>U: 결제 완료 (paymentId)
 
     par Track A: 앱 직접 확인
-        U->>EF: POST /verify-payment-v1 {paymentId}
+        U->>EF: POST /payment-verify {paymentId}
         EF->>PG: GET /payments/{paymentId}
         PG-->>EF: 결제 상세 (status, amount)
         EF->>DB: UPDATE event_applications SET status='paid'
         Note over DB: ON CONFLICT → 멱등 (이미 paid면 skip)
     and Track B: PG 웹훅
-        PG->>WH: POST /portone-webhook-v1 {paymentId, status}
+        PG->>WH: POST /payment-webhook {paymentId, status}
         WH->>PG: GET /payments/{paymentId} (검증)
         PG-->>WH: 결제 상세
         WH->>DB: UPDATE event_applications SET status='paid'
@@ -128,7 +128,7 @@ sequenceDiagram
     Note over DB: 요율 스냅샷 저장 (REQ-3.1.2)
 ```
 
-**텍스트 설명**: 유저가 PortOne으로 결제하면, (A) 앱이 verify-payment-v1으로 직접 확인하거나 (B) PG가 웹훅으로 알려준다. 두 경로 모두 PortOne API로 결제를 재검증한 뒤 `event_applications`를 `paid`로 업데이트한다. 멱등성으로 중복 처리를 방지하고, 이벤트 완료 시 트리거가 `settlement_items`에 PENDING 상태로 정산 원장을 적재한다.
+**텍스트 설명**: 유저가 PortOne으로 결제하면, (A) 앱이 payment-verify로 직접 확인하거나 (B) PG가 웹훅으로 알려준다. 두 경로 모두 PortOne API로 결제를 재검증한 뒤 `event_applications`를 `paid`로 업데이트한다. 멱등성으로 중복 처리를 방지하고, 이벤트 완료 시 트리거가 `settlement_items`에 PENDING 상태로 정산 원장을 적재한다.
 
 ### 2.3 UC-02: 14일 보류 후 READY 확정
 
@@ -219,7 +219,7 @@ stateDiagram-v2
 ```mermaid
 sequenceDiagram
     participant PG as PortOne
-    participant WH as portone-webhook-v1
+    participant WH as payment-webhook
     participant DB as PostgreSQL
 
     PG->>WH: 환불/차지백 웹훅
@@ -332,9 +332,9 @@ erDiagram
 ```
 정산 시스템 (Settlement System)
 ├── Payment Gateway Module        ← PG 연동 (PortOne)
-│   ├── verify-payment            ← 앱 직접 결제 검증
-│   ├── portone-webhook           ← PG 웹훅 수신/검증
-│   └── cancel-payment            ← 결제 취소/환불
+│   ├── payment-verify            ← 앱 직접 결제 검증
+│   ├── payment-webhook           ← PG 웹훅 수신/검증
+│   └── payment-cancel            ← 결제 취소/환불
 │
 ├── Settlement Ledger Module      ← 정산 원장 관리
 │   ├── settlement-items          ← 원장 CRUD + 상태 머신
@@ -419,8 +419,8 @@ flowchart LR
     subgraph Payment["결제 (동기)"]
         A[유저 결제] --> B[PG 승인]
         B --> C{이중 승인}
-        C -->|Track A| D[verify-payment-v1]
-        C -->|Track B| E[portone-webhook-v1]
+        C -->|Track A| D[payment-verify]
+        C -->|Track B| E[payment-webhook]
         D --> F[event_applications.status = paid]
         E --> F
     end
@@ -550,12 +550,12 @@ minglit/
 │   │   │   ├── auth_utils.ts      # JWT 인증
 │   │   │   ├── response_utils.ts  # 응답 포맷
 │   │   │   └── sentry_utils.ts    # 에러 모니터링
-│   │   ├── verify-payment-v1/     # 결제 검증 (Track A)
-│   │   ├── portone-webhook-v1/    # PG 웹훅 수신 (Track B)
-│   │   ├── cancel-payment/        # 결제 취소/환불
-│   │   ├── query-settlements/     # 정산 조회 (PortOne API)
-│   │   ├── create-order-transfer/ # 주문 이체 등록 (PortOne)
-│   │   ├── sync-platform-partner/ # 파트너 PortOne 동기화
+│   │   ├── payment-verify/        # 결제 검증 (Track A)
+│   │   ├── payment-webhook/       # PG 웹훅 수신 (Track B)
+│   │   ├── payment-cancel/        # 결제 취소/환불
+│   │   ├── settlement-query/      # 정산 조회 (PortOne API)
+│   │   ├── settlement-transfer/   # 주문 이체 등록 (PortOne)
+│   │   ├── partner-sync/          # 파트너 PortOne 동기화
 │   │   ├── notification-worker/   # FCM 푸시 알림
 │   │   └── ...                    # 기타 (health, seed, identity 등)
 │   │
@@ -692,13 +692,13 @@ flowchart TB
         GW[API Gateway<br/>Kong / GoTrue]
 
         subgraph Edge["Edge Functions (Deno Deploy)"]
-            VP[verify-payment-v1]
-            WH[portone-webhook-v1]
-            CP[cancel-payment]
-            QS[query-settlements]
-            COT[create-order-transfer]
+            VP[payment-verify]
+            WH[payment-webhook]
+            CP[payment-cancel]
+            QS[settlement-query]
+            COT[settlement-transfer]
             NW[notification-worker]
-            SPP[sync-platform-partner]
+            SPP[partner-sync]
         end
 
         subgraph DB["PostgreSQL"]

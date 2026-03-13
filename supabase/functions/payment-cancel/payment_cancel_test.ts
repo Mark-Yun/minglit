@@ -18,7 +18,7 @@ const ENV = {
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
 };
 
-Deno.test("cancel-payment - happy path cancels payment and updates DB", async () => {
+Deno.test("payment-cancel - happy path cancels payment and updates DB", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock, calls } = createFetchMock([
@@ -58,7 +58,7 @@ Deno.test("cancel-payment - happy path cancels payment and updates DB", async ()
   });
 });
 
-Deno.test("cancel-payment - missing payment_id returns 400", async () => {
+Deno.test("payment-cancel - missing payment_id returns 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
   const { fetchMock } = createFetchMock([]);
 
@@ -74,7 +74,7 @@ Deno.test("cancel-payment - missing payment_id returns 400", async () => {
   });
 });
 
-Deno.test("cancel-payment - token failure returns 502", async () => {
+Deno.test("payment-cancel - token failure returns 502", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -96,7 +96,7 @@ Deno.test("cancel-payment - token failure returns 502", async () => {
   });
 });
 
-Deno.test("cancel-payment - malformed JSON returns 400", async () => {
+Deno.test("payment-cancel - malformed JSON returns 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
   const { fetchMock } = createFetchMock([]);
 
@@ -112,7 +112,7 @@ Deno.test("cancel-payment - malformed JSON returns 400", async () => {
   });
 });
 
-Deno.test("cancel-payment - partial refund passes amount and checksum to iamport", async () => {
+Deno.test("payment-cancel - partial refund passes amount and checksum to iamport", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock, calls } = createFetchMock([
@@ -157,7 +157,7 @@ Deno.test("cancel-payment - partial refund passes amount and checksum to iamport
   });
 });
 
-Deno.test("cancel-payment - DB error is non-fatal, still returns 200", async () => {
+Deno.test("payment-cancel - DB error is non-fatal, still returns 200", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([

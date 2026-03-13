@@ -23,7 +23,7 @@ void main() {
       test('sends bug report via edge function', () async {
         when(
           () => mockFunctions.invoke(
-            'report-bug',
+            'bug-report',
             body: any(named: 'body'),
           ),
         ).thenAnswer(
@@ -41,7 +41,7 @@ void main() {
 
         verify(
           () => mockFunctions.invoke(
-            'report-bug',
+            'bug-report',
             body: any(named: 'body'),
           ),
         ).called(1);
@@ -50,7 +50,7 @@ void main() {
       test('throws when edge function fails', () async {
         when(
           () => mockFunctions.invoke(
-            'report-bug',
+            'bug-report',
             body: any(named: 'body'),
           ),
         ).thenThrow(Exception('Network error'));
@@ -68,7 +68,7 @@ void main() {
       test('includes optional parameters when provided', () async {
         when(
           () => mockFunctions.invoke(
-            'report-bug',
+            'bug-report',
             body: any(named: 'body'),
           ),
         ).thenAnswer(
@@ -89,7 +89,7 @@ void main() {
 
         final captured = verify(
           () => mockFunctions.invoke(
-            'report-bug',
+            'bug-report',
             body: captureAny(named: 'body'),
           ),
         ).captured;
@@ -106,7 +106,7 @@ void main() {
       test('excludes optional parameters when not provided', () async {
         when(
           () => mockFunctions.invoke(
-            'report-bug',
+            'bug-report',
             body: any(named: 'body'),
           ),
         ).thenAnswer(
@@ -124,7 +124,7 @@ void main() {
 
         final captured = verify(
           () => mockFunctions.invoke(
-            'report-bug',
+            'bug-report',
             body: captureAny(named: 'body'),
           ),
         ).captured;
