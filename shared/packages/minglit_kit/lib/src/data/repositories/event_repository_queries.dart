@@ -64,13 +64,15 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
     try {
       // 1. Base Query with Relations
       var selectQuery =
-          '*, party:parties!inner(*, location:locations(*), partner:partners(*)), '
+          '*, party:parties!inner(*, location:locations(*), '
+          'partner:partners(*)), '
           'entryGroups:entry_groups(*), tickets(*)';
 
       // Special case for Early Bird: filter by ticket name
       if (type == EventFeedType.earlyBird) {
         selectQuery =
-            '*, party:parties!inner(*, location:locations(*), partner:partners(*)), '
+            '*, party:parties!inner(*, location:locations(*), '
+            'partner:partners(*)), '
             'entryGroups:entry_groups(*), tickets!inner(*)';
       }
 
@@ -225,7 +227,7 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
   ) async {
     try {
       final data =
-          await supabaseClient.rpc(
+          await supabaseClient.rpc<dynamic>(
                 'get_entry_group_participant_counts',
                 params: {'p_event_id': eventId},
               )

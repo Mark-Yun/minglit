@@ -26,7 +26,7 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
   final _descriptionController = TextEditingController();
   bool _submitting = false;
 
-  static const _reasonLabels = {
+  static const Map<ReportReason, String> _reasonLabels = {
     ReportReason.sexualContent: '선정적인 콘텐츠',
     ReportReason.falseInformation: '허위 또는 과장된 정보',
     ReportReason.noShow: '노쇼 / 이벤트 미진행',
@@ -110,7 +110,9 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
             RadioListTile<ReportReason>(
               title: Text(_reasonLabels[reason] ?? reason.name),
               value: reason,
+              // ignore: deprecated_member_use, RadioGroup migration pending
               groupValue: _selectedReason,
+              // ignore: deprecated_member_use, RadioGroup migration pending
               onChanged: (v) => setState(() => _selectedReason = v),
             ),
           if (_selectedReason == ReportReason.other)
@@ -137,7 +139,7 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: MinglitCircularProgressIndicator(),
                     )
                   : const Text('신고하기'),
             ),

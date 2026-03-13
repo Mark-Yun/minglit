@@ -115,6 +115,7 @@ class _DocumentPicker extends StatelessWidget {
           icon: const Icon(Icons.upload_file, color: MinglitColors.primary),
           label: Text(
             hasFile ? '파일 변경' : hint,
+            // ignore: minglit_no_hardcoded_text_style, button label color
             style: const TextStyle(color: MinglitColors.primary),
           ),
           style: OutlinedButton.styleFrom(

@@ -1,8 +1,0 @@
-{
-  "track_id": "lint_fix_minglit_kit_20260117",
-  "type": "chore",
-  "status": "new",
-  "created_at": "2026-01-17T18:30:00+09:00",
-  "updated_at": "2026-01-17T18:30:00+09:00",
-  "description": "Fix lint errors and standardize code style in minglit_kit"
-}

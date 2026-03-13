@@ -8,12 +8,15 @@ part of 'theme_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// ThemeController manages theme mode with SharedPreferences persistence.
 
 @ProviderFor(ThemeController)
 const themeControllerProvider = ThemeControllerProvider._();
 
+/// ThemeController manages theme mode with SharedPreferences persistence.
 final class ThemeControllerProvider
     extends $NotifierProvider<ThemeController, ThemeMode> {
+  /// ThemeController manages theme mode with SharedPreferences persistence.
   const ThemeControllerProvider._()
     : super(
         from: null,
@@ -41,7 +44,9 @@ final class ThemeControllerProvider
   }
 }
 
-String _$themeControllerHash() => r'8d464b99d4bff4677940215ea337eb1c058bed60';
+String _$themeControllerHash() => r'fbfbba97f0449bf3074a3b7bc4f8092ee8532b07';
+
+/// ThemeController manages theme mode with SharedPreferences persistence.
 
 abstract class _$ThemeController extends $Notifier<ThemeMode> {
   ThemeMode build();

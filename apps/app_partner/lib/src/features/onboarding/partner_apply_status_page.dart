@@ -27,13 +27,11 @@ class PartnerApplyStatusPage extends ConsumerWidget {
         title: Text(l10n.partnerApplication_status_title),
         automaticallyImplyLeading: false,
       ),
-      body: onboardingAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(l10n.common_error_system)),
+      body: MinglitAsyncValueWidget<OnboardingState>(
+        value: onboardingAsync,
         data: (onboardingState) {
-          return applicationAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text(l10n.common_error_system)),
+          return MinglitAsyncValueWidget<PartnerApplication?>(
+            value: applicationAsync,
             data: (application) => _buildContent(
               context,
               ref,

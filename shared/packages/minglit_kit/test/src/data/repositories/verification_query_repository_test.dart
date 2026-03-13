@@ -322,7 +322,8 @@ void main() {
 
     group('getRequestsByStatus', () {
       test('returns empty list when user not authenticated', () async {
-        // mockClient already has no currentUser (createMockSupabase() with no args)
+        // mockClient already has no currentUser
+        // (createMockSupabase() with no args)
         final result = await repository.getRequestsByStatus(
           VerificationStatus.pending,
         );

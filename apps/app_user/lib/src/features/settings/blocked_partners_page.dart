@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -16,7 +18,7 @@ class _BlockedPartnersPageState extends ConsumerState<BlockedPartnersPage> {
   @override
   void initState() {
     super.initState();
-    _load();
+    unawaited(_load());
   }
 
   Future<void> _load() async {
@@ -55,7 +57,7 @@ class _BlockedPartnersPageState extends ConsumerState<BlockedPartnersPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('차단이 해제되었습니다')),
       );
-      _load();
+      unawaited(_load());
     }
   }
 
@@ -65,7 +67,7 @@ class _BlockedPartnersPageState extends ConsumerState<BlockedPartnersPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('차단 목록')),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: MinglitCircularProgressIndicator())
           : _partners == null || _partners!.isEmpty
           ? Center(
               child: Text(

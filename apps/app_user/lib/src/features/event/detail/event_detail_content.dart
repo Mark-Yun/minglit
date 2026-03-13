@@ -121,7 +121,9 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
     final partnerProfileImageUrl = partner?.profileImageUrl;
     final eventTitle = party?.title ?? event.title ?? '제목 없음';
     final user = ref.watch(currentUserProvider);
-    final iconColor = _showTitle ? theme.colorScheme.onSurface : Colors.white;
+    final iconColor = _showTitle
+        ? theme.colorScheme.onSurface
+        : MinglitColors.background;
 
     // Date Format
     final dateLabel = DateFormat(
@@ -168,12 +170,17 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                         left: 0,
                         right: 0,
                         height: topPadding + kToolbarHeight + 16,
-                        child: const DecoratedBox(
+                        child: DecoratedBox(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
-                              colors: [Colors.black45, Colors.transparent],
+                              colors: [
+                                MinglitColors.textPrimary.withValues(
+                                  alpha: 0.45,
+                                ),
+                                MinglitColors.transparent,
+                              ],
                             ),
                           ),
                         ),
@@ -236,7 +243,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                                 ],
                               ),
                             );
-                            if (confirmed == true && context.mounted) {
+                            if ((confirmed ?? false) && context.mounted) {
                               await ref
                                   .read(socialRepositoryProvider)
                                   .blockPartner(partner.id);
@@ -279,7 +286,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                     ),
                 ],
                 backgroundColor: theme.colorScheme.primary,
-                foregroundColor: Colors.white,
+                foregroundColor: MinglitColors.background,
               ),
 
               // Tab Bar
@@ -555,12 +562,15 @@ class _EventDetailContentSkeleton extends StatelessWidget {
                   left: 0,
                   right: 0,
                   height: topPadding + kToolbarHeight + 16,
-                  child: const DecoratedBox(
+                  child: DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [Colors.black26, Colors.transparent],
+                        colors: [
+                          MinglitColors.textPrimary.withValues(alpha: 0.26),
+                          MinglitColors.transparent,
+                        ],
                       ),
                     ),
                   ),

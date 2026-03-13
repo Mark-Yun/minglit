@@ -8,6 +8,7 @@ import 'package:flutter/rendering.dart';
 import 'package:minglit_kit/src/data/repositories/bug_report_repository.dart';
 import 'package:minglit_kit/src/data/repositories/storage_repository.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 
 import 'package:minglit_kit/src/utils/environment_info.dart';
 import 'package:minglit_kit/src/utils/layout_dump.dart';
@@ -142,7 +143,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
           contentType: 'text/plain',
           extension: '.txt',
         );
-      } catch (e) {
+      } on Object catch (e) {
         Log.e('Layout dump upload failed (best-effort)', e);
       }
     }
@@ -159,6 +160,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
 
     _isReportOpen = true;
     try {
+      if (!ctx.mounted) return;
       await showModalBottomSheet<void>(
         context: ctx,
         isScrollControlled: true,
@@ -169,10 +171,12 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
           builder: (context, setSheetState) {
             return Padding(
               padding: EdgeInsets.only(
-                left: 16,
-                right: 16,
-                top: 16,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                left: MinglitSpacing.medium,
+                right: MinglitSpacing.medium,
+                top: MinglitSpacing.medium,
+                bottom:
+                    MediaQuery.of(context).viewInsets.bottom +
+                    MinglitSpacing.medium,
               ),
               child: SingleChildScrollView(
                 child: Column(
@@ -184,7 +188,9 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                       child: Container(
                         width: 40,
                         height: 4,
-                        margin: const EdgeInsets.only(bottom: 16),
+                        margin: const EdgeInsets.only(
+                          bottom: MinglitSpacing.medium,
+                        ),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.outlineVariant,
                           borderRadius: BorderRadius.circular(2),
@@ -192,10 +198,9 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                       ),
                     ),
                     // Title
-                    const Text(
+                    Text(
                       '🐞 Bug Report',
-                      style: TextStyle(
-                        fontSize: 18,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -233,9 +238,9 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                         child: TextButton(
                           onPressed: () =>
                               setSheetState(() => _screenshotUrl = null),
-                          child: const Text(
+                          child: Text(
                             'Remove screenshot',
-                            style: TextStyle(fontSize: 12),
+                            style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ),
                       ),
@@ -322,9 +327,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                                 ? const SizedBox(
                                     width: 16,
                                     height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
+                                    child: MinglitCircularProgressIndicator(),
                                   )
                                 : const Text('Send Report'),
                           ),
