@@ -46,6 +46,7 @@ adb -s adb-R3CX803P2ND-8btuuD._adb-tls-connect._tcp install -r build/app/outputs
 - 증상이 아닌 root cause를 찾아 수정한다. 표면적 증상만 막는 workaround 금지.
 - root cause 파악이 어려울 경우, 재현 경로를 먼저 확보한 뒤 디버깅한다.
 - debuggability, maintainability, readability를 고려한 수정을 한다. 급한 핫픽스라도 코드 품질을 떨어뜨리지 않는다.
+- 수정 후, 해당 버그를 재현하는 유닛 테스트 또는 인티그레이션 테스트를 추가하여 재발을 차단한다.
 
 ### 코드 이력 주석
 - 버그 픽스 코드에는 반드시 관련 Issue 번호와 수정 이유를 주석으로 남긴다.
