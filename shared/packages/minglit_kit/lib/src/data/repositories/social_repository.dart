@@ -145,7 +145,7 @@ class SocialRepository {
         'target_id': partnerId,
         'target_type': SocialTargetType.partner.name,
         'reason': reason,
-        if (description != null) 'description': description,
+        'description': ?description,
       });
     } on Object catch (e, st) {
       Log.e('reportPartner Error', e, st);
