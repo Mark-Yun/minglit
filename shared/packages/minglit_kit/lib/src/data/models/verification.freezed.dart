@@ -319,7 +319,8 @@ mixin _$Verification {
  String get id; VerificationCategory get category;/// Internal identifier (e.g., 'global_career').
 @JsonKey(name: 'internal_name') String get internalName;/// Display name shown to users (e.g., '직장 인증').
 @JsonKey(name: 'display_name') String get displayName;/// Partner ID who owns this verification. Null means Global/System verification.
-@JsonKey(name: 'partner_id') String? get partnerId; String? get description;/// Icon identifier (e.g., 'briefcase').
+@JsonKey(name: 'partner_id') String? get partnerId;// Fix #42: Handle nullable DB fields — description and icon_key can be null in verifications table
+ String? get description;/// Icon identifier (e.g., 'briefcase').
 @JsonKey(name: 'icon_key') String? get iconKey;/// Dynamic form definition.
 @JsonKey(name: 'form_schema') List<VerificationFormField> get formSchema;@JsonKey(name: 'is_active') bool get isActive;@JsonKey(name: 'created_at') DateTime? get createdAt;
 /// Create a copy of Verification
@@ -535,6 +536,7 @@ class _Verification implements Verification {
 @override@JsonKey(name: 'display_name') final  String displayName;
 /// Partner ID who owns this verification. Null means Global/System verification.
 @override@JsonKey(name: 'partner_id') final  String? partnerId;
+// Fix #42: Handle nullable DB fields — description and icon_key can be null in verifications table
 @override final  String? description;
 /// Icon identifier (e.g., 'briefcase').
 @override@JsonKey(name: 'icon_key') final  String? iconKey;
