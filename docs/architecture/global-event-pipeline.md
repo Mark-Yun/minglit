@@ -155,3 +155,12 @@ We chose a two-tier design to solve the "one-to-many" problem. A single database
 
 ### Why DB Trigger Fan-out?
 Using database triggers ensures that events are captured even if the application layer changes. It provides a single source of truth at the data layer. By moving the fan-out logic to a dispatcher, we keep the individual triggers simple and maintainable.
+
+---
+
+## Related Documents
+
+- [Backend Architecture](./backend.md) — 전체 백엔드 인프라
+- [Search & Recommendation](./search-and-recommendation.md) — q_vectors 큐 consumer (vector-worker)
+- [Trust & Verification](./trust-and-verification.md) — verification_result 이벤트 처리
+- [Payment Pipeline](./payment-pipeline.md) — 결제/정산 파이프라인

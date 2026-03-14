@@ -1,5 +1,18 @@
 # Agent Conventions
 
+## Architecture Reference
+
+작업 시작 전 `docs/architecture/` 문서를 참고하여 프로젝트 구조와 설계 의도를 파악한다.
+
+| 문서 | 내용 |
+|------|------|
+| [client.md](docs/architecture/client.md) | Flutter 앱 아키텍처 (Feature-first, Coordinator, Repository, Design System) |
+| [backend.md](docs/architecture/backend.md) | Supabase 백엔드 (29 테이블, Edge Functions, RLS, Triggers) |
+| [trust-and-verification.md](docs/architecture/trust-and-verification.md) | 2-layer 신뢰 모델 (Identity + Qualification) |
+| [payment-pipeline.md](docs/architecture/payment-pipeline.md) | 결제/정산 파이프라인 |
+| [search-and-recommendation.md](docs/architecture/search-and-recommendation.md) | PGroonga 검색 + pgvector 추천 |
+| [global-event-pipeline.md](docs/architecture/global-event-pipeline.md) | PGMQ 2-tier 이벤트 파이프라인 |
+
 ## Build Defaults
 
 - APK 빌드 요청 시 `--debug`가 디폴트. `--release`는 명시적으로 요청할 때만 사용.
