@@ -357,4 +357,12 @@ Material 3 기반 컴포넌트들을 밍릿 스타일로 커스터마이징한 �
 
 ---
 
+## 관련 문서
+
+- [화면 카탈로그](screen-catalog.md) — 전체 화면 목록, 사이트맵, 네비게이션 구조
+- [사용자 플로우](user-flows.md) — 주요 사용자 여정 플로우차트
+- [클라이언트 아키텍처](../../architecture/client.md) — Feature-first 구조, Coordinator 패턴 등 기술 아키텍처
+
+---
+
 *소스 파일 변경 시 이 문서도 함께 업데이트합니다.*

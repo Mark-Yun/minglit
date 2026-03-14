@@ -345,4 +345,12 @@ flowchart TD
 
 ---
 
+## 관련 문서
+
+- [화면 카탈로그](screen-catalog.md) — 각 화면의 상세 정보, 라우트 경로, UI 요소
+- [디자인 시스템](design-system.md) — 디자인 토큰, 컴포넌트 테마, 위젯 패턴 카탈로그
+- [정산 UI/UX 설계](../../features/partner-settlement/ui-ux-design.md) — 정산 플로우 상세 설계
+
+---
+
 *이 문서는 `app_router.dart`, `partner_apply_controller.dart`, `party_create_wizard_controller.dart`, `event_application_controller.dart`, `checkin_controller.dart` 소스를 기반으로 작성되었습니다.*

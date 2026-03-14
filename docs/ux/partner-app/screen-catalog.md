@@ -353,4 +353,9 @@ stateDiagram-v2
   - 위자드로 다시 돌아가기 버튼 (수정용)
 
 ---
-*이 문서는 파트너 앱의 화면 구성을 지속적으로 반영하며, 상세 디자인은 Figma 링크를 참조하십시오.*
+
+## 관련 문서
+
+- [사용자 플로우](user-flows.md) — 각 화면을 연결하는 사용자 여정 플로우차트
+- [디자인 시스템](design-system.md) — 디자인 토큰, 컴포넌트 테마, 위젯 패턴 카탈로그
+- [클라이언트 아키텍처](../../architecture/client.md) — Feature-first 구조, Coordinator 패턴, Repository 패턴 등 기술 아키텍처
