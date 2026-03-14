@@ -33,7 +33,7 @@
 
 ## 2. 전체 시스템 구조
 
-public, payment, settlement 스키마 분리 및 QStash 비동기 처리.
+public, payment, settlement 스키마 분리 및 PGMQ 비동기 처리.
 
 ---
 
@@ -153,7 +153,7 @@ PENDING -> HOLD -> CANCELED -> READY -> PROCESSING -> COMPLETED -> FAILED
 ### 4.2 성능 및 장애 방어
 
 - **Chunk Processing**: 트랜잭션당 500건 분할 업데이트.
-- **4중 방어막**: 앱 투트랙 승인, PG 재시도, QStash 큐잉, 일일 대사(Reconciliation).
+- **4중 방어막**: 앱 투트랙 승인, PG 재시도, PGMQ 큐잉, 일일 대사(Reconciliation).
 
 ### 4.3 모니터링/관측성 (Observability)
 
