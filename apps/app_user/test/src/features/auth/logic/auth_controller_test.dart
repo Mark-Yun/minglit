@@ -92,13 +92,13 @@ void main() {
       );
 
       final controller = container.read(authControllerProvider.notifier);
-      
+
       // Simulate ref being disposed by invalidating the provider
       container.invalidate(authControllerProvider);
-      
+
       // This should not throw even though ref is disposed
       await controller.signOut();
-      
+
       verify(() => mockAuthRepo.signOut()).called(1);
     });
   });
