@@ -48,7 +48,7 @@ if [[ -n "$CHANGED_FUNCTIONS" ]]; then
     while IFS= read -r fn; do
       if [[ -d "supabase/functions/$fn" ]]; then
         echo "  → deno test supabase/functions/$fn/"
-        deno test --allow-all "supabase/functions/$fn/" || true
+        deno test --allow-all "supabase/functions/$fn/"
         RAN_ANY=true
       fi
     done <<< "$CHANGED_FUNCTIONS"
@@ -64,7 +64,7 @@ if [[ -n "$CHANGED_DART" ]]; then
   if command -v dart &>/dev/null; then
     while IFS= read -r f; do
       echo "  → dart test $f"
-      dart test "$f" || true
+      dart test "$f"
       RAN_ANY=true
     done <<< "$CHANGED_DART"
   else
