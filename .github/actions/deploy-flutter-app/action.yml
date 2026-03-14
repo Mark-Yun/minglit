@@ -59,7 +59,9 @@ runs:
       shell: bash
       run: |
         cp ${{ inputs.working-directory }}/vercel.json ${{ inputs.working-directory }}/build/web/vercel.json
-        cp -r ${{ inputs.working-directory }}/web/.well-known ${{ inputs.working-directory }}/build/web/.well-known
+        if [[ -d "${{ inputs.working-directory }}/web/.well-known" ]]; then
+          cp -r ${{ inputs.working-directory }}/web/.well-known ${{ inputs.working-directory }}/build/web/.well-known
+        fi
         if [[ -d "${{ inputs.working-directory }}/api" ]]; then
           mkdir -p ${{ inputs.working-directory }}/build/web/api
           cp -r ${{ inputs.working-directory }}/api/. ${{ inputs.working-directory }}/build/web/api/
