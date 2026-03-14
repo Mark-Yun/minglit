@@ -20,18 +20,18 @@
 
 ## 인증 게이트 플로우
 
-앱 진입 시 `GoRouter`의 `redirect` 로직이 인증 상태와 온보딩 상태를 순차적으로 검사하여 적절한 화면으로 분기한다.
-분기 기준은 `currentUserProvider`(로그인 여부)와 `onboardingStateProvider`(파트너 신청 상태) 두 가지다.
+앱 진입 시 인증 상태와 온보딩 상태를 순차적으로 검사하여 적절한 화면으로 분기한다.
+분기 기준은 로그인 여부와 파트너 신청 상태 두 가지다.
 
 ```mermaid
 flowchart TD
-    A([앱 진입]) --> B{로그인 여부\ncurrentUserProvider}
+    A([앱 진입]) --> B{로그인 여부}
     B -- 미인증 --> C[파트너 로그인\n/login]
     C -- 로그인 성공 --> B
     B -- 인증됨 --> D{onboardingState\n로드 완료?}
     D -- 로딩 중 --> E[스플래시/로딩 유지]
     E --> D
-    D -- 완료 --> F{온보딩 상태\nonboardingStateProvider}
+    D -- 완료 --> F{온보딩 상태}
 
     F -- needsApplication --> G[파트너 신청 위자드\n/apply]
     F -- draftInProgress --> G
@@ -48,8 +48,7 @@ flowchart TD
     style I fill:#dcfce7
 ```
 
-> **참고**: `/dev` 경로는 인증 없이 접근 가능 (개발 전용 DevMap).
-> 로그인 상태에서 `/login` 접근 시 `/`로 즉시 리다이렉트.
+> **참고**: 로그인 상태에서 `/login` 접근 시 `/`로 즉시 리다이렉트.
 
 ---
 
@@ -198,8 +197,7 @@ flowchart TD
 ## Flow 4 — 신청 심사
 
 이벤트에 참가 신청한 유저를 개별 심사하는 여정.
-`EventApplicationReviewController`가 `approved` / `rejected` 두 가지 상태를 처리하며,
-인증 제출(`verification_submission`)이 연결된 경우 `verificationRepository`를 통해 처리한다.
+승인 또는 거절 두 가지 결과로 처리하며, 인증 제출이 연결된 경우 인증 심사도 함께 진행한다.
 
 ```mermaid
 flowchart TD
@@ -276,8 +274,8 @@ flowchart TD
 ## Flow 6 — QR 체크인
 
 현장에서 유저의 QR 티켓을 스캔하여 입장을 처리하는 여정.
-`CheckinController`는 `idle → processing → (success | invalid | alreadyCheckedIn | error) → idle` 사이클로 동작하며,
-결과 표시 후 **3초 뒤 자동으로 `idle` 상태로 복귀**한다.
+체크인은 `idle → processing → 결과(success/invalid/alreadyCheckedIn/error) → idle` 사이클로 동작하며,
+결과 표시 후 **3초 뒤 자동으로 대기 상태로 복귀**한다.
 
 ```mermaid
 flowchart TD
@@ -286,7 +284,7 @@ flowchart TD
 
     C -- QR 코드 인식 --> D[CheckinResult: processing\nJSON 파싱 + TicketToken 생성]
 
-    D --> E{서명 검증\nrepo.verifyAndCheckin}
+    D --> E{서명 검증}
     E -- 유효한 티켓 --> F[CheckinResult: success\n유저명 표시\n입장 처리 완료]
     E -- 이미 체크인 --> G[CheckinResult: alreadyCheckedIn\n중복 입장 경고]
     E -- 서명 불일치 --> H[CheckinResult: invalid\n'유효하지 않은 티켓입니다']
