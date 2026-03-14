@@ -73,7 +73,8 @@ class PartnerSettlement {
       platformFee: _toInt(json['platform_fee']),
       vat: _toInt(json['vat']),
       netAmount: _toInt(json['net_amount']),
-      status: json['status'] as String? ?? 'pending',
+      // Normalize UPPERCASE statuses to lowercase for backward compatibility
+      status: (json['status'] as String? ?? 'pending').toLowerCase(),
     );
   }
 
@@ -90,6 +91,111 @@ class PartnerSettlement {
   final String status;
 }
 
+/// Represents a single settlement item from the `settlement_items` table.
+/// Uses UPPERCASE status values natively (see [SettlementItemStatus]).
+class SettlementItem {
+  const SettlementItem({
+    required this.id,
+    required this.partnerId,
+    required this.settlementPeriodStart,
+    required this.settlementPeriodEnd,
+    required this.currency,
+    required this.sourceType,
+    required this.sourceId,
+    required this.status,
+    required this.grossAmount,
+    required this.platformFeeRate,
+    required this.platformFeeAmount,
+    required this.pgFeeRate,
+    required this.pgFeeAmount,
+    required this.vatRate,
+    required this.vatAmount,
+    required this.netAmount,
+    required this.retryable,
+    required this.retryCount,
+    required this.calcChecksum,
+    required this.version,
+    required this.createdAt,
+    required this.updatedAt,
+    this.holdReasonCode,
+    this.holdReasonDetail,
+    this.failureReasonCode,
+    this.failureMessage,
+    this.nextRetryAt,
+    this.payoutId,
+    this.eventCompletedAt,
+  });
+
+  factory SettlementItem.fromJson(Map<String, dynamic> json) {
+    return SettlementItem(
+      id: json['id'] as String? ?? '',
+      partnerId: json['partner_id'] as String? ?? '',
+      settlementPeriodStart: _toDate(json['settlement_period_start']),
+      settlementPeriodEnd: _toDate(json['settlement_period_end']),
+      currency: json['currency'] as String? ?? 'KRW',
+      sourceType: json['source_type'] as String? ?? '',
+      sourceId: json['source_id'] as String? ?? '',
+      status: json['status'] as String? ?? 'PENDING',
+      grossAmount: _toInt(json['gross_amount']),
+      platformFeeRate: _toDouble(json['platform_fee_rate']),
+      platformFeeAmount: _toInt(json['platform_fee_amount']),
+      pgFeeRate: _toDouble(json['pg_fee_rate']),
+      pgFeeAmount: _toInt(json['pg_fee_amount']),
+      vatRate: _toDouble(json['vat_rate']),
+      vatAmount: _toInt(json['vat_amount']),
+      netAmount: _toInt(json['net_amount']),
+      holdReasonCode: json['hold_reason_code'] as String?,
+      holdReasonDetail: json['hold_reason_detail'] as String?,
+      failureReasonCode: json['failure_reason_code'] as String?,
+      failureMessage: json['failure_message'] as String?,
+      retryable: json['retryable'] as bool? ?? false,
+      retryCount: _toInt(json['retry_count']),
+      nextRetryAt: json['next_retry_at'] != null
+          ? _toDateTime(json['next_retry_at'])
+          : null,
+      payoutId: json['payout_id'] as String?,
+      calcChecksum: json['calc_checksum'] as String? ?? '',
+      version: _toInt(json['version']),
+      eventCompletedAt: json['event_completed_at'] != null
+          ? _toDateTime(json['event_completed_at'])
+          : null,
+      createdAt: _toDateTime(json['created_at']),
+      updatedAt: _toDateTime(json['updated_at']),
+    );
+  }
+
+  final String id;
+  final String partnerId;
+  final DateTime settlementPeriodStart;
+  final DateTime settlementPeriodEnd;
+  final String currency;
+  final String sourceType;
+  final String sourceId;
+  // 'PENDING','HOLD','CANCELED','READY','PROCESSING','COMPLETED','FAILED'
+  final String status;
+  final int grossAmount;
+  final double platformFeeRate;
+  final int platformFeeAmount;
+  final double pgFeeRate;
+  final int pgFeeAmount;
+  final double vatRate;
+  final int vatAmount;
+  final int netAmount;
+  final String? holdReasonCode;
+  final String? holdReasonDetail;
+  final String? failureReasonCode;
+  final String? failureMessage;
+  final bool retryable;
+  final int retryCount;
+  final DateTime? nextRetryAt;
+  final String? payoutId;
+  final String calcChecksum;
+  final int version;
+  final DateTime? eventCompletedAt;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+}
+
 int _toInt(dynamic value) {
   if (value is int) return value;
   if (value is num) return value.round();
@@ -97,8 +203,32 @@ int _toInt(dynamic value) {
   return 0;
 }
 
+double _toDouble(dynamic value) {
+  if (value is double) return value;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? 0;
+  return 0;
+}
+
 DateTime _toDateTime(dynamic value) {
   if (value is DateTime) return value;
   if (value is String) return DateTime.tryParse(value) ?? DateTime.now();
   return DateTime.now();
+}
+
+DateTime _toDate(dynamic value) {
+  if (value is DateTime) return value;
+  if (value is String) return DateTime.tryParse(value) ?? DateTime.now();
+  return DateTime.now();
+}
+
+/// Status constants for [SettlementItem].
+abstract class SettlementItemStatus {
+  static const pending = 'PENDING';
+  static const hold = 'HOLD';
+  static const canceled = 'CANCELED';
+  static const ready = 'READY';
+  static const processing = 'PROCESSING';
+  static const completed = 'COMPLETED';
+  static const failed = 'FAILED';
 }
