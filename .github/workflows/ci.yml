@@ -206,11 +206,20 @@ jobs:
         run: flutter pub get
         working-directory: tests/backend_integration
       - name: Test (integration)
-        run: dart test
+        run: dart test --coverage=coverage
         working-directory: tests/backend_integration
         env:
           SUPABASE_URL: http://127.0.0.1:54321
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_LOCAL_SERVICE_ROLE_KEY }}
+      - name: Format coverage
+        run: dart run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
+        working-directory: tests/backend_integration
+      - uses: codecov/codecov-action@v4
+        with:
+          file: tests/backend_integration/coverage/lcov.info
+          flags: backend-integration
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
       - name: Stop Supabase
         if: always()
         run: supabase stop
