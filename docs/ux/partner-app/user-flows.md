@@ -1,174 +1,348 @@
-# 파트너 앱 사용자 여정 (User Flows)
+# 파트너 앱 사용자 여정 플로우 (User Flows)
 
-이 문서는 밍릿 파트너 앱(`app_partner`)의 주요 사용자 여정과 핵심 비즈니스 로직에 따른 화면 전이 흐름을 정의합니다. 모든 화면 명칭과 라우트 경로는 [화면 카탈로그(screen-catalog.md)](screen-catalog.md)를 준수합니다.
-
-## 1. 개요
-파트너 앱은 사용자가 파트너 권한을 획득하는 **온보딩** 단계부터, 자신의 공간을 등록하고 **이벤트를 운영**하며 **수익을 정산**받는 전 과정을 포괄합니다. 각 여정은 복잡한 상태 전이를 포함하며, 특히 인증 게이트를 통해 사용자의 권한 상태에 맞는 최적의 화면을 제공합니다.
+이 문서는 밍릿 파트너 앱(`app_partner`)의 주요 사용자 여정을 플로우차트로 정의한 UX 레퍼런스입니다.
+각 플로우에서 사용하는 화면명과 라우트 경로는 **[화면 카탈로그](./screen-catalog.md)** 를 기준으로 합니다.
 
 ---
 
-## 2. 인증 게이트 및 초기 진입 플로우
-앱 실행 시 사용자의 인증 상태와 파트너 온보딩 완료 여부를 체크하여 적절한 페이지로 리다이렉트합니다.
+## 목차
+
+1. [인증 게이트 플로우](#인증-게이트-플로우)
+2. [Flow 1 — 파트너 온보딩](#flow-1--파트너-온보딩)
+3. [Flow 2 — 파티 생성](#flow-2--파티-생성)
+4. [Flow 3 — 이벤트 생성 및 운영](#flow-3--이벤트-생성-및-운영)
+5. [Flow 4 — 신청 심사](#flow-4--신청-심사)
+6. [Flow 5 — 정산 확인](#flow-5--정산-확인)
+7. [Flow 6 — QR 체크인](#flow-6--qr-체크인)
+8. [공통 예외 경로](#공통-예외-경로)
+
+---
+
+## 인증 게이트 플로우
+
+앱 진입 시 `GoRouter`의 `redirect` 로직이 인증 상태와 온보딩 상태를 순차적으로 검사하여 적절한 화면으로 분기한다.
+분기 기준은 `currentUserProvider`(로그인 여부)와 `onboardingStateProvider`(파트너 신청 상태) 두 가지다.
 
 ```mermaid
-graph TD
-    Start([앱 실행]) --> Loading[로딩 및 상태 확인]
-    Loading --> AuthCheck{로그인 여부}
-    
-    AuthCheck -- No --> Login[파트너 로그인 /login]
-    Login --> LoginSuccess[로그인 성공]
-    LoginSuccess --> Loading
-    
-    AuthCheck -- Yes --> OnboardingCheck{온보딩 상태}
-    
-    OnboardingCheck -- "미신청 (needsApplication)" --> Apply[파트너 신청 위자드 /apply]
-    OnboardingCheck -- "임시저장 (draftInProgress)" --> Apply
-    
-    OnboardingCheck -- "심사중 (pendingReview)" --> ApplyStatus[신청 상태 확인 /apply/status]
-    OnboardingCheck -- "보완필요 (needsCorrection)" --> ApplyStatus
-    
-    OnboardingCheck -- "승인완료 (hasPartner)" --> Main[파트너 홈 /]
-    
-    ApplyStatus -- "수정하기 클릭" --> Apply
-    Apply -- "제출 완료" --> ApplyStatus
-    Main --> BottomNav[하단 내비게이션 활성화]
+flowchart TD
+    A([앱 진입]) --> B{로그인 여부\ncurrentUserProvider}
+    B -- 미인증 --> C[파트너 로그인\n/login]
+    C -- 로그인 성공 --> B
+    B -- 인증됨 --> D{onboardingState\n로드 완료?}
+    D -- 로딩 중 --> E[스플래시/로딩 유지]
+    E --> D
+    D -- 완료 --> F{온보딩 상태\nonboardingStateProvider}
+
+    F -- needsApplication --> G[파트너 신청 위자드\n/apply]
+    F -- draftInProgress --> G
+    F -- pendingReview --> H[신청 상태 확인\n/apply/status]
+    F -- needsCorrection --> H
+    F -- hasPartner --> I[파트너 홈\n/]
+
+    G -- 이미 파트너 상태로 진입 시 --> I
+    H -- 이미 파트너 상태로 진입 시 --> I
+
+    style C fill:#fef3c7
+    style G fill:#dbeafe
+    style H fill:#dbeafe
+    style I fill:#dcfce7
+```
+
+> **참고**: `/dev` 경로는 인증 없이 접근 가능 (개발 전용 DevMap).
+> 로그인 상태에서 `/login` 접근 시 `/`로 즉시 리다이렉트.
+
+---
+
+## Flow 1 — 파트너 온보딩
+
+일반 유저가 파트너 권한을 획득하기까지의 전체 여정.
+신청 위자드(`PartnerApplyPage`)는 5단계로 구성되며, 각 단계 이동 시 임시 저장(draft)이 자동으로 수행된다.
+
+```mermaid
+flowchart TD
+    A([앱 최초 진입\nneedsApplication 상태]) --> B[파트너 로그인\n/login]
+    B -- 회원가입 링크 --> C[회원가입 완료]
+    C --> B
+    B -- 로그인 성공 --> D[파트너 신청 위자드\n/apply]
+
+    D --> S1[Step 1\n기본 매장 정보\n브랜드명·소개·프로필 이미지]
+    S1 -- 유효성 통과 → nextStep + saveDraft --> S2[Step 2\n사업자 등록 정보\n사업자 유형·번호·대표자명]
+    S2 -- 유효성 통과 --> S3[Step 3\n연락처 및 정산 계좌\n전화·이메일·은행·계좌번호·세금계산서 이메일]
+    S3 -- 유효성 통과 --> S4[Step 4\n증빙 서류 업로드\n사업자등록증·통장사본]
+    S4 -- 유효성 통과 --> S5[Step 5\n최종 확인 및 제출]
+
+    S1 -- 유효성 실패 --> S1
+    S2 -- 유효성 실패 --> S2
+    S3 -- 유효성 실패 --> S3
+    S4 -- 유효성 실패 --> S4
+
+    S2 -- 이전 --> S1
+    S3 -- 이전 --> S2
+    S4 -- 이전 --> S3
+    S5 -- 이전 --> S4
+
+    S5 -- 제출 성공 --> W[신청 상태 확인\n/apply/status\npendingReview 상태]
+    S5 -- 제출 실패 --> ERR[에러 토스트 표시]
+    ERR --> S5
+
+    W --> R{관리자 심사 결과}
+    R -- 승인 --> I[파트너 홈\n/\nhasPartner 상태]
+    R -- 보완요청 --> K[신청 상태 확인\n/apply/status\nneedsCorrection + 보완 사유 표시]
+    K -- 수정하기 --> D
+    R -- 반려 --> L[신청 상태 확인\n/apply/status\n반려 사유 표시]
+    L -- 재신청 --> D
+
+    D -- 앱 종료 후 재진입\ndraftInProgress --> D2[임시저장 복원\n이어서 작성]
+    D2 --> S1
+```
+
+### 온보딩 상태 전이 요약
+
+| 상태 | 진입 화면 | 트리거 |
+|------|-----------|--------|
+| `needsApplication` | `/apply` (Step 1) | 최초 진입 |
+| `draftInProgress` | `/apply` (저장된 스텝) | 임시저장 후 재진입 |
+| `pendingReview` | `/apply/status` | 제출 완료 |
+| `needsCorrection` | `/apply/status` | 관리자 보완요청 |
+| `hasPartner` | `/` | 관리자 승인 |
+
+---
+
+## Flow 2 — 파티 생성
+
+파트너가 새로운 파티(매장)를 등록하는 여정.
+위자드는 `PartyCreateStep` enum 기준 6단계로 구성되며, 편집 시에는 기존 데이터가 프리필(`isPrefilled=true`)된다.
+
+```mermaid
+flowchart TD
+    A([파트너 홈\n/]) --> B[파티 목록\n/parties]
+    B -- FAB '파티 생성' 클릭 --> C[파티 생성 위자드\n/parties/create]
+
+    C --> W1[Step 1: basicInfo\n파티명·설명·카테고리·이미지]
+    W1 -- 유효성 통과 --> W2[Step 2: location\n지도 좌표·상세 주소·오시는 길]
+    W2 -- 유효성 통과 --> W3[Step 3: capacityAndContact\n정원·최소인원·연락처·성비균형 허용치]
+    W3 -- 유효성 통과 --> W4[Step 4: entryRules\n입장 그룹 설정\nEntryGroupTemplate 정의]
+    W4 -- 유효성 통과 --> W5[Step 5: tickets\n티켓 템플릿 구성\nTicketTemplate 가격·수량·공개 여부]
+    W5 -- 유효성 통과 --> W6[Step 6: review\n전체 입력 내용 최종 확인]
+
+    W1 -- 유효성 실패 --> W1
+    W2 -- 유효성 실패 --> W2
+    W3 -- 유효성 실패 --> W3
+    W4 -- 유효성 실패 --> W4
+    W5 -- 유효성 실패 --> W5
+
+    W2 -- 이전 --> W1
+    W3 -- 이전 --> W2
+    W4 -- 이전 --> W3
+    W5 -- 이전 --> W4
+    W6 -- 이전 --> W5
+
+    W6 -- 생성 완료 --> D[파티 상세\n/parties/:partyId]
+    W6 -- 생성 실패 --> ERR[에러 토스트]
+    ERR --> W6
+
+    D --> B
+
+    B -- 기존 파티 '편집' 메뉴 --> E[파티 생성 위자드\n/parties/:partyId/edit\nisPrefilled=true]
+    E --> W1
+```
+
+### 파티 생성 위자드 단계 요약
+
+| 스텝 | `PartyCreateStep` | 주요 입력 |
+|------|-------------------|-----------|
+| 1 | `basicInfo` | 파티명, 설명, 카테고리, 이미지 |
+| 2 | `location` | 지도 좌표(`Location`), 상세 주소, 오시는 길 안내 |
+| 3 | `capacityAndContact` | 정원, 최소 인원, 연락처, 성비 균형 허용치(`balanceTolerance`) |
+| 4 | `entryRules` | 입장 그룹(`EntryGroupTemplate`) 정의 |
+| 5 | `tickets` | 티켓 템플릿(`TicketTemplate`), 공개 여부(`visibility`) |
+| 6 | `review` | 전체 내용 최종 확인 후 제출 |
+
+---
+
+## Flow 3 — 이벤트 생성 및 운영
+
+파티 상세에서 특정 일정(이벤트 회차)을 생성하고 운영하는 여정.
+
+```mermaid
+flowchart TD
+    A[파티 상세\n/parties/:partyId] --> B[이벤트 관리 탭\nPartyEventManagementTab]
+    B -- '이벤트 생성' 클릭 --> C[이벤트 생성\n/parties/:partyId/events/create]
+
+    C --> D{날짜·시간·정원 입력\nEventCreatePage}
+    D -- 유효성 실패 --> D
+    D -- 저장 성공 --> E[이벤트 상세\n/parties/:partyId/events/:eventId]
+    D -- 저장 실패 --> ERR1[에러 토스트]
+    ERR1 --> D
+
+    E --> F[참가 신청자 명단 확인]
+    E --> G[체크인 현황 확인]
+    E --> H[티켓 판매 통계 확인]
+    E --> I[티켓 생성\n/parties/:partyId/events/:eventId/tickets/create]
+    E --> J[티켓 수정\n.../tickets/:ticketId/edit]
+    E --> K[QR 스캐너 실행\nQRScannerScreen]
+
+    I --> L{티켓 정보 입력\nTicketCreatePage\n명칭·가격·수량·판매기간}
+    L -- 유효성 실패 --> L
+    L -- 저장 --> E
+
+    J --> M{티켓 정보 수정\nTicketEditPage}
+    M -- 저장 --> E
+
+    K --> N[체크인 플로우\n→ Flow 6 참조]
+    N --> E
 ```
 
 ---
 
-## 3. 여정 1 — 파트너 온보딩 (입점 신청)
-일반 유저가 파트너가 되기 위해 사업자 정보와 증빙 서류를 제출하는 5단계 위자드 프로세스입니다.
+## Flow 4 — 신청 심사
+
+이벤트에 참가 신청한 유저를 개별 심사하는 여정.
+`EventApplicationReviewController`가 `approved` / `rejected` 두 가지 상태를 처리하며,
+인증 제출(`verification_submission`)이 연결된 경우 `verificationRepository`를 통해 처리한다.
 
 ```mermaid
-graph TD
-    A[PartnerApplyPage 진입] --> S1[Step 1: 기본 매장 정보]
-    S1 -- "다음" --> S2[Step 2: 사업자 정보]
-    S2 -- "이전" --> S1
-    S2 -- "다음" --> S3[Step 3: 연락처 및 정산 계좌]
-    S3 -- "이전" --> S2
-    S3 -- "다음" --> S4[Step 4: 증빙 서류 업로드]
-    S4 -- "이전" --> S3
-    S4 -- "다음" --> S5[Step 5: 최종 확인 및 제출]
-    
-    S5 -- "제출" --> Submit{제출 처리}
-    Submit -- "성공" --> Status[PartnerApplyStatusPage 심사중]
-    Submit -- "오류" --> Error[에러 팝업/토스트]
-    Error --> S5
-    
-    Status -- "관리자 보완 요청" --> Correction[상태: 보완 필요]
-    Correction -- "수정하기" --> S1
-    
-    Status -- "관리자 최종 승인" --> Home[PartnerHomePage 진입]
+flowchart TD
+    A[이벤트 상세\n/parties/:partyId/events/:eventId] --> B[참가 신청자 명단\neventApplications 목록]
+    B -- 신청자 항목 클릭 --> C[신청 상세 모달\n신청자 프로필·인증 서류]
+
+    C --> VS{verification_submission\n존재 여부}
+    VS -- 있음 --> VR[verificationRepository.reviewRequest\nVerificationStatus.approved/rejected]
+    VS -- 없음 --> DR[event_applications 직접 업데이트\nstatus + rejection_reason]
+
+    VR --> D{심사 결정}
+    DR --> D
+
+    D -- 승인 --> E[status: approved\n신청자에게 승인 알림 발송]
+    D -- 거절 → 사유 없음 --> F[status: rejected]
+    D -- 거절 → 사유 입력 --> G[status: rejected\nrejection_reason 저장]
+
+    E --> H[명단 갱신\n승인 상태로 표시]
+    F --> H
+    G --> H
+
+    H --> B
+
+    B -- 전체 일괄 승인 --> I[일괄 approved 처리]
+    I --> H
+
+    C -- 심사 중 오류 --> ERR[에러 토스트\n재시도 안내]
+    ERR --> C
 ```
+
+### 심사 결과 상태값
+
+| 결과 | `status` 값 | `rejection_reason` | 비고 |
+|------|-------------|---------------------|------|
+| 승인 | `approved` | — | 신청자 입장 확정, 알림 발송 |
+| 거절 (사유 없음) | `rejected` | `null` | — |
+| 거절 (사유 있음) | `rejected` | 사유 문자열 | 신청자에게 사유 전달 |
 
 ---
 
-## 4. 여정 2 — 파티 생성 (장소 등록)
-파트너가 이벤트를 개최할 기반이 되는 파티(매장) 공간을 등록하는 6단계 위자드입니다.
+## Flow 5 — 정산 확인
+
+정산 탭에서 수익 현황을 확인하는 여정. 상세 UI/UX 명세는
+**[정산 UI/UX 설계서](../../features/partner-settlement/ui-ux-design.md)** 를 참조한다.
 
 ```mermaid
-graph TD
-    List[PartyListPage] --> CreateBtn[파티 생성 버튼 클릭]
-    CreateBtn --> W1[Step 1: 기본 정보 - 이름/설명/이미지]
-    W1 -- "다음" --> W2[Step 2: 위치 - 지도/상세주소]
-    W2 -- "다음" --> W3[Step 3: 인원 및 연락처]
-    W3 -- "다음" --> W4[Step 4: 입장 규칙 - 그룹 설정]
-    W4 -- "다음" --> W5[Step 5: 티켓 템플릿]
-    W5 -- "다음" --> W6[Step 6: 최종 리뷰]
-    
-    W6 -- "생성 완료" --> Detail[PartyDetailPage]
-    
-    Detail -- "정보 수정" --> EditWizard[편집 모드 진입]
-    EditWizard -- "기존 데이터 프리필" --> W1
+flowchart TD
+    A([Bottom Nav\n수익관리 탭]) --> B[정산 관리\n/settlement\nSettlementPage]
+
+    B --> C[정산 가능 금액 섹션]
+    B --> D[월별 수익 리포트 그래프]
+    B --> E[정산 계좌 관리]
+
+    C -- 정산 신청 클릭 --> F{계좌 등록 여부}
+    F -- 미등록 --> G[계좌 등록 안내\n→ 계좌 관리로 이동]
+    G --> E
+    F -- 등록됨 --> H[정산 신청 확인 다이얼로그]
+    H -- 확인 --> I[정산 신청 완료\n처리 중 상태 표시]
+    H -- 취소 --> B
+
+    D -- 월 선택 --> J[해당 월 상세 내역]
+    J -- 뒤로가기 --> B
+
+    E -- 계좌 추가/변경 --> K[계좌 정보 입력 폼]
+    K -- 저장 성공 --> B
+    K -- 저장 실패 --> ERR[에러 토스트]
+    ERR --> K
 ```
+
+> 정산 플로우 상세(수수료 계산, 정산 주기, 세금계산서 등)는 [정산 UI/UX 설계서](../../features/partner-settlement/ui-ux-design.md)에서 관리한다.
 
 ---
 
-## 5. 여정 3 — 이벤트 생성 및 운영
-등록된 파티를 기반으로 실제 모집 일정(이벤트)을 생성하고 관리합니다.
+## Flow 6 — QR 체크인
+
+현장에서 유저의 QR 티켓을 스캔하여 입장을 처리하는 여정.
+`CheckinController`는 `idle → processing → (success | invalid | alreadyCheckedIn | error) → idle` 사이클로 동작하며,
+결과 표시 후 **3초 뒤 자동으로 `idle` 상태로 복귀**한다.
 
 ```mermaid
-graph TD
-    PartyDetail[PartyDetailPage] --> EventTab[이벤트 관리 탭]
-    EventTab --> CreateEv[이벤트 생성 버튼]
-    CreateEv --> EvForm[EventCreatePage: 날짜/시간/정원 설정]
-    EvForm -- "저장" --> PartyDetail
-    
-    PartyDetail --> EvList[이벤트 리스트]
-    EvList -- "클릭" --> EvDetail[EventDetailPage: 운영 대시보드]
-    
-    EvDetail --> Ops{운영 작업}
-    Ops --> Scan[QR 스캐너 실행]
-    Ops --> Manage[참가자 명단 관리]
-    Ops --> Ticket[티켓 설정 변경]
+flowchart TD
+    A([이벤트 상세\n/parties/:partyId/events/:eventId]) --> B[QR 스캐너 버튼 클릭]
+    B --> C[QRScannerScreen\nCheckinResult: idle]
+
+    C -- QR 코드 인식 --> D[CheckinResult: processing\nJSON 파싱 + TicketToken 생성]
+
+    D --> E{서명 검증\nrepo.verifyAndCheckin}
+    E -- 유효한 티켓 --> F[CheckinResult: success\n유저명 표시\n입장 처리 완료]
+    E -- 이미 체크인 --> G[CheckinResult: alreadyCheckedIn\n중복 입장 경고]
+    E -- 서명 불일치 --> H[CheckinResult: invalid\n'유효하지 않은 티켓입니다']
+    E -- JSON 파싱 실패 --> I[CheckinResult: invalid\n'티켓 데이터를 읽을 수 없습니다']
+    E -- 네트워크/기타 오류 --> J[CheckinResult: error\n오류 메시지 표시]
+
+    F -- 3초 후 자동 복귀 --> C
+    G -- 3초 후 자동 복귀 --> C
+    H -- 3초 후 자동 복귀 --> C
+    I -- 3초 후 자동 복귀 --> C
+    J -- 3초 후 자동 복귀 --> C
+
+    C -- 뒤로가기 --> A
 ```
+
+### 체크인 결과 상태 요약
+
+| `CheckinResult` | 표시 내용 | 후속 동작 |
+|-----------------|-----------|-----------|
+| `idle` | 스캐너 대기 화면 | — |
+| `processing` | 로딩 인디케이터 | — |
+| `success` | 유저명 + 성공 메시지 | 3초 후 idle 복귀 |
+| `alreadyCheckedIn` | 중복 입장 경고 | 3초 후 idle 복귀 |
+| `invalid` | 오류 메시지 | 3초 후 idle 복귀 |
+| `error` | 오류 메시지 | 3초 후 idle 복귀 |
 
 ---
 
-## 6. 여정 4 — 신청 심사 (참가 승인)
-유저들이 신청한 이벤트 참가 요청을 검토하고 승인 또는 거절합니다.
+## 공통 예외 경로
 
-```mermaid
-graph TD
-    EvDetail[EventDetailPage] --> AppList[신청자 명단 확인]
-    AppList --> AppItem[개별 신청 상세/프로필]
-    
-    AppItem --> Review{심사 결정}
-    Review -- "승인" --> Approve[상태: 승인됨/티켓 발송]
-    Review -- "거절" --> Reject[거절 사유 입력]
-    Review -- "보완요청" --> NeedsMore[보완 요청 메시지 발송]
-    
-    Approve --> Update[명단 현황 업데이트]
-    Reject --> Update
-    NeedsMore --> Update
-```
+모든 플로우에 공통으로 적용되는 예외 처리 원칙.
+
+| 예외 상황 | 처리 방식 |
+|-----------|-----------|
+| 네트워크 단절 | 스낵바 안내 + 재시도 유도 |
+| 권한 부족 | "권한이 없습니다" 팝업 (멤버 권한 설정에 따라) |
+| 위자드 유효성 실패 | 해당 필드 강조 + 다음 단계 이동 차단 |
+| 세션 만료 | `/login`으로 자동 리다이렉트 |
+| 서버 오류 (5xx) | 에러 토스트 + 재시도 버튼 |
 
 ---
 
-## 7. 여정 5 — 정산 확인 및 관리
-이벤트 운영을 통해 발생한 매출을 확인하고 정산을 관리합니다.
+## 화면 간 연결 관계 요약
 
-```mermaid
-graph TD
-    Tab[SettlementPage: 수익 관리] --> Summary[누적 수익 및 정산 가능 금액 확인]
-    Summary --> History[월별/이벤트별 상세 내역]
-    History --> Detail[정산 상세 리포트]
-    
-    Summary --> Account[정산 계좌 등록/변경]
-    Summary --> Request[정산 신청]
-    
-    subgraph "상세 설계 참조"
-        Ref[../../features/partner-settlement/ui-ux-design.md]
-    end
-    
-    Detail -.-> Ref
-```
+각 플로우에서 등장하는 화면의 전체 목록과 라우트는 **[화면 카탈로그](./screen-catalog.md)** 를 참조한다.
+
+| 플로우 | 진입점 | 핵심 화면 | 종료점 |
+|--------|--------|-----------|--------|
+| 인증 게이트 | 앱 진입 | `파트너 로그인`, `파트너 신청 위자드`, `신청 상태 확인` | `파트너 홈` |
+| 파트너 온보딩 | `파트너 로그인` | `파트너 신청 위자드` (5단계), `신청 상태 확인` | `파트너 홈` |
+| 파티 생성 | `파티 목록` | `파티 생성 위자드` (6단계) | `파티 상세` |
+| 이벤트 생성·운영 | `파티 상세` | `이벤트 생성`, `이벤트 상세`, `티켓 생성/편집` | `이벤트 상세` |
+| 신청 심사 | `이벤트 상세` | 신청 상세 모달 | `이벤트 상세` |
+| 정산 확인 | Bottom Nav 수익관리 탭 | `정산 관리` | `정산 관리` |
+| QR 체크인 | `이벤트 상세` | `QRScannerScreen` | `이벤트 상세` |
 
 ---
 
-## 8. 여정 6 — QR 체크인 플로우
-현장에서 유저의 디지털 티켓을 스캔하여 입장을 확인하는 프로세스입니다.
-
-```mermaid
-graph TD
-    EvDetail[EventDetailPage] --> ScanBtn[QR 스캔 버튼 클릭]
-    ScanBtn --> Scanner[QRScannerScreen 실행]
-    
-    Scanner -- "QR 코드 인식" --> Proc{CheckinController: 검증}
-    
-    Proc -- "성공" --> Success[체크인 완료 표시/이름 확인]
-    Proc -- "이미 체크인됨" --> Already[이미 입장한 유저 경고]
-    Proc -- "유효하지 않음" --> Invalid[위변조 또는 타 이벤트 티켓 에러]
-    Proc -- "네트워크 에러" --> Error[재시도 안내]
-    
-    Success --> Scanner
-    Already --> Scanner
-    Invalid --> Scanner
-```
-
----
-
-## 9. 예외 및 에러 경로
-- **네트워크 단절**: 모든 API 요청 시 오프라인 상태이면 스낵바를 통해 안내하고 재시도를 유도합니다.
-- **권한 부족**: 파트너 멤버 권한 설정에 따라 특정 메뉴(정산, 멤버 관리 등) 접근 시 "권한이 없습니다" 팝업을 노출합니다.
-- **데이터 유효성 실패**: 위자드 단계 이동 시 필수 항목 누락 시 해당 필드를 강조하고 이동을 차단합니다.
+*이 문서는 `app_router.dart`, `partner_apply_controller.dart`, `party_create_wizard_controller.dart`, `event_application_controller.dart`, `checkin_controller.dart` 소스를 기반으로 작성되었습니다.*
