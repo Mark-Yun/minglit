@@ -324,37 +324,13 @@ stateDiagram-v2
   - **EntryGroupEditorScreen**: 입장 그룹(예: 신규 회원, 우수 회원, 남성/여성 전용) 정의 및 편집.
 
 ## 26. [모달] 티켓 및 입장 관리 (Modal: Ticket & Entry)
-- **용도**: 티켓 라이브러리 및 현장 입장 관련 보조 화면.
+- **용도**: 티켓 라이브러리 및 현장 입장 관련 부조 화면.
 - **주요 화면**:
   - **TicketManageScreen**: 파티/이벤트별 전체 티켓 현황 조회.
   - **TicketTemplateManageScreen**: 자주 사용하는 티켓 설정 재사용을 위한 템플릿 관리.
   - **QRScannerScreen**: 티켓 검수용 카메라 스캐너. (체크인 및 일반 QR 인식 중복 기능 포함)
 
-## 27. [모달] 위치 검색 (Modal: Location Search)
-- **화면명**: 위치 검색 화면 (LocationSearchScreen)
-- **라우트**: 비라우팅 (Navigator.push)
-- **피처**: `minglit_kit > search`
-- **용도**: 파티/이벤트 생성 시 주소를 검색하고 지도에서 위치를 선택하는 전체 화면 모달.
-- **주요 UI**:
-  - 텍스트 검색 입력
-  - 검색 결과 목록 (주소 자동완성)
-  - 지도 프리뷰 (선택한 위치 표시)
-- **진입**: PartyCreateCoordinator, PartyDetailCoordinator에서 push
-- **이탈**: 위치 선택 후 pop (결과 반환)
-
-## 28. [모달] 인증 심사 (Modal: Review Verification)
-- **화면명**: 인증 심사 화면 (ReviewVerificationScreen)
-- **라우트**: 비라우팅 (Navigator.push)
-- **피처**: `verification > review`
-- **용도**: 유저가 제출한 인증 서류를 파트너가 검토하고 승인/거절/보완요청하는 화면.
-- **주요 UI**:
-  - 유저 제출 서류 이미지 뷰어
-  - 인증 항목별 상태 표시
-  - 승인/거절/보완요청 버튼
-- **진입**: VerificationCoordinator에서 push
-- **이탈**: 심사 완료 후 pop
-
-## 29. [온보딩] 파트너 입점 신청 위자드 (Onboarding: Application Wizard)
+## 27. [온보딩] 파트너 입점 신청 위자드 (Onboarding: Application Wizard)
 - **화면명**: 파트너 신청 페이지 (PartnerApplyPage)
 - **라우트**: `/apply`
 - **피처**: `onboarding`
@@ -366,7 +342,7 @@ stateDiagram-v2
   4. 증빙 서류 업로드 (사업자 등록증 등)
   5. 입력 정보 최종 확인 및 제출
 
-## 30. [온보딩] 입점 신청 상태 및 보완 (Onboarding: Application Status)
+## 28. [온보딩] 입점 신청 상태 및 보완 (Onboarding: Application Status)
 - **화면명**: 신청 상태 확인 (PartnerApplyStatusPage)
 - **라우트**: `/apply/status`
 - **피처**: `onboarding`
@@ -377,9 +353,4 @@ stateDiagram-v2
   - 위자드로 다시 돌아가기 버튼 (수정용)
 
 ---
-
-## 관련 문서
-
-- [사용자 플로우](user-flows.md) — 각 화면을 연결하는 사용자 여정 플로우차트
-- [디자인 시스템](design-system.md) — 디자인 토큰, 컴포넌트 테마, 위젯 패턴 카탈로그
-- [클라이언트 아키텍처](../../architecture/client.md) — Feature-first 구조, Coordinator 패턴, Repository 패턴 등 기술 아키텍처
+*이 문서는 파트너 앱의 화면 구성을 지속적으로 반영하며, 상세 디자인은 Figma 링크를 참조하십시오.*
