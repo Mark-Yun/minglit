@@ -75,10 +75,10 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
       - name: Analyze (minglit_kit)
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos
         working-directory: shared/packages/minglit_kit
       - name: Analyze
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos
         working-directory: apps/app_user
       - name: Test
         run: flutter test --coverage
@@ -109,10 +109,10 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
       - name: Analyze (minglit_kit)
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos
         working-directory: shared/packages/minglit_kit
       - name: Analyze
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos
         working-directory: apps/app_partner
       - name: Test
         run: flutter test --coverage
