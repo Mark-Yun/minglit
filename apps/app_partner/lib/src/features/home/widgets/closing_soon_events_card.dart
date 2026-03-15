@@ -83,9 +83,10 @@ class ClosingSoonEventsCard extends StatelessWidget {
                         ),
                       ),
                       _DayBadge(
-                        daysUntil: event.startTime
-                            .difference(DateTime.now())
-                            .inDays,
+                        // Fix: calendar day 기준으로 D-day 계산 — Duration.inDays는 24h 절사라 타임존에 따라 off-by-one
+                        daysUntil: DateUtils.dateOnly(
+                          event.startTime,
+                        ).difference(DateUtils.dateOnly(DateTime.now())).inDays,
                       ),
                     ],
                   ),
