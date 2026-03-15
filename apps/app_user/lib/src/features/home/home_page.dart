@@ -33,6 +33,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(currentUserProvider);
     final homeCoordinator = ref.read(homeCoordinatorProvider);
     final eventCoordinator = ref.read(eventCoordinatorProvider);
     final recommendationAsync = ref.watch(recommendationEventsProvider);
@@ -67,10 +68,35 @@ class _HomePageState extends ConsumerState<HomePage> {
                 icon: const Icon(Icons.search),
                 onPressed: () => const SearchRoute().push<void>(context),
               ),
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined),
-                onPressed: homeCoordinator.pushNotificationCenter,
-              ),
+              if (user != null) ...[
+                IconButton(
+                  icon: const Icon(Icons.notifications_outlined),
+                  onPressed: homeCoordinator.pushNotificationCenter,
+                ),
+                GestureDetector(
+                  onTap: () => const MyPageRoute().push<void>(context),
+                  child: CircleAvatar(
+                    radius: 14,
+                    backgroundImage: user.userMetadata?['avatar_url'] != null
+                        ? NetworkImage(
+                            user.userMetadata!['avatar_url'] as String,
+                          )
+                        : null,
+                    onBackgroundImageError:
+                        user.userMetadata?['avatar_url'] != null
+                        ? (_, __) {}
+                        : null,
+                    child: user.userMetadata?['avatar_url'] == null
+                        ? const Icon(Icons.person, size: 14)
+                        : null,
+                  ),
+                ),
+              ] else
+                IconButton(
+                  icon: const Icon(Icons.person_outline),
+                  onPressed: () =>
+                      ref.read(authCoordinatorProvider).pushLogin(),
+                ),
               const SizedBox(width: MinglitSpacing.small),
             ],
             // Fix #76: use theme color instead of
