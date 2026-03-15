@@ -5,22 +5,6 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 const noop = () => {};
 
-function makeAppSelectHandler(appStatus: string) {
-  return ({ filters }: { filters: Record<string, unknown> }) => {
-    const appId = filters["id"] as string;
-    return {
-      data: {
-        id: appId,
-        event_id: "event-1",
-        ticket_id: "ticket-1",
-        user_id: "user-1",
-        status: appStatus,
-      },
-      error: null,
-    };
-  };
-}
-
 function makeEventSelectHandler() {
   return () => ({
     data: {
@@ -57,76 +41,6 @@ Deno.test("simApproveVerifications - empty list returns empty result", async () 
 Deno.test("simApproveVerifications - 5 apps with approveRate=0.8 → 4 approved, 1 rejected", async () => {
   const appIds = ["app-1", "app-2", "app-3", "app-4", "app-5"];
   const submissionStatuses: Record<string, string> = {};
-
-  const mock = createMockSupabaseClient({
-    tables: {
-      event_applications: {
-        select: ({ filters }) => {
-          const appId = filters["id"] as string;
-          const status = submissionStatuses[`app_${appId}`] ?? "pending_review";
-          return {
-            data: {
-              id: appId,
-              event_id: "event-1",
-              ticket_id: "ticket-1",
-              user_id: "user-1",
-              status,
-            },
-            error: null,
-          };
-        },
-        update: ({ values, filters }) => {
-          const appId = filters["id"] as string;
-          const v = values as { status: string };
-          submissionStatuses[`app_${appId}`] = v.status;
-          return { data: null, error: null };
-        },
-      },
-      events: {
-        select: makeEventSelectHandler(),
-      },
-      verifications: {
-        select: makeVerificationSelectHandler("verif-1"),
-      },
-      verification_submissions: {
-        insert: ({ values }) => {
-          const v = values as { id: string; status: string };
-          submissionStatuses[`sub_${v.id}`] = v.status;
-          return { data: null, error: null };
-        },
-        update: ({ values, filters }) => {
-          const subId = filters["id"] as string;
-          const v = values as { status: string };
-          submissionStatuses[`sub_${subId}`] = v.status;
-          if (v.status === "approved") {
-            const appId = submissionStatuses[`sub_${subId}_appId`];
-            if (appId) submissionStatuses[`app_${appId}`] = "approved";
-          } else if (v.status === "rejected") {
-            const appId = submissionStatuses[`sub_${subId}_appId`];
-            if (appId) submissionStatuses[`app_${appId}`] = "rejected";
-          }
-          return { data: null, error: null };
-        },
-        select: ({ filters }) => {
-          const subId = filters["id"] as string;
-          const status = submissionStatuses[`sub_${subId}`] ?? "pending";
-          return {
-            data: {
-              id: subId,
-              status,
-              partner_id: "partner-1",
-              user_id: "user-1",
-              verification_id: "verif-1",
-            },
-            error: null,
-          };
-        },
-      },
-      partner_verified_users: {
-        select: () => ({ data: { id: "pvu-1" }, error: null }),
-      },
-    },
-  });
 
   const insertedSubmissions: Array<{ id: string; appId: string; status: string }> = [];
 

@@ -50,7 +50,7 @@ Deno.test("simUploadLog() — returns null gracefully when supabase errors", asy
   const mockSupabase = {
     storage: {
       from: (_bucket: string) => ({
-        upload: async (_path: string, _bytes: Uint8Array, _opts: unknown) => ({
+        upload: (_path: string, _bytes: Uint8Array, _opts: unknown) => ({
           error: { message: "Storage unavailable" },
           data: null,
         }),
@@ -79,12 +79,12 @@ Deno.test("simCreateGitHubIssue() — mock fetch, title contains [E2E-SIM], labe
     globalThis,
     "fetch",
     // deno-lint-ignore no-explicit-any
-    async (_url: any, options?: any) => {
+    (_url: any, options?: any): Promise<Response> => {
       capturedBody = JSON.parse(options?.body as string);
-      return new Response(
+      return Promise.resolve(new Response(
         JSON.stringify({ html_url: "https://github.com/Mark-Yun/minglit/issues/999" }),
         { status: 201 },
-      );
+      ));
     },
   );
 

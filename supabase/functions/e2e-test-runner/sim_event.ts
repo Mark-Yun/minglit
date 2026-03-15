@@ -3,8 +3,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { SimLogEntry, SimAssertionResult } from "./sim_types.ts";
 import {
-  simAssertCheckedIn,
-  simAssertNoShow,
   simAssertMatchPairCreated,
   simAssertCheckinRatio,
 } from "./sim_assertions.ts";
