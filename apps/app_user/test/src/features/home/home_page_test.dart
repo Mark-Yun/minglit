@@ -31,7 +31,10 @@ void main() {
     }
   });
 
-  Widget createTestWidget({List<dynamic> overrides = const []}) {
+  Widget createTestWidget({
+    User? currentUser,
+    List<dynamic> overrides = const [],
+  }) {
     return ProviderScope(
       overrides: [
         eventRepositoryProvider.overrideWithValue(mockEventRepository),
@@ -39,6 +42,8 @@ void main() {
         activeFiltersProvider.overrideWith(
           _NoFiltersNotifier.new,
         ),
+        // Default: unauthenticated. Pass currentUser to test logged-in state.
+        currentUserProvider.overrideWith((_) => currentUser),
         ...overrides.cast(),
       ],
       child: MaterialApp(
@@ -49,8 +54,15 @@ void main() {
   }
 
   group('HomePage', () {
-    testWidgets('renders notification bell icon', (tester) async {
-      await tester.pumpWidget(createTestWidget());
+    testWidgets('renders notification bell icon when logged in', (
+      tester,
+    ) async {
+      final mockUser = MockUser();
+      when(() => mockUser.id).thenReturn('user1');
+      when(() => mockUser.email).thenReturn('test@example.com');
+      when(() => mockUser.userMetadata).thenReturn({'full_name': 'Test User'});
+
+      await tester.pumpWidget(createTestWidget(currentUser: mockUser));
       await tester.pump();
 
       expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);
