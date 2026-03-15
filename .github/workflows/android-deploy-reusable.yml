@@ -1,0 +1,164 @@
+name: Android Build & Deploy (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      app-name:
+        description: 'App name (user or partner)'
+        required: true
+        type: string
+      app-directory:
+        description: 'App directory path (e.g., apps/app_user)'
+        required: true
+        type: string
+      package-name:
+        description: 'Android package name'
+        required: true
+        type: string
+      gradle-cache-prefix:
+        description: 'Gradle cache key prefix (e.g., gradle- or gradle-partner-)'
+        required: true
+        type: string
+      artifact-name-apk:
+        description: 'Artifact name for dev APK (e.g., app-dev-release.apk)'
+        required: true
+        type: string
+      artifact-name-aab:
+        description: 'Artifact name for prod AAB (e.g., app-prod-release.aab)'
+        required: true
+        type: string
+      notify-workflow-name:
+        description: 'Workflow name for failure notification'
+        required: true
+        type: string
+    secrets:
+      ANDROID_KEYSTORE_BASE64:
+        required: true
+      ANDROID_KEYSTORE_PASSWORD:
+        required: true
+      ANDROID_KEY_PASSWORD:
+        required: true
+      ANDROID_KEY_ALIAS:
+        required: true
+      SUPABASE_DEV_URL:
+        required: true
+      SUPABASE_DEV_PUBLISHABLE_KEY:
+        required: true
+      SUPABASE_MAIN_URL:
+        required: true
+      SUPABASE_MAIN_PUBLISHABLE_KEY:
+        required: true
+      SENTRY_DSN_FLUTTER:
+        required: true
+      FIREBASE_APP_ID_ANDROID:
+        required: true
+      FIREBASE_SERVICE_ACCOUNT_JSON_DEV:
+        required: true
+      GOOGLE_PLAY_SERVICE_ACCOUNT_JSON:
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+    defaults:
+      run:
+        working-directory: ./${{ inputs.app-directory }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+          cache-dependency-path: ${{ inputs.app-directory }}/android/build.gradle.kts
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ${{ inputs.app-directory }}/android/.gradle
+          key: ${{ runner.os }}-${{ inputs.gradle-cache-prefix }}${{ hashFiles(format('{0}/android/**/*.gradle.kts', inputs.app-directory), format('{0}/android/gradle/wrapper/gradle-wrapper.properties', inputs.app-directory)) }}
+          restore-keys: |
+            ${{ runner.os }}-${{ inputs.gradle-cache-prefix }}
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Decode Keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          echo $ANDROID_KEYSTORE_BASE64 | base64 --decode > android/app/upload-keystore.jks
+
+      - name: Create key.properties
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          echo "storePassword=$ANDROID_KEYSTORE_PASSWORD" > android/key.properties
+          echo "keyPassword=$ANDROID_KEY_PASSWORD" >> android/key.properties
+          echo "keyAlias=$ANDROID_KEY_ALIAS" >> android/key.properties
+          echo "storeFile=upload-keystore.jks" >> android/key.properties
+
+      - name: Build APK (Dev)
+        if: github.ref == 'refs/heads/dev'
+        run: flutter build apk --flavor dev --release --build-number=${{ github.run_number }} --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_DEV_URL }} --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} --dart-define=ENVIRONMENT=development
+
+      - name: Build AAB (Main)
+        if: github.ref == 'refs/heads/main'
+        run: flutter build appbundle --flavor prod --release --build-number=${{ github.run_number }} --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_MAIN_URL }} --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} --dart-define=ENVIRONMENT=production
+
+      - name: Upload Artifact (Dev APK)
+        if: github.ref == 'refs/heads/dev'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name-apk }}
+          path: ${{ inputs.app-directory }}/build/app/outputs/flutter-apk/app-dev-release.apk
+
+      - name: Upload Artifact (Prod AAB)
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name-aab }}
+          path: ${{ inputs.app-directory }}/build/app/outputs/bundle/prodRelease/app-prod-release.aab
+
+      - name: Upload to Firebase App Distribution (Dev)
+        if: github.ref == 'refs/heads/dev'
+        uses: w9jds/firebase-action@a1f982626337684fb8947605c63de592b5af0114 # v15.10.0
+        with:
+          args: appdistribution:distribute ${{ inputs.app-directory }}/build/app/outputs/flutter-apk/app-dev-release.apk --app ${{ secrets.FIREBASE_APP_ID_ANDROID }} --release-notes Dev-Build-${{ github.run_number }} --groups testers
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_DEV }}
+
+      - name: Upload to Google Play (Prod)
+        if: github.ref == 'refs/heads/main'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: ${{ inputs.package-name }}
+          releaseFiles: ${{ inputs.app-directory }}/build/app/outputs/bundle/prodRelease/app-prod-release.aab
+          track: internal
+          status: draft
+
+  notify-failure:
+    needs: [build]
+    if: always()
+    permissions:
+      issues: write
+    uses: ./.github/workflows/notify-failure.yml
+    with:
+      success: ${{ needs.build.result == 'success' }}
+      workflow_name: ${{ inputs.notify-workflow-name }}
