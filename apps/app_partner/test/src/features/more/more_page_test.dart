@@ -3,7 +3,6 @@ import 'package:app_partner/src/features/more/more_page.dart';
 import 'package:app_partner/src/features/party/party_providers.dart';
 import 'package:app_partner/src/routing/app_router.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -58,9 +57,9 @@ void main() {
           ),
         ),
         moreCoordinatorProvider.overrideWithValue(mockCoordinator),
-        authControllerProvider.overrideWith(() => MockAuthController()),
+        authControllerProvider.overrideWith(MockAuthController.new),
         minglitUrlConfigProvider.overrideWithValue(
-          MinglitUrlConfig(const MinglitDomains.production()),
+          const MinglitUrlConfig(MinglitDomains.production()),
         ),
         goRouterProvider.overrideWithValue(mockRouter),
       ],
