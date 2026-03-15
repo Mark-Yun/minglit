@@ -222,8 +222,9 @@ BEGIN
     FROM public.settlements WHERE event_id = v_event_id;
 END $$;
 
--- Test 10: total_refunds=20000 차감 후 net_amount=70650
-SELECT is((SELECT net_amount FROM s5), 70650, 'S5: total_refunds=20000 차감 → net_amount=70650');
+-- Test 10: total_sales=120000 (user1: 100000 + user2: 20000, both 'paid'), total_refunds=20000
+-- pg_fee=4200, platform_fee=6000, vat=1020, net_amount=120000-20000-4200-6000-1020=88780
+SELECT is((SELECT net_amount FROM s5), 88780, 'S5: total_refunds=20000 차감 → net_amount=88780');
 
 -- Test 11: total_refunds 값 자체 검증
 SELECT is((SELECT total_refunds FROM s5), 20000, 'S5: total_refunds=20000 저장됨');

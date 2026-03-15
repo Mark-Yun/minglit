@@ -27,7 +27,8 @@ BEGIN
   v_user_id := tests.create_supabase_user('ticket_test_user_1');
 
   INSERT INTO public.user_profiles (id, name, birth_date, gender, username)
-  VALUES (v_user_id, 'Test User', '2000-01-01', 'male', 'ticket_test_user_1');
+  VALUES (v_user_id, 'Test User', '2000-01-01', 'male', 'ticket_test_user_1')
+  ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, birth_date = EXCLUDED.birth_date;
 
   INSERT INTO public.partners (name)
   VALUES ('Ticket Partner 1')
@@ -53,7 +54,7 @@ BEGIN
   UPDATE public.event_applications SET status = 'approved' WHERE id = v_app_id;
 
   INSERT INTO ticket_results (participant_count, ticket_code, display_name, birth_year, participant_status)
-  SELECT count(*)::int, ticket_code, display_name, birth_year, status
+  SELECT count(*)::int, min(ticket_code), min(display_name), min(birth_year), min(status)
   FROM public.event_participants
   WHERE event_id = v_event_id AND user_id = v_user_id;
 END $$;
@@ -117,7 +118,8 @@ BEGIN
   v_user_id := tests.create_supabase_user('ticket_test_user_2');
 
   INSERT INTO public.user_profiles (id, name, birth_date, gender, username)
-  VALUES (v_user_id, 'Duplicate User', '1995-06-15', 'female', 'ticket_test_user_2');
+  VALUES (v_user_id, 'Duplicate User', '1995-06-15', 'female', 'ticket_test_user_2')
+  ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, birth_date = EXCLUDED.birth_date;
 
   INSERT INTO public.partners (name)
   VALUES ('Ticket Partner 2')
@@ -142,12 +144,9 @@ BEGIN
 
   UPDATE public.event_applications SET status = 'approved' WHERE id = v_app_id_1;
 
-  -- 두 번째 신청 및 승인 (동일 user+event) → ON CONFLICT DO NOTHING
-  INSERT INTO public.event_applications (event_id, ticket_id, user_id, status, payment_id, payment_amount)
-  VALUES (v_event_id, v_ticket_id, v_user_id, 'pending_review', 'imp_ticket_002b', 5000)
-  RETURNING id INTO v_app_id_2;
-
-  UPDATE public.event_applications SET status = 'approved' WHERE id = v_app_id_2;
+  -- 재승인 (status 변경 → 트리거 재발동) → ON CONFLICT DO NOTHING on event_participants
+  UPDATE public.event_applications SET status = 'pending_review' WHERE id = v_app_id_1;
+  UPDATE public.event_applications SET status = 'approved' WHERE id = v_app_id_1;
 
   INSERT INTO duplicate_ticket_results (participant_count)
   SELECT count(*)::int
