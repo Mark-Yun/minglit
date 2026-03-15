@@ -231,19 +231,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+      - name: Start Supabase
+        run: supabase start
       - name: Test (edge functions)
         run: deno test --allow-all functions/
         working-directory: supabase
-        env:
-          SUPABASE_URL: http://localhost:54321
-          SUPABASE_SERVICE_ROLE_KEY: test-service-role-key
-          SUPABASE_ANON_KEY: test-anon-key
-          GITHUB_ACCESS_TOKEN: test-github-token
-          FIREBASE_SERVICE_ACCOUNT: '{"type":"service_account"}'
-          ENVIRONMENT: test
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop
 
   # E2E 시나리오 테스트
   test-e2e-scenarios:
