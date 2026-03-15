@@ -43,4 +43,5 @@ const _$SocialInteractionTypeEnumMap = {
   SocialInteractionType.bookmark: 'bookmark',
   SocialInteractionType.block: 'block',
   SocialInteractionType.report: 'report',
+  SocialInteractionType.dislike: 'dislike',
 };
