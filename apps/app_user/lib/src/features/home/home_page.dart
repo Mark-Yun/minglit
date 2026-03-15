@@ -84,9 +84,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
                 const SizedBox(width: MinglitSpacing.small),
               ],
-              // Fix #76: use theme color instead of hardcoded white for dark mode support
+              // Fix #76: use theme color instead of
+              // hardcoded white for dark mode support
               backgroundColor: Theme.of(context).colorScheme.surface,
-              surfaceTintColor: Colors.transparent,
+              surfaceTintColor: MinglitColors.transparent,
             ),
             const SliverToBoxAdapter(
               child: Padding(
