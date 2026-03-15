@@ -196,6 +196,139 @@ List<Event> filteredEvents(
   return result;
 }
 
+/// Pagination state for the recommendation feed.
+class RecommendationFeedState {
+  const RecommendationFeedState({
+    required this.events,
+    required this.serverOffset,
+    required this.hasMore,
+    this.isLoadingMore = false,
+  });
+
+  /// Client-side filtered display events.
+  final List<Event> events;
+
+  /// Total events fetched from server (for next page offset).
+  final int serverOffset;
+
+  /// Whether more events might be available.
+  final bool hasMore;
+
+  /// Whether a loadMore() call is in progress.
+  final bool isLoadingMore;
+
+  RecommendationFeedState copyWith({
+    List<Event>? events,
+    int? serverOffset,
+    bool? hasMore,
+    bool? isLoadingMore,
+  }) {
+    return RecommendationFeedState(
+      events: events ?? this.events,
+      serverOffset: serverOffset ?? this.serverOffset,
+      hasMore: hasMore ?? this.hasMore,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+    );
+  }
+}
+
+/// Manages pagination state for the recommendation event feed.
+///
+/// Tracks server-side offset separately from display count because
+/// client-side filtering (eligibility + nearby sort) means the number
+/// of displayed events may differ from the number fetched from server.
+///
+/// Filter changes (via [activeFiltersProvider]) automatically reset the
+/// state to page 0.
+@riverpod
+class RecommendationFeedNotifier extends _$RecommendationFeedNotifier {
+  static const int _limit = 10;
+
+  /// Raw events accumulated from server (before client-side filtering).
+  /// Reset on every [build] call (i.e., when filters change).
+  List<Event> _rawEvents = [];
+
+  @override
+  Future<RecommendationFeedState> build() async {
+    // Reset raw accumulation whenever filters change
+    _rawEvents = [];
+
+    // Watch filters — triggers rebuild on change, resetting pagination
+    final filters = ref.watch(activeFiltersProvider);
+
+    return _fetchPage(
+      filters: filters,
+      serverOffset: 0,
+    );
+  }
+
+  /// Loads the next page of events.
+  ///
+  /// No-op if already loading or no more pages available.
+  Future<void> loadMore() async {
+    final current = state.value;
+    if (current == null) return;
+    if (current.isLoadingMore) return; // Concurrent guard
+    if (!current.hasMore) return; // No more pages
+
+    // Preserve existing data while indicating loading
+    state = AsyncData(current.copyWith(isLoadingMore: true));
+
+    final filters = ref.read(activeFiltersProvider);
+    try {
+      final updated = await _fetchPage(
+        filters: filters,
+        serverOffset: current.serverOffset,
+      );
+      if (!ref.mounted) return;
+      state = AsyncData(updated);
+    } on Exception catch (_) {
+      // On error: restore previous state, preserve existing events
+      if (!ref.mounted) return;
+      state = AsyncData(current.copyWith(isLoadingMore: false));
+    }
+  }
+
+  Future<RecommendationFeedState> _fetchPage({
+    required ExploreFilters filters,
+    required int serverOffset,
+  }) async {
+    final feedType = _mapFeedType(filters.sortType);
+
+    // Call repository directly to avoid Riverpod error-zone propagation
+    // and to manage our own lifecycle (bypassing the 5-min per-page cache).
+    final repository = ref.read(eventRepositoryProvider);
+    final rawPage = await repository.getEventsByType(
+      type: feedType,
+      offset: serverOffset,
+    );
+
+    // Append new unique events to raw accumulation
+    final existingIds = _rawEvents.map((e) => e.id).toSet();
+    final newUnique = rawPage
+        .where((e) => !existingIds.contains(e.id))
+        .toList();
+    _rawEvents = [..._rawEvents, ...newUnique];
+
+    // Apply client-side filter + sort to full accumulated list
+    final filtered = ref.read(filteredEventsProvider(events: _rawEvents));
+
+    return RecommendationFeedState(
+      events: filtered,
+      serverOffset: serverOffset + rawPage.length,
+      hasMore: rawPage.length >= _limit,
+    );
+  }
+
+  EventFeedType _mapFeedType(ExploreSortType sortType) {
+    return switch (sortType) {
+      ExploreSortType.recommended => EventFeedType.newArrivals,
+      ExploreSortType.closingSoon => EventFeedType.closingSoon,
+      ExploreSortType.nearestDate => EventFeedType.earlyBird,
+    };
+  }
+}
+
 /// Fetches and filters the unified recommendation event list.
 ///
 /// Maps [ExploreSortType] to [EventFeedType]:
