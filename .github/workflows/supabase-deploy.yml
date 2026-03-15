@@ -47,8 +47,8 @@ jobs:
           supabase secrets set SENTRY_DSN=$SENTRY_DSN
           supabase secrets set ENVIRONMENT=development
 
-          # Dev 환경: 새 마이그레이션만 적용 (db reset은 WAL 비대화 유발)
-          supabase db push --password $SUPABASE_DB_PASSWORD
+          # Dev 환경: 새 마이그레이션 적용 (--include-all: feature branch 병렬 작업 시 순서 불일치 허용)
+          supabase db push --password $SUPABASE_DB_PASSWORD --include-all
 
           # Deploy Edge Functions
           supabase functions deploy
@@ -85,7 +85,7 @@ jobs:
           supabase secrets set SENTRY_DSN=$SENTRY_DSN
           supabase secrets set ENVIRONMENT=production
 
-          supabase db push --password $SUPABASE_DB_PASSWORD
+          supabase db push --password $SUPABASE_DB_PASSWORD --include-all
 
           # Deploy Edge Functions
           supabase functions deploy
