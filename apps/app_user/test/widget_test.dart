@@ -39,6 +39,7 @@ void main() {
       ProviderScope(
         overrides: [
           eventRepositoryProvider.overrideWithValue(mockEventRepository),
+          currentUserProvider.overrideWith((_) => null),
         ],
         child: MaterialApp(
           theme: MinglitTheme.materialTheme,
@@ -73,6 +74,7 @@ void main() {
           recommendationEventsProvider.overrideWith(
             (ref) => completer.future,
           ),
+          currentUserProvider.overrideWith((_) => null),
         ],
         child: MaterialApp(
           theme: MinglitTheme.materialTheme,
@@ -116,6 +118,7 @@ void main() {
       ProviderScope(
         overrides: [
           eventRepositoryProvider.overrideWithValue(mockEventRepository),
+          currentUserProvider.overrideWith((_) => null),
         ],
         child: MaterialApp(
           theme: MinglitTheme.materialTheme,
@@ -135,6 +138,10 @@ void main() {
     tester,
   ) async {
     final mockEventRepository = MockEventRepository();
+    final mockUser = MockUser();
+    when(() => mockUser.id).thenReturn('user1');
+    when(() => mockUser.email).thenReturn('test@example.com');
+    when(() => mockUser.userMetadata).thenReturn({'full_name': 'Test User'});
 
     for (final type in EventFeedType.values) {
       when(
@@ -162,6 +169,7 @@ void main() {
       ProviderScope(
         overrides: [
           eventRepositoryProvider.overrideWithValue(mockEventRepository),
+          currentUserProvider.overrideWith((_) => mockUser),
         ],
         child: MaterialApp(
           theme: MinglitTheme.materialTheme,
@@ -205,6 +213,7 @@ void main() {
       ProviderScope(
         overrides: [
           eventRepositoryProvider.overrideWithValue(mockEventRepository),
+          currentUserProvider.overrideWith((_) => null),
         ],
         child: MaterialApp(
           theme: MinglitTheme.materialTheme,

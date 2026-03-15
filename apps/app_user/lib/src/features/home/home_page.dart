@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/features/explore/providers/explore_state_provider.dart';
 import 'package:app_user/src/features/explore/widgets/filter_chip_bar.dart';
@@ -84,7 +85,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                         : null,
                     onBackgroundImageError:
                         user.userMetadata?['avatar_url'] != null
-                        ? (_, __) {}
+                        ? (_, _) {}
                         : null,
                     child: user.userMetadata?['avatar_url'] == null
                         ? const Icon(Icons.person, size: 14)
