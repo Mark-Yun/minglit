@@ -325,7 +325,7 @@ jobs:
             echo ""
             echo "Waiting for CodeRabbit review on $SHA ..."
             for i in $(seq 1 60); do
-              STATE=$(gh api repos/${{ github.repository }}/commits/$SHA/status --jq '.statuses[] | select(.context=="CodeRabbit") | .state' 2>/dev/null || echo "")
+              STATE=$(gh api repos/${{ github.repository }}/commits/$SHA/status --jq '[.statuses[] | select(.context=="CodeRabbit") | .state][0] // ""' 2>/dev/null || echo "")
               if [ "$STATE" = "success" ]; then
                 echo "✅ CodeRabbit review completed"
                 break
@@ -337,7 +337,8 @@ jobs:
               sleep 30
             done
             if [ "$STATE" != "success" ]; then
-              echo "⚠️ CodeRabbit review timed out after 30 minutes — proceeding"
+              echo "❌ CodeRabbit review did not complete within 30 minutes"
+              exit 1
             fi
           fi
 
