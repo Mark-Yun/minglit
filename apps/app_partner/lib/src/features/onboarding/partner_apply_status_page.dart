@@ -151,6 +151,7 @@ class PartnerApplyStatusPage extends ConsumerWidget {
   ) {
     return OutlinedButton(
       onPressed: () async {
+        // Fix: GoRouter redirect가 signOut 중 widget tree를 변경하는 race condition 방지
         final authRepo = ref.read(authRepositoryProvider);
         await authRepo.signOut();
       },

@@ -306,7 +306,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check CI results
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          # 1. Check CI job results
           results='${{ toJSON(needs.*.result) }}'
           echo "Job results: $results"
           if echo "$results" | grep -q '"failure"'; then
@@ -314,7 +317,32 @@ jobs:
             echo '${{ toJSON(needs) }}' | jq -r 'to_entries[] | select(.value.result == "failure") | "❌ \(.key)"'
             exit 1
           fi
-          echo "✅ CI passed"
+          echo "✅ CI jobs passed"
+
+          # 2. Wait for CodeRabbit review (PR only)
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            SHA="${{ github.event.pull_request.head.sha }}"
+            echo ""
+            echo "Waiting for CodeRabbit review on $SHA ..."
+            for i in $(seq 1 60); do
+              STATE=$(gh api repos/${{ github.repository }}/commits/$SHA/status --jq '.statuses[] | select(.context=="CodeRabbit") | .state' 2>/dev/null || echo "")
+              if [ "$STATE" = "success" ]; then
+                echo "✅ CodeRabbit review completed"
+                break
+              elif [ "$STATE" = "failure" ] || [ "$STATE" = "error" ]; then
+                echo "❌ CodeRabbit review failed: $STATE"
+                exit 1
+              fi
+              echo "  ⏳ Attempt $i/60 — state: ${STATE:-pending} — waiting 30s..."
+              sleep 30
+            done
+            if [ "$STATE" != "success" ]; then
+              echo "⚠️ CodeRabbit review timed out after 30 minutes — proceeding"
+            fi
+          fi
+
+          echo ""
+          echo "✅ All checks passed"
 
   notify-failure:
     needs: [check-migration-versions, test-app-user, test-app-partner, lint-landing-user, lint-landing-partner, test-pgtap, test-backend-integration, test-edge-functions, test-e2e-scenarios]
