@@ -124,23 +124,28 @@ void main() {
   });
 
   group('ActiveFilters provider', () {
-    test('initial state has no filters', () {
+    test('initial state has eligibility and nearby enabled', () {
       final container = createContainer();
       final filters = container.read(activeFiltersProvider);
-      expect(filters.hasActiveFilters, false);
+      expect(filters.hasActiveFilters, true);
+      expect(filters.eligibilityEnabled, true);
+      expect(filters.nearbyEnabled, true);
+      expect(filters.activeFilterCount, 2);
     });
 
     test('toggleEligibility flips the flag', () {
       final container = createContainer();
-      container.read(activeFiltersProvider.notifier).toggleEligibility();
-      expect(
-        container.read(activeFiltersProvider).eligibilityEnabled,
-        true,
-      );
+      // Initial state: eligibilityEnabled = true
+      expect(container.read(activeFiltersProvider).eligibilityEnabled, true);
       container.read(activeFiltersProvider.notifier).toggleEligibility();
       expect(
         container.read(activeFiltersProvider).eligibilityEnabled,
         false,
+      );
+      container.read(activeFiltersProvider.notifier).toggleEligibility();
+      expect(
+        container.read(activeFiltersProvider).eligibilityEnabled,
+        true,
       );
     });
 
@@ -157,10 +162,12 @@ void main() {
 
     test('toggleNearby flips the flag', () {
       final container = createContainer();
-      container.read(activeFiltersProvider.notifier).toggleNearby();
+      // Initial state: nearbyEnabled = true
       expect(container.read(activeFiltersProvider).nearbyEnabled, true);
       container.read(activeFiltersProvider.notifier).toggleNearby();
       expect(container.read(activeFiltersProvider).nearbyEnabled, false);
+      container.read(activeFiltersProvider.notifier).toggleNearby();
+      expect(container.read(activeFiltersProvider).nearbyEnabled, true);
     });
 
     test('clearAll resets all filters', () {
@@ -195,8 +202,7 @@ void main() {
 
     test('removeFilter removes nearby filter', () {
       final container = createContainer();
-      container.read(activeFiltersProvider.notifier).toggleNearby();
-      container.read(activeFiltersProvider.notifier).toggleEligibility();
+      // Initial state: nearbyEnabled = true, eligibilityEnabled = true
 
       container
           .read(activeFiltersProvider.notifier)
@@ -279,7 +285,7 @@ void main() {
         ],
       );
 
-      container.read(activeFiltersProvider.notifier).toggleNearby();
+      // nearbyEnabled is true by default — no need to toggle
 
       // Wait for the async userLocation provider to resolve
       await container.read(userLocationProvider.future);
@@ -314,7 +320,7 @@ void main() {
         ],
       );
 
-      container.read(activeFiltersProvider.notifier).toggleNearby();
+      // nearbyEnabled is true by default — no need to toggle
       await container.read(userLocationProvider.future);
 
       final result = container.read(
