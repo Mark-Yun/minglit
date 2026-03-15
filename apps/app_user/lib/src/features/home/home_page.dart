@@ -95,8 +95,9 @@ class _HomePageState extends ConsumerState<HomePage> {
               ] else
                 IconButton(
                   icon: const Icon(Icons.person_outline),
+                  // Fix #102: use go (not push) so GoRouter redirect fires after login
                   onPressed: () =>
-                      ref.read(authCoordinatorProvider).pushLogin(from: '/'),
+                      ref.read(authCoordinatorProvider).goToLogin(from: '/'),
                 ),
               const SizedBox(width: MinglitSpacing.small),
             ],

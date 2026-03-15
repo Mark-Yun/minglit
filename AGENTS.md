@@ -63,6 +63,16 @@ adb -s adb-R3CX803P2ND-8btuuD._adb-tls-connect._tcp install -r build/app/outputs
 - 머지 후 소스 브랜치는 자동 삭제된다 (`delete_branch_on_merge` 활성화).
 - Admin bypass (`--admin`)는 긴급 상황에서만 사용한다.
 
+### PR 코드 리뷰 대응
+
+- PR에 달린 코드 리뷰 코멘트는 **전부 resolve** 한다. 미해결 코멘트가 남아있는 상태로 머지하지 않는다.
+- 리뷰 코멘트 확인: `gh api repos/{owner}/{repo}/pulls/{PR번호}/comments`
+- 코멘트에 대한 대응:
+  1. 코드 수정이 필요한 경우: 수정 후 같은 브랜치에 push → 리뷰 코멘트에 수정 내용 답글 → resolve
+  2. 수정 불필요 (의도된 설계): 근거를 답글로 남기고 → resolve
+  3. 논의가 필요한 경우: 답글로 의견 남기고 사용자에게 판단 요청
+- 모든 코멘트가 resolved 된 후 머지를 진행한다.
+
 ### PR 머지 확인 및 CI 실패 대응
 
 - PR 생성 후 `gh pr checks <PR번호>`로 CI 상태를 확인한다.
