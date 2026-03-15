@@ -5,7 +5,7 @@ reviews:
     drafts: false
     base_branches:
       - dev
-  profile: assertive
+  profile: chill
   high_level_summary: true
   high_level_summary_in_walkthrough: true
   sequence_diagrams: true
@@ -27,7 +27,7 @@ reviews:
         - Coordinator 패턴: 화면 간 네비게이션은 Coordinator를 통해서만. 위젯에서 직접 GoRouter 호출 금지.
         - Repository 패턴: UI에서 Supabase 직접 호출 금지. 반드시 Repository를 통해 접근.
         - AsyncValue 사용 시 loading/error/data 3가지 상태 모두 처리 확인.
-        - as any, @ts-ignore 에 해당하는 dynamic 캐스팅 최소화.
+        - dynamic 캐스팅 및 // ignore: 주석 사용 최소화.
     - path: "supabase/migrations/**"
       instructions: |
         Supabase Migration 리뷰 기준:
