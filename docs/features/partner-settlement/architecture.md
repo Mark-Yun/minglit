@@ -1,7 +1,7 @@
 # 밍글릿 결제/정산 시스템 아키텍처 기술서 (Architecture Description)
 
-- **버전**: 1.1
-- **작성일**: 2026. 03. 13.
+- **버전**: 1.2
+- **작성일**: 2026. 03. 15.
 - **기반 문서**: SRS v2.0 (requirements.md)
 - **뷰 모델**: Kruchten 4+1 Architectural View Model
 
@@ -11,6 +11,7 @@
 |------|------|--------|-----------|
 | 1.0 | 2026.03.13 | — | 초안 작성. SRS v2.0 기반 4+1 뷰 |
 | 1.1 | 2026.03.13 | — | 심층 리뷰 기반 수정. AS-IS/TO-BE 경계 명확화, 상태값 오류 수정(`paid`→`approved`), 웹훅 인증 3중 방어 반영, JWT 인증 위임 방식 정정, QStash/PGMQ 정리, 보안 Gap(계좌번호 평문) 식별, 환경변수 불일치 기록, `_shared/` 누락 모듈 추가, Gap 분석 5건 보강 |
+| 1.2 | 2026.03.15 | — | Phase 1+2 구현 완료 반영, v1.2 |
 
 ---
 
@@ -131,7 +132,7 @@ sequenceDiagram
 
 **텍스트 설명**: 유저가 PortOne으로 결제하면, (A) 앱이 payment-verify로 직접 확인하거나 (B) PG가 웹훅으로 알려준다. 두 경로 모두 PortOne API로 결제를 재검증한 뒤 `event_applications`를 `approved`로 업데이트한다. 멱등성으로 중복 처리를 방지하고, 이벤트 완료 시 트리거가 `settlements`에 `pending` 상태로 정산 레코드를 생성한다.
 
-> **AS-IS vs TO-BE 참고**: 현재 코드에서는 단일 `settlements` 테이블에 `pending` 상태로 생성된다. TO-BE에서는 `settlement_items` 테이블로 전환하여 `PENDING` 상태로 적재할 예정이다 (Phase 1~2 참조).
+> **AS-IS vs TO-BE**: ✅ 구현 완료 (Phase 1+2). settlement_items 테이블로 전환, PENDING 상태 적재, 체크섬+감사로그 포함.
 
 ### 2.3 UC-02: 14일 보류 후 READY 확정
 
@@ -250,7 +251,7 @@ sequenceDiagram
 
 ### 3.1 도메인 모델 (Entity Relationship)
 
-> ⚠️ **이 ER 다이어그램은 TO-BE 목표 스키마다.** AS-IS에는 단일 `settlements` 테이블(4상태: pending/ready/requested/completed)만 존재한다. TO-BE 5개 테이블(`settlement_items`, `payouts`, `payout_transfers`, `settlement_histories`, `adjustment_items`)은 Phase 1~2에서 구현 예정이다. AS-IS 스키마는 [7.1 구조적 차이](#71-구조적-차이) 참조.
+> ✅ **구현 완료 (Phase 1).** 5개 테이블(`settlement_items`, `payouts`, `payout_transfers`, `settlement_histories`, `adjustment_items`) 모두 생성됨. AS-IS 스키마는 [7.1 구조적 차이](#71-구조적-차이) 참조.
 
 ```mermaid
 erDiagram
@@ -383,7 +384,7 @@ erDiagram
 
 ### 3.3 상태 머신 (Settlement Item)
 
-> ⚠️ **이 상태 머신은 TO-BE 목표 설계다.** AS-IS에는 4단계(`pending` → `ready` → `requested` → `completed`)만 존재한다. TO-BE 7단계(PENDING, HOLD, CANCELED, READY, PROCESSING, COMPLETED, FAILED)는 Phase 2에서 구현 예정이다.
+> ✅ **구현 완료 (Phase 2).** CAS 기반 transition_settlement_status() 함수로 13개 전이 지원.
 
 ```mermaid
 stateDiagram-v2
@@ -468,7 +469,7 @@ flowchart LR
 
 ### 4.2 동시성 제어 패턴
 
-> ⚠️ **TO-BE 패턴.** AS-IS에는 `version` 컬럼과 CAS 패턴이 구현되어 있지 않다. 현재는 `ON CONFLICT`를 통한 부분적 멱등성만 사용 중이다.
+> ✅ **구현 완료 (Phase 2).** transition_settlement_status() 함수로 CAS 원자 업데이트 구현.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -491,14 +492,14 @@ flowchart LR
 
 | 프로세스 | 스케줄 | 대상 | 처리 방식 | 구현 상태 |
 |---------|--------|------|----------|----------|
-| settlement-status-transition | 매일 03:00 KST | pending → ready (7일 경과) | pg_cron → SQL 함수 | ✅ AS-IS |
+| settlement-status-transition | 매일 03:00 KST | PENDING → READY (14일 경과) | pg_cron → SQL 함수 | ✅ AS-IS |
 | notification-worker | 매 1분 | PGMQ 대기 알림 | pg_cron → Edge Function | ✅ AS-IS |
 | payout-assembly | 매일 10:00 KST | READY → PROCESSING | Edge Function / Job | ⬜ TO-BE (Phase 3) |
 | payout-execution | 매일 11:00-14:00 KST | PortOne 정산 API 지급 | Edge Function (chunk 500건) | ⬜ TO-BE (Phase 3) |
 | retry-scheduler | 매 30분 | FAILED (retryable) | next_retry_at 기반 | ⬜ TO-BE (Phase 3) |
 | reconciliation-daily | 매일 22:00 KST | 3-way 대사 | PG report + bank statement | ⬜ TO-BE (Phase 4) |
 | reconciliation-payout | 지급 완료 후 1시간 | 당일 지급분 | 즉시 트리거 | ⬜ TO-BE (Phase 4) |
-| stuck-processing-check | 매 30분 | PROCESSING > 2h | 자동 FAILED 전환 | ⬜ TO-BE (Phase 3) |
+| stuck-processing-check | 매 30분 | PROCESSING > 2h | 자동 FAILED 전환 | ✅ AS-IS (Phase 2) |
 | data-retention-cleanup | 매일 01:00 KST | 만료 데이터 | 파기/마스킹 | ⬜ TO-BE (Phase 4) |
 
 ### 4.4 알림 처리 흐름

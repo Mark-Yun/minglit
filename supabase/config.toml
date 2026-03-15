@@ -499,3 +499,13 @@ entrypoint = "./functions/settlement-query/index.ts"
 enabled = true
 verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
 entrypoint = "./functions/partner-sync/index.ts"
+
+[functions.settlement-register-transfers]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/settlement-register-transfers/index.ts"
+
+[functions.payout-sync]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/payout-sync/index.ts"

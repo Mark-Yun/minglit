@@ -21,10 +21,10 @@ User App ──결제──> Portone(Iamport V1) ──웹훅──> payment-web
               event_participants (티켓 발권)
                     │
                     ▼ (event completed → 트리거)
-              settlements (정산 자동 생성)
+              settlement_items (정산 자동 생성)
                     │
-                    ▼ (7일 후 → 크론)
-              status: pending → ready
+                    ▼ (14일 후 → 크론)
+              status: PENDING → READY (14일 후)
 ```
 
 ### Key Actors
@@ -189,27 +189,31 @@ sequenceDiagram
 ```sql
 -- create_settlement_on_event_completion() 핵심 로직:
 -- 1. 파트너 정보, 이벤트 제목/날짜 조회
--- 2. event_applications에서 매출/환불 집계
--- 3. 수수료 계산:
-v_pg_fee       := round(v_total_sales * 0.035)  -- PG 수수료 3.5%
-v_platform_fee := round(v_total_sales * 0.05)   -- 플랫폼 수수료 5%
-v_vat          := round((v_pg_fee + v_platform_fee) * 0.1)  -- VAT 10%
-v_net_amount   := v_total_sales - v_total_refunds - v_pg_fee - v_platform_fee - v_vat
--- 4. settlements 테이블에 INSERT (ON CONFLICT UPDATE)
+-- 2. calculate_settlement_amounts() 함수로 수수료 계산:
+v_pg_fee       := floor(v_total_sales * 0.035);  -- PG 수수료 3.5%
+v_platform_fee := floor(v_total_sales * 0.05);   -- 플랫폼 수수료 5%
+v_vat          := floor((v_pg_fee + v_platform_fee) * 0.1);  -- VAT 10%
+v_net_amount   := v_total_sales - v_total_refunds - v_pg_fee - v_platform_fee - v_vat;
+-- 3. settlement_items 테이블에 INSERT (PENDING 상태)
 ```
 
 ### 6.2 정산 상태 머신
 
 ```text
-pending ──(7일 경과, 크론)──> ready ──(수동)──> requested ──(수동)──> completed
+PENDING ──(14일 경과, 크론)──> READY ──(지급 편성)──> PROCESSING ──(성공)──> COMPLETED
+                                                        │
+                                                        └──(실패)──> FAILED/HOLD
 ```
 
 | Status | 설명 | 전환 방식 |
 |--------|------|----------|
-| `pending` | 생성 직후, 보류 기간 | 자동 (이벤트 완료 트리거) |
-| `ready` | 보류 기간 종료, 지급 가능 | 자동 (매일 03:00 크론) |
-| `requested` | 지급 요청됨 | 수동 |
-| `completed` | 지급 완료 | 수동 |
+| `PENDING` | 생성 직후, 14일 보류 기간 | 자동 (이벤트 완료 트리거) |
+| `READY` | 보류 종료, 체크섬 검증 통과 | 자동 (매일 03:00 크론) |
+| `PROCESSING`| 지급 처리 중 (CAS 잠금) | 자동 (지급 배치 시작 시) |
+| `COMPLETED` | 지급 완료 (Terminal) | 자동 (PortOne API 성공 시) |
+| `FAILED` | 재시도 가능 실패 | 자동 (지수 백오프 스케줄링) |
+| `HOLD` | 비재시도 실패/DLQ | 수동 (관리자 개입 필요) |
+| `CANCELED` | 환불/취소됨 (Terminal) | 자동 (웹훅/트리거) |
 
 ### 6.3 Revenue Views
 
@@ -240,8 +244,8 @@ partner_monthly_revenue (view)
 | Issue | 설명 |
 |-------|------|
 | **수수료 하드코딩** | PG 3.5%, 플랫폼 5%가 `create_settlement_on_event_completion` 함수 내 하드코딩 |
-| **CAS 미적용** | 정산 상태 변경에 낙관적 잠금(version/CAS) 없음 |
-| **단일 정산 테이블** | `settlements` 1개 테이블로 운영, `settlement_items` 미구현 |
+| **CAS 미적용** | ✅ 해결됨 (Phase 2). transition_settlement_status()로 CAS 적용 |
+| **단일 정산 테이블** | ✅ 해결됨 (Phase 1). settlement_items 외 4개 테이블로 분리 |
 | **V1 HMAC 미지원** | Iamport V1은 웹훅 서명 검증 불가, IP Whitelist 의존 |
 | **환불 비동기 불일치** | 트리거에서 `pg_net`으로 환불 호출 시, 실패해도 `refund_status`가 `requested`로 남을 수 있음 |
 | **부분 환불 추적** | `refund_amount`만 기록하며, 다건 부분 환불 이력 미관리 |
