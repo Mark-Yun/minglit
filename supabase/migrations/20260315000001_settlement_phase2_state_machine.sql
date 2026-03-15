@@ -401,24 +401,24 @@ begin
         'SYSTEM',
         'settlement_cron_job',
         'calc_succeeded',
-        null, null, null, null,
-        '{"source": "update_settlement_ready_status"}',
-        null
+        null::text, null::text, null::text, null::text,
+        '{"source": "update_settlement_ready_status"}'::jsonb,
+        null::text
       );
     else
-      -- Checksum mismatch → FAILED (REQ-7.03)
+      -- Checksum mismatch → HOLD for manual review (PENDING→FAILED not in allowed matrix)
       perform public.transition_settlement_status(
         v_item.id,
         v_item.version,
-        'FAILED',
+        'HOLD',
         'SYSTEM',
         'settlement_cron_job',
-        'payout_failed',
-        null, null,
-        'CHECKSUM_MISMATCH',
-        'Checksum validation failed during ready transition',
-        '{"expected": "' || v_expected_cs || '", "actual": "' || v_item.calc_checksum || '"}',
-        null
+        'hold_applied',
+        'CHECKSUM_MISMATCH'::text,
+        'Checksum validation failed during ready transition'::text,
+        null::text, null::text,
+        ('{"expected": "' || v_expected_cs || '", "actual": "' || v_item.calc_checksum || '"}')::jsonb,
+        null::text
       );
     end if;
 
@@ -460,11 +460,11 @@ begin
       'SYSTEM',
       'stuck_check_job',
       'payout_failed',
-      null, null,
+      null::text, null::text,
       'TIMEOUT_STUCK_PROCESSING',
       'Processing exceeded 2 hour limit',
-      '{"source": "check_stuck_processing_settlements"}',
-      null
+      '{"source": "check_stuck_processing_settlements"}'::jsonb,
+      null::text
     );
   end loop;
 end;
