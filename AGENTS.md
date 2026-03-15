@@ -63,20 +63,51 @@ adb -s adb-R3CX803P2ND-8btuuD._adb-tls-connect._tcp install -r build/app/outputs
 - 머지 후 소스 브랜치는 자동 삭제된다 (`delete_branch_on_merge` 활성화).
 - Admin bypass (`--admin`)는 긴급 상황에서만 사용한다.
 
-### PR 코드 리뷰 대응
+### PR 모니터링 (Background Agent)
+
+PR 생성 직후 **반드시** background monitoring agent를 발사한다. PR이 MERGED 될 때까지 모니터링한다.
+
+```bash
+# PR 생성 직후 실행할 모니터링 명령 시퀀스
+# Background agent가 60초 간격으로 아래를 반복한다:
+
+# 1. CodeRabbit 리뷰 상태 확인
+gh api repos/{owner}/{repo}/commits/{HEAD_SHA}/statuses --jq '.[] | select(.context=="CodeRabbit") | .state'
+
+# 2. 리뷰 코멘트 확인 (CodeRabbit이 success 된 후)
+gh api repos/{owner}/{repo}/pulls/{PR번호}/comments --jq '.[] | {path: .path, body: .body, line: .line}'
+
+# 3. PR 상태 확인
+gh api repos/{owner}/{repo}/pulls/{PR번호} --jq '{state: .state, merged: .merged}'
+```
+
+#### 모니터링 결과별 대응
+
+| 상태 | 대응 |
+|------|------|
+| CodeRabbit `pending` | 계속 대기 (60초 후 재확인) |
+| CodeRabbit `success` + 코멘트 없음 | "리뷰 통과" 보고. auto-merge 대기 |
+| CodeRabbit `success` + **코멘트 있음** | 코멘트 내용을 orchestrator에게 보고. orchestrator가 대응 |
+| CI 실패 | 실패 로그(`gh run view --log-failed`)를 orchestrator에게 보고 |
+| PR `MERGED` | "PR 머지 완료" 보고. 모니터링 종료 |
+
+#### 코멘트 대응 규칙
 
 - PR에 달린 코드 리뷰 코멘트는 **전부 resolve** 한다. 미해결 코멘트가 남아있는 상태로 머지하지 않는다.
-- 리뷰 코멘트 확인: `gh api repos/{owner}/{repo}/pulls/{PR번호}/comments`
 - 코멘트에 대한 대응:
   1. 코드 수정이 필요한 경우: 수정 후 같은 브랜치에 push → 리뷰 코멘트에 수정 내용 답글 → resolve
   2. 수정 불필요 (의도된 설계): 근거를 답글로 남기고 → resolve
   3. 논의가 필요한 경우: 답글로 의견 남기고 사용자에게 판단 요청
 - 모든 코멘트가 resolved 된 후 머지를 진행한다.
 
-### PR 머지 확인 및 CI 실패 대응
+#### 금지 사항
 
-- PR 생성 후 `gh pr checks <PR번호>`로 CI 상태를 확인한다.
-- CI가 통과하여 auto-merge가 완료되었는지 `gh pr view <PR번호> --json state`로 확인한다.
+- `--admin` merge는 **유저가 명시적으로 요청할 때만** 사용한다. CodeRabbit 리뷰를 우회하기 위해 사용 금지.
+- CodeRabbit 리뷰 코멘트를 읽지 않고 머지 금지.
+- PR 생성만 하고 모니터링 agent 없이 방치 금지.
+
+### CI 실패 대응
+
 - CI 실패 시:
   1. `gh run view <run_id> --log-failed`로 실패 원인 파악
   2. 로컬에서 수정 후 같은 브랜치에 push (PR은 유지됨)
