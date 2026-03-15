@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/features/explore/providers/explore_state_provider.dart';
 import 'package:app_user/src/features/explore/widgets/filter_chip_bar.dart';
@@ -17,6 +19,20 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
+  late ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final homeCoordinator = ref.read(homeCoordinatorProvider);
@@ -34,6 +50,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           return false;
         },
         child: CustomScrollView(
+          controller: _scrollController,
           slivers: [
             SliverAppBar(
               floating: true,
@@ -42,7 +59,18 @@ class _HomePageState extends ConsumerState<HomePage> {
               title: Row(
                 children: [
                   const SizedBox(width: MinglitSpacing.medium),
-                  MinglitTheme.appBarLogo(height: 36),
+                  GestureDetector(
+                    onTap: () {
+                      unawaited(
+                        _scrollController.animateTo(
+                          0,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOut,
+                        ),
+                      );
+                    },
+                    child: MinglitTheme.appBarLogo(height: 36),
+                  ),
                 ],
               ),
               actions: [
@@ -56,7 +84,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
                 const SizedBox(width: MinglitSpacing.small),
               ],
-              backgroundColor: MinglitColors.background,
+              // Fix #76: use theme color instead of
+              // hardcoded white for dark mode support
+              backgroundColor: Theme.of(context).colorScheme.surface,
               surfaceTintColor: MinglitColors.transparent,
             ),
             const SliverToBoxAdapter(

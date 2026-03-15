@@ -117,3 +117,13 @@ jobs:
           SUPABASE_MAIN_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
           GOOGLE_MAIN_ID: ${{ secrets.GOOGLE_MAIN_WEB_CLIENT_ID }}
           SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
+
+  notify-failure:
+    needs: [changes, deploy-app_user, deploy-landing_user, deploy-landing_partner, deploy-app_partner]
+    if: always()
+    permissions:
+      issues: write
+    uses: ./.github/workflows/notify-failure.yml
+    with:
+      success: ${{ !contains(needs.*.result, 'failure') }}
+      workflow_name: 'Vercel Deploy'

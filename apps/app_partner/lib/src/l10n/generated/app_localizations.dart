@@ -592,6 +592,12 @@ abstract class AppLocalizations {
   /// **'사업자 유형'**
   String get partnerApplication_field_bizType;
 
+  /// No description provided for @partnerApplication_hint_bizType.
+  ///
+  /// In ko, this message translates to:
+  /// **'사업자 유형 선택'**
+  String get partnerApplication_hint_bizType;
+
   /// No description provided for @partnerApplication_option_individual.
   ///
   /// In ko, this message translates to:

@@ -97,7 +97,10 @@ mixin _PartyCreateWizardSubmit
 
         final createdParty = await partyRepo.createParty(
           newParty,
-          extraFields: {'balance_config': balanceConfig},
+          extraFields: {
+            'balance_config': balanceConfig,
+            'visibility': state.visibility,
+          },
         );
 
         // 5. Create Ticket Templates

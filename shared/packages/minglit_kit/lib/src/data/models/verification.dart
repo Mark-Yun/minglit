@@ -49,14 +49,15 @@ enum VerificationStatus {
 abstract class VerificationFormField with _$VerificationFormField {
   /// Creates a [VerificationFormField] definition.
   const factory VerificationFormField({
-    /// Unique key for the field (e.g., 'company_name').
-    required String key,
-
     /// Input type: 'text', 'number', 'file', 'date', etc.
     required String type,
 
     /// UI Label (e.g., '회사명').
     required String label,
+
+    /// Unique key for the field (e.g., 'company_name').
+    /// Defaults to empty string when missing from DB data.
+    @Default('') String key,
 
     /// Whether this field is mandatory.
     @Default(true) bool required,
@@ -89,6 +90,7 @@ abstract class Verification with _$Verification {
 
     /// Partner ID who owns this verification. Null means Global/System verification.
     @JsonKey(name: 'partner_id') String? partnerId,
+    // Fix #42: Handle nullable DB fields — description and icon_key can be null in verifications table
     String? description,
 
     /// Icon identifier (e.g., 'briefcase').

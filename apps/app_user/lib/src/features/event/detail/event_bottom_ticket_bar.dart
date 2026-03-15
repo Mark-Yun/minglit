@@ -28,6 +28,7 @@ class _BottomTicketBar extends ConsumerWidget {
         ],
       ),
       child: SafeArea(
+        top: false,
         child: Row(
           children: [
             Column(
@@ -124,6 +125,7 @@ class _BottomTicketBarSkeleton extends StatelessWidget {
         ],
       ),
       child: SafeArea(
+        top: false,
         child: Row(
           children: [
             const Column(

@@ -66,7 +66,7 @@ supabase start
 ### 4. Seed Test Data
 
 ```bash
-curl -s -X POST http://127.0.0.1:54321/functions/v1/dev-seed-database
+curl -s -X POST http://127.0.0.1:54321/functions/v1/dev-seed
 ```
 
 ## Running
@@ -107,7 +107,7 @@ cd apps/app_partner && flutter test
 
 # Edge Functions (Deno)
 cd supabase/functions/dev-session-switch && deno test --allow-env --allow-net
-cd supabase/functions/dev-seed-database && deno test --allow-env --allow-net
+cd supabase/functions/dev-seed && deno test --allow-env --allow-net
 
 # Lint
 flutter analyze
@@ -118,15 +118,15 @@ flutter analyze
 | Function | Purpose |
 |----------|---------|
 | `dev-session-switch` | 테스트 유저 목록 조회 (dev only) |
-| `dev-seed-database` | 테스트 데이터 시딩 (dev only) |
+| `dev-seed` | 테스트 데이터 시딩 (dev only) |
 | `notification-worker` | FCM 푸시 알림 |
-| `update-user-profile` | 유저 프로필 임베딩 |
+| `profile-update` | 유저 프로필 임베딩 |
 | `vector-worker` | 파티 벡터화 |
-| `verify-payment-v1` | 결제 검증 |
-| `verify-identity-v1/v2` | 본인인증 |
-| `portone-webhook-v1` | 결제 웹훅 |
-| `cancel-payment` | 결제 취소 |
-| `report-bug` | 버그 리포트 |
+| `payment-verify` | 결제 검증 |
+| `identity-verify` | 본인인증 |
+| `payment-webhook` | 결제 웹훅 |
+| `payment-cancel` | 결제 취소 |
+| `bug-report` | 버그 리포트 |
 
 dev-only 함수들은 프로덕션에서 403 반환 (`DENO_DEPLOYMENT_ID` guard clause).
 

@@ -58,18 +58,21 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
     double? latitude,
     double? longitude,
     int limit = 10,
+    Set<String>? blockedPartnerIds,
   }) async {
     Log.d('getEventsByType called | type: $type');
     try {
       // 1. Base Query with Relations
       var selectQuery =
-          '*, party:parties(*, location:locations(*), partner:partners(*)), '
+          '*, party:parties!inner(*, location:locations(*), '
+          'partner:partners(*)), '
           'entryGroups:entry_groups(*), tickets(*)';
 
       // Special case for Early Bird: filter by ticket name
       if (type == EventFeedType.earlyBird) {
         selectQuery =
-            '*, party:parties(*, location:locations(*), partner:partners(*)), '
+            '*, party:parties!inner(*, location:locations(*), '
+            'partner:partners(*)), '
             'entryGroups:entry_groups(*), tickets!inner(*)';
       }
 
@@ -80,6 +83,8 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
       query = query.eq('status', 'scheduled');
       // ignore: avoid_dynamic_calls, Reason: Supabase builder chaining
       query = query.gte('start_time', DateTime.now().toIso8601String());
+      // ignore: avoid_dynamic_calls, Reason: Supabase builder chaining
+      query = query.eq('party.visibility', 'public');
 
       // 3. Early Bird Filter
       if (type == EventFeedType.earlyBird) {
@@ -106,11 +111,24 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
           query = query.order('created_at', ascending: false);
       }
 
+      final queryLimit =
+          blockedPartnerIds != null && blockedPartnerIds.isNotEmpty
+          ? (limit * 2).clamp(limit, 30)
+          : limit;
       final data =
-          await (query as PostgrestTransformBuilder).limit(limit) as List;
-      final result = data.map((json) {
+          await (query as PostgrestTransformBuilder).limit(queryLimit) as List;
+      var result = data.map((json) {
         return Event.fromJson(json as Map<String, dynamic>);
       }).toList();
+
+      if (blockedPartnerIds != null && blockedPartnerIds.isNotEmpty) {
+        result = result
+            .where(
+              (e) => !blockedPartnerIds.contains(e.party?.partner?.id),
+            )
+            .take(limit)
+            .toList();
+      }
 
       Log.d('getEventsByType success | count: ${result.length}');
       return result;
@@ -203,6 +221,24 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
     return app != null && app.status != 'rejected' && app.status != 'cancelled';
   }
 
+  /// Fetches entry group participant counts for a specific event.
+  Future<List<Map<String, dynamic>>> getEntryGroupParticipantCounts(
+    String eventId,
+  ) async {
+    try {
+      final data =
+          await supabaseClient.rpc<dynamic>(
+                'get_entry_group_participant_counts',
+                params: {'p_event_id': eventId},
+              )
+              as List<dynamic>;
+      return data.cast<Map<String, dynamic>>();
+    } on Exception catch (e, st) {
+      Log.e('getEntryGroupParticipantCounts Error', e, st);
+      rethrow;
+    }
+  }
+
   /// Fetches the current user's purchase history.
   Future<List<EventApplication>> getMyPurchaseHistory(String userId) async {
     Log.d('getMyPurchaseHistory called | userId: $userId');
@@ -264,9 +300,7 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
           .map((item) => item as Map<String, dynamic>)
           .toList();
 
-      Log.d(
-        'getPersonalizedRecommendations success | count: ${result.length}',
-      );
+      Log.d('getPersonalizedRecommendations success | count: ${result.length}');
       return result;
     } catch (e, st) {
       Log.e('❌ [EventRepo] getPersonalizedRecommendations Error', e, st);

@@ -50,6 +50,7 @@ dependencies:
   minglit_kit:
     path: ../../shared/packages/minglit_kit
   mobile_scanner: any
+  package_info_plus: ^8.0.0
   path: any
   riverpod: ^3.0.3
   riverpod_annotation: ^3.0.3
@@ -63,6 +64,7 @@ dependencies:
 dev_dependencies:
   build_runner: ^2.10.4
   custom_lint: 0.8.1
+  flutter_launcher_icons: ^0.14.3
   flutter_lints: ^5.0.0
   flutter_test:
     sdk: flutter

@@ -1,8 +1,0 @@
-{
-  "track_id": "party_matching_system_20260118",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-01-18T00:00:00Z",
-  "updated_at": "2026-01-18T00:00:00Z",
-  "description": "파티 종료 후 참가자 간 실시간 그룹 기반 커플 매칭 및 연락처 공개 시스템"
-}

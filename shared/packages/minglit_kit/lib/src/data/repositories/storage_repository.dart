@@ -78,9 +78,9 @@ class StorageRepository {
     required String bucket,
     String? pathPrefix,
     String contentType = 'image/png',
+    String extension = '.png',
   }) async {
     try {
-      const extension = '.png';
       final filename = '${const Uuid().v4()}$extension';
       final fullPath = pathPrefix != null ? '$pathPrefix/$filename' : filename;
 

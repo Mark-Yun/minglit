@@ -204,7 +204,7 @@ abstract class _SupabasePartnerContextBase implements _SupabasePartnerContext {
     }
   }
 
-  /// Fetches settlement records for a partner.
+  /// Fetches settlement records for a partner from settlement_items table.
   Future<List<Map<String, dynamic>>> getPartnerSettlements(
     String partnerId,
   ) async {
@@ -212,10 +212,10 @@ abstract class _SupabasePartnerContextBase implements _SupabasePartnerContext {
     try {
       final data =
           await supabaseClient
-                  .from('settlements')
+                  .from('settlement_items')
                   .select()
                   .eq('partner_id', partnerId)
-                  .order('event_date', ascending: false)
+                  .order('settlement_period_start', ascending: false)
               as List;
       return data.map((entry) {
         return entry as Map<String, dynamic>;

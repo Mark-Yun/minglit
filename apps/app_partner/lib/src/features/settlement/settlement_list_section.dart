@@ -91,14 +91,14 @@ class _SettlementCard extends StatelessWidget {
             value: formatter.format(settlement.totalRefunds),
           ),
           _FeeRow(
-            label: 'PG 수수료 (3.5%)',
+            label: 'PG 수수료',
             value: formatter.format(settlement.pgFee),
           ),
           _FeeRow(
-            label: '플랫폼 수수료 (5%)',
+            label: '플랫폼 수수료',
             value: formatter.format(settlement.platformFee),
           ),
-          _FeeRow(label: '부가세 (10%)', value: formatter.format(settlement.vat)),
+          _FeeRow(label: '부가세', value: formatter.format(settlement.vat)),
           const Divider(height: MinglitSpacing.large),
           _FeeRow(
             label: '정산 예정액',
@@ -184,28 +184,40 @@ class _StatusBadge extends StatelessWidget {
   }
 
   String _statusLabel(String status) {
-    switch (status) {
-      case 'ready':
-        return '정산 가능';
-      case 'requested':
-        return '정산 신청됨';
-      case 'completed':
+    switch (status.toUpperCase()) {
+      case 'READY':
+        return '정산 확정';
+      case 'PROCESSING':
+        return '처리중';
+      case 'COMPLETED':
         return '정산 완료';
-      case 'pending':
+      case 'HOLD':
+        return '보류';
+      case 'CANCELED':
+        return '취소됨';
+      case 'FAILED':
+        return '실패';
+      case 'PENDING':
       default:
         return '정산 대기';
     }
   }
 
   Color _statusColor(String status, ColorScheme scheme) {
-    switch (status) {
-      case 'ready':
+    switch (status.toUpperCase()) {
+      case 'READY':
         return scheme.primary;
-      case 'requested':
+      case 'PROCESSING':
         return scheme.tertiary;
-      case 'completed':
+      case 'COMPLETED':
         return scheme.secondary;
-      case 'pending':
+      case 'HOLD':
+        return const Color(0xFFFF9800);
+      case 'CANCELED':
+        return scheme.error;
+      case 'FAILED':
+        return scheme.error;
+      case 'PENDING':
       default:
         return scheme.onSurfaceVariant;
     }

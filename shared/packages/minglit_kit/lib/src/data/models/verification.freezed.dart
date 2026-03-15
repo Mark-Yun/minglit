@@ -15,10 +15,11 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$VerificationFormField {
 
-/// Unique key for the field (e.g., 'company_name').
- String get key;/// Input type: 'text', 'number', 'file', 'date', etc.
+/// Input type: 'text', 'number', 'file', 'date', etc.
  String get type;/// UI Label (e.g., '회사명').
- String get label;/// Whether this field is mandatory.
+ String get label;/// Unique key for the field (e.g., 'company_name').
+/// Defaults to empty string when missing from DB data.
+ String get key;/// Whether this field is mandatory.
  bool get required;/// Placeholder text for the input.
  String? get placeholder;/// List of options (for select/radio types).
  List<String>? get options;
@@ -34,16 +35,16 @@ $VerificationFormFieldCopyWith<VerificationFormField> get copyWith => _$Verifica
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is VerificationFormField&&(identical(other.key, key) || other.key == key)&&(identical(other.type, type) || other.type == type)&&(identical(other.label, label) || other.label == label)&&(identical(other.required, required) || other.required == required)&&(identical(other.placeholder, placeholder) || other.placeholder == placeholder)&&const DeepCollectionEquality().equals(other.options, options));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is VerificationFormField&&(identical(other.type, type) || other.type == type)&&(identical(other.label, label) || other.label == label)&&(identical(other.key, key) || other.key == key)&&(identical(other.required, required) || other.required == required)&&(identical(other.placeholder, placeholder) || other.placeholder == placeholder)&&const DeepCollectionEquality().equals(other.options, options));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,key,type,label,required,placeholder,const DeepCollectionEquality().hash(options));
+int get hashCode => Object.hash(runtimeType,type,label,key,required,placeholder,const DeepCollectionEquality().hash(options));
 
 @override
 String toString() {
-  return 'VerificationFormField(key: $key, type: $type, label: $label, required: $required, placeholder: $placeholder, options: $options)';
+  return 'VerificationFormField(type: $type, label: $label, key: $key, required: $required, placeholder: $placeholder, options: $options)';
 }
 
 
@@ -54,7 +55,7 @@ abstract mixin class $VerificationFormFieldCopyWith<$Res>  {
   factory $VerificationFormFieldCopyWith(VerificationFormField value, $Res Function(VerificationFormField) _then) = _$VerificationFormFieldCopyWithImpl;
 @useResult
 $Res call({
- String key, String type, String label, bool required, String? placeholder, List<String>? options
+ String type, String label, String key, bool required, String? placeholder, List<String>? options
 });
 
 
@@ -71,11 +72,11 @@ class _$VerificationFormFieldCopyWithImpl<$Res>
 
 /// Create a copy of VerificationFormField
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? key = null,Object? type = null,Object? label = null,Object? required = null,Object? placeholder = freezed,Object? options = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? type = null,Object? label = null,Object? key = null,Object? required = null,Object? placeholder = freezed,Object? options = freezed,}) {
   return _then(_self.copyWith(
-key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
-as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
+as String,key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
 as String,required: null == required ? _self.required : required // ignore: cast_nullable_to_non_nullable
 as bool,placeholder: freezed == placeholder ? _self.placeholder : placeholder // ignore: cast_nullable_to_non_nullable
 as String?,options: freezed == options ? _self.options : options // ignore: cast_nullable_to_non_nullable
@@ -164,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String key,  String type,  String label,  bool required,  String? placeholder,  List<String>? options)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String type,  String label,  String key,  bool required,  String? placeholder,  List<String>? options)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _VerificationFormField() when $default != null:
-return $default(_that.key,_that.type,_that.label,_that.required,_that.placeholder,_that.options);case _:
+return $default(_that.type,_that.label,_that.key,_that.required,_that.placeholder,_that.options);case _:
   return orElse();
 
 }
@@ -185,10 +186,10 @@ return $default(_that.key,_that.type,_that.label,_that.required,_that.placeholde
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String key,  String type,  String label,  bool required,  String? placeholder,  List<String>? options)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String type,  String label,  String key,  bool required,  String? placeholder,  List<String>? options)  $default,) {final _that = this;
 switch (_that) {
 case _VerificationFormField():
-return $default(_that.key,_that.type,_that.label,_that.required,_that.placeholder,_that.options);case _:
+return $default(_that.type,_that.label,_that.key,_that.required,_that.placeholder,_that.options);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -205,10 +206,10 @@ return $default(_that.key,_that.type,_that.label,_that.required,_that.placeholde
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String key,  String type,  String label,  bool required,  String? placeholder,  List<String>? options)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String type,  String label,  String key,  bool required,  String? placeholder,  List<String>? options)?  $default,) {final _that = this;
 switch (_that) {
 case _VerificationFormField() when $default != null:
-return $default(_that.key,_that.type,_that.label,_that.required,_that.placeholder,_that.options);case _:
+return $default(_that.type,_that.label,_that.key,_that.required,_that.placeholder,_that.options);case _:
   return null;
 
 }
@@ -220,15 +221,16 @@ return $default(_that.key,_that.type,_that.label,_that.required,_that.placeholde
 @JsonSerializable()
 
 class _VerificationFormField implements VerificationFormField {
-  const _VerificationFormField({required this.key, required this.type, required this.label, this.required = true, this.placeholder, final  List<String>? options}): _options = options;
+  const _VerificationFormField({required this.type, required this.label, this.key = '', this.required = true, this.placeholder, final  List<String>? options}): _options = options;
   factory _VerificationFormField.fromJson(Map<String, dynamic> json) => _$VerificationFormFieldFromJson(json);
 
-/// Unique key for the field (e.g., 'company_name').
-@override final  String key;
 /// Input type: 'text', 'number', 'file', 'date', etc.
 @override final  String type;
 /// UI Label (e.g., '회사명').
 @override final  String label;
+/// Unique key for the field (e.g., 'company_name').
+/// Defaults to empty string when missing from DB data.
+@override@JsonKey() final  String key;
 /// Whether this field is mandatory.
 @override@JsonKey() final  bool required;
 /// Placeholder text for the input.
@@ -258,16 +260,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _VerificationFormField&&(identical(other.key, key) || other.key == key)&&(identical(other.type, type) || other.type == type)&&(identical(other.label, label) || other.label == label)&&(identical(other.required, required) || other.required == required)&&(identical(other.placeholder, placeholder) || other.placeholder == placeholder)&&const DeepCollectionEquality().equals(other._options, _options));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _VerificationFormField&&(identical(other.type, type) || other.type == type)&&(identical(other.label, label) || other.label == label)&&(identical(other.key, key) || other.key == key)&&(identical(other.required, required) || other.required == required)&&(identical(other.placeholder, placeholder) || other.placeholder == placeholder)&&const DeepCollectionEquality().equals(other._options, _options));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,key,type,label,required,placeholder,const DeepCollectionEquality().hash(_options));
+int get hashCode => Object.hash(runtimeType,type,label,key,required,placeholder,const DeepCollectionEquality().hash(_options));
 
 @override
 String toString() {
-  return 'VerificationFormField(key: $key, type: $type, label: $label, required: $required, placeholder: $placeholder, options: $options)';
+  return 'VerificationFormField(type: $type, label: $label, key: $key, required: $required, placeholder: $placeholder, options: $options)';
 }
 
 
@@ -278,7 +280,7 @@ abstract mixin class _$VerificationFormFieldCopyWith<$Res> implements $Verificat
   factory _$VerificationFormFieldCopyWith(_VerificationFormField value, $Res Function(_VerificationFormField) _then) = __$VerificationFormFieldCopyWithImpl;
 @override @useResult
 $Res call({
- String key, String type, String label, bool required, String? placeholder, List<String>? options
+ String type, String label, String key, bool required, String? placeholder, List<String>? options
 });
 
 
@@ -295,11 +297,11 @@ class __$VerificationFormFieldCopyWithImpl<$Res>
 
 /// Create a copy of VerificationFormField
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? key = null,Object? type = null,Object? label = null,Object? required = null,Object? placeholder = freezed,Object? options = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? type = null,Object? label = null,Object? key = null,Object? required = null,Object? placeholder = freezed,Object? options = freezed,}) {
   return _then(_VerificationFormField(
-key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
-as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
+as String,key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
 as String,required: null == required ? _self.required : required // ignore: cast_nullable_to_non_nullable
 as bool,placeholder: freezed == placeholder ? _self.placeholder : placeholder // ignore: cast_nullable_to_non_nullable
 as String?,options: freezed == options ? _self._options : options // ignore: cast_nullable_to_non_nullable
@@ -317,7 +319,8 @@ mixin _$Verification {
  String get id; VerificationCategory get category;/// Internal identifier (e.g., 'global_career').
 @JsonKey(name: 'internal_name') String get internalName;/// Display name shown to users (e.g., '직장 인증').
 @JsonKey(name: 'display_name') String get displayName;/// Partner ID who owns this verification. Null means Global/System verification.
-@JsonKey(name: 'partner_id') String? get partnerId; String? get description;/// Icon identifier (e.g., 'briefcase').
+@JsonKey(name: 'partner_id') String? get partnerId;// Fix #42: Handle nullable DB fields — description and icon_key can be null in verifications table
+ String? get description;/// Icon identifier (e.g., 'briefcase').
 @JsonKey(name: 'icon_key') String? get iconKey;/// Dynamic form definition.
 @JsonKey(name: 'form_schema') List<VerificationFormField> get formSchema;@JsonKey(name: 'is_active') bool get isActive;@JsonKey(name: 'created_at') DateTime? get createdAt;
 /// Create a copy of Verification
@@ -533,6 +536,7 @@ class _Verification implements Verification {
 @override@JsonKey(name: 'display_name') final  String displayName;
 /// Partner ID who owns this verification. Null means Global/System verification.
 @override@JsonKey(name: 'partner_id') final  String? partnerId;
+// Fix #42: Handle nullable DB fields — description and icon_key can be null in verifications table
 @override final  String? description;
 /// Icon identifier (e.g., 'briefcase').
 @override@JsonKey(name: 'icon_key') final  String? iconKey;

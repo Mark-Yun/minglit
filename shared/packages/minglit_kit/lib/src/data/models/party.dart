@@ -67,12 +67,14 @@ abstract class Party with _$Party {
     @JsonKey(name: 'contact_options')
     @Default({})
     Map<String, dynamic> contactOptions,
+    @Default({}) Map<String, dynamic> metadata,
     @JsonKey(name: 'required_verification_ids')
     @Default([])
     List<String> requiredVerificationIds,
     @JsonKey(name: 'min_confirmed_count') @Default(0) int minConfirmedCount,
     @JsonKey(name: 'max_participants') @Default(20) int maxParticipants,
     @Default('active') String status,
+    @Default('public') String visibility,
     @JsonKey(includeToJson: false) List<TicketTemplate>? ticketTemplates,
     @JsonKey(includeToJson: false) Partner? partner,
     @JsonKey(name: 'entry_group_templates', includeToJson: false)
@@ -111,6 +113,12 @@ extension PartyX on Party {
 
   /// Whether the party is in draft state.
   bool get isDraft => status == 'draft';
+
+  /// Whether the party is private (link-only access).
+  bool get isPrivate => visibility == 'private';
+
+  /// Whether the party is publicly visible.
+  bool get isPublic => visibility == 'public';
 
   /// Summarizes entry conditions for display.
   List<String> get conditionSummaries {

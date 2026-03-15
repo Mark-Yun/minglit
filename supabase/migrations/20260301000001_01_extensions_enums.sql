@@ -12,12 +12,7 @@ create extension if not exists supabase_vault cascade;
 create extension if not exists pgmq cascade;
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
--- PGroonga: available locally, not on hosted Supabase
-DO $$ BEGIN
-  CREATE EXTENSION IF NOT EXISTS pgroonga;
-EXCEPTION WHEN OTHERS THEN
-  RAISE NOTICE 'pgroonga not available, skipping';
-END $$;
+create extension if not exists pgroonga;
 
 -- ============================================================
 -- 2. Enum Types

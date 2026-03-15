@@ -222,16 +222,22 @@ class _ParticipantDDayOverlay extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: MinglitSpacing.xsmall2,
-        vertical: MinglitSpacing.xxsmall,
+        horizontal: MinglitSpacing.small,
+        vertical: MinglitSpacing.xsmall,
       ),
       decoration: BoxDecoration(
-        color: MinglitColors.textPrimary.withValues(alpha: 0.45),
+        color: MinglitColors.textPrimary.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(MinglitRadius.small),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          const Icon(
+            Icons.person,
+            size: 13,
+            color: MinglitColors.background,
+          ),
+          const SizedBox(width: 3),
           // 3-segment battery gauge
           for (var i = 0; i < 3; i++) ...[
             if (i > 0) const SizedBox(width: 2),
@@ -252,7 +258,7 @@ class _ParticipantDDayOverlay extends StatelessWidget {
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: MinglitColors.background,
               fontSize: 13,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w400,
             ),
           ),
           const SizedBox(width: 4),
@@ -261,16 +267,22 @@ class _ParticipantDDayOverlay extends StatelessWidget {
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: MinglitColors.background.withValues(alpha: 0.6),
               fontSize: 13,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w400,
             ),
           ),
           const SizedBox(width: 4),
+          const Icon(
+            Icons.calendar_today,
+            size: 13,
+            color: MinglitColors.background,
+          ),
+          const SizedBox(width: 3),
           Text(
             dDayLabel,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: MinglitColors.background,
               fontSize: 13,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w400,
             ),
           ),
         ],
@@ -289,11 +301,11 @@ class _PartnerOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: MinglitSpacing.xsmall2,
-        vertical: MinglitSpacing.xxsmall,
+        horizontal: MinglitSpacing.small,
+        vertical: MinglitSpacing.xsmall,
       ),
       decoration: BoxDecoration(
-        color: MinglitColors.textPrimary.withValues(alpha: 0.45),
+        color: MinglitColors.textPrimary.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(MinglitRadius.small),
       ),
       child: Row(
@@ -321,7 +333,7 @@ class _PartnerOverlay extends StatelessWidget {
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: MinglitColors.background,
                 fontSize: 13,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w400,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

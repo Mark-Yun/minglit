@@ -58,11 +58,15 @@ class _MinglitImageCarouselState extends State<MinglitImageCarousel> {
     final theme = Theme.of(context);
     final useFixedHeight = widget.height != null;
 
+    // Fix #74: Show styled placeholder when no images available
     if (widget.imageUrls.isEmpty) {
+      final theme = Theme.of(context);
       final placeholder = Container(
-        width: double.infinity,
-        color: theme.colorScheme.surfaceContainerHighest,
-        child: const Icon(Icons.image_not_supported_outlined, size: 48),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(MinglitRadius.small),
+        ),
+        child: Icon(Icons.image, color: theme.colorScheme.outline),
       );
       return useFixedHeight
           ? SizedBox(height: widget.height, child: placeholder)

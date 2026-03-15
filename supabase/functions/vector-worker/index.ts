@@ -102,41 +102,55 @@ Deno.serve(withSentryHandler(async (req) => {
     // 2. Process Party Vectorization (Efficient OpenAI Batching)
     if (partyTasks.length > 0) {
       try {
-        const texts = partyTasks.map(t => serializeParty(t.record));
-        console.log(`Requesting ${texts.length} embeddings from OpenAI...`);
-        const embeddings = await openAi.generateEmbeddings(texts);
-        console.log(`Received ${embeddings.length} embeddings.`);
+        // Separate public and private parties
+        const publicPartyTasks = partyTasks.filter(t => t.record.visibility !== 'private');
+        const privatePartyTasks = partyTasks.filter(t => t.record.visibility === 'private');
         
-        await supabase.from('debug_logs').insert({
-          message: 'OpenAI Result Check',
-          payload: { 
-            textCount: texts.length, 
-            embeddingCount: embeddings.length,
-            sample: embeddings.length > 0 ? Array.from(embeddings[0]).slice(0, 5) : null
-          }
-        });
+        // Handle private parties - skip embedding, delete existing
+        for (const t of privatePartyTasks) {
+          console.log(`Skipping private party: ${t.record.id}`);
+          await supabase.from('party_embeddings').delete().eq('party_id', t.record.id);
+          await utils.markProcessed(t.traceId);
+          processedMsgIds.push(t.msgId);
+        }
         
-        for (let i = 0; i < partyTasks.length; i++) {
-          const t = partyTasks[i];
-          const item = {
-            party_id: t.record.id,
-            embedding: embeddings[i],
-            updated_at: new Date().toISOString()
-          };
+        // Process only public parties
+        if (publicPartyTasks.length > 0) {
+          const texts = publicPartyTasks.map(t => serializeParty(t.record));
+          console.log(`Requesting ${texts.length} embeddings from OpenAI...`);
+          const embeddings = await openAi.generateEmbeddings(texts);
+          console.log(`Received ${embeddings.length} embeddings.`);
           
-          const { error: upsertError } = await supabase.from('party_embeddings').upsert(item);
-          if (upsertError) {
-            console.error(`Upsert Error for party ${t.record.id}:`, JSON.stringify(upsertError));
-          } else {
-            console.log(`Successfully saved embedding for party ${t.record.id}`);
-            await utils.markProcessed(t.traceId);
-            processedMsgIds.push(t.msgId);
+          await supabase.from('debug_logs').insert({
+            message: 'OpenAI Result Check',
+            payload: { 
+              textCount: texts.length, 
+              embeddingCount: embeddings.length,
+              sample: embeddings.length > 0 ? Array.from(embeddings[0]).slice(0, 5) : null
+            }
+          });
+          
+          for (let i = 0; i < publicPartyTasks.length; i++) {
+            const t = publicPartyTasks[i];
+            const item = {
+              party_id: t.record.id,
+              embedding: embeddings[i],
+              updated_at: new Date().toISOString()
+            };
+            
+            const { error: upsertError } = await supabase.from('party_embeddings').upsert(item);
+            if (upsertError) {
+              console.error(`Upsert Error for party ${t.record.id}:`, JSON.stringify(upsertError));
+            } else {
+              console.log(`Successfully saved embedding for party ${t.record.id}`);
+              await utils.markProcessed(t.traceId);
+              processedMsgIds.push(t.msgId);
+            }
           }
         }
       } catch (e) {
         console.error('Party Vectorization Error:', e);
       }
-    }
 
     // 3. Process User Interactions
     for (const task of interactionTasks) {

@@ -34,16 +34,10 @@ class MinglitTheme {
           const SizedBox(width: 16),
           appBarLogo(height: 36),
           const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              title,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
+          Expanded(child: Text(title, overflow: TextOverflow.ellipsis)),
         ],
       ),
       actions: actions,
-      backgroundColor: MinglitColors.background,
       surfaceTintColor: Colors.transparent,
     );
   }
@@ -60,7 +54,6 @@ class MinglitTheme {
       centerTitle: centerTitle,
       automaticallyImplyLeading: showBackButton,
       actions: actions,
-      backgroundColor: MinglitColors.background,
       surfaceTintColor: Colors.transparent,
     );
   }
@@ -122,6 +115,121 @@ class MinglitTheme {
       checkboxTheme: _MinglitComponentThemes.checkbox,
       tabBarTheme: _MinglitComponentThemes.tabBar,
       dividerTheme: _MinglitComponentThemes.divider,
+    );
+  }
+
+  static ThemeData get materialThemeDark {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      fontFamily: 'NotoSansKR',
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: MinglitColorsDark.primary,
+        brightness: Brightness.dark,
+        primary: MinglitColorsDark.primary,
+        secondary: MinglitColorsDark.secondary,
+        tertiary: MinglitColorsDark.tertiary,
+        surface: MinglitColorsDark.surface,
+        error: MinglitColorsDark.error,
+        onSurfaceVariant: MinglitColorsDark.textSecondary,
+      ),
+      scaffoldBackgroundColor: MinglitColorsDark.background,
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 32,
+          fontWeight: FontWeight.bold,
+          color: MinglitColorsDark.textPrimary,
+        ),
+        titleLarge: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: MinglitColorsDark.textPrimary,
+        ),
+        titleMedium: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: MinglitColorsDark.textPrimary,
+        ),
+        titleSmall: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: MinglitColorsDark.textPrimary,
+        ),
+        bodyMedium: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 16,
+          color: MinglitColorsDark.textSecondary,
+        ),
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: MinglitColorsDark.background,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: IconThemeData(color: MinglitColorsDark.textPrimary),
+        titleTextStyle: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          color: MinglitColorsDark.textPrimary,
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          fontFamily: 'NotoSansKR',
+        ),
+      ),
+      elevatedButtonTheme: _MinglitComponentThemes.elevatedButton,
+      outlinedButtonTheme: _MinglitComponentThemes.outlinedButton,
+      textButtonTheme: _MinglitComponentThemes.textButton,
+      cardTheme: CardThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(MinglitRadius.card),
+        ),
+        elevation: 0,
+        color: MinglitColorsDark.surface,
+        margin: EdgeInsets.zero,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: MinglitColorsDark.surface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(MinglitRadius.input),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(MinglitRadius.input),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(MinglitRadius.input),
+          borderSide: const BorderSide(
+            color: MinglitColorsDark.primary,
+            width: 2,
+          ),
+        ),
+        contentPadding: const EdgeInsets.all(MinglitSpacing.medium),
+        hintStyle: const TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          color: MinglitColorsDark.textSecondary,
+          fontSize: 14,
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+        side: BorderSide.none,
+        backgroundColor: MinglitColorsDark.surface,
+        secondarySelectedColor: MinglitColorsDark.primary,
+        labelStyle: const TextStyle(
+          fontSize: 13,
+        ), // ignore: minglit_no_hardcoded_text_style -- theme definition
+      ),
+      checkboxTheme: _MinglitComponentThemes.checkbox,
+      tabBarTheme: _MinglitComponentThemes.tabBar,
+      dividerTheme: const DividerThemeData(
+        color: MinglitColorsDark.divider,
+        thickness: 1,
+        space: MinglitSpacing.medium,
+      ),
     );
   }
 }

@@ -14,6 +14,7 @@ Future<Map<String, dynamic>> collectEnvironmentInfo() async {
   final results = await Future.wait([
     _getAppVersion(),
     _getBuildNumber(),
+    _getPackageName(),
     _getPlatform(),
     _getOsVersion(),
     _getDeviceModel(),
@@ -24,12 +25,13 @@ Future<Map<String, dynamic>> collectEnvironmentInfo() async {
   return {
     'appVersion': results[0],
     'buildNumber': results[1],
-    'platform': results[2],
-    'osVersion': results[3],
-    'deviceModel': results[4],
-    'screenSize': results[5],
-    'networkStatus': results[6],
-    'batteryLevel': results[7],
+    'packageName': results[2],
+    'platform': results[3],
+    'osVersion': results[4],
+    'deviceModel': results[5],
+    'screenSize': results[6],
+    'networkStatus': results[7],
+    'batteryLevel': results[8],
   };
 }
 
@@ -46,6 +48,15 @@ Future<String?> _getBuildNumber() async {
   try {
     final info = await PackageInfo.fromPlatform();
     return info.buildNumber;
+  } on Exception {
+    return null;
+  }
+}
+
+Future<String?> _getPackageName() async {
+  try {
+    final info = await PackageInfo.fromPlatform();
+    return info.packageName;
   } on Exception {
     return null;
   }

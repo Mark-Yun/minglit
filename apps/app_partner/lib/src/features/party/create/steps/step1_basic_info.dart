@@ -107,6 +107,25 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                   .updateImages(imageUrls: urls, newFiles: files);
             },
           ),
+          const SizedBox(height: MinglitSpacing.large),
+          Text(
+            '공개 범위',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.medium),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('비공개 파티'),
+            subtitle: const Text('링크를 가진 사용자만 접근 가능'),
+            value: state.visibility == 'private',
+            onChanged: (value) {
+              ref
+                  .read(partyCreateWizardControllerProvider.notifier)
+                  .setVisibility(value ? 'private' : 'public');
+            },
+          ),
         ],
       ),
     );

@@ -81,5 +81,25 @@ void main() {
       expect(state, isA<AsyncError<void>>());
       expect(state.error, exception);
     });
+
+    test('signOut returns early if ref is disposed', () async {
+      when(() => mockAuthRepo.signOut()).thenAnswer((_) async {});
+
+      final container = createContainer(
+        overrides: [
+          authRepositoryProvider.overrideWith((ref) => mockAuthRepo),
+        ],
+      );
+
+      final controller = container.read(authControllerProvider.notifier);
+
+      // Simulate ref being disposed by invalidating the provider
+      container.invalidate(authControllerProvider);
+
+      // This should not throw even though ref is disposed
+      await controller.signOut();
+
+      verify(() => mockAuthRepo.signOut()).called(1);
+    });
   });
 }

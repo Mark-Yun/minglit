@@ -120,4 +120,53 @@ void main() {
       expect(find.text('Always Visible'), findsOneWidget);
     });
   });
+
+  group('Deduplication and cooldown', () {
+    testWidgets('registers and removes WidgetsBindingObserver without crash', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: BugReporterWrapper(
+                child: Text('test'),
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(find.text('test'), findsOneWidget);
+
+      // Rebuild with empty widget — triggers dispose and observer removal
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(
+            home: SizedBox(),
+          ),
+        ),
+      );
+      // No crash = observer was properly unregistered
+    });
+
+    testWidgets('renders FAB when enabled', (tester) async {
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: BugReporterWrapper(
+                child: Text('content'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Verify child is rendered
+      expect(find.text('content'), findsOneWidget);
+
+      // Verify FAB is rendered when enabled
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+    });
+  });
 }

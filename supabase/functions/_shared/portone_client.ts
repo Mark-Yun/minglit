@@ -53,7 +53,7 @@ export interface PortonePageFilter {
 
 export class PortoneV2Client {
   private apiKey: string;
-  private baseUrl = "https://api.portone.io";
+  private baseUrl = Deno.env.get('PORTONE_V2_API_URL') || "https://api.portone.io";
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;

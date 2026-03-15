@@ -108,3 +108,13 @@ jobs:
           releaseFiles: apps/app_user/build/app/outputs/bundle/prodRelease/app-prod-release.aab
           track: internal
           status: draft
+
+  notify-failure:
+    needs: [build]
+    if: always()
+    permissions:
+      issues: write
+    uses: ./.github/workflows/notify-failure.yml
+    with:
+      success: ${{ needs.build.result == 'success' }}
+      workflow_name: 'Android Deploy User'

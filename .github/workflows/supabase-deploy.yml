@@ -17,6 +17,9 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
     steps:
       - uses: actions/checkout@v4
 
@@ -44,8 +47,8 @@ jobs:
           supabase secrets set SENTRY_DSN=$SENTRY_DSN
           supabase secrets set ENVIRONMENT=development
 
-          # Dev 환경: 새 마이그레이션만 적용 (db reset은 WAL 비대화 유발)
-          supabase db push --password $SUPABASE_DB_PASSWORD
+          # Dev 환경: 새 마이그레이션 적용 (--include-all: feature branch 병렬 작업 시 순서 불일치 허용)
+          supabase db push --password $SUPABASE_DB_PASSWORD --include-all
 
           # Deploy Edge Functions
           supabase functions deploy
@@ -54,7 +57,7 @@ jobs:
           SUPABASE_URL="https://${SUPABASE_PROJECT_ID}.supabase.co"
           echo "🌱 Seeding test data..."
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            -X POST "${SUPABASE_URL}/functions/v1/dev-seed-database" \
+            -X POST "${SUPABASE_URL}/functions/v1/dev-seed" \
             -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Content-Type: application/json")
           if [ "$HTTP_STATUS" -eq 200 ]; then
@@ -82,7 +85,18 @@ jobs:
           supabase secrets set SENTRY_DSN=$SENTRY_DSN
           supabase secrets set ENVIRONMENT=production
 
-          supabase db push --password $SUPABASE_DB_PASSWORD
+          supabase db push --password $SUPABASE_DB_PASSWORD --include-all
 
           # Deploy Edge Functions
           supabase functions deploy
+
+
+  notify-failure:
+    needs: [deploy]
+    if: always()
+    permissions:
+      issues: write
+    uses: ./.github/workflows/notify-failure.yml
+    with:
+      success: ${{ needs.deploy.result == 'success' }}
+      workflow_name: 'Deploy Supabase Migrations'

@@ -1,27 +1,34 @@
 part of 'event_detail_page.dart';
 
-class _EntryConditionsSection extends StatelessWidget {
+class _EntryConditionsSection extends ConsumerWidget {
   const _EntryConditionsSection({required this.event});
 
   final Event event;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final entryGroups = event.entryGroups ?? [];
+    final countsAsync = ref.watch(
+      entryGroupParticipantCountsProvider(event.id),
+    );
+    final counts = countsAsync.value ?? {};
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '참여 자격',
+          '참여 현황',
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: MinglitSpacing.medium),
         if (entryGroups.isEmpty)
-          const Text('별도의 참여 제한이 없습니다.')
+          Text(
+            '${event.currentParticipants}명 / ${event.maxParticipants}명',
+            style: theme.textTheme.bodyMedium,
+          )
         else
           ListView.separated(
             shrinkWrap: true,
@@ -46,7 +53,8 @@ class _EntryConditionsSection extends StatelessWidget {
                 0,
                 (sum, t) => sum + t.quantity,
               );
-              final showGauge = matchingTickets.isNotEmpty && totalQuantity > 0;
+              final showGauge = matchingTickets.isNotEmpty;
+              final participantCount = counts[group.id] ?? 0;
 
               return Stack(
                 children: [
@@ -59,7 +67,22 @@ class _EntryConditionsSection extends StatelessWidget {
                         color: theme.colorScheme.outlineVariant,
                       ),
                     ),
-                    child: EntryGroupDetail(group: group.toTemplate()),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        EntryGroupDetail(
+                          group: group.toTemplate(),
+                          showVerificationBadges: false,
+                        ),
+                        const SizedBox(height: MinglitSpacing.xsmall),
+                        Text(
+                          '$participantCount명 참여',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   if (showGauge)
                     Positioned(

@@ -1,3 +1,4 @@
+import 'package:app_user/src/features/explore/providers/explore_state_provider.dart';
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -34,6 +35,10 @@ void main() {
     return ProviderScope(
       overrides: [
         eventRepositoryProvider.overrideWithValue(mockEventRepository),
+        // Disable active filters to avoid triggering location services
+        activeFiltersProvider.overrideWith(
+          _NoFiltersNotifier.new,
+        ),
         ...overrides.cast(),
       ],
       child: MaterialApp(
@@ -51,41 +56,31 @@ void main() {
       expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);
     });
 
-    testWidgets('renders all 4 category chips', (tester) async {
+    testWidgets('renders search icon', (tester) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pump();
 
-      expect(find.text('내 주변'), findsOneWidget);
-      expect(find.text('신규 오픈'), findsWidgets); // chip + section header
-      expect(find.text('마감 임박'), findsWidgets);
-      expect(find.text('얼리버드'), findsOneWidget);
+      expect(find.byIcon(Icons.search), findsOneWidget);
     });
 
-    testWidgets('renders 3 event feed section headers', (tester) async {
+    testWidgets('renders filter chip bar with sort chips', (tester) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pump();
 
-      // Section headers use type.title
-      expect(find.text('신규 오픈'), findsWidgets);
-      expect(find.text('마감 임박'), findsWidgets);
-      expect(find.text('얼리버드 특가'), findsWidgets);
-    });
-
-    testWidgets('renders 더보기 buttons for each section', (tester) async {
-      await tester.pumpWidget(createTestWidget());
-      await tester.pump();
-
-      expect(find.text('더보기'), findsNWidgets(3));
+      // ExploreFilterChipBar renders these sort chips
+      expect(find.text('추천순'), findsOneWidget);
+      expect(find.text('마감임박'), findsOneWidget);
+      expect(find.text('가까운날짜'), findsOneWidget);
     });
 
     testWidgets('shows empty state when no events', (tester) async {
       await tester.pumpWidget(createTestWidget());
+      // Multiple pumps to resolve async providers
       await tester.pump();
       await tester.pump();
       await tester.pump();
 
-      // Each section shows empty message
-      expect(find.textContaining('없습니다'), findsNWidgets(3));
+      expect(find.text('추천 이벤트가 없습니다'), findsOneWidget);
     });
 
     testWidgets('renders event cards when data is available', (tester) async {
@@ -127,4 +122,12 @@ void main() {
       expect(find.text('Test Party Event'), findsOneWidget);
     });
   });
+}
+
+/// A notifier that starts with no active filters (all disabled),
+/// so filteredEventsProvider passes through without triggering
+/// location services or eligibility checks.
+class _NoFiltersNotifier extends ActiveFilters {
+  @override
+  ExploreFilters build() => const ExploreFilters();
 }

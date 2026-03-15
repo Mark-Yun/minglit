@@ -1,8 +1,0 @@
-{
-  "track_id": "partner_app_home_navigation_20260120",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-01-21T00:30:00Z",
-  "updated_at": "2026-01-21T00:30:00Z",
-  "description": "파트너 앱 메인 대시보드 및 네비게이션 구현 (4탭 + 중앙 QR 버튼, Action Center)"
-}

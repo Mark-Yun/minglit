@@ -141,6 +141,53 @@ class EventCreateInfoTab extends ConsumerWidget {
                   .toList(),
             ),
           ),
+          const SizedBox(height: MinglitSpacing.large),
+
+          // 4. Visibility Setting
+          Container(
+            padding: const EdgeInsets.all(MinglitSpacing.medium),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(MinglitRadius.card),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '공개 설정',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: MinglitSpacing.medium),
+                DropdownButtonFormField<String?>(
+                  initialValue: state.visibility,
+                  decoration: const InputDecoration(
+                    labelText: '공개 설정',
+                    prefixIcon: Icon(Icons.visibility),
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      child: Text('파티 설정 따라가기'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'public',
+                      child: Text('공개'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'private',
+                      child: Text('비공개'),
+                    ),
+                  ],
+                  onChanged: notifier.setVisibility,
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
