@@ -59,6 +59,7 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
     double? longitude,
     int limit = 10,
     Set<String>? blockedPartnerIds,
+    int offset = 0,
   }) async {
     Log.d('getEventsByType called | type: $type');
     try {
@@ -116,16 +117,18 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
           ? (limit * 2).clamp(limit, 30)
           : limit;
       final data =
-          await (query as PostgrestTransformBuilder).limit(queryLimit) as List;
+          await (query as PostgrestTransformBuilder).range(
+                offset,
+                offset + queryLimit - 1,
+              )
+              as List;
       var result = data.map((json) {
         return Event.fromJson(json as Map<String, dynamic>);
       }).toList();
 
       if (blockedPartnerIds != null && blockedPartnerIds.isNotEmpty) {
         result = result
-            .where(
-              (e) => !blockedPartnerIds.contains(e.party?.partner?.id),
-            )
+            .where((e) => !blockedPartnerIds.contains(e.party?.partner?.id))
             .take(limit)
             .toList();
       }

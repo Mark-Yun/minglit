@@ -27,6 +27,8 @@ void main() {
           latitude: any(named: 'latitude'),
           longitude: any(named: 'longitude'),
           limit: any(named: 'limit'),
+          blockedPartnerIds: any(named: 'blockedPartnerIds'),
+          offset: any(named: 'offset'),
         ),
       ).thenAnswer((_) async => [mockEvent]);
 
@@ -51,6 +53,8 @@ void main() {
           latitude: any(named: 'latitude'),
           longitude: any(named: 'longitude'),
           limit: any(named: 'limit'),
+          blockedPartnerIds: any(named: 'blockedPartnerIds'),
+          offset: any(named: 'offset'),
         ),
       ).thenAnswer((_) async => []);
 
@@ -74,6 +78,8 @@ void main() {
           latitude: any(named: 'latitude'),
           longitude: any(named: 'longitude'),
           limit: any(named: 'limit'),
+          blockedPartnerIds: any(named: 'blockedPartnerIds'),
+          offset: any(named: 'offset'),
         ),
       ).thenThrow(Exception('Network error'));
 
