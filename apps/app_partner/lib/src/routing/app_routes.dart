@@ -140,9 +140,7 @@ class NotificationCenterRoute extends GoRouteData
     ),
     // 3. Revenue Management Branch
     TypedStatefulShellBranch<SettlementBranch>(
-      routes: [
-        TypedGoRoute<SettlementRoute>(path: '/settlement'),
-      ],
+      routes: [TypedGoRoute<SettlementRoute>(path: '/settlement')],
     ),
     // 4. Settings & Profile Branch
     TypedStatefulShellBranch<MoreBranch>(
@@ -151,11 +149,10 @@ class NotificationCenterRoute extends GoRouteData
           path: '/more',
           routes: [
             // Settings, Profile, etc.
-            TypedGoRoute<VerificationManageRoute>(
-              path: 'verifications/manage',
-            ),
-            TypedGoRoute<CreateVerificationRoute>(
-              path: 'verifications/create',
+            TypedGoRoute<VerificationManageRoute>(path: 'verifications/manage'),
+            TypedGoRoute<CreateVerificationRoute>(path: 'verifications/create'),
+            TypedGoRoute<NotificationSettingsRoute>(
+              path: 'notification-settings',
             ),
             TypedGoRoute<MemberListRoute>(
               path: 'partners/:partnerId/members',
@@ -367,4 +364,12 @@ class MemberPermissionRoute extends GoRouteData with $MemberPermissionRoute {
         partnerId: partnerId,
         targetUserId: targetUserId,
       );
+}
+
+class NotificationSettingsRoute extends GoRouteData
+    with $NotificationSettingsRoute {
+  const NotificationSettingsRoute();
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const NotificationSettingsScreen();
 }
