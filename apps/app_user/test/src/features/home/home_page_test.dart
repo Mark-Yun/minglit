@@ -1,7 +1,6 @@
 import 'package:app_user/src/features/explore/providers/explore_state_provider.dart';
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -38,7 +37,7 @@ void main() {
         eventRepositoryProvider.overrideWithValue(mockEventRepository),
         // Disable active filters to avoid triggering location services
         activeFiltersProvider.overrideWith(
-          () => _NoFiltersNotifier(),
+          _NoFiltersNotifier.new,
         ),
         ...overrides.cast(),
       ],

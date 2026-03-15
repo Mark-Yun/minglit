@@ -1,7 +1,6 @@
 import 'package:app_user/src/ui/shell/nav_visibility_provider.dart';
 import 'package:app_user/src/ui/shell/user_scaffold.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -47,7 +46,7 @@ void main() {
       return ProviderScope(
         overrides: [
           // Make nav bar visible so tap tests work
-          navVisibilityProvider.overrideWith(() => _AlwaysVisibleNavNotifier()),
+          navVisibilityProvider.overrideWith(_AlwaysVisibleNavNotifier.new),
         ],
         child: MaterialApp.router(
           theme: MinglitTheme.materialTheme,
