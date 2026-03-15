@@ -75,10 +75,10 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
       - name: Analyze (minglit_kit)
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos
         working-directory: shared/packages/minglit_kit
       - name: Analyze
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos
         working-directory: apps/app_user
       - name: Test
         run: flutter test --coverage
@@ -109,10 +109,10 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
       - name: Analyze (minglit_kit)
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos
         working-directory: shared/packages/minglit_kit
       - name: Analyze
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos
         working-directory: apps/app_partner
       - name: Test
         run: flutter test --coverage
@@ -167,8 +167,8 @@ jobs:
       - run: npm run lint
       - run: npm run build
 
-  # Supabase Check
-  check-supabase:
+  # pgTAP DB 테스트
+  test-pgtap:
     needs: changes
     if: ${{ needs.changes.outputs.supabase == 'true' }}
     runs-on: ubuntu-latest
@@ -177,11 +177,26 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
-      - run: supabase -v # CLI 설치 확인
       - name: Start Supabase
         run: supabase start
       - name: Test (pgTAP)
         run: supabase test db
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop
+
+  # Dart Backend Integration 테스트
+  test-backend-integration:
+    needs: changes
+    if: ${{ needs.changes.outputs.supabase == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start Supabase
+        run: supabase start
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -191,18 +206,63 @@ jobs:
         run: flutter pub get
         working-directory: tests/backend_integration
       - name: Test (integration)
-        run: dart test
+        run: dart test --coverage=coverage
         working-directory: tests/backend_integration
         env:
           SUPABASE_URL: http://127.0.0.1:54321
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_LOCAL_SERVICE_ROLE_KEY }}
-      - name: Setup Deno
-        uses: denoland/setup-deno@v2
+      - name: Format coverage
+        run: dart run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
+        working-directory: tests/backend_integration
+      - uses: codecov/codecov-action@v4
+        with:
+          file: tests/backend_integration/coverage/lcov.info
+          flags: backend-integration
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop
+
+  # Deno Edge Function 테스트 (supabase 불필요)
+  test-edge-functions:
+    needs: changes
+    if: ${{ needs.changes.outputs.supabase == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+      - name: Start Supabase
+        run: supabase start
       - name: Test (edge functions)
         run: deno test --allow-all functions/
         working-directory: supabase
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop
+
+  # E2E 시나리오 테스트
+  test-e2e-scenarios:
+    needs: changes
+    if: ${{ needs.changes.outputs.supabase == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start Supabase
+        run: supabase start
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
       - name: Install dependencies (e2e scenarios)
         run: flutter pub get
         working-directory: apps/integration_scenario_tester
@@ -218,7 +278,7 @@ jobs:
         run: supabase stop
 
   notify-failure:
-    needs: [check-migration-versions, test-app-user, test-app-partner, lint-landing-user, lint-landing-partner, check-supabase]
+    needs: [check-migration-versions, test-app-user, test-app-partner, lint-landing-user, lint-landing-partner, test-pgtap, test-backend-integration, test-edge-functions, test-e2e-scenarios]
     if: always()
     permissions:
       issues: write

@@ -2,8 +2,8 @@ BEGIN;
 SELECT plan(7);
 
 -- Setup: create test partner and parties
-INSERT INTO public.partners (id, name, business_number) 
-VALUES ('11111111-1111-1111-1111-111111111111', 'Test Partner', '1234567890')
+INSERT INTO public.partners (id, name) 
+VALUES ('11111111-1111-1111-1111-111111111111', 'Test Partner')
 ON CONFLICT (id) DO NOTHING;
 
 -- Public party

@@ -1,7 +1,7 @@
 export class IamportClient {
   private apiKey: string;
   private apiSecret: string;
-  private baseUrl = "https://api.iamport.kr";
+  private baseUrl = Deno.env.get('PORTONE_V1_API_URL') || "https://api.iamport.kr";
 
   constructor(apiKey: string, apiSecret: string) {
     this.apiKey = apiKey;
