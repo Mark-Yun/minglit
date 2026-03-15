@@ -26,17 +26,8 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Minglit Kit - Pub Get
+      - name: Install dependencies
         run: flutter pub get
-        working-directory: shared/packages/minglit_kit
-
-      - name: App User - Pub Get
-        run: flutter pub get
-        working-directory: apps/app_user
-
-      - name: App Partner - Pub Get
-        run: flutter pub get
-        working-directory: apps/app_partner
 
       - name: Minglit Kit - Fix & Format
         run: |
