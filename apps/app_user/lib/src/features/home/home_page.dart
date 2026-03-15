@@ -96,7 +96,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 IconButton(
                   icon: const Icon(Icons.person_outline),
                   onPressed: () =>
-                      ref.read(authCoordinatorProvider).pushLogin(),
+                      ref.read(authCoordinatorProvider).pushLogin(from: '/'),
                 ),
               const SizedBox(width: MinglitSpacing.small),
             ],
