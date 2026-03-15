@@ -4,6 +4,8 @@ import 'package:app_user/src/features/settings/blocked_partners_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MyPage extends ConsumerWidget {
   const MyPage({super.key});
@@ -61,7 +63,7 @@ class MyPage extends ConsumerWidget {
       ),
       body: ListView(
         children: [
-          // 1. Profile Section
+          // Profile Section
           Padding(
             padding: const EdgeInsets.all(MinglitSpacing.large),
             child: Row(
@@ -100,7 +102,7 @@ class MyPage extends ConsumerWidget {
           ),
           const Divider(),
 
-          // 2. Menu Items
+          // Section 1: 활동
           ListTile(
             leading: const Icon(Icons.receipt_long_outlined),
             title: const Text('구매 내역'),
@@ -113,6 +115,9 @@ class MyPage extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: homeCoordinator.pushPurchaseHistory,
           ),
+          const Divider(),
+
+          // Section 2: 설정
           ListTile(
             leading: const Icon(Icons.notifications_outlined),
             title: const Text('알림 설정'),
@@ -132,6 +137,47 @@ class MyPage extends ConsumerWidget {
             ),
           ),
           const Divider(),
+
+          // Section 3: 앱 정보
+          ListTile(
+            leading: const Icon(Icons.security_outlined),
+            title: const Text('권한'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => launchUrl(Uri.parse('app-settings:')),
+          ),
+          ListTile(
+            leading: const Icon(Icons.privacy_tip_outlined),
+            title: const Text('개인정보처리방침'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => launchUrl(Uri.parse('https://minglit.com/privacy')),
+          ),
+          ListTile(
+            leading: const Icon(Icons.description_outlined),
+            title: const Text('이용약관'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => launchUrl(Uri.parse('https://minglit.com/terms')),
+          ),
+          FutureBuilder<PackageInfo>(
+            future: PackageInfo.fromPlatform(),
+            builder: (context, snapshot) {
+              return ListTile(
+                leading: const Icon(Icons.info_outline),
+                title: const Text('앱 버전'),
+                trailing: snapshot.hasData
+                    ? Text(
+                        '${snapshot.data!.version}'
+                        '+${snapshot.data!.buildNumber}',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      )
+                    : null,
+              );
+            },
+          ),
+          const Divider(),
+
+          // Section 4: 계정
           ListTile(
             leading: const Icon(Icons.logout, color: MinglitColors.error),
             title: Text(
@@ -141,10 +187,7 @@ class MyPage extends ConsumerWidget {
               ).textTheme.bodyMedium!.copyWith(color: MinglitColors.error),
             ),
             onTap: () async {
-              // 먼저 홈으로 이동 후 signOut — /my (protected) 에서 signOut하면
-              // GoRouter redirect가 /login으로 보내는 race condition 방지
               GoRouter.of(context).go('/');
-              // yield: 라우터가 위치를 '/' 로 업데이트한 뒤 signOut
               await Future<void>.delayed(Duration.zero);
               await ref.read(authControllerProvider.notifier).signOut();
             },
