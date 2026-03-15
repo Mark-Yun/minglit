@@ -15,197 +15,27 @@ concurrency:
 
 jobs:
   ios-deploy:
-    runs-on: macos-latest
-    timeout-minutes: 60
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
-    defaults:
-      run:
-        working-directory: ./apps/app_partner
-    env:
-      BUNDLE_ID: com.minglit.appPartner
-      KEYCHAIN_NAME: ci-signing.keychain-db
-      DERIVED_DATA_PATH: ~/Library/Developer/Xcode/DerivedData
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: "stable"
-          cache: true
-
-      - name: Flutter pub get
-        run: flutter pub get
-
-      - name: Cache CocoaPods
-        uses: actions/cache@v4
-        with:
-          path: |
-            apps/app_partner/ios/Pods
-            ~/Library/Caches/CocoaPods
-          key: ${{ runner.os }}-cocoapods-${{ hashFiles('apps/app_partner/ios/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cocoapods-
-
-      - name: Cache DerivedData
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.DERIVED_DATA_PATH }}
-          key: ${{ runner.os }}-deriveddata-${{ hashFiles('apps/app_partner/ios/Podfile.lock', 'apps/app_partner/ios/Runner.xcodeproj/project.pbxproj') }}
-          restore-keys: |
-            ${{ runner.os }}-deriveddata-
-
-      - name: Install CocoaPods
-        run: pod install
-        working-directory: ./apps/app_partner/ios
-
-      - name: Set Dev Bundle ID
-        if: ${{ github.ref == 'refs/heads/dev' }}
-        run: |
-          sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = com.minglit.appPartner;/PRODUCT_BUNDLE_IDENTIFIER = com.minglit.appPartner.dev;/g" ios/Runner.xcodeproj/project.pbxproj
-
-      - name: Generate keychain password
-        run: echo "KEYCHAIN_PASSWORD=$(uuidgen)" >> $GITHUB_ENV
-
-      - name: Create keychain
-        run: |
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_NAME"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
-          security list-keychains -d user -s "$KEYCHAIN_NAME" login.keychain-db
-
-      - name: Import signing certificate
-        run: |
-          echo "$APPLE_CERTIFICATE_BASE64" | base64 --decode > signing.p12
-          security import signing.p12 -k "$KEYCHAIN_NAME" -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
-          rm -f signing.p12
-        env:
-          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-
-      - name: Install provisioning profile (Dev)
-        if: ${{ github.ref == 'refs/heads/dev' }}
-        run: |
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "$APPLE_PROVISION_PROFILE_PARTNER_DEV_BASE64" | base64 --decode > profile.mobileprovision
-          profile_uuid=$(grep -a -A1 UUID profile.mobileprovision | grep -o '[-a-f0-9]\{36\}')
-          echo "Provisioning Profile UUID: $profile_uuid"
-          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$profile_uuid.mobileprovision
-          rm -f profile.mobileprovision
-        env:
-          APPLE_PROVISION_PROFILE_PARTNER_DEV_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_PARTNER_DEV_BASE64 }}
-
-      - name: Install provisioning profile (Main)
-        if: ${{ github.ref == 'refs/heads/main' }}
-        run: |
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "$APPLE_PROVISION_PROFILE_PARTNER_BASE64" | base64 --decode > profile.mobileprovision
-          profile_uuid=$(grep -a -A1 UUID profile.mobileprovision | grep -o '[-a-f0-9]\{36\}')
-          echo "Provisioning Profile UUID: $profile_uuid"
-          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$profile_uuid.mobileprovision
-          rm -f profile.mobileprovision
-        env:
-          APPLE_PROVISION_PROFILE_PARTNER_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_PARTNER_BASE64 }}
-
-      - name: Create App Store Connect API key
-        run: |
-          mkdir -p ~/private_keys
-          echo "$APP_STORE_CONNECT_API_KEY_BASE64" | base64 --decode > ~/private_keys/AuthKey_$APP_STORE_CONNECT_API_KEY_ID.p8
-        env:
-          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-
-      - name: Configure manual signing (Dev)
-        if: ${{ github.ref == 'refs/heads/dev' }}
-        run: |
-          PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
-          
-          # Remove conflicting settings from project.pbxproj to let xcconfig take precedence
-          sed -i '' '/CODE_SIGN_IDENTITY/d' "$PBXPROJ"
-          sed -i '' '/CODE_SIGN_STYLE/d' "$PBXPROJ"
-          sed -i '' '/DEVELOPMENT_TEAM/d' "$PBXPROJ"
-          sed -i '' '/PROVISIONING_PROFILE_SPECIFIER/d' "$PBXPROJ"
-          
-          # Create xcconfig with correct settings
-          cat > ios/CI.xcconfig << 'EOF'
-          CODE_SIGN_STYLE = Manual
-          CODE_SIGN_IDENTITY = Apple Distribution
-          DEVELOPMENT_TEAM = TAY59SLH9F
-          PROVISIONING_PROFILE_SPECIFIER = Minglit Partner App DEV Profile
-          EOF
-          
-          # Include in Release.xcconfig
-          echo '#include "../CI.xcconfig"' >> ios/Flutter/Release.xcconfig
-          
-          echo "=== Verify project.pbxproj cleaned ==="
-          grep -E "CODE_SIGN|DEVELOPMENT_TEAM" "$PBXPROJ" || echo "Cleaned successfully"
-          echo "=== CI.xcconfig content ==="
-          cat ios/CI.xcconfig
-
-      - name: Configure manual signing (Main)
-        if: ${{ github.ref == 'refs/heads/main' }}
-        run: |
-          PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
-          
-          # Remove conflicting settings from project.pbxproj to let xcconfig take precedence
-          sed -i '' '/CODE_SIGN_IDENTITY/d' "$PBXPROJ"
-          sed -i '' '/CODE_SIGN_STYLE/d' "$PBXPROJ"
-          sed -i '' '/DEVELOPMENT_TEAM/d' "$PBXPROJ"
-          sed -i '' '/PROVISIONING_PROFILE_SPECIFIER/d' "$PBXPROJ"
-          
-          # Create xcconfig with correct settings
-          cat > ios/CI.xcconfig << 'EOF'
-          CODE_SIGN_STYLE = Manual
-          CODE_SIGN_IDENTITY = Apple Distribution
-          DEVELOPMENT_TEAM = TAY59SLH9F
-          PROVISIONING_PROFILE_SPECIFIER = Minglit Partner App Store Profile
-          EOF
-          
-          # Include in Release.xcconfig
-          echo '#include "../CI.xcconfig"' >> ios/Flutter/Release.xcconfig
-          
-          echo "=== Verify project.pbxproj cleaned ==="
-          grep -E "CODE_SIGN|DEVELOPMENT_TEAM" "$PBXPROJ" || echo "Cleaned successfully"
-          echo "=== CI.xcconfig content ==="
-          cat ios/CI.xcconfig
-
-      - name: Build IPA (Dev)
-        if: ${{ github.ref == 'refs/heads/dev' }}
-        run: |
-          flutter build ipa --release --export-options-plist=ios/ExportOptions-dev.plist \
-            --build-number=${{ github.run_number }} \
-            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_DEV_URL }} \
-            --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }} \
-            --dart-define=KAKAO_LOCAL_REST_API_KEY=${{ secrets.KAKAO_LOCAL_REST_API_KEY }} \
-            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} \
-            --dart-define=ENVIRONMENT=development
-
-      - name: Build IPA (Main)
-        if: ${{ github.ref == 'refs/heads/main' }}
-        run: |
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist \
-            --build-number=${{ github.run_number }} \
-            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_MAIN_URL }} \
-            --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }} \
-            --dart-define=KAKAO_LOCAL_REST_API_KEY=${{ secrets.KAKAO_LOCAL_REST_API_KEY }} \
-            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} \
-            --dart-define=ENVIRONMENT=production
-
-      - name: Upload to App Store Connect (TestFlight/App Store)
-        run: |
-          xcrun altool --upload-app --type ios --file build/ios/ipa/*.ipa \
-            --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
-            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
-        env:
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-
-      - name: Cleanup keychain
-        if: ${{ always() }}
-        run: security delete-keychain "$KEYCHAIN_NAME"
+    uses: ./.github/workflows/ios-deploy-reusable.yml
+    with:
+      app-name: partner
+      app-directory: apps/app_partner
+      bundle-id: com.minglit.appPartner
+      provisioning-profile-dev-specifier: Minglit Partner App DEV Profile
+      provisioning-profile-prod-specifier: Minglit Partner App Store Profile
+    secrets:
+      APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      APPLE_PROVISION_PROFILE_DEV_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_PARTNER_DEV_BASE64 }}
+      APPLE_PROVISION_PROFILE_PROD_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_PARTNER_BASE64 }}
+      APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+      APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+      SUPABASE_DEV_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+      KAKAO_LOCAL_REST_API_KEY: ${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
+      SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
+      SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
+      SUPABASE_MAIN_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
 
   notify-failure:
     needs: [ios-deploy]
