@@ -386,7 +386,6 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                           MinglitChip(
                             label: '공유하기',
                             icon: Icons.share_outlined,
-                            size: MinglitChipSize.medium,
                             onTap: () => unawaited(
                               ShareUtils.shareEvent(
                                 eventTitle: eventTitle,
