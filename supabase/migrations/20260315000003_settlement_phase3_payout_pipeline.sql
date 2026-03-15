@@ -76,15 +76,14 @@ begin
   loop
     -- Get bank account snapshot from partner_settlements (most recent)
     select jsonb_build_object(
-      'bank_code',            ps.bank_code,
-      'account_holder_name',  ps.account_holder_name,
-      'account_number',       ps.account_number,
-      'account_last4',        right(ps.account_number, 4)
+      'bank_name',      ps.bank_name,
+      'account_holder', ps.account_holder,
+      'account_number', ps.account_number,
+      'account_last4',  right(ps.account_number, 4)
     )
     into v_bank_snapshot
     from public.partner_settlements ps
     where ps.partner_id = v_partner.partner_id
-    order by ps.created_at desc
     limit 1;
 
     if v_bank_snapshot is null then
