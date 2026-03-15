@@ -1,13 +1,32 @@
+codecov:
+  require_ci_to_pass: false
+
 coverage:
   status:
     project:
       default:
-        target: 50%
+        target: auto
         threshold: 5%
     patch:
       default:
         target: 70%
         threshold: 5%
-  comment:
-  layout: "diff, flags, files"
+
+comment:
+  layout: "condensed_header, diff, flags, condensed_files, condensed_footer"
   behavior: default
+  require_changes: true
+
+flags:
+  app-user:
+    paths:
+      - apps/app_user/lib/
+    carryforward: true
+  app-partner:
+    paths:
+      - apps/app_partner/lib/
+    carryforward: true
+  backend-integration:
+    paths:
+      - tests/backend_integration/lib/
+    carryforward: true
