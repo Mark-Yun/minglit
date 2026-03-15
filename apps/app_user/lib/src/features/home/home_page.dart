@@ -24,11 +24,21 @@ class _HomePageState extends ConsumerState<HomePage> {
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      unawaited(ref.read(recommendationFeedProvider.notifier).loadMore());
+    }
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _scrollController
+      ..removeListener(_onScroll)
+      ..dispose();
     super.dispose();
   }
 
@@ -37,7 +47,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     final user = ref.watch(currentUserProvider);
     final homeCoordinator = ref.read(homeCoordinatorProvider);
     final eventCoordinator = ref.read(eventCoordinatorProvider);
-    final recommendationAsync = ref.watch(recommendationEventsProvider);
+    final recommendationState = ref.watch(recommendationFeedProvider);
 
     return Scaffold(
       body: CustomScrollView(
@@ -114,9 +124,9 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
           ),
           // ignore: use_minglit_async_value_widget, returns Sliver which is incompatible with Widget-based MinglitAsyncValueWidget
-          recommendationAsync.when(
-            data: (events) {
-              if (events.isEmpty) {
+          recommendationState.when(
+            data: (state) {
+              if (state.events.isEmpty && !state.hasMore) {
                 return const SliverFillRemaining(
                   child: Center(child: Text('추천 이벤트가 없습니다')),
                 );
@@ -127,11 +137,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                   bottom: MinglitSpacing.medium,
                 ),
                 sliver: SliverList.separated(
-                  itemCount: events.length,
+                  itemCount: state.events.length,
                   separatorBuilder: (_, _) =>
                       const SizedBox(height: MinglitSpacing.small),
                   itemBuilder: (context, index) {
-                    final event = events[index];
+                    final event = state.events[index];
                     return MinglitEventCard(
                       event: event,
                       onTap: () => eventCoordinator.pushEventDetail(event.id),
@@ -147,6 +157,13 @@ class _HomePageState extends ConsumerState<HomePage> {
               child: SizedBox.shrink(),
             ),
           ),
+          if (recommendationState.value?.isLoadingMore ?? false)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: MinglitSpacing.medium),
+                child: Center(child: MinglitCircularProgressIndicator()),
+              ),
+            ),
           const SliverPadding(
             padding: EdgeInsets.only(bottom: MinglitSpacing.xlarge),
           ),
