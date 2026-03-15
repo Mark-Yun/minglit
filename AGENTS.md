@@ -63,6 +63,16 @@ adb -s adb-R3CX803P2ND-8btuuD._adb-tls-connect._tcp install -r build/app/outputs
 - 머지 후 소스 브랜치는 자동 삭제된다 (`delete_branch_on_merge` 활성화).
 - Admin bypass (`--admin`)는 긴급 상황에서만 사용한다.
 
+### PR 머지 확인 및 CI 실패 대응
+
+- PR 생성 후 `gh pr checks <PR번호>`로 CI 상태를 확인한다.
+- CI가 통과하여 auto-merge가 완료되었는지 `gh pr view <PR번호> --json state`로 확인한다.
+- CI 실패 시:
+  1. `gh run view <run_id> --log-failed`로 실패 원인 파악
+  2. 로컬에서 수정 후 같은 브랜치에 push (PR은 유지됨)
+  3. CI 재실행 → 통과 확인 → auto-merge 완료까지 반복
+- PR이 `MERGED` 상태가 될 때까지 케어한다. 생성만 하고 방치하지 않는다.
+
 ## Bug Fix Conventions
 
 ### 진단 프로세스
