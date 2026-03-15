@@ -120,6 +120,8 @@ class MinglitSocialButton extends ConsumerWidget {
         isActive ? Icons.bookmark : Icons.bookmark_border,
       SocialInteractionType.block => Icons.block,
       SocialInteractionType.report => Icons.flag,
+      SocialInteractionType.dislike =>
+        isActive ? Icons.thumb_down : Icons.thumb_down_outlined,
     };
   }
 
@@ -128,6 +130,7 @@ class MinglitSocialButton extends ConsumerWidget {
       SocialInteractionType.like => theme.colorScheme.error,
       SocialInteractionType.subscribe => theme.colorScheme.secondary,
       SocialInteractionType.bookmark => theme.colorScheme.primary,
+      SocialInteractionType.dislike => theme.colorScheme.onSurfaceVariant,
       _ => theme.colorScheme.primary,
     };
   }
@@ -139,6 +142,7 @@ class MinglitSocialButton extends ConsumerWidget {
       SocialInteractionType.bookmark => '저장',
       SocialInteractionType.block => '차단',
       SocialInteractionType.report => '신고',
+      SocialInteractionType.dislike => '싫어요',
     };
   }
 }

@@ -190,33 +190,6 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                 ),
                 leading: BackButton(color: iconColor),
                 actions: [
-                  IconButton(
-                    onPressed: () {
-                      unawaited(
-                        ShareUtils.shareEvent(
-                          eventTitle: eventTitle,
-                          eventId: event.id,
-                          baseUrl: ref.watch(minglitDomainsProvider).userApp,
-                        ),
-                      );
-                    },
-                    icon: Icon(Icons.share_outlined, color: iconColor),
-                    tooltip: '공유하기',
-                  ),
-                  if (user != null)
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        right: MinglitSpacing.small,
-                      ),
-                      child: MinglitSocialButton(
-                        targetId: event.partyId, // Like the party
-                        targetType: SocialTargetType.party,
-                        interactionType: SocialInteractionType.like,
-                        activeColor: iconColor,
-                        inactiveColor: iconColor,
-                        tooltip: '좋아요',
-                      ),
-                    ),
                   if (partner != null && user != null)
                     PopupMenuButton<String>(
                       icon: Icon(Icons.more_vert, color: iconColor),
@@ -374,6 +347,57 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                         icon: Icons.location_on_outlined,
                         title: location?.name ?? '장소 미정',
                         subtitle: location?.address ?? '주소 정보 없음',
+                      ),
+                      const SizedBox(height: MinglitSpacing.medium),
+                      Wrap(
+                        spacing: MinglitSpacing.small,
+                        runSpacing: MinglitSpacing.small,
+                        children: [
+                          MinglitSocialActionChip(
+                            targetId: event.partyId,
+                            targetType: SocialTargetType.party,
+                            interactionType: SocialInteractionType.like,
+                            label: '좋아요',
+                            activeIcon: Icons.thumb_up,
+                            inactiveIcon: Icons.thumb_up_outlined,
+                            activeColor: Theme.of(context).colorScheme.error,
+                            onUnauthenticatedTap: user == null
+                                ? () => ref
+                                      .read(authCoordinatorProvider)
+                                      .pushLogin()
+                                : null,
+                          ),
+                          MinglitSocialActionChip(
+                            targetId: event.partyId,
+                            targetType: SocialTargetType.party,
+                            interactionType: SocialInteractionType.dislike,
+                            label: '싫어요',
+                            activeIcon: Icons.thumb_down,
+                            inactiveIcon: Icons.thumb_down_outlined,
+                            activeColor: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                            onUnauthenticatedTap: user == null
+                                ? () => ref
+                                      .read(authCoordinatorProvider)
+                                      .pushLogin()
+                                : null,
+                          ),
+                          MinglitChip(
+                            label: '공유하기',
+                            icon: Icons.share_outlined,
+                            size: MinglitChipSize.medium,
+                            onTap: () => unawaited(
+                              ShareUtils.shareEvent(
+                                eventTitle: eventTitle,
+                                eventId: event.id,
+                                baseUrl: ref
+                                    .watch(minglitDomainsProvider)
+                                    .userApp,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const Divider(height: MinglitSpacing.xlarge),
                       // Entry Conditions (without verification badges)

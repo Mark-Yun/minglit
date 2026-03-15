@@ -33,7 +33,14 @@ void main() {
     });
 
     test('parses all interaction types', () {
-      for (final type in ['like', 'subscribe', 'bookmark', 'block']) {
+      for (final type in [
+        'like',
+        'subscribe',
+        'bookmark',
+        'block',
+        'report',
+        'dislike',
+      ]) {
         final i = SocialInteraction.fromJson({
           ...interactionJson(),
           'interactionType': type,
@@ -78,7 +85,7 @@ void main() {
 
   group('SocialInteractionType', () {
     test('has all expected values', () {
-      expect(SocialInteractionType.values, hasLength(4));
+      expect(SocialInteractionType.values, hasLength(6));
       expect(
         SocialInteractionType.values,
         contains(SocialInteractionType.like),
@@ -94,6 +101,14 @@ void main() {
       expect(
         SocialInteractionType.values,
         contains(SocialInteractionType.block),
+      );
+      expect(
+        SocialInteractionType.values,
+        contains(SocialInteractionType.report),
+      );
+      expect(
+        SocialInteractionType.values,
+        contains(SocialInteractionType.dislike),
       );
     });
   });
