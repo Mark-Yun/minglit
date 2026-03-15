@@ -116,20 +116,27 @@ export async function simCreateParties(
       const maleGroupId = crypto.randomUUID();
       const femaleGroupId = crypto.randomUUID();
 
-      await supabase.from("entry_groups").insert({
+      const { error: maleGroupErr } = await supabase.from("entry_groups").insert({
         id: maleGroupId,
         event_id: eventId, label: "남성", gender: "male",
         birth_year_min: scenario.birthYearMin, birth_year_max: scenario.birthYearMax,
         required_verification_ids: [],
       });
-      await supabase.from("entry_groups").insert({
+      if (maleGroupErr) {
+        log({ level: "warn", phase: "create", step: "create_entry_group", message: `Failed to create male entry_group: ${maleGroupErr.message}` });
+      }
+
+      const { error: femaleGroupErr } = await supabase.from("entry_groups").insert({
         id: femaleGroupId,
         event_id: eventId, label: "여성", gender: "female",
         birth_year_min: scenario.birthYearMin, birth_year_max: scenario.birthYearMax,
         required_verification_ids: [],
       });
+      if (femaleGroupErr) {
+        log({ level: "warn", phase: "create", step: "create_entry_group", message: `Failed to create female entry_group: ${femaleGroupErr.message}` });
+      }
 
-      await supabase.from("tickets").insert({
+      const { error: ticketErr } = await supabase.from("tickets").insert({
         id: crypto.randomUUID(),
         event_id: eventId,
         name: "[E2E] 일반 티켓",
@@ -138,6 +145,9 @@ export async function simCreateParties(
         target_entry_group_ids: [maleGroupId, femaleGroupId],
         status: "on_sale",
       });
+      if (ticketErr) {
+        log({ level: "warn", phase: "create", step: "create_ticket", message: `Failed to create ticket: ${ticketErr.message}` });
+      }
     }
 
     log({ level: "info", phase: "create", step: "party_created", message: `Created: ${scenario.title}`, data: { partyId } });
@@ -244,7 +254,7 @@ export async function simDiscoverAndApply(
 
       if (isHappyPath) {
         paidApplicationIds.push(appId);
-        await supabase.from("event_participants").insert({
+        const { error: participantErr } = await supabase.from("event_participants").insert({
           id: crypto.randomUUID(),
           event_id: eventId,
           ticket_id: ticket.id,
@@ -253,6 +263,9 @@ export async function simDiscoverAndApply(
           status: "ticket_issued",
           birth_year: birthYear,
         });
+        if (participantErr) {
+          log({ level: "warn", phase: "create", step: "create_participant", message: `Failed to create participant: ${participantErr.message}` });
+        }
       } else {
         pendingReviewApplicationIds.push(appId);
       }

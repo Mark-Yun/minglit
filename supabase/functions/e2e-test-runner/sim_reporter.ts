@@ -119,13 +119,12 @@ export async function simCreateGitHubIssue(
       : "No storage log available";
 
     const encoder = new TextEncoder();
-    const logBytes = encoder.encode(logText);
     let truncatedLog = logText;
-    if (logBytes.length > MAX_ISSUE_BODY_BYTES) {
-      const decoder = new TextDecoder();
-      truncatedLog =
-        decoder.decode(logBytes.slice(0, MAX_ISSUE_BODY_BYTES)) +
-        "\n...[truncated]";
+    while (encoder.encode(truncatedLog).length > MAX_ISSUE_BODY_BYTES) {
+      truncatedLog = truncatedLog.slice(0, -100);
+    }
+    if (truncatedLog.length < logText.length) {
+      truncatedLog += "\n...[truncated]";
     }
 
     const body = `## E2E Simulation Failure Report

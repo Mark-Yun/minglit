@@ -84,7 +84,9 @@ export async function simVerifySettlement(
       const checksumAssertion = await simAssertSettlementChecksum(supabase, settlementId);
       assertions.push(checksumAssertion);
 
-      settlementIds.push(settlementId);
+      if (createdAssertion.passed) {
+        settlementIds.push(settlementId);
+      }
 
       log({
         level: "info",

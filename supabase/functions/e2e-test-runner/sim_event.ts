@@ -84,8 +84,9 @@ export async function simCheckin(
         }
       }
 
-      // Assert checkin ratio
-      const ratioAssertion = await simAssertCheckinRatio(supabase, eventId, checkinRate, 0.15);
+      // Assert checkin ratio — use dynamic tolerance for small participant counts
+      const tolerance = Math.max(0.15, 1 / Math.max(eligible.length, 1));
+      const ratioAssertion = await simAssertCheckinRatio(supabase, eventId, checkinRate, tolerance);
       assertions.push(ratioAssertion);
 
       log({
