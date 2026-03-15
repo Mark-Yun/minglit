@@ -205,16 +205,17 @@ void main() {
     });
 
     group('getPartnerSettlements', () {
-      test('returns settlement records', () async {
+      test('returns settlement records from settlement_items', () async {
         unawaited(
           mockTable(
             mockClient,
-            'settlements',
+            'settlement_items',
             selectData: [
               {
                 'partner_id': 'partner_1',
-                'event_date': '2026-02-15',
-                'amount': 150000,
+                'settlement_period_start': '2026-02-01',
+                'gross_amount': 150000,
+                'status': 'COMPLETED',
               },
             ],
           ),
@@ -223,7 +224,8 @@ void main() {
         final result = await repository.getPartnerSettlements('partner_1');
 
         expect(result, hasLength(1));
-        expect(result.first['amount'], 150000);
+        expect(result.first['gross_amount'], 150000);
+        expect(result.first['status'], 'COMPLETED');
       });
     });
   });
