@@ -118,7 +118,8 @@ jobs:
           APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
 
-      - name: Configure manual signing
+      - name: Configure manual signing (Dev)
+        if: ${{ github.ref == 'refs/heads/dev' }}
         run: |
           PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
           
@@ -134,6 +135,33 @@ jobs:
           CODE_SIGN_IDENTITY = Apple Distribution
           DEVELOPMENT_TEAM = TAY59SLH9F
           PROVISIONING_PROFILE_SPECIFIER = Minglit Partner App DEV Profile
+          EOF
+          
+          # Include in Release.xcconfig
+          echo '#include "../CI.xcconfig"' >> ios/Flutter/Release.xcconfig
+          
+          echo "=== Verify project.pbxproj cleaned ==="
+          grep -E "CODE_SIGN|DEVELOPMENT_TEAM" "$PBXPROJ" || echo "Cleaned successfully"
+          echo "=== CI.xcconfig content ==="
+          cat ios/CI.xcconfig
+
+      - name: Configure manual signing (Main)
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
+          
+          # Remove conflicting settings from project.pbxproj to let xcconfig take precedence
+          sed -i '' '/CODE_SIGN_IDENTITY/d' "$PBXPROJ"
+          sed -i '' '/CODE_SIGN_STYLE/d' "$PBXPROJ"
+          sed -i '' '/DEVELOPMENT_TEAM/d' "$PBXPROJ"
+          sed -i '' '/PROVISIONING_PROFILE_SPECIFIER/d' "$PBXPROJ"
+          
+          # Create xcconfig with correct settings
+          cat > ios/CI.xcconfig << 'EOF'
+          CODE_SIGN_STYLE = Manual
+          CODE_SIGN_IDENTITY = Apple Distribution
+          DEVELOPMENT_TEAM = TAY59SLH9F
+          PROVISIONING_PROFILE_SPECIFIER = Minglit Partner App Store Profile
           EOF
           
           # Include in Release.xcconfig
