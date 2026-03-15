@@ -141,6 +141,36 @@ void main() {
         expect(v.category, isNotNull);
       }
     });
+
+    test('handles nullable description and iconKey fields (Fix #42)', () {
+      // Test that null values in DB fields don't cause parse errors
+      final v = Verification.fromJson({
+        'id': 'v1',
+        'category': 'career',
+        'internal_name': 'test',
+        'display_name': 'Test',
+        'description': null,
+        'icon_key': null,
+      });
+
+      expect(v.description, isNull);
+      expect(v.iconKey, isNull);
+      expect(v.id, 'v1');
+    });
+
+    test('handles mixed null and non-null nullable fields', () {
+      final v = Verification.fromJson({
+        'id': 'v2',
+        'category': 'asset',
+        'internal_name': 'asset_test',
+        'display_name': 'Asset Test',
+        'description': 'Asset verification',
+        'icon_key': null,
+      });
+
+      expect(v.description, 'Asset verification');
+      expect(v.iconKey, isNull);
+    });
   });
 
   group('VerificationRequirementStatus', () {

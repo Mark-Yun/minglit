@@ -1,8 +1,0 @@
-{
-  "track_id": "user_purchase_history_20260120",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-01-20T22:55:00Z",
-  "updated_at": "2026-01-20T22:55:00Z",
-  "description": "유저 앱 구매 내역 구현"
-}

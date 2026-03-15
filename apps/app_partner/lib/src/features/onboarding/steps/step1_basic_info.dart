@@ -113,6 +113,7 @@ class _ProfileImagePicker extends StatelessWidget {
           icon: const Icon(Icons.image_outlined, color: MinglitColors.primary),
           label: Text(
             imagePath != null || imageFile != null ? '이미지 변경' : '이미지 선택',
+            // ignore: minglit_no_hardcoded_text_style, button label color
             style: const TextStyle(color: MinglitColors.primary),
           ),
           style: OutlinedButton.styleFrom(

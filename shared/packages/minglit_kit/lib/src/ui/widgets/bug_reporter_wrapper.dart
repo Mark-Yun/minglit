@@ -8,6 +8,7 @@ import 'package:flutter/rendering.dart';
 import 'package:minglit_kit/src/data/repositories/bug_report_repository.dart';
 import 'package:minglit_kit/src/data/repositories/storage_repository.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 
 import 'package:minglit_kit/src/utils/environment_info.dart';
 import 'package:minglit_kit/src/utils/layout_dump.dart';
@@ -42,24 +43,28 @@ class BugReporterWrapper extends StatefulWidget {
   State<BugReporterWrapper> createState() => _BugReporterWrapperState();
 }
 
-class _BugReporterWrapperState extends State<BugReporterWrapper> {
+class _BugReporterWrapperState extends State<BugReporterWrapper>
+    with WidgetsBindingObserver {
   ShakeDetector? _detector;
   bool _isReportOpen = false;
   final GlobalKey _boundaryKey = GlobalKey();
   String? _screenshotUrl;
   Map<String, dynamic>? _environmentInfo;
   String? _layoutDumpUrl;
+  DateTime? _lastShakeTime;
+  static const _shakeCooldown = Duration(seconds: 5);
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     if (widget.enabled &&
         !kIsWeb &&
         (defaultTargetPlatform == TargetPlatform.iOS ||
             defaultTargetPlatform == TargetPlatform.android)) {
       _detector = ShakeDetector.autoStart(
         onPhoneShake: (event) {
-          unawaited(_showReportDialog());
+          unawaited(_onShakeDetected());
         },
       );
     }
@@ -67,8 +72,24 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _detector?.stopListening();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!widget.enabled) return;
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.detached:
+        // Fix #51: pause shake detection when app is not in foreground
+        _detector?.stopListening();
+      case AppLifecycleState.resumed:
+        _detector?.startListening();
+    }
   }
 
   /// Returns a [BuildContext] that has a [Navigator] ancestor.
@@ -106,15 +127,21 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
     }
   }
 
+  /// Called when shake is detected. Applies cooldown before showing dialog.
+  Future<void> _onShakeDetected() async {
+    // Fix #51: cooldown prevents rapid shake from triggering multiple dialogs
+    if (_lastShakeTime != null &&
+        DateTime.now().difference(_lastShakeTime!) < _shakeCooldown) {
+      return;
+    }
+    _lastShakeTime = DateTime.now();
+    await _showReportDialog();
+  }
+
   Future<void> _showReportDialog() async {
     if (!mounted) return;
-    if (_isReportOpen) {
-      // Dismiss existing dialog before showing a fresh one
-      final ctx = _dialogContext;
-      if (ctx != null && ctx.mounted) {
-        unawaited(Navigator.of(ctx).maybePop());
-      }
-    }
+    // Fix #51: return early if dialog is already open — do not dismiss+reopen
+    if (_isReportOpen) return;
     // Capture context BEFORE async gap
     final ctx = _dialogContext;
     if (ctx == null) return;
@@ -142,7 +169,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
           contentType: 'text/plain',
           extension: '.txt',
         );
-      } catch (e) {
+      } on Object catch (e) {
         Log.e('Layout dump upload failed (best-effort)', e);
       }
     }
@@ -159,6 +186,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
 
     _isReportOpen = true;
     try {
+      if (!ctx.mounted) return;
       await showModalBottomSheet<void>(
         context: ctx,
         isScrollControlled: true,
@@ -169,10 +197,12 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
           builder: (context, setSheetState) {
             return Padding(
               padding: EdgeInsets.only(
-                left: 16,
-                right: 16,
-                top: 16,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                left: MinglitSpacing.medium,
+                right: MinglitSpacing.medium,
+                top: MinglitSpacing.medium,
+                bottom:
+                    MediaQuery.of(context).viewInsets.bottom +
+                    MinglitSpacing.medium,
               ),
               child: SingleChildScrollView(
                 child: Column(
@@ -184,7 +214,9 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                       child: Container(
                         width: 40,
                         height: 4,
-                        margin: const EdgeInsets.only(bottom: 16),
+                        margin: const EdgeInsets.only(
+                          bottom: MinglitSpacing.medium,
+                        ),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.outlineVariant,
                           borderRadius: BorderRadius.circular(2),
@@ -192,10 +224,9 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                       ),
                     ),
                     // Title
-                    const Text(
+                    Text(
                       '🐞 Bug Report',
-                      style: TextStyle(
-                        fontSize: 18,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -233,9 +264,9 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                         child: TextButton(
                           onPressed: () =>
                               setSheetState(() => _screenshotUrl = null),
-                          child: const Text(
+                          child: Text(
                             'Remove screenshot',
-                            style: TextStyle(fontSize: 12),
+                            style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ),
                       ),
@@ -322,9 +353,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                                 ? const SizedBox(
                                     width: 16,
                                     height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
+                                    child: MinglitCircularProgressIndicator(),
                                   )
                                 : const Text('Send Report'),
                           ),

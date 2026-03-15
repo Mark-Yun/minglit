@@ -131,9 +131,10 @@ void main() {
           ),
         ).called(1);
 
-        // Kakao uses web OAuth redirect on ALL platforms. The controller does NOT
-        // set AsyncData after a successful call — auth completion arrives later
-        // via onAuthStateChange after the OAuth callback redirects back.
+        // Kakao uses web OAuth redirect on ALL platforms.
+        // The controller does NOT set AsyncData after a
+        // successful call — auth completion arrives later
+        // via onAuthStateChange after the OAuth callback.
         expect(
           container.read(authControllerProvider),
           isA<AsyncLoading<void>>(),

@@ -113,7 +113,7 @@ mixin _EventRepositoryCommands
     Log.d('confirmPayment called | impUid: $impUid');
     try {
       await supabaseClient.functions.invoke(
-        'verify-payment-v1',
+        'payment-verify',
         body: {'imp_uid': impUid, 'merchant_uid': merchantUid},
       );
       Log.i('✅ [EventRepo] Payment verified.');
@@ -134,7 +134,7 @@ mixin _EventRepositoryCommands
     );
     try {
       final response = await supabaseClient.functions.invoke(
-        'cancel-payment',
+        'payment-cancel',
         body: {
           'payment_id': paymentId,
           'amount': refundAmount,

@@ -1,8 +1,8 @@
 import 'dart:async' show unawaited;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:minglit_kit/src/data/models/party.dart';
 import 'package:minglit_kit/src/data/models/event.dart';
+import 'package:minglit_kit/src/data/models/party.dart';
 import 'package:minglit_kit/src/data/repositories/party_repository.dart';
 
 import '../../../helpers/mocks.dart';
@@ -60,7 +60,9 @@ void main() {
       });
 
       test('throws on error', () async {
-        unawaited(mockTable(mockClient, 'parties', shouldThrow: Exception('error')));
+        unawaited(
+          mockTable(mockClient, 'parties', shouldThrow: Exception('error')),
+        );
 
         await expectLater(
           repository.getPartyById('party_1'),
@@ -90,7 +92,9 @@ void main() {
       });
 
       test('throws on error', () async {
-        unawaited(mockTable(mockClient, 'parties', shouldThrow: Exception('error')));
+        unawaited(
+          mockTable(mockClient, 'parties', shouldThrow: Exception('error')),
+        );
 
         await expectLater(
           repository.getPartiesByPartnerId('partner_1'),
@@ -134,7 +138,9 @@ void main() {
       });
 
       test('throws on error', () async {
-        unawaited(mockTable(mockClient, 'parties', shouldThrow: Exception('error')));
+        unawaited(
+          mockTable(mockClient, 'parties', shouldThrow: Exception('error')),
+        );
 
         final party = Party.fromJson(partyJson);
         await expectLater(
@@ -157,7 +163,9 @@ void main() {
       });
 
       test('throws on error', () async {
-        unawaited(mockTable(mockClient, 'parties', shouldThrow: Exception('error')));
+        unawaited(
+          mockTable(mockClient, 'parties', shouldThrow: Exception('error')),
+        );
 
         final party = Party.fromJson(partyJson);
         await expectLater(
@@ -178,7 +186,9 @@ void main() {
       });
 
       test('throws on error', () async {
-        unawaited(mockTable(mockClient, 'parties', shouldThrow: Exception('error')));
+        unawaited(
+          mockTable(mockClient, 'parties', shouldThrow: Exception('error')),
+        );
 
         await expectLater(
           repository.updatePartyStatus('party_1', 'closed'),

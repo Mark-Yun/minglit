@@ -57,7 +57,7 @@ jobs:
           SUPABASE_URL="https://${SUPABASE_PROJECT_ID}.supabase.co"
           echo "🌱 Seeding test data..."
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            -X POST "${SUPABASE_URL}/functions/v1/dev-seed-database" \
+            -X POST "${SUPABASE_URL}/functions/v1/dev-seed" \
             -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Content-Type: application/json")
           if [ "$HTTP_STATUS" -eq 200 ]; then

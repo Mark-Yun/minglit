@@ -36,7 +36,8 @@ void main() {
     );
   }
 
-  group('filteredEventsProvider — eligibility filter with verification check', () {
+  group('filteredEventsProvider \u2014 eligibility filter'
+      ' with verification check', () {
     test('unverified user with eligibilityEnabled: true sees all events', () {
       final events = [
         makeEvent(tickets: [makeTicket()]),
@@ -64,8 +65,9 @@ void main() {
       // Enable eligibility filter
       container.read(activeFiltersProvider.notifier).toggleEligibility();
 
-      // Even though eligibilityEnabled is true, unverified users should see all events
-      // because the filter is skipped for unverified users
+      // Even though eligibilityEnabled is true, unverified
+      // users should see all events because the filter
+      // is skipped for unverified users
       final result = container.read(
         filteredEventsProvider(events: events),
       );
@@ -181,7 +183,7 @@ void main() {
         // Enable eligibility filter
         container.read(activeFiltersProvider.notifier).toggleEligibility();
 
-        // When eligibility data is null, filter is skipped (guard: if eligibility == null)
+        // When eligibility data is null, filter is skipped
         final result = container.read(
           filteredEventsProvider(events: events),
         );

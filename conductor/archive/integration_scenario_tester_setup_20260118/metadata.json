@@ -1,8 +1,0 @@
-{
-  "track_id": "integration_scenario_tester_setup_20260118",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-01-18T00:00:00Z",
-  "updated_at": "2026-01-18T00:00:00Z",
-  "description": "클라이언트 로직 통합 테스트 환경(integration_scenario_tester) 구축 및 전략 문서화"
-}

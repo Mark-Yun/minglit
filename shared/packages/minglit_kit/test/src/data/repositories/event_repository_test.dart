@@ -202,7 +202,7 @@ void main() {
       test('calls edge function', () async {
         when(
           () => mockFunctions.invoke(
-            'verify-payment-v1',
+            'payment-verify',
             body: any(named: 'body'),
           ),
         ).thenAnswer(
@@ -223,7 +223,7 @@ void main() {
       test('succeeds with 200 response', () async {
         when(
           () => mockFunctions.invoke(
-            'cancel-payment',
+            'payment-cancel',
             body: any(named: 'body'),
           ),
         ).thenAnswer(
@@ -243,7 +243,7 @@ void main() {
       test('throws MinglitUserException when non-200', () async {
         when(
           () => mockFunctions.invoke(
-            'cancel-payment',
+            'payment-cancel',
             body: any(named: 'body'),
           ),
         ).thenAnswer(

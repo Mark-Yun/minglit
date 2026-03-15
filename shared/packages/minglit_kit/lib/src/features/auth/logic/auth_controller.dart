@@ -128,6 +128,8 @@ class AuthController extends _$AuthController {
     state = const AsyncLoading();
     try {
       await ref.read(authRepositoryProvider).signOut();
+      // Fix #42: prevent disposed Ref error on GoRouter redirect
+      if (!ref.mounted) return;
       state = const AsyncData(null);
     } on Object catch (e, st) {
       Log.e('AuthController signOut failed', e, st);

@@ -121,8 +121,8 @@ class _TestOpenInAppBannerWrapper extends StatelessWidget {
         top: false,
         child: Padding(
           padding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 8,
+            horizontal: MinglitSpacing.medium,
+            vertical: MinglitSpacing.small,
           ),
           child: Row(
             children: [

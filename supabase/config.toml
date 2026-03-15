@@ -405,16 +405,16 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/vectorize-party/*.html" ]
 
-[functions.update-user-profile]
+[functions.profile-update]
 enabled = true
 verify_jwt = true
-import_map = "./functions/update-user-profile/deno.json"
+import_map = "./functions/profile-update/deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/update-user-profile/index.ts"
+entrypoint = "./functions/profile-update/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/update-user-profile/*.html" ]
+# static_files = [ "./functions/profile-update/*.html" ]
 
 [functions.notification-worker]
 enabled = true
@@ -449,57 +449,53 @@ verify_jwt = false
 import_map = "./functions/dev-session-switch/deno.json"
 entrypoint = "./functions/dev-session-switch/index.ts"
 
-[functions.dev-seed-database]
+[functions.dev-seed]
 enabled = true
 verify_jwt = false
-import_map = "./functions/dev-seed-database/deno.json"
-entrypoint = "./functions/dev-seed-database/index.ts"
+import_map = "./functions/dev-seed/deno.json"
+entrypoint = "./functions/dev-seed/index.ts"
 
-[functions.report-bug]
+[functions.bug-report]
 enabled = true
 verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
-import_map = "./functions/report-bug/deno.json"
-entrypoint = "./functions/report-bug/index.ts"
+import_map = "./functions/bug-report/deno.json"
+entrypoint = "./functions/bug-report/index.ts"
 
-[functions.verify-identity-v1]
+
+[functions.identity-verify]
 enabled = true
 verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
-entrypoint = "./functions/verify-identity-v1/index.ts"
+entrypoint = "./functions/identity-verify/index.ts"
 
-[functions.verify-identity-v2]
+[functions.payment-verify]
 enabled = true
 verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
-entrypoint = "./functions/verify-identity-v2/index.ts"
+import_map = "./functions/payment-verify/deno.json"
+entrypoint = "./functions/payment-verify/index.ts"
 
-[functions.verify-payment-v1]
+[functions.payment-cancel]
 enabled = true
 verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
-import_map = "./functions/verify-payment-v1/deno.json"
-entrypoint = "./functions/verify-payment-v1/index.ts"
-
-[functions.cancel-payment]
-enabled = true
-verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
-import_map = "./functions/cancel-payment/deno.json"
-entrypoint = "./functions/cancel-payment/index.ts"
+import_map = "./functions/payment-cancel/deno.json"
+entrypoint = "./functions/payment-cancel/index.ts"
 
 # TODO: 포트원 서버 호출자 검증 강화 필요 (현재 IP whitelist만 사용)
-[functions.portone-webhook-v1]
+[functions.payment-webhook]
 enabled = true
 verify_jwt = false
-entrypoint = "./functions/portone-webhook-v1/index.ts"
+entrypoint = "./functions/payment-webhook/index.ts"
 
-[functions.create-order-transfer]
+[functions.settlement-transfer]
 enabled = true
 verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
-entrypoint = "./functions/create-order-transfer/index.ts"
+entrypoint = "./functions/settlement-transfer/index.ts"
 
-[functions.query-settlements]
+[functions.settlement-query]
 enabled = true
 verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
-entrypoint = "./functions/query-settlements/index.ts"
+entrypoint = "./functions/settlement-query/index.ts"
 
-[functions.sync-platform-partner]
+[functions.partner-sync]
 enabled = true
 verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
-entrypoint = "./functions/sync-platform-partner/index.ts"
+entrypoint = "./functions/partner-sync/index.ts"

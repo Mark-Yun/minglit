@@ -1,8 +1,0 @@
-{
-  "track_id": "application_review_system_20260117",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-01-17T19:30:00Z",
-  "updated_at": "2026-01-17T19:30:00Z",
-  "description": "Implement partner application review with auto-refund on rejection"
-}

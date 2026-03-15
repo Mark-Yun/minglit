@@ -215,12 +215,15 @@ void main() {
         const app = PartnerApplication(
           id: 'app_1',
           userId: 'user_1',
-          status: 'draft',
           brandName: 'Updated Brand',
         );
 
         unawaited(
-          mockTable(mockClient, 'partner_applications', singleData: applicationJson),
+          mockTable(
+            mockClient,
+            'partner_applications',
+            singleData: applicationJson,
+          ),
         );
 
         final result = await repository.updateApplication(app);
@@ -231,7 +234,6 @@ void main() {
         const app = PartnerApplication(
           id: 'app_1',
           userId: 'user_1',
-          status: 'draft',
         );
 
         unawaited(
@@ -253,7 +255,11 @@ void main() {
       test('returns submitted application on success', () async {
         final pendingJson = {...applicationJson, 'status': 'pending'};
         unawaited(
-          mockTable(mockClient, 'partner_applications', singleData: pendingJson),
+          mockTable(
+            mockClient,
+            'partner_applications',
+            singleData: pendingJson,
+          ),
         );
 
         final result = await repository.submitDraft(applicationId: 'app_1');
