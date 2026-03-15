@@ -9,7 +9,6 @@ import 'package:app_user/src/features/partner/detail/partner_detail_page.dart';
 import 'package:app_user/src/features/party/party_curation_page.dart';
 import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
 import 'package:app_user/src/features/search/search_page.dart';
-import 'package:app_user/src/ui/shell/user_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_dev.dart';
@@ -154,57 +153,15 @@ class NotificationSettingsRoute extends GoRouteData
 }
 
 // ---------------------------------------------------------------------------
-// Stateful Shell Route (Bottom Navigation)
+// Shell Routes (promoted to top-level)
 // ---------------------------------------------------------------------------
-
-@TypedStatefulShellRoute<UserShellRoute>(
-  branches: [
-    // 1. Home Branch
-    TypedStatefulShellBranch<HomeBranch>(
-      routes: [
-        TypedGoRoute<HomeRoute>(
-          path: '/',
-          routes: [
-            TypedGoRoute<EventCurationRoute>(path: 'curation'),
-          ],
-        ),
-      ],
-    ),
-    // 2. My Page Branch
-    TypedStatefulShellBranch<MyPageBranch>(
-      routes: [
-        TypedGoRoute<MyPageRoute>(path: '/my'),
-      ],
-    ),
-  ],
-)
-class UserShellRoute extends StatefulShellRouteData {
-  const UserShellRoute();
-
-  @override
-  Widget builder(
-    BuildContext context,
-    GoRouterState state,
-    StatefulNavigationShell navigationShell,
-  ) {
-    return UserScaffold(navigationShell: navigationShell);
-  }
-}
-
-// --- Branches ---
-
-class HomeBranch extends StatefulShellBranchData {
-  const HomeBranch();
-}
-
-class MyPageBranch extends StatefulShellBranchData {
-  const MyPageBranch();
-}
-
-// --- Route Data Classes ---
 
 /// **Home Route**: Main Dashboard.
 /// Path: `/`
+@TypedGoRoute<HomeRoute>(
+  path: '/',
+  routes: [TypedGoRoute<EventCurationRoute>(path: 'curation')],
+)
 class HomeRoute extends GoRouteData with $HomeRoute {
   const HomeRoute();
 
@@ -236,6 +193,7 @@ class SearchRoute extends GoRouteData with $SearchRoute {
 
 /// **My Page Route**
 /// Path: `/my`
+@TypedGoRoute<MyPageRoute>(path: '/my')
 class MyPageRoute extends GoRouteData with $MyPageRoute {
   const MyPageRoute();
 
