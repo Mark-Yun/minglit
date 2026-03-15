@@ -30,7 +30,10 @@ SELECT is(
 -- ============================================================
 -- 5. check_settlement_alarms runs without error
 -- ============================================================
-PERFORM public.check_settlement_alarms();
+DO $$
+BEGIN
+  PERFORM public.check_settlement_alarms();
+END$$;
 SELECT ok(true, 'check_settlement_alarms() executes without error');
 
 -- ============================================================
@@ -39,7 +42,10 @@ SELECT ok(true, 'check_settlement_alarms() executes without error');
 INSERT INTO public.settlement_alarm_results (alarm_type, severity, message, metric_value, threshold, fired_at)
 VALUES ('HIGH_FAILURE_RATE', 'CRITICAL', 'test alarm', 6.5, 5, now());
 
-PERFORM public.check_settlement_alarms();
+DO $$
+BEGIN
+  PERFORM public.check_settlement_alarms();
+END$$;
 
 SELECT is(
   (SELECT count(*) FROM public.settlement_alarm_results WHERE alarm_type = 'HIGH_FAILURE_RATE' AND fired_at > now() - interval '1 minute'),
