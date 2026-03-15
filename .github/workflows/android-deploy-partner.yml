@@ -1,4 +1,4 @@
-name: Android Partner App Build & Deploy
+name: Android Build & Deploy (Partner)
 
 on:
   push:
@@ -14,107 +14,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
-    defaults:
-      run:
-        working-directory: ./apps/app_partner
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-          cache: 'gradle'
-          cache-dependency-path: apps/app_partner/android/build.gradle.kts
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          cache: true
-
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-            apps/app_partner/android/.gradle
-          key: ${{ runner.os }}-gradle-partner-${{ hashFiles('apps/app_partner/android/**/*.gradle.kts', 'apps/app_partner/android/gradle/wrapper/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-partner-
-
-      - name: Get dependencies
-        run: flutter pub get
-
-      - name: Decode Keystore
-        env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-        run: |
-          echo $ANDROID_KEYSTORE_BASE64 | base64 --decode > android/app/upload-keystore.jks
-
-      - name: Create key.properties
-        env:
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-        run: |
-          echo "storePassword=$ANDROID_KEYSTORE_PASSWORD" > android/key.properties
-          echo "keyPassword=$ANDROID_KEY_PASSWORD" >> android/key.properties
-          echo "keyAlias=$ANDROID_KEY_ALIAS" >> android/key.properties
-          echo "storeFile=upload-keystore.jks" >> android/key.properties
-
-      - name: Build APK (Dev)
-        if: github.ref == 'refs/heads/dev'
-        run: flutter build apk --flavor dev --release --build-number=${{ github.run_number }} --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_DEV_URL }} --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} --dart-define=ENVIRONMENT=development
-
-      - name: Build AAB (Main)
-        if: github.ref == 'refs/heads/main'
-        run: flutter build appbundle --flavor prod --release --build-number=${{ github.run_number }} --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_MAIN_URL }} --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} --dart-define=ENVIRONMENT=production
-
-      - name: Upload Artifact (Dev APK)
-        if: github.ref == 'refs/heads/dev'
-        uses: actions/upload-artifact@v4
-        with:
-          name: partner-app-dev-release.apk
-          path: apps/app_partner/build/app/outputs/flutter-apk/app-dev-release.apk
-
-      - name: Upload Artifact (Prod AAB)
-        if: github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
-        with:
-          name: partner-app-prod-release.aab
-          path: apps/app_partner/build/app/outputs/bundle/prodRelease/app-prod-release.aab
-
-      - name: Upload to Firebase App Distribution (Dev)
-        if: github.ref == 'refs/heads/dev'
-        uses: w9jds/firebase-action@master
-        with:
-          args: appdistribution:distribute apps/app_partner/build/app/outputs/flutter-apk/app-dev-release.apk --app ${{ secrets.FIREBASE_APP_ID_ANDROID_PARTNER_DEV }} --release-notes Dev-Build-${{ github.run_number }} --groups testers
-        env:
-          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_DEV }}
-
-      - name: Upload to Google Play (Prod)
-        if: github.ref == 'refs/heads/main'
-        uses: r0adkll/upload-google-play@v1
-        with:
-          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: com.minglit.app_partner
-          releaseFiles: apps/app_partner/build/app/outputs/bundle/prodRelease/app-prod-release.aab
-          track: internal
-          status: draft
-
-  notify-failure:
-    needs: [build]
-    if: always()
-    permissions:
-      issues: write
-    uses: ./.github/workflows/notify-failure.yml
+  deploy:
+    uses: ./.github/workflows/android-deploy-reusable.yml
     with:
-      success: ${{ needs.build.result == 'success' }}
-      workflow_name: 'Android Deploy Partner'
+      app-name: partner
+      app-directory: apps/app_partner
+      package-name: com.minglit.app_partner
+      gradle-cache-prefix: gradle-partner-
+      artifact-name-apk: partner-app-dev-release.apk
+      artifact-name-aab: partner-app-prod-release.aab
+      notify-workflow-name: Android Deploy Partner
+    secrets:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+      SUPABASE_DEV_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+      SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
+      SUPABASE_MAIN_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
+      SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
+      FIREBASE_APP_ID_ANDROID: ${{ secrets.FIREBASE_APP_ID_ANDROID_PARTNER_DEV }}
+      FIREBASE_SERVICE_ACCOUNT_JSON_DEV: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_DEV }}
+      GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
