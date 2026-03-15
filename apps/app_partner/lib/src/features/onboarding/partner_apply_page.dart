@@ -210,11 +210,12 @@ class _PartnerApplyPageState extends ConsumerState<PartnerApplyPage> {
               ),
               TextButton(
                 onPressed: () async {
+                  // Fix: dialog를 먼저 닫고 signOut — signOut이 GoRouter redirect를
+                  // 트리거하면 dialog context가 무효화되어 검은화면+freeze 발생
                   final authRepo = ref.read(authRepositoryProvider);
+                  Navigator.of(context).pop();
+                  await Future<void>.delayed(Duration.zero);
                   await authRepo.signOut();
-                  if (context.mounted) {
-                    Navigator.of(context).pop();
-                  }
                 },
                 child: Text(context.l10n.home_button_logout),
               ),
