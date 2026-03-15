@@ -278,6 +278,22 @@ jobs:
         if: always()
         run: supabase stop
 
+  ci-result:
+    needs: [check-migration-versions, test-app-user, test-app-partner, lint-landing-user, lint-landing-partner, test-pgtap, test-backend-integration, test-edge-functions, test-e2e-scenarios]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check CI results
+        run: |
+          results='${{ toJSON(needs.*.result) }}'
+          echo "Job results: $results"
+          if echo "$results" | grep -q '"failure"'; then
+            echo ""
+            echo '${{ toJSON(needs) }}' | jq -r 'to_entries[] | select(.value.result == "failure") | "❌ \(.key)"'
+            exit 1
+          fi
+          echo "✅ CI passed"
+
   notify-failure:
     needs: [check-migration-versions, test-app-user, test-app-partner, lint-landing-user, lint-landing-partner, test-pgtap, test-backend-integration, test-edge-functions, test-e2e-scenarios]
     if: always()
