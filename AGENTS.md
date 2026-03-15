@@ -52,6 +52,17 @@ adb -s adb-R3CX803P2ND-8btuuD._adb-tls-connect._tcp install -r build/app/outputs
 - 여러 이슈: `Closes #53, closes #54, closes #55`
 - dev 브랜치에 머지되면 해당 이슈가 자동으로 닫힌다.
 
+### Auto-Merge
+
+- PR 생성 직후 반드시 auto-merge를 활성화한다:
+  ```bash
+  gh pr create --base dev --title "..." --body "..."
+  gh pr merge <PR번호> --auto --squash
+  ```
+- required check (`check-migration-versions`) 통과 시 자동으로 squash merge 된다.
+- 머지 후 소스 브랜치는 자동 삭제된다 (`delete_branch_on_merge` 활성화).
+- Admin bypass (`--admin`)는 긴급 상황에서만 사용한다.
+
 ## Bug Fix Conventions
 
 ### 진단 프로세스
