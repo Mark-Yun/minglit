@@ -65,10 +65,14 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
       if (renderObject == null || !renderObject.attached) continue;
       final viewport = RenderAbstractViewport.maybeOf(renderObject);
       if (viewport == null) continue;
-      final revealOffset = viewport.getOffsetToReveal(renderObject, 0).offset;
-      // Account for pinned headers (SliverAppBar collapsed + TabBar)
-      const pinnedHeight = kToolbarHeight + kTextTabBarHeight + 1;
-      if (_scrollController.offset >= revealOffset - pinnedHeight) {
+      // getOffsetToReveal already accounts for pinned slivers via
+      // maxScrollObstructionExtentBefore — compare directly.
+      final revealed = viewport.getOffsetToReveal(
+        renderObject,
+        0.0,
+        rect: Rect.fromLTWH(0, 0, renderObject.paintBounds.width, 0),
+      );
+      if (_scrollController.offset >= revealed.offset) {
         activeIndex = i;
       }
     }
@@ -85,9 +89,15 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
     final viewport = RenderAbstractViewport.maybeOf(renderObject);
     if (viewport == null) return;
 
-    const pinnedHeight = kToolbarHeight + kTextTabBarHeight + 1;
-    final revealOffset = viewport.getOffsetToReveal(renderObject, 0).offset;
-    final targetOffset = (revealOffset - pinnedHeight).clamp(
+    // getOffsetToReveal already accounts for pinned slivers via
+    // maxScrollObstructionExtentBefore — do NOT subtract pinnedHeight.
+    // Use rect to target only the top edge of the section.
+    final revealed = viewport.getOffsetToReveal(
+      renderObject,
+      0.0,
+      rect: Rect.fromLTWH(0, 0, renderObject.paintBounds.width, 0),
+    );
+    final targetOffset = revealed.offset.clamp(
       0.0,
       _scrollController.position.maxScrollExtent,
     );
@@ -282,8 +292,8 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
 
               // Section 1: 기본 정보
               SliverToBoxAdapter(
-                key: _section1Key,
                 child: Padding(
+                  key: _section1Key,
                   padding: const EdgeInsets.all(MinglitSpacing.medium),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -408,8 +418,8 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
 
               // Section 2: 상세 소개
               SliverToBoxAdapter(
-                key: _section2Key,
                 child: Padding(
+                  key: _section2Key,
                   padding: const EdgeInsets.all(MinglitSpacing.medium),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -422,20 +432,26 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
 
               // Section 3: 참가 현황
               SliverToBoxAdapter(
-                key: _section3Key,
-                child: _ParticipationSection(event: event),
+                child: SizedBox(
+                  key: _section3Key,
+                  child: _ParticipationSection(event: event),
+                ),
               ),
 
               // Section 4: 필요 인증
               SliverToBoxAdapter(
-                key: _section4Key,
-                child: _VerificationSection(event: event),
+                child: SizedBox(
+                  key: _section4Key,
+                  child: _VerificationSection(event: event),
+                ),
               ),
 
               // Section 5: 환불 정책
               SliverToBoxAdapter(
-                key: _section5Key,
-                child: const _RefundPolicySection(),
+                child: SizedBox(
+                  key: _section5Key,
+                  child: const _RefundPolicySection(),
+                ),
               ),
 
               // Bottom padding for last section scrollability
