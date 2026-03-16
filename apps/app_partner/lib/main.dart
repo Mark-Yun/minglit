@@ -104,6 +104,26 @@ Future<void> appStartup(Ref ref) async {
   } on Exception catch (e) {
     Log.e('App startup warning', e);
   }
+
+  const statsigClientKey = String.fromEnvironment('STATSIG_CLIENT_KEY');
+  const environment = String.fromEnvironment(
+    'ENVIRONMENT',
+    defaultValue: 'local',
+  );
+  await StatsigAnalytics.initialize(statsigClientKey, tier: environment);
+  StatsigAnalytics.logEvent(MingLitEvent.appOpened);
+
+  // Sync Statsig user context with auth state changes
+  ref.listen(authStateChangesProvider, (_, next) {
+    next.whenData((authState) {
+      final userId = authState.session?.user.id;
+      if (userId != null) {
+        unawaited(StatsigAnalytics.updateUser(userId));
+      } else {
+        unawaited(StatsigAnalytics.shutdown());
+      }
+    });
+  });
 }
 
 class MinglitPartnerApp extends StatelessWidget {

@@ -3,6 +3,8 @@
 /// Lean strategy: only 7 event types tracked.
 /// No-ops gracefully when STATSIG_CLIENT_KEY is empty or 'FILL_THIS'.
 
+import 'package:statsig/statsig.dart';
+
 /// Event name constants for Statsig analytics.
 /// ONLY these 7 events are tracked.
 class MingLitEvent {
@@ -35,8 +37,6 @@ class StatsigAnalytics {
       return;
     }
     try {
-      // Dynamic import to avoid compilation errors when statsig is not available
-      // ignore: avoid_dynamic_calls
       await _initializeInternal(clientKey, userId: userId, tier: tier);
     } catch (_) {
       // Graceful degradation — never crash on analytics
@@ -48,8 +48,9 @@ class StatsigAnalytics {
     String? userId,
     required String tier,
   }) async {
-    // Implementation uses statsig package
-    // This will be a no-op if statsig package is not available
+    final user = StatsigUser(userId: userId ?? '');
+    final options = StatsigOptions(environment: tier);
+    await Statsig.initialize(clientKey, user, options);
     _initialized = true;
   }
 
@@ -57,7 +58,7 @@ class StatsigAnalytics {
   static Future<void> updateUser(String userId) async {
     if (!_initialized) return;
     try {
-      // Update user context in Statsig
+      await Statsig.updateUser(StatsigUser(userId: userId));
     } catch (_) {}
   }
 
@@ -69,15 +70,15 @@ class StatsigAnalytics {
   }) {
     if (!_initialized) return;
     try {
-      // Log event to Statsig
+      Statsig.logEvent(eventName, doubleValue: value, metadata: metadata);
     } catch (_) {}
   }
 
   /// Evaluate a feature gate. Returns false if not initialized.
-  static Future<bool> checkGate(String gateName) async {
+  static bool checkGate(String gateName) {
     if (!_initialized) return false;
     try {
-      return false; // Default until fully integrated
+      return Statsig.checkGate(gateName);
     } catch (_) {
       return false;
     }
@@ -87,6 +88,7 @@ class StatsigAnalytics {
   static Future<void> shutdown() async {
     if (!_initialized) return;
     try {
+      await Statsig.shutdown();
       _initialized = false;
     } catch (_) {}
   }

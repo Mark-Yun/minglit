@@ -183,10 +183,22 @@ class EventApplicationController extends _$EventApplicationController {
   }
 
   void _handlePaymentSuccess() {
+    StatsigAnalytics.logEvent(
+      MingLitEvent.paymentCompleted,
+      metadata: {'event_id': _event.id},
+    );
+    StatsigAnalytics.logEvent(
+      MingLitEvent.eventApplied,
+      metadata: {'event_id': _event.id},
+    );
     state = state.copyWith(status: EventApplicationStatus.success);
   }
 
   void _handlePaymentFailure(Object error, StackTrace st) {
+    StatsigAnalytics.logEvent(
+      MingLitEvent.paymentFailed,
+      metadata: {'event_id': _event.id},
+    );
     final exception = MinglitException.from(error, st);
     final message = exception is MinglitSystemException
         ? exception.userMessage
@@ -220,8 +232,16 @@ class EventApplicationController extends _$EventApplicationController {
         verificationData: vData,
       );
 
+      StatsigAnalytics.logEvent(
+        MingLitEvent.eventApplied,
+        metadata: {'event_id': _event.id},
+      );
       state = state.copyWith(status: EventApplicationStatus.success);
     } on Object catch (e) {
+      StatsigAnalytics.logEvent(
+        MingLitEvent.errorOccurred,
+        metadata: {'context': 'event_application', 'event_id': _event.id},
+      );
       state = state.copyWith(
         status: EventApplicationStatus.error,
         errorMessage: e.toString(),

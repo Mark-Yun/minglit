@@ -31,6 +31,16 @@ class EventDetailPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final eventAsync = ref.watch(eventDetailControllerProvider(eventId));
 
+    // Track event_viewed once when event data loads successfully
+    ref.listen(eventDetailControllerProvider(eventId), (prev, next) {
+      if (prev?.hasValue != true && next.hasValue) {
+        StatsigAnalytics.logEvent(
+          MingLitEvent.eventViewed,
+          metadata: {'event_id': eventId},
+        );
+      }
+    });
+
     return Scaffold(
       body: Column(
         children: [
