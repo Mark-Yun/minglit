@@ -16,6 +16,9 @@ Widget createTestApp({
   List<dynamic> additionalOverrides = const [],
   String initialLocation = '/',
 }) {
+  // Unify auth signals: if currentUser is provided, treat as logged in
+  final effectiveLoggedIn = isLoggedIn || currentUser != null;
+
   final testRouter = GoRouter(
     initialLocation: initialLocation,
     routes: $appRoutes,
@@ -31,7 +34,7 @@ Widget createTestApp({
       final isLoggingIn = path == '/login';
 
       // Logged in + trying to access /login → redirect to `from` or home
-      if (isLoggedIn && isLoggingIn) {
+      if (effectiveLoggedIn && isLoggingIn) {
         final from = state.uri.queryParameters['from'];
         if (from != null &&
             from.startsWith('/') &&
@@ -54,7 +57,7 @@ Widget createTestApp({
           protectedPrefixes.any(path.startsWith) || path.endsWith('/apply');
 
       // Not logged in + protected route → /login?from={path}
-      if (!isLoggedIn && isProtected) {
+      if (!effectiveLoggedIn && isProtected) {
         return Uri(
           path: '/login',
           queryParameters: {'from': path},
