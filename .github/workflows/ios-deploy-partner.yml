@@ -2,11 +2,13 @@ name: iOS Partner App Deploy
 
 on:
   push:
-    branches: ["dev", "main"]
+    branches: ["main"]
     paths:
       - "apps/app_partner/**"
       - "shared/packages/minglit_kit/**"
       - "pubspec.yaml"
+  schedule:
+    - cron: '0 10 * * *'  # Daily dev build (KST 19:00) — runs on default branch (dev)
   workflow_dispatch:
 
 concurrency:
