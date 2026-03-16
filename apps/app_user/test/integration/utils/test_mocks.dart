@@ -1,10 +1,10 @@
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
-import '../../test/utils/mocks.dart';
+import '../../utils/mocks.dart';
 
 // Re-export existing mocks from unit test utils
-export '../../test/utils/mocks.dart';
+export '../../utils/mocks.dart';
 
 /// Creates a MockUser with realistic test metadata.
 User createMockUserForTest({
