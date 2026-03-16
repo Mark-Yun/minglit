@@ -1761,6 +1761,66 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'입점 신청 현황'**
   String get partnerApplication_status_title;
+
+  /// No description provided for @welcome_appbar_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'파트너 소개'**
+  String get welcome_appbar_title;
+
+  /// No description provided for @welcome_page1_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'밍글릿 파트너가 되어보세요'**
+  String get welcome_page1_title;
+
+  /// No description provided for @welcome_page1_body.
+  ///
+  /// In ko, this message translates to:
+  /// **'파티를 직접 기획하고 운영하세요. 밍글릿은 파트너님의 비즈니스를 성장시키는 플랫폼입니다.'**
+  String get welcome_page1_body;
+
+  /// No description provided for @welcome_page2_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'신청 절차 안내'**
+  String get welcome_page2_title;
+
+  /// No description provided for @welcome_page2_body.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 정보, 사업자 정보, 연락처 및 정산 정보, 서류(사업자등록증·통장사본) 총 4단계를 완성하면 심사가 시작됩니다.'**
+  String get welcome_page2_body;
+
+  /// No description provided for @welcome_page3_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'함께 성장해요'**
+  String get welcome_page3_title;
+
+  /// No description provided for @welcome_page3_body.
+  ///
+  /// In ko, this message translates to:
+  /// **'밍글릿의 검증된 매칭 시스템으로 취향에 맞는 참가자를 만나보세요.'**
+  String get welcome_page3_body;
+
+  /// No description provided for @welcome_page4_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'파트너 후기'**
+  String get welcome_page4_title;
+
+  /// No description provided for @welcome_page4_body.
+  ///
+  /// In ko, this message translates to:
+  /// **'\"밍글릿 덕분에 매월 안정적인 파티를 운영하고 있어요. 운영 도구가 특히 편리합니다.\" — 실제 파트너 후기'**
+  String get welcome_page4_body;
+
+  /// No description provided for @welcome_cta_button.
+  ///
+  /// In ko, this message translates to:
+  /// **'파트너 신청서 작성하기'**
+  String get welcome_cta_button;
 }
 
 class _AppLocalizationsDelegate

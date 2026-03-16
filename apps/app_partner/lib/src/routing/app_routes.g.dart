@@ -12,6 +12,7 @@ List<RouteBase> get $appRoutes => [
   $loginRoute,
   $partnerApplyRoute,
   $partnerApplyStatusRoute,
+  $partnerWelcomeRoute,
   $notificationCenterRoute,
   $partnerShellRoute,
 ];
@@ -138,6 +139,32 @@ mixin $PartnerApplyStatusRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
+RouteBase get $partnerWelcomeRoute => GoRouteData.$route(
+  path: '/welcome',
+  factory: $PartnerWelcomeRoute._fromState,
+);
+
+mixin $PartnerWelcomeRoute on GoRouteData {
+  static PartnerWelcomeRoute _fromState(GoRouterState state) =>
+      const PartnerWelcomeRoute();
+
+  @override
+  String get location => GoRouteData.$location('/welcome');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
 RouteBase get $notificationCenterRoute => GoRouteData.$route(
   path: '/notifications',
   factory: $NotificationCenterRoute._fromState,
@@ -242,6 +269,16 @@ RouteBase get $partnerShellRoute => StatefulShellRouteData.$route(
         GoRouteData.$route(
           path: '/settlement',
           factory: $SettlementRoute._fromState,
+          routes: [
+            GoRouteData.$route(
+              path: 'bank-account',
+              factory: $BankAccountRoute._fromState,
+            ),
+            GoRouteData.$route(
+              path: ':id',
+              factory: $SettlementDetailRoute._fromState,
+            ),
+          ],
         ),
       ],
     ),
@@ -606,6 +643,51 @@ mixin $SettlementRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/settlement');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $BankAccountRoute on GoRouteData {
+  static BankAccountRoute _fromState(GoRouterState state) =>
+      const BankAccountRoute();
+
+  @override
+  String get location => GoRouteData.$location('/settlement/bank-account');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $SettlementDetailRoute on GoRouteData {
+  static SettlementDetailRoute _fromState(GoRouterState state) =>
+      SettlementDetailRoute(id: state.pathParameters['id']!);
+
+  SettlementDetailRoute get _self => this as SettlementDetailRoute;
+
+  @override
+  String get location =>
+      GoRouteData.$location('/settlement/${Uri.encodeComponent(_self.id)}');
 
   @override
   void go(BuildContext context) => context.go(location);

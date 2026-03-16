@@ -81,6 +81,10 @@ Deno.serve(withSentry(async (req) => {
       });
     }
 
+    const paidAtIso = payment.paid_at && payment.paid_at > 0
+      ? new Date(payment.paid_at * 1000).toISOString()
+      : new Date().toISOString();
+
     const { error: updateError } = await withSpan(
       'db.update.event_applications',
       'db.update',
@@ -89,6 +93,7 @@ Deno.serve(withSentry(async (req) => {
         .update({
           status: "approved",
           payment_id: imp_uid,
+          paid_at: paidAtIso,
           updated_at: new Date().toISOString(),
         })
         .eq("id", merchant_uid)

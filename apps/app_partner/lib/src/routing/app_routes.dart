@@ -9,11 +9,14 @@ import 'package:app_partner/src/features/member/partner_member_permission_page.d
 import 'package:app_partner/src/features/more/more_page.dart';
 import 'package:app_partner/src/features/onboarding/partner_apply_page.dart';
 import 'package:app_partner/src/features/onboarding/partner_apply_status_page.dart';
+import 'package:app_partner/src/features/onboarding/partner_welcome_page.dart';
 import 'package:app_partner/src/features/party/create/party_create_wizard_page.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_page.dart';
 import 'package:app_partner/src/features/party/event/create/event_create_page.dart';
 import 'package:app_partner/src/features/party/event/detail/event_detail_page.dart';
 import 'package:app_partner/src/features/party/list/party_list_page.dart';
+import 'package:app_partner/src/features/settlement/bank_account_page.dart';
+import 'package:app_partner/src/features/settlement/settlement_detail_page.dart';
 import 'package:app_partner/src/features/settlement/settlement_page.dart';
 import 'package:app_partner/src/features/ticket/create/ticket_create_page.dart';
 import 'package:app_partner/src/features/ticket/edit/ticket_edit_page.dart';
@@ -72,6 +75,15 @@ class PartnerApplyStatusRoute extends GoRouteData
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const PartnerApplyStatusPage();
+}
+
+/// **Partner Welcome Route**: Onboarding page before application wizard.
+@TypedGoRoute<PartnerWelcomeRoute>(path: '/welcome')
+class PartnerWelcomeRoute extends GoRouteData with $PartnerWelcomeRoute {
+  const PartnerWelcomeRoute();
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const PartnerWelcomePage();
 }
 
 /// **Notification Center Route**
@@ -140,7 +152,15 @@ class NotificationCenterRoute extends GoRouteData
     ),
     // 3. Revenue Management Branch
     TypedStatefulShellBranch<SettlementBranch>(
-      routes: [TypedGoRoute<SettlementRoute>(path: '/settlement')],
+      routes: [
+        TypedGoRoute<SettlementRoute>(
+          path: '/settlement',
+          routes: [
+            TypedGoRoute<BankAccountRoute>(path: 'bank-account'),
+            TypedGoRoute<SettlementDetailRoute>(path: ':id'),
+          ],
+        ),
+      ],
     ),
     // 4. Settings & Profile Branch
     TypedStatefulShellBranch<MoreBranch>(
@@ -317,6 +337,21 @@ class SettlementRoute extends GoRouteData with $SettlementRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const SettlementPage();
+}
+
+class SettlementDetailRoute extends GoRouteData with $SettlementDetailRoute {
+  const SettlementDetailRoute({required this.id});
+  final String id;
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      SettlementDetailPage(itemId: id);
+}
+
+class BankAccountRoute extends GoRouteData with $BankAccountRoute {
+  const BankAccountRoute();
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const BankAccountPage();
 }
 
 // 4. More

@@ -335,6 +335,99 @@ final class FilteredEventsFamily extends $Family
   String toString() => r'filteredEventsProvider';
 }
 
+/// Manages pagination state for the recommendation event feed.
+///
+/// Tracks server-side offset separately from display count because
+/// client-side filtering (eligibility + nearby sort) means the number
+/// of displayed events may differ from the number fetched from server.
+///
+/// Filter changes (via [activeFiltersProvider]) automatically reset the
+/// state to page 0.
+
+@ProviderFor(RecommendationFeedNotifier)
+const recommendationFeedProvider = RecommendationFeedNotifierProvider._();
+
+/// Manages pagination state for the recommendation event feed.
+///
+/// Tracks server-side offset separately from display count because
+/// client-side filtering (eligibility + nearby sort) means the number
+/// of displayed events may differ from the number fetched from server.
+///
+/// Filter changes (via [activeFiltersProvider]) automatically reset the
+/// state to page 0.
+final class RecommendationFeedNotifierProvider
+    extends
+        $AsyncNotifierProvider<
+          RecommendationFeedNotifier,
+          RecommendationFeedState
+        > {
+  /// Manages pagination state for the recommendation event feed.
+  ///
+  /// Tracks server-side offset separately from display count because
+  /// client-side filtering (eligibility + nearby sort) means the number
+  /// of displayed events may differ from the number fetched from server.
+  ///
+  /// Filter changes (via [activeFiltersProvider]) automatically reset the
+  /// state to page 0.
+  const RecommendationFeedNotifierProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'recommendationFeedProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$recommendationFeedNotifierHash();
+
+  @$internal
+  @override
+  RecommendationFeedNotifier create() => RecommendationFeedNotifier();
+}
+
+String _$recommendationFeedNotifierHash() =>
+    r'906ac68b337591f121be10802be813e73f8c2832';
+
+/// Manages pagination state for the recommendation event feed.
+///
+/// Tracks server-side offset separately from display count because
+/// client-side filtering (eligibility + nearby sort) means the number
+/// of displayed events may differ from the number fetched from server.
+///
+/// Filter changes (via [activeFiltersProvider]) automatically reset the
+/// state to page 0.
+
+abstract class _$RecommendationFeedNotifier
+    extends $AsyncNotifier<RecommendationFeedState> {
+  FutureOr<RecommendationFeedState> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref =
+        this.ref
+            as $Ref<
+              AsyncValue<RecommendationFeedState>,
+              RecommendationFeedState
+            >;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                AsyncValue<RecommendationFeedState>,
+                RecommendationFeedState
+              >,
+              AsyncValue<RecommendationFeedState>,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}
+
 /// Fetches and filters the unified recommendation event list.
 ///
 /// Maps [ExploreSortType] to [EventFeedType]:

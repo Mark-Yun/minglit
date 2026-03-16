@@ -26,6 +26,10 @@ flags:
     paths:
       - apps/app_partner/lib/
     carryforward: true
+  minglit-kit:
+    paths:
+      - shared/packages/minglit_kit/lib/
+    carryforward: true
   backend-integration:
     paths:
       - tests/backend_integration/lib/

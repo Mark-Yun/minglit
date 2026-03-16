@@ -23,6 +23,7 @@ abstract class EventApplication with _$EventApplication {
     @JsonKey(name: 'payment_amount') int? paymentAmount,
     @Default('none') @JsonKey(name: 'refund_status') String refundStatus,
     @JsonKey(name: 'rejection_reason') String? rejectionReason,
+    @JsonKey(name: 'paid_at') DateTime? paidAt,
 
     // Relations (Nullable)
     UserProfile? user,

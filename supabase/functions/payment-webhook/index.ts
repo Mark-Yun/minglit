@@ -77,15 +77,21 @@ serve(withSentry(async (req) => {
         dbStatus = `unknown_${payment.status}`;
     }
 
-    // Update event_applications table
-    const updatePayload: Record<string, unknown> = {
-      status: dbStatus,
-      payment_id: imp_uid,
-      updated_at: new Date().toISOString(),
-    };
-    if (payment.status === "cancelled") {
-      updatePayload.refund_status = "completed";
-    }
+     // Update event_applications table
+     // Fix #133: paid_at 없을 때 now로 폴백하면 재시도마다 paid_at이 밀려 멱등성 깨짐 — 실제 결제 시각이 있을 때만 업데이트
+     const paidAtIso = payment.paid_at && payment.paid_at > 0
+       ? new Date(payment.paid_at * 1000).toISOString()
+       : null;
+     
+     const updatePayload: Record<string, unknown> = {
+       status: dbStatus,
+       payment_id: imp_uid,
+       updated_at: new Date().toISOString(),
+       ...(payment.status === "paid" && paidAtIso ? { paid_at: paidAtIso } : {}),
+     };
+     if (payment.status === "cancelled") {
+       updatePayload.refund_status = "completed";
+     }
     const { error } = await supabase
       .from("event_applications")
       .update(updatePayload)

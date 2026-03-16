@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$EventApplication {
 
- String get id;@JsonKey(name: 'event_id') String get eventId;@JsonKey(name: 'ticket_id') String get ticketId;@JsonKey(name: 'user_id') String get userId; String get status;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'updated_at') DateTime get updatedAt;@JsonKey(name: 'payment_id') String? get paymentId;@JsonKey(name: 'payment_amount') int? get paymentAmount;@JsonKey(name: 'refund_status') String get refundStatus;@JsonKey(name: 'rejection_reason') String? get rejectionReason;// Relations (Nullable)
+ String get id;@JsonKey(name: 'event_id') String get eventId;@JsonKey(name: 'ticket_id') String get ticketId;@JsonKey(name: 'user_id') String get userId; String get status;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'updated_at') DateTime get updatedAt;@JsonKey(name: 'payment_id') String? get paymentId;@JsonKey(name: 'payment_amount') int? get paymentAmount;@JsonKey(name: 'refund_status') String get refundStatus;@JsonKey(name: 'rejection_reason') String? get rejectionReason;@JsonKey(name: 'paid_at') DateTime? get paidAt;// Relations (Nullable)
  UserProfile? get user; VerificationSubmission? get submission; Event? get event; Ticket? get ticket;
 /// Create a copy of EventApplication
 /// with the given fields replaced by the non-null parameter values.
@@ -29,16 +29,16 @@ $EventApplicationCopyWith<EventApplication> get copyWith => _$EventApplicationCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EventApplication&&(identical(other.id, id) || other.id == id)&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.ticketId, ticketId) || other.ticketId == ticketId)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.paymentId, paymentId) || other.paymentId == paymentId)&&(identical(other.paymentAmount, paymentAmount) || other.paymentAmount == paymentAmount)&&(identical(other.refundStatus, refundStatus) || other.refundStatus == refundStatus)&&(identical(other.rejectionReason, rejectionReason) || other.rejectionReason == rejectionReason)&&(identical(other.user, user) || other.user == user)&&(identical(other.submission, submission) || other.submission == submission)&&(identical(other.event, event) || other.event == event)&&(identical(other.ticket, ticket) || other.ticket == ticket));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EventApplication&&(identical(other.id, id) || other.id == id)&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.ticketId, ticketId) || other.ticketId == ticketId)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.paymentId, paymentId) || other.paymentId == paymentId)&&(identical(other.paymentAmount, paymentAmount) || other.paymentAmount == paymentAmount)&&(identical(other.refundStatus, refundStatus) || other.refundStatus == refundStatus)&&(identical(other.rejectionReason, rejectionReason) || other.rejectionReason == rejectionReason)&&(identical(other.paidAt, paidAt) || other.paidAt == paidAt)&&(identical(other.user, user) || other.user == user)&&(identical(other.submission, submission) || other.submission == submission)&&(identical(other.event, event) || other.event == event)&&(identical(other.ticket, ticket) || other.ticket == ticket));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,eventId,ticketId,userId,status,createdAt,updatedAt,paymentId,paymentAmount,refundStatus,rejectionReason,user,submission,event,ticket);
+int get hashCode => Object.hash(runtimeType,id,eventId,ticketId,userId,status,createdAt,updatedAt,paymentId,paymentAmount,refundStatus,rejectionReason,paidAt,user,submission,event,ticket);
 
 @override
 String toString() {
-  return 'EventApplication(id: $id, eventId: $eventId, ticketId: $ticketId, userId: $userId, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, paymentId: $paymentId, paymentAmount: $paymentAmount, refundStatus: $refundStatus, rejectionReason: $rejectionReason, user: $user, submission: $submission, event: $event, ticket: $ticket)';
+  return 'EventApplication(id: $id, eventId: $eventId, ticketId: $ticketId, userId: $userId, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, paymentId: $paymentId, paymentAmount: $paymentAmount, refundStatus: $refundStatus, rejectionReason: $rejectionReason, paidAt: $paidAt, user: $user, submission: $submission, event: $event, ticket: $ticket)';
 }
 
 
@@ -49,7 +49,7 @@ abstract mixin class $EventApplicationCopyWith<$Res>  {
   factory $EventApplicationCopyWith(EventApplication value, $Res Function(EventApplication) _then) = _$EventApplicationCopyWithImpl;
 @useResult
 $Res call({
- String id,@JsonKey(name: 'event_id') String eventId,@JsonKey(name: 'ticket_id') String ticketId,@JsonKey(name: 'user_id') String userId, String status,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'payment_id') String? paymentId,@JsonKey(name: 'payment_amount') int? paymentAmount,@JsonKey(name: 'refund_status') String refundStatus,@JsonKey(name: 'rejection_reason') String? rejectionReason, UserProfile? user, VerificationSubmission? submission, Event? event, Ticket? ticket
+ String id,@JsonKey(name: 'event_id') String eventId,@JsonKey(name: 'ticket_id') String ticketId,@JsonKey(name: 'user_id') String userId, String status,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'payment_id') String? paymentId,@JsonKey(name: 'payment_amount') int? paymentAmount,@JsonKey(name: 'refund_status') String refundStatus,@JsonKey(name: 'rejection_reason') String? rejectionReason,@JsonKey(name: 'paid_at') DateTime? paidAt, UserProfile? user, VerificationSubmission? submission, Event? event, Ticket? ticket
 });
 
 
@@ -66,7 +66,7 @@ class _$EventApplicationCopyWithImpl<$Res>
 
 /// Create a copy of EventApplication
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? eventId = null,Object? ticketId = null,Object? userId = null,Object? status = null,Object? createdAt = null,Object? updatedAt = null,Object? paymentId = freezed,Object? paymentAmount = freezed,Object? refundStatus = null,Object? rejectionReason = freezed,Object? user = freezed,Object? submission = freezed,Object? event = freezed,Object? ticket = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? eventId = null,Object? ticketId = null,Object? userId = null,Object? status = null,Object? createdAt = null,Object? updatedAt = null,Object? paymentId = freezed,Object? paymentAmount = freezed,Object? refundStatus = null,Object? rejectionReason = freezed,Object? paidAt = freezed,Object? user = freezed,Object? submission = freezed,Object? event = freezed,Object? ticket = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,eventId: null == eventId ? _self.eventId : eventId // ignore: cast_nullable_to_non_nullable
@@ -79,7 +79,8 @@ as DateTime,paymentId: freezed == paymentId ? _self.paymentId : paymentId // ign
 as String?,paymentAmount: freezed == paymentAmount ? _self.paymentAmount : paymentAmount // ignore: cast_nullable_to_non_nullable
 as int?,refundStatus: null == refundStatus ? _self.refundStatus : refundStatus // ignore: cast_nullable_to_non_nullable
 as String,rejectionReason: freezed == rejectionReason ? _self.rejectionReason : rejectionReason // ignore: cast_nullable_to_non_nullable
-as String?,user: freezed == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
+as String?,paidAt: freezed == paidAt ? _self.paidAt : paidAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,user: freezed == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
 as UserProfile?,submission: freezed == submission ? _self.submission : submission // ignore: cast_nullable_to_non_nullable
 as VerificationSubmission?,event: freezed == event ? _self.event : event // ignore: cast_nullable_to_non_nullable
 as Event?,ticket: freezed == ticket ? _self.ticket : ticket // ignore: cast_nullable_to_non_nullable
@@ -216,10 +217,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'event_id')  String eventId, @JsonKey(name: 'ticket_id')  String ticketId, @JsonKey(name: 'user_id')  String userId,  String status, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'payment_id')  String? paymentId, @JsonKey(name: 'payment_amount')  int? paymentAmount, @JsonKey(name: 'refund_status')  String refundStatus, @JsonKey(name: 'rejection_reason')  String? rejectionReason,  UserProfile? user,  VerificationSubmission? submission,  Event? event,  Ticket? ticket)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'event_id')  String eventId, @JsonKey(name: 'ticket_id')  String ticketId, @JsonKey(name: 'user_id')  String userId,  String status, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'payment_id')  String? paymentId, @JsonKey(name: 'payment_amount')  int? paymentAmount, @JsonKey(name: 'refund_status')  String refundStatus, @JsonKey(name: 'rejection_reason')  String? rejectionReason, @JsonKey(name: 'paid_at')  DateTime? paidAt,  UserProfile? user,  VerificationSubmission? submission,  Event? event,  Ticket? ticket)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _EventApplication() when $default != null:
-return $default(_that.id,_that.eventId,_that.ticketId,_that.userId,_that.status,_that.createdAt,_that.updatedAt,_that.paymentId,_that.paymentAmount,_that.refundStatus,_that.rejectionReason,_that.user,_that.submission,_that.event,_that.ticket);case _:
+return $default(_that.id,_that.eventId,_that.ticketId,_that.userId,_that.status,_that.createdAt,_that.updatedAt,_that.paymentId,_that.paymentAmount,_that.refundStatus,_that.rejectionReason,_that.paidAt,_that.user,_that.submission,_that.event,_that.ticket);case _:
   return orElse();
 
 }
@@ -237,10 +238,10 @@ return $default(_that.id,_that.eventId,_that.ticketId,_that.userId,_that.status,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'event_id')  String eventId, @JsonKey(name: 'ticket_id')  String ticketId, @JsonKey(name: 'user_id')  String userId,  String status, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'payment_id')  String? paymentId, @JsonKey(name: 'payment_amount')  int? paymentAmount, @JsonKey(name: 'refund_status')  String refundStatus, @JsonKey(name: 'rejection_reason')  String? rejectionReason,  UserProfile? user,  VerificationSubmission? submission,  Event? event,  Ticket? ticket)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'event_id')  String eventId, @JsonKey(name: 'ticket_id')  String ticketId, @JsonKey(name: 'user_id')  String userId,  String status, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'payment_id')  String? paymentId, @JsonKey(name: 'payment_amount')  int? paymentAmount, @JsonKey(name: 'refund_status')  String refundStatus, @JsonKey(name: 'rejection_reason')  String? rejectionReason, @JsonKey(name: 'paid_at')  DateTime? paidAt,  UserProfile? user,  VerificationSubmission? submission,  Event? event,  Ticket? ticket)  $default,) {final _that = this;
 switch (_that) {
 case _EventApplication():
-return $default(_that.id,_that.eventId,_that.ticketId,_that.userId,_that.status,_that.createdAt,_that.updatedAt,_that.paymentId,_that.paymentAmount,_that.refundStatus,_that.rejectionReason,_that.user,_that.submission,_that.event,_that.ticket);case _:
+return $default(_that.id,_that.eventId,_that.ticketId,_that.userId,_that.status,_that.createdAt,_that.updatedAt,_that.paymentId,_that.paymentAmount,_that.refundStatus,_that.rejectionReason,_that.paidAt,_that.user,_that.submission,_that.event,_that.ticket);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -257,10 +258,10 @@ return $default(_that.id,_that.eventId,_that.ticketId,_that.userId,_that.status,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'event_id')  String eventId, @JsonKey(name: 'ticket_id')  String ticketId, @JsonKey(name: 'user_id')  String userId,  String status, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'payment_id')  String? paymentId, @JsonKey(name: 'payment_amount')  int? paymentAmount, @JsonKey(name: 'refund_status')  String refundStatus, @JsonKey(name: 'rejection_reason')  String? rejectionReason,  UserProfile? user,  VerificationSubmission? submission,  Event? event,  Ticket? ticket)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'event_id')  String eventId, @JsonKey(name: 'ticket_id')  String ticketId, @JsonKey(name: 'user_id')  String userId,  String status, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'payment_id')  String? paymentId, @JsonKey(name: 'payment_amount')  int? paymentAmount, @JsonKey(name: 'refund_status')  String refundStatus, @JsonKey(name: 'rejection_reason')  String? rejectionReason, @JsonKey(name: 'paid_at')  DateTime? paidAt,  UserProfile? user,  VerificationSubmission? submission,  Event? event,  Ticket? ticket)?  $default,) {final _that = this;
 switch (_that) {
 case _EventApplication() when $default != null:
-return $default(_that.id,_that.eventId,_that.ticketId,_that.userId,_that.status,_that.createdAt,_that.updatedAt,_that.paymentId,_that.paymentAmount,_that.refundStatus,_that.rejectionReason,_that.user,_that.submission,_that.event,_that.ticket);case _:
+return $default(_that.id,_that.eventId,_that.ticketId,_that.userId,_that.status,_that.createdAt,_that.updatedAt,_that.paymentId,_that.paymentAmount,_that.refundStatus,_that.rejectionReason,_that.paidAt,_that.user,_that.submission,_that.event,_that.ticket);case _:
   return null;
 
 }
@@ -272,7 +273,7 @@ return $default(_that.id,_that.eventId,_that.ticketId,_that.userId,_that.status,
 @JsonSerializable()
 
 class _EventApplication implements EventApplication {
-  const _EventApplication({required this.id, @JsonKey(name: 'event_id') required this.eventId, @JsonKey(name: 'ticket_id') required this.ticketId, @JsonKey(name: 'user_id') required this.userId, required this.status, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'updated_at') required this.updatedAt, @JsonKey(name: 'payment_id') this.paymentId, @JsonKey(name: 'payment_amount') this.paymentAmount, @JsonKey(name: 'refund_status') this.refundStatus = 'none', @JsonKey(name: 'rejection_reason') this.rejectionReason, this.user, this.submission, this.event, this.ticket});
+  const _EventApplication({required this.id, @JsonKey(name: 'event_id') required this.eventId, @JsonKey(name: 'ticket_id') required this.ticketId, @JsonKey(name: 'user_id') required this.userId, required this.status, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'updated_at') required this.updatedAt, @JsonKey(name: 'payment_id') this.paymentId, @JsonKey(name: 'payment_amount') this.paymentAmount, @JsonKey(name: 'refund_status') this.refundStatus = 'none', @JsonKey(name: 'rejection_reason') this.rejectionReason, @JsonKey(name: 'paid_at') this.paidAt, this.user, this.submission, this.event, this.ticket});
   factory _EventApplication.fromJson(Map<String, dynamic> json) => _$EventApplicationFromJson(json);
 
 @override final  String id;
@@ -286,6 +287,7 @@ class _EventApplication implements EventApplication {
 @override@JsonKey(name: 'payment_amount') final  int? paymentAmount;
 @override@JsonKey(name: 'refund_status') final  String refundStatus;
 @override@JsonKey(name: 'rejection_reason') final  String? rejectionReason;
+@override@JsonKey(name: 'paid_at') final  DateTime? paidAt;
 // Relations (Nullable)
 @override final  UserProfile? user;
 @override final  VerificationSubmission? submission;
@@ -305,16 +307,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _EventApplication&&(identical(other.id, id) || other.id == id)&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.ticketId, ticketId) || other.ticketId == ticketId)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.paymentId, paymentId) || other.paymentId == paymentId)&&(identical(other.paymentAmount, paymentAmount) || other.paymentAmount == paymentAmount)&&(identical(other.refundStatus, refundStatus) || other.refundStatus == refundStatus)&&(identical(other.rejectionReason, rejectionReason) || other.rejectionReason == rejectionReason)&&(identical(other.user, user) || other.user == user)&&(identical(other.submission, submission) || other.submission == submission)&&(identical(other.event, event) || other.event == event)&&(identical(other.ticket, ticket) || other.ticket == ticket));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _EventApplication&&(identical(other.id, id) || other.id == id)&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.ticketId, ticketId) || other.ticketId == ticketId)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.paymentId, paymentId) || other.paymentId == paymentId)&&(identical(other.paymentAmount, paymentAmount) || other.paymentAmount == paymentAmount)&&(identical(other.refundStatus, refundStatus) || other.refundStatus == refundStatus)&&(identical(other.rejectionReason, rejectionReason) || other.rejectionReason == rejectionReason)&&(identical(other.paidAt, paidAt) || other.paidAt == paidAt)&&(identical(other.user, user) || other.user == user)&&(identical(other.submission, submission) || other.submission == submission)&&(identical(other.event, event) || other.event == event)&&(identical(other.ticket, ticket) || other.ticket == ticket));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,eventId,ticketId,userId,status,createdAt,updatedAt,paymentId,paymentAmount,refundStatus,rejectionReason,user,submission,event,ticket);
+int get hashCode => Object.hash(runtimeType,id,eventId,ticketId,userId,status,createdAt,updatedAt,paymentId,paymentAmount,refundStatus,rejectionReason,paidAt,user,submission,event,ticket);
 
 @override
 String toString() {
-  return 'EventApplication(id: $id, eventId: $eventId, ticketId: $ticketId, userId: $userId, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, paymentId: $paymentId, paymentAmount: $paymentAmount, refundStatus: $refundStatus, rejectionReason: $rejectionReason, user: $user, submission: $submission, event: $event, ticket: $ticket)';
+  return 'EventApplication(id: $id, eventId: $eventId, ticketId: $ticketId, userId: $userId, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, paymentId: $paymentId, paymentAmount: $paymentAmount, refundStatus: $refundStatus, rejectionReason: $rejectionReason, paidAt: $paidAt, user: $user, submission: $submission, event: $event, ticket: $ticket)';
 }
 
 
@@ -325,7 +327,7 @@ abstract mixin class _$EventApplicationCopyWith<$Res> implements $EventApplicati
   factory _$EventApplicationCopyWith(_EventApplication value, $Res Function(_EventApplication) _then) = __$EventApplicationCopyWithImpl;
 @override @useResult
 $Res call({
- String id,@JsonKey(name: 'event_id') String eventId,@JsonKey(name: 'ticket_id') String ticketId,@JsonKey(name: 'user_id') String userId, String status,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'payment_id') String? paymentId,@JsonKey(name: 'payment_amount') int? paymentAmount,@JsonKey(name: 'refund_status') String refundStatus,@JsonKey(name: 'rejection_reason') String? rejectionReason, UserProfile? user, VerificationSubmission? submission, Event? event, Ticket? ticket
+ String id,@JsonKey(name: 'event_id') String eventId,@JsonKey(name: 'ticket_id') String ticketId,@JsonKey(name: 'user_id') String userId, String status,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'payment_id') String? paymentId,@JsonKey(name: 'payment_amount') int? paymentAmount,@JsonKey(name: 'refund_status') String refundStatus,@JsonKey(name: 'rejection_reason') String? rejectionReason,@JsonKey(name: 'paid_at') DateTime? paidAt, UserProfile? user, VerificationSubmission? submission, Event? event, Ticket? ticket
 });
 
 
@@ -342,7 +344,7 @@ class __$EventApplicationCopyWithImpl<$Res>
 
 /// Create a copy of EventApplication
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? eventId = null,Object? ticketId = null,Object? userId = null,Object? status = null,Object? createdAt = null,Object? updatedAt = null,Object? paymentId = freezed,Object? paymentAmount = freezed,Object? refundStatus = null,Object? rejectionReason = freezed,Object? user = freezed,Object? submission = freezed,Object? event = freezed,Object? ticket = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? eventId = null,Object? ticketId = null,Object? userId = null,Object? status = null,Object? createdAt = null,Object? updatedAt = null,Object? paymentId = freezed,Object? paymentAmount = freezed,Object? refundStatus = null,Object? rejectionReason = freezed,Object? paidAt = freezed,Object? user = freezed,Object? submission = freezed,Object? event = freezed,Object? ticket = freezed,}) {
   return _then(_EventApplication(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,eventId: null == eventId ? _self.eventId : eventId // ignore: cast_nullable_to_non_nullable
@@ -355,7 +357,8 @@ as DateTime,paymentId: freezed == paymentId ? _self.paymentId : paymentId // ign
 as String?,paymentAmount: freezed == paymentAmount ? _self.paymentAmount : paymentAmount // ignore: cast_nullable_to_non_nullable
 as int?,refundStatus: null == refundStatus ? _self.refundStatus : refundStatus // ignore: cast_nullable_to_non_nullable
 as String,rejectionReason: freezed == rejectionReason ? _self.rejectionReason : rejectionReason // ignore: cast_nullable_to_non_nullable
-as String?,user: freezed == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
+as String?,paidAt: freezed == paidAt ? _self.paidAt : paidAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,user: freezed == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
 as UserProfile?,submission: freezed == submission ? _self.submission : submission // ignore: cast_nullable_to_non_nullable
 as VerificationSubmission?,event: freezed == event ? _self.event : event // ignore: cast_nullable_to_non_nullable
 as Event?,ticket: freezed == ticket ? _self.ticket : ticket // ignore: cast_nullable_to_non_nullable

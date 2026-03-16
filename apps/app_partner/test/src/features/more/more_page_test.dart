@@ -52,8 +52,8 @@ void main() {
         currentPartnerInfoProvider.overrideWith(
           (ref) async => partnerValue.when(
             data: (p) => p,
-            loading: () => throw StateError('loading'),
-            error: (e, _) => throw e,
+            loading: () => throw Exception('loading'),
+            error: (e, _) => throw Exception(e),
           ),
         ),
         moreCoordinatorProvider.overrideWithValue(mockCoordinator),

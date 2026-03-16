@@ -19,6 +19,9 @@ _EventApplication _$EventApplicationFromJson(Map<String, dynamic> json) =>
       paymentAmount: (json['payment_amount'] as num?)?.toInt(),
       refundStatus: json['refund_status'] as String? ?? 'none',
       rejectionReason: json['rejection_reason'] as String?,
+      paidAt: json['paid_at'] == null
+          ? null
+          : DateTime.parse(json['paid_at'] as String),
       user: json['user'] == null
           ? null
           : UserProfile.fromJson(json['user'] as Map<String, dynamic>),
@@ -48,6 +51,7 @@ Map<String, dynamic> _$EventApplicationToJson(_EventApplication instance) =>
       'payment_amount': instance.paymentAmount,
       'refund_status': instance.refundStatus,
       'rejection_reason': instance.rejectionReason,
+      'paid_at': instance.paidAt?.toIso8601String(),
       'user': instance.user,
       'submission': instance.submission,
       'event': instance.event,

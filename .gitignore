@@ -17,6 +17,10 @@ logs/
 *.log.gz
 *-audit.json
 
+# Allure
+allure-results/
+allure-report/
+
 # Flutter / Dart
 **/.dart_tool/
 **/.flutter-plugins
