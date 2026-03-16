@@ -1,60 +1,37 @@
-import 'dart:async';
-
 import 'package:app_partner/src/features/party/party_providers.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'revenue_summary_card.g.dart';
+
+/// Loads current month net settlement amount from SettlementRepository.
+@riverpod
+Future<int> currentMonthNet(Ref ref) async {
+  final partner = await ref.read(currentPartnerInfoProvider.future);
+  if (partner == null) return 0;
+  final now = DateTime.now();
+  final repo = ref.read(settlementRepositoryProvider);
+  final data = await repo.getSettlementDashboard(
+    partnerId: partner.id,
+    periodStart: DateTime(now.year, now.month),
+    periodEnd: DateTime(now.year, now.month + 1, 0),
+  );
+  return data['completed_net_total'] as int? ?? 0;
+}
 
 /// Revenue summary card — displays current month net settlement amount.
-/// Loads data from SettlementRepository.getSettlementDashboard().
-class RevenueSummaryCard extends ConsumerStatefulWidget {
+class RevenueSummaryCard extends ConsumerWidget {
   const RevenueSummaryCard({super.key});
 
   @override
-  ConsumerState<RevenueSummaryCard> createState() => _RevenueSummaryCardState();
-}
-
-class _RevenueSummaryCardState extends ConsumerState<RevenueSummaryCard> {
-  int? _currentMonthNet;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    unawaited(_loadData());
-  }
-
-  Future<void> _loadData() async {
-    try {
-      final partner = await ref.read(currentPartnerInfoProvider.future);
-      if (partner == null) {
-        if (mounted) setState(() => _isLoading = false);
-        return;
-      }
-      final now = DateTime.now();
-      final repo = ref.read(settlementRepositoryProvider);
-      final data = await repo.getSettlementDashboard(
-        partnerId: partner.id,
-        periodStart: DateTime(now.year, now.month),
-        periodEnd: DateTime(now.year, now.month + 1, 0),
-      );
-      if (mounted) {
-        setState(() {
-          _currentMonthNet = data['completed_net_total'] as int? ?? 0;
-          _isLoading = false;
-        });
-      }
-    } on Exception catch (_) {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final formatter = NumberFormat.currency(locale: 'ko_KR', symbol: '₩');
+    final currentMonthNetAsync = ref.watch(currentMonthNetProvider);
 
     return Card(
       elevation: 0,
@@ -87,8 +64,15 @@ class _RevenueSummaryCardState extends ConsumerState<RevenueSummaryCard> {
                 ],
               ),
               const SizedBox(height: 8),
-              if (_isLoading)
-                SizedBox(
+              currentMonthNetAsync.when(
+                data: (amount) => Text(
+                  formatter.format(amount),
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                loading: () => SizedBox(
                   height: 24,
                   width: 24,
                   child: CircularProgressIndicator(
@@ -97,15 +81,15 @@ class _RevenueSummaryCardState extends ConsumerState<RevenueSummaryCard> {
                       colorScheme.primary,
                     ),
                   ),
-                )
-              else
-                Text(
-                  formatter.format(_currentMonthNet ?? 0),
+                ),
+                error: (error, stackTrace) => Text(
+                  formatter.format(0),
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: colorScheme.primary,
                   ),
                 ),
+              ),
             ],
           ),
         ),
