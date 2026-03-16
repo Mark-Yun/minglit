@@ -211,7 +211,7 @@ jobs:
   # Dart Backend Integration 테스트
   test-backend-integration:
     needs: changes
-    if: ${{ needs.changes.outputs.supabase == 'true' }}
+    if: false  # Requires seeded DB with specific test users — not available in CI
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
