@@ -21,8 +21,10 @@ class RefundCalculator {
   }) {
     final baseTime = now ?? DateTime.now();
 
+    // Fix #133: 미래 paidAt는 음수 duration으로 grace period를 통과하므로 명시적으로 제외
     final withinGracePeriod =
         paidAt != null &&
+        !paidAt.isAfter(baseTime) &&
         baseTime.difference(paidAt) <= Duration(hours: gracePeriodHours);
 
     final withinCutoff =

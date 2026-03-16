@@ -64,7 +64,18 @@ Deno.serve(withSentry(async (req) => {
       supabase.rpc("get_current_policy", { p_key: "refund" }),
     ]);
 
-    if (eventResult.data && policyResult.data) {
+    // Fix #133: 이벤트/정책 조회 실패 시 적격성 검사를 건너뛰지 않고 명시적으로 에러 반환
+    if (eventResult.error || !eventResult.data) {
+      console.error("Failed to fetch event:", eventResult.error);
+      return errorResponse("Failed to verify refund eligibility", 500);
+    }
+
+    if (policyResult.error || !policyResult.data) {
+      console.error("Failed to fetch policy:", policyResult.error);
+      return errorResponse("Failed to verify refund eligibility", 500);
+    }
+
+    {
       const policy = policyResult.data as Record<string, number>;
       const gracePeriodHours = policy.grace_period_hours ?? 2;
       const cutoffDays = policy.cutoff_days ?? 7;

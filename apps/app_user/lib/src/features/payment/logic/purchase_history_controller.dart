@@ -72,11 +72,17 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
       return;
     }
 
-    final policyRepo = ref.read(policyRepositoryProvider);
-    final policy = await policyRepo.getRefundPolicy();
-    final gracePeriodHours =
-        (policy?['grace_period_hours'] as num?)?.toInt() ?? 2;
-    final cutoffDays = (policy?['cutoff_days'] as num?)?.toInt() ?? 7;
+    // Fix #133: 정책 조회 실패 시 기본값(2/7)으로 환불 플로우가 계속 진행되도록 보호
+    int gracePeriodHours = 2;
+    int cutoffDays = 7;
+    try {
+      final policyRepo = ref.read(policyRepositoryProvider);
+      final policy = await policyRepo.getRefundPolicy();
+      gracePeriodHours = (policy?['grace_period_hours'] as num?)?.toInt() ?? 2;
+      cutoffDays = (policy?['cutoff_days'] as num?)?.toInt() ?? 7;
+    } on Object {
+      // 정책 조회 실패 시 기본 정책으로 진행
+    }
 
     final calculation = calculateRefund(
       eventStartTime: eventStartTime,
