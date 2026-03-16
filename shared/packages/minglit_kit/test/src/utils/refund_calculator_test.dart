@@ -2,97 +2,126 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/utils/refund_calculator.dart';
 
 void main() {
-  group('RefundCalculator - edge cases', () {
-    test('exactly 7 days returns 100% refund', () {
-      final now = DateTime(2026, 1, 1, 12);
+  group('RefundCalculator binary policy', () {
+    const amount = 10000;
+    final now = DateTime(2026, 3, 16, 12, 0);
+
+    test('within grace period → full refund', () {
+      final paidAt = now.subtract(const Duration(hours: 1));
+      final eventStart = now.add(const Duration(days: 3));
       final result = RefundCalculator.calculate(
-        eventStartTime: now.add(const Duration(days: 7)),
-        paymentAmount: 10000,
+        eventStartTime: eventStart,
+        paymentAmount: amount,
+        paidAt: paidAt,
+        gracePeriodHours: 2,
+        cutoffDays: 7,
         now: now,
       );
-
       expect(result.refundPercentage, 100);
-      expect(result.refundAmount, 10000);
+      expect(result.refundAmount, amount);
       expect(result.feeAmount, 0);
     });
 
-    test('exactly 3 days returns 80% refund', () {
-      final now = DateTime(2026, 1, 1, 12);
+    test('within cutoff days → full refund', () {
+      final paidAt = now.subtract(const Duration(hours: 5));
+      final eventStart = now.add(const Duration(days: 10));
       final result = RefundCalculator.calculate(
-        eventStartTime: now.add(const Duration(days: 3)),
-        paymentAmount: 10000,
+        eventStartTime: eventStart,
+        paymentAmount: amount,
+        paidAt: paidAt,
+        gracePeriodHours: 2,
+        cutoffDays: 7,
         now: now,
       );
-
-      expect(result.refundPercentage, 80);
-      expect(result.refundAmount, 8000);
-      expect(result.feeAmount, 2000);
+      expect(result.refundPercentage, 100);
+      expect(result.refundAmount, amount);
+      expect(result.feeAmount, 0);
     });
 
-    test('exactly 1 day returns 50% refund', () {
-      final now = DateTime(2026, 1, 1, 12);
+    test('both conditions fail → no refund', () {
+      final paidAt = now.subtract(const Duration(hours: 5));
+      final eventStart = now.add(const Duration(days: 3));
       final result = RefundCalculator.calculate(
-        eventStartTime: now.add(const Duration(days: 1)),
-        paymentAmount: 10000,
+        eventStartTime: eventStart,
+        paymentAmount: amount,
+        paidAt: paidAt,
+        gracePeriodHours: 2,
+        cutoffDays: 7,
         now: now,
       );
-
-      expect(result.refundPercentage, 50);
-      expect(result.refundAmount, 5000);
-      expect(result.feeAmount, 5000);
-    });
-
-    test('event already started returns 0% refund', () {
-      final now = DateTime(2026, 1, 1, 12);
-      final result = RefundCalculator.calculate(
-        eventStartTime: now.subtract(const Duration(hours: 1)),
-        paymentAmount: 10000,
-        now: now,
-      );
-
       expect(result.refundPercentage, 0);
       expect(result.refundAmount, 0);
-      expect(result.feeAmount, 10000);
+      expect(result.feeAmount, amount);
+    });
+
+    test('paidAt null + within cutoff → full refund', () {
+      final eventStart = now.add(const Duration(days: 10));
+      final result = RefundCalculator.calculate(
+        eventStartTime: eventStart,
+        paymentAmount: amount,
+        paidAt: null,
+        gracePeriodHours: 2,
+        cutoffDays: 7,
+        now: now,
+      );
+      expect(result.refundPercentage, 100);
+      expect(result.refundAmount, amount);
+    });
+
+    test('paidAt null + outside cutoff → no refund', () {
+      final eventStart = now.add(const Duration(days: 3));
+      final result = RefundCalculator.calculate(
+        eventStartTime: eventStart,
+        paymentAmount: amount,
+        paidAt: null,
+        gracePeriodHours: 2,
+        cutoffDays: 7,
+        now: now,
+      );
+      expect(result.refundPercentage, 0);
+      expect(result.refundAmount, 0);
+    });
+
+    test('exactly at grace period boundary → full refund', () {
+      final paidAt = now.subtract(const Duration(hours: 2));
+      final eventStart = now.add(const Duration(days: 3));
+      final result = RefundCalculator.calculate(
+        eventStartTime: eventStart,
+        paymentAmount: amount,
+        paidAt: paidAt,
+        gracePeriodHours: 2,
+        cutoffDays: 7,
+        now: now,
+      );
+      expect(result.refundPercentage, 100);
+    });
+
+    test('exactly at cutoff boundary → full refund', () {
+      final paidAt = now.subtract(const Duration(hours: 5));
+      final eventStart = now.add(const Duration(days: 7));
+      final result = RefundCalculator.calculate(
+        eventStartTime: eventStart,
+        paymentAmount: amount,
+        paidAt: paidAt,
+        gracePeriodHours: 2,
+        cutoffDays: 7,
+        now: now,
+      );
+      expect(result.refundPercentage, 100);
     });
 
     test('zero payment amount returns zero amounts', () {
-      final now = DateTime(2026, 1, 1, 12);
+      final eventStart = now.add(const Duration(days: 10));
       final result = RefundCalculator.calculate(
-        eventStartTime: now.add(const Duration(days: 10)),
+        eventStartTime: eventStart,
         paymentAmount: 0,
+        paidAt: null,
+        gracePeriodHours: 2,
+        cutoffDays: 7,
         now: now,
       );
-
       expect(result.refundAmount, 0);
       expect(result.feeAmount, 0);
-    });
-
-    test('large payment amount calculates correctly', () {
-      final now = DateTime(2026, 1, 1, 12);
-      final result = RefundCalculator.calculate(
-        eventStartTime: now.add(const Duration(days: 5)),
-        paymentAmount: 1000000,
-        now: now,
-      );
-
-      expect(result.refundPercentage, 80);
-      expect(result.refundAmount, 800000);
-      expect(result.feeAmount, 200000);
-    });
-
-    test('23 hours 59 minutes returns 0% refund', () {
-      final now = DateTime(2026, 1, 1, 12);
-      final result = RefundCalculator.calculate(
-        eventStartTime: now.add(
-          const Duration(hours: 23, minutes: 59),
-        ),
-        paymentAmount: 10000,
-        now: now,
-      );
-
-      expect(result.refundPercentage, 0);
-      expect(result.refundAmount, 0);
-      expect(result.feeAmount, 10000);
     });
   });
 }
