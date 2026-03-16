@@ -140,19 +140,12 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        ProviderScope(
+        createTestWidget(
           overrides: [
-            eventRepositoryProvider.overrideWithValue(mockEventRepository),
-            activeFiltersProvider.overrideWith(_NoFiltersNotifier.new),
             recommendationFeedProvider.overrideWith(
               _MockLoadingMoreNotifier.new,
             ),
-            currentUserProvider.overrideWith((_) => null),
           ],
-          child: MaterialApp(
-            theme: MinglitTheme.materialTheme,
-            home: const HomePage(),
-          ),
         ),
       );
       await tester.pump();
@@ -164,19 +157,12 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        ProviderScope(
+        createTestWidget(
           overrides: [
-            eventRepositoryProvider.overrideWithValue(mockEventRepository),
-            activeFiltersProvider.overrideWith(_NoFiltersNotifier.new),
             recommendationFeedProvider.overrideWith(
               _MockNoMoreNotifier.new,
             ),
-            currentUserProvider.overrideWith((_) => null),
           ],
-          child: MaterialApp(
-            theme: MinglitTheme.materialTheme,
-            home: const HomePage(),
-          ),
         ),
       );
       await tester.pump();

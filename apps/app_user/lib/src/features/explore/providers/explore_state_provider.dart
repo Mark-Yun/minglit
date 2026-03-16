@@ -248,18 +248,35 @@ class RecommendationFeedNotifier extends _$RecommendationFeedNotifier {
   /// Reset on every [build] call (i.e., when filters change).
   List<Event> _rawEvents = [];
 
+  /// Monotonically increasing generation counter.
+  /// Incremented on each [build] call (filter change).
+  /// Used to discard stale async results from previous builds.
+  int _generation = 0;
+
   @override
   Future<RecommendationFeedState> build() async {
-    // Reset raw accumulation whenever filters change
+    // Reset raw accumulation and bump generation on every filter change
     _rawEvents = [];
+    _generation++;
+    final capturedGen = _generation;
 
     // Watch filters — triggers rebuild on change, resetting pagination
     final filters = ref.watch(activeFiltersProvider);
 
-    return _fetchPage(
+    final result = await _fetchPage(
       filters: filters,
       serverOffset: 0,
+      generation: capturedGen,
     );
+
+    // If a newer build started during our fetch, return empty state —
+    // the newer build will overwrite this immediately.
+    return result ??
+        const RecommendationFeedState(
+          events: [],
+          serverOffset: 0,
+          hasMore: false,
+        );
   }
 
   /// Loads the next page of events.
@@ -274,13 +291,17 @@ class RecommendationFeedNotifier extends _$RecommendationFeedNotifier {
     // Preserve existing data while indicating loading
     state = AsyncData(current.copyWith(isLoadingMore: true));
 
+    final capturedGen = _generation;
     final filters = ref.read(activeFiltersProvider);
     try {
       final updated = await _fetchPage(
         filters: filters,
         serverOffset: current.serverOffset,
+        generation: capturedGen,
       );
       if (!ref.mounted) return;
+      // Discard if a filter change occurred during fetch
+      if (updated == null) return;
       state = AsyncData(updated);
     } on Exception catch (_) {
       // On error: restore previous state, preserve existing events
@@ -289,9 +310,11 @@ class RecommendationFeedNotifier extends _$RecommendationFeedNotifier {
     }
   }
 
-  Future<RecommendationFeedState> _fetchPage({
+  /// Returns null if the result is stale (a newer generation started).
+  Future<RecommendationFeedState?> _fetchPage({
     required ExploreFilters filters,
     required int serverOffset,
+    required int generation,
   }) async {
     final feedType = _mapFeedType(filters.sortType);
 
@@ -302,6 +325,9 @@ class RecommendationFeedNotifier extends _$RecommendationFeedNotifier {
       type: feedType,
       offset: serverOffset,
     );
+
+    // Discard if a filter change (new generation) occurred during the fetch
+    if (generation != _generation) return null;
 
     // Append new unique events to raw accumulation
     final existingIds = _rawEvents.map((e) => e.id).toSet();
@@ -324,7 +350,9 @@ class RecommendationFeedNotifier extends _$RecommendationFeedNotifier {
     return switch (sortType) {
       ExploreSortType.recommended => EventFeedType.newArrivals,
       ExploreSortType.closingSoon => EventFeedType.closingSoon,
-      ExploreSortType.nearestDate => EventFeedType.earlyBird,
+      // Use nearest (date-sorted) rather than earlyBird, which applies an
+      // additional ticket-name filter that would exclude non-early-bird events.
+      ExploreSortType.nearestDate => EventFeedType.nearest,
     };
   }
 }
@@ -334,7 +362,7 @@ class RecommendationFeedNotifier extends _$RecommendationFeedNotifier {
 /// Maps [ExploreSortType] to [EventFeedType]:
 /// - recommended → newArrivals
 /// - closingSoon → closingSoon
-/// - nearestDate → earlyBird
+/// - nearestDate → nearest
 @riverpod
 Future<List<Event>> recommendationEvents(Ref ref) async {
   final filters = ref.watch(activeFiltersProvider);
@@ -342,7 +370,7 @@ Future<List<Event>> recommendationEvents(Ref ref) async {
   final feedType = switch (filters.sortType) {
     ExploreSortType.recommended => EventFeedType.newArrivals,
     ExploreSortType.closingSoon => EventFeedType.closingSoon,
-    ExploreSortType.nearestDate => EventFeedType.earlyBird,
+    ExploreSortType.nearestDate => EventFeedType.nearest,
   };
 
   final link = ref.keepAlive();

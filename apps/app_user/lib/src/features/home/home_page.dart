@@ -49,6 +49,18 @@ class _HomePageState extends ConsumerState<HomePage> {
     final eventCoordinator = ref.read(eventCoordinatorProvider);
     final recommendationState = ref.watch(recommendationFeedProvider);
 
+    // Auto-fetch next page when first page is completely filtered out
+    // by client-side eligibility/nearby filter (events empty but hasMore=true).
+    ref.listen(recommendationFeedProvider, (_, next) {
+      next.whenData((s) {
+        if (s.events.isEmpty && s.hasMore && !s.isLoadingMore) {
+          unawaited(
+            ref.read(recommendationFeedProvider.notifier).loadMore(),
+          );
+        }
+      });
+    });
+
     return Scaffold(
       body: CustomScrollView(
         controller: _scrollController,
@@ -131,6 +143,13 @@ class _HomePageState extends ConsumerState<HomePage> {
                   child: Center(child: Text('추천 이벤트가 없습니다')),
                 );
               }
+              // First page fully filtered client-side: show loading while
+              // auto-fetch (triggered by ref.listen above) loads next page.
+              if (state.events.isEmpty) {
+                return const SliverFillRemaining(
+                  child: Center(child: MinglitCircularProgressIndicator()),
+                );
+              }
               return SliverPadding(
                 padding: const EdgeInsets.only(
                   top: MinglitSpacing.small,
@@ -160,7 +179,10 @@ class _HomePageState extends ConsumerState<HomePage> {
           if (recommendationState.value?.isLoadingMore ?? false)
             const SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.symmetric(vertical: MinglitSpacing.medium),
+                padding: EdgeInsets.only(
+                  top: MinglitSpacing.medium,
+                  bottom: MinglitSpacing.medium,
+                ),
                 child: Center(child: MinglitCircularProgressIndicator()),
               ),
             ),
