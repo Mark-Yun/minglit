@@ -22,9 +22,8 @@ runs:
         VERCEL_PROJECT_ID: ${{ inputs.vercel-project-id }}
         VERCEL_TOKEN: ${{ inputs.vercel-token }}
       run: |
-        npm install --global vercel@latest
         if [[ "${{ github.ref_name }}" == "main" ]]; then
-          vercel deploy --prod --token=$VERCEL_TOKEN --yes
+          npx --yes vercel@latest deploy --prod --token=$VERCEL_TOKEN --yes
         else
-          vercel deploy --token=$VERCEL_TOKEN --yes
+          npx --yes vercel@latest deploy --token=$VERCEL_TOKEN --yes
         fi
