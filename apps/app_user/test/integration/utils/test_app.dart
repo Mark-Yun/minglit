@@ -15,10 +15,8 @@ Widget createTestApp({
   User? currentUser,
   List<dynamic> additionalOverrides = const [],
   String initialLocation = '/',
+  List<Event>? events,
 }) {
-  // Unify auth signals: if currentUser is provided, treat as logged in
-  final effectiveLoggedIn = isLoggedIn || currentUser != null;
-
   final testRouter = GoRouter(
     initialLocation: initialLocation,
     routes: $appRoutes,
@@ -34,7 +32,7 @@ Widget createTestApp({
       final isLoggingIn = path == '/login';
 
       // Logged in + trying to access /login → redirect to `from` or home
-      if (effectiveLoggedIn && isLoggingIn) {
+      if (isLoggedIn && isLoggingIn) {
         final from = state.uri.queryParameters['from'];
         if (from != null &&
             from.startsWith('/') &&
@@ -57,7 +55,7 @@ Widget createTestApp({
           protectedPrefixes.any(path.startsWith) || path.endsWith('/apply');
 
       // Not logged in + protected route → /login?from={path}
-      if (!effectiveLoggedIn && isProtected) {
+      if (!isLoggedIn && isProtected) {
         return Uri(
           path: '/login',
           queryParameters: {'from': path},
@@ -79,7 +77,9 @@ Widget createTestApp({
       // Notification (prevent FCM platform channel errors)
       notificationInitializerProvider.overrideWith((_) {}),
       // Event/explore providers (prevent API calls)
-      recommendationEventsProvider.overrideWith((_) async => <Event>[]),
+      recommendationEventsProvider.overrideWith(
+        (_) async => events ?? <Event>[],
+      ),
       eventFeedProvider.overrideWith((ref, arg) async => <Event>[]),
       activeFiltersProvider.overrideWith(_NoFiltersNotifier.new),
       ...additionalOverrides.cast(),
