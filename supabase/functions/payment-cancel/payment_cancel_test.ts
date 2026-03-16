@@ -25,7 +25,7 @@ const ineligiblePaidAt = new Date(nowMs - 3 * 60 * 60 * 1000).toISOString(); // 
 const farFutureEvent = new Date(nowMs + 10 * 24 * 60 * 60 * 1000).toISOString(); // 10일 후
 const nearFutureEvent = new Date(nowMs + 3 * 24 * 60 * 60 * 1000).toISOString(); // 3일 후
 
-function appRoute(overrides?: { paid_at?: string | null; refund_status?: string }) {
+function appRoute(overrides?: { paid_at?: string | null; refund_status?: string; user_id?: string }) {
   return {
     matcher: (req: Request) =>
       req.url.includes("/rest/v1/event_applications") && req.method === "GET",
@@ -34,6 +34,7 @@ function appRoute(overrides?: { paid_at?: string | null; refund_status?: string 
         paid_at: overrides?.paid_at !== undefined ? overrides.paid_at : eligiblePaidAt,
         event_id: "event-123",
         refund_status: overrides?.refund_status ?? "none",
+        user_id: overrides?.user_id ?? "user-123",
       }),
   };
 }
@@ -320,6 +321,31 @@ Deno.test("payment-cancel - partial refund passes amount and checksum to iamport
         const dbBody = JSON.parse(dbCall!.body!);
         assertEquals(dbBody.refund_status, "completed");
         assertEquals(dbBody.refund_amount, 5000);
+      });
+    });
+  });
+});
+
+Deno.test("payment-cancel - different user's payment → 403", async () => {
+  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+  const { fetchMock } = createFetchMock([
+    authRoute,
+    appRoute({ user_id: "other-user-456" }),
+  ]);
+
+  await withEnv(ENV, async () => {
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = authenticatedJsonRequest("http://localhost", {
+          payment_id: "imp_123",
+        });
+
+        const response = await handler(request);
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 403);
+        assertEquals(payload.error, "Forbidden");
       });
     });
   });

@@ -39,12 +39,17 @@ Deno.serve(withSentry(async (req) => {
     // 1.5a Fetch application for eligibility check
     const { data: application, error: appError } = await supabase
       .from("event_applications")
-      .select("paid_at, event_id, refund_status")
+      .select("paid_at, event_id, refund_status, user_id")
       .eq("payment_id", payment_id)
       .single();
 
     if (appError || !application) {
       return errorResponse("Application not found", 404);
+    }
+
+    // Fix #133: 호출자가 신청자 본인인지 검증 — service role은 RLS를 우회하므로 명시적 확인 필요
+    if (application.user_id !== auth) {
+      return errorResponse("Forbidden", 403);
     }
 
     // 1.5b Prevent double refund
