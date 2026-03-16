@@ -75,15 +75,20 @@ serve(withSentry(async (req) => {
         dbStatus = `unknown_${payment.status}`;
     }
 
-    // Update event_applications table
-    const updatePayload: Record<string, unknown> = {
-      status: dbStatus,
-      payment_id: imp_uid,
-      updated_at: new Date().toISOString(),
-    };
-    if (payment.status === "cancelled") {
-      updatePayload.refund_status = "completed";
-    }
+     // Update event_applications table
+     const paidAtIso = payment.paid_at && payment.paid_at > 0
+       ? new Date(payment.paid_at * 1000).toISOString()
+       : new Date().toISOString();
+     
+     const updatePayload: Record<string, unknown> = {
+       status: dbStatus,
+       payment_id: imp_uid,
+       updated_at: new Date().toISOString(),
+       ...(payment.status === "paid" ? { paid_at: paidAtIso } : {}),
+     };
+     if (payment.status === "cancelled") {
+       updatePayload.refund_status = "completed";
+     }
     const { error } = await supabase
       .from("event_applications")
       .update(updatePayload)
