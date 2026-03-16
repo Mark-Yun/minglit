@@ -23,7 +23,7 @@ import {
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // ─────────────────────────────────────────────────────────
-// simCalcRefund — 4 tiers
+// simCalcRefund — binary policy (100% or 0%)
 // ─────────────────────────────────────────────────────────
 
 Deno.test("simCalcRefund - 7d+ returns 100%", () => {
@@ -44,40 +44,40 @@ Deno.test("simCalcRefund - exactly 7d returns 100%", () => {
   assertEquals(result.fee_amount, 0);
 });
 
-Deno.test("simCalcRefund - 3-7d returns 80%", () => {
+Deno.test("simCalcRefund - 3-7d returns 0% (binary policy)", () => {
   const now = new Date();
   const startTime = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);
   const result = simCalcRefund(startTime, 10000, now);
-  assertEquals(result.refund_percentage, 80);
-  assertEquals(result.refund_amount, 8000);
-  assertEquals(result.fee_amount, 2000);
+  assertEquals(result.refund_percentage, 0);
+  assertEquals(result.refund_amount, 0);
+  assertEquals(result.fee_amount, 10000);
 });
 
-Deno.test("simCalcRefund - exactly 3d returns 80%", () => {
+Deno.test("simCalcRefund - exactly 3d returns 0% (binary policy)", () => {
   const now = new Date();
   const startTime = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
   const result = simCalcRefund(startTime, 10000, now);
-  assertEquals(result.refund_percentage, 80);
-  assertEquals(result.refund_amount, 8000);
-  assertEquals(result.fee_amount, 2000);
+  assertEquals(result.refund_percentage, 0);
+  assertEquals(result.refund_amount, 0);
+  assertEquals(result.fee_amount, 10000);
 });
 
-Deno.test("simCalcRefund - 1-3d returns 50%", () => {
+Deno.test("simCalcRefund - 1-3d returns 0% (binary policy)", () => {
   const now = new Date();
   const startTime = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
   const result = simCalcRefund(startTime, 10000, now);
-  assertEquals(result.refund_percentage, 50);
-  assertEquals(result.refund_amount, 5000);
-  assertEquals(result.fee_amount, 5000);
+  assertEquals(result.refund_percentage, 0);
+  assertEquals(result.refund_amount, 0);
+  assertEquals(result.fee_amount, 10000);
 });
 
-Deno.test("simCalcRefund - exactly 1d returns 50%", () => {
+Deno.test("simCalcRefund - exactly 1d returns 0% (binary policy)", () => {
   const now = new Date();
   const startTime = new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000);
   const result = simCalcRefund(startTime, 10000, now);
-  assertEquals(result.refund_percentage, 50);
-  assertEquals(result.refund_amount, 5000);
-  assertEquals(result.fee_amount, 5000);
+  assertEquals(result.refund_percentage, 0);
+  assertEquals(result.refund_amount, 0);
+  assertEquals(result.fee_amount, 10000);
 });
 
 Deno.test("simCalcRefund - <1d returns 0%", () => {
@@ -89,12 +89,12 @@ Deno.test("simCalcRefund - <1d returns 0%", () => {
   assertEquals(result.fee_amount, 10000);
 });
 
-Deno.test("simCalcRefund - floor math (odd amount)", () => {
+Deno.test("simCalcRefund - floor math (100% case)", () => {
   const now = new Date();
-  const startTime = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000); // 80%
-  const result = simCalcRefund(startTime, 10001, now); // 10001 * 80 / 100 = 8000.8 → floor = 8000
-  assertEquals(result.refund_amount, 8000);
-  assertEquals(result.fee_amount, 10001 - 8000);
+  const startTime = new Date(now.getTime() + 8 * 24 * 60 * 60 * 1000);
+  const result = simCalcRefund(startTime, 10001, now);
+  assertEquals(result.refund_amount, 10001);
+  assertEquals(result.fee_amount, 0);
 });
 
 // ─────────────────────────────────────────────────────────

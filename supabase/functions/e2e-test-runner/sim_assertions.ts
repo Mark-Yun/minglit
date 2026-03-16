@@ -163,6 +163,7 @@ export async function simAssertVerificationApproved(
 // Phase 4 — 환불 검증
 // ─────────────────────────────────────────────────────────
 
+// Fix #133: 환불 시뮬레이션 로직을 binary DB-driven 정책(100%/0%)으로 정렬
 export function simCalcRefund(
   startTime: Date,
   paymentAmount: number,
@@ -176,19 +177,10 @@ export function simCalcRefund(
     paidAt.getTime() <= now.getTime() &&
     now.getTime() - paidAt.getTime() <= gracePeriodHours * 60 * 60 * 1000;
 
-  const daysUntilEvent = (startTime.getTime() - now.getTime()) / (24 * 60 * 60 * 1000);
+  const withinCutoff =
+    startTime.getTime() - now.getTime() >= cutoffDays * 24 * 60 * 60 * 1000;
 
-  let percentage: number;
-  if (withinGracePeriod || daysUntilEvent >= cutoffDays) {
-    percentage = 100;
-  } else if (daysUntilEvent >= 3) {
-    percentage = 80;
-  } else if (daysUntilEvent >= 1) {
-    percentage = 50;
-  } else {
-    percentage = 0;
-  }
-
+  const percentage = withinGracePeriod || withinCutoff ? 100 : 0;
   const refundAmount = Math.floor((paymentAmount * percentage) / 100);
   const feeAmount = paymentAmount - refundAmount;
   return { refund_percentage: percentage, refund_amount: refundAmount, fee_amount: feeAmount };

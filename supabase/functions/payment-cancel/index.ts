@@ -83,8 +83,10 @@ Deno.serve(withSentry(async (req) => {
       const paidAt = application.paid_at ? new Date(application.paid_at) : null;
       const eventStart = new Date(eventResult.data.start_time);
 
+      // Fix #133: 미래 paid_at은 음수 duration으로 grace period를 통과하므로 명시적으로 제외
       const withinGracePeriod =
         paidAt !== null &&
+        paidAt.getTime() <= now.getTime() &&
         now.getTime() - paidAt.getTime() <=
           gracePeriodHours * 60 * 60 * 1000;
       const withinCutoff =
