@@ -205,6 +205,7 @@ class PurchaseHistoryCard extends ConsumerWidget {
                       paymentId: paymentId,
                       paymentAmount: paymentAmount,
                       eventStartTime: eventStartTime,
+                      paidAt: application.paidAt,
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: theme.colorScheme.errorContainer,
@@ -242,17 +243,26 @@ class PurchaseHistoryCard extends ConsumerWidget {
     required String? paymentId,
     required int? paymentAmount,
     required DateTime? eventStartTime,
+    required DateTime? paidAt,
   }) async {
     final controller = ref.read(purchaseHistoryControllerProvider.notifier);
     await controller.runRefundFlow(
       paymentId: paymentId,
       paymentAmount: paymentAmount,
       eventStartTime: eventStartTime,
+      paidAt: paidAt,
       showMissingInfo: () async {
         if (!context.mounted) return;
         await context.showMinglitAlert(
           title: '환불 정보를 확인할 수 없습니다',
           message: '결제 정보를 다시 확인해주세요.',
+        );
+      },
+      showNotEligible: () async {
+        if (!context.mounted) return;
+        await context.showMinglitAlert(
+          title: '환불 불가',
+          message: '결제 후 2시간 이내 또는 이벤트 시작 7일 전까지만 환불 가능합니다.',
         );
       },
       confirmRefund: (calculation) async {

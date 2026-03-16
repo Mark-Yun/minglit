@@ -41,10 +41,18 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
   RefundCalculation calculateRefund({
     required DateTime eventStartTime,
     required int paymentAmount,
+    required DateTime? paidAt,
+    required int gracePeriodHours,
+    required int cutoffDays,
+    DateTime? now,
   }) {
     return RefundCalculator.calculate(
       eventStartTime: eventStartTime,
       paymentAmount: paymentAmount,
+      paidAt: paidAt,
+      gracePeriodHours: gracePeriodHours,
+      cutoffDays: cutoffDays,
+      now: now,
     );
   }
 
@@ -52,7 +60,9 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
     required String? paymentId,
     required int? paymentAmount,
     required DateTime? eventStartTime,
+    required DateTime? paidAt,
     required Future<void> Function() showMissingInfo,
+    required Future<void> Function() showNotEligible,
     required Future<bool> Function(RefundCalculation calculation) confirmRefund,
     required Future<bool> Function(String message) showError,
     required Future<void> Function() onSuccess,
@@ -62,10 +72,24 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
       return;
     }
 
+    final policyRepo = ref.read(policyRepositoryProvider);
+    final policy = await policyRepo.getRefundPolicy();
+    final gracePeriodHours =
+        (policy?['grace_period_hours'] as num?)?.toInt() ?? 2;
+    final cutoffDays = (policy?['cutoff_days'] as num?)?.toInt() ?? 7;
+
     final calculation = calculateRefund(
       eventStartTime: eventStartTime,
       paymentAmount: paymentAmount,
+      paidAt: paidAt,
+      gracePeriodHours: gracePeriodHours,
+      cutoffDays: cutoffDays,
     );
+
+    if (calculation.refundPercentage == 0) {
+      await showNotEligible();
+      return;
+    }
 
     final confirmed = await confirmRefund(calculation);
     if (!confirmed) return;
