@@ -1,3 +1,5 @@
+import { FetchRoute, jsonResponse } from "./mock_http.ts";
+
 export const mockOrder = {
   payment_amount: 15000,
   status: "pending",
@@ -39,6 +41,11 @@ export const mockPortoneVerification = {
 
 export const mockUser = {
   id: "user-123",
+};
+
+export const authRoute: FetchRoute = {
+  matcher: (req: Request) => req.url.includes("/auth/v1/user"),
+  handler: () => jsonResponse(mockUser),
 };
 
 export const mockNotificationMessage = {
