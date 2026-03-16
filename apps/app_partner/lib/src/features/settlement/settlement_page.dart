@@ -372,7 +372,38 @@ class _ListTabState extends ConsumerState<_ListTab> {
         ),
         const SizedBox(height: MinglitSpacing.small),
         Expanded(
-          child: listState.items.isEmpty && !listState.isLoading
+          child: listState.error != null && listState.items.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                      const SizedBox(height: MinglitSpacing.medium),
+                      Text(
+                        '오류가 발생했습니다',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: MinglitSpacing.small),
+                      Text(
+                        listState.error!,
+                        style: Theme.of(context).textTheme.bodySmall,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: MinglitSpacing.medium),
+                      FilledButton(
+                        onPressed: () => ref
+                            .read(settlementListControllerProvider.notifier)
+                            .refresh(),
+                        child: const Text('다시 시도'),
+                      ),
+                    ],
+                  ),
+                )
+              : listState.items.isEmpty && !listState.isLoading
               ? SettlementEmptyState(
                   title: '정산 항목이 없습니다',
                   subtitle: listState.selectedStatus != null
