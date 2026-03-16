@@ -128,12 +128,18 @@ export async function simRefundRequests(
         .eq("user_id", userId);
 
       if (deleteErr) {
+        // Rollback: participant delete failed — revert application status to avoid cancelled-but-has-participant state
+        await supabase
+          .from("event_applications")
+          .update({ status: "paid", refund_status: null, refund_amount: null })
+          .eq("id", appId);
         log({
-          level: "warn",
+          level: "error",
           phase: "refund",
           step: "delete_participant",
-          message: `Failed to delete participant for app ${appId}: ${deleteErr.message}`,
+          message: `Participant delete failed, reverted application ${appId}: ${deleteErr.message}`,
         });
+        continue;
       }
 
       const assertion = await simAssertRefundProcessed(

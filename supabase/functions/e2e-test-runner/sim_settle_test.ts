@@ -49,6 +49,12 @@ Deno.test("simVerifySettlement - passes when settlement exists with PENDING stat
           return { data: null, error: null };
         },
       },
+      event_applications: {
+        select: () => ({
+          data: Array.from({ length: 5 }, () => ({ payment_amount: GROSS / 5 })),
+          error: null,
+        }),
+      },
     },
   });
 
@@ -125,7 +131,7 @@ Deno.test("simTransitionToReady - settlement updated to READY after event_comple
       },
     },
     rpcs: {
-      update_settlement_ready_status: () => {
+      update_single_settlement_ready_status: () => {
         rpcCalled = true;
         return { data: null, error: null };
       },

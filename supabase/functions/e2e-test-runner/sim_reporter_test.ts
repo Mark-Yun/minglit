@@ -54,8 +54,9 @@ Deno.test("simUploadLog() — returns null gracefully when supabase errors", asy
           error: { message: "Storage unavailable" },
           data: null,
         }),
-        getPublicUrl: (_path: string) => ({
-          data: { publicUrl: "https://example.com/log.log" },
+        createSignedUrl: (_path: string, _expiry: number) => Promise.resolve({
+          data: { signedUrl: "https://example.com/signed/log.log" },
+          error: null,
         }),
       }),
     },

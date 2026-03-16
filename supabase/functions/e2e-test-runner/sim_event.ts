@@ -248,7 +248,16 @@ export async function simMatch(
           candidate_id: userA,
         });
         if (voteBErr) {
-          log({ level: "error", phase: "match", step: "insert_vote", message: `Failed to insert vote ${userB}→${userA}: ${voteBErr.message}` });
+          // Rollback: A→B was already inserted — delete it to avoid half-applied state
+          await supabase.from("match_votes")
+            .delete()
+            .eq("event_id", eventId)
+            .eq("voter_id", userA)
+            .eq("candidate_id", userB);
+          log({
+            level: "error", phase: "match", step: "insert_vote",
+            message: `Vote B→A failed, rolled back A→B for pair (${userA}, ${userB}): ${voteBErr.message}`,
+          });
           continue;
         }
 
