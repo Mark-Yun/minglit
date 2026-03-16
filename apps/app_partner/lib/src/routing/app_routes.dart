@@ -9,6 +9,7 @@ import 'package:app_partner/src/features/member/partner_member_permission_page.d
 import 'package:app_partner/src/features/more/more_page.dart';
 import 'package:app_partner/src/features/onboarding/partner_apply_page.dart';
 import 'package:app_partner/src/features/onboarding/partner_apply_status_page.dart';
+import 'package:app_partner/src/features/onboarding/partner_welcome_page.dart';
 import 'package:app_partner/src/features/party/create/party_create_wizard_page.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_page.dart';
 import 'package:app_partner/src/features/party/event/create/event_create_page.dart';
@@ -72,6 +73,15 @@ class PartnerApplyStatusRoute extends GoRouteData
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const PartnerApplyStatusPage();
+}
+
+/// **Partner Welcome Route**: Onboarding page before application wizard.
+@TypedGoRoute<PartnerWelcomeRoute>(path: '/welcome')
+class PartnerWelcomeRoute extends GoRouteData with $PartnerWelcomeRoute {
+  const PartnerWelcomeRoute();
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const PartnerWelcomePage();
 }
 
 /// **Notification Center Route**
