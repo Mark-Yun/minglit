@@ -19,6 +19,7 @@ Future<List<Event>> fetchEventFeed(
   double? latitude,
   double? longitude,
   int limit = 10,
+  int offset = 0,
 }) {
   // Cache data for 5 minutes
   final link = ref.keepAlive();
@@ -32,6 +33,7 @@ Future<List<Event>> fetchEventFeed(
     latitude: latitude,
     longitude: longitude,
     limit: limit,
+    offset: offset,
   );
 }
 

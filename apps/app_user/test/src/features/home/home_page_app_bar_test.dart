@@ -26,6 +26,7 @@ void main() {
           latitude: any(named: 'latitude'),
           longitude: any(named: 'longitude'),
           limit: any(named: 'limit'),
+          offset: any(named: 'offset'),
         ),
       ).thenAnswer((_) async => []);
     }

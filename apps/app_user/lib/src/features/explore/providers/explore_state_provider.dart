@@ -196,12 +196,173 @@ List<Event> filteredEvents(
   return result;
 }
 
+/// Pagination state for the recommendation feed.
+class RecommendationFeedState {
+  const RecommendationFeedState({
+    required this.events,
+    required this.serverOffset,
+    required this.hasMore,
+    this.isLoadingMore = false,
+  });
+
+  /// Client-side filtered display events.
+  final List<Event> events;
+
+  /// Total events fetched from server (for next page offset).
+  final int serverOffset;
+
+  /// Whether more events might be available.
+  final bool hasMore;
+
+  /// Whether a loadMore() call is in progress.
+  final bool isLoadingMore;
+
+  RecommendationFeedState copyWith({
+    List<Event>? events,
+    int? serverOffset,
+    bool? hasMore,
+    bool? isLoadingMore,
+  }) {
+    return RecommendationFeedState(
+      events: events ?? this.events,
+      serverOffset: serverOffset ?? this.serverOffset,
+      hasMore: hasMore ?? this.hasMore,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+    );
+  }
+}
+
+/// Manages pagination state for the recommendation event feed.
+///
+/// Tracks server-side offset separately from display count because
+/// client-side filtering (eligibility + nearby sort) means the number
+/// of displayed events may differ from the number fetched from server.
+///
+/// Filter changes (via [activeFiltersProvider]) automatically reset the
+/// state to page 0.
+@riverpod
+class RecommendationFeedNotifier extends _$RecommendationFeedNotifier {
+  static const int _limit = 10;
+
+  /// Raw events accumulated from server (before client-side filtering).
+  /// Reset on every [build] call (i.e., when filters change).
+  List<Event> _rawEvents = [];
+
+  /// Monotonically increasing generation counter.
+  /// Incremented on each [build] call (filter change).
+  /// Used to discard stale async results from previous builds.
+  int _generation = 0;
+
+  @override
+  Future<RecommendationFeedState> build() async {
+    // Reset raw accumulation and bump generation on every filter change
+    _rawEvents = [];
+    _generation++;
+    final capturedGen = _generation;
+
+    // Watch filters — triggers rebuild on change, resetting pagination
+    final filters = ref.watch(activeFiltersProvider);
+
+    final result = await _fetchPage(
+      filters: filters,
+      serverOffset: 0,
+      generation: capturedGen,
+    );
+
+    // If a newer build started during our fetch, return empty state —
+    // the newer build will overwrite this immediately.
+    return result ??
+        const RecommendationFeedState(
+          events: [],
+          serverOffset: 0,
+          hasMore: false,
+        );
+  }
+
+  /// Loads the next page of events.
+  ///
+  /// No-op if already loading or no more pages available.
+  Future<void> loadMore() async {
+    final current = state.value;
+    if (current == null) return;
+    if (current.isLoadingMore) return; // Concurrent guard
+    if (!current.hasMore) return; // No more pages
+
+    // Preserve existing data while indicating loading
+    state = AsyncData(current.copyWith(isLoadingMore: true));
+
+    final capturedGen = _generation;
+    final filters = ref.read(activeFiltersProvider);
+    try {
+      final updated = await _fetchPage(
+        filters: filters,
+        serverOffset: current.serverOffset,
+        generation: capturedGen,
+      );
+      if (!ref.mounted) return;
+      // Discard if a filter change occurred during fetch
+      if (updated == null) return;
+      state = AsyncData(updated);
+    } on Exception catch (_) {
+      // On error: restore previous state, preserve existing events
+      if (!ref.mounted) return;
+      state = AsyncData(current.copyWith(isLoadingMore: false));
+    }
+  }
+
+  /// Returns null if the result is stale (a newer generation started).
+  Future<RecommendationFeedState?> _fetchPage({
+    required ExploreFilters filters,
+    required int serverOffset,
+    required int generation,
+  }) async {
+    final feedType = _mapFeedType(filters.sortType);
+
+    // Call repository directly to avoid Riverpod error-zone propagation
+    // and to manage our own lifecycle (bypassing the 5-min per-page cache).
+    final repository = ref.read(eventRepositoryProvider);
+    final rawPage = await repository.getEventsByType(
+      type: feedType,
+      offset: serverOffset,
+    );
+
+    // Discard if a filter change (new generation) occurred during the fetch
+    if (generation != _generation) return null;
+
+    // Append new unique events to raw accumulation
+    final existingIds = _rawEvents.map((e) => e.id).toSet();
+    final newUnique = rawPage
+        .where((e) => !existingIds.contains(e.id))
+        .toList();
+    _rawEvents = [..._rawEvents, ...newUnique];
+
+    // Apply client-side filter + sort to full accumulated list
+    final filtered = ref.read(filteredEventsProvider(events: _rawEvents));
+
+    return RecommendationFeedState(
+      events: filtered,
+      serverOffset: serverOffset + rawPage.length,
+      hasMore: rawPage.length >= _limit,
+    );
+  }
+
+  EventFeedType _mapFeedType(ExploreSortType sortType) {
+    return switch (sortType) {
+      ExploreSortType.recommended => EventFeedType.newArrivals,
+      ExploreSortType.closingSoon => EventFeedType.closingSoon,
+      // Use nearest (date-sorted) rather than earlyBird, which applies an
+      // additional ticket-name filter that would exclude non-early-bird events.
+      ExploreSortType.nearestDate => EventFeedType.nearest,
+    };
+  }
+}
+
 /// Fetches and filters the unified recommendation event list.
 ///
 /// Maps [ExploreSortType] to [EventFeedType]:
 /// - recommended → newArrivals
 /// - closingSoon → closingSoon
-/// - nearestDate → earlyBird
+/// - nearestDate → nearest
 @riverpod
 Future<List<Event>> recommendationEvents(Ref ref) async {
   final filters = ref.watch(activeFiltersProvider);
@@ -209,7 +370,7 @@ Future<List<Event>> recommendationEvents(Ref ref) async {
   final feedType = switch (filters.sortType) {
     ExploreSortType.recommended => EventFeedType.newArrivals,
     ExploreSortType.closingSoon => EventFeedType.closingSoon,
-    ExploreSortType.nearestDate => EventFeedType.earlyBird,
+    ExploreSortType.nearestDate => EventFeedType.nearest,
   };
 
   final link = ref.keepAlive();
