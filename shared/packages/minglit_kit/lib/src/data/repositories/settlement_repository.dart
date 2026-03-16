@@ -112,7 +112,7 @@ class SettlementRepository {
                     'event_type, from_status, to_status, details, created_at',
                   )
                   .eq('settlement_item_id', itemId)
-                  .order('created_at')
+                  .order('created_at', ascending: false)
               as List;
 
       final historiesData = historiesRaw
