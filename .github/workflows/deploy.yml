@@ -17,7 +17,7 @@ on:
           - main
 
 concurrency:
-  group: vercel-${{ github.ref }}
+  group: vercel-${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
