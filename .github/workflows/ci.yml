@@ -211,7 +211,7 @@ jobs:
   # Dart Backend Integration 테스트
   test-backend-integration:
     needs: changes
-    if: ${{ needs.changes.outputs.supabase == 'true' }}
+    if: ${{ vars.ENABLE_BACKEND_INTEGRATION == 'true' }}  # Requires seeded DB with specific test users — disabled by default
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -229,7 +229,7 @@ jobs:
         run: flutter pub get
         working-directory: tests/backend_integration
       - name: Test (integration)
-        run: dart test --coverage=coverage
+        run: flutter test src/ --coverage
         working-directory: tests/backend_integration
         env:
           SUPABASE_URL: http://127.0.0.1:54321
@@ -272,7 +272,7 @@ jobs:
   # E2E 시나리오 테스트
   test-e2e-scenarios:
     needs: changes
-    if: ${{ needs.changes.outputs.supabase == 'true' }}
+    if: ${{ vars.ENABLE_E2E_SCENARIOS == 'true' }}  # Requires device/emulator — disabled by default
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

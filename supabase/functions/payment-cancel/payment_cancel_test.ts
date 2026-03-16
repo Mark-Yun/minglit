@@ -2,7 +2,7 @@ import { assertEquals } from "@std/assert";
 import {
   captureServeHandler,
   createFetchMock,
-  jsonRequest,
+  authenticatedJsonRequest,
   jsonResponse,
   readJson,
   textRequest,
@@ -10,6 +10,7 @@ import {
   withMockedFetch,
   withNoIntervals,
 } from "../_test_utils/mock_http.ts";
+import { authRoute } from "../_test_utils/fixtures.ts";
 
 const ENV = {
   PORTONE_API_KEY: "test-key",
@@ -22,6 +23,7 @@ Deno.test("payment-cancel - happy path cancels payment and updates DB", async ()
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock, calls } = createFetchMock([
+    authRoute,
     {
       matcher: "https://api.iamport.kr/users/getToken",
       handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
@@ -39,7 +41,7 @@ Deno.test("payment-cancel - happy path cancels payment and updates DB", async ()
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", {
+        const request = authenticatedJsonRequest("http://localhost", {
           payment_id: "imp_123",
           reason: "user requested",
         });
@@ -60,16 +62,18 @@ Deno.test("payment-cancel - happy path cancels payment and updates DB", async ()
 
 Deno.test("payment-cancel - missing payment_id returns 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-  const { fetchMock } = createFetchMock([]);
+  const { fetchMock } = createFetchMock([authRoute]);
 
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
-      const request = jsonRequest("http://localhost", { reason: "missing" });
-      const response = await handler(request);
-      const payload = await readJson(response);
+      await withNoIntervals(async () => {
+        const request = authenticatedJsonRequest("http://localhost", { reason: "missing" });
+        const response = await handler(request);
+        const payload = await readJson(response);
 
-      assertEquals(response.status, 400);
-      assertEquals(payload.error, "Missing payment_id");
+        assertEquals(response.status, 400);
+        assertEquals(payload.error, "Missing payment_id");
+      });
     });
   });
 });
@@ -78,6 +82,7 @@ Deno.test("payment-cancel - token failure returns 502", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
+    authRoute,
     {
       matcher: "https://api.iamport.kr/users/getToken",
       handler: () => jsonResponse({ code: 1, message: "bad key" }),
@@ -86,28 +91,32 @@ Deno.test("payment-cancel - token failure returns 502", async () => {
 
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
-      const request = jsonRequest("http://localhost", { payment_id: "imp_123" });
-      const response = await handler(request);
-      const payload = await readJson(response);
+      await withNoIntervals(async () => {
+        const request = authenticatedJsonRequest("http://localhost", { payment_id: "imp_123" });
+        const response = await handler(request);
+        const payload = await readJson(response);
 
-      assertEquals(response.status, 502);
-      assertEquals(payload.error, "Payment provider error");
+        assertEquals(response.status, 502);
+        assertEquals(payload.error, "Payment provider error");
+      });
     });
   });
 });
 
 Deno.test("payment-cancel - malformed JSON returns 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-  const { fetchMock } = createFetchMock([]);
+  const { fetchMock } = createFetchMock([authRoute]);
 
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
-      const request = textRequest("http://localhost", "{invalid-json");
-      const response = await handler(request);
-      const payload = await readJson(response);
+      await withNoIntervals(async () => {
+        const request = textRequest("http://localhost", "{invalid-json", { headers: { Authorization: "Bearer test-token" } });
+        const response = await handler(request);
+        const payload = await readJson(response);
 
-      assertEquals(response.status, 400);
-      assertEquals(payload.error, "Invalid JSON body");
+        assertEquals(response.status, 400);
+        assertEquals(payload.error, "Invalid JSON body");
+      });
     });
   });
 });
@@ -116,6 +125,7 @@ Deno.test("payment-cancel - partial refund passes amount and checksum to iamport
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock, calls } = createFetchMock([
+    authRoute,
     {
       matcher: "https://api.iamport.kr/users/getToken",
       handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
@@ -133,7 +143,7 @@ Deno.test("payment-cancel - partial refund passes amount and checksum to iamport
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", {
+        const request = authenticatedJsonRequest("http://localhost", {
           payment_id: "imp_123",
           reason: "partial refund",
           amount: 5000,
@@ -161,6 +171,7 @@ Deno.test("payment-cancel - DB error is non-fatal, still returns 200", async () 
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
+    authRoute,
     {
       matcher: "https://api.iamport.kr/users/getToken",
       handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
@@ -178,7 +189,7 @@ Deno.test("payment-cancel - DB error is non-fatal, still returns 200", async () 
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", { payment_id: "imp_123" });
+        const request = authenticatedJsonRequest("http://localhost", { payment_id: "imp_123" });
         const response = await handler(request);
         const payload = await readJson(response);
 

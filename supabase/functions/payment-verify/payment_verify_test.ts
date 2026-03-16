@@ -1,8 +1,8 @@
 import { assertEquals } from "@std/assert";
 import {
+  authenticatedJsonRequest,
   captureServeHandler,
   createFetchMock,
-  jsonRequest,
   jsonResponse,
   readJson,
   textRequest,
@@ -10,7 +10,7 @@ import {
   withEnv,
   withMockedFetch,
 } from "../_test_utils/mock_http.ts";
-import { mockOrder, mockPaidPayment, mockReadyPayment } from "../_test_utils/fixtures.ts";
+import { authRoute, mockOrder, mockPaidPayment, mockReadyPayment } from "../_test_utils/fixtures.ts";
 
 const ENV = {
   PORTONE_API_KEY: "test-key",
@@ -23,6 +23,7 @@ Deno.test("payment-verify - happy path approves order", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
+      authRoute,
       {
         matcher: "https://api.iamport.kr/users/getToken",
         handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
@@ -43,7 +44,7 @@ Deno.test("payment-verify - happy path approves order", async () => {
 
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", {
+        const request = authenticatedJsonRequest("http://localhost", {
           imp_uid: "imp_123",
           merchant_uid: "order-123",
         });
@@ -61,11 +62,11 @@ Deno.test("payment-verify - happy path approves order", async () => {
 Deno.test("payment-verify - missing params returns 400", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    const { fetchMock } = createFetchMock([]);
+    const { fetchMock } = createFetchMock([authRoute]);
 
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", { merchant_uid: "order-123" });
+        const request = authenticatedJsonRequest("http://localhost", { merchant_uid: "order-123" });
         const response = await handler(request);
         const payload = await readJson(response);
 
@@ -80,6 +81,7 @@ Deno.test("payment-verify - payment not completed returns 400", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
+      authRoute,
       {
         matcher: "https://api.iamport.kr/users/getToken",
         handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
@@ -96,7 +98,7 @@ Deno.test("payment-verify - payment not completed returns 400", async () => {
 
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", {
+        const request = authenticatedJsonRequest("http://localhost", {
           imp_uid: "imp_ready",
           merchant_uid: "order-123",
         });
@@ -114,6 +116,7 @@ Deno.test("payment-verify - amount mismatch returns 400", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
+      authRoute,
       {
         matcher: "https://api.iamport.kr/users/getToken",
         handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
@@ -130,7 +133,7 @@ Deno.test("payment-verify - amount mismatch returns 400", async () => {
 
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", {
+        const request = authenticatedJsonRequest("http://localhost", {
           imp_uid: "imp_mismatch",
           merchant_uid: "order-123",
         });
@@ -148,6 +151,7 @@ Deno.test("payment-verify - iamport failure returns 500", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
+      authRoute,
       {
         matcher: "https://api.iamport.kr/users/getToken",
         handler: () => new Response("Iamport down", { status: 500 }),
@@ -160,7 +164,7 @@ Deno.test("payment-verify - iamport failure returns 500", async () => {
 
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", {
+        const request = authenticatedJsonRequest("http://localhost", {
           imp_uid: "imp_fail",
           merchant_uid: "order-123",
         });
@@ -177,11 +181,11 @@ Deno.test("payment-verify - iamport failure returns 500", async () => {
 Deno.test("payment-verify - malformed JSON returns 400", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    const { fetchMock } = createFetchMock([]);
+    const { fetchMock } = createFetchMock([authRoute]);
 
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = textRequest("http://localhost", "{oops");
+        const request = textRequest("http://localhost", "{oops", { headers: { Authorization: "Bearer test-token" } });
         const response = await handler(request);
         const payload = await readJson(response);
 

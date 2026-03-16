@@ -151,6 +151,7 @@ Deno.serve(withSentryHandler(async (req) => {
       } catch (e) {
         console.error('Party Vectorization Error:', e);
       }
+    }
 
     // 3. Process User Interactions
     for (const task of interactionTasks) {

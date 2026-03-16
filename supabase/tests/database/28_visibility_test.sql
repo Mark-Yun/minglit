@@ -26,11 +26,6 @@ INSERT INTO public.events (id, party_id, title, status, start_time, end_time)
 VALUES ('55555555-5555-5555-5555-555555555555', '33333333-3333-3333-3333-333333333333', 'PrivateInheritEvent', 'scheduled', now() + interval '1 day', now() + interval '2 days')
 ON CONFLICT (id) DO NOTHING;
 
--- Event with independent visibility override (public event on private party)
-INSERT INTO public.events (id, party_id, title, status, start_time, end_time, visibility)
-VALUES ('66666666-6666-6666-6666-666666666666', '33333333-3333-3333-3333-333333333333', 'PublicOverrideEvent', 'scheduled', now() + interval '1 day', now() + interval '2 days', 'public')
-ON CONFLICT (id) DO NOTHING;
-
 -- Test 1: Private party excluded from search_parties_pgroonga
 SELECT is(
   (SELECT count(*)::int FROM search_parties_pgroonga('PrivatePartyTest')),
@@ -51,6 +46,11 @@ SELECT is(
   0,
   'Event on private party should not appear in search_events_pgroonga'
 );
+
+-- Event with independent visibility override (public event on private party)
+INSERT INTO public.events (id, party_id, title, status, start_time, end_time, visibility)
+VALUES ('66666666-6666-6666-6666-666666666666', '33333333-3333-3333-3333-333333333333', 'PublicOverrideEvent', 'scheduled', now() + interval '1 day', now() + interval '2 days', 'public')
+ON CONFLICT (id) DO NOTHING;
 
 -- Test 4: Public party event found in search_events_pgroonga
 SELECT is(
