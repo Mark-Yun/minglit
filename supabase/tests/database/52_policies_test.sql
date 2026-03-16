@@ -80,6 +80,13 @@ SELECT results_eq(
 );
 
 SELECT lives_ok(
+  $$UPDATE public.policies
+      SET description = 'updated by service_role'
+    WHERE key = 'test_policy'$$,
+  'service_role can UPDATE policies'
+);
+
+SELECT lives_ok(
   $$DELETE FROM public.policies WHERE key = 'test_policy'$$,
   'service_role can DELETE policies'
 );
