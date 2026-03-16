@@ -3,6 +3,7 @@ import { runWorkerLoop } from './loop_worker.ts'
 import { WorkerUtils } from '../_shared/worker_utils.ts'
 import * as jose from 'https://deno.land/x/jose@v4.14.4/index.ts'
 import { initSentry, withSentryHandler } from '../_shared/sentry_utils.ts'
+import { initStatsig, logStatsigEvent } from '../_shared/statsig_utils.ts'
 
 // --- Helper: Google OAuth2 Access Token ---
 async function getAccessToken(serviceAccountJson: string) {
@@ -181,6 +182,7 @@ async function sendToAllParticipants(
 
 
 initSentry();
+initStatsig();
 
 Deno.serve(withSentryHandler(async (_req) => {
   try {
@@ -354,6 +356,9 @@ Deno.serve(withSentryHandler(async (_req) => {
             deep_link: deepLink,
             metadata: payload.data
         });
+
+        const notificationType = isSchemaA ? (payload.event_type as string) : category;
+        logStatsigEvent(userId, 'notification_sent', undefined, { type: notificationType }).catch(() => {});
 
       } catch (procError) {
           const msg_ = procError instanceof Error ? procError.message : String(procError);

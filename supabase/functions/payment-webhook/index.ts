@@ -6,6 +6,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { IamportClient } from "../_shared/iamport_client.ts";
 import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
+import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
 
 const IMP_KEY = Deno.env.get("PORTONE_API_KEY");
 const IMP_SECRET = Deno.env.get("PORTONE_API_SECRET");
@@ -18,6 +19,7 @@ if (!IMP_KEY || !IMP_SECRET) {
 const ALLOWED_IPS = ["52.78.100.19", "52.78.48.223", "52.78.17.128", "127.0.0.1"];
 
 initSentry();
+initStatsig();
 
 serve(withSentry(async (req) => {
   try {
@@ -96,6 +98,10 @@ serve(withSentry(async (req) => {
 
     console.log(`Updated order ${merchant_uid} to status ${dbStatus}`);
 
+    if (payment.status === "failed") {
+      logStatsigEvent(merchant_uid, 'payment_failed', undefined, { reason: 'payment_failed', imp_uid, merchant_uid }).catch(() => {});
+    }
+
     // Send payment completion notification
     if (payment.status === "paid") {
       // Fetch user_id and event_id from the application
@@ -106,6 +112,7 @@ serve(withSentry(async (req) => {
         .single();
 
       if (application) {
+        logStatsigEvent(application.user_id, 'payment_completed', payment.amount, { imp_uid, merchant_uid }).catch(() => {});
         // TODO: Migrate to produce_event() pattern via q_global_events
         // Currently sends directly to q_notifications, bypassing 2-tier architecture
         // See: docs/architecture/global-event-pipeline.md

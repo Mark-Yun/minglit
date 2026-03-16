@@ -3,6 +3,7 @@ import { IamportClient } from "../_shared/iamport_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
+import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
 
 const IMP_KEY = Deno.env.get("PORTONE_API_KEY");
 const IMP_SECRET = Deno.env.get("PORTONE_API_SECRET");
@@ -12,6 +13,7 @@ if (!IMP_KEY || !IMP_SECRET) {
 }
 
 initSentry();
+initStatsig();
 
 Deno.serve(withSentry(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
@@ -59,6 +61,7 @@ Deno.serve(withSentry(async (req) => {
 
     // 3. 결제 상태 및 금액 검증
     if (payment.status !== "paid") {
+      logStatsigEvent(auth, 'payment_failed', undefined, { reason: 'payment_not_completed', imp_uid }).catch(() => {});
       return errorResponse("Payment not completed", 400, { status: payment.status });
     }
 
@@ -67,6 +70,7 @@ Deno.serve(withSentry(async (req) => {
         const msg = e instanceof Error ? e.message : String(e);
         console.error("Cancel on mismatch failed:", msg);
       });
+      logStatsigEvent(auth, 'payment_failed', undefined, { reason: 'amount_mismatch', imp_uid }).catch(() => {});
       return errorResponse("Amount mismatch", 400, {
         expected: order.payment_amount,
         actual: payment.amount,
@@ -90,9 +94,11 @@ Deno.serve(withSentry(async (req) => {
 
     if (updateError) {
       console.error("DB Update Error:", updateError);
+      logStatsigEvent(auth, 'payment_failed', undefined, { reason: 'db_update_error', imp_uid }).catch(() => {});
       return errorResponse("Failed to update order status", 500);
     }
 
+    logStatsigEvent(auth, 'payment_completed', payment.amount, { imp_uid, merchant_uid }).catch(() => {});
     return successResponse({ success: true, imp_uid });
 
 
