@@ -123,13 +123,13 @@ Deno.test("simRefundRequests - 100% refund (event +30 days) → refund_amount ==
   assertEquals(deletedParticipants.length, 1);
 });
 
-Deno.test("simRefundRequests - 80% refund (event +5 days) → floor calculation correct", async () => {
+Deno.test("simRefundRequests - 0% refund (event +5 days, binary policy) → refund_amount=0", async () => {
   const paymentAmount = 10000;
   const startTime = daysFromNow(5);
   const expectedCalc = simCalcRefund(new Date(startTime), paymentAmount, new Date());
 
-  assertEquals(expectedCalc.refund_percentage, 80);
-  assertEquals(expectedCalc.refund_amount, Math.floor(paymentAmount * 80 / 100));
+  assertEquals(expectedCalc.refund_percentage, 0);
+  assertEquals(expectedCalc.refund_amount, 0);
 
   const appStates: Record<string, { status: string; refund_status: string; refund_amount: number }> = {};
 
@@ -192,18 +192,18 @@ Deno.test("simRefundRequests - 80% refund (event +5 days) → floor calculation 
     1.0,
   );
 
-  assertEquals(result.refundedApplicationIds.length, 1);
-  assertEquals(appStates["app-80pct"].refund_status, "completed");
-  assertEquals(appStates["app-80pct"].refund_amount, Math.floor(paymentAmount * 80 / 100));
+  assertEquals(result.refundedApplicationIds.length, 0);
+  assertEquals(appStates["app-80pct"].refund_status, "failed");
+  assertEquals(appStates["app-80pct"].refund_amount, 0);
 });
 
-Deno.test("simRefundRequests - 50% refund (event +2 days) → floor calculation correct", async () => {
+Deno.test("simRefundRequests - 0% refund (event +2 days, binary policy) → refund_amount=0", async () => {
   const paymentAmount = 9999;
   const startTime = daysFromNow(2);
   const expectedCalc = simCalcRefund(new Date(startTime), paymentAmount, new Date());
 
-  assertEquals(expectedCalc.refund_percentage, 50);
-  assertEquals(expectedCalc.refund_amount, Math.floor(paymentAmount * 50 / 100));
+  assertEquals(expectedCalc.refund_percentage, 0);
+  assertEquals(expectedCalc.refund_amount, 0);
 
   const appStates: Record<string, { status: string; refund_status: string; refund_amount: number }> = {};
 
@@ -268,8 +268,8 @@ Deno.test("simRefundRequests - 50% refund (event +2 days) → floor calculation 
 
   assertEquals(result.assertions.length, 1);
   assertEquals(appStates["app-50pct"].status, "cancelled");
-  assertEquals(appStates["app-50pct"].refund_status, "completed");
-  assertEquals(appStates["app-50pct"].refund_amount, Math.floor(paymentAmount * 50 / 100));
+  assertEquals(appStates["app-50pct"].refund_status, "failed");
+  assertEquals(appStates["app-50pct"].refund_amount, 0);
 });
 
 Deno.test("simRefundRequests - 0% refund (+12 hours) → refund_amount=0, status='failed'", async () => {

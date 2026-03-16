@@ -73,20 +73,26 @@ Deno.serve(withSentry(async (req) => {
       });
     }
 
-    // 4. Supabase DB 업데이트 (티켓 발권 및 신청 상태 변경)
-    // ... rest of the logic ...
-    
-    // Note: We used service role key so auth check via header is optional but good practice if we want to link user.
-    // But since we have merchant_uid which is unique, we can just update.
-    
-    const { error: updateError } = await supabase
-      .from("event_applications")
-      .update({
-        status: "approved",
-        payment_id: imp_uid,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", merchant_uid);
+     // 4. Supabase DB 업데이트 (티켓 발권 및 신청 상태 변경)
+     // ... rest of the logic ...
+     
+     // Note: We used service role key so auth check via header is optional but good practice if we want to link user.
+     // But since we have merchant_uid which is unique, we can just update.
+     
+     // payment.paid_at is Unix seconds from Portone V1 API
+     const paidAtIso = payment.paid_at && payment.paid_at > 0
+       ? new Date(payment.paid_at * 1000).toISOString()
+       : new Date().toISOString();
+     
+     const { error: updateError } = await supabase
+       .from("event_applications")
+       .update({
+         status: "approved",
+         payment_id: imp_uid,
+         paid_at: paidAtIso,
+         updated_at: new Date().toISOString(),
+       })
+       .eq("id", merchant_uid);
 
     if (updateError) {
       console.error("DB Update Error:", updateError);
