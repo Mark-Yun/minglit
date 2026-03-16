@@ -2,13 +2,10 @@ import 'package:app_user/src/features/auth/login_page.dart';
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
 void main() {
-  
-
   group('Auth Redirect Flow', () {
     // Test 1: Unauthenticated → /my (protected prefix) → LoginPage
     testWidgets('비로그인: /my 접근 시 LoginPage로 리다이렉트', (tester) async {

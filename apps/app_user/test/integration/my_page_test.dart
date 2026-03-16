@@ -3,13 +3,10 @@ import 'package:app_user/src/features/home/my_page.dart';
 import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
 void main() {
-  
-
   group('MyPage Flow', () {
     // Test 1: Authenticated MyPage content
     testWidgets('로그인 상태: MyPage에서 사용자 이름과 메뉴 표시', (tester) async {

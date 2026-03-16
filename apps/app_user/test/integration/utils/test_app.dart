@@ -77,7 +77,9 @@ Widget createTestApp({
       // Notification (prevent FCM platform channel errors)
       notificationInitializerProvider.overrideWith((_) {}),
       // Event/explore providers (prevent API calls)
-      recommendationEventsProvider.overrideWith((_) async => events ?? <Event>[]),
+      recommendationEventsProvider.overrideWith(
+        (_) async => events ?? <Event>[],
+      ),
       eventFeedProvider.overrideWith((ref, arg) async => <Event>[]),
       activeFiltersProvider.overrideWith(_NoFiltersNotifier.new),
       ...additionalOverrides.cast(),

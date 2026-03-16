@@ -12,11 +12,18 @@ void main() {
       setKoreanLocale(tester);
       final fakeUser = createFakeUser();
       final mockNotificationRepo = MockNotificationRepository();
-      when(() => mockNotificationRepo.getNotifications()).thenAnswer((_) async => []);
-      await tester.pumpWidget(ProviderScope(
-        overrides: [currentUserProvider.overrideWith((_) => fakeUser), notificationRepositoryProvider.overrideWithValue(mockNotificationRepo)],
-        child: const MaterialApp(home: NotificationListScreen()),
-      ));
+      when(mockNotificationRepo.getNotifications).thenAnswer((_) async => []);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            currentUserProvider.overrideWith((_) => fakeUser),
+            notificationRepositoryProvider.overrideWithValue(
+              mockNotificationRepo,
+            ),
+          ],
+          child: const MaterialApp(home: NotificationListScreen()),
+        ),
+      );
       await tester.pump();
       await tester.pump();
       await tester.pump();
