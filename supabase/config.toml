@@ -509,3 +509,8 @@ entrypoint = "./functions/settlement-register-transfers/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/payout-sync/index.ts"
+
+[functions.reconciliation-daily]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/reconciliation-daily/index.ts"
