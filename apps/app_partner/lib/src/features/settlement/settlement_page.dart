@@ -1,11 +1,9 @@
-import 'dart:async' show unawaited;
-
-import 'package:app_partner/src/features/party/party_providers.dart';
+import 'package:app_partner/src/features/settlement/settlement_coordinator.dart';
 import 'package:app_partner/src/features/settlement/settlement_dashboard_controller.dart';
+import 'package:app_partner/src/features/settlement/settlement_list_controller.dart';
 import 'package:app_partner/src/features/settlement/widgets/settlement_card.dart';
 import 'package:app_partner/src/features/settlement/widgets/settlement_empty_state.dart';
 import 'package:app_partner/src/features/settlement/widgets/status_filter_chips.dart';
-import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -306,7 +304,7 @@ class _MonthHeader extends _ListItem {
 
 class _CardItem extends _ListItem {
   const _CardItem(this.data);
-  final Map<String, dynamic> data;
+  final SettlementItemDetail data;
 }
 
 class _ListTab extends ConsumerStatefulWidget {
@@ -318,17 +316,11 @@ class _ListTab extends ConsumerStatefulWidget {
 
 class _ListTabState extends ConsumerState<_ListTab> {
   final _scrollController = ScrollController();
-  String? _selectedStatus;
-  final _items = <Map<String, dynamic>>[];
-  bool _isLoading = false;
-  bool _hasMore = true;
-  static const _pageSize = 20;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    unawaited(_loadMore());
   }
 
   @override
@@ -340,62 +332,19 @@ class _ListTabState extends ConsumerState<_ListTab> {
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      unawaited(_loadMore());
+      ref.read(settlementListControllerProvider.notifier).loadMore();
     }
   }
 
-  Future<void> _loadMore() async {
-    if (_isLoading || !_hasMore) return;
-    setState(() => _isLoading = true);
-    try {
-      final repo = ref.read(settlementRepositoryProvider);
-      final partner = await ref.read(currentPartnerInfoProvider.future);
-      final partnerId = partner?.id;
-      if (partnerId == null) {
-        if (mounted) setState(() => _isLoading = false);
-        return;
-      }
-      final newItems = await repo.getSettlementItems(
-        partnerId: partnerId,
-        status: _selectedStatus,
-        offset: _items.length,
-      );
-      if (mounted) {
-        setState(() {
-          _items.addAll(
-            newItems.map((e) => e.toJson()).toList(),
-          );
-          _hasMore = newItems.length == _pageSize;
-        });
-      }
-    } on Exception catch (e, st) {
-      Log.e('ListTab _loadMore error', e, st);
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  void _onStatusChanged(String? status) {
-    setState(() {
-      _selectedStatus = status;
-      _items.clear();
-      _hasMore = true;
-    });
-    unawaited(_loadMore());
-  }
-
-  List<_ListItem> _buildViewList() {
+  List<_ListItem> _buildViewList(List<SettlementItemDetail> items) {
     final result = <_ListItem>[];
     String? lastMonth;
-    for (final item in _items) {
-      final raw = item['created_at'] as String?;
-      final dt = raw != null ? DateTime.tryParse(raw) : null;
-      if (dt != null) {
-        final label = '${dt.year}년 ${dt.month}월';
-        if (label != lastMonth) {
-          result.add(_MonthHeader(label));
-          lastMonth = label;
-        }
+    for (final item in items) {
+      final dt = item.createdAt;
+      final label = '${dt.year}년 ${dt.month}월';
+      if (label != lastMonth) {
+        result.add(_MonthHeader(label));
+        lastMonth = label;
       }
       result.add(_CardItem(item));
     }
@@ -404,35 +353,38 @@ class _ListTabState extends ConsumerState<_ListTab> {
 
   @override
   Widget build(BuildContext context) {
+    final listState = ref.watch(settlementListControllerProvider);
+
     return Column(
       children: [
         const SizedBox(height: 8),
         StatusFilterChips(
-          selectedStatus: _selectedStatus,
-          onStatusChanged: _onStatusChanged,
+          selectedStatus: listState.selectedStatus,
+          onStatusChanged: (status) => ref
+              .read(settlementListControllerProvider.notifier)
+              .changeStatus(status),
         ),
         const SizedBox(height: 8),
         Expanded(
-          child: _items.isEmpty && !_isLoading
+          child: listState.items.isEmpty && !listState.isLoading
               ? SettlementEmptyState(
                   title: '정산 항목이 없습니다',
-                  subtitle: _selectedStatus != null ? '다른 상태를 선택해 보세요.' : null,
+                  subtitle: listState.selectedStatus != null
+                      ? '다른 상태를 선택해 보세요.'
+                      : null,
                 )
               : RefreshIndicator(
-                  onRefresh: () async {
-                    setState(() {
-                      _items.clear();
-                      _hasMore = true;
-                    });
-                    await _loadMore();
-                  },
+                  onRefresh: () => ref
+                      .read(settlementListControllerProvider.notifier)
+                      .refresh(),
                   child: Builder(
                     builder: (context) {
-                      final viewList = _buildViewList();
+                      final viewList = _buildViewList(listState.items);
                       return ListView.builder(
                         controller: _scrollController,
                         physics: const AlwaysScrollableScrollPhysics(),
-                        itemCount: viewList.length + (_isLoading ? 1 : 0),
+                        itemCount:
+                            viewList.length + (listState.isLoading ? 1 : 0),
                         itemBuilder: (context, i) {
                           if (i >= viewList.length) {
                             return const Padding(
@@ -451,13 +403,12 @@ class _ListTabState extends ConsumerState<_ListTab> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 SettlementCard(
-                                  item: data,
-                                  onTap: () {
-                                    final id = data['id'] as String?;
-                                    if (id != null) {
-                                      SettlementDetailRoute(id: id).go(context);
-                                    }
-                                  },
+                                  item: data.toJson(),
+                                  onTap: () => ref
+                                      .read(
+                                        settlementCoordinatorProvider.notifier,
+                                      )
+                                      .goToDetail(data.id),
                                 ),
                                 const Divider(height: 1),
                               ],
