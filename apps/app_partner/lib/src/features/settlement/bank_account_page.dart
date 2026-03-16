@@ -1,10 +1,10 @@
 import 'dart:async' show unawaited;
 
 import 'package:app_partner/src/features/party/party_providers.dart';
+import 'package:app_partner/src/features/settlement/settlement_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class BankAccountPage extends ConsumerStatefulWidget {
   const BankAccountPage({super.key});
@@ -30,11 +30,8 @@ class _BankAccountPageState extends ConsumerState<BankAccountPage> {
         if (mounted) setState(() => _isLoading = false);
         return;
       }
-      final data = await Supabase.instance.client
-          .from('partner_settlements')
-          .select('bank_name, account_holder, account_number')
-          .eq('partner_id', partner.id)
-          .maybeSingle();
+      final repo = ref.read(settlementRepositoryProvider);
+      final data = await repo.getBankAccount(partner.id);
       if (mounted) {
         setState(() {
           _accountData = data;
@@ -184,12 +181,13 @@ class _AccountEditFormState extends ConsumerState<AccountEditForm> {
     try {
       final partner = await ref.read(currentPartnerInfoProvider.future);
       if (partner == null) return;
-      await Supabase.instance.client.from('partner_settlements').upsert({
-        'partner_id': partner.id,
-        'bank_name': _bankCtrl.text.trim(),
-        'account_holder': _holderCtrl.text.trim(),
-        'account_number': _numberCtrl.text.trim(),
-      }, onConflict: 'partner_id');
+      final repo = ref.read(settlementRepositoryProvider);
+      await repo.upsertBankAccount(
+        partnerId: partner.id,
+        bankName: _bankCtrl.text.trim(),
+        accountHolder: _holderCtrl.text.trim(),
+        accountNumber: _numberCtrl.text.trim(),
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('계좌 정보가 저장되었습니다.')),
@@ -272,13 +270,13 @@ class _RetryPayoutButtonState extends ConsumerState<RetryPayoutButton> {
   Future<void> _retry() async {
     setState(() => _isLoading = true);
     try {
-      await Supabase.instance.client.rpc<void>(
-        'request_retry_payout',
-        params: {
-          'p_payout_id': widget.payoutId,
-          'p_partner_id': widget.partnerId,
-        },
-      );
+      await ref
+          .read(settlementCoordinatorProvider.notifier)
+          .retryPayout(
+            context,
+            payoutId: widget.payoutId,
+            partnerId: widget.partnerId,
+          );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('재지급 요청이 완료되었습니다.')),
