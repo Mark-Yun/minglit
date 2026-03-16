@@ -94,6 +94,14 @@ jobs:
         with:
           channel: 'stable'
           cache: true
+      - name: Cache pub packages
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
       - name: Install dependencies
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         run: flutter pub get
@@ -188,6 +196,13 @@ jobs:
         run: supabase start
       - name: Test (pgTAP)
         run: supabase test db
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
       - name: Install dependencies (integration)
         if: ${{ vars.ENABLE_BACKEND_INTEGRATION == 'true' }}
         run: flutter pub get
