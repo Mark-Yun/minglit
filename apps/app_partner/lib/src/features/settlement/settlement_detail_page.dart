@@ -1,6 +1,7 @@
 import 'dart:async' show unawaited;
 
 import 'package:app_partner/src/features/party/party_providers.dart';
+import 'package:app_partner/src/features/settlement/widgets/download_bottom_sheet.dart';
 import 'package:app_partner/src/features/settlement/widgets/settlement_status_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -305,8 +306,6 @@ class ActionButtons extends ConsumerWidget {
   }
 
   void _downloadCsv(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('CSV 다운로드 기능은 Task 9에서 구현됩니다.')),
-    );
+    unawaited(DownloadBottomSheet.show(context, detail));
   }
 }
