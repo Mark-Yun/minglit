@@ -3,6 +3,7 @@ import 'package:app_partner/src/features/settlement/settlement_dashboard_control
 import 'package:app_partner/src/features/settlement/settlement_list_controller.dart';
 import 'package:app_partner/src/features/settlement/widgets/settlement_card.dart';
 import 'package:app_partner/src/features/settlement/widgets/settlement_empty_state.dart';
+import 'package:app_partner/src/features/settlement/widgets/settlement_status_badge.dart';
 import 'package:app_partner/src/features/settlement/widgets/status_filter_chips.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -68,7 +69,7 @@ class _DashboardTab extends ConsumerWidget {
           .loadDashboard(),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(MinglitSpacing.medium),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -78,11 +79,11 @@ class _DashboardTab extends ConsumerWidget {
                   .read(settlementDashboardControllerProvider.notifier)
                   .changeMonth(delta),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: MinglitSpacing.medium),
             ...dashState.status.when(
               data: (_) => [
                 _RevenueSummaryCard(data: dashState.dashboardData),
-                const SizedBox(height: 16),
+                const SizedBox(height: MinglitSpacing.medium),
                 _StatusSummaryGrid(data: dashState.dashboardData),
               ],
               loading: () => [const Center(child: CircularProgressIndicator())],
@@ -94,12 +95,12 @@ class _DashboardTab extends ConsumerWidget {
                         '오류가 발생했습니다',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: MinglitSpacing.small),
                       Text(
                         error.toString(),
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: MinglitSpacing.medium),
                       FilledButton(
                         onPressed: () => ref
                             .read(
@@ -163,12 +164,12 @@ class _RevenueSummaryCard extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(MinglitSpacing.medium),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('매출 요약', style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 12),
+            const SizedBox(height: MinglitSpacing.sm),
             _DashRow('총 매출', '₩${fmt.format(totalGross)}'),
             _DashRow('총 수수료', '-₩${fmt.format(totalFees)}'),
             const Divider(),
@@ -195,7 +196,7 @@ class _DashRow extends StatelessWidget {
           ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)
         : Theme.of(context).textTheme.bodyMedium;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.xsmall),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -212,38 +213,43 @@ class _StatusSummaryGrid extends StatelessWidget {
 
   final Map<String, dynamic>? data;
 
-  static const _statuses = [
-    ('PENDING', '대기', Color(0xFF616161)),
-    ('READY', '확정', Color(0xFF1565C0)),
-    ('PROCESSING', '지급중', Color(0xFF283593)),
-    ('COMPLETED', '완료', Color(0xFF1B5E20)),
-    ('FAILED', '실패', Color(0xFFB71C1C)),
-    ('HOLD', '보류', Color(0xFFE65100)),
-    ('CANCELED', '취소', Color(0xFF9E9E9E)),
+  static final List<(String, String, SettlementStatus)> _statuses = [
+    ('PENDING', '대기', SettlementStatus.pending),
+    ('READY', '확정', SettlementStatus.ready),
+    ('PROCESSING', '지급중', SettlementStatus.processing),
+    ('COMPLETED', '완료', SettlementStatus.completed),
+    ('FAILED', '실패', SettlementStatus.failed),
+    ('HOLD', '보류', SettlementStatus.hold),
+    ('CANCELED', '취소', SettlementStatus.canceled),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final counts = data?['status_counts'] as Map<String, dynamic>? ?? {};
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(MinglitSpacing.medium),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('상태별 현황', style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 12),
+            const SizedBox(height: MinglitSpacing.sm),
             GridView.count(
               crossAxisCount: 4,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 8,
-              crossAxisSpacing: 8,
+              mainAxisSpacing: MinglitSpacing.small,
+              crossAxisSpacing: MinglitSpacing.small,
               childAspectRatio: 1.2,
               children: _statuses.map((s) {
-                final (status, label, color) = s;
+                final (status, label, statusEnum) = s;
                 final count = counts[status] as int? ?? 0;
-                return _StatusCell(label: label, count: count, color: color);
+                return _StatusCell(
+                  label: label,
+                  count: count,
+                  color: statusEnum.textColor(colorScheme),
+                );
               }).toList(),
             ),
           ],
@@ -269,7 +275,7 @@ class _StatusCell extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(MinglitRadius.small),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -357,14 +363,14 @@ class _ListTabState extends ConsumerState<_ListTab> {
 
     return Column(
       children: [
-        const SizedBox(height: 8),
+        const SizedBox(height: MinglitSpacing.small),
         StatusFilterChips(
           selectedStatus: listState.selectedStatus,
           onStatusChanged: (status) => ref
               .read(settlementListControllerProvider.notifier)
               .changeStatus(status),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: MinglitSpacing.small),
         Expanded(
           child: listState.items.isEmpty && !listState.isLoading
               ? SettlementEmptyState(
@@ -388,7 +394,7 @@ class _ListTabState extends ConsumerState<_ListTab> {
                         itemBuilder: (context, i) {
                           if (i >= viewList.length) {
                             return const Padding(
-                              padding: EdgeInsets.all(16),
+                              padding: EdgeInsets.all(MinglitSpacing.medium),
                               child: Center(
                                 child: CircularProgressIndicator(),
                               ),
@@ -432,7 +438,12 @@ class _MonthHeaderWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+      padding: const EdgeInsets.fromLTRB(
+        MinglitSpacing.medium,
+        MinglitSpacing.medium,
+        MinglitSpacing.medium,
+        MinglitSpacing.xsmall,
+      ),
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
