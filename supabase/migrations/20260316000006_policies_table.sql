@@ -18,7 +18,6 @@ CREATE TABLE public.policies (
   CONSTRAINT policies_key_effective_date_unique UNIQUE(key, effective_date)
 );
 
-CREATE INDEX idx_policies_key_effective ON public.policies(key, effective_date DESC);
 
 -- ============================================================
 -- 2. RLS
@@ -50,7 +49,7 @@ CREATE OR REPLACE FUNCTION public.get_current_policy(
 RETURNS jsonb
 LANGUAGE sql
 STABLE
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path = public
 AS $$
   SELECT value FROM public.policies
