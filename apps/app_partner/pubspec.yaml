@@ -50,10 +50,12 @@ dependencies:
   minglit_kit:
     path: ../../shared/packages/minglit_kit
   mobile_scanner: any
+  package_info_plus: ^8.3.1
   path: any
   riverpod: ^3.0.3
   riverpod_annotation: ^3.0.3
   sentry_flutter: ^9.0.0
+  share_plus: ^12.0.1
   shared_preferences: ^2.5.4
   supabase_flutter: ^2.12.0
   url_launcher: ^6.3.2

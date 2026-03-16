@@ -113,6 +113,18 @@ const NOTIFICATION_TEMPLATES: Record<string, (data: Record<string, unknown>) => 
     title: '[이벤트 리마인더]',
     body: `${(d.event_title as string) || '이벤트'}이(가) 1시간 후 시작됩니다.`,
   }),
+  settlement_ready: (_d) => ({
+    title: '[정산 확정]',
+    body: `정산이 확정되었습니다. 곧 지급이 시작됩니다.`,
+  }),
+  settlement_completed: (_d) => ({
+    title: '[지급 완료]',
+    body: `정산 지급이 완료되었습니다.`,
+  }),
+  settlement_failed: (_d) => ({
+    title: '[지급 실패]',
+    body: `정산 지급에 실패했습니다. 계좌 정보를 확인해 주세요.`,
+  }),
 };
 
 // --- Helper: Resolve affected user_id for Schema A events ---
@@ -127,6 +139,37 @@ async function getAffectedUserId(supabase: any, eventType: string, data: Record<
       .eq('id', data.event_id)
       .single();
     return event?.parties?.partner_id || null;
+  }
+  // settlement events: partner_id is in data, resolve to partner owner user_id
+  if (
+    (eventType === 'settlement_ready' ||
+      eventType === 'settlement_completed' ||
+      eventType === 'settlement_failed') &&
+    data.settlement_item_id
+  ) {
+    // Get partner_id from settlement_items
+    const { data: item, error: itemError } = await supabase
+      .from('settlement_items')
+      .select('partner_id')
+      .eq('id', data.settlement_item_id)
+      .single();
+    if (itemError) {
+      console.error('Failed to fetch settlement item:', itemError.message);
+      return null;
+    }
+    if (!item?.partner_id) return null;
+    // Get owner user_id from partner_member_permissions (role = 'owner')
+    const { data: perm, error: permError } = await supabase
+      .from('partner_member_permissions')
+      .select('user_id')
+      .eq('partner_id', item.partner_id)
+      .eq('role', 'owner')
+      .single();
+    if (permError) {
+      console.error('Failed to fetch partner owner:', permError.message);
+      return null;
+    }
+    return perm?.user_id || null;
   }
   return null;
 }
@@ -276,7 +319,9 @@ Deno.serve(withSentryHandler(async (_req) => {
           title = t;
           body = b;
           category = 'service';
-          deepLink = undefined;
+          deepLink = eventType.startsWith('settlement_') && data.settlement_item_id
+            ? `minglit-partner://settlement/${data.settlement_item_id}`
+            : undefined;
 
           userId = await getAffectedUserId(supabase, eventType, data);
 
@@ -323,13 +368,19 @@ Deno.serve(withSentryHandler(async (_req) => {
         if (tokens && tokens.length > 0) {
             // C. Send Notifications
             const sendPromises = tokens.map(async (t) => {
+                const fcmData = isSchemaA
+                  ? {
+                      event_type: (payload.event_type as string) ?? '',
+                      deep_link: deepLink ?? '',
+                    }
+                  : payload.data;
                 const status = await sendFCM(
                     accessToken, 
                     projectId, 
                     t.token, 
                     title,
                     body,
-                    payload.data // deep_link, category etc (Schema B compat)
+                    fcmData
                 );
 
                 if (status === 'INVALID') {
