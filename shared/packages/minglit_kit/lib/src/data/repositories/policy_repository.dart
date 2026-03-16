@@ -14,11 +14,11 @@ class PolicyRepository {
   final SupabaseClient _supabase;
 
   Future<Map<String, dynamic>?> getRefundPolicy() async {
-    final result = await _supabase.rpc(
+    final result = await _supabase.rpc<Map<String, dynamic>?>(
       'get_current_policy',
       params: {'p_key': 'refund'},
     );
     if (result == null) return null;
-    return result as Map<String, dynamic>;
+    return result;
   }
 }
