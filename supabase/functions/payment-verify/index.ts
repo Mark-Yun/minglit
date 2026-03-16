@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { IamportClient } from "../_shared/iamport_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
+import { initSentry, withSentry, withSpan } from "../_shared/sentry_utils.ts";
 import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
 
 const IMP_KEY = Deno.env.get("PORTONE_API_KEY");
@@ -40,11 +40,15 @@ Deno.serve(withSentry(async (req) => {
     );
 
     // 1. DB에서 주문 정보 조회 (금액 확인)
-    const { data: order, error: orderError } = await supabase
-      .from("event_applications")
-      .select("payment_amount, status")
-      .eq("id", merchant_uid)
-      .single();
+    const { data: order, error: orderError } = await withSpan(
+      'db.query.event_applications',
+      'db.query',
+      async () => supabase
+        .from("event_applications")
+        .select("payment_amount, status")
+        .eq("id", merchant_uid)
+        .single()
+    );
 
     if (orderError || !order) {
       return errorResponse("Order not found", 404);
@@ -83,14 +87,18 @@ Deno.serve(withSentry(async (req) => {
     // Note: We used service role key so auth check via header is optional but good practice if we want to link user.
     // But since we have merchant_uid which is unique, we can just update.
     
-    const { error: updateError } = await supabase
-      .from("event_applications")
-      .update({
-        status: "approved",
-        payment_id: imp_uid,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", merchant_uid);
+    const { error: updateError } = await withSpan(
+      'db.update.event_applications',
+      'db.update',
+      async () => supabase
+        .from("event_applications")
+        .update({
+          status: "approved",
+          payment_id: imp_uid,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", merchant_uid)
+    );
 
     if (updateError) {
       console.error("DB Update Error:", updateError);
