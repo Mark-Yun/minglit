@@ -2,6 +2,7 @@ import { assertEquals } from "@std/assert";
 import {
   captureServeHandler,
   createFetchMock,
+  authenticatedJsonRequest,
   jsonRequest,
   jsonResponse,
   readJson,
@@ -10,7 +11,7 @@ import {
   withEnv,
   withMockedFetch,
 } from "../_test_utils/mock_http.ts";
-import { mockPortoneVerification, mockUser } from "../_test_utils/fixtures.ts";
+import { authRoute, mockPortoneVerification, mockUser } from "../_test_utils/fixtures.ts";
 
 Deno.test("identity-verify - happy path updates profile", async () => {
   await withEnv(
@@ -64,11 +65,11 @@ Deno.test("identity-verify - missing id returns 400", async () => {
     },
     async () => {
       const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-      const { fetchMock } = createFetchMock([]);
+      const { fetchMock } = createFetchMock([authRoute]);
 
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
-          const request = jsonRequest("http://localhost", {});
+          const request = authenticatedJsonRequest("http://localhost", {});
           const response = await handler(request);
           const payload = await readJson(response);
 
@@ -90,6 +91,7 @@ Deno.test("identity-verify - external API error returns status", async () => {
     async () => {
       const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
       const { fetchMock } = createFetchMock([
+        authRoute,
         {
           matcher: "https://api.portone.io/identity-verifications/verify_123",
           handler: () => jsonResponse({ message: "failure" }, { status: 500 }),
@@ -98,7 +100,7 @@ Deno.test("identity-verify - external API error returns status", async () => {
 
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
-          const request = jsonRequest("http://localhost", {
+          const request = authenticatedJsonRequest("http://localhost", {
             identity_verification_id: "verify_123",
           });
           const response = await handler(request);
@@ -128,13 +130,13 @@ Deno.test("identity-verify - unauthorized returns 401", async () => {
         },
         {
           matcher: (req) => req.url.includes("/auth/v1/user"),
-          handler: () => jsonResponse({}),
+          handler: () => jsonResponse({}, { status: 401 }),
         },
       ]);
 
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
-          const request = jsonRequest("http://localhost", {
+          const request = authenticatedJsonRequest("http://localhost", {
             identity_verification_id: "verify_123",
           });
           const response = await handler(request);
@@ -157,11 +159,11 @@ Deno.test("identity-verify - malformed JSON returns 500", async () => {
     },
     async () => {
       const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-      const { fetchMock } = createFetchMock([]);
+      const { fetchMock } = createFetchMock([authRoute]);
 
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
-          const request = textRequest("http://localhost", "{bad-json");
+          const request = textRequest("http://localhost", "{bad-json", { headers: { Authorization: "Bearer test-token" } });
           const response = await handler(request);
           const payload = await readJson(response);
 

@@ -50,12 +50,20 @@ Deno.test({
         },
       },
       {
+        matcher: (req) => req.url.includes("/storage/v1/object/list/"),
+        handler: () => jsonResponse([
+          { name: "party_cafe_warm.jpg" },
+          { name: "party_lounge_bright.jpg" },
+          { name: "party_premium_lounge.jpg" },
+        ]),
+      },
+      {
         matcher: (req) => req.url.includes("/rest/v1/") && req.method === "POST",
         handler: async (req) => {
           insertCounter++;
           const id = crypto.randomUUID();
           const url = new URL(req.url);
-          const table = url.pathname.split("/rest/v1/")[1]?.split("?")[0];
+          url.pathname.split("/rest/v1/")[1]?.split("?")[0];
           
           const prefer = req.headers.get("Prefer") ?? "";
           if (prefer.includes("return=representation")) {
@@ -90,8 +98,8 @@ Deno.test({
 
         assertEquals(body.created_users, 25);
         assertEquals(body.created_partners, 5);
-        assertEquals(body.created_parties, 17);
-        assertEquals(body.created_events, 34);
+        assertEquals(body.created_parties, 26);
+        assertEquals(body.created_events, 52);
       });
     });
   },
@@ -151,6 +159,14 @@ Deno.test({
           deleteUserCalled = true;
           return jsonResponse({ user: { id: existingUserId } });
         },
+      },
+      {
+        matcher: (req) => req.url.includes("/storage/v1/object/list/"),
+        handler: () => jsonResponse([
+          { name: "party_cafe_warm.jpg" },
+          { name: "party_lounge_bright.jpg" },
+          { name: "party_premium_lounge.jpg" },
+        ]),
       },
       {
         matcher: (req) => req.url.includes("/rest/v1/") && req.method === "POST",

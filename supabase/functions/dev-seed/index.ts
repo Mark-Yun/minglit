@@ -932,6 +932,51 @@ async function seedUserActivity(sb: SupabaseClient): Promise<void> {
       }).eq('id', cancelledAppsList[1].id)
     }
   }
+
+  // ── Step 10: Expand partner_verified_users pool ────────────────────────
+  const { data: allUsers } = await sb.from('user_profiles')
+    .select('id')
+    .not('username', 'like', 'partner_%')
+    .limit(30)
+
+  const { data: allPartners } = await sb.from('partners').select('id')
+  const { data: allVerifications } = await sb.from('verifications').select('id, partner_id')
+
+  if (allUsers && allPartners && allVerifications) {
+    for (const user of allUsers) {
+      for (const partner of allPartners) {
+        const partnerVerifs = allVerifications.filter((v: any) =>
+          v.partner_id === partner.id || v.partner_id === null
+        )
+        for (const verif of partnerVerifs) {
+          await sb.from('partner_verified_users').upsert({
+            partner_id: partner.id,
+            user_id: user.id,
+            verification_id: verif.id,
+            verified_at: new Date().toISOString(),
+          }, { onConflict: 'partner_id,user_id,verification_id' })
+        }
+      }
+    }
+  }
+
+  // ── Step 11: Seed match_rules for scheduled events ─────────────────────
+  const { data: eventsForRules } = await sb.from('events')
+    .select('id, entry_groups!inner(id)')
+    .eq('status', 'scheduled')
+
+  if (eventsForRules) {
+    for (const event of eventsForRules) {
+      const groups = (event as any).entry_groups ?? []
+      if (groups.length >= 2) {
+        // Insert bidirectional match rules
+        await sb.from('match_rules').upsert([
+          { event_id: event.id, source_group_id: groups[0].id, target_group_id: groups[1].id },
+          { event_id: event.id, source_group_id: groups[1].id, target_group_id: groups[0].id },
+        ], { onConflict: 'event_id,source_group_id,target_group_id', ignoreDuplicates: true })
+      }
+    }
+  }
 }
 
 Deno.serve(async (_req) => {
