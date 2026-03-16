@@ -8,10 +8,11 @@ SELECT tests.authenticate_as_service_role();
 -- PART 1: event_type_name enum validation
 -- ============================================================
 
--- Test 1: event_type_name enum exists and has 9 values
+-- Test 1: event_type_name enum exists and has 12 values
+-- (9 original + 3 settlement: settlement_ready, settlement_completed, settlement_failed)
 SELECT ok(
-  (SELECT count(*) FROM pg_enum JOIN pg_type ON pg_enum.enumtypid = pg_type.oid WHERE pg_type.typname = 'event_type_name') = 9,
-  'event_type_name enum should have 9 values'
+  (SELECT count(*) FROM pg_enum JOIN pg_type ON pg_enum.enumtypid = pg_type.oid WHERE pg_type.typname = 'event_type_name') = 12,
+  'event_type_name enum should have 12 values'
 );
 
 -- Test 2-10: individual enum values exist
