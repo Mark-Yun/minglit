@@ -211,7 +211,7 @@ jobs:
   # Dart Backend Integration 테스트
   test-backend-integration:
     needs: changes
-    if: false  # Requires seeded DB with specific test users — not available in CI
+    if: ${{ false }}  # Requires seeded DB with specific test users — not available in CI
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -272,7 +272,7 @@ jobs:
   # E2E 시나리오 테스트
   test-e2e-scenarios:
     needs: changes
-    if: false
+    if: ${{ false }}  # Requires device/emulator — not available in CI runner
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
