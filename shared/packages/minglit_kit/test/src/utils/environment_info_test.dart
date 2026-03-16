@@ -5,7 +5,7 @@ void main() {
   setUpAll(TestWidgetsFlutterBinding.ensureInitialized);
 
   group('collectEnvironmentInfo', () {
-    test('returns a map with all 8 expected keys', () async {
+    test('returns a map with all 9 expected keys', () async {
       final info = await collectEnvironmentInfo();
 
       expect(info, isA<Map<String, dynamic>>());
@@ -14,6 +14,7 @@ void main() {
         containsAll([
           'appVersion',
           'buildNumber',
+          'packageName',
           'platform',
           'osVersion',
           'deviceModel',
@@ -22,7 +23,7 @@ void main() {
           'batteryLevel',
         ]),
       );
-      expect(info.length, equals(8));
+      expect(info.length, equals(9));
     });
 
     test('returns a map with correct value types', () async {

@@ -1,0 +1,69 @@
+name: Allure Report
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # 매주 월요일 00:00 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: allure-report
+  cancel-in-progress: true
+
+jobs:
+  generate-report:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages-content
+
+      - name: Download Allure Results (app_user)
+        uses: dawidd6/action-download-artifact@v9
+        with:
+          workflow: ci.yml
+          name: allure-results-app_user
+          path: allure-results/
+          if_no_artifact_found: warn
+        continue-on-error: true
+
+      - name: Download Allure Results (app_partner)
+        uses: dawidd6/action-download-artifact@v9
+        with:
+          workflow: ci.yml
+          name: allure-results-app_partner
+          path: allure-results/
+          if_no_artifact_found: warn
+        continue-on-error: true
+
+      - name: Download Allure Results (minglit_kit)
+        uses: dawidd6/action-download-artifact@v9
+        with:
+          workflow: ci.yml
+          name: allure-results-minglit_kit
+          path: allure-results/
+          if_no_artifact_found: warn
+        continue-on-error: true
+
+      - name: Copy previous history for trend tracking
+        run: |
+          if [ -d "gh-pages-content/history" ]; then
+            cp -r gh-pages-content/history allure-results/history
+            echo "History copied for trend tracking"
+          else
+            echo "No previous history found — first run"
+          fi
+
+      - name: Generate Allure Report
+        run: npx allure-commandline generate allure-results/ -o allure-report/ --clean
+        continue-on-error: true
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./allure-report
+          destination_dir: .
+          keep_files: false
