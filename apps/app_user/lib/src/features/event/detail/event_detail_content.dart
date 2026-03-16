@@ -69,7 +69,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
       // maxScrollObstructionExtentBefore — compare directly.
       final revealed = viewport.getOffsetToReveal(
         renderObject,
-        0.0,
+        0,
         rect: Rect.fromLTWH(0, 0, renderObject.paintBounds.width, 0),
       );
       if (_scrollController.offset >= revealed.offset) {
@@ -94,7 +94,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
     // Use rect to target only the top edge of the section.
     final revealed = viewport.getOffsetToReveal(
       renderObject,
-      0.0,
+      0,
       rect: Rect.fromLTWH(0, 0, renderObject.paintBounds.width, 0),
     );
     final targetOffset = revealed.offset.clamp(
