@@ -1,6 +1,7 @@
 import 'dart:async' show unawaited;
 
 import 'package:app_partner/src/features/party/party_providers.dart';
+import 'package:app_partner/src/features/settlement/settlement_dashboard_controller.dart';
 import 'package:app_partner/src/features/settlement/widgets/settlement_card.dart';
 import 'package:app_partner/src/features/settlement/widgets/settlement_empty_state.dart';
 import 'package:app_partner/src/features/settlement/widgets/status_filter_chips.dart';
@@ -56,72 +57,17 @@ class _SettlementPageState extends ConsumerState<SettlementPage>
   }
 }
 
-class _DashboardTab extends ConsumerStatefulWidget {
+class _DashboardTab extends ConsumerWidget {
   const _DashboardTab();
 
   @override
-  ConsumerState<_DashboardTab> createState() => _DashboardTabState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dashState = ref.watch(settlementDashboardControllerProvider);
 
-class _DashboardTabState extends ConsumerState<_DashboardTab> {
-  DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
-  Map<String, dynamic>? _dashboardData;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    unawaited(_loadDashboard());
-  }
-
-  Future<void> _loadDashboard() async {
-    setState(() => _isLoading = true);
-    try {
-      final repo = ref.read(settlementRepositoryProvider);
-      final partner = await ref.read(currentPartnerInfoProvider.future);
-      if (partner == null) {
-        if (mounted) setState(() => _isLoading = false);
-        return;
-      }
-      final data = await repo.getSettlementDashboard(
-        partnerId: partner.id,
-        periodStart: _selectedMonth,
-        periodEnd: DateTime(
-          _selectedMonth.year,
-          _selectedMonth.month + 1,
-          0,
-          23,
-          59,
-          59,
-          999,
-        ),
-      );
-      if (mounted) {
-        setState(() {
-          _dashboardData = data;
-          _isLoading = false;
-        });
-      }
-    } on Exception catch (_) {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  void _onMonthChanged(int delta) {
-    setState(() {
-      _selectedMonth = DateTime(
-        _selectedMonth.year,
-        _selectedMonth.month + delta,
-      );
-      _dashboardData = null;
-    });
-    unawaited(_loadDashboard());
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: _loadDashboard,
+      onRefresh: () => ref
+          .read(settlementDashboardControllerProvider.notifier)
+          .loadDashboard(),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
@@ -129,17 +75,46 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _PeriodSelector(
-              selectedMonth: _selectedMonth,
-              onChanged: _onMonthChanged,
+              selectedMonth: dashState.selectedMonth,
+              onChanged: (delta) => ref
+                  .read(settlementDashboardControllerProvider.notifier)
+                  .changeMonth(delta),
             ),
             const SizedBox(height: 16),
-            if (_isLoading)
-              const Center(child: CircularProgressIndicator())
-            else ...[
-              _RevenueSummaryCard(data: _dashboardData),
-              const SizedBox(height: 16),
-              _StatusSummaryGrid(data: _dashboardData),
-            ],
+            ...dashState.status.when(
+              data: (_) => [
+                _RevenueSummaryCard(data: dashState.dashboardData),
+                const SizedBox(height: 16),
+                _StatusSummaryGrid(data: dashState.dashboardData),
+              ],
+              loading: () => [const Center(child: CircularProgressIndicator())],
+              error: (error, _) => [
+                Center(
+                  child: Column(
+                    children: [
+                      Text(
+                        '오류가 발생했습니다',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        error.toString(),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton(
+                        onPressed: () => ref
+                            .read(
+                              settlementDashboardControllerProvider.notifier,
+                            )
+                            .loadDashboard(),
+                        child: const Text('다시 시도'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
