@@ -1,10 +1,10 @@
-import 'dart:async' show unawaited;
-
-import 'package:app_partner/src/features/party/party_providers.dart';
+import 'package:app_partner/src/features/settlement/settlement_coordinator.dart';
+import 'package:app_partner/src/features/settlement/settlement_dashboard_controller.dart';
+import 'package:app_partner/src/features/settlement/settlement_list_controller.dart';
 import 'package:app_partner/src/features/settlement/widgets/settlement_card.dart';
 import 'package:app_partner/src/features/settlement/widgets/settlement_empty_state.dart';
+import 'package:app_partner/src/features/settlement/widgets/settlement_status_badge.dart';
 import 'package:app_partner/src/features/settlement/widgets/status_filter_chips.dart';
-import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -56,90 +56,64 @@ class _SettlementPageState extends ConsumerState<SettlementPage>
   }
 }
 
-class _DashboardTab extends ConsumerStatefulWidget {
+class _DashboardTab extends ConsumerWidget {
   const _DashboardTab();
 
   @override
-  ConsumerState<_DashboardTab> createState() => _DashboardTabState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dashState = ref.watch(settlementDashboardControllerProvider);
 
-class _DashboardTabState extends ConsumerState<_DashboardTab> {
-  DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
-  Map<String, dynamic>? _dashboardData;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    unawaited(_loadDashboard());
-  }
-
-  Future<void> _loadDashboard() async {
-    setState(() => _isLoading = true);
-    try {
-      final repo = ref.read(settlementRepositoryProvider);
-      final partner = await ref.read(currentPartnerInfoProvider.future);
-      if (partner == null) {
-        if (mounted) setState(() => _isLoading = false);
-        return;
-      }
-      final data = await repo.getSettlementDashboard(
-        partnerId: partner.id,
-        periodStart: _selectedMonth,
-        periodEnd: DateTime(
-          _selectedMonth.year,
-          _selectedMonth.month + 1,
-          0,
-          23,
-          59,
-          59,
-          999,
-        ),
-      );
-      if (mounted) {
-        setState(() {
-          _dashboardData = data;
-          _isLoading = false;
-        });
-      }
-    } on Exception catch (_) {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  void _onMonthChanged(int delta) {
-    setState(() {
-      _selectedMonth = DateTime(
-        _selectedMonth.year,
-        _selectedMonth.month + delta,
-      );
-      _dashboardData = null;
-    });
-    unawaited(_loadDashboard());
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: _loadDashboard,
+      onRefresh: () => ref
+          .read(settlementDashboardControllerProvider.notifier)
+          .loadDashboard(),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(MinglitSpacing.medium),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _PeriodSelector(
-              selectedMonth: _selectedMonth,
-              onChanged: _onMonthChanged,
+              selectedMonth: dashState.selectedMonth,
+              onChanged: (delta) => ref
+                  .read(settlementDashboardControllerProvider.notifier)
+                  .changeMonth(delta),
             ),
-            const SizedBox(height: 16),
-            if (_isLoading)
-              const Center(child: CircularProgressIndicator())
-            else ...[
-              _RevenueSummaryCard(data: _dashboardData),
-              const SizedBox(height: 16),
-              _StatusSummaryGrid(data: _dashboardData),
-            ],
+            const SizedBox(height: MinglitSpacing.medium),
+            ...dashState.status.when(
+              data: (_) => [
+                _RevenueSummaryCard(data: dashState.dashboardData),
+                const SizedBox(height: MinglitSpacing.medium),
+                _StatusSummaryGrid(data: dashState.dashboardData),
+              ],
+              loading: () => [const Center(child: CircularProgressIndicator())],
+              error: (error, _) => [
+                Center(
+                  child: Column(
+                    children: [
+                      Text(
+                        '오류가 발생했습니다',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: MinglitSpacing.small),
+                      Text(
+                        error.toString(),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: MinglitSpacing.medium),
+                      FilledButton(
+                        onPressed: () => ref
+                            .read(
+                              settlementDashboardControllerProvider.notifier,
+                            )
+                            .loadDashboard(),
+                        child: const Text('다시 시도'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -190,12 +164,12 @@ class _RevenueSummaryCard extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(MinglitSpacing.medium),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('매출 요약', style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 12),
+            const SizedBox(height: MinglitSpacing.sm),
             _DashRow('총 매출', '₩${fmt.format(totalGross)}'),
             _DashRow('총 수수료', '-₩${fmt.format(totalFees)}'),
             const Divider(),
@@ -222,7 +196,7 @@ class _DashRow extends StatelessWidget {
           ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)
         : Theme.of(context).textTheme.bodyMedium;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.xsmall),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -239,38 +213,43 @@ class _StatusSummaryGrid extends StatelessWidget {
 
   final Map<String, dynamic>? data;
 
-  static const _statuses = [
-    ('PENDING', '대기', Color(0xFF616161)),
-    ('READY', '확정', Color(0xFF1565C0)),
-    ('PROCESSING', '지급중', Color(0xFF283593)),
-    ('COMPLETED', '완료', Color(0xFF1B5E20)),
-    ('FAILED', '실패', Color(0xFFB71C1C)),
-    ('HOLD', '보류', Color(0xFFE65100)),
-    ('CANCELED', '취소', Color(0xFF9E9E9E)),
+  static final List<(String, String, SettlementStatus)> _statuses = [
+    ('PENDING', '대기', SettlementStatus.pending),
+    ('READY', '확정', SettlementStatus.ready),
+    ('PROCESSING', '지급중', SettlementStatus.processing),
+    ('COMPLETED', '완료', SettlementStatus.completed),
+    ('FAILED', '실패', SettlementStatus.failed),
+    ('HOLD', '보류', SettlementStatus.hold),
+    ('CANCELED', '취소', SettlementStatus.canceled),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final counts = data?['status_counts'] as Map<String, dynamic>? ?? {};
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(MinglitSpacing.medium),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('상태별 현황', style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 12),
+            const SizedBox(height: MinglitSpacing.sm),
             GridView.count(
               crossAxisCount: 4,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 8,
-              crossAxisSpacing: 8,
+              mainAxisSpacing: MinglitSpacing.small,
+              crossAxisSpacing: MinglitSpacing.small,
               childAspectRatio: 1.2,
               children: _statuses.map((s) {
-                final (status, label, color) = s;
+                final (status, label, statusEnum) = s;
                 final count = counts[status] as int? ?? 0;
-                return _StatusCell(label: label, count: count, color: color);
+                return _StatusCell(
+                  label: label,
+                  count: count,
+                  color: statusEnum.textColor(colorScheme),
+                );
               }).toList(),
             ),
           ],
@@ -296,7 +275,7 @@ class _StatusCell extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(MinglitRadius.small),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -331,7 +310,7 @@ class _MonthHeader extends _ListItem {
 
 class _CardItem extends _ListItem {
   const _CardItem(this.data);
-  final Map<String, dynamic> data;
+  final SettlementItemDetail data;
 }
 
 class _ListTab extends ConsumerStatefulWidget {
@@ -343,17 +322,11 @@ class _ListTab extends ConsumerStatefulWidget {
 
 class _ListTabState extends ConsumerState<_ListTab> {
   final _scrollController = ScrollController();
-  String? _selectedStatus;
-  final _items = <Map<String, dynamic>>[];
-  bool _isLoading = false;
-  bool _hasMore = true;
-  static const _pageSize = 20;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    unawaited(_loadMore());
   }
 
   @override
@@ -365,62 +338,19 @@ class _ListTabState extends ConsumerState<_ListTab> {
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      unawaited(_loadMore());
+      ref.read(settlementListControllerProvider.notifier).loadMore();
     }
   }
 
-  Future<void> _loadMore() async {
-    if (_isLoading || !_hasMore) return;
-    setState(() => _isLoading = true);
-    try {
-      final repo = ref.read(settlementRepositoryProvider);
-      final partner = await ref.read(currentPartnerInfoProvider.future);
-      final partnerId = partner?.id;
-      if (partnerId == null) {
-        if (mounted) setState(() => _isLoading = false);
-        return;
-      }
-      final newItems = await repo.getSettlementItems(
-        partnerId: partnerId,
-        status: _selectedStatus,
-        offset: _items.length,
-      );
-      if (mounted) {
-        setState(() {
-          _items.addAll(
-            newItems.map((e) => e.toJson()).toList(),
-          );
-          _hasMore = newItems.length == _pageSize;
-        });
-      }
-    } on Exception catch (e, st) {
-      Log.e('ListTab _loadMore error', e, st);
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  void _onStatusChanged(String? status) {
-    setState(() {
-      _selectedStatus = status;
-      _items.clear();
-      _hasMore = true;
-    });
-    unawaited(_loadMore());
-  }
-
-  List<_ListItem> _buildViewList() {
+  List<_ListItem> _buildViewList(List<SettlementItemDetail> items) {
     final result = <_ListItem>[];
     String? lastMonth;
-    for (final item in _items) {
-      final raw = item['created_at'] as String?;
-      final dt = raw != null ? DateTime.tryParse(raw) : null;
-      if (dt != null) {
-        final label = '${dt.year}년 ${dt.month}월';
-        if (label != lastMonth) {
-          result.add(_MonthHeader(label));
-          lastMonth = label;
-        }
+    for (final item in items) {
+      final dt = item.createdAt;
+      final label = '${dt.year}년 ${dt.month}월';
+      if (label != lastMonth) {
+        result.add(_MonthHeader(label));
+        lastMonth = label;
       }
       result.add(_CardItem(item));
     }
@@ -429,39 +359,42 @@ class _ListTabState extends ConsumerState<_ListTab> {
 
   @override
   Widget build(BuildContext context) {
+    final listState = ref.watch(settlementListControllerProvider);
+
     return Column(
       children: [
-        const SizedBox(height: 8),
+        const SizedBox(height: MinglitSpacing.small),
         StatusFilterChips(
-          selectedStatus: _selectedStatus,
-          onStatusChanged: _onStatusChanged,
+          selectedStatus: listState.selectedStatus,
+          onStatusChanged: (status) => ref
+              .read(settlementListControllerProvider.notifier)
+              .changeStatus(status),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: MinglitSpacing.small),
         Expanded(
-          child: _items.isEmpty && !_isLoading
+          child: listState.items.isEmpty && !listState.isLoading
               ? SettlementEmptyState(
                   title: '정산 항목이 없습니다',
-                  subtitle: _selectedStatus != null ? '다른 상태를 선택해 보세요.' : null,
+                  subtitle: listState.selectedStatus != null
+                      ? '다른 상태를 선택해 보세요.'
+                      : null,
                 )
               : RefreshIndicator(
-                  onRefresh: () async {
-                    setState(() {
-                      _items.clear();
-                      _hasMore = true;
-                    });
-                    await _loadMore();
-                  },
+                  onRefresh: () => ref
+                      .read(settlementListControllerProvider.notifier)
+                      .refresh(),
                   child: Builder(
                     builder: (context) {
-                      final viewList = _buildViewList();
+                      final viewList = _buildViewList(listState.items);
                       return ListView.builder(
                         controller: _scrollController,
                         physics: const AlwaysScrollableScrollPhysics(),
-                        itemCount: viewList.length + (_isLoading ? 1 : 0),
+                        itemCount:
+                            viewList.length + (listState.isLoading ? 1 : 0),
                         itemBuilder: (context, i) {
                           if (i >= viewList.length) {
                             return const Padding(
-                              padding: EdgeInsets.all(16),
+                              padding: EdgeInsets.all(MinglitSpacing.medium),
                               child: Center(
                                 child: CircularProgressIndicator(),
                               ),
@@ -476,13 +409,12 @@ class _ListTabState extends ConsumerState<_ListTab> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 SettlementCard(
-                                  item: data,
-                                  onTap: () {
-                                    final id = data['id'] as String?;
-                                    if (id != null) {
-                                      SettlementDetailRoute(id: id).go(context);
-                                    }
-                                  },
+                                  item: data.toJson(),
+                                  onTap: () => ref
+                                      .read(
+                                        settlementCoordinatorProvider.notifier,
+                                      )
+                                      .goToDetail(data.id),
                                 ),
                                 const Divider(height: 1),
                               ],
@@ -506,7 +438,12 @@ class _MonthHeaderWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+      padding: const EdgeInsets.fromLTRB(
+        MinglitSpacing.medium,
+        MinglitSpacing.medium,
+        MinglitSpacing.medium,
+        MinglitSpacing.xsmall,
+      ),
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(

@@ -230,4 +230,108 @@ class SettlementRepository {
       rethrow;
     }
   }
+
+  /// Fetches bank account info for a partner.
+  ///
+  /// Returns null if the partner settlement record is not found.
+  Future<Map<String, dynamic>?> getBankAccount(String partnerId) async {
+    Log.d('getBankAccount called | partnerId: $partnerId');
+    try {
+      final data = await _supabase
+          .from('partner_settlements')
+          .select('bank_name, account_holder, account_number')
+          .eq('partner_id', partnerId)
+          .maybeSingle();
+
+      if (data == null) {
+        Log.d('getBankAccount | not found: $partnerId');
+        return null;
+      }
+
+      Log.d('getBankAccount success | bankName: ${data['bank_name']}');
+      return data;
+    } catch (e, st) {
+      Log.e('❌ [SettlementRepo] getBankAccount Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// Upserts bank account info for a partner.
+  ///
+  /// Creates or updates the bank account record in partner_settlements table.
+  Future<void> upsertBankAccount({
+    required String partnerId,
+    required String bankName,
+    required String accountHolder,
+    required String accountNumber,
+  }) async {
+    Log.d(
+      'upsertBankAccount called | partnerId: $partnerId, bankName: $bankName',
+    );
+    try {
+      await _supabase.from('partner_settlements').upsert({
+        'partner_id': partnerId,
+        'bank_name': bankName,
+        'account_holder': accountHolder,
+        'account_number': accountNumber,
+      }, onConflict: 'partner_id');
+
+      Log.d('upsertBankAccount success | partnerId: $partnerId');
+    } catch (e, st) {
+      Log.e('❌ [SettlementRepo] upsertBankAccount Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// Fetches full partner settlement info for display.
+  ///
+  /// Returns null if the partner settlement record is not found.
+  Future<Map<String, dynamic>?> getPartnerSettlementInfo(
+    String partnerId,
+  ) async {
+    Log.d('getPartnerSettlementInfo called | partnerId: $partnerId');
+    try {
+      final data = await _supabase
+          .from('partner_settlements')
+          .select()
+          .eq('partner_id', partnerId)
+          .maybeSingle();
+
+      if (data == null) {
+        Log.d('getPartnerSettlementInfo | not found: $partnerId');
+        return null;
+      }
+
+      Log.d('getPartnerSettlementInfo success | partnerId: $partnerId');
+      return data;
+    } catch (e, st) {
+      Log.e('❌ [SettlementRepo] getPartnerSettlementInfo Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// Requests a retry payout via RPC.
+  ///
+  /// Calls the request_retry_payout RPC function to retry a failed payout.
+  Future<Map<String, dynamic>> retryPayout({
+    required String payoutId,
+    required String partnerId,
+  }) async {
+    Log.d('retryPayout called | payoutId: $payoutId, partnerId: $partnerId');
+    try {
+      final result = await _supabase.rpc<Map<String, dynamic>>(
+        'request_retry_payout',
+        params: {
+          'p_payout_id': payoutId,
+          'p_partner_id': partnerId,
+        },
+      );
+
+      Log.d('retryPayout success | payoutId: $payoutId');
+      return result;
+    } catch (e, st) {
+      Log.e('❌ [SettlementRepo] retryPayout Error', e, st);
+      rethrow;
+    }
+  }
 }
