@@ -3,7 +3,6 @@ import 'dart:async' show unawaited;
 import 'package:app_partner/src/features/party/party_providers.dart';
 import 'package:app_partner/src/features/settlement/settlement_coordinator.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class BankAccountPage extends ConsumerStatefulWidget {

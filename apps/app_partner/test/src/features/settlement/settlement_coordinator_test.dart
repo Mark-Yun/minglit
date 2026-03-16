@@ -2,7 +2,6 @@ import 'package:app_partner/src/features/settlement/settlement_coordinator.dart'
 import 'package:app_partner/src/routing/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../utils/mocks.dart';
@@ -16,7 +15,7 @@ void main() {
     mockRouter = MockGoRouter();
     mockSettlementRepository = MockSettlementRepository();
     when(() => mockRouter.go(any())).thenReturn(null);
-    when(() => mockRouter.push(any())).thenAnswer((_) => Future.value(null));
+    when(() => mockRouter.push(any())).thenAnswer((_) => Future.value());
   });
 
   group('SettlementCoordinator', () {

@@ -133,7 +133,7 @@ void main() {
       });
 
       test('returns null when item not found', () async {
-        mockTable(mockClient, 'settlement_items', maybeSingleData: null);
+        mockTable(mockClient, 'settlement_items');
         // Other tables won't be queried when item is null.
 
         final result = await repository.getSettlementItemDetail('nonexistent');
@@ -276,7 +276,7 @@ void main() {
       });
 
       test('returns null when event not found', () async {
-        mockTable(mockClient, 'events', maybeSingleData: null);
+        mockTable(mockClient, 'events');
 
         final result = await repository.getEventInfo('nonexistent');
 
@@ -321,7 +321,7 @@ void main() {
       });
 
       test('returns null when not found', () async {
-        mockTable(mockClient, 'partner_settlements', maybeSingleData: null);
+        mockTable(mockClient, 'partner_settlements');
 
         final result = await repository.getBankAccount('partner_1');
 
@@ -405,7 +405,7 @@ void main() {
       });
 
       test('returns null when not found', () async {
-        mockTable(mockClient, 'partner_settlements', maybeSingleData: null);
+        mockTable(mockClient, 'partner_settlements');
 
         final result = await repository.getPartnerSettlementInfo('partner_1');
 

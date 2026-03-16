@@ -28,10 +28,10 @@ class StatusFilterChips extends StatelessWidget {
       height: 40,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: MinglitSpacing.medium),
+        padding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.medium),
         itemCount: _statuses.length,
         separatorBuilder: (context, index) =>
-            SizedBox(width: MinglitSpacing.small),
+            const SizedBox(width: MinglitSpacing.small),
         itemBuilder: (context, i) {
           final (status, label) = _statuses[i];
           final isSelected = selectedStatus == status;

@@ -1,6 +1,5 @@
 import 'package:app_partner/src/features/party/party_providers.dart';
 import 'package:app_partner/src/features/settlement/settlement_list_controller.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -86,7 +85,7 @@ void main() {
       final container = makeContainer();
       final sub = container.listen(
         settlementListControllerProvider,
-        (_, __) {},
+        (_, _) {},
       );
       addTearDown(sub.close);
 
@@ -104,7 +103,7 @@ void main() {
       final container = makeContainer(items: items);
       final sub = container.listen(
         settlementListControllerProvider,
-        (_, __) {},
+        (_, _) {},
       );
       addTearDown(sub.close);
 
@@ -125,7 +124,7 @@ void main() {
         final container = makeContainer(items: items);
         final sub = container.listen(
           settlementListControllerProvider,
-          (_, __) {},
+          (_, _) {},
         );
         addTearDown(sub.close);
 
@@ -142,7 +141,7 @@ void main() {
       final container = makeContainer(loadError: error);
       final sub = container.listen(
         settlementListControllerProvider,
-        (_, __) {},
+        (_, _) {},
       );
       addTearDown(sub.close);
 
@@ -159,7 +158,7 @@ void main() {
       final container = makeContainer(nullPartner: true);
       final sub = container.listen(
         settlementListControllerProvider,
-        (_, __) {},
+        (_, _) {},
       );
       addTearDown(sub.close);
 
@@ -177,7 +176,7 @@ void main() {
       final container = makeContainer(items: items);
       final sub = container.listen(
         settlementListControllerProvider,
-        (_, __) {},
+        (_, _) {},
       );
       addTearDown(sub.close);
 
@@ -212,7 +211,7 @@ void main() {
       final container = makeContainer();
       final sub = container.listen(
         settlementListControllerProvider,
-        (_, __) {},
+        (_, _) {},
       );
       addTearDown(sub.close);
 
@@ -238,7 +237,7 @@ void main() {
       final container = makeContainer(items: items);
       final sub = container.listen(
         settlementListControllerProvider,
-        (_, __) {},
+        (_, _) {},
       );
       addTearDown(sub.close);
 

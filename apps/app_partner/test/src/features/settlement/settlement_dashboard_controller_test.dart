@@ -1,6 +1,5 @@
 import 'package:app_partner/src/features/party/party_providers.dart';
 import 'package:app_partner/src/features/settlement/settlement_dashboard_controller.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -64,7 +63,7 @@ void main() {
       // Listen to keep provider alive during async microtask
       final sub = container.listen(
         settlementDashboardControllerProvider,
-        (_, __) {},
+        (_, _) {},
       );
       addTearDown(sub.close);
 
@@ -81,7 +80,7 @@ void main() {
       final container = makeContainer();
       final sub = container.listen(
         settlementDashboardControllerProvider,
-        (_, __) {},
+        (_, _) {},
       );
       addTearDown(sub.close);
 
@@ -100,7 +99,7 @@ void main() {
       final container = makeContainer(dashboardData: data);
       final sub = container.listen(
         settlementDashboardControllerProvider,
-        (_, __) {},
+        (_, _) {},
       );
       addTearDown(sub.close);
 
@@ -120,7 +119,7 @@ void main() {
       final container = makeContainer(dashboardError: error);
       final sub = container.listen(
         settlementDashboardControllerProvider,
-        (_, __) {},
+        (_, _) {},
       );
       addTearDown(sub.close);
 
@@ -138,7 +137,7 @@ void main() {
         final container = makeContainer(nullPartner: true);
         final sub = container.listen(
           settlementDashboardControllerProvider,
-          (_, __) {},
+          (_, _) {},
         );
         addTearDown(sub.close);
 
@@ -155,7 +154,7 @@ void main() {
       final container = makeContainer();
       final sub = container.listen(
         settlementDashboardControllerProvider,
-        (_, __) {},
+        (_, _) {},
       );
       addTearDown(sub.close);
 
@@ -188,7 +187,7 @@ void main() {
       final container = makeContainer();
       final sub = container.listen(
         settlementDashboardControllerProvider,
-        (_, __) {},
+        (_, _) {},
       );
       addTearDown(sub.close);
 
