@@ -13,7 +13,7 @@ SELECT col_type_is('public', 'policies', 'version', 'integer', 'policies.version
 SELECT col_type_is('public', 'policies', 'effective_date', 'timestamp with time zone', 'policies.effective_date is timestamptz');
 SELECT col_type_is('public', 'policies', 'description', 'text', 'policies.description is text');
 SELECT col_type_is('public', 'policies', 'created_at', 'timestamp with time zone', 'policies.created_at is timestamptz');
-SELECT has_index('public', 'policies', 'idx_policies_key_effective', 'idx_policies_key_effective index exists');
+SELECT has_index('public', 'policies', 'policies_key_effective_date_unique', 'UNIQUE(key, effective_date) index exists');
 SELECT tests.rls_enabled('public', 'policies');
 
 -- ============================================================
