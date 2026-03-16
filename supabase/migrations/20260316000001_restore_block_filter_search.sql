@@ -33,3 +33,6 @@ LANGUAGE sql STABLE SECURITY INVOKER AS $$
     AND NOT EXISTS (SELECT 1 FROM public.social_interactions si WHERE si.user_id = auth.uid() AND si.target_id = p.partner_id AND si.interaction_type = 'block')
   LIMIT 20;
 $$;
+
+GRANT EXECUTE ON FUNCTION public.search_events_pgroonga(text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.search_parties_pgroonga(text) TO authenticated;

@@ -229,7 +229,7 @@ jobs:
         run: flutter pub get
         working-directory: tests/backend_integration
       - name: Test (integration)
-        run: dart test src/ --coverage=coverage
+        run: flutter test src/ --coverage=coverage
         working-directory: tests/backend_integration
         env:
           SUPABASE_URL: http://127.0.0.1:54321
