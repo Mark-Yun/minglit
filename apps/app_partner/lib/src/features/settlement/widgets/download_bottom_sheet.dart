@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:share_plus/share_plus.dart';
 
 class DownloadBottomSheet extends StatefulWidget {
   const DownloadBottomSheet({required this.detail, super.key});
@@ -69,23 +71,24 @@ class _DownloadBottomSheetState extends State<DownloadBottomSheet> {
     setState(() => _isGenerating = true);
     try {
       final csv = _buildCsv(widget.detail);
-      final bytes = utf8.encode('\uFEFF$csv');
-      // Use clipboard as fallback if share_plus not available
-      // In production, use share_plus: Share.shareXFiles([XFile.fromData(bytes, mimeType: 'text/csv')])
-      if (context.mounted) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('CSV 파일이 생성되었습니다.')),
-        );
-      }
-      // Suppress unused variable warning
-      assert(bytes.isNotEmpty, 'CSV bytes must not be empty');
+      final bytes = Uint8List.fromList(utf8.encode('\uFEFF$csv'));
+      final id = widget.detail.id;
+      final ts = DateTime.now().millisecondsSinceEpoch;
+      final fileName = 'settlement_${id}_$ts.csv';
+      final xFile = XFile.fromData(
+        bytes,
+        name: fileName,
+        mimeType: 'text/csv',
+      );
+      await SharePlus.instance.share(
+        ShareParams(files: [xFile], subject: '정산 내역 CSV'),
+      );
+      if (mounted) Navigator.of(context).pop();
     } on Exception catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $e')),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('오류: $e')),
+      );
     } finally {
       if (mounted) setState(() => _isGenerating = false);
     }
