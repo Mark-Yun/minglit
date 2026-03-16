@@ -1,7 +1,7 @@
 -- ============================================================
 -- Analytics Aggregation Functions and pg_cron Jobs
 -- ============================================================
--- Schema: analytics (created in 20260316000005_analytics_infrastructure.sql)
+-- Schema: analytics (created in 20260317000002_analytics_infrastructure.sql)
 -- Tables populated:
 --   analytics.daily_active_users (date, app, count)
 --   analytics.daily_events       (date, event_name, count)
