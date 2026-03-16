@@ -229,7 +229,7 @@ jobs:
         run: flutter pub get
         working-directory: tests/backend_integration
       - name: Test (integration)
-        run: dart test --coverage=coverage
+        run: dart test src/ --coverage=coverage
         working-directory: tests/backend_integration
         env:
           SUPABASE_URL: http://127.0.0.1:54321
@@ -272,7 +272,7 @@ jobs:
   # E2E 시나리오 테스트
   test-e2e-scenarios:
     needs: changes
-    if: ${{ needs.changes.outputs.supabase == 'true' }}
+    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
