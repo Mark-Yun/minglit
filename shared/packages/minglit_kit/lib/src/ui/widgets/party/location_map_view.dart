@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:minglit_kit/src/data/models/party.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/map/location_map.dart';
+// Fix #108: Use conditional import so mobile gets KakaoMap, web gets JS SDK
+import 'package:minglit_kit/src/ui/widgets/map/location_map.dart'
+    if (dart.library.html) 'package:minglit_kit/src/ui/widgets/map/location_map_web.dart'
+    if (dart.library.io) 'package:minglit_kit/src/ui/widgets/map/location_map_mobile.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// **Location Map View**
