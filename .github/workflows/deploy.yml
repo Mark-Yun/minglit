@@ -22,23 +22,23 @@ jobs:
       landing_user: ${{ steps.filter.outputs.landing_user }}
       landing_partner: ${{ steps.filter.outputs.landing_partner }}
     steps:
-    - uses: actions/checkout@v4
-    - uses: dorny/paths-filter@v3
-      id: filter
-      with:
-        filters: |
-          app_user:
-            - 'apps/app_user/**'
-            - 'shared/packages/minglit_kit/**'
-          app_partner:
-            - 'apps/app_partner/**'
-            - 'shared/packages/minglit_kit/**'
-          landing_user:
-            - 'apps/landing_user/**'
-            - 'shared/web/**'
-          landing_partner:
-            - 'apps/landing_partner/**'
-            - 'shared/web/**'
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            app_user:
+              - 'apps/app_user/**'
+              - 'shared/packages/minglit_kit/**'
+            app_partner:
+              - 'apps/app_partner/**'
+              - 'shared/packages/minglit_kit/**'
+            landing_user:
+              - 'apps/landing_user/**'
+              - 'shared/web/**'
+            landing_partner:
+              - 'apps/landing_partner/**'
+              - 'shared/web/**'
 
   deploy-app_user:
     needs: changes
@@ -63,6 +63,7 @@ jobs:
           SUPABASE_MAIN_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
           GOOGLE_MAIN_ID: ${{ secrets.GOOGLE_MAIN_WEB_CLIENT_ID }}
           SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
+          STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
 
   deploy-landing_user:
     needs: changes
@@ -117,6 +118,7 @@ jobs:
           SUPABASE_MAIN_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
           GOOGLE_MAIN_ID: ${{ secrets.GOOGLE_MAIN_WEB_CLIENT_ID }}
           SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
+          STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
 
   notify-failure:
     needs: [changes, deploy-app_user, deploy-landing_user, deploy-landing_partner, deploy-app_partner]
