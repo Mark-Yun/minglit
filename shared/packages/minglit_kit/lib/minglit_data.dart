@@ -4,7 +4,6 @@ export 'package:supabase_flutter/supabase_flutter.dart'
 
 // Config
 export 'src/config/iamport_config.dart';
-
 // Models
 export 'src/data/models/event.dart';
 export 'src/data/models/event_application.dart';
@@ -37,12 +36,12 @@ export 'src/data/repositories/matching_repository.dart';
 export 'src/data/repositories/notification_repository.dart';
 export 'src/data/repositories/partner_repository.dart';
 export 'src/data/repositories/party_repository.dart';
+export 'src/data/repositories/policy_repository.dart';
 export 'src/data/repositories/settlement_repository.dart';
 export 'src/data/repositories/social_repository.dart';
 export 'src/data/repositories/storage_repository.dart';
 export 'src/data/repositories/ticket_repository.dart';
 export 'src/data/repositories/user_repository.dart';
 export 'src/data/repositories/verification_repository.dart';
-export 'src/data/repositories/policy_repository.dart';
 // Utils
 export 'src/utils/ticket_crypto.dart';

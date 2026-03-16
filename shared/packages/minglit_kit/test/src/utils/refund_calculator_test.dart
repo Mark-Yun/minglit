@@ -4,7 +4,7 @@ import 'package:minglit_kit/src/utils/refund_calculator.dart';
 void main() {
   group('RefundCalculator binary policy', () {
     const amount = 10000;
-    final now = DateTime(2026, 3, 16, 12, 0);
+    final now = DateTime(2026, 3, 16, 12);
 
     test('within grace period → full refund', () {
       final paidAt = now.subtract(const Duration(hours: 1));
