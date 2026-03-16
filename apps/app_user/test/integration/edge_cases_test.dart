@@ -2,14 +2,11 @@ import 'package:app_user/src/features/auth/login_page.dart';
 import 'package:app_user/src/features/dev/user_dev_map.dart';
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:integration_test/integration_test.dart';
 
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
 void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-
   group('Edge Cases', () {
     // Test 1: /explore redirect → home (backward compat)
     testWidgets('/explore 접근 시 홈으로 리다이렉트 (backward compat)', (tester) async {
