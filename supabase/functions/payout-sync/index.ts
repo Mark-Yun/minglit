@@ -113,32 +113,32 @@ Deno.serve(withSentry(async (req) => {
             .eq("payout_id", payout.id)
             .eq("status", "PROCESSING");
 
-          for (const item of linkedItems ?? []) {
-            await supabase.rpc("transition_settlement_status", {
-              p_item_id: item.id,
-              p_expected_version: item.version,
-              p_new_status: "COMPLETED",
-              p_actor_type: "SYSTEM",
-              p_actor_id: "payout_sync",
-              p_event_type: "payout_completed",
-              p_hold_reason_code: null,
-              p_hold_reason_detail: null,
-              p_failure_reason_code: null,
-              p_failure_message: null,
-              p_details: { source: "payout_sync", portone_payout_id: portonePayoutId },
-              p_idempotency_key: null,
-            });
-          }
+           for (const item of linkedItems ?? []) {
+             await supabase.rpc("transition_settlement_status", {
+               p_item_id: item.id,
+               p_expected_version: item.version,
+               p_new_status: "SUCCEEDED",
+               p_actor_type: "SYSTEM",
+               p_actor_id: "payout_sync",
+               p_event_type: "payout_completed",
+               p_hold_reason_code: null,
+               p_hold_reason_detail: null,
+               p_failure_reason_code: null,
+               p_failure_message: null,
+               p_details: { source: "payout_sync", portone_payout_id: portonePayoutId },
+               p_idempotency_key: null,
+             });
+           }
 
-          await supabase.from("payout_transfers").insert({
-            payout_id: payout.id,
-            provider: "portone",
-            idempotency_key: idempotencyKey,
-            attempt_no: attemptNo,
-            status: "COMPLETED",
-            retryable: false,
-            response_payload: matchedPortonePayout,
-          });
+           await supabase.from("payout_transfers").insert({
+             payout_id: payout.id,
+             provider: "portone",
+             idempotency_key: idempotencyKey,
+             attempt_no: attemptNo,
+             status: "SUCCEEDED",
+             retryable: false,
+             response_payload: matchedPortonePayout,
+           });
 
           synced++;
         } else if (portoneStatus === "FAILED" || portoneStatus === "CANCELED") {

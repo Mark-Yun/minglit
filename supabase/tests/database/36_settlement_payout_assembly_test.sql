@@ -181,17 +181,17 @@ SELECT results_eq(
 );
 
 -- ============================================================
--- 7. payout_request_idempotency_key 형식: 'prod:payout:{partner_id}:{yyyyMMdd}-001'
+-- 7. payout_request_idempotency_key 형식: 'prod:payout:{partner_id}:{currency}:{yyyyMMdd}-001'
 -- ============================================================
 SELECT results_eq(
   $$SELECT payout_request_idempotency_key ~
     ('^prod:payout:' ||
      (SELECT val FROM payout_test_state WHERE key='partner_id_1') ||
-     ':\d{8}-001$')
+     ':[A-Z]+:\d{8}-001$')
   FROM payouts
   WHERE partner_id = (SELECT val FROM payout_test_state WHERE key='partner_id_1')::uuid$$,
   $$VALUES (true)$$,
-  'payout_request_idempotency_key matches format prod:payout:{partner_id}:{yyyyMMdd}-001'
+  'payout_request_idempotency_key matches format prod:payout:{partner_id}:{currency}:{yyyyMMdd}-001'
 );
 
 SELECT * FROM finish();
