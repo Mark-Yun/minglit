@@ -166,17 +166,19 @@ export async function simAssertVerificationApproved(
 export function simCalcRefund(
   startTime: Date,
   paymentAmount: number,
+  paidAt: Date | null = null,
+  gracePeriodHours: number = 2,
+  cutoffDays: number = 7,
   now: Date = new Date(),
 ): SimRefundCalc {
-  const diffMs = startTime.getTime() - now.getTime();
-  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  const withinGracePeriod =
+    paidAt !== null &&
+    now.getTime() - paidAt.getTime() <= gracePeriodHours * 60 * 60 * 1000;
 
-  let percentage = 0;
-  if (diffDays >= 7) percentage = 100;
-  else if (diffDays >= 3) percentage = 80;
-  else if (diffDays >= 1) percentage = 50;
-  // else 0 (< 1 day)
+  const withinCutoff =
+    startTime.getTime() - now.getTime() >= cutoffDays * 24 * 60 * 60 * 1000;
 
+  const percentage = withinGracePeriod || withinCutoff ? 100 : 0;
   const refundAmount = Math.floor((paymentAmount * percentage) / 100);
   const feeAmount = paymentAmount - refundAmount;
   return { refund_percentage: percentage, refund_amount: refundAmount, fee_amount: feeAmount };

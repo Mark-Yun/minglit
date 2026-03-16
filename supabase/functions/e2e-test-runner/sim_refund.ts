@@ -99,7 +99,7 @@ export async function simRefundRequests(
       const ev = eventData as any;
       const startTime = new Date(ev.start_time);
 
-      const refundCalc = simCalcRefund(startTime, paymentAmount, new Date());
+       const refundCalc = simCalcRefund(startTime, paymentAmount, null, 2, 7, new Date());
 
       const refundStatus = refundCalc.refund_percentage > 0 ? "completed" : "failed";
       const { error: updateErr } = await supabase
