@@ -52,7 +52,7 @@ export async function logStatsigEvent(
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-    await fetch(STATSIG_LOG_EVENT_URL, {
+    const response = await fetch(STATSIG_LOG_EVENT_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -61,6 +61,9 @@ export async function logStatsigEvent(
       body: JSON.stringify(payload),
       signal: controller.signal,
     }).finally(() => clearTimeout(timeoutId));
+
+    // Consume response body to avoid resource leaks
+    await response.body?.cancel();
   } catch (_error) {
     // Graceful degradation — never throw from analytics
   }
@@ -93,7 +96,10 @@ export async function checkStatsigGate(
       signal: controller.signal,
     }).finally(() => clearTimeout(timeoutId));
 
-    if (!response.ok) return false;
+    if (!response.ok) {
+      await response.body?.cancel();
+      return false;
+    }
 
     const data = await response.json();
     return data.value === true;
