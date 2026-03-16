@@ -86,6 +86,12 @@ jobs:
             report_name: 'Partner App Tests'
             artifact_name: app-partner-coverage
             coverage_flag: app-partner
+          - app: minglit_kit
+            change_key: app_user
+            directory: shared/packages/minglit_kit
+            report_name: 'Minglit Kit Tests'
+            artifact_name: minglit-kit-coverage
+            coverage_flag: minglit-kit
     steps:
       - uses: actions/checkout@v4
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
