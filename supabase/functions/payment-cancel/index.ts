@@ -30,6 +30,63 @@ Deno.serve(withSentry(async (req) => {
       return errorResponse("Missing payment_id", 400);
     }
 
+    // 1.5 Init Supabase (reused throughout)
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    // 1.5a Fetch application for eligibility check
+    const { data: application, error: appError } = await supabase
+      .from("event_applications")
+      .select("paid_at, event_id, refund_status")
+      .eq("payment_id", payment_id)
+      .single();
+
+    if (appError || !application) {
+      return errorResponse("Application not found", 404);
+    }
+
+    // 1.5b Prevent double refund
+    if (application.refund_status !== "none") {
+      return errorResponse("already_refunded", 400, {
+        reason: "Refund already processed",
+      });
+    }
+
+    // 1.5c Verify refund eligibility against policy
+    const [eventResult, policyResult] = await Promise.all([
+      supabase
+        .from("events")
+        .select("start_time")
+        .eq("id", application.event_id)
+        .single(),
+      supabase.rpc("get_current_policy", { p_key: "refund" }),
+    ]);
+
+    if (eventResult.data && policyResult.data) {
+      const policy = policyResult.data as Record<string, number>;
+      const gracePeriodHours = policy.grace_period_hours ?? 2;
+      const cutoffDays = policy.cutoff_days ?? 7;
+      const now = new Date();
+      const paidAt = application.paid_at ? new Date(application.paid_at) : null;
+      const eventStart = new Date(eventResult.data.start_time);
+
+      const withinGracePeriod =
+        paidAt !== null &&
+        now.getTime() - paidAt.getTime() <=
+          gracePeriodHours * 60 * 60 * 1000;
+      const withinCutoff =
+        eventStart.getTime() - now.getTime() >=
+          cutoffDays * 24 * 60 * 60 * 1000;
+
+      if (!withinGracePeriod && !withinCutoff) {
+        return errorResponse("refund_not_eligible", 400, {
+          reason: "Refund window has expired",
+        });
+      }
+    }
+
     // 2. Init IamportClient
     const impKey = Deno.env.get("PORTONE_API_KEY");
     const impSecret = Deno.env.get("PORTONE_API_SECRET");
@@ -60,10 +117,6 @@ Deno.serve(withSentry(async (req) => {
 
     // 4. Update DB: refund_status + refund_amount
     const refundAmount = amount ?? (cancelResponse.amount as number | undefined);
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
     const updatePayload: Record<string, unknown> = {
       refund_status: "completed",
       updated_at: new Date().toISOString(),
