@@ -26,6 +26,7 @@ void main() {
           latitude: any(named: 'latitude'),
           longitude: any(named: 'longitude'),
           limit: any(named: 'limit'),
+          offset: any(named: 'offset'),
         ),
       ).thenAnswer((_) async => []);
     }
@@ -123,6 +124,7 @@ void main() {
           latitude: any(named: 'latitude'),
           longitude: any(named: 'longitude'),
           limit: any(named: 'limit'),
+          offset: any(named: 'offset'),
         ),
       ).thenAnswer((_) async => testEvents);
 
@@ -133,6 +135,43 @@ void main() {
 
       expect(find.text('Test Party Event'), findsOneWidget);
     });
+
+    testWidgets('shows loading indicator when isLoadingMore is true', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        createTestWidget(
+          overrides: [
+            recommendationFeedProvider.overrideWith(
+              _MockLoadingMoreNotifier.new,
+            ),
+          ],
+        ),
+      );
+      await tester.pump();
+
+      // Fix #113: SliverFillRemaining fills viewport, SliverToBoxAdapter skips
+      expect(find.byType(MinglitCircularProgressIndicator), findsOneWidget);
+    });
+
+    testWidgets('does not show loading indicator when hasMore is false', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        createTestWidget(
+          overrides: [
+            recommendationFeedProvider.overrideWith(
+              _MockNoMoreNotifier.new,
+            ),
+          ],
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byType(MinglitCircularProgressIndicator), findsNothing);
+    });
   });
 }
 
@@ -142,4 +181,29 @@ void main() {
 class _NoFiltersNotifier extends ActiveFilters {
   @override
   ExploreFilters build() => const ExploreFilters();
+}
+
+/// A notifier that returns isLoadingMore=true to test the loading indicator.
+class _MockLoadingMoreNotifier extends RecommendationFeedNotifier {
+  @override
+  Future<RecommendationFeedState> build() async {
+    return const RecommendationFeedState(
+      events: [],
+      serverOffset: 0,
+      hasMore: true,
+      isLoadingMore: true,
+    );
+  }
+}
+
+/// A notifier that returns hasMore=false and isLoadingMore=false.
+class _MockNoMoreNotifier extends RecommendationFeedNotifier {
+  @override
+  Future<RecommendationFeedState> build() async {
+    return const RecommendationFeedState(
+      events: [],
+      serverOffset: 0,
+      hasMore: false,
+    );
+  }
 }
