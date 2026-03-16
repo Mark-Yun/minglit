@@ -113,6 +113,11 @@ cd supabase/functions/dev-seed && deno test --allow-env --allow-net
 flutter analyze
 ```
 
+## Test Reports
+
+- **Coverage**: [Codecov Dashboard](https://app.codecov.io/gh/Mark-Yun/minglit)
+- **Test Report**: [Allure Report](https://mark-yun.github.io/minglit/) (weekly update)
+
 ## Edge Functions
 
 | Function | Purpose |
