@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:minglit_kit/src/features/iamport/data/repository/iamport_repository.dart';
 import '../../utils/test_helper.dart';
 
 /// **Scenario S01-01: Full Signup Flow**

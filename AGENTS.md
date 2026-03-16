@@ -42,9 +42,11 @@ adb -s adb-R3CX803P2ND-8btuuD._adb-tls-connect._tcp install -r build/app/outputs
 ## Branch Protection
 
 - `dev` 브랜치는 direct push 금지. 반드시 feature branch에서 PR을 통해 머지.
-- PR 머지 전 `check-migration-versions` CI 체크 통과 필수 (migration version 중복 검사).
+- Required check: **`ci-result`** — 이 하나의 summary job이 모든 CI + CodeRabbit 리뷰를 게이트한다.
 - Approvals 불필요 (0개). self-merge 가능.
-- Admin은 긴급 시 bypass 가능하지만, 일반 작업은 항상 PR 사용.
+- `required_conversation_resolution` 활성화 — 미해결 코멘트가 있으면 머지 불가.
+- `required_linear_history` 활성화 — squash merge만 허용.
+- `--admin` bypass는 **유저가 명시적으로 요청할 때만** 사용한다. CI나 리뷰 우회 목적 금지.
 
 ## PR Conventions
 
@@ -59,60 +61,69 @@ adb -s adb-R3CX803P2ND-8btuuD._adb-tls-connect._tcp install -r build/app/outputs
   gh pr create --base dev --title "..." --body "..."
   gh pr merge <PR번호> --auto --squash
   ```
-- required check (`check-migration-versions`) 통과 시 자동으로 squash merge 된다.
+- `ci-result` 통과 시 자동으로 squash merge 된다.
 - 머지 후 소스 브랜치는 자동 삭제된다 (`delete_branch_on_merge` 활성화).
-- Admin bypass (`--admin`)는 긴급 상황에서만 사용한다.
+
+### CI 파이프라인
+
+`ci-result`는 아래 모든 항목이 통과해야 success가 된다:
+
+| Job | 조건 | 내용 |
+|-----|------|------|
+| `check-migration-versions` | 항상 | migration version 중복 검사 |
+| `test-app-user` | `apps/app_user/**` 또는 `shared/packages/minglit_kit/**` 변경 시 | Flutter analyze + test |
+| `test-app-partner` | `apps/app_partner/**` 또는 `shared/packages/minglit_kit/**` 변경 시 | Flutter analyze + test |
+| `lint-landing-user` | `apps/landing_user/**` 또는 `shared/web/**` 변경 시 | npm lint + build |
+| `lint-landing-partner` | `apps/landing_partner/**` 또는 `shared/web/**` 변경 시 | npm lint + build |
+| `test-pgtap` | `supabase/**` 또는 `tests/backend_integration/**` 변경 시 | pgTAP DB 테스트 |
+| `test-backend-integration` | 동일 | Dart backend integration 테스트 |
+| `test-edge-functions` | 동일 | Deno edge function 테스트 |
+| `test-e2e-scenarios` | 동일 | E2E 시나리오 테스트 |
+| CodeRabbit 리뷰 | PR only | `ci-result` job 내에서 최대 30분 대기 |
+
+별도 워크플로우 (required check 아님, 참고용):
+- **Auto Format PR**: PR 시 `dart fix --apply` + `dart format` 자동 적용. 포맷 변경이 있으면 자동 커밋.
+- **Secret Scanning**: PR 시 Gitleaks로 시크릿 유출 검사.
 
 ### PR 모니터링 (Background Agent)
 
-PR 생성 직후 **반드시** background monitoring agent를 발사한다. PR이 MERGED 될 때까지 모니터링한다.
+PR 생성 직후 **반드시** background monitoring agent를 발사한다. PR이 MERGED 될 때까지 모니터링한다. 생성만 하고 방치 금지.
 
 ```bash
-# PR 생성 직후 실행할 모니터링 명령 시퀀스
-# Background agent가 60초 간격으로 아래를 반복한다:
+# Background agent가 60초 간격으로 아래를 반복:
 
-# 1. CodeRabbit 리뷰 상태 확인
-gh api repos/{owner}/{repo}/commits/{HEAD_SHA}/statuses --jq '.[] | select(.context=="CodeRabbit") | .state'
+# 1. CI 상태 확인 (ci-result가 CodeRabbit 대기까지 포함)
+gh pr checks <PR번호> --watch --fail-fast
 
-# 2. 리뷰 코멘트 확인 (CodeRabbit이 success 된 후)
+# 2. 리뷰 코멘트 확인
 gh api repos/{owner}/{repo}/pulls/{PR번호}/comments --jq '.[] | {path: .path, body: .body, line: .line}'
 
 # 3. PR 상태 확인
-gh api repos/{owner}/{repo}/pulls/{PR번호} --jq '{state: .state, merged: .merged}'
+gh pr view <PR번호> --json state,mergedAt --jq '{state: .state, merged: .mergedAt}'
 ```
 
 #### 모니터링 결과별 대응
 
 | 상태 | 대응 |
 |------|------|
-| CodeRabbit `pending` | 계속 대기 (60초 후 재확인) |
-| CodeRabbit `success` + 코멘트 없음 | "리뷰 통과" 보고. auto-merge 대기 |
-| CodeRabbit `success` + **코멘트 있음** | 코멘트 내용을 orchestrator에게 보고. orchestrator가 대응 |
-| CI 실패 | 실패 로그(`gh run view --log-failed`)를 orchestrator에게 보고 |
+| `ci-result` 통과 + 코멘트 없음 | "CI 통과" 보고. auto-merge 대기 |
+| `ci-result` 통과 + **코멘트 있음** | 코멘트 내용을 orchestrator에게 보고 |
+| CI 실패 | `gh run view <run_id> --log-failed`로 원인 파악 → orchestrator에게 보고 |
 | PR `MERGED` | "PR 머지 완료" 보고. 모니터링 종료 |
 
 #### 코멘트 대응 규칙
 
-- PR에 달린 코드 리뷰 코멘트는 **전부 resolve** 한다. 미해결 코멘트가 남아있는 상태로 머지하지 않는다.
-- 코멘트에 대한 대응:
-  1. 코드 수정이 필요한 경우: 수정 후 같은 브랜치에 push → 리뷰 코멘트에 수정 내용 답글 → resolve
+- 리뷰 코멘트는 **전부 resolve** 한다 (GitHub 설정에서도 강제됨).
+- 대응 방법:
+  1. 코드 수정 필요: 수정 후 같은 브랜치에 push → 답글 → resolve
   2. 수정 불필요 (의도된 설계): 근거를 답글로 남기고 → resolve
-  3. 논의가 필요한 경우: 답글로 의견 남기고 사용자에게 판단 요청
-- 모든 코멘트가 resolved 된 후 머지를 진행한다.
-
-#### 금지 사항
-
-- `--admin` merge는 **유저가 명시적으로 요청할 때만** 사용한다. CodeRabbit 리뷰를 우회하기 위해 사용 금지.
-- CodeRabbit 리뷰 코멘트를 읽지 않고 머지 금지.
-- PR 생성만 하고 모니터링 agent 없이 방치 금지.
+  3. 논의 필요: 답글로 의견 남기고 사용자에게 판단 요청
 
 ### CI 실패 대응
 
-- CI 실패 시:
-  1. `gh run view <run_id> --log-failed`로 실패 원인 파악
-  2. 로컬에서 수정 후 같은 브랜치에 push (PR은 유지됨)
-  3. CI 재실행 → 통과 확인 → auto-merge 완료까지 반복
-- PR이 `MERGED` 상태가 될 때까지 케어한다. 생성만 하고 방치하지 않는다.
+1. `gh run view <run_id> --log-failed`로 실패 원인 파악
+2. 로컬에서 수정 후 같은 브랜치에 push (PR은 유지됨)
+3. CI 재실행 → 통과 확인 → auto-merge 완료까지 반복
 
 ## Bug Fix Conventions
 
