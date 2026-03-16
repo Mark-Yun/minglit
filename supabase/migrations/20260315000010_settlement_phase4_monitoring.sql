@@ -38,11 +38,13 @@ with
   ),
   last_recon as (
     select
-      max(completed_at)   as last_run_at,
-      max(critical_count) as last_critical_count
+      completed_at   as last_run_at,
+      critical_count as last_critical_count
     from public.reconciliation_runs
     where status = 'COMPLETED'
       and completed_at > now() - interval '48 hours'
+    order by completed_at desc
+    limit 1
   ),
   last_payout as (
     select max(updated_at) as last_success_at
