@@ -1,7 +1,13 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { PortoneV2Client } from "../_shared/portone_client.ts";
+import { PortoneV2Client, PortoneSettlement } from "../_shared/portone_client.ts";
 
 const PORTONE_V2_API_KEY = Deno.env.get("PORTONE_V2_API_KEY") ?? "";
+
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Authorization, Content-Type",
+};
 
 const MISMATCH_TYPES = {
   MATCHED: "MATCHED",
@@ -23,14 +29,6 @@ interface LedgerItem {
   processing_ended_at: string;
   status: string;
   payout_id: string | null;
-}
-
-interface PortoneSettlement {
-  id: string;
-  partnerId?: string;
-  amount?: { total?: number };
-  settledAt?: string;
-  status?: string;
 }
 
 interface ReconciliationResult {
@@ -81,13 +79,16 @@ function computeSourceHash(ledgerData: unknown[], portoneData: unknown[]): strin
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: { "Access-Control-Allow-Origin": "*" } });
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
 
   const authHeader = req.headers.get("Authorization");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
   if (!authHeader || authHeader !== `Bearer ${serviceRoleKey}`) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+    });
   }
 
   const supabase = createClient(
@@ -95,9 +96,12 @@ Deno.serve(async (req) => {
     serviceRoleKey,
   );
 
-  const yesterday = new Date();
-  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-  const runDate = yesterday.toISOString().split("T")[0];
+  const nowKst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const yesterdayKst = new Date(nowKst);
+  yesterdayKst.setUTCDate(yesterdayKst.getUTCDate() - 1);
+  const runDate = yesterdayKst.toISOString().split("T")[0];
+  const runDateStart = `${runDate}T00:00:00.000+09:00`;
+  const runDateEnd = `${runDate}T23:59:59.999+09:00`;
 
   const { data: runRecord, error: runInsertError } = await supabase
     .from("reconciliation_runs")
@@ -108,7 +112,7 @@ Deno.serve(async (req) => {
   if (runInsertError || !runRecord) {
     return new Response(
       JSON.stringify({ error: "Failed to create run", detail: runInsertError?.message }),
-      { status: 500 },
+      { status: 500, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } },
     );
   }
 
@@ -119,8 +123,8 @@ Deno.serve(async (req) => {
       .from("settlement_items")
       .select("id, partner_id, net_amount, processing_ended_at, status, payout_id")
       .eq("status", "COMPLETED")
-      .gte("processing_ended_at", `${runDate}T00:00:00.000Z`)
-      .lt("processing_ended_at", `${runDate}T23:59:59.999Z`);
+      .gte("processing_ended_at", runDateStart)
+      .lte("processing_ended_at", runDateEnd);
 
     if (ledgerError) throw new Error(`Ledger query failed: ${ledgerError.message}`);
 
@@ -139,7 +143,7 @@ Deno.serve(async (req) => {
         .eq("id", runId);
       return new Response(
         JSON.stringify({ error: "PortOne API failed", detail: String(portoneErr) }),
-        { status: 500 },
+        { status: 500, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } },
       );
     }
 
@@ -149,7 +153,8 @@ Deno.serve(async (req) => {
     const portonePartnerIdMap = new Map<string, PortoneSettlement[]>();
 
     for (const ps of portoneSettlements) {
-      portoneMap.set(ps.id, ps);
+      const psId = ps.id ?? "";
+      portoneMap.set(psId, ps);
       if (ps.partnerId) {
         const existing = portonePartnerIdMap.get(ps.partnerId) ?? [];
         existing.push(ps);
@@ -162,30 +167,37 @@ Deno.serve(async (req) => {
 
     for (const item of (ledgerItems ?? []) as LedgerItem[]) {
       const portoneMatches = portonePartnerIdMap.get(item.partner_id) ?? [];
-      const portoneMatch = portoneMatches.find(
-        (ps) => Math.abs((ps.amount?.total ?? 0) - item.net_amount) <= 1,
-      );
+      const portoneMatch =
+        portoneMatches.find(
+          (ps) => !matchedPortoneIds.has(ps.id ?? "") && Math.abs((ps.amount ?? 0) - item.net_amount) <= 1,
+        ) ??
+        portoneMatches.find(
+          (ps) => matchedPortoneIds.has(ps.id ?? "") && Math.abs((ps.amount ?? 0) - item.net_amount) <= 1,
+        );
 
       if (portoneMatch) {
-        matchedPortoneIds.add(portoneMatch.id);
-        const portoneDate = portoneMatch.settledAt?.split("T")[0] ?? null;
+        const psId = portoneMatch.id ?? "";
+        matchedPortoneIds.add(psId);
+        const portoneDate = typeof portoneMatch.settlementDate === "string"
+          ? portoneMatch.settlementDate.split("T")[0]
+          : null;
         const ledgerDate = item.processing_ended_at?.split("T")[0] ?? null;
         const { mismatch_type, severity } = classifyMismatch(
           item.net_amount,
-          portoneMatch.amount?.total ?? null,
+          portoneMatch.amount ?? null,
           ledgerDate,
           portoneDate,
           item.status,
-          portoneMatch.status ?? null,
+          typeof portoneMatch.status === "string" ? portoneMatch.status : null,
         );
         results.push({
           settlement_item_id: item.id,
-          portone_settlement_id: portoneMatch.id,
+          portone_settlement_id: psId,
           mismatch_type,
           severity,
           details: {
             ledger_amount: item.net_amount,
-            portone_amount: portoneMatch.amount?.total,
+            portone_amount: portoneMatch.amount,
             ledger_date: ledgerDate,
             portone_date: portoneDate,
           },
@@ -202,13 +214,14 @@ Deno.serve(async (req) => {
     }
 
     for (const ps of portoneSettlements) {
-      if (!matchedPortoneIds.has(ps.id)) {
+      const psId = ps.id ?? "";
+      if (!matchedPortoneIds.has(psId)) {
         results.push({
           settlement_item_id: null,
-          portone_settlement_id: ps.id,
+          portone_settlement_id: psId,
           mismatch_type: MISMATCH_TYPES.MISSING_IN_LEDGER,
           severity: "CRITICAL",
-          details: { portone_amount: ps.amount?.total, partner_id: ps.partnerId },
+          details: { portone_amount: ps.amount, partner_id: ps.partnerId },
         });
       }
     }
@@ -236,7 +249,9 @@ Deno.serve(async (req) => {
     const { error: rpcError } = await supabase.rpc("process_reconciliation_kill_switch", {
       p_run_id: runId,
     });
-    if (rpcError) console.error("Kill switch RPC error:", rpcError.message);
+    if (rpcError) {
+      throw new Error(`Kill switch RPC failed: ${rpcError.message}`);
+    }
 
     const matchedCount = results.filter((r) => r.mismatch_type === MISMATCH_TYPES.MATCHED).length;
     const mismatchedCount = results.filter((r) => r.mismatch_type !== MISMATCH_TYPES.MATCHED).length;
@@ -264,7 +279,7 @@ Deno.serve(async (req) => {
         mismatched: mismatchedCount,
         critical: criticalCount,
       }),
-      { status: 200, headers: { "Content-Type": "application/json" } },
+      { status: 200, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } },
     );
   } catch (err) {
     await supabase
@@ -277,7 +292,7 @@ Deno.serve(async (req) => {
       .eq("id", runId);
     return new Response(
       JSON.stringify({ error: "Reconciliation failed", detail: String(err) }),
-      { status: 500 },
+      { status: 500, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } },
     );
   }
 });

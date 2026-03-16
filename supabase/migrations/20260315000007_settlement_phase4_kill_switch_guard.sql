@@ -47,6 +47,16 @@ begin
     raise exception 'settlement_item not found: %', p_item_id;
   end if;
 
+  -- Re-check kill switch after row lock (eliminates TOCTOU race condition)
+  if p_new_status = 'PROCESSING' then
+    if (select (value->>'enabled')::boolean
+        from public.system_settings
+        where key = 'settlement_kill_switch'
+        for share) then
+      raise exception 'Kill switch is active. READY→PROCESSING transitions are blocked.';
+    end if;
+  end if;
+
   -- Reject any transition from terminal states (REQ-3.2.16)
   if v_current_status in ('COMPLETED', 'CANCELED') then
     raise exception

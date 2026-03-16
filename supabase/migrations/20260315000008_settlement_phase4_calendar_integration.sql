@@ -91,7 +91,7 @@ begin
       v_partner.period_end,
       v_partner.currency,
       'CREATED',
-      calculate_scheduled_at(now()::date),
+      calculate_scheduled_at((now() at time zone 'Asia/Seoul')::date),
       v_partner.item_count,
       v_partner.total_gross,
       v_partner.total_platform_fee,
@@ -101,7 +101,17 @@ begin
       v_bank_snapshot,
       v_idem_key
     )
+    on conflict (partner_id, payout_request_idempotency_key)
+      where payout_request_idempotency_key is not null
+      do nothing
     returning id into v_payout_id;
+
+    if v_payout_id is null then
+      select id into v_payout_id
+      from public.payouts
+      where partner_id = v_partner.partner_id
+        and payout_request_idempotency_key = v_idem_key;
+    end if;
 
     -- Link settlement_items to this payout
     update public.settlement_items

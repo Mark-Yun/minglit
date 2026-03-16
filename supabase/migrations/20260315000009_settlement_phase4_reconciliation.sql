@@ -20,8 +20,9 @@ create table if not exists public.reconciliation_runs (
   completed_at        timestamptz
 );
 
-create unique index if not exists idx_reconciliation_runs_date_type
-  on public.reconciliation_runs (run_date, run_type);
+create unique index if not exists idx_reconciliation_runs_date_type_running
+  on public.reconciliation_runs (run_date, run_type)
+  where status = 'RUNNING';
 
 -- ============================================================
 -- 2. reconciliation_results — 개별 매칭/불일치 결과
@@ -152,3 +153,22 @@ begin
   return v_activated;
 end;
 $$;
+
+alter table public.reconciliation_runs enable row level security;
+create policy "reconciliation_runs_service_role_only"
+  on public.reconciliation_runs
+  using (auth.role() = 'service_role');
+
+alter table public.reconciliation_results enable row level security;
+create policy "reconciliation_results_service_role_only"
+  on public.reconciliation_results
+  using (auth.role() = 'service_role');
+
+create index if not exists idx_reconciliation_results_settlement_item_id
+  on public.reconciliation_results (settlement_item_id)
+  where settlement_item_id is not null;
+
+revoke execute on function public.classify_reconciliation_mismatch(bigint, bigint, date, date, text, text) from public;
+revoke execute on function public.process_reconciliation_kill_switch(uuid) from public;
+grant execute on function public.classify_reconciliation_mismatch(bigint, bigint, date, date, text, text) to service_role;
+grant execute on function public.process_reconciliation_kill_switch(uuid) to service_role;

@@ -16,10 +16,11 @@ SELECT has_function('public', 'classify_reconciliation_mismatch', 'classify_reco
 SELECT has_function('public', 'process_reconciliation_kill_switch', 'process_reconciliation_kill_switch function exists');
 
 -- ============================================================
--- 3. reconciliation_runs: unique (run_date, run_type) enforced
+-- 3. reconciliation_runs: partial unique (RUNNING only) prevents concurrent runs
+-- Allows retries (FAILED→new RUNNING on same date/type)
 -- ============================================================
 INSERT INTO public.reconciliation_runs (run_date, run_type, status)
-VALUES ('2026-03-14', 'DAILY', 'COMPLETED');
+VALUES ('2026-03-14', 'DAILY', 'RUNNING');
 
 DO $$
 DECLARE v_raised boolean := false;
@@ -30,9 +31,24 @@ BEGIN
   EXCEPTION WHEN unique_violation THEN
     v_raised := true;
   END;
-  ASSERT v_raised, 'duplicate (run_date, run_type) should raise unique_violation';
+  ASSERT v_raised, 'concurrent RUNNING runs for same date/type should raise unique_violation';
 END$$;
-SELECT ok(true, 'reconciliation_runs: unique (run_date, run_type) enforced');
+SELECT ok(true, 'reconciliation_runs: concurrent RUNNING blocked, retries allowed');
+
+UPDATE public.reconciliation_runs SET status = 'FAILED' WHERE run_date = '2026-03-14' AND run_type = 'DAILY';
+
+DO $$
+DECLARE v_raised boolean := false;
+BEGIN
+  BEGIN
+    INSERT INTO public.reconciliation_runs (run_date, run_type, status)
+    VALUES ('2026-03-14', 'DAILY', 'RUNNING');
+  EXCEPTION WHEN OTHERS THEN
+    v_raised := true;
+  END;
+  ASSERT NOT v_raised, 'retry after FAILED should succeed (partial unique index allows it)';
+END$$;
+SELECT ok(true, 'reconciliation_runs: retry after FAILED allowed');
 
 -- ============================================================
 -- 4. classify_reconciliation_mismatch: MISSING_IN_LEDGER

@@ -44,11 +44,11 @@ declare
   v_item record;
 begin
   -- Select all PROCESSING items with row-level lock (SKIP LOCKED for non-blocking)
-  for v_item in
-    select id, version
-    from public.settlement_items
-    where status = 'PROCESSING'
-    for update skip locked
+    for v_item in
+      select id, version
+      from public.settlement_items
+      where status = 'PROCESSING'
+      for update
   loop
     -- Transition each PROCESSING item to FAILED
     -- REQ-4.6.10: Kill switch forces PROCESSING → FAILED
@@ -97,3 +97,13 @@ begin
   end if;
 end;
 $$;
+
+alter table public.system_settings enable row level security;
+create policy "system_settings_service_role_only"
+  on public.system_settings
+  using (auth.role() = 'service_role');
+
+revoke execute on function public.force_fail_processing_on_kill_switch() from public;
+revoke execute on function public.toggle_settlement_kill_switch(boolean, text) from public;
+grant execute on function public.force_fail_processing_on_kill_switch() to service_role;
+grant execute on function public.toggle_settlement_kill_switch(boolean, text) to service_role;

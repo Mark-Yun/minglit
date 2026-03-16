@@ -73,8 +73,8 @@ begin
     v_effective_date := p_base_date;
   end if;
 
-  -- Fallback check: if no non-business day entries in next 30 days → calendar probably empty
-  -- (business_calendar stores only non-business days; regular business days are NOT stored)
+  -- Fallback check: if no non-business day entries in next 30 days → calendar data absent
+  -- (business_calendar stores all days; is_business_day=false marks non-business days)
   select count(*) into v_calendar_count
   from public.business_calendar
   where date > v_effective_date
@@ -128,3 +128,11 @@ begin
   return v_result;
 end;
 $$;
+
+alter table public.business_calendar enable row level security;
+create policy "business_calendar_select_all"
+  on public.business_calendar for select
+  using (true);
+create policy "business_calendar_write_service_role"
+  on public.business_calendar for all
+  using (auth.role() = 'service_role');
