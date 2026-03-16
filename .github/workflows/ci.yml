@@ -62,93 +62,72 @@ jobs:
             - 'supabase/**'
             - 'tests/backend_integration/**'
 
-  # App User CI
-  test-app-user:
+  # App CI (User + Partner)
+  test-flutter-apps:
     needs: changes
-    if: ${{ needs.changes.outputs.app_user == 'true' }}
+    if: ${{ needs.changes.outputs.app_user == 'true' || needs.changes.outputs.app_partner == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
       checks: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: app_user
+            change_key: app_user
+            directory: apps/app_user
+            report_name: 'User App Tests'
+            artifact_name: app-user-coverage
+            coverage_flag: app-user
+          - app: app_partner
+            change_key: app_partner
+            directory: apps/app_partner
+            report_name: 'Partner App Tests'
+            artifact_name: app-partner-coverage
+            coverage_flag: app-partner
     steps:
       - uses: actions/checkout@v4
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
       - uses: subosito/flutter-action@v2
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         with:
           channel: 'stable'
           cache: true
       - name: Install dependencies
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         run: flutter pub get
       - name: Analyze (minglit_kit)
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         run: flutter analyze --no-fatal-infos
         working-directory: shared/packages/minglit_kit
       - name: Analyze
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         run: flutter analyze --no-fatal-infos
-        working-directory: apps/app_user
+        working-directory: ${{ matrix.directory }}
       - name: Test
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         run: flutter test --coverage --file-reporter=json:test-results.json
-        working-directory: apps/app_user
+        working-directory: ${{ matrix.directory }}
       - name: Test Report
         uses: dorny/test-reporter@v1
-        if: success() || failure()
+        if: ${{ (success() || failure()) && needs.changes.outputs[matrix.change_key] == 'true' }}
         with:
-          name: 'User App Tests'
-          path: apps/app_user/test-results.json
+          name: ${{ matrix.report_name }}
+          path: ${{ matrix.directory }}/test-results.json
           reporter: dart-json
           fail-on-error: false
       - uses: actions/upload-artifact@v4
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         with:
-          name: app-user-coverage
-          path: apps/app_user/coverage
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.directory }}/coverage
       - name: Upload coverage
         uses: codecov/codecov-action@v4
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         with:
-          file: apps/app_user/coverage/lcov.info
-          flags: app-user
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
-
-  # App Partner CI
-  test-app-partner:
-    needs: changes
-    if: ${{ needs.changes.outputs.app_partner == 'true' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      checks: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          cache: true
-      - name: Install dependencies
-        run: flutter pub get
-      - name: Analyze (minglit_kit)
-        run: flutter analyze --no-fatal-infos
-        working-directory: shared/packages/minglit_kit
-      - name: Analyze
-        run: flutter analyze --no-fatal-infos
-        working-directory: apps/app_partner
-      - name: Test
-        run: flutter test --coverage --file-reporter=json:test-results.json
-        working-directory: apps/app_partner
-      - name: Test Report
-        uses: dorny/test-reporter@v1
-        if: success() || failure()
-        with:
-          name: 'Partner App Tests'
-          path: apps/app_partner/test-results.json
-          reporter: dart-json
-          fail-on-error: false
-      - uses: actions/upload-artifact@v4
-        with:
-          name: app-partner-coverage
-          path: apps/app_partner/coverage
-      - name: Upload coverage
-        uses: codecov/codecov-action@v4
-        with:
-          file: apps/app_partner/coverage/lcov.info
-          flags: app-partner
+          file: ${{ matrix.directory }}/coverage/lcov.info
+          flags: ${{ matrix.coverage_flag }}
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
 
@@ -262,7 +241,7 @@ jobs:
         working-directory: supabase
 
   ci-result:
-    needs: [check-migration-versions, test-app-user, test-app-partner, lint-landing-user, lint-landing-partner, test-supabase, test-edge-functions]
+    needs: [check-migration-versions, test-flutter-apps, lint-landing-user, lint-landing-partner, test-supabase, test-edge-functions]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -307,7 +286,7 @@ jobs:
           echo "✅ All checks passed"
 
   notify-failure:
-    needs: [check-migration-versions, test-app-user, test-app-partner, lint-landing-user, lint-landing-partner, test-supabase, test-edge-functions]
+    needs: [check-migration-versions, test-flutter-apps, lint-landing-user, lint-landing-partner, test-supabase, test-edge-functions]
     if: always()
     permissions:
       issues: write
