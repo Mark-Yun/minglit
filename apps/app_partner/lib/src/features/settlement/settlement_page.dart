@@ -312,6 +312,20 @@ class _StatusCell extends StatelessWidget {
   }
 }
 
+sealed class _ListItem {
+  const _ListItem();
+}
+
+class _MonthHeader extends _ListItem {
+  const _MonthHeader(this.label);
+  final String label;
+}
+
+class _CardItem extends _ListItem {
+  const _CardItem(this.data);
+  final Map<String, dynamic> data;
+}
+
 class _ListTab extends ConsumerStatefulWidget {
   const _ListTab();
 
@@ -387,6 +401,24 @@ class _ListTabState extends ConsumerState<_ListTab> {
     unawaited(_loadMore());
   }
 
+  List<_ListItem> _buildViewList() {
+    final result = <_ListItem>[];
+    String? lastMonth;
+    for (final item in _items) {
+      final raw = item['created_at'] as String?;
+      final dt = raw != null ? DateTime.tryParse(raw) : null;
+      if (dt != null) {
+        final label = '${dt.year}년 ${dt.month}월';
+        if (label != lastMonth) {
+          result.add(_MonthHeader(label));
+          lastMonth = label;
+        }
+      }
+      result.add(_CardItem(item));
+    }
+    return result;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -411,27 +443,43 @@ class _ListTabState extends ConsumerState<_ListTab> {
                     });
                     await _loadMore();
                   },
-                  child: ListView.separated(
-                    controller: _scrollController,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    separatorBuilder: (context, index) =>
-                        const Divider(height: 1),
-                    itemCount: _items.length + (_isLoading ? 1 : 0),
-                    itemBuilder: (context, i) {
-                      if (i >= _items.length) {
-                        return const Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Center(child: CircularProgressIndicator()),
-                        );
-                      }
-                      final item = _items[i];
-                      return SettlementCard(
-                        item: item,
-                        onTap: () {
-                          final id = item['id'] as String?;
-                          if (id != null) {
-                            SettlementDetailRoute(id: id).go(context);
+                  child: Builder(
+                    builder: (context) {
+                      final viewList = _buildViewList();
+                      return ListView.builder(
+                        controller: _scrollController,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemCount: viewList.length + (_isLoading ? 1 : 0),
+                        itemBuilder: (context, i) {
+                          if (i >= viewList.length) {
+                            return const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
                           }
+                          final item = viewList[i];
+                          return switch (item) {
+                            _MonthHeader(:final label) => _MonthHeaderWidget(
+                              label: label,
+                            ),
+                            _CardItem(:final data) => Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SettlementCard(
+                                  item: data,
+                                  onTap: () {
+                                    final id = data['id'] as String?;
+                                    if (id != null) {
+                                      SettlementDetailRoute(id: id).go(context);
+                                    }
+                                  },
+                                ),
+                                const Divider(height: 1),
+                              ],
+                            ),
+                          };
                         },
                       );
                     },
@@ -439,6 +487,25 @@ class _ListTabState extends ConsumerState<_ListTab> {
                 ),
         ),
       ],
+    );
+  }
+}
+
+class _MonthHeaderWidget extends StatelessWidget {
+  const _MonthHeaderWidget({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 }
