@@ -62,93 +62,80 @@ jobs:
             - 'supabase/**'
             - 'tests/backend_integration/**'
 
-  # App User CI
-  test-app-user:
+  # App CI (User + Partner)
+  test-flutter-apps:
     needs: changes
-    if: ${{ needs.changes.outputs.app_user == 'true' }}
+    if: ${{ needs.changes.outputs.app_user == 'true' || needs.changes.outputs.app_partner == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
       checks: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: app_user
+            change_key: app_user
+            directory: apps/app_user
+            report_name: 'User App Tests'
+            artifact_name: app-user-coverage
+            coverage_flag: app-user
+          - app: app_partner
+            change_key: app_partner
+            directory: apps/app_partner
+            report_name: 'Partner App Tests'
+            artifact_name: app-partner-coverage
+            coverage_flag: app-partner
     steps:
       - uses: actions/checkout@v4
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
       - uses: subosito/flutter-action@v2
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         with:
           channel: 'stable'
           cache: true
+      - name: Cache pub packages
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
       - name: Install dependencies
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         run: flutter pub get
       - name: Analyze (minglit_kit)
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         run: flutter analyze --no-fatal-infos
         working-directory: shared/packages/minglit_kit
       - name: Analyze
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         run: flutter analyze --no-fatal-infos
-        working-directory: apps/app_user
+        working-directory: ${{ matrix.directory }}
       - name: Test
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         run: flutter test --coverage --file-reporter=json:test-results.json
-        working-directory: apps/app_user
+        working-directory: ${{ matrix.directory }}
       - name: Test Report
         uses: dorny/test-reporter@v1
-        if: success() || failure()
+        if: ${{ (success() || failure()) && needs.changes.outputs[matrix.change_key] == 'true' }}
         with:
-          name: 'User App Tests'
-          path: apps/app_user/test-results.json
+          name: ${{ matrix.report_name }}
+          path: ${{ matrix.directory }}/test-results.json
           reporter: dart-json
           fail-on-error: false
       - uses: actions/upload-artifact@v4
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         with:
-          name: app-user-coverage
-          path: apps/app_user/coverage
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.directory }}/coverage
       - name: Upload coverage
         uses: codecov/codecov-action@v4
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         with:
-          file: apps/app_user/coverage/lcov.info
-          flags: app-user
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
-
-  # App Partner CI
-  test-app-partner:
-    needs: changes
-    if: ${{ needs.changes.outputs.app_partner == 'true' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      checks: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          cache: true
-      - name: Install dependencies
-        run: flutter pub get
-      - name: Analyze (minglit_kit)
-        run: flutter analyze --no-fatal-infos
-        working-directory: shared/packages/minglit_kit
-      - name: Analyze
-        run: flutter analyze --no-fatal-infos
-        working-directory: apps/app_partner
-      - name: Test
-        run: flutter test --coverage --file-reporter=json:test-results.json
-        working-directory: apps/app_partner
-      - name: Test Report
-        uses: dorny/test-reporter@v1
-        if: success() || failure()
-        with:
-          name: 'Partner App Tests'
-          path: apps/app_partner/test-results.json
-          reporter: dart-json
-          fail-on-error: false
-      - uses: actions/upload-artifact@v4
-        with:
-          name: app-partner-coverage
-          path: apps/app_partner/coverage
-      - name: Upload coverage
-        uses: codecov/codecov-action@v4
-        with:
-          file: apps/app_partner/coverage/lcov.info
-          flags: app-partner
+          file: ${{ matrix.directory }}/coverage/lcov.info
+          flags: ${{ matrix.coverage_flag }}
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
 
@@ -190,8 +177,8 @@ jobs:
       - run: npm run lint
       - run: npm run build
 
-  # pgTAP DB 테스트
-  test-pgtap:
+  # Supabase 통합 테스트 (pgTAP + backend-integration + e2e-scenarios)
+  test-supabase:
     needs: changes
     if: ${{ needs.changes.outputs.supabase == 'true' }}
     runs-on: ubuntu-latest
@@ -200,49 +187,56 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
-      - name: Start Supabase
-        run: supabase start
-      - name: Test (pgTAP)
-        run: supabase test db
-      - name: Stop Supabase
-        if: always()
-        run: supabase stop
-
-  # Dart Backend Integration 테스트
-  test-backend-integration:
-    needs: changes
-    if: ${{ vars.ENABLE_BACKEND_INTEGRATION == 'true' }}  # Requires seeded DB with specific test users — disabled by default
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
-      - name: Start Supabase
-        run: supabase start
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
+      - name: Start Supabase
+        run: supabase start
+      - name: Test (pgTAP)
+        run: supabase test db
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
       - name: Install dependencies (integration)
+        if: ${{ vars.ENABLE_BACKEND_INTEGRATION == 'true' }}
         run: flutter pub get
         working-directory: tests/backend_integration
       - name: Test (integration)
+        if: ${{ vars.ENABLE_BACKEND_INTEGRATION == 'true' }}
         run: flutter test src/ --coverage
         working-directory: tests/backend_integration
         env:
           SUPABASE_URL: http://127.0.0.1:54321
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_LOCAL_SERVICE_ROLE_KEY }}
       - name: Format coverage
+        if: ${{ vars.ENABLE_BACKEND_INTEGRATION == 'true' }}
         run: dart run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
         working-directory: tests/backend_integration
       - uses: codecov/codecov-action@v4
+        if: ${{ vars.ENABLE_BACKEND_INTEGRATION == 'true' }}
         with:
           file: tests/backend_integration/coverage/lcov.info
           flags: backend-integration
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
+      - name: Install dependencies (e2e scenarios)
+        if: ${{ vars.ENABLE_E2E_SCENARIOS == 'true' }}
+        run: flutter pub get
+        working-directory: apps/integration_scenario_tester
+      - name: Test (e2e scenarios)
+        if: ${{ vars.ENABLE_E2E_SCENARIOS == 'true' }}
+        run: flutter test integration_test/
+        working-directory: apps/integration_scenario_tester
+        env:
+          SUPABASE_URL: http://127.0.0.1:54321
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_LOCAL_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_LOCAL_SERVICE_ROLE_KEY }}
       - name: Stop Supabase
         if: always()
         run: supabase stop
@@ -254,54 +248,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
-      - name: Start Supabase
-        run: supabase start
       - name: Test (edge functions)
         run: deno test --allow-all functions/
         working-directory: supabase
-      - name: Stop Supabase
-        if: always()
-        run: supabase stop
-
-  # E2E 시나리오 테스트
-  test-e2e-scenarios:
-    needs: changes
-    if: ${{ vars.ENABLE_E2E_SCENARIOS == 'true' }}  # Requires device/emulator — disabled by default
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
-      - name: Start Supabase
-        run: supabase start
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          cache: true
-      - name: Install dependencies (e2e scenarios)
-        run: flutter pub get
-        working-directory: apps/integration_scenario_tester
-      - name: Test (e2e scenarios)
-        run: flutter test integration_test/
-        working-directory: apps/integration_scenario_tester
-        env:
-          SUPABASE_URL: http://127.0.0.1:54321
-          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_LOCAL_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_LOCAL_SERVICE_ROLE_KEY }}
-      - name: Stop Supabase
-        if: always()
-        run: supabase stop
 
   ci-result:
-    needs: [check-migration-versions, test-app-user, test-app-partner, lint-landing-user, lint-landing-partner, test-pgtap, test-backend-integration, test-edge-functions, test-e2e-scenarios]
+    needs: [check-migration-versions, test-flutter-apps, lint-landing-user, lint-landing-partner, test-supabase, test-edge-functions]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -346,7 +301,7 @@ jobs:
           echo "✅ All checks passed"
 
   notify-failure:
-    needs: [check-migration-versions, test-app-user, test-app-partner, lint-landing-user, lint-landing-partner, test-pgtap, test-backend-integration, test-edge-functions, test-e2e-scenarios]
+    needs: [check-migration-versions, test-flutter-apps, lint-landing-user, lint-landing-partner, test-supabase, test-edge-functions]
     if: always()
     permissions:
       issues: write
