@@ -12,6 +12,7 @@ List<RouteBase> get $appRoutes => [
   $loginRoute,
   $partnerApplyRoute,
   $partnerApplyStatusRoute,
+  $partnerWelcomeRoute,
   $notificationCenterRoute,
   $partnerShellRoute,
 ];
@@ -123,6 +124,32 @@ mixin $PartnerApplyStatusRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/apply/status');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $partnerWelcomeRoute => GoRouteData.$route(
+  path: '/welcome',
+  factory: $PartnerWelcomeRoute._fromState,
+);
+
+mixin $PartnerWelcomeRoute on GoRouteData {
+  static PartnerWelcomeRoute _fromState(GoRouterState state) =>
+      const PartnerWelcomeRoute();
+
+  @override
+  String get location => GoRouteData.$location('/welcome');
 
   @override
   void go(BuildContext context) => context.go(location);
