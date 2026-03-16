@@ -1,6 +1,5 @@
 import 'package:app_partner/src/features/settlement/settlement_coordinator.dart';
 import 'package:app_partner/src/routing/app_router.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -9,11 +8,9 @@ import '../../../utils/test_utils.dart';
 
 void main() {
   late MockGoRouter mockRouter;
-  late MockSettlementRepository mockSettlementRepository;
 
   setUp(() {
     mockRouter = MockGoRouter();
-    mockSettlementRepository = MockSettlementRepository();
     when(() => mockRouter.go(any())).thenReturn(null);
     when(() => mockRouter.push(any())).thenAnswer((_) => Future.value());
   });
@@ -75,13 +72,4 @@ void main() {
     // Unit testing this method would require mocking the entire Material framework.
     // Consider testing retryPayout in integration tests or widget tests instead.
   });
-}
-
-// Mock BuildContext for testing retryPayout
-class _MockBuildContext extends Mock implements BuildContext {
-  @override
-  bool get mounted => true;
-
-  @override
-  Widget get widget => const SizedBox();
 }

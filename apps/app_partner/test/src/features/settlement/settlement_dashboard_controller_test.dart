@@ -85,7 +85,7 @@ void main() {
       addTearDown(sub.close);
 
       final state = container.read(settlementDashboardControllerProvider);
-      expect(state.status, isA<AsyncLoading>());
+      expect(state.status, isA<AsyncLoading<void>>());
 
       await pump();
     });
@@ -110,7 +110,7 @@ void main() {
       await pump();
 
       final state = container.read(settlementDashboardControllerProvider);
-      expect(state.status, isA<AsyncData>());
+      expect(state.status, isA<AsyncData<void>>());
       expect(state.dashboardData, equals(data));
     });
 
@@ -127,7 +127,7 @@ void main() {
       await pump();
 
       final state = container.read(settlementDashboardControllerProvider);
-      expect(state.status, isA<AsyncError>());
+      expect(state.status, isA<AsyncError<void>>());
       expect(state.dashboardData, isNull);
     });
 
@@ -145,7 +145,7 @@ void main() {
         await pump();
 
         final state = container.read(settlementDashboardControllerProvider);
-        expect(state.status, isA<AsyncData>());
+        expect(state.status, isA<AsyncData<void>>());
         expect(state.dashboardData, isNull);
       },
     );
@@ -180,7 +180,7 @@ void main() {
       final stateAfterReload = container.read(
         settlementDashboardControllerProvider,
       );
-      expect(stateAfterReload.status, isA<AsyncData>());
+      expect(stateAfterReload.status, isA<AsyncData<void>>());
     });
 
     test('changeMonth with negative delta goes to previous month', () async {
