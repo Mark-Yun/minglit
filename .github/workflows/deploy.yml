@@ -23,9 +23,11 @@ concurrency:
 jobs:
   deploy-app_user:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+    environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
       - name: Deploy User App
         uses: ./.github/actions/deploy-flutter-app
         with:
@@ -45,9 +47,11 @@ jobs:
 
   deploy-landing_user:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+    environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
       - name: Deploy User Landing
         uses: ./.github/actions/deploy-nextjs-app
         with:
@@ -58,9 +62,11 @@ jobs:
 
   deploy-landing_partner:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+    environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
       - name: Deploy Partner Landing
         uses: ./.github/actions/deploy-nextjs-app
         with:
@@ -71,9 +77,11 @@ jobs:
 
   deploy-app_partner:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+    environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
       - name: Deploy Partner App
         uses: ./.github/actions/deploy-flutter-app
         with:
