@@ -76,8 +76,17 @@ export async function simVerifySettlement(
       const settlementId = (settlement as { id: string; status: string; gross_amount: number }).id;
       const grossAmount = (settlement as { id: string; status: string; gross_amount: number }).gross_amount;
 
-      // 3. Assert fee calculations
-      const amountsAssertion = await simAssertSettlementAmounts(supabase, settlementId, grossAmount);
+      // 3. Assert fee calculations — compute expected gross independently from event_applications
+      //    to avoid self-referential check (passing settlement.gross_amount as its own expected value)
+      const { data: paidAppsData } = await supabase
+        .from("event_applications")
+        .select("payment_amount")
+        .eq("event_id", eventId)
+        .eq("status", "paid");
+      // deno-lint-ignore no-explicit-any
+      const expectedGross = (paidAppsData ?? []).reduce((sum: number, app: any) => sum + (app.payment_amount ?? 0), 0);
+
+      const amountsAssertion = await simAssertSettlementAmounts(supabase, settlementId, expectedGross);
       assertions.push(amountsAssertion);
 
       // 4. Assert checksum
@@ -158,8 +167,10 @@ export async function simTransitionToReady(
         continue;
       }
 
-      // 2. Call update_settlement_ready_status() to transition PENDING → READY
-      const { error: rpcErr } = await supabase.rpc("update_settlement_ready_status");
+      // 2. Call targeted RPC to transition this specific settlement PENDING → READY
+      const { error: rpcErr } = await supabase.rpc("update_single_settlement_ready_status", {
+        p_settlement_id: settlementId,
+      });
 
       if (rpcErr) {
         log({

@@ -80,8 +80,14 @@ export async function simUploadLog(
       return null;
     }
 
-    const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(path);
-    return data.publicUrl;
+    const { data: signedData, error: signErr } = await supabase.storage
+      .from(BUCKET_NAME)
+      .createSignedUrl(path, 86400);
+    if (signErr) {
+      console.error("[sim_reporter] Signed URL error:", signErr.message);
+      return null;
+    }
+    return signedData?.signedUrl ?? null;
   } catch (err) {
     console.error("[sim_reporter] simUploadLog exception:", err);
     return null;
@@ -120,11 +126,13 @@ export async function simCreateGitHubIssue(
 
     const encoder = new TextEncoder();
     let truncatedLog = logText;
-    while (encoder.encode(truncatedLog).length > MAX_ISSUE_BODY_BYTES) {
-      truncatedLog = truncatedLog.slice(0, -100);
-    }
-    if (truncatedLog.length < logText.length) {
-      truncatedLog += "\n...[truncated]";
+    const logBytes = encoder.encode(logText);
+    if (logBytes.length > MAX_ISSUE_BODY_BYTES) {
+      let safeEnd = MAX_ISSUE_BODY_BYTES;
+      while (safeEnd > 0 && (logBytes[safeEnd] & 0xc0) === 0x80) {
+        safeEnd--;
+      }
+      truncatedLog = new TextDecoder().decode(logBytes.slice(0, safeEnd)) + "\n...[truncated]";
     }
 
     const body = `## E2E Simulation Failure Report
