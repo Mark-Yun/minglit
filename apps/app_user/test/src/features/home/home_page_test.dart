@@ -150,6 +150,9 @@ void main() {
       );
       await tester.pump();
 
+      // SliverFillRemaining(loading) shows when events are empty and hasMore=true.
+      // SliverToBoxAdapter(isLoadingMore) follows in the sliver list but is not
+      // built because SliverFillRemaining fills the remaining viewport first.
       expect(find.byType(MinglitCircularProgressIndicator), findsOneWidget);
     });
 
