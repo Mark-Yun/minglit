@@ -42,7 +42,7 @@ final class SettlementCoordinatorProvider
 }
 
 String _$settlementCoordinatorHash() =>
-    r'90345138923ae890998b40208a23dbd96ea74738';
+    r'05d742aff3585d7a30c37bd17f4aa8e7727f6043';
 
 abstract class _$SettlementCoordinator extends $Notifier<void> {
   void build();
