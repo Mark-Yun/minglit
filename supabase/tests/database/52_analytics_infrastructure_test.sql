@@ -24,12 +24,18 @@ SELECT has_table('analytics', 'funnel_daily', 'funnel_daily table exists');
 -- ============================================================
 -- 4. analytics_reader can SELECT from analytics tables
 -- ============================================================
-SELECT has_table_privilege('analytics_reader', 'analytics.daily_active_users', 'SELECT', 'analytics_reader can SELECT from daily_active_users');
+SELECT ok(
+  has_table_privilege('analytics_reader', 'analytics.daily_active_users', 'SELECT'),
+  'analytics_reader can SELECT from daily_active_users'
+);
 
 -- ============================================================
 -- 5. analytics_reader cannot SELECT from public.user_profiles
 -- ============================================================
-SELECT hasnt_table_privilege('analytics_reader', 'public.user_profiles', 'SELECT', 'analytics_reader cannot SELECT from public.user_profiles');
+SELECT ok(
+  NOT has_table_privilege('analytics_reader', 'public.user_profiles', 'SELECT'),
+  'analytics_reader cannot SELECT from public.user_profiles'
+);
 
 SELECT * FROM finish();
 ROLLBACK;
