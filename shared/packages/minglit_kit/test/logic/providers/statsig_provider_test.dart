@@ -40,7 +40,7 @@ void main() {
     });
 
     test('checkGate returns false when not initialized', () async {
-      final result = await StatsigAnalytics.checkGate('test_gate');
+      final result = StatsigAnalytics.checkGate('test_gate');
       expect(result, isFalse);
     });
 

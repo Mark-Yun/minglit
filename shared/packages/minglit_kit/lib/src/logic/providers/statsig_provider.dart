@@ -2,6 +2,7 @@
 ///
 /// Lean strategy: only 7 event types tracked.
 /// No-ops gracefully when STATSIG_CLIENT_KEY is empty or 'FILL_THIS'.
+library;
 
 import 'package:statsig/statsig.dart';
 
@@ -30,8 +31,8 @@ class StatsigAnalytics {
   /// Initialize Statsig. No-ops if [clientKey] is empty or 'FILL_THIS'.
   static Future<void> initialize(
     String clientKey, {
-    String? userId,
     required String tier,
+    String? userId,
   }) async {
     if (clientKey.isEmpty || clientKey == 'FILL_THIS') {
       return;
@@ -45,8 +46,8 @@ class StatsigAnalytics {
 
   static Future<void> _initializeInternal(
     String clientKey, {
-    String? userId,
     required String tier,
+    String? userId,
   }) async {
     final user = StatsigUser(userId: userId ?? '');
     final options = StatsigOptions(environment: tier);
