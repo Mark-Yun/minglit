@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 class StatusFilterChips extends StatelessWidget {
   const StatusFilterChips({
@@ -27,9 +28,10 @@ class StatusFilterChips extends StatelessWidget {
       height: 40,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: EdgeInsets.symmetric(horizontal: MinglitSpacing.medium),
         itemCount: _statuses.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 8),
+        separatorBuilder: (context, index) =>
+            SizedBox(width: MinglitSpacing.small),
         itemBuilder: (context, i) {
           final (status, label) = _statuses[i];
           final isSelected = selectedStatus == status;
