@@ -121,7 +121,7 @@ jobs:
         working-directory: ${{ matrix.directory }}
       - name: Test
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
-        run: flutter test --coverage --file-reporter=json:test-results.json
+        run: dart run test_reporter -- flutter test --coverage --file-reporter=json:test-results.json
         working-directory: ${{ matrix.directory }}
       - name: Integration Test
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' && matrix.app == 'app_user' }}
@@ -140,6 +140,14 @@ jobs:
         with:
           name: ${{ matrix.artifact_name }}
           path: ${{ matrix.directory }}/coverage
+      - name: Upload Allure Results
+        uses: actions/upload-artifact@v4
+        if: ${{ (success() || failure()) && needs.changes.outputs[matrix.change_key] == 'true' }}
+        continue-on-error: true
+        with:
+          name: allure-results-${{ matrix.app }}
+          path: ${{ matrix.directory }}/allure-results
+          retention-days: 30
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
