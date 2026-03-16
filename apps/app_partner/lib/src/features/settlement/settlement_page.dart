@@ -1,7 +1,6 @@
-import 'dart:async';
+import 'dart:async' show unawaited;
 
 import 'package:app_partner/src/features/party/party_providers.dart';
-import 'package:app_partner/src/features/settlement/settlement_models.dart';
 import 'package:app_partner/src/features/settlement/widgets/settlement_card.dart';
 import 'package:app_partner/src/features/settlement/widgets/settlement_empty_state.dart';
 import 'package:app_partner/src/features/settlement/widgets/status_filter_chips.dart';
@@ -9,9 +8,6 @@ import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-
-part 'settlement_revenue_section.dart';
-part 'settlement_list_section.dart';
 
 class SettlementPage extends ConsumerStatefulWidget {
   const SettlementPage({super.key});
@@ -60,23 +56,255 @@ class _SettlementPageState extends ConsumerState<SettlementPage>
   }
 }
 
-class _DashboardTab extends StatelessWidget {
+class _DashboardTab extends ConsumerStatefulWidget {
   const _DashboardTab();
 
   @override
+  ConsumerState<_DashboardTab> createState() => _DashboardTabState();
+}
+
+class _DashboardTabState extends ConsumerState<_DashboardTab> {
+  DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
+  Map<String, dynamic>? _dashboardData;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadDashboard());
+  }
+
+  Future<void> _loadDashboard() async {
+    setState(() => _isLoading = true);
+    try {
+      final repo = ref.read(settlementRepositoryProvider);
+      final partner = await ref.read(currentPartnerInfoProvider.future);
+      if (partner == null) {
+        if (mounted) setState(() => _isLoading = false);
+        return;
+      }
+      final data = await repo.getSettlementDashboard(
+        partnerId: partner.id,
+        periodStart: _selectedMonth,
+        periodEnd: DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0),
+      );
+      if (mounted) {
+        setState(() {
+          _dashboardData = data;
+          _isLoading = false;
+        });
+      }
+    } on Exception catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _onMonthChanged(int delta) {
+    setState(() {
+      _selectedMonth = DateTime(
+        _selectedMonth.year,
+        _selectedMonth.month + delta,
+      );
+      _dashboardData = null;
+    });
+    unawaited(_loadDashboard());
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const SingleChildScrollView(
-      child: Column(
+    return RefreshIndicator(
+      onRefresh: _loadDashboard,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _PeriodSelector(
+              selectedMonth: _selectedMonth,
+              onChanged: _onMonthChanged,
+            ),
+            const SizedBox(height: 16),
+            if (_isLoading)
+              const Center(child: CircularProgressIndicator())
+            else ...[
+              _RevenueSummaryCard(data: _dashboardData),
+              const SizedBox(height: 16),
+              _StatusSummaryGrid(data: _dashboardData),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PeriodSelector extends StatelessWidget {
+  const _PeriodSelector({
+    required this.selectedMonth,
+    required this.onChanged,
+  });
+
+  final DateTime selectedMonth;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = '${selectedMonth.year}년 ${selectedMonth.month}월';
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.chevron_left),
+          onPressed: () => onChanged(-1),
+        ),
+        Text(label, style: Theme.of(context).textTheme.titleMedium),
+        IconButton(
+          icon: const Icon(Icons.chevron_right),
+          onPressed: () => onChanged(1),
+        ),
+      ],
+    );
+  }
+}
+
+class _RevenueSummaryCard extends StatelessWidget {
+  const _RevenueSummaryCard({required this.data});
+
+  final Map<String, dynamic>? data;
+
+  @override
+  Widget build(BuildContext context) {
+    final fmt = NumberFormat('#,###');
+    final totalGross = data?['completed_gross_total'] as int? ?? 0;
+    final totalNet = data?['completed_net_total'] as int? ?? 0;
+    final totalFees = totalGross - totalNet;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('매출 요약', style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(height: 12),
+            _DashRow('총 매출', '₩${fmt.format(totalGross)}'),
+            _DashRow('총 수수료', '-₩${fmt.format(totalFees)}'),
+            const Divider(),
+            _DashRow('정산금', '₩${fmt.format(totalNet)}', bold: true),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DashRow extends StatelessWidget {
+  const _DashRow(this.label, this.value, {this.bold = false});
+
+  final String label;
+  final String value;
+  final bool bold;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = bold
+        ? Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)
+        : Theme.of(context).textTheme.bodyMedium;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Center(child: Text('대시보드 (Task 6에서 구현)')),
-          Offstage(
-            child: _RevenueSummarySection(summary: PartnerRevenueSummary()),
+          Text(label, style: style),
+          Text(value, style: style),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusSummaryGrid extends StatelessWidget {
+  const _StatusSummaryGrid({required this.data});
+
+  final Map<String, dynamic>? data;
+
+  static const _statuses = [
+    ('PENDING', '대기', Color(0xFF616161)),
+    ('READY', '확정', Color(0xFF1565C0)),
+    ('PROCESSING', '지급중', Color(0xFF283593)),
+    ('COMPLETED', '완료', Color(0xFF1B5E20)),
+    ('FAILED', '실패', Color(0xFFB71C1C)),
+    ('HOLD', '보류', Color(0xFFE65100)),
+    ('CANCELED', '취소', Color(0xFF9E9E9E)),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final counts = data?['status_counts'] as Map<String, dynamic>? ?? {};
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('상태별 현황', style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(height: 12),
+            GridView.count(
+              crossAxisCount: 4,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              childAspectRatio: 1.2,
+              children: _statuses.map((s) {
+                final (status, label, color) = s;
+                final count = counts[status] as int? ?? 0;
+                return _StatusCell(label: label, count: count, color: color);
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusCell extends StatelessWidget {
+  const _StatusCell({
+    required this.label,
+    required this.count,
+    required this.color,
+  });
+
+  final String label;
+  final int count;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            count.toString(),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          Offstage(
-            child: _RevenueTrendSection(monthlyRevenue: []),
-          ),
-          Offstage(
-            child: _SettlementListSection(settlements: []),
+          Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: color),
           ),
         ],
       ),
