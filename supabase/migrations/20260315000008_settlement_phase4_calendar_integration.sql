@@ -64,9 +64,10 @@ begin
     from public.payouts
     where partner_id = v_partner.partner_id
       and payout_request_idempotency_key like
-          'prod:payout:' || v_partner.partner_id || ':' || v_today || '-%';
+          'prod:payout:' || v_partner.partner_id || ':' || v_partner.currency || ':' || v_today || '-%';
 
     v_idem_key := 'prod:payout:' || v_partner.partner_id
+                  || ':' || v_partner.currency
                   || ':' || v_today
                   || '-' || lpad(v_seq::text, 3, '0');
 
@@ -125,3 +126,6 @@ begin
   end loop;
 end;
 $$;
+
+revoke execute on function public.assemble_payouts() from public;
+grant execute on function public.assemble_payouts() to service_role;

@@ -188,3 +188,6 @@ create policy "settlement_alarm_results_service_role_only"
 
 revoke execute on function public.check_settlement_alarms() from public;
 grant execute on function public.check_settlement_alarms() to service_role;
+
+revoke all on public.settlement_metrics from public;
+grant select on public.settlement_metrics to service_role;
