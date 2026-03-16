@@ -244,12 +244,12 @@ RouteBase get $partnerShellRoute => StatefulShellRouteData.$route(
           factory: $SettlementRoute._fromState,
           routes: [
             GoRouteData.$route(
-              path: ':id',
-              factory: $SettlementDetailRoute._fromState,
-            ),
-            GoRouteData.$route(
               path: 'bank-account',
               factory: $BankAccountRoute._fromState,
+            ),
+            GoRouteData.$route(
+              path: ':id',
+              factory: $SettlementDetailRoute._fromState,
             ),
           ],
         ),
@@ -631,15 +631,12 @@ mixin $SettlementRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
-mixin $SettlementDetailRoute on GoRouteData {
-  static SettlementDetailRoute _fromState(GoRouterState state) =>
-      SettlementDetailRoute(id: state.pathParameters['id']!);
-
-  SettlementDetailRoute get _self => this as SettlementDetailRoute;
+mixin $BankAccountRoute on GoRouteData {
+  static BankAccountRoute _fromState(GoRouterState state) =>
+      const BankAccountRoute();
 
   @override
-  String get location =>
-      GoRouteData.$location('/settlement/${Uri.encodeComponent(_self.id)}');
+  String get location => GoRouteData.$location('/settlement/bank-account');
 
   @override
   void go(BuildContext context) => context.go(location);
@@ -655,12 +652,15 @@ mixin $SettlementDetailRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
-mixin $BankAccountRoute on GoRouteData {
-  static BankAccountRoute _fromState(GoRouterState state) =>
-      const BankAccountRoute();
+mixin $SettlementDetailRoute on GoRouteData {
+  static SettlementDetailRoute _fromState(GoRouterState state) =>
+      SettlementDetailRoute(id: state.pathParameters['id']!);
+
+  SettlementDetailRoute get _self => this as SettlementDetailRoute;
 
   @override
-  String get location => GoRouteData.$location('/settlement/bank-account');
+  String get location =>
+      GoRouteData.$location('/settlement/${Uri.encodeComponent(_self.id)}');
 
   @override
   void go(BuildContext context) => context.go(location);

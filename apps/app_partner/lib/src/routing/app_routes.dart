@@ -146,8 +146,8 @@ class NotificationCenterRoute extends GoRouteData
         TypedGoRoute<SettlementRoute>(
           path: '/settlement',
           routes: [
-            TypedGoRoute<SettlementDetailRoute>(path: ':id'),
             TypedGoRoute<BankAccountRoute>(path: 'bank-account'),
+            TypedGoRoute<SettlementDetailRoute>(path: ':id'),
           ],
         ),
       ],

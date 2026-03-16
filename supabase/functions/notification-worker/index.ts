@@ -148,19 +148,27 @@ async function getAffectedUserId(supabase: any, eventType: string, data: Record<
     data.settlement_item_id
   ) {
     // Get partner_id from settlement_items
-    const { data: item } = await supabase
+    const { data: item, error: itemError } = await supabase
       .from('settlement_items')
       .select('partner_id')
       .eq('id', data.settlement_item_id)
       .single();
+    if (itemError) {
+      console.error('Failed to fetch settlement item:', itemError.message);
+      return null;
+    }
     if (!item?.partner_id) return null;
     // Get owner user_id from partner_member_permissions (role = 'owner')
-    const { data: perm } = await supabase
+    const { data: perm, error: permError } = await supabase
       .from('partner_member_permissions')
       .select('user_id')
       .eq('partner_id', item.partner_id)
       .eq('role', 'owner')
       .single();
+    if (permError) {
+      console.error('Failed to fetch partner owner:', permError.message);
+      return null;
+    }
     return perm?.user_id || null;
   }
   return null;

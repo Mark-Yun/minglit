@@ -82,6 +82,14 @@ declare
   v_item         record;
   v_new_idem_key text;
 begin
+  if not exists (
+    select 1 from public.partner_member_permissions
+    where user_id = auth.uid()
+      and partner_id = p_partner_id
+  ) then
+    raise exception 'unauthorized: caller is not a member of partner %', p_partner_id;
+  end if;
+
   select * into v_payout
   from public.payouts
   where id = p_payout_id

@@ -184,14 +184,12 @@ class _AccountEditFormState extends ConsumerState<AccountEditForm> {
     try {
       final partner = await ref.read(currentPartnerInfoProvider.future);
       if (partner == null) return;
-      await Supabase.instance.client
-          .from('partner_settlements')
-          .update({
-            'bank_name': _bankCtrl.text.trim(),
-            'account_holder': _holderCtrl.text.trim(),
-            'account_number': _numberCtrl.text.trim(),
-          })
-          .eq('partner_id', partner.id);
+      await Supabase.instance.client.from('partner_settlements').upsert({
+        'partner_id': partner.id,
+        'bank_name': _bankCtrl.text.trim(),
+        'account_holder': _holderCtrl.text.trim(),
+        'account_number': _numberCtrl.text.trim(),
+      }, onConflict: 'partner_id');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('계좌 정보가 저장되었습니다.')),

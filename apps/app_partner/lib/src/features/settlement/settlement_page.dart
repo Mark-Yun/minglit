@@ -86,7 +86,15 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
       final data = await repo.getSettlementDashboard(
         partnerId: partner.id,
         periodStart: _selectedMonth,
-        periodEnd: DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0),
+        periodEnd: DateTime(
+          _selectedMonth.year,
+          _selectedMonth.month + 1,
+          0,
+          23,
+          59,
+          59,
+          999,
+        ),
       );
       if (mounted) {
         setState(() {
