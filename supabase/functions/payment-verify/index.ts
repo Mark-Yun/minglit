@@ -81,12 +81,6 @@ Deno.serve(withSentry(async (req) => {
       });
     }
 
-    // 4. Supabase DB 업데이트 (티켓 발권 및 신청 상태 변경)
-    // ... rest of the logic ...
-    
-    // Note: We used service role key so auth check via header is optional but good practice if we want to link user.
-    // But since we have merchant_uid which is unique, we can just update.
-    
     const { error: updateError } = await withSpan(
       'db.update.event_applications',
       'db.update',
