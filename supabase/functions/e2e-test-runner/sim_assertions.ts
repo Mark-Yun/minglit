@@ -166,10 +166,10 @@ export async function simAssertVerificationApproved(
 export function simCalcRefund(
   startTime: Date,
   paymentAmount: number,
+  now: Date = new Date(),
   paidAt: Date | null = null,
   gracePeriodHours: number = 2,
   cutoffDays: number = 7,
-  now: Date = new Date(),
 ): SimRefundCalc {
   const withinGracePeriod =
     paidAt !== null &&
