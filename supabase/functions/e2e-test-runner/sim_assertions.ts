@@ -173,12 +173,22 @@ export function simCalcRefund(
 ): SimRefundCalc {
   const withinGracePeriod =
     paidAt !== null &&
+    paidAt.getTime() <= now.getTime() &&
     now.getTime() - paidAt.getTime() <= gracePeriodHours * 60 * 60 * 1000;
 
-  const withinCutoff =
-    startTime.getTime() - now.getTime() >= cutoffDays * 24 * 60 * 60 * 1000;
+  const daysUntilEvent = (startTime.getTime() - now.getTime()) / (24 * 60 * 60 * 1000);
 
-  const percentage = withinGracePeriod || withinCutoff ? 100 : 0;
+  let percentage: number;
+  if (withinGracePeriod || daysUntilEvent >= cutoffDays) {
+    percentage = 100;
+  } else if (daysUntilEvent >= 3) {
+    percentage = 80;
+  } else if (daysUntilEvent >= 1) {
+    percentage = 50;
+  } else {
+    percentage = 0;
+  }
+
   const refundAmount = Math.floor((paymentAmount * percentage) / 100);
   const feeAmount = paymentAmount - refundAmount;
   return { refund_percentage: percentage, refund_amount: refundAmount, fee_amount: feeAmount };
