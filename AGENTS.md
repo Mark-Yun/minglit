@@ -71,14 +71,11 @@ adb -s adb-R3CX803P2ND-8btuuD._adb-tls-connect._tcp install -r build/app/outputs
 | Job | 조건 | 내용 |
 |-----|------|------|
 | `check-migration-versions` | 항상 | migration version 중복 검사 |
-| `test-app-user` | `apps/app_user/**` 또는 `shared/packages/minglit_kit/**` 변경 시 | Flutter analyze + test |
-| `test-app-partner` | `apps/app_partner/**` 또는 `shared/packages/minglit_kit/**` 변경 시 | Flutter analyze + test |
+| `test-flutter-apps` | `apps/app_user/**`, `apps/app_partner/**` 또는 `shared/packages/minglit_kit/**` 변경 시 | Flutter analyze + test (matrix: app_user, app_partner) |
 | `lint-landing-user` | `apps/landing_user/**` 또는 `shared/web/**` 변경 시 | npm lint + build |
 | `lint-landing-partner` | `apps/landing_partner/**` 또는 `shared/web/**` 변경 시 | npm lint + build |
-| `test-pgtap` | `supabase/**` 또는 `tests/backend_integration/**` 변경 시 | pgTAP DB 테스트 |
-| `test-backend-integration` | 동일 | Dart backend integration 테스트 |
+| `test-supabase` | `supabase/**` 또는 `tests/backend_integration/**` 변경 시 | pgTAP + backend integration + e2e 통합 테스트 |
 | `test-edge-functions` | 동일 | Deno edge function 테스트 |
-| `test-e2e-scenarios` | 동일 | E2E 시나리오 테스트 |
 | CodeRabbit 리뷰 | PR only | `ci-result` job 내에서 최대 30분 대기 |
 
 별도 워크플로우 (required check 아님, 참고용):
