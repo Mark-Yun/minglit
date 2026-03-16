@@ -185,3 +185,6 @@ alter table public.settlement_alarm_results enable row level security;
 create policy "settlement_alarm_results_service_role_only"
   on public.settlement_alarm_results
   using (auth.role() = 'service_role');
+
+revoke execute on function public.check_settlement_alarms() from public;
+grant execute on function public.check_settlement_alarms() to service_role;

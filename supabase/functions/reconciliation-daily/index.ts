@@ -3,6 +3,10 @@ import { PortoneV2Client, PortoneSettlement } from "../_shared/portone_client.ts
 
 const PORTONE_V2_API_KEY = Deno.env.get("PORTONE_V2_API_KEY") ?? "";
 
+if (!PORTONE_V2_API_KEY) {
+  throw new Error("Missing required environment variable: PORTONE_V2_API_KEY");
+}
+
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -257,7 +261,7 @@ Deno.serve(async (req) => {
     const mismatchedCount = results.filter((r) => r.mismatch_type !== MISMATCH_TYPES.MATCHED).length;
     const criticalCount = results.filter((r) => r.severity === "CRITICAL").length;
 
-    await supabase
+    const { error: completeError } = await supabase
       .from("reconciliation_runs")
       .update({
         status: "COMPLETED",
@@ -269,6 +273,10 @@ Deno.serve(async (req) => {
         completed_at: new Date().toISOString(),
       })
       .eq("id", runId);
+
+    if (completeError) {
+      throw new Error(`Failed to mark run as COMPLETED: ${completeError.message}`);
+    }
 
     return new Response(
       JSON.stringify({

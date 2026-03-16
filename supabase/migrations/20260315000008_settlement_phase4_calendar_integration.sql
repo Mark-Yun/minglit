@@ -47,6 +47,7 @@ begin
     into v_bank_snapshot
     from public.partner_settlements ps
     where ps.partner_id = v_partner.partner_id
+    order by ps.updated_at desc nulls last
     limit 1;
 
     if v_bank_snapshot is null then
