@@ -1,6 +1,13 @@
 -- Make e2e-test-logs bucket private with access restrictions
 -- Fixes: bucket was public=true exposing internal simulation logs externally
 
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM storage.buckets WHERE id = 'e2e-test-logs') THEN
+    RAISE EXCEPTION 'Bucket e2e-test-logs not found — ensure 20260315000012 ran first';
+  END IF;
+END $$;
+
 UPDATE storage.buckets
 SET
   public = false,
