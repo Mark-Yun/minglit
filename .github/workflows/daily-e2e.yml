@@ -1,4 +1,4 @@
-name: Daily E2E CUJ Tests
+name: Daily Client CUJ Integration Tests
 
 on:
   schedule:
@@ -6,11 +6,11 @@ on:
   workflow_dispatch:       # Manual trigger
 
 concurrency:
-  group: daily-e2e-${{ github.ref }}
+  group: daily-client-cuj-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  e2e-test:
+  client-cuj-test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -43,11 +43,11 @@ jobs:
         working-directory: tests/client_cuj_integration
 
   notify-failure:
-    needs: [e2e-test]
+    needs: [client-cuj-test]
     if: always()
     permissions:
       issues: write
     uses: ./.github/workflows/notify-failure.yml
     with:
-      success: ${{ needs.e2e-test.result == 'success' }}
-      workflow_name: 'Daily E2E CUJ'
+      success: ${{ needs.client-cuj-test.result == 'success' }}
+      workflow_name: 'Daily Client CUJ'
