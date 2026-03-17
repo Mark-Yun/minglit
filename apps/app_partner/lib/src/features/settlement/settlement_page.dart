@@ -371,8 +371,22 @@ class _ListTabState extends ConsumerState<_ListTab> {
               .changeStatus(status),
         ),
         const SizedBox(height: MinglitSpacing.small),
+        // Fix #127: 목록 로드 실패 시 일반 빈 상태 대신 오류 상태와 재시도 액션을 노출
         Expanded(
-          child: listState.items.isEmpty && !listState.isLoading
+          child:
+              listState.error != null &&
+                  listState.items.isEmpty &&
+                  !listState.isLoading
+              ? SettlementEmptyState(
+                  icon: Icons.error_outline,
+                  title: '목록을 불러오지 못했습니다',
+                  subtitle: '잠시 후 다시 시도해 주세요.',
+                  actionLabel: '다시 시도',
+                  onAction: () => ref
+                      .read(settlementListControllerProvider.notifier)
+                      .refresh(),
+                )
+              : listState.items.isEmpty && !listState.isLoading
               ? SettlementEmptyState(
                   title: '정산 항목이 없습니다',
                   subtitle: listState.selectedStatus != null
