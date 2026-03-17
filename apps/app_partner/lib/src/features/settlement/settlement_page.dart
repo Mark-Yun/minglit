@@ -371,6 +371,7 @@ class _ListTabState extends ConsumerState<_ListTab> {
               .changeStatus(status),
         ),
         const SizedBox(height: MinglitSpacing.small),
+        // Fix #127: 목록 로드 실패 시 일반 빈 상태 대신 오류 상태와 재시도 액션을 노출
         Expanded(
           child:
               listState.error != null &&
