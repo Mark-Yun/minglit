@@ -121,7 +121,7 @@ class MinglitSocialActionChip extends ConsumerWidget {
                   isActive ? activeIcon : inactiveIcon,
                   size: 16,
                   color: isActive
-                      ? Colors.white
+                      ? MinglitColors.background
                       : theme.colorScheme.onSurfaceVariant,
                 ),
               const SizedBox(width: 4),
@@ -129,7 +129,7 @@ class MinglitSocialActionChip extends ConsumerWidget {
                 width: 1,
                 height: 14,
                 color: isActive
-                    ? Colors.white.withValues(alpha: 0.4)
+                    ? MinglitColors.background.withValues(alpha: 0.4)
                     : theme.colorScheme.outlineVariant,
               ),
               const SizedBox(width: 4),
@@ -138,7 +138,7 @@ class MinglitSocialActionChip extends ConsumerWidget {
                 style: theme.textTheme.labelMedium?.copyWith(
                   fontSize: 14,
                   color: isActive
-                      ? Colors.white
+                      ? MinglitColors.background
                       : theme.colorScheme.onSurfaceVariant,
                 ),
               ),
