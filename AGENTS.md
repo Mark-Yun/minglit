@@ -13,6 +13,64 @@
 | [search-and-recommendation.md](docs/architecture/search-and-recommendation.md) | PGroonga 검색 + pgvector 추천 |
 | [global-event-pipeline.md](docs/architecture/global-event-pipeline.md) | PGMQ 2-tier 이벤트 파이프라인 |
 
+## Versioning Conventions
+
+모노레포 전체에 `YY.MM.PR#` CalVer 버저닝을 사용한다.
+
+### 버전 형식
+
+| 구성요소 | 설명 | 예시 |
+|----------|------|------|
+| `YY` | 연도 2자리 | `26` (2026년) |
+| `MM` | 월 2자리 | `03` (3월) |
+| `PR#` | 월 내 릴리즈 순번 | `1`, `2`, `99` |
+
+**예시**:
+- `26.03.1` — 26년 3월 첫 번째 릴리즈
+- `26.03.2` — 26년 3월 두 번째 릴리즈
+- `26.05.1` — 26년 5월 첫 번째 릴리즈 (월 건너뛸 수 있음)
+
+### Dev / Release 구분
+
+- **dev 브랜치**: `-dev` 접미사 (예: `26.03.1-dev`)
+- **release (main)**: 접미사 없음 (예: `26.03.1`)
+
+### 패키지별 버전 형식
+
+| 패키지 | 형식 | 예시 |
+|--------|------|------|
+| Flutter 앱 (`app_user`, `app_partner`) | `YY.MM.PR#[-dev]+YYMMPPPP` | `26.03.1-dev+26030001` |
+| Shared packages (`minglit_kit` 등) | `YY.MM.PR#[-dev]` | `26.03.1-dev` |
+| Landing pages (`landing_user` 등) | `YY.MM.PR#[-dev]` | `26.03.1-dev` |
+| Root `package.json` | `YY.MM.PR#[-dev]` | `26.03.1-dev` |
+
+- **versionCode** (`+YYMMPPPP`): `YYMM * 10000 + PR#`
+  - 예: `26.03.1` → `2603 * 10000 + 1 = 26030001`
+  - 예: `26.12.99` → `2612 * 10000 + 99 = 26120099`
+
+### 버전 Bump 방법
+
+```bash
+# 버전 일괄 업데이트 (8개 대상 파일)
+bash scripts/bump-version.sh <version>
+
+# 예시
+bash scripts/bump-version.sh 26.03.1-dev    # dev 버전 세팅
+bash scripts/bump-version.sh 26.03.1        # release 버전 세팅
+```
+
+### CI 자동화 (예정 — 후속 PR에서 구현)
+
+- PR merge to `main` 시 자동 bump + git tag (`v26.03.1` 형식) — *미구현, 후속 PR 예정*
+- 동일 월이면 PR# + 1, 새 월이면 .1 시작
+
+### 버전 관리 제외 대상
+
+아래 테스트 패키지는 버저닝 대상에서 제외:
+- `tests/test_data_seeder`
+- `tests/backend_integration`
+- `apps/integration_scenario_tester`
+
 ## Build Defaults
 
 - APK 빌드 요청 시 `--debug`가 디폴트. `--release`는 명시적으로 요청할 때만 사용.
