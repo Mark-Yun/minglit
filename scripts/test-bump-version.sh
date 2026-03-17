@@ -6,6 +6,9 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BUMP_SCRIPT="$SCRIPT_DIR/bump-version.sh"
+
 TESTS_PASSED=0
 TESTS_FAILED=0
 
@@ -24,7 +27,10 @@ setup_test_dir() {
     local test_dir="/tmp/bump_version_test_$test_num"
     rm -rf "$test_dir"
     mkdir -p "$test_dir"
-    cd "$test_dir"
+    cd "$test_dir" || {
+        echo -e "${RED}✗ FAIL: unable to enter test dir: $test_dir${NC}"
+        exit 1
+    }
     
     mkdir -p apps/app_user apps/app_partner shared/packages/minglit_kit shared/packages/minglit_lints shared/packages/minglit_iamport_v1 apps/landing_user apps/landing_partner
     
@@ -80,7 +86,7 @@ echo ""
 
 echo -e "${BLUE}TEST 1: Normal version bump (25.03.1)${NC}"
 setup_test_dir 1
-bash /Users/mark/workspace/minglit-release-versioning/scripts/bump-version.sh 25.03.1 > /dev/null 2>&1
+bash "$BUMP_SCRIPT" 25.03.1 > /dev/null 2>&1
 if grep -q "version: 25.03.1+25030001" apps/app_user/pubspec.yaml; then assert_pass "app_user versionCode"; else assert_fail "app_user versionCode"; fi
 if grep -q "version: 25.03.1+25030001" apps/app_partner/pubspec.yaml; then assert_pass "app_partner versionCode"; else assert_fail "app_partner versionCode"; fi
 if grep -q "version: 25.03.1" shared/packages/minglit_kit/pubspec.yaml; then assert_pass "minglit_kit version"; else assert_fail "minglit_kit version"; fi
@@ -93,7 +99,7 @@ echo ""
 
 echo -e "${BLUE}TEST 2: Dev suffix version bump (25.03.1-dev)${NC}"
 setup_test_dir 2
-bash /Users/mark/workspace/minglit-release-versioning/scripts/bump-version.sh 25.03.1-dev > /dev/null 2>&1
+bash "$BUMP_SCRIPT" 25.03.1-dev > /dev/null 2>&1
 if grep -q "version: 25.03.1-dev+25030001" apps/app_user/pubspec.yaml; then assert_pass "app_user dev version"; else assert_fail "app_user dev version"; fi
 if grep -q "version: 25.03.1-dev" shared/packages/minglit_kit/pubspec.yaml; then assert_pass "minglit_kit dev version"; else assert_fail "minglit_kit dev version"; fi
 if grep -q '"version": "25.03.1-dev"' apps/landing_user/package.json; then assert_pass "landing_user version (with -dev)"; else assert_fail "landing_user version (with -dev)"; fi
@@ -103,13 +109,13 @@ echo ""
 
 echo -e "${BLUE}TEST 3: versionCode calculation (26.12.99 → 26120099)${NC}"
 setup_test_dir 3
-bash /Users/mark/workspace/minglit-release-versioning/scripts/bump-version.sh 26.12.99 > /dev/null 2>&1
+bash "$BUMP_SCRIPT" 26.12.99 > /dev/null 2>&1
 if grep -q "version: 26.12.99+26120099" apps/app_user/pubspec.yaml; then assert_pass "versionCode 26120099"; else assert_fail "versionCode 26120099"; fi
 echo ""
 
 echo -e "${BLUE}TEST 4: Invalid input rejection - wrong format (1.0.0)${NC}"
 setup_test_dir 4
-if bash /Users/mark/workspace/minglit-release-versioning/scripts/bump-version.sh 1.0.0 > /dev/null 2>&1; then
+if bash "$BUMP_SCRIPT" 1.0.0 > /dev/null 2>&1; then
     assert_fail "Invalid format rejected"
 else
     assert_pass "Invalid format rejected"
@@ -118,7 +124,7 @@ echo ""
 
 echo -e "${BLUE}TEST 5: Invalid input rejection - invalid month (25.13.1)${NC}"
 setup_test_dir 5
-if bash /Users/mark/workspace/minglit-release-versioning/scripts/bump-version.sh 25.13.1 > /dev/null 2>&1; then
+if bash "$BUMP_SCRIPT" 25.13.1 > /dev/null 2>&1; then
     assert_fail "Invalid month rejected"
 else
     assert_pass "Invalid month rejected"
@@ -127,7 +133,7 @@ echo ""
 
 echo -e "${BLUE}TEST 6: Empty input rejection${NC}"
 setup_test_dir 6
-if bash /Users/mark/workspace/minglit-release-versioning/scripts/bump-version.sh > /dev/null 2>&1; then
+if bash "$BUMP_SCRIPT" > /dev/null 2>&1; then
     assert_fail "Empty input rejected"
 else
     assert_pass "Empty input rejected"
@@ -136,9 +142,9 @@ echo ""
 
 echo -e "${BLUE}TEST 7: Idempotency - same version twice (25.03.1)${NC}"
 setup_test_dir 7
-bash /Users/mark/workspace/minglit-release-versioning/scripts/bump-version.sh 25.03.1 > /dev/null 2>&1
+bash "$BUMP_SCRIPT" 25.03.1 > /dev/null 2>&1
 FIRST_HASH=$(md5 -q apps/app_user/pubspec.yaml)
-bash /Users/mark/workspace/minglit-release-versioning/scripts/bump-version.sh 25.03.1 > /dev/null 2>&1
+bash "$BUMP_SCRIPT" 25.03.1 > /dev/null 2>&1
 SECOND_HASH=$(md5 -q apps/app_user/pubspec.yaml)
 if [ "$FIRST_HASH" = "$SECOND_HASH" ]; then
     assert_pass "Idempotency verified"

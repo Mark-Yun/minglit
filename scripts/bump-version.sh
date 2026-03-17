@@ -84,6 +84,22 @@ declare -a FILES=(
     "$NPM_ROOT"
 )
 
+# Preflight: validate all target files exist before mutating anything
+for file in "${FILES[@]}"; do
+    if [ ! -f "$file" ]; then
+        echo -e "${RED}✗ File not found: $file${NC}"
+        exit 1
+    fi
+done
+
+# Preflight: validate JSON files are parseable
+for file in "$NPM_LANDING_USER" "$NPM_LANDING_PARTNER" "$NPM_ROOT"; do
+    if ! python3 -c "import json; json.load(open('$file'))" 2>/dev/null; then
+        echo -e "${RED}✗ Invalid JSON: $file${NC}"
+        exit 1
+    fi
+done
+
 # Update Flutter pubspec.yaml files (with versionCode)
 echo -e "${YELLOW}Updating Flutter app pubspec.yaml files...${NC}"
 for file in "$FLUTTER_APP_USER" "$FLUTTER_APP_PARTNER"; do
