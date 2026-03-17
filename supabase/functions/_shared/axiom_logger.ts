@@ -55,9 +55,7 @@ export function log(entry: LogEntry): void {
       console.log(prefix, entry.message, entry.metadata ?? "");
   }
 
-  if (_enabled) {
-    _buffer.push(event);
-  }
+  _buffer.push(event);
 }
 
 export async function flush(): Promise<void> {
