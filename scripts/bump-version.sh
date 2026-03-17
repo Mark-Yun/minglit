@@ -123,7 +123,7 @@ try:
     with open('$file', 'r') as f:
         data = json.load(f)
     
-    data['version'] = '$BASE_VERSION'
+    data['version'] = '$VERSION_INPUT'
     
     with open('$file', 'w') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)

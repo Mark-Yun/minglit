@@ -96,7 +96,9 @@ setup_test_dir 2
 bash /Users/mark/workspace/minglit-release-versioning/scripts/bump-version.sh 25.03.1-dev > /dev/null 2>&1
 if grep -q "version: 25.03.1-dev+25030001" apps/app_user/pubspec.yaml; then assert_pass "app_user dev version"; else assert_fail "app_user dev version"; fi
 if grep -q "version: 25.03.1-dev" shared/packages/minglit_kit/pubspec.yaml; then assert_pass "minglit_kit dev version"; else assert_fail "minglit_kit dev version"; fi
-if grep -q '"version": "25.03.1"' apps/landing_user/package.json; then assert_pass "landing_user version (base only)"; else assert_fail "landing_user version (base only)"; fi
+if grep -q '"version": "25.03.1-dev"' apps/landing_user/package.json; then assert_pass "landing_user version (with -dev)"; else assert_fail "landing_user version (with -dev)"; fi
+if grep -q '"version": "25.03.1-dev"' apps/landing_partner/package.json; then assert_pass "landing_partner version (with -dev)"; else assert_fail "landing_partner version (with -dev)"; fi
+if grep -q '"version": "25.03.1-dev"' package.json; then assert_pass "root version (with -dev)"; else assert_fail "root version (with -dev)"; fi
 echo ""
 
 echo -e "${BLUE}TEST 3: versionCode calculation (26.12.99 → 26120099)${NC}"
