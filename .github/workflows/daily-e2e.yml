@@ -31,6 +31,7 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+        working-directory: tests/e2e_automation_tester
 
       - name: Run E2E CUJ Tests
         run: |
