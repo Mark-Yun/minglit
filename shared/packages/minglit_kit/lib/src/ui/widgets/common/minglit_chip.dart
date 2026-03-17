@@ -97,9 +97,20 @@ class MinglitChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Fix #136: Add vertical separator between icon and text for medium/large sizes
           if (icon != null) ...[
             Icon(icon, size: iconSize, color: textColor),
-            const SizedBox(width: MinglitSpacing.xxsmall),
+            if (size == MinglitChipSize.small)
+              const SizedBox(width: MinglitSpacing.xxsmall)
+            else ...[
+              const SizedBox(width: 4),
+              Container(
+                width: 1,
+                height: iconSize - 2,
+                color: colorScheme.outlineVariant,
+              ),
+              const SizedBox(width: 4),
+            ],
           ],
           Text(
             label,
