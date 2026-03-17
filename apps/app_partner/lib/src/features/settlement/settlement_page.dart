@@ -372,7 +372,20 @@ class _ListTabState extends ConsumerState<_ListTab> {
         ),
         const SizedBox(height: MinglitSpacing.small),
         Expanded(
-          child: listState.items.isEmpty && !listState.isLoading
+          child:
+              listState.error != null &&
+                  listState.items.isEmpty &&
+                  !listState.isLoading
+              ? SettlementEmptyState(
+                  icon: Icons.error_outline,
+                  title: '목록을 불러오지 못했습니다',
+                  subtitle: '잠시 후 다시 시도해 주세요.',
+                  actionLabel: '다시 시도',
+                  onAction: () => ref
+                      .read(settlementListControllerProvider.notifier)
+                      .refresh(),
+                )
+              : listState.items.isEmpty && !listState.isLoading
               ? SettlementEmptyState(
                   title: '정산 항목이 없습니다',
                   subtitle: listState.selectedStatus != null
