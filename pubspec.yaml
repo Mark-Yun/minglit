@@ -8,7 +8,7 @@ workspace:
   - apps/app_user
   - shared/packages/minglit_kit
   - shared/packages/minglit_lints
-  - tests/e2e_automation_tester
+  - tests/client_cuj_integration
 
 dependency_overrides:
   iamport_webview_flutter: 3.1.0

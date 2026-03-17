@@ -60,7 +60,6 @@ jobs:
             - 'shared/web/**'
           supabase:
             - 'supabase/**'
-            - 'tests/backend_integration/**'
 
   # App CI (User + Partner)
   test-flutter-apps:

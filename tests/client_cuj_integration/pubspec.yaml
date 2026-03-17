@@ -1,5 +1,5 @@
-name: e2e_automation_tester
-description: Daily CUJ E2E tests against dev Supabase
+name: client_cuj_integration
+description: Daily CUJ integration tests against dev Supabase (Repository/Provider level)
 publish_to: 'none'
 version: 0.1.0
 resolution: workspace

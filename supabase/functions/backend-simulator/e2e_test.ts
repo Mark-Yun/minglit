@@ -218,7 +218,7 @@ function createBroadMock() {
 }
 
 Deno.test({
-  name: "e2e-test-runner - blocks in production",
+  name: "backend-simulator - blocks in production",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
@@ -232,7 +232,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "e2e-test-runner - full run returns success structure",
+  name: "backend-simulator - full run returns success structure",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
@@ -270,7 +270,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "e2e-test-runner - force_fail creates failure and GitHub issue",
+  name: "backend-simulator - force_fail creates failure and GitHub issue",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
@@ -302,7 +302,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "e2e-test-runner - phase=create returns party_ids and event_ids",
+  name: "backend-simulator - phase=create returns party_ids and event_ids",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
@@ -334,7 +334,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "e2e-test-runner - phase=verify returns verification summary",
+  name: "backend-simulator - phase=verify returns verification summary",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {

@@ -1,4 +1,4 @@
-// e2e-test-runner/index.ts — Main Edge Function handler for E2E simulation
+// backend-simulator/index.ts — Main Edge Function handler for backend simulation
 
 import { createClient } from "@supabase/supabase-js";
 import {
