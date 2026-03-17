@@ -7,7 +7,8 @@ enum SettlementStatus {
   processing,
   completed,
   failed,
-  canceled
+  canceled,
+  unknown
   ;
 
   static SettlementStatus fromString(String value) {
@@ -19,7 +20,7 @@ enum SettlementStatus {
       'COMPLETED' => SettlementStatus.completed,
       'FAILED' => SettlementStatus.failed,
       'CANCELED' => SettlementStatus.canceled,
-      _ => SettlementStatus.pending,
+      _ => SettlementStatus.unknown,
     };
   }
 
@@ -31,26 +32,29 @@ enum SettlementStatus {
     SettlementStatus.completed => '지급 완료',
     SettlementStatus.failed => '지급 실패',
     SettlementStatus.canceled => '취소',
+    SettlementStatus.unknown => '알 수 없음',
   };
 
-  Color get backgroundColor => switch (this) {
-    SettlementStatus.pending => const Color(0xFFE0E0E0),
-    SettlementStatus.hold => const Color(0xFFFFF3E0),
-    SettlementStatus.ready => const Color(0xFFE3F2FD),
-    SettlementStatus.processing => const Color(0xFFE8EAF6),
-    SettlementStatus.completed => const Color(0xFFE8F5E9),
-    SettlementStatus.failed => const Color(0xFFFFEBEE),
-    SettlementStatus.canceled => const Color(0xFFF5F5F5),
+  Color backgroundColor(ColorScheme colorScheme) => switch (this) {
+    SettlementStatus.pending => colorScheme.surfaceContainerHighest,
+    SettlementStatus.hold => colorScheme.errorContainer,
+    SettlementStatus.ready => colorScheme.primaryContainer,
+    SettlementStatus.processing => colorScheme.secondaryContainer,
+    SettlementStatus.completed => colorScheme.tertiaryContainer,
+    SettlementStatus.failed => colorScheme.errorContainer,
+    SettlementStatus.canceled => colorScheme.surfaceContainerLow,
+    SettlementStatus.unknown => colorScheme.surfaceContainerHighest,
   };
 
-  Color get textColor => switch (this) {
-    SettlementStatus.pending => const Color(0xFF616161),
-    SettlementStatus.hold => const Color(0xFFE65100),
-    SettlementStatus.ready => const Color(0xFF1565C0),
-    SettlementStatus.processing => const Color(0xFF283593),
-    SettlementStatus.completed => const Color(0xFF1B5E20),
-    SettlementStatus.failed => const Color(0xFFB71C1C),
-    SettlementStatus.canceled => const Color(0xFF9E9E9E),
+  Color textColor(ColorScheme colorScheme) => switch (this) {
+    SettlementStatus.pending => colorScheme.onSurfaceVariant,
+    SettlementStatus.hold => colorScheme.error,
+    SettlementStatus.ready => colorScheme.primary,
+    SettlementStatus.processing => colorScheme.secondary,
+    SettlementStatus.completed => colorScheme.tertiary,
+    SettlementStatus.failed => colorScheme.error,
+    SettlementStatus.canceled => colorScheme.outline,
+    SettlementStatus.unknown => colorScheme.onSurfaceVariant,
   };
 }
 
@@ -66,14 +70,17 @@ class SettlementStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final isStrikethrough = status == SettlementStatus.canceled;
+    final bgColor = status.backgroundColor(colorScheme);
+    final textCol = status.textColor(colorScheme);
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: compact ? 8 : 12,
         vertical: compact ? 2 : 4,
       ),
       decoration: BoxDecoration(
-        color: status.backgroundColor,
+        color: bgColor,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
@@ -81,9 +88,9 @@ class SettlementStatusBadge extends StatelessWidget {
         style: TextStyle(
           fontSize: compact ? 11 : 13,
           fontWeight: FontWeight.w600,
-          color: status.textColor,
+          color: textCol,
           decoration: isStrikethrough ? TextDecoration.lineThrough : null,
-          decorationColor: isStrikethrough ? status.textColor : null,
+          decorationColor: isStrikethrough ? textCol : null,
         ),
       ),
     );

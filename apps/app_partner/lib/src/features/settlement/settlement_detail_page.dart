@@ -1,12 +1,12 @@
 import 'dart:async' show unawaited;
 
 import 'package:app_partner/src/features/party/party_providers.dart';
+import 'package:app_partner/src/features/settlement/settlement_coordinator.dart';
 import 'package:app_partner/src/features/settlement/widgets/download_bottom_sheet.dart';
 import 'package:app_partner/src/features/settlement/widgets/settlement_status_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SettlementDetailPage extends ConsumerStatefulWidget {
   const SettlementDetailPage({required this.itemId, super.key});
@@ -55,7 +55,37 @@ class _SettlementDetailPageState extends ConsumerState<SettlementDetailPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-          ? Center(child: Text('오류: $_error'))
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      '오류가 발생했습니다',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _error!,
+                      style: Theme.of(context).textTheme.bodySmall,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      onPressed: _loadDetail,
+                      child: const Text('다시 시도'),
+                    ),
+                  ],
+                ),
+              ),
+            )
           : _detail == null
           ? const Center(child: Text('정산 항목을 찾을 수 없습니다.'))
           : _DetailContent(detail: _detail!),
@@ -281,28 +311,15 @@ class ActionButtons extends ConsumerWidget {
 
   Future<void> _retryPayout(BuildContext context, WidgetRef ref) async {
     if (detail.payoutId == null) return;
-    try {
-      final partner = await ref.read(currentPartnerInfoProvider.future);
-      if (partner == null) return;
-      await Supabase.instance.client.rpc<void>(
-        'request_retry_payout',
-        params: {
-          'p_payout_id': detail.payoutId,
-          'p_partner_id': partner.id,
-        },
-      );
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('재지급 요청이 완료되었습니다.')),
+    final partner = await ref.read(currentPartnerInfoProvider.future);
+    if (partner == null) return;
+    await ref
+        .read(settlementCoordinatorProvider.notifier)
+        .retryPayout(
+          context,
+          payoutId: detail.payoutId!,
+          partnerId: partner.id,
         );
-      }
-    } on Exception catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $e')),
-        );
-      }
-    }
   }
 
   void _downloadCsv(BuildContext context) {
