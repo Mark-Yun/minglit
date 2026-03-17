@@ -10,6 +10,7 @@ workspace:
   - shared/packages/minglit_lints
   - tests/test_data_seeder
   - tests/backend_integration
+  - tests/e2e_automation_tester
 
 dependency_overrides:
   iamport_webview_flutter: 3.1.0
