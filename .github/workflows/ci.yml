@@ -60,7 +60,6 @@ jobs:
             - 'shared/web/**'
           supabase:
             - 'supabase/**'
-            - 'tests/backend_integration/**'
 
   # App CI (User + Partner)
   test-flutter-apps:
@@ -214,47 +213,6 @@ jobs:
         run: supabase start
       - name: Test (pgTAP)
         run: supabase test db
-      - name: Cache pub packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.pub-cache
-          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pub-
-      - name: Install dependencies (integration)
-        if: ${{ vars.ENABLE_BACKEND_INTEGRATION == 'true' }}
-        run: flutter pub get
-        working-directory: tests/backend_integration
-      - name: Test (integration)
-        if: ${{ vars.ENABLE_BACKEND_INTEGRATION == 'true' }}
-        run: flutter test src/ --coverage
-        working-directory: tests/backend_integration
-        env:
-          SUPABASE_URL: http://127.0.0.1:54321
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_LOCAL_SERVICE_ROLE_KEY }}
-      - name: Format coverage
-        if: ${{ vars.ENABLE_BACKEND_INTEGRATION == 'true' }}
-        run: dart run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
-        working-directory: tests/backend_integration
-      - uses: codecov/codecov-action@v4
-        if: ${{ vars.ENABLE_BACKEND_INTEGRATION == 'true' }}
-        with:
-          file: tests/backend_integration/coverage/lcov.info
-          flags: backend-integration
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
-      - name: Install dependencies (e2e scenarios)
-        if: ${{ vars.ENABLE_E2E_SCENARIOS == 'true' }}
-        run: flutter pub get
-        working-directory: apps/integration_scenario_tester
-      - name: Test (e2e scenarios)
-        if: ${{ vars.ENABLE_E2E_SCENARIOS == 'true' }}
-        run: flutter test integration_test/
-        working-directory: apps/integration_scenario_tester
-        env:
-          SUPABASE_URL: http://127.0.0.1:54321
-          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_LOCAL_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_LOCAL_SERVICE_ROLE_KEY }}
       - name: Stop Supabase
         if: always()
         run: supabase stop

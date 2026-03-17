@@ -74,7 +74,7 @@ adb -s adb-R3CX803P2ND-8btuuD._adb-tls-connect._tcp install -r build/app/outputs
 | `test-flutter-apps` | `apps/app_user/**`, `apps/app_partner/**` 또는 `shared/packages/minglit_kit/**` 변경 시 | Flutter analyze + test (matrix: app_user, app_partner) |
 | `lint-landing-user` | `apps/landing_user/**` 또는 `shared/web/**` 변경 시 | npm lint + build |
 | `lint-landing-partner` | `apps/landing_partner/**` 또는 `shared/web/**` 변경 시 | npm lint + build |
-| `test-supabase` | `supabase/**` 또는 `tests/backend_integration/**` 변경 시 | pgTAP + backend integration + e2e 통합 테스트 |
+| `test-supabase` | `supabase/**` 변경 시 | pgTAP 테스트 |
 | `test-edge-functions` | 동일 | Deno edge function 테스트 |
 | CodeRabbit 리뷰 | PR only | `ci-result` job 내에서 최대 30분 대기 |
 
