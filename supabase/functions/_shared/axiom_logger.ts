@@ -29,6 +29,7 @@ const _environment = Deno.env.get("ENVIRONMENT") ?? "local";
 const _enabled = _token.length > 0 && _environment !== "local";
 
 const _buffer: AxiomEvent[] = [];
+const MAX_BUFFER_SIZE = 1000;
 
 export function log(entry: LogEntry): void {
   const event: AxiomEvent = {
@@ -57,6 +58,9 @@ export function log(entry: LogEntry): void {
 
   if (_enabled) {
     _buffer.push(event);
+    if (_buffer.length > MAX_BUFFER_SIZE) {
+      _buffer.shift();
+    }
   }
 }
 
@@ -77,9 +81,17 @@ export async function flush(): Promise<void> {
       },
     );
     if (!res.ok) {
+      _buffer.unshift(...events);
+      if (_buffer.length > MAX_BUFFER_SIZE) {
+        _buffer.splice(MAX_BUFFER_SIZE);
+      }
       console.warn(`[axiom_logger] Ingest failed: ${res.status} ${res.statusText}`);
     }
   } catch (e) {
+    _buffer.unshift(...events);
+    if (_buffer.length > MAX_BUFFER_SIZE) {
+      _buffer.splice(MAX_BUFFER_SIZE);
+    }
     console.warn("[axiom_logger] Ingest error:", e);
   }
 }
