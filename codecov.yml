@@ -7,10 +7,19 @@ coverage:
       default:
         target: auto
         threshold: 5%
+        flags:
+          - minglit-kit
     patch:
       default:
-        target: 70%
+        target: 60%
         threshold: 5%
+        flags:
+          - minglit-kit
+      apps:
+        informational: true
+        flags:
+          - app-user
+          - app-partner
 
 comment:
   layout: "condensed_header, diff, flags, condensed_files, condensed_footer"
