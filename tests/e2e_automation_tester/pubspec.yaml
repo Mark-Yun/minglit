@@ -19,5 +19,3 @@ dev_dependencies:
     sdk: flutter
   integration_test:
     sdk: flutter
-  test_data_seeder:
-    path: ../test_data_seeder

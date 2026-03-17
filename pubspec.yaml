@@ -8,8 +8,6 @@ workspace:
   - apps/app_user
   - shared/packages/minglit_kit
   - shared/packages/minglit_lints
-  - tests/test_data_seeder
-  - tests/backend_integration
   - tests/e2e_automation_tester
 
 dependency_overrides:
