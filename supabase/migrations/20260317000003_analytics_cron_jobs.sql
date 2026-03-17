@@ -151,8 +151,8 @@ BEGIN
 
   SELECT COUNT(*)      INTO v_paid
   FROM public.event_applications
-  WHERE updated_at >= p_date
-    AND updated_at < p_date + INTERVAL '1 day'
+  WHERE created_at >= p_date
+    AND created_at < p_date + INTERVAL '1 day'
     AND status IN ('approved', 'paid');
 
   -- Step 1: event_applied (base)

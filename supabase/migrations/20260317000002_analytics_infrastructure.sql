@@ -5,15 +5,16 @@
 -- 1. Create analytics schema
 CREATE SCHEMA IF NOT EXISTS analytics;
 
--- 2. Create analytics_reader role (LOGIN role for Metabase)
+-- 2. Create analytics_reader role (NOLOGIN — login credentials provisioned per-environment)
 DO $$ BEGIN
   IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'analytics_reader') THEN
-    CREATE ROLE analytics_reader WITH LOGIN PASSWORD 'CHANGE_ME_IN_PRODUCTION';
+    CREATE ROLE analytics_reader WITH NOLOGIN;
   END IF;
 END $$;
 
--- 3. Grant USAGE on analytics schema to analytics_reader
+-- 3. Grant USAGE on analytics schema
 GRANT USAGE ON SCHEMA analytics TO analytics_reader;
+GRANT USAGE ON SCHEMA analytics TO postgres, anon, authenticated, service_role;
 
 -- 4. Explicitly revoke all on public schema from analytics_reader
 REVOKE ALL ON SCHEMA public FROM analytics_reader;
@@ -58,8 +59,21 @@ CREATE TABLE IF NOT EXISTS analytics.funnel_daily (
   PRIMARY KEY (date, step)
 );
 
--- 6. Grant SELECT on all tables in analytics schema to analytics_reader
-GRANT SELECT ON ALL TABLES IN SCHEMA analytics TO analytics_reader;
+-- 6. Enable RLS on all analytics tables
+ALTER TABLE analytics.daily_active_users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE analytics.daily_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE analytics.daily_revenue ENABLE ROW LEVEL SECURITY;
+ALTER TABLE analytics.funnel_daily ENABLE ROW LEVEL SECURITY;
 
--- 7. Set default privileges for future tables
+CREATE POLICY service_role_select_dau ON analytics.daily_active_users FOR SELECT TO service_role USING (true);
+CREATE POLICY service_role_select_events ON analytics.daily_events FOR SELECT TO service_role USING (true);
+CREATE POLICY service_role_select_revenue ON analytics.daily_revenue FOR SELECT TO service_role USING (true);
+CREATE POLICY service_role_select_funnel ON analytics.funnel_daily FOR SELECT TO service_role USING (true);
+
+-- 7. Grant SELECT on all tables in analytics schema
+GRANT SELECT ON ALL TABLES IN SCHEMA analytics TO analytics_reader;
+GRANT SELECT ON ALL TABLES IN SCHEMA analytics TO service_role;
+
+-- 8. Set default privileges for future tables
 ALTER DEFAULT PRIVILEGES IN SCHEMA analytics GRANT SELECT ON TABLES TO analytics_reader;
+ALTER DEFAULT PRIVILEGES IN SCHEMA analytics GRANT SELECT ON TABLES TO service_role;

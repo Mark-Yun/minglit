@@ -4,7 +4,7 @@ import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
 const GITHUB_TOKEN = Deno.env.get("GITHUB_ACCESS_TOKEN");
 const GITHUB_REPO = "Mark-Yun/minglit";
 
-const ALERT_LABELS: Record<string, string[]> = {
+export const ALERT_LABELS: Record<string, string[]> = {
   performance: ["metrics-alert", "auto-generated", "performance"],
   business: ["metrics-alert", "auto-generated", "business-metrics"],
   infra: ["metrics-alert", "auto-generated", "infrastructure"],
@@ -16,9 +16,12 @@ initSentry();
 Deno.serve(withSentry(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
 
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!serviceRoleKey) {
+    return errorResponse("SUPABASE_SERVICE_ROLE_KEY not configured", 500);
+  }
   const authHeader = req.headers.get("Authorization") ?? "";
-  if (serviceRoleKey && !authHeader.includes(serviceRoleKey)) {
+  if (authHeader !== `Bearer ${serviceRoleKey}`) {
     return errorResponse("Unauthorized", 401);
   }
 
@@ -79,6 +82,10 @@ Deno.serve(withSentry(async (req) => {
         body: JSON.stringify({ body: alertBody }),
       },
     );
+    if (!commentRes.ok) {
+      const errorText = await commentRes.text();
+      return errorResponse(`GitHub API comment failed: ${errorText}`, 502);
+    }
     await commentRes.body?.cancel();
     return successResponse({ action: "commented", issue_number: existingIssue.number });
   }

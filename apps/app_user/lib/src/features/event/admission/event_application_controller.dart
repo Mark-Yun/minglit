@@ -195,11 +195,18 @@ class EventApplicationController extends _$EventApplicationController {
   }
 
   void _handlePaymentFailure(Object error, StackTrace st) {
-    StatsigAnalytics.logEvent(
-      MingLitEvent.paymentFailed,
-      metadata: {'event_id': _event.id},
-    );
     final exception = MinglitException.from(error, st);
+    if (exception is MinglitSystemException) {
+      StatsigAnalytics.logEvent(
+        MingLitEvent.errorOccurred,
+        metadata: {'context': 'payment', 'event_id': _event.id},
+      );
+    } else {
+      StatsigAnalytics.logEvent(
+        MingLitEvent.paymentFailed,
+        metadata: {'event_id': _event.id},
+      );
+    }
     final message = exception is MinglitSystemException
         ? exception.userMessage
         : exception.message;

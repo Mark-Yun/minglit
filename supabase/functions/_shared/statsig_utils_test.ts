@@ -8,13 +8,11 @@ import {
 
 Deno.test("initStatsig: no-ops when no key provided", () => {
   _resetStatsigForTesting();
-  // Should not throw
   initStatsig("");
 });
 
 Deno.test("logStatsigEvent: no-ops when not initialized", async () => {
   _resetStatsigForTesting();
-  // Should complete without error
   await logStatsigEvent("user-123", "test_event");
 });
 
@@ -25,15 +23,51 @@ Deno.test("checkStatsigGate: returns false when not initialized", async () => {
 });
 
 Deno.test("logStatsigEvent: handles API failure gracefully", async () => {
-  _resetStatsigForTesting();
-  initStatsig("test-invalid-key-for-testing");
-  // With an invalid key, API will return error — should not throw
-  await logStatsigEvent("user-123", "test_event", 1.0, { source: "test" });
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () => Promise.resolve(new Response('{"error":"unauthorized"}', { status: 401 }));
+  try {
+    _resetStatsigForTesting();
+    initStatsig("test-invalid-key");
+    await logStatsigEvent("user-123", "test_event", 1.0, { source: "test" });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 Deno.test("checkStatsigGate: returns false on API failure", async () => {
-  _resetStatsigForTesting();
-  initStatsig("test-invalid-key-for-testing");
-  const result = await checkStatsigGate("user-123", "nonexistent_gate");
-  assertEquals(result, false);
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () => Promise.resolve(new Response('{"error":"unauthorized"}', { status: 401 }));
+  try {
+    _resetStatsigForTesting();
+    initStatsig("test-invalid-key");
+    const result = await checkStatsigGate("user-123", "nonexistent_gate");
+    assertEquals(result, false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+Deno.test("logStatsigEvent: handles network error gracefully", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () => Promise.reject(new Error("Network error"));
+  try {
+    _resetStatsigForTesting();
+    initStatsig("test-key");
+    await logStatsigEvent("user-123", "test_event");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+Deno.test("checkStatsigGate: returns false on network error", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () => Promise.reject(new Error("Network error"));
+  try {
+    _resetStatsigForTesting();
+    initStatsig("test-key");
+    const result = await checkStatsigGate("user-123", "test_gate");
+    assertEquals(result, false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });

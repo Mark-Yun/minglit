@@ -44,7 +44,11 @@ jobs:
           supabase secrets set OPENAI_API_KEY=$OPENAI_API_KEY
           supabase secrets set GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN
           supabase secrets set SENTRY_DSN=$SENTRY_DSN
-          supabase secrets set STATSIG_SERVER_KEY=$STATSIG_SERVER_KEY
+          if [ -z "$STATSIG_SERVER_KEY" ]; then
+            echo "⚠️ STATSIG_SERVER_KEY is not set. Skipping."
+          else
+            supabase secrets set STATSIG_SERVER_KEY=$STATSIG_SERVER_KEY
+          fi
           supabase secrets set ENVIRONMENT=development
 
           supabase db push --password $SUPABASE_DB_PASSWORD --include-all
@@ -79,7 +83,11 @@ jobs:
           supabase secrets set OPENAI_API_KEY=$OPENAI_API_KEY
           supabase secrets set GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN
           supabase secrets set SENTRY_DSN=$SENTRY_DSN
-          supabase secrets set STATSIG_SERVER_KEY=$STATSIG_SERVER_KEY
+          if [ -z "$STATSIG_SERVER_KEY" ]; then
+            echo "⚠️ STATSIG_SERVER_KEY is not set. Skipping."
+          else
+            supabase secrets set STATSIG_SERVER_KEY=$STATSIG_SERVER_KEY
+          fi
           supabase secrets set ENVIRONMENT=production
 
           supabase db push --password $SUPABASE_DB_PASSWORD --include-all

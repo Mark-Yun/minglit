@@ -81,9 +81,10 @@ Deno.serve(withSentry(async (req) => {
       });
     }
 
+    // Fix #133: paid_at 없을 때 now 폴백하면 재시도마다 값이 밀려 멱등성 깨짐 — payment-webhook과 동일하게 null 처리
     const paidAtIso = payment.paid_at && payment.paid_at > 0
       ? new Date(payment.paid_at * 1000).toISOString()
-      : new Date().toISOString();
+      : null;
 
     const { error: updateError } = await withSpan(
       'db.update.event_applications',
@@ -93,7 +94,7 @@ Deno.serve(withSentry(async (req) => {
         .update({
           status: "approved",
           payment_id: imp_uid,
-          paid_at: paidAtIso,
+          ...(paidAtIso ? { paid_at: paidAtIso } : {}),
           updated_at: new Date().toISOString(),
         })
         .eq("id", merchant_uid)

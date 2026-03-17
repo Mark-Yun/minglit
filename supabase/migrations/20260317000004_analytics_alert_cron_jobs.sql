@@ -15,6 +15,7 @@ CREATE OR REPLACE FUNCTION analytics.call_metrics_alert(
 ) RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = pg_catalog
 AS $$
 DECLARE
   v_service_role_key TEXT;
@@ -40,9 +41,12 @@ BEGIN
     )
   );
 EXCEPTION WHEN OTHERS THEN
-  NULL;
+  RAISE WARNING 'analytics.call_metrics_alert failed: [%] %', SQLSTATE, SQLERRM;
 END;
 $$;
+
+REVOKE EXECUTE ON FUNCTION analytics.call_metrics_alert(TEXT, TEXT, TEXT) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION analytics.call_metrics_alert(TEXT, TEXT, TEXT) TO service_role;
 
 -- ============================================================
 -- 2. Performance alert: check error rate
@@ -51,6 +55,7 @@ CREATE OR REPLACE FUNCTION analytics.check_performance_alert()
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = pg_catalog
 AS $$
 DECLARE
   v_error_count BIGINT;
@@ -82,6 +87,9 @@ BEGIN
 END;
 $$;
 
+REVOKE EXECUTE ON FUNCTION analytics.check_performance_alert() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION analytics.check_performance_alert() TO service_role;
+
 -- ============================================================
 -- 3. Business alert: check revenue drop
 -- ============================================================
@@ -89,6 +97,7 @@ CREATE OR REPLACE FUNCTION analytics.check_business_alert()
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = pg_catalog
 AS $$
 DECLARE
   v_today_revenue BIGINT;
@@ -120,6 +129,9 @@ BEGIN
 END;
 $$;
 
+REVOKE EXECUTE ON FUNCTION analytics.check_business_alert() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION analytics.check_business_alert() TO service_role;
+
 -- ============================================================
 -- 4. Daily report: send summary at 9 AM KST (0:00 UTC)
 -- ============================================================
@@ -127,6 +139,7 @@ CREATE OR REPLACE FUNCTION analytics.send_daily_report()
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = pg_catalog
 AS $$
 DECLARE
   v_dau_user BIGINT;
@@ -163,6 +176,9 @@ BEGIN
   );
 END;
 $$;
+
+REVOKE EXECUTE ON FUNCTION analytics.send_daily_report() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION analytics.send_daily_report() TO service_role;
 
 -- ============================================================
 -- 5. Register pg_cron jobs
