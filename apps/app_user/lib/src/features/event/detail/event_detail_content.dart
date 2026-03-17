@@ -157,10 +157,11 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                 expandedHeight: expandedHeight,
                 pinned: true,
                 title: _showTitle
+                    // Fix #140: onPrimary resolves to black in dark mode — use onSurface to match icon color
                     ? Text(
                         eventTitle,
                         style: theme.textTheme.titleMedium?.copyWith(
-                          color: theme.colorScheme.onPrimary,
+                          color: theme.colorScheme.onSurface,
                           fontWeight: FontWeight.w600,
                         ),
                       )
