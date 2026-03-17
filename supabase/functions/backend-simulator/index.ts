@@ -87,6 +87,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const runId = crypto.randomUUID();
   log({ function: FN, level: "info", message: "invoked", metadata: { runId, phase: body.phase ?? "full", forceFail } });
 
+  try {
+
   const collector = new SimLogCollector();
 
   // Log adapter: sim modules expect (entry: Omit<SimLogEntry, "timestamp">) => void
@@ -397,7 +399,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
     message: "completed",
     metadata: { runId, passed: summary.passed, failed: summary.failed, total: summary.total_checks, logUrl, githubIssueUrl },
   });
-  await flush();
 
   return successResponse({
     success: summary.failed === 0,
@@ -406,4 +407,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     log_url: logUrl,
     github_issue_url: githubIssueUrl,
   });
+
+  } finally {
+    await flush();
+  }
 });
