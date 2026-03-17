@@ -44,14 +44,25 @@ PR_AND_SUFFIX=$(echo "$VERSION_INPUT" | cut -d. -f3)
 # Extract PR# (remove -dev suffix if present)
 PR=$(echo "$PR_AND_SUFFIX" | sed 's/-dev$//')
 
+# Validate PR# (must be >= 1)
+if [ "$((10#$PR))" -lt 1 ]; then
+    echo -e "${RED}Error: Invalid PR#: $PR (must be >= 1)${NC}"
+    exit 1
+fi
+
+# Convert to decimal to avoid octal interpretation (08, 09 would fail)
+YY_DEC=$((10#$YY))
+MM_DEC=$((10#$MM))
+PR_DEC=$((10#$PR))
+
 # Validate month (01-12)
-if [ "$MM" -lt 1 ] || [ "$MM" -gt 12 ]; then
+if [ "$MM_DEC" -lt 1 ] || [ "$MM_DEC" -gt 12 ]; then
     echo -e "${RED}Error: Invalid month: $MM (must be 01-12)${NC}"
     exit 1
 fi
 
 # Calculate versionCode: YYMM * 10000 + PR#
-VERSION_CODE=$((YY * 100 * 10000 + MM * 10000 + PR))
+VERSION_CODE=$(( (YY_DEC * 100 + MM_DEC) * 10000 + PR_DEC ))
 
 # Extract base version (without -dev)
 BASE_VERSION=$(echo "$VERSION_INPUT" | sed 's/-dev$//')

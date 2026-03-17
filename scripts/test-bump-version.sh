@@ -12,6 +12,17 @@ BUMP_SCRIPT="$SCRIPT_DIR/bump-version.sh"
 TESTS_PASSED=0
 TESTS_FAILED=0
 
+hash_file() {
+    local f="$1"
+    if command -v md5sum >/dev/null 2>&1; then
+        md5sum "$f" | awk '{print $1}'
+    elif command -v md5 >/dev/null 2>&1; then
+        md5 -q "$f"
+    else
+        shasum -a 256 "$f" | awk '{print $1}'
+    fi
+}
+
 assert_pass() {
     echo -e "${GREEN}✓ PASS: $1${NC}"
     ((TESTS_PASSED++))
@@ -113,6 +124,12 @@ bash "$BUMP_SCRIPT" 26.12.99 > /dev/null 2>&1
 if grep -q "version: 26.12.99+26120099" apps/app_user/pubspec.yaml; then assert_pass "versionCode 26120099"; else assert_fail "versionCode 26120099"; fi
 echo ""
 
+echo -e "${BLUE}TEST 3b: Octal-safe month (26.08.1)${NC}"
+setup_test_dir 3b
+bash "$BUMP_SCRIPT" 26.08.1 > /dev/null 2>&1
+if grep -q "version: 26.08.1+26080001" apps/app_user/pubspec.yaml; then assert_pass "versionCode 26080001 (month 08)"; else assert_fail "versionCode 26080001 (month 08)"; fi
+echo ""
+
 echo -e "${BLUE}TEST 4: Invalid input rejection - wrong format (1.0.0)${NC}"
 setup_test_dir 4
 if bash "$BUMP_SCRIPT" 1.0.0 > /dev/null 2>&1; then
@@ -143,9 +160,9 @@ echo ""
 echo -e "${BLUE}TEST 7: Idempotency - same version twice (25.03.1)${NC}"
 setup_test_dir 7
 bash "$BUMP_SCRIPT" 25.03.1 > /dev/null 2>&1
-FIRST_HASH=$(md5 -q apps/app_user/pubspec.yaml)
+FIRST_HASH=$(hash_file apps/app_user/pubspec.yaml)
 bash "$BUMP_SCRIPT" 25.03.1 > /dev/null 2>&1
-SECOND_HASH=$(md5 -q apps/app_user/pubspec.yaml)
+SECOND_HASH=$(hash_file apps/app_user/pubspec.yaml)
 if [ "$FIRST_HASH" = "$SECOND_HASH" ]; then
     assert_pass "Idempotency verified"
 else

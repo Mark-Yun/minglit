@@ -59,9 +59,9 @@ bash scripts/bump-version.sh 26.03.1-dev    # dev 버전 세팅
 bash scripts/bump-version.sh 26.03.1        # release 버전 세팅
 ```
 
-### CI 자동화
+### CI 자동화 (예정 — 후속 PR에서 구현)
 
-- PR merge to `main` 시 자동 bump + git tag (`v26.03.1` 형식)
+- PR merge to `main` 시 자동 bump + git tag (`v26.03.1` 형식) — *미구현, 후속 PR 예정*
 - 동일 월이면 PR# + 1, 새 월이면 .1 시작
 
 ### 버전 관리 제외 대상
