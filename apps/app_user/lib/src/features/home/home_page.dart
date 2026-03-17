@@ -97,27 +97,24 @@ class _HomePageState extends ConsumerState<HomePage> {
                   icon: const Icon(Icons.notifications_outlined),
                   onPressed: homeCoordinator.pushNotificationCenter,
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: MinglitSpacing.small,
-                  ),
-                  child: GestureDetector(
-                    onTap: () => const MyPageRoute().push<void>(context),
-                    child: CircleAvatar(
-                      radius: 14,
-                      backgroundImage: user.userMetadata?['avatar_url'] != null
-                          ? NetworkImage(
-                              user.userMetadata!['avatar_url'] as String,
-                            )
-                          : null,
-                      onBackgroundImageError:
-                          user.userMetadata?['avatar_url'] != null
-                          ? (_, _) {}
-                          : null,
-                      child: user.userMetadata?['avatar_url'] == null
-                          ? const Icon(Icons.person, size: 14)
-                          : null,
-                    ),
+                // Fix #141: Use IconButton for consistent touch target (48x48)
+                // and ripple effect with other app bar actions
+                IconButton(
+                  onPressed: () => const MyPageRoute().push<void>(context),
+                  icon: CircleAvatar(
+                    radius: 14,
+                    backgroundImage: user.userMetadata?['avatar_url'] != null
+                        ? NetworkImage(
+                            user.userMetadata!['avatar_url'] as String,
+                          )
+                        : null,
+                    onBackgroundImageError:
+                        user.userMetadata?['avatar_url'] != null
+                        ? (_, _) {}
+                        : null,
+                    child: user.userMetadata?['avatar_url'] == null
+                        ? const Icon(Icons.person, size: 14)
+                        : null,
                   ),
                 ),
               ] else
