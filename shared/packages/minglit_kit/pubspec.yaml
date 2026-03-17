@@ -44,7 +44,6 @@ dependencies:
   # Other dependencies
   riverpod: ^3.0.3
   riverpod_annotation: ^3.0.3
-  shake: ^3.0.0
   shared_preferences: ^2.5.4
   shimmer: ^3.0.0
   sign_in_with_apple: ^7.0.1

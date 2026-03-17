@@ -106,17 +106,16 @@ class MorePage extends ConsumerWidget {
           const Divider(),
 
           // ── 섹션 1: 관리 ──
+          // Fix #144: trailing chevron icons removed for cleaner settings UI
           ListTile(
             leading: const Icon(Icons.verified_user_outlined),
             title: const Text('인증 심사 관리'),
-            trailing: const Icon(Icons.chevron_right),
             onTap: () =>
                 ref.read(moreCoordinatorProvider).pushVerificationManage(),
           ),
           ListTile(
             leading: const Icon(Icons.people_outline),
             title: const Text('멤버 관리'),
-            trailing: const Icon(Icons.chevron_right),
             onTap: () {
               final partner = partnerAsync.value;
               if (partner == null) {
@@ -132,7 +131,6 @@ class MorePage extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.notifications_outlined),
             title: const Text('알림 설정'),
-            trailing: const Icon(Icons.chevron_right),
             onTap: () =>
                 ref.read(moreCoordinatorProvider).pushNotificationSettings(),
           ),
@@ -143,13 +141,11 @@ class MorePage extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.person_outline),
             title: const Text('계정 관리'),
-            trailing: const Icon(Icons.chevron_right),
             onTap: () => context.showMinglitInfo('준비 중입니다'),
           ),
           ListTile(
             leading: const Icon(Icons.store_outlined),
             title: const Text('파트너 프로필'),
-            trailing: const Icon(Icons.chevron_right),
             onTap: () => context.showMinglitInfo('준비 중입니다'),
           ),
           const Divider(),
@@ -158,7 +154,6 @@ class MorePage extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.privacy_tip_outlined),
             title: const Text('개인정보처리방침'),
-            trailing: const Icon(Icons.chevron_right),
             onTap: () {
               final url = ref.read(minglitUrlConfigProvider).privacyUrl;
               unawaited(launchUrl(Uri.parse(url)));
@@ -167,7 +162,6 @@ class MorePage extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.description_outlined),
             title: const Text('이용약관'),
-            trailing: const Icon(Icons.chevron_right),
             onTap: () {
               final url = ref.read(minglitUrlConfigProvider).termsUrl;
               unawaited(launchUrl(Uri.parse(url)));
