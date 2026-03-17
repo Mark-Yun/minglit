@@ -28,7 +28,6 @@ class ThemeSettingsTile extends ConsumerWidget {
             ? '라이트 모드'
             : '시스템 설정',
       ),
-      trailing: const Icon(Icons.chevron_right),
       onTap: () {
         unawaited(_showThemePicker(context, ref, currentMode));
       },

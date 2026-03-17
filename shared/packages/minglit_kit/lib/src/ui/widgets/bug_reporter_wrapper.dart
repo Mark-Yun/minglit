@@ -13,10 +13,9 @@ import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 import 'package:minglit_kit/src/utils/environment_info.dart';
 import 'package:minglit_kit/src/utils/layout_dump.dart';
 import 'package:minglit_kit/src/utils/log.dart';
-import 'package:shake/shake.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Wraps [child] with bug reporting UI and shake detection.
+/// Wraps [child] with bug reporting UI.
 class BugReporterWrapper extends StatefulWidget {
   /// Creates a bug reporter wrapper.
   const BugReporterWrapper({
@@ -43,54 +42,13 @@ class BugReporterWrapper extends StatefulWidget {
   State<BugReporterWrapper> createState() => _BugReporterWrapperState();
 }
 
-class _BugReporterWrapperState extends State<BugReporterWrapper>
-    with WidgetsBindingObserver {
-  ShakeDetector? _detector;
+class _BugReporterWrapperState extends State<BugReporterWrapper> {
   bool _isReportOpen = false;
+  bool _isCapturing = false;
   final GlobalKey _boundaryKey = GlobalKey();
   String? _screenshotUrl;
   Map<String, dynamic>? _environmentInfo;
   String? _layoutDumpUrl;
-  DateTime? _lastShakeTime;
-  static const _shakeCooldown = Duration(seconds: 5);
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    if (widget.enabled &&
-        !kIsWeb &&
-        (defaultTargetPlatform == TargetPlatform.iOS ||
-            defaultTargetPlatform == TargetPlatform.android)) {
-      _detector = ShakeDetector.autoStart(
-        onPhoneShake: (event) {
-          unawaited(_onShakeDetected());
-        },
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _detector?.stopListening();
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (!widget.enabled) return;
-    switch (state) {
-      case AppLifecycleState.paused:
-      case AppLifecycleState.inactive:
-      case AppLifecycleState.hidden:
-      case AppLifecycleState.detached:
-        // Fix #51: pause shake detection when app is not in foreground
-        _detector?.stopListening();
-      case AppLifecycleState.resumed:
-        _detector?.startListening();
-    }
-  }
 
   /// Returns a [BuildContext] that has a [Navigator] ancestor.
   ///
@@ -127,24 +85,16 @@ class _BugReporterWrapperState extends State<BugReporterWrapper>
     }
   }
 
-  /// Called when shake is detected. Applies cooldown before showing dialog.
-  Future<void> _onShakeDetected() async {
-    // Fix #51: cooldown prevents rapid shake from triggering multiple dialogs
-    if (_lastShakeTime != null &&
-        DateTime.now().difference(_lastShakeTime!) < _shakeCooldown) {
-      return;
-    }
-    _lastShakeTime = DateTime.now();
-    await _showReportDialog();
-  }
-
   Future<void> _showReportDialog() async {
     if (!mounted) return;
     // Fix #51: return early if dialog is already open — do not dismiss+reopen
-    if (_isReportOpen) return;
+    if (_isReportOpen || _isCapturing) return;
     // Capture context BEFORE async gap
     final ctx = _dialogContext;
     if (ctx == null) return;
+
+    // Fix #147: show progress on FAB while capturing screenshot/env info
+    setState(() => _isCapturing = true);
 
     // Capture screenshot AND environment info in parallel BEFORE opening sheet
     final results = await Future.wait([
@@ -152,7 +102,13 @@ class _BugReporterWrapperState extends State<BugReporterWrapper>
       collectEnvironmentInfo(),
       captureLayoutDump(),
     ]);
-    if (!mounted || !ctx.mounted) return;
+
+    if (!mounted) {
+      _isCapturing = false;
+      return;
+    }
+    setState(() => _isCapturing = false);
+    if (!ctx.mounted) return;
 
     final screenshotUrl = results[0] as String?;
     final environment = results[1] as Map<String, dynamic>?;
@@ -384,11 +340,18 @@ class _BugReporterWrapperState extends State<BugReporterWrapper>
             bottom: 16,
             child: Material(
               type: MaterialType.transparency,
+              // Fix #147: show progress indicator while capturing bug report data
               child: FloatingActionButton(
                 mini: true,
-                onPressed: _showReportDialog,
+                onPressed: _isCapturing ? null : _showReportDialog,
                 backgroundColor: MinglitColors.error,
-                child: const Icon(Icons.bug_report),
+                child: _isCapturing
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: MinglitCircularProgressIndicator(),
+                      )
+                    : const Icon(Icons.bug_report),
               ),
             ),
           ),
