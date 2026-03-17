@@ -45,7 +45,6 @@ class SettlementListController extends _$SettlementListController {
         partnerId: partner.id,
         status: state.selectedStatus,
         offset: state.items.length,
-        limit: _pageSize,
       );
       // Race condition guard: discard stale responses
       if (generation != _currentGeneration) return;
