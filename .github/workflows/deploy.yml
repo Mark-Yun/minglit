@@ -44,6 +44,7 @@ jobs:
           SUPABASE_MAIN_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
           GOOGLE_MAIN_ID: ${{ secrets.GOOGLE_MAIN_WEB_CLIENT_ID }}
           SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
+          STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
 
   deploy-landing_user:
     runs-on: ubuntu-latest
@@ -98,6 +99,7 @@ jobs:
           SUPABASE_MAIN_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
           GOOGLE_MAIN_ID: ${{ secrets.GOOGLE_MAIN_WEB_CLIENT_ID }}
           SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
+          STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
 
   notify-failure:
     needs: [deploy-app_user, deploy-landing_user, deploy-landing_partner, deploy-app_partner]

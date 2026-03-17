@@ -13,6 +13,7 @@ let _Sentry: {
   init: (options: Record<string, unknown>) => void;
   captureException: (error: unknown) => void;
   flush: (timeout: number) => Promise<boolean>;
+  startSpan: (options: { name: string; op: string }, fn: () => Promise<unknown>) => Promise<unknown>;
 } | null = null;
 
 /**
@@ -95,6 +96,33 @@ export function withSentryHandler(
       throw error;
     }
   };
+}
+
+/**
+ * Wrap an async operation in a Sentry performance span.
+ * No-ops if Sentry is not initialized.
+ *
+ * Usage:
+ * ```ts
+ * const result = await withSpan(
+ *   'db.query.users',
+ *   'db.query',
+ *   () => supabase.from('users').select('*')
+ * );
+ * ```
+ */
+export async function withSpan<T>(
+  name: string,
+  operation: string,
+  fn: () => Promise<T>,
+): Promise<T> {
+  if (!_enabled || !_Sentry) return fn();
+
+  try {
+    return await _Sentry.startSpan({ name, op: operation }, fn) as T;
+  } catch (error) {
+    throw error;
+  }
 }
 
 /** Reset internal state. For testing only. */

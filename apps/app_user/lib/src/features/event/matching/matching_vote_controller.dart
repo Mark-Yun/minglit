@@ -23,6 +23,10 @@ class MatchingVoteController extends _$MatchingVoteController {
       // and refresh matches to see if a match occurred instantly
       ref.invalidate(myMatchesProvider(eventId));
 
+      StatsigAnalytics.logEvent(
+        MingLitEvent.matchingResult,
+        metadata: {'event_id': eventId},
+      );
       state = const AsyncData(null);
     } on Object catch (e, st) {
       state = AsyncError(e, st);

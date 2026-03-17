@@ -27,7 +27,6 @@ jobs:
         with:
           version: latest
 
-      # Dev 환경 배포
       - name: Deploy to Dev Supabase
         if: github.ref == 'refs/heads/dev'
         env:
@@ -38,22 +37,24 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_ACCESS_TOKEN: ${{ secrets.GH_PAT_FOR_BUG_REPORT }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN_EDGE_FUNCTIONS }}
+          STATSIG_SERVER_KEY: ${{ secrets.STATSIG_SERVER_KEY }}
         run: |
           supabase link --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD
           
-          # Set Secrets
           supabase secrets set OPENAI_API_KEY=$OPENAI_API_KEY
           supabase secrets set GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN
           supabase secrets set SENTRY_DSN=$SENTRY_DSN
+          if [ -z "$STATSIG_SERVER_KEY" ]; then
+            echo "⚠️ STATSIG_SERVER_KEY is not set. Skipping."
+          else
+            supabase secrets set STATSIG_SERVER_KEY=$STATSIG_SERVER_KEY
+          fi
           supabase secrets set ENVIRONMENT=development
 
-          # Dev 환경: 새 마이그레이션 적용 (--include-all: feature branch 병렬 작업 시 순서 불일치 허용)
           supabase db push --password $SUPABASE_DB_PASSWORD --include-all
 
-          # Deploy Edge Functions
           supabase functions deploy
 
-          # Seed test data (dev only)
           SUPABASE_URL="https://${SUPABASE_PROJECT_ID}.supabase.co"
           echo "🌱 Seeding test data..."
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
@@ -66,7 +67,6 @@ jobs:
             echo "⚠️ Seed request returned HTTP ${HTTP_STATUS} (non-blocking)"
           fi
 
-      # Main 환경 배포
       - name: Deploy to Main Supabase
         if: github.ref == 'refs/heads/main'
         env:
@@ -76,20 +76,23 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_ACCESS_TOKEN: ${{ secrets.GH_PAT_FOR_BUG_REPORT }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN_EDGE_FUNCTIONS }}
+          STATSIG_SERVER_KEY: ${{ secrets.STATSIG_SERVER_KEY }}
         run: |
           supabase link --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD
           
-          # Set Secrets
           supabase secrets set OPENAI_API_KEY=$OPENAI_API_KEY
           supabase secrets set GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN
           supabase secrets set SENTRY_DSN=$SENTRY_DSN
+          if [ -z "$STATSIG_SERVER_KEY" ]; then
+            echo "⚠️ STATSIG_SERVER_KEY is not set. Skipping."
+          else
+            supabase secrets set STATSIG_SERVER_KEY=$STATSIG_SERVER_KEY
+          fi
           supabase secrets set ENVIRONMENT=production
 
           supabase db push --password $SUPABASE_DB_PASSWORD --include-all
 
-          # Deploy Edge Functions
           supabase functions deploy
-
 
   notify-failure:
     needs: [deploy]

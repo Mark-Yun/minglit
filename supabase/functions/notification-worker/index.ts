@@ -4,6 +4,7 @@ import { WorkerUtils } from '../_shared/worker_utils.ts'
 import * as jose from 'https://deno.land/x/jose@v4.14.4/index.ts'
 import { initSentry, withSentryHandler } from '../_shared/sentry_utils.ts'
 
+
 // --- Helper: Google OAuth2 Access Token ---
 async function getAccessToken(serviceAccountJson: string) {
   try {

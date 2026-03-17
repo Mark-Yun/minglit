@@ -54,7 +54,8 @@ runs:
           --dart-define=SUPABASE_PUBLISHABLE_KEY=$SB_KEY \
           --dart-define=GOOGLE_WEB_CLIENT_ID=$G_ID \
           --dart-define=SENTRY_DSN=$SENTRY_DSN_FLUTTER \
-          --dart-define=ENVIRONMENT=$APP_ENV
+          --dart-define=ENVIRONMENT=$APP_ENV \
+          --dart-define=STATSIG_CLIENT_KEY=$STATSIG_CLIENT_KEY
 
     - name: Copy vercel.json and .well-known
       shell: bash

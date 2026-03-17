@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { StatsigAnalyticsProvider } from "@/components/statsig-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,7 +15,9 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className="antialiased">
-        {children}
+        <StatsigAnalyticsProvider>
+          {children}
+        </StatsigAnalyticsProvider>
       </body>
     </html>
   );
