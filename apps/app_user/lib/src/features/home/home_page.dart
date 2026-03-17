@@ -86,6 +86,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
               ],
             ),
+            // Fix #141: Equalize action button spacing and padding alignment
             actions: [
               IconButton(
                 icon: const Icon(Icons.search),
@@ -96,9 +97,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                   icon: const Icon(Icons.notifications_outlined),
                   onPressed: homeCoordinator.pushNotificationCenter,
                 ),
-                GestureDetector(
-                  onTap: () => const MyPageRoute().push<void>(context),
-                  child: CircleAvatar(
+                // Fix #141: Use IconButton for consistent touch target (48x48)
+                // and ripple effect with other app bar actions
+                IconButton(
+                  onPressed: () => const MyPageRoute().push<void>(context),
+                  icon: CircleAvatar(
                     radius: 14,
                     backgroundImage: user.userMetadata?['avatar_url'] != null
                         ? NetworkImage(
