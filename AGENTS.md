@@ -140,21 +140,20 @@ adb -s adb-R3CX803P2ND-8btuuD._adb-tls-connect._tcp install -r build/app/outputs
 - **Auto Format PR**: PR 시 `dart fix --apply` + `dart format` 자동 적용. 포맷 변경이 있으면 자동 커밋.
 - **Secret Scanning**: PR 시 Gitleaks로 시크릿 유출 검사.
 
-### PR 모니터링 (Background Agent)
+### PR 케어 (생성 → 머지 완료까지)
 
-PR 생성 직후 **반드시** background monitoring agent를 발사한다. PR이 MERGED 될 때까지 모니터링한다. 생성만 하고 방치 금지.
+PR을 생성하면 **MERGED 될 때까지 케어한다**. 생성만 하고 방치 금지.
+CI 확인, 리뷰 코멘트 대응, 브랜치 업데이트를 모두 포함한다.
 
 ```bash
-# Background agent가 60초 간격으로 아래를 반복:
-
 # 1. CI 상태 확인 (ci-result가 CodeRabbit 대기까지 포함)
-gh pr checks <PR번호> --watch --fail-fast
+gh pr checks <PR번호>
 
 # 2. 리뷰 코멘트 확인
 gh api repos/{owner}/{repo}/pulls/{PR번호}/comments --jq '.[] | {path: .path, body: .body, line: .line}'
 
-# 3. PR 상태 확인
-gh pr view <PR번호> --json state,mergedAt --jq '{state: .state, merged: .mergedAt}'
+# 3. PR 상태 확인 (머지 여부, 브랜치 상태)
+gh pr view <PR번호> --json state,mergedAt,mergeStateStatus --jq '{state: .state, merged: .mergedAt, mergeState: .mergeStateStatus}'
 ```
 
 #### 모니터링 결과별 대응
@@ -177,6 +176,7 @@ gh api repos/{owner}/{repo}/pulls/{PR번호}/update-branch --method PUT
 
 # 방법 2: 로컬에서 업데이트
 git checkout <브랜치>
+git fetch origin
 git merge origin/dev
 git push
 ```
