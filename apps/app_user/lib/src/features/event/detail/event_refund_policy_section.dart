@@ -67,7 +67,8 @@ class _RefundPolicySection extends ConsumerWidget {
     final cutoffDays = (policy?['cutoff_days'] as num?)?.toInt() ?? 7;
     final cutoffDate = event.startTime.subtract(Duration(days: cutoffDays));
     final now = DateTime.now();
-    final isRefundable = cutoffDate.isAfter(now);
+    // Fix #138: "~까지 환불 가능" 문구와 일치하도록 경계값 포함 비교
+    final isRefundable = !now.isAfter(cutoffDate);
     final dateFormat = DateFormat('M월 d일 HH시', 'ko_KR');
 
     return Column(
@@ -188,13 +189,15 @@ class _RefundPolicySection extends ConsumerWidget {
       children: List.generate(
         2,
         (_) => Padding(
-          padding: const EdgeInsets.only(bottom: MinglitSpacing.small),
+          padding: const EdgeInsets.only(
+            bottom: MinglitSpacing.small,
+          ),
           child: Container(
             height: 20,
             width: double.infinity,
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(MinglitRadius.small),
             ),
           ),
         ),
@@ -211,7 +214,10 @@ class _RefundPolicySection extends ConsumerWidget {
     return Row(
       children: [
         Expanded(
-          child: Text(condition, style: theme.textTheme.bodyMedium),
+          child: Text(
+            condition,
+            style: theme.textTheme.bodyMedium,
+          ),
         ),
         Text(
           policy,
