@@ -95,10 +95,11 @@ class MinglitSocialActionChip extends ConsumerWidget {
                     )
                     .toggle();
               },
+        // Fix #136: Increase padding, font size, icon size and add vertical separator
         child: Container(
           padding: const EdgeInsets.symmetric(
-            horizontal: MinglitSpacing.small,
-            vertical: MinglitSpacing.xxsmall,
+            horizontal: MinglitSpacing.sm,
+            vertical: MinglitSpacing.xsmall2,
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(MinglitRadius.small),
@@ -111,25 +112,33 @@ class MinglitSocialActionChip extends ConsumerWidget {
             children: [
               if (isLoading)
                 const SizedBox(
-                  width: 14,
-                  height: 14,
+                  width: 16,
+                  height: 16,
                   child: MinglitCircularProgressIndicator(strokeWidth: 1.5),
                 )
               else
                 Icon(
                   isActive ? activeIcon : inactiveIcon,
-                  size: 14,
+                  size: 16,
                   color: isActive
-                      ? Colors.white
+                      ? MinglitColors.background
                       : theme.colorScheme.onSurfaceVariant,
                 ),
-              const SizedBox(width: MinglitSpacing.xxsmall),
+              const SizedBox(width: 4),
+              Container(
+                width: 1,
+                height: 14,
+                color: isActive
+                    ? MinglitColors.background.withValues(alpha: 0.4)
+                    : theme.colorScheme.outlineVariant,
+              ),
+              const SizedBox(width: 4),
               Text(
                 label,
                 style: theme.textTheme.labelMedium?.copyWith(
-                  fontSize: 12,
+                  fontSize: 14,
                   color: isActive
-                      ? Colors.white
+                      ? MinglitColors.background
                       : theme.colorScheme.onSurfaceVariant,
                 ),
               ),
