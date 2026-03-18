@@ -64,6 +64,13 @@ export function log(entry: LogEntry): void {
   }
 }
 
+function _restoreBuffer(events: AxiomEvent[]): void {
+  _buffer.unshift(...events);
+  if (_buffer.length > MAX_BUFFER_SIZE) {
+    _buffer.splice(MAX_BUFFER_SIZE);
+  }
+}
+
 export async function flush(): Promise<void> {
   if (!_enabled || _buffer.length === 0) return;
 
@@ -78,21 +85,16 @@ export async function flush(): Promise<void> {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(events),
+        signal: AbortSignal.timeout(5000),
       },
     );
     if (!res.ok) {
       await res.body?.cancel();
-      _buffer.unshift(...events);
-      if (_buffer.length > MAX_BUFFER_SIZE) {
-        _buffer.splice(MAX_BUFFER_SIZE);
-      }
+      _restoreBuffer(events);
       console.warn(`[axiom_logger] Ingest failed: ${res.status} ${res.statusText}`);
     }
   } catch (e) {
-    _buffer.unshift(...events);
-    if (_buffer.length > MAX_BUFFER_SIZE) {
-      _buffer.splice(MAX_BUFFER_SIZE);
-    }
+    _restoreBuffer(events);
     console.warn("[axiom_logger] Ingest error:", e);
   }
 }
