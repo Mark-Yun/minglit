@@ -67,7 +67,8 @@ class _RefundPolicySection extends ConsumerWidget {
     final cutoffDays = (policy?['cutoff_days'] as num?)?.toInt() ?? 7;
     final cutoffDate = event.startTime.subtract(Duration(days: cutoffDays));
     final now = DateTime.now();
-    final isRefundable = cutoffDate.isAfter(now);
+    // Fix #138: "~까지 환불 가능" 문구와 일치하도록 경계값 포함 비교
+    final isRefundable = !now.isAfter(cutoffDate);
     final dateFormat = DateFormat('M월 d일 HH시', 'ko_KR');
 
     return Column(
