@@ -396,9 +396,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                           ),
                         ],
                       ),
-                      const Divider(height: MinglitSpacing.xlarge),
-                      // Entry Conditions (without verification badges)
-                      _EntryConditionsSection(event: event),
+                      // Fix #137: 참여현황 위젯을 참가 현황 탭으로 이동
                     ],
                   ),
                 ),
@@ -419,10 +417,11 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
               ),
 
               // Section 3: 참가 현황
+              // Fix #137: 상세정보에서 참가 현황 탭으로 _EntryConditionsSection 이동
               SliverToBoxAdapter(
                 child: SizedBox(
                   key: _section3Key,
-                  child: _ParticipationSection(event: event),
+                  child: _EntryConditionsSection(event: event),
                 ),
               ),
 
