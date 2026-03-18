@@ -6,6 +6,7 @@ import {
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
+import { log, flush } from "../_shared/axiom_logger.ts";
 import {
   SimLogCollector,
   simCreateGitHubIssue,
@@ -50,6 +51,8 @@ const DEFAULT_CONFIG: SimConfig = {
 // Handler
 // ─────────────────────────────────────────────────────────
 
+const FN = "backend-simulator";
+
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
   if (isProduction()) return errorResponse("Dev only", 403);
@@ -82,6 +85,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const phase = body.phase;
 
   const runId = crypto.randomUUID();
+  log({ function: FN, level: "info", message: "invoked", metadata: { runId, phase: body.phase ?? "full", forceFail } });
+
+  try {
+
   const collector = new SimLogCollector();
 
   // Log adapter: sim modules expect (entry: Omit<SimLogEntry, "timestamp">) => void
@@ -386,6 +393,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
     );
   }
 
+  log({
+    function: FN,
+    level: summary.failed > 0 ? "error" : "info",
+    message: "completed",
+    metadata: { runId, passed: summary.passed, failed: summary.failed, total: summary.total_checks, logUrl, githubIssueUrl },
+  });
+
   return successResponse({
     success: summary.failed === 0,
     run_id: runId,
@@ -393,4 +407,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     log_url: logUrl,
     github_issue_url: githubIssueUrl,
   });
+
+  } finally {
+    await flush();
+  }
 });

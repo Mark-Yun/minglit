@@ -1,9 +1,12 @@
 /**
- * Sentry error tracking utilities for Edge Functions.
+ * Sentry error tracking + Axiom structured logging for Edge Functions.
  *
  * Supports both `serve()` (old) and `Deno.serve()` (new) patterns.
- * Gracefully no-ops when SENTRY_DSN is not set.
+ * Gracefully no-ops when SENTRY_DSN / AXIOM_API_TOKEN is not set.
  */
+
+import { log as axiomLog, flush as axiomFlush, extractFunctionName } from "./axiom_logger.ts";
+export { log, flush } from "./axiom_logger.ts";
 
 let _initialized = false;
 let _enabled = false;
@@ -60,14 +63,21 @@ export function withSentry(
   handler: (req: Request) => Response | Promise<Response>,
 ): (req: Request) => Promise<Response> {
   return async (req: Request): Promise<Response> => {
+    const fn = extractFunctionName(req);
+    axiomLog({ function: fn, level: "info", message: "invoked", metadata: { method: req.method } });
     try {
-      return await handler(req);
+      const res = await handler(req);
+      axiomLog({ function: fn, level: "info", message: "completed", metadata: { status: res.status } });
+      return res;
     } catch (error) {
+      axiomLog({ function: fn, level: "error", message: error instanceof Error ? error.message : String(error) });
       if (_enabled && _Sentry) {
         _Sentry.captureException(error);
         await _Sentry.flush(2000);
       }
       throw error;
+    } finally {
+      await axiomFlush();
     }
   };
 }
@@ -86,14 +96,21 @@ export function withSentryHandler(
   handler: (req: Request) => Response | Promise<Response>,
 ): (req: Request) => Promise<Response> {
   return async (req: Request): Promise<Response> => {
+    const fn = extractFunctionName(req);
+    axiomLog({ function: fn, level: "info", message: "invoked", metadata: { method: req.method } });
     try {
-      return await handler(req);
+      const res = await handler(req);
+      axiomLog({ function: fn, level: "info", message: "completed", metadata: { status: res.status } });
+      return res;
     } catch (error) {
+      axiomLog({ function: fn, level: "error", message: error instanceof Error ? error.message : String(error) });
       if (_enabled && _Sentry) {
         _Sentry.captureException(error);
         await _Sentry.flush(2000);
       }
       throw error;
+    } finally {
+      await axiomFlush();
     }
   };
 }

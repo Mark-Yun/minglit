@@ -98,9 +98,7 @@ class _RefundPolicySection extends ConsumerWidget {
               Expanded(
                 child: Text(
                   isRefundable
-                      ? '지금 결제 시 '
-                            '${dateFormat.format(cutoffDate)}'
-                            '까지 환불 가능'
+                      ? '지금 결제 시 ${dateFormat.format(cutoffDate)}까지 환불 가능'
                       : '환불 가능 기간이 지났습니다',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
