@@ -161,14 +161,33 @@ gh pr view <PR번호> --json state,mergedAt --jq '{state: .state, merged: .merge
 
 | 상태 | 대응 |
 |------|------|
-| `ci-result` 통과 + 코멘트 없음 | "CI 통과" 보고. auto-merge 대기 |
-| `ci-result` 통과 + **코멘트 있음** | 코멘트 내용을 orchestrator에게 보고 |
-| CI 실패 | `gh run view <run_id> --log-failed`로 원인 파악 → orchestrator에게 보고 |
-| PR `MERGED` | "PR 머지 완료" 보고. 모니터링 종료 |
+| `ci-result` 통과 + 코멘트 없음 | auto-merge 대기 |
+| `ci-result` 통과 + **코멘트 있음** | 코멘트 대응 (아래 규칙 참고) |
+| CI 실패 | 실패 원인 파악 → 수정 (아래 규칙 참고) |
+| PR `MERGED` | 모니터링 종료 |
+| `mergeStateStatus: BEHIND` | 브랜치 업데이트 필요 (아래 규칙 참고) |
+
+#### 브랜치 업데이트 (BEHIND 상태)
+
+PR의 브랜치가 base(dev) 대비 뒤처지면 auto-merge가 진행되지 않는다. 반드시 업데이트한다:
+
+```bash
+# 방법 1: GitHub API로 업데이트 (권장 — 로컬 체크아웃 불필요)
+gh api repos/{owner}/{repo}/pulls/{PR번호}/update-branch --method PUT
+
+# 방법 2: 로컬에서 업데이트
+git checkout <브랜치>
+git merge origin/dev
+git push
+```
+
+- `mergeStateStatus`가 `BEHIND`이면 **즉시** 브랜치를 업데이트한다.
+- 업데이트 후 CI가 다시 돌아가고, 통과하면 auto-merge가 진행된다.
+- 충돌(conflict)이 발생하면 로컬에서 수동 해결 후 push.
 
 #### 코멘트 대응 규칙
 
-- 리뷰 코멘트는 **전부 resolve** 한다 (GitHub 설정에서도 강제됨).
+- 리뷰 코멘트는 **전부 resolve** 한다 (GitHub 설정에서도 강제됨 — unresolved 코멘트가 있으면 머지 불가).
 - 대응 방법:
   1. 코드 수정 필요: 수정 후 같은 브랜치에 push → 답글 → resolve
   2. 수정 불필요 (의도된 설계): 근거를 답글로 남기고 → resolve
@@ -177,8 +196,9 @@ gh pr view <PR번호> --json state,mergedAt --jq '{state: .state, merged: .merge
 ### CI 실패 대응
 
 1. `gh run view <run_id> --log-failed`로 실패 원인 파악
-2. 로컬에서 수정 후 같은 브랜치에 push (PR은 유지됨)
-3. CI 재실행 → 통과 확인 → auto-merge 완료까지 반복
+2. **ci-result만 실패** + 나머지 전부 pass → CodeRabbit 타임아웃일 가능성. `gh run rerun <run_id> --failed`로 재실행 (최대 3회).
+3. 실제 test/build 실패 → 로컬에서 수정 후 같은 브랜치에 push (PR은 유지됨)
+4. CI 재실행 → 통과 확인 → auto-merge 완료까지 반복
 
 ## Deploy Conventions
 
