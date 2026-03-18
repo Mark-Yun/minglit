@@ -451,7 +451,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
               SliverToBoxAdapter(
                 child: SizedBox(
                   key: _section5Key,
-                  child: const _RefundPolicySection(),
+                  child: _RefundPolicySection(event: event),
                 ),
               ),
 
