@@ -364,6 +364,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                         spacing: MinglitSpacing.small,
                         runSpacing: MinglitSpacing.small,
                         children: [
+                          // Fix #136: Remove dislike button, change like active color to brand primary
                           MinglitSocialActionChip(
                             targetId: event.partyId,
                             targetType: SocialTargetType.party,
@@ -371,32 +372,18 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                             label: '좋아요',
                             activeIcon: Icons.thumb_up,
                             inactiveIcon: Icons.thumb_up_outlined,
-                            activeColor: Theme.of(context).colorScheme.error,
+                            activeColor: MinglitColors.primary,
                             onUnauthenticatedTap: user == null
                                 ? () => ref
                                       .read(authCoordinatorProvider)
                                       .pushLogin()
                                 : null,
                           ),
-                          MinglitSocialActionChip(
-                            targetId: event.partyId,
-                            targetType: SocialTargetType.party,
-                            interactionType: SocialInteractionType.dislike,
-                            label: '싫어요',
-                            activeIcon: Icons.thumb_down,
-                            inactiveIcon: Icons.thumb_down_outlined,
-                            activeColor: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                            onUnauthenticatedTap: user == null
-                                ? () => ref
-                                      .read(authCoordinatorProvider)
-                                      .pushLogin()
-                                : null,
-                          ),
+                          // Fix #136: Use large size to match social action chip updates
                           MinglitChip(
                             label: '공유하기',
                             icon: Icons.share_outlined,
+                            size: MinglitChipSize.large,
                             onTap: () => unawaited(
                               ShareUtils.shareEvent(
                                 eventTitle: eventTitle,
@@ -451,7 +438,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
               SliverToBoxAdapter(
                 child: SizedBox(
                   key: _section5Key,
-                  child: const _RefundPolicySection(),
+                  child: _RefundPolicySection(event: event),
                 ),
               ),
 

@@ -81,6 +81,7 @@ export async function flush(): Promise<void> {
       },
     );
     if (!res.ok) {
+      await res.body?.cancel();
       _buffer.unshift(...events);
       if (_buffer.length > MAX_BUFFER_SIZE) {
         _buffer.splice(MAX_BUFFER_SIZE);

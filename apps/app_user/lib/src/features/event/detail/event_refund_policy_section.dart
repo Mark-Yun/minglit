@@ -8,7 +8,9 @@ final _refundPolicyProvider = FutureProvider.autoDispose<Map<String, dynamic>?>(
 );
 
 class _RefundPolicySection extends ConsumerWidget {
-  const _RefundPolicySection();
+  const _RefundPolicySection({required this.event});
+
+  final Event event;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -20,61 +22,171 @@ class _RefundPolicySection extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '환불 정책',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '환불 정책',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.info_outline,
+                  color: theme.colorScheme.onSurfaceVariant,
+                  size: MinglitIconSize.small,
+                ),
+                tooltip: '환불 정책 상세',
+                onPressed: () => _showPolicyDetailSheet(context, policyAsync),
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
           ),
           const SizedBox(height: MinglitSpacing.medium),
           policyAsync.when(
-            data: (policy) => _buildPolicyContent(context, policy),
+            data: (policy) => _buildSummary(context, policy),
             loading: () => _buildLoadingContent(context),
-            error: (e, st) => _buildPolicyContent(context, null),
+            error: (e, st) => _buildSummary(context, null),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPolicyContent(
+  Widget _buildSummary(
     BuildContext context,
     Map<String, dynamic>? policy,
   ) {
+    final theme = Theme.of(context);
     final gracePeriodHours =
         (policy?['grace_period_hours'] as num?)?.toInt() ?? 2;
     final cutoffDays = (policy?['cutoff_days'] as num?)?.toInt() ?? 7;
+    final cutoffDate = event.startTime.subtract(Duration(days: cutoffDays));
+    final now = DateTime.now();
+    final isRefundable = cutoffDate.isAfter(now);
+    final dateFormat = DateFormat('M월 d일 HH시', 'ko_KR');
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildPolicyRow(
-          context,
-          '결제 후 $gracePeriodHours시간 이내',
-          '전액 환불',
+        // Fix #138: 동적 환불 가능 날짜 표시
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(MinglitSpacing.small),
+          decoration: BoxDecoration(
+            color: isRefundable
+                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
+                : theme.colorScheme.errorContainer.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(MinglitRadius.card),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                isRefundable
+                    ? Icons.check_circle_outline
+                    : Icons.cancel_outlined,
+                size: MinglitIconSize.small,
+                color: isRefundable
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.error,
+              ),
+              const SizedBox(width: MinglitSpacing.small),
+              Expanded(
+                child: Text(
+                  isRefundable
+                      ? '지금 결제 시 ${dateFormat.format(cutoffDate)}까지 환불 가능'
+                      : '환불 가능 기간이 지났습니다',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: isRefundable
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.error,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: MinglitSpacing.small),
-        _buildPolicyRow(
-          context,
-          '이벤트 시작 $cutoffDays일 전까지',
-          '전액 환불',
-        ),
-        const SizedBox(height: MinglitSpacing.small),
-        _buildPolicyRow(context, '그 외', '환불 불가'),
-        const SizedBox(height: MinglitSpacing.medium),
         Text(
-          '자세한 내용은 고객센터로 문의해주세요.',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          '결제 후 $gracePeriodHours시간 이내 전액 환불',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
       ],
     );
   }
 
+  void _showPolicyDetailSheet(
+    BuildContext context,
+    AsyncValue<Map<String, dynamic>?> policyAsync,
+  ) {
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        showDragHandle: true,
+        builder: (context) {
+          final theme = Theme.of(context);
+          final policy = policyAsync.value;
+          final gracePeriodHours =
+              (policy?['grace_period_hours'] as num?)?.toInt() ?? 2;
+          final cutoffDays = (policy?['cutoff_days'] as num?)?.toInt() ?? 7;
+
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(
+              MinglitSpacing.medium,
+              0,
+              MinglitSpacing.medium,
+              MinglitSpacing.xlarge,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '환불 정책 상세',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: MinglitSpacing.medium),
+                _buildPolicyRow(
+                  context,
+                  '결제 후 $gracePeriodHours시간 이내',
+                  '전액 환불',
+                ),
+                const SizedBox(height: MinglitSpacing.small),
+                _buildPolicyRow(
+                  context,
+                  '이벤트 시작 $cutoffDays일 전까지',
+                  '전액 환불',
+                ),
+                const SizedBox(height: MinglitSpacing.small),
+                _buildPolicyRow(context, '그 외', '환불 불가'),
+                const SizedBox(height: MinglitSpacing.medium),
+                Text(
+                  '자세한 내용은 고객센터로 문의해주세요.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildLoadingContent(BuildContext context) {
     return Column(
       children: List.generate(
-        3,
+        2,
         (_) => Padding(
           padding: const EdgeInsets.only(bottom: MinglitSpacing.small),
           child: Container(

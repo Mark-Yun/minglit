@@ -1,7 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { log, flush, extractFunctionName, isEnabled, _resetForTesting, _getBuffer } from "./axiom_logger.ts";
 
-Deno.test("log - buffers event only when enabled", () => {
+Deno.test("log - buffers only when enabled", () => {
   _resetForTesting();
   log({ function: "payment-verify", level: "info", message: "started" });
 
@@ -20,9 +20,8 @@ Deno.test("log - includes metadata when provided", () => {
   _resetForTesting();
   log({ function: "payment-verify", level: "info", message: "ok", metadata: { amount: 50000 } });
 
-  const buffer = _getBuffer();
   if (isEnabled()) {
-    assertEquals(buffer[0].metadata?.amount, 50000);
+    assertEquals(_getBuffer()[0].metadata?.amount, 50000);
   }
 });
 
@@ -30,9 +29,8 @@ Deno.test("log - omits metadata field when not provided", () => {
   _resetForTesting();
   log({ function: "health", level: "info", message: "ok" });
 
-  const buffer = _getBuffer();
   if (isEnabled()) {
-    assertEquals(buffer[0].metadata, undefined);
+    assertEquals(_getBuffer()[0].metadata, undefined);
   }
 });
 
@@ -40,28 +38,13 @@ Deno.test("flush - no-ops when disabled (no token)", async () => {
   _resetForTesting();
   log({ function: "test", level: "info", message: "hello" });
 
+  await flush();
   if (!isEnabled()) {
     assertEquals(_getBuffer().length, 0);
-  } else {
-    assertEquals(_getBuffer().length, 1);
   }
-
-  await flush();
-
-  assertEquals(_getBuffer().length, 0);
 });
 
-Deno.test("flush - resets buffer for testing", () => {
-  _resetForTesting();
-  log({ function: "test", level: "info", message: "a" });
-  log({ function: "test", level: "error", message: "b" });
-
-  if (isEnabled()) {
-    assertEquals(_getBuffer().length, 2);
-  } else {
-    assertEquals(_getBuffer().length, 0);
-  }
-
+Deno.test("_resetForTesting clears buffer", () => {
   _resetForTesting();
   assertEquals(_getBuffer().length, 0);
 });

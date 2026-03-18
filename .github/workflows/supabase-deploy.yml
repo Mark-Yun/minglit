@@ -45,8 +45,12 @@ jobs:
           supabase secrets set OPENAI_API_KEY=$OPENAI_API_KEY
           supabase secrets set GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN
           supabase secrets set SENTRY_DSN=$SENTRY_DSN
-          supabase secrets set AXIOM_API_TOKEN=$AXIOM_API_TOKEN
-          supabase secrets set AXIOM_DATASET=edge-functions
+          if [ -z "$AXIOM_API_TOKEN" ]; then
+            echo "⚠️ AXIOM_API_TOKEN is not set. Skipping."
+          else
+            supabase secrets set AXIOM_API_TOKEN=$AXIOM_API_TOKEN
+            supabase secrets set AXIOM_DATASET=edge-functions
+          fi
           if [ -z "$STATSIG_SERVER_KEY" ]; then
             echo "⚠️ STATSIG_SERVER_KEY is not set. Skipping."
           else
@@ -87,8 +91,12 @@ jobs:
           supabase secrets set OPENAI_API_KEY=$OPENAI_API_KEY
           supabase secrets set GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN
           supabase secrets set SENTRY_DSN=$SENTRY_DSN
-          supabase secrets set AXIOM_API_TOKEN=$AXIOM_API_TOKEN
-          supabase secrets set AXIOM_DATASET=edge-functions
+          if [ -z "$AXIOM_API_TOKEN" ]; then
+            echo "⚠️ AXIOM_API_TOKEN is not set. Skipping."
+          else
+            supabase secrets set AXIOM_API_TOKEN=$AXIOM_API_TOKEN
+            supabase secrets set AXIOM_DATASET=edge-functions
+          fi
           if [ -z "$STATSIG_SERVER_KEY" ]; then
             echo "⚠️ STATSIG_SERVER_KEY is not set. Skipping."
           else
