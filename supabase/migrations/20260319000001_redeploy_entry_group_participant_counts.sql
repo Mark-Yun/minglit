@@ -30,3 +30,7 @@ as $$
   group by eg.id, eg.label
   order by eg.created_at;
 $$;
+
+-- Fix #79: RPC 실행 권한 명시적 설정
+revoke all on function public.get_entry_group_participant_counts(uuid) from public;
+grant execute on function public.get_entry_group_participant_counts(uuid) to anon, authenticated, service_role;
