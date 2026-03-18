@@ -78,7 +78,8 @@ class ExploreFilterChipBar extends ConsumerWidget {
   Future<void> _onNearbyTap(BuildContext context, WidgetRef ref) async {
     final filters = ref.read(activeFiltersProvider);
     if (!filters.nearbyEnabled) {
-      // Check if location is available before enabling
+      // Fix #154: Invalidate cached location to retry GPS acquisition
+      ref.invalidate(userLocationProvider);
       final location = await ref.read(userLocationProvider.future);
       if (location == null) {
         if (context.mounted) {
