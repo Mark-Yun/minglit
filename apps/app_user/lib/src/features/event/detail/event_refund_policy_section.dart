@@ -197,7 +197,7 @@ class _RefundPolicySection extends ConsumerWidget {
             width: double.infinity,
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(MinglitRadius.small),
             ),
           ),
         ),
