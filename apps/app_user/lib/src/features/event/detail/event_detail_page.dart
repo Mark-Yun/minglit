@@ -17,7 +17,6 @@ part 'event_bottom_ticket_bar.dart';
 part 'event_detail_content.dart';
 part 'event_entry_conditions_section.dart';
 part 'event_info_tile.dart';
-part 'event_participation_section.dart';
 part 'event_quill_viewer.dart';
 part 'event_refund_policy_section.dart';
 part 'event_verification_section.dart';
