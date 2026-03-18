@@ -1,6 +1,8 @@
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
+import 'package:app_user/src/features/settings/app_permissions_page.dart';
 import 'package:app_user/src/features/settings/blocked_partners_page.dart';
+import 'package:app_user/src/features/settings/privacy_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -120,6 +122,29 @@ class MyPage extends ConsumerWidget {
             onTap: homeCoordinator.pushNotificationSettings,
           ),
           const ThemeSettingsTile(),
+          // Fix #139: Add privacy and permissions menu items
+          ListTile(
+            leading: const Icon(Icons.lock_outline),
+            title: const Text('개인정보'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                builder: (_) => const PrivacyPage(),
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.admin_panel_settings_outlined),
+            title: const Text('권한 설정'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                builder: (_) => const AppPermissionsPage(),
+              ),
+            ),
+          ),
           ListTile(
             leading: const Icon(Icons.block),
             title: const Text('차단 목록'),
