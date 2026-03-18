@@ -176,6 +176,7 @@ gh api repos/{owner}/{repo}/pulls/{PR번호}/update-branch --method PUT
 
 # 방법 2: 로컬에서 업데이트
 git checkout <브랜치>
+git fetch origin
 git merge origin/dev
 git push
 ```
