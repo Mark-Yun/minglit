@@ -6,7 +6,7 @@ import {
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { log, flush } from "../_shared/axiom_logger.ts";
+import { log, flush, debugStatus } from "../_shared/axiom_logger.ts";
 import {
   SimLogCollector,
   simCreateGitHubIssue,
@@ -291,6 +291,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       success: summary.failed === 0,
       run_id: runId,
       summary,
+      _axiom_debug: debugStatus(),
     });
   }
 
