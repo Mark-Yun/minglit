@@ -6,6 +6,12 @@ import { initSentry, withHandler, log } from '../_shared/logger.ts'
 
 const FN = "notification-worker";
 
+// --- Helper: Mask FCM token for safe logging ---
+function maskToken(token: string): string {
+  if (!token || token.length <= 10) return "***";
+  return `${token.slice(0, 6)}...${token.slice(-4)}`;
+}
+
 // --- Helper: Google OAuth2 Access Token ---
 async function getAccessToken(serviceAccountJson: string) {
   try {
@@ -67,7 +73,7 @@ async function sendFCM(accessToken: string, projectId: string, fcmToken: string,
 
   if (!res.ok) {
     const errText = await res.text();
-    log({ function: FN, level: "error", message: `FCM Send Error [${fcmToken}]`, metadata: { detail: errText } });
+    log({ function: FN, level: "error", message: `FCM Send Error [${maskToken(fcmToken)}]`, metadata: { detail: errText } });
     // If error is 'UNREGISTERED' (token invalid), return specific status to delete it
     if (errText.includes('UNREGISTERED') || errText.includes('INVALID_ARGUMENT')) {
         return 'INVALID';
@@ -210,7 +216,7 @@ async function sendToAllParticipants(
         const status = await sendFCM(accessToken, projectId, t.token, title, body);
         if (status === 'INVALID') {
           await supabase.from('fcm_tokens').delete().eq('token', t.token);
-          log({ function: FN, level: "info", message: `Deleted invalid token: ${t.token}` });
+          log({ function: FN, level: "info", message: `Deleted invalid token: ${maskToken(t.token)}` });
         }
       }
     }
