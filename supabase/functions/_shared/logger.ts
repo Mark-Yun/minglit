@@ -1,12 +1,25 @@
 /**
- * Sentry error tracking + Axiom structured logging for Edge Functions.
+ * Unified observability for Edge Functions.
  *
- * Supports both `serve()` (old) and `Deno.serve()` (new) patterns.
+ * - Axiom: structured logging (all levels)
+ * - Sentry: error tracking + performance spans
+ *
+ * Usage:
+ * ```ts
+ * import { initSentry, withHandler, log, withSpan } from "../_shared/logger.ts";
+ * await initSentry();
+ * Deno.serve(withHandler(async (req) => {
+ *   log({ function: "my-fn", level: "info", message: "doing work" });
+ *   const data = await withSpan("db.query", "db", () => supabase.from("t").select("*"));
+ *   return successResponse(data);
+ * }));
+ * ```
+ *
  * Gracefully no-ops when SENTRY_DSN / AXIOM_API_TOKEN is not set.
  */
 
 import { log as axiomLog, flush as axiomFlush, extractFunctionName } from "./axiom_logger.ts";
-export { log, flush } from "./axiom_logger.ts";
+export { log, flush, isEnabled, debugStatus } from "./axiom_logger.ts";
 
 let _initialized = false;
 let _enabled = false;
@@ -20,7 +33,7 @@ let _Sentry: {
 } | null = null;
 
 /**
- * Initialize Sentry. Call once at module top-level, before serve().
+ * Initialize Sentry. Call once at module top-level, before Deno.serve().
  * No-ops if SENTRY_DSN env var is missing or empty.
  */
 export async function initSentry(dsn?: string): Promise<void> {
@@ -44,22 +57,20 @@ export async function initSentry(dsn?: string): Promise<void> {
     _Sentry = Sentry;
     _enabled = true;
   } catch (e) {
-    console.warn("[sentry_utils] Failed to initialize Sentry:", e);
+    console.warn("[logger] Failed to initialize Sentry:", e);
     _enabled = false;
   }
 }
 
 /**
- * Wrapper for old `serve()` pattern.
+ * Request handler wrapper. Provides:
+ * - Axiom structured logging (invoked/completed/error)
+ * - Sentry error capture
+ * - Axiom flush on completion
  *
- * Usage:
- * ```ts
- * import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
- * initSentry();
- * serve(withSentry(async (req) => { ... }));
- * ```
+ * Works with both `Deno.serve()` and legacy `serve()`.
  */
-export function withSentry(
+export function withHandler(
   handler: (req: Request) => Response | Promise<Response>,
 ): (req: Request) => Promise<Response> {
   return async (req: Request): Promise<Response> => {
@@ -82,51 +93,14 @@ export function withSentry(
   };
 }
 
-/**
- * Wrapper for new `Deno.serve()` pattern.
- *
- * Usage:
- * ```ts
- * import { initSentry, withSentryHandler } from "../_shared/sentry_utils.ts";
- * await initSentry();
- * Deno.serve(withSentryHandler(async (req) => { ... }));
- * ```
- */
-export function withSentryHandler(
-  handler: (req: Request) => Response | Promise<Response>,
-): (req: Request) => Promise<Response> {
-  return async (req: Request): Promise<Response> => {
-    const fn = extractFunctionName(req);
-    axiomLog({ function: fn, level: "info", message: "invoked", metadata: { method: req.method } });
-    try {
-      const res = await handler(req);
-      axiomLog({ function: fn, level: "info", message: "completed", metadata: { status: res.status } });
-      return res;
-    } catch (error) {
-      axiomLog({ function: fn, level: "error", message: error instanceof Error ? error.message : String(error) });
-      if (_enabled && _Sentry) {
-        _Sentry.captureException(error);
-        await _Sentry.flush(2000);
-      }
-      throw error;
-    } finally {
-      await axiomFlush();
-    }
-  };
-}
+/** @deprecated Use `withHandler` instead. */
+export const withSentry = withHandler;
+/** @deprecated Use `withHandler` instead. */
+export const withSentryHandler = withHandler;
 
 /**
  * Wrap an async operation in a Sentry performance span.
  * No-ops if Sentry is not initialized.
- *
- * Usage:
- * ```ts
- * const result = await withSpan(
- *   'db.query.users',
- *   'db.query',
- *   () => supabase.from('users').select('*')
- * );
- * ```
  */
 export async function withSpan<T>(
   name: string,

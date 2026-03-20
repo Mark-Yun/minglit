@@ -3,7 +3,7 @@
  * Uses REST API directly (no SDK) for Deno compatibility.
  * Gracefully no-ops when STATSIG_SERVER_KEY is not set.
  *
- * Pattern follows sentry_utils.ts.
+ * Pattern follows logger.ts.
  */
 
 let _enabled = false;

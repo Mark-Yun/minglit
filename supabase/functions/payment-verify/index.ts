@@ -2,7 +2,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { IamportClient } from "../_shared/iamport_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withSentry, withSpan } from "../_shared/sentry_utils.ts";
+import { initSentry, withHandler, withSpan, log } from "../_shared/logger.ts";
+
+const FN = "payment-verify";
 import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
 
 const IMP_KEY = Deno.env.get("PORTONE_API_KEY");
@@ -15,7 +17,7 @@ if (!IMP_KEY || !IMP_SECRET) {
 initSentry();
 initStatsig();
 
-Deno.serve(withSentry(async (req) => {
+Deno.serve(withHandler(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
 
   const auth = await requireAuth(req);
@@ -72,7 +74,7 @@ Deno.serve(withSentry(async (req) => {
     if (payment.amount !== order.payment_amount) {
       client.cancelPayment(imp_uid, "결제 금액 위변조로 자동 취소").catch((e: unknown) => {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error("Cancel on mismatch failed:", msg);
+        log({ function: FN, level: "error", message: "Cancel on mismatch failed", metadata: { detail: msg } });
       });
       logStatsigEvent(auth, 'payment_failed', undefined, { reason: 'amount_mismatch', imp_uid }).catch(() => {});
       return errorResponse("Amount mismatch", 400, {
@@ -101,7 +103,7 @@ Deno.serve(withSentry(async (req) => {
     );
 
     if (updateError) {
-      console.error("DB Update Error:", updateError);
+      log({ function: FN, level: "error", message: "DB Update Error", metadata: { detail: updateError } });
       logStatsigEvent(auth, 'payment_failed', undefined, { reason: 'db_update_error', imp_uid }).catch(() => {});
       return errorResponse("Failed to update order status", 500);
     }
@@ -112,7 +114,7 @@ Deno.serve(withSentry(async (req) => {
 
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error("Error in payment-verify:", message);
+    log({ function: FN, level: "error", message: "Error in payment-verify", metadata: { detail: message } });
     return errorResponse(message, 500);
   }
 }));

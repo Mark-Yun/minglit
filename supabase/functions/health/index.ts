@@ -1,4 +1,7 @@
 import { successResponse, errorResponse } from "../_shared/response_utils.ts";
+import { initSentry, withHandler } from "../_shared/logger.ts";
+
+initSentry();
 
 interface CheckResult {
   status: "up" | "down";
@@ -108,7 +111,7 @@ async function checkStorage(): Promise<CheckResult> {
   }
 }
 
-Deno.serve(async (req) => {
+Deno.serve(withHandler(async (req) => {
   if (req.method !== "GET") {
     return errorResponse("Method not allowed", 405);
   }
@@ -138,4 +141,4 @@ Deno.serve(async (req) => {
     return successResponse(body as unknown as Record<string, unknown>, 200);
   }
   return errorResponse("unhealthy", 503, body);
-});
+}));

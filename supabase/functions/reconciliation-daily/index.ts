@@ -1,5 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { PortoneV2Client, PortoneSettlement } from "../_shared/portone_client.ts";
+import { initSentry, withHandler } from "../_shared/logger.ts";
+
+initSentry();
 
 const PORTONE_V2_API_KEY = Deno.env.get("PORTONE_V2_API_KEY") ?? "";
 
@@ -81,7 +84,7 @@ function computeSourceHash(ledgerData: unknown[], portoneData: unknown[]): strin
   return Math.abs(hash).toString(16);
 }
 
-Deno.serve(async (req) => {
+Deno.serve(withHandler(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
@@ -303,4 +306,4 @@ Deno.serve(async (req) => {
       { status: 500, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } },
     );
   }
-});
+}));

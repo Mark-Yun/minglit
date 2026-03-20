@@ -1,7 +1,9 @@
 import { PortoneV2Client } from "../_shared/portone_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
+import { initSentry, withHandler, log } from "../_shared/logger.ts";
+
+const FN = "settlement-query";
 
 const PORTONE_V2_API_KEY = Deno.env.get("PORTONE_V2_API_KEY");
 
@@ -11,7 +13,7 @@ if (!PORTONE_V2_API_KEY) {
 
 initSentry();
 
-Deno.serve(withSentry(async (req) => {
+Deno.serve(withHandler(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
 
   const auth = await requireAuth(req);
@@ -46,7 +48,7 @@ Deno.serve(withSentry(async (req) => {
         });
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
-        console.error("PortOne getPartnerSettlements error:", message);
+        log({ function: FN, level: "error", message: "PortOne getPartnerSettlements error", metadata: { detail: message } });
         return errorResponse("Failed to fetch settlements", 502);
       }
       return successResponse({ success: true, ...result });
@@ -59,14 +61,14 @@ Deno.serve(withSentry(async (req) => {
       });
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
-      console.error("PortOne getPayouts error:", message);
+      log({ function: FN, level: "error", message: "PortOne getPayouts error", metadata: { detail: message } });
       return errorResponse("Failed to fetch payouts", 502);
     }
     return successResponse({ success: true, ...result });
 
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    console.error("Error in settlement-query:", message);
+    log({ function: FN, level: "error", message: "Error in settlement-query", metadata: { detail: message } });
     return errorResponse(message, 500);
   }
 }));

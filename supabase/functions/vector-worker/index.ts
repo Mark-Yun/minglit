@@ -3,7 +3,9 @@ import { OpenAIService } from './openai_service.ts'
 import { serializeParty } from './party_serializer.ts'
 import { HybridCalculator } from './calculator.ts'
 import { WorkerUtils } from '../_shared/worker_utils.ts'
-import { initSentry, withSentryHandler } from '../_shared/sentry_utils.ts'
+import { initSentry, withHandler, log } from '../_shared/logger.ts'
+
+const FN = "vector-worker";
 
 const WEIGHTS: Record<string, number> = {
   view: 0.1,
@@ -16,8 +18,8 @@ const calculator = new HybridCalculator({ decayRate: 0.05 });
 
 initSentry();
 
-Deno.serve(withSentryHandler(async (req) => {
-  console.log("🚀 [Vector Worker] Triggered! Checking environment and auth...");
+Deno.serve(withHandler(async (req) => {
+  log({ function: FN, level: "info", message: "Vector Worker Triggered! Checking environment and auth..." });
   try {
     const payload = await req.json().catch(() => ({}));
     const batchSize = payload.batch_size ?? 50;
@@ -48,18 +50,18 @@ Deno.serve(withSentryHandler(async (req) => {
     });
 
     if (readError) {
-        console.error('PGMQ Read Error:', readError);
+        log({ function: FN, level: "error", message: "PGMQ Read Error", metadata: { detail: readError } });
         throw readError;
     }
-    
+
     if (!messages || (Array.isArray(messages) && messages.length === 0)) {
-      return new Response(JSON.stringify({ processed: 0 }), { 
+      return new Response(JSON.stringify({ processed: 0 }), {
         headers: { "Content-Type": "application/json" }
       });
     }
 
     const msgArray = Array.isArray(messages) ? messages : [messages];
-    console.log(`Processing v2 batch of ${msgArray.length} messages`);
+    log({ function: FN, level: "info", message: `Processing v2 batch of ${msgArray.length} messages` });
 
     // deno-lint-ignore no-explicit-any
     const partyTasks: any[] = [];
@@ -79,7 +81,7 @@ Deno.serve(withSentryHandler(async (req) => {
 
       // B. Idempotency Check
       if (await utils.isProcessed(traceId)) {
-        console.log(`[${traceId}] Already processed. Skipping.`);
+        log({ function: FN, level: "info", message: `[${traceId}] Already processed. Skipping.` });
         processedMsgIds.push(msg.msg_id);
         continue;
       }
@@ -105,31 +107,31 @@ Deno.serve(withSentryHandler(async (req) => {
         // Separate public and private parties
         const publicPartyTasks = partyTasks.filter(t => t.record.visibility !== 'private');
         const privatePartyTasks = partyTasks.filter(t => t.record.visibility === 'private');
-        
+
         // Handle private parties - skip embedding, delete existing
         for (const t of privatePartyTasks) {
-          console.log(`Skipping private party: ${t.record.id}`);
+          log({ function: FN, level: "info", message: `Skipping private party: ${t.record.id}` });
           await supabase.from('party_embeddings').delete().eq('party_id', t.record.id);
           await utils.markProcessed(t.traceId);
           processedMsgIds.push(t.msgId);
         }
-        
+
         // Process only public parties
         if (publicPartyTasks.length > 0) {
           const texts = publicPartyTasks.map(t => serializeParty(t.record));
-          console.log(`Requesting ${texts.length} embeddings from OpenAI...`);
+          log({ function: FN, level: "info", message: `Requesting ${texts.length} embeddings from OpenAI...` });
           const embeddings = await openAi.generateEmbeddings(texts);
-          console.log(`Received ${embeddings.length} embeddings.`);
-          
+          log({ function: FN, level: "info", message: `Received ${embeddings.length} embeddings.` });
+
           await supabase.from('debug_logs').insert({
             message: 'OpenAI Result Check',
-            payload: { 
-              textCount: texts.length, 
+            payload: {
+              textCount: texts.length,
               embeddingCount: embeddings.length,
               sample: embeddings.length > 0 ? Array.from(embeddings[0]).slice(0, 5) : null
             }
           });
-          
+
           for (let i = 0; i < publicPartyTasks.length; i++) {
             const t = publicPartyTasks[i];
             const item = {
@@ -137,19 +139,19 @@ Deno.serve(withSentryHandler(async (req) => {
               embedding: embeddings[i],
               updated_at: new Date().toISOString()
             };
-            
+
             const { error: upsertError } = await supabase.from('party_embeddings').upsert(item);
             if (upsertError) {
-              console.error(`Upsert Error for party ${t.record.id}:`, JSON.stringify(upsertError));
+              log({ function: FN, level: "error", message: `Upsert Error for party ${t.record.id}`, metadata: { detail: JSON.stringify(upsertError) } });
             } else {
-              console.log(`Successfully saved embedding for party ${t.record.id}`);
+              log({ function: FN, level: "info", message: `Successfully saved embedding for party ${t.record.id}` });
               await utils.markProcessed(t.traceId);
               processedMsgIds.push(t.msgId);
             }
           }
         }
       } catch (e) {
-        console.error('Party Vectorization Error:', e);
+        log({ function: FN, level: "error", message: "Party Vectorization Error", metadata: { error: e } });
       }
     }
 
@@ -167,34 +169,34 @@ Deno.serve(withSentryHandler(async (req) => {
         if (partyRes.data && partyRes.data.embedding) {
           const oldVector = userRes.data?.embedding ?? new Array(1536).fill(0);
           const newVector = calculator.calculate(oldVector, partyRes.data.embedding, weight);
-          
+
           const { error } = await supabase.from('user_embeddings').upsert({
             user_id,
             embedding: newVector,
             updated_at: new Date().toISOString()
           });
           if (error) throw error;
-          
+
           await utils.markProcessed(task.traceId);
           processedMsgIds.push(task.msgId);
         } else {
-          console.warn(`Skipping interaction: Party ${party_id} embedding not found.`);
+          log({ function: FN, level: "warn", message: `Skipping interaction: Party ${party_id} embedding not found.` });
           processedMsgIds.push(task.msgId);
         }
       } catch (e) {
-        console.error(`Interaction Error:`, e);
+        log({ function: FN, level: "error", message: "Interaction Error", metadata: { error: e } });
       }
     }
 
     // 4. Delete processed messages from queue individually for reliability
     if (processedMsgIds.length > 0) {
-      console.log(`Deleting ${processedMsgIds.length} messages from queue...`);
+      log({ function: FN, level: "info", message: `Deleting ${processedMsgIds.length} messages from queue...` });
       for (const msgId of processedMsgIds) {
         const { error: delError } = await supabase.rpc('pgmq_delete', {
           queue_name: 'q_vectors',
           msg_id: msgId
         });
-        if (delError) console.error(`PGMQ Delete Error for ${msgId}:`, delError);
+        if (delError) log({ function: FN, level: "error", message: `PGMQ Delete Error for ${msgId}`, metadata: { detail: delError } });
       }
     }
 
@@ -204,8 +206,8 @@ Deno.serve(withSentryHandler(async (req) => {
 
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : String(err);
-    console.error('Vector Worker Error:', errorMessage);
-    return new Response(JSON.stringify({ error: errorMessage }), { 
+    log({ function: FN, level: "error", message: `Vector Worker Error: ${errorMessage}` });
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { "Content-Type": "application/json" }
     });
