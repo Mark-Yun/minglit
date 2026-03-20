@@ -394,7 +394,7 @@ Deno.serve(withHandler(async (_req) => {
                 if (status === 'INVALID') {
                     // Clean up invalid token
                     await supabase.from('fcm_tokens').delete().eq('token', t.token);
-                    log({ function: FN, level: "info", message: `Deleted invalid token: ${t.token}` });
+                    log({ function: FN, level: "info", message: `Deleted invalid token: ${maskToken(t.token)}` });
                 }
             });
 
