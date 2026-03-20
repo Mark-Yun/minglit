@@ -1,4 +1,4 @@
-import { assertEquals, assertExists, assertMatch } from "@std/assert";
+import { assertEquals, assertExists, assertMatch, assertStringIncludes } from "@std/assert";
 import {
   captureServeHandler,
   createFetchMock,
@@ -346,6 +346,7 @@ Deno.test({
         ENVIRONMENT: "development",
         SUPABASE_URL: "http://localhost:54321",
         SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+        GITHUB_ACCESS_TOKEN: "test-github-token",
       },
       async () => {
         await withMockedFetch(fetchMock, async () => {
@@ -359,6 +360,12 @@ Deno.test({
           assertEquals(typeof body.summary.passed, "number");
           assertEquals(typeof body.summary.failed, "number");
           assertEquals(Array.isArray(body.summary.assertion_results), true);
+
+          // When assertions fail, github_issue_url should be present
+          if (body.summary.failed > 0) {
+            assertExists(body.github_issue_url);
+            assertStringIncludes(body.github_issue_url, "github.com");
+          }
         });
       },
     );
