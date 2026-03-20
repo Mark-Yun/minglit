@@ -30,13 +30,19 @@ Deno.serve(withHandler(async (req) => {
     const forwardedFor = req.headers.get("x-forwarded-for");
     const clientIp = forwardedFor ? forwardedFor.split(",")[0].trim() : "";
 
-    if (clientIp && !ALLOWED_IPS.includes(clientIp)) {
-      log({ function: FN, level: "warn", message: `Blocked Webhook Request from unauthorized IP: ${clientIp}` });
+    if (!clientIp || !ALLOWED_IPS.includes(clientIp)) {
+      log({ function: FN, level: "warn", message: `Blocked Webhook Request from unauthorized IP: ${clientIp || "(empty)"}` });
       return new Response("Unauthorized IP", { status: 403 });
     }
 
-    const body = JSON.parse(rawBody);
-    const { imp_uid, merchant_uid, status } = body;
+    let body: Record<string, unknown>;
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      log({ function: FN, level: "warn", message: "Malformed JSON body received" });
+      return new Response("Bad Request", { status: 400 });
+    }
+    const { imp_uid, merchant_uid, status } = body as { imp_uid?: string; merchant_uid?: string; status?: string };
     log({ function: FN, level: "info", message: `Webhook V1 received: ${imp_uid} (${status})` });
 
     if (!imp_uid || !merchant_uid) {

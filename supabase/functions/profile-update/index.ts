@@ -44,7 +44,8 @@ Deno.serve(withHandler(async (_req) => {
     const { user_id, party_id, action_type } = msg.message;
     const weight = WEIGHTS[action_type] ?? 0;
 
-    log({ function: FN, level: "info", message: `Processing action: ${action_type} (w:${weight}) for user ${user_id}` });
+    // Fix #167: user_id 평문 로깅 방지
+log({ function: FN, level: "info", message: `Processing action: ${action_type} (w:${weight}) for user ${typeof user_id === "string" ? user_id.slice(0, 8) : "unknown"}...` });
 
     const [userRes, partyRes] = await Promise.all([
       supabase.from('user_embeddings').select('embedding').eq('user_id', user_id).maybeSingle(),

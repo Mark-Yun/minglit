@@ -72,7 +72,7 @@ Deno.serve(withHandler(async (req) => {
     }
 
     if (payment.amount !== order.payment_amount) {
-      client.cancelPayment(imp_uid, "결제 금액 위변조로 자동 취소").catch((e: unknown) => {
+      await client.cancelPayment(imp_uid, "결제 금액 위변조로 자동 취소").catch((e: unknown) => {
         const msg = e instanceof Error ? e.message : String(e);
         log({ function: FN, level: "error", message: "Cancel on mismatch failed", metadata: { detail: msg } });
       });
