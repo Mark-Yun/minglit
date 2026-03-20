@@ -2,7 +2,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { PortoneV2Client } from "../_shared/portone_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
+import { initSentry, withHandler, log } from "../_shared/logger.ts";
+
+const FN = "settlement-register-transfers";
 
 const PORTONE_V2_API_KEY = Deno.env.get("PORTONE_V2_API_KEY");
 
@@ -14,7 +16,7 @@ initSentry();
 
 const CHUNK_SIZE = 500;
 
-Deno.serve(withSentry(async (req) => {
+Deno.serve(withHandler(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
 
   const auth = await requireAuth(req);
@@ -33,7 +35,7 @@ Deno.serve(withSentry(async (req) => {
       .is("portone_transfer_id", null);
 
     if (fetchError) {
-      console.error("Failed to fetch pending settlement items:", fetchError.message);
+      log({ function: FN, level: "error", message: `Failed to fetch pending settlement items: ${fetchError.message}` });
       return errorResponse("Failed to fetch pending items", 500);
     }
 
@@ -57,7 +59,7 @@ Deno.serve(withSentry(async (req) => {
             .single();
 
           if (partnerError || !partner?.portone_partner_id) {
-            console.error(`Partner not found or not synced for item ${item.id}`);
+            log({ function: FN, level: "error", message: `Partner not found or not synced for item ${item.id}` });
             failed++;
             continue;
           }
@@ -70,7 +72,7 @@ Deno.serve(withSentry(async (req) => {
             .in("payment_status", ["paid", "approved"]);
 
           if (appError || !applications || applications.length === 0) {
-            console.error(`No paid applications found for item ${item.id}`);
+            log({ function: FN, level: "error", message: `No paid applications found for item ${item.id}` });
             failed++;
             continue;
           }
@@ -95,7 +97,7 @@ Deno.serve(withSentry(async (req) => {
               }
             } catch (e) {
               const message = e instanceof Error ? e.message : String(e);
-              console.error(`createOrderTransfer failed for item ${item.id}, app ${app.id}:`, message);
+              log({ function: FN, level: "error", message: `createOrderTransfer failed for item ${item.id}, app ${app.id}: ${message}` });
             }
           }
 
@@ -106,7 +108,7 @@ Deno.serve(withSentry(async (req) => {
           }
         } catch (e) {
           const message = e instanceof Error ? e.message : String(e);
-          console.error(`Error processing item ${item.id}:`, message);
+          log({ function: FN, level: "error", message: `Error processing item ${item.id}: ${message}` });
           failed++;
         }
       }
@@ -119,7 +121,7 @@ Deno.serve(withSentry(async (req) => {
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    console.error("Error in settlement-register-transfers:", message);
+    log({ function: FN, level: "error", message: `Error in settlement-register-transfers: ${message}` });
     return errorResponse(message, 500);
   }
 }));

@@ -2,7 +2,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { PortoneV2Client } from "../_shared/portone_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
+import { initSentry, withHandler, log } from "../_shared/logger.ts";
+
+const FN = "identity-verify";
 
 const PORTONE_API_KEY = Deno.env.get("PORTONE_V2_API_KEY");
 
@@ -12,7 +14,7 @@ if (!PORTONE_API_KEY) {
 
 initSentry();
 
-Deno.serve(withSentry(async (req) => {
+Deno.serve(withHandler(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
 
   const auth = await requireAuth(req);
@@ -32,7 +34,7 @@ Deno.serve(withSentry(async (req) => {
       verification = await portone.getIdentityVerification(identity_verification_id);
     } catch (fetchError) {
       const msg = fetchError instanceof Error ? fetchError.message : String(fetchError);
-      console.error("Portone V2 API Error:", msg);
+      log({ function: FN, level: "error", message: "Portone V2 API Error", metadata: { detail: msg } });
       return errorResponse("Failed to fetch verification info", 502, msg);
     }
 
@@ -68,7 +70,7 @@ Deno.serve(withSentry(async (req) => {
       .eq("id", userId);
 
     if (updateError) {
-      console.error("DB Update Error:", updateError);
+      log({ function: FN, level: "error", message: "DB Update Error", metadata: { detail: updateError } });
       return errorResponse("Failed to update user profile", 500);
     }
 
@@ -76,7 +78,7 @@ Deno.serve(withSentry(async (req) => {
 
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    console.error("Error in verify-identity:", message);
+    log({ function: FN, level: "error", message: "Error in verify-identity", metadata: { detail: message } });
     return errorResponse(message, 500);
   }
 }));

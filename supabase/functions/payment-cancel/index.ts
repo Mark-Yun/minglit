@@ -2,11 +2,13 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { IamportClient } from "../_shared/iamport_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
+import { initSentry, withHandler, log } from "../_shared/logger.ts";
+
+const FN = "payment-cancel";
 
 initSentry();
 
-Deno.serve(withSentry(async (req) => {
+Deno.serve(withHandler(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
 
   const auth = await requireAuth(req);
@@ -71,12 +73,12 @@ Deno.serve(withSentry(async (req) => {
 
     // Fix #133: 이벤트/정책 조회 실패 시 적격성 검사를 건너뛰지 않고 명시적으로 에러 반환
     if (eventResult.error || !eventResult.data) {
-      console.error("Failed to fetch event:", eventResult.error);
+      log({ function: FN, level: "error", message: "Failed to fetch event", metadata: { detail: eventResult.error } });
       return errorResponse("Failed to verify refund eligibility", 500);
     }
 
     if (policyResult.error || !policyResult.data) {
-      console.error("Failed to fetch policy:", policyResult.error);
+      log({ function: FN, level: "error", message: "Failed to fetch policy", metadata: { detail: policyResult.error } });
       return errorResponse("Failed to verify refund eligibility", 500);
     }
 
@@ -110,7 +112,7 @@ Deno.serve(withSentry(async (req) => {
     const impSecret = Deno.env.get("PORTONE_API_SECRET");
 
     if (!impKey || !impSecret) {
-      console.error("Missing Portone credentials");
+      log({ function: FN, level: "error", message: "Missing Portone credentials" });
       return errorResponse("Server configuration error", 500);
     }
 
@@ -126,7 +128,7 @@ Deno.serve(withSentry(async (req) => {
       );
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
-      console.error("Failed to cancel payment:", message);
+      log({ function: FN, level: "error", message: `Failed to cancel payment: ${message}` });
       if (message.startsWith("Failed to get token") || message.startsWith("Iamport Error")) {
         return errorResponse("Payment provider error", 502);
       }
@@ -148,7 +150,7 @@ Deno.serve(withSentry(async (req) => {
       .eq("payment_id", payment_id);
 
     if (dbError) {
-      console.error("DB Update Error:", dbError);
+      log({ function: FN, level: "error", message: "DB Update Error", metadata: { detail: dbError } });
       // Non-fatal: payment was cancelled, just log the DB error
     }
 
@@ -157,7 +159,7 @@ Deno.serve(withSentry(async (req) => {
 
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    console.error("Error in payment-cancel:", message);
+    log({ function: FN, level: "error", message: `Error in payment-cancel: ${message}` });
     return errorResponse(message, 500);
   }
 }));

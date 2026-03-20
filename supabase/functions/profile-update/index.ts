@@ -3,7 +3,9 @@
 // queue is removed or renamed.
 import { createClient } from '@supabase/supabase-js'
 import { HybridCalculator } from './calculator.ts'
-import { initSentry, withSentryHandler } from '../_shared/sentry_utils.ts'
+import { initSentry, withHandler, log } from '../_shared/logger.ts'
+
+const FN = "profile-update";
 
 const WEIGHTS: Record<string, number> = {
   view: 1,
@@ -16,7 +18,7 @@ const calculator = new HybridCalculator({ decayRate: 0.05 });
 
 initSentry();
 
-Deno.serve(withSentryHandler(async (_req) => {
+Deno.serve(withHandler(async (_req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -27,7 +29,7 @@ Deno.serve(withSentryHandler(async (_req) => {
     });
 
     if (qError) {
-        console.error('PGMQ Pop Error:', qError);
+        log({ function: FN, level: "error", message: "PGMQ Pop Error", metadata: { detail: qError } });
         throw qError;
     }
     
@@ -42,7 +44,7 @@ Deno.serve(withSentryHandler(async (_req) => {
     const { user_id, party_id, action_type } = msg.message;
     const weight = WEIGHTS[action_type] ?? 0;
 
-    console.log(`Processing action: ${action_type} (w:${weight}) for user ${user_id}`);
+    log({ function: FN, level: "info", message: `Processing action: ${action_type} (w:${weight}) for user ${user_id}` });
 
     const [userRes, partyRes] = await Promise.all([
       supabase.from('user_embeddings').select('embedding').eq('user_id', user_id).maybeSingle(),
@@ -50,7 +52,7 @@ Deno.serve(withSentryHandler(async (_req) => {
     ]);
 
     if (partyRes.error || !partyRes.data) {
-        console.warn(`Party embedding not found for ${party_id}. Skipping.`);
+        log({ function: FN, level: "warn", message: `Party embedding not found for ${party_id}. Skipping.` });
         return new Response(JSON.stringify({ error: "Party embedding missing" }), { status: 404 });
     }
 
@@ -76,7 +78,7 @@ Deno.serve(withSentryHandler(async (_req) => {
 
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : String(err);
-    console.error('Error:', errorMessage);
+    log({ function: FN, level: "error", message: "Error", metadata: { detail: errorMessage } });
     return new Response(JSON.stringify({ error: errorMessage }), { 
       status: 500,
       headers: { "Content-Type": "application/json" }

@@ -2,7 +2,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { PortoneV2Client } from "../_shared/portone_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
+import { initSentry, withHandler, log } from "../_shared/logger.ts";
+
+const FN = "payout-sync";
 
 const PORTONE_V2_API_KEY = Deno.env.get("PORTONE_V2_API_KEY");
 
@@ -32,7 +34,7 @@ function classifyError(errorCode: string): { retryable: boolean } {
   return { retryable: true };
 }
 
-Deno.serve(withSentry(async (req) => {
+Deno.serve(withHandler(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
 
   const auth = await requireAuth(req);
@@ -50,7 +52,7 @@ Deno.serve(withSentry(async (req) => {
       .in("status", ["CREATED", "READY", "PROCESSING"]);
 
     if (payoutFetchError) {
-      console.error("Failed to fetch active payouts:", payoutFetchError.message);
+      log({ function: FN, level: "error", message: `Failed to fetch active payouts: ${payoutFetchError.message}` });
       return errorResponse("Failed to fetch payouts", 500);
     }
 
@@ -70,7 +72,7 @@ Deno.serve(withSentry(async (req) => {
           .single();
 
         if (partnerError || !partner?.portone_partner_id) {
-          console.error(`Partner not found for payout ${payout.id}`);
+          log({ function: FN, level: "error", message: `Partner not found for payout ${payout.id}` });
           continue;
         }
 
@@ -80,7 +82,7 @@ Deno.serve(withSentry(async (req) => {
           portonePayouts = result.payouts ?? [];
         } catch (e) {
           const message = e instanceof Error ? e.message : String(e);
-          console.error(`getPayouts failed for payout ${payout.id}:`, message);
+          log({ function: FN, level: "error", message: `getPayouts failed for payout ${payout.id}: ${message}` });
           continue;
         }
 
@@ -197,14 +199,14 @@ Deno.serve(withSentry(async (req) => {
         }
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
-        console.error(`Error syncing payout ${payout.id}:`, message);
+        log({ function: FN, level: "error", message: `Error syncing payout ${payout.id}: ${message}` });
       }
     }
 
     return successResponse({ synced });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    console.error("Error in payout-sync:", message);
+    log({ function: FN, level: "error", message: `Error in payout-sync: ${message}` });
     return errorResponse(message, 500);
   }
 }));

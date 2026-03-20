@@ -1,5 +1,5 @@
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
-import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
+import { initSentry, withHandler } from "../_shared/logger.ts";
 
 const GITHUB_TOKEN = Deno.env.get("GITHUB_ACCESS_TOKEN");
 const GITHUB_REPO = "Mark-Yun/minglit";
@@ -13,7 +13,7 @@ export const ALERT_LABELS: Record<string, string[]> = {
 
 initSentry();
 
-Deno.serve(withSentry(async (req) => {
+Deno.serve(withHandler(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
 
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
