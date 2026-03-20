@@ -287,10 +287,24 @@ Deno.serve(async (req: Request): Promise<Response> => {
       assertion_results: settleResult.assertions,
     };
 
+    // Create GitHub issue on assertion failure
+    let githubIssueUrl: string | null = null;
+    if (summary.failed > 0) {
+      const logText = collector.formatAsText();
+      const logUrl = await simUploadLog(supabase, runId, logText);
+      githubIssueUrl = await simCreateGitHubIssue(
+        summary,
+        logUrl,
+        runId,
+        logText,
+      );
+    }
+
     return successResponse({
       success: summary.failed === 0,
       run_id: runId,
       summary,
+      github_issue_url: githubIssueUrl,
       _axiom_debug: debugStatus(),
     });
   }

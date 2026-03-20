@@ -113,8 +113,8 @@ export function extractFunctionName(req: Request): string {
   }
 }
 
-export function debugStatus(): { enabled: boolean; token: string; dataset: string; environment: string; bufferSize: number } {
-  return { enabled: _enabled, token: _token ? `${_token.slice(0, 8)}...` : "(empty)", dataset: _dataset, environment: _environment, bufferSize: _buffer.length };
+export function debugStatus(): { enabled: boolean; tokenConfigured: boolean; dataset: string; environment: string; bufferSize: number } {
+  return { enabled: _enabled, tokenConfigured: _token.length > 0, dataset: _dataset, environment: _environment, bufferSize: _buffer.length };
 }
 
 export function isEnabled(): boolean {

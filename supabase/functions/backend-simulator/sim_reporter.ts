@@ -135,13 +135,24 @@ export async function simCreateGitHubIssue(
       truncatedLog = new TextDecoder().decode(logBytes.slice(0, safeEnd)) + "\n...[truncated]";
     }
 
+    const axiomDataset = Deno.env.get("AXIOM_DATASET") ?? "edge-functions";
     const body = `## E2E Simulation Failure Report
 
-**Run ID**: ${runId}
+**Run ID**: \`${runId}\`
 **Failed Checks**: ${summary.failed}/${summary.total_checks}
+**Environment**: ${Deno.env.get("ENVIRONMENT") ?? "unknown"}
 
 ## Failed Assertions
 ${assertionLines || "_No assertion details available_"}
+
+## Axiom 디버깅
+Edge Function 로그는 Axiom에서 확인할 수 있습니다.
+
+\`\`\`
+axiom query "['${axiomDataset}'] | where metadata.runId == '${runId}'"
+\`\`\`
+
+또는 Axiom 대시보드에서 dataset \`${axiomDataset}\`를 선택하고 \`metadata.runId == '${runId}'\`로 필터링하세요.
 
 ## Log Details
 ${logSection}

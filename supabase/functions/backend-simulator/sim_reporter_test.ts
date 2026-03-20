@@ -116,6 +116,9 @@ Deno.test("simCreateGitHubIssue() — mock fetch, title contains [E2E-SIM], labe
     assertExists(result);
     assertStringIncludes(result!, "github.com");
     assertStringIncludes(capturedBody.title as string, "[E2E-SIM]");
+    assertStringIncludes(capturedBody.body as string, "Axiom");
+    assertStringIncludes(capturedBody.body as string, "axiom query");
+    assertStringIncludes(capturedBody.body as string, "run-abc-123");
     assertEquals(
       (capturedBody.labels as string[]).includes("e2e-simulation"),
       true,
