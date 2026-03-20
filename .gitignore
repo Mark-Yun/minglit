@@ -8,6 +8,8 @@
 
 # AI agent workspace
 .sisyphus/
+.claude/
+.omc/
 
 # Local scripts
 **/run_local.sh
