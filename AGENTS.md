@@ -12,6 +12,7 @@
 | [payment-pipeline.md](docs/architecture/payment-pipeline.md) | 결제/정산 파이프라인 |
 | [search-and-recommendation.md](docs/architecture/search-and-recommendation.md) | PGroonga 검색 + pgvector 추천 |
 | [global-event-pipeline.md](docs/architecture/global-event-pipeline.md) | PGMQ 2-tier 이벤트 파이프라인 |
+| [edge-functions.md](docs/debugging/edge-functions.md) | Edge Function 디버깅 (Axiom, Sentry, 로컬/Dev, 테스트) |
 
 ## Versioning Conventions
 
