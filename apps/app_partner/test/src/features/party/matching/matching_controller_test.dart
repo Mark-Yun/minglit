@@ -1,5 +1,4 @@
 import 'package:app_partner/src/features/party/matching/matching_controller.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -41,7 +40,7 @@ void main() {
         // Listen to controller to initialize
         final sub = container.listen(
           matchingControllerProvider,
-          (_, __) {},
+          (_, _) {},
         );
         addTearDown(sub.close);
         await pump();
@@ -78,7 +77,7 @@ void main() {
 
         final sub = container.listen(
           matchingControllerProvider,
-          (_, __) {},
+          (_, _) {},
         );
         addTearDown(sub.close);
         await pump();
@@ -165,7 +164,7 @@ void main() {
 
       final sub = container.listen(
         eventMatchRulesProvider('event_err'),
-        (_, __) {},
+        (_, _) {},
       );
       addTearDown(sub.close);
 

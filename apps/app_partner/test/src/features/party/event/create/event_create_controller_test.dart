@@ -1,6 +1,5 @@
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/event/create/event_create_controller.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -65,22 +64,26 @@ void main() {
   setUp(() {
     mockPartyRepo = MockPartyRepository();
     mockLocationRepo = MockLocationRepository();
-    registerFallbackValue(Event(
-      id: '',
-      partyId: '',
-      startTime: DateTime.now(),
-      endTime: DateTime.now(),
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    ));
-    registerFallbackValue(Location(
-      id: '',
-      partnerId: '',
-      name: '',
-      address: '',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    ));
+    registerFallbackValue(
+      Event(
+        id: '',
+        partyId: '',
+        startTime: DateTime.now(),
+        endTime: DateTime.now(),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+    registerFallbackValue(
+      Location(
+        id: '',
+        partnerId: '',
+        name: '',
+        address: '',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
   });
 
   group('EventCreateController', () {
@@ -157,7 +160,6 @@ void main() {
         notifier.initWithParty(
           party: _makeParty(),
           templates: [],
-          location: null,
         );
 
         final state = container.read(
@@ -181,7 +183,7 @@ void main() {
         );
 
         final entryGroupTemplates = [
-          EntryGroupTemplate(
+          const EntryGroupTemplate(
             id: 'eg-1',
             partyId: 'party-1',
             label: 'Male',
@@ -192,7 +194,6 @@ void main() {
         notifier.initWithParty(
           party: _makeParty(entryGroups: entryGroupTemplates),
           templates: [],
-          location: null,
         );
 
         final state = container.read(
@@ -233,8 +234,7 @@ void main() {
         expect(updated.endTime.isAfter(farFuture), isTrue);
       });
 
-      test('updateStartTime does not change end if end is after new start',
-          () {
+      test('updateStartTime does not change end if end is after new start', () {
         final container = createContainer(
           overrides: [
             partyRepositoryProvider.overrideWithValue(mockPartyRepo),
@@ -273,7 +273,7 @@ void main() {
           eventCreateControllerProvider('party-1').notifier,
         );
 
-        final newEnd = DateTime(2030, 1, 1, 23, 0);
+        final newEnd = DateTime(2030, 1, 1, 23);
         notifier.updateEndTime(newEnd);
 
         final state = container.read(
@@ -351,9 +351,7 @@ void main() {
         notifier.updateDescription({'ops': []});
 
         expect(
-          container
-              .read(eventCreateControllerProvider('party-1'))
-              .description,
+          container.read(eventCreateControllerProvider('party-1')).description,
           {'ops': []},
         );
       });
@@ -371,9 +369,7 @@ void main() {
         notifier.updateImageUrl('https://example.com/img.jpg');
 
         expect(
-          container
-              .read(eventCreateControllerProvider('party-1'))
-              .imageUrl,
+          container.read(eventCreateControllerProvider('party-1')).imageUrl,
           'https://example.com/img.jpg',
         );
       });
@@ -473,74 +469,76 @@ void main() {
         notifier.setVisibility('private');
 
         expect(
-          container
-              .read(eventCreateControllerProvider('party-1'))
-              .visibility,
+          container.read(eventCreateControllerProvider('party-1')).visibility,
           'private',
         );
       });
     });
 
     group('submit', () {
-      test('creates event without new location when locationId exists',
-          () async {
-        final party = _makeParty(locationId: 'loc-1');
+      test(
+        'creates event without new location when locationId exists',
+        () async {
+          final party = _makeParty(locationId: 'loc-1');
 
-        when(() => mockPartyRepo.createEvent(any()))
-            .thenAnswer((_) async => Event(
-                  id: 'new-event',
-                  partyId: 'party-1',
-                  startTime: DateTime.now(),
-                  endTime: DateTime.now(),
-                  createdAt: DateTime.now(),
-                  updatedAt: DateTime.now(),
-                ));
-
-        final container = createContainer(
-          overrides: [
-            partyRepositoryProvider.overrideWithValue(mockPartyRepo),
-            locationRepositoryProvider.overrideWithValue(mockLocationRepo),
-            partyDetailProvider('party-1').overrideWith(
-              (ref) async => party,
+          when(() => mockPartyRepo.createEvent(any())).thenAnswer(
+            (_) async => Event(
+              id: 'new-event',
+              partyId: 'party-1',
+              startTime: DateTime.now(),
+              endTime: DateTime.now(),
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
             ),
-          ],
-        );
+          );
 
-        final notifier = container.read(
-          eventCreateControllerProvider('party-1').notifier,
-        );
+          final container = createContainer(
+            overrides: [
+              partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+              locationRepositoryProvider.overrideWithValue(mockLocationRepo),
+              partyDetailProvider('party-1').overrideWith(
+                (ref) async => party,
+              ),
+            ],
+          );
 
-        // Set locationId (simulating initWithParty)
-        notifier.updateLocation(_makeLocation());
-        notifier.updateTitle('Event Title');
+          final notifier = container.read(
+            eventCreateControllerProvider('party-1').notifier,
+          );
 
-        await notifier.submit();
+          // Set locationId (simulating initWithParty)
+          notifier.updateLocation(_makeLocation());
+          notifier.updateTitle('Event Title');
 
-        final state = container.read(
-          eventCreateControllerProvider('party-1'),
-        );
+          await notifier.submit();
 
-        expect(state.status, isA<AsyncData<void>>());
-        verify(() => mockPartyRepo.createEvent(any())).called(1);
-        verifyNever(() => mockLocationRepo.createLocation(any()));
-      });
+          final state = container.read(
+            eventCreateControllerProvider('party-1'),
+          );
 
-      test('creates location first when selectedLocation has no id',
-          () async {
+          expect(state.status, isA<AsyncData<void>>());
+          verify(() => mockPartyRepo.createEvent(any())).called(1);
+          verifyNever(() => mockLocationRepo.createLocation(any()));
+        },
+      );
+
+      test('creates location first when selectedLocation has no id', () async {
         final party = _makeParty();
         final newLocation = _makeLocation(id: 'new-loc');
 
-        when(() => mockLocationRepo.createLocation(any()))
-            .thenAnswer((_) async => newLocation);
-        when(() => mockPartyRepo.createEvent(any()))
-            .thenAnswer((_) async => Event(
-                  id: 'new-event',
-                  partyId: 'party-1',
-                  startTime: DateTime.now(),
-                  endTime: DateTime.now(),
-                  createdAt: DateTime.now(),
-                  updatedAt: DateTime.now(),
-                ));
+        when(
+          () => mockLocationRepo.createLocation(any()),
+        ).thenAnswer((_) async => newLocation);
+        when(() => mockPartyRepo.createEvent(any())).thenAnswer(
+          (_) async => Event(
+            id: 'new-event',
+            partyId: 'party-1',
+            startTime: DateTime.now(),
+            endTime: DateTime.now(),
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
 
         final container = createContainer(
           overrides: [
@@ -581,8 +579,9 @@ void main() {
       });
 
       test('sets error status on repository failure', () async {
-        when(() => mockPartyRepo.createEvent(any()))
-            .thenThrow(Exception('Create failed'));
+        when(
+          () => mockPartyRepo.createEvent(any()),
+        ).thenThrow(Exception('Create failed'));
 
         final container = createContainer(
           overrides: [

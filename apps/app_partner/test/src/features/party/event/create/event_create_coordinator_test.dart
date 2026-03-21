@@ -1,6 +1,5 @@
 import 'package:app_partner/src/features/party/event/create/event_create_coordinator.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -63,7 +62,7 @@ void main() {
             onPressed: () {
               EventCreateCoordinator(context).openBasicInfoEdit(
                 party: _makeParty(),
-                onSave: (_, __, ___, ____, _____) {},
+                onSave: (_, _, _, _, _) {},
               );
             },
             child: const Text('Go'),
@@ -90,7 +89,7 @@ void main() {
             onPressed: () {
               EventCreateCoordinator(context).openCapacityContactEdit(
                 party: _makeParty(),
-                onSave: (_, __, ___) {},
+                onSave: (_, _, _) {},
               );
             },
             child: const Text('Go'),
@@ -118,7 +117,7 @@ void main() {
                 initialLocation: _makeLocation(),
                 initialAddressDetail: '3층',
                 initialDirectionsGuide: '엘리베이터 이용',
-                onSave: (_, __, ___) {},
+                onSave: (_, _, _) {},
               );
             },
             child: const Text('Go'),
@@ -133,8 +132,9 @@ void main() {
       tester.takeException();
     });
 
-    testWidgets('openLocationEdit works with null initial values',
-        (tester) async {
+    testWidgets('openLocationEdit works with null initial values', (
+      tester,
+    ) async {
       var routePushed = false;
       final observer = _TrackingObserver(onPush: () => routePushed = true);
 
@@ -147,7 +147,7 @@ void main() {
                 initialLocation: null,
                 initialAddressDetail: null,
                 initialDirectionsGuide: null,
-                onSave: (_, __, ___) {},
+                onSave: (_, _, _) {},
               );
             },
             child: const Text('Go'),
@@ -171,8 +171,9 @@ void main() {
           observer: observer,
           builder: (context) => ElevatedButton(
             onPressed: () {
-              EventCreateCoordinator(context)
-                  .openTicketTemplateManage('party-1');
+              EventCreateCoordinator(
+                context,
+              ).openTicketTemplateManage('party-1');
             },
             child: const Text('Go'),
           ),

@@ -80,7 +80,7 @@ void main() {
 
       final sub = container.listen(
         eventTicketsProvider('event_err'),
-        (_, __) {},
+        (_, _) {},
       );
       addTearDown(sub.close);
 
