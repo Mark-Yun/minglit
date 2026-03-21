@@ -22,16 +22,16 @@ class _RefundPolicySection extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Fix #190: 인포버튼을 타이틀 바로 옆에 배치
           Row(
             children: [
-              Expanded(
-                child: Text(
-                  '환불 정책',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              Text(
+                '환불 정책',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
               ),
+              const SizedBox(width: MinglitSpacing.xxsmall),
               IconButton(
                 icon: Icon(
                   Icons.info_outline,
@@ -69,7 +69,9 @@ class _RefundPolicySection extends ConsumerWidget {
     final now = DateTime.now();
     // Fix #138: "~까지 환불 가능" 문구와 일치하도록 경계값 포함 비교
     final isRefundable = !now.isAfter(cutoffDate);
-    final dateFormat = DateFormat('M월 d일 HH시', 'ko_KR');
+    // Fix #190: 요일 추가, D-day 표시로 날짜 인지성 개선
+    final dateFormat = DateFormat('M월 d일 (E) HH시', 'ko_KR');
+    final daysLeft = cutoffDate.difference(now).inDays;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,18 +98,41 @@ class _RefundPolicySection extends ConsumerWidget {
                     : theme.colorScheme.error,
               ),
               const SizedBox(width: MinglitSpacing.small),
+              // Fix #190: 날짜만 강조하여 빠른 인지 지원
               Expanded(
-                child: Text(
-                  isRefundable
-                      ? '지금 결제 시 ${dateFormat.format(cutoffDate)}까지 환불 가능'
-                      : '환불 가능 기간이 지났습니다',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: isRefundable
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.error,
-                  ),
-                ),
+                child: isRefundable
+                    ? Text.rich(
+                        TextSpan(
+                          style: theme.textTheme.bodyMedium,
+                          children: [
+                            TextSpan(
+                              text: dateFormat.format(cutoffDate),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                            const TextSpan(text: '까지 환불 가능'),
+                            if (daysLeft >= 0)
+                              TextSpan(
+                                text: daysLeft == 0
+                                    ? ' (오늘)'
+                                    : ' ($daysLeft일 후)',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                          ],
+                        ),
+                      )
+                    : Text(
+                        '환불 가능 기간이 지났습니다',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.error,
+                        ),
+                      ),
               ),
             ],
           ),
