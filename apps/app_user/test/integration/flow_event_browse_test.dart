@@ -2,14 +2,11 @@ import 'dart:async';
 
 import 'package:app_user/src/features/event/detail/event_detail_page.dart';
 import 'package:app_user/src/features/explore/providers/explore_state_provider.dart';
-import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/features/partner/detail/partner_detail_page.dart';
 import 'package:app_user/src/features/partner/detail/partner_events_page.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:minglit_kit/minglit_kit.dart';
-
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
@@ -154,11 +151,12 @@ void main() {
       setKoreanLocale(tester);
       await tester.pumpWidget(
         createTestApp(
-          initialLocation: '/partners/test-partner-id/events'
+          initialLocation:
+              '/partners/test-partner-id/events'
               '?partner-name=Test%20Partner',
           additionalOverrides: [
             partnerEventsProvider.overrideWith(
-              (ref, partnerId) async => createMockEventsForTest(count: 2),
+              (ref, partnerId) async => createMockEventsForTest(),
             ),
           ],
         ),
@@ -178,7 +176,8 @@ void main() {
       setKoreanLocale(tester);
       await tester.pumpWidget(
         createTestApp(
-          initialLocation: '/partners/test-partner-id/events'
+          initialLocation:
+              '/partners/test-partner-id/events'
               '?partner-name=Test%20Partner',
           additionalOverrides: [
             partnerEventsProvider.overrideWith(
