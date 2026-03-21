@@ -56,14 +56,14 @@ void main() {
     });
 
     group('onAuthStateChange', () {
-      test('returns auth state stream from auth client', () async {
+      test('returns auth state stream from auth client', () {
         final controller = StreamController<AuthState>();
         when(
           () => mockAuth.onAuthStateChange,
         ).thenAnswer((_) => controller.stream);
 
         expect(repository.onAuthStateChange, isA<Stream<AuthState>>());
-        await controller.close();
+        unawaited(controller.close());
       });
     });
 
