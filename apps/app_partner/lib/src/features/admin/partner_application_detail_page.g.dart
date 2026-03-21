@@ -12,13 +12,10 @@ part of 'partner_application_detail_page.dart';
 @ProviderFor(partnerApplication)
 const partnerApplicationProvider = PartnerApplicationFamily._();
 
-final class PartnerApplicationProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<PartnerApplication?>,
-          PartnerApplication?,
-          FutureOr<PartnerApplication?>
-        >
+final class PartnerApplicationProvider extends $FunctionalProvider<
+        AsyncValue<PartnerApplication?>,
+        PartnerApplication?,
+        FutureOr<PartnerApplication?>>
     with
         $FutureModifier<PartnerApplication?>,
         $FutureProvider<PartnerApplication?> {
@@ -26,12 +23,12 @@ final class PartnerApplicationProvider
     required PartnerApplicationFamily super.from,
     required String super.argument,
   }) : super(
-         retry: null,
-         name: r'partnerApplicationProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+          retry: null,
+          name: r'partnerApplicationProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$partnerApplicationHash();
@@ -47,7 +44,8 @@ final class PartnerApplicationProvider
   @override
   $FutureProviderElement<PartnerApplication?> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<PartnerApplication?> create(Ref ref) {
@@ -72,13 +70,13 @@ String _$partnerApplicationHash() =>
 final class PartnerApplicationFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<PartnerApplication?>, String> {
   const PartnerApplicationFamily._()
-    : super(
-        retry: null,
-        name: r'partnerApplicationProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
+      : super(
+          retry: null,
+          name: r'partnerApplicationProvider',
+          dependencies: null,
+          $allTransitiveDependencies: null,
+          isAutoDispose: true,
+        );
 
   PartnerApplicationProvider call({required String applicationId}) =>
       PartnerApplicationProvider._(argument: applicationId, from: this);

@@ -17,10 +17,10 @@ class ThemeSettingsTile extends ConsumerWidget {
     final icon = currentMode == ThemeMode.dark
         ? Icons.dark_mode
         : currentMode == ThemeMode.light
-        ? Icons.light_mode
-        : systemBrightness == Brightness.dark
-        ? Icons.dark_mode
-        : Icons.light_mode;
+            ? Icons.light_mode
+            : systemBrightness == Brightness.dark
+                ? Icons.dark_mode
+                : Icons.light_mode;
     return ListTile(
       leading: Icon(icon),
       title: const Text('테마'),
@@ -28,8 +28,8 @@ class ThemeSettingsTile extends ConsumerWidget {
         currentMode == ThemeMode.dark
             ? '다크 모드'
             : currentMode == ThemeMode.light
-            ? '라이트 모드'
-            : '시스템 설정',
+                ? '라이트 모드'
+                : '시스템 설정',
       ),
       onTap: () {
         unawaited(_showThemePicker(context, ref, currentMode));
@@ -66,8 +66,8 @@ class ThemeSettingsTile extends ConsumerWidget {
                       mode == ThemeMode.system
                           ? '시스템 설정'
                           : mode == ThemeMode.light
-                          ? '라이트 모드'
-                          : '다크 모드',
+                              ? '라이트 모드'
+                              : '다크 모드',
                     ),
                     value: mode,
                   ),

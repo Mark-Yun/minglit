@@ -15,25 +15,21 @@ const socialRepositoryProvider = SocialRepositoryProvider._();
 
 /// Provider for SocialRepository.
 
-final class SocialRepositoryProvider
-    extends
-        $FunctionalProvider<
-          SocialRepository,
-          SocialRepository,
-          SocialRepository
-        >
-    with $Provider<SocialRepository> {
+final class SocialRepositoryProvider extends $FunctionalProvider<
+    SocialRepository,
+    SocialRepository,
+    SocialRepository> with $Provider<SocialRepository> {
   /// Provider for SocialRepository.
   const SocialRepositoryProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'socialRepositoryProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'socialRepositoryProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$socialRepositoryHash();

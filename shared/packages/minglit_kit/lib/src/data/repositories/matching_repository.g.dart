@@ -15,25 +15,21 @@ const matchingRepositoryProvider = MatchingRepositoryProvider._();
 
 /// Provides the [MatchingRepository].
 
-final class MatchingRepositoryProvider
-    extends
-        $FunctionalProvider<
-          MatchingRepository,
-          MatchingRepository,
-          MatchingRepository
-        >
-    with $Provider<MatchingRepository> {
+final class MatchingRepositoryProvider extends $FunctionalProvider<
+    MatchingRepository,
+    MatchingRepository,
+    MatchingRepository> with $Provider<MatchingRepository> {
   /// Provides the [MatchingRepository].
   const MatchingRepositoryProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'matchingRepositoryProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'matchingRepositoryProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$matchingRepositoryHash();
@@ -42,7 +38,8 @@ final class MatchingRepositoryProvider
   @override
   $ProviderElement<MatchingRepository> $createElement(
     $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  ) =>
+      $ProviderElement(pointer);
 
   @override
   MatchingRepository create(Ref ref) {

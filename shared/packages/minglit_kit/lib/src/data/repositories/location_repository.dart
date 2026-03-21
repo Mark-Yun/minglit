@@ -15,7 +15,7 @@ LocationRepository locationRepository(Ref ref) {
 class LocationRepository {
   /// Creates a [LocationRepository] with a Supabase client.
   LocationRepository({SupabaseClient? supabase})
-    : _supabase = supabase ?? Supabase.instance.client;
+      : _supabase = supabase ?? Supabase.instance.client;
 
   final SupabaseClient _supabase;
 
@@ -112,14 +112,11 @@ class LocationRepository {
   }) async {
     Log.d('updateLocationDetails called | locationId: $locationId');
     try {
-      await _supabase
-          .from('locations')
-          .update({
-            'address_detail': addressDetail,
-            'directions_guide': directionsGuide,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', locationId);
+      await _supabase.from('locations').update({
+        'address_detail': addressDetail,
+        'directions_guide': directionsGuide,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', locationId);
       Log.d('updateLocationDetails success');
     } catch (e, st) {
       Log.e('❌ [LocationRepo] updateLocationDetails Error', e, st);

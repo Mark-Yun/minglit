@@ -15,25 +15,21 @@ const settlementRepositoryProvider = SettlementRepositoryProvider._();
 
 /// Provider for [SettlementRepository].
 
-final class SettlementRepositoryProvider
-    extends
-        $FunctionalProvider<
-          SettlementRepository,
-          SettlementRepository,
-          SettlementRepository
-        >
-    with $Provider<SettlementRepository> {
+final class SettlementRepositoryProvider extends $FunctionalProvider<
+    SettlementRepository,
+    SettlementRepository,
+    SettlementRepository> with $Provider<SettlementRepository> {
   /// Provider for [SettlementRepository].
   const SettlementRepositoryProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'settlementRepositoryProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'settlementRepositoryProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$settlementRepositoryHash();
@@ -42,7 +38,8 @@ final class SettlementRepositoryProvider
   @override
   $ProviderElement<SettlementRepository> $createElement(
     $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  ) =>
+      $ProviderElement(pointer);
 
   @override
   SettlementRepository create(Ref ref) {

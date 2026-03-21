@@ -12,20 +12,19 @@ part of 'party_providers.dart';
 @ProviderFor(currentPartnerInfo)
 const currentPartnerInfoProvider = CurrentPartnerInfoProvider._();
 
-final class CurrentPartnerInfoProvider
-    extends
-        $FunctionalProvider<AsyncValue<Partner?>, Partner?, FutureOr<Partner?>>
+final class CurrentPartnerInfoProvider extends $FunctionalProvider<
+        AsyncValue<Partner?>, Partner?, FutureOr<Partner?>>
     with $FutureModifier<Partner?>, $FutureProvider<Partner?> {
   const CurrentPartnerInfoProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'currentPartnerInfoProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'currentPartnerInfoProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$currentPartnerInfoHash();
@@ -47,26 +46,23 @@ String _$currentPartnerInfoHash() =>
 @ProviderFor(partyVerificationTypes)
 const partyVerificationTypesProvider = PartyVerificationTypesProvider._();
 
-final class PartyVerificationTypesProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<Verification>>,
-          List<Verification>,
-          FutureOr<List<Verification>>
-        >
+final class PartyVerificationTypesProvider extends $FunctionalProvider<
+        AsyncValue<List<Verification>>,
+        List<Verification>,
+        FutureOr<List<Verification>>>
     with
         $FutureModifier<List<Verification>>,
         $FutureProvider<List<Verification>> {
   const PartyVerificationTypesProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'partyVerificationTypesProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'partyVerificationTypesProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$partyVerificationTypesHash();
@@ -75,7 +71,8 @@ final class PartyVerificationTypesProvider
   @override
   $FutureProviderElement<List<Verification>> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<Verification>> create(Ref ref) {

@@ -12,13 +12,10 @@ part of 'event_my_application_provider.dart';
 @ProviderFor(eventMyApplication)
 const eventMyApplicationProvider = EventMyApplicationFamily._();
 
-final class EventMyApplicationProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<EventApplication?>,
-          EventApplication?,
-          FutureOr<EventApplication?>
-        >
+final class EventMyApplicationProvider extends $FunctionalProvider<
+        AsyncValue<EventApplication?>,
+        EventApplication?,
+        FutureOr<EventApplication?>>
     with
         $FutureModifier<EventApplication?>,
         $FutureProvider<EventApplication?> {
@@ -26,12 +23,12 @@ final class EventMyApplicationProvider
     required EventMyApplicationFamily super.from,
     required String super.argument,
   }) : super(
-         retry: null,
-         name: r'eventMyApplicationProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+          retry: null,
+          name: r'eventMyApplicationProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$eventMyApplicationHash();
@@ -47,7 +44,8 @@ final class EventMyApplicationProvider
   @override
   $FutureProviderElement<EventApplication?> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<EventApplication?> create(Ref ref) {
@@ -72,13 +70,13 @@ String _$eventMyApplicationHash() =>
 final class EventMyApplicationFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<EventApplication?>, String> {
   const EventMyApplicationFamily._()
-    : super(
-        retry: null,
-        name: r'eventMyApplicationProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
+      : super(
+          retry: null,
+          name: r'eventMyApplicationProvider',
+          dependencies: null,
+          $allTransitiveDependencies: null,
+          isAutoDispose: true,
+        );
 
   EventMyApplicationProvider call(String eventId) =>
       EventMyApplicationProvider._(argument: eventId, from: this);

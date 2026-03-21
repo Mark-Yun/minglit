@@ -21,7 +21,7 @@ StorageRepository storageRepository(Ref ref) {
 class StorageRepository {
   /// Creates a [StorageRepository] with a Supabase client.
   StorageRepository({SupabaseClient? supabase})
-    : _supabase = supabase ?? Supabase.instance.client;
+      : _supabase = supabase ?? Supabase.instance.client;
 
   final SupabaseClient _supabase;
 
@@ -39,18 +39,15 @@ class StorageRepository {
   }) async {
     try {
       final bytes = await file.readAsBytes();
-      final extension = p.extension(file.path).isEmpty
-          ? '.jpg'
-          : p.extension(file.path);
+      final extension =
+          p.extension(file.path).isEmpty ? '.jpg' : p.extension(file.path);
       // Generate a unique filename
       final filename = '${const Uuid().v4()}$extension';
       final fullPath = pathPrefix != null ? '$pathPrefix/$filename' : filename;
 
       Log.d('Uploading file to $bucket/$fullPath...');
 
-      await _supabase.storage
-          .from(bucket)
-          .uploadBinary(
+      await _supabase.storage.from(bucket).uploadBinary(
             fullPath,
             bytes,
             fileOptions: FileOptions(
@@ -86,9 +83,7 @@ class StorageRepository {
 
       Log.d('Uploading bytes to $bucket/$fullPath...');
 
-      await _supabase.storage
-          .from(bucket)
-          .uploadBinary(
+      await _supabase.storage.from(bucket).uploadBinary(
             fullPath,
             bytes,
             fileOptions: FileOptions(contentType: contentType),

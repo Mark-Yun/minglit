@@ -63,8 +63,7 @@ class VerificationManagePage extends ConsumerWidget {
     final confirmed = await MinglitAlert.showConfirm(
       context: context,
       title: '인증 보관',
-      content:
-          "'${verification.displayName}' 인증을 보관함으로 이동하시겠습니까?\n\n"
+      content: "'${verification.displayName}' 인증을 보관함으로 이동하시겠습니까?\n\n"
           '더 이상 새로운 파티에 이 인증을 사용할 수 없게 됩니다.',
       confirmText: '보관하기',
       isDestructive: true,
@@ -85,8 +84,7 @@ class VerificationManagePage extends ConsumerWidget {
     final confirmed = await MinglitAlert.showConfirm(
       context: context,
       title: '인증 복구',
-      content:
-          "'${verification.displayName}' 인증을 복구하시겠습니까?\n\n"
+      content: "'${verification.displayName}' 인증을 복구하시겠습니까?\n\n"
           '다시 파티 생성 시 선택할 수 있게 됩니다.',
       confirmText: '복구하기',
     );

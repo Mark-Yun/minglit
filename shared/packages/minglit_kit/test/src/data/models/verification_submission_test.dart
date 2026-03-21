@@ -7,22 +7,22 @@ void main() {
 
   group('VerificationSubmission', () {
     Map<String, dynamic> submissionJson() => {
-      'id': 'sub_1',
-      'partner_id': 'partner_1',
-      'user_id': 'user_1',
-      'verification_id': 'verif_1',
-      'status': 'pending',
-      'snapshot_data': {
-        'company': 'Minglit Inc',
-        'position': 'Developer',
-      },
-      'created_at': now.toIso8601String(),
-      'updated_at': now.toIso8601String(),
-      'application_id': 'app_1',
-      'admin_comment': 'Please resubmit',
-      'reviewed_at': now.toIso8601String(),
-      'reviewed_by': 'admin_1',
-    };
+          'id': 'sub_1',
+          'partner_id': 'partner_1',
+          'user_id': 'user_1',
+          'verification_id': 'verif_1',
+          'status': 'pending',
+          'snapshot_data': {
+            'company': 'Minglit Inc',
+            'position': 'Developer',
+          },
+          'created_at': now.toIso8601String(),
+          'updated_at': now.toIso8601String(),
+          'application_id': 'app_1',
+          'admin_comment': 'Please resubmit',
+          'reviewed_at': now.toIso8601String(),
+          'reviewed_by': 'admin_1',
+        };
 
     test('creates from JSON with all fields', () {
       final sub = VerificationSubmission.fromJson(submissionJson());

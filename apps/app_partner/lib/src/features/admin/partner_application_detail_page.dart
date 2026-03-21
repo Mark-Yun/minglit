@@ -40,9 +40,9 @@ Future<PartnerApplication?> partnerApplication(
       .getAllApplications(status: 'all');
 
   return apps.cast<PartnerApplication?>().firstWhere(
-    (a) => a?.id == applicationId,
-    orElse: () => null,
-  );
+        (a) => a?.id == applicationId,
+        orElse: () => null,
+      );
 }
 
 class PartnerApplicationDetailPage extends ConsumerStatefulWidget {
@@ -62,9 +62,7 @@ class _PartnerApplicationDetailPageState
   Future<void> _processReview({required String status, String? comment}) async {
     final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
     try {
-      await ref
-          .read(partnerRepositoryProvider)
-          .reviewApplication(
+      await ref.read(partnerRepositoryProvider).reviewApplication(
             applicationId: widget.applicationId,
             status: status,
             adminComment: comment,
@@ -88,9 +86,8 @@ class _PartnerApplicationDetailPageState
   Future<void> _openFile(String path) async {
     final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
     try {
-      final signedUrl = await ref
-          .read(partnerRepositoryProvider)
-          .getSignedUrl(path);
+      final signedUrl =
+          await ref.read(partnerRepositoryProvider).getSignedUrl(path);
       final extension = p.extension(path).toLowerCase();
 
       if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].contains(extension)) {

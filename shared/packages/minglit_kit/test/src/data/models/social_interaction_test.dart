@@ -6,12 +6,12 @@ void main() {
 
   group('SocialInteraction', () {
     Map<String, dynamic> interactionJson() => {
-      'userId': 'user_1',
-      'targetId': 'party_1',
-      'targetType': 'party',
-      'interactionType': 'like',
-      'createdAt': now.toIso8601String(),
-    };
+          'userId': 'user_1',
+          'targetId': 'party_1',
+          'targetType': 'party',
+          'interactionType': 'like',
+          'createdAt': now.toIso8601String(),
+        };
 
     test('creates from JSON', () {
       final interaction = SocialInteraction.fromJson(interactionJson());

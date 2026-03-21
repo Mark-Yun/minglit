@@ -15,21 +15,19 @@ const eventRepositoryProvider = EventRepositoryProvider._();
 
 /// Provider for EventRepository.
 
-final class EventRepositoryProvider
-    extends
-        $FunctionalProvider<EventRepository, EventRepository, EventRepository>
-    with $Provider<EventRepository> {
+final class EventRepositoryProvider extends $FunctionalProvider<EventRepository,
+    EventRepository, EventRepository> with $Provider<EventRepository> {
   /// Provider for EventRepository.
   const EventRepositoryProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'eventRepositoryProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'eventRepositoryProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$eventRepositoryHash();

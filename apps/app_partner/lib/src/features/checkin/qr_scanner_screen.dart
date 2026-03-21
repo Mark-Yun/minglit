@@ -121,8 +121,8 @@ class _ResultFeedbackOverlay extends StatelessWidget {
           Text(
             title,
             style: Theme.of(context).textTheme.displayLarge!.copyWith(
-              color: MinglitColors.background,
-            ),
+                  color: MinglitColors.background,
+                ),
           ),
           if (subTitle.isNotEmpty)
             Padding(
@@ -130,8 +130,8 @@ class _ResultFeedbackOverlay extends StatelessWidget {
               child: Text(
                 subTitle,
                 style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                  color: MinglitColors.background,
-                ),
+                      color: MinglitColors.background,
+                    ),
               ),
             ),
         ],
@@ -232,8 +232,8 @@ class QrScannerOverlayShape extends ShapeBorder {
 
   @override
   ShapeBorder scale(double t) => QrScannerOverlayShape(
-    borderColor: borderColor,
-    borderWidth: borderWidth,
-    overlayColor: overlayColor,
-  );
+        borderColor: borderColor,
+        borderWidth: borderWidth,
+        overlayColor: overlayColor,
+      );
 }

@@ -145,8 +145,8 @@ class _AddressSearchDialogState extends State<AddressSearchDialog> {
                 child: Text(
                   _errorMessage!,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                 ),
               ),
             )
@@ -157,8 +157,8 @@ class _AddressSearchDialogState extends State<AddressSearchDialog> {
                   '위 검색창에 주소를 입력하고 검색 버튼을 눌러주세요',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                 ),
               ),
             )

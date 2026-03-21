@@ -18,15 +18,15 @@ final class LocationSearchControllerProvider
     extends $AsyncNotifierProvider<LocationSearchController, List<Location>> {
   /// Handles location search with debounce and async results.
   const LocationSearchControllerProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'locationSearchControllerProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'locationSearchControllerProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$locationSearchControllerHash();
@@ -49,14 +49,11 @@ abstract class _$LocationSearchController
   void runBuild() {
     final created = build();
     final ref = this.ref as $Ref<AsyncValue<List<Location>>, List<Location>>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<AsyncValue<List<Location>>, List<Location>>,
-              AsyncValue<List<Location>>,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<AsyncValue<List<Location>>, List<Location>>,
+        AsyncValue<List<Location>>,
+        Object?,
+        Object?>;
     element.handleValue(ref, created);
   }
 }

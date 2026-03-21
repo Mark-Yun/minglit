@@ -13,22 +13,18 @@ part of 'settlement_dashboard_controller.dart';
 const settlementDashboardControllerProvider =
     SettlementDashboardControllerProvider._();
 
-final class SettlementDashboardControllerProvider
-    extends
-        $NotifierProvider<
-          SettlementDashboardController,
-          SettlementDashboardState
-        > {
+final class SettlementDashboardControllerProvider extends $NotifierProvider<
+    SettlementDashboardController, SettlementDashboardState> {
   const SettlementDashboardControllerProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'settlementDashboardControllerProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'settlementDashboardControllerProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$settlementDashboardControllerHash();
@@ -58,14 +54,11 @@ abstract class _$SettlementDashboardController
     final created = build();
     final ref =
         this.ref as $Ref<SettlementDashboardState, SettlementDashboardState>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<SettlementDashboardState, SettlementDashboardState>,
-              SettlementDashboardState,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<SettlementDashboardState, SettlementDashboardState>,
+        SettlementDashboardState,
+        Object?,
+        Object?>;
     element.handleValue(ref, created);
   }
 }

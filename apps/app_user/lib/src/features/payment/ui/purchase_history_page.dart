@@ -27,8 +27,8 @@ class PurchaseHistoryPage extends ConsumerWidget {
               child: Text(
                 '구매 내역이 없습니다.',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
               ),
             );
           }

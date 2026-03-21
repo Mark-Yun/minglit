@@ -7,12 +7,10 @@ mixin _PartnerMemberRepository on _SupabasePartnerContext {
   ) async {
     Log.d('getPartnerMembers called | partnerId: $partnerId');
     try {
-      final data =
-          await supabaseClient.rpc<dynamic>(
-                'get_partner_members_with_user',
-                params: {'p_partner_id': partnerId},
-              )
-              as List;
+      final data = await supabaseClient.rpc<dynamic>(
+        'get_partner_members_with_user',
+        params: {'p_partner_id': partnerId},
+      ) as List;
       final result = data.map((entry) {
         final map = entry as Map<String, dynamic>;
         // RPC returns flat columns: user_id, partner_id, role,
@@ -50,10 +48,9 @@ mixin _PartnerMemberRepository on _SupabasePartnerContext {
     try {
       await supabaseClient
           .from('partner_member_permissions')
-          .update({'role': role})
-          .match(
-            {'partner_id': partnerId, 'user_id': userId},
-          );
+          .update({'role': role}).match(
+        {'partner_id': partnerId, 'user_id': userId},
+      );
       Log.d('updateMemberRole success');
     } catch (e, st) {
       Log.e('❌ [PartnerRepo] updateMemberRole Error', e, st);
@@ -74,10 +71,9 @@ mixin _PartnerMemberRepository on _SupabasePartnerContext {
     try {
       await supabaseClient
           .from('partner_member_permissions')
-          .update({'permissions': permissions})
-          .match(
-            {'partner_id': partnerId, 'user_id': userId},
-          );
+          .update({'permissions': permissions}).match(
+        {'partner_id': partnerId, 'user_id': userId},
+      );
       Log.d('updateMemberPermissions success');
     } catch (e, st) {
       Log.e('❌ [PartnerRepo] updateMemberPermissions Error', e, st);

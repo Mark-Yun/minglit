@@ -8,8 +8,7 @@ enum SettlementStatus {
   completed,
   failed,
   canceled,
-  unknown
-  ;
+  unknown;
 
   static SettlementStatus fromString(String value) {
     return switch (value.toUpperCase()) {
@@ -25,37 +24,37 @@ enum SettlementStatus {
   }
 
   String get label => switch (this) {
-    SettlementStatus.pending => '정산 대기',
-    SettlementStatus.hold => '보류',
-    SettlementStatus.ready => '정산 확정',
-    SettlementStatus.processing => '지급 중',
-    SettlementStatus.completed => '지급 완료',
-    SettlementStatus.failed => '지급 실패',
-    SettlementStatus.canceled => '취소',
-    SettlementStatus.unknown => '알 수 없음',
-  };
+        SettlementStatus.pending => '정산 대기',
+        SettlementStatus.hold => '보류',
+        SettlementStatus.ready => '정산 확정',
+        SettlementStatus.processing => '지급 중',
+        SettlementStatus.completed => '지급 완료',
+        SettlementStatus.failed => '지급 실패',
+        SettlementStatus.canceled => '취소',
+        SettlementStatus.unknown => '알 수 없음',
+      };
 
   Color backgroundColor(ColorScheme colorScheme) => switch (this) {
-    SettlementStatus.pending => colorScheme.surfaceContainerHighest,
-    SettlementStatus.hold => colorScheme.errorContainer,
-    SettlementStatus.ready => colorScheme.primaryContainer,
-    SettlementStatus.processing => colorScheme.secondaryContainer,
-    SettlementStatus.completed => colorScheme.tertiaryContainer,
-    SettlementStatus.failed => colorScheme.errorContainer,
-    SettlementStatus.canceled => colorScheme.surfaceContainerLow,
-    SettlementStatus.unknown => colorScheme.surfaceContainerHighest,
-  };
+        SettlementStatus.pending => colorScheme.surfaceContainerHighest,
+        SettlementStatus.hold => colorScheme.errorContainer,
+        SettlementStatus.ready => colorScheme.primaryContainer,
+        SettlementStatus.processing => colorScheme.secondaryContainer,
+        SettlementStatus.completed => colorScheme.tertiaryContainer,
+        SettlementStatus.failed => colorScheme.errorContainer,
+        SettlementStatus.canceled => colorScheme.surfaceContainerLow,
+        SettlementStatus.unknown => colorScheme.surfaceContainerHighest,
+      };
 
   Color textColor(ColorScheme colorScheme) => switch (this) {
-    SettlementStatus.pending => colorScheme.onSurfaceVariant,
-    SettlementStatus.hold => colorScheme.error,
-    SettlementStatus.ready => colorScheme.primary,
-    SettlementStatus.processing => colorScheme.secondary,
-    SettlementStatus.completed => colorScheme.tertiary,
-    SettlementStatus.failed => colorScheme.error,
-    SettlementStatus.canceled => colorScheme.outline,
-    SettlementStatus.unknown => colorScheme.onSurfaceVariant,
-  };
+        SettlementStatus.pending => colorScheme.onSurfaceVariant,
+        SettlementStatus.hold => colorScheme.error,
+        SettlementStatus.ready => colorScheme.primary,
+        SettlementStatus.processing => colorScheme.secondary,
+        SettlementStatus.completed => colorScheme.tertiary,
+        SettlementStatus.failed => colorScheme.error,
+        SettlementStatus.canceled => colorScheme.outline,
+        SettlementStatus.unknown => colorScheme.onSurfaceVariant,
+      };
 }
 
 class SettlementStatusBadge extends StatelessWidget {

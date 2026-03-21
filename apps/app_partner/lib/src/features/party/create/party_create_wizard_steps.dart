@@ -26,7 +26,8 @@ mixin _PartyCreateWizardSteps on _$PartyCreateWizardController {
   void updateImages({
     required List<String> imageUrls,
     required List<XFile> newFiles,
-  }) => state = state.copyWith(imageUrls: imageUrls, imageFiles: newFiles);
+  }) =>
+      state = state.copyWith(imageUrls: imageUrls, imageFiles: newFiles);
 
   void setVisibility(String value) => state = state.copyWith(visibility: value);
 
@@ -74,9 +75,8 @@ mixin _PartyCreateWizardSteps on _$PartyCreateWizardController {
 
   void updateEntryGroup(EntryGroupTemplate group) {
     state = state.copyWith(
-      entryGroups: state.entryGroups
-          .map((g) => g.id == group.id ? group : g)
-          .toList(),
+      entryGroups:
+          state.entryGroups.map((g) => g.id == group.id ? group : g).toList(),
     );
   }
 

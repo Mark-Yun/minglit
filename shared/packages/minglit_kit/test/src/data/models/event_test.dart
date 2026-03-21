@@ -9,22 +9,22 @@ void main() {
 
   group('Event', () {
     Map<String, dynamic> eventJson() => {
-      'id': 'event_1',
-      'party_id': 'party_1',
-      'start_time': now.toIso8601String(),
-      'end_time': later.toIso8601String(),
-      'created_at': now.toIso8601String(),
-      'updated_at': now.toIso8601String(),
-      'title': 'Friday Night',
-      'description': {'ops': <Map<String, dynamic>>[]},
-      'image_urls': ['https://img.com/a.jpg'],
-      'contact_options': {'phone': '010-1234'},
-      'min_confirmed_count': 3,
-      'max_participants': 25,
-      'current_participants': 10,
-      'status': 'scheduled',
-      'metadata': <String, dynamic>{},
-    };
+          'id': 'event_1',
+          'party_id': 'party_1',
+          'start_time': now.toIso8601String(),
+          'end_time': later.toIso8601String(),
+          'created_at': now.toIso8601String(),
+          'updated_at': now.toIso8601String(),
+          'title': 'Friday Night',
+          'description': {'ops': <Map<String, dynamic>>[]},
+          'image_urls': ['https://img.com/a.jpg'],
+          'contact_options': {'phone': '010-1234'},
+          'min_confirmed_count': 3,
+          'max_participants': 25,
+          'current_participants': 10,
+          'status': 'scheduled',
+          'metadata': <String, dynamic>{},
+        };
 
     test('creates from JSON with all fields', () {
       final event = Event.fromJson(eventJson());

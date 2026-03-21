@@ -36,7 +36,8 @@ void main() {
     );
   }
 
-  group('filteredEventsProvider \u2014 eligibility filter'
+  group(
+      'filteredEventsProvider \u2014 eligibility filter'
       ' with verification check', () {
     test('unverified user with eligibilityEnabled: true sees all events', () {
       final events = [

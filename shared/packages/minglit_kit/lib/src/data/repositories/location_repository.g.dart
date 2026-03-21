@@ -15,25 +15,21 @@ const locationRepositoryProvider = LocationRepositoryProvider._();
 
 /// Provides the [LocationRepository].
 
-final class LocationRepositoryProvider
-    extends
-        $FunctionalProvider<
-          LocationRepository,
-          LocationRepository,
-          LocationRepository
-        >
-    with $Provider<LocationRepository> {
+final class LocationRepositoryProvider extends $FunctionalProvider<
+    LocationRepository,
+    LocationRepository,
+    LocationRepository> with $Provider<LocationRepository> {
   /// Provides the [LocationRepository].
   const LocationRepositoryProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'locationRepositoryProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'locationRepositoryProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$locationRepositoryHash();
@@ -42,7 +38,8 @@ final class LocationRepositoryProvider
   @override
   $ProviderElement<LocationRepository> $createElement(
     $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  ) =>
+      $ProviderElement(pointer);
 
   @override
   LocationRepository create(Ref ref) {

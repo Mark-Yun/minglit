@@ -110,8 +110,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                         : null,
                     onBackgroundImageError:
                         user.userMetadata?['avatar_url'] != null
-                        ? (_, _) {}
-                        : null,
+                            ? (_, _) {}
+                            : null,
                     child: user.userMetadata?['avatar_url'] == null
                         ? const Icon(Icons.person, size: 14)
                         : null,

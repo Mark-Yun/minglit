@@ -20,15 +20,15 @@ final class IamportConfigProvider
     with $Provider<IamportConfig> {
   /// Provides the current [IamportConfig].
   const IamportConfigProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'iamportConfigProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'iamportConfigProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$iamportConfigHash();

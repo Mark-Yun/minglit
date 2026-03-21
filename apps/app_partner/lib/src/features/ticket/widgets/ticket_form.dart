@@ -27,8 +27,7 @@ class TicketForm extends StatefulWidget {
     required int price,
     required int quantity,
     required List<String> targetEntryGroupIds,
-  })
-  onSaved;
+  }) onSaved;
 
   @override
   State<TicketForm> createState() => _TicketFormState();
@@ -211,8 +210,8 @@ class _TicketFormState extends State<TicketForm> {
     final gender = group.gender == 'male'
         ? context.l10n.entryGroup_option_male
         : group.gender == 'female'
-        ? context.l10n.entryGroup_option_female
-        : context.l10n.entryGroup_option_any;
+            ? context.l10n.entryGroup_option_female
+            : context.l10n.entryGroup_option_any;
     final ageText = _getAgeText(group.birthYearMin, group.birthYearMax);
     return '$gender ($ageText)';
   }

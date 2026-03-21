@@ -15,25 +15,21 @@ const verificationRepositoryProvider = VerificationRepositoryProvider._();
 
 /// Provider for VerificationRepository.
 
-final class VerificationRepositoryProvider
-    extends
-        $FunctionalProvider<
-          VerificationRepository,
-          VerificationRepository,
-          VerificationRepository
-        >
-    with $Provider<VerificationRepository> {
+final class VerificationRepositoryProvider extends $FunctionalProvider<
+    VerificationRepository,
+    VerificationRepository,
+    VerificationRepository> with $Provider<VerificationRepository> {
   /// Provider for VerificationRepository.
   const VerificationRepositoryProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'verificationRepositoryProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'verificationRepositoryProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$verificationRepositoryHash();
@@ -42,7 +38,8 @@ final class VerificationRepositoryProvider
   @override
   $ProviderElement<VerificationRepository> $createElement(
     $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  ) =>
+      $ProviderElement(pointer);
 
   @override
   VerificationRepository create(Ref ref) {
@@ -68,13 +65,10 @@ const verificationsByIdsProvider = VerificationsByIdsFamily._();
 
 /// Fetches verifications by a comma-separated list of IDs.
 
-final class VerificationsByIdsProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<Verification>>,
-          List<Verification>,
-          FutureOr<List<Verification>>
-        >
+final class VerificationsByIdsProvider extends $FunctionalProvider<
+        AsyncValue<List<Verification>>,
+        List<Verification>,
+        FutureOr<List<Verification>>>
     with
         $FutureModifier<List<Verification>>,
         $FutureProvider<List<Verification>> {
@@ -83,12 +77,12 @@ final class VerificationsByIdsProvider
     required VerificationsByIdsFamily super.from,
     required String super.argument,
   }) : super(
-         retry: null,
-         name: r'verificationsByIdsProvider',
-         isAutoDispose: false,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+          retry: null,
+          name: r'verificationsByIdsProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$verificationsByIdsHash();
@@ -104,7 +98,8 @@ final class VerificationsByIdsProvider
   @override
   $FutureProviderElement<List<Verification>> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<Verification>> create(Ref ref) {
@@ -131,13 +126,13 @@ String _$verificationsByIdsHash() =>
 final class VerificationsByIdsFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<Verification>>, String> {
   const VerificationsByIdsFamily._()
-    : super(
-        retry: null,
-        name: r'verificationsByIdsProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: false,
-      );
+      : super(
+          retry: null,
+          name: r'verificationsByIdsProvider',
+          dependencies: null,
+          $allTransitiveDependencies: null,
+          isAutoDispose: false,
+        );
 
   /// Fetches verifications by a comma-separated list of IDs.
 

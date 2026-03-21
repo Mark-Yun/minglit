@@ -7,21 +7,21 @@ part of 'app_routes.dart';
 // **************************************************************************
 
 List<RouteBase> get $appRoutes => [
-  $devRoute,
-  $devUserSwitchRoute,
-  $loginRoute,
-  $authCallbackRoute,
-  $eventDetailRoute,
-  $partnerDetailRoute,
-  $certificationRoute,
-  $eventApplicationRoute,
-  $purchaseHistoryRoute,
-  $notificationCenterRoute,
-  $notificationSettingsRoute,
-  $homeRoute,
-  $searchRoute,
-  $myPageRoute,
-];
+      $devRoute,
+      $devUserSwitchRoute,
+      $loginRoute,
+      $authCallbackRoute,
+      $eventDetailRoute,
+      $partnerDetailRoute,
+      $certificationRoute,
+      $eventApplicationRoute,
+      $purchaseHistoryRoute,
+      $notificationCenterRoute,
+      $notificationSettingsRoute,
+      $homeRoute,
+      $searchRoute,
+      $myPageRoute,
+    ];
 
 RouteBase get $devRoute =>
     GoRouteData.$route(path: '/dev', factory: $DevRoute._fromState);
@@ -47,9 +47,9 @@ mixin $DevRoute on GoRouteData {
 }
 
 RouteBase get $devUserSwitchRoute => GoRouteData.$route(
-  path: '/dev/switch',
-  factory: $DevUserSwitchRoute._fromState,
-);
+      path: '/dev/switch',
+      factory: $DevUserSwitchRoute._fromState,
+    );
 
 mixin $DevUserSwitchRoute on GoRouteData {
   static DevUserSwitchRoute _fromState(GoRouterState state) =>
@@ -83,9 +83,9 @@ mixin $LoginRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location(
-    '/login',
-    queryParams: {if (_self.from != null) 'from': _self.from},
-  );
+        '/login',
+        queryParams: {if (_self.from != null) 'from': _self.from},
+      );
 
   @override
   void go(BuildContext context) => context.go(location);
@@ -102,9 +102,9 @@ mixin $LoginRoute on GoRouteData {
 }
 
 RouteBase get $authCallbackRoute => GoRouteData.$route(
-  path: '/auth/callback',
-  factory: $AuthCallbackRoute._fromState,
-);
+      path: '/auth/callback',
+      factory: $AuthCallbackRoute._fromState,
+    );
 
 mixin $AuthCallbackRoute on GoRouteData {
   static AuthCallbackRoute _fromState(GoRouterState state) =>
@@ -128,9 +128,9 @@ mixin $AuthCallbackRoute on GoRouteData {
 }
 
 RouteBase get $eventDetailRoute => GoRouteData.$route(
-  path: '/events/:eventId',
-  factory: $EventDetailRoute._fromState,
-);
+      path: '/events/:eventId',
+      factory: $EventDetailRoute._fromState,
+    );
 
 mixin $EventDetailRoute on GoRouteData {
   static EventDetailRoute _fromState(GoRouterState state) =>
@@ -157,9 +157,9 @@ mixin $EventDetailRoute on GoRouteData {
 }
 
 RouteBase get $partnerDetailRoute => GoRouteData.$route(
-  path: '/partners/:partnerId',
-  factory: $PartnerDetailRoute._fromState,
-);
+      path: '/partners/:partnerId',
+      factory: $PartnerDetailRoute._fromState,
+    );
 
 mixin $PartnerDetailRoute on GoRouteData {
   static PartnerDetailRoute _fromState(GoRouterState state) =>
@@ -169,8 +169,8 @@ mixin $PartnerDetailRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location(
-    '/partners/${Uri.encodeComponent(_self.partnerId)}',
-  );
+        '/partners/${Uri.encodeComponent(_self.partnerId)}',
+      );
 
   @override
   void go(BuildContext context) => context.go(location);
@@ -187,9 +187,9 @@ mixin $PartnerDetailRoute on GoRouteData {
 }
 
 RouteBase get $certificationRoute => GoRouteData.$route(
-  path: '/certification',
-  factory: $CertificationRoute._fromState,
-);
+      path: '/certification',
+      factory: $CertificationRoute._fromState,
+    );
 
 mixin $CertificationRoute on GoRouteData {
   static CertificationRoute _fromState(GoRouterState state) =>
@@ -213,9 +213,9 @@ mixin $CertificationRoute on GoRouteData {
 }
 
 RouteBase get $eventApplicationRoute => GoRouteData.$route(
-  path: '/events/:eventId/apply',
-  factory: $EventApplicationRoute._fromState,
-);
+      path: '/events/:eventId/apply',
+      factory: $EventApplicationRoute._fromState,
+    );
 
 mixin $EventApplicationRoute on GoRouteData {
   static EventApplicationRoute _fromState(GoRouterState state) =>
@@ -228,9 +228,9 @@ mixin $EventApplicationRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location(
-    '/events/${Uri.encodeComponent(_self.eventId)}/apply',
-    queryParams: {if (_self.ticketId != null) 'ticket-id': _self.ticketId},
-  );
+        '/events/${Uri.encodeComponent(_self.eventId)}/apply',
+        queryParams: {if (_self.ticketId != null) 'ticket-id': _self.ticketId},
+      );
 
   @override
   void go(BuildContext context) => context.go(location);
@@ -247,9 +247,9 @@ mixin $EventApplicationRoute on GoRouteData {
 }
 
 RouteBase get $purchaseHistoryRoute => GoRouteData.$route(
-  path: '/purchase-history',
-  factory: $PurchaseHistoryRoute._fromState,
-);
+      path: '/purchase-history',
+      factory: $PurchaseHistoryRoute._fromState,
+    );
 
 mixin $PurchaseHistoryRoute on GoRouteData {
   static PurchaseHistoryRoute _fromState(GoRouterState state) =>
@@ -273,9 +273,9 @@ mixin $PurchaseHistoryRoute on GoRouteData {
 }
 
 RouteBase get $notificationCenterRoute => GoRouteData.$route(
-  path: '/notifications',
-  factory: $NotificationCenterRoute._fromState,
-);
+      path: '/notifications',
+      factory: $NotificationCenterRoute._fromState,
+    );
 
 mixin $NotificationCenterRoute on GoRouteData {
   static NotificationCenterRoute _fromState(GoRouterState state) =>
@@ -299,9 +299,9 @@ mixin $NotificationCenterRoute on GoRouteData {
 }
 
 RouteBase get $notificationSettingsRoute => GoRouteData.$route(
-  path: '/my/notification-settings',
-  factory: $NotificationSettingsRoute._fromState,
-);
+      path: '/my/notification-settings',
+      factory: $NotificationSettingsRoute._fromState,
+    );
 
 mixin $NotificationSettingsRoute on GoRouteData {
   static NotificationSettingsRoute _fromState(GoRouterState state) =>
@@ -325,15 +325,15 @@ mixin $NotificationSettingsRoute on GoRouteData {
 }
 
 RouteBase get $homeRoute => GoRouteData.$route(
-  path: '/',
-  factory: $HomeRoute._fromState,
-  routes: [
-    GoRouteData.$route(
-      path: 'curation',
-      factory: $EventCurationRoute._fromState,
-    ),
-  ],
-);
+      path: '/',
+      factory: $HomeRoute._fromState,
+      routes: [
+        GoRouteData.$route(
+          path: 'curation',
+          factory: $EventCurationRoute._fromState,
+        ),
+      ],
+    );
 
 mixin $HomeRoute on GoRouteData {
   static HomeRoute _fromState(GoRouterState state) => const HomeRoute();
@@ -358,8 +358,7 @@ mixin $HomeRoute on GoRouteData {
 mixin $EventCurationRoute on GoRouteData {
   static EventCurationRoute _fromState(GoRouterState state) =>
       EventCurationRoute(
-        type:
-            _$convertMapValue(
+        type: _$convertMapValue(
               'type',
               state.uri.queryParameters,
               _$EventFeedTypeEnumMap._$fromName,
@@ -371,12 +370,12 @@ mixin $EventCurationRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location(
-    '/curation',
-    queryParams: {
-      if (_self.type != EventFeedType.newArrivals)
-        'type': _$EventFeedTypeEnumMap[_self.type],
-    },
-  );
+        '/curation',
+        queryParams: {
+          if (_self.type != EventFeedType.newArrivals)
+            'type': _$EventFeedTypeEnumMap[_self.type],
+        },
+      );
 
   @override
   void go(BuildContext context) => context.go(location);

@@ -15,21 +15,19 @@ const staffRepositoryProvider = StaffRepositoryProvider._();
 
 /// Provides the [StaffRepository].
 
-final class StaffRepositoryProvider
-    extends
-        $FunctionalProvider<StaffRepository, StaffRepository, StaffRepository>
-    with $Provider<StaffRepository> {
+final class StaffRepositoryProvider extends $FunctionalProvider<StaffRepository,
+    StaffRepository, StaffRepository> with $Provider<StaffRepository> {
   /// Provides the [StaffRepository].
   const StaffRepositoryProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'staffRepositoryProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'staffRepositoryProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$staffRepositoryHash();

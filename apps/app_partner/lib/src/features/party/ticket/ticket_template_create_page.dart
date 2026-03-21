@@ -24,36 +24,33 @@ class TicketTemplateCreatePage extends StatelessWidget {
         padding: const EdgeInsets.all(MinglitSpacing.medium),
         child: TicketForm(
           entryGroups: entryGroups,
-          initialTicket: template != null
-              ? Ticket.createFromTemplate(template)
-              : null,
+          initialTicket:
+              template != null ? Ticket.createFromTemplate(template) : null,
           submitButtonLabel: template == null ? '추가하기' : '수정 완료',
-          onSaved:
-              ({
-                required name,
-                required price,
-                required quantity,
-                required targetEntryGroupIds,
-              }) {
-                final result =
-                    (template ??
-                            TicketTemplate(
-                              id: '', // Temporary ID
-                              partyId: '',
-                              name: '',
-                              createdAt: DateTime.now(),
-                              updatedAt: DateTime.now(),
-                            ))
-                        .copyWith(
-                          name: name,
-                          price: price,
-                          quantity: quantity,
-                          targetEntryGroupIds: targetEntryGroupIds,
-                          updatedAt: DateTime.now(),
-                        );
+          onSaved: ({
+            required name,
+            required price,
+            required quantity,
+            required targetEntryGroupIds,
+          }) {
+            final result = (template ??
+                    TicketTemplate(
+                      id: '', // Temporary ID
+                      partyId: '',
+                      name: '',
+                      createdAt: DateTime.now(),
+                      updatedAt: DateTime.now(),
+                    ))
+                .copyWith(
+              name: name,
+              price: price,
+              quantity: quantity,
+              targetEntryGroupIds: targetEntryGroupIds,
+              updatedAt: DateTime.now(),
+            );
 
-                Navigator.of(context).pop(result);
-              },
+            Navigator.of(context).pop(result);
+          },
         ),
       ),
     );

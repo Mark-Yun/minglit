@@ -15,15 +15,15 @@ const checkinControllerProvider = CheckinControllerProvider._();
 final class CheckinControllerProvider
     extends $NotifierProvider<CheckinController, CheckinState> {
   const CheckinControllerProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'checkinControllerProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'checkinControllerProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$checkinControllerHash();
@@ -50,14 +50,11 @@ abstract class _$CheckinController extends $Notifier<CheckinState> {
   void runBuild() {
     final created = build();
     final ref = this.ref as $Ref<CheckinState, CheckinState>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<CheckinState, CheckinState>,
-              CheckinState,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<CheckinState, CheckinState>,
+        CheckinState,
+        Object?,
+        Object?>;
     element.handleValue(ref, created);
   }
 }

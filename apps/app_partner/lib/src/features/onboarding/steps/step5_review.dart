@@ -28,7 +28,6 @@ class Step5Review extends ConsumerWidget {
             value: state.introduction,
           ),
           const SizedBox(height: MinglitSpacing.large),
-
           _SectionHeader(
             title: context.l10n.partnerApplication_section_biz,
             onEdit: () => notifier.setStep(1),
@@ -50,7 +49,6 @@ class Step5Review extends ConsumerWidget {
             value: state.representativeName,
           ),
           const SizedBox(height: MinglitSpacing.large),
-
           _SectionHeader(
             title: context.l10n.partnerApplication_section_account,
             onEdit: () => notifier.setStep(2),
@@ -81,22 +79,19 @@ class Step5Review extends ConsumerWidget {
           ),
           _ReviewItem(label: '세금계산서 수신 이메일', value: state.taxEmail),
           const SizedBox(height: MinglitSpacing.large),
-
           _SectionHeader(
             title: context.l10n.partnerApplication_section_files,
             onEdit: () => notifier.setStep(3),
           ),
           _ReviewItem(
             label: context.l10n.partnerApplication_label_bizReg,
-            value:
-                state.bizRegistrationFile?.name ??
+            value: state.bizRegistrationFile?.name ??
                 state.bizRegistrationPath?.split('/').last ??
                 '-',
           ),
           _ReviewItem(
             label: context.l10n.partnerApplication_label_bankbook,
-            value:
-                state.bankbookFile?.name ??
+            value: state.bankbookFile?.name ??
                 state.bankbookPath?.split('/').last ??
                 '-',
           ),
@@ -126,8 +121,8 @@ class _SectionHeader extends StatelessWidget {
           Text(
             title,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           TextButton(
             onPressed: onEdit,
@@ -157,8 +152,8 @@ class _ReviewItem extends StatelessWidget {
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: MinglitColors.textSecondary,
-              ),
+                    color: MinglitColors.textSecondary,
+                  ),
             ),
           ),
           Expanded(

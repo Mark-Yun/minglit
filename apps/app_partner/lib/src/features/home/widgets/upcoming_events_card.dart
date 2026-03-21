@@ -62,9 +62,7 @@ class UpcomingEventsCard extends StatelessWidget {
                 ),
               )
             else
-              ...events
-                  .take(5)
-                  .map(
+              ...events.take(5).map(
                     (event) => InkWell(
                       onTap: () => onEventTap(event),
                       borderRadius: BorderRadius.circular(8),

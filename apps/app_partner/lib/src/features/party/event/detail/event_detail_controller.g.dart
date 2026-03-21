@@ -12,24 +12,19 @@ part of 'event_detail_controller.dart';
 @ProviderFor(eventTickets)
 const eventTicketsProvider = EventTicketsFamily._();
 
-final class EventTicketsProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<Ticket>>,
-          List<Ticket>,
-          FutureOr<List<Ticket>>
-        >
+final class EventTicketsProvider extends $FunctionalProvider<
+        AsyncValue<List<Ticket>>, List<Ticket>, FutureOr<List<Ticket>>>
     with $FutureModifier<List<Ticket>>, $FutureProvider<List<Ticket>> {
   const EventTicketsProvider._({
     required EventTicketsFamily super.from,
     required String super.argument,
   }) : super(
-         retry: null,
-         name: r'eventTicketsProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+          retry: null,
+          name: r'eventTicketsProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$eventTicketsHash();
@@ -45,7 +40,8 @@ final class EventTicketsProvider
   @override
   $FutureProviderElement<List<Ticket>> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<Ticket>> create(Ref ref) {
@@ -69,13 +65,13 @@ String _$eventTicketsHash() => r'292ea4381aa7f017c1a785d41309452e93af279c';
 final class EventTicketsFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<Ticket>>, String> {
   const EventTicketsFamily._()
-    : super(
-        retry: null,
-        name: r'eventTicketsProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
+      : super(
+          retry: null,
+          name: r'eventTicketsProvider',
+          dependencies: null,
+          $allTransitiveDependencies: null,
+          isAutoDispose: true,
+        );
 
   EventTicketsProvider call(String eventId) =>
       EventTicketsProvider._(argument: eventId, from: this);

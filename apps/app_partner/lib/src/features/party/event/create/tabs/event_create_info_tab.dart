@@ -136,9 +136,8 @@ class EventCreateInfoTab extends ConsumerWidget {
             title: context.l10n.partyDetail_section_entranceCondition,
             onTap: () {}, // Event Entry Groups are read-only for now
             child: PartyEntranceConditionSummary(
-              entryGroups: state.entryGroups
-                  .map((e) => e.toTemplate())
-                  .toList(),
+              entryGroups:
+                  state.entryGroups.map((e) => e.toTemplate()).toList(),
             ),
           ),
           const SizedBox(height: MinglitSpacing.large),
@@ -159,8 +158,8 @@ class EventCreateInfoTab extends ConsumerWidget {
                 Text(
                   '공개 설정',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(height: MinglitSpacing.medium),
                 DropdownButtonFormField<String?>(

@@ -15,13 +15,10 @@ const partnerMembersProvider = PartnerMembersFamily._();
 
 /// **Local Provider: Partner Members**
 
-final class PartnerMembersProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<Map<String, dynamic>>>,
-          List<Map<String, dynamic>>,
-          FutureOr<List<Map<String, dynamic>>>
-        >
+final class PartnerMembersProvider extends $FunctionalProvider<
+        AsyncValue<List<Map<String, dynamic>>>,
+        List<Map<String, dynamic>>,
+        FutureOr<List<Map<String, dynamic>>>>
     with
         $FutureModifier<List<Map<String, dynamic>>>,
         $FutureProvider<List<Map<String, dynamic>>> {
@@ -30,12 +27,12 @@ final class PartnerMembersProvider
     required PartnerMembersFamily super.from,
     required String super.argument,
   }) : super(
-         retry: null,
-         name: r'partnerMembersProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+          retry: null,
+          name: r'partnerMembersProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$partnerMembersHash();
@@ -51,7 +48,8 @@ final class PartnerMembersProvider
   @override
   $FutureProviderElement<List<Map<String, dynamic>>> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<Map<String, dynamic>>> create(Ref ref) {
@@ -76,18 +74,16 @@ String _$partnerMembersHash() => r'61400c3d950954968fc732e9ade14a2c7114faf5';
 
 final class PartnerMembersFamily extends $Family
     with
-        $FunctionalFamilyOverride<
-          FutureOr<List<Map<String, dynamic>>>,
-          String
-        > {
+        $FunctionalFamilyOverride<FutureOr<List<Map<String, dynamic>>>,
+            String> {
   const PartnerMembersFamily._()
-    : super(
-        retry: null,
-        name: r'partnerMembersProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
+      : super(
+          retry: null,
+          name: r'partnerMembersProvider',
+          dependencies: null,
+          $allTransitiveDependencies: null,
+          isAutoDispose: true,
+        );
 
   /// **Local Provider: Partner Members**
 

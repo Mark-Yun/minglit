@@ -15,25 +15,21 @@ const partnerRepositoryProvider = PartnerRepositoryProvider._();
 
 /// Provider for PartnerRepository.
 
-final class PartnerRepositoryProvider
-    extends
-        $FunctionalProvider<
-          PartnerRepository,
-          PartnerRepository,
-          PartnerRepository
-        >
-    with $Provider<PartnerRepository> {
+final class PartnerRepositoryProvider extends $FunctionalProvider<
+    PartnerRepository,
+    PartnerRepository,
+    PartnerRepository> with $Provider<PartnerRepository> {
   /// Provider for PartnerRepository.
   const PartnerRepositoryProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'partnerRepositoryProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'partnerRepositoryProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$partnerRepositoryHash();
@@ -42,7 +38,8 @@ final class PartnerRepositoryProvider
   @override
   $ProviderElement<PartnerRepository> $createElement(
     $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  ) =>
+      $ProviderElement(pointer);
 
   @override
   PartnerRepository create(Ref ref) {

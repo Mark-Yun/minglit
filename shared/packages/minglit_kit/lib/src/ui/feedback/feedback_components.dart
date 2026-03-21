@@ -32,25 +32,25 @@ class MinglitFeedbackUI {
     // Determine colors based on type
     final (bgColor, icon, iconColor) = switch (type) {
       MinglitFeedbackType.success => (
-        theme.colorScheme.primary,
-        Icons.check_circle_outline,
-        MinglitColors.background,
-      ),
+          theme.colorScheme.primary,
+          Icons.check_circle_outline,
+          MinglitColors.background,
+        ),
       MinglitFeedbackType.info => (
-        theme.colorScheme.onSurface,
-        Icons.info_outline,
-        theme.colorScheme.surface,
-      ),
+          theme.colorScheme.onSurface,
+          Icons.info_outline,
+          theme.colorScheme.surface,
+        ),
       MinglitFeedbackType.warning => (
-        theme.colorScheme.secondary,
-        Icons.warning_amber_rounded,
-        MinglitColors.background,
-      ),
+          theme.colorScheme.secondary,
+          Icons.warning_amber_rounded,
+          MinglitColors.background,
+        ),
       MinglitFeedbackType.error => (
-        theme.colorScheme.error,
-        Icons.error_outline,
-        theme.colorScheme.onError,
-      ),
+          theme.colorScheme.error,
+          Icons.error_outline,
+          theme.colorScheme.onError,
+        ),
     };
 
     return SnackBar(

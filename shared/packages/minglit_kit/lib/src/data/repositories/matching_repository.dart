@@ -16,16 +16,17 @@ MatchingRepository matchingRepository(Ref ref) {
 class MatchingRepository {
   /// Creates a [MatchingRepository] with a Supabase client.
   MatchingRepository({SupabaseClient? supabase})
-    : _supabase = supabase ?? Supabase.instance.client;
+      : _supabase = supabase ?? Supabase.instance.client;
 
   final SupabaseClient _supabase;
 
   /// Fetches matching rules for a specific event.
   Future<List<MatchRule>> getMatchRules(String eventId) async {
     try {
-      final data =
-          await _supabase.from('match_rules').select().eq('event_id', eventId)
-              as List;
+      final data = await _supabase
+          .from('match_rules')
+          .select()
+          .eq('event_id', eventId) as List;
       return data.map((e) {
         return MatchRule.fromJson(e as Map<String, dynamic>);
       }).toList();
@@ -93,12 +94,10 @@ class MatchingRepository {
 
     try {
       // 1. Fetch from View
-      final data =
-          await _supabase
-                  .from('my_matches_view')
-                  .select()
-                  .eq('event_id', eventId)
-              as List;
+      final data = await _supabase
+          .from('my_matches_view')
+          .select()
+          .eq('event_id', eventId) as List;
       final matches = data.map((e) {
         return MatchPair.fromJson(e as Map<String, dynamic>);
       }).toList();
@@ -108,15 +107,13 @@ class MatchingRepository {
       // 2. Enrich with Partner Profile & Contact via get_matched_user_info RPC
       final enrichedMatches = await Future.wait(
         matches.map((m) async {
-          final info =
-              await _supabase.rpc<List<dynamic>>(
-                    'get_matched_user_info',
-                    params: {
-                      'p_target_user_id': m.partnerId,
-                      'p_target_event_id': eventId,
-                    },
-                  )
-                  as List?;
+          final info = await _supabase.rpc<List<dynamic>>(
+            'get_matched_user_info',
+            params: {
+              'p_target_user_id': m.partnerId,
+              'p_target_event_id': eventId,
+            },
+          ) as List?;
           final userData = (info?.isNotEmpty ?? false)
               ? info!.first as Map<String, dynamic>
               : null;
@@ -165,13 +162,11 @@ class MatchingRepository {
       final myGroupIds = List<String>.from(targetEntryGroupIds as List);
       if (myGroupIds.isEmpty) return [];
 
-      final rules =
-          await _supabase
-                  .from('match_rules')
-                  .select('target_group_id')
-                  .eq('event_id', eventId)
-                  .inFilter('source_group_id', myGroupIds)
-              as List;
+      final rules = await _supabase
+          .from('match_rules')
+          .select('target_group_id')
+          .eq('event_id', eventId)
+          .inFilter('source_group_id', myGroupIds) as List;
       final targetGroupIds = rules
           .map((rule) {
             return (rule as Map<String, dynamic>)['target_group_id'] as String?;
@@ -181,26 +176,20 @@ class MatchingRepository {
           .toList();
 
       if (targetGroupIds.isEmpty) {
-        final myGroups =
-            await _supabase
-                    .from('entry_groups')
-                    .select('id, gender')
-                    .inFilter('id', myGroupIds)
-                as List;
-        final myGender = myGroups
-            .map((group) {
-              return (group as Map<String, dynamic>)['gender'] as String?;
-            })
-            .firstWhere((gender) => gender != null, orElse: () => null);
+        final myGroups = await _supabase
+            .from('entry_groups')
+            .select('id, gender')
+            .inFilter('id', myGroupIds) as List;
+        final myGender = myGroups.map((group) {
+          return (group as Map<String, dynamic>)['gender'] as String?;
+        }).firstWhere((gender) => gender != null, orElse: () => null);
 
         if (myGender != null) {
-          final oppositeGroups =
-              await _supabase
-                      .from('entry_groups')
-                      .select('id')
-                      .eq('event_id', eventId)
-                      .neq('gender', myGender)
-                  as List;
+          final oppositeGroups = await _supabase
+              .from('entry_groups')
+              .select('id')
+              .eq('event_id', eventId)
+              .neq('gender', myGender) as List;
           targetGroupIds.addAll(
             oppositeGroups.map((group) {
               return (group as Map<String, dynamic>)['id'] as String?;
@@ -211,17 +200,16 @@ class MatchingRepository {
 
       if (targetGroupIds.isEmpty) return [];
 
-      final participants =
-          await _supabase
-                  .from('event_participants')
-                  .select(
-                    'user_id, display_name, birth_year, '
-                    'ticket:ticket_id(target_entry_group_ids)',
-                  )
-                  .eq('event_id', eventId)
-                  .neq('user_id', userId)
-                  .filter('ticket.target_entry_group_ids', 'ov', targetGroupIds)
-              as List;
+      final participants = await _supabase
+              .from('event_participants')
+              .select(
+                'user_id, display_name, birth_year, '
+                'ticket:ticket_id(target_entry_group_ids)',
+              )
+              .eq('event_id', eventId)
+              .neq('user_id', userId)
+              .filter('ticket.target_entry_group_ids', 'ov', targetGroupIds)
+          as List;
       final candidates = participants.map((p) {
         final pMap = p as Map<String, dynamic>;
         // Build minimal UserProfile from event_participants blurred data

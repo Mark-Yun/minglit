@@ -45,9 +45,8 @@ mixin _PartnerApplyDraft on _$PartnerApplyController {
         bizType: state.bizType,
         bizName: state.bizName.isEmpty ? null : state.bizName,
         bizNumber: state.bizNumber.isEmpty ? null : state.bizNumber,
-        representativeName: state.representativeName.isEmpty
-            ? null
-            : state.representativeName,
+        representativeName:
+            state.representativeName.isEmpty ? null : state.representativeName,
         contactPhone: state.contactPhone.isEmpty ? null : state.contactPhone,
         contactEmail: state.contactEmail.isEmpty ? null : state.contactEmail,
         address: state.address.isEmpty ? null : state.address,

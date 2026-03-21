@@ -167,8 +167,7 @@ mixin _PartyCreateWizardSubmit
           : null;
 
       final newLocation = state.selectedLocation!;
-      final isSameSpot =
-          currentLocation != null &&
+      final isSameSpot = currentLocation != null &&
           currentLocation.latitude == newLocation.latitude &&
           currentLocation.longitude == newLocation.longitude;
 

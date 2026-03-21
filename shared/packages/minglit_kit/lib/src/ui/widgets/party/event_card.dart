@@ -49,8 +49,8 @@ class MinglitEventCard extends StatelessWidget {
     final dDayLabel = difference == 0
         ? '오늘'
         : difference > 0
-        ? 'D-$difference'
-        : '종료';
+            ? 'D-$difference'
+            : '종료';
 
     // Format Date
     final dateLabel = DateFormat(
@@ -66,8 +66,8 @@ class MinglitEventCard extends StatelessWidget {
     final priceLabel = lowestPrice == null
         ? '가격 미정'
         : lowestPrice == 0
-        ? '무료'
-        : '${NumberFormat('#,###').format(lowestPrice)}원~';
+            ? '무료'
+            : '${NumberFormat('#,###').format(lowestPrice)}원~';
 
     final partner = party?.partner;
 
@@ -209,10 +209,10 @@ class _ParticipantDDayOverlay extends StatelessWidget {
     final filledCount = ratio <= 0
         ? 0
         : ratio <= 0.33
-        ? 1
-        : ratio <= 0.66
-        ? 2
-        : 3;
+            ? 1
+            : ratio <= 0.66
+                ? 2
+                : 3;
     final segmentColor = switch (filledCount) {
       0 => MinglitColors.background.withValues(alpha: 0.3),
       1 => MinglitColors.secondary,
@@ -256,19 +256,19 @@ class _ParticipantDDayOverlay extends StatelessWidget {
           Text(
             '$current/$max',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: MinglitColors.background,
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
-            ),
+                  color: MinglitColors.background,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                ),
           ),
           const SizedBox(width: 4),
           Text(
             '·',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: MinglitColors.background.withValues(alpha: 0.6),
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
-            ),
+                  color: MinglitColors.background.withValues(alpha: 0.6),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                ),
           ),
           const SizedBox(width: 4),
           const Icon(
@@ -280,10 +280,10 @@ class _ParticipantDDayOverlay extends StatelessWidget {
           Text(
             dDayLabel,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: MinglitColors.background,
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
-            ),
+                  color: MinglitColors.background,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                ),
           ),
         ],
       ),
@@ -331,10 +331,10 @@ class _PartnerOverlay extends StatelessWidget {
             child: Text(
               partner.name,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: MinglitColors.background,
-                fontSize: 13,
-                fontWeight: FontWeight.w400,
-              ),
+                    color: MinglitColors.background,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                  ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

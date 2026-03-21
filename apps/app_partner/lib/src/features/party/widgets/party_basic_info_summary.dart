@@ -62,8 +62,7 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
     final colorScheme = theme.colorScheme;
 
     final ops = widget.description['ops'] as List?;
-    final isDescriptionEmpty =
-        ops == null ||
+    final isDescriptionEmpty = ops == null ||
         ops.isEmpty ||
         (ops.length == 1 && (ops[0] as Map<String, dynamic>)['insert'] == '\n');
 
@@ -103,7 +102,6 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
               ),
             ),
           ),
-
         if (widget.showTitle)
           Row(
             children: [
@@ -147,7 +145,6 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
             ],
           ),
         if (widget.showTitle) const SizedBox(height: MinglitSpacing.small),
-
         if (isDescriptionEmpty)
           Text(
             context.l10n.wizard_review_noDescription,
@@ -183,7 +180,6 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
                 ),
               ),
             ),
-
           if (_isExpanded)
             Container(
               margin: const EdgeInsets.only(top: MinglitSpacing.xsmall),

@@ -13,22 +13,18 @@ part of 'verification_manage_controller.dart';
 const verificationManageControllerProvider =
     VerificationManageControllerProvider._();
 
-final class VerificationManageControllerProvider
-    extends
-        $AsyncNotifierProvider<
-          VerificationManageController,
-          VerificationManageState
-        > {
+final class VerificationManageControllerProvider extends $AsyncNotifierProvider<
+    VerificationManageController, VerificationManageState> {
   const VerificationManageControllerProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'verificationManageControllerProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'verificationManageControllerProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$verificationManageControllerHash();
@@ -48,23 +44,14 @@ abstract class _$VerificationManageController
   @override
   void runBuild() {
     final created = build();
-    final ref =
-        this.ref
-            as $Ref<
-              AsyncValue<VerificationManageState>,
-              VerificationManageState
-            >;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<
-                AsyncValue<VerificationManageState>,
-                VerificationManageState
-              >,
-              AsyncValue<VerificationManageState>,
-              Object?,
-              Object?
-            >;
+    final ref = this.ref
+        as $Ref<AsyncValue<VerificationManageState>, VerificationManageState>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<AsyncValue<VerificationManageState>,
+            VerificationManageState>,
+        AsyncValue<VerificationManageState>,
+        Object?,
+        Object?>;
     element.handleValue(ref, created);
   }
 }

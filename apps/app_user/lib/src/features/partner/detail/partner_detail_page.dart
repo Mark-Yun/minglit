@@ -22,8 +22,7 @@ class PartnerDetailPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title:
-            partnerAsync.whenOrNull(data: (p) => Text(p?.name ?? '')) ??
+        title: partnerAsync.whenOrNull(data: (p) => Text(p?.name ?? '')) ??
             const SizedBox.shrink(),
         centerTitle: true,
       ),

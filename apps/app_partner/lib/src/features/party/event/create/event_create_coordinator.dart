@@ -21,8 +21,7 @@ class EventCreateCoordinator {
       List<String> imageUrls,
       List<XFile> newImages,
       String status,
-    )
-    onSave,
+    ) onSave,
   }) {
     unawaited(
       Navigator.of(context).push(
@@ -42,8 +41,7 @@ class EventCreateCoordinator {
       int min,
       int max,
       Map<String, String> options,
-    )
-    onSave,
+    ) onSave,
   }) {
     unawaited(
       Navigator.of(context).push(
@@ -65,8 +63,7 @@ class EventCreateCoordinator {
       Location? newLoc,
       String addressDetail,
       String directions,
-    )
-    onSave,
+    ) onSave,
   }) {
     unawaited(
       Navigator.of(context).push(

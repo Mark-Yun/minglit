@@ -101,23 +101,23 @@ class _PartyImageEditorState extends State<PartyImageEditor> {
               scrollDirection: Axis.horizontal,
               children: [
                 ..._currentUrls.asMap().entries.map(
-                  (e) => _buildPreviewItem(
-                    context,
-                    index: e.key,
-                    url: e.value,
-                    onDelete: () => _removeUrl(e.key),
-                    isRepresentative: e.key == 0,
-                  ),
-                ),
+                      (e) => _buildPreviewItem(
+                        context,
+                        index: e.key,
+                        url: e.value,
+                        onDelete: () => _removeUrl(e.key),
+                        isRepresentative: e.key == 0,
+                      ),
+                    ),
                 ..._newFiles.asMap().entries.map(
-                  (e) => _buildPreviewItem(
-                    context,
-                    index: e.key,
-                    file: e.value,
-                    onDelete: () => _removeNewFile(e.key),
-                    isRepresentative: _currentUrls.isEmpty && e.key == 0,
-                  ),
-                ),
+                      (e) => _buildPreviewItem(
+                        context,
+                        index: e.key,
+                        file: e.value,
+                        onDelete: () => _removeNewFile(e.key),
+                        isRepresentative: _currentUrls.isEmpty && e.key == 0,
+                      ),
+                    ),
               ],
             ),
           ),

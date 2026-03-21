@@ -15,25 +15,21 @@ const checkinRepositoryProvider = CheckinRepositoryProvider._();
 
 /// Provides the [CheckinRepository].
 
-final class CheckinRepositoryProvider
-    extends
-        $FunctionalProvider<
-          CheckinRepository,
-          CheckinRepository,
-          CheckinRepository
-        >
-    with $Provider<CheckinRepository> {
+final class CheckinRepositoryProvider extends $FunctionalProvider<
+    CheckinRepository,
+    CheckinRepository,
+    CheckinRepository> with $Provider<CheckinRepository> {
   /// Provides the [CheckinRepository].
   const CheckinRepositoryProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'checkinRepositoryProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'checkinRepositoryProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$checkinRepositoryHash();
@@ -42,7 +38,8 @@ final class CheckinRepositoryProvider
   @override
   $ProviderElement<CheckinRepository> $createElement(
     $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  ) =>
+      $ProviderElement(pointer);
 
   @override
   CheckinRepository create(Ref ref) {

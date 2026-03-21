@@ -16,9 +16,9 @@ _EntryGroupTemplate _$EntryGroupTemplateFromJson(Map<String, dynamic> json) =>
       birthYearMax: (json['birth_year_max'] as num?)?.toInt(),
       requiredVerificationIds:
           (json['required_verification_ids'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const [],
+                  ?.map((e) => e as String)
+                  .toList() ??
+              const [],
       createdAt: json['created_at'] == null
           ? null
           : DateTime.parse(json['created_at'] as String),
@@ -41,24 +41,24 @@ Map<String, dynamic> _$EntryGroupTemplateToJson(_EntryGroupTemplate instance) =>
     };
 
 _EntryGroup _$EntryGroupFromJson(Map<String, dynamic> json) => _EntryGroup(
-  id: json['id'] as String,
-  eventId: json['event_id'] as String,
-  label: json['label'] as String?,
-  gender: json['gender'] as String?,
-  birthYearMin: (json['birth_year_min'] as num?)?.toInt(),
-  birthYearMax: (json['birth_year_max'] as num?)?.toInt(),
-  requiredVerificationIds:
-      (json['required_verification_ids'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList() ??
-      const [],
-  createdAt: json['created_at'] == null
-      ? null
-      : DateTime.parse(json['created_at'] as String),
-  updatedAt: json['updated_at'] == null
-      ? null
-      : DateTime.parse(json['updated_at'] as String),
-);
+      id: json['id'] as String,
+      eventId: json['event_id'] as String,
+      label: json['label'] as String?,
+      gender: json['gender'] as String?,
+      birthYearMin: (json['birth_year_min'] as num?)?.toInt(),
+      birthYearMax: (json['birth_year_max'] as num?)?.toInt(),
+      requiredVerificationIds:
+          (json['required_verification_ids'] as List<dynamic>?)
+                  ?.map((e) => e as String)
+                  .toList() ??
+              const [],
+      createdAt: json['created_at'] == null
+          ? null
+          : DateTime.parse(json['created_at'] as String),
+      updatedAt: json['updated_at'] == null
+          ? null
+          : DateTime.parse(json['updated_at'] as String),
+    );
 
 Map<String, dynamic> _$EntryGroupToJson(_EntryGroup instance) =>
     <String, dynamic>{

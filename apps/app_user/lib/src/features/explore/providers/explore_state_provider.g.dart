@@ -14,15 +14,15 @@ const searchQueryProvider = SearchQueryProvider._();
 
 final class SearchQueryProvider extends $NotifierProvider<SearchQuery, String> {
   const SearchQueryProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'searchQueryProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'searchQueryProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$searchQueryHash();
@@ -49,14 +49,8 @@ abstract class _$SearchQuery extends $Notifier<String> {
   void runBuild() {
     final created = build();
     final ref = this.ref as $Ref<String, String>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<String, String>,
-              String,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<String, String>, String, Object?, Object?>;
     element.handleValue(ref, created);
   }
 }
@@ -67,15 +61,15 @@ const activeFiltersProvider = ActiveFiltersProvider._();
 final class ActiveFiltersProvider
     extends $NotifierProvider<ActiveFilters, ExploreFilters> {
   const ActiveFiltersProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'activeFiltersProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'activeFiltersProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$activeFiltersHash();
@@ -102,14 +96,11 @@ abstract class _$ActiveFilters extends $Notifier<ExploreFilters> {
   void runBuild() {
     final created = build();
     final ref = this.ref as $Ref<ExploreFilters, ExploreFilters>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<ExploreFilters, ExploreFilters>,
-              ExploreFilters,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<ExploreFilters, ExploreFilters>,
+        ExploreFilters,
+        Object?,
+        Object?>;
     element.handleValue(ref, created);
   }
 }
@@ -117,24 +108,19 @@ abstract class _$ActiveFilters extends $Notifier<ExploreFilters> {
 @ProviderFor(userLocation)
 const userLocationProvider = UserLocationProvider._();
 
-final class UserLocationProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<LocationResult?>,
-          LocationResult?,
-          FutureOr<LocationResult?>
-        >
+final class UserLocationProvider extends $FunctionalProvider<
+        AsyncValue<LocationResult?>, LocationResult?, FutureOr<LocationResult?>>
     with $FutureModifier<LocationResult?>, $FutureProvider<LocationResult?> {
   const UserLocationProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'userLocationProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'userLocationProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$userLocationHash();
@@ -143,7 +129,8 @@ final class UserLocationProvider
   @override
   $FutureProviderElement<LocationResult?> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<LocationResult?> create(Ref ref) {
@@ -156,24 +143,19 @@ String _$userLocationHash() => r'c5abbab38df1a8f555fc8dfb49b489dbfeebed1a';
 @ProviderFor(searchResults)
 const searchResultsProvider = SearchResultsProvider._();
 
-final class SearchResultsProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<Event>>,
-          List<Event>,
-          FutureOr<List<Event>>
-        >
+final class SearchResultsProvider extends $FunctionalProvider<
+        AsyncValue<List<Event>>, List<Event>, FutureOr<List<Event>>>
     with $FutureModifier<List<Event>>, $FutureProvider<List<Event>> {
   const SearchResultsProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'searchResultsProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'searchResultsProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$searchResultsHash();
@@ -182,7 +164,8 @@ final class SearchResultsProvider
   @override
   $FutureProviderElement<List<Event>> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<Event>> create(Ref ref) {
@@ -199,27 +182,24 @@ const bulkEligibilityDataProvider = BulkEligibilityDataProvider._();
 
 /// Fetches bulk eligibility data (user profile + verified status).
 
-final class BulkEligibilityDataProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<BulkEligibilityData?>,
-          BulkEligibilityData?,
-          FutureOr<BulkEligibilityData?>
-        >
+final class BulkEligibilityDataProvider extends $FunctionalProvider<
+        AsyncValue<BulkEligibilityData?>,
+        BulkEligibilityData?,
+        FutureOr<BulkEligibilityData?>>
     with
         $FutureModifier<BulkEligibilityData?>,
         $FutureProvider<BulkEligibilityData?> {
   /// Fetches bulk eligibility data (user profile + verified status).
   const BulkEligibilityDataProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'bulkEligibilityDataProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'bulkEligibilityDataProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$bulkEligibilityDataHash();
@@ -228,7 +208,8 @@ final class BulkEligibilityDataProvider
   @override
   $FutureProviderElement<BulkEligibilityData?> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<BulkEligibilityData?> create(Ref ref) {
@@ -260,12 +241,12 @@ final class FilteredEventsProvider
     required FilteredEventsFamily super.from,
     required List<Event> super.argument,
   }) : super(
-         retry: null,
-         name: r'filteredEventsProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+          retry: null,
+          name: r'filteredEventsProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$filteredEventsHash();
@@ -316,13 +297,13 @@ String _$filteredEventsHash() => r'ed17a50de476e0a95b2e441b680435c5e94bbbeb';
 final class FilteredEventsFamily extends $Family
     with $FunctionalFamilyOverride<List<Event>, List<Event>> {
   const FilteredEventsFamily._()
-    : super(
-        retry: null,
-        name: r'filteredEventsProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
+      : super(
+          retry: null,
+          name: r'filteredEventsProvider',
+          dependencies: null,
+          $allTransitiveDependencies: null,
+          isAutoDispose: true,
+        );
 
   /// Applies active filters and nearby sort to a list of events (client-side).
   ///
@@ -355,12 +336,8 @@ const recommendationFeedProvider = RecommendationFeedNotifierProvider._();
 ///
 /// Filter changes (via [activeFiltersProvider]) automatically reset the
 /// state to page 0.
-final class RecommendationFeedNotifierProvider
-    extends
-        $AsyncNotifierProvider<
-          RecommendationFeedNotifier,
-          RecommendationFeedState
-        > {
+final class RecommendationFeedNotifierProvider extends $AsyncNotifierProvider<
+    RecommendationFeedNotifier, RecommendationFeedState> {
   /// Manages pagination state for the recommendation event feed.
   ///
   /// Tracks server-side offset separately from display count because
@@ -370,15 +347,15 @@ final class RecommendationFeedNotifierProvider
   /// Filter changes (via [activeFiltersProvider]) automatically reset the
   /// state to page 0.
   const RecommendationFeedNotifierProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'recommendationFeedProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'recommendationFeedProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$recommendationFeedNotifierHash();
@@ -407,23 +384,14 @@ abstract class _$RecommendationFeedNotifier
   @override
   void runBuild() {
     final created = build();
-    final ref =
-        this.ref
-            as $Ref<
-              AsyncValue<RecommendationFeedState>,
-              RecommendationFeedState
-            >;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<
-                AsyncValue<RecommendationFeedState>,
-                RecommendationFeedState
-              >,
-              AsyncValue<RecommendationFeedState>,
-              Object?,
-              Object?
-            >;
+    final ref = this.ref
+        as $Ref<AsyncValue<RecommendationFeedState>, RecommendationFeedState>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<AsyncValue<RecommendationFeedState>,
+            RecommendationFeedState>,
+        AsyncValue<RecommendationFeedState>,
+        Object?,
+        Object?>;
     element.handleValue(ref, created);
   }
 }
@@ -445,13 +413,8 @@ const recommendationEventsProvider = RecommendationEventsProvider._();
 /// - closingSoon → closingSoon
 /// - nearestDate → earlyBird
 
-final class RecommendationEventsProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<Event>>,
-          List<Event>,
-          FutureOr<List<Event>>
-        >
+final class RecommendationEventsProvider extends $FunctionalProvider<
+        AsyncValue<List<Event>>, List<Event>, FutureOr<List<Event>>>
     with $FutureModifier<List<Event>>, $FutureProvider<List<Event>> {
   /// Fetches and filters the unified recommendation event list.
   ///
@@ -460,15 +423,15 @@ final class RecommendationEventsProvider
   /// - closingSoon → closingSoon
   /// - nearestDate → earlyBird
   const RecommendationEventsProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'recommendationEventsProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'recommendationEventsProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$recommendationEventsHash();
@@ -477,7 +440,8 @@ final class RecommendationEventsProvider
   @override
   $FutureProviderElement<List<Event>> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<Event>> create(Ref ref) {

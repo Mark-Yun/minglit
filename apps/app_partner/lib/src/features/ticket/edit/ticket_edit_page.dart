@@ -26,12 +26,10 @@ class TicketEditPage extends ConsumerWidget {
 
     // Dynamic AsyncValue based on mode
     final ticketAsync = isTemplate
-        ? ref
-              .watch(ticketTemplateDetailProvider(ticketId))
-              .whenData(
-                (template) =>
-                    Ticket.createFromTemplate(template, id: template.id),
-              )
+        ? ref.watch(ticketTemplateDetailProvider(ticketId)).whenData(
+              (template) =>
+                  Ticket.createFromTemplate(template, id: template.id),
+            )
         : ref.watch(ticketDetailProvider(ticketId));
 
     return Scaffold(
@@ -58,68 +56,67 @@ class TicketEditPage extends ConsumerWidget {
                   initialTicket: ticket,
                   entryGroups: party.entryGroups ?? [],
                   submitButtonLabel: context.l10n.ticket_button_edit,
-                  onSaved:
-                      ({
-                        required name,
-                        required price,
-                        required quantity,
-                        required targetEntryGroupIds,
-                      }) async {
-                        if (isTemplate) {
-                          // Update Template
-                          final template = ref
-                              .read(ticketTemplateDetailProvider(ticketId))
-                              .value!;
+                  onSaved: ({
+                    required name,
+                    required price,
+                    required quantity,
+                    required targetEntryGroupIds,
+                  }) async {
+                    if (isTemplate) {
+                      // Update Template
+                      final template = ref
+                          .read(ticketTemplateDetailProvider(ticketId))
+                          .value!;
 
-                          await ref
-                              .read(ticketControllerProvider.notifier)
-                              .updateTicketTemplate(
-                                template: template,
-                                name: name,
-                                price: price,
-                                quantity: quantity,
-                                targetEntryGroupIds: targetEntryGroupIds,
-                              );
-                        } else {
-                          // Update Ticket Instance
-                          await ref
-                              .read(ticketControllerProvider.notifier)
-                              .updateTicket(
-                                ticket: ticket,
-                                name: name,
-                                price: price,
-                                quantity: quantity,
-                                targetEntryGroupIds: targetEntryGroupIds,
-                              );
-                        }
-
-                        final updatedState = ref.read(ticketControllerProvider);
-                        if (!updatedState.hasError && context.mounted) {
-                          context
-                            ..pop()
-                            ..showMinglitSuccess(
-                              context.l10n.ticket_message_updated,
-                            );
-
-                          if (isTemplate) {
-                            ref
-                              ..invalidate(
-                                ticketTemplateDetailProvider(ticketId),
-                              )
-                              ..invalidate(partyTicketsProvider(partyId));
-                          } else {
-                            ref
-                              ..invalidate(ticketDetailProvider(ticketId))
-                              ..invalidate(eventTicketsProvider(eventId));
-                          }
-                        } else if (updatedState.hasError && context.mounted) {
-                          handleMinglitError(
-                            context,
-                            updatedState.error!,
-                            updatedState.stackTrace,
+                      await ref
+                          .read(ticketControllerProvider.notifier)
+                          .updateTicketTemplate(
+                            template: template,
+                            name: name,
+                            price: price,
+                            quantity: quantity,
+                            targetEntryGroupIds: targetEntryGroupIds,
                           );
-                        }
-                      },
+                    } else {
+                      // Update Ticket Instance
+                      await ref
+                          .read(ticketControllerProvider.notifier)
+                          .updateTicket(
+                            ticket: ticket,
+                            name: name,
+                            price: price,
+                            quantity: quantity,
+                            targetEntryGroupIds: targetEntryGroupIds,
+                          );
+                    }
+
+                    final updatedState = ref.read(ticketControllerProvider);
+                    if (!updatedState.hasError && context.mounted) {
+                      context
+                        ..pop()
+                        ..showMinglitSuccess(
+                          context.l10n.ticket_message_updated,
+                        );
+
+                      if (isTemplate) {
+                        ref
+                          ..invalidate(
+                            ticketTemplateDetailProvider(ticketId),
+                          )
+                          ..invalidate(partyTicketsProvider(partyId));
+                      } else {
+                        ref
+                          ..invalidate(ticketDetailProvider(ticketId))
+                          ..invalidate(eventTicketsProvider(eventId));
+                      }
+                    } else if (updatedState.hasError && context.mounted) {
+                      handleMinglitError(
+                        context,
+                        updatedState.error!,
+                        updatedState.stackTrace,
+                      );
+                    }
+                  },
                 ),
               );
             },

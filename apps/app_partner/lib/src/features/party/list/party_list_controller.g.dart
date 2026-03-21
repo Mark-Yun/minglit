@@ -12,24 +12,19 @@ part of 'party_list_controller.dart';
 @ProviderFor(partyList)
 const partyListProvider = PartyListProvider._();
 
-final class PartyListProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<Party>>,
-          List<Party>,
-          FutureOr<List<Party>>
-        >
+final class PartyListProvider extends $FunctionalProvider<
+        AsyncValue<List<Party>>, List<Party>, FutureOr<List<Party>>>
     with $FutureModifier<List<Party>>, $FutureProvider<List<Party>> {
   const PartyListProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'partyListProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'partyListProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$partyListHash();
@@ -38,7 +33,8 @@ final class PartyListProvider
   @override
   $FutureProviderElement<List<Party>> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<Party>> create(Ref ref) {

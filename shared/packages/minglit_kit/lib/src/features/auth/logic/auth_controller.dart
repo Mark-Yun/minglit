@@ -18,9 +18,7 @@ class AuthController extends _$AuthController {
   Future<void> signInWithGoogle({String? redirectTo}) async {
     state = const AsyncLoading();
     try {
-      await ref
-          .read(authRepositoryProvider)
-          .signInWithGoogle(
+      await ref.read(authRepositoryProvider).signInWithGoogle(
             redirectTo: redirectTo,
           );
       // On Web, the browser redirects. We don't want to trigger "Login Success"
@@ -49,9 +47,7 @@ class AuthController extends _$AuthController {
   }) async {
     state = const AsyncLoading();
     try {
-      await ref
-          .read(authRepositoryProvider)
-          .signInWithEmail(
+      await ref.read(authRepositoryProvider).signInWithEmail(
             email: email,
             password: password,
           );
@@ -75,9 +71,7 @@ class AuthController extends _$AuthController {
   Future<void> signInWithApple({String? redirectTo}) async {
     state = const AsyncLoading();
     try {
-      await ref
-          .read(authRepositoryProvider)
-          .signInWithApple(
+      await ref.read(authRepositoryProvider).signInWithApple(
             redirectTo: redirectTo,
           );
       if (!kIsWeb) {
@@ -101,9 +95,7 @@ class AuthController extends _$AuthController {
   Future<void> signInWithKakao({String? redirectTo}) async {
     state = const AsyncLoading();
     try {
-      await ref
-          .read(authRepositoryProvider)
-          .signInWithKakao(
+      await ref.read(authRepositoryProvider).signInWithKakao(
             redirectTo: redirectTo,
           );
       // Kakao uses web OAuth redirect on ALL platforms (mobile and web).

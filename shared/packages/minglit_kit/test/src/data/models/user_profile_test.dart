@@ -6,19 +6,19 @@ void main() {
     final now = DateTime(2026, 1, 15, 12);
 
     Map<String, dynamic> profileJson() => {
-      'id': 'user_1',
-      'name': '김밍글',
-      'username': 'mingle_kim',
-      'phone_number': '010-1234-5678',
-      'gender': 'male',
-      'birth_date': now.toIso8601String(),
-      'is_verified': true,
-      'birth_year': 1995,
-      'avatar_url': 'https://img.com/avatar.jpg',
-      'profile_image_url': 'https://img.com/profile.jpg',
-      'created_at': now.toIso8601String(),
-      'updated_at': now.toIso8601String(),
-    };
+          'id': 'user_1',
+          'name': '김밍글',
+          'username': 'mingle_kim',
+          'phone_number': '010-1234-5678',
+          'gender': 'male',
+          'birth_date': now.toIso8601String(),
+          'is_verified': true,
+          'birth_year': 1995,
+          'avatar_url': 'https://img.com/avatar.jpg',
+          'profile_image_url': 'https://img.com/profile.jpg',
+          'created_at': now.toIso8601String(),
+          'updated_at': now.toIso8601String(),
+        };
 
     test('creates from JSON with all fields', () {
       final profile = UserProfile.fromJson(profileJson());

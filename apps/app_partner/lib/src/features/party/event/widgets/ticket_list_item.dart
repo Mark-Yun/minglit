@@ -225,8 +225,8 @@ class TicketListItem extends StatelessWidget {
     final gInitial = group.gender == 'male'
         ? '남'
         : group.gender == 'female'
-        ? '여'
-        : '무관';
+            ? '여'
+            : '무관';
     return '$gInitial($ageText)';
   }
 }

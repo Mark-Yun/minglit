@@ -12,24 +12,20 @@ part of 'payment_coordinator.dart';
 @ProviderFor(paymentCoordinator)
 const paymentCoordinatorProvider = PaymentCoordinatorProvider._();
 
-final class PaymentCoordinatorProvider
-    extends
-        $FunctionalProvider<
-          PaymentCoordinator,
-          PaymentCoordinator,
-          PaymentCoordinator
-        >
-    with $Provider<PaymentCoordinator> {
+final class PaymentCoordinatorProvider extends $FunctionalProvider<
+    PaymentCoordinator,
+    PaymentCoordinator,
+    PaymentCoordinator> with $Provider<PaymentCoordinator> {
   const PaymentCoordinatorProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'paymentCoordinatorProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'paymentCoordinatorProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$paymentCoordinatorHash();
@@ -38,7 +34,8 @@ final class PaymentCoordinatorProvider
   @override
   $ProviderElement<PaymentCoordinator> $createElement(
     $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  ) =>
+      $ProviderElement(pointer);
 
   @override
   PaymentCoordinator create(Ref ref) {

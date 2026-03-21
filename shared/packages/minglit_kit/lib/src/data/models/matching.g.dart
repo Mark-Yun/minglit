@@ -7,12 +7,12 @@ part of 'matching.dart';
 // **************************************************************************
 
 _MatchRule _$MatchRuleFromJson(Map<String, dynamic> json) => _MatchRule(
-  id: json['id'] as String,
-  eventId: json['event_id'] as String,
-  sourceGroupId: json['source_group_id'] as String,
-  targetGroupId: json['target_group_id'] as String,
-  createdAt: DateTime.parse(json['created_at'] as String),
-);
+      id: json['id'] as String,
+      eventId: json['event_id'] as String,
+      sourceGroupId: json['source_group_id'] as String,
+      targetGroupId: json['target_group_id'] as String,
+      createdAt: DateTime.parse(json['created_at'] as String),
+    );
 
 Map<String, dynamic> _$MatchRuleToJson(_MatchRule instance) =>
     <String, dynamic>{
@@ -24,11 +24,11 @@ Map<String, dynamic> _$MatchRuleToJson(_MatchRule instance) =>
     };
 
 _MatchVote _$MatchVoteFromJson(Map<String, dynamic> json) => _MatchVote(
-  eventId: json['event_id'] as String,
-  voterId: json['voter_id'] as String,
-  candidateId: json['candidate_id'] as String,
-  createdAt: DateTime.parse(json['created_at'] as String),
-);
+      eventId: json['event_id'] as String,
+      voterId: json['voter_id'] as String,
+      candidateId: json['candidate_id'] as String,
+      createdAt: DateTime.parse(json['created_at'] as String),
+    );
 
 Map<String, dynamic> _$MatchVoteToJson(_MatchVote instance) =>
     <String, dynamic>{
@@ -39,11 +39,11 @@ Map<String, dynamic> _$MatchVoteToJson(_MatchVote instance) =>
     };
 
 _MatchPair _$MatchPairFromJson(Map<String, dynamic> json) => _MatchPair(
-  matchId: json['match_id'] as String,
-  eventId: json['event_id'] as String,
-  partnerId: json['partner_id'] as String,
-  matchedAt: DateTime.parse(json['matched_at'] as String),
-);
+      matchId: json['match_id'] as String,
+      eventId: json['event_id'] as String,
+      partnerId: json['partner_id'] as String,
+      matchedAt: DateTime.parse(json['matched_at'] as String),
+    );
 
 Map<String, dynamic> _$MatchPairToJson(_MatchPair instance) =>
     <String, dynamic>{

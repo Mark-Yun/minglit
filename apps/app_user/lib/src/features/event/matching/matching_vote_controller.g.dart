@@ -15,15 +15,15 @@ const matchingVoteControllerProvider = MatchingVoteControllerProvider._();
 final class MatchingVoteControllerProvider
     extends $AsyncNotifierProvider<MatchingVoteController, void> {
   const MatchingVoteControllerProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'matchingVoteControllerProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'matchingVoteControllerProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$matchingVoteControllerHash();
@@ -43,14 +43,11 @@ abstract class _$MatchingVoteController extends $AsyncNotifier<void> {
   void runBuild() {
     build();
     final ref = this.ref as $Ref<AsyncValue<void>, void>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<AsyncValue<void>, void>,
-              AsyncValue<void>,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<AsyncValue<void>, void>,
+        AsyncValue<void>,
+        Object?,
+        Object?>;
     element.handleValue(ref, null);
   }
 }
@@ -58,13 +55,10 @@ abstract class _$MatchingVoteController extends $AsyncNotifier<void> {
 @ProviderFor(matchCandidates)
 const matchCandidatesProvider = MatchCandidatesFamily._();
 
-final class MatchCandidatesProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<UserProfile>>,
-          List<UserProfile>,
-          FutureOr<List<UserProfile>>
-        >
+final class MatchCandidatesProvider extends $FunctionalProvider<
+        AsyncValue<List<UserProfile>>,
+        List<UserProfile>,
+        FutureOr<List<UserProfile>>>
     with
         $FutureModifier<List<UserProfile>>,
         $FutureProvider<List<UserProfile>> {
@@ -72,12 +66,12 @@ final class MatchCandidatesProvider
     required MatchCandidatesFamily super.from,
     required String super.argument,
   }) : super(
-         retry: null,
-         name: r'matchCandidatesProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+          retry: null,
+          name: r'matchCandidatesProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$matchCandidatesHash();
@@ -93,7 +87,8 @@ final class MatchCandidatesProvider
   @override
   $FutureProviderElement<List<UserProfile>> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<UserProfile>> create(Ref ref) {
@@ -117,13 +112,13 @@ String _$matchCandidatesHash() => r'c7ada3a4f5892dad45787e78a963feff15a39542';
 final class MatchCandidatesFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<UserProfile>>, String> {
   const MatchCandidatesFamily._()
-    : super(
-        retry: null,
-        name: r'matchCandidatesProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
+      : super(
+          retry: null,
+          name: r'matchCandidatesProvider',
+          dependencies: null,
+          $allTransitiveDependencies: null,
+          isAutoDispose: true,
+        );
 
   MatchCandidatesProvider call(String eventId) =>
       MatchCandidatesProvider._(argument: eventId, from: this);
@@ -135,24 +130,19 @@ final class MatchCandidatesFamily extends $Family
 @ProviderFor(myMatches)
 const myMatchesProvider = MyMatchesFamily._();
 
-final class MyMatchesProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<MatchPair>>,
-          List<MatchPair>,
-          FutureOr<List<MatchPair>>
-        >
+final class MyMatchesProvider extends $FunctionalProvider<
+        AsyncValue<List<MatchPair>>, List<MatchPair>, FutureOr<List<MatchPair>>>
     with $FutureModifier<List<MatchPair>>, $FutureProvider<List<MatchPair>> {
   const MyMatchesProvider._({
     required MyMatchesFamily super.from,
     required String super.argument,
   }) : super(
-         retry: null,
-         name: r'myMatchesProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+          retry: null,
+          name: r'myMatchesProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$myMatchesHash();
@@ -168,7 +158,8 @@ final class MyMatchesProvider
   @override
   $FutureProviderElement<List<MatchPair>> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<MatchPair>> create(Ref ref) {
@@ -192,13 +183,13 @@ String _$myMatchesHash() => r'4a5e9634d05797acaedf3e500e863a62aa74c2f3';
 final class MyMatchesFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<MatchPair>>, String> {
   const MyMatchesFamily._()
-    : super(
-        retry: null,
-        name: r'myMatchesProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
+      : super(
+          retry: null,
+          name: r'myMatchesProvider',
+          dependencies: null,
+          $allTransitiveDependencies: null,
+          isAutoDispose: true,
+        );
 
   MyMatchesProvider call(String eventId) =>
       MyMatchesProvider._(argument: eventId, from: this);

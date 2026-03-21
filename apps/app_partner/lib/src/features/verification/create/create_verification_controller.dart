@@ -89,13 +89,11 @@ class CreateVerificationController extends _$CreateVerificationController {
       },
     );
 
-    ref
-        .read(globalLoadingControllerProvider.notifier)
-        .show(
-          onCancel: () {
-            unawaited(_submitOperation?.cancel());
-          },
-        );
+    ref.read(globalLoadingControllerProvider.notifier).show(
+      onCancel: () {
+        unawaited(_submitOperation?.cancel());
+      },
+    );
 
     try {
       await _submitOperation!.value;

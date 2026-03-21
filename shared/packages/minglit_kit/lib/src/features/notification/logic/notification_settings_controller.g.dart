@@ -16,19 +16,19 @@ const notificationSettingsControllerProvider =
 
 /// Manages notification settings for the current user.
 final class NotificationSettingsControllerProvider
-    extends
-        $AsyncNotifierProvider<NotificationSettingsController, UserSettings?> {
+    extends $AsyncNotifierProvider<NotificationSettingsController,
+        UserSettings?> {
   /// Manages notification settings for the current user.
   const NotificationSettingsControllerProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'notificationSettingsControllerProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'notificationSettingsControllerProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$notificationSettingsControllerHash();
@@ -51,14 +51,11 @@ abstract class _$NotificationSettingsController
   void runBuild() {
     final created = build();
     final ref = this.ref as $Ref<AsyncValue<UserSettings?>, UserSettings?>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<AsyncValue<UserSettings?>, UserSettings?>,
-              AsyncValue<UserSettings?>,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<AsyncValue<UserSettings?>, UserSettings?>,
+        AsyncValue<UserSettings?>,
+        Object?,
+        Object?>;
     element.handleValue(ref, created);
   }
 }

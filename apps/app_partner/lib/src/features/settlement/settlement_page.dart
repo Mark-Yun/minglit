@@ -283,9 +283,9 @@ class _StatusCell extends StatelessWidget {
           Text(
             count.toString(),
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: color,
-              fontWeight: FontWeight.bold,
-            ),
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           Text(
             label,
@@ -373,8 +373,7 @@ class _ListTabState extends ConsumerState<_ListTab> {
         const SizedBox(height: MinglitSpacing.small),
         // Fix #127: 목록 로드 실패 시 일반 빈 상태 대신 오류 상태와 재시도 액션을 노출
         Expanded(
-          child:
-              listState.error != null &&
+          child: listState.error != null &&
                   listState.items.isEmpty &&
                   !listState.isLoading
               ? SettlementEmptyState(
@@ -387,58 +386,61 @@ class _ListTabState extends ConsumerState<_ListTab> {
                       .refresh(),
                 )
               : listState.items.isEmpty && !listState.isLoading
-              ? SettlementEmptyState(
-                  title: '정산 항목이 없습니다',
-                  subtitle: listState.selectedStatus != null
-                      ? '다른 상태를 선택해 보세요.'
-                      : null,
-                )
-              : RefreshIndicator(
-                  onRefresh: () => ref
-                      .read(settlementListControllerProvider.notifier)
-                      .refresh(),
-                  child: Builder(
-                    builder: (context) {
-                      final viewList = _buildViewList(listState.items);
-                      return ListView.builder(
-                        controller: _scrollController,
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        itemCount:
-                            viewList.length + (listState.isLoading ? 1 : 0),
-                        itemBuilder: (context, i) {
-                          if (i >= viewList.length) {
-                            return const Padding(
-                              padding: EdgeInsets.all(MinglitSpacing.medium),
-                              child: Center(
-                                child: CircularProgressIndicator(),
-                              ),
-                            );
-                          }
-                          final item = viewList[i];
-                          return switch (item) {
-                            _MonthHeader(:final label) => _MonthHeaderWidget(
-                              label: label,
-                            ),
-                            _CardItem(:final data) => Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                SettlementCard(
-                                  item: data.toJson(),
-                                  onTap: () => ref
-                                      .read(
-                                        settlementCoordinatorProvider.notifier,
-                                      )
-                                      .goToDetail(data.id),
-                                ),
-                                const Divider(height: 1),
-                              ],
-                            ),
-                          };
+                  ? SettlementEmptyState(
+                      title: '정산 항목이 없습니다',
+                      subtitle: listState.selectedStatus != null
+                          ? '다른 상태를 선택해 보세요.'
+                          : null,
+                    )
+                  : RefreshIndicator(
+                      onRefresh: () => ref
+                          .read(settlementListControllerProvider.notifier)
+                          .refresh(),
+                      child: Builder(
+                        builder: (context) {
+                          final viewList = _buildViewList(listState.items);
+                          return ListView.builder(
+                            controller: _scrollController,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            itemCount:
+                                viewList.length + (listState.isLoading ? 1 : 0),
+                            itemBuilder: (context, i) {
+                              if (i >= viewList.length) {
+                                return const Padding(
+                                  padding:
+                                      EdgeInsets.all(MinglitSpacing.medium),
+                                  child: Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                );
+                              }
+                              final item = viewList[i];
+                              return switch (item) {
+                                _MonthHeader(:final label) =>
+                                  _MonthHeaderWidget(
+                                    label: label,
+                                  ),
+                                _CardItem(:final data) => Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      SettlementCard(
+                                        item: data.toJson(),
+                                        onTap: () => ref
+                                            .read(
+                                              settlementCoordinatorProvider
+                                                  .notifier,
+                                            )
+                                            .goToDetail(data.id),
+                                      ),
+                                      const Divider(height: 1),
+                                    ],
+                                  ),
+                              };
+                            },
+                          );
                         },
-                      );
-                    },
-                  ),
-                ),
+                      ),
+                    ),
         ),
       ],
     );
@@ -461,9 +463,9 @@ class _MonthHeaderWidget extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-          fontWeight: FontWeight.bold,
-        ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.bold,
+            ),
       ),
     );
   }

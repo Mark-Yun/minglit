@@ -172,12 +172,11 @@ mixin _VerificationQueryRepository on _SupabaseVerificationContext {
           final map = m as Map<String, dynamic>;
           final vId = map['id'];
 
-          final original = (originalDatas as List)
-              .cast<Map<String, dynamic>?>()
-              .firstWhere(
-                (d) => d?['verification_id'] == vId,
-                orElse: () => null,
-              );
+          final original =
+              (originalDatas as List).cast<Map<String, dynamic>?>().firstWhere(
+                    (d) => d?['verification_id'] == vId,
+                    orElse: () => null,
+                  );
 
           final submissionMap = (activeSubmissions as List)
               .cast<Map<String, dynamic>?>()

@@ -6,21 +6,21 @@ void main() {
     final now = DateTime(2026, 1, 15, 12);
 
     Map<String, dynamic> locationJson() => {
-      'id': 'loc_1',
-      'partner_id': 'partner_1',
-      'name': 'Test Venue',
-      'address': '서울시 강남구',
-      'created_at': now.toIso8601String(),
-      'updated_at': now.toIso8601String(),
-      'address_detail': '3층',
-      'region_1': '서울특별시',
-      'region_2': '강남구',
-      'region_3': '역삼동',
-      'directions_guide': '2번 출구에서 직진',
-      'postal_code': '06241',
-      'lat': 37.5,
-      'lng': 127.0,
-    };
+          'id': 'loc_1',
+          'partner_id': 'partner_1',
+          'name': 'Test Venue',
+          'address': '서울시 강남구',
+          'created_at': now.toIso8601String(),
+          'updated_at': now.toIso8601String(),
+          'address_detail': '3층',
+          'region_1': '서울특별시',
+          'region_2': '강남구',
+          'region_3': '역삼동',
+          'directions_guide': '2번 출구에서 직진',
+          'postal_code': '06241',
+          'lat': 37.5,
+          'lng': 127.0,
+        };
 
     test('creates from JSON with all fields', () {
       final loc = Location.fromJson(locationJson());
@@ -95,20 +95,20 @@ void main() {
     final now = DateTime(2026, 1, 15, 12);
 
     Map<String, dynamic> partyJson() => {
-      'id': 'party_1',
-      'partner_id': 'partner_1',
-      'title': 'Friday Mingle',
-      'created_at': now.toIso8601String(),
-      'updated_at': now.toIso8601String(),
-      'description': {'ops': <Map<String, dynamic>>[]},
-      'image_urls': ['https://img.com/1.jpg', 'https://img.com/2.jpg'],
-      'contact_options': {'kakao': 'minglit'},
-      'required_verification_ids': ['v1', 'v2'],
-      'min_confirmed_count': 5,
-      'max_participants': 30,
-      'status': 'active',
-      'metadata': <String, dynamic>{},
-    };
+          'id': 'party_1',
+          'partner_id': 'partner_1',
+          'title': 'Friday Mingle',
+          'created_at': now.toIso8601String(),
+          'updated_at': now.toIso8601String(),
+          'description': {'ops': <Map<String, dynamic>>[]},
+          'image_urls': ['https://img.com/1.jpg', 'https://img.com/2.jpg'],
+          'contact_options': {'kakao': 'minglit'},
+          'required_verification_ids': ['v1', 'v2'],
+          'min_confirmed_count': 5,
+          'max_participants': 30,
+          'status': 'active',
+          'metadata': <String, dynamic>{},
+        };
 
     test('creates from JSON with all fields', () {
       final party = Party.fromJson(partyJson());

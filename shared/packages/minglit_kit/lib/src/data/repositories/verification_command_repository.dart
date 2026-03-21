@@ -41,8 +41,7 @@ mixin _VerificationCommandRepository on _SupabaseVerificationContext {
     try {
       await supabaseClient
           .from('verifications')
-          .update({'is_active': false})
-          .eq('id', verificationId);
+          .update({'is_active': false}).eq('id', verificationId);
       Log.d('deleteVerification success');
     } catch (e, st) {
       Log.e('❌ [VerificationRepo] deleteVerification Error', e, st);
@@ -55,8 +54,7 @@ mixin _VerificationCommandRepository on _SupabaseVerificationContext {
     try {
       await supabaseClient
           .from('verifications')
-          .update({'is_active': true})
-          .eq('id', verificationId);
+          .update({'is_active': true}).eq('id', verificationId);
       Log.d('restoreVerification success');
     } catch (e, st) {
       Log.e('❌ [VerificationRepo] restoreVerification Error', e, st);
@@ -86,14 +84,11 @@ mixin _VerificationCommandRepository on _SupabaseVerificationContext {
       });
 
       if (existingSubmissionId != null) {
-        await supabaseClient
-            .from('verification_submissions')
-            .update({
-              'status': VerificationStatus.pending.name,
-              'snapshot_data': claimData,
-              'updated_at': DateTime.now().toIso8601String(),
-            })
-            .eq('id', existingSubmissionId);
+        await supabaseClient.from('verification_submissions').update({
+          'status': VerificationStatus.pending.name,
+          'snapshot_data': claimData,
+          'updated_at': DateTime.now().toIso8601String(),
+        }).eq('id', existingSubmissionId);
       } else {
         await supabaseClient.from('verification_submissions').insert({
           'partner_id': partnerId,
@@ -143,15 +138,12 @@ mixin _VerificationCommandRepository on _SupabaseVerificationContext {
       'reviewRequest called | submissionId: $submissionId, status: $status',
     );
     try {
-      await supabaseClient
-          .from('verification_submissions')
-          .update({
-            'status': status.name,
-            'admin_comment': adminComment,
-            'reviewed_at': DateTime.now().toIso8601String(),
-            'reviewed_by': supabaseClient.auth.currentUser?.id,
-          })
-          .eq('id', submissionId);
+      await supabaseClient.from('verification_submissions').update({
+        'status': status.name,
+        'admin_comment': adminComment,
+        'reviewed_at': DateTime.now().toIso8601String(),
+        'reviewed_by': supabaseClient.auth.currentUser?.id,
+      }).eq('id', submissionId);
       Log.d('reviewRequest success');
     } catch (e, st) {
       Log.e('❌ [VerificationRepo] reviewRequest Error', e, st);

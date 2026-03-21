@@ -17,9 +17,9 @@ class DevScreenItem {
     this.category,
     this.description,
   }) : assert(
-         screenBuilder != null || onTap != null,
-         'Either screenBuilder or onTap must be provided',
-       );
+          screenBuilder != null || onTap != null,
+          'Either screenBuilder or onTap must be provided',
+        );
 
   /// The title of the screen.
   final String title;

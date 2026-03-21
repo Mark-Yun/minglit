@@ -4,27 +4,27 @@ import 'package:minglit_kit/src/data/models/partner_application.dart';
 void main() {
   group('PartnerApplication', () {
     Map<String, dynamic> appJson() => {
-      'id': 'app_1',
-      'user_id': 'user_1',
-      'brand_name': 'Minglit Lounge',
-      'introduction': 'Best social lounge in Gangnam',
-      'address': '서울시 강남구',
-      'contact_phone': '010-1234-5678',
-      'contact_email': 'test@minglit.com',
-      'biz_type': '법인사업자',
-      'biz_name': '(주)밍글릿',
-      'biz_number': '123-45-67890',
-      'representative_name': '김밍글',
-      'bank_name': '신한은행',
-      'account_number': '110-123-456789',
-      'account_holder': '김밍글',
-      'biz_registration_path': 'user_1/biz_reg_123.pdf',
-      'bankbook_path': 'user_1/bankbook_456.jpg',
-      'status': 'pending',
-      'admin_comment': null,
-      'created_at': '2026-01-15T12:00:00.000',
-      'updated_at': '2026-01-15T12:00:00.000',
-    };
+          'id': 'app_1',
+          'user_id': 'user_1',
+          'brand_name': 'Minglit Lounge',
+          'introduction': 'Best social lounge in Gangnam',
+          'address': '서울시 강남구',
+          'contact_phone': '010-1234-5678',
+          'contact_email': 'test@minglit.com',
+          'biz_type': '법인사업자',
+          'biz_name': '(주)밍글릿',
+          'biz_number': '123-45-67890',
+          'representative_name': '김밍글',
+          'bank_name': '신한은행',
+          'account_number': '110-123-456789',
+          'account_holder': '김밍글',
+          'biz_registration_path': 'user_1/biz_reg_123.pdf',
+          'bankbook_path': 'user_1/bankbook_456.jpg',
+          'status': 'pending',
+          'admin_comment': null,
+          'created_at': '2026-01-15T12:00:00.000',
+          'updated_at': '2026-01-15T12:00:00.000',
+        };
 
     test('creates from JSON with all fields', () {
       final app = PartnerApplication.fromJson(appJson());

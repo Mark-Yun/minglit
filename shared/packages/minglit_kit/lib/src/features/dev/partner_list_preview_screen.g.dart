@@ -15,25 +15,20 @@ const previewPartnersProvider = PreviewPartnersProvider._();
 
 /// Local provider to fetch partners for preview.
 
-final class PreviewPartnersProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<Partner>>,
-          List<Partner>,
-          FutureOr<List<Partner>>
-        >
+final class PreviewPartnersProvider extends $FunctionalProvider<
+        AsyncValue<List<Partner>>, List<Partner>, FutureOr<List<Partner>>>
     with $FutureModifier<List<Partner>>, $FutureProvider<List<Partner>> {
   /// Local provider to fetch partners for preview.
   const PreviewPartnersProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'previewPartnersProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'previewPartnersProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$previewPartnersHash();
@@ -42,7 +37,8 @@ final class PreviewPartnersProvider
   @override
   $FutureProviderElement<List<Partner>> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<Partner>> create(Ref ref) {

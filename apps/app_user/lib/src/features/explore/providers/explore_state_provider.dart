@@ -64,9 +64,9 @@ class SearchQuery extends _$SearchQuery {
 class ActiveFilters extends _$ActiveFilters {
   @override
   ExploreFilters build() => const ExploreFilters(
-    eligibilityEnabled: true,
-    nearbyEnabled: true,
-  );
+        eligibilityEnabled: true,
+        nearbyEnabled: true,
+      );
 
   // Riverpod notifier method — cannot use setter syntax with code generation.
   // ignore: use_setters_to_change_properties
@@ -166,28 +166,27 @@ List<Event> filteredEvents(
   if (filters.nearbyEnabled) {
     final userLoc = ref.watch(userLocationProvider).value;
     if (userLoc != null) {
-      result = [...result]
-        ..sort((a, b) {
+      result = [...result]..sort((a, b) {
           final locA = a.location ?? a.party?.location;
           final locB = b.location ?? b.party?.location;
           final distA =
               (locA == null || (locA.latitude == 0.0 && locA.longitude == 0.0))
-              ? double.infinity
-              : _haversineDistance(
-                  userLoc.latitude,
-                  userLoc.longitude,
-                  locA.latitude,
-                  locA.longitude,
-                );
+                  ? double.infinity
+                  : _haversineDistance(
+                      userLoc.latitude,
+                      userLoc.longitude,
+                      locA.latitude,
+                      locA.longitude,
+                    );
           final distB =
               (locB == null || (locB.latitude == 0.0 && locB.longitude == 0.0))
-              ? double.infinity
-              : _haversineDistance(
-                  userLoc.latitude,
-                  userLoc.longitude,
-                  locB.latitude,
-                  locB.longitude,
-                );
+                  ? double.infinity
+                  : _haversineDistance(
+                      userLoc.latitude,
+                      userLoc.longitude,
+                      locB.latitude,
+                      locB.longitude,
+                    );
           return distA.compareTo(distB);
         });
     }
@@ -331,9 +330,8 @@ class RecommendationFeedNotifier extends _$RecommendationFeedNotifier {
 
     // Append new unique events to raw accumulation
     final existingIds = _rawEvents.map((e) => e.id).toSet();
-    final newUnique = rawPage
-        .where((e) => !existingIds.contains(e.id))
-        .toList();
+    final newUnique =
+        rawPage.where((e) => !existingIds.contains(e.id)).toList();
     _rawEvents = [..._rawEvents, ...newUnique];
 
     // Apply client-side filter + sort to full accumulated list
@@ -400,8 +398,7 @@ double _haversineDistance(
   const earthRadius = 6371000.0; // meters
   final dLat = _toRadians(lat2 - lat1);
   final dLon = _toRadians(lon2 - lon1);
-  final a =
-      math.sin(dLat / 2) * math.sin(dLat / 2) +
+  final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
       math.cos(_toRadians(lat1)) *
           math.cos(_toRadians(lat2)) *
           math.sin(dLon / 2) *

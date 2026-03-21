@@ -6,16 +6,16 @@ void main() {
 
   group('EntryGroupTemplate', () {
     Map<String, dynamic> templateJson() => {
-      'id': 'egt_1',
-      'party_id': 'party_1',
-      'label': 'VIP Group',
-      'gender': 'male',
-      'birth_year_min': 1990,
-      'birth_year_max': 2000,
-      'required_verification_ids': ['v1', 'v2'],
-      'created_at': now.toIso8601String(),
-      'updated_at': now.toIso8601String(),
-    };
+          'id': 'egt_1',
+          'party_id': 'party_1',
+          'label': 'VIP Group',
+          'gender': 'male',
+          'birth_year_min': 1990,
+          'birth_year_max': 2000,
+          'required_verification_ids': ['v1', 'v2'],
+          'created_at': now.toIso8601String(),
+          'updated_at': now.toIso8601String(),
+        };
 
     test('creates from JSON with all fields', () {
       final t = EntryGroupTemplate.fromJson(templateJson());
@@ -76,16 +76,16 @@ void main() {
 
   group('EntryGroup', () {
     Map<String, dynamic> groupJson() => {
-      'id': 'eg_1',
-      'event_id': 'event_1',
-      'label': 'Group A',
-      'gender': 'female',
-      'birth_year_min': 1995,
-      'birth_year_max': 2005,
-      'required_verification_ids': ['v3'],
-      'created_at': now.toIso8601String(),
-      'updated_at': now.toIso8601String(),
-    };
+          'id': 'eg_1',
+          'event_id': 'event_1',
+          'label': 'Group A',
+          'gender': 'female',
+          'birth_year_min': 1995,
+          'birth_year_max': 2005,
+          'required_verification_ids': ['v3'],
+          'created_at': now.toIso8601String(),
+          'updated_at': now.toIso8601String(),
+        };
 
     test('creates from JSON with all fields', () {
       final g = EntryGroup.fromJson(groupJson());

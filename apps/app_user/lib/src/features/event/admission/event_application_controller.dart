@@ -152,23 +152,21 @@ class EventApplicationController extends _$EventApplicationController {
     required User user,
     required String merchantUid,
   }) async {
-    return ref
-        .read(iamportControllerProvider.notifier)
-        .startPayment(
-          context: context,
-          userCode: userCode,
-          data: {
-            'pg': 'html5_inicis',
-            'pay_method': 'card',
-            'merchant_uid': merchantUid,
-            'name': ticket.name,
-            'amount': ticket.price,
-            'buyer_name': user.userMetadata?['name'] ?? '게스트',
-            'buyer_tel': user.phone ?? '01000000000',
-            'buyer_email': user.email ?? 'guest@minglit.com',
-            'app_scheme': 'minglit',
-          },
-        );
+    return ref.read(iamportControllerProvider.notifier).startPayment(
+      context: context,
+      userCode: userCode,
+      data: {
+        'pg': 'html5_inicis',
+        'pay_method': 'card',
+        'merchant_uid': merchantUid,
+        'name': ticket.name,
+        'amount': ticket.price,
+        'buyer_name': user.userMetadata?['name'] ?? '게스트',
+        'buyer_tel': user.phone ?? '01000000000',
+        'buyer_email': user.email ?? 'guest@minglit.com',
+        'app_scheme': 'minglit',
+      },
+    );
   }
 
   Future<void> _verifyPayment({

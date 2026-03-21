@@ -7,12 +7,10 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
   ) async {
     Log.d('getApplicationsByEventId called | id: $eventId');
     try {
-      final data =
-          await supabaseClient.rpc<dynamic>(
-                'get_event_applications_with_user',
-                params: {'p_event_id': eventId},
-              )
-              as List;
+      final data = await supabaseClient.rpc<dynamic>(
+        'get_event_applications_with_user',
+        params: {'p_event_id': eventId},
+      ) as List;
       final result = data.map((json) {
         final map = json as Map<String, dynamic>;
         // RPC returns flat columns: application_id, event_id, ticket_id,
@@ -64,15 +62,13 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
     Log.d('getEventsByType called | type: $type');
     try {
       // 1. Base Query with Relations
-      var selectQuery =
-          '*, party:parties!inner(*, location:locations(*), '
+      var selectQuery = '*, party:parties!inner(*, location:locations(*), '
           'partner:partners(*)), '
           'entryGroups:entry_groups(*), tickets(*)';
 
       // Special case for Early Bird: filter by ticket name
       if (type == EventFeedType.earlyBird) {
-        selectQuery =
-            '*, party:parties!inner(*, location:locations(*), '
+        selectQuery = '*, party:parties!inner(*, location:locations(*), '
             'partner:partners(*)), '
             'entryGroups:entry_groups(*), tickets!inner(*)';
       }
@@ -114,14 +110,12 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
 
       final queryLimit =
           blockedPartnerIds != null && blockedPartnerIds.isNotEmpty
-          ? (limit * 2).clamp(limit, 30)
-          : limit;
-      final data =
-          await (query as PostgrestTransformBuilder).range(
-                offset,
-                offset + queryLimit - 1,
-              )
-              as List;
+              ? (limit * 2).clamp(limit, 30)
+              : limit;
+      final data = await (query as PostgrestTransformBuilder).range(
+        offset,
+        offset + queryLimit - 1,
+      ) as List;
       var result = data.map((json) {
         return Event.fromJson(json as Map<String, dynamic>);
       }).toList();
@@ -229,12 +223,10 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
     String eventId,
   ) async {
     try {
-      final data =
-          await supabaseClient.rpc<dynamic>(
-                'get_entry_group_participant_counts',
-                params: {'p_event_id': eventId},
-              )
-              as List<dynamic>;
+      final data = await supabaseClient.rpc<dynamic>(
+        'get_entry_group_participant_counts',
+        params: {'p_event_id': eventId},
+      ) as List<dynamic>;
       return data.cast<Map<String, dynamic>>();
     } on Exception catch (e, st) {
       Log.e('getEntryGroupParticipantCounts Error', e, st);
@@ -299,9 +291,8 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
         params: {'p_user_id': userId, 'p_limit': limit},
       );
 
-      final result = response
-          .map((item) => item as Map<String, dynamic>)
-          .toList();
+      final result =
+          response.map((item) => item as Map<String, dynamic>).toList();
 
       Log.d('getPersonalizedRecommendations success | count: ${result.length}');
       return result;
@@ -333,9 +324,8 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
         },
       );
 
-      final result = response
-          .map((item) => item as Map<String, dynamic>)
-          .toList();
+      final result =
+          response.map((item) => item as Map<String, dynamic>).toList();
 
       Log.d('getEventsWithinRadius success | count: ${result.length}');
       return result;

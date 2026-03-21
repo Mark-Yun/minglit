@@ -15,27 +15,24 @@ const devUserProfilesProvider = DevUserProfilesProvider._();
 
 /// Fetches test user profiles for the dev user switcher.
 
-final class DevUserProfilesProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<Map<String, dynamic>>>,
-          List<Map<String, dynamic>>,
-          FutureOr<List<Map<String, dynamic>>>
-        >
+final class DevUserProfilesProvider extends $FunctionalProvider<
+        AsyncValue<List<Map<String, dynamic>>>,
+        List<Map<String, dynamic>>,
+        FutureOr<List<Map<String, dynamic>>>>
     with
         $FutureModifier<List<Map<String, dynamic>>>,
         $FutureProvider<List<Map<String, dynamic>>> {
   /// Fetches test user profiles for the dev user switcher.
   const DevUserProfilesProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'devUserProfilesProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'devUserProfilesProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$devUserProfilesHash();
@@ -44,7 +41,8 @@ final class DevUserProfilesProvider
   @override
   $FutureProviderElement<List<Map<String, dynamic>>> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<Map<String, dynamic>>> create(Ref ref) {

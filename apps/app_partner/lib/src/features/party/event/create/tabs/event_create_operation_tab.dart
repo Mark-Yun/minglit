@@ -41,7 +41,6 @@ class EventCreateOperationTab extends StatelessWidget {
             ),
           ),
           const SizedBox(height: MinglitSpacing.large),
-
           MinglitEditableSection(
             title: context.l10n.wizard_review_tickets,
             onTap: () {
@@ -49,9 +48,8 @@ class EventCreateOperationTab extends StatelessWidget {
             },
             child: PartyTicketsSummary(
               tickets: state.tickets,
-              entryGroups: state.entryGroups
-                  .map((e) => e.toTemplate())
-                  .toList(),
+              entryGroups:
+                  state.entryGroups.map((e) => e.toTemplate()).toList(),
               maxCapacity: state.maxParticipants,
               showStats: false,
             ),

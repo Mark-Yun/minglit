@@ -15,25 +15,20 @@ const partnerPartiesProvider = PartnerPartiesFamily._();
 
 /// Provider to fetch parties for a specific partner.
 
-final class PartnerPartiesProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<Party>>,
-          List<Party>,
-          FutureOr<List<Party>>
-        >
+final class PartnerPartiesProvider extends $FunctionalProvider<
+        AsyncValue<List<Party>>, List<Party>, FutureOr<List<Party>>>
     with $FutureModifier<List<Party>>, $FutureProvider<List<Party>> {
   /// Provider to fetch parties for a specific partner.
   const PartnerPartiesProvider._({
     required PartnerPartiesFamily super.from,
     required String super.argument,
   }) : super(
-         retry: null,
-         name: r'partnerPartiesProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+          retry: null,
+          name: r'partnerPartiesProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$partnerPartiesHash();
@@ -49,7 +44,8 @@ final class PartnerPartiesProvider
   @override
   $FutureProviderElement<List<Party>> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<Party>> create(Ref ref) {
@@ -75,13 +71,13 @@ String _$partnerPartiesHash() => r'f7b1cb676b9bdcf5a939a16e263fe5a5d33b3681';
 final class PartnerPartiesFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<Party>>, String> {
   const PartnerPartiesFamily._()
-    : super(
-        retry: null,
-        name: r'partnerPartiesProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
+      : super(
+          retry: null,
+          name: r'partnerPartiesProvider',
+          dependencies: null,
+          $allTransitiveDependencies: null,
+          isAutoDispose: true,
+        );
 
   /// Provider to fetch parties for a specific partner.
 

@@ -18,12 +18,12 @@ final class EventDetailControllerProvider
     required EventDetailControllerFamily super.from,
     required String super.argument,
   }) : super(
-         retry: null,
-         name: r'eventDetailControllerProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+          retry: null,
+          name: r'eventDetailControllerProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$eventDetailControllerHash();
@@ -55,21 +55,16 @@ String _$eventDetailControllerHash() =>
 
 final class EventDetailControllerFamily extends $Family
     with
-        $ClassFamilyOverride<
-          EventDetailController,
-          AsyncValue<Event>,
-          Event,
-          FutureOr<Event>,
-          String
-        > {
+        $ClassFamilyOverride<EventDetailController, AsyncValue<Event>, Event,
+            FutureOr<Event>, String> {
   const EventDetailControllerFamily._()
-    : super(
-        retry: null,
-        name: r'eventDetailControllerProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
+      : super(
+          retry: null,
+          name: r'eventDetailControllerProvider',
+          dependencies: null,
+          $allTransitiveDependencies: null,
+          isAutoDispose: true,
+        );
 
   EventDetailControllerProvider call(String eventId) =>
       EventDetailControllerProvider._(argument: eventId, from: this);
@@ -88,14 +83,11 @@ abstract class _$EventDetailController extends $AsyncNotifier<Event> {
   void runBuild() {
     final created = build(_$args);
     final ref = this.ref as $Ref<AsyncValue<Event>, Event>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<AsyncValue<Event>, Event>,
-              AsyncValue<Event>,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<AsyncValue<Event>, Event>,
+        AsyncValue<Event>,
+        Object?,
+        Object?>;
     element.handleValue(ref, created);
   }
 }
@@ -104,24 +96,21 @@ abstract class _$EventDetailController extends $AsyncNotifier<Event> {
 const entryGroupParticipantCountsProvider =
     EntryGroupParticipantCountsFamily._();
 
-final class EntryGroupParticipantCountsProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<Map<String, int>>,
-          Map<String, int>,
-          FutureOr<Map<String, int>>
-        >
+final class EntryGroupParticipantCountsProvider extends $FunctionalProvider<
+        AsyncValue<Map<String, int>>,
+        Map<String, int>,
+        FutureOr<Map<String, int>>>
     with $FutureModifier<Map<String, int>>, $FutureProvider<Map<String, int>> {
   const EntryGroupParticipantCountsProvider._({
     required EntryGroupParticipantCountsFamily super.from,
     required String super.argument,
   }) : super(
-         retry: null,
-         name: r'entryGroupParticipantCountsProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+          retry: null,
+          name: r'entryGroupParticipantCountsProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$entryGroupParticipantCountsHash();
@@ -137,7 +126,8 @@ final class EntryGroupParticipantCountsProvider
   @override
   $FutureProviderElement<Map<String, int>> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<Map<String, int>> create(Ref ref) {
@@ -163,13 +153,13 @@ String _$entryGroupParticipantCountsHash() =>
 final class EntryGroupParticipantCountsFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Map<String, int>>, String> {
   const EntryGroupParticipantCountsFamily._()
-    : super(
-        retry: null,
-        name: r'entryGroupParticipantCountsProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
+      : super(
+          retry: null,
+          name: r'entryGroupParticipantCountsProvider',
+          dependencies: null,
+          $allTransitiveDependencies: null,
+          isAutoDispose: true,
+        );
 
   EntryGroupParticipantCountsProvider call(String eventId) =>
       EntryGroupParticipantCountsProvider._(argument: eventId, from: this);

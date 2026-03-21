@@ -12,24 +12,20 @@ part of 'event_coordinator.dart';
 @ProviderFor(eventCoordinator)
 const eventCoordinatorProvider = EventCoordinatorProvider._();
 
-final class EventCoordinatorProvider
-    extends
-        $FunctionalProvider<
-          EventCoordinator,
-          EventCoordinator,
-          EventCoordinator
-        >
-    with $Provider<EventCoordinator> {
+final class EventCoordinatorProvider extends $FunctionalProvider<
+    EventCoordinator,
+    EventCoordinator,
+    EventCoordinator> with $Provider<EventCoordinator> {
   const EventCoordinatorProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'eventCoordinatorProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'eventCoordinatorProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$eventCoordinatorHash();

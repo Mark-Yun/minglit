@@ -49,13 +49,10 @@ class EventApplicationReviewController
         );
       } else {
         // No submission, handle direct application status update
-        await supabase
-            .from('event_applications')
-            .update({
-              'status': status,
-              'rejection_reason': reason,
-            })
-            .eq('id', applicationId);
+        await supabase.from('event_applications').update({
+          'status': status,
+          'rejection_reason': reason,
+        }).eq('id', applicationId);
       }
     });
   }

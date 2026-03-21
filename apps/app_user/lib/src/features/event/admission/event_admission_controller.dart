@@ -148,8 +148,7 @@ class EventAdmissionController extends _$EventAdmissionController {
       case EventAdmissionStatus.rejected:
         final confirmed = await context.showMinglitConfirm(
           title: '심사 결과 안내',
-          message:
-              '반려 사유: ${state.rejectionReason ?? "정보 부족"}\n\n'
+          message: '반려 사유: ${state.rejectionReason ?? "정보 부족"}\n\n'
               '기존 신청을 취소하고 다시 신청하시겠습니까?',
           confirmLabel: '다시 신청하기',
           cancelLabel: '닫기',
@@ -161,9 +160,7 @@ class EventAdmissionController extends _$EventAdmissionController {
           final loading = ref.read(globalLoadingControllerProvider.notifier)
             ..show();
           try {
-            await ref
-                .read(eventRepositoryProvider)
-                .deleteApplication(
+            await ref.read(eventRepositoryProvider).deleteApplication(
                   eventId: event.id,
                   userId: user.id,
                 );

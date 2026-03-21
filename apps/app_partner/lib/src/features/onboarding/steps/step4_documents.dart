@@ -92,9 +92,9 @@ class _DocumentPicker extends StatelessWidget {
                   child: Text(
                     fileName,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: MinglitColors.success,
-                      fontWeight: FontWeight.bold,
-                    ),
+                          color: MinglitColors.success,
+                          fontWeight: FontWeight.bold,
+                        ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),

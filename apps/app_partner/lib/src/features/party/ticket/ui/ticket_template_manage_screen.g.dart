@@ -12,13 +12,10 @@ part of 'ticket_template_manage_screen.dart';
 @ProviderFor(partyTicketTemplates)
 const partyTicketTemplatesProvider = PartyTicketTemplatesFamily._();
 
-final class PartyTicketTemplatesProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<TicketTemplate>>,
-          List<TicketTemplate>,
-          FutureOr<List<TicketTemplate>>
-        >
+final class PartyTicketTemplatesProvider extends $FunctionalProvider<
+        AsyncValue<List<TicketTemplate>>,
+        List<TicketTemplate>,
+        FutureOr<List<TicketTemplate>>>
     with
         $FutureModifier<List<TicketTemplate>>,
         $FutureProvider<List<TicketTemplate>> {
@@ -26,12 +23,12 @@ final class PartyTicketTemplatesProvider
     required PartyTicketTemplatesFamily super.from,
     required String super.argument,
   }) : super(
-         retry: null,
-         name: r'partyTicketTemplatesProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+          retry: null,
+          name: r'partyTicketTemplatesProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$partyTicketTemplatesHash();
@@ -47,7 +44,8 @@ final class PartyTicketTemplatesProvider
   @override
   $FutureProviderElement<List<TicketTemplate>> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<TicketTemplate>> create(Ref ref) {
@@ -72,13 +70,13 @@ String _$partyTicketTemplatesHash() =>
 final class PartyTicketTemplatesFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<TicketTemplate>>, String> {
   const PartyTicketTemplatesFamily._()
-    : super(
-        retry: null,
-        name: r'partyTicketTemplatesProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
+      : super(
+          retry: null,
+          name: r'partyTicketTemplatesProvider',
+          dependencies: null,
+          $allTransitiveDependencies: null,
+          isAutoDispose: true,
+        );
 
   PartyTicketTemplatesProvider call(String partyId) =>
       PartyTicketTemplatesProvider._(argument: partyId, from: this);

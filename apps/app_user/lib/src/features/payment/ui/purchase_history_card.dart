@@ -157,14 +157,12 @@ class PurchaseHistoryCard extends ConsumerWidget {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () async {
-                    final phone =
-                        _resolveContactValue(
+                    final phone = _resolveContactValue(
                           contactOptions,
                           'phone',
                         ) ??
                         party?.partner?.contactPhone;
-                    final email =
-                        _resolveContactValue(
+                    final email = _resolveContactValue(
                           contactOptions,
                           'email',
                         ) ??

@@ -180,12 +180,10 @@ void main() {
         await container.read(recommendationFeedProvider.future);
 
         // Dispatch two concurrent loadMore() calls without awaiting
-        final f1 = container
-            .read(recommendationFeedProvider.notifier)
-            .loadMore();
-        final f2 = container
-            .read(recommendationFeedProvider.notifier)
-            .loadMore();
+        final f1 =
+            container.read(recommendationFeedProvider.notifier).loadMore();
+        final f2 =
+            container.read(recommendationFeedProvider.notifier).loadMore();
         await f1;
         await f2;
 

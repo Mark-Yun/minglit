@@ -19,10 +19,8 @@ class _VerificationStep extends ConsumerWidget {
         .where((g) => ticket.targetEntryGroupIds.contains(g.id))
         .toList();
 
-    final verifIds = linkedGroups
-        .expand((g) => g.requiredVerificationIds)
-        .toSet()
-        .toList();
+    final verifIds =
+        linkedGroups.expand((g) => g.requiredVerificationIds).toSet().toList();
 
     if (verifIds.isEmpty) {
       return Center(

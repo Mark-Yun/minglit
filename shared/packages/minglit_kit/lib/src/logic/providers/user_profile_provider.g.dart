@@ -15,25 +15,20 @@ const currentUserProfileProvider = CurrentUserProfileProvider._();
 
 /// Provides the current signed-in user's profile, if available.
 
-final class CurrentUserProfileProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<UserProfile?>,
-          UserProfile?,
-          FutureOr<UserProfile?>
-        >
+final class CurrentUserProfileProvider extends $FunctionalProvider<
+        AsyncValue<UserProfile?>, UserProfile?, FutureOr<UserProfile?>>
     with $FutureModifier<UserProfile?>, $FutureProvider<UserProfile?> {
   /// Provides the current signed-in user's profile, if available.
   const CurrentUserProfileProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'currentUserProfileProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'currentUserProfileProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$currentUserProfileHash();
@@ -42,7 +37,8 @@ final class CurrentUserProfileProvider
   @override
   $FutureProviderElement<UserProfile?> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<UserProfile?> create(Ref ref) {

@@ -12,24 +12,20 @@ part of 'party_detail_coordinator.dart';
 @ProviderFor(partyDetailCoordinator)
 const partyDetailCoordinatorProvider = PartyDetailCoordinatorProvider._();
 
-final class PartyDetailCoordinatorProvider
-    extends
-        $FunctionalProvider<
-          PartyDetailCoordinator,
-          PartyDetailCoordinator,
-          PartyDetailCoordinator
-        >
-    with $Provider<PartyDetailCoordinator> {
+final class PartyDetailCoordinatorProvider extends $FunctionalProvider<
+    PartyDetailCoordinator,
+    PartyDetailCoordinator,
+    PartyDetailCoordinator> with $Provider<PartyDetailCoordinator> {
   const PartyDetailCoordinatorProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'partyDetailCoordinatorProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'partyDetailCoordinatorProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$partyDetailCoordinatorHash();
@@ -38,7 +34,8 @@ final class PartyDetailCoordinatorProvider
   @override
   $ProviderElement<PartyDetailCoordinator> $createElement(
     $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  ) =>
+      $ProviderElement(pointer);
 
   @override
   PartyDetailCoordinator create(Ref ref) {

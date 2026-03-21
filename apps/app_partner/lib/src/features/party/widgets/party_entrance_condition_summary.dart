@@ -58,9 +58,8 @@ class PartyEntranceConditionSummary extends ConsumerWidget {
               ),
             ),
             child: InkWell(
-              onTap: onGroupTap != null
-                  ? () => onGroupTap!(entryGroups[i])
-                  : null,
+              onTap:
+                  onGroupTap != null ? () => onGroupTap!(entryGroups[i]) : null,
               borderRadius: BorderRadius.circular(MinglitRadius.card),
               child: Padding(
                 padding: const EdgeInsets.all(MinglitSpacing.medium),

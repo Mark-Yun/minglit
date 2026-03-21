@@ -16,8 +16,7 @@ class PartyCapacityContactEditScreen extends StatefulWidget {
     int minCount,
     int maxCount,
     Map<String, String> contactOptions,
-  )
-  onSave;
+  ) onSave;
 
   @override
   State<PartyCapacityContactEditScreen> createState() =>
