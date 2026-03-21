@@ -101,9 +101,9 @@ void main() {
       final container = createTestContainer();
       await container.read(locationSearchControllerProvider.future);
 
-      final notifier = container.read(
-        locationSearchControllerProvider.notifier,
-      )..onSearchChanged('');
+      container
+          .read(locationSearchControllerProvider.notifier)
+          .onSearchChanged('');
 
       final state = container.read(locationSearchControllerProvider);
       expect(state.value, isEmpty);
