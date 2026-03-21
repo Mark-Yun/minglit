@@ -36,21 +36,33 @@ class _VerificationSection extends ConsumerWidget {
               ),
             )
           else
+            // Fix #191: MinglitChip → VerificationCard로 변경하여 다른 UI와 룩앤필 통일
             MinglitAsyncValueWidget(
               value: ref.watch(verificationsByIdsProvider(allIds.join(','))),
-              data: (verifications) => Wrap(
-                spacing: MinglitSpacing.small,
-                runSpacing: MinglitSpacing.small,
+              data: (verifications) => Column(
                 children: verifications
                     .map(
-                      (v) => MinglitChip(
-                        label: v.displayName,
-                        icon: Icons.verified_user_outlined,
+                      (v) => Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: MinglitSpacing.small,
+                        ),
+                        // Fix #191: 클릭 시 상세 화면 이동 (임시 스낵바)
+                        child: VerificationCard(
+                          verification: v,
+                          onTap: () {
+                            context.showMinglitInfo('구현준비중입니다');
+                          },
+                          trailing: Icon(
+                            Icons.chevron_right,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                       ),
                     )
                     .toList(),
               ),
-              loading: () => const MinglitSkeleton(height: 32, width: 80),
+              loading: () =>
+                  const MinglitSkeleton(height: 72, width: double.infinity),
               error: (e, s) => const SizedBox.shrink(),
             ),
         ],
