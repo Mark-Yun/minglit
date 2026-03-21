@@ -8,23 +8,26 @@ const goldenSurfaceSize = Size(400, 800);
 /// then compares against [goldenFileName].
 ///
 /// Use [surfaceSize] to override the default 400x800 canvas.
+/// Use [theme] to supply the app's real theme data.
+/// Use [wrapper] to customise how the widget is placed in the scaffold.
 Future<void> expectGolden(
   WidgetTester tester, {
   required Widget widget,
   required String goldenFileName,
   Size surfaceSize = goldenSurfaceSize,
+  ThemeData? theme,
+  Widget Function(Widget child)? wrapper,
 }) async {
   await tester.binding.setSurfaceSize(surfaceSize);
   addTearDown(() => tester.binding.setSurfaceSize(null));
 
+  final body = wrapper != null ? wrapper(widget) : widget;
+
   await tester.pumpWidget(
     MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: Scaffold(body: Center(child: widget)),
+      theme: theme,
+      home: Scaffold(body: body),
     ),
   );
   await tester.pumpAndSettle();
