@@ -18,6 +18,10 @@ jobs:
     permissions:
       issues: write
     steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .
+          fetch-depth: 1
       - name: Create or comment on issue for CI failure
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
