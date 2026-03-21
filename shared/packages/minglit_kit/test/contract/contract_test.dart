@@ -95,14 +95,15 @@ void main() {
     test('payment-cancel success has expected fields', () {
       final json = _loadSample('payment_cancel_success');
       expect(json['success'], true);
-      expect(json['data'], isA<Map>());
+      expect(json['data'], isA<Map<String, dynamic>>());
     });
 
     test('settlement-query settlements has expected fields', () {
       final json = _loadSample('settlement_query_settlements');
       expect(json['success'], true);
-      expect(json['settlements'], isA<List>());
-      final first = (json['settlements'] as List).first as Map;
+      expect(json['settlements'], isA<List<dynamic>>());
+      final settlements = json['settlements'] as List<dynamic>;
+      final first = settlements.first as Map<String, dynamic>;
       expect(first['id'], isA<String>());
       expect(first['partnerId'], isA<String>());
       expect(first['amount'], isA<num>());
@@ -112,8 +113,9 @@ void main() {
     test('settlement-query payouts has expected fields', () {
       final json = _loadSample('settlement_query_payouts');
       expect(json['success'], true);
-      expect(json['payouts'], isA<List>());
-      final first = (json['payouts'] as List).first as Map;
+      expect(json['payouts'], isA<List<dynamic>>());
+      final payouts = json['payouts'] as List<dynamic>;
+      final first = payouts.first as Map<String, dynamic>;
       expect(first['id'], isA<String>());
       expect(first['partnerId'], isA<String>());
       expect(first['amount'], isA<num>());
@@ -128,8 +130,8 @@ void main() {
     test('profile-update success has expected fields', () {
       final json = _loadSample('profile_update_success');
       expect(json['success'], true);
-      expect(json['processed'], isA<Map>());
-      final processed = json['processed'] as Map;
+      expect(json['processed'], isA<Map<String, dynamic>>());
+      final processed = json['processed'] as Map<String, dynamic>;
       expect(processed['user_id'], isA<String>());
       expect(processed['action_type'], isA<String>());
       expect(processed['weight'], isA<num>());
