@@ -101,7 +101,6 @@ abstract class Verification with _$Verification {
     @JsonKey(name: 'form_schema')
     @Default([])
     List<VerificationFormField> formSchema,
-
     @JsonKey(name: 'is_active') @Default(true) bool isActive,
     @JsonKey(name: 'created_at') DateTime? createdAt,
   }) = _Verification;

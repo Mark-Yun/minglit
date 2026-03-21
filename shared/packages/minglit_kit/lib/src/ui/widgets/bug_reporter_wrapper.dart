@@ -340,7 +340,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
             bottom: 16,
             child: Material(
               type: MaterialType.transparency,
-              // Fix #147: show progress indicator while capturing bug report data
+              // Fix #147: show progress indicator while capturing
               child: FloatingActionButton(
                 mini: true,
                 onPressed: _isCapturing ? null : _showReportDialog,

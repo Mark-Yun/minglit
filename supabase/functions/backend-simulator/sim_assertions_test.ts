@@ -254,7 +254,7 @@ Deno.test("simAssertVerificationApproved - passes when approved + pvu exists", a
         }),
       },
       partner_verified_users: {
-        select: () => ({ data: { id: "pvu-1" }, error: null }),
+        select: () => ({ data: { submission_id: "pvu-1" }, error: null }),
       },
     },
   });

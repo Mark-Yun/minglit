@@ -94,6 +94,8 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
       }
 
       // 4. Sorting Strategy
+      // Fix #193: Add `id` tiebreaker to all ORDER BY for deterministic
+      // offset-based pagination — prevents duplicate/skipped rows across pages.
       switch (type) {
         case EventFeedType.newArrivals:
           // ignore: avoid_dynamic_calls, Reason: Supabase builder chaining
@@ -111,6 +113,8 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
           // ignore: avoid_dynamic_calls, Reason: Supabase builder chaining
           query = query.order('created_at', ascending: false);
       }
+      // ignore: avoid_dynamic_calls, Reason: Supabase builder chaining
+      query = query.order('id', ascending: true);
 
       final queryLimit =
           blockedPartnerIds != null && blockedPartnerIds.isNotEmpty
@@ -360,6 +364,32 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
       return response;
     } catch (e, st) {
       Log.e('❌ [EventRepo] getBulkEligibilityData Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// Fetches all upcoming events for a specific partner (via parties).
+  /// Used in the partner detail page to show the partner's event list.
+  Future<List<Event>> getEventsByPartnerId(String partnerId) async {
+    Log.d('getEventsByPartnerId called | partnerId: $partnerId');
+    try {
+      final data = await supabaseClient
+          .from('events')
+          .select(
+            '*, party:parties!inner(*, location:locations(*), '
+            'partner:partners(*)), '
+            'entryGroups:entry_groups(*), tickets(*)',
+          )
+          .eq('party.partner_id', partnerId)
+          .eq('status', 'scheduled')
+          .gte('start_time', DateTime.now().toIso8601String())
+          .order('start_time');
+      final result = data.map(Event.fromJson).toList();
+
+      Log.d('getEventsByPartnerId success | count: ${result.length}');
+      return result;
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] getEventsByPartnerId Error', e, st);
       rethrow;
     }
   }
