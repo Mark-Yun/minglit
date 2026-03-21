@@ -6,11 +6,14 @@ class ActivePartySummaryScroll extends StatelessWidget {
   const ActivePartySummaryScroll({
     required this.parties,
     required this.onPartyTap,
+    this.onViewAllTap,
     super.key,
   });
 
   final List<Party> parties;
   final void Function(Party party) onPartyTap;
+  // Fix #185: 파티 전체 보기 버튼 콜백
+  final VoidCallback? onViewAllTap;
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +39,29 @@ class ActivePartySummaryScroll extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              // Fix #185: 파티 전체 보기 버튼
+              if (onViewAllTap != null) ...[
+                const Spacer(),
+                GestureDetector(
+                  onTap: onViewAllTap,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '자세히',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 16,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         ),
