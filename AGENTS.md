@@ -226,3 +226,27 @@ git push
   final visibility = party.visibility ?? 'public';
   ```
 - 주석은 수정된 코드 바로 위에 작성한다. 파일 상단이나 먼 곳에 남기지 않는다.
+
+## Test Conventions
+
+새 피쳐 구현 또는 버그 수정 시 반드시 [Automation Test Guide](docs/AUTOMATION_TEST_GUIDE.md)를 따른다.
+
+### 필수 테스트 규칙
+- **Repository 변경** → `minglit_kit/test/src/data/repositories/` 에 테스트 추가
+- **Controller/Provider 변경** → `apps/{app}/test/src/features/{feature}/logic/` 에 테스트 추가
+- **DB Migration 추가** → `supabase/tests/database/` 에 pgTAP 스키마/RLS 테스트 추가
+- **Edge Function 추가** → 같은 디렉토리에 `{name}_test.ts` 추가
+- **버그 수정** → 해당 버그를 재현하는 테스트를 반드시 포함
+
+### 테스트 실행 확인
+코드 변경 후 관련 테스트를 실행하여 통과를 확인한다:
+```bash
+# Flutter
+cd {package_dir} && flutter test
+
+# pgTAP
+supabase test db
+
+# Edge Functions
+deno test --allow-all supabase/functions/{function_name}/
+```
