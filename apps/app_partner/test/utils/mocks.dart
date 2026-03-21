@@ -16,3 +16,9 @@ class MockVerificationRepository extends Mock
 class MockUserRepository extends Mock implements UserRepository {}
 
 class MockSettlementRepository extends Mock implements SettlementRepository {}
+
+class MockPartyRepository extends Mock implements PartyRepository {}
+
+class MockTicketRepository extends Mock implements TicketRepository {}
+
+class MockLocationRepository extends Mock implements LocationRepository {}
