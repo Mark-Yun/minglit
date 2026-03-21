@@ -12,8 +12,9 @@ import '../../../helpers/supabase_mock_helpers.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const googleSignInChannel =
-      MethodChannel('plugins.flutter.io/google_sign_in');
+  const googleSignInChannel = MethodChannel(
+    'plugins.flutter.io/google_sign_in',
+  );
 
   late MockSupabaseClient mockClient;
   late MockGoTrueClient mockAuth;
