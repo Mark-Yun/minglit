@@ -21,6 +21,9 @@ BEGIN
     v_reason := new.rejection_reason;
 
     IF v_payment_id IS NOT NULL THEN
+      -- Fix #209: set refund_status before vault lookup so it persists even when secrets are missing
+      new.refund_status := 'requested';
+
       SELECT decrypted_secret INTO v_project_url
       FROM vault.decrypted_secrets
       WHERE name = 'supabase_url' LIMIT 1;
@@ -46,8 +49,6 @@ BEGIN
           'reason', v_reason
         )
       );
-
-      new.refund_status := 'requested';
     END IF;
   END IF;
   RETURN new;
