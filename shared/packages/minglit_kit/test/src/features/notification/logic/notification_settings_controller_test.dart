@@ -41,7 +41,7 @@ void main() {
 
   group('NotificationSettingsController', () {
     test('returns null when user is not logged in', () async {
-      final container = createTestContainer(user: null);
+      final container = createTestContainer();
 
       final result = await container.read(
         notificationSettingsControllerProvider.future,
@@ -210,7 +210,7 @@ void main() {
       });
 
       test('does nothing when user is null', () async {
-        final container = createTestContainer(user: null);
+        final container = createTestContainer();
         await container.read(
           notificationSettingsControllerProvider.future,
         );

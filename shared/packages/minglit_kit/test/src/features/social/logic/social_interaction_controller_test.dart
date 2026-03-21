@@ -202,9 +202,9 @@ void main() {
 }
 
 /// A test controller that bypasses the Supabase.instance dependency.
-class _TestSocialInteractionController
-    extends SocialInteractionController {
-  _TestSocialInteractionController(this._initialState, {
+class _TestSocialInteractionController extends SocialInteractionController {
+  _TestSocialInteractionController(
+    this._initialState, {
     required this.hasUser,
   });
   final bool _initialState;

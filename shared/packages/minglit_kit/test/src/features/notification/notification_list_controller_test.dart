@@ -41,7 +41,7 @@ void main() {
   group('NotificationListController', () {
     test('build loads notifications from repository', () async {
       when(
-        () => mockRepo.getNotifications(limit: 20, offset: 0),
+        () => mockRepo.getNotifications(),
       ).thenAnswer((_) async => testNotifications);
 
       final container = createTestContainer(user: mockUser);
@@ -53,7 +53,7 @@ void main() {
 
     test('refresh reloads notifications', () async {
       when(
-        () => mockRepo.getNotifications(limit: 20, offset: 0),
+        () => mockRepo.getNotifications(),
       ).thenAnswer((_) async => testNotifications);
 
       final container = createTestContainer(user: mockUser);
@@ -63,11 +63,10 @@ void main() {
         {'id': 'n1', 'title': 'Welcome', 'is_read': true},
       ];
       when(
-        () => mockRepo.getNotifications(limit: 20, offset: 0),
+        () => mockRepo.getNotifications(),
       ).thenAnswer((_) async => updatedNotifications);
 
-      final notifier =
-          container.read(notificationListProvider.notifier);
+      final notifier = container.read(notificationListProvider.notifier);
       await notifier.refresh();
 
       final state = container.read(notificationListProvider);
@@ -76,7 +75,7 @@ void main() {
 
     test('markAsRead updates notification optimistically', () async {
       when(
-        () => mockRepo.getNotifications(limit: 20, offset: 0),
+        () => mockRepo.getNotifications(),
       ).thenAnswer((_) async => testNotifications);
       when(
         () => mockRepo.markAsRead('n1'),
@@ -85,8 +84,7 @@ void main() {
       final container = createTestContainer(user: mockUser);
       await container.read(notificationListProvider.future);
 
-      final notifier =
-          container.read(notificationListProvider.notifier);
+      final notifier = container.read(notificationListProvider.notifier);
       await notifier.markAsRead('n1');
 
       final state = container.read(notificationListProvider);
@@ -100,7 +98,7 @@ void main() {
 
     test('markAllAsRead calls repository and refreshes', () async {
       when(
-        () => mockRepo.getNotifications(limit: 20, offset: 0),
+        () => mockRepo.getNotifications(),
       ).thenAnswer((_) async => testNotifications);
       when(
         () => mockRepo.markAllAsRead('user_1'),
@@ -109,8 +107,7 @@ void main() {
       final container = createTestContainer(user: mockUser);
       await container.read(notificationListProvider.future);
 
-      final notifier =
-          container.read(notificationListProvider.notifier);
+      final notifier = container.read(notificationListProvider.notifier);
       await notifier.markAllAsRead();
 
       verify(() => mockRepo.markAllAsRead('user_1')).called(1);
@@ -118,14 +115,13 @@ void main() {
 
     test('markAllAsRead does nothing when user is null', () async {
       when(
-        () => mockRepo.getNotifications(limit: 20, offset: 0),
+        () => mockRepo.getNotifications(),
       ).thenAnswer((_) async => testNotifications);
 
-      final container = createTestContainer(user: null);
+      final container = createTestContainer();
       await container.read(notificationListProvider.future);
 
-      final notifier =
-          container.read(notificationListProvider.notifier);
+      final notifier = container.read(notificationListProvider.notifier);
       await notifier.markAllAsRead();
 
       verifyNever(() => mockRepo.markAllAsRead(any()));
@@ -133,7 +129,7 @@ void main() {
 
     test('deleteNotification removes item optimistically', () async {
       when(
-        () => mockRepo.getNotifications(limit: 20, offset: 0),
+        () => mockRepo.getNotifications(),
       ).thenAnswer((_) async => testNotifications);
       when(
         () => mockRepo.deleteNotification('n1'),
@@ -142,8 +138,7 @@ void main() {
       final container = createTestContainer(user: mockUser);
       await container.read(notificationListProvider.future);
 
-      final notifier =
-          container.read(notificationListProvider.notifier);
+      final notifier = container.read(notificationListProvider.notifier);
       await notifier.deleteNotification('n1');
 
       final state = container.read(notificationListProvider);

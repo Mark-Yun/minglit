@@ -42,8 +42,7 @@ void main() {
 
         final container = createTestContainer();
         await container.read(authControllerProvider.future);
-        final notifier =
-            container.read(authControllerProvider.notifier);
+        final notifier = container.read(authControllerProvider.notifier);
 
         await notifier.signInWithGoogle();
 
@@ -63,8 +62,7 @@ void main() {
 
         final container = createTestContainer();
         await container.read(authControllerProvider.future);
-        final notifier =
-            container.read(authControllerProvider.notifier);
+        final notifier = container.read(authControllerProvider.notifier);
 
         await notifier.signInWithEmail(
           email: 'test@test.com',
@@ -89,8 +87,7 @@ void main() {
 
         final container = createTestContainer();
         await container.read(authControllerProvider.future);
-        final notifier =
-            container.read(authControllerProvider.notifier);
+        final notifier = container.read(authControllerProvider.notifier);
 
         await notifier.signInWithEmail(
           email: 'bad@test.com',
@@ -112,8 +109,7 @@ void main() {
 
         final container = createTestContainer();
         await container.read(authControllerProvider.future);
-        final notifier =
-            container.read(authControllerProvider.notifier);
+        final notifier = container.read(authControllerProvider.notifier);
 
         await notifier.signInWithApple();
 
@@ -132,8 +128,7 @@ void main() {
 
         final container = createTestContainer();
         await container.read(authControllerProvider.future);
-        final notifier =
-            container.read(authControllerProvider.notifier);
+        final notifier = container.read(authControllerProvider.notifier);
 
         await notifier.signInWithKakao();
 
@@ -148,8 +143,7 @@ void main() {
 
         final container = createTestContainer();
         await container.read(authControllerProvider.future);
-        final notifier =
-            container.read(authControllerProvider.notifier);
+        final notifier = container.read(authControllerProvider.notifier);
 
         await notifier.signOut();
 
@@ -157,13 +151,11 @@ void main() {
       });
 
       test('sets error state on failure', () async {
-        when(() => mockRepo.signOut())
-            .thenThrow(Exception('Sign out failed'));
+        when(() => mockRepo.signOut()).thenThrow(Exception('Sign out failed'));
 
         final container = createTestContainer();
         await container.read(authControllerProvider.future);
-        final notifier =
-            container.read(authControllerProvider.notifier);
+        final notifier = container.read(authControllerProvider.notifier);
 
         await notifier.signOut();
 
