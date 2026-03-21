@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:app_partner/src/features/party/party_providers.dart';
 import 'package:app_partner/src/features/settlement/settlement_controller.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
