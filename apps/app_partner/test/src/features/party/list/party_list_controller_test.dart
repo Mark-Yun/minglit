@@ -36,8 +36,9 @@ void main() {
         (_) async => [const Partner(id: 'partner-1', name: 'Test Partner')],
       );
       final parties = [_makeParty('p-1'), _makeParty('p-2')];
-      when(() => mockPartyRepo.getPartiesByPartnerId('partner-1'))
-          .thenAnswer((_) async => parties);
+      when(
+        () => mockPartyRepo.getPartiesByPartnerId('partner-1'),
+      ).thenAnswer((_) async => parties);
 
       final container = createContainer(
         overrides: [
@@ -56,8 +57,9 @@ void main() {
     });
 
     test('returns empty list when no managed partners', () async {
-      when(() => mockPartnerRepo.getMyManagedPartners())
-          .thenAnswer((_) async => []);
+      when(
+        () => mockPartnerRepo.getMyManagedPartners(),
+      ).thenAnswer((_) async => []);
 
       final container = createContainer(
         overrides: [
@@ -76,8 +78,9 @@ void main() {
     });
 
     test('propagates error when partner fetch fails', () async {
-      when(() => mockPartnerRepo.getMyManagedPartners())
-          .thenThrow(Exception('network error'));
+      when(
+        () => mockPartnerRepo.getMyManagedPartners(),
+      ).thenThrow(Exception('network error'));
 
       final container = createContainer(
         overrides: [
@@ -98,8 +101,9 @@ void main() {
       when(() => mockPartnerRepo.getMyManagedPartners()).thenAnswer(
         (_) async => [const Partner(id: 'partner-1', name: 'Test Partner')],
       );
-      when(() => mockPartyRepo.getPartiesByPartnerId('partner-1'))
-          .thenThrow(Exception('db error'));
+      when(
+        () => mockPartyRepo.getPartiesByPartnerId('partner-1'),
+      ).thenThrow(Exception('db error'));
 
       final container = createContainer(
         overrides: [

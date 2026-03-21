@@ -39,7 +39,7 @@ void main() {
 
       verify(
         () => mockRouter.push(
-          PartyEditRoute(partyId: 'party-1').location,
+          const PartyEditRoute(partyId: 'party-1').location,
         ),
       ).called(1);
     });
@@ -55,7 +55,7 @@ void main() {
 
       verify(
         () => mockRouter.push(
-          EventCreateRoute(partyId: 'party-1').location,
+          const EventCreateRoute(partyId: 'party-1').location,
         ),
       ).called(1);
     });
@@ -73,7 +73,10 @@ void main() {
 
       verify(
         () => mockRouter.go(
-          EventDetailRoute(partyId: 'party-1', eventId: 'event-1').location,
+          const EventDetailRoute(
+            partyId: 'party-1',
+            eventId: 'event-1',
+          ).location,
         ),
       ).called(1);
     });
@@ -91,7 +94,10 @@ void main() {
 
       verify(
         () => mockRouter.push(
-          TicketCreateRoute(partyId: 'party-1', eventId: 'event-1').location,
+          const TicketCreateRoute(
+            partyId: 'party-1',
+            eventId: 'event-1',
+          ).location,
         ),
       ).called(1);
     });

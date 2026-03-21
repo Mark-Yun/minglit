@@ -1,5 +1,4 @@
 import 'package:app_partner/src/features/party/create/party_create_wizard_controller.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -344,8 +343,9 @@ void main() {
 
         notifier.removeEntryGroup('eg-1');
 
-        final groups =
-            container.read(partyCreateWizardControllerProvider).entryGroups;
+        final groups = container
+            .read(partyCreateWizardControllerProvider)
+            .entryGroups;
         expect(groups, hasLength(1));
         expect(groups.first.id, 'eg-2');
       });
@@ -359,12 +359,16 @@ void main() {
         const group = EntryGroupTemplate(id: 'eg-1', partyId: '');
         notifier.addEntryGroup(group);
 
-        const updated =
-            EntryGroupTemplate(id: 'eg-1', partyId: '', gender: 'female');
+        const updated = EntryGroupTemplate(
+          id: 'eg-1',
+          partyId: '',
+          gender: 'female',
+        );
         notifier.updateEntryGroup(updated);
 
-        final groups =
-            container.read(partyCreateWizardControllerProvider).entryGroups;
+        final groups = container
+            .read(partyCreateWizardControllerProvider)
+            .entryGroups;
         expect(groups.first.gender, 'female');
       });
     });
@@ -414,8 +418,9 @@ void main() {
             extraFields: any(named: 'extraFields'),
           ),
         ).thenAnswer((_) async => createdParty);
-        when(() => mockPartyRepo.uploadPartyImages(any(), any()))
-            .thenAnswer((_) async => []);
+        when(
+          () => mockPartyRepo.uploadPartyImages(any(), any()),
+        ).thenAnswer((_) async => []);
 
         final ticketTemplate = TicketTemplate(
           id: 't-1',
@@ -424,8 +429,9 @@ void main() {
           createdAt: now,
           updatedAt: now,
         );
-        when(() => mockTicketRepo.createTicketTemplate(any()))
-            .thenAnswer((_) async => ticketTemplate);
+        when(
+          () => mockTicketRepo.createTicketTemplate(any()),
+        ).thenAnswer((_) async => ticketTemplate);
 
         final container = makeContainer();
         final notifier = container.read(

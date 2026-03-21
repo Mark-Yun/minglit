@@ -62,8 +62,9 @@ void main() {
   group('partyDetail', () {
     test('returns party when found', () async {
       final party = _makeParty('party-1');
-      when(() => mockPartyRepo.getPartyById('party-1'))
-          .thenAnswer((_) async => party);
+      when(
+        () => mockPartyRepo.getPartyById('party-1'),
+      ).thenAnswer((_) async => party);
 
       final container = createContainer(
         overrides: [
@@ -84,8 +85,9 @@ void main() {
     });
 
     test('throws when party not found', () async {
-      when(() => mockPartyRepo.getPartyById('missing'))
-          .thenAnswer((_) async => null);
+      when(
+        () => mockPartyRepo.getPartyById('missing'),
+      ).thenAnswer((_) async => null);
 
       final container = createContainer(
         overrides: [
@@ -108,8 +110,9 @@ void main() {
   group('partyTickets', () {
     test('returns ticket list', () async {
       final tickets = [_makeTicket('t-1'), _makeTicket('t-2')];
-      when(() => mockTicketRepo.getTicketTemplatesByPartyId('party-1'))
-          .thenAnswer((_) async => tickets);
+      when(
+        () => mockTicketRepo.getTicketTemplatesByPartyId('party-1'),
+      ).thenAnswer((_) async => tickets);
 
       final container = createContainer(
         overrides: [
@@ -129,8 +132,9 @@ void main() {
     });
 
     test('returns empty list when no tickets', () async {
-      when(() => mockTicketRepo.getTicketTemplatesByPartyId('party-1'))
-          .thenAnswer((_) async => []);
+      when(
+        () => mockTicketRepo.getTicketTemplatesByPartyId('party-1'),
+      ).thenAnswer((_) async => []);
 
       final container = createContainer(
         overrides: [
@@ -153,8 +157,9 @@ void main() {
   group('locationDetail', () {
     test('returns location when id provided', () async {
       final location = _makeLocation('loc-1');
-      when(() => mockLocationRepo.getLocationById('loc-1'))
-          .thenAnswer((_) async => location);
+      when(
+        () => mockLocationRepo.getLocationById('loc-1'),
+      ).thenAnswer((_) async => location);
 
       final container = createContainer(
         overrides: [
@@ -216,25 +221,27 @@ void main() {
   group('partyVerifications', () {
     test('returns verifications for party with required ids', () async {
       final party = _makeParty('party-1', verificationIds: ['v-1', 'v-2']);
-      when(() => mockPartyRepo.getPartyById('party-1'))
-          .thenAnswer((_) async => party);
+      when(
+        () => mockPartyRepo.getPartyById('party-1'),
+      ).thenAnswer((_) async => party);
 
       final verifications = [
-        Verification(
+        const Verification(
           id: 'v-1',
           category: VerificationCategory.career,
           internalName: 'id_verify',
           displayName: '본인인증',
         ),
-        Verification(
+        const Verification(
           id: 'v-2',
           category: VerificationCategory.career,
           internalName: 'career',
           displayName: '직장인증',
         ),
       ];
-      when(() => mockVerifRepo.getVerificationsByIds(['v-1', 'v-2']))
-          .thenAnswer((_) async => verifications);
+      when(
+        () => mockVerifRepo.getVerificationsByIds(['v-1', 'v-2']),
+      ).thenAnswer((_) async => verifications);
 
       final container = createContainer(
         overrides: [
@@ -256,8 +263,9 @@ void main() {
 
     test('returns empty list when no required verification ids', () async {
       final party = _makeParty('party-1');
-      when(() => mockPartyRepo.getPartyById('party-1'))
-          .thenAnswer((_) async => party);
+      when(
+        () => mockPartyRepo.getPartyById('party-1'),
+      ).thenAnswer((_) async => party);
 
       final container = createContainer(
         overrides: [

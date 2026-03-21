@@ -20,8 +20,9 @@ void main() {
                           return Scaffold(
                             body: ElevatedButton(
                               onPressed: () {
-                                final coordinator =
-                                    PartyCreateCoordinator(innerContext);
+                                final coordinator = PartyCreateCoordinator(
+                                  innerContext,
+                                );
                                 coordinator.onPartyCreated();
                                 popped = true;
                               },
