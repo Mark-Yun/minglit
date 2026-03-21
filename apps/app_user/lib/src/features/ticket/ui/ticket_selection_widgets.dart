@@ -178,11 +178,13 @@ extension _TicketSelectionWidgets on _TicketSelectionSheetState {
     );
   }
 
+  // Fix #180: tickets null 및 firstWhere 매치 실패 시 crash 방지
   String calculateTotal() {
     if (_selectedTicketId == null) return '0원';
-    final ticket = widget.event.tickets!.firstWhere(
-      (t) => t.id == _selectedTicketId,
-    );
+    final tickets = widget.event.tickets;
+    if (tickets == null) return '0원';
+    final ticket = tickets.where((t) => t.id == _selectedTicketId).firstOrNull;
+    if (ticket == null) return '0원';
     return '${NumberFormat('#,###').format(ticket.price * _quantity)}원';
   }
 
