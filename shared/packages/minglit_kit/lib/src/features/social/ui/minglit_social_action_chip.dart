@@ -107,9 +107,10 @@ class MinglitSocialActionChip extends ConsumerWidget {
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(MinglitRadius.small),
-            border: isActive
-                ? null
-                : Border.all(color: theme.colorScheme.outline),
+            // Fix #174: 항상 border 유지 — active 시 transparent로 변경하여 크기 변동 방지
+            border: Border.all(
+              color: isActive ? Colors.transparent : theme.colorScheme.outline,
+            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
