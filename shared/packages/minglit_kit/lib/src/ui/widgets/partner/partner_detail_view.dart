@@ -1,29 +1,34 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:minglit_kit/src/data/models/event.dart';
 import 'package:minglit_kit/src/data/models/partner.dart';
-import 'package:minglit_kit/src/data/models/party.dart';
 import 'package:minglit_kit/src/data/models/social_interaction.dart';
-import 'package:minglit_kit/src/data/repositories/party_repository.dart';
-import 'package:minglit_kit/src/features/dev/widgets/party_detail_view.dart';
 import 'package:minglit_kit/src/features/social/ui/minglit_social_button.dart';
+import 'package:minglit_kit/src/logic/providers/event_feed_provider.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-
-part 'partner_detail_view.g.dart';
+import 'package:minglit_kit/src/ui/widgets/party/event_card.dart';
 
 /// A detailed view of a Partner profile.
+///
+/// Fix #171: 알림받기 텍스트 버튼, 진행중인 이벤트 가로 카드, 더 보기 버튼
 class PartnerDetailView extends ConsumerWidget {
   /// Creates a [PartnerDetailView].
   const PartnerDetailView({
     required this.partner,
+    this.onEventTap,
+    this.onMoreEventsTap,
     super.key,
   });
 
   /// The partner data to display.
   final Partner partner;
+
+  /// Callback when an event card is tapped.
+  final void Function(Event event)? onEventTap;
+
+  /// Callback when the "더 보기" button is tapped.
+  final VoidCallback? onMoreEventsTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -70,10 +75,12 @@ class PartnerDetailView extends ConsumerWidget {
                         ),
                       ),
                     const SizedBox(height: MinglitSpacing.small),
+                    // Fix #171: 알림받기 아이콘에 텍스트 추가
                     MinglitSocialButton(
                       targetId: partner.id,
                       targetType: SocialTargetType.partner,
                       interactionType: SocialInteractionType.subscribe,
+                      label: '알림받기',
                     ),
                   ],
                 ),
@@ -86,8 +93,8 @@ class PartnerDetailView extends ConsumerWidget {
           _buildSection(context, '소개', partner.introduction ?? '소개글이 없습니다.'),
           const Divider(height: MinglitSpacing.xlarge * 1.5),
 
-          // Parties
-          _buildPartySection(ref, context),
+          // Fix #171: 진행중인 이벤트 (가로 카드형 + 더 보기)
+          _buildEventSection(ref, context),
           const Divider(height: MinglitSpacing.xlarge * 1.5),
 
           // Business Info
@@ -106,38 +113,56 @@ class PartnerDetailView extends ConsumerWidget {
     );
   }
 
-  Widget _buildPartySection(WidgetRef ref, BuildContext context) {
+  Widget _buildEventSection(WidgetRef ref, BuildContext context) {
     final theme = Theme.of(context);
-    final partiesAsync = ref.watch(
-      partnerPartiesProvider(partnerId: partner.id),
+    final eventsAsync = ref.watch(
+      partnerEventsProvider(partnerId: partner.id),
     );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '진행 중인 파티',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+        // Fix #171: 헤더에 더 보기 버튼 추가
+        Row(
+          children: [
+            Text(
+              '진행중인 이벤트',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const Spacer(),
+            if (onMoreEventsTap != null)
+              TextButton(
+                onPressed: onMoreEventsTap,
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  '더 보기',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: MinglitSpacing.medium),
         MinglitAsyncValueWidget(
-          value: partiesAsync,
-          data: (parties) {
-            if (parties.isEmpty) {
+          value: eventsAsync,
+          data: (events) {
+            if (events.isEmpty) {
               return Text(
-                '등록된 파티가 없습니다.',
+                '등록된 이벤트가 없습니다.',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.outline,
                 ),
               );
             }
-            return Column(
-              children: parties
-                  .map((p) => _buildPartyCard(p, context))
-                  .toList(),
-            );
+            // Fix #171: 가로 카드형 썸네일, 1.5개 보이도록
+            return _buildHorizontalEventList(context, events);
           },
           error: (e, _) => Text('Error: $e'),
         ),
@@ -145,41 +170,34 @@ class PartnerDetailView extends ConsumerWidget {
     );
   }
 
-  Widget _buildPartyCard(Party party, BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      margin: const EdgeInsets.only(bottom: MinglitSpacing.small),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: theme.colorScheme.outlineVariant),
-        borderRadius: BorderRadius.circular(MinglitRadius.small),
-      ),
-      child: ListTile(
-        onTap: () {
-          unawaited(
-            Navigator.push<void>(
-              context,
-              MaterialPageRoute<void>(
-                builder: (context) => PartyDetailView(party: party),
+  Widget _buildHorizontalEventList(
+    BuildContext context,
+    List<Event> events,
+  ) {
+    // Card width = ~2/3 of available width so ~1.5 cards show
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final cardWidth = (screenWidth - MinglitSpacing.large * 2) * 0.65;
+
+    return SizedBox(
+      height: cardWidth * (9 / 16) + 56, // image height + content area
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: events.length,
+        separatorBuilder: (_, _) =>
+            const SizedBox(width: MinglitSpacing.small),
+        itemBuilder: (context, index) {
+          final event = events[index];
+          return SizedBox(
+            width: cardWidth,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(MinglitRadius.card),
+              child: MinglitEventCard(
+                event: event,
+                onTap: onEventTap != null ? () => onEventTap!(event) : null,
               ),
             ),
           );
         },
-        leading: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(MinglitRadius.small),
-          ),
-          child: Icon(Icons.celebration, color: theme.colorScheme.secondary),
-        ),
-        title: Text(party.title, style: theme.textTheme.bodyLarge),
-        subtitle: Text(
-          (party.contactOptions['phone'] as String?) ?? '문의처 없음',
-          style: theme.textTheme.labelSmall,
-        ),
-        trailing: const Icon(Icons.chevron_right),
       ),
     );
   }
@@ -233,10 +251,4 @@ class PartnerDetailView extends ConsumerWidget {
       ),
     );
   }
-}
-
-/// Provider to fetch parties for a specific partner.
-@riverpod
-Future<List<Party>> partnerParties(Ref ref, {required String partnerId}) {
-  return ref.read(partyRepositoryProvider).getPartiesByPartnerId(partnerId);
 }

@@ -6,6 +6,7 @@ import 'package:app_user/src/features/event/detail/event_detail_page.dart';
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/features/home/my_page.dart';
 import 'package:app_user/src/features/partner/detail/partner_detail_page.dart';
+import 'package:app_user/src/features/partner/detail/partner_events_page.dart';
 import 'package:app_user/src/features/party/party_curation_page.dart';
 import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
 import 'package:app_user/src/features/search/search_page.dart';
@@ -89,6 +90,23 @@ class PartnerDetailRoute extends GoRouteData with $PartnerDetailRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       PartnerDetailPage(partnerId: partnerId);
+}
+
+/// **Partner Events Route**: Full list of events for a partner.
+/// Path: `/partners/:partnerId/events`
+@TypedGoRoute<PartnerEventsRoute>(path: '/partners/:partnerId/events')
+class PartnerEventsRoute extends GoRouteData with $PartnerEventsRoute {
+  const PartnerEventsRoute({
+    required this.partnerId,
+    required this.partnerName,
+  });
+
+  final String partnerId;
+  final String partnerName;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      PartnerEventsPage(partnerId: partnerId, partnerName: partnerName);
 }
 
 /// **Certification Route**: Identity Verification Screen.
