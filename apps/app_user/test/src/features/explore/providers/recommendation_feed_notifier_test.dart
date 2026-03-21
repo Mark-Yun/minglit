@@ -308,10 +308,6 @@ void main() {
         }
         // Page 4: new unique events → resets counter
         stubPage(offset: 40, returns: makeEvents(10, startIndex: 10));
-        // Pages 5-7: duplicates again
-        for (var i = 5; i <= 7; i++) {
-          stubPage(offset: i * 10, returns: makeEvents(10));
-        }
 
         final container = makeContainer();
         await container.read(recommendationFeedProvider.future);
