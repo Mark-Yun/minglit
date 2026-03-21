@@ -366,8 +366,9 @@ class RecommendationFeedNotifier extends _$RecommendationFeedNotifier {
     // Fix #193: Track consecutive pages that add zero visible events.
     // Stop pagination to prevent infinite API calls when all events are
     // filtered out by eligibility/nearby filters.
-    final prevFilteredCount =
-        ref.read(filteredEventsProvider(events: _rawEvents)).length;
+    final prevFilteredCount = ref
+        .read(filteredEventsProvider(events: _rawEvents))
+        .length;
     _rawEvents = [..._rawEvents, ...newUnique];
 
     // Apply client-side filter + sort to full accumulated list
@@ -380,8 +381,8 @@ class RecommendationFeedNotifier extends _$RecommendationFeedNotifier {
     }
 
     final serverHasMore = rawPage.length >= _limit;
-    final hasMore = serverHasMore &&
-        _consecutiveEmptyPages < _maxConsecutiveEmptyPages;
+    final hasMore =
+        serverHasMore && _consecutiveEmptyPages < _maxConsecutiveEmptyPages;
 
     return RecommendationFeedState(
       events: filtered,
