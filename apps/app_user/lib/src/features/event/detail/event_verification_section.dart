@@ -66,7 +66,8 @@ class _VerificationSection extends ConsumerWidget {
                     )
                     .toList(),
               ),
-              loading: () => const MinglitSkeleton(height: 72, width: double.infinity),
+              loading: () =>
+                  const MinglitSkeleton(height: 72, width: double.infinity),
               error: (e, s) => const SizedBox.shrink(),
             ),
         ],
