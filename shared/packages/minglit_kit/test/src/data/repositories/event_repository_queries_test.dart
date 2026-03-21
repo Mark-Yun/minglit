@@ -350,6 +350,40 @@ void main() {
       });
     });
 
+    group('getTicketBalanceStatus', () {
+      // happy path and null tests are above
+
+      test('throws on RPC error', () async {
+        when(
+          () => mockClient.rpc<List<dynamic>?>(
+            'get_event_ticket_balance_status',
+            params: any(named: 'params'),
+          ),
+        ).thenThrow(Exception('RPC error'));
+
+        await expectLater(
+          repository.getTicketBalanceStatus('event_1'),
+          throwsA(anything),
+        );
+      });
+    });
+
+    group('getApplicationsByEventId error', () {
+      test('throws on RPC error', () async {
+        when(
+          () => mockClient.rpc<dynamic>(
+            'get_event_applications_with_user',
+            params: any(named: 'params'),
+          ),
+        ).thenThrow(Exception('RPC error'));
+
+        await expectLater(
+          repository.getApplicationsByEventId('event_1'),
+          throwsA(anything),
+        );
+      });
+    });
+
     group('getPersonalizedRecommendations', () {
       test('returns recommendations from RPC', () async {
         when(
@@ -370,6 +404,20 @@ void main() {
 
         expect(result, hasLength(2));
         expect(result.first['event_id'], 'event_1');
+      });
+
+      test('throws on RPC error', () async {
+        when(
+          () => mockClient.rpc<List<dynamic>>(
+            'get_personalized_recommendations',
+            params: any(named: 'params'),
+          ),
+        ).thenThrow(Exception('RPC error'));
+
+        await expectLater(
+          repository.getPersonalizedRecommendations(userId: 'user_1'),
+          throwsA(anything),
+        );
       });
     });
 
@@ -393,6 +441,23 @@ void main() {
 
         expect(result, hasLength(1));
         expect(result.first['distance'], 500.0);
+      });
+
+      test('throws on RPC error', () async {
+        when(
+          () => mockClient.rpc<List<dynamic>>(
+            'get_events_within_radius',
+            params: any(named: 'params'),
+          ),
+        ).thenThrow(Exception('RPC error'));
+
+        await expectLater(
+          repository.getEventsWithinRadius(
+            latitude: 37.5665,
+            longitude: 126.9780,
+          ),
+          throwsA(anything),
+        );
       });
     });
 

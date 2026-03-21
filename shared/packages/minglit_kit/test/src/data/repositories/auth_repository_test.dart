@@ -12,6 +12,9 @@ import '../../../helpers/supabase_mock_helpers.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  const googleSignInChannel =
+      MethodChannel('plugins.flutter.io/google_sign_in');
+
   late MockSupabaseClient mockClient;
   late MockGoTrueClient mockAuth;
   late AuthRepository repository;
@@ -25,13 +28,12 @@ void main() {
 
     // Stub GoogleSignIn platform channel to avoid MissingPluginException
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('plugins.flutter.io/google_sign_in'),
-          (call) async {
-            if (call.method == 'init' || call.method == 'signOut') return null;
-            return null;
-          },
-        );
+        .setMockMethodCallHandler(googleSignInChannel, (call) async => null);
+  });
+
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(googleSignInChannel, null);
   });
 
   group('AuthRepository', () {
@@ -71,9 +73,7 @@ void main() {
             email: any(named: 'email'),
             password: any(named: 'password'),
           ),
-        ).thenAnswer(
-          (_) async => AuthResponse(),
-        );
+        ).thenAnswer((_) async => AuthResponse());
 
         await repository.signInWithEmail(
           email: 'test@example.com',
@@ -107,18 +107,23 @@ void main() {
     });
 
     group('signOut', () {
-      test('calls supabase auth signOut', () async {
+      test('completes successfully', () async {
         when(() => mockAuth.signOut()).thenAnswer((_) async {});
 
-        // signOut also calls _googleSignIn.signOut() which may throw in test,
-        // but Future.wait catches both. We verify Supabase signOut is called.
-        try {
-          await repository.signOut();
-        } on Exception {
-          // GoogleSignIn may throw in test environment
-        }
+        await expectLater(repository.signOut(), completes);
 
         verify(() => mockAuth.signOut()).called(1);
+      });
+
+      test('rethrows when supabase signOut fails', () async {
+        when(
+          () => mockAuth.signOut(),
+        ).thenThrow(Exception('signout failed'));
+
+        await expectLater(
+          repository.signOut(),
+          throwsA(isA<Exception>()),
+        );
       });
     });
   });

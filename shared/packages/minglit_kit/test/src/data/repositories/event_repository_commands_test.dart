@@ -284,6 +284,47 @@ void main() {
 
         expect(result, 'app_1');
       });
+
+      test('throws when getApplication fails', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
+            shouldThrow: Exception('db error'),
+          ),
+        );
+
+        await expectLater(
+          repository.createOrder(
+            eventId: 'event_1',
+            ticketId: 'ticket_1',
+            userId: 'user_1',
+            amount: 30000,
+          ),
+          throwsA(anything),
+        );
+      });
+
+      test('throws when applyEvent RPC fails for new application', () async {
+        unawaited(mockTable(mockClient, 'event_applications'));
+
+        when(
+          () => mockClient.rpc<String>(
+            'apply_event',
+            params: any(named: 'params'),
+          ),
+        ).thenThrow(Exception('RPC error'));
+
+        await expectLater(
+          repository.createOrder(
+            eventId: 'event_1',
+            ticketId: 'ticket_1',
+            userId: 'user_1',
+            amount: 30000,
+          ),
+          throwsA(anything),
+        );
+      });
     });
   });
 }
