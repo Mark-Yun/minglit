@@ -34,6 +34,7 @@ jobs:
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DEV_DB_PASSWORD }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_DEV_PROJECT_ID }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_DEV_SECRET_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_DEV_ANON_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_ACCESS_TOKEN: ${{ secrets.GH_PAT_FOR_BUG_REPORT }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN_EDGE_FUNCTIONS }}
@@ -57,6 +58,19 @@ jobs:
             supabase secrets set STATSIG_SERVER_KEY=$STATSIG_SERVER_KEY
           fi
           supabase secrets set ENVIRONMENT=development
+
+          # Ensure vault has anon_key for pg_cron → Edge Function auth
+          supabase db execute --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD <<EOSQL
+          DO \$\$
+          BEGIN
+            IF NOT EXISTS (SELECT 1 FROM vault.decrypted_secrets WHERE name = 'anon_key') THEN
+              PERFORM vault.create_secret('${SUPABASE_ANON_KEY}', 'anon_key', 'Anon key for EF cron calls');
+              RAISE NOTICE 'vault: anon_key created';
+            ELSE
+              RAISE NOTICE 'vault: anon_key already exists';
+            END IF;
+          END \$\$;
+          EOSQL
 
           supabase db push --password $SUPABASE_DB_PASSWORD --include-all
 
@@ -85,9 +99,10 @@ jobs:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN_EDGE_FUNCTIONS }}
           STATSIG_SERVER_KEY: ${{ secrets.STATSIG_SERVER_KEY }}
           AXIOM_API_TOKEN: ${{ secrets.AXIOM_API_TOKEN }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_MAIN_ANON_KEY }}
         run: |
           supabase link --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD
-          
+
           supabase secrets set OPENAI_API_KEY=$OPENAI_API_KEY
           supabase secrets set GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN
           supabase secrets set SENTRY_DSN=$SENTRY_DSN
@@ -103,6 +118,19 @@ jobs:
             supabase secrets set STATSIG_SERVER_KEY=$STATSIG_SERVER_KEY
           fi
           supabase secrets set ENVIRONMENT=production
+
+          # Ensure vault has anon_key for pg_cron → Edge Function auth
+          supabase db execute --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD <<EOSQL
+          DO \$\$
+          BEGIN
+            IF NOT EXISTS (SELECT 1 FROM vault.decrypted_secrets WHERE name = 'anon_key') THEN
+              PERFORM vault.create_secret('${SUPABASE_ANON_KEY}', 'anon_key', 'Anon key for EF cron calls');
+              RAISE NOTICE 'vault: anon_key created';
+            ELSE
+              RAISE NOTICE 'vault: anon_key already exists';
+            END IF;
+          END \$\$;
+          EOSQL
 
           supabase db push --password $SUPABASE_DB_PASSWORD --include-all
 
