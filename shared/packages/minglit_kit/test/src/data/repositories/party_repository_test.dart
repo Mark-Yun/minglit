@@ -355,7 +355,7 @@ void main() {
         unawaited(mockTable(mockClient, 'entry_groups'));
 
         final templates = [
-          EntryGroupTemplate(
+          const EntryGroupTemplate(
             id: 'eg_1',
             partyId: 'party_1',
             label: '남성',

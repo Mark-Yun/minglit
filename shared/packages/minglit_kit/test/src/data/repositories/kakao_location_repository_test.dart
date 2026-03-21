@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/repositories/kakao_location_repository.dart';
 

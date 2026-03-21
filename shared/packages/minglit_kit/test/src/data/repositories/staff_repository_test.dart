@@ -56,8 +56,7 @@ void main() {
         expect(result, isNull);
       });
 
-      test('returns user when token valid and email is @minglit.com',
-          () async {
+      test('returns user when token valid and email is @minglit.com', () async {
         SharedPreferences.setMockInitialValues({
           'minglit_staff_proof_token': 'valid_token',
         });
@@ -79,28 +78,30 @@ void main() {
         expect(result!.email, 'admin@minglit.com');
       });
 
-      test('returns null and clears token when email is not @minglit.com',
-          () async {
-        SharedPreferences.setMockInitialValues({
-          'minglit_staff_proof_token': 'valid_token',
-        });
+      test(
+        'returns null and clears token when email is not @minglit.com',
+        () async {
+          SharedPreferences.setMockInitialValues({
+            'minglit_staff_proof_token': 'valid_token',
+          });
 
-        final mockUser = MockUser();
-        when(() => mockUser.email).thenReturn('user@gmail.com');
+          final mockUser = MockUser();
+          when(() => mockUser.email).thenReturn('user@gmail.com');
 
-        final mockResponse = MockUserResponse();
-        when(() => mockResponse.user).thenReturn(mockUser);
+          final mockResponse = MockUserResponse();
+          when(() => mockResponse.user).thenReturn(mockUser);
 
-        when(() => mockAuth.getUser('valid_token')).thenAnswer(
-          (_) async => mockResponse,
-        );
+          when(() => mockAuth.getUser('valid_token')).thenAnswer(
+            (_) async => mockResponse,
+          );
 
-        final result = await repository.verifyStaffStatus();
+          final result = await repository.verifyStaffStatus();
 
-        expect(result, isNull);
-        final prefs = await SharedPreferences.getInstance();
-        expect(prefs.getString('minglit_staff_proof_token'), isNull);
-      });
+          expect(result, isNull);
+          final prefs = await SharedPreferences.getInstance();
+          expect(prefs.getString('minglit_staff_proof_token'), isNull);
+        },
+      );
 
       test('returns null and clears token when verification fails', () async {
         SharedPreferences.setMockInitialValues({
