@@ -117,8 +117,9 @@ class PartnerApplyStatusPage extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: MinglitSpacing.small),
+                  // Fix #180: 이중 강제 언래핑 제거 — null-safe 접근으로 crash 방지
                   Text(
-                    application!.adminComment!,
+                    application?.adminComment ?? '',
                     style: theme.textTheme.bodyMedium,
                   ),
                 ],

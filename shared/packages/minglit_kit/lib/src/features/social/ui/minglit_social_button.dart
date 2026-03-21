@@ -17,6 +17,7 @@ class MinglitSocialButton extends ConsumerWidget {
     this.inactiveColor,
     this.iconSize = MinglitIconSize.medium,
     this.tooltip,
+    this.label,
     super.key,
   });
 
@@ -40,6 +41,9 @@ class MinglitSocialButton extends ConsumerWidget {
 
   /// Tooltip text shown on long press. Defaults to interaction type label.
   final String? tooltip;
+
+  /// Optional text label displayed next to the icon.
+  final String? label;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -69,21 +73,44 @@ class MinglitSocialButton extends ConsumerWidget {
         ? (activeColor ?? _getDefaultActiveColor(theme))
         : (inactiveColor ?? theme.colorScheme.onSurfaceVariant);
 
+    void onPressed() => ref
+        .read(
+          socialInteractionControllerProvider(
+            targetId: targetId,
+            targetType: targetType,
+            interactionType: interactionType,
+          ).notifier,
+        )
+        .toggle();
+
+    final icon = Icon(
+      _getIcon(isActive),
+      color: color,
+      size: iconSize,
+    );
+
+    if (label != null) {
+      return TextButton.icon(
+        onPressed: onPressed,
+        icon: icon,
+        label: Text(
+          label!,
+          style: TextStyle(color: color, fontSize: 13),
+        ),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(
+            horizontal: MinglitSpacing.small,
+            vertical: MinglitSpacing.xxsmall,
+          ),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+      );
+    }
+
     return IconButton(
-      onPressed: () => ref
-          .read(
-            socialInteractionControllerProvider(
-              targetId: targetId,
-              targetType: targetType,
-              interactionType: interactionType,
-            ).notifier,
-          )
-          .toggle(),
-      icon: Icon(
-        _getIcon(isActive),
-        color: color,
-        size: iconSize,
-      ),
+      onPressed: onPressed,
+      icon: icon,
       tooltip: tooltip ?? _getDefaultTooltip(),
       constraints: const BoxConstraints(),
       padding: const EdgeInsets.all(MinglitSpacing.xxsmall),

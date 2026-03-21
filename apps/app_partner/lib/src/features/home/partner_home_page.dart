@@ -135,6 +135,12 @@ class PartnerHomePage extends ConsumerWidget {
                       PartyDetailRoute(partyId: party.id).push<void>(context),
                     );
                   },
+                  // Fix #185: 파티 전체 보기 화면으로 이동
+                  onViewAllTap: () {
+                    unawaited(
+                      const PartyListRoute().push<void>(context),
+                    );
+                  },
                 ),
                 const SizedBox(height: MinglitSpacing.large),
 

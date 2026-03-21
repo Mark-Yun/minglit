@@ -102,7 +102,7 @@ class MyPage extends ConsumerWidget {
           ),
           const Divider(),
 
-          // 2. Menu Items
+          // 2. Menu Items — 거래
           ListTile(
             leading: const Icon(Icons.receipt_long_outlined),
             title: const Text('구매 내역'),
@@ -115,6 +115,8 @@ class MyPage extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: homeCoordinator.pushPurchaseHistory,
           ),
+          // Fix #187: 그룹별 구분선 추가 — 거래 / 앱 설정
+          const Divider(),
           ListTile(
             leading: const Icon(Icons.notifications_outlined),
             title: const Text('알림 설정'),
@@ -122,6 +124,8 @@ class MyPage extends ConsumerWidget {
             onTap: homeCoordinator.pushNotificationSettings,
           ),
           const ThemeSettingsTile(),
+          // Fix #187: 그룹별 구분선 추가 — 앱 설정 / 개인정보·보안
+          const Divider(),
           // Fix #139: Add privacy and permissions menu items
           ListTile(
             leading: const Icon(Icons.lock_outline),
