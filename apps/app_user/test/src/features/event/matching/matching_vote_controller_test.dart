@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_user/src/features/event/matching/matching_vote_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -5,10 +7,6 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../../utils/mocks.dart';
 import '../../../../utils/test_utils.dart';
-
-Future<void> pump() async {
-  await Future<void>.delayed(const Duration(milliseconds: 50));
-}
 
 void main() {
   late MockMatchingRepository mockMatchingRepo;
@@ -29,7 +27,8 @@ void main() {
 
         final container = createContainer(
           overrides: [
-            matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
+            matchingRepositoryProvider
+                .overrideWithValue(mockMatchingRepo),
           ],
         );
 
@@ -38,7 +37,8 @@ void main() {
           (_, _) {},
         );
         addTearDown(sub.close);
-        await pump();
+        await container
+            .read(matchingVoteControllerProvider.future);
 
         final notifier = container.read(
           matchingVoteControllerProvider.notifier,
@@ -49,7 +49,8 @@ void main() {
           candidateId: 'candidate_1',
         );
 
-        final state = container.read(matchingVoteControllerProvider);
+        final state =
+            container.read(matchingVoteControllerProvider);
         expect(state, isA<AsyncData<void>>());
         verify(
           () => mockMatchingRepo.castVote(
@@ -69,7 +70,8 @@ void main() {
 
         final container = createContainer(
           overrides: [
-            matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
+            matchingRepositoryProvider
+                .overrideWithValue(mockMatchingRepo),
           ],
         );
 
@@ -78,7 +80,8 @@ void main() {
           (_, _) {},
         );
         addTearDown(sub.close);
-        await pump();
+        await container
+            .read(matchingVoteControllerProvider.future);
 
         final notifier = container.read(
           matchingVoteControllerProvider.notifier,
@@ -89,7 +92,8 @@ void main() {
           candidateId: 'candidate_1',
         );
 
-        final state = container.read(matchingVoteControllerProvider);
+        final state =
+            container.read(matchingVoteControllerProvider);
         expect(state, isA<AsyncError<void>>());
       });
     });
@@ -118,7 +122,8 @@ void main() {
 
       final container = createContainer(
         overrides: [
-          matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
+          matchingRepositoryProvider
+              .overrideWithValue(mockMatchingRepo),
         ],
       );
 
@@ -136,12 +141,14 @@ void main() {
 
     test('returns empty list when no candidates', () async {
       when(
-        () => mockMatchingRepo.getMatchingCandidates('event_empty'),
+        () =>
+            mockMatchingRepo.getMatchingCandidates('event_empty'),
       ).thenAnswer((_) async => <UserProfile>[]);
 
       final container = createContainer(
         overrides: [
-          matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
+          matchingRepositoryProvider
+              .overrideWithValue(mockMatchingRepo),
         ],
       );
 
@@ -154,23 +161,31 @@ void main() {
 
     test('propagates error when repository throws', () async {
       when(
-        () => mockMatchingRepo.getMatchingCandidates('event_err'),
+        () =>
+            mockMatchingRepo.getMatchingCandidates('event_err'),
       ).thenAnswer((_) async => throw Exception('DB error'));
 
       final container = createContainer(
         overrides: [
-          matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
+          matchingRepositoryProvider
+              .overrideWithValue(mockMatchingRepo),
         ],
       );
 
+      final completer = Completer<void>();
       final sub = container.listen(
         matchCandidatesProvider('event_err'),
-        (_, _) {},
+        (_, next) {
+          if (next.hasError && !completer.isCompleted) {
+            completer.complete();
+          }
+        },
       );
       addTearDown(sub.close);
-      await pump();
+      await completer.future;
 
-      final state = container.read(matchCandidatesProvider('event_err'));
+      final state =
+          container.read(matchCandidatesProvider('event_err'));
       expect(state.hasError, isTrue);
     });
   });
@@ -192,7 +207,8 @@ void main() {
 
       final container = createContainer(
         overrides: [
-          matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
+          matchingRepositoryProvider
+              .overrideWithValue(mockMatchingRepo),
         ],
       );
 
@@ -212,7 +228,8 @@ void main() {
 
       final container = createContainer(
         overrides: [
-          matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
+          matchingRepositoryProvider
+              .overrideWithValue(mockMatchingRepo),
         ],
       );
 
@@ -230,18 +247,25 @@ void main() {
 
       final container = createContainer(
         overrides: [
-          matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
+          matchingRepositoryProvider
+              .overrideWithValue(mockMatchingRepo),
         ],
       );
 
+      final completer = Completer<void>();
       final sub = container.listen(
         myMatchesProvider('event_err'),
-        (_, _) {},
+        (_, next) {
+          if (next.hasError && !completer.isCompleted) {
+            completer.complete();
+          }
+        },
       );
       addTearDown(sub.close);
-      await pump();
+      await completer.future;
 
-      final state = container.read(myMatchesProvider('event_err'));
+      final state =
+          container.read(myMatchesProvider('event_err'));
       expect(state.hasError, isTrue);
     });
   });

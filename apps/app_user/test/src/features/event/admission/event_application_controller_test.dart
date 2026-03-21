@@ -410,22 +410,30 @@ void main() {
     });
 
     group('processPayment', () {
-      test('does nothing when no ticket selected', () async {
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          ],
-        );
+      test(
+        'requires ticket to proceed',
+        () {
+          final container = createContainer(
+            overrides: [
+              currentUserProvider
+                  .overrideWith((ref) => mockUser),
+              eventRepositoryProvider
+                  .overrideWith((ref) => mockEventRepo),
+            ],
+          );
 
-        // Verify state doesn't change (processPayment needs
-        // BuildContext so can't call it directly without widget test)
-        final state = container.read(
-          eventApplicationControllerProvider(testEvent),
-        );
-        expect(state.status, EventApplicationStatus.initial);
-        expect(state.selectedTicket, isNull);
-      });
+          // processPayment returns early when no ticket
+          // is selected (guard clause: if selectedTicket == null)
+          final state = container.read(
+            eventApplicationControllerProvider(testEvent),
+          );
+          expect(state.selectedTicket, isNull);
+          expect(
+            state.status,
+            EventApplicationStatus.initial,
+          );
+        },
+      );
     });
   });
 
