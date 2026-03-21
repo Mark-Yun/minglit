@@ -418,13 +418,8 @@ void main() {
           ],
         );
 
-        final notifier = container.read(
-          eventApplicationControllerProvider(testEvent).notifier,
-        );
-
-        // processPayment requires BuildContext, but with no ticket it returns early
-        // We can't easily test this path without a widget test,
-        // but we can verify the state doesn't change
+        // Verify state doesn't change (processPayment needs
+        // BuildContext so can't call it directly without widget test)
         final state = container.read(
           eventApplicationControllerProvider(testEvent),
         );
