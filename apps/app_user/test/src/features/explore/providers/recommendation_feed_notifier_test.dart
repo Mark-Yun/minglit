@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:app_user/src/features/explore/logic/eligibility_filter.dart';
 import 'package:app_user/src/features/explore/providers/explore_state_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -295,6 +294,7 @@ void main() {
         when(
           () => mockEventRepository.getEventsByType(
             type: EventFeedType.newArrivals,
+            offset: any(named: 'offset'),
           ),
         ).thenAnswer((_) async => restrictedEvents);
 
