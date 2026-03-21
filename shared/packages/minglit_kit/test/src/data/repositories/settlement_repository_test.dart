@@ -1,4 +1,4 @@
-// ignore_for_file: unawaited_futures
+// ignore_for_file: unawaited_futures // test stubs fire-and-forget
 import 'dart:async' show FutureOr;
 
 import 'package:flutter_test/flutter_test.dart';

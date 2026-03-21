@@ -39,7 +39,7 @@ void main() {
           interactionType: interactionType,
         ).overrideWith(() {
           return _TestSocialInteractionController(
-            initialState,
+            initialState: initialState,
             hasUser: true,
           );
         }),
@@ -165,7 +165,7 @@ void main() {
             interactionType: interactionType,
           ).overrideWith(() {
             return _TestSocialInteractionController(
-              false,
+              initialState: false,
               hasUser: false,
             );
           }),
@@ -203,10 +203,10 @@ void main() {
 
 /// A test controller that bypasses the Supabase.instance dependency.
 class _TestSocialInteractionController extends SocialInteractionController {
-  _TestSocialInteractionController(
-    this._initialState, {
+  _TestSocialInteractionController({
+    required bool initialState,
     required this.hasUser,
-  });
+  }) : _initialState = initialState;
   final bool _initialState;
   final bool hasUser;
 

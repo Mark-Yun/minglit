@@ -89,9 +89,8 @@ void main() {
 
       final notifier = container.read(
         locationSearchControllerProvider.notifier,
-      );
-
-      notifier.onSearchChanged('강남');
+      )
+        ..onSearchChanged('강남');
       await (notifier as _DirectSearchController).lastSearch;
 
       final state = container.read(locationSearchControllerProvider);
@@ -105,9 +104,8 @@ void main() {
 
       final notifier = container.read(
         locationSearchControllerProvider.notifier,
-      );
-
-      notifier.onSearchChanged('');
+      )
+        ..onSearchChanged('');
 
       final state = container.read(locationSearchControllerProvider);
       expect(state.value, isEmpty);
@@ -128,9 +126,8 @@ void main() {
 
       final notifier = container.read(
         locationSearchControllerProvider.notifier,
-      );
-
-      notifier.onSearchChanged('에러');
+      )
+        ..onSearchChanged('에러');
       await (notifier as _DirectSearchController).lastSearch;
 
       final state = container.read(locationSearchControllerProvider);
