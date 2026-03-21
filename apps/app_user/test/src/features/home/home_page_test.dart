@@ -175,7 +175,7 @@ void main() {
           ],
         ),
       );
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(find.text('피드를 불러오지 못했습니다'), findsOneWidget);
       expect(find.text('다시 시도'), findsOneWidget);
