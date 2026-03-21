@@ -4,11 +4,15 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('PartyListCoordinator', () {
-    testWidgets('goToCreate navigates without error', (tester) async {
+    testWidgets('goToCreate triggers route push', (tester) async {
       late PartyListCoordinator coordinator;
+      var pushCount = 0;
+
+      final observer = _CountingObserver(onPushed: () => pushCount++);
 
       await tester.pumpWidget(
         MaterialApp(
+          navigatorObservers: [observer],
           home: Builder(
             builder: (context) {
               coordinator = PartyListCoordinator(context);
@@ -18,17 +22,29 @@ void main() {
         ),
       );
 
-      // goToCreate uses try/catch fallback to Navigator.push.
-      // In test environment without GoRouter, it falls back to Navigator.push.
-      // This verifies no unhandled exceptions.
-      expect(() => coordinator.goToCreate(), returnsNormally);
+      final initialPushCount = pushCount;
+
+      // goToCreate falls back to Navigator.push when GoRouter is unavailable.
+      // The pushed page may throw during build (no ProviderScope), which is
+      // expected in this unit test scope — we only verify navigation triggers.
+      final originalOnError = FlutterError.onError;
+      FlutterError.onError = (details) {};
+      coordinator.goToCreate();
+      await tester.pump();
+      FlutterError.onError = originalOnError;
+
+      expect(pushCount, greaterThan(initialPushCount));
     });
 
-    testWidgets('goToDetail navigates without error', (tester) async {
+    testWidgets('goToDetail triggers route push', (tester) async {
       late PartyListCoordinator coordinator;
+      var pushCount = 0;
+
+      final observer = _CountingObserver(onPushed: () => pushCount++);
 
       await tester.pumpWidget(
         MaterialApp(
+          navigatorObservers: [observer],
           home: Builder(
             builder: (context) {
               coordinator = PartyListCoordinator(context);
@@ -38,7 +54,26 @@ void main() {
         ),
       );
 
-      expect(() => coordinator.goToDetail('party-1'), returnsNormally);
+      final initialPushCount = pushCount;
+
+      final originalOnError = FlutterError.onError;
+      FlutterError.onError = (details) {};
+      coordinator.goToDetail('party-1');
+      await tester.pump();
+      FlutterError.onError = originalOnError;
+
+      expect(pushCount, greaterThan(initialPushCount));
     });
   });
+}
+
+class _CountingObserver extends NavigatorObserver {
+  _CountingObserver({required this.onPushed});
+
+  final VoidCallback onPushed;
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    onPushed();
+  }
 }

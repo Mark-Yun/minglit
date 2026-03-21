@@ -79,7 +79,7 @@ void main() {
       await tester.tap(find.text('error'));
       await tester.pumpAndSettle();
 
-      // Should not throw — error is handled gracefully
+      expect(tester.takeException(), isNull);
     });
   });
 }
