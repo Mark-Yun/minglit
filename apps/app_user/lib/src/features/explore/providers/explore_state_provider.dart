@@ -267,7 +267,9 @@ class RecommendationFeedNotifier extends _$RecommendationFeedNotifier {
     // asynchronously (without re-fetching from server).
     ref.listen(bulkEligibilityDataProvider, (prev, next) {
       if (next.hasValue && next.value != null) {
-        Log.d('Eligibility data arrived, refiltering ${_rawEvents.length} events');
+        Log.d(
+          'Eligibility data arrived, refiltering ${_rawEvents.length} events',
+        );
       }
       _refilterExistingEvents();
     });
