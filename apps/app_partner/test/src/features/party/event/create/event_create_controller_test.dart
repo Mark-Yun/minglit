@@ -572,8 +572,9 @@ void main() {
         expect(state.status, isA<AsyncData<void>>());
         verify(() => mockLocationRepo.createLocation(any())).called(1);
 
-        final captured =
-            verify(() => mockPartyRepo.createEvent(captureAny())).captured;
+        final captured = verify(
+          () => mockPartyRepo.createEvent(captureAny()),
+        ).captured;
         expect(captured, hasLength(1));
         final createdEvent = captured.first as Event;
         expect(createdEvent.locationId, 'new-loc');
