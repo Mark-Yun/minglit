@@ -62,7 +62,8 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
     final colorScheme = theme.colorScheme;
 
     final ops = widget.description['ops'] as List?;
-    final isDescriptionEmpty = ops == null ||
+    final isDescriptionEmpty =
+        ops == null ||
         ops.isEmpty ||
         (ops.length == 1 && (ops[0] as Map<String, dynamic>)['insert'] == '\n');
 

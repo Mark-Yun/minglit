@@ -37,7 +37,9 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
       Log.e('❌ [PartnerRepo] Application Failed', e, stackTrace);
       // Attempt cleanup (Best effort)
       try {
-        await supabaseClient.storage.from('partner-proofs').remove(
+        await supabaseClient.storage
+            .from('partner-proofs')
+            .remove(
               [bizRegPath, bankbookPath].whereType<String>().toList(),
             );
       } on Exception catch (_) {
@@ -54,7 +56,9 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
     final path = '$userId/${type}_$timestamp$extension';
     final bytes = await file.readAsBytes();
 
-    await supabaseClient.storage.from('partner-proofs').uploadBinary(
+    await supabaseClient.storage
+        .from('partner-proofs')
+        .uploadBinary(
           path,
           bytes,
           fileOptions: FileOptions(contentType: file.mimeType),
@@ -136,11 +140,14 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
       '''reviewApplication called | id: $applicationId, status: $status, comment: $adminComment''',
     );
     try {
-      await supabaseClient.from('partner_applications').update({
-        'status': status,
-        'admin_comment': adminComment,
-        'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', applicationId);
+      await supabaseClient
+          .from('partner_applications')
+          .update({
+            'status': status,
+            'admin_comment': adminComment,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', applicationId);
       Log.d('reviewApplication success');
     } catch (e, st) {
       Log.e('❌ [PartnerRepo] reviewApplication Error', e, st);

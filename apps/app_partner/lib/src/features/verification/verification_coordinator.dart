@@ -19,7 +19,9 @@ class VerificationCoordinator extends _$VerificationCoordinator {
 
   void pushCreateVerification({String? partnerId}) {
     unawaited(
-      ref.read(goRouterProvider).push(
+      ref
+          .read(goRouterProvider)
+          .push(
             CreateVerificationRoute(partnerId: partnerId).location,
           ),
     );

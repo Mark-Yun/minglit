@@ -28,7 +28,7 @@ class PartyRepository extends _SupabasePartyContextBase
     with _PartyEventRepository, _PartyMatchingRepository {
   /// Creates a [PartyRepository] with a Supabase client.
   PartyRepository({SupabaseClient? supabase})
-      : super(supabase ?? Supabase.instance.client);
+    : super(supabase ?? Supabase.instance.client);
 }
 
 abstract class _SupabasePartyContext {
@@ -80,7 +80,9 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
       final path = '$partnerId/${timestamp}_$random$extension';
       final bytes = await file.readAsBytes();
 
-      await supabaseClient.storage.from('party-assets').uploadBinary(
+      await supabaseClient.storage
+          .from('party-assets')
+          .uploadBinary(
             path,
             bytes,
             fileOptions: const FileOptions(
@@ -89,8 +91,9 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
             ),
           );
 
-      final url =
-          supabaseClient.storage.from('party-assets').getPublicUrl(path);
+      final url = supabaseClient.storage
+          .from('party-assets')
+          .getPublicUrl(path);
       return url;
     } catch (e, st) {
       Log.e('❌ [PartyRepo] uploadPartyImage Error', e, st);
@@ -187,14 +190,16 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
   /// Retrieves all parties for a specific partner.
   Future<List<Party>> getPartiesByPartnerId(String partnerId) async {
     try {
-      final data = await supabaseClient
-          .from('parties')
-          .select(
-            '*, location:locations(*), '
-            'ticket_templates(*), entry_group_templates(*)',
-          )
-          .eq('partner_id', partnerId)
-          .order('created_at', ascending: false) as List;
+      final data =
+          await supabaseClient
+                  .from('parties')
+                  .select(
+                    '*, location:locations(*), '
+                    'ticket_templates(*), entry_group_templates(*)',
+                  )
+                  .eq('partner_id', partnerId)
+                  .order('created_at', ascending: false)
+              as List;
       return data.map((e) {
         return Party.fromJson(e as Map<String, dynamic>);
       }).toList();
@@ -207,13 +212,15 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
   /// Retrieves all parties (e.g. for admin or dev list).
   Future<List<Party>> getParties() async {
     try {
-      final data = await supabaseClient
-          .from('parties')
-          .select(
-            '*, location:locations(*), '
-            'ticket_templates(*), entry_group_templates(*)',
-          )
-          .order('created_at', ascending: false) as List;
+      final data =
+          await supabaseClient
+                  .from('parties')
+                  .select(
+                    '*, location:locations(*), '
+                    'ticket_templates(*), entry_group_templates(*)',
+                  )
+                  .order('created_at', ascending: false)
+              as List;
       return data.map((e) {
         return Party.fromJson(e as Map<String, dynamic>);
       }).toList();
@@ -258,7 +265,8 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
     try {
       await supabaseClient
           .from('parties')
-          .update({'status': status}).eq('id', partyId);
+          .update({'status': status})
+          .eq('id', partyId);
       Log.d('updatePartyStatus success');
     } catch (e, st) {
       Log.e('❌ [PartyRepo] updatePartyStatus Error', e, st);
@@ -274,7 +282,8 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
     try {
       await supabaseClient
           .from('parties')
-          .update({'metadata': metadata}).eq('id', partyId);
+          .update({'metadata': metadata})
+          .eq('id', partyId);
       Log.d('updatePartyMetadata success');
     } catch (e, st) {
       Log.e('❌ [PartyRepo] updatePartyMetadata Error', e, st);
@@ -290,7 +299,8 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
     try {
       await supabaseClient
           .from('parties')
-          .update({'location_id': locationId}).eq('id', partyId);
+          .update({'location_id': locationId})
+          .eq('id', partyId);
       Log.d('updatePartyLocation success');
     } catch (e, st) {
       Log.e('❌ [PartyRepo] updatePartyLocation Error', e, st);

@@ -85,13 +85,15 @@ class Step5Review extends ConsumerWidget {
           ),
           _ReviewItem(
             label: context.l10n.partnerApplication_label_bizReg,
-            value: state.bizRegistrationFile?.name ??
+            value:
+                state.bizRegistrationFile?.name ??
                 state.bizRegistrationPath?.split('/').last ??
                 '-',
           ),
           _ReviewItem(
             label: context.l10n.partnerApplication_label_bankbook,
-            value: state.bankbookFile?.name ??
+            value:
+                state.bankbookFile?.name ??
                 state.bankbookPath?.split('/').last ??
                 '-',
           ),
@@ -121,8 +123,8 @@ class _SectionHeader extends StatelessWidget {
           Text(
             title,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+              fontWeight: FontWeight.bold,
+            ),
           ),
           TextButton(
             onPressed: onEdit,
@@ -152,8 +154,8 @@ class _ReviewItem extends StatelessWidget {
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: MinglitColors.textSecondary,
-                  ),
+                color: MinglitColors.textSecondary,
+              ),
             ),
           ),
           Expanded(

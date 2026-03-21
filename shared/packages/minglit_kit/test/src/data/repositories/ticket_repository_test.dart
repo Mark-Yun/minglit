@@ -191,8 +191,7 @@ void main() {
         // Create a ticket with quantity less than sold count
         final ticket = (await repository.getTicketById(
           'ticket_1',
-        ))
-            .copyWith(quantity: 5); // 5 < 10 (soldCount)
+        )).copyWith(quantity: 5); // 5 < 10 (soldCount)
 
         // Re-setup for the update call's getTicketById
         unawaited(mockTable(mockClient, 'tickets', singleData: ticketJson));
@@ -214,8 +213,7 @@ void main() {
 
         final ticket = (await repository.getTicketById(
           'ticket_1',
-        ))
-            .copyWith(quantity: 200); // 200 >= 10 (soldCount)
+        )).copyWith(quantity: 200); // 200 >= 10 (soldCount)
 
         // Re-setup: getTicketById + update chain
         unawaited(mockTable(mockClient, 'tickets', singleData: updatedJson));

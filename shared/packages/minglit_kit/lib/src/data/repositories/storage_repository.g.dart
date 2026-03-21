@@ -15,21 +15,25 @@ const storageRepositoryProvider = StorageRepositoryProvider._();
 
 /// Provides the [StorageRepository].
 
-final class StorageRepositoryProvider extends $FunctionalProvider<
-    StorageRepository,
-    StorageRepository,
-    StorageRepository> with $Provider<StorageRepository> {
+final class StorageRepositoryProvider
+    extends
+        $FunctionalProvider<
+          StorageRepository,
+          StorageRepository,
+          StorageRepository
+        >
+    with $Provider<StorageRepository> {
   /// Provides the [StorageRepository].
   const StorageRepositoryProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'storageRepositoryProvider',
-          isAutoDispose: false,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'storageRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$storageRepositoryHash();
@@ -38,8 +42,7 @@ final class StorageRepositoryProvider extends $FunctionalProvider<
   @override
   $ProviderElement<StorageRepository> $createElement(
     $ProviderPointer pointer,
-  ) =>
-      $ProviderElement(pointer);
+  ) => $ProviderElement(pointer);
 
   @override
   StorageRepository create(Ref ref) {

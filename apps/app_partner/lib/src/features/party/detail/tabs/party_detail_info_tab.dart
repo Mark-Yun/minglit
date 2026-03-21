@@ -34,14 +34,14 @@ class PartyDetailInfoTab extends ConsumerWidget {
                 party: party,
                 onSave: (title, description, imageUrls, newImages, status) =>
                     _handleUpdateBasicInfo(
-                  context,
-                  ref,
-                  title,
-                  description,
-                  imageUrls,
-                  newImages,
-                  status,
-                ),
+                      context,
+                      ref,
+                      title,
+                      description,
+                      imageUrls,
+                      newImages,
+                      status,
+                    ),
               );
             },
             child: PartyBasicInfoSummary(
@@ -165,10 +165,12 @@ class PartyDetailInfoTab extends ConsumerWidget {
       final partyRepo = ref.read(partyRepositoryProvider);
 
       // Check if coordinates changed (New location vs Current location)
-      final currentLocation =
-          ref.read(locationDetailProvider(party.locationId)).value;
+      final currentLocation = ref
+          .read(locationDetailProvider(party.locationId))
+          .value;
 
-      final isSameSpot = currentLocation != null &&
+      final isSameSpot =
+          currentLocation != null &&
           currentLocation.latitude == newLocation.latitude &&
           currentLocation.longitude == newLocation.longitude;
 

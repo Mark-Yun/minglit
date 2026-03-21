@@ -60,19 +60,19 @@ void main() {
 
   group('Verification', () {
     Map<String, dynamic> verificationJson() => {
-          'id': 'verif_1',
-          'category': 'career',
-          'internal_name': 'global_career',
-          'display_name': '직장 인증',
-          'partner_id': 'partner_1',
-          'description': 'Career verification',
-          'icon_key': 'briefcase',
-          'form_schema': [
-            {'key': 'company', 'type': 'text', 'label': '회사명'},
-          ],
-          'is_active': true,
-          'created_at': now.toIso8601String(),
-        };
+      'id': 'verif_1',
+      'category': 'career',
+      'internal_name': 'global_career',
+      'display_name': '직장 인증',
+      'partner_id': 'partner_1',
+      'description': 'Career verification',
+      'icon_key': 'briefcase',
+      'form_schema': [
+        {'key': 'company', 'type': 'text', 'label': '회사명'},
+      ],
+      'is_active': true,
+      'created_at': now.toIso8601String(),
+    };
 
     test('creates from JSON with all fields', () {
       final v = Verification.fromJson(verificationJson());
@@ -175,11 +175,11 @@ void main() {
 
   group('VerificationRequirementStatus', () {
     Verification baseMaster() => Verification.fromJson({
-          'id': 'v1',
-          'category': 'career',
-          'internal_name': 'test',
-          'display_name': 'Test',
-        });
+      'id': 'v1',
+      'category': 'career',
+      'internal_name': 'test',
+      'display_name': 'Test',
+    });
 
     test('creates with master only', () {
       final status = VerificationRequirementStatus(master: baseMaster());

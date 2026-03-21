@@ -13,8 +13,9 @@ void main() {
       final payload = jsonEncode({
         'tid': ticketId,
         'eid': eventId,
-        'exp':
-            DateTime.now().add(const Duration(days: 1)).millisecondsSinceEpoch,
+        'exp': DateTime.now()
+            .add(const Duration(days: 1))
+            .millisecondsSinceEpoch,
       });
 
       // 1. Sign

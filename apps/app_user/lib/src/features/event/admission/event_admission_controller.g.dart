@@ -18,12 +18,12 @@ final class EventAdmissionControllerProvider
     required EventAdmissionControllerFamily super.from,
     required Event super.argument,
   }) : super(
-          retry: null,
-          name: r'eventAdmissionControllerProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+         retry: null,
+         name: r'eventAdmissionControllerProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$eventAdmissionControllerHash();
@@ -57,19 +57,20 @@ String _$eventAdmissionControllerHash() =>
 final class EventAdmissionControllerFamily extends $Family
     with
         $ClassFamilyOverride<
-            EventAdmissionController,
-            AsyncValue<AdmissionState>,
-            AdmissionState,
-            FutureOr<AdmissionState>,
-            Event> {
+          EventAdmissionController,
+          AsyncValue<AdmissionState>,
+          AdmissionState,
+          FutureOr<AdmissionState>,
+          Event
+        > {
   const EventAdmissionControllerFamily._()
-      : super(
-          retry: null,
-          name: r'eventAdmissionControllerProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: true,
-        );
+    : super(
+        retry: null,
+        name: r'eventAdmissionControllerProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
 
   EventAdmissionControllerProvider call(Event event) =>
       EventAdmissionControllerProvider._(argument: event, from: this);
@@ -89,11 +90,14 @@ abstract class _$EventAdmissionController
   void runBuild() {
     final created = build(_$args);
     final ref = this.ref as $Ref<AsyncValue<AdmissionState>, AdmissionState>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<AdmissionState>, AdmissionState>,
-        AsyncValue<AdmissionState>,
-        Object?,
-        Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<AdmissionState>, AdmissionState>,
+              AsyncValue<AdmissionState>,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }

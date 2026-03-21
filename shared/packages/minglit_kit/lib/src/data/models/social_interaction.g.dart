@@ -22,15 +22,13 @@ _SocialInteraction _$SocialInteractionFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$SocialInteractionToJson(
   _SocialInteraction instance,
-) =>
-    <String, dynamic>{
-      'userId': instance.userId,
-      'targetId': instance.targetId,
-      'targetType': _$SocialTargetTypeEnumMap[instance.targetType]!,
-      'interactionType':
-          _$SocialInteractionTypeEnumMap[instance.interactionType]!,
-      'createdAt': instance.createdAt?.toIso8601String(),
-    };
+) => <String, dynamic>{
+  'userId': instance.userId,
+  'targetId': instance.targetId,
+  'targetType': _$SocialTargetTypeEnumMap[instance.targetType]!,
+  'interactionType': _$SocialInteractionTypeEnumMap[instance.interactionType]!,
+  'createdAt': instance.createdAt?.toIso8601String(),
+};
 
 const _$SocialTargetTypeEnumMap = {
   SocialTargetType.party: 'party',

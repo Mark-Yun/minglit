@@ -20,15 +20,15 @@ final class AuthConfigProvider
     with $Provider<AuthConfig> {
   /// Provider for AuthConfig. Must be overridden in main.dart.
   const AuthConfigProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'authConfigProvider',
-          isAutoDispose: false,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'authConfigProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$authConfigHash();
@@ -66,15 +66,15 @@ final class AuthRepositoryProvider
     with $Provider<AuthRepository> {
   /// Provider for the AuthRepository instance.
   const AuthRepositoryProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'authRepositoryProvider',
-          isAutoDispose: false,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'authRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$authRepositoryHash();
@@ -107,20 +107,21 @@ const authStateChangesProvider = AuthStateChangesProvider._();
 
 /// Provider for authentication state changes stream.
 
-final class AuthStateChangesProvider extends $FunctionalProvider<
-        AsyncValue<AuthState>, AuthState, Stream<AuthState>>
+final class AuthStateChangesProvider
+    extends
+        $FunctionalProvider<AsyncValue<AuthState>, AuthState, Stream<AuthState>>
     with $FutureModifier<AuthState>, $StreamProvider<AuthState> {
   /// Provider for authentication state changes stream.
   const AuthStateChangesProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'authStateChangesProvider',
-          isAutoDispose: false,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'authStateChangesProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$authStateChangesHash();
@@ -149,15 +150,15 @@ final class CurrentUserProvider extends $FunctionalProvider<User?, User?, User?>
     with $Provider<User?> {
   /// Provider for the current user. Updates automatically on auth state change.
   const CurrentUserProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'currentUserProvider',
-          isAutoDispose: false,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'currentUserProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$currentUserHash();

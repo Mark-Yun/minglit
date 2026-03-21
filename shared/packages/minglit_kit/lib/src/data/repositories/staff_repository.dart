@@ -19,8 +19,8 @@ StaffRepository staffRepository(Ref ref) {
 class StaffRepository {
   /// Creates a [StaffRepository] with a Supabase client.
   StaffRepository({SupabaseClient? supabase, String? redirectUrl})
-      : _supabase = supabase ?? Supabase.instance.client,
-        _redirectUrl = redirectUrl;
+    : _supabase = supabase ?? Supabase.instance.client,
+      _redirectUrl = redirectUrl;
   static const _staffTokenKey = 'minglit_staff_proof_token';
 
   final SupabaseClient _supabase;

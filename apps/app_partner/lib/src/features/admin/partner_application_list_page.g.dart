@@ -12,10 +12,13 @@ part of 'partner_application_list_page.dart';
 @ProviderFor(partnerApplications)
 const partnerApplicationsProvider = PartnerApplicationsFamily._();
 
-final class PartnerApplicationsProvider extends $FunctionalProvider<
-        AsyncValue<List<PartnerApplication>>,
-        List<PartnerApplication>,
-        FutureOr<List<PartnerApplication>>>
+final class PartnerApplicationsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<PartnerApplication>>,
+          List<PartnerApplication>,
+          FutureOr<List<PartnerApplication>>
+        >
     with
         $FutureModifier<List<PartnerApplication>>,
         $FutureProvider<List<PartnerApplication>> {
@@ -23,12 +26,12 @@ final class PartnerApplicationsProvider extends $FunctionalProvider<
     required PartnerApplicationsFamily super.from,
     required ({String status, String? searchTerm}) super.argument,
   }) : super(
-          retry: null,
-          name: r'partnerApplicationsProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+         retry: null,
+         name: r'partnerApplicationsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$partnerApplicationsHash();
@@ -44,8 +47,7 @@ final class PartnerApplicationsProvider extends $FunctionalProvider<
   @override
   $FutureProviderElement<List<PartnerApplication>> $createElement(
     $ProviderPointer pointer,
-  ) =>
-      $FutureProviderElement(pointer);
+  ) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<PartnerApplication>> create(Ref ref) {
@@ -73,25 +75,26 @@ String _$partnerApplicationsHash() =>
 
 final class PartnerApplicationsFamily extends $Family
     with
-        $FunctionalFamilyOverride<FutureOr<List<PartnerApplication>>,
-            ({String status, String? searchTerm})> {
+        $FunctionalFamilyOverride<
+          FutureOr<List<PartnerApplication>>,
+          ({String status, String? searchTerm})
+        > {
   const PartnerApplicationsFamily._()
-      : super(
-          retry: null,
-          name: r'partnerApplicationsProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: true,
-        );
+    : super(
+        retry: null,
+        name: r'partnerApplicationsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
 
   PartnerApplicationsProvider call({
     String status = 'all',
     String? searchTerm,
-  }) =>
-      PartnerApplicationsProvider._(
-        argument: (status: status, searchTerm: searchTerm),
-        from: this,
-      );
+  }) => PartnerApplicationsProvider._(
+    argument: (status: status, searchTerm: searchTerm),
+    from: this,
+  );
 
   @override
   String toString() => r'partnerApplicationsProvider';

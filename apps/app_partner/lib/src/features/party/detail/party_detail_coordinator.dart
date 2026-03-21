@@ -26,7 +26,9 @@ class PartyDetailCoordinator {
 
   void goToEditParty(String partyId) {
     unawaited(
-      _ref.read(goRouterProvider).push(
+      _ref
+          .read(goRouterProvider)
+          .push(
             PartyEditRoute(partyId: partyId).location,
           ),
     );
@@ -41,7 +43,8 @@ class PartyDetailCoordinator {
       List<String> imageUrls,
       List<XFile> newImages,
       String status,
-    ) onSave,
+    )
+    onSave,
   }) {
     unawaited(
       Navigator.of(context).push(
@@ -62,7 +65,8 @@ class PartyDetailCoordinator {
       int min,
       int max,
       Map<String, String> options,
-    ) onSave,
+    )
+    onSave,
   }) {
     unawaited(
       Navigator.of(context).push(
@@ -85,7 +89,8 @@ class PartyDetailCoordinator {
       Location? newLoc,
       String addressDetail,
       String directions,
-    ) onSave,
+    )
+    onSave,
   }) {
     unawaited(
       Navigator.of(context).push(
@@ -164,7 +169,9 @@ class PartyDetailCoordinator {
           .map((g) => g.id == updatedGroup.id ? updatedGroup : g)
           .toList();
 
-      await _ref.read(partyRepositoryProvider).updateParty(
+      await _ref
+          .read(partyRepositoryProvider)
+          .updateParty(
             party.copyWith(
               entryGroups: updatedGroups,
             ),
@@ -194,7 +201,9 @@ class PartyDetailCoordinator {
     try {
       final party = await _ref.read(partyDetailProvider(partyId).future);
 
-      await _ref.read(partyRepositoryProvider).updateParty(
+      await _ref
+          .read(partyRepositoryProvider)
+          .updateParty(
             party.copyWith(
               minConfirmedCount: minCount,
               maxParticipants: maxCount,

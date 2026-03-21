@@ -26,7 +26,8 @@ void main() {
       );
       await tester.pump();
 
-      final isAppleSupported = kIsWeb ||
+      final isAppleSupported =
+          kIsWeb ||
           defaultTargetPlatform == TargetPlatform.iOS ||
           defaultTargetPlatform == TargetPlatform.macOS;
 

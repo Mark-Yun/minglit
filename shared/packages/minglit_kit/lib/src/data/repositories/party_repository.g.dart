@@ -15,19 +15,21 @@ const partyRepositoryProvider = PartyRepositoryProvider._();
 
 /// Provider for PartyRepository.
 
-final class PartyRepositoryProvider extends $FunctionalProvider<PartyRepository,
-    PartyRepository, PartyRepository> with $Provider<PartyRepository> {
+final class PartyRepositoryProvider
+    extends
+        $FunctionalProvider<PartyRepository, PartyRepository, PartyRepository>
+    with $Provider<PartyRepository> {
   /// Provider for PartyRepository.
   const PartyRepositoryProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'partyRepositoryProvider',
-          isAutoDispose: false,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'partyRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$partyRepositoryHash();

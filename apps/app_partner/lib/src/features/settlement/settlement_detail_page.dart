@@ -55,40 +55,40 @@ class _SettlementDetailPageState extends ConsumerState<SettlementDetailPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 48,
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          '오류가 발생했습니다',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _error!,
-                          style: Theme.of(context).textTheme.bodySmall,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        FilledButton(
-                          onPressed: _loadDetail,
-                          child: const Text('다시 시도'),
-                        ),
-                      ],
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Theme.of(context).colorScheme.error,
                     ),
-                  ),
-                )
-              : _detail == null
-                  ? const Center(child: Text('정산 항목을 찾을 수 없습니다.'))
-                  : _DetailContent(detail: _detail!),
+                    const SizedBox(height: 16),
+                    Text(
+                      '오류가 발생했습니다',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _error!,
+                      style: Theme.of(context).textTheme.bodySmall,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      onPressed: _loadDetail,
+                      child: const Text('다시 시도'),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : _detail == null
+          ? const Center(child: Text('정산 항목을 찾을 수 없습니다.'))
+          : _DetailContent(detail: _detail!),
     );
   }
 }
@@ -201,8 +201,8 @@ class _Row extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = bold
         ? Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            )
+            fontWeight: FontWeight.bold,
+          )
         : Theme.of(context).textTheme.bodyMedium;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -266,14 +266,14 @@ class _TimelineItem extends StatelessWidget {
                 Text(
                   '${entry.fromStatus} → ${entry.toStatus}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 Text(
                   fmt.format(entry.createdAt.toLocal()),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -313,7 +313,9 @@ class ActionButtons extends ConsumerWidget {
     if (detail.payoutId == null) return;
     final partner = await ref.read(currentPartnerInfoProvider.future);
     if (partner == null) return;
-    await ref.read(settlementCoordinatorProvider.notifier).retryPayout(
+    await ref
+        .read(settlementCoordinatorProvider.notifier)
+        .retryPayout(
           context,
           payoutId: detail.payoutId!,
           partnerId: partner.id,

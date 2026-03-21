@@ -28,14 +28,14 @@ final class SocialInteractionControllerProvider
       SocialTargetType targetType,
       SocialInteractionType interactionType,
     })
-        super.argument,
+    super.argument,
   }) : super(
-          retry: null,
-          name: r'socialInteractionControllerProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+         retry: null,
+         name: r'socialInteractionControllerProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$socialInteractionControllerHash();
@@ -72,23 +72,24 @@ String _$socialInteractionControllerHash() =>
 final class SocialInteractionControllerFamily extends $Family
     with
         $ClassFamilyOverride<
-            SocialInteractionController,
-            AsyncValue<bool>,
-            bool,
-            FutureOr<bool>,
-            ({
-              String targetId,
-              SocialTargetType targetType,
-              SocialInteractionType interactionType,
-            })> {
+          SocialInteractionController,
+          AsyncValue<bool>,
+          bool,
+          FutureOr<bool>,
+          ({
+            String targetId,
+            SocialTargetType targetType,
+            SocialInteractionType interactionType,
+          })
+        > {
   const SocialInteractionControllerFamily._()
-      : super(
-          retry: null,
-          name: r'socialInteractionControllerProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: true,
-        );
+    : super(
+        retry: null,
+        name: r'socialInteractionControllerProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
 
   /// Manages the state of a single social interaction
   /// (like, subscribe, bookmark, block).
@@ -97,15 +98,14 @@ final class SocialInteractionControllerFamily extends $Family
     required String targetId,
     required SocialTargetType targetType,
     required SocialInteractionType interactionType,
-  }) =>
-      SocialInteractionControllerProvider._(
-        argument: (
-          targetId: targetId,
-          targetType: targetType,
-          interactionType: interactionType,
-        ),
-        from: this,
-      );
+  }) => SocialInteractionControllerProvider._(
+    argument: (
+      targetId: targetId,
+      targetType: targetType,
+      interactionType: interactionType,
+    ),
+    from: this,
+  );
 
   @override
   String toString() => r'socialInteractionControllerProvider';
@@ -115,11 +115,13 @@ final class SocialInteractionControllerFamily extends $Family
 /// (like, subscribe, bookmark, block).
 
 abstract class _$SocialInteractionController extends $AsyncNotifier<bool> {
-  late final _$args = ref.$arg as ({
-    String targetId,
-    SocialTargetType targetType,
-    SocialInteractionType interactionType,
-  });
+  late final _$args =
+      ref.$arg
+          as ({
+            String targetId,
+            SocialTargetType targetType,
+            SocialInteractionType interactionType,
+          });
   String get targetId => _$args.targetId;
   SocialTargetType get targetType => _$args.targetType;
   SocialInteractionType get interactionType => _$args.interactionType;
@@ -138,11 +140,14 @@ abstract class _$SocialInteractionController extends $AsyncNotifier<bool> {
       interactionType: _$args.interactionType,
     );
     final ref = this.ref as $Ref<AsyncValue<bool>, bool>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<bool>, bool>,
-        AsyncValue<bool>,
-        Object?,
-        Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<bool>, bool>,
+              AsyncValue<bool>,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }

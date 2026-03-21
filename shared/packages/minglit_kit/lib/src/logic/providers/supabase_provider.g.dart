@@ -20,15 +20,15 @@ final class SupabaseClientProvider
     with $Provider<SupabaseClient> {
   /// Provides the shared [SupabaseClient] instance.
   const SupabaseClientProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'supabaseClientProvider',
-          isAutoDispose: false,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'supabaseClientProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$supabaseClientHash();

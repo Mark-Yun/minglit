@@ -45,14 +45,16 @@ class NotificationRepository {
   Future<void> markAsRead(String notificationId) async {
     await _client
         .from('user_notifications')
-        .update({'is_read': true}).eq('id', notificationId);
+        .update({'is_read': true})
+        .eq('id', notificationId);
   }
 
   /// 모든 알림 읽음 처리
   Future<void> markAllAsRead(String userId) async {
     await _client
         .from('user_notifications')
-        .update({'is_read': true}).eq('user_id', userId);
+        .update({'is_read': true})
+        .eq('user_id', userId);
   }
 
   /// 알림 삭제

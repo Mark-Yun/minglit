@@ -15,24 +15,24 @@ class MinglitDomains {
 
   /// Production environment (Default)
   const MinglitDomains.production()
-      : userWeb = 'https://minglit.com',
-        partnerWeb = 'https://partner.minglit.com',
-        userApp = 'https://app.minglit.com',
-        partnerApp = 'https://app.partner.minglit.com';
+    : userWeb = 'https://minglit.com',
+      partnerWeb = 'https://partner.minglit.com',
+      userApp = 'https://app.minglit.com',
+      partnerApp = 'https://app.partner.minglit.com';
 
   /// Development environment
   const MinglitDomains.dev()
-      : userWeb = 'https://dev.minglit.com',
-        partnerWeb = 'https://dev.partner.minglit.com',
-        userApp = 'https://dev.app.minglit.com',
-        partnerApp = 'https://dev.app.partner.minglit.com';
+    : userWeb = 'https://dev.minglit.com',
+      partnerWeb = 'https://dev.partner.minglit.com',
+      userApp = 'https://dev.app.minglit.com',
+      partnerApp = 'https://dev.app.partner.minglit.com';
 
   /// Local environment
   const MinglitDomains.local()
-      : userWeb = 'http://localhost:3002',
-        partnerWeb = 'http://localhost:3003',
-        userApp = 'http://localhost:3000',
-        partnerApp = 'http://localhost:3001';
+    : userWeb = 'http://localhost:3002',
+      partnerWeb = 'http://localhost:3003',
+      userApp = 'http://localhost:3000',
+      partnerApp = 'http://localhost:3001';
 
   /// Base domain for the user-facing website.
   final String userWeb;

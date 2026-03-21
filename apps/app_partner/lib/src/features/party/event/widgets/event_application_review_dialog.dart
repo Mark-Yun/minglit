@@ -102,12 +102,12 @@ class _EventApplicationReviewDialogState
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) =>
                                 Container(
-                              height: 100,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerLowest,
-                              child: const Icon(Icons.broken_image),
-                            ),
+                                  height: 100,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainerLowest,
+                                  child: const Icon(Icons.broken_image),
+                                ),
                           ),
                         ),
                       ],
@@ -202,8 +202,9 @@ class _EventApplicationReviewDialogState
   }
 
   Future<void> _handleReview(BuildContext context, String status) async {
-    final reason =
-        _isCustomReason ? _customReasonController.text : _selectedReason;
+    final reason = _isCustomReason
+        ? _customReasonController.text
+        : _selectedReason;
 
     if (status == 'rejected' && (reason == null || reason.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(

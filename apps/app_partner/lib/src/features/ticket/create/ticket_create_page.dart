@@ -27,7 +27,9 @@ class TicketCreatePage extends ConsumerWidget {
       required int quantity,
       required List<String> targetEntryGroupIds,
     }) async {
-      await ref.read(ticketControllerProvider.notifier).createTicket(
+      await ref
+          .read(ticketControllerProvider.notifier)
+          .createTicket(
             eventId: eventId,
             name: name,
             price: price,

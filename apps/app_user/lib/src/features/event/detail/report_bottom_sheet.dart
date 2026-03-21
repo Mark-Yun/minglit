@@ -44,7 +44,9 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
     if (_selectedReason == null || _submitting) return;
     setState(() => _submitting = true);
     try {
-      await ref.read(socialRepositoryProvider).reportPartner(
+      await ref
+          .read(socialRepositoryProvider)
+          .reportPartner(
             partnerId: widget.partnerId,
             reason: _selectedReason!.value,
             description: _selectedReason == ReportReason.other
@@ -130,8 +132,9 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
           Padding(
             padding: const EdgeInsets.all(MinglitSpacing.medium),
             child: FilledButton(
-              onPressed:
-                  _selectedReason != null && !_submitting ? _submit : null,
+              onPressed: _selectedReason != null && !_submitting
+                  ? _submit
+                  : null,
               child: _submitting
                   ? const SizedBox(
                       width: 20,

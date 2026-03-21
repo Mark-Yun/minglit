@@ -268,8 +268,8 @@ class _LoginButton extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: foregroundColor,
-                  ),
+                color: foregroundColor,
+              ),
             ),
           ],
         ),

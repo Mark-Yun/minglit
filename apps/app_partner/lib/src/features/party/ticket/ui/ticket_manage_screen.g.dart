@@ -12,19 +12,24 @@ part of 'ticket_manage_screen.dart';
 @ProviderFor(partyTickets)
 const partyTicketsProvider = PartyTicketsFamily._();
 
-final class PartyTicketsProvider extends $FunctionalProvider<
-        AsyncValue<List<Ticket>>, List<Ticket>, FutureOr<List<Ticket>>>
+final class PartyTicketsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Ticket>>,
+          List<Ticket>,
+          FutureOr<List<Ticket>>
+        >
     with $FutureModifier<List<Ticket>>, $FutureProvider<List<Ticket>> {
   const PartyTicketsProvider._({
     required PartyTicketsFamily super.from,
     required String super.argument,
   }) : super(
-          retry: null,
-          name: r'partyTicketsProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+         retry: null,
+         name: r'partyTicketsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$partyTicketsHash();
@@ -40,8 +45,7 @@ final class PartyTicketsProvider extends $FunctionalProvider<
   @override
   $FutureProviderElement<List<Ticket>> $createElement(
     $ProviderPointer pointer,
-  ) =>
-      $FutureProviderElement(pointer);
+  ) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<Ticket>> create(Ref ref) {
@@ -65,13 +69,13 @@ String _$partyTicketsHash() => r'4ba35ae993c1f1cd573d41bc872318a0d541425d';
 final class PartyTicketsFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<Ticket>>, String> {
   const PartyTicketsFamily._()
-      : super(
-          retry: null,
-          name: r'partyTicketsProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: true,
-        );
+    : super(
+        retry: null,
+        name: r'partyTicketsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
 
   PartyTicketsProvider call(String eventId) =>
       PartyTicketsProvider._(argument: eventId, from: this);

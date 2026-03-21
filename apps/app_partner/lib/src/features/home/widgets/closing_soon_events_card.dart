@@ -122,9 +122,9 @@ class _DayBadge extends StatelessWidget {
       child: Text(
         'D-$daysUntil',
         style: Theme.of(context).textTheme.bodySmall!.copyWith(
-              color: colorScheme.onError,
-              fontWeight: FontWeight.bold,
-            ),
+          color: colorScheme.onError,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

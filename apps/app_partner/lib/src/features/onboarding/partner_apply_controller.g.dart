@@ -15,15 +15,15 @@ const partnerApplyControllerProvider = PartnerApplyControllerProvider._();
 final class PartnerApplyControllerProvider
     extends $NotifierProvider<PartnerApplyController, PartnerApplyState> {
   const PartnerApplyControllerProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'partnerApplyControllerProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'partnerApplyControllerProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$partnerApplyControllerHash();
@@ -51,11 +51,14 @@ abstract class _$PartnerApplyController extends $Notifier<PartnerApplyState> {
   void runBuild() {
     final created = build();
     final ref = this.ref as $Ref<PartnerApplyState, PartnerApplyState>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<PartnerApplyState, PartnerApplyState>,
-        PartnerApplyState,
-        Object?,
-        Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<PartnerApplyState, PartnerApplyState>,
+              PartnerApplyState,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }

@@ -10,7 +10,8 @@ mixin _PartyCreateWizardValidation on _$PartyCreateWizardController {
     }
 
     final ops = state.description['ops'] as List?;
-    final isDescriptionEmpty = ops == null ||
+    final isDescriptionEmpty =
+        ops == null ||
         ops.isEmpty ||
         (ops.length == 1 && (ops[0] as Map<String, dynamic>)['insert'] == '\n');
     if (isDescriptionEmpty) {

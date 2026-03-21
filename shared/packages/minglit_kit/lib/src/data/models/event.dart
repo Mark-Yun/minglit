@@ -65,8 +65,9 @@ abstract class Event with _$Event {
       metadata: Map<String, dynamic>.from(party.metadata),
       minConfirmedCount: party.minConfirmedCount,
       maxParticipants: party.maxParticipants,
-      entryGroups:
-          party.entryGroups?.map(EntryGroup.createFromTemplate).toList(),
+      entryGroups: party.entryGroups
+          ?.map(EntryGroup.createFromTemplate)
+          .toList(),
     );
   }
 

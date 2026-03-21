@@ -165,7 +165,7 @@ class _TicketEligibility {
   const _TicketEligibility.eligible() : this._(isEligible: true);
 
   const _TicketEligibility.ineligible(String reason)
-      : this._(isEligible: false, reason: reason);
+    : this._(isEligible: false, reason: reason);
 
   final bool isEligible;
   final String? reason;

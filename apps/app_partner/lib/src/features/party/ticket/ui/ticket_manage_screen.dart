@@ -161,9 +161,9 @@ class _TicketManageCard extends ConsumerWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.bodySmall!.copyWith(
-              color: color,
-              fontWeight: FontWeight.bold,
-            ),
+          color: color,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -219,7 +219,9 @@ class _TicketEditSheetState extends ConsumerState<_TicketEditSheet> {
 
     final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
     try {
-      await ref.read(ticketRepositoryProvider).updateTicket(
+      await ref
+          .read(ticketRepositoryProvider)
+          .updateTicket(
             widget.ticket.copyWith(
               quantity: newQuantity,
               price: newPrice,
@@ -253,8 +255,8 @@ class _TicketEditSheetState extends ConsumerState<_TicketEditSheet> {
           Text(
             '티켓 수정',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: MinglitSpacing.large),
           Row(

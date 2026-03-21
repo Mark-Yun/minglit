@@ -4,12 +4,12 @@ part of 'minglit_theme.dart';
 class MinglitShadows {
   /// Returns a card shadow using the given accent color.
   static List<BoxShadow> cardSelected(Color accentColor) => [
-        BoxShadow(
-          color: accentColor.withValues(alpha: 0.1),
-          blurRadius: MinglitSpacing.small,
-          offset: const Offset(0, 4),
-        ),
-      ];
+    BoxShadow(
+      color: accentColor.withValues(alpha: 0.1),
+      blurRadius: MinglitSpacing.small,
+      offset: const Offset(0, 4),
+    ),
+  ];
 }
 
 /// Border presets for Minglit UI components.

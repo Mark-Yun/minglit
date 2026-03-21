@@ -60,15 +60,15 @@ final class GlobalLoadingControllerProvider
   /// );
   /// ```
   const GlobalLoadingControllerProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'globalLoadingControllerProvider',
-          isAutoDispose: false,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'globalLoadingControllerProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$globalLoadingControllerHash();
@@ -112,11 +112,14 @@ abstract class _$GlobalLoadingController extends $Notifier<GlobalLoadingState> {
   void runBuild() {
     final created = build();
     final ref = this.ref as $Ref<GlobalLoadingState, GlobalLoadingState>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<GlobalLoadingState, GlobalLoadingState>,
-        GlobalLoadingState,
-        Object?,
-        Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<GlobalLoadingState, GlobalLoadingState>,
+              GlobalLoadingState,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }

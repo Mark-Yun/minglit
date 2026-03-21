@@ -18,7 +18,7 @@ class PartyLocationEditScreen extends ConsumerStatefulWidget {
   final String? initialAddressDetail;
   final String? initialDirectionsGuide;
   final void Function(Location? location, String detail, String directions)
-      onSave;
+  onSave;
 
   @override
   ConsumerState<PartyLocationEditScreen> createState() =>

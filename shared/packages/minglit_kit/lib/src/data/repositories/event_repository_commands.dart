@@ -49,24 +49,30 @@ mixin _EventRepositoryCommands
           verificationData: verificationData,
         );
 
-        await supabaseClient.from('event_applications').update({
-          'status': 'pending',
-          'payment_id': pendingPaymentId,
-          'ticket_id': ticketId,
-          'payment_amount': amount,
-          'updated_at': DateTime.now().toIso8601String(),
-        }).eq('id', appId);
+        await supabaseClient
+            .from('event_applications')
+            .update({
+              'status': 'pending',
+              'payment_id': pendingPaymentId,
+              'ticket_id': ticketId,
+              'payment_amount': amount,
+              'updated_at': DateTime.now().toIso8601String(),
+            })
+            .eq('id', appId);
 
         return appId;
       }
 
-      await supabaseClient.from('event_applications').update({
-        'ticket_id': ticketId,
-        'payment_id': pendingPaymentId,
-        'payment_amount': amount,
-        'status': 'pending',
-        'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', existingApp.id);
+      await supabaseClient
+          .from('event_applications')
+          .update({
+            'ticket_id': ticketId,
+            'payment_id': pendingPaymentId,
+            'payment_amount': amount,
+            'status': 'pending',
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', existingApp.id);
 
       if (verificationData == null) {
         await supabaseClient

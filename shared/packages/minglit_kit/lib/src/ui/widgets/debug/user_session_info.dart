@@ -35,8 +35,9 @@ class UserSessionInfo extends ConsumerWidget {
     }
 
     const encoder = JsonEncoder.withIndent('  ');
-    final prettyMetadata =
-        user.userMetadata != null ? encoder.convert(user.userMetadata) : '{}';
+    final prettyMetadata = user.userMetadata != null
+        ? encoder.convert(user.userMetadata)
+        : '{}';
 
     return Container(
       width: double.infinity,

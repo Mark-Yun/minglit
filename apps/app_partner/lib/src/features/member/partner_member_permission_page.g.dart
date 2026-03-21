@@ -21,10 +21,13 @@ const partnerMemberProvider = PartnerMemberFamily._();
 /// Fetches details for a specific member.
 /// Filters from full list, can be updated to fetch from DB.
 
-final class PartnerMemberProvider extends $FunctionalProvider<
-        AsyncValue<Map<String, dynamic>?>,
-        Map<String, dynamic>?,
-        FutureOr<Map<String, dynamic>?>>
+final class PartnerMemberProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Map<String, dynamic>?>,
+          Map<String, dynamic>?,
+          FutureOr<Map<String, dynamic>?>
+        >
     with
         $FutureModifier<Map<String, dynamic>?>,
         $FutureProvider<Map<String, dynamic>?> {
@@ -36,12 +39,12 @@ final class PartnerMemberProvider extends $FunctionalProvider<
     required PartnerMemberFamily super.from,
     required ({String partnerId, String targetUserId}) super.argument,
   }) : super(
-          retry: null,
-          name: r'partnerMemberProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+         retry: null,
+         name: r'partnerMemberProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$partnerMemberHash();
@@ -57,8 +60,7 @@ final class PartnerMemberProvider extends $FunctionalProvider<
   @override
   $FutureProviderElement<Map<String, dynamic>?> $createElement(
     $ProviderPointer pointer,
-  ) =>
-      $FutureProviderElement(pointer);
+  ) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<Map<String, dynamic>?> create(Ref ref) {
@@ -90,16 +92,18 @@ String _$partnerMemberHash() => r'28b6c1ad53112e4630bf553eeb90e59178a7dfd5';
 
 final class PartnerMemberFamily extends $Family
     with
-        $FunctionalFamilyOverride<FutureOr<Map<String, dynamic>?>,
-            ({String partnerId, String targetUserId})> {
+        $FunctionalFamilyOverride<
+          FutureOr<Map<String, dynamic>?>,
+          ({String partnerId, String targetUserId})
+        > {
   const PartnerMemberFamily._()
-      : super(
-          retry: null,
-          name: r'partnerMemberProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: true,
-        );
+    : super(
+        retry: null,
+        name: r'partnerMemberProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
 
   /// **Local Provider: Single Partner Member**
   ///
@@ -109,11 +113,10 @@ final class PartnerMemberFamily extends $Family
   PartnerMemberProvider call({
     required String partnerId,
     required String targetUserId,
-  }) =>
-      PartnerMemberProvider._(
-        argument: (partnerId: partnerId, targetUserId: targetUserId),
-        from: this,
-      );
+  }) => PartnerMemberProvider._(
+    argument: (partnerId: partnerId, targetUserId: targetUserId),
+    from: this,
+  );
 
   @override
   String toString() => r'partnerMemberProvider';

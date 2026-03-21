@@ -30,8 +30,9 @@ class _ReviewVerificationScreenState
   Future<void> _loadRequests() async {
     setState(() => _isLoading = true);
     try {
-      final myPartners =
-          await ref.read(partnerRepositoryProvider).getMyManagedPartners();
+      final myPartners = await ref
+          .read(partnerRepositoryProvider)
+          .getMyManagedPartners();
       if (myPartners.isEmpty) {
         if (!mounted) return;
         setState(() => _pendingRequests = []);
@@ -60,7 +61,9 @@ class _ReviewVerificationScreenState
   }) async {
     final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
     try {
-      await ref.read(verificationRepositoryProvider).reviewRequest(
+      await ref
+          .read(verificationRepositoryProvider)
+          .reviewRequest(
             submissionId: id,
             status: status,
             adminComment: reason,
@@ -109,7 +112,8 @@ class _ReviewVerificationScreenState
             maxLines: 3,
             decoration: InputDecoration(
               labelText: context
-                  .l10n.reviewVerification_dialog_correction_commentLabel,
+                  .l10n
+                  .reviewVerification_dialog_correction_commentLabel,
               hintText:
                   context.l10n.reviewVerification_dialog_correction_commentHint,
             ),
@@ -339,7 +343,8 @@ class _CommentsView extends ConsumerWidget {
                 return ListView.builder(
                   itemCount: comments.length,
                   itemBuilder: (context, i) {
-                    final isPartner = comments[i]['author_id'] ==
+                    final isPartner =
+                        comments[i]['author_id'] ==
                         Supabase.instance.client.auth.currentUser?.id;
                     final content =
                         comments[i]['content'] as Map<String, dynamic>;

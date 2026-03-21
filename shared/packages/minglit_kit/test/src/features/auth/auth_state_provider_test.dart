@@ -55,8 +55,7 @@ void main() {
   });
 
   group('AuthController', () {
-    test(
-        'signInWithGoogle calls repository and sets AsyncData on success '
+    test('signInWithGoogle calls repository and sets AsyncData on success '
         '(non-web environment)', () async {
       when(
         () =>

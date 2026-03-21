@@ -117,7 +117,7 @@ class SupabaseVerificationRepository extends _SupabaseVerificationContextBase
     implements VerificationRepository {
   /// Creates a [SupabaseVerificationRepository] with a [SupabaseClient].
   SupabaseVerificationRepository({SupabaseClient? supabase})
-      : super(supabase ?? Supabase.instance.client);
+    : super(supabase ?? Supabase.instance.client);
 }
 
 abstract class _SupabaseVerificationContext {

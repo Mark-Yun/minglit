@@ -62,9 +62,9 @@ class PartnerHomePage extends ConsumerWidget {
                     child: Text(
                       unreadCount > 99 ? '99+' : unreadCount.toString(),
                       style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                            color: MinglitColors.background,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        color: MinglitColors.background,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),

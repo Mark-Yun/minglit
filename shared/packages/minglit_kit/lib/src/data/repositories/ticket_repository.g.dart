@@ -15,21 +15,25 @@ const ticketRepositoryProvider = TicketRepositoryProvider._();
 
 /// Provides the [TicketRepository].
 
-final class TicketRepositoryProvider extends $FunctionalProvider<
-    TicketRepository,
-    TicketRepository,
-    TicketRepository> with $Provider<TicketRepository> {
+final class TicketRepositoryProvider
+    extends
+        $FunctionalProvider<
+          TicketRepository,
+          TicketRepository,
+          TicketRepository
+        >
+    with $Provider<TicketRepository> {
   /// Provides the [TicketRepository].
   const TicketRepositoryProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'ticketRepositoryProvider',
-          isAutoDispose: false,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'ticketRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$ticketRepositoryHash();

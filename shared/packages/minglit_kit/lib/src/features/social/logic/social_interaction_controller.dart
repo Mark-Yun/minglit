@@ -7,7 +7,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 part 'social_interaction_controller.g.dart';
 
 @riverpod
-
 /// Manages the state of a single social interaction
 /// (like, subscribe, bookmark, block).
 class SocialInteractionController extends _$SocialInteractionController {

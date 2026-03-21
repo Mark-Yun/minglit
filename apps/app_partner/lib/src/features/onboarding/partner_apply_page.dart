@@ -169,8 +169,8 @@ class _PartnerApplyPageState extends ConsumerState<PartnerApplyPage> {
                   onPressed: isLoading
                       ? null
                       : (isLastStep
-                          ? (notifier.canProceed() ? notifier.submit : null)
-                          : notifier.nextStep),
+                            ? (notifier.canProceed() ? notifier.submit : null)
+                            : notifier.nextStep),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: MinglitColors.primary,
                     foregroundColor: MinglitColors.background,

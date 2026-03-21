@@ -70,8 +70,9 @@ class MyPage extends ConsumerWidget {
               children: [
                 CircleAvatar(
                   radius: 32,
-                  backgroundImage:
-                      avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                  backgroundImage: avatarUrl != null
+                      ? NetworkImage(avatarUrl)
+                      : null,
                   child: avatarUrl == null
                       ? const Icon(Icons.person, size: 32)
                       : null,

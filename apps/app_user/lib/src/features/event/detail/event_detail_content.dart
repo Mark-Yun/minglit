@@ -131,8 +131,9 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
     final partnerProfileImageUrl = partner?.profileImageUrl;
     final eventTitle = party?.title ?? event.title ?? '제목 없음';
     final user = ref.watch(currentUserProvider);
-    final iconColor =
-        _showTitle ? theme.colorScheme.onSurface : MinglitColors.background;
+    final iconColor = _showTitle
+        ? theme.colorScheme.onSurface
+        : MinglitColors.background;
 
     // Date Format
     final dateLabel = DateFormat(
@@ -374,8 +375,8 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                             activeColor: MinglitColors.primary,
                             onUnauthenticatedTap: user == null
                                 ? () => ref
-                                    .read(authCoordinatorProvider)
-                                    .pushLogin()
+                                      .read(authCoordinatorProvider)
+                                      .pushLogin()
                                 : null,
                           ),
                           // Fix #136: Use large size to match social action chip updates
@@ -387,8 +388,9 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                               ShareUtils.shareEvent(
                                 eventTitle: eventTitle,
                                 eventId: event.id,
-                                baseUrl:
-                                    ref.watch(minglitDomainsProvider).userApp,
+                                baseUrl: ref
+                                    .watch(minglitDomainsProvider)
+                                    .userApp,
                               ),
                             ),
                           ),

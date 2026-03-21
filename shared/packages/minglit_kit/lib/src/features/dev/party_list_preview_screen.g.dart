@@ -15,20 +15,25 @@ const previewPartiesProvider = PreviewPartiesProvider._();
 
 /// Fetches parties for the preview list.
 
-final class PreviewPartiesProvider extends $FunctionalProvider<
-        AsyncValue<List<Party>>, List<Party>, FutureOr<List<Party>>>
+final class PreviewPartiesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Party>>,
+          List<Party>,
+          FutureOr<List<Party>>
+        >
     with $FutureModifier<List<Party>>, $FutureProvider<List<Party>> {
   /// Fetches parties for the preview list.
   const PreviewPartiesProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'previewPartiesProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'previewPartiesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$previewPartiesHash();
@@ -37,8 +42,7 @@ final class PreviewPartiesProvider extends $FunctionalProvider<
   @override
   $FutureProviderElement<List<Party>> $createElement(
     $ProviderPointer pointer,
-  ) =>
-      $FutureProviderElement(pointer);
+  ) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<Party>> create(Ref ref) {

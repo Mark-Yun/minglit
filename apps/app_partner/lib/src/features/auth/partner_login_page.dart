@@ -21,7 +21,8 @@ class PartnerLoginPage extends ConsumerWidget {
       }
     });
     final authState = ref.watch(authControllerProvider);
-    final isAppleSignInAvailable = kIsWeb ||
+    final isAppleSignInAvailable =
+        kIsWeb ||
         defaultTargetPlatform == TargetPlatform.iOS ||
         defaultTargetPlatform == TargetPlatform.macOS;
     if (authState.isLoading) {
@@ -30,8 +31,9 @@ class PartnerLoginPage extends ConsumerWidget {
 
     return MinglitLoginScreen(
       isPartner: true,
-      onDevMapTrigger:
-          isDevEnv ? () => const DevMapRoute().push<void>(context) : null,
+      onDevMapTrigger: isDevEnv
+          ? () => const DevMapRoute().push<void>(context)
+          : null,
       onGoogleSignIn: () {
         unawaited(ref.read(authControllerProvider.notifier).signInWithGoogle());
       },

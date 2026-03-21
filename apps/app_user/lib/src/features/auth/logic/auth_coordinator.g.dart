@@ -12,18 +12,20 @@ part of 'auth_coordinator.dart';
 @ProviderFor(authCoordinator)
 const authCoordinatorProvider = AuthCoordinatorProvider._();
 
-final class AuthCoordinatorProvider extends $FunctionalProvider<AuthCoordinator,
-    AuthCoordinator, AuthCoordinator> with $Provider<AuthCoordinator> {
+final class AuthCoordinatorProvider
+    extends
+        $FunctionalProvider<AuthCoordinator, AuthCoordinator, AuthCoordinator>
+    with $Provider<AuthCoordinator> {
   const AuthCoordinatorProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'authCoordinatorProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'authCoordinatorProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$authCoordinatorHash();

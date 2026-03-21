@@ -16,15 +16,16 @@ _TicketTemplate _$TicketTemplateFromJson(Map<String, dynamic> json) =>
       description: json['description'] as String?,
       price: (json['price'] as num?)?.toInt() ?? 0,
       quantity: (json['quantity'] as num?)?.toInt() ?? 0,
-      targetEntryGroupIds: (json['target_entry_group_ids'] as List<dynamic>?)
+      targetEntryGroupIds:
+          (json['target_entry_group_ids'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],
       requiredVerificationIds:
           (json['required_verification_ids'] as List<dynamic>?)
-                  ?.map((e) => e as String)
-                  .toList() ??
-              const [],
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
     );
 
 Map<String, dynamic> _$TicketTemplateToJson(_TicketTemplate instance) =>

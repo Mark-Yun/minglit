@@ -4,11 +4,13 @@ mixin _PartyEventRepository on _SupabasePartyContext {
   /// Retrieves events for a specific party.
   Future<List<Event>> getEventsByPartyId(String partyId) async {
     try {
-      final data = await supabaseClient
-          .from('events')
-          .select('*, entry_groups(*), tickets(*)')
-          .eq('party_id', partyId)
-          .order('start_time', ascending: false) as List;
+      final data =
+          await supabaseClient
+                  .from('events')
+                  .select('*, entry_groups(*), tickets(*)')
+                  .eq('party_id', partyId)
+                  .order('start_time', ascending: false)
+              as List;
       return data.map((e) {
         return Event.fromJson(e as Map<String, dynamic>);
       }).toList();
@@ -87,7 +89,8 @@ mixin _PartyEventRepository on _SupabasePartyContext {
     try {
       await supabaseClient
           .from('events')
-          .update({'status': status}).eq('id', eventId);
+          .update({'status': status})
+          .eq('id', eventId);
       Log.d('updateEventStatus success');
     } catch (e, st) {
       Log.e('❌ [PartyRepo] updateEventStatus Error', e, st);
@@ -103,7 +106,8 @@ mixin _PartyEventRepository on _SupabasePartyContext {
     try {
       await supabaseClient
           .from('events')
-          .update({'metadata': metadata}).eq('id', eventId);
+          .update({'metadata': metadata})
+          .eq('id', eventId);
       Log.d('updateEventMetadata success');
     } catch (e, st) {
       Log.e('❌ [PartyRepo] updateEventMetadata Error', e, st);

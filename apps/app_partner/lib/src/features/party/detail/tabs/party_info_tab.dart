@@ -35,14 +35,14 @@ class PartyInfoTab extends ConsumerWidget {
                 party: party,
                 onSave: (title, description, imageUrls, newImages, status) =>
                     _handleUpdateBasicInfo(
-                  context,
-                  ref,
-                  title,
-                  description,
-                  imageUrls,
-                  newImages,
-                  status,
-                ),
+                      context,
+                      ref,
+                      title,
+                      description,
+                      imageUrls,
+                      newImages,
+                      status,
+                    ),
               );
             },
             child: Column(
@@ -64,12 +64,12 @@ class PartyInfoTab extends ConsumerWidget {
                       backgroundColor: Theme.of(
                         context,
                       ).colorScheme.errorContainer,
-                      labelStyle:
-                          Theme.of(context).textTheme.labelSmall!.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onErrorContainer,
-                              ),
+                      labelStyle: Theme.of(context).textTheme.labelSmall!
+                          .copyWith(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onErrorContainer,
+                          ),
                     ),
                   ),
               ],
@@ -167,10 +167,12 @@ class PartyInfoTab extends ConsumerWidget {
       final partyRepo = ref.read(partyRepositoryProvider);
 
       // Check if coordinates changed (New location vs Current location)
-      final currentLocation =
-          ref.read(locationDetailProvider(party.locationId)).value;
+      final currentLocation = ref
+          .read(locationDetailProvider(party.locationId))
+          .value;
 
-      final isSameSpot = currentLocation != null &&
+      final isSameSpot =
+          currentLocation != null &&
           currentLocation.latitude == newLocation.latitude &&
           currentLocation.longitude == newLocation.longitude;
 

@@ -15,7 +15,8 @@ enum EventFeedType {
   earlyBird('얼리버드 특가', '가격순'),
 
   /// AI-powered personalized recommendations.
-  aiRecommended('AI 추천', '추천순');
+  aiRecommended('AI 추천', '추천순')
+  ;
 
   const EventFeedType(this.title, this.sortLabel);
 

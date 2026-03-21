@@ -66,7 +66,9 @@ class TicketTemplateManageScreen extends ConsumerWidget {
           final loading = ref.read(globalLoadingControllerProvider.notifier)
             ..show();
           try {
-            await ref.read(ticketRepositoryProvider).createTicketTemplate(
+            await ref
+                .read(ticketRepositoryProvider)
+                .createTicketTemplate(
                   template.copyWith(partyId: partyId),
                 );
             ref.invalidate(partyTicketTemplatesProvider(partyId));

@@ -45,12 +45,12 @@ class PayoutSummary {
 
   /// Converts to a JSON map.
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'status': status,
-        'total_net_amount': totalNetAmount,
-        'scheduled_at': scheduledAt?.toIso8601String(),
-        'bank_account_snapshot': bankAccountSnapshot,
-      };
+    'id': id,
+    'status': status,
+    'total_net_amount': totalNetAmount,
+    'scheduled_at': scheduledAt?.toIso8601String(),
+    'bank_account_snapshot': bankAccountSnapshot,
+  };
 }
 
 /// A single entry in the settlement history log.
@@ -92,12 +92,12 @@ class SettlementHistoryEntry {
 
   /// Converts to a JSON map.
   Map<String, dynamic> toJson() => {
-        'event_type': eventType,
-        'from_status': fromStatus,
-        'to_status': toStatus,
-        'created_at': createdAt.toIso8601String(),
-        'details': details,
-      };
+    'event_type': eventType,
+    'from_status': fromStatus,
+    'to_status': toStatus,
+    'created_at': createdAt.toIso8601String(),
+    'details': details,
+  };
 }
 
 /// An adjustment item linked to a settlement item.
@@ -139,12 +139,12 @@ class AdjustmentItemModel {
 
   /// Converts to a JSON map.
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'adjustment_type': adjustmentType,
-        'amount_signed': amountSigned,
-        'reason_code': reasonCode,
-        'status': status,
-      };
+    'id': id,
+    'adjustment_type': adjustmentType,
+    'amount_signed': amountSigned,
+    'reason_code': reasonCode,
+    'status': status,
+  };
 }
 
 /// Full detail of a settlement item, including nested payout, history, and
@@ -222,12 +222,15 @@ class SettlementItemDetail {
       payoutId: json['payout_id'] as String?,
       retryable: json['retryable'] as bool? ?? false,
       retryCount: json['retry_count'] as int? ?? 0,
-      payoutInfo:
-          payoutData != null ? PayoutSummary.fromJson(payoutData) : null,
-      histories:
-          (historiesData ?? []).map(SettlementHistoryEntry.fromJson).toList(),
-      adjustments:
-          (adjustmentsData ?? []).map(AdjustmentItemModel.fromJson).toList(),
+      payoutInfo: payoutData != null
+          ? PayoutSummary.fromJson(payoutData)
+          : null,
+      histories: (historiesData ?? [])
+          .map(SettlementHistoryEntry.fromJson)
+          .toList(),
+      adjustments: (adjustmentsData ?? [])
+          .map(AdjustmentItemModel.fromJson)
+          .toList(),
     );
   }
 
@@ -312,28 +315,28 @@ class SettlementItemDetail {
 
   /// Converts to a JSON map (flat, without nested data).
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'partner_id': partnerId,
-        'event_id': eventId,
-        'status': status,
-        'gross_amount': grossAmount,
-        'platform_fee_amount': platformFeeAmount,
-        'pg_fee_amount': pgFeeAmount,
-        'vat_amount': vatAmount,
-        'net_amount': netAmount,
-        'currency': currency,
-        'hold_reason_code': holdReasonCode,
-        'hold_reason_detail': holdReasonDetail,
-        'failure_reason_code': failureReasonCode,
-        'failure_message': failureMessage,
-        'settlement_period_start': settlementPeriodStart?.toIso8601String(),
-        'settlement_period_end': settlementPeriodEnd?.toIso8601String(),
-        'processing_started_at': processingStartedAt?.toIso8601String(),
-        'processing_ended_at': processingEndedAt?.toIso8601String(),
-        'created_at': createdAt.toIso8601String(),
-        'updated_at': updatedAt.toIso8601String(),
-        'payout_id': payoutId,
-        'retryable': retryable,
-        'retry_count': retryCount,
-      };
+    'id': id,
+    'partner_id': partnerId,
+    'event_id': eventId,
+    'status': status,
+    'gross_amount': grossAmount,
+    'platform_fee_amount': platformFeeAmount,
+    'pg_fee_amount': pgFeeAmount,
+    'vat_amount': vatAmount,
+    'net_amount': netAmount,
+    'currency': currency,
+    'hold_reason_code': holdReasonCode,
+    'hold_reason_detail': holdReasonDetail,
+    'failure_reason_code': failureReasonCode,
+    'failure_message': failureMessage,
+    'settlement_period_start': settlementPeriodStart?.toIso8601String(),
+    'settlement_period_end': settlementPeriodEnd?.toIso8601String(),
+    'processing_started_at': processingStartedAt?.toIso8601String(),
+    'processing_ended_at': processingEndedAt?.toIso8601String(),
+    'created_at': createdAt.toIso8601String(),
+    'updated_at': updatedAt.toIso8601String(),
+    'payout_id': payoutId,
+    'retryable': retryable,
+    'retry_count': retryCount,
+  };
 }

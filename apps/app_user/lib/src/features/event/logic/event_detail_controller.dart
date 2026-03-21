@@ -21,7 +21,7 @@ Future<Map<String, int>> entryGroupParticipantCounts(
   final list = await repo.getEntryGroupParticipantCounts(eventId);
   return {
     for (final item in list)
-      item['entry_group_id'] as String:
-          (item['participant_count'] as num).toInt(),
+      item['entry_group_id'] as String: (item['participant_count'] as num)
+          .toInt(),
   };
 }

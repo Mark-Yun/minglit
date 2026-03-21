@@ -82,8 +82,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   Text(
                     '검색어를 입력하세요',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -98,8 +98,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   child: Text(
                     '"$query" 검색 결과가 없습니다',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 );
               }

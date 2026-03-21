@@ -82,7 +82,8 @@ class _EventInfoTab extends ConsumerWidget {
     // Watch applications to show count
     final appsAsync = ref.watch(eventApplicationsProvider(event.id));
     final appCount = appsAsync.asData?.value.length ?? 0;
-    final pendingCount = appsAsync.asData?.value
+    final pendingCount =
+        appsAsync.asData?.value
             .where((a) => a.status == 'pending_review')
             .length ??
         0;
@@ -125,7 +126,8 @@ class _EventInfoTab extends ConsumerWidget {
                 _DetailRow(
                   icon: Icons.access_time,
                   label: context.l10n.eventDetail_label_time,
-                  value: '${timeFormat.format(event.startTime)} ~ '
+                  value:
+                      '${timeFormat.format(event.startTime)} ~ '
                       '${timeFormat.format(event.endTime)}',
                 ),
                 const Padding(

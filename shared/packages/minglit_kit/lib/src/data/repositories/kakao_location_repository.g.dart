@@ -15,21 +15,25 @@ const kakaoLocationRepositoryProvider = KakaoLocationRepositoryProvider._();
 
 /// Provides the [KakaoLocationRepository].
 
-final class KakaoLocationRepositoryProvider extends $FunctionalProvider<
-    KakaoLocationRepository,
-    KakaoLocationRepository,
-    KakaoLocationRepository> with $Provider<KakaoLocationRepository> {
+final class KakaoLocationRepositoryProvider
+    extends
+        $FunctionalProvider<
+          KakaoLocationRepository,
+          KakaoLocationRepository,
+          KakaoLocationRepository
+        >
+    with $Provider<KakaoLocationRepository> {
   /// Provides the [KakaoLocationRepository].
   const KakaoLocationRepositoryProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'kakaoLocationRepositoryProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'kakaoLocationRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$kakaoLocationRepositoryHash();
@@ -38,8 +42,7 @@ final class KakaoLocationRepositoryProvider extends $FunctionalProvider<
   @override
   $ProviderElement<KakaoLocationRepository> $createElement(
     $ProviderPointer pointer,
-  ) =>
-      $ProviderElement(pointer);
+  ) => $ProviderElement(pointer);
 
   @override
   KakaoLocationRepository create(Ref ref) {

@@ -28,8 +28,9 @@ class MinglitCircularProgressIndicator extends StatelessWidget {
         // ignore: use_minglit_progress_indicator, this IS the MinglitCircularProgressIndicator implementation
         child: CircularProgressIndicator(
           strokeWidth: strokeWidth,
-          valueColor:
-              color != null ? AlwaysStoppedAnimation<Color>(color!) : null,
+          valueColor: color != null
+              ? AlwaysStoppedAnimation<Color>(color!)
+              : null,
         ),
       ),
     );

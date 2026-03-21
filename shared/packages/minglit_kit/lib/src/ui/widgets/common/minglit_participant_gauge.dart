@@ -40,10 +40,10 @@ class MinglitParticipantGauge extends StatelessWidget {
     final filledCount = ratio <= 0
         ? 0
         : ratio <= _kLowThreshold
-            ? 1
-            : ratio <= _kMedThreshold
-                ? 2
-                : 3;
+        ? 1
+        : ratio <= _kMedThreshold
+        ? 2
+        : 3;
     final segmentColor = switch (filledCount) {
       0 => Theme.of(context).colorScheme.outlineVariant,
       1 => MinglitColors.secondary,
@@ -81,10 +81,10 @@ class MinglitParticipantGauge extends StatelessWidget {
           Text(
             '$current/$max',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: _kGaugeTextSize,
-                  fontWeight: FontWeight.w700,
-                ),
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: _kGaugeTextSize,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           const SizedBox(width: MinglitSpacing.xxsmall),
           Icon(

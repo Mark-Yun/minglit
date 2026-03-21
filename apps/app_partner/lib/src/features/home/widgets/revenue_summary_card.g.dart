@@ -20,15 +20,15 @@ final class CurrentMonthNetProvider
     with $FutureModifier<int>, $FutureProvider<int> {
   /// Loads current month net settlement amount from SettlementRepository.
   const CurrentMonthNetProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'currentMonthNetProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'currentMonthNetProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$currentMonthNetHash();

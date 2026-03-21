@@ -12,20 +12,24 @@ part of 'policy_repository.dart';
 @ProviderFor(policyRepository)
 const policyRepositoryProvider = PolicyRepositoryProvider._();
 
-final class PolicyRepositoryProvider extends $FunctionalProvider<
-    PolicyRepository,
-    PolicyRepository,
-    PolicyRepository> with $Provider<PolicyRepository> {
+final class PolicyRepositoryProvider
+    extends
+        $FunctionalProvider<
+          PolicyRepository,
+          PolicyRepository,
+          PolicyRepository
+        >
+    with $Provider<PolicyRepository> {
   const PolicyRepositoryProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'policyRepositoryProvider',
-          isAutoDispose: false,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'policyRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$policyRepositoryHash();

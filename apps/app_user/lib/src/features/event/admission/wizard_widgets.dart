@@ -45,8 +45,9 @@ class _StepIndicator extends StatelessWidget {
     bool isActive,
   ) {
     final theme = Theme.of(context);
-    final color =
-        isActive ? theme.colorScheme.primary : theme.colorScheme.outline;
+    final color = isActive
+        ? theme.colorScheme.primary
+        : theme.colorScheme.outline;
 
     return Column(
       children: [
@@ -117,8 +118,9 @@ class _Footer extends StatelessWidget {
             Expanded(
               flex: 2,
               child: ElevatedButton(
-                onPressed:
-                    isSubmitting ? null : (isFirstStep ? onNext : onSubmit),
+                onPressed: isSubmitting
+                    ? null
+                    : (isFirstStep ? onNext : onSubmit),
                 child: isSubmitting
                     ? const MinglitCircularProgressIndicator(
                         size: 20,

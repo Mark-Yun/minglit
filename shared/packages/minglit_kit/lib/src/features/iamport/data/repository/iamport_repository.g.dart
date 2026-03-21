@@ -15,21 +15,25 @@ const iamportRepositoryProvider = IamportRepositoryProvider._();
 
 /// Provides the [IamportRepository] instance.
 
-final class IamportRepositoryProvider extends $FunctionalProvider<
-    IamportRepository,
-    IamportRepository,
-    IamportRepository> with $Provider<IamportRepository> {
+final class IamportRepositoryProvider
+    extends
+        $FunctionalProvider<
+          IamportRepository,
+          IamportRepository,
+          IamportRepository
+        >
+    with $Provider<IamportRepository> {
   /// Provides the [IamportRepository] instance.
   const IamportRepositoryProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'iamportRepositoryProvider',
-          isAutoDispose: false,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'iamportRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$iamportRepositoryHash();
@@ -38,8 +42,7 @@ final class IamportRepositoryProvider extends $FunctionalProvider<
   @override
   $ProviderElement<IamportRepository> $createElement(
     $ProviderPointer pointer,
-  ) =>
-      $ProviderElement(pointer);
+  ) => $ProviderElement(pointer);
 
   @override
   IamportRepository create(Ref ref) {

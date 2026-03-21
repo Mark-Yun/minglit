@@ -7,12 +7,12 @@ part of 'ticket_token.dart';
 // **************************************************************************
 
 _TicketToken _$TicketTokenFromJson(Map<String, dynamic> json) => _TicketToken(
-      ticketId: json['ticketId'] as String,
-      eventId: json['eventId'] as String,
-      userId: json['userId'] as String,
-      signature: json['signature'] as String,
-      expiresAt: DateTime.parse(json['expiresAt'] as String),
-    );
+  ticketId: json['ticketId'] as String,
+  eventId: json['eventId'] as String,
+  userId: json['userId'] as String,
+  signature: json['signature'] as String,
+  expiresAt: DateTime.parse(json['expiresAt'] as String),
+);
 
 Map<String, dynamic> _$TicketTokenToJson(_TicketToken instance) =>
     <String, dynamic>{

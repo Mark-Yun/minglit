@@ -18,15 +18,15 @@ final class StaffGuardProvider
     extends $AsyncNotifierProvider<StaffGuard, User?> {
   /// Guards staff-only access and persists verification state.
   const StaffGuardProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'staffGuardProvider',
-          isAutoDispose: false,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'staffGuardProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$staffGuardHash();
@@ -47,11 +47,14 @@ abstract class _$StaffGuard extends $AsyncNotifier<User?> {
   void runBuild() {
     final created = build();
     final ref = this.ref as $Ref<AsyncValue<User?>, User?>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<User?>, User?>,
-        AsyncValue<User?>,
-        Object?,
-        Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<User?>, User?>,
+              AsyncValue<User?>,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }

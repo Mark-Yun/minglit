@@ -26,7 +26,7 @@ class PartnerRepository extends _SupabasePartnerContextBase
     with _PartnerMemberRepository, _PartnerApplicationRepository {
   /// Creates a [PartnerRepository] with a [SupabaseClient].
   PartnerRepository({SupabaseClient? supabase})
-      : super(supabase ?? Supabase.instance.client);
+    : super(supabase ?? Supabase.instance.client);
 }
 
 abstract class _SupabasePartnerContext {
@@ -43,11 +43,13 @@ abstract class _SupabasePartnerContextBase implements _SupabasePartnerContext {
   Future<List<Partner>> getPartners() async {
     Log.d('getPartners called');
     try {
-      final data = await supabaseClient
-          .from('partners')
-          .select()
-          .eq('is_active', true)
-          .order('created_at', ascending: false) as List;
+      final data =
+          await supabaseClient
+                  .from('partners')
+                  .select()
+                  .eq('is_active', true)
+                  .order('created_at', ascending: false)
+              as List;
       final result = data.map((json) {
         return Partner.fromJson(json as Map<String, dynamic>);
       }).toList();
@@ -72,10 +74,12 @@ abstract class _SupabasePartnerContextBase implements _SupabasePartnerContext {
 
     // 1. Get partner_ids from permissions
     try {
-      final permissions = await supabaseClient
-          .from('partner_member_permissions')
-          .select('partner_id')
-          .eq('user_id', userId) as List;
+      final permissions =
+          await supabaseClient
+                  .from('partner_member_permissions')
+                  .select('partner_id')
+                  .eq('user_id', userId)
+              as List;
 
       Log.d('🔍 [PartnerRepo] Found permissions raw data: $permissions');
       final partnerIds = permissions
@@ -91,11 +95,13 @@ abstract class _SupabasePartnerContextBase implements _SupabasePartnerContext {
       }
 
       // 2. Get partners details
-      final data = await supabaseClient
-          .from('partners')
-          .select()
-          .inFilter('id', partnerIds)
-          .eq('is_active', true) as List;
+      final data =
+          await supabaseClient
+                  .from('partners')
+                  .select()
+                  .inFilter('id', partnerIds)
+                  .eq('is_active', true)
+              as List;
       final result = data.map((json) {
         return Partner.fromJson(json as Map<String, dynamic>);
       }).toList();
@@ -139,7 +145,8 @@ abstract class _SupabasePartnerContextBase implements _SupabasePartnerContext {
       final data = await supabaseClient
           .from('partner_member_permissions')
           .select('role, permissions')
-          .match({'partner_id': partnerId, 'user_id': userId}).maybeSingle();
+          .match({'partner_id': partnerId, 'user_id': userId})
+          .maybeSingle();
 
       return data;
     } catch (e, st) {
@@ -181,11 +188,13 @@ abstract class _SupabasePartnerContextBase implements _SupabasePartnerContext {
   ) async {
     Log.d('getPartnerMonthlyRevenue called | partnerId: $partnerId');
     try {
-      final data = await supabaseClient
-          .from('partner_monthly_revenue')
-          .select()
-          .eq('partner_id', partnerId)
-          .order('month', ascending: true) as List;
+      final data =
+          await supabaseClient
+                  .from('partner_monthly_revenue')
+                  .select()
+                  .eq('partner_id', partnerId)
+                  .order('month', ascending: true)
+              as List;
       return data.map((entry) {
         return entry as Map<String, dynamic>;
       }).toList();
@@ -201,11 +210,13 @@ abstract class _SupabasePartnerContextBase implements _SupabasePartnerContext {
   ) async {
     Log.d('getPartnerSettlements called | partnerId: $partnerId');
     try {
-      final data = await supabaseClient
-          .from('settlement_items')
-          .select()
-          .eq('partner_id', partnerId)
-          .order('settlement_period_start', ascending: false) as List;
+      final data =
+          await supabaseClient
+                  .from('settlement_items')
+                  .select()
+                  .eq('partner_id', partnerId)
+                  .order('settlement_period_start', ascending: false)
+              as List;
       return data.map((entry) {
         return entry as Map<String, dynamic>;
       }).toList();

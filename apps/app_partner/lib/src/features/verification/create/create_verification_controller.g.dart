@@ -13,18 +13,22 @@ part of 'create_verification_controller.dart';
 const createVerificationControllerProvider =
     CreateVerificationControllerProvider._();
 
-final class CreateVerificationControllerProvider extends $NotifierProvider<
-    CreateVerificationController, CreateVerificationState> {
+final class CreateVerificationControllerProvider
+    extends
+        $NotifierProvider<
+          CreateVerificationController,
+          CreateVerificationState
+        > {
   const CreateVerificationControllerProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'createVerificationControllerProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'createVerificationControllerProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$createVerificationControllerHash();
@@ -54,11 +58,14 @@ abstract class _$CreateVerificationController
     final created = build();
     final ref =
         this.ref as $Ref<CreateVerificationState, CreateVerificationState>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<CreateVerificationState, CreateVerificationState>,
-        CreateVerificationState,
-        Object?,
-        Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<CreateVerificationState, CreateVerificationState>,
+              CreateVerificationState,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }

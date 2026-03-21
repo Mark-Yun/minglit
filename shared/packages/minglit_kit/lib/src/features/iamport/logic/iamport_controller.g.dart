@@ -14,19 +14,20 @@ part of 'iamport_controller.dart';
 const iamportControllerProvider = IamportControllerProvider._();
 
 /// Controls Iamport payment and certification state.
-final class IamportControllerProvider extends $NotifierProvider<
-    IamportController, AsyncValue<IamportResultModel?>> {
+final class IamportControllerProvider
+    extends
+        $NotifierProvider<IamportController, AsyncValue<IamportResultModel?>> {
   /// Controls Iamport payment and certification state.
   const IamportControllerProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'iamportControllerProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'iamportControllerProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$iamportControllerHash();
@@ -57,14 +58,23 @@ abstract class _$IamportController
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<AsyncValue<IamportResultModel?>,
-        AsyncValue<IamportResultModel?>>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<IamportResultModel?>,
-            AsyncValue<IamportResultModel?>>,
-        AsyncValue<IamportResultModel?>,
-        Object?,
-        Object?>;
+    final ref =
+        this.ref
+            as $Ref<
+              AsyncValue<IamportResultModel?>,
+              AsyncValue<IamportResultModel?>
+            >;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                AsyncValue<IamportResultModel?>,
+                AsyncValue<IamportResultModel?>
+              >,
+              AsyncValue<IamportResultModel?>,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }

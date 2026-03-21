@@ -82,8 +82,9 @@ class NotificationListScreen extends ConsumerWidget {
                     title: Text(
                       title,
                       style: theme.textTheme.bodyMedium!.copyWith(
-                        fontWeight:
-                            isRead ? FontWeight.normal : FontWeight.bold,
+                        fontWeight: isRead
+                            ? FontWeight.normal
+                            : FontWeight.bold,
                       ),
                     ),
                     subtitle: Column(

@@ -15,15 +15,15 @@ const settlementListControllerProvider = SettlementListControllerProvider._();
 final class SettlementListControllerProvider
     extends $NotifierProvider<SettlementListController, SettlementListState> {
   const SettlementListControllerProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'settlementListControllerProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'settlementListControllerProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$settlementListControllerHash();
@@ -52,11 +52,14 @@ abstract class _$SettlementListController
   void runBuild() {
     final created = build();
     final ref = this.ref as $Ref<SettlementListState, SettlementListState>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<SettlementListState, SettlementListState>,
-        SettlementListState,
-        Object?,
-        Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<SettlementListState, SettlementListState>,
+              SettlementListState,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }

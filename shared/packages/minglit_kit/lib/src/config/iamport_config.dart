@@ -31,7 +31,8 @@ IamportConfig iamportConfig(Ref ref) {
 
   return IamportConfig(
     userCode: userCode,
-    mobileRedirectUrl:
-        mobileRedirectScheme.isEmpty ? null : '$mobileRedirectScheme://iamport',
+    mobileRedirectUrl: mobileRedirectScheme.isEmpty
+        ? null
+        : '$mobileRedirectScheme://iamport',
   );
 }

@@ -71,13 +71,13 @@ class AuthRepository {
     String? webClientId,
     String? defaultRedirectUrl,
     String? mobileRedirectScheme,
-  })  : _supabase = supabase ?? Supabase.instance.client,
-        _defaultRedirectUrl = defaultRedirectUrl,
-        _mobileRedirectScheme = mobileRedirectScheme,
-        _googleSignIn = GoogleSignIn(
-          clientId: kIsWeb ? webClientId : null,
-          serverClientId: kIsWeb ? null : webClientId,
-        );
+  }) : _supabase = supabase ?? Supabase.instance.client,
+       _defaultRedirectUrl = defaultRedirectUrl,
+       _mobileRedirectScheme = mobileRedirectScheme,
+       _googleSignIn = GoogleSignIn(
+         clientId: kIsWeb ? webClientId : null,
+         serverClientId: kIsWeb ? null : webClientId,
+       );
 
   final SupabaseClient _supabase;
   final GoogleSignIn _googleSignIn;
@@ -147,7 +147,8 @@ class AuthRepository {
         return;
       }
 
-      final isAppleNative = defaultTargetPlatform == TargetPlatform.iOS ||
+      final isAppleNative =
+          defaultTargetPlatform == TargetPlatform.iOS ||
           defaultTargetPlatform == TargetPlatform.macOS;
 
       if (!isAppleNative) {
@@ -212,12 +213,13 @@ class AuthRepository {
   Future<void> signInWithKakao({String? redirectTo}) async {
     Log.d('🟡 [AuthRepo] Kakao Sign-In started');
     try {
-      final targetRedirect = redirectTo ??
+      final targetRedirect =
+          redirectTo ??
           (kIsWeb
               ? (_defaultRedirectUrl ?? Uri.base.origin)
               : (_mobileRedirectScheme != null
-                  ? '$_mobileRedirectScheme://callback'
-                  : null));
+                    ? '$_mobileRedirectScheme://callback'
+                    : null));
       Log.d('🌐 [AuthRepo] Kakao OAuth redirect to: $targetRedirect');
 
       await _supabase.auth.signInWithOAuth(

@@ -13,18 +13,19 @@ part of 'party_create_wizard_controller.dart';
 const partyCreateWizardControllerProvider =
     PartyCreateWizardControllerProvider._();
 
-final class PartyCreateWizardControllerProvider extends $NotifierProvider<
-    PartyCreateWizardController, PartyCreateWizardState> {
+final class PartyCreateWizardControllerProvider
+    extends
+        $NotifierProvider<PartyCreateWizardController, PartyCreateWizardState> {
   const PartyCreateWizardControllerProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'partyCreateWizardControllerProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'partyCreateWizardControllerProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$partyCreateWizardControllerHash();
@@ -54,11 +55,14 @@ abstract class _$PartyCreateWizardController
     final created = build();
     final ref =
         this.ref as $Ref<PartyCreateWizardState, PartyCreateWizardState>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<PartyCreateWizardState, PartyCreateWizardState>,
-        PartyCreateWizardState,
-        Object?,
-        Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<PartyCreateWizardState, PartyCreateWizardState>,
+              PartyCreateWizardState,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }

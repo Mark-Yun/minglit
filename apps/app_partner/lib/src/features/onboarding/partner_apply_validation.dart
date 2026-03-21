@@ -4,14 +4,16 @@ mixin _PartnerApplyValidation on _$PartnerApplyController {
   bool validateStep(int step) {
     return switch (step) {
       0 => state.brandName.isNotEmpty,
-      1 => state.bizName.isNotEmpty &&
-          state.bizNumber.isNotEmpty &&
-          state.representativeName.isNotEmpty,
-      2 => state.contactPhone.isNotEmpty &&
-          state.contactEmail.isNotEmpty &&
-          state.bankName.isNotEmpty &&
-          state.accountNumber.isNotEmpty &&
-          state.accountHolder.isNotEmpty,
+      1 =>
+        state.bizName.isNotEmpty &&
+            state.bizNumber.isNotEmpty &&
+            state.representativeName.isNotEmpty,
+      2 =>
+        state.contactPhone.isNotEmpty &&
+            state.contactEmail.isNotEmpty &&
+            state.bankName.isNotEmpty &&
+            state.accountNumber.isNotEmpty &&
+            state.accountHolder.isNotEmpty,
       3 => state.bizRegistrationPath != null && state.bankbookPath != null,
       4 => validateAll(),
       _ => false,

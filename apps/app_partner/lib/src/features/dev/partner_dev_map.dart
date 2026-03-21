@@ -89,7 +89,8 @@ class PartnerDevMap extends StatelessWidget {
           DevScreenItem(
             category: 'Preview',
             title: 'Partner List Preview',
-            description: '생성된 모든 파트너 목록 및 '
+            description:
+                '생성된 모든 파트너 목록 및 '
                 '상세 화면 확인',
             screenBuilder: (_) => const PartnerListPreviewScreen(),
           ),

@@ -125,10 +125,10 @@ class PartyListItem extends StatelessWidget {
                             // Participants Chip
                             _InfoChip(
                               icon: Icons.people,
-                              label:
-                                  context.l10n.partyList_chip_maxParticipants(
-                                party.maxParticipants,
-                              ),
+                              label: context.l10n
+                                  .partyList_chip_maxParticipants(
+                                    party.maxParticipants,
+                                  ),
                             ),
 
                             // Condition Chips (Gender/Age)
@@ -145,8 +145,8 @@ class PartyListItem extends StatelessWidget {
                                 icon: Icons.verified_user,
                                 label: context.l10n
                                     .partyList_chip_requiredVerifications(
-                                  party.requiredVerificationIds.length,
-                                ),
+                                      party.requiredVerificationIds.length,
+                                    ),
                               )
                             else
                               _InfoChip(
@@ -186,17 +186,17 @@ class PartyListItem extends StatelessWidget {
     final theme = Theme.of(context);
     final (label, color) = switch (party.status) {
       'active' => (
-          context.l10n.partyList_badge_active,
-          theme.colorScheme.tertiary,
-        ),
+        context.l10n.partyList_badge_active,
+        theme.colorScheme.tertiary,
+      ),
       'closed' => (
-          context.l10n.partyList_badge_closed,
-          theme.colorScheme.outline,
-        ),
+        context.l10n.partyList_badge_closed,
+        theme.colorScheme.outline,
+      ),
       'draft' => (
-          context.l10n.partyList_badge_draft,
-          theme.colorScheme.secondary,
-        ),
+        context.l10n.partyList_badge_draft,
+        theme.colorScheme.secondary,
+      ),
       _ => (party.status, theme.colorScheme.primary),
     };
 

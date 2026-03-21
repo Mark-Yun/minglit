@@ -95,7 +95,8 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
     );
 
     final recommendedTicket = recommendation.recommendedTicket;
-    final selectedIsEligible = _selectedTicketId != null &&
+    final selectedIsEligible =
+        _selectedTicketId != null &&
         recommendation.eligibleTickets.any(
           (ticket) => ticket.id == _selectedTicketId,
         );
@@ -120,7 +121,9 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
     Navigator.pop(context);
 
     // Navigate to Application Wizard via Coordinator
-    ref.read(eventCoordinatorProvider).goToApplicationWizard(
+    ref
+        .read(eventCoordinatorProvider)
+        .goToApplicationWizard(
           widget.event.id,
           ticketId: _selectedTicketId,
         );
@@ -134,8 +137,9 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
     final recommendedTicket = recommendation?.recommendedTicket;
     final eligibleTickets = recommendation?.eligibleTickets ?? [];
     final ineligibleReasons = recommendation?.ineligibleReasons ?? {};
-    final otherTickets =
-        tickets.where((ticket) => ticket.id != recommendedTicket?.id).toList();
+    final otherTickets = tickets
+        .where((ticket) => ticket.id != recommendedTicket?.id)
+        .toList();
 
     return Container(
       padding: const EdgeInsets.all(MinglitSpacing.large),

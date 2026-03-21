@@ -51,37 +51,37 @@ class MinglitChip extends StatelessWidget {
     // Determine padding and font size based on MinglitChipSize
     final (padding, fontSize, iconSize) = switch (size) {
       MinglitChipSize.small => (
-          const EdgeInsets.symmetric(
-            horizontal: MinglitSpacing.small,
-            vertical: MinglitSpacing.xxsmall,
-          ),
-          10.0,
-          12.0,
+        const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.small,
+          vertical: MinglitSpacing.xxsmall,
         ),
+        10.0,
+        12.0,
+      ),
       MinglitChipSize.medium => (
-          const EdgeInsets.symmetric(
-            horizontal: MinglitSpacing.small,
-            vertical: MinglitSpacing.xsmall,
-          ),
-          12.0,
-          14.0,
+        const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.small,
+          vertical: MinglitSpacing.xsmall,
         ),
+        12.0,
+        14.0,
+      ),
       MinglitChipSize.large => (
-          const EdgeInsets.symmetric(
-            horizontal: MinglitSpacing.sm,
-            vertical: MinglitSpacing.xsmall2,
-          ),
-          14.0,
-          16.0,
+        const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.sm,
+          vertical: MinglitSpacing.xsmall2,
         ),
+        14.0,
+        16.0,
+      ),
     };
 
     final bgColor =
         color ?? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
     final textColor = color != null
         ? (ThemeData.estimateBrightnessForColor(color!) == Brightness.dark
-            ? theme.colorScheme.onPrimary
-            : theme.colorScheme.onSurface)
+              ? theme.colorScheme.onPrimary
+              : theme.colorScheme.onSurface)
         : colorScheme.onSurfaceVariant;
 
     final widget = Container(

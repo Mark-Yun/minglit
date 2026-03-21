@@ -155,8 +155,9 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
               if (state.currentStep.index > 0)
                 Expanded(
                   child: OutlinedButton(
-                    onPressed:
-                        state.status.isLoading ? null : notifier.previousStep,
+                    onPressed: state.status.isLoading
+                        ? null
+                        : notifier.previousStep,
                     child: Text(context.l10n.wizard_button_prev),
                   ),
                 ),
@@ -168,15 +169,15 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
                   onPressed: state.status.isLoading
                       ? null
                       : (state.currentStep == PartyCreateStep.review
-                          ? (notifier.validationErrors.isEmpty
-                              ? _handleSubmit
-                              : null)
-                          : notifier.nextStep),
+                            ? (notifier.validationErrors.isEmpty
+                                  ? _handleSubmit
+                                  : null)
+                            : notifier.nextStep),
                   child: Text(
                     state.currentStep == PartyCreateStep.review
                         ? (isEditing
-                            ? '수정 완료'
-                            : context.l10n.wizard_button_complete)
+                              ? '수정 완료'
+                              : context.l10n.wizard_button_complete)
                         : context.l10n.wizard_button_next,
                   ),
                 ),

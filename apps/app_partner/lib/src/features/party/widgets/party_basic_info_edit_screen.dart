@@ -23,7 +23,8 @@ class PartyBasicInfoEditScreen extends ConsumerStatefulWidget {
     List<String> imageUrls,
     List<XFile> newImages,
     String status,
-  ) onSave;
+  )
+  onSave;
 
   @override
   ConsumerState<PartyBasicInfoEditScreen> createState() =>
@@ -210,9 +211,9 @@ class _PartyBasicInfoEditScreenState
             Text(
               label,
               style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
             ),
             const Spacer(),
             const Icon(Icons.arrow_drop_down),

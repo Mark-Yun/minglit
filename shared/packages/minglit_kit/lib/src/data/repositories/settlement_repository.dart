@@ -20,7 +20,7 @@ SettlementRepository settlementRepository(Ref ref) {
 class SettlementRepository {
   /// Creates a [SettlementRepository] with an optional [SupabaseClient].
   SettlementRepository({SupabaseClient? supabase})
-      : _supabase = supabase ?? Supabase.instance.client;
+    : _supabase = supabase ?? Supabase.instance.client;
 
   final SupabaseClient _supabase;
 
@@ -55,9 +55,9 @@ class SettlementRepository {
         query = query.lte('created_at', dateEnd.toIso8601String());
       }
 
-      final data = await query
-          .order('created_at')
-          .range(offset, offset + limit - 1) as List;
+      final data =
+          await query.order('created_at').range(offset, offset + limit - 1)
+              as List;
 
       final result = data.map((json) {
         return SettlementItemDetail.fromJson(json as Map<String, dynamic>);
@@ -105,27 +105,33 @@ class SettlementRepository {
       }
 
       // 3. Fetch settlement history entries ordered newest first.
-      final historiesRaw = await _supabase
-          .from('settlement_histories')
-          .select(
-            'event_type, from_status, to_status, details, created_at',
-          )
-          .eq('settlement_item_id', itemId)
-          .order('created_at', ascending: false) as List;
+      final historiesRaw =
+          await _supabase
+                  .from('settlement_histories')
+                  .select(
+                    'event_type, from_status, to_status, details, created_at',
+                  )
+                  .eq('settlement_item_id', itemId)
+                  .order('created_at', ascending: false)
+              as List;
 
-      final historiesData =
-          historiesRaw.map((e) => e as Map<String, dynamic>).toList();
+      final historiesData = historiesRaw
+          .map((e) => e as Map<String, dynamic>)
+          .toList();
 
       // 4. Fetch adjustment items.
-      final adjustmentsRaw = await _supabase
-          .from('adjustment_items')
-          .select(
-            'id, adjustment_type, amount_signed, reason_code, status',
-          )
-          .eq('settlement_item_id', itemId) as List;
+      final adjustmentsRaw =
+          await _supabase
+                  .from('adjustment_items')
+                  .select(
+                    'id, adjustment_type, amount_signed, reason_code, status',
+                  )
+                  .eq('settlement_item_id', itemId)
+              as List;
 
-      final adjustmentsData =
-          adjustmentsRaw.map((e) => e as Map<String, dynamic>).toList();
+      final adjustmentsData = adjustmentsRaw
+          .map((e) => e as Map<String, dynamic>)
+          .toList();
 
       final result = SettlementItemDetail.fromJson(
         itemData,

@@ -48,7 +48,9 @@ class _MatchingSettingsScreenState
 
   void _initializeRules(List<MatchRule> rules) {
     for (final rule in rules) {
-      _selectedRules.putIfAbsent(rule.sourceGroupId, () => {}).add(
+      _selectedRules
+          .putIfAbsent(rule.sourceGroupId, () => {})
+          .add(
             rule.targetGroupId,
           );
     }
@@ -154,7 +156,9 @@ class _MatchingSettingsScreenState
       }
     });
 
-    await ref.read(matchingControllerProvider.notifier).updateRules(
+    await ref
+        .read(matchingControllerProvider.notifier)
+        .updateRules(
           eventId: widget.eventId,
           rules: rules,
         );

@@ -121,8 +121,8 @@ class _InfoRow extends StatelessWidget {
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
           Text(value, style: Theme.of(context).textTheme.bodyMedium),
@@ -269,7 +269,9 @@ class _RetryPayoutButtonState extends ConsumerState<RetryPayoutButton> {
   Future<void> _retry() async {
     setState(() => _isLoading = true);
     try {
-      await ref.read(settlementCoordinatorProvider.notifier).retryPayout(
+      await ref
+          .read(settlementCoordinatorProvider.notifier)
+          .retryPayout(
             context,
             payoutId: widget.payoutId,
             partnerId: widget.partnerId,

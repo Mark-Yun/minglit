@@ -69,36 +69,36 @@ class _BlockedPartnersPageState extends ConsumerState<BlockedPartnersPage> {
       body: _loading
           ? const Center(child: MinglitCircularProgressIndicator())
           : _partners == null || _partners!.isEmpty
-              ? Center(
-                  child: Text(
-                    '차단된 파트너가 없습니다',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                )
-              : ListView.builder(
-                  itemCount: _partners!.length,
-                  itemBuilder: (context, index) {
-                    final p = _partners![index];
-                    final id = p['id'] as String;
-                    final name = p['name'] as String? ?? '';
-                    final imageUrl = p['profile_image_url'] as String?;
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundImage:
-                            imageUrl != null ? NetworkImage(imageUrl) : null,
-                        child:
-                            imageUrl == null ? const Icon(Icons.store) : null,
-                      ),
-                      title: Text(name),
-                      trailing: TextButton(
-                        onPressed: () => _unblock(id),
-                        child: const Text('차단 해제'),
-                      ),
-                    );
-                  },
+          ? Center(
+              child: Text(
+                '차단된 파트너가 없습니다',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
+              ),
+            )
+          : ListView.builder(
+              itemCount: _partners!.length,
+              itemBuilder: (context, index) {
+                final p = _partners![index];
+                final id = p['id'] as String;
+                final name = p['name'] as String? ?? '';
+                final imageUrl = p['profile_image_url'] as String?;
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: imageUrl != null
+                        ? NetworkImage(imageUrl)
+                        : null,
+                    child: imageUrl == null ? const Icon(Icons.store) : null,
+                  ),
+                  title: Text(name),
+                  trailing: TextButton(
+                    onPressed: () => _unblock(id),
+                    child: const Text('차단 해제'),
+                  ),
+                );
+              },
+            ),
     );
   }
 }

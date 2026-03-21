@@ -14,19 +14,20 @@ part of 'notification_list_controller.dart';
 const notificationListProvider = NotificationListProvider._();
 
 /// Controls the notification list state and actions.
-final class NotificationListProvider extends $AsyncNotifierProvider<
-    NotificationList, List<Map<String, dynamic>>> {
+final class NotificationListProvider
+    extends
+        $AsyncNotifierProvider<NotificationList, List<Map<String, dynamic>>> {
   /// Controls the notification list state and actions.
   const NotificationListProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'notificationListProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'notificationListProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$notificationListHash();
@@ -47,14 +48,23 @@ abstract class _$NotificationList
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<AsyncValue<List<Map<String, dynamic>>>,
-        List<Map<String, dynamic>>>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<List<Map<String, dynamic>>>,
-            List<Map<String, dynamic>>>,
-        AsyncValue<List<Map<String, dynamic>>>,
-        Object?,
-        Object?>;
+    final ref =
+        this.ref
+            as $Ref<
+              AsyncValue<List<Map<String, dynamic>>>,
+              List<Map<String, dynamic>>
+            >;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                AsyncValue<List<Map<String, dynamic>>>,
+                List<Map<String, dynamic>>
+              >,
+              AsyncValue<List<Map<String, dynamic>>>,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }

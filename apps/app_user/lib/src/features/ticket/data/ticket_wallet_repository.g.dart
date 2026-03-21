@@ -12,20 +12,24 @@ part of 'ticket_wallet_repository.dart';
 @ProviderFor(secureStorage)
 const secureStorageProvider = SecureStorageProvider._();
 
-final class SecureStorageProvider extends $FunctionalProvider<
-    FlutterSecureStorage,
-    FlutterSecureStorage,
-    FlutterSecureStorage> with $Provider<FlutterSecureStorage> {
+final class SecureStorageProvider
+    extends
+        $FunctionalProvider<
+          FlutterSecureStorage,
+          FlutterSecureStorage,
+          FlutterSecureStorage
+        >
+    with $Provider<FlutterSecureStorage> {
   const SecureStorageProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'secureStorageProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'secureStorageProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$secureStorageHash();
@@ -34,8 +38,7 @@ final class SecureStorageProvider extends $FunctionalProvider<
   @override
   $ProviderElement<FlutterSecureStorage> $createElement(
     $ProviderPointer pointer,
-  ) =>
-      $ProviderElement(pointer);
+  ) => $ProviderElement(pointer);
 
   @override
   FlutterSecureStorage create(Ref ref) {
@@ -56,20 +59,24 @@ String _$secureStorageHash() => r'273dc403a965c1f24962aaf4d40776611a26f8b8';
 @ProviderFor(ticketWalletRepository)
 const ticketWalletRepositoryProvider = TicketWalletRepositoryProvider._();
 
-final class TicketWalletRepositoryProvider extends $FunctionalProvider<
-    TicketWalletRepository,
-    TicketWalletRepository,
-    TicketWalletRepository> with $Provider<TicketWalletRepository> {
+final class TicketWalletRepositoryProvider
+    extends
+        $FunctionalProvider<
+          TicketWalletRepository,
+          TicketWalletRepository,
+          TicketWalletRepository
+        >
+    with $Provider<TicketWalletRepository> {
   const TicketWalletRepositoryProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'ticketWalletRepositoryProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'ticketWalletRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$ticketWalletRepositoryHash();
@@ -78,8 +85,7 @@ final class TicketWalletRepositoryProvider extends $FunctionalProvider<
   @override
   $ProviderElement<TicketWalletRepository> $createElement(
     $ProviderPointer pointer,
-  ) =>
-      $ProviderElement(pointer);
+  ) => $ProviderElement(pointer);
 
   @override
   TicketWalletRepository create(Ref ref) {

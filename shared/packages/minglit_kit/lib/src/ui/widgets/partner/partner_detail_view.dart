@@ -134,8 +134,9 @@ class PartnerDetailView extends ConsumerWidget {
               );
             }
             return Column(
-              children:
-                  parties.map((p) => _buildPartyCard(p, context)).toList(),
+              children: parties
+                  .map((p) => _buildPartyCard(p, context))
+                  .toList(),
             );
           },
           error: (e, _) => Text('Error: $e'),

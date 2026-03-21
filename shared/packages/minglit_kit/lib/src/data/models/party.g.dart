@@ -7,91 +7,91 @@ part of 'party.dart';
 // **************************************************************************
 
 _Location _$LocationFromJson(Map<String, dynamic> json) => _Location(
-      id: json['id'] as String,
-      partnerId: json['partner_id'] as String,
-      name: json['name'] as String,
-      address: json['address'] as String,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
-      addressDetail: json['address_detail'] as String?,
-      region1: json['region_1'] as String?,
-      region2: json['region_2'] as String?,
-      region3: json['region_3'] as String?,
-      directionsGuide: json['directions_guide'] as String?,
-      postalCode: json['postal_code'] as String?,
-      latitude: (json['lat'] as num?)?.toDouble() ?? 0.0,
-      longitude: (json['lng'] as num?)?.toDouble() ?? 0.0,
-    );
+  id: json['id'] as String,
+  partnerId: json['partner_id'] as String,
+  name: json['name'] as String,
+  address: json['address'] as String,
+  createdAt: DateTime.parse(json['created_at'] as String),
+  updatedAt: DateTime.parse(json['updated_at'] as String),
+  addressDetail: json['address_detail'] as String?,
+  region1: json['region_1'] as String?,
+  region2: json['region_2'] as String?,
+  region3: json['region_3'] as String?,
+  directionsGuide: json['directions_guide'] as String?,
+  postalCode: json['postal_code'] as String?,
+  latitude: (json['lat'] as num?)?.toDouble() ?? 0.0,
+  longitude: (json['lng'] as num?)?.toDouble() ?? 0.0,
+);
 
 Map<String, dynamic> _$LocationToJson(_Location instance) => <String, dynamic>{
-      'id': instance.id,
-      'partner_id': instance.partnerId,
-      'name': instance.name,
-      'address': instance.address,
-      'created_at': instance.createdAt.toIso8601String(),
-      'updated_at': instance.updatedAt.toIso8601String(),
-      'address_detail': instance.addressDetail,
-      'region_1': instance.region1,
-      'region_2': instance.region2,
-      'region_3': instance.region3,
-      'directions_guide': instance.directionsGuide,
-      'postal_code': instance.postalCode,
-      'lat': instance.latitude,
-      'lng': instance.longitude,
-    };
+  'id': instance.id,
+  'partner_id': instance.partnerId,
+  'name': instance.name,
+  'address': instance.address,
+  'created_at': instance.createdAt.toIso8601String(),
+  'updated_at': instance.updatedAt.toIso8601String(),
+  'address_detail': instance.addressDetail,
+  'region_1': instance.region1,
+  'region_2': instance.region2,
+  'region_3': instance.region3,
+  'directions_guide': instance.directionsGuide,
+  'postal_code': instance.postalCode,
+  'lat': instance.latitude,
+  'lng': instance.longitude,
+};
 
 _Party _$PartyFromJson(Map<String, dynamic> json) => _Party(
-      id: json['id'] as String,
-      partnerId: json['partner_id'] as String,
-      title: json['title'] as String,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
-      locationId: json['location_id'] as String?,
-      location: json['location'] == null
-          ? null
-          : Location.fromJson(json['location'] as Map<String, dynamic>),
-      description: json['description'] as Map<String, dynamic>?,
-      imageUrls: (json['image_urls'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const [],
-      contactOptions:
-          json['contact_options'] as Map<String, dynamic>? ?? const {},
-      metadata: json['metadata'] as Map<String, dynamic>? ?? const {},
-      requiredVerificationIds:
-          (json['required_verification_ids'] as List<dynamic>?)
-                  ?.map((e) => e as String)
-                  .toList() ??
-              const [],
-      minConfirmedCount: (json['min_confirmed_count'] as num?)?.toInt() ?? 0,
-      maxParticipants: (json['max_participants'] as num?)?.toInt() ?? 20,
-      status: json['status'] as String? ?? 'active',
-      visibility: json['visibility'] as String? ?? 'public',
-      ticketTemplates: (json['ticketTemplates'] as List<dynamic>?)
-          ?.map((e) => TicketTemplate.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      partner: json['partner'] == null
-          ? null
-          : Partner.fromJson(json['partner'] as Map<String, dynamic>),
-      entryGroups: (json['entry_group_templates'] as List<dynamic>?)
-          ?.map((e) => EntryGroupTemplate.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    );
+  id: json['id'] as String,
+  partnerId: json['partner_id'] as String,
+  title: json['title'] as String,
+  createdAt: DateTime.parse(json['created_at'] as String),
+  updatedAt: DateTime.parse(json['updated_at'] as String),
+  locationId: json['location_id'] as String?,
+  location: json['location'] == null
+      ? null
+      : Location.fromJson(json['location'] as Map<String, dynamic>),
+  description: json['description'] as Map<String, dynamic>?,
+  imageUrls:
+      (json['image_urls'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const [],
+  contactOptions: json['contact_options'] as Map<String, dynamic>? ?? const {},
+  metadata: json['metadata'] as Map<String, dynamic>? ?? const {},
+  requiredVerificationIds:
+      (json['required_verification_ids'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const [],
+  minConfirmedCount: (json['min_confirmed_count'] as num?)?.toInt() ?? 0,
+  maxParticipants: (json['max_participants'] as num?)?.toInt() ?? 20,
+  status: json['status'] as String? ?? 'active',
+  visibility: json['visibility'] as String? ?? 'public',
+  ticketTemplates: (json['ticketTemplates'] as List<dynamic>?)
+      ?.map((e) => TicketTemplate.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  partner: json['partner'] == null
+      ? null
+      : Partner.fromJson(json['partner'] as Map<String, dynamic>),
+  entryGroups: (json['entry_group_templates'] as List<dynamic>?)
+      ?.map((e) => EntryGroupTemplate.fromJson(e as Map<String, dynamic>))
+      .toList(),
+);
 
 Map<String, dynamic> _$PartyToJson(_Party instance) => <String, dynamic>{
-      'id': instance.id,
-      'partner_id': instance.partnerId,
-      'title': instance.title,
-      'created_at': instance.createdAt.toIso8601String(),
-      'updated_at': instance.updatedAt.toIso8601String(),
-      'location_id': instance.locationId,
-      'description': instance.description,
-      'image_urls': instance.imageUrls,
-      'contact_options': instance.contactOptions,
-      'metadata': instance.metadata,
-      'required_verification_ids': instance.requiredVerificationIds,
-      'min_confirmed_count': instance.minConfirmedCount,
-      'max_participants': instance.maxParticipants,
-      'status': instance.status,
-      'visibility': instance.visibility,
-    };
+  'id': instance.id,
+  'partner_id': instance.partnerId,
+  'title': instance.title,
+  'created_at': instance.createdAt.toIso8601String(),
+  'updated_at': instance.updatedAt.toIso8601String(),
+  'location_id': instance.locationId,
+  'description': instance.description,
+  'image_urls': instance.imageUrls,
+  'contact_options': instance.contactOptions,
+  'metadata': instance.metadata,
+  'required_verification_ids': instance.requiredVerificationIds,
+  'min_confirmed_count': instance.minConfirmedCount,
+  'max_participants': instance.maxParticipants,
+  'status': instance.status,
+  'visibility': instance.visibility,
+};

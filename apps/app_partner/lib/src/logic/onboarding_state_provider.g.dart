@@ -12,19 +12,24 @@ part of 'onboarding_state_provider.dart';
 @ProviderFor(onboardingState)
 const onboardingStateProvider = OnboardingStateProvider._();
 
-final class OnboardingStateProvider extends $FunctionalProvider<
-        AsyncValue<OnboardingState>, OnboardingState, FutureOr<OnboardingState>>
+final class OnboardingStateProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<OnboardingState>,
+          OnboardingState,
+          FutureOr<OnboardingState>
+        >
     with $FutureModifier<OnboardingState>, $FutureProvider<OnboardingState> {
   const OnboardingStateProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'onboardingStateProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'onboardingStateProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$onboardingStateHash();
@@ -33,8 +38,7 @@ final class OnboardingStateProvider extends $FunctionalProvider<
   @override
   $FutureProviderElement<OnboardingState> $createElement(
     $ProviderPointer pointer,
-  ) =>
-      $FutureProviderElement(pointer);
+  ) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<OnboardingState> create(Ref ref) {

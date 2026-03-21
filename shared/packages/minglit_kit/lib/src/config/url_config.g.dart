@@ -23,15 +23,15 @@ final class MinglitDomainsProvider
   /// Holds the current environment domains.
   /// Override this provider in `dev_main.dart` to switch environments.
   const MinglitDomainsProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'minglitDomainsProvider',
-          isAutoDispose: false,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'minglitDomainsProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$minglitDomainsHash();
@@ -64,21 +64,25 @@ const minglitUrlConfigProvider = MinglitUrlConfigProvider._();
 
 /// Computes the final URLs based on [minglitDomainsProvider].
 
-final class MinglitUrlConfigProvider extends $FunctionalProvider<
-    MinglitUrlConfig,
-    MinglitUrlConfig,
-    MinglitUrlConfig> with $Provider<MinglitUrlConfig> {
+final class MinglitUrlConfigProvider
+    extends
+        $FunctionalProvider<
+          MinglitUrlConfig,
+          MinglitUrlConfig,
+          MinglitUrlConfig
+        >
+    with $Provider<MinglitUrlConfig> {
   /// Computes the final URLs based on [minglitDomainsProvider].
   const MinglitUrlConfigProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'minglitUrlConfigProvider',
-          isAutoDispose: false,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'minglitUrlConfigProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$minglitUrlConfigHash();

@@ -15,20 +15,21 @@ const partnerDetailProvider = PartnerDetailFamily._();
 
 /// Fetches a partner by ID for the detail page.
 
-final class PartnerDetailProvider extends $FunctionalProvider<
-        AsyncValue<Partner?>, Partner?, FutureOr<Partner?>>
+final class PartnerDetailProvider
+    extends
+        $FunctionalProvider<AsyncValue<Partner?>, Partner?, FutureOr<Partner?>>
     with $FutureModifier<Partner?>, $FutureProvider<Partner?> {
   /// Fetches a partner by ID for the detail page.
   const PartnerDetailProvider._({
     required PartnerDetailFamily super.from,
     required String super.argument,
   }) : super(
-          retry: null,
-          name: r'partnerDetailProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+         retry: null,
+         name: r'partnerDetailProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$partnerDetailHash();
@@ -69,13 +70,13 @@ String _$partnerDetailHash() => r'e5bb5d7f1c100f3d6b2f95492dd04e6b7d1b46a2';
 final class PartnerDetailFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Partner?>, String> {
   const PartnerDetailFamily._()
-      : super(
-          retry: null,
-          name: r'partnerDetailProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: true,
-        );
+    : super(
+        retry: null,
+        name: r'partnerDetailProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
 
   /// Fetches a partner by ID for the detail page.
 

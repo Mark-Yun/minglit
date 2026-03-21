@@ -250,7 +250,9 @@ class MatchingVoteScreen extends ConsumerWidget {
     );
 
     if (confirmed) {
-      await ref.read(matchingVoteControllerProvider.notifier).vote(
+      await ref
+          .read(matchingVoteControllerProvider.notifier)
+          .vote(
             eventId: eventId,
             candidateId: candidate.id,
           );

@@ -18,12 +18,12 @@ final class EventCreateControllerProvider
     required EventCreateControllerFamily super.from,
     required String super.argument,
   }) : super(
-          retry: null,
-          name: r'eventCreateControllerProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+         retry: null,
+         name: r'eventCreateControllerProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$eventCreateControllerHash();
@@ -63,16 +63,21 @@ String _$eventCreateControllerHash() =>
 
 final class EventCreateControllerFamily extends $Family
     with
-        $ClassFamilyOverride<EventCreateController, EventCreateState,
-            EventCreateState, EventCreateState, String> {
+        $ClassFamilyOverride<
+          EventCreateController,
+          EventCreateState,
+          EventCreateState,
+          EventCreateState,
+          String
+        > {
   const EventCreateControllerFamily._()
-      : super(
-          retry: null,
-          name: r'eventCreateControllerProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: true,
-        );
+    : super(
+        retry: null,
+        name: r'eventCreateControllerProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
 
   EventCreateControllerProvider call(String partyId) =>
       EventCreateControllerProvider._(argument: partyId, from: this);
@@ -91,11 +96,14 @@ abstract class _$EventCreateController extends $Notifier<EventCreateState> {
   void runBuild() {
     final created = build(_$args);
     final ref = this.ref as $Ref<EventCreateState, EventCreateState>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<EventCreateState, EventCreateState>,
-        EventCreateState,
-        Object?,
-        Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<EventCreateState, EventCreateState>,
+              EventCreateState,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }

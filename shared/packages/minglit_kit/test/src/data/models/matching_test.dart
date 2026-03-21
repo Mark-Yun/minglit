@@ -6,12 +6,12 @@ void main() {
 
   group('MatchRule', () {
     Map<String, dynamic> ruleJson() => {
-          'id': 'rule_1',
-          'event_id': 'event_1',
-          'source_group_id': 'group_a',
-          'target_group_id': 'group_b',
-          'created_at': now.toIso8601String(),
-        };
+      'id': 'rule_1',
+      'event_id': 'event_1',
+      'source_group_id': 'group_a',
+      'target_group_id': 'group_b',
+      'created_at': now.toIso8601String(),
+    };
 
     test('creates from JSON', () {
       final rule = MatchRule.fromJson(ruleJson());
@@ -53,11 +53,11 @@ void main() {
 
   group('MatchVote', () {
     Map<String, dynamic> voteJson() => {
-          'event_id': 'event_1',
-          'voter_id': 'user_1',
-          'candidate_id': 'user_2',
-          'created_at': now.toIso8601String(),
-        };
+      'event_id': 'event_1',
+      'voter_id': 'user_1',
+      'candidate_id': 'user_2',
+      'created_at': now.toIso8601String(),
+    };
 
     test('creates from JSON', () {
       final vote = MatchVote.fromJson(voteJson());
@@ -83,11 +83,11 @@ void main() {
 
   group('MatchPair', () {
     Map<String, dynamic> pairJson() => {
-          'match_id': 'match_1',
-          'event_id': 'event_1',
-          'partner_id': 'user_2',
-          'matched_at': now.toIso8601String(),
-        };
+      'match_id': 'match_1',
+      'event_id': 'event_1',
+      'partner_id': 'user_2',
+      'matched_at': now.toIso8601String(),
+    };
 
     test('creates from JSON', () {
       final pair = MatchPair.fromJson(pairJson());

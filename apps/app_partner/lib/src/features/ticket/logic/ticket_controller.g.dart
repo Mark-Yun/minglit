@@ -15,15 +15,15 @@ const ticketControllerProvider = TicketControllerProvider._();
 final class TicketControllerProvider
     extends $AsyncNotifierProvider<TicketController, void> {
   const TicketControllerProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'ticketControllerProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'ticketControllerProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$ticketControllerHash();
@@ -42,11 +42,14 @@ abstract class _$TicketController extends $AsyncNotifier<void> {
   void runBuild() {
     build();
     final ref = this.ref as $Ref<AsyncValue<void>, void>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<void>, void>,
-        AsyncValue<void>,
-        Object?,
-        Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<void>, void>,
+              AsyncValue<void>,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, null);
   }
 }
@@ -61,12 +64,12 @@ final class TicketDetailProvider
     required TicketDetailFamily super.from,
     required String super.argument,
   }) : super(
-          retry: null,
-          name: r'ticketDetailProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+         retry: null,
+         name: r'ticketDetailProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$ticketDetailHash();
@@ -105,13 +108,13 @@ String _$ticketDetailHash() => r'308bfb15738db3d69e471ca4009ba002b0e5bf23';
 final class TicketDetailFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Ticket>, String> {
   const TicketDetailFamily._()
-      : super(
-          retry: null,
-          name: r'ticketDetailProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: true,
-        );
+    : super(
+        retry: null,
+        name: r'ticketDetailProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
 
   TicketDetailProvider call(String ticketId) =>
       TicketDetailProvider._(argument: ticketId, from: this);
@@ -123,19 +126,24 @@ final class TicketDetailFamily extends $Family
 @ProviderFor(ticketTemplateDetail)
 const ticketTemplateDetailProvider = TicketTemplateDetailFamily._();
 
-final class TicketTemplateDetailProvider extends $FunctionalProvider<
-        AsyncValue<TicketTemplate>, TicketTemplate, FutureOr<TicketTemplate>>
+final class TicketTemplateDetailProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<TicketTemplate>,
+          TicketTemplate,
+          FutureOr<TicketTemplate>
+        >
     with $FutureModifier<TicketTemplate>, $FutureProvider<TicketTemplate> {
   const TicketTemplateDetailProvider._({
     required TicketTemplateDetailFamily super.from,
     required String super.argument,
   }) : super(
-          retry: null,
-          name: r'ticketTemplateDetailProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+         retry: null,
+         name: r'ticketTemplateDetailProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$ticketTemplateDetailHash();
@@ -151,8 +159,7 @@ final class TicketTemplateDetailProvider extends $FunctionalProvider<
   @override
   $FutureProviderElement<TicketTemplate> $createElement(
     $ProviderPointer pointer,
-  ) =>
-      $FutureProviderElement(pointer);
+  ) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<TicketTemplate> create(Ref ref) {
@@ -177,13 +184,13 @@ String _$ticketTemplateDetailHash() =>
 final class TicketTemplateDetailFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<TicketTemplate>, String> {
   const TicketTemplateDetailFamily._()
-      : super(
-          retry: null,
-          name: r'ticketTemplateDetailProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: true,
-        );
+    : super(
+        retry: null,
+        name: r'ticketTemplateDetailProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
 
   TicketTemplateDetailProvider call(String templateId) =>
       TicketTemplateDetailProvider._(argument: templateId, from: this);

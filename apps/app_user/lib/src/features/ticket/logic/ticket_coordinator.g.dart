@@ -12,20 +12,24 @@ part of 'ticket_coordinator.dart';
 @ProviderFor(ticketCoordinator)
 const ticketCoordinatorProvider = TicketCoordinatorProvider._();
 
-final class TicketCoordinatorProvider extends $FunctionalProvider<
-    TicketCoordinator,
-    TicketCoordinator,
-    TicketCoordinator> with $Provider<TicketCoordinator> {
+final class TicketCoordinatorProvider
+    extends
+        $FunctionalProvider<
+          TicketCoordinator,
+          TicketCoordinator,
+          TicketCoordinator
+        >
+    with $Provider<TicketCoordinator> {
   const TicketCoordinatorProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'ticketCoordinatorProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'ticketCoordinatorProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$ticketCoordinatorHash();
@@ -34,8 +38,7 @@ final class TicketCoordinatorProvider extends $FunctionalProvider<
   @override
   $ProviderElement<TicketCoordinator> $createElement(
     $ProviderPointer pointer,
-  ) =>
-      $ProviderElement(pointer);
+  ) => $ProviderElement(pointer);
 
   @override
   TicketCoordinator create(Ref ref) {

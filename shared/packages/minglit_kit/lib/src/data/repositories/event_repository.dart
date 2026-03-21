@@ -21,7 +21,7 @@ class EventRepository extends _SupabaseEventContextBase
     with _EventRepositoryQueries, _EventRepositoryCommands {
   /// Creates an [EventRepository] with a Supabase client.
   EventRepository({SupabaseClient? supabase})
-      : super(supabase ?? Supabase.instance.client);
+    : super(supabase ?? Supabase.instance.client);
 }
 
 abstract class _SupabaseEventContext {

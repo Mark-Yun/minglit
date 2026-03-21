@@ -19,8 +19,8 @@ typedef NotificationDeepLinkHandler = void Function(String link);
 /// Provides the notification deep link handler.
 final notificationDeepLinkHandlerProvider =
     Provider<NotificationDeepLinkHandler>((_) {
-  return (_) {};
-});
+      return (_) {};
+    });
 
 /// Provides the notification service instance.
 final notificationServiceProvider = Provider<NotificationService>((ref) {

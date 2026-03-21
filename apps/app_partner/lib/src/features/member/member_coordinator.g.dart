@@ -57,15 +57,15 @@ final class MemberCoordinatorProvider
   /// ref.read(memberCoordinatorProvider.notifier).goToMemberPermission(...);
   /// ```
   const MemberCoordinatorProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'memberCoordinatorProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'memberCoordinatorProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$memberCoordinatorHash();
@@ -107,8 +107,14 @@ abstract class _$MemberCoordinator extends $Notifier<void> {
   void runBuild() {
     build();
     final ref = this.ref as $Ref<void, void>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<void, void>, void, Object?, Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<void, void>,
+              void,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, null);
   }
 }

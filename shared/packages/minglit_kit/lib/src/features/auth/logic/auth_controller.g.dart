@@ -21,15 +21,15 @@ final class AuthControllerProvider
   /// Controller for authentication actions (Sign In, Sign Out).
   /// Handles the state of the *request* (loading, error, success).
   const AuthControllerProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'authControllerProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'authControllerProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$authControllerHash();
@@ -51,11 +51,14 @@ abstract class _$AuthController extends $AsyncNotifier<void> {
   void runBuild() {
     build();
     final ref = this.ref as $Ref<AsyncValue<void>, void>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<void>, void>,
-        AsyncValue<void>,
-        Object?,
-        Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<void>, void>,
+              AsyncValue<void>,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, null);
   }
 }

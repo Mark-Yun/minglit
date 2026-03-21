@@ -107,8 +107,9 @@ class MinglitSocialActionChip extends ConsumerWidget {
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(MinglitRadius.small),
-            border:
-                isActive ? null : Border.all(color: theme.colorScheme.outline),
+            border: isActive
+                ? null
+                : Border.all(color: theme.colorScheme.outline),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,

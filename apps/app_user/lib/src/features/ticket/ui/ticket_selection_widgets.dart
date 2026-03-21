@@ -13,8 +13,8 @@ extension _TicketSelectionWidgets on _TicketSelectionSheetState {
     final nameColor = isLocked
         ? theme.colorScheme.onSurfaceVariant
         : isSelected
-            ? theme.colorScheme.primary
-            : theme.colorScheme.onSurface;
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurface;
     final priceColor = isLocked ? theme.colorScheme.onSurfaceVariant : null;
 
     return GestureDetector(

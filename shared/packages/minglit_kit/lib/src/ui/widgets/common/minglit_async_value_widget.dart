@@ -40,12 +40,13 @@ class MinglitAsyncValueWidget<T> extends StatelessWidget {
     return value.when(
       data: data,
       loading: loading ?? () => const MinglitCircularProgressIndicator(),
-      error: error ??
+      error:
+          error ??
           (err, stack) => _DefaultErrorView(
-                error: err,
-                stackTrace: stack,
-                showDetails: showErrorDetails,
-              ),
+            error: err,
+            stackTrace: stack,
+            showDetails: showErrorDetails,
+          ),
     );
   }
 }

@@ -96,7 +96,7 @@ extension MetadataMapX on Map<String, dynamic> {
   /// // {'visibility': 'public', 'max_waitlist_size': 10}
   /// ```
   Map<String, dynamic> withValue<T>(MetadataKey<T> key, T value) => {
-        ...this,
-        key.key: value,
-      };
+    ...this,
+    key.key: value,
+  };
 }

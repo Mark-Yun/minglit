@@ -17,7 +17,7 @@ TicketRepository ticketRepository(Ref ref) {
 class TicketRepository {
   /// Creates a [TicketRepository] with a Supabase client.
   TicketRepository({SupabaseClient? supabase})
-      : _supabase = supabase ?? Supabase.instance.client;
+    : _supabase = supabase ?? Supabase.instance.client;
 
   final SupabaseClient _supabase;
 
@@ -101,8 +101,11 @@ class TicketRepository {
   Future<Ticket> getTicketById(String id) async {
     Log.d('getTicketById called | id: $id');
     try {
-      final data =
-          await _supabase.from('tickets').select().eq('id', id).single();
+      final data = await _supabase
+          .from('tickets')
+          .select()
+          .eq('id', id)
+          .single();
 
       final result = Ticket.fromJson(data);
       Log.d('getTicketById success | id: ${result.id}');
@@ -197,8 +200,11 @@ class TicketRepository {
         ..remove('updated_at')
         ..remove('sold_count');
 
-      final data =
-          await _supabase.from('tickets').insert(json).select().single();
+      final data = await _supabase
+          .from('tickets')
+          .insert(json)
+          .select()
+          .single();
 
       final result = Ticket.fromJson(data);
       Log.d('createTicket success | id: ${result.id}');

@@ -60,8 +60,8 @@ class CheckinController extends _$CheckinController {
       // TODO(Checkin): Get actual public key from server
       final success = await repo.verifyAndCheckin(
         token: token,
-        serverPublicKey:
-            await (await TicketCrypto().generateKeyPair()).extractPublicKey(),
+        serverPublicKey: await (await TicketCrypto().generateKeyPair())
+            .extractPublicKey(),
       );
 
       if (success) {

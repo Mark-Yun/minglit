@@ -65,8 +65,9 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
   Future<String?> _captureScreenshot() async {
     if (kIsWeb) return null;
     try {
-      final boundary = _boundaryKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
+      final boundary =
+          _boundaryKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
       if (boundary == null) return null;
       final image = await boundary.toImage();
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
@@ -155,7 +156,8 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                 left: MinglitSpacing.medium,
                 right: MinglitSpacing.medium,
                 top: MinglitSpacing.medium,
-                bottom: MediaQuery.of(context).viewInsets.bottom +
+                bottom:
+                    MediaQuery.of(context).viewInsets.bottom +
                     MinglitSpacing.medium,
               ),
               child: SingleChildScrollView(
@@ -181,8 +183,8 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                     Text(
                       '🐞 Bug Report',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     // Screenshot preview (if available)
@@ -197,19 +199,19 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
                               Container(
-                            height: 60,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                            child: Center(
-                              child: Icon(
-                                Icons.broken_image,
+                                height: 60,
                                 color: Theme.of(
                                   context,
-                                ).colorScheme.onSurfaceVariant,
+                                ).colorScheme.surfaceContainerHighest,
+                                child: Center(
+                                  child: Icon(
+                                    Icons.broken_image,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
                         ),
                       ),
                       const SizedBox(height: 4),

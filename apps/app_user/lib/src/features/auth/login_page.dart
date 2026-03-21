@@ -23,7 +23,8 @@ class LoginPage extends ConsumerWidget {
     });
 
     final authState = ref.watch(authControllerProvider);
-    final isAppleSignInAvailable = kIsWeb ||
+    final isAppleSignInAvailable =
+        kIsWeb ||
         defaultTargetPlatform == TargetPlatform.iOS ||
         defaultTargetPlatform == TargetPlatform.macOS;
 
@@ -64,7 +65,9 @@ class LoginPage extends ConsumerWidget {
             }
 
             unawaited(
-              ref.read(authControllerProvider.notifier).signInWithGoogle(
+              ref
+                  .read(authControllerProvider.notifier)
+                  .signInWithGoogle(
                     redirectTo: redirectTo,
                   ),
             );
@@ -87,7 +90,9 @@ class LoginPage extends ConsumerWidget {
                   }
 
                   unawaited(
-                    ref.read(authControllerProvider.notifier).signInWithApple(
+                    ref
+                        .read(authControllerProvider.notifier)
+                        .signInWithApple(
                           redirectTo: redirectTo,
                         ),
                   );
@@ -110,7 +115,9 @@ class LoginPage extends ConsumerWidget {
             }
 
             unawaited(
-              ref.read(authControllerProvider.notifier).signInWithKakao(
+              ref
+                  .read(authControllerProvider.notifier)
+                  .signInWithKakao(
                     redirectTo: redirectTo,
                   ),
             );
@@ -118,8 +125,8 @@ class LoginPage extends ConsumerWidget {
         },
         onDevMapTrigger: isDevEnv
             ? () => const DevRoute().push<void>(
-                  context,
-                )
+                context,
+              )
             : null,
       ),
     );

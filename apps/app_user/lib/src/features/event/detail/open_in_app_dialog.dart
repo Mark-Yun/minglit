@@ -1,5 +1,7 @@
 import 'package:app_user/src/features/event/detail/html_stub.dart'
-    if (dart.library.html) 'dart:html' as html show window;
+    if (dart.library.html) 'dart:html'
+    as html
+    show window;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';

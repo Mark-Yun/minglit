@@ -38,7 +38,9 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
     setState(() => _isActionRunning = true);
     try {
       // In local dev, all seed users have the same password.
-      await ref.read(authControllerProvider.notifier).signInWithEmail(
+      await ref
+          .read(authControllerProvider.notifier)
+          .signInWithEmail(
             email: email,
             password: 'password1234!',
           );
@@ -134,17 +136,17 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
 
         final (Color roleColor, String roleLabel) = switch (username) {
           String u when u.startsWith('partner_owner') => (
-              MinglitColors.warning.withValues(alpha: 0.3),
-              'Owner',
-            ),
+            MinglitColors.warning.withValues(alpha: 0.3),
+            'Owner',
+          ),
           String u when u.startsWith('partner_') => (
-              MinglitColors.primary.withValues(alpha: 0.2),
-              'Partner',
-            ),
+            MinglitColors.primary.withValues(alpha: 0.2),
+            'Partner',
+          ),
           String u when u.startsWith('staff_') => (
-              MinglitColors.tertiary.withValues(alpha: 0.5),
-              'Staff',
-            ),
+            MinglitColors.tertiary.withValues(alpha: 0.5),
+            'Staff',
+          ),
           _ => (theme.colorScheme.surfaceContainerLowest, 'User'),
         };
 

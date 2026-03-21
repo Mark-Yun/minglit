@@ -20,22 +20,26 @@ const purchaseHistoryControllerProvider = PurchaseHistoryControllerProvider._();
 ///
 /// Manages the state of the user's purchase history.
 /// Fetches data from EventRepository.
-final class PurchaseHistoryControllerProvider extends $AsyncNotifierProvider<
-    PurchaseHistoryController, List<EventApplication>> {
+final class PurchaseHistoryControllerProvider
+    extends
+        $AsyncNotifierProvider<
+          PurchaseHistoryController,
+          List<EventApplication>
+        > {
   /// **Purchase History Controller**
   ///
   /// Manages the state of the user's purchase history.
   /// Fetches data from EventRepository.
   const PurchaseHistoryControllerProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'purchaseHistoryControllerProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'purchaseHistoryControllerProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$purchaseHistoryControllerHash();
@@ -60,13 +64,20 @@ abstract class _$PurchaseHistoryController
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref
-        as $Ref<AsyncValue<List<EventApplication>>, List<EventApplication>>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<List<EventApplication>>, List<EventApplication>>,
-        AsyncValue<List<EventApplication>>,
-        Object?,
-        Object?>;
+    final ref =
+        this.ref
+            as $Ref<AsyncValue<List<EventApplication>>, List<EventApplication>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                AsyncValue<List<EventApplication>>,
+                List<EventApplication>
+              >,
+              AsyncValue<List<EventApplication>>,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }

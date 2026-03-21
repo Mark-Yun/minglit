@@ -9,11 +9,12 @@ class _VerificationSection extends ConsumerWidget {
     final theme = Theme.of(context);
 
     // Collect all unique verification IDs from all entry groups
-    final allIds = (event.entryGroups ?? [])
-        .expand((g) => g.requiredVerificationIds)
-        .toSet()
-        .toList()
-      ..sort();
+    final allIds =
+        (event.entryGroups ?? [])
+            .expand((g) => g.requiredVerificationIds)
+            .toSet()
+            .toList()
+          ..sort();
 
     return Padding(
       padding: const EdgeInsets.all(MinglitSpacing.medium),
