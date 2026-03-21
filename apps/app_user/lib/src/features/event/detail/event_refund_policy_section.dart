@@ -72,9 +72,11 @@ class _RefundPolicySection extends ConsumerWidget {
     // Fix #190: 요일 추가, D-day 표시로 날짜 인지성 개선
     final dateFormat = DateFormat('M월 d일 (E) HH시', 'ko_KR');
     // Fix #190: 캘린더 일수 기반 계산 — 시간 무관하게 날짜 단위로 비교
-    final daysLeft = DateTime(cutoffDate.year, cutoffDate.month, cutoffDate.day)
-        .difference(DateTime(now.year, now.month, now.day))
-        .inDays;
+    final daysLeft = DateTime(
+      cutoffDate.year,
+      cutoffDate.month,
+      cutoffDate.day,
+    ).difference(DateTime(now.year, now.month, now.day)).inDays;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
