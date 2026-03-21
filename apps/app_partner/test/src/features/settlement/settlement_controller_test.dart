@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:app_partner/src/features/party/party_providers.dart';
 import 'package:app_partner/src/features/settlement/settlement_controller.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -7,8 +10,22 @@ import 'package:mocktail/mocktail.dart';
 import '../../../utils/mocks.dart';
 import '../../../utils/test_utils.dart';
 
-Future<void> pump() async {
-  await Future<void>.delayed(const Duration(milliseconds: 50));
+/// Waits until SettlementController.status transitions out of loading.
+Future<void> waitForSettlement(ProviderContainer container) async {
+  final completer = Completer<void>();
+  final sub = container.listen(settlementControllerProvider, (prev, next) {
+    if (next.status is! AsyncLoading && !completer.isCompleted) {
+      completer.complete();
+    }
+  });
+  // Check if already resolved
+  final current = container.read(settlementControllerProvider);
+  if (current.status is! AsyncLoading) {
+    sub.close();
+    return;
+  }
+  await completer.future;
+  sub.close();
 }
 
 void main() {
@@ -98,7 +115,7 @@ void main() {
       expect(state.monthlyRevenue, isEmpty);
 
       // Let the auto-triggered loadSettlementData complete
-      await pump();
+      await waitForSettlement(container);
 
       final resolved = container.read(settlementControllerProvider);
       expect(resolved.status, isA<AsyncData<void>>());
@@ -113,7 +130,7 @@ void main() {
       addTearDown(sub.close);
 
       container.read(settlementControllerProvider);
-      await pump();
+      await waitForSettlement(container);
 
       final state = container.read(settlementControllerProvider);
       expect(state.status, isA<AsyncData<void>>());
@@ -138,7 +155,7 @@ void main() {
         addTearDown(sub.close);
 
         container.read(settlementControllerProvider);
-        await pump();
+        await waitForSettlement(container);
 
         final state = container.read(settlementControllerProvider);
         expect(state.status, isA<AsyncData<void>>());
@@ -157,7 +174,7 @@ void main() {
       addTearDown(sub.close);
 
       container.read(settlementControllerProvider);
-      await pump();
+      await waitForSettlement(container);
 
       final state = container.read(settlementControllerProvider);
       expect(state.status, isA<AsyncError<void>>());
@@ -181,7 +198,7 @@ void main() {
       addTearDown(sub.close);
 
       container.read(settlementControllerProvider);
-      await pump();
+      await waitForSettlement(container);
 
       final state = container.read(settlementControllerProvider);
       expect(state.status, isA<AsyncData<void>>());
@@ -199,7 +216,7 @@ void main() {
       addTearDown(sub.close);
 
       container.read(settlementControllerProvider);
-      await pump();
+      await waitForSettlement(container);
 
       verify(
         () => mockPartnerRepo.getPartnerRevenueStats('partner-1'),

@@ -1,5 +1,6 @@
 import 'package:app_partner/src/features/party/party_providers.dart';
 import 'package:app_partner/src/features/verification/manage/verification_manage_controller.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -7,8 +8,13 @@ import 'package:mocktail/mocktail.dart';
 import '../../../utils/mocks.dart';
 import '../../../utils/test_utils.dart';
 
-Future<void> pump() async {
-  await Future<void>.delayed(const Duration(milliseconds: 50));
+/// Awaits until the VerificationManageController async build completes.
+/// Yields to the event loop to let the mocked async provider chain resolve.
+Future<void> waitForBuild(ProviderContainer container) async {
+  // Double yield: first for currentPartnerInfoProvider.future,
+  // second for the repo calls within Future.wait.
+  await Future<void>(() {});
+  await Future<void>(() {});
 }
 
 Verification _makeVerification(String id, {bool isActive = true}) {
@@ -42,11 +48,14 @@ void main() {
 
     if (loadError != null) {
       when(
+        () => mockVerificationRepo.getPartnerVerifications(any()),
+      ).thenAnswer((_) async => throw loadError);
+      when(
         () => mockVerificationRepo.getPartnerVerifications(
           any(),
           isActive: any(named: 'isActive'),
         ),
-      ).thenThrow(loadError);
+      ).thenAnswer((_) async => throw loadError);
     } else {
       // Active list
       when(
@@ -89,8 +98,7 @@ void main() {
       );
       addTearDown(sub.close);
 
-      // Wait for async build
-      await pump();
+      await waitForBuild(container);
 
       final state = container.read(verificationManageControllerProvider).value!;
       expect(state.active.length, 2);
@@ -107,7 +115,7 @@ void main() {
       );
       addTearDown(sub.close);
 
-      await pump();
+      await waitForBuild(container);
 
       final state = container.read(verificationManageControllerProvider).value!;
       expect(state.active, isEmpty);
@@ -125,7 +133,7 @@ void main() {
       );
       addTearDown(sub.close);
 
-      await pump();
+      await waitForBuild(container);
 
       final asyncValue = container.read(verificationManageControllerProvider);
       expect(asyncValue.hasError, isTrue);
@@ -142,7 +150,7 @@ void main() {
         );
         addTearDown(sub.close);
 
-        await pump();
+        await waitForBuild(container);
 
         when(
           () => mockVerificationRepo.deleteVerification(any()),
@@ -184,7 +192,7 @@ void main() {
       );
       addTearDown(sub.close);
 
-      await pump();
+      await waitForBuild(container);
 
       when(
         () => mockVerificationRepo.deleteVerification(any()),
@@ -209,7 +217,7 @@ void main() {
         );
         addTearDown(sub.close);
 
-        await pump();
+        await waitForBuild(container);
 
         when(
           () => mockVerificationRepo.restoreVerification(any()),
@@ -251,7 +259,7 @@ void main() {
       );
       addTearDown(sub.close);
 
-      await pump();
+      await waitForBuild(container);
 
       when(
         () => mockVerificationRepo.restoreVerification(any()),

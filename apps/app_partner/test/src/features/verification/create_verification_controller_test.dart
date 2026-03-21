@@ -6,10 +6,6 @@ import 'package:mocktail/mocktail.dart';
 import '../../../utils/mocks.dart';
 import '../../../utils/test_utils.dart';
 
-Future<void> pump() async {
-  await Future<void>.delayed(const Duration(milliseconds: 50));
-}
-
 void main() {
   late MockPartnerRepository mockPartnerRepo;
   late MockVerificationRepository mockVerificationRepo;
