@@ -62,137 +62,144 @@ class _HomePageState extends ConsumerState<HomePage> {
     });
 
     return Scaffold(
-      body: CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          SliverAppBar(
-            floating: true,
-            snap: true,
-            titleSpacing: 0,
-            title: Row(
-              children: [
-                const SizedBox(width: MinglitSpacing.medium),
-                GestureDetector(
-                  onTap: () {
-                    unawaited(
-                      _scrollController.animateTo(
-                        0,
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeOut,
-                      ),
-                    );
-                  },
-                  child: MinglitTheme.appBarLogo(height: 36),
-                ),
-              ],
-            ),
-            // Fix #141: Equalize action button spacing and padding alignment
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.search),
-                onPressed: () => const SearchRoute().push<void>(context),
-              ),
-              if (user != null) ...[
-                IconButton(
-                  icon: const Icon(Icons.notifications_outlined),
-                  onPressed: homeCoordinator.pushNotificationCenter,
-                ),
-                // Fix #141: Use IconButton for consistent touch target (48x48)
-                // and ripple effect with other app bar actions
-                IconButton(
-                  onPressed: () => const MyPageRoute().push<void>(context),
-                  icon: CircleAvatar(
-                    radius: 14,
-                    backgroundImage: user.userMetadata?['avatar_url'] != null
-                        ? NetworkImage(
-                            user.userMetadata!['avatar_url'] as String,
-                          )
-                        : null,
-                    onBackgroundImageError:
-                        user.userMetadata?['avatar_url'] != null
-                        ? (_, _) {}
-                        : null,
-                    child: user.userMetadata?['avatar_url'] == null
-                        ? const Icon(Icons.person, size: 14)
-                        : null,
+      // Fix #192: Pull-to-refresh to reload the explore feed from scratch.
+      body: RefreshIndicator(
+        onRefresh: () =>
+            ref.read(recommendationFeedProvider.notifier).refresh(),
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            SliverAppBar(
+              floating: true,
+              snap: true,
+              titleSpacing: 0,
+              title: Row(
+                children: [
+                  const SizedBox(width: MinglitSpacing.medium),
+                  GestureDetector(
+                    onTap: () {
+                      unawaited(
+                        _scrollController.animateTo(
+                          0,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOut,
+                        ),
+                      );
+                    },
+                    child: MinglitTheme.appBarLogo(height: 36),
                   ),
-                ),
-              ] else
+                ],
+              ),
+              // Fix #141: Equalize action button spacing and padding alignment
+              actions: [
                 IconButton(
-                  icon: const Icon(Icons.person_outline),
-                  // Fix #102: use go (not push) so GoRouter redirect
-                  // fires after login
-                  onPressed: () =>
-                      ref.read(authCoordinatorProvider).goToLogin(from: '/'),
+                  icon: const Icon(Icons.search),
+                  onPressed: () => const SearchRoute().push<void>(context),
                 ),
-              const SizedBox(width: MinglitSpacing.small),
-            ],
-            // Fix #76: use theme color instead of
-            // hardcoded white for dark mode support
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            surfaceTintColor: MinglitColors.transparent,
-          ),
-          const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.only(top: MinglitSpacing.small),
-              child: ExploreFilterChipBar(),
+                if (user != null) ...[
+                  IconButton(
+                    icon: const Icon(Icons.notifications_outlined),
+                    onPressed: homeCoordinator.pushNotificationCenter,
+                  ),
+                  // Fix #141: Use IconButton for consistent touch target (48x48)
+                  // and ripple effect with other app bar actions
+                  IconButton(
+                    onPressed: () => const MyPageRoute().push<void>(context),
+                    icon: CircleAvatar(
+                      radius: 14,
+                      backgroundImage:
+                          user.userMetadata?['avatar_url'] != null
+                          ? NetworkImage(
+                              user.userMetadata!['avatar_url'] as String,
+                            )
+                          : null,
+                      onBackgroundImageError:
+                          user.userMetadata?['avatar_url'] != null
+                          ? (_, _) {}
+                          : null,
+                      child: user.userMetadata?['avatar_url'] == null
+                          ? const Icon(Icons.person, size: 14)
+                          : null,
+                    ),
+                  ),
+                ] else
+                  IconButton(
+                    icon: const Icon(Icons.person_outline),
+                    // Fix #102: use go (not push) so GoRouter redirect
+                    // fires after login
+                    onPressed: () =>
+                        ref.read(authCoordinatorProvider).goToLogin(from: '/'),
+                  ),
+                const SizedBox(width: MinglitSpacing.small),
+              ],
+              // Fix #76: use theme color instead of
+              // hardcoded white for dark mode support
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              surfaceTintColor: MinglitColors.transparent,
             ),
-          ),
-          // ignore: use_minglit_async_value_widget, returns Sliver which is incompatible with Widget-based MinglitAsyncValueWidget
-          recommendationState.when(
-            data: (state) {
-              if (state.events.isEmpty && !state.hasMore) {
-                return const SliverFillRemaining(
-                  child: Center(child: Text('추천 이벤트가 없습니다')),
-                );
-              }
-              // First page fully filtered client-side: show loading while
-              // auto-fetch (triggered by ref.listen above) loads next page.
-              if (state.events.isEmpty) {
-                return const SliverFillRemaining(
-                  child: Center(child: MinglitCircularProgressIndicator()),
-                );
-              }
-              return SliverPadding(
-                padding: const EdgeInsets.only(
-                  top: MinglitSpacing.small,
-                  bottom: MinglitSpacing.medium,
-                ),
-                sliver: SliverList.separated(
-                  itemCount: state.events.length,
-                  separatorBuilder: (_, _) =>
-                      const SizedBox(height: MinglitSpacing.small),
-                  itemBuilder: (context, index) {
-                    final event = state.events[index];
-                    return MinglitEventCard(
-                      event: event,
-                      onTap: () => eventCoordinator.pushEventDetail(event.id),
-                    );
-                  },
-                ),
-              );
-            },
-            loading: () => const SliverFillRemaining(
-              child: Center(child: MinglitCircularProgressIndicator()),
-            ),
-            error: (_, _) => const SliverFillRemaining(
-              child: SizedBox.shrink(),
-            ),
-          ),
-          if (recommendationState.value?.isLoadingMore ?? false)
             const SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.only(
-                  top: MinglitSpacing.medium,
-                  bottom: MinglitSpacing.medium,
-                ),
-                child: Center(child: MinglitCircularProgressIndicator()),
+                padding: EdgeInsets.only(top: MinglitSpacing.small),
+                child: ExploreFilterChipBar(),
               ),
             ),
-          const SliverPadding(
-            padding: EdgeInsets.only(bottom: MinglitSpacing.xlarge),
-          ),
-        ],
+            // ignore: use_minglit_async_value_widget, returns Sliver which is incompatible with Widget-based MinglitAsyncValueWidget
+            recommendationState.when(
+              data: (state) {
+                if (state.events.isEmpty && !state.hasMore) {
+                  return const SliverFillRemaining(
+                    child: Center(child: Text('추천 이벤트가 없습니다')),
+                  );
+                }
+                // First page fully filtered client-side: show loading while
+                // auto-fetch (triggered by ref.listen above) loads next page.
+                if (state.events.isEmpty) {
+                  return const SliverFillRemaining(
+                    child: Center(child: MinglitCircularProgressIndicator()),
+                  );
+                }
+                return SliverPadding(
+                  padding: const EdgeInsets.only(
+                    top: MinglitSpacing.small,
+                    bottom: MinglitSpacing.medium,
+                  ),
+                  sliver: SliverList.separated(
+                    itemCount: state.events.length,
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: MinglitSpacing.small),
+                    itemBuilder: (context, index) {
+                      final event = state.events[index];
+                      return MinglitEventCard(
+                        event: event,
+                        onTap: () =>
+                            eventCoordinator.pushEventDetail(event.id),
+                      );
+                    },
+                  ),
+                );
+              },
+              loading: () => const SliverFillRemaining(
+                child: Center(child: MinglitCircularProgressIndicator()),
+              ),
+              error: (_, _) => const SliverFillRemaining(
+                child: SizedBox.shrink(),
+              ),
+            ),
+            if (recommendationState.value?.isLoadingMore ?? false)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    top: MinglitSpacing.medium,
+                    bottom: MinglitSpacing.medium,
+                  ),
+                  child: Center(child: MinglitCircularProgressIndicator()),
+                ),
+              ),
+            const SliverPadding(
+              padding: EdgeInsets.only(bottom: MinglitSpacing.xlarge),
+            ),
+          ],
+        ),
       ),
     );
   }

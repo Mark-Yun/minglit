@@ -298,6 +298,13 @@ class RecommendationFeedNotifier extends _$RecommendationFeedNotifier {
         );
   }
 
+  /// Resets pagination and re-fetches from page 0.
+  // Fix #192: Pull-to-refresh support for the explore feed.
+  Future<void> refresh() async {
+    ref.invalidateSelf();
+    await future;
+  }
+
   /// Loads the next page of events.
   ///
   /// No-op if already loading or no more pages available.

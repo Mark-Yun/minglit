@@ -154,6 +154,15 @@ void main() {
       expect(find.byType(MinglitCircularProgressIndicator), findsOneWidget);
     });
 
+    testWidgets('wraps content in RefreshIndicator for pull-to-refresh', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createTestWidget());
+      await tester.pump();
+
+      expect(find.byType(RefreshIndicator), findsOneWidget);
+    });
+
     testWidgets('does not show loading indicator when hasMore is false', (
       tester,
     ) async {
