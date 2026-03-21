@@ -52,7 +52,7 @@ void main() {
     test('returns empty list when no tickets exist', () async {
       when(
         () => mockTicketRepo.getTicketsByEventId('event_empty'),
-      ).thenAnswer((_) async => []);
+      ).thenAnswer((_) async => <Ticket>[]);
 
       final container = createContainer(
         overrides: [

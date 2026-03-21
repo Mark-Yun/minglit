@@ -86,7 +86,7 @@ void main() {
           matchingControllerProvider.notifier,
         );
 
-        await notifier.updateRules(eventId: 'event_1', rules: []);
+        await notifier.updateRules(eventId: 'event_1', rules: <Map<String, String>>[]);
 
         final state = container.read(matchingControllerProvider);
         expect(state, isA<AsyncError<void>>());
@@ -136,7 +136,7 @@ void main() {
     test('returns empty list when no rules exist', () async {
       when(
         () => mockMatchingRepo.getMatchRules('event_empty'),
-      ).thenAnswer((_) async => []);
+      ).thenAnswer((_) async => <MatchRule>[]);
 
       final container = createContainer(
         overrides: [

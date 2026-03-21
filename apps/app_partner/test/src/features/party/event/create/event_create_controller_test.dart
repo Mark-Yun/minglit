@@ -155,7 +155,7 @@ void main() {
 
         notifier.initWithParty(
           party: _makeParty(),
-          templates: [],
+          templates: <TicketTemplate>[],
         );
 
         final state = container.read(
@@ -189,7 +189,7 @@ void main() {
 
         notifier.initWithParty(
           party: _makeParty(entryGroups: entryGroupTemplates),
-          templates: [],
+          templates: <TicketTemplate>[],
         );
 
         final state = container.read(
