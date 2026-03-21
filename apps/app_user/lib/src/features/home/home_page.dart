@@ -107,8 +107,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     onPressed: () => const MyPageRoute().push<void>(context),
                     icon: CircleAvatar(
                       radius: 14,
-                      backgroundImage:
-                          user.userMetadata?['avatar_url'] != null
+                      backgroundImage: user.userMetadata?['avatar_url'] != null
                           ? NetworkImage(
                               user.userMetadata!['avatar_url'] as String,
                             )
@@ -171,8 +170,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       final event = state.events[index];
                       return MinglitEventCard(
                         event: event,
-                        onTap: () =>
-                            eventCoordinator.pushEventDetail(event.id),
+                        onTap: () => eventCoordinator.pushEventDetail(event.id),
                       );
                     },
                   ),
