@@ -29,6 +29,12 @@ BEGIN
       FROM vault.decrypted_secrets
       WHERE name = 'anon_key' LIMIT 1;
 
+      IF v_project_url IS NULL OR v_anon_key IS NULL THEN
+        RAISE WARNING 'handle_application_rejection: vault secret missing (supabase_url=%, anon_key=%)',
+          v_project_url IS NOT NULL, v_anon_key IS NOT NULL;
+        RETURN new;
+      END IF;
+
       PERFORM net.http_post(
         url := v_project_url || '/functions/v1/payment-cancel',
         headers := jsonb_build_object(
@@ -44,6 +50,9 @@ BEGIN
       new.refund_status := 'requested';
     END IF;
   END IF;
+  RETURN new;
+EXCEPTION WHEN OTHERS THEN
+  RAISE WARNING 'handle_application_rejection failed: [%] %', SQLSTATE, SQLERRM;
   RETURN new;
 END;
 $$;
@@ -73,6 +82,12 @@ BEGIN
   FROM vault.decrypted_secrets
   WHERE name = 'supabase_url'
   LIMIT 1;
+
+  IF v_supabase_url IS NULL OR v_anon_key IS NULL THEN
+    RAISE WARNING 'call_metrics_alert: vault secret missing (supabase_url=%, anon_key=%)',
+      v_supabase_url IS NOT NULL, v_anon_key IS NOT NULL;
+    RETURN;
+  END IF;
 
   PERFORM net.http_post(
     url := v_supabase_url || '/functions/v1/metrics-alert',
