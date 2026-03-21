@@ -1,0 +1,10 @@
+{
+  "success": true,
+  "data": {
+    "imp_uid": "imp_123456789",
+    "merchant_uid": "order-123",
+    "amount": 15000,
+    "cancel_amount": 15000,
+    "status": "cancelled"
+  }
+}

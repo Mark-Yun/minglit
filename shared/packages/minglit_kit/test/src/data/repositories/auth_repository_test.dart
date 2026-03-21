@@ -63,7 +63,7 @@ void main() {
         ).thenAnswer((_) => controller.stream);
 
         expect(repository.onAuthStateChange, isA<Stream<AuthState>>());
-        controller.close();
+        unawaited(controller.close());
       });
     });
 
