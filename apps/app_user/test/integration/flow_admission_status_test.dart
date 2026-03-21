@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:app_user/src/features/auth/login_page.dart';
 import 'package:app_user/src/features/event/admission/event_admission_controller.dart';
-import 'package:app_user/src/features/event/detail/event_detail_page.dart';
 import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
 import 'package:app_user/src/features/ticket/ui/ticket_selection_sheet.dart';
 import 'package:flutter/material.dart';
@@ -25,12 +24,15 @@ void main() {
     mockEventRepo = MockEventRepository();
 
     // Stub methods called by TicketSelectionSheet
-    when(() => mockEventRepo.getTicketBalanceStatus(any()))
-        .thenAnswer((_) async => <String, bool>{});
-    when(() => mockUserRepo.getUserProfile(any()))
-        .thenAnswer((_) async => null);
-    when(() => mockUserRepo.getApprovedVerificationIds(any()))
-        .thenAnswer((_) async => <String>[]);
+    when(
+      () => mockEventRepo.getTicketBalanceStatus(any()),
+    ).thenAnswer((_) async => <String, bool>{});
+    when(
+      () => mockUserRepo.getUserProfile(any()),
+    ).thenAnswer((_) async => null);
+    when(
+      () => mockUserRepo.getApprovedVerificationIds(any()),
+    ).thenAnswer((_) async => <String>[]);
     // Stub deleteApplication for rejected → re-apply flow
     when(
       () => mockEventRepo.deleteApplication(
@@ -93,7 +95,7 @@ void main() {
           ),
           // Provide test IamportConfig to avoid platform channel errors
           iamportConfigProvider.overrideWithValue(
-            const IamportConfig(userCode: 'imp_test', mobileRedirectUrl: null),
+            const IamportConfig(userCode: 'imp_test'),
           ),
           // Mock repositories to avoid Supabase initialization errors
           // (needed when TicketSelectionSheet or handleAction accesses repos)
