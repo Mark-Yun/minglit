@@ -1,16 +1,25 @@
+/// Result of a refund eligibility calculation.
 class RefundCalculation {
+  /// Creates a [RefundCalculation].
   const RefundCalculation({
     required this.refundPercentage,
     required this.refundAmount,
     required this.feeAmount,
   });
 
+  /// Percentage of the payment that is refundable (0 or 100).
   final int refundPercentage;
+
+  /// Amount to be refunded in the smallest currency unit.
   final int refundAmount;
+
+  /// Non-refundable fee amount.
   final int feeAmount;
 }
 
+/// Calculates refund eligibility based on event start time and payment date.
 class RefundCalculator {
+  /// Calculates refund eligibility.
   static RefundCalculation calculate({
     required DateTime eventStartTime,
     required int paymentAmount,
