@@ -14,7 +14,7 @@ void main() {
   });
 
   group('EventCard golden', () {
-    final baseTime = DateTime(2026, 4, 15, 19, 0);
+    final baseTime = DateTime(2026, 4, 15, 19);
     final baseEvent = Event(
       id: 'e1',
       partyId: 'p1',
@@ -23,9 +23,7 @@ void main() {
       createdAt: baseTime,
       updatedAt: baseTime,
       title: '금요 파티',
-      maxParticipants: 20,
       currentParticipants: 12,
-      status: 'scheduled',
     );
 
     testWidgets('scheduled', (tester) async {

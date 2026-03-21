@@ -14,7 +14,7 @@ void main() {
   });
 
   group('UpcomingEventsCard golden', () {
-    final baseTime = DateTime(2026, 4, 15, 19, 0);
+    final baseTime = DateTime(2026, 4, 15, 19);
 
     Event makeEvent(String id, String title, int daysFromBase) {
       final start = baseTime.add(Duration(days: daysFromBase));

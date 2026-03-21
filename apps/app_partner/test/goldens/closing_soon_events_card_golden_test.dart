@@ -15,7 +15,7 @@ void main() {
 
   group('ClosingSoonEventsCard golden', () {
     // Use a fixed date so the golden file is deterministic.
-    final baseTime = DateTime(2026, 4, 15, 19, 0);
+    final baseTime = DateTime(2026, 4, 15, 19);
 
     Event makeEvent(String id, String title, int daysFromBase) {
       final start = baseTime.add(Duration(days: daysFromBase));
