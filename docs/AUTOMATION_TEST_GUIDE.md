@@ -207,6 +207,39 @@ void main() {
 }
 ```
 
+### Layer 3.5: Golden (Snapshot) 테스트
+
+**위치:** `apps/{app}/test/goldens/`
+**우선순위:** 디자인 토큰 변경, 레이아웃 회귀 방지
+
+Golden Test는 위젯 렌더링 결과를 이미지로 저장해두고 이후 픽셀 비교로 시각적 회귀를 감지한다.
+
+```dart
+// 파일명: {widget_name}_golden_test.dart
+@Tags(['golden'])
+import 'package:flutter_test/flutter_test.dart';
+
+import '../utils/golden_test_helpers.dart';
+
+void main() {
+  testWidgets('EventCard matches golden', (tester) async {
+    await expectGolden(
+      tester,
+      widget: EventCard(event: mockEvent, onTap: () {}),
+      goldenFileName: 'goldens/event_card_scheduled.png',
+    );
+  });
+}
+```
+
+**핵심 규칙:**
+- `@Tags(['golden'])`으로 태깅하여 일반 테스트와 분리 실행
+- CI 환경(Linux)에서만 golden 생성/검증 — macOS/Linux 폰트 렌더링 차이
+- golden 업데이트: `flutter test --update-goldens --tags golden`
+- 의도적 UI 변경 시 golden 파일도 함께 업데이트
+- CI에서 golden 불일치 시 diff 이미지가 `golden-failures-{app}` artifact로 업로드됨
+- 헬퍼: `expectGolden()` — `apps/{app}/test/utils/golden_test_helpers.dart`
+
 ### Layer 4: Database 테스트 (pgTAP)
 
 **위치:** `supabase/tests/database/`
@@ -307,6 +340,7 @@ Claude가 새 피쳐를 구현할 때 아래 체크리스트를 따른다:
 
 ### 권장 (SHOULD)
 
+- [ ] **Golden 테스트** — 디자인 토큰이나 레이아웃에 영향을 주는 UI 변경 시 (`@Tags(['golden'])`)
 - [ ] **Widget 테스트** — 복잡한 상태 분기가 있는 UI 위젯
 - [ ] **Coordinator 테스트** — 네비게이션 로직이 있는 Coordinator
 - [ ] **에러 핸들링** — 네트워크 오류, 인증 만료 등 에러 시나리오
@@ -336,6 +370,9 @@ apps/{app}/test/src/features/{feature}/logic/{name}_coordinator_test.dart
 
 # Widget 테스트 (앱별)
 apps/{app}/test/src/features/{feature}/ui/{widget_name}_test.dart
+
+# Golden 테스트 (앱별)
+apps/{app}/test/goldens/{widget_name}_golden_test.dart
 
 # Integration 테스트 (앱별)
 apps/{app}/test/integration/{scenario_name}_test.dart
