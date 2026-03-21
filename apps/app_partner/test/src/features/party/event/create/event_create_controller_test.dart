@@ -7,10 +7,6 @@ import 'package:mocktail/mocktail.dart';
 import '../../../../../utils/mocks.dart';
 import '../../../../../utils/test_utils.dart';
 
-Future<void> pump() async {
-  await Future<void>.delayed(const Duration(milliseconds: 50));
-}
-
 Party _makeParty({
   String id = 'party-1',
   String? locationId,
@@ -575,7 +571,12 @@ void main() {
 
         expect(state.status, isA<AsyncData<void>>());
         verify(() => mockLocationRepo.createLocation(any())).called(1);
-        verify(() => mockPartyRepo.createEvent(any())).called(1);
+
+        final captured =
+            verify(() => mockPartyRepo.createEvent(captureAny())).captured;
+        expect(captured, hasLength(1));
+        final createdEvent = captured.first as Event;
+        expect(createdEvent.locationId, 'new-loc');
       });
 
       test('sets error status on repository failure', () async {
@@ -587,6 +588,9 @@ void main() {
           overrides: [
             partyRepositoryProvider.overrideWithValue(mockPartyRepo),
             locationRepositoryProvider.overrideWithValue(mockLocationRepo),
+            partyDetailProvider('party-1').overrideWith(
+              (ref) async => _makeParty(),
+            ),
           ],
         );
 
@@ -601,6 +605,8 @@ void main() {
         );
 
         expect(state.status, isA<AsyncError<void>>());
+        verify(() => mockPartyRepo.createEvent(any())).called(1);
+        verifyNever(() => mockLocationRepo.createLocation(any()));
       });
     });
   });
