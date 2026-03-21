@@ -49,7 +49,6 @@ void main() {
     updatedAt: DateTime.now(),
     targetEntryGroupIds: ['group_1'],
     requiredVerificationIds: [],
-    price: 0,
   );
 
   setUp(() {
