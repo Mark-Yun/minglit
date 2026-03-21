@@ -90,8 +90,32 @@ void main() {
       expect(find.text('Test Event 0'), findsOneWidget);
     });
 
-    // ── 이벤트 상세: 라우트 이동 ──
-    testWidgets('이벤트 카드 tap → EventDetailPage 이동', (tester) async {
+    // ── 이벤트 카드 tap → EventDetailPage 이동 (실제 탭 플로우) ──
+    testWidgets('홈 이벤트 카드 tap → EventDetailPage 이동', (tester) async {
+      setKoreanLocale(tester);
+      final mockEvents = createMockEventsForTest(count: 1);
+      await tester.pumpWidget(
+        createTestApp(
+          additionalOverrides: [
+            recommendationFeedProvider.overrideWith(
+              () => _MockDataNotifier(mockEvents),
+            ),
+          ],
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      // Tap the event card
+      await tester.tap(find.byType(MinglitEventCard).first);
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byType(EventDetailPage), findsOneWidget);
+    });
+
+    // ── 이벤트 상세: 라우트 직접 진입 ──
+    testWidgets('/events/:id 라우트 → EventDetailPage 렌더링', (tester) async {
       setKoreanLocale(tester);
       await tester.pumpWidget(
         createTestApp(initialLocation: '/events/test-event-0'),
@@ -102,15 +126,17 @@ void main() {
       expect(find.byType(EventDetailPage), findsOneWidget);
     });
 
-    // ── EventDetailPage: AsyncLoading ──
-    testWidgets('EventDetailPage AsyncLoading → 스켈레톤 UI 표시', (
+    // ── EventDetailPage: AsyncLoading → 로딩 UI 표시 ──
+    // EventDetailPage has internal timers (scroll sync, animations) that cause
+    // "Timer still pending" in widget tests. The skeleton widget is also private.
+    // Verify page renders with loading indicator instead.
+    testWidgets('EventDetailPage AsyncLoading → 로딩 UI 표시', (
       tester,
     ) async {
       setKoreanLocale(tester);
       await tester.pumpWidget(
         createTestApp(initialLocation: '/events/nonexistent-id'),
       );
-      // Only one pump — keep in loading state
       await tester.pump();
 
       expect(find.byType(EventDetailPage), findsOneWidget);
