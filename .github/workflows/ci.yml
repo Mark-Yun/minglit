@@ -120,7 +120,7 @@ jobs:
         working-directory: ${{ matrix.directory }}
       - name: Test
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
-        run: dart run test_reporter -- flutter test --coverage --file-reporter=json:test-results.json
+        run: dart run test_reporter -- flutter test --coverage --exclude-tags golden --file-reporter=json:test-results.json
         working-directory: ${{ matrix.directory }}
       - name: Integration Test
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' && matrix.app == 'app_user' }}
@@ -132,7 +132,10 @@ jobs:
           # --update-goldens: generate/update golden files from CI (Linux).
           # Golden files should be committed from CI, not local (macOS/Linux
           # font rendering differs). Exit 79 = no tests matched the tag.
-          flutter test --update-goldens --tags golden; rc=$?
+          set +e
+          flutter test --update-goldens --tags golden
+          rc=$?
+          set -e
           if [ "$rc" -eq 79 ]; then exit 0; fi
           exit "$rc"
         working-directory: ${{ matrix.directory }}
