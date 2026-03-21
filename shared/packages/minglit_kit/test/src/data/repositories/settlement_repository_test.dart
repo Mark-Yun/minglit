@@ -1,3 +1,4 @@
+// ignore_for_file: unawaited_futures
 import 'dart:async' show FutureOr;
 
 import 'package:flutter_test/flutter_test.dart';
@@ -65,7 +66,7 @@ void main() {
     // -------------------------------------------------------------------------
     group('getSettlementItems', () {
       test('returns list of SettlementItemDetail', () async {
-        await mockTable(
+        mockTable(
           mockClient,
           'settlement_items',
           selectData: [_settlementItemJson()],
@@ -82,7 +83,7 @@ void main() {
       });
 
       test('returns empty list when no items', () async {
-        await mockTable(mockClient, 'settlement_items', selectData: []);
+        mockTable(mockClient, 'settlement_items', selectData: []);
 
         final result = await repository.getSettlementItems(
           partnerId: 'partner_1',
@@ -92,7 +93,7 @@ void main() {
       });
 
       test('throws on db error', () async {
-        await mockTable(
+        mockTable(
           mockClient,
           'settlement_items',
           shouldThrow: Exception('db error'),
@@ -113,16 +114,16 @@ void main() {
         final itemJson = _settlementItemJson();
 
         // settlement_items → maybeSingle returns the item
-        await mockTable(
+        mockTable(
           mockClient,
           'settlement_items',
           maybeSingleData: itemJson,
         );
         // payouts → not queried because payout_id is null in itemJson
         // settlement_histories → returns empty list
-        await mockTable(mockClient, 'settlement_histories', selectData: []);
+        mockTable(mockClient, 'settlement_histories', selectData: []);
         // adjustment_items → returns empty list
-        await mockTable(mockClient, 'adjustment_items', selectData: []);
+        mockTable(mockClient, 'adjustment_items', selectData: []);
 
         final result = await repository.getSettlementItemDetail('item_1');
 
@@ -133,7 +134,7 @@ void main() {
       });
 
       test('returns null when item not found', () async {
-        await mockTable(mockClient, 'settlement_items');
+        mockTable(mockClient, 'settlement_items');
         // Other tables won't be queried when item is null.
 
         final result = await repository.getSettlementItemDetail('nonexistent');
@@ -142,7 +143,7 @@ void main() {
       });
 
       test('throws on db error', () async {
-        await mockTable(
+        mockTable(
           mockClient,
           'settlement_items',
           shouldThrow: Exception('db error'),
@@ -167,18 +168,18 @@ void main() {
           'bank_account_snapshot': null,
         };
 
-        await mockTable(
+        mockTable(
           mockClient,
           'settlement_items',
           maybeSingleData: itemJsonWithPayout,
         );
-        await mockTable(
+        mockTable(
           mockClient,
           'payouts',
           maybeSingleData: payoutJson,
         );
-        await mockTable(mockClient, 'settlement_histories', selectData: []);
-        await mockTable(mockClient, 'adjustment_items', selectData: []);
+        mockTable(mockClient, 'settlement_histories', selectData: []);
+        mockTable(mockClient, 'adjustment_items', selectData: []);
 
         final result = await repository.getSettlementItemDetail('item_1');
 
@@ -195,7 +196,7 @@ void main() {
     // -------------------------------------------------------------------------
     group('getSettlementDashboard', () {
       test('returns aggregated dashboard data', () async {
-        await mockTable(
+        mockTable(
           mockClient,
           'settlement_items',
           selectData: [
@@ -230,7 +231,7 @@ void main() {
       });
 
       test('returns zeros when no items', () async {
-        await mockTable(mockClient, 'settlement_items', selectData: []);
+        mockTable(mockClient, 'settlement_items', selectData: []);
 
         final result = await repository.getSettlementDashboard(
           partnerId: 'partner_1',
@@ -242,7 +243,7 @@ void main() {
       });
 
       test('throws on db error', () async {
-        await mockTable(
+        mockTable(
           mockClient,
           'settlement_items',
           shouldThrow: Exception('db error'),
@@ -266,7 +267,7 @@ void main() {
           'date': '2026-03-01',
           'parties': {'name': '테스트 파티'},
         };
-        await mockTable(mockClient, 'events', maybeSingleData: eventJson);
+        mockTable(mockClient, 'events', maybeSingleData: eventJson);
 
         final result = await repository.getEventInfo('event_1');
 
@@ -276,7 +277,7 @@ void main() {
       });
 
       test('returns null when event not found', () async {
-        await mockTable(mockClient, 'events');
+        mockTable(mockClient, 'events');
 
         final result = await repository.getEventInfo('nonexistent');
 
@@ -284,7 +285,7 @@ void main() {
       });
 
       test('throws on db error', () async {
-        await mockTable(
+        mockTable(
           mockClient,
           'events',
           shouldThrow: Exception('db error'),
@@ -307,7 +308,7 @@ void main() {
           'account_holder': '홍길동',
           'account_number': '123-456-789',
         };
-        await mockTable(
+        mockTable(
           mockClient,
           'partner_settlements',
           maybeSingleData: bankJson,
@@ -321,7 +322,7 @@ void main() {
       });
 
       test('returns null when not found', () async {
-        await mockTable(mockClient, 'partner_settlements');
+        mockTable(mockClient, 'partner_settlements');
 
         final result = await repository.getBankAccount('partner_1');
 
@@ -329,7 +330,7 @@ void main() {
       });
 
       test('throws on db error', () async {
-        await mockTable(
+        mockTable(
           mockClient,
           'partner_settlements',
           shouldThrow: Exception('db error'),
@@ -347,7 +348,7 @@ void main() {
     // -------------------------------------------------------------------------
     group('upsertBankAccount', () {
       test('completes without error', () async {
-        await mockTable(mockClient, 'partner_settlements');
+        mockTable(mockClient, 'partner_settlements');
 
         await expectLater(
           repository.upsertBankAccount(
@@ -361,7 +362,7 @@ void main() {
       });
 
       test('throws on db error', () async {
-        await mockTable(
+        mockTable(
           mockClient,
           'partner_settlements',
           shouldThrow: Exception('upsert failed'),
@@ -391,7 +392,7 @@ void main() {
           'account_number': '987-654-321',
           'created_at': '2026-01-01T00:00:00.000Z',
         };
-        await mockTable(
+        mockTable(
           mockClient,
           'partner_settlements',
           maybeSingleData: infoJson,
@@ -405,7 +406,7 @@ void main() {
       });
 
       test('returns null when not found', () async {
-        await mockTable(mockClient, 'partner_settlements');
+        mockTable(mockClient, 'partner_settlements');
 
         final result = await repository.getPartnerSettlementInfo('partner_1');
 
@@ -413,7 +414,7 @@ void main() {
       });
 
       test('throws on db error', () async {
-        await mockTable(
+        mockTable(
           mockClient,
           'partner_settlements',
           shouldThrow: Exception('db error'),
