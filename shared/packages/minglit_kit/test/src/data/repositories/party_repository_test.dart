@@ -3,6 +3,7 @@ import 'dart:async' show unawaited;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/models/event.dart';
 import 'package:minglit_kit/src/data/models/party.dart';
+import 'package:minglit_kit/src/data/models/party_entry_group.dart';
 import 'package:minglit_kit/src/data/repositories/party_repository.dart';
 
 import '../../../helpers/mocks.dart';
@@ -308,6 +309,79 @@ void main() {
 
         await expectLater(
           repository.updateEventStatus('event_1', 'active'),
+          throwsA(anything),
+        );
+      });
+    });
+
+    group('updateEventMetadata', () {
+      test('completes without error', () async {
+        unawaited(mockTable(mockClient, 'events'));
+
+        await expectLater(
+          repository.updateEventMetadata(
+            'event_1',
+            {'theme': 'dark', 'capacity': 50},
+          ),
+          completes,
+        );
+      });
+
+      test('throws on error', () async {
+        unawaited(
+          mockTable(mockClient, 'events', shouldThrow: Exception('error')),
+        );
+
+        await expectLater(
+          repository.updateEventMetadata('event_1', {'key': 'value'}),
+          throwsA(anything),
+        );
+      });
+    });
+  });
+
+  group('PartyRepository (matching)', () {
+    group('replaceEntryGroupTemplates', () {
+      test('completes with empty templates (delete only)', () async {
+        unawaited(mockTable(mockClient, 'entry_groups'));
+
+        await expectLater(
+          repository.replaceEntryGroupTemplates('party_1', []),
+          completes,
+        );
+      });
+
+      test('completes with templates (delete + insert)', () async {
+        unawaited(mockTable(mockClient, 'entry_groups'));
+
+        final templates = [
+          EntryGroupTemplate(
+            id: 'eg_1',
+            partyId: 'party_1',
+            label: '남성',
+            gender: 'male',
+            birthYearMin: 1990,
+            birthYearMax: 2000,
+          ),
+        ];
+
+        await expectLater(
+          repository.replaceEntryGroupTemplates('party_1', templates),
+          completes,
+        );
+      });
+
+      test('throws on error', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'entry_groups',
+            shouldThrow: Exception('error'),
+          ),
+        );
+
+        await expectLater(
+          repository.replaceEntryGroupTemplates('party_1', []),
           throwsA(anything),
         );
       });
