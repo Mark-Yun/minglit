@@ -26,12 +26,12 @@ void main() {
     // Stub GoogleSignIn platform channel to avoid MissingPluginException
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-      const MethodChannel('plugins.flutter.io/google_sign_in'),
-      (call) async {
-        if (call.method == 'init' || call.method == 'signOut') return null;
-        return null;
-      },
-    );
+          const MethodChannel('plugins.flutter.io/google_sign_in'),
+          (call) async {
+            if (call.method == 'init' || call.method == 'signOut') return null;
+            return null;
+          },
+        );
   });
 
   group('AuthRepository', () {
@@ -55,8 +55,9 @@ void main() {
     group('onAuthStateChange', () {
       test('returns auth state stream from auth client', () {
         final controller = StreamController<AuthState>();
-        when(() => mockAuth.onAuthStateChange)
-            .thenAnswer((_) => controller.stream);
+        when(
+          () => mockAuth.onAuthStateChange,
+        ).thenAnswer((_) => controller.stream);
 
         expect(repository.onAuthStateChange, isA<Stream<AuthState>>());
         controller.close();
@@ -71,7 +72,7 @@ void main() {
             password: any(named: 'password'),
           ),
         ).thenAnswer(
-          (_) async => AuthResponse(session: null, user: null),
+          (_) async => AuthResponse(),
         );
 
         await repository.signInWithEmail(

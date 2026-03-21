@@ -23,7 +23,7 @@ abstract class UserRepository {
 class SupabaseUserRepository implements UserRepository {
   /// Creates a [SupabaseUserRepository] with an optional Supabase client.
   SupabaseUserRepository({SupabaseClient? supabase})
-      : _supabase = supabase ?? Supabase.instance.client;
+    : _supabase = supabase ?? Supabase.instance.client;
 
   final SupabaseClient _supabase;
 

@@ -3,7 +3,6 @@ import 'dart:async' show unawaited;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/repositories/event_repository.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../helpers/mocks.dart';
 import '../../../helpers/supabase_mock_helpers.dart';
@@ -224,8 +223,7 @@ void main() {
           ),
         );
 
-        final result =
-            await repository.getPendingApplicationCount('partner_1');
+        final result = await repository.getPendingApplicationCount('partner_1');
 
         expect(result, 2);
       });
@@ -235,12 +233,10 @@ void main() {
           mockTable(
             mockClient,
             'verification_submissions',
-            countValue: 0,
           ),
         );
 
-        final result =
-            await repository.getPendingApplicationCount('partner_1');
+        final result = await repository.getPendingApplicationCount('partner_1');
 
         expect(result, 0);
       });
@@ -254,8 +250,7 @@ void main() {
           ),
         );
 
-        final result =
-            await repository.getPendingApplicationCount('partner_1');
+        final result = await repository.getPendingApplicationCount('partner_1');
 
         expect(result, 0);
       });
@@ -268,8 +263,8 @@ void main() {
             'get_event_ticket_balance_status',
             params: any(named: 'params'),
           ),
-        ).thenAnswer((_) =>
-          FakeRpcBuilder<List<dynamic>?>([
+        ).thenAnswer(
+          (_) => FakeRpcBuilder<List<dynamic>?>([
             {'ticket_id': 't_1', 'allowed': true},
             {'ticket_id': 't_2', 'allowed': false},
           ]),
@@ -316,8 +311,8 @@ void main() {
             'get_event_applications_with_user',
             params: any(named: 'params'),
           ),
-        ).thenAnswer((_) =>
-          FakeRpcBuilder<dynamic>([
+        ).thenAnswer(
+          (_) => FakeRpcBuilder<dynamic>([
             {
               'application_id': 'app_1',
               'event_id': 'event_1',
@@ -334,8 +329,7 @@ void main() {
           ]),
         );
 
-        final result =
-            await repository.getApplicationsByEventId('event_1');
+        final result = await repository.getApplicationsByEventId('event_1');
 
         expect(result, hasLength(1));
         expect(result.first.id, 'app_1');
@@ -350,8 +344,7 @@ void main() {
           ),
         ).thenAnswer((_) => FakeRpcBuilder<dynamic>(<dynamic>[]));
 
-        final result =
-            await repository.getApplicationsByEventId('event_1');
+        final result = await repository.getApplicationsByEventId('event_1');
 
         expect(result, isEmpty);
       });
@@ -364,8 +357,8 @@ void main() {
             'get_personalized_recommendations',
             params: any(named: 'params'),
           ),
-        ).thenAnswer((_) =>
-          FakeRpcBuilder<List<dynamic>>([
+        ).thenAnswer(
+          (_) => FakeRpcBuilder<List<dynamic>>([
             {'event_id': 'event_1', 'score': 0.95},
             {'event_id': 'event_2', 'score': 0.87},
           ]),
@@ -373,7 +366,6 @@ void main() {
 
         final result = await repository.getPersonalizedRecommendations(
           userId: 'user_1',
-          limit: 10,
         );
 
         expect(result, hasLength(2));
@@ -388,8 +380,8 @@ void main() {
             'get_events_within_radius',
             params: any(named: 'params'),
           ),
-        ).thenAnswer((_) =>
-          FakeRpcBuilder<List<dynamic>>([
+        ).thenAnswer(
+          (_) => FakeRpcBuilder<List<dynamic>>([
             {'event_id': 'event_1', 'distance': 500.0},
           ]),
         );
@@ -397,7 +389,6 @@ void main() {
         final result = await repository.getEventsWithinRadius(
           latitude: 37.5665,
           longitude: 126.9780,
-          radiusMeters: 5000,
         );
 
         expect(result, hasLength(1));
@@ -412,8 +403,8 @@ void main() {
             'get_bulk_eligibility_data',
             params: any(named: 'params'),
           ),
-        ).thenAnswer((_) =>
-          FakeRpcBuilder<Map<String, dynamic>>({
+        ).thenAnswer(
+          (_) => FakeRpcBuilder<Map<String, dynamic>>({
             'profile': {'name': '홍길동'},
             'is_verified': true,
           }),
@@ -593,15 +584,16 @@ void main() {
             'get_entry_group_participant_counts',
             params: any(named: 'params'),
           ),
-        ).thenAnswer((_) =>
-          FakeRpcBuilder<dynamic>(<Map<String, dynamic>>[
+        ).thenAnswer(
+          (_) => FakeRpcBuilder<dynamic>(<Map<String, dynamic>>[
             {'entry_group_id': 'eg_1', 'count': 5},
             {'entry_group_id': 'eg_2', 'count': 3},
           ]),
         );
 
-        final result =
-            await repository.getEntryGroupParticipantCounts('event_1');
+        final result = await repository.getEntryGroupParticipantCounts(
+          'event_1',
+        );
 
         expect(result, hasLength(2));
         expect(result.first['count'], 5);
