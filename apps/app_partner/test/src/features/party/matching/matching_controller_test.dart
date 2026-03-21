@@ -86,7 +86,10 @@ void main() {
           matchingControllerProvider.notifier,
         );
 
-        await notifier.updateRules(eventId: 'event_1', rules: <Map<String, String>>[]);
+        await notifier.updateRules(
+          eventId: 'event_1',
+          rules: <Map<String, String>>[],
+        );
 
         final state = container.read(matchingControllerProvider);
         expect(state, isA<AsyncError<void>>());
