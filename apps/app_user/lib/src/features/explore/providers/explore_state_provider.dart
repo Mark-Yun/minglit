@@ -244,6 +244,10 @@ class RecommendationFeedState {
 class RecommendationFeedNotifier extends _$RecommendationFeedNotifier {
   static const int _limit = 10;
 
+  // Fix #193: Cap consecutive page fetches that add zero new visible events
+  // to prevent infinite API hammering when client-side filters reject all items.
+  static const int _maxConsecutiveEmptyPages = 5;
+
   /// Raw events accumulated from server (before client-side filtering).
   /// Reset on every [build] call (i.e., when filters change).
   List<Event> _rawEvents = [];
@@ -253,10 +257,14 @@ class RecommendationFeedNotifier extends _$RecommendationFeedNotifier {
   /// Used to discard stale async results from previous builds.
   int _generation = 0;
 
+  /// Tracks consecutive pages where no new visible events were added.
+  int _consecutiveEmptyPages = 0;
+
   @override
   Future<RecommendationFeedState> build() async {
     // Reset raw accumulation and bump generation on every filter change
     _rawEvents = [];
+    _consecutiveEmptyPages = 0;
     _generation++;
     final capturedGen = _generation;
 
@@ -354,15 +362,31 @@ class RecommendationFeedNotifier extends _$RecommendationFeedNotifier {
     final newUnique = rawPage
         .where((e) => !existingIds.contains(e.id))
         .toList();
+
+    // Fix #193: Track consecutive pages that add zero visible events.
+    // Stop pagination to prevent infinite API calls when all events are
+    // filtered out by eligibility/nearby filters.
+    final prevFilteredCount =
+        ref.read(filteredEventsProvider(events: _rawEvents)).length;
     _rawEvents = [..._rawEvents, ...newUnique];
 
     // Apply client-side filter + sort to full accumulated list
     final filtered = ref.read(filteredEventsProvider(events: _rawEvents));
 
+    if (filtered.length > prevFilteredCount) {
+      _consecutiveEmptyPages = 0;
+    } else {
+      _consecutiveEmptyPages++;
+    }
+
+    final serverHasMore = rawPage.length >= _limit;
+    final hasMore = serverHasMore &&
+        _consecutiveEmptyPages < _maxConsecutiveEmptyPages;
+
     return RecommendationFeedState(
       events: filtered,
       serverOffset: serverOffset + rawPage.length,
-      hasMore: rawPage.length >= _limit,
+      hasMore: hasMore,
     );
   }
 

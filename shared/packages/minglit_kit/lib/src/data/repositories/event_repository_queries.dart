@@ -94,6 +94,8 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
       }
 
       // 4. Sorting Strategy
+      // Fix #193: Add `id` tiebreaker to all ORDER BY for deterministic
+      // offset-based pagination — prevents duplicate/skipped rows across pages.
       switch (type) {
         case EventFeedType.newArrivals:
           // ignore: avoid_dynamic_calls, Reason: Supabase builder chaining
@@ -111,6 +113,8 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
           // ignore: avoid_dynamic_calls, Reason: Supabase builder chaining
           query = query.order('created_at', ascending: false);
       }
+      // ignore: avoid_dynamic_calls, Reason: Supabase builder chaining
+      query = query.order('id', ascending: true);
 
       final queryLimit =
           blockedPartnerIds != null && blockedPartnerIds.isNotEmpty

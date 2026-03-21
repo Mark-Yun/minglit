@@ -266,6 +266,74 @@ void main() {
       });
     });
 
+    group('Fix #193: consecutive empty page cap', () {
+      test('hasMore becomes false after 5 pages with no new visible events',
+          () async {
+        // Page 0 returns 10 events that pass filter → visible
+        stubPage(offset: 0, returns: makeEvents(10));
+
+        // Pages 1-5: all return 10 events, but they are duplicates of page 0
+        // (simulating non-deterministic ORDER BY returning same items).
+        for (var i = 1; i <= 5; i++) {
+          stubPage(offset: i * 10, returns: makeEvents(10));
+        }
+
+        final container = makeContainer();
+        await container.read(recommendationFeedProvider.future);
+
+        // Load 5 more pages — all add 0 new visible events (all duplicates)
+        for (var i = 0; i < 5; i++) {
+          await container
+              .read(recommendationFeedProvider.notifier)
+              .loadMore();
+        }
+
+        final state = await container.read(recommendationFeedProvider.future);
+        expect(
+          state.hasMore,
+          isFalse,
+          reason: '5 consecutive pages with no new visible events '
+              'should stop pagination',
+        );
+      });
+
+      test('counter resets when new visible events appear', () async {
+        stubPage(offset: 0, returns: makeEvents(10));
+        // Pages 1-3: duplicates (no new visible events)
+        for (var i = 1; i <= 3; i++) {
+          stubPage(offset: i * 10, returns: makeEvents(10));
+        }
+        // Page 4: new unique events → resets counter
+        stubPage(offset: 40, returns: makeEvents(10, startIndex: 10));
+        // Pages 5-7: duplicates again
+        for (var i = 5; i <= 7; i++) {
+          stubPage(offset: i * 10, returns: makeEvents(10));
+        }
+
+        final container = makeContainer();
+        await container.read(recommendationFeedProvider.future);
+
+        // Load 3 empty pages
+        for (var i = 0; i < 3; i++) {
+          await container
+              .read(recommendationFeedProvider.notifier)
+              .loadMore();
+        }
+
+        var state = await container.read(recommendationFeedProvider.future);
+        expect(state.hasMore, isTrue,
+            reason: 'only 3 empty pages, below cap of 5');
+
+        // Page 4 adds new events → counter resets
+        await container
+            .read(recommendationFeedProvider.notifier)
+            .loadMore();
+        state = await container.read(recommendationFeedProvider.future);
+        expect(state.hasMore, isTrue);
+        expect(state.events, hasLength(20));
+      });
+    });
+
     group('Fix #173: eligibility data late arrival re-filters feed', () {
       test('feed re-filters when eligibility data loads after events', () async {
         // Events requiring verification 'v_required' that user does NOT have
