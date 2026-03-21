@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "settlement_query_success_response",
+  "title": "settlement-query success response",
+  "type": "object",
+  "required": ["success"],
+  "properties": {
+    "success": { "type": "boolean", "const": true },
+    "settlements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "partnerId": { "type": "string" },
+          "transferId": { "type": "string" },
+          "amount": { "type": "number" },
+          "currency": { "type": "string" },
+          "settlementDate": { "type": "string" }
+        }
+      }
+    },
+    "payouts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "partnerId": { "type": "string" },
+          "amount": { "type": "number" },
+          "currency": { "type": "string" }
+        }
+      }
+    },
+    "page": { "type": "object" }
+  },
+  "oneOf": [
+    { "required": ["settlements"] },
+    { "required": ["payouts"] }
+  ],
+  "additionalProperties": true
+}

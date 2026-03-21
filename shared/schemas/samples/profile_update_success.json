@@ -1,0 +1,8 @@
+{
+  "success": true,
+  "processed": {
+    "user_id": "user-001",
+    "action_type": "like",
+    "weight": 3
+  }
+}
