@@ -348,11 +348,11 @@ void main() {
         final notifier = container.read(
           eventCreateControllerProvider('party-1').notifier,
         );
-        notifier.updateDescription({'ops': []});
+        notifier.updateDescription({'ops': <dynamic>[]});
 
         expect(
           container.read(eventCreateControllerProvider('party-1')).description,
-          {'ops': []},
+          {'ops': <dynamic>[]},
         );
       });
 
