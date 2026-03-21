@@ -267,8 +267,7 @@ void main() {
     });
 
     group('Fix #173: eligibility data late arrival re-filters feed', () {
-      test('feed re-filters when eligibility data loads after events',
-          () async {
+      test('feed re-filters when eligibility data loads after events', () async {
         // Events requiring verification 'v_required' that user does NOT have
         final restrictedEvents = List.generate(
           10,
