@@ -27,8 +27,7 @@ void main() {
 
         final container = createContainer(
           overrides: [
-            matchingRepositoryProvider
-                .overrideWithValue(mockMatchingRepo),
+            matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
           ],
         );
 
@@ -37,8 +36,7 @@ void main() {
           (_, _) {},
         );
         addTearDown(sub.close);
-        await container
-            .read(matchingVoteControllerProvider.future);
+        await container.read(matchingVoteControllerProvider.future);
 
         final notifier = container.read(
           matchingVoteControllerProvider.notifier,
@@ -49,8 +47,7 @@ void main() {
           candidateId: 'candidate_1',
         );
 
-        final state =
-            container.read(matchingVoteControllerProvider);
+        final state = container.read(matchingVoteControllerProvider);
         expect(state, isA<AsyncData<void>>());
         verify(
           () => mockMatchingRepo.castVote(
@@ -70,8 +67,7 @@ void main() {
 
         final container = createContainer(
           overrides: [
-            matchingRepositoryProvider
-                .overrideWithValue(mockMatchingRepo),
+            matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
           ],
         );
 
@@ -80,8 +76,7 @@ void main() {
           (_, _) {},
         );
         addTearDown(sub.close);
-        await container
-            .read(matchingVoteControllerProvider.future);
+        await container.read(matchingVoteControllerProvider.future);
 
         final notifier = container.read(
           matchingVoteControllerProvider.notifier,
@@ -92,8 +87,7 @@ void main() {
           candidateId: 'candidate_1',
         );
 
-        final state =
-            container.read(matchingVoteControllerProvider);
+        final state = container.read(matchingVoteControllerProvider);
         expect(state, isA<AsyncError<void>>());
       });
     });
@@ -122,8 +116,7 @@ void main() {
 
       final container = createContainer(
         overrides: [
-          matchingRepositoryProvider
-              .overrideWithValue(mockMatchingRepo),
+          matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
         ],
       );
 
@@ -141,14 +134,12 @@ void main() {
 
     test('returns empty list when no candidates', () async {
       when(
-        () =>
-            mockMatchingRepo.getMatchingCandidates('event_empty'),
+        () => mockMatchingRepo.getMatchingCandidates('event_empty'),
       ).thenAnswer((_) async => <UserProfile>[]);
 
       final container = createContainer(
         overrides: [
-          matchingRepositoryProvider
-              .overrideWithValue(mockMatchingRepo),
+          matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
         ],
       );
 
@@ -161,14 +152,12 @@ void main() {
 
     test('propagates error when repository throws', () async {
       when(
-        () =>
-            mockMatchingRepo.getMatchingCandidates('event_err'),
+        () => mockMatchingRepo.getMatchingCandidates('event_err'),
       ).thenAnswer((_) async => throw Exception('DB error'));
 
       final container = createContainer(
         overrides: [
-          matchingRepositoryProvider
-              .overrideWithValue(mockMatchingRepo),
+          matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
         ],
       );
 
@@ -184,8 +173,7 @@ void main() {
       addTearDown(sub.close);
       await completer.future;
 
-      final state =
-          container.read(matchCandidatesProvider('event_err'));
+      final state = container.read(matchCandidatesProvider('event_err'));
       expect(state.hasError, isTrue);
     });
   });
@@ -207,8 +195,7 @@ void main() {
 
       final container = createContainer(
         overrides: [
-          matchingRepositoryProvider
-              .overrideWithValue(mockMatchingRepo),
+          matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
         ],
       );
 
@@ -228,8 +215,7 @@ void main() {
 
       final container = createContainer(
         overrides: [
-          matchingRepositoryProvider
-              .overrideWithValue(mockMatchingRepo),
+          matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
         ],
       );
 
@@ -247,8 +233,7 @@ void main() {
 
       final container = createContainer(
         overrides: [
-          matchingRepositoryProvider
-              .overrideWithValue(mockMatchingRepo),
+          matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
         ],
       );
 
@@ -264,8 +249,7 @@ void main() {
       addTearDown(sub.close);
       await completer.future;
 
-      final state =
-          container.read(myMatchesProvider('event_err'));
+      final state = container.read(myMatchesProvider('event_err'));
       expect(state.hasError, isTrue);
     });
   });

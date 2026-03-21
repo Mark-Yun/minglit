@@ -415,10 +415,8 @@ void main() {
         () {
           final container = createContainer(
             overrides: [
-              currentUserProvider
-                  .overrideWith((ref) => mockUser),
-              eventRepositoryProvider
-                  .overrideWith((ref) => mockEventRepo),
+              currentUserProvider.overrideWith((ref) => mockUser),
+              eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
             ],
           );
 
