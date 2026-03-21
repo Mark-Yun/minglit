@@ -50,12 +50,7 @@ class _VerificationSection extends ConsumerWidget {
                         child: VerificationCard(
                           verification: v,
                           onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('구현준비중입니다'),
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
+                            context.showMinglitInfo('구현준비중입니다');
                           },
                           trailing: Icon(
                             Icons.chevron_right,
