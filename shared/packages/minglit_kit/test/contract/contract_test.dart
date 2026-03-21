@@ -57,8 +57,7 @@ void main() {
     test('round-trips through toJson → fromJson', () {
       final json = _loadSample('event_application');
       final model = EventApplication.fromJson(json);
-      final roundTripped =
-          EventApplication.fromJson(model.toJson());
+      final roundTripped = EventApplication.fromJson(model.toJson());
 
       expect(roundTripped.id, model.id);
       expect(roundTripped.eventId, model.eventId);
@@ -85,8 +84,7 @@ void main() {
     test('round-trips through toJson → fromJson', () {
       final json = _loadSample('user_profile');
       final model = UserProfile.fromJson(json);
-      final roundTripped =
-          UserProfile.fromJson(model.toJson());
+      final roundTripped = UserProfile.fromJson(model.toJson());
 
       expect(roundTripped.id, model.id);
       expect(roundTripped.name, model.name);
@@ -116,18 +114,15 @@ void main() {
     test(
       'settlement-query settlements has expected fields',
       () {
-        final json =
-            _loadSample('settlement_query_settlements');
+        final json = _loadSample('settlement_query_settlements');
         expect(json['success'], true);
         expect(
           json['settlements'],
           isA<List<dynamic>>(),
         );
-        final settlements =
-            json['settlements'] as List<dynamic>;
+        final settlements = json['settlements'] as List<dynamic>;
         expect(settlements, isNotEmpty);
-        final first =
-            settlements.first as Map<String, dynamic>;
+        final first = settlements.first as Map<String, dynamic>;
         expect(first['id'], isA<String>());
         expect(first['partnerId'], isA<String>());
         expect(first['amount'], isA<num>());
@@ -138,15 +133,12 @@ void main() {
     test(
       'settlement-query payouts has expected fields',
       () {
-        final json =
-            _loadSample('settlement_query_payouts');
+        final json = _loadSample('settlement_query_payouts');
         expect(json['success'], true);
         expect(json['payouts'], isA<List<dynamic>>());
-        final payouts =
-            json['payouts'] as List<dynamic>;
+        final payouts = json['payouts'] as List<dynamic>;
         expect(payouts, isNotEmpty);
-        final first =
-            payouts.first as Map<String, dynamic>;
+        final first = payouts.first as Map<String, dynamic>;
         expect(first['id'], isA<String>());
         expect(first['partnerId'], isA<String>());
         expect(first['amount'], isA<num>());
@@ -162,15 +154,13 @@ void main() {
     test(
       'profile-update success has expected fields',
       () {
-        final json =
-            _loadSample('profile_update_success');
+        final json = _loadSample('profile_update_success');
         expect(json['success'], true);
         expect(
           json['processed'],
           isA<Map<String, dynamic>>(),
         );
-        final processed =
-            json['processed'] as Map<String, dynamic>;
+        final processed = json['processed'] as Map<String, dynamic>;
         expect(processed['user_id'], isA<String>());
         expect(processed['action_type'], isA<String>());
         expect(processed['weight'], isA<num>());
