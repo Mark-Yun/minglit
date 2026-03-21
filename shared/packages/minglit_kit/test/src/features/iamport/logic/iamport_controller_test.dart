@@ -35,32 +35,35 @@ void main() {
     });
 
     group('onCertificationResult', () {
-      test('verifies and sets success state on successful certification',
-          () async {
-        when(() => mockRepo.verifyCertification('imp_success_001'))
-            .thenAnswer((_) async => <String, dynamic>{'verified': true});
+      test(
+        'verifies and sets success state on successful certification',
+        () async {
+          when(
+            () => mockRepo.verifyCertification('imp_success_001'),
+          ).thenAnswer((_) async => <String, dynamic>{'verified': true});
 
-        final container = createTestContainer();
-        final notifier =
-            container.read(iamportControllerProvider.notifier);
+          final container = createTestContainer();
+          final notifier = container.read(iamportControllerProvider.notifier);
 
-        await notifier.onCertificationResult(<String, String>{
-          'imp_uid': 'imp_success_001',
-          'merchant_uid': 'mid_001',
-          'success': 'true',
-        });
+          await notifier.onCertificationResult(<String, String>{
+            'imp_uid': 'imp_success_001',
+            'merchant_uid': 'mid_001',
+            'success': 'true',
+          });
 
-        final state = container.read(iamportControllerProvider);
-        expect(state, isA<AsyncData<IamportResultModel?>>());
-        expect(state.value!.success, isTrue);
-        expect(state.value!.impUid, 'imp_success_001');
-        verify(() => mockRepo.verifyCertification('imp_success_001')).called(1);
-      });
+          final state = container.read(iamportControllerProvider);
+          expect(state, isA<AsyncData<IamportResultModel?>>());
+          expect(state.value!.success, isTrue);
+          expect(state.value!.impUid, 'imp_success_001');
+          verify(
+            () => mockRepo.verifyCertification('imp_success_001'),
+          ).called(1);
+        },
+      );
 
       test('sets error state when certification fails from Iamport', () async {
         final container = createTestContainer();
-        final notifier =
-            container.read(iamportControllerProvider.notifier);
+        final notifier = container.read(iamportControllerProvider.notifier);
 
         await notifier.onCertificationResult(<String, String>{
           'imp_uid': '',
@@ -75,28 +78,29 @@ void main() {
         verifyNever(() => mockRepo.verifyCertification(any()));
       });
 
-      test('sets error state when success is true but impUid is null',
-          () async {
-        final container = createTestContainer();
-        final notifier =
-            container.read(iamportControllerProvider.notifier);
+      test(
+        'sets error state when success is true but impUid is null',
+        () async {
+          final container = createTestContainer();
+          final notifier = container.read(iamportControllerProvider.notifier);
 
-        await notifier.onCertificationResult(<String, String>{
-          'success': 'false',
-          'error_msg': 'No UID returned',
-        });
+          await notifier.onCertificationResult(<String, String>{
+            'success': 'false',
+            'error_msg': 'No UID returned',
+          });
 
-        final state = container.read(iamportControllerProvider);
-        expect(state, isA<AsyncError<IamportResultModel?>>());
-      });
+          final state = container.read(iamportControllerProvider);
+          expect(state, isA<AsyncError<IamportResultModel?>>());
+        },
+      );
 
       test('sets error state when server verification fails', () async {
-        when(() => mockRepo.verifyCertification('imp_server_fail'))
-            .thenThrow(Exception('server error'));
+        when(
+          () => mockRepo.verifyCertification('imp_server_fail'),
+        ).thenThrow(Exception('server error'));
 
         final container = createTestContainer();
-        final notifier =
-            container.read(iamportControllerProvider.notifier);
+        final notifier = container.read(iamportControllerProvider.notifier);
 
         await notifier.onCertificationResult(<String, String>{
           'imp_uid': 'imp_server_fail',
@@ -110,8 +114,7 @@ void main() {
 
       test('uses default error message when errorMsg is null', () async {
         final container = createTestContainer();
-        final notifier =
-            container.read(iamportControllerProvider.notifier);
+        final notifier = container.read(iamportControllerProvider.notifier);
 
         await notifier.onCertificationResult(<String, String>{
           'success': 'false',
@@ -128,12 +131,12 @@ void main() {
 
     group('reset', () {
       test('resets state to AsyncData(null)', () async {
-        when(() => mockRepo.verifyCertification('imp_reset'))
-            .thenAnswer((_) async => <String, dynamic>{'verified': true});
+        when(
+          () => mockRepo.verifyCertification('imp_reset'),
+        ).thenAnswer((_) async => <String, dynamic>{'verified': true});
 
         final container = createTestContainer();
-        final notifier =
-            container.read(iamportControllerProvider.notifier);
+        final notifier = container.read(iamportControllerProvider.notifier);
 
         await notifier.onCertificationResult(<String, String>{
           'imp_uid': 'imp_reset',

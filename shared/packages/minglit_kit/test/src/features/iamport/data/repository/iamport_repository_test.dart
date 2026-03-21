@@ -81,7 +81,7 @@ void main() {
             body: {'identity_verification_id': 'imp_fail_002'},
           ),
         ).thenAnswer(
-          (_) async => FunctionResponse(status: 500, data: null),
+          (_) async => FunctionResponse(status: 500),
         );
 
         expect(

@@ -70,7 +70,6 @@ void main() {
           impUid: 'imp_abc',
           merchantUid: 'mid_xyz',
           success: true,
-          errorMsg: null,
           pgProvider: 'danal',
           pgType: 'certification',
         );
@@ -195,7 +194,6 @@ void main() {
       test('creates modified copy', () {
         const original = IamportResultModel(
           impUid: 'imp_copy',
-          success: false,
           errorMsg: 'timeout',
         );
 
