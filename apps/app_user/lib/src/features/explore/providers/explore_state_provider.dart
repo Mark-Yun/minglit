@@ -263,6 +263,17 @@ class RecommendationFeedNotifier extends _$RecommendationFeedNotifier {
     // Watch filters — triggers rebuild on change, resetting pagination
     final filters = ref.watch(activeFiltersProvider);
 
+    // Fix #173: Re-filter existing events when eligibility data arrives
+    // asynchronously (without re-fetching from server).
+    ref.listen(bulkEligibilityDataProvider, (prev, next) {
+      if (next.hasValue && next.value != null) {
+        Log.d(
+          'Eligibility data arrived, refiltering ${_rawEvents.length} events',
+        );
+      }
+      _refilterExistingEvents();
+    });
+
     final result = await _fetchPage(
       filters: filters,
       serverOffset: 0,
@@ -308,6 +319,15 @@ class RecommendationFeedNotifier extends _$RecommendationFeedNotifier {
       if (!ref.mounted) return;
       state = AsyncData(current.copyWith(isLoadingMore: false));
     }
+  }
+
+  // Fix #173: Re-apply client-side filters to already-fetched events when
+  // eligibility data loads after the initial fetch. Preserves pagination state.
+  void _refilterExistingEvents() {
+    final current = state.value;
+    if (current == null || _rawEvents.isEmpty) return;
+    final filtered = ref.read(filteredEventsProvider(events: _rawEvents));
+    state = AsyncData(current.copyWith(events: filtered));
   }
 
   /// Returns null if the result is stale (a newer generation started).
