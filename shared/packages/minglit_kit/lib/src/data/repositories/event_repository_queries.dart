@@ -368,6 +368,32 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
     }
   }
 
+  /// Fetches all upcoming events for a specific partner (via parties).
+  /// Used in the partner detail page to show the partner's event list.
+  Future<List<Event>> getEventsByPartnerId(String partnerId) async {
+    Log.d('getEventsByPartnerId called | partnerId: $partnerId');
+    try {
+      final data = await supabaseClient
+          .from('events')
+          .select(
+            '*, party:parties!inner(*, location:locations(*), '
+            'partner:partners(*)), '
+            'entryGroups:entry_groups(*), tickets(*)',
+          )
+          .eq('party.partner_id', partnerId)
+          .eq('status', 'scheduled')
+          .gte('start_time', DateTime.now().toIso8601String())
+          .order('start_time');
+      final result = data.map(Event.fromJson).toList();
+
+      Log.d('getEventsByPartnerId success | count: ${result.length}');
+      return result;
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] getEventsByPartnerId Error', e, st);
+      rethrow;
+    }
+  }
+
   /// [Partner Dashboard]
   /// Fetches events scheduled for today for a specific partner.
   Future<List<Event>> getTodayEvents(String partnerId) async {
