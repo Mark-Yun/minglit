@@ -1,5 +1,4 @@
 import 'package:app_partner/src/features/verification/create/create_verification_controller.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -36,8 +35,7 @@ void main() {
     return createContainer(
       overrides: [
         partnerRepositoryProvider.overrideWithValue(mockPartnerRepo),
-        verificationRepositoryProvider
-            .overrideWithValue(mockVerificationRepo),
+        verificationRepositoryProvider.overrideWithValue(mockVerificationRepo),
       ],
     );
   }
@@ -139,8 +137,9 @@ void main() {
       );
       addTearDown(sub.close);
 
-      final notifier =
-          container.read(createVerificationControllerProvider.notifier);
+      final notifier = container.read(
+        createVerificationControllerProvider.notifier,
+      );
       notifier.addField('text');
       notifier.addField('file');
 
@@ -164,12 +163,15 @@ void main() {
       );
       addTearDown(sub.close);
 
-      final notifier =
-          container.read(createVerificationControllerProvider.notifier);
+      final notifier = container.read(
+        createVerificationControllerProvider.notifier,
+      );
       notifier.addField('text');
 
-      final original =
-          container.read(createVerificationControllerProvider).fields.first;
+      final original = container
+          .read(createVerificationControllerProvider)
+          .fields
+          .first;
       final updated = original.copyWith(label: '회사명');
       notifier.updateField(0, updated);
 
@@ -185,8 +187,9 @@ void main() {
       );
       addTearDown(sub.close);
 
-      final notifier =
-          container.read(createVerificationControllerProvider.notifier);
+      final notifier = container.read(
+        createVerificationControllerProvider.notifier,
+      );
       notifier.addField('text');
       notifier.addField('file');
       notifier.addField('date');
@@ -227,17 +230,19 @@ void main() {
       );
       addTearDown(sub.close);
 
-      when(() => mockVerificationRepo.createVerification(any()))
-          .thenAnswer((_) async => const Verification(
-                id: 'new-v-1',
-                partnerId: 'partner-1',
-                category: VerificationCategory.etc,
-                internalName: 'test',
-                displayName: 'Test',
-              ));
+      when(() => mockVerificationRepo.createVerification(any())).thenAnswer(
+        (_) async => const Verification(
+          id: 'new-v-1',
+          partnerId: 'partner-1',
+          category: VerificationCategory.etc,
+          internalName: 'test',
+          displayName: 'Test',
+        ),
+      );
 
-      final notifier =
-          container.read(createVerificationControllerProvider.notifier);
+      final notifier = container.read(
+        createVerificationControllerProvider.notifier,
+      );
       notifier.updateDisplayName('Test');
       notifier.updateInternalName('test');
       notifier.addField('text');
@@ -259,17 +264,19 @@ void main() {
       when(() => mockPartnerRepo.getMyManagedPartners()).thenAnswer(
         (_) async => [const Partner(id: 'auto-partner', name: 'Auto')],
       );
-      when(() => mockVerificationRepo.createVerification(any()))
-          .thenAnswer((_) async => const Verification(
-                id: 'new-v-1',
-                partnerId: 'auto-partner',
-                category: VerificationCategory.etc,
-                internalName: 'test',
-                displayName: 'Test',
-              ));
+      when(() => mockVerificationRepo.createVerification(any())).thenAnswer(
+        (_) async => const Verification(
+          id: 'new-v-1',
+          partnerId: 'auto-partner',
+          category: VerificationCategory.etc,
+          internalName: 'test',
+          displayName: 'Test',
+        ),
+      );
 
-      final notifier =
-          container.read(createVerificationControllerProvider.notifier);
+      final notifier = container.read(
+        createVerificationControllerProvider.notifier,
+      );
       notifier.addField('text');
 
       final result = await notifier.submit(null);
@@ -278,30 +285,34 @@ void main() {
       verify(() => mockPartnerRepo.getMyManagedPartners()).called(1);
     });
 
-    test('submit with null partnerId and no managed partners returns false',
-        () async {
-      final container = makeContainer();
-      final sub = container.listen(
-        createVerificationControllerProvider,
-        (_, _) {},
-      );
-      addTearDown(sub.close);
+    test(
+      'submit with null partnerId and no managed partners returns false',
+      () async {
+        final container = makeContainer();
+        final sub = container.listen(
+          createVerificationControllerProvider,
+          (_, _) {},
+        );
+        addTearDown(sub.close);
 
-      when(() => mockPartnerRepo.getMyManagedPartners())
-          .thenAnswer((_) async => []);
+        when(
+          () => mockPartnerRepo.getMyManagedPartners(),
+        ).thenAnswer((_) async => []);
 
-      final notifier =
-          container.read(createVerificationControllerProvider.notifier);
-      notifier.addField('text');
+        final notifier = container.read(
+          createVerificationControllerProvider.notifier,
+        );
+        notifier.addField('text');
 
-      final result = await notifier.submit(null);
+        final result = await notifier.submit(null);
 
-      expect(result, isFalse);
-      expect(
-        container.read(createVerificationControllerProvider).error,
-        contains('파트너 정보를 찾을 수 없습니다'),
-      );
-    });
+        expect(result, isFalse);
+        expect(
+          container.read(createVerificationControllerProvider).error,
+          contains('파트너 정보를 찾을 수 없습니다'),
+        );
+      },
+    );
 
     test('submit error sets error message', () async {
       final container = makeContainer();
@@ -311,11 +322,13 @@ void main() {
       );
       addTearDown(sub.close);
 
-      when(() => mockVerificationRepo.createVerification(any()))
-          .thenThrow(Exception('create failed'));
+      when(
+        () => mockVerificationRepo.createVerification(any()),
+      ).thenThrow(Exception('create failed'));
 
-      final notifier =
-          container.read(createVerificationControllerProvider.notifier);
+      final notifier = container.read(
+        createVerificationControllerProvider.notifier,
+      );
       notifier.addField('text');
 
       final result = await notifier.submit('partner-1');

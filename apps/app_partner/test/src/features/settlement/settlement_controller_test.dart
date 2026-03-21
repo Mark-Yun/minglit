@@ -1,6 +1,5 @@
 import 'package:app_partner/src/features/party/party_providers.dart';
 import 'package:app_partner/src/features/settlement/settlement_controller.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -32,8 +31,9 @@ void main() {
     final resolvedPartner = nullPartner ? null : (partner ?? fakePartner);
 
     if (error != null) {
-      when(() => mockPartnerRepo.getPartnerRevenueStats(any()))
-          .thenThrow(error);
+      when(
+        () => mockPartnerRepo.getPartnerRevenueStats(any()),
+      ).thenThrow(error);
     } else {
       when(() => mockPartnerRepo.getPartnerRevenueStats(any())).thenAnswer(
         (_) async =>
@@ -127,24 +127,26 @@ void main() {
       expect(state.settlements.first.status, 'completed');
     });
 
-    test('loadSettlementData with null partner returns early with data status',
-        () async {
-      final container = makeContainer(nullPartner: true);
-      final sub = container.listen(
-        settlementControllerProvider,
-        (_, _) {},
-      );
-      addTearDown(sub.close);
+    test(
+      'loadSettlementData with null partner returns early with data status',
+      () async {
+        final container = makeContainer(nullPartner: true);
+        final sub = container.listen(
+          settlementControllerProvider,
+          (_, _) {},
+        );
+        addTearDown(sub.close);
 
-      container.read(settlementControllerProvider);
-      await pump();
+        container.read(settlementControllerProvider);
+        await pump();
 
-      final state = container.read(settlementControllerProvider);
-      expect(state.status, isA<AsyncData<void>>());
-      expect(state.settlements, isEmpty);
-      expect(state.monthlyRevenue, isEmpty);
-      verifyNever(() => mockPartnerRepo.getPartnerRevenueStats(any()));
-    });
+        final state = container.read(settlementControllerProvider);
+        expect(state.status, isA<AsyncData<void>>());
+        expect(state.settlements, isEmpty);
+        expect(state.monthlyRevenue, isEmpty);
+        verifyNever(() => mockPartnerRepo.getPartnerRevenueStats(any()));
+      },
+    );
 
     test('loadSettlementData error sets error status', () async {
       final container = makeContainer(error: Exception('network error'));
@@ -199,12 +201,15 @@ void main() {
       container.read(settlementControllerProvider);
       await pump();
 
-      verify(() => mockPartnerRepo.getPartnerRevenueStats('partner-1'))
-          .called(1);
-      verify(() => mockPartnerRepo.getPartnerMonthlyRevenue('partner-1'))
-          .called(1);
-      verify(() => mockPartnerRepo.getPartnerSettlements('partner-1'))
-          .called(1);
+      verify(
+        () => mockPartnerRepo.getPartnerRevenueStats('partner-1'),
+      ).called(1);
+      verify(
+        () => mockPartnerRepo.getPartnerMonthlyRevenue('partner-1'),
+      ).called(1);
+      verify(
+        () => mockPartnerRepo.getPartnerSettlements('partner-1'),
+      ).called(1);
     });
   });
 }

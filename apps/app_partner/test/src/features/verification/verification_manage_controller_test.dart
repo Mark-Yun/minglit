@@ -1,6 +1,5 @@
 import 'package:app_partner/src/features/party/party_providers.dart';
 import 'package:app_partner/src/features/verification/manage/verification_manage_controller.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -53,7 +52,6 @@ void main() {
       when(
         () => mockVerificationRepo.getPartnerVerifications(
           any(),
-          isActive: true,
         ),
       ).thenAnswer((_) async => activeList ?? []);
 
@@ -68,8 +66,7 @@ void main() {
 
     return createContainer(
       overrides: [
-        verificationRepositoryProvider
-            .overrideWithValue(mockVerificationRepo),
+        verificationRepositoryProvider.overrideWithValue(mockVerificationRepo),
         currentPartnerInfoProvider.overrideWith(
           (ref) async => resolvedPartner,
         ),
@@ -95,8 +92,7 @@ void main() {
       // Wait for async build
       await pump();
 
-      final state =
-          container.read(verificationManageControllerProvider).value!;
+      final state = container.read(verificationManageControllerProvider).value!;
       expect(state.active.length, 2);
       expect(state.archived.length, 1);
       expect(state.active.first.id, 'v-1');
@@ -113,8 +109,7 @@ void main() {
 
       await pump();
 
-      final state =
-          container.read(verificationManageControllerProvider).value!;
+      final state = container.read(verificationManageControllerProvider).value!;
       expect(state.active, isEmpty);
       expect(state.archived, isEmpty);
       verifyNever(
@@ -123,8 +118,7 @@ void main() {
     });
 
     test('build error produces AsyncError', () async {
-      final container =
-          makeContainer(loadError: Exception('network error'));
+      final container = makeContainer(loadError: Exception('network error'));
       final sub = container.listen(
         verificationManageControllerProvider,
         (_, _) {},
@@ -133,51 +127,53 @@ void main() {
 
       await pump();
 
-      final asyncValue =
-          container.read(verificationManageControllerProvider);
+      final asyncValue = container.read(verificationManageControllerProvider);
       expect(asyncValue.hasError, isTrue);
     });
 
-    test('archiveVerification calls deleteVerification and refreshes',
-        () async {
-      final active = [_makeVerification('v-1')];
-      final container = makeContainer(activeList: active);
-      final sub = container.listen(
-        verificationManageControllerProvider,
-        (_, _) {},
-      );
-      addTearDown(sub.close);
+    test(
+      'archiveVerification calls deleteVerification and refreshes',
+      () async {
+        final active = [_makeVerification('v-1')];
+        final container = makeContainer(activeList: active);
+        final sub = container.listen(
+          verificationManageControllerProvider,
+          (_, _) {},
+        );
+        addTearDown(sub.close);
 
-      await pump();
+        await pump();
 
-      when(() => mockVerificationRepo.deleteVerification(any()))
-          .thenAnswer((_) async {});
+        when(
+          () => mockVerificationRepo.deleteVerification(any()),
+        ).thenAnswer((_) async {});
 
-      // After archive, active list will be empty
-      when(
-        () => mockVerificationRepo.getPartnerVerifications(
-          any(),
-          isActive: true,
-        ),
-      ).thenAnswer((_) async => []);
-      when(
-        () => mockVerificationRepo.getPartnerVerifications(
-          any(),
-          isActive: false,
-        ),
-      ).thenAnswer((_) async => [_makeVerification('v-1', isActive: false)]);
+        // After archive, active list will be empty
+        when(
+          () => mockVerificationRepo.getPartnerVerifications(
+            any(),
+          ),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockVerificationRepo.getPartnerVerifications(
+            any(),
+            isActive: false,
+          ),
+        ).thenAnswer((_) async => [_makeVerification('v-1', isActive: false)]);
 
-      await container
-          .read(verificationManageControllerProvider.notifier)
-          .archiveVerification('v-1');
+        await container
+            .read(verificationManageControllerProvider.notifier)
+            .archiveVerification('v-1');
 
-      verify(() => mockVerificationRepo.deleteVerification('v-1')).called(1);
+        verify(() => mockVerificationRepo.deleteVerification('v-1')).called(1);
 
-      final state =
-          container.read(verificationManageControllerProvider).value!;
-      expect(state.active, isEmpty);
-      expect(state.archived.length, 1);
-    });
+        final state = container
+            .read(verificationManageControllerProvider)
+            .value!;
+        expect(state.active, isEmpty);
+        expect(state.archived.length, 1);
+      },
+    );
 
     test('archiveVerification error sets AsyncError', () async {
       final active = [_makeVerification('v-1')];
@@ -190,59 +186,61 @@ void main() {
 
       await pump();
 
-      when(() => mockVerificationRepo.deleteVerification(any()))
-          .thenThrow(Exception('delete failed'));
+      when(
+        () => mockVerificationRepo.deleteVerification(any()),
+      ).thenThrow(Exception('delete failed'));
 
       await container
           .read(verificationManageControllerProvider.notifier)
           .archiveVerification('v-1');
 
-      final asyncValue =
-          container.read(verificationManageControllerProvider);
+      final asyncValue = container.read(verificationManageControllerProvider);
       expect(asyncValue.hasError, isTrue);
     });
 
-    test('restoreVerification calls restoreVerification and refreshes',
-        () async {
-      final archived = [_makeVerification('v-1', isActive: false)];
-      final container = makeContainer(archivedList: archived);
-      final sub = container.listen(
-        verificationManageControllerProvider,
-        (_, _) {},
-      );
-      addTearDown(sub.close);
+    test(
+      'restoreVerification calls restoreVerification and refreshes',
+      () async {
+        final archived = [_makeVerification('v-1', isActive: false)];
+        final container = makeContainer(archivedList: archived);
+        final sub = container.listen(
+          verificationManageControllerProvider,
+          (_, _) {},
+        );
+        addTearDown(sub.close);
 
-      await pump();
+        await pump();
 
-      when(() => mockVerificationRepo.restoreVerification(any()))
-          .thenAnswer((_) async {});
+        when(
+          () => mockVerificationRepo.restoreVerification(any()),
+        ).thenAnswer((_) async {});
 
-      // After restore, archived will be empty, active gains the item
-      when(
-        () => mockVerificationRepo.getPartnerVerifications(
-          any(),
-          isActive: true,
-        ),
-      ).thenAnswer((_) async => [_makeVerification('v-1')]);
-      when(
-        () => mockVerificationRepo.getPartnerVerifications(
-          any(),
-          isActive: false,
-        ),
-      ).thenAnswer((_) async => []);
+        // After restore, archived will be empty, active gains the item
+        when(
+          () => mockVerificationRepo.getPartnerVerifications(
+            any(),
+          ),
+        ).thenAnswer((_) async => [_makeVerification('v-1')]);
+        when(
+          () => mockVerificationRepo.getPartnerVerifications(
+            any(),
+            isActive: false,
+          ),
+        ).thenAnswer((_) async => []);
 
-      await container
-          .read(verificationManageControllerProvider.notifier)
-          .restoreVerification('v-1');
+        await container
+            .read(verificationManageControllerProvider.notifier)
+            .restoreVerification('v-1');
 
-      verify(() => mockVerificationRepo.restoreVerification('v-1'))
-          .called(1);
+        verify(() => mockVerificationRepo.restoreVerification('v-1')).called(1);
 
-      final state =
-          container.read(verificationManageControllerProvider).value!;
-      expect(state.active.length, 1);
-      expect(state.archived, isEmpty);
-    });
+        final state = container
+            .read(verificationManageControllerProvider)
+            .value!;
+        expect(state.active.length, 1);
+        expect(state.archived, isEmpty);
+      },
+    );
 
     test('restoreVerification error sets AsyncError', () async {
       final archived = [_makeVerification('v-1', isActive: false)];
@@ -255,15 +253,15 @@ void main() {
 
       await pump();
 
-      when(() => mockVerificationRepo.restoreVerification(any()))
-          .thenThrow(Exception('restore failed'));
+      when(
+        () => mockVerificationRepo.restoreVerification(any()),
+      ).thenThrow(Exception('restore failed'));
 
       await container
           .read(verificationManageControllerProvider.notifier)
           .restoreVerification('v-1');
 
-      final asyncValue =
-          container.read(verificationManageControllerProvider);
+      final asyncValue = container.read(verificationManageControllerProvider);
       expect(asyncValue.hasError, isTrue);
     });
   });
