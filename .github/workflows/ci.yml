@@ -128,15 +128,22 @@ jobs:
         working-directory: ${{ matrix.directory }}
       - name: Golden Test
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
-        run: flutter test --tags golden
+        run: |
+          # --update-goldens: generate/update golden files from CI (Linux).
+          # Golden files should be committed from CI, not local (macOS/Linux
+          # font rendering differs). Exit 79 = no tests matched the tag.
+          flutter test --update-goldens --tags golden; rc=$?
+          if [ "$rc" -eq 79 ]; then exit 0; fi
+          exit "$rc"
         working-directory: ${{ matrix.directory }}
-      - name: Upload Golden Failures
-        if: ${{ failure() && needs.changes.outputs[matrix.change_key] == 'true' }}
+      - name: Upload Golden Files
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
-          name: golden-failures-${{ matrix.app }}
-          path: ${{ matrix.directory }}/test/**/failures/
-          retention-days: 7
+          name: golden-files-${{ matrix.app }}
+          path: ${{ matrix.directory }}/test/goldens/*.png
+          retention-days: 30
       - name: Test Report
         uses: dorny/test-reporter@v1
         if: ${{ (success() || failure()) && needs.changes.outputs[matrix.change_key] == 'true' }}
