@@ -171,6 +171,113 @@ Deno.test("contract: identity-verify response matches schema", async () => {
   });
 });
 
+Deno.test("contract: payment-cancel response matches schema", async () => {
+  const schema = await loadSchema("payment_cancel");
+
+  const nowMs = Date.now();
+  const eligiblePaidAt = new Date(nowMs - 1 * 60 * 60 * 1000).toISOString();
+  const farFutureEvent = new Date(nowMs + 10 * 24 * 60 * 60 * 1000).toISOString();
+
+  await withEnv(COMMON_ENV, async () => {
+    const handler = await captureServeHandler(
+      new URL("../payment-cancel/index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute,
+      {
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/event_applications") && req.method === "GET",
+        handler: () =>
+          jsonResponse({
+            paid_at: eligiblePaidAt,
+            event_id: "event-123",
+            refund_status: "none",
+            user_id: "user-123",
+          }),
+      },
+      {
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/events") && req.method === "GET",
+        handler: () => jsonResponse({ start_time: farFutureEvent }),
+      },
+      {
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/rpc/get_current_policy") && req.method === "POST",
+        handler: () => jsonResponse({ grace_period_hours: 2, cutoff_days: 7 }),
+      },
+      {
+        matcher: "https://api.iamport.kr/users/getToken",
+        handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
+      },
+      {
+        matcher: "https://api.iamport.kr/payments/cancel",
+        handler: () =>
+          jsonResponse({ code: 0, response: { status: "cancelled", amount: 15000 } }),
+      },
+      {
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/event_applications") && req.method === "PATCH",
+        handler: () => jsonResponse({}),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          payment_id: "imp_contract_cancel",
+          reason: "contract test",
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const payload = await readJson(res);
+        assertMatchesSchema(payload, schema, "payment-cancel live response");
+      });
+    });
+  });
+});
+
+Deno.test("contract: settlement-query response matches schema", async () => {
+  const schema = await loadSchema("settlement_query");
+
+  await withEnv(COMMON_ENV, async () => {
+    const handler = await captureServeHandler(
+      new URL("../settlement-query/index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute,
+      {
+        matcher: "https://api.portone.io/platform/partner-settlements",
+        handler: () =>
+          jsonResponse({
+            settlements: [
+              {
+                id: "s1",
+                partnerId: "p1",
+                transferId: "t1",
+                amount: 10000,
+                currency: "KRW",
+                settlementDate: "2026-03-20",
+              },
+            ],
+            page: { number: 0, size: 10 },
+          }),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          type: "settlements",
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const payload = await readJson(res);
+        assertMatchesSchema(payload, schema, "settlement-query live response");
+      });
+    });
+  });
+});
+
 Deno.test("contract: payment-verify error matches error schema", async () => {
   const schema = await loadSchema("error");
 

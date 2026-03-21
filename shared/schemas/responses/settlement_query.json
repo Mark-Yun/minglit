@@ -10,6 +10,7 @@
       "type": "array",
       "items": {
         "type": "object",
+        "required": ["id", "partnerId", "amount", "currency", "settlementDate"],
         "properties": {
           "id": { "type": "string" },
           "partnerId": { "type": "string" },
@@ -24,6 +25,7 @@
       "type": "array",
       "items": {
         "type": "object",
+        "required": ["id", "partnerId", "amount", "currency"],
         "properties": {
           "id": { "type": "string" },
           "partnerId": { "type": "string" },
@@ -32,11 +34,19 @@
         }
       }
     },
-    "page": { "type": "object" }
+    "page": {
+      "type": "object",
+      "required": ["number", "size"],
+      "properties": {
+        "number": { "type": "integer" },
+        "size": { "type": "integer" }
+      },
+      "additionalProperties": false
+    }
   },
   "oneOf": [
     { "required": ["settlements"] },
     { "required": ["payouts"] }
   ],
-  "additionalProperties": true
+  "additionalProperties": false
 }
