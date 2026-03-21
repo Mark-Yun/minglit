@@ -88,9 +88,10 @@ class UpcomingEventsCard extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
+                                    // Fix #180: 강제 언래핑 제거 — null-safe 접근
                                     dateFormat.format(event.startTime) +
-                                        (event.party != null
-                                            ? ' \u00b7 ${event.party!.title}'
+                                        (event.party?.title != null
+                                            ? ' \u00b7 ${event.party?.title}'
                                             : ''),
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: colorScheme.onSurfaceVariant,
