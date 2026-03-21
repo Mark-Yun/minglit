@@ -143,9 +143,10 @@ export async function simAssertVerificationApproved(
       return fail("verification_approved", "approved", actualStatus, `submission status is '${actualStatus}'`);
     }
     // Also check that partner_verified_users row was created by the trigger
+    // Fix #181: partner_verified_users has composite PK (partner_id, user_id, verification_id), no 'id' column
     const { data: pvuData, error: pvuErr } = await supabase
       .from("partner_verified_users")
-      .select("id")
+      .select("submission_id")
       .eq("partner_id", data.partner_id)
       .eq("user_id", data.user_id)
       .eq("verification_id", data.verification_id)
