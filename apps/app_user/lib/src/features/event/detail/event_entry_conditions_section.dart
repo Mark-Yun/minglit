@@ -14,9 +14,12 @@ class _EntryConditionsSection extends ConsumerWidget {
     );
     final counts = countsAsync.value ?? {};
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+    // Fix #172: 다른 섹션(Section 4, 5)과 동일하게 좌우 패딩 추가
+    return Padding(
+      padding: const EdgeInsets.all(MinglitSpacing.medium),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
         Text(
           '참여 현황',
           style: theme.textTheme.titleMedium?.copyWith(
@@ -97,7 +100,8 @@ class _EntryConditionsSection extends ConsumerWidget {
               );
             },
           ),
-      ],
+        ],
+      ),
     );
   }
 }
