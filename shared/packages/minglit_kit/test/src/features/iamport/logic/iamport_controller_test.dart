@@ -85,8 +85,8 @@ void main() {
           final notifier = container.read(iamportControllerProvider.notifier);
 
           await notifier.onCertificationResult(<String, String>{
-            'success': 'false',
-            'error_msg': 'No UID returned',
+            'success': 'true',
+            'merchant_uid': 'mid_no_uid',
           });
 
           final state = container.read(iamportControllerProvider);
