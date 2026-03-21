@@ -183,8 +183,7 @@ class PartnerDetailView extends ConsumerWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: events.length,
-        separatorBuilder: (_, _) =>
-            const SizedBox(width: MinglitSpacing.small),
+        separatorBuilder: (_, _) => const SizedBox(width: MinglitSpacing.small),
         itemBuilder: (context, index) {
           final event = events[index];
           return SizedBox(
