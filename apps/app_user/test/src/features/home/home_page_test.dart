@@ -163,6 +163,24 @@ void main() {
       expect(find.byType(RefreshIndicator), findsOneWidget);
     });
 
+    testWidgets('shows error message with retry button on feed load failure', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        createTestWidget(
+          overrides: [
+            recommendationFeedProvider.overrideWith(
+              _MockErrorNotifier.new,
+            ),
+          ],
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('피드를 불러오지 못했습니다'), findsOneWidget);
+      expect(find.text('다시 시도'), findsOneWidget);
+    });
+
     testWidgets('does not show loading indicator when hasMore is false', (
       tester,
     ) async {
@@ -202,6 +220,14 @@ class _MockLoadingMoreNotifier extends RecommendationFeedNotifier {
       hasMore: true,
       isLoadingMore: true,
     );
+  }
+}
+
+/// A notifier that throws an error to test the error state UI.
+class _MockErrorNotifier extends RecommendationFeedNotifier {
+  @override
+  Future<RecommendationFeedState> build() async {
+    throw Exception('Feed load failed');
   }
 }
 

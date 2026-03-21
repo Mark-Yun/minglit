@@ -179,8 +179,22 @@ class _HomePageState extends ConsumerState<HomePage> {
               loading: () => const SliverFillRemaining(
                 child: Center(child: MinglitCircularProgressIndicator()),
               ),
-              error: (_, _) => const SliverFillRemaining(
-                child: SizedBox.shrink(),
+              // Fix #192: 피드 로드 실패 시 에러 메시지와 재시도 버튼 표시
+              error: (_, _) => SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('피드를 불러오지 못했습니다'),
+                      const SizedBox(height: MinglitSpacing.small),
+                      TextButton(
+                        onPressed: () =>
+                            ref.invalidate(recommendationFeedProvider),
+                        child: const Text('다시 시도'),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
             if (recommendationState.value?.isLoadingMore ?? false)
