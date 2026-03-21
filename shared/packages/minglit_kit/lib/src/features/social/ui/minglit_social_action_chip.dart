@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/data/models/social_interaction.dart';
@@ -85,17 +87,19 @@ class MinglitSocialActionChip extends ConsumerWidget {
                   onUnauthenticatedTap!();
                   return;
                 }
-                ref
-                    .read(
-                      socialInteractionControllerProvider(
-                        targetId: targetId,
-                        targetType: targetType,
-                        interactionType: interactionType,
-                      ).notifier,
-                    )
-                    .toggle();
+                unawaited(
+                  ref
+                      .read(
+                        socialInteractionControllerProvider(
+                          targetId: targetId,
+                          targetType: targetType,
+                          interactionType: interactionType,
+                        ).notifier,
+                      )
+                      .toggle(),
+                );
               },
-        // Fix #136: Increase padding, font size, icon size and add vertical separator
+        // Fix #136: Increase padding, font size, icon size and add separator
         child: Container(
           padding: const EdgeInsets.symmetric(
             horizontal: MinglitSpacing.sm,
