@@ -295,7 +295,6 @@ void main() {
         when(
           () => mockEventRepository.getEventsByType(
             type: EventFeedType.newArrivals,
-            offset: 0,
           ),
         ).thenAnswer((_) async => restrictedEvents);
 
@@ -306,14 +305,14 @@ void main() {
           overrides: [
             eventRepositoryProvider.overrideWithValue(mockEventRepository),
             // Eligibility data controlled by completer (simulates late arrival)
-            bulkEligibilityDataProvider
-                .overrideWith((ref) => eligibilityCompleter.future),
+            bulkEligibilityDataProvider.overrideWith(
+              (ref) => eligibilityCompleter.future,
+            ),
           ],
         );
 
         // Initial load: eligibility data not yet available -> no filtering
-        final state1 =
-            await container.read(recommendationFeedProvider.future);
+        final state1 = await container.read(recommendationFeedProvider.future);
         expect(
           state1.events,
           hasLength(10),
@@ -336,12 +335,12 @@ void main() {
         await Future<void>.delayed(Duration.zero);
         await Future<void>.delayed(Duration.zero);
 
-        final state2 =
-            await container.read(recommendationFeedProvider.future);
+        final state2 = await container.read(recommendationFeedProvider.future);
         expect(
           state2.events,
           hasLength(0),
-          reason: 'user without required verification should see '
+          reason:
+              'user without required verification should see '
               'no events after eligibility data loads',
         );
       });

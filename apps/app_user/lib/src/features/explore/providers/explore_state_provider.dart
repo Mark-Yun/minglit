@@ -265,7 +265,7 @@ class RecommendationFeedNotifier extends _$RecommendationFeedNotifier {
 
     // Fix #173: Re-filter existing events when eligibility data arrives
     // asynchronously (without re-fetching from server).
-    ref.listen(bulkEligibilityDataProvider, (_, __) {
+    ref.listen(bulkEligibilityDataProvider, (_, _) {
       _refilterExistingEvents();
     });
 
