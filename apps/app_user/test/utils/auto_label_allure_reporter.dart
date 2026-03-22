@@ -19,14 +19,16 @@ class AutoLabelAllureReporter extends AllureReporter {
 
     final featureMatch = _featureRegex.firstMatch(suitePath);
     if (featureMatch != null) {
-      extraLabels.putIfAbsent(test.id, () => {})['epic'] =
-          featureMatch.group(1)!;
+      extraLabels.putIfAbsent(test.id, () => {})['epic'] = featureMatch.group(
+        1,
+      )!;
     }
 
     final layerMatch = _layerRegex.firstMatch(suitePath);
     if (layerMatch != null) {
-      extraLabels.putIfAbsent(test.id, () => {})['feature'] =
-          layerMatch.group(1)!;
+      extraLabels.putIfAbsent(test.id, () => {})['feature'] = layerMatch.group(
+        1,
+      )!;
     }
 
     return super.onReportCreated(report);
