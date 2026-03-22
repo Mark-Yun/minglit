@@ -1,0 +1,28 @@
+version: 2
+updates:
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  # Next.js Landing User
+  - package-ecosystem: "npm"
+    directory: "/apps/landing_user"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
+  # Next.js Landing Partner
+  - package-ecosystem: "npm"
+    directory: "/apps/landing_partner"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
+  # Flutter/Dart (pub)
+  - package-ecosystem: "pub"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
