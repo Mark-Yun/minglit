@@ -1,5 +1,6 @@
 import 'package:app_user/src/features/auth/login_page.dart';
 import 'package:app_user/src/features/home/home_page.dart';
+import 'package:app_user/src/features/home/my_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -99,13 +100,24 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      // 읽은 알림: fontWeight normal
+      // 읽은 알림: fontWeight normal, 기본 배경색 (tileColor null)
       final readTitle = tester.widget<Text>(find.text('읽은 알림'));
       expect(readTitle.style?.fontWeight, FontWeight.normal);
+      final readTile = tester.widget<ListTile>(
+        find.ancestor(of: find.text('읽은 알림'), matching: find.byType(ListTile)),
+      );
+      expect(readTile.tileColor, isNull);
 
-      // 안읽은 알림: fontWeight bold
+      // 안읽은 알림: fontWeight bold, primary 계열 배경색 적용
       final unreadTitle = tester.widget<Text>(find.text('안읽은 알림'));
       expect(unreadTitle.style?.fontWeight, FontWeight.bold);
+      final unreadTile = tester.widget<ListTile>(
+        find.ancestor(
+          of: find.text('안읽은 알림'),
+          matching: find.byType(ListTile),
+        ),
+      );
+      expect(unreadTile.tileColor, isNotNull);
     });
 
     testWidgets('알림 tap → markAsRead + deep_link로 이동', (tester) async {
@@ -241,6 +253,9 @@ void main() {
 
       expect(find.byType(LoginPage), findsOneWidget);
       expect(find.byType(HomePage), findsNothing);
+      // from 파라미터가 /my로 전달되었는지 확인
+      final loginPage = tester.widget<LoginPage>(find.byType(LoginPage));
+      expect(loginPage.from, '/my');
     });
 
     testWidgets('비로그인 /events/:id/apply → /login?from=/events/:id/apply', (
@@ -254,6 +269,8 @@ void main() {
       await tester.pump();
 
       expect(find.byType(LoginPage), findsOneWidget);
+      final loginPage = tester.widget<LoginPage>(find.byType(LoginPage));
+      expect(loginPage.from, '/events/test-event-id/apply');
     });
 
     testWidgets('비로그인 /purchase-history → /login?from=/purchase-history', (
@@ -267,6 +284,8 @@ void main() {
       await tester.pump();
 
       expect(find.byType(LoginPage), findsOneWidget);
+      final loginPage = tester.widget<LoginPage>(find.byType(LoginPage));
+      expect(loginPage.from, '/purchase-history');
     });
   });
 
@@ -284,8 +303,9 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      // 로그인 상태 + from=/my → /my로 리다이렉트
+      // 로그인 상태 + from=/my → /my로 리다이렉트 (LoginPage 미표시, MyPage 표시)
       expect(find.byType(LoginPage), findsNothing);
+      expect(find.byType(MyPage), findsOneWidget);
     });
   });
 }
