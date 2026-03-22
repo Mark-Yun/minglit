@@ -41,7 +41,7 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 
 ### 2.1 Table Inventory
 
-총 **29개 테이블** + **4개 뷰** + **3개 PGMQ 큐 테이블**.
+총 **44개 테이블** + **4개 뷰** + **3개 PGMQ 큐 테이블** + **4개 analytics 테이블**.
 
 #### Core (사용자/파트너)
 
@@ -94,8 +94,33 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 | `match_pairs` | 매칭 결과 | event_id, user_lower_id, user_higher_id, matched_at |
 | `minglit_files` | 파일 메타데이터 | storage_object_id, bucket_id, file_path, owner_id |
 | `file_access_grants` | 파일 접근 권한 | file_id, viewer_id, expires_at |
-| `settlements` | 정산 | partner_id, event_id, total_sales, net_amount, status — [상세](./payment-pipeline.md) |
+| `settlements` | 정산 (레거시) | partner_id, event_id, total_sales, net_amount, status — [상세](./payment-pipeline.md) |
 | `report_details` | 신고 상세 정보 | social_interaction_id, target_type, reason, description |
+| `system_settings` | 시스템 설정 키-값 | key (PK), value jsonb, description |
+| `policies` | 약관/정책 버전 관리 | key, value jsonb, version, effective_date |
+
+#### Settlement v2 (정산 파이프라인 v2)
+
+| Table | Purpose | Key Columns |
+|-------|---------|-------------|
+| `settlement_items` | 정산 항목 (v2) | partner_id, source_type, source_id, status, gross_amount, net_amount, version |
+| `settlement_histories` | 정산 상태 변경 이력 | settlement_item_id, event_type, actor_type, from_status, to_status |
+| `payouts` | 지급 건 | partner_id, payout_period_start/end, status, total_net_amount |
+| `payout_transfers` | 지급 이체 시도 | payout_id, provider, status, amount, attempt_no, idempotency_key |
+| `adjustment_items` | 조정 항목 (환불/차감/보정) | partner_id, adjustment_type, amount_signed, status |
+| `business_calendar` | 영업일 달력 | date (PK), is_business_day, reason |
+| `reconciliation_runs` | 일일 대사 실행 | run_date, run_type, status, matched_count, mismatched_count |
+| `reconciliation_results` | 대사 불일치 결과 | run_id, settlement_item_id, mismatch_type, severity |
+| `settlement_alarm_results` | 정산 모니터링 알람 | alarm_type, severity, message, metric_value, threshold |
+
+#### Analytics (분석)
+
+| Table | Schema | Purpose | Key Columns |
+|-------|--------|---------|-------------|
+| `daily_active_users` | analytics | 일별 활성 사용자 | date, app, count |
+| `daily_events` | analytics | 일별 이벤트 집계 | date, event_name, count |
+| `daily_revenue` | analytics | 일별 매출 집계 | date, gross, net, refunds |
+| `funnel_daily` | analytics | 일별 퍼널 전환율 | date, step, count, conversion_rate |
 
 #### PGMQ Infrastructure
 
@@ -189,6 +214,12 @@ Supabase Edge Functions는 Deno 런타임 기반이며, `supabase/functions/` �
 | `health` | System | 시스템 헬스 체크 |
 | `dev-seed` | Dev | 테스트 데이터 시딩 (dev only) |
 | `dev-session-switch` | Dev | 테스트 유저 전환 (dev only) |
+| `backend-simulator` | Dev | 백엔드 시뮬레이터 (dev only) |
+| `dev-mock-portone` | Dev | Portone 목업 서버 (dev only) |
+| `metrics-alert` | Monitoring | 정산 메트릭 알람 발송 |
+| `payout-sync` | Payment | 지급 상태 동기화 |
+| `reconciliation-daily` | Payment | 일일 대사 (PG ↔ DB 불일치 검출) |
+| `settlement-register-transfers` | Payment | 정산 이체 등록 |
 
 ### 3.2 Shared Modules (`_shared/`)
 
@@ -196,7 +227,9 @@ Supabase Edge Functions는 Deno 런타임 기반이며, `supabase/functions/` �
 |--------|-----|---------|
 | `portone_client.ts` | 209 | Portone V2 API 클라이언트 (결제 검증, 취소) |
 | `iamport_client.ts` | 63 | Iamport V1 레거시 API 래퍼 |
-| `sentry_utils.ts` | 105 | Sentry 에러 트래킹 (`withSentry`, `withSentryHandler`) |
+| `logger.ts` | — | 구조화 로깅 (Axiom 연동, Sentry 래퍼) |
+| `axiom_logger.ts` | — | Axiom 로그 전송 클라이언트 |
+| `statsig_utils.ts` | — | Statsig 피처 플래그 / 이벤트 로깅 |
 | `worker_utils.ts` | 58 | PGMQ 워커 유틸 (중복 체크, DLQ, 지연 로깅) |
 | `auth_utils.ts` | 38 | 인증 유틸 (`requireAuth` — Bearer 토큰 → `auth.getUser()`) |
 | `response_utils.ts` | 33 | HTTP 응답 헬퍼 (CORS, JSON/에러 응답) |
