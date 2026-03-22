@@ -64,7 +64,7 @@ jobs:
             echo "::error::SUPABASE_PUBLISHABLE_KEY is not set. Vault injection failed."
             exit 1
           fi
-          supabase db execute --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD <<EOSQL
+          supabase db execute <<EOSQL
           DO \$\$
           DECLARE
             v_publishable_secret_id uuid;
@@ -129,7 +129,7 @@ jobs:
             echo "::error::SUPABASE_PUBLISHABLE_KEY is not set. Vault injection failed."
             exit 1
           fi
-          supabase db execute --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD <<EOSQL
+          supabase db execute <<EOSQL
           DO \$\$
           DECLARE
             v_publishable_secret_id uuid;
@@ -178,8 +178,6 @@ jobs:
         run: |
           EXPECTED=$(ls supabase/migrations/*.sql | wc -l | tr -d ' ')
           APPLIED=$(supabase db execute \
-            --project-ref ${{ steps.env.outputs.PROJECT_ID }} \
-            --password ${{ steps.env.outputs.DB_PASSWORD }} \
             --sql "SELECT count(*)::text FROM supabase_migrations.schema_migrations;" \
             | grep -oE '[0-9]+' | head -1)
           echo "Expected: $EXPECTED, Applied: $APPLIED"
@@ -194,8 +192,6 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
           supabase db execute \
-            --project-ref ${{ steps.env.outputs.PROJECT_ID }} \
-            --password ${{ steps.env.outputs.DB_PASSWORD }} \
             --sql "$(cat scripts/verify-db-objects.sql)"
 
       # --- DB state snapshot ---
@@ -209,8 +205,6 @@ jobs:
           echo "# ${ENV} DB State — $(date -u '+%Y-%m-%d %H:%M UTC')" > "$REPORT_FILE"
           echo "" >> "$REPORT_FILE"
           supabase db execute \
-            --project-ref ${{ steps.env.outputs.PROJECT_ID }} \
-            --password ${{ steps.env.outputs.DB_PASSWORD }} \
             --sql "$(cat scripts/db-snapshot.sql)" >> "$REPORT_FILE"
 
       - name: Commit DB state report
