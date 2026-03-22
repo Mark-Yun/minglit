@@ -202,6 +202,7 @@ class PurchaseHistoryCard extends ConsumerWidget {
                       context: context,
                       ref: ref,
                       eventName: eventName,
+                      eventId: application.eventId,
                       paymentId: paymentId,
                       paymentAmount: paymentAmount,
                       eventStartTime: eventStartTime,
@@ -236,10 +237,12 @@ class PurchaseHistoryCard extends ConsumerWidget {
     return null;
   }
 
+  // Fix #299: eventId 추가 — user-cancel-order EF 전환
   Future<void> _onCancelPressed({
     required BuildContext context,
     required WidgetRef ref,
     required String eventName,
+    required String eventId,
     required String? paymentId,
     required int? paymentAmount,
     required DateTime? eventStartTime,
@@ -247,6 +250,7 @@ class PurchaseHistoryCard extends ConsumerWidget {
   }) async {
     final controller = ref.read(purchaseHistoryControllerProvider.notifier);
     await controller.runRefundFlow(
+      eventId: eventId,
       paymentId: paymentId,
       paymentAmount: paymentAmount,
       eventStartTime: eventStartTime,

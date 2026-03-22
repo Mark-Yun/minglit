@@ -174,6 +174,112 @@ void main() {
       });
     });
 
+    group('cancelOrder', () {
+      test('returns cancelled result on pre-payment cancel', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-cancel-order',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true, 'type': 'cancelled'},
+          ),
+        );
+
+        final result = await repository.cancelOrder(eventId: 'event_1');
+
+        expect(result.type, 'cancelled');
+        expect(result.refundAmount, isNull);
+      });
+
+      test('returns refunded result with amount', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-cancel-order',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {
+              'success': true,
+              'type': 'refunded',
+              'data': {'refund_amount': 30000},
+            },
+          ),
+        );
+
+        final result = await repository.cancelOrder(
+          eventId: 'event_1',
+          reason: '일정 변경',
+        );
+
+        expect(result.type, 'refunded');
+        expect(result.refundAmount, 30000);
+      });
+
+      test('passes reason when provided', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-cancel-order',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true, 'type': 'cancelled'},
+          ),
+        );
+
+        await repository.cancelOrder(
+          eventId: 'event_1',
+          reason: '일정 변경',
+        );
+
+        verify(
+          () => mockFunctions.invoke(
+            'user-cancel-order',
+            body: {'event_id': 'event_1', 'reason': '일정 변경'},
+          ),
+        ).called(1);
+      });
+
+      test('throws MinglitUserException on error response', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-cancel-order',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 400,
+            data: {'error': '이미 취소/거절된 신청입니다'},
+          ),
+        );
+
+        expect(
+          () => repository.cancelOrder(eventId: 'event_1'),
+          throwsA(isA<MinglitUserException>()),
+        );
+      });
+
+      test('throws on network error', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-cancel-order',
+            body: any(named: 'body'),
+          ),
+        ).thenThrow(Exception('network error'));
+
+        await expectLater(
+          repository.cancelOrder(eventId: 'event_1'),
+          throwsA(anything),
+        );
+      });
+    });
+
     group('applyEvent', () {
       test('calls apply_event RPC and returns application ID', () async {
         when(

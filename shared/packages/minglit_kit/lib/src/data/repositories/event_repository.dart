@@ -39,6 +39,17 @@ class CreateOrderResult {
   final String ticketName;
 }
 
+/// Fix #299: Result from user-cancel-order Edge Function.
+class CancelOrderResult {
+  const CancelOrderResult({required this.type, this.refundAmount});
+
+  /// 'cancelled' (결제 전/무료) or 'refunded' (유료 환불)
+  final String type;
+
+  /// 환불 금액 (type == 'refunded'일 때만)
+  final int? refundAmount;
+}
+
 abstract class _SupabaseEventContext {
   SupabaseClient get supabaseClient;
 }
