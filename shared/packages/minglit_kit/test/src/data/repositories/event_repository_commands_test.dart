@@ -155,7 +155,10 @@ void main() {
       ).thenAnswer(
         (_) async => FunctionResponse(
           status: 400,
-          data: {'error': 'ELIGIBILITY_FAILED', 'details': {'reason': 'gender_mismatch'}},
+          data: {
+            'error': 'ELIGIBILITY_FAILED',
+            'details': {'reason': 'gender_mismatch'},
+          },
         ),
       );
 
@@ -175,7 +178,7 @@ void main() {
           body: any(named: 'body'),
         ),
       ).thenAnswer(
-        (_) async => FunctionResponse(status: 200, data: null),
+        (_) async => FunctionResponse(status: 200),
       );
 
       expect(
@@ -204,5 +207,4 @@ void main() {
       );
     });
   });
-
 }

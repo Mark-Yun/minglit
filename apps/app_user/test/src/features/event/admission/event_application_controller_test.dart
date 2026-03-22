@@ -31,7 +31,6 @@ void main() {
     updatedAt: now,
     targetEntryGroupIds: [],
     requiredVerificationIds: [],
-    price: 0,
   );
 
   final testEvent = Event(
@@ -67,7 +66,9 @@ void main() {
 
         controller.selectTicket(testTicketPaid);
 
-        final state = container.read(eventApplicationControllerProvider(testEvent));
+        final state = container.read(
+          eventApplicationControllerProvider(testEvent),
+        );
         expect(state.selectedTicket?.id, 'ticket_paid');
       });
     });
@@ -80,7 +81,7 @@ void main() {
             ticketId: any(named: 'ticketId'),
           ),
         ).thenAnswer(
-          (_) async => CreateOrderResult(
+          (_) async => const CreateOrderResult(
             applicationId: 'app-free',
             amount: 0,
             requiresPayment: false,
@@ -105,7 +106,9 @@ void main() {
           _FakeBuildContext(),
         );
 
-        final state = container.read(eventApplicationControllerProvider(testEvent));
+        final state = container.read(
+          eventApplicationControllerProvider(testEvent),
+        );
         expect(state.status, EventApplicationStatus.success);
         // createOrder was called with the free ticket
         verify(
@@ -139,7 +142,9 @@ void main() {
 
         await controller.processPayment(_FakeBuildContext());
 
-        final state = container.read(eventApplicationControllerProvider(testEvent));
+        final state = container.read(
+          eventApplicationControllerProvider(testEvent),
+        );
         expect(state.status, EventApplicationStatus.error);
         expect(state.errorMessage, isNotNull);
       });
@@ -165,7 +170,9 @@ void main() {
 
         await controller.processPayment(_FakeBuildContext());
 
-        final state = container.read(eventApplicationControllerProvider(testEvent));
+        final state = container.read(
+          eventApplicationControllerProvider(testEvent),
+        );
         expect(state.status, EventApplicationStatus.error);
         expect(state.errorMessage, contains('매진'));
       });
@@ -191,7 +198,9 @@ void main() {
 
         await controller.processPayment(_FakeBuildContext());
 
-        final state = container.read(eventApplicationControllerProvider(testEvent));
+        final state = container.read(
+          eventApplicationControllerProvider(testEvent),
+        );
         expect(state.status, EventApplicationStatus.error);
         expect(state.errorMessage, contains('이미 신청'));
       });
@@ -213,7 +222,9 @@ void main() {
         await controller.processPayment(_FakeBuildContext());
 
         // Should remain in initial state
-        final state = container.read(eventApplicationControllerProvider(testEvent));
+        final state = container.read(
+          eventApplicationControllerProvider(testEvent),
+        );
         expect(state.status, EventApplicationStatus.initial);
         verifyNever(
           () => mockEventRepo.createOrder(
@@ -239,7 +250,9 @@ void main() {
 
         await controller.processPayment(_FakeBuildContext());
 
-        final state = container.read(eventApplicationControllerProvider(testEvent));
+        final state = container.read(
+          eventApplicationControllerProvider(testEvent),
+        );
         expect(state.status, EventApplicationStatus.initial);
         verifyNever(
           () => mockEventRepo.createOrder(
@@ -258,7 +271,7 @@ void main() {
             ticketId: any(named: 'ticketId'),
           ),
         ).thenAnswer(
-          (_) async => CreateOrderResult(
+          (_) async => const CreateOrderResult(
             applicationId: 'app-free-2',
             amount: 0,
             requiresPayment: false,
@@ -279,7 +292,9 @@ void main() {
 
         await controller.submitApplication(_FakeBuildContext());
 
-        final state = container.read(eventApplicationControllerProvider(testEvent));
+        final state = container.read(
+          eventApplicationControllerProvider(testEvent),
+        );
         expect(state.status, EventApplicationStatus.success);
       });
     });
@@ -313,7 +328,9 @@ void main() {
 
         controller.resetStatus();
 
-        final state = container.read(eventApplicationControllerProvider(testEvent));
+        final state = container.read(
+          eventApplicationControllerProvider(testEvent),
+        );
         expect(state.status, EventApplicationStatus.initial);
         expect(state.selectedTicket?.id, 'ticket_paid'); // preserved
         expect(state.errorMessage, isNull);
