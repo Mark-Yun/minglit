@@ -522,9 +522,11 @@ entrypoint = "./functions/backend-simulator/index.ts"
 [functions.event-checkin]
 enabled = true
 verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
+import_map = "./functions/event-checkin/deno.json"
 entrypoint = "./functions/event-checkin/index.ts"
 
 [functions.event-matching]
 enabled = true
 verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
+import_map = "./functions/event-matching/deno.json"
 entrypoint = "./functions/event-matching/index.ts"
