@@ -101,7 +101,7 @@ void main() {
       expect(notifier.validateStep(99), isFalse);
     });
 
-    test('validateAll returns true only when all required fields are filled',
+    test('validateAll returns false when required file paths are missing',
         () {
       final container = createContainer(
         overrides: [

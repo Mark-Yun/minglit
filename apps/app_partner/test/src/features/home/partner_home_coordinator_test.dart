@@ -62,7 +62,11 @@ void main() {
       coordinator.pushNotificationCenter();
       coordinator.pushApplicationList();
 
-      verify(() => mockRouter.push(any())).called(2);
+      final captured = verify(
+        () => mockRouter.push(captureAny()),
+      ).captured;
+      expect(captured.length, 2);
+      expect(captured[0], isNot(equals(captured[1])));
     });
   });
 }

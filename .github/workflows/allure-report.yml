@@ -92,32 +92,21 @@ jobs:
           mkdir -p allure-results
 
           # categories.json — failure type classification
-          cat > allure-results/categories.json <<'CATEOF'
-[
-  {"name": "Test Defects", "matchedStatuses": ["failed"]},
-  {"name": "Infrastructure Issues", "matchedStatuses": ["broken"]},
-  {"name": "Skipped / Disabled", "matchedStatuses": ["skipped"]}
-]
-CATEOF
+          printf '%s\n' '[' \
+            '  {"name": "Test Defects", "matchedStatuses": ["failed"]},' \
+            '  {"name": "Infrastructure Issues", "matchedStatuses": ["broken"]},' \
+            '  {"name": "Skipped / Disabled", "matchedStatuses": ["skipped"]}' \
+            ']' > allure-results/categories.json
 
           # executor.json — CI link
-          cat > allure-results/executor.json <<EXEOF
-{
-  "name": "GitHub Actions",
-  "type": "github",
-  "buildName": "Daily Report #${GITHUB_RUN_NUMBER}",
-  "buildUrl": "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}",
-  "reportUrl": "https://mark-yun.github.io/minglit/"
-}
-EXEOF
+          printf '{\n  "name": "GitHub Actions",\n  "type": "github",\n  "buildName": "Daily Report #%s",\n  "buildUrl": "%s/%s/actions/runs/%s",\n  "reportUrl": "https://mark-yun.github.io/minglit/"\n}\n' \
+            "${GITHUB_RUN_NUMBER}" "${GITHUB_SERVER_URL}" "${GITHUB_REPOSITORY}" "${GITHUB_RUN_ID}" \
+            > allure-results/executor.json
 
           # environment.properties — build info + coverage
-          cat > allure-results/environment.properties <<ENVEOF
-Report.Date=$(date -u +%Y-%m-%d)
-Flutter.Channel=stable
-Repository=${GITHUB_REPOSITORY}
-Branch=dev
-ENVEOF
+          printf 'Report.Date=%s\nFlutter.Channel=stable\nRepository=%s\nBranch=dev\n' \
+            "$(date -u +%Y-%m-%d)" "${GITHUB_REPOSITORY}" \
+            > allure-results/environment.properties
 
           # Parse coverage from lcov.info and append to environment.properties
           calc_coverage() {
