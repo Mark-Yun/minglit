@@ -34,7 +34,7 @@ mixin _EventRepositoryCommands
         'user-cancel-order',
         body: {
           'event_id': eventId,
-          if (reason != null) 'reason': reason,
+          'reason': ?reason,
         },
       );
 
