@@ -90,6 +90,35 @@ cd apps/app_user && flutter build apk --flavor dev --release --dart-define-from-
 adb -s adb-R3CX803P2ND-8btuuD._adb-tls-connect._tcp install -r build/app/outputs/flutter-apk/app-dev-debug.apk
 ```
 
+## RLS & Write Strategy
+
+클라이언트(user/partner)는 **READ-only RLS**만 갖고, **쓰기/삭제는 Edge Function을 통해** 수행한다.
+
+### 원칙
+- **SELECT**: RLS 정책으로 클라이언트가 직접 조회 가능
+- **INSERT / UPDATE / DELETE**: Edge Function → `service_role`로 수행
+- 클라이언트에서 직접 `insert()`, `update()`, `delete()` 호출 금지
+
+### 이유
+- RLS write 정책은 복잡해지면 보안 취약점 발생 가능
+- Edge Function에서 비즈니스 로직(검증, 권한 체크, 부수 효과)을 일관되게 처리
+- 감사 로그, 알림, 정산 같은 부수 효과를 한 곳에서 관리
+
+### 예외 (허용)
+- `service_role` 전용 ALL/INSERT/UPDATE/DELETE 정책은 허용 (EF 내부에서 사용)
+- DB 트리거/크론잡에서의 쓰기는 허용 (서버 사이드)
+
+### 새 테이블 생성 시
+```sql
+-- ✅ 올바른 패턴
+ALTER TABLE public.new_table ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "authenticated_read" ON public.new_table FOR SELECT TO authenticated USING (...);
+-- INSERT/UPDATE/DELETE는 Edge Function에서 service_role로 수행
+
+-- ❌ 잘못된 패턴
+CREATE POLICY "users_can_insert" ON public.new_table FOR INSERT TO authenticated WITH CHECK (...);
+```
+
 ## Supabase Migration Rules
 
 - 새 migration 생성 시, 반드시 `ls supabase/migrations/` 로 기존 version 확인 후 다음 번호 사용.
