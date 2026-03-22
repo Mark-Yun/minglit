@@ -99,7 +99,9 @@ class NotificationRepository {
     );
     _ensureSuccess(response);
 
-    final data = jsonDecode(response.data as String) as Map<String, dynamic>;
+    final data = response.data is String
+        ? jsonDecode(response.data as String) as Map<String, dynamic>
+        : response.data as Map<String, dynamic>;
     final settings = data['settings'] as Map<String, dynamic>?;
     if (settings == null) return null;
     return UserSettings.fromJson(settings);
