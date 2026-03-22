@@ -108,7 +108,7 @@ jobs:
     env:
       IS_PROD: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' }}
     steps:
-      - name: Set URLs
+      - name: Set URLs and bypass tokens
         id: urls
         run: |
           if [ "$IS_PROD" = "true" ]; then
@@ -125,18 +125,33 @@ jobs:
             echo "supabase=${{ secrets.SUPABASE_DEV_URL }}" >> "$GITHUB_OUTPUT"
           fi
       - name: Smoke test — Vercel apps
+        env:
+          BYPASS_APP_USER: ${{ secrets.VERCEL_BYPASS_APP_USER }}
+          BYPASS_APP_PARTNER: ${{ secrets.VERCEL_BYPASS_APP_PARTNER }}
+          BYPASS_LANDING_USER: ${{ secrets.VERCEL_BYPASS_LANDING_USER }}
+          BYPASS_LANDING_PARTNER: ${{ secrets.VERCEL_BYPASS_LANDING_PARTNER }}
         run: |
           failed=0
+          declare -A BYPASS_MAP=(
+            ["${{ steps.urls.outputs.app_user }}"]="$BYPASS_APP_USER"
+            ["${{ steps.urls.outputs.app_partner }}"]="$BYPASS_APP_PARTNER"
+            ["${{ steps.urls.outputs.landing_user }}"]="$BYPASS_LANDING_USER"
+            ["${{ steps.urls.outputs.landing_partner }}"]="$BYPASS_LANDING_PARTNER"
+          )
           for url in \
             "${{ steps.urls.outputs.app_user }}" \
             "${{ steps.urls.outputs.app_partner }}" \
             "${{ steps.urls.outputs.landing_user }}" \
             "${{ steps.urls.outputs.landing_partner }}"; do
             printf "Checking %s ... " "$url"
-            if curl -fsSL -o /dev/null -w "%{http_code}" --max-time 15 "$url"; then
-              echo " ✅"
+            BYPASS="${BYPASS_MAP[$url]}"
+            STATUS=$(curl -sL -o /dev/null -w "%{http_code}" \
+              -H "x-vercel-protection-bypass: $BYPASS" \
+              --max-time 15 "$url" || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ ($STATUS)"
             else
-              echo " ❌"
+              echo "❌ ($STATUS)"
               failed=1
             fi
           done
@@ -148,7 +163,7 @@ jobs:
         run: |
           HEALTH_URL="${{ steps.urls.outputs.supabase }}/functions/v1/health"
           printf "Checking %s ... " "$HEALTH_URL"
-          STATUS=$(curl -fsSL -o /dev/null -w "%{http_code}" --max-time 15 "$HEALTH_URL" || true)
+          STATUS=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 15 "$HEALTH_URL" || echo "000")
           if [ "$STATUS" = "200" ]; then
             echo "✅"
           else
