@@ -96,10 +96,11 @@ SELECT is(
   'Application status synced to rejected'
 );
 
+-- Fix #301: admin_comment dropped — rejection_reason no longer synced from verification
 SELECT is(
   (SELECT rejection_reason FROM refund_results),
-  'Invalid ID Proof',
-  'Rejection reason synced to application'
+  NULL::text,
+  'Rejection reason is null (admin_comment removed)'
 );
 
 SELECT is(
