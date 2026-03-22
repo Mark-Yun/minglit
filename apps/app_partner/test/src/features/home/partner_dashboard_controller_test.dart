@@ -90,7 +90,7 @@ void main() {
 
       // Read synchronously — loadDashboardData hasn't completed yet.
       final state = container.read(partnerDashboardControllerProvider);
-      expect(state.status, isA<AsyncLoading>());
+      expect(state.status, isA<AsyncLoading<void>>());
 
       // Subscribe and pump to let the background microtask complete cleanly
       // before the container is disposed by addTearDown.
@@ -107,7 +107,7 @@ void main() {
       final container = await buildAndPump();
 
       final state = container.read(partnerDashboardControllerProvider);
-      expect(state.status, isA<AsyncData>());
+      expect(state.status, isA<AsyncData<void>>());
       expect(state.pendingReviewCount, 3);
       expect(state.upcomingEvents, contains(_testEvent));
       expect(state.activeParties, contains(_testParty));
@@ -131,7 +131,7 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
       final state = container.read(partnerDashboardControllerProvider);
-      expect(state.status, isA<AsyncData>());
+      expect(state.status, isA<AsyncData<void>>());
       expect(state.pendingReviewCount, 0);
       expect(state.upcomingEvents, isEmpty);
       expect(state.activeParties, isEmpty);
@@ -144,7 +144,7 @@ void main() {
       final container = await buildAndPump();
 
       final state = container.read(partnerDashboardControllerProvider);
-      expect(state.status, isA<AsyncError>());
+      expect(state.status, isA<AsyncError<void>>());
     });
 
     test('manual loadDashboardData refreshes pendingReviewCount', () async {

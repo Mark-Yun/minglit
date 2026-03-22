@@ -73,7 +73,7 @@ void main() {
       final container = buildContainer();
       final state = container.read(ticketControllerProvider);
 
-      expect(state, isA<AsyncData>());
+      expect(state, isA<AsyncData<void>>());
     });
 
     test('createTicket calls repo.createTicket and sets AsyncData', () async {
@@ -89,7 +89,7 @@ void main() {
       verify(() => mockTicketRepo.createTicket(any())).called(1);
 
       final state = container.read(ticketControllerProvider);
-      expect(state, isA<AsyncData>());
+      expect(state, isA<AsyncData<void>>());
     });
 
     test('createTicket sets AsyncError on repo failure', () async {
@@ -106,7 +106,7 @@ void main() {
           );
 
       final state = container.read(ticketControllerProvider);
-      expect(state, isA<AsyncError>());
+      expect(state, isA<AsyncError<void>>());
     });
 
     test('updateTicket calls repo.updateTicket', () async {
