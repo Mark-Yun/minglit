@@ -110,6 +110,8 @@ Deno.serve(withHandler(async (req) => {
               .update({
                 snapshot_data: snapshotArray,
                 status: "pending",
+                reviewed_at: null,
+                reviewed_by: null,
               })
               .eq("id", existing.id),
           );
