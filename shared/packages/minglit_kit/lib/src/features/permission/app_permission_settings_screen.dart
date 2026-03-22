@@ -63,8 +63,7 @@ class _AppPermissionSettingsScreenState
 
     // Fix #186: 알림 권한 — firebase_messaging으로 확인
     if (!kIsWeb) {
-      final notifStatus =
-          await _checkNotificationPermission();
+      final notifStatus = await _checkNotificationPermission();
       items.add(
         _PermissionItem(
           icon: Icons.notifications_outlined,
@@ -111,17 +110,14 @@ class _AppPermissionSettingsScreenState
 
   Future<_PermissionStatus> _checkLocationPermission() async {
     try {
-      final serviceEnabled =
-          await Geolocator.isLocationServiceEnabled();
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) return _PermissionStatus.disabled;
 
       final permission = await Geolocator.checkPermission();
       return switch (permission) {
         LocationPermission.always ||
-        LocationPermission.whileInUse =>
-          _PermissionStatus.granted,
-        LocationPermission.deniedForever =>
-          _PermissionStatus.permanentlyDenied,
+        LocationPermission.whileInUse => _PermissionStatus.granted,
+        LocationPermission.deniedForever => _PermissionStatus.permanentlyDenied,
         _ => _PermissionStatus.denied,
       };
     } on Exception {
@@ -129,17 +125,14 @@ class _AppPermissionSettingsScreenState
     }
   }
 
-  Future<_PermissionStatus> _checkNotificationPermission()
-      async {
+  Future<_PermissionStatus> _checkNotificationPermission() async {
     try {
       final settings = await FirebaseMessaging.instance
           .getNotificationSettings();
       return switch (settings.authorizationStatus) {
         AuthorizationStatus.authorized ||
-        AuthorizationStatus.provisional =>
-          _PermissionStatus.granted,
-        AuthorizationStatus.denied =>
-          _PermissionStatus.denied,
+        AuthorizationStatus.provisional => _PermissionStatus.granted,
+        AuthorizationStatus.denied => _PermissionStatus.denied,
         _ => _PermissionStatus.denied,
       };
     } on Exception {
@@ -164,18 +157,15 @@ class _AppPermissionSettingsScreenState
                   child: Text(
                     '앱에서 사용하는 권한을 확인하고 '
                     '관리할 수 있습니다.',
-                    style:
-                        theme.textTheme.bodyMedium?.copyWith(
-                      color:
-                          theme.colorScheme.onSurfaceVariant,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),
                 ..._permissions.map(
                   (item) => _PermissionTile(
                     item: item,
-                    onTap: item.status ==
-                            _PermissionStatus.onDemand
+                    onTap: item.status == _PermissionStatus.onDemand
                         ? null
                         : _openAppSettings,
                   ),
@@ -187,10 +177,8 @@ class _AppPermissionSettingsScreenState
                   ),
                   child: Text(
                     _settingsGuideText,
-                    style:
-                        theme.textTheme.bodySmall?.copyWith(
-                      color:
-                          theme.colorScheme.onSurfaceVariant,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),
@@ -282,8 +270,7 @@ class _PermissionTile extends StatelessWidget {
             ),
             child: Text(
               statusText,
-              style: theme.textTheme.labelSmall
-                  ?.copyWith(color: statusColor),
+              style: theme.textTheme.labelSmall?.copyWith(color: statusColor),
             ),
           ),
           if (onTap != null) ...[
