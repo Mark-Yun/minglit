@@ -199,7 +199,17 @@ BEGIN
   END IF;
 
   -- ==============================
-  -- 3. Result
+  -- 3. Vault secrets
+  -- ==============================
+  IF NOT EXISTS (SELECT 1 FROM vault.decrypted_secrets WHERE name = 'publishable_key') THEN
+    missing := missing || 'vault:publishable_key';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM vault.decrypted_secrets WHERE name = 'supabase_url') THEN
+    missing := missing || 'vault:supabase_url';
+  END IF;
+
+  -- ==============================
+  -- 4. Result
   -- ==============================
   IF array_length(missing, 1) > 0 THEN
     RAISE EXCEPTION 'Missing DB objects: %', array_to_string(missing, ', ');
