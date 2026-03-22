@@ -39,8 +39,9 @@ void main() {
   }
 
   group('PartnerMemberPermissionPage — Fix #270 회귀 테스트', () {
-    testWidgets('unknown role "member" defaults to "staff" without crash',
-        (tester) async {
+    testWidgets('unknown role "member" defaults to "staff" without crash', (
+      tester,
+    ) async {
       final memberData = {
         'user_id': 'u1',
         'role': 'member', // Dropdown에 없는 값
@@ -48,11 +49,13 @@ void main() {
         'user': {'name': 'Test User', 'email': 'test@test.com'},
       };
 
-      await tester.pumpWidget(buildTestWidget(
-        partnerId: 'p1',
-        targetUserId: 'u1',
-        memberData: memberData,
-      ));
+      await tester.pumpWidget(
+        buildTestWidget(
+          partnerId: 'p1',
+          targetUserId: 'u1',
+          memberData: memberData,
+        ),
+      );
       await tester.pump();
       await tester.pump();
 
@@ -69,11 +72,13 @@ void main() {
         'user': {'name': 'Test User', 'email': 'test@test.com'},
       };
 
-      await tester.pumpWidget(buildTestWidget(
-        partnerId: 'p1',
-        targetUserId: 'u1',
-        memberData: memberData,
-      ));
+      await tester.pumpWidget(
+        buildTestWidget(
+          partnerId: 'p1',
+          targetUserId: 'u1',
+          memberData: memberData,
+        ),
+      );
       await tester.pump();
       await tester.pump();
 
@@ -88,19 +93,22 @@ void main() {
         'user': {'name': 'Test User', 'email': 'test@test.com'},
       };
 
-      await tester.pumpWidget(buildTestWidget(
-        partnerId: 'p1',
-        targetUserId: 'u1',
-        memberData: memberData,
-      ));
+      await tester.pumpWidget(
+        buildTestWidget(
+          partnerId: 'p1',
+          targetUserId: 'u1',
+          memberData: memberData,
+        ),
+      );
       await tester.pump();
       await tester.pump();
 
       expect(find.byType(DropdownButton<String>), findsOneWidget);
     });
 
-    testWidgets('null user_id aborts save without calling repository',
-        (tester) async {
+    testWidgets('null user_id aborts save without calling repository', (
+      tester,
+    ) async {
       final memberData = {
         'user_id': null, // null user_id
         'role': 'staff',
@@ -108,11 +116,13 @@ void main() {
         'user': {'name': 'Test User', 'email': 'test@test.com'},
       };
 
-      await tester.pumpWidget(buildTestWidget(
-        partnerId: 'p1',
-        targetUserId: 'u1',
-        memberData: memberData,
-      ));
+      await tester.pumpWidget(
+        buildTestWidget(
+          partnerId: 'p1',
+          targetUserId: 'u1',
+          memberData: memberData,
+        ),
+      );
       await tester.pump();
       await tester.pump();
 

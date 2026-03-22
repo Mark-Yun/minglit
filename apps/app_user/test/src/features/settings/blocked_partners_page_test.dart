@@ -25,10 +25,12 @@ void main() {
   }
 
   group('BlockedPartnersPage — Fix #270 회귀 테스트', () {
-    testWidgets('network failure shows snackbar and stops loading',
-        (tester) async {
-      when(() => mockSocialRepo.getBlockedPartners())
-          .thenAnswer((_) async => throw Exception('Network error'));
+    testWidgets('network failure shows snackbar and stops loading', (
+      tester,
+    ) async {
+      when(
+        () => mockSocialRepo.getBlockedPartners(),
+      ).thenAnswer((_) async => throw Exception('Network error'));
 
       await tester.pumpWidget(buildTestWidget());
       await tester.pump(); // initState → _load()

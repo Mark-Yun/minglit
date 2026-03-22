@@ -31,8 +31,9 @@ void main() {
   }
 
   group('PurchaseHistoryCard — Fix #270 회귀 테스트', () {
-    testWidgets('renders card without crash when paymentAmount is null',
-        (tester) async {
+    testWidgets('renders card without crash when paymentAmount is null', (
+      tester,
+    ) async {
       final mockHistory = [
         EventApplication(
           id: 'app1',
@@ -42,7 +43,6 @@ void main() {
           status: 'paid',
           createdAt: DateTime(2024),
           updatedAt: DateTime(2024),
-          paymentAmount: null, // Fix #270: null paymentAmount
           event: Event(
             id: 'event1',
             partyId: 'party1',
@@ -57,7 +57,6 @@ void main() {
             name: 'Free Ticket',
             createdAt: DateTime(2024),
             updatedAt: DateTime(2024),
-            price: 0,
           ),
         ),
       ];
