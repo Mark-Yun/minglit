@@ -47,5 +47,5 @@ jobs:
             gh issue comment "$EXISTING" --repo "$REPO" --body "$BODY"
           else
             echo "🆕 Creating new issue..."
-            gh issue create --repo "$REPO" --title "$TITLE" --body "$BODY" --label "ci-failure"
+            gh issue create --repo "$REPO" --title "$TITLE" --body "$BODY" --label "ci-failure" --label "P0-critical"
           fi
