@@ -77,7 +77,7 @@ export async function simCreateParties(
       partner_id: partner.id,
       location_id: locationId,
       title: scenario.title,
-      description: "[E2E] 시뮬레이션 테스트 파티입니다.",
+      description: { ops: [{ insert: "[E2E] 시뮬레이션 테스트 파티입니다.\n" }] },
       image_urls: [],
       required_verification_ids: [],
       min_confirmed_count: 4,
