@@ -48,8 +48,7 @@ void main() {
         updatedAt: DateTime(2026),
       ),
     );
-    when(() => mockTicketRepo.updateTicketTemplate(any()))
-        .thenAnswer(
+    when(() => mockTicketRepo.updateTicketTemplate(any())).thenAnswer(
       (_) async => TicketTemplate(
         id: 'tmpl-1',
         partyId: 'party-1',
@@ -79,7 +78,9 @@ void main() {
     test('createTicket calls repo.createTicket and sets AsyncData', () async {
       final container = buildContainer();
 
-      await container.read(ticketControllerProvider.notifier).createTicket(
+      await container
+          .read(ticketControllerProvider.notifier)
+          .createTicket(
             eventId: 'event-1',
             name: 'VIP',
             price: 30000,
@@ -93,12 +94,15 @@ void main() {
     });
 
     test('createTicket sets AsyncError on repo failure', () async {
-      when(() => mockTicketRepo.createTicket(any()))
-          .thenThrow(Exception('create failed'));
+      when(
+        () => mockTicketRepo.createTicket(any()),
+      ).thenThrow(Exception('create failed'));
 
       final container = buildContainer();
 
-      await container.read(ticketControllerProvider.notifier).createTicket(
+      await container
+          .read(ticketControllerProvider.notifier)
+          .createTicket(
             eventId: 'event-1',
             name: 'VIP',
             price: 30000,

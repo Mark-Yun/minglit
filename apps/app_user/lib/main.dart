@@ -111,7 +111,9 @@ Future<void> appStartup(Ref ref) async {
       if (userId != null) {
         unawaited(StatsigAnalytics.updateUser(userId));
       } else {
-        unawaited(StatsigAnalytics.shutdown());
+        // Fix #155: shutdown() kills _initialized flag, blocking all future events.
+        // Reset to anonymous instead of shutting down the SDK.
+        unawaited(StatsigAnalytics.updateUser(''));
       }
     });
   });

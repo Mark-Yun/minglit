@@ -1,6 +1,5 @@
 import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/features/party/party_providers.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -11,18 +10,18 @@ import '../../../utils/test_utils.dart';
 final _testEvent = Event(
   id: 'event-1',
   partyId: 'party-1',
-  startTime: DateTime(2026, 6, 1),
+  startTime: DateTime(2026, 6),
   endTime: DateTime(2026, 6, 1, 23),
-  createdAt: DateTime(2026, 1, 1),
-  updatedAt: DateTime(2026, 1, 1),
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
 );
 
 final _testParty = Party(
   id: 'party-1',
   partnerId: 'partner-1',
   title: 'Test Party',
-  createdAt: DateTime(2026, 1, 1),
-  updatedAt: DateTime(2026, 1, 1),
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
 );
 
 const _testPartner = Partner(
@@ -39,14 +38,18 @@ void main() {
     mockEventRepo = MockEventRepository();
     mockPartyRepo = MockPartyRepository();
 
-    when(() => mockEventRepo.getPendingApplicationCount(any()))
-        .thenAnswer((_) async => 3);
-    when(() => mockEventRepo.getUpcomingEvents(any()))
-        .thenAnswer((_) async => [_testEvent]);
-    when(() => mockEventRepo.getClosingSoonEvents(any()))
-        .thenAnswer((_) async => []);
-    when(() => mockPartyRepo.getPartiesByPartnerId(any()))
-        .thenAnswer((_) async => [_testParty]);
+    when(
+      () => mockEventRepo.getPendingApplicationCount(any()),
+    ).thenAnswer((_) async => 3);
+    when(
+      () => mockEventRepo.getUpcomingEvents(any()),
+    ).thenAnswer((_) async => [_testEvent]);
+    when(
+      () => mockEventRepo.getClosingSoonEvents(any()),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockPartyRepo.getPartiesByPartnerId(any()),
+    ).thenAnswer((_) async => [_testParty]);
   });
 
   /// Creates container, subscribes to the dashboard provider, and pumps
@@ -65,7 +68,7 @@ void main() {
     // A listener is required for Riverpod to push state updates.
     final sub = container.listen(
       partnerDashboardControllerProvider,
-      (_, __) {},
+      (_, _) {},
     );
     addTearDown(sub.close);
 
@@ -96,7 +99,7 @@ void main() {
       // before the container is disposed by addTearDown.
       final sub = container.listen(
         partnerDashboardControllerProvider,
-        (_, __) {},
+        (_, _) {},
       );
       addTearDown(sub.close);
       await container.read(currentPartnerInfoProvider.future);
@@ -123,7 +126,7 @@ void main() {
       );
       final sub = container.listen(
         partnerDashboardControllerProvider,
-        (_, __) {},
+        (_, _) {},
       );
       addTearDown(sub.close);
       // Partner is null — the microtask still runs and checks the null branch.
@@ -138,8 +141,9 @@ void main() {
     });
 
     test('loadDashboardData sets error state on exception', () async {
-      when(() => mockEventRepo.getPendingApplicationCount(any()))
-          .thenThrow(Exception('network error'));
+      when(
+        () => mockEventRepo.getPendingApplicationCount(any()),
+      ).thenThrow(Exception('network error'));
 
       final container = await buildAndPump();
 
@@ -150,8 +154,9 @@ void main() {
     test('manual loadDashboardData refreshes pendingReviewCount', () async {
       final container = await buildAndPump();
 
-      when(() => mockEventRepo.getPendingApplicationCount(any()))
-          .thenAnswer((_) async => 7);
+      when(
+        () => mockEventRepo.getPendingApplicationCount(any()),
+      ).thenAnswer((_) async => 7);
 
       await container
           .read(partnerDashboardControllerProvider.notifier)

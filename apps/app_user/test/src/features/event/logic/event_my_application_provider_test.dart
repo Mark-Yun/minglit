@@ -2,7 +2,6 @@ import 'package:app_user/src/features/event/logic/event_my_application_provider.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../utils/mocks.dart';
 import '../../../../utils/test_utils.dart';
@@ -41,61 +40,65 @@ void main() {
       );
     });
 
-    test('returns application when user is logged in and application exists',
-        () async {
-      final mockApplication = EventApplication(
-        id: 'app_1',
-        eventId: 'event_abc',
-        ticketId: 'ticket_1',
-        userId: 'user_123',
-        status: 'approved',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-
-      when(
-        () => mockEventRepo.getApplication(
+    test(
+      'returns application when user is logged in and application exists',
+      () async {
+        final mockApplication = EventApplication(
+          id: 'app_1',
           eventId: 'event_abc',
+          ticketId: 'ticket_1',
           userId: 'user_123',
-        ),
-      ).thenAnswer((_) async => mockApplication);
+          status: 'approved',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
 
-      final container = createContainer(
-        overrides: [
-          currentUserProvider.overrideWithValue(mockUser),
-          eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-        ],
-      );
+        when(
+          () => mockEventRepo.getApplication(
+            eventId: 'event_abc',
+            userId: 'user_123',
+          ),
+        ).thenAnswer((_) async => mockApplication);
 
-      final result = await container.read(
-        eventMyApplicationProvider('event_abc').future,
-      );
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWithValue(mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+          ],
+        );
 
-      expect(result, mockApplication);
-    });
+        final result = await container.read(
+          eventMyApplicationProvider('event_abc').future,
+        );
 
-    test('returns null when user is logged in but no application found',
-        () async {
-      when(
-        () => mockEventRepo.getApplication(
-          eventId: 'event_abc',
-          userId: 'user_123',
-        ),
-      ).thenAnswer((_) async => null);
+        expect(result, mockApplication);
+      },
+    );
 
-      final container = createContainer(
-        overrides: [
-          currentUserProvider.overrideWithValue(mockUser),
-          eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-        ],
-      );
+    test(
+      'returns null when user is logged in but no application found',
+      () async {
+        when(
+          () => mockEventRepo.getApplication(
+            eventId: 'event_abc',
+            userId: 'user_123',
+          ),
+        ).thenAnswer((_) async => null);
 
-      final result = await container.read(
-        eventMyApplicationProvider('event_abc').future,
-      );
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWithValue(mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+          ],
+        );
 
-      expect(result, isNull);
-    });
+        final result = await container.read(
+          eventMyApplicationProvider('event_abc').future,
+        );
+
+        expect(result, isNull);
+      },
+    );
 
     test('calls repository with correct eventId and userId', () async {
       when(

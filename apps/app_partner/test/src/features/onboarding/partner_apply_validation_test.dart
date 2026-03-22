@@ -1,6 +1,5 @@
 import 'package:app_partner/src/features/onboarding/partner_apply_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:minglit_kit/minglit_kit.dart';
 
 import '../../../utils/test_utils.dart';
 
@@ -16,8 +15,7 @@ void main() {
         ],
       );
 
-      final notifier =
-          container.read(partnerApplyControllerProvider.notifier);
+      final notifier = container.read(partnerApplyControllerProvider.notifier);
 
       expect(notifier.validateStep(0), isFalse);
     });
@@ -31,15 +29,13 @@ void main() {
         ],
       );
 
-      final notifier =
-          container.read(partnerApplyControllerProvider.notifier);
+      final notifier = container.read(partnerApplyControllerProvider.notifier);
       notifier.updateField('brandName', 'My Brand');
 
       expect(notifier.validateStep(0), isTrue);
     });
 
-    test('validateStep(1) requires bizName, bizNumber, representativeName',
-        () {
+    test('validateStep(1) requires bizName, bizNumber, representativeName', () {
       final container = createContainer(
         overrides: [
           partnerApplyControllerProvider.overrideWith(
@@ -48,8 +44,7 @@ void main() {
         ],
       );
 
-      final notifier =
-          container.read(partnerApplyControllerProvider.notifier);
+      final notifier = container.read(partnerApplyControllerProvider.notifier);
 
       // Partial fill — missing representativeName
       notifier
@@ -71,8 +66,7 @@ void main() {
         ],
       );
 
-      final notifier =
-          container.read(partnerApplyControllerProvider.notifier);
+      final notifier = container.read(partnerApplyControllerProvider.notifier);
 
       expect(notifier.validateStep(2), isFalse);
 
@@ -95,14 +89,12 @@ void main() {
         ],
       );
 
-      final notifier =
-          container.read(partnerApplyControllerProvider.notifier);
+      final notifier = container.read(partnerApplyControllerProvider.notifier);
 
       expect(notifier.validateStep(99), isFalse);
     });
 
-    test('validateAll returns false when required file paths are missing',
-        () {
+    test('validateAll returns false when required file paths are missing', () {
       final container = createContainer(
         overrides: [
           partnerApplyControllerProvider.overrideWith(
@@ -111,8 +103,7 @@ void main() {
         ],
       );
 
-      final notifier =
-          container.read(partnerApplyControllerProvider.notifier);
+      final notifier = container.read(partnerApplyControllerProvider.notifier);
 
       expect(notifier.validateAll(), isFalse);
 

@@ -50,23 +50,25 @@ void main() {
       verify(() => mockRouter.push(any())).called(1);
     });
 
-    test('pushNotificationCenter and pushApplicationList push different routes',
-        () {
-      final container = createContainer(
-        overrides: [
-          goRouterProvider.overrideWithValue(mockRouter),
-        ],
-      );
-      final coordinator = container.read(partnerHomeCoordinatorProvider);
+    test(
+      'pushNotificationCenter and pushApplicationList push different routes',
+      () {
+        final container = createContainer(
+          overrides: [
+            goRouterProvider.overrideWithValue(mockRouter),
+          ],
+        );
+        final coordinator = container.read(partnerHomeCoordinatorProvider);
 
-      coordinator.pushNotificationCenter();
-      coordinator.pushApplicationList();
+        coordinator.pushNotificationCenter();
+        coordinator.pushApplicationList();
 
-      final captured = verify(
-        () => mockRouter.push(captureAny()),
-      ).captured;
-      expect(captured.length, 2);
-      expect(captured[0], isNot(equals(captured[1])));
-    });
+        final captured = verify(
+          () => mockRouter.push(captureAny()),
+        ).captured;
+        expect(captured.length, 2);
+        expect(captured[0], isNot(equals(captured[1])));
+      },
+    );
   });
 }
