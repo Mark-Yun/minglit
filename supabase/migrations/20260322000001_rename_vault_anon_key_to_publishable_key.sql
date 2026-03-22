@@ -13,10 +13,16 @@ BEGIN
   FROM vault.decrypted_secrets WHERE name = 'anon_key' LIMIT 1;
 
   IF v_secret IS NOT NULL THEN
-    -- Delete old, create new
-    DELETE FROM vault.secrets WHERE name = 'anon_key';
-    PERFORM vault.create_secret(v_secret, 'publishable_key', 'Publishable key for EF cron calls');
-    RAISE NOTICE 'vault: anon_key renamed to publishable_key';
+    IF EXISTS (SELECT 1 FROM vault.decrypted_secrets WHERE name = 'publishable_key') THEN
+      -- publishable_key already injected by CI; just remove the legacy key
+      DELETE FROM vault.secrets WHERE name = 'anon_key';
+      RAISE NOTICE 'vault: anon_key removed; publishable_key already exists';
+    ELSE
+      -- No publishable_key yet; copy value from anon_key
+      DELETE FROM vault.secrets WHERE name = 'anon_key';
+      PERFORM vault.create_secret(v_secret, 'publishable_key', 'Publishable key for EF cron calls');
+      RAISE NOTICE 'vault: anon_key renamed to publishable_key';
+    END IF;
   ELSE
     -- Maybe already renamed or never existed
     IF NOT EXISTS (SELECT 1 FROM vault.decrypted_secrets WHERE name = 'publishable_key') THEN

@@ -66,12 +66,25 @@ jobs:
           fi
           supabase db execute --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD <<EOSQL
           DO \$\$
+          DECLARE
+            v_publishable_secret_id uuid;
           BEGIN
-            IF NOT EXISTS (SELECT 1 FROM vault.decrypted_secrets WHERE name = 'publishable_key') THEN
+            SELECT id INTO v_publishable_secret_id
+            FROM vault.decrypted_secrets
+            WHERE name = 'publishable_key'
+            LIMIT 1;
+
+            IF v_publishable_secret_id IS NULL THEN
               PERFORM vault.create_secret('${SUPABASE_PUBLISHABLE_KEY}', 'publishable_key', 'Publishable key for EF cron calls');
               RAISE NOTICE 'vault: publishable_key created';
             ELSE
-              RAISE NOTICE 'vault: publishable_key already exists';
+              PERFORM vault.update_secret(
+                v_publishable_secret_id,
+                '${SUPABASE_PUBLISHABLE_KEY}',
+                'publishable_key',
+                'Publishable key for EF cron calls'
+              );
+              RAISE NOTICE 'vault: publishable_key updated';
             END IF;
           END \$\$;
           EOSQL
@@ -118,12 +131,25 @@ jobs:
           fi
           supabase db execute --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD <<EOSQL
           DO \$\$
+          DECLARE
+            v_publishable_secret_id uuid;
           BEGIN
-            IF NOT EXISTS (SELECT 1 FROM vault.decrypted_secrets WHERE name = 'publishable_key') THEN
+            SELECT id INTO v_publishable_secret_id
+            FROM vault.decrypted_secrets
+            WHERE name = 'publishable_key'
+            LIMIT 1;
+
+            IF v_publishable_secret_id IS NULL THEN
               PERFORM vault.create_secret('${SUPABASE_PUBLISHABLE_KEY}', 'publishable_key', 'Publishable key for EF cron calls');
               RAISE NOTICE 'vault: publishable_key created';
             ELSE
-              RAISE NOTICE 'vault: publishable_key already exists';
+              PERFORM vault.update_secret(
+                v_publishable_secret_id,
+                '${SUPABASE_PUBLISHABLE_KEY}',
+                'publishable_key',
+                'Publishable key for EF cron calls'
+              );
+              RAISE NOTICE 'vault: publishable_key updated';
             END IF;
           END \$\$;
           EOSQL
