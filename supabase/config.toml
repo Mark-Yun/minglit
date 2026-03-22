@@ -465,6 +465,7 @@ entrypoint = "./functions/bug-report/index.ts"
 [functions.identity-verify]
 enabled = true
 verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
+import_map = "./functions/identity-verify/deno.json"
 entrypoint = "./functions/identity-verify/index.ts"
 
 [functions.payment-verify]
@@ -483,11 +484,13 @@ entrypoint = "./functions/payment-cancel/index.ts"
 [functions.payment-webhook]
 enabled = true
 verify_jwt = false
+import_map = "./functions/payment-webhook/deno.json"
 entrypoint = "./functions/payment-webhook/index.ts"
 
 [functions.settlement-transfer]
 enabled = true
 verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
+import_map = "./functions/settlement-transfer/deno.json"
 entrypoint = "./functions/settlement-transfer/index.ts"
 
 [functions.settlement-query]
@@ -498,25 +501,30 @@ entrypoint = "./functions/settlement-query/index.ts"
 [functions.partner-sync]
 enabled = true
 verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
+import_map = "./functions/partner-sync/deno.json"
 entrypoint = "./functions/partner-sync/index.ts"
 
 [functions.settlement-register-transfers]
 enabled = true
 verify_jwt = false
+import_map = "./functions/settlement-register-transfers/deno.json"
 entrypoint = "./functions/settlement-register-transfers/index.ts"
 
 [functions.payout-sync]
 enabled = true
 verify_jwt = false
+import_map = "./functions/payout-sync/deno.json"
 entrypoint = "./functions/payout-sync/index.ts"
 
 [functions.reconciliation-daily]
 enabled = true
 verify_jwt = false
+import_map = "./functions/reconciliation-daily/deno.json"
 entrypoint = "./functions/reconciliation-daily/index.ts"
 [functions.backend-simulator]
 enabled = true
 verify_jwt = false  # dev-only, protected by isProduction() guard
+import_map = "./functions/backend-simulator/deno.json"
 entrypoint = "./functions/backend-simulator/index.ts"
 
 [functions.event-checkin]
@@ -530,3 +538,51 @@ enabled = true
 verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
 import_map = "./functions/event-matching/deno.json"
 entrypoint = "./functions/event-matching/index.ts"
+
+[functions.dev-mock-portone]
+enabled = true
+verify_jwt = false
+import_map = "./functions/dev-mock-portone/deno.json"
+entrypoint = "./functions/dev-mock-portone/index.ts"
+
+[functions.github-stats-sync]
+enabled = true
+verify_jwt = false
+import_map = "./functions/github-stats-sync/deno.json"
+entrypoint = "./functions/github-stats-sync/index.ts"
+
+[functions.user-cancel-order]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./functions/user-cancel-order/deno.json"
+entrypoint = "./functions/user-cancel-order/index.ts"
+
+[functions.user-create-order]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./functions/user-create-order/deno.json"
+entrypoint = "./functions/user-create-order/index.ts"
+
+[functions.user-manage-notification]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./functions/user-manage-notification/deno.json"
+entrypoint = "./functions/user-manage-notification/index.ts"
+
+# [functions.user-manage-settings]  # PR #318 머지 후 활성화
+# enabled = true
+# verify_jwt = false
+# import_map = "./functions/user-manage-settings/deno.json"
+# entrypoint = "./functions/user-manage-settings/index.ts"
+
+[functions.user-manage-social]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./functions/user-manage-social/deno.json"
+entrypoint = "./functions/user-manage-social/index.ts"
+
+[functions.metrics-alert]
+enabled = true
+verify_jwt = false
+import_map = "./functions/metrics-alert/deno.json"
+entrypoint = "./functions/metrics-alert/index.ts"
