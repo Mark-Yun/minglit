@@ -1,3 +1,4 @@
+// Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
 import { createClient } from "@supabase/supabase-js";
 import { errorResponse } from "./response_utils.ts";
 

@@ -41,7 +41,7 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 
 ### 2.1 Table Inventory
 
-총 **44개 테이블** + **4개 뷰** + **3개 PGMQ 큐 테이블** + **4개 analytics 테이블**.
+총 **44개 테이블(analytics 스키마 4개 포함)** + **4개 뷰** + **3개 PGMQ 큐 테이블**.
 
 #### Core (사용자/파트너)
 
@@ -409,13 +409,15 @@ User B ──vote──> User A
 
 ## 10. Error Handling & Monitoring
 
-### Sentry Integration
+### Logging & Monitoring
 
-`sentry_utils.ts`가 Edge Function 에러 트래킹을 담당한다:
+`logger.ts`가 Edge Function의 구조화 로깅과 에러 트래킹을 담당한다:
 
-- `initSentry()` — SENTRY_DSN 환경변수가 있을 때만 초기화 (없으면 no-op)
-- `withSentry()` — `serve()` 패턴용 래퍼
-- `withSentryHandler()` — `Deno.serve()` 패턴용 래퍼
+- `initSentry()` — Sentry 초기화 (SENTRY_DSN 환경변수가 있을 때만, 없으면 no-op)
+- `withHandler()` — `Deno.serve()` 래퍼 (Sentry + 구조화 로깅)
+- `log` — 구조화 로깅 객체 (`log.info()`, `log.error()` 등)
+- `axiom_logger.ts` — Axiom으로 로그 전송
+- `statsig_utils.ts` — Statsig 피처 플래그 및 이벤트 로깅 (`initStatsig()`, `logStatsigEvent()`)
 - 환경 구분: `ENVIRONMENT` 환경변수 (local/dev/prod)
 - `tracesSampleRate`: 0.2 (20%)
 
