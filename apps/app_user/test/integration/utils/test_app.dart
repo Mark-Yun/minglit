@@ -16,6 +16,7 @@ Widget createTestApp({
   List<dynamic> additionalOverrides = const [],
   String initialLocation = '/',
   List<Event>? events,
+  List<Event>? feedEvents,
 }) {
   final testRouter = GoRouter(
     initialLocation: initialLocation,
@@ -80,7 +81,9 @@ Widget createTestApp({
       recommendationEventsProvider.overrideWith(
         (_) async => events ?? <Event>[],
       ),
-      eventFeedProvider.overrideWith((ref, arg) async => <Event>[]),
+      eventFeedProvider.overrideWith(
+        (ref, arg) async => feedEvents ?? <Event>[],
+      ),
       activeFiltersProvider.overrideWith(_NoFiltersNotifier.new),
       ...additionalOverrides.cast(),
     ],
