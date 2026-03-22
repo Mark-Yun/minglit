@@ -569,11 +569,11 @@ verify_jwt = false  # JWT verification handled in function code
 import_map = "./functions/user-manage-notification/deno.json"
 entrypoint = "./functions/user-manage-notification/index.ts"
 
-[functions.user-manage-settings]
-enabled = true
-verify_jwt = false  # JWT verification handled in function code
-import_map = "./functions/user-manage-settings/deno.json"
-entrypoint = "./functions/user-manage-settings/index.ts"
+# [functions.user-manage-settings]  # PR #318 머지 후 활성화
+# enabled = true
+# verify_jwt = false
+# import_map = "./functions/user-manage-settings/deno.json"
+# entrypoint = "./functions/user-manage-settings/index.ts"
 
 [functions.user-manage-social]
 enabled = true
