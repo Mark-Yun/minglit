@@ -1,4 +1,3 @@
-import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
 import 'package:flutter/widgets.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -84,6 +83,11 @@ class EventApplicationController extends _$EventApplicationController {
     }
   }
 
+  /// Processes payment for both paid and free events.
+  ///
+  /// Calls the user-create-order EF for server-side validation. If
+  /// [requires_payment] is false (free ticket), skips payment and succeeds
+  /// immediately. Otherwise, proceeds with Iamport payment flow.
   Future<void> processPayment(BuildContext context) async {
     if (state.selectedTicket == null) return;
     final user = ref.read(currentUserProvider);
@@ -94,14 +98,18 @@ class EventApplicationController extends _$EventApplicationController {
     try {
       final repository = ref.read(eventRepositoryProvider);
       final ticket = state.selectedTicket!;
-      final event = await _loadEvent();
-      final verificationData = _buildVerificationPayload(event, ticket);
-      final merchantUid = await _createOrder(
-        repository: repository,
-        ticket: ticket,
-        userId: user.id,
-        verificationData: verificationData,
+
+      // Call EF — server validates all business rules (V1~V8)
+      final orderResult = await repository.createOrder(
+        eventId: _event.id,
+        ticketId: ticket.id,
       );
+
+      // V7: price=0 → skip payment, already 'paid' in DB
+      if (!orderResult.requiresPayment) {
+        _handlePaymentSuccess();
+        return;
+      }
 
       if (!context.mounted) return;
 
@@ -111,7 +119,8 @@ class EventApplicationController extends _$EventApplicationController {
         userCode: config.userCode,
         ticket: ticket,
         user: user,
-        merchantUid: merchantUid,
+        merchantUid: orderResult.applicationId,
+        amount: orderResult.amount,
       );
 
       if (impUid == null) {
@@ -121,7 +130,7 @@ class EventApplicationController extends _$EventApplicationController {
       await _verifyPayment(
         repository: repository,
         impUid: impUid,
-        merchantUid: merchantUid,
+        merchantUid: orderResult.applicationId,
       );
 
       _handlePaymentSuccess();
@@ -130,19 +139,12 @@ class EventApplicationController extends _$EventApplicationController {
     }
   }
 
-  Future<String> _createOrder({
-    required EventRepository repository,
-    required Ticket ticket,
-    required String userId,
-    Map<String, dynamic>? verificationData,
-  }) async {
-    return repository.createOrder(
-      eventId: _event.id,
-      ticketId: ticket.id,
-      userId: userId,
-      amount: ticket.price,
-      verificationData: verificationData,
-    );
+  /// Submits a free event application via the user-create-order EF.
+  ///
+  /// This method now delegates to [processPayment] which handles both
+  /// free and paid flows uniformly through the EF.
+  Future<void> submitApplication(BuildContext context) async {
+    await processPayment(context);
   }
 
   Future<String?> _requestPayment({
@@ -151,6 +153,7 @@ class EventApplicationController extends _$EventApplicationController {
     required Ticket ticket,
     required User user,
     required String merchantUid,
+    required int amount,
   }) async {
     return ref
         .read(iamportControllerProvider.notifier)
@@ -162,7 +165,7 @@ class EventApplicationController extends _$EventApplicationController {
             'pay_method': 'card',
             'merchant_uid': merchantUid,
             'name': ticket.name,
-            'amount': ticket.price,
+            'amount': amount,
             'buyer_name': user.userMetadata?['name'] ?? '게스트',
             'buyer_tel': user.phone ?? '01000000000',
             'buyer_email': user.email ?? 'guest@minglit.com',
@@ -214,68 +217,6 @@ class EventApplicationController extends _$EventApplicationController {
       status: EventApplicationStatus.error,
       errorMessage: message,
     );
-  }
-
-  Future<void> submitApplication() async {
-    if (state.selectedTicket == null) return;
-
-    final user = ref.read(currentUserProvider);
-    if (user == null) return;
-
-    state = state.copyWith(status: EventApplicationStatus.submitting);
-
-    try {
-      final repository = ref.read(eventRepositoryProvider);
-      final ticket = state.selectedTicket!;
-      final event = await _loadEvent();
-      final vData = _buildVerificationPayload(event, ticket);
-
-      await repository.applyEvent(
-        eventId: _event.id,
-        ticketId: ticket.id,
-        userId: user.id,
-        paymentId: 'MOCK_PAY_${DateTime.now().millisecondsSinceEpoch}',
-        paymentAmount: ticket.price,
-        verificationData: vData,
-      );
-
-      StatsigAnalytics.logEvent(
-        MingLitEvent.eventApplied,
-        metadata: {'event_id': _event.id},
-      );
-      state = state.copyWith(status: EventApplicationStatus.success);
-    } on Object catch (e) {
-      StatsigAnalytics.logEvent(
-        MingLitEvent.errorOccurred,
-        metadata: {'context': 'event_application', 'event_id': _event.id},
-      );
-      state = state.copyWith(
-        status: EventApplicationStatus.error,
-        errorMessage: e.toString(),
-      );
-    }
-  }
-
-  Map<String, dynamic>? _buildVerificationPayload(Event event, Ticket ticket) {
-    final entryGroups = event.entryGroups ?? [];
-    final reqIds = entryGroups
-        .where((g) => ticket.targetEntryGroupIds.contains(g.id))
-        .expand((g) => g.requiredVerificationIds)
-        .toSet()
-        .toList();
-
-    if (reqIds.isEmpty || state.verificationData.isEmpty) return null;
-    return {
-      'partner_id': event.party?.partnerId,
-      'verification_id': reqIds.first,
-      'data': state.verificationData,
-    };
-  }
-
-  Future<Event> _loadEvent() async {
-    final cached = ref.read(eventDetailControllerProvider(_event.id)).value;
-    if (cached != null) return cached;
-    return ref.read(eventRepositoryProvider).getEventById(_event.id);
   }
 
   void resetStatus() {

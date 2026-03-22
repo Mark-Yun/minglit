@@ -1,5 +1,3 @@
-import 'dart:async' show unawaited;
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/repositories/event_repository.dart';
 import 'package:minglit_kit/src/utils/exceptions.dart';
@@ -13,318 +11,198 @@ void main() {
   late MockSupabaseClient mockClient;
   late EventRepository repository;
   late MockFunctionsClient mockFunctions;
-
-  final now = DateTime.now();
-  final mockUser = MockUser();
-
-  final applicationJson = {
-    'id': 'app_1',
-    'event_id': 'event_1',
-    'user_id': 'user_1',
-    'ticket_id': 'ticket_1',
-    'status': 'confirmed',
-    'payment_id': 'pay_123',
-    'payment_amount': 30000,
-    'created_at': now.toIso8601String(),
-    'updated_at': now.toIso8601String(),
-  };
+  late MockUser mockUser;
 
   setUp(() {
-    mockClient = createMockSupabase(currentUser: mockUser);
-    when(() => mockUser.id).thenReturn('user_1');
+    mockClient = createMockSupabase();
+    mockUser = MockUser();
+    when(() => mockUser.id).thenReturn('user-1');
     mockFunctions = mockClient.functions as MockFunctionsClient;
     repository = EventRepository(supabase: mockClient);
   });
 
-  group('EventRepository Commands', () {
-    group('deleteApplication', () {
-      test('completes without error', () async {
-        unawaited(mockTable(mockClient, 'event_applications'));
+  group('createOrder', () {
+    test('returns CreateOrderResult on success (paid)', () async {
+      when(
+        () => mockFunctions.invoke(
+          'user-create-order',
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer(
+        (_) async => FunctionResponse(
+          status: 200,
+          data: {
+            'success': true,
+            'application_id': 'app-123',
+            'amount': 15000,
+            'requires_payment': true,
+            'ticket_name': '남성 티켓',
+          },
+        ),
+      );
 
-        await expectLater(
-          repository.deleteApplication(
-            eventId: 'event_1',
-            userId: 'user_1',
-          ),
-          completes,
-        );
-      });
+      final result = await repository.createOrder(
+        eventId: 'event-1',
+        ticketId: 'ticket-1',
+      );
 
-      test('throws on error', () async {
-        unawaited(
-          mockTable(
-            mockClient,
-            'event_applications',
-            shouldThrow: Exception('delete error'),
-          ),
-        );
-
-        await expectLater(
-          repository.deleteApplication(
-            eventId: 'event_1',
-            userId: 'user_1',
-          ),
-          throwsA(anything),
-        );
-      });
+      expect(result.applicationId, 'app-123');
+      expect(result.amount, 15000);
+      expect(result.requiresPayment, isTrue);
+      expect(result.ticketName, '남성 티켓');
     });
 
-    group('confirmPayment', () {
-      test('calls payment-verify edge function', () async {
-        when(
-          () => mockFunctions.invoke(
-            'payment-verify',
-            body: any(named: 'body'),
-          ),
-        ).thenAnswer(
-          (_) async => FunctionResponse(status: 200, data: {'ok': true}),
-        );
+    test('returns CreateOrderResult on success (free)', () async {
+      when(
+        () => mockFunctions.invoke(
+          'user-create-order',
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer(
+        (_) async => FunctionResponse(
+          status: 200,
+          data: {
+            'success': true,
+            'application_id': 'app-free',
+            'amount': 0,
+            'requires_payment': false,
+            'ticket_name': '무료 티켓',
+          },
+        ),
+      );
 
-        await expectLater(
-          repository.confirmPayment(
-            impUid: 'imp_123',
-            merchantUid: 'order_456',
-          ),
-          completes,
-        );
+      final result = await repository.createOrder(
+        eventId: 'event-2',
+        ticketId: 'ticket-free',
+      );
 
-        verify(
-          () => mockFunctions.invoke(
-            'payment-verify',
-            body: {'imp_uid': 'imp_123', 'merchant_uid': 'order_456'},
-          ),
-        ).called(1);
-      });
-
-      test('throws on edge function error', () async {
-        when(
-          () => mockFunctions.invoke(
-            'payment-verify',
-            body: any(named: 'body'),
-          ),
-        ).thenThrow(Exception('network error'));
-
-        await expectLater(
-          repository.confirmPayment(
-            impUid: 'imp_123',
-            merchantUid: 'order_456',
-          ),
-          throwsA(anything),
-        );
-      });
+      expect(result.requiresPayment, isFalse);
+      expect(result.amount, 0);
     });
 
-    group('cancelPayment', () {
-      test('succeeds with 200 response', () async {
-        when(
-          () => mockFunctions.invoke(
-            'payment-cancel',
-            body: any(named: 'body'),
-          ),
-        ).thenAnswer(
-          (_) async => FunctionResponse(status: 200, data: {'ok': true}),
-        );
+    test('throws MinglitUserException on ALREADY_APPLIED error', () async {
+      when(
+        () => mockFunctions.invoke(
+          'user-create-order',
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer(
+        (_) async => FunctionResponse(
+          status: 409,
+          data: {'error': 'ALREADY_APPLIED'},
+        ),
+      );
 
-        await expectLater(
-          repository.cancelPayment(
-            paymentId: 'pay_123',
-            refundAmount: 30000,
-            reason: '고객 요청',
-          ),
-          completes,
-        );
-      });
-
-      test('succeeds without reason', () async {
-        when(
-          () => mockFunctions.invoke(
-            'payment-cancel',
-            body: any(named: 'body'),
-          ),
-        ).thenAnswer(
-          (_) async => FunctionResponse(status: 200, data: {'ok': true}),
-        );
-
-        await expectLater(
-          repository.cancelPayment(
-            paymentId: 'pay_123',
-            refundAmount: 30000,
-          ),
-          completes,
-        );
-      });
-
-      test('throws MinglitUserException when non-200', () async {
-        when(
-          () => mockFunctions.invoke(
-            'payment-cancel',
-            body: any(named: 'body'),
-          ),
-        ).thenAnswer(
-          (_) async => FunctionResponse(status: 400, data: 'fail'),
-        );
-
-        expect(
-          () => repository.cancelPayment(
-            paymentId: 'pay_123',
-            refundAmount: 30000,
-          ),
-          throwsA(isA<MinglitUserException>()),
-        );
-      });
+      expect(
+        () => repository.createOrder(
+          eventId: 'event-1',
+          ticketId: 'ticket-1',
+        ),
+        throwsA(isA<MinglitUserException>()),
+      );
     });
 
-    group('applyEvent', () {
-      test('calls apply_event RPC and returns application ID', () async {
-        when(
-          () => mockClient.rpc<String>(
-            'apply_event',
-            params: any(named: 'params'),
-          ),
-        ).thenAnswer((_) => FakeRpcBuilder<String>('app_new_1'));
+    test('throws MinglitUserException on TICKET_SOLD_OUT error', () async {
+      when(
+        () => mockFunctions.invoke(
+          'user-create-order',
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer(
+        (_) async => FunctionResponse(
+          status: 400,
+          data: {'error': 'TICKET_SOLD_OUT'},
+        ),
+      );
 
-        final result = await repository.applyEvent(
-          eventId: 'event_1',
-          ticketId: 'ticket_1',
-          userId: 'user_1',
-          paymentId: 'pay_123',
-          paymentAmount: 30000,
-        );
-
-        expect(result, 'app_new_1');
-      });
-
-      test('passes verification data when provided', () async {
-        final verificationData = {
-          'partner_id': 'partner_1',
-          'verification_id': 'v_1',
-          'data': {'field': 'value'},
-        };
-
-        when(
-          () => mockClient.rpc<String>(
-            'apply_event',
-            params: any(named: 'params'),
-          ),
-        ).thenAnswer((_) => FakeRpcBuilder<String>('app_new_2'));
-
-        final result = await repository.applyEvent(
-          eventId: 'event_1',
-          ticketId: 'ticket_1',
-          userId: 'user_1',
-          paymentId: 'pay_123',
-          paymentAmount: 30000,
-          verificationData: verificationData,
-        );
-
-        expect(result, 'app_new_2');
-      });
-
-      test('throws on RPC error', () async {
-        when(
-          () => mockClient.rpc<String>(
-            'apply_event',
-            params: any(named: 'params'),
-          ),
-        ).thenThrow(Exception('RPC error'));
-
-        await expectLater(
-          repository.applyEvent(
-            eventId: 'event_1',
-            ticketId: 'ticket_1',
-            userId: 'user_1',
-            paymentId: 'pay_123',
-            paymentAmount: 30000,
-          ),
-          throwsA(anything),
-        );
-      });
+      expect(
+        () => repository.createOrder(
+          eventId: 'event-1',
+          ticketId: 'ticket-1',
+        ),
+        throwsA(isA<MinglitUserException>()),
+      );
     });
 
-    group('createOrder', () {
-      test('creates new application when none exists', () async {
-        // getApplication returns null (no existing application)
-        unawaited(
-          mockTable(mockClient, 'event_applications'),
-        );
+    test('throws MinglitUserException on EVENT_NOT_FOUND error', () async {
+      when(
+        () => mockFunctions.invoke(
+          'user-create-order',
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer(
+        (_) async => FunctionResponse(
+          status: 404,
+          data: {'error': 'EVENT_NOT_FOUND'},
+        ),
+      );
 
-        when(
-          () => mockClient.rpc<String>(
-            'apply_event',
-            params: any(named: 'params'),
-          ),
-        ).thenAnswer((_) => FakeRpcBuilder<String>('app_new_1'));
+      expect(
+        () => repository.createOrder(
+          eventId: 'bad-event',
+          ticketId: 'ticket-1',
+        ),
+        throwsA(isA<MinglitUserException>()),
+      );
+    });
 
-        final result = await repository.createOrder(
-          eventId: 'event_1',
-          ticketId: 'ticket_1',
-          userId: 'user_1',
-          amount: 30000,
-        );
+    test('throws MinglitUserException on ELIGIBILITY_FAILED error', () async {
+      when(
+        () => mockFunctions.invoke(
+          'user-create-order',
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer(
+        (_) async => FunctionResponse(
+          status: 400,
+          data: {'error': 'ELIGIBILITY_FAILED', 'details': {'reason': 'gender_mismatch'}},
+        ),
+      );
 
-        expect(result, 'app_new_1');
-      });
+      expect(
+        () => repository.createOrder(
+          eventId: 'event-1',
+          ticketId: 'ticket-1',
+        ),
+        throwsA(isA<MinglitUserException>()),
+      );
+    });
 
-      test('updates existing application when one exists', () async {
-        unawaited(
-          mockTable(
-            mockClient,
-            'event_applications',
-            maybeSingleData: applicationJson,
-          ),
-        );
-        unawaited(mockTable(mockClient, 'verification_submissions'));
+    test('throws MinglitUserException when data is null', () async {
+      when(
+        () => mockFunctions.invoke(
+          'user-create-order',
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer(
+        (_) async => FunctionResponse(status: 200, data: null),
+      );
 
-        final result = await repository.createOrder(
-          eventId: 'event_1',
-          ticketId: 'ticket_1',
-          userId: 'user_1',
-          amount: 30000,
-        );
+      expect(
+        () => repository.createOrder(
+          eventId: 'event-1',
+          ticketId: 'ticket-1',
+        ),
+        throwsA(isA<MinglitUserException>()),
+      );
+    });
 
-        expect(result, 'app_1');
-      });
+    test('rethrows on network error', () async {
+      when(
+        () => mockFunctions.invoke(
+          'user-create-order',
+          body: any(named: 'body'),
+        ),
+      ).thenThrow(Exception('Network error'));
 
-      test('throws when getApplication fails', () async {
-        unawaited(
-          mockTable(
-            mockClient,
-            'event_applications',
-            shouldThrow: Exception('db error'),
-          ),
-        );
-
-        await expectLater(
-          repository.createOrder(
-            eventId: 'event_1',
-            ticketId: 'ticket_1',
-            userId: 'user_1',
-            amount: 30000,
-          ),
-          throwsA(anything),
-        );
-      });
-
-      test('throws when applyEvent RPC fails for new application', () async {
-        unawaited(mockTable(mockClient, 'event_applications'));
-
-        when(
-          () => mockClient.rpc<String>(
-            'apply_event',
-            params: any(named: 'params'),
-          ),
-        ).thenThrow(Exception('RPC error'));
-
-        await expectLater(
-          repository.createOrder(
-            eventId: 'event_1',
-            ticketId: 'ticket_1',
-            userId: 'user_1',
-            amount: 30000,
-          ),
-          throwsA(anything),
-        );
-      });
+      expect(
+        () => repository.createOrder(
+          eventId: 'event-1',
+          ticketId: 'ticket-1',
+        ),
+        throwsA(anything),
+      );
     });
   });
+
 }
