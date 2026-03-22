@@ -267,9 +267,7 @@ mixin _VerificationQueryRepository on _SupabaseVerificationContext {
     if (userId == null) return [];
 
     try {
-      final statusName = status == VerificationStatus.needsCorrection
-          ? 'needs_correction'
-          : status.name;
+      final statusName = status.name;
 
       final data = await supabaseClient
           .from('verification_submissions')
@@ -286,17 +284,41 @@ mixin _VerificationQueryRepository on _SupabaseVerificationContext {
     }
   }
 
+  // Fix #301: Comments now live inside snapshot_data JSON array
   Future<List<Map<String, dynamic>>> getVerificationComments(
     String submissionId,
   ) async {
     Log.d('getVerificationComments called | submissionId: $submissionId');
     try {
       final data = await supabaseClient
-          .from('verification_comments')
-          .select()
-          .eq('submission_id', submissionId)
-          .order('created_at', ascending: true);
-      final result = (data as List<dynamic>).cast<Map<String, dynamic>>();
+          .from('verification_submissions')
+          .select('snapshot_data')
+          .eq('id', submissionId)
+          .maybeSingle();
+
+      if (data == null) return [];
+
+      final snapshotData = data['snapshot_data'];
+      if (snapshotData is! List) return [];
+
+      // Collect all comments from all history entries
+      final result = <Map<String, dynamic>>[];
+      for (final entry in snapshotData) {
+        if (entry is Map<String, dynamic>) {
+          final comments = entry['comments'];
+          if (comments is List) {
+            for (final c in comments) {
+              if (c is Map<String, dynamic>) {
+                result.add({
+                  'author_id': c['author'],
+                  'content': {'text': c['text']},
+                  'created_at': c['at'],
+                });
+              }
+            }
+          }
+        }
+      }
       Log.d('getVerificationComments success | count: ${result.length}');
       return result;
     } catch (e, st) {

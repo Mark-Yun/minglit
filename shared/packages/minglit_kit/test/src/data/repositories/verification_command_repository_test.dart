@@ -176,39 +176,6 @@ void main() {
           repository.reviewRequest(
             submissionId: 'sub_1',
             status: VerificationStatus.rejected,
-            adminComment: '부적합',
-          ),
-          throwsA(anything),
-        );
-      });
-    });
-
-    group('submitComment', () {
-      test('completes without error', () async {
-        unawaited(mockTable(mockClient, 'verification_comments'));
-
-        await expectLater(
-          repository.submitComment(
-            submissionId: 'sub_1',
-            content: {'text': '보완 요청'},
-          ),
-          completes,
-        );
-      });
-
-      test('throws on error', () async {
-        unawaited(
-          mockTable(
-            mockClient,
-            'verification_comments',
-            shouldThrow: Exception('DB error'),
-          ),
-        );
-
-        await expectLater(
-          repository.submitComment(
-            submissionId: 'sub_1',
-            content: {'text': '보완 요청'},
           ),
           throwsA(anything),
         );

@@ -56,7 +56,6 @@ class _ReviewVerificationScreenState
   Future<void> _reviewRequest(
     String id,
     VerificationStatus status, {
-    String? reason,
     String? comment,
   }) async {
     final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
@@ -66,7 +65,6 @@ class _ReviewVerificationScreenState
           .reviewRequest(
             submissionId: id,
             status: status,
-            adminComment: reason,
           );
       if (comment != null) {
         await ref
@@ -128,12 +126,14 @@ class _ReviewVerificationScreenState
         ElevatedButton(
           onPressed: () {
             Navigator.pop(context);
+            // Fix #301: needsCorrection removed — use rejected with comment
             unawaited(
               _reviewRequest(
                 submissionId,
-                VerificationStatus.needsCorrection,
-                reason: reasonController.text,
-                comment: commentController.text,
+                VerificationStatus.rejected,
+                comment: commentController.text.isNotEmpty
+                    ? '${reasonController.text}\n${commentController.text}'
+                    : reasonController.text,
               ),
             );
           },
@@ -205,7 +205,13 @@ class _ReviewVerificationScreenState
   Widget _buildRequestCard(Map<String, dynamic> req) {
     final theme = Theme.of(context);
     final user = req['user'] as Map<String, dynamic>? ?? {};
-    final claim = req['snapshot_data'] as Map<String, dynamic>? ?? {};
+    // Fix #301: snapshot_data is now an array of history entries
+    final snapshotRaw = req['snapshot_data'];
+    final snapshotList = snapshotRaw is List ? snapshotRaw : <dynamic>[];
+    final lastEntry = snapshotList.isNotEmpty
+        ? snapshotList.last as Map<String, dynamic>
+        : <String, dynamic>{};
+    final claim = lastEntry['data'] as Map<String, dynamic>? ?? {};
     final images = claim.values
         .whereType<String>()
         .where((val) => val.contains('/'))

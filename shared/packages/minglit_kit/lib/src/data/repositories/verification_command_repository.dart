@@ -64,6 +64,78 @@ mixin _VerificationCommandRepository on _SupabaseVerificationContext {
     }
   }
 
+  // Fix #301: Split into EF calls — personal data save + partner submission
+  Future<void> saveUserVerificationData({
+    required String verificationId,
+    required Map<String, dynamic> data,
+  }) async {
+    Log.d(
+      'saveUserVerificationData called | verificationId: $verificationId',
+    );
+    try {
+      final response = await supabaseClient.functions.invoke(
+        'user-update-verification',
+        body: {
+          'verification_id': verificationId,
+          'data': data,
+        },
+      );
+
+      if (response.status != 200) {
+        final respData = response.data;
+        final errorMsg = respData is Map
+            ? (respData['error'] as String?) ?? 'Failed to save verification'
+            : 'Failed to save verification';
+        throw MinglitUserException(errorMsg);
+      }
+      Log.d('saveUserVerificationData success');
+    } catch (e, st) {
+      Log.e('❌ [VerificationRepo] saveUserVerificationData Error', e, st);
+      rethrow;
+    }
+  }
+
+  // Fix #301: Submit verification to partner via EF
+  Future<String> submitVerificationToPartner({
+    required String partnerId,
+    required String verificationId,
+    String? applicationId,
+  }) async {
+    Log.d(
+      'submitVerificationToPartner called | partnerId: $partnerId,'
+      ' verificationId: $verificationId',
+    );
+    try {
+      final response = await supabaseClient.functions.invoke(
+        'user-submit-verification',
+        body: {
+          'action': 'submit',
+          'partner_id': partnerId,
+          'verification_id': verificationId,
+          // ignore: use_null_aware_elements, ?'key': val syntax causes invalid_null_aware_operator
+          if (applicationId != null) 'application_id': applicationId,
+        },
+      );
+
+      if (response.status != 200) {
+        final respData = response.data;
+        final errorMsg = respData is Map
+            ? (respData['error'] as String?) ?? 'Failed to submit verification'
+            : 'Failed to submit verification';
+        throw MinglitUserException(errorMsg);
+      }
+
+      final data = response.data as Map<String, dynamic>;
+      final submissionId = data['submission_id'] as String;
+      Log.d('submitVerificationToPartner success | id: $submissionId');
+      return submissionId;
+    } catch (e, st) {
+      Log.e('❌ [VerificationRepo] submitVerificationToPartner Error', e, st);
+      rethrow;
+    }
+  }
+
+  // Fix #301: Combined save + submit (backward compatible replacement)
   Future<void> submitOrUpdateVerification({
     required String partnerId,
     required String verificationId,
@@ -74,35 +146,17 @@ mixin _VerificationCommandRepository on _SupabaseVerificationContext {
       'submitOrUpdateVerification called | partnerId: $partnerId,'
       ' verificationId: $verificationId',
     );
-    final userId = supabaseClient.auth.currentUser?.id;
-    if (userId == null) throw const AuthException('User not authenticated');
-
     try {
-      await supabaseClient.from('user_verifications').upsert({
-        'user_id': userId,
-        'verification_id': verificationId,
-        'data': claimData,
-        'updated_at': DateTime.now().toIso8601String(),
-      });
-
-      if (existingSubmissionId != null) {
-        await supabaseClient
-            .from('verification_submissions')
-            .update({
-              'status': VerificationStatus.pending.name,
-              'snapshot_data': claimData,
-              'updated_at': DateTime.now().toIso8601String(),
-            })
-            .eq('id', existingSubmissionId);
-      } else {
-        await supabaseClient.from('verification_submissions').insert({
-          'partner_id': partnerId,
-          'user_id': userId,
-          'verification_id': verificationId,
-          'status': VerificationStatus.pending.name,
-          'snapshot_data': claimData,
-        });
-      }
+      // Step 1: Save personal data via EF
+      await saveUserVerificationData(
+        verificationId: verificationId,
+        data: claimData,
+      );
+      // Step 2: Submit to partner via EF
+      await submitVerificationToPartner(
+        partnerId: partnerId,
+        verificationId: verificationId,
+      );
       Log.d('submitOrUpdateVerification success');
     } on Exception catch (e, stackTrace) {
       Log.e('❌ [VerificationRepo] Submission Failed', e, stackTrace);
@@ -120,11 +174,9 @@ mixin _VerificationCommandRepository on _SupabaseVerificationContext {
     );
     try {
       for (final submission in submissions) {
-        await submitOrUpdateVerification(
+        await submitVerificationToPartner(
           partnerId: partnerId,
           verificationId: submission.verificationId,
-          claimData: submission.snapshotData,
-          existingSubmissionId: submission.id,
         );
       }
       Log.d('submitBulkVerifications success');
@@ -134,10 +186,10 @@ mixin _VerificationCommandRepository on _SupabaseVerificationContext {
     }
   }
 
+  // Fix #301: will be replaced by partner-review-submission EF (#309)
   Future<void> reviewRequest({
     required String submissionId,
     required VerificationStatus status,
-    String? adminComment,
   }) async {
     Log.d(
       'reviewRequest called | submissionId: $submissionId, status: $status',
@@ -147,7 +199,6 @@ mixin _VerificationCommandRepository on _SupabaseVerificationContext {
           .from('verification_submissions')
           .update({
             'status': status.name,
-            'admin_comment': adminComment,
             'reviewed_at': DateTime.now().toIso8601String(),
             'reviewed_by': supabaseClient.auth.currentUser?.id,
           })
@@ -159,18 +210,30 @@ mixin _VerificationCommandRepository on _SupabaseVerificationContext {
     }
   }
 
+  // Fix #301: submitComment via EF (verification_comments table dropped)
   Future<void> submitComment({
     required String submissionId,
     required Map<String, dynamic> content,
   }) async {
     Log.d('submitComment called | submissionId: $submissionId');
-    final userId = supabaseClient.auth.currentUser?.id;
     try {
-      await supabaseClient.from('verification_comments').insert({
-        'submission_id': submissionId,
-        'author_id': userId,
-        'content': content,
-      });
+      final text = content['text'] as String? ?? '';
+      final response = await supabaseClient.functions.invoke(
+        'user-submit-verification',
+        body: {
+          'action': 'comment',
+          'submission_id': submissionId,
+          'text': text,
+        },
+      );
+
+      if (response.status != 200) {
+        final respData = response.data;
+        final errorMsg = respData is Map
+            ? (respData['error'] as String?) ?? 'Failed to submit comment'
+            : 'Failed to submit comment';
+        throw MinglitUserException(errorMsg);
+      }
       Log.d('submitComment success');
     } catch (e, st) {
       Log.e('❌ [VerificationRepo] submitComment Error', e, st);
