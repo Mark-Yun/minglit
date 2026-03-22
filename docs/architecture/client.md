@@ -24,7 +24,7 @@ Minglit의 Flutter 클라이언트 아키텍처를 기술한다.
 ```text
 minglit_kit/lib/src/features/
 ├── auth/           # 로그인, 회원가입, OAuth
-├── dev/            # 개발 유틸리티 (DevMap, 유저 전환, 미리보기)
+├── dev/            # 개발 유틸리티 (세션 스위처, 미리보기)
 ├── iamport/        # 결제 연동 (Iamport SDK 래퍼)
 ├── loading/        # 글로벌 로딩 오버레이
 ├── notification/   # 푸시 알림, FCM, 알림 목록/설정
