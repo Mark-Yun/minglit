@@ -77,8 +77,26 @@ jobs:
           BRANCH="${{ github.base_ref }}"
           BUMP_BRANCH="chore/version-bump-v${NEW_VERSION}"
 
+          # Fix #350: skip if a bump PR already exists for this version
+          EXISTING_PR=$(gh pr list \
+            --base "$BRANCH" \
+            --head "$BUMP_BRANCH" \
+            --state open \
+            --json number \
+            --jq '.[0].number' \
+            --repo "${{ github.repository }}" 2>/dev/null || true)
+
+          if [ -n "$EXISTING_PR" ]; then
+            echo "Version bump PR #${EXISTING_PR} already exists for v${NEW_VERSION}. Skipping."
+            exit 0
+          fi
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Fix #350: delete stale remote branch from previous failed runs
+          git push origin --delete "$BUMP_BRANCH" 2>/dev/null || true
+
           git checkout -b "$BUMP_BRANCH"
           git add -A
           git commit -m "chore: bump version to v${NEW_VERSION}"
