@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
+// Fix #301: Extract latest data from snapshot_data array
+Map<String, dynamic> _extractLatestData(List<dynamic> snapshotData) {
+  if (snapshotData.isEmpty) return <String, dynamic>{};
+  final last = snapshotData.last;
+  if (last is Map<String, dynamic>) {
+    return last['data'] as Map<String, dynamic>? ?? <String, dynamic>{};
+  }
+  return <String, dynamic>{};
+}
+
 class EventApplicationReviewDialog extends StatefulWidget {
   const EventApplicationReviewDialog({
     required this.application,
@@ -75,8 +85,9 @@ class _EventApplicationReviewDialogState
                 ),
               ),
               const SizedBox(height: MinglitSpacing.small),
-              ...submission.snapshotData.entries.map((
-                entry,
+              // Fix #301: snapshot_data is now an array of history entries
+              ..._extractLatestData(submission.snapshotData).entries.map((
+                MapEntry<String, dynamic> entry,
               ) {
                 final key = entry.key;
                 final value = entry.value;

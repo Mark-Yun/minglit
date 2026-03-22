@@ -79,9 +79,9 @@ BEGIN
   )
   RETURNING id INTO v_submission_id;
 
+  -- Fix #301: admin_comment column dropped
   UPDATE public.verification_submissions
-  SET status = 'rejected',
-      admin_comment = v_reason
+  SET status = 'rejected'
   WHERE id = v_submission_id;
 
   INSERT INTO refund_results (status, rejection_reason, refund_status)

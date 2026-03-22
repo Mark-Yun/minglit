@@ -76,13 +76,7 @@ WITH vs AS (
 )
 SELECT set_config('tests.submission_id', id::text, true) FROM vs;
 
--- user_a (partner owner / reviewer) leaves a verification comment
-INSERT INTO public.verification_comments (submission_id, author_id, content)
-VALUES (
-  current_setting('tests.submission_id')::uuid,
-  tests.get_supabase_uid('user_a'),
-  '{"text": "LGTM"}'::jsonb
-);
+-- Fix #301: verification_comments table dropped — comment data now in snapshot_data JSON
 
 -- ===========================================================================
 -- app_roles TESTS (assertions 1–5)
