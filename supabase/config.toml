@@ -397,7 +397,7 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 # Disabled: missing index.ts entrypoint (helper/test files only).
 # enabled = true
 # verify_jwt = true
-# import_map = "./functions/vectorize-party/deno.json"
+# import_map = "./deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
 # entrypoint = "./functions/vectorize-party/index.ts"
@@ -408,7 +408,7 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 [functions.profile-update]
 enabled = true
 verify_jwt = true
-import_map = "./functions/profile-update/deno.json"
+import_map = "./deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
 entrypoint = "./functions/profile-update/index.ts"
@@ -419,7 +419,7 @@ entrypoint = "./functions/profile-update/index.ts"
 [functions.notification-worker]
 enabled = true
 verify_jwt = true
-import_map = "./functions/notification-worker/deno.json"
+import_map = "./deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
 entrypoint = "./functions/notification-worker/index.ts"
@@ -430,7 +430,7 @@ entrypoint = "./functions/notification-worker/index.ts"
 [functions.vector-worker]
 enabled = true
 verify_jwt = true
-import_map = "./functions/vector-worker/deno.json"
+import_map = "./deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
 entrypoint = "./functions/vector-worker/index.ts"
@@ -446,48 +446,51 @@ entrypoint = "./functions/health/index.ts"
 [functions.dev-session-switch]
 enabled = true
 verify_jwt = false
-import_map = "./functions/dev-session-switch/deno.json"
+import_map = "./deno.json"
 entrypoint = "./functions/dev-session-switch/index.ts"
 
 [functions.dev-seed]
 enabled = true
 verify_jwt = false
-import_map = "./functions/dev-seed/deno.json"
+import_map = "./deno.json"
 entrypoint = "./functions/dev-seed/index.ts"
 
 [functions.bug-report]
 enabled = true
 verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
-import_map = "./functions/bug-report/deno.json"
+import_map = "./deno.json"
 entrypoint = "./functions/bug-report/index.ts"
 
 
 [functions.identity-verify]
 enabled = true
 verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
+import_map = "./deno.json"
 entrypoint = "./functions/identity-verify/index.ts"
 
 [functions.payment-verify]
 enabled = true
 verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
-import_map = "./functions/payment-verify/deno.json"
+import_map = "./deno.json"
 entrypoint = "./functions/payment-verify/index.ts"
 
 [functions.payment-cancel]
 enabled = true
 verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
-import_map = "./functions/payment-cancel/deno.json"
+import_map = "./deno.json"
 entrypoint = "./functions/payment-cancel/index.ts"
 
 # TODO: 포트원 서버 호출자 검증 강화 필요 (현재 IP whitelist만 사용)
 [functions.payment-webhook]
 enabled = true
 verify_jwt = false
+import_map = "./deno.json"
 entrypoint = "./functions/payment-webhook/index.ts"
 
 [functions.settlement-transfer]
 enabled = true
 verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
+import_map = "./deno.json"
 entrypoint = "./functions/settlement-transfer/index.ts"
 
 [functions.settlement-query]
@@ -498,33 +501,88 @@ entrypoint = "./functions/settlement-query/index.ts"
 [functions.partner-sync]
 enabled = true
 verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
+import_map = "./deno.json"
 entrypoint = "./functions/partner-sync/index.ts"
 
 [functions.settlement-register-transfers]
 enabled = true
 verify_jwt = false
+import_map = "./deno.json"
 entrypoint = "./functions/settlement-register-transfers/index.ts"
 
 [functions.payout-sync]
 enabled = true
 verify_jwt = false
+import_map = "./deno.json"
 entrypoint = "./functions/payout-sync/index.ts"
 
 [functions.reconciliation-daily]
 enabled = true
 verify_jwt = false
+import_map = "./deno.json"
 entrypoint = "./functions/reconciliation-daily/index.ts"
 [functions.backend-simulator]
 enabled = true
 verify_jwt = false  # dev-only, protected by isProduction() guard
+import_map = "./deno.json"
 entrypoint = "./functions/backend-simulator/index.ts"
 
 [functions.event-checkin]
 enabled = true
 verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
+import_map = "./deno.json"
 entrypoint = "./functions/event-checkin/index.ts"
 
 [functions.event-matching]
 enabled = true
 verify_jwt = false  # JWT verification handled in function code (ES256 compatible)
+import_map = "./deno.json"
 entrypoint = "./functions/event-matching/index.ts"
+
+[functions.dev-mock-portone]
+enabled = true
+verify_jwt = false
+import_map = "./deno.json"
+entrypoint = "./functions/dev-mock-portone/index.ts"
+
+[functions.github-stats-sync]
+enabled = true
+verify_jwt = false
+import_map = "./deno.json"
+entrypoint = "./functions/github-stats-sync/index.ts"
+
+[functions.user-cancel-order]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/user-cancel-order/index.ts"
+
+[functions.user-create-order]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/user-create-order/index.ts"
+
+[functions.user-manage-notification]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/user-manage-notification/index.ts"
+
+# [functions.user-manage-settings]  # PR #318 머지 후 활성화
+# enabled = true
+# verify_jwt = false
+# import_map = "./deno.json"
+# entrypoint = "./functions/user-manage-settings/index.ts"
+
+[functions.user-manage-social]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/user-manage-social/index.ts"
+
+[functions.metrics-alert]
+enabled = true
+verify_jwt = false
+import_map = "./deno.json"
+entrypoint = "./functions/metrics-alert/index.ts"
