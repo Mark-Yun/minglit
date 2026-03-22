@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
-import '../utils/mocks.dart';
 import 'utils/mock_data.dart';
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
@@ -21,7 +20,6 @@ void main() {
         createTestApp(
           isLoggedIn: true,
           currentUser: user,
-          initialLocation: '/',
           additionalOverrides: [
             notificationRepositoryProvider.overrideWithValue(mockRepo),
           ],
@@ -192,8 +190,9 @@ void main() {
       verify(() => mockRepo.deleteNotification('n-dismiss')).called(1);
     });
 
-    testWidgets('무효한 deep_link (null) → "이동할 링크가 없습니다" SnackBar',
-        (tester) async {
+    testWidgets('무효한 deep_link (null) → "이동할 링크가 없습니다" SnackBar', (
+      tester,
+    ) async {
       setKoreanLocale(tester);
       final user = createMockUserForTest();
       final mockRepo = MockNotificationRepository();
@@ -244,8 +243,9 @@ void main() {
       expect(find.byType(HomePage), findsNothing);
     });
 
-    testWidgets('비로그인 /events/:id/apply → /login?from=/events/:id/apply',
-        (tester) async {
+    testWidgets('비로그인 /events/:id/apply → /login?from=/events/:id/apply', (
+      tester,
+    ) async {
       setKoreanLocale(tester);
       await tester.pumpWidget(
         createTestApp(initialLocation: '/events/test-event-id/apply'),
@@ -256,8 +256,9 @@ void main() {
       expect(find.byType(LoginPage), findsOneWidget);
     });
 
-    testWidgets('비로그인 /purchase-history → /login?from=/purchase-history',
-        (tester) async {
+    testWidgets('비로그인 /purchase-history → /login?from=/purchase-history', (
+      tester,
+    ) async {
       setKoreanLocale(tester);
       await tester.pumpWidget(
         createTestApp(initialLocation: '/purchase-history'),
