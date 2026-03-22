@@ -59,6 +59,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
   if (!supabaseUrl || !serviceRoleKey) {
     return errorResponse("Missing required environment variables", 500);
   }
@@ -114,6 +115,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       config,
       logFn,
       createResult.eventIds,
+      supabaseUrl,
+      anonKey,
     );
     return successResponse({
       success: true,
@@ -174,6 +177,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       paidIds,
       logFn,
       config.refund_rate,
+      supabaseUrl,
+      anonKey,
     );
     return successResponse({
       success: true,
@@ -202,8 +207,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
       eventIds,
       logFn,
       config.checkin_rate,
+      supabaseUrl,
+      anonKey,
     );
-    const matchResult = await simMatch(supabase, eventIds, logFn);
+    const matchResult = await simMatch(supabase, eventIds, logFn, supabaseUrl, serviceRoleKey);
     const completeResult = await simCompleteEvents(supabase, eventIds, logFn);
 
     const allAssertions: SimAssertionResult[] = [
@@ -320,6 +327,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     config,
     logFn,
     createResult.eventIds,
+    supabaseUrl,
+    anonKey,
   );
 
   // Phase 3: Approve verifications (80% approve, 20% reject)
@@ -335,6 +344,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     applyResult.paidApplicationIds,
     logFn,
     config.refund_rate,
+    supabaseUrl,
+    anonKey,
   );
 
   // Phase 5: Check-in + Match + Complete
@@ -343,8 +354,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
     createResult.eventIds,
     logFn,
     config.checkin_rate,
+    supabaseUrl,
+    anonKey,
   );
-  const matchResult = await simMatch(supabase, createResult.eventIds, logFn);
+  const matchResult = await simMatch(supabase, createResult.eventIds, logFn, supabaseUrl, serviceRoleKey);
   const completeResult = await simCompleteEvents(
     supabase,
     createResult.eventIds,

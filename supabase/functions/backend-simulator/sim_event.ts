@@ -6,6 +6,7 @@ import {
   simAssertMatchPairCreated,
   simAssertCheckinRatio,
 } from "./sim_assertions.ts";
+import { getSimUserToken, callEdgeFunction } from "./sim_auth.ts";
 
 export interface SimEventResult {
   checkedInParticipantIds: string[];
@@ -30,10 +31,14 @@ export async function simCheckin(
   eventIds: string[],
   log: (entry: Omit<SimLogEntry, "timestamp">) => void,
   checkinRate: number = 0.7,
+  supabaseUrl?: string,
+  anonKey?: string,
 ): Promise<{ checkedInParticipantIds: string[]; noShowParticipantIds: string[]; assertions: SimAssertionResult[] }> {
   const checkedInParticipantIds: string[] = [];
   const noShowParticipantIds: string[] = [];
   const assertions: SimAssertionResult[] = [];
+
+  const simUserPassword = Deno.env.get("SIM_USER_PASSWORD") ?? "password1234!";
 
   if (eventIds.length === 0) {
     log({ level: "info", phase: "checkin", step: "skip", message: "No events to process" });
@@ -67,6 +72,38 @@ export async function simCheckin(
         const participant = eligible[i];
         const newStatus = i < splitIndex ? "checked_in" : "no_show";
 
+        if (newStatus === "checked_in" && supabaseUrl && anonKey) {
+          // Attempt to use event-checkin EF with user token
+          const { data: profileData } = await supabase
+            .from("user_profiles")
+            .select("username")
+            .eq("id", participant.user_id)
+            .maybeSingle();
+          const username = (profileData as { username?: string } | null)?.username;
+
+          if (username && !username.startsWith("partner_")) {
+            const userEmail = `${username}@test.com`;
+            try {
+              const userToken = await getSimUserToken(supabaseUrl, anonKey, userEmail, simUserPassword);
+              const efResult = await callEdgeFunction(supabaseUrl, "event-checkin", {
+                event_id: eventId,
+                participant_id: participant.id,
+              }, userToken);
+
+              if (efResult.status === 200) {
+                checkedInParticipantIds.push(participant.id);
+                log({ level: "info", phase: "checkin", step: "ef_checkin", message: `Checked in participant ${participant.id} via EF` });
+                continue;
+              } else {
+                log({ level: "warn", phase: "checkin", step: "ef_checkin_failed", message: `event-checkin EF returned ${efResult.status} for participant ${participant.id}, falling back to direct update` });
+              }
+            } catch (authErr) {
+              log({ level: "warn", phase: "checkin", step: "ef_auth_fallback", message: `Auth failed for ${username}, using direct update: ${String(authErr)}` });
+            }
+          }
+        }
+
+        // Fallback: direct DB update (for no_show and when EF call unavailable)
         const { error: updErr } = await supabase
           .from("event_participants")
           .update({ status: newStatus })
@@ -127,6 +164,8 @@ export async function simMatch(
   supabase: SupabaseClient,
   eventIds: string[],
   log: (entry: Omit<SimLogEntry, "timestamp">) => void,
+  supabaseUrl?: string,
+  serviceRoleKey?: string,
 ): Promise<{ matchPairs: Array<{ userId1: string; userId2: string; eventId: string }>; assertions: SimAssertionResult[] }> {
   const matchPairs: Array<{ userId1: string; userId2: string; eventId: string }> = [];
   const assertions: SimAssertionResult[] = [];
@@ -138,6 +177,30 @@ export async function simMatch(
 
   for (const eventId of eventIds) {
     try {
+      // Attempt to use event-matching EF with service_role token (admin operation)
+      if (supabaseUrl && serviceRoleKey) {
+        try {
+          const efResult = await callEdgeFunction(supabaseUrl, "event-matching", { event_id: eventId }, serviceRoleKey);
+          // deno-lint-ignore no-explicit-any
+          const efData = efResult.data as any;
+          if (efResult.status === 200 && efData?.success) {
+            const pairs = (efData.pairs ?? []) as Array<{ user1: string; user2: string }>;
+            for (const pair of pairs) {
+              matchPairs.push({ userId1: pair.user1, userId2: pair.user2, eventId });
+              const pairAssertion = await simAssertMatchPairCreated(supabase, eventId, pair.user1, pair.user2);
+              assertions.push(pairAssertion);
+            }
+            log({ level: "info", phase: "match", step: "ef_match", message: `event-matching EF created ${pairs.length} pairs for event ${eventId}`, data: { eventId, idempotent: efData.idempotent } });
+            continue;
+          } else {
+            log({ level: "warn", phase: "match", step: "ef_match_failed", message: `event-matching EF returned ${efResult.status} for event ${eventId}, falling back to direct vote insert` });
+          }
+        } catch (efErr) {
+          log({ level: "warn", phase: "match", step: "ef_match_error", message: `event-matching EF error for event ${eventId}: ${String(efErr)}, falling back to direct vote insert` });
+        }
+      }
+
+      // Fallback: direct vote insert (used when EF call unavailable or failed)
       // Query entry_groups for this event
       const { data: groupsData, error: groupsErr } = await supabase
         .from("entry_groups")
