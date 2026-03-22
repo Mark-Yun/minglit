@@ -50,7 +50,7 @@ dependencies:
   minglit_kit:
     path: ../../shared/packages/minglit_kit
   mobile_scanner: any
-  package_info_plus: ^8.3.1
+  package_info_plus: ^9.0.0
   path: any
   riverpod: ^3.0.3
   riverpod_annotation: ^3.0.3

@@ -38,7 +38,7 @@ dependencies:
   # Payment & Identification (Iamport V1)
   minglit_iamport_v1:
     path: ../minglit_iamport_v1
-  package_info_plus: ^8.0.0
+  package_info_plus: ^9.0.0
   path: ^1.9.1
 
   # Other dependencies
