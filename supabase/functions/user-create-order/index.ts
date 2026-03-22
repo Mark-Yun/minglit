@@ -1,9 +1,13 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "@supabase/supabase-js";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
+import { initSentry, withHandler, log } from "../_shared/logger.ts";
+import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
+
+const FN = "user-create-order";
 
 initSentry();
+initStatsig();
 
 // Error code → HTTP status mapping
 const ERROR_STATUS: Record<string, number> = {
@@ -19,7 +23,7 @@ const ERROR_STATUS: Record<string, number> = {
   BALANCE_LIMIT: 400,
 };
 
-Deno.serve(withSentry(async (req) => {
+Deno.serve(withHandler(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
 
   const auth = await requireAuth(req);
