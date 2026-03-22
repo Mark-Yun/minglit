@@ -257,12 +257,10 @@ void main() {
         // Status stays initial since no ticket was selected
         expect(state.status, EventApplicationStatus.initial);
         verifyNever(
-          () => mockEventRepo.applyEvent(
+          () => mockEventRepo.createOrderViaEF(
             eventId: any(named: 'eventId'),
             ticketId: any(named: 'ticketId'),
-            userId: any(named: 'userId'),
-            paymentId: any(named: 'paymentId'),
-            paymentAmount: any(named: 'paymentAmount'),
+            verificationData: any(named: 'verificationData'),
           ),
         );
       });
@@ -290,15 +288,19 @@ void main() {
 
       test('succeeds when ticket and user are present', () async {
         when(
-          () => mockEventRepo.applyEvent(
+          () => mockEventRepo.createOrderViaEF(
             eventId: any(named: 'eventId'),
             ticketId: any(named: 'ticketId'),
-            userId: any(named: 'userId'),
-            paymentId: any(named: 'paymentId'),
-            paymentAmount: any(named: 'paymentAmount'),
             verificationData: any(named: 'verificationData'),
           ),
-        ).thenAnswer((_) async => 'app_123');
+        ).thenAnswer(
+          (_) async => const CreateOrderResult(
+            applicationId: 'app_123',
+            amount: 0,
+            requiresPayment: false,
+            ticketName: '무료 티켓',
+          ),
+        );
 
         final container = createContainer(
           overrides: [
@@ -319,12 +321,9 @@ void main() {
         );
         expect(state.status, EventApplicationStatus.success);
         verify(
-          () => mockEventRepo.applyEvent(
+          () => mockEventRepo.createOrderViaEF(
             eventId: 'event_1',
             ticketId: 'ticket_free',
-            userId: 'user_1',
-            paymentId: any(named: 'paymentId'),
-            paymentAmount: 0,
             verificationData: any(named: 'verificationData'),
           ),
         ).called(1);
@@ -332,12 +331,9 @@ void main() {
 
       test('sets error state on failure', () async {
         when(
-          () => mockEventRepo.applyEvent(
+          () => mockEventRepo.createOrderViaEF(
             eventId: any(named: 'eventId'),
             ticketId: any(named: 'ticketId'),
-            userId: any(named: 'userId'),
-            paymentId: any(named: 'paymentId'),
-            paymentAmount: any(named: 'paymentAmount'),
             verificationData: any(named: 'verificationData'),
           ),
         ).thenThrow(Exception('Server error'));
@@ -367,12 +363,9 @@ void main() {
     group('resetStatus', () {
       test('resets status to initial, preserving ticket and step', () async {
         when(
-          () => mockEventRepo.applyEvent(
+          () => mockEventRepo.createOrderViaEF(
             eventId: any(named: 'eventId'),
             ticketId: any(named: 'ticketId'),
-            userId: any(named: 'userId'),
-            paymentId: any(named: 'paymentId'),
-            paymentAmount: any(named: 'paymentAmount'),
             verificationData: any(named: 'verificationData'),
           ),
         ).thenThrow(Exception('Fail'));

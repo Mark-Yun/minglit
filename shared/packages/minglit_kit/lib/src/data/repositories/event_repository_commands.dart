@@ -105,6 +105,47 @@ mixin _EventRepositoryCommands
     }
   }
 
+  /// Creates a pending order via user-create-order Edge Function.
+  /// Server validates all business rules (price, eligibility, capacity, etc.).
+  /// Returns the order result with server-determined amount.
+  Future<CreateOrderResult> createOrderViaEF({
+    required String eventId,
+    required String ticketId,
+    Map<String, dynamic>? verificationData,
+  }) async {
+    Log.d('createOrderViaEF called | event: $eventId, ticket: $ticketId');
+    try {
+      final response = await supabaseClient.functions.invoke(
+        'user-create-order',
+        body: {
+          'event_id': eventId,
+          'ticket_id': ticketId,
+          if (verificationData != null)
+            'verification_data': verificationData,
+        },
+      );
+
+      if (response.status != 200) {
+        final data = response.data;
+        final errorMsg = data is Map
+            ? (data['error'] as String?) ?? '주문 생성에 실패했습니다.'
+            : '주문 생성에 실패했습니다.';
+        throw MinglitUserException(errorMsg);
+      }
+
+      final data = response.data as Map<String, dynamic>;
+      return CreateOrderResult(
+        applicationId: data['application_id'] as String,
+        amount: data['amount'] as int,
+        requiresPayment: data['requires_payment'] as bool,
+        ticketName: data['ticket_name'] as String,
+      );
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] createOrderViaEF Error', e, st);
+      rethrow;
+    }
+  }
+
   /// Verifies the payment with the backend.
   Future<void> confirmPayment({
     required String impUid,
