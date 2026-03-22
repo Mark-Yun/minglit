@@ -21,87 +21,72 @@ mixin _EventRepositoryCommands
     }
   }
 
-  /// Creates a pending order for payment processing.
-  /// Returns the application ID (merchant_uid).
-  Future<String> createOrder({
+  /// Creates a validated order via the user-create-order Edge Function.
+  ///
+  /// Performs server-side validation of all business rules (V1~V8) and
+  /// returns the result including [applicationId], [amount],
+  /// [requiresPayment], and [ticketName].
+  ///
+  /// Throws [MinglitUserException] on known error codes, or rethrows
+  /// unexpected errors.
+  Future<CreateOrderResult> createOrder({
     required String eventId,
     required String ticketId,
-    required String userId,
-    required int amount,
-    Map<String, dynamic>? verificationData,
   }) async {
-    Log.d('createOrder called | event: $eventId');
+    Log.d('createOrder called | event: $eventId, ticket: $ticketId');
     try {
-      final pendingPaymentId =
-          'PENDING_${DateTime.now().millisecondsSinceEpoch}';
-      final existingApp = await getApplication(
-        eventId: eventId,
-        userId: userId,
+      final response = await supabaseClient.functions.invoke(
+        'user-create-order',
+        body: {'event_id': eventId, 'ticket_id': ticketId},
       );
 
-      if (existingApp == null) {
-        final appId = await applyEvent(
-          eventId: eventId,
-          ticketId: ticketId,
-          userId: userId,
-          paymentId: pendingPaymentId,
-          paymentAmount: amount,
-          verificationData: verificationData,
-        );
-
-        await supabaseClient
-            .from('event_applications')
-            .update({
-              'status': 'pending',
-              'payment_id': pendingPaymentId,
-              'ticket_id': ticketId,
-              'payment_amount': amount,
-              'updated_at': DateTime.now().toIso8601String(),
-            })
-            .eq('id', appId);
-
-        return appId;
+      final data = response.data as Map<String, dynamic>?;
+      if (data == null) {
+        throw const MinglitUserException('서버 응답이 올바르지 않습니다.');
       }
 
-      await supabaseClient
-          .from('event_applications')
-          .update({
-            'ticket_id': ticketId,
-            'payment_id': pendingPaymentId,
-            'payment_amount': amount,
-            'status': 'pending',
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', existingApp.id);
-
-      if (verificationData == null) {
-        await supabaseClient
-            .from('verification_submissions')
-            .delete()
-            .eq('application_id', existingApp.id)
-            .eq('status', 'pending');
-        return existingApp.id;
+      if (data.containsKey('error')) {
+        final code = data['error'] as String;
+        throw MinglitUserException(_orderErrorMessage(code));
       }
 
-      await supabaseClient
-          .from('verification_submissions')
-          .delete()
-          .eq('application_id', existingApp.id)
-          .eq('status', 'pending');
-
-      await supabaseClient.from('verification_submissions').insert({
-        'application_id': existingApp.id,
-        'partner_id': verificationData['partner_id'],
-        'verification_id': verificationData['verification_id'],
-        'user_id': userId,
-        'status': 'pending',
-        'snapshot_data': verificationData['data'],
-      });
-
-      return existingApp.id;
+      Log.i('✅ [EventRepo] createOrder success. ID: ${data['application_id']}');
+      return CreateOrderResult(
+        applicationId: data['application_id'] as String,
+        amount: (data['amount'] as num).toInt(),
+        requiresPayment: data['requires_payment'] as bool,
+        ticketName: data['ticket_name'] as String,
+      );
     } catch (e, st) {
       Log.e('❌ [EventRepo] createOrder Error', e, st);
       rethrow;
+    }
+  }
+
+  static String _orderErrorMessage(String code) {
+    switch (code) {
+      case 'EVENT_NOT_FOUND':
+        return '이벤트를 찾을 수 없습니다.';
+      case 'TICKET_NOT_FOUND':
+        return '티켓을 찾을 수 없습니다.';
+      case 'ALREADY_APPLIED':
+        return '이미 신청한 이벤트입니다.';
+      case 'EVENT_NOT_ACTIVE':
+        return '신청 가능한 이벤트가 아닙니다.';
+      case 'EVENT_FULL':
+        return '정원이 가득 찼습니다.';
+      case 'TICKET_SOLD_OUT':
+        return '티켓이 매진되었습니다.';
+      case 'IDENTITY_REQUIRED':
+        return '본인 인증이 필요합니다.';
+      case 'ELIGIBILITY_FAILED':
+        return '신청 자격이 충족되지 않았습니다.';
+      case 'VERIFICATION_REQUIRED':
+        return '필수 서류 제출이 필요합니다.';
+      case 'BALANCE_LIMIT':
+        return '성비 조절 중입니다. 잠시 후 다시 시도해 주세요.';
+      default:
+        return '신청 처리 중 오류가 발생했습니다.';
     }
   }
 
@@ -155,6 +140,10 @@ mixin _EventRepositoryCommands
 
   /// Submits an event application (One-Shot Flow).
   /// Handles application creation and verification submission in one trans.
+  ///
+  /// Deprecated: Use [createOrder] which calls the user-create-order Edge
+  /// Function for server-side validated order creation.
+  @Deprecated('Phase 3에서 삭제 예정. createOrder EF 방식으로 교체됨.')
   Future<String> applyEvent({
     required String eventId,
     required String ticketId,
