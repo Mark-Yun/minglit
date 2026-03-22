@@ -1,6 +1,5 @@
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
-import 'package:app_user/src/features/settings/app_permissions_page.dart';
 import 'package:app_user/src/features/settings/blocked_partners_page.dart';
 import 'package:app_user/src/features/settings/privacy_page.dart';
 import 'package:flutter/material.dart';
@@ -142,10 +141,11 @@ class MyPage extends ConsumerWidget {
             leading: const Icon(Icons.admin_panel_settings_outlined),
             title: const Text('권한 설정'),
             trailing: const Icon(Icons.chevron_right),
+            // Fix #186: minglit_kit 공유 권한 설정 화면 사용
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute<void>(
-                builder: (_) => const AppPermissionsPage(),
+                builder: (_) => const AppPermissionSettingsScreen(),
               ),
             ),
           ),

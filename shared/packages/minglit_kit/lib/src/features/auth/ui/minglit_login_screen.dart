@@ -16,7 +16,7 @@ class MinglitLoginScreen extends ConsumerWidget {
     this.onKakaoSignIn,
     this.onVerifyIdentity,
     this.isPartner = false,
-    this.onDevMapTrigger,
+    this.onDevTrigger,
   });
 
   /// Callback when Google sign-in is pressed.
@@ -34,8 +34,8 @@ class MinglitLoginScreen extends ConsumerWidget {
   /// Whether this is for the Partner app (theme adjustment).
   final bool isPartner;
 
-  /// Callback to trigger DevMap (hidden gesture). Null in production.
-  final VoidCallback? onDevMapTrigger;
+  /// Callback for hidden dev trigger (5-tap logo). Null in production.
+  final VoidCallback? onDevTrigger;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -65,8 +65,8 @@ class MinglitLoginScreen extends ConsumerWidget {
             children: [
               const Spacer(),
               // 1. Logo & Slogan
-              if (onDevMapTrigger != null)
-                _DevTriggerLogo(onTrigger: onDevMapTrigger!)
+              if (onDevTrigger != null)
+                _DevTriggerLogo(onTrigger: onDevTrigger!)
               else
                 const MinglitImage(
                   path:

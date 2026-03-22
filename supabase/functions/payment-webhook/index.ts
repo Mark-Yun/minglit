@@ -2,7 +2,8 @@
 // 현재: IP whitelist만 사용 (ALLOWED_IPS)
 // 추가 필요: 포트원 V1 webhook signature 검증 또는 HMAC 검증
 // 참고: V1은 HMAC 미지원이므로 IP whitelist가 1차 보안. 추가 보안 레이어 검토 필요.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
+import { createClient } from "@supabase/supabase-js";
 import { IamportClient } from "../_shared/iamport_client.ts";
 import { initSentry, withHandler, log } from "../_shared/logger.ts";
 import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
