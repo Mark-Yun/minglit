@@ -14,6 +14,7 @@ void main() {
   late SupabaseClient adminClient;
   late ScheduledEventContext eventCtx;
   late String testUserId;
+  String? applicationId;
 
   setUpAll(() async {
     await initializeE2E();
@@ -23,56 +24,22 @@ void main() {
     final email = await getTestUserEmail(adminClient, gender: 'male');
     await signInAsTestUser(email);
     testUserId = Supabase.instance.client.auth.currentUser!.id;
+
+    // Cleanup any leftover data
+    await _cleanup(adminClient, testUserId, eventCtx.eventId);
   });
 
   tearDownAll(() async {
-    // Best-effort cleanup — don't fail teardown
-    try {
-      await adminClient
-          .from('event_participants')
-          .delete()
-          .eq('user_id', testUserId)
-          .eq('event_id', eventCtx.eventId);
-    } on Object catch (_) {}
-    try {
-      final appId = await _getApplicationId(
-        adminClient,
-        testUserId,
-        eventCtx.eventId,
-      );
-      if (appId != null) {
-        await adminClient
-            .from('verification_submissions')
-            .delete()
-            .eq('application_id', appId);
-        await adminClient.from('event_applications').delete().eq('id', appId);
-      }
-    } on Object catch (_) {}
+    await _cleanup(adminClient, testUserId, eventCtx.eventId);
     await signOut();
   });
 
   group('CUJ 03: Application', () {
-    testWidgets('Should complete full application flow', (tester) async {
+    testWidgets('이벤트에 신청하면 pending_review 상태로 생성된다',
+        (tester) async {
       final client = Supabase.instance.client;
-
-      // 1. Cleanup any existing application (idempotent)
-      try {
-        await adminClient
-            .from('event_participants')
-            .delete()
-            .eq('user_id', testUserId)
-            .eq('event_id', eventCtx.eventId);
-        await adminClient
-            .from('event_applications')
-            .delete()
-            .eq('user_id', testUserId)
-            .eq('event_id', eventCtx.eventId);
-      } on Object catch (_) {}
-
-      // 2. Get verification ID
       final verificationId = await getCareerVerificationId(adminClient);
 
-      // 3. Apply to event (atomic RPC)
       final appId = await client.rpc<dynamic>(
         'apply_event',
         params: {
@@ -89,35 +56,44 @@ void main() {
         },
       );
       expect(appId, isNotNull, reason: 'Application should be created');
+      applicationId = appId as String;
 
-      // 4. Verify pending status
       final app = await client
           .from('event_applications')
           .select()
           .eq('id', appId as Object)
           .single();
       expect(app['status'], equals('pending_review'));
+    });
 
-      // 5. Admin approves verification
+    testWidgets('관리자가 심사 승인하면 approved 상태가 된다',
+        (tester) async {
+      expect(applicationId, isNotNull,
+          reason: 'Previous test must create application',);
+
       await adminClient
           .from('verification_submissions')
-          .update({'status': 'approved'}).eq('application_id', appId);
+          .update({'status': 'approved'}).eq(
+              'application_id', applicationId!,);
 
-      // 6. Wait for DB trigger to process
       await Future<void>.delayed(const Duration(milliseconds: 500));
 
-      // 7. Verify approved + participant created
       final updatedApp = await adminClient
           .from('event_applications')
           .select()
-          .eq('id', appId)
+          .eq('id', applicationId!)
           .single();
       expect(updatedApp['status'], equals('approved'));
+    });
+
+    testWidgets('승인 후 participant가 생성된다', (tester) async {
+      expect(applicationId, isNotNull,
+          reason: 'Previous test must create application',);
 
       final participant = await adminClient
           .from('event_participants')
           .select()
-          .eq('application_id', appId)
+          .eq('application_id', applicationId!)
           .maybeSingle();
       expect(participant, isNotNull, reason: 'Participant should be created');
       expect(participant!['ticket_code'], isNotNull);
@@ -125,16 +101,32 @@ void main() {
   });
 }
 
-Future<String?> _getApplicationId(
+Future<void> _cleanup(
   SupabaseClient admin,
   String userId,
   String eventId,
 ) async {
-  final res = await admin
-      .from('event_applications')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('event_id', eventId)
-      .maybeSingle();
-  return res?['id'] as String?;
+  try {
+    await admin
+        .from('event_participants')
+        .delete()
+        .eq('user_id', userId)
+        .eq('event_id', eventId);
+  } on Object catch (_) {}
+  try {
+    final appRes = await admin
+        .from('event_applications')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('event_id', eventId)
+        .maybeSingle();
+    if (appRes != null) {
+      final appId = appRes['id'] as String;
+      await admin
+          .from('verification_submissions')
+          .delete()
+          .eq('application_id', appId);
+      await admin.from('event_applications').delete().eq('id', appId);
+    }
+  } on Object catch (_) {}
 }

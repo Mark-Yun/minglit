@@ -12,17 +12,17 @@ void main() {
   late SupabaseClient adminClient;
   late String maleUserId;
   late String femaleUserId;
+  late String maleEmail;
+  late String femaleEmail;
   late String eventId;
 
   setUpAll(() async {
     await initializeE2E();
     adminClient = createAdminClient();
 
-    // Resolve test users
-    final maleEmail = await getTestUserEmail(adminClient, gender: 'male');
-    final femaleEmail = await getTestUserEmail(adminClient, gender: 'female');
+    maleEmail = await getTestUserEmail(adminClient, gender: 'male');
+    femaleEmail = await getTestUserEmail(adminClient, gender: 'female');
 
-    // Get user IDs via admin
     await signInAsTestUser(maleEmail);
     maleUserId = Supabase.instance.client.auth.currentUser!.id;
     await signOut();
@@ -31,49 +31,20 @@ void main() {
     femaleUserId = Supabase.instance.client.auth.currentUser!.id;
     await signOut();
 
-    // Get a scheduled event
     final ctx = await findScheduledEvent(adminClient);
     eventId = ctx.eventId;
+
+    // Cleanup leftover data
+    await _cleanup(adminClient, eventId, maleUserId, femaleUserId);
   });
 
   tearDownAll(() async {
-    // Cleanup votes and matches
-    try {
-      await adminClient
-          .from('match_votes')
-          .delete()
-          .eq('event_id', eventId)
-          .inFilter('voter_id', [maleUserId, femaleUserId]);
-    } on Object catch (_) {}
-    try {
-      await adminClient
-          .from('event_matches')
-          .delete()
-          .eq('event_id', eventId)
-          .or('user_a_id.eq.$maleUserId,user_b_id.eq.$maleUserId');
-    } on Object catch (_) {}
+    await _cleanup(adminClient, eventId, maleUserId, femaleUserId);
     await signOut();
   });
 
   group('CUJ 04: Matching', () {
-    testWidgets('Should cast mutual votes and verify match data',
-        (tester) async {
-      // 1. Cleanup existing votes (idempotent)
-      try {
-        await adminClient
-            .from('match_votes')
-            .delete()
-            .eq('event_id', eventId)
-            .inFilter('voter_id', [maleUserId, femaleUserId]);
-        await adminClient
-            .from('event_matches')
-            .delete()
-            .eq('event_id', eventId)
-            .or('user_a_id.eq.$maleUserId,user_b_id.eq.$maleUserId');
-      } on Object catch (_) {}
-
-      // 2. Male votes for Female
-      final maleEmail = await getTestUserEmail(adminClient, gender: 'male');
+    testWidgets('남성 유저가 여성 유저에게 투표할 수 있다', (tester) async {
       await signInAsTestUser(maleEmail);
       await Supabase.instance.client.from('match_votes').insert({
         'event_id': eventId,
@@ -82,8 +53,17 @@ void main() {
       });
       await signOut();
 
-      // 3. Female votes for Male
-      final femaleEmail = await getTestUserEmail(adminClient, gender: 'female');
+      final vote = await adminClient
+          .from('match_votes')
+          .select()
+          .eq('event_id', eventId)
+          .eq('voter_id', maleUserId)
+          .eq('candidate_id', femaleUserId)
+          .maybeSingle();
+      expect(vote, isNotNull, reason: 'Vote should be recorded');
+    });
+
+    testWidgets('여성 유저가 남성 유저에게 투표할 수 있다', (tester) async {
       await signInAsTestUser(femaleEmail);
       await Supabase.instance.client.from('match_votes').insert({
         'event_id': eventId,
@@ -92,10 +72,19 @@ void main() {
       });
       await signOut();
 
-      // 4. Wait for match trigger
+      final vote = await adminClient
+          .from('match_votes')
+          .select()
+          .eq('event_id', eventId)
+          .eq('voter_id', femaleUserId)
+          .eq('candidate_id', maleUserId)
+          .maybeSingle();
+      expect(vote, isNotNull, reason: 'Vote should be recorded');
+    });
+
+    testWidgets('상호 투표 시 매치가 생성된다', (tester) async {
       await Future<void>.delayed(const Duration(milliseconds: 500));
 
-      // 5. Verify match exists (use admin to bypass RLS)
       final matches = await adminClient
           .from('event_matches')
           .select()
@@ -105,11 +94,29 @@ void main() {
             'and(user_a_id.eq.$femaleUserId,user_b_id.eq.$maleUserId)',
           ) as List;
 
-      expect(
-        matches,
-        isNotEmpty,
-        reason: 'Mutual votes should create a match',
-      );
+      expect(matches, isNotEmpty, reason: 'Mutual votes should create a match');
     });
   });
+}
+
+Future<void> _cleanup(
+  SupabaseClient admin,
+  String eventId,
+  String maleUserId,
+  String femaleUserId,
+) async {
+  try {
+    await admin
+        .from('match_votes')
+        .delete()
+        .eq('event_id', eventId)
+        .inFilter('voter_id', [maleUserId, femaleUserId]);
+  } on Object catch (_) {}
+  try {
+    await admin
+        .from('event_matches')
+        .delete()
+        .eq('event_id', eventId)
+        .or('user_a_id.eq.$maleUserId,user_b_id.eq.$maleUserId');
+  } on Object catch (_) {}
 }

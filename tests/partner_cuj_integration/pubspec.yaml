@@ -1,0 +1,21 @@
+name: partner_cuj_integration
+description: Daily CUJ integration tests for partner app against dev Supabase
+publish_to: 'none'
+version: 0.1.0
+resolution: workspace
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  minglit_kit:
+    path: ../../shared/packages/minglit_kit
+  supabase_flutter: ^2.8.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
