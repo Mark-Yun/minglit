@@ -16,11 +16,10 @@ abstract class VerificationSubmission with _$VerificationSubmission {
     @JsonKey(name: 'user_id') required String userId,
     @JsonKey(name: 'verification_id') required String verificationId,
     required VerificationStatus status,
-    @JsonKey(name: 'snapshot_data') required Map<String, dynamic> snapshotData,
+    @JsonKey(name: 'snapshot_data') required List<dynamic> snapshotData,
     @JsonKey(name: 'created_at') required DateTime createdAt,
     @JsonKey(name: 'updated_at') required DateTime updatedAt,
     @JsonKey(name: 'application_id') String? applicationId,
-    @JsonKey(name: 'admin_comment') String? adminComment,
     @JsonKey(name: 'reviewed_at') DateTime? reviewedAt,
     @JsonKey(name: 'reviewed_by') String? reviewedBy,
   }) = _VerificationSubmission;

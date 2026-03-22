@@ -8,9 +8,12 @@ part of 'policy_repository.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provides a [PolicyRepository] instance.
 
 @ProviderFor(policyRepository)
 const policyRepositoryProvider = PolicyRepositoryProvider._();
+
+/// Provides a [PolicyRepository] instance.
 
 final class PolicyRepositoryProvider
     extends
@@ -20,6 +23,7 @@ final class PolicyRepositoryProvider
           PolicyRepository
         >
     with $Provider<PolicyRepository> {
+  /// Provides a [PolicyRepository] instance.
   const PolicyRepositoryProvider._()
     : super(
         from: null,

@@ -35,13 +35,6 @@ enum VerificationStatus {
 
   /// Submission was rejected.
   rejected,
-
-  /// Submission requires user corrections.
-  @JsonValue('needs_correction')
-  needsCorrection,
-
-  /// Submission was cancelled.
-  cancelled,
 }
 
 /// Represents a single field definition in the dynamic form schema.

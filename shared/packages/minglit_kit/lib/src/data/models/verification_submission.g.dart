@@ -14,11 +14,10 @@ _VerificationSubmission _$VerificationSubmissionFromJson(
   userId: json['user_id'] as String,
   verificationId: json['verification_id'] as String,
   status: $enumDecode(_$VerificationStatusEnumMap, json['status']),
-  snapshotData: json['snapshot_data'] as Map<String, dynamic>,
+  snapshotData: json['snapshot_data'] as List<dynamic>,
   createdAt: DateTime.parse(json['created_at'] as String),
   updatedAt: DateTime.parse(json['updated_at'] as String),
   applicationId: json['application_id'] as String?,
-  adminComment: json['admin_comment'] as String?,
   reviewedAt: json['reviewed_at'] == null
       ? null
       : DateTime.parse(json['reviewed_at'] as String),
@@ -37,7 +36,6 @@ Map<String, dynamic> _$VerificationSubmissionToJson(
   'created_at': instance.createdAt.toIso8601String(),
   'updated_at': instance.updatedAt.toIso8601String(),
   'application_id': instance.applicationId,
-  'admin_comment': instance.adminComment,
   'reviewed_at': instance.reviewedAt?.toIso8601String(),
   'reviewed_by': instance.reviewedBy,
 };
@@ -46,6 +44,4 @@ const _$VerificationStatusEnumMap = {
   VerificationStatus.pending: 'pending',
   VerificationStatus.approved: 'approved',
   VerificationStatus.rejected: 'rejected',
-  VerificationStatus.needsCorrection: 'needs_correction',
-  VerificationStatus.cancelled: 'cancelled',
 };

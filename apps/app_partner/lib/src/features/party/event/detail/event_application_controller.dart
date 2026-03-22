@@ -40,12 +40,12 @@ class EventApplicationReviewController
 
       if (subData != null) {
         final submissionId = subData['id'] as String;
+        // Fix #301: adminComment removed — will be handled by partner EF (#309)
         await repo.reviewRequest(
           submissionId: submissionId,
           status: status == 'approved'
               ? VerificationStatus.approved
               : VerificationStatus.rejected,
-          adminComment: reason,
         );
       } else {
         // No submission, handle direct application status update

@@ -795,7 +795,7 @@ async function seedUserActivity(sb: SupabaseClient): Promise<void> {
     for (let ui = 0; ui < eventUsers.length; ui++) {
       const user = eventUsers[ui]
       const scenario = needsVerification
-        ? (ui === 0 ? 'pending_review_approved' : ui === 1 ? 'pending_review_rejected' : ui === 2 ? 'pending_review_needs_correction' : 'pending_review_pending')
+        ? (ui === 0 ? 'pending_review_approved' : ui === 1 ? 'pending_review_rejected' : 'pending_review_pending')
         : (ui === 0 ? 'approved' : ui === 1 ? 'paid' : ui === 2 ? 'cancelled' : ui === 3 ? 'payment_failed' : 'pending')
 
       const { data: app, error: appErr } = await sb.from('event_applications').insert({
@@ -834,7 +834,7 @@ async function seedUserActivity(sb: SupabaseClient): Promise<void> {
       verification_id: verifId,
       application_id: app.id,
       status: 'pending',
-      snapshot_data: { submitted_at: new Date().toISOString(), data: { note: 'seed data' } },
+      snapshot_data: [{ submitted_at: new Date().toISOString(), data: { note: 'seed data' }, result: null, reviewed_by: null, reviewed_at: null, comments: [] }],
     }).select('id').single()
 
     if (subErr) {
@@ -846,12 +846,10 @@ async function seedUserActivity(sb: SupabaseClient): Promise<void> {
     let targetStatus: string | null = null
     if (app.scenario === 'pending_review_approved') targetStatus = 'approved'
     else if (app.scenario === 'pending_review_rejected') targetStatus = 'rejected'
-    else if (app.scenario === 'pending_review_needs_correction') targetStatus = 'needs_correction'
 
     if (targetStatus) {
       await sb.from('verification_submissions').update({
         status: targetStatus,
-        admin_comment: targetStatus === 'rejected' ? '인증 서류 불충분' : targetStatus === 'needs_correction' ? '추가 서류 필요' : null,
         reviewed_at: new Date().toISOString(),
       }).eq('id', sub.id)
     }
