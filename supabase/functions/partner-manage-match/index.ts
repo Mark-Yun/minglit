@@ -17,6 +17,7 @@ interface RuleInput {
 
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
+  if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
   // 1. Environment check (before auth — requireAuth also reads these)
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -33,16 +34,20 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // 3. Parse body
   let body: Record<string, unknown>;
   try {
-    body = await req.json();
+    const parsed = await req.json();
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      return errorResponse("Request body must be a JSON object", 400);
+    }
+    body = parsed as Record<string, unknown>;
   } catch {
     return errorResponse("Invalid JSON body", 400);
   }
 
   const action = body.action as string | undefined;
-  if (!action) return errorResponse("Missing action", 400);
+  if (typeof action !== "string" || !action) return errorResponse("Missing action", 400);
 
-  const eventId = body.event_id as string | undefined;
-  if (!eventId) return errorResponse("Missing event_id", 400);
+  const eventId = body.event_id;
+  if (typeof eventId !== "string" || !eventId) return errorResponse("Missing event_id", 400);
 
   // 4. Supabase client (service role)
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
