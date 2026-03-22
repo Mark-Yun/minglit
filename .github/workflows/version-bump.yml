@@ -105,5 +105,6 @@ jobs:
       issues: write
     uses: ./.github/workflows/notify-failure.yml
     with:
-      success: ${{ needs.bump.result == 'success' }}
+      success: ${{ needs.bump.result == 'success' || needs.bump.result == 'skipped' }}
       workflow_name: 'Version Bump'
+      job_results: '{"bump":"${{ needs.bump.result }}"}'
