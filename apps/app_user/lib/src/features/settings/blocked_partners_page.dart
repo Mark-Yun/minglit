@@ -23,12 +23,24 @@ class _BlockedPartnersPageState extends ConsumerState<BlockedPartnersPage> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final data = await ref.read(socialRepositoryProvider).getBlockedPartners();
-    if (mounted) {
-      setState(() {
-        _partners = data;
-        _loading = false;
-      });
+    // Fix #270: 네트워크 실패 시 에러 처리 — 영구 로딩 상태 방지
+    try {
+      final data =
+          await ref.read(socialRepositoryProvider).getBlockedPartners();
+      if (mounted) {
+        setState(() {
+          _partners = data;
+          _loading = false;
+        });
+      }
+    } on Object catch (e) {
+      debugPrint('Failed to load blocked partners: $e');
+      if (mounted) {
+        setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('차단 목록을 불러오지 못했습니다')),
+        );
+      }
     }
   }
 
