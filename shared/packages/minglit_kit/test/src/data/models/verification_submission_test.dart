@@ -20,7 +20,7 @@ void main() {
           'result': null,
           'reviewed_by': null,
           'reviewed_at': null,
-          'comments': [],
+          'comments': <dynamic>[],
         },
       ],
       'created_at': now.toIso8601String(),
@@ -38,7 +38,7 @@ void main() {
       expect(sub.userId, 'user_1');
       expect(sub.verificationId, 'verif_1');
       expect(sub.status, VerificationStatus.pending);
-      expect(sub.snapshotData, isA<List>());
+      expect(sub.snapshotData, isA<List<dynamic>>());
       expect(sub.snapshotData.length, 1);
       expect(sub.applicationId, 'app_1');
       expect(sub.reviewedBy, 'admin_1');
