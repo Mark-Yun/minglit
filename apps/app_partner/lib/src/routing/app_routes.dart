@@ -1,7 +1,6 @@
 import 'package:app_partner/src/features/admin/partner_application_detail_page.dart';
 import 'package:app_partner/src/features/admin/partner_application_list_page.dart';
 import 'package:app_partner/src/features/auth/partner_login_page.dart';
-import 'package:app_partner/src/features/dev/partner_dev_map.dart';
 import 'package:app_partner/src/features/home/guide/location_guide_page.dart';
 import 'package:app_partner/src/features/home/partner_home_page.dart';
 import 'package:app_partner/src/features/member/partner_member_list_page.dart';
@@ -32,15 +31,7 @@ part 'app_routes.g.dart';
 
 // --- Top Level Routes (No Shell) ---
 
-/// **Dev: Dev Map Route**
-@TypedGoRoute<DevMapRoute>(path: '/dev')
-class DevMapRoute extends GoRouteData with $DevMapRoute {
-  const DevMapRoute();
-  @override
-  Widget build(BuildContext context, GoRouterState state) =>
-      const PartnerDevMap();
-}
-
+/// **Dev User Switch Route**: Screen to switch between test users.
 @TypedGoRoute<DevUserSwitchRoute>(path: '/dev/user-switch')
 class DevUserSwitchRoute extends GoRouteData with $DevUserSwitchRoute {
   const DevUserSwitchRoute();
