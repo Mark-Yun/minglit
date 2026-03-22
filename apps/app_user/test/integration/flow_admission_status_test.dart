@@ -175,6 +175,10 @@ void main() {
         find.widgetWithText(ElevatedButton, '나이 조건이 맞지 않습니다.'),
       );
       expect(button.onPressed, isNull);
+      // Disabled style: backgroundColor = theme.colorScheme.outline
+      final theme = Theme.of(tester.element(find.byType(ElevatedButton).last));
+      final bg = button.style?.backgroundColor?.resolve({});
+      expect(bg, theme.colorScheme.outline);
     });
 
     testWidgets('eligible → "참가 신청하기" (enabled)', (tester) async {
@@ -242,6 +246,28 @@ void main() {
         find.widgetWithText(ElevatedButton, '심사 반려 (사유 확인)'),
       );
       expect(button.onPressed, isNotNull);
+      // Destructive style: backgroundColor = theme.colorScheme.error
+      final theme = Theme.of(tester.element(find.byType(ElevatedButton).last));
+      final bg = button.style?.backgroundColor?.resolve({});
+      expect(bg, theme.colorScheme.error);
+    });
+
+    testWidgets('eligible → normal style (no custom backgroundColor)', (
+      tester,
+    ) async {
+      await pumpEventDetailWithState(
+        tester,
+        admissionState: AdmissionState(
+          status: EventAdmissionStatus.eligible,
+        ),
+        currentUser: testUser,
+      );
+
+      final button = tester.widget<ElevatedButton>(
+        find.widgetWithText(ElevatedButton, '참가 신청하기'),
+      );
+      // Normal style: no custom backgroundColor override
+      expect(button.style?.backgroundColor, isNull);
     });
   });
 
