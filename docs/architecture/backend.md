@@ -96,8 +96,8 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 | `file_access_grants` | 파일 접근 권한 | file_id, viewer_id, expires_at |
 | `settlements` | 정산 (레거시) | partner_id, event_id, total_sales, net_amount, status — [상세](./payment-pipeline.md) |
 | `report_details` | 신고 상세 정보 | social_interaction_id, target_type, reason, description |
-| `system_settings` | 시스템 설정 키-값 | key (PK), value jsonb, description |
-| `policies` | 약관/정책 버전 관리 | key, value jsonb, version, effective_date |
+| `system_settings` | 시스템 설정 키-값 | key (PK), value jsonb, description, updated_at, updated_by |
+| `policies` | 약관/정책 버전 관리 | id (PK uuid), key, value jsonb, version, effective_date, description, created_at |
 
 #### Settlement v2 (정산 파이프라인 v2)
 
@@ -227,9 +227,9 @@ Supabase Edge Functions는 Deno 런타임 기반이며, `supabase/functions/` �
 |--------|-----|---------|
 | `portone_client.ts` | 209 | Portone V2 API 클라이언트 (결제 검증, 취소) |
 | `iamport_client.ts` | 63 | Iamport V1 레거시 API 래퍼 |
-| `logger.ts` | — | 구조화 로깅 (Axiom 연동, Sentry 래퍼) |
-| `axiom_logger.ts` | — | Axiom 로그 전송 클라이언트 |
-| `statsig_utils.ts` | — | Statsig 피처 플래그 / 이벤트 로깅 |
+| `logger.ts` | 124 | 구조화 로깅 (Axiom 연동, Sentry 래퍼) |
+| `axiom_logger.ts` | 130 | Axiom 로그 전송 클라이언트 |
+| `statsig_utils.ts` | 115 | Statsig 피처 플래그 / 이벤트 로깅 |
 | `worker_utils.ts` | 58 | PGMQ 워커 유틸 (중복 체크, DLQ, 지연 로깅) |
 | `auth_utils.ts` | 38 | 인증 유틸 (`requireAuth` — Bearer 토큰 → `auth.getUser()`) |
 | `response_utils.ts` | 33 | HTTP 응답 헬퍼 (CORS, JSON/에러 응답) |
