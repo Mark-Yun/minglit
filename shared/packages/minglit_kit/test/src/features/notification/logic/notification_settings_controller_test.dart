@@ -94,7 +94,9 @@ void main() {
             'user_1',
             {'marketing_consent': true},
           ),
-        ).thenAnswer((_) async {});
+        ).thenAnswer((_) async {
+          return null;
+        });
 
         final container = createTestContainer(user: mockUser);
         await container.read(
@@ -132,7 +134,9 @@ void main() {
             'user_1',
             {'service_notification': false},
           ),
-        ).thenAnswer((_) async {});
+        ).thenAnswer((_) async {
+          return null;
+        });
 
         final container = createTestContainer(user: mockUser);
         await container.read(

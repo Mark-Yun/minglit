@@ -141,8 +141,7 @@ void main() {
       test('supports pagination', () async {
         mockTable(mockClient, 'user_notifications', selectData: []);
 
-        final result =
-            await repository.getNotifications(limit: 10, offset: 20);
+        final result = await repository.getNotifications(limit: 10, offset: 20);
         expect(result, isEmpty);
       });
     });
