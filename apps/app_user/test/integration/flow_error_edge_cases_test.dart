@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:app_user/src/features/event/admission/event_admission_controller.dart';
 import 'package:app_user/src/features/event/detail/event_detail_page.dart';
-import 'package:app_user/src/features/event/detail/report_bottom_sheet.dart';
 import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
 import 'package:app_user/src/features/partner/detail/partner_detail_page.dart';
 import 'package:app_user/src/features/ticket/data/ticket_wallet_repository.dart';
@@ -11,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-// ignore: implementation_imports
 import 'package:minglit_kit/src/features/social/logic/social_interaction_controller.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -36,18 +34,19 @@ void main() {
       ),
       eventAdmissionControllerProvider(event).overrideWith(
         admissionError
-            ? () => _ErrorAdmissionController()
-            : () => _GuestAdmissionController(),
+            ? _ErrorAdmissionController.new
+            : _GuestAdmissionController.new,
       ),
       policyRepositoryProvider.overrideWith(
         (ref) => _FakePolicyRepository(),
       ),
       if (withUser) ...[
         socialInteractionControllerProvider.overrideWith(
-          () => _NoOpSocialInteractionController(),
+          _NoOpSocialInteractionController.new,
         ),
-        socialRepositoryProvider
-            .overrideWithValue(socialRepo ?? MockSocialRepository()),
+        socialRepositoryProvider.overrideWithValue(
+          socialRepo ?? MockSocialRepository(),
+        ),
       ],
     ];
   }
@@ -229,7 +228,7 @@ void main() {
               ),
             ),
             eventAdmissionControllerProvider(testEvent).overrideWith(
-              () => _GuestAdmissionController(),
+              _GuestAdmissionController.new,
             ),
             policyRepositoryProvider.overrideWith(
               (ref) => _FakePolicyRepository(),
