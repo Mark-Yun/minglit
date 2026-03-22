@@ -137,6 +137,7 @@ void main() {
       await tester.pump();
       await tester.pump();
 
+      await tester.scrollUntilVisible(find.text('구매 내역'), 100);
       await tester.tap(find.text('구매 내역'));
       await tester.pump();
       await tester.pump();
