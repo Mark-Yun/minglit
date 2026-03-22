@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:app_user/src/features/event/admission/event_admission_controller.dart';
 import 'package:app_user/src/features/event/admission/event_application_controller.dart';
 import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
-import 'package:app_user/src/features/ticket/ui/ticket_selection_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -98,7 +97,7 @@ void main() {
   );
 
   final testUser = createMockUserForTest();
-  final testProfile = UserProfile(
+  const testProfile = UserProfile(
     id: 'test-user-id',
     name: 'Test User',
     username: 'testuser',
@@ -286,20 +285,22 @@ void main() {
       await tester.pump();
     }
 
-    testWidgets('Step 1 (verification) renders step indicator with "인증" active',
-        (tester) async {
-      await pumpWizard(tester, event: testEventWithVerification);
-
-      // Step indicator should show
-      expect(find.text('인증'), findsOneWidget);
-      expect(find.text('결제'), findsOneWidget);
-      // "다음" button visible on verification step
-      expect(find.text('다음'), findsOneWidget);
-    });
-
     testWidgets(
-        'no verification required → "바로 결제로 진행해주세요" message',
-        (tester) async {
+      'Step 1 (verification) renders step indicator with "인증" active',
+      (tester) async {
+        await pumpWizard(tester, event: testEventWithVerification);
+
+        // Step indicator should show
+        expect(find.text('인증'), findsOneWidget);
+        expect(find.text('결제'), findsOneWidget);
+        // "다음" button visible on verification step
+        expect(find.text('다음'), findsOneWidget);
+      },
+    );
+
+    testWidgets('no verification required → "바로 결제로 진행해주세요" message', (
+      tester,
+    ) async {
       await pumpWizard(
         tester,
         event: testEventWithVerification,
