@@ -204,10 +204,14 @@ export async function simAssertRefundProcessed(
     const actualStatus = data?.refund_status ?? null;
 
     const amountOk = actualAmount === expectedAmount;
-    const statusOk = actualStatus === "completed" || actualStatus === "requested";
+    // For 0%-refund cases, no real Portone refund is attempted, so refund_status is 'failed' or null — both are valid
+    const statusOk = expectedPercentage === 0
+      ? (actualStatus === "failed" || actualStatus === null)
+      : (actualStatus === "completed" || actualStatus === "requested");
 
     if (!statusOk) {
-      return fail("refund_processed", "completed|requested", actualStatus, `refund_status is '${actualStatus}'`);
+      const expectedStatuses = expectedPercentage === 0 ? "failed|null" : "completed|requested";
+      return fail("refund_processed", expectedStatuses, actualStatus, `refund_status is '${actualStatus}'`);
     }
     if (!amountOk) {
       return fail("refund_processed", expectedAmount, actualAmount, `refund_amount mismatch (expected ${expectedAmount}, got ${actualAmount})`);
