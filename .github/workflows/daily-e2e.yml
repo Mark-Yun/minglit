@@ -55,7 +55,11 @@ jobs:
           disable-animations: true
           working-directory: tests/client_cuj_integration
           script: |
-            for test_file in integration_test/cuj/*_test.dart; do echo "▶ Running $test_file" && flutter test "$test_file" --reporter expanded --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_DEV_URL }} --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }} --dart-define=SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_DEV_SECRET_KEY }} || exit 1; done
+            DART_DEFINES="--dart-define=SUPABASE_URL=${{ secrets.SUPABASE_DEV_URL }} --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}"
+            for test_file in integration_test/cuj/*_test.dart; do
+              echo "▶ Running $test_file"
+              flutter test "$test_file" --reporter expanded $DART_DEFINES || exit 1
+            done
 
   notify-failure:
     needs: [client-cuj-test]
