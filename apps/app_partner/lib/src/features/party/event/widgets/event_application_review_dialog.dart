@@ -87,7 +87,7 @@ class _EventApplicationReviewDialogState
               const SizedBox(height: MinglitSpacing.small),
               // Fix #301: snapshot_data is now an array of history entries
               ..._extractLatestData(submission.snapshotData).entries.map((
-                MapEntry<String, dynamic> entry,
+                entry,
               ) {
                 final key = entry.key;
                 final value = entry.value;
