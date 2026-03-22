@@ -4,7 +4,9 @@
 /// No-ops gracefully when STATSIG_CLIENT_KEY is empty or 'FILL_THIS'.
 library;
 
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:statsig/statsig.dart';
+import 'package:uuid/uuid.dart';
 
 /// Event name constants for Statsig analytics.
 /// ONLY these 7 events are tracked.
@@ -57,12 +59,24 @@ class StatsigAnalytics {
     }
   }
 
+  static const _stableIdKey = 'statsig_stable_id';
+
   static Future<void> _initializeInternal(
     String clientKey, {
     required String tier,
     String? userId,
   }) async {
-    final user = StatsigUser(userId: userId ?? '');
+    final prefs = await SharedPreferences.getInstance();
+    var stableId = prefs.getString(_stableIdKey);
+    if (stableId == null) {
+      stableId = const Uuid().v4();
+      await prefs.setString(_stableIdKey, stableId);
+    }
+
+    final user = StatsigUser(
+      userId: userId ?? '',
+      customIds: {'stableID': stableId},
+    );
     final options = StatsigOptions(environment: tier);
     await Statsig.initialize(clientKey, user, options);
     _initialized = true;
