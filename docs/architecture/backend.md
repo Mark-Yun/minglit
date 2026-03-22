@@ -41,7 +41,7 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 
 ### 2.1 Table Inventory
 
-총 **44개 테이블(analytics 스키마 4개 포함)** + **4개 뷰** + **3개 PGMQ 큐 테이블**.
+총 **49개 테이블(analytics 스키마 4개 포함)** + **4개 뷰** + **3개 PGMQ 큐 테이블**.
 
 #### Core (사용자/파트너)
 
