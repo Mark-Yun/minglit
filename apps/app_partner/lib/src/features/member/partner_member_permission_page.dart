@@ -111,8 +111,10 @@ class _MemberPermissionFormState extends ConsumerState<_MemberPermissionForm> {
   @override
   void initState() {
     super.initState();
-    // Fix #270: dynamic map에서 안전 캐스팅 — null이면 기본값 사용
-    _selectedRole = widget.memberData['role'] as String? ?? 'member';
+    // Fix #270: dynamic map에서 안전 캐스팅 — Dropdown 항목에 없는 값이면 'staff' 사용
+    final rawRole = widget.memberData['role'] as String?;
+    const allowedRoles = {'owner', 'manager', 'staff'};
+    _selectedRole = allowedRoles.contains(rawRole) ? rawRole! : 'staff';
     _currentPermissions = List<String>.from(
       widget.memberData['permissions'] as Iterable<dynamic>? ?? [],
     );
