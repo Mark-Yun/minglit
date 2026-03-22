@@ -25,8 +25,9 @@ class _BlockedPartnersPageState extends ConsumerState<BlockedPartnersPage> {
     setState(() => _loading = true);
     // Fix #270: 네트워크 실패 시 에러 처리 — 영구 로딩 상태 방지
     try {
-      final data =
-          await ref.read(socialRepositoryProvider).getBlockedPartners();
+      final data = await ref
+          .read(socialRepositoryProvider)
+          .getBlockedPartners();
       if (mounted) {
         setState(() {
           _partners = data;
