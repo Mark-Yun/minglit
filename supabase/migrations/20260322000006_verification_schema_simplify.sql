@@ -64,6 +64,50 @@ END;
 $$;
 
 -- ============================================================
+-- 4b. Update handle_verification_approval: remove admin_comment reference
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.handle_verification_approval()
+RETURNS trigger
+SET search_path = public
+AS $$
+BEGIN
+  -- 1. Handling Approval
+  IF (NEW.status = 'approved' AND OLD.status IS DISTINCT FROM 'approved') THEN
+    INSERT INTO public.partner_verified_users (partner_id, user_id, verification_id, submission_id, verified_at)
+    VALUES (NEW.partner_id, NEW.user_id, NEW.verification_id, NEW.id, now())
+    ON CONFLICT (partner_id, user_id, verification_id)
+    DO UPDATE SET submission_id = NEW.id, verified_at = now(), valid_until = NULL;
+
+    IF (NEW.application_id IS NOT NULL) THEN
+      UPDATE public.event_applications
+      SET status = 'approved', updated_at = now()
+      WHERE id = NEW.application_id
+      AND status IN ('pending', 'pending_review');
+    END IF;
+  END IF;
+
+  -- 2. Handling Rejection (admin_comment removed — rejection_reason cleared)
+  IF (NEW.status = 'rejected' AND OLD.status IS DISTINCT FROM 'rejected') THEN
+    IF (NEW.application_id IS NOT NULL) THEN
+      UPDATE public.event_applications
+      SET
+        status = 'rejected',
+        updated_at = now()
+      WHERE id = NEW.application_id;
+    END IF;
+  END IF;
+
+  -- 3. Revoking
+  IF (OLD.status = 'approved' AND NEW.status IS DISTINCT FROM 'approved') THEN
+    DELETE FROM public.partner_verified_users
+    WHERE submission_id = NEW.id;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================================
 -- 5. Revoke write grants on user_verifications (writes go through EF now)
 -- ============================================================
 -- Keep SELECT only for authenticated users
