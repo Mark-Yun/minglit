@@ -1,19 +1,25 @@
 import 'dart:async' show unawaited;
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/repositories/matching_repository.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../helpers/mocks.dart';
 import '../../../helpers/supabase_mock_helpers.dart';
 
 void main() {
   late MockSupabaseClient mockClient;
+  late MockFunctionsClient mockFunctions;
   late MatchingRepository repository;
 
   final mockUser = MockUser();
 
   setUp(() {
     mockClient = createMockSupabase(currentUser: mockUser);
+    mockFunctions = mockClient.functions as MockFunctionsClient;
     when(() => mockUser.id).thenReturn('user_1');
     repository = MatchingRepository(supabase: mockClient);
   });
@@ -53,8 +59,18 @@ void main() {
     });
 
     group('updateMatchRules', () {
-      test('completes without error', () async {
-        unawaited(mockTable(mockClient, 'match_rules'));
+      test('completes without error via EF', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-match',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            data: utf8.encode(jsonEncode({'success': true, 'count': 1})),
+            status: 200,
+          ),
+        );
 
         await expectLater(
           repository.updateMatchRules(
@@ -63,6 +79,7 @@ void main() {
               {
                 'source_group_id': 'group_m',
                 'target_group_id': 'group_f',
+                'vote_count': 3,
               },
             ],
           ),
@@ -70,14 +87,45 @@ void main() {
         );
       });
 
-      test('handles empty rules list', () async {
-        unawaited(mockTable(mockClient, 'match_rules'));
+      test('handles empty rules list via EF', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-match',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            data: utf8.encode(jsonEncode({'success': true, 'count': 0})),
+            status: 200,
+          ),
+        );
 
         await expectLater(
           repository.updateMatchRules(
             eventId: 'event_1',
             rules: [],
           ),
+          completes,
+        );
+      });
+    });
+
+    group('clearMatchRules', () {
+      test('completes without error via EF', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-match',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            data: utf8.encode(jsonEncode({'success': true})),
+            status: 200,
+          ),
+        );
+
+        await expectLater(
+          repository.clearMatchRules(eventId: 'event_1'),
           completes,
         );
       });
