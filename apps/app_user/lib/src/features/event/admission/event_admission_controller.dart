@@ -161,12 +161,10 @@ class EventAdmissionController extends _$EventAdmissionController {
           final loading = ref.read(globalLoadingControllerProvider.notifier)
             ..show();
           try {
+            // Fix #299: deleteApplication → cancelOrder EF 전환
             await ref
                 .read(eventRepositoryProvider)
-                .deleteApplication(
-                  eventId: event.id,
-                  userId: user.id,
-                );
+                .cancelOrder(eventId: event.id);
             ref.invalidate(eventAdmissionControllerProvider(event));
             if (context.mounted) {
               unawaited(

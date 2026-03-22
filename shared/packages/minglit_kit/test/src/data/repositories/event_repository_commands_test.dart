@@ -174,6 +174,112 @@ void main() {
       });
     });
 
+    group('cancelOrder', () {
+      test('returns cancelled result on pre-payment cancel', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-cancel-order',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true, 'type': 'cancelled'},
+          ),
+        );
+
+        final result = await repository.cancelOrder(eventId: 'event_1');
+
+        expect(result.type, 'cancelled');
+        expect(result.refundAmount, isNull);
+      });
+
+      test('returns refunded result with amount', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-cancel-order',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {
+              'success': true,
+              'type': 'refunded',
+              'data': {'refund_amount': 30000},
+            },
+          ),
+        );
+
+        final result = await repository.cancelOrder(
+          eventId: 'event_1',
+          reason: '일정 변경',
+        );
+
+        expect(result.type, 'refunded');
+        expect(result.refundAmount, 30000);
+      });
+
+      test('passes reason when provided', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-cancel-order',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true, 'type': 'cancelled'},
+          ),
+        );
+
+        await repository.cancelOrder(
+          eventId: 'event_1',
+          reason: '일정 변경',
+        );
+
+        verify(
+          () => mockFunctions.invoke(
+            'user-cancel-order',
+            body: {'event_id': 'event_1', 'reason': '일정 변경'},
+          ),
+        ).called(1);
+      });
+
+      test('throws MinglitUserException on error response', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-cancel-order',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 400,
+            data: {'error': '이미 취소/거절된 신청입니다'},
+          ),
+        );
+
+        expect(
+          () => repository.cancelOrder(eventId: 'event_1'),
+          throwsA(isA<MinglitUserException>()),
+        );
+      });
+
+      test('throws on network error', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-cancel-order',
+            body: any(named: 'body'),
+          ),
+        ).thenThrow(Exception('network error'));
+
+        await expectLater(
+          repository.cancelOrder(eventId: 'event_1'),
+          throwsA(anything),
+        );
+      });
+    });
+
     group('applyEvent', () {
       test('calls apply_event RPC and returns application ID', () async {
         when(
@@ -235,6 +341,148 @@ void main() {
             userId: 'user_1',
             paymentId: 'pay_123',
             paymentAmount: 30000,
+          ),
+          throwsA(anything),
+        );
+      });
+    });
+
+    group('createOrderViaEF', () {
+      test('returns CreateOrderResult on success', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-create-order',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {
+              'success': true,
+              'application_id': 'app-ef-1',
+              'amount': 15000,
+              'requires_payment': true,
+              'ticket_name': '일반 티켓',
+            },
+          ),
+        );
+
+        final result = await repository.createOrderViaEF(
+          eventId: 'event_1',
+          ticketId: 'ticket_1',
+        );
+
+        expect(result.applicationId, 'app-ef-1');
+        expect(result.amount, 15000);
+        expect(result.requiresPayment, true);
+        expect(result.ticketName, '일반 티켓');
+      });
+
+      test('returns free order result', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-create-order',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {
+              'success': true,
+              'application_id': 'app-ef-2',
+              'amount': 0,
+              'requires_payment': false,
+              'ticket_name': '무료 티켓',
+            },
+          ),
+        );
+
+        final result = await repository.createOrderViaEF(
+          eventId: 'event_1',
+          ticketId: 'ticket_free',
+        );
+
+        expect(result.amount, 0);
+        expect(result.requiresPayment, false);
+      });
+
+      test('passes verification data when provided', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-create-order',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {
+              'success': true,
+              'application_id': 'app-ef-3',
+              'amount': 15000,
+              'requires_payment': true,
+              'ticket_name': '일반 티켓',
+            },
+          ),
+        );
+
+        await repository.createOrderViaEF(
+          eventId: 'event_1',
+          ticketId: 'ticket_1',
+          verificationData: {
+            'verification_id': 'v_1',
+            'data': {'field': 'value'},
+          },
+        );
+
+        verify(
+          () => mockFunctions.invoke(
+            'user-create-order',
+            body: {
+              'event_id': 'event_1',
+              'ticket_id': 'ticket_1',
+              'verification_data': {
+                'verification_id': 'v_1',
+                'data': {'field': 'value'},
+              },
+            },
+          ),
+        ).called(1);
+      });
+
+      test('throws MinglitUserException on error response', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-create-order',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 400,
+            data: {'error': '티켓이 매진되었습니다.'},
+          ),
+        );
+
+        expect(
+          () => repository.createOrderViaEF(
+            eventId: 'event_1',
+            ticketId: 'ticket_1',
+          ),
+          throwsA(isA<MinglitUserException>()),
+        );
+      });
+
+      test('throws on network error', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-create-order',
+            body: any(named: 'body'),
+          ),
+        ).thenThrow(Exception('network error'));
+
+        await expectLater(
+          repository.createOrderViaEF(
+            eventId: 'event_1',
+            ticketId: 'ticket_1',
           ),
           throwsA(anything),
         );

@@ -56,7 +56,9 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
     );
   }
 
+  // Fix #299: eventId 기반으로 전환 — user-cancel-order EF가 서버에서 검증
   Future<void> runRefundFlow({
+    required String eventId,
     required String? paymentId,
     required int? paymentAmount,
     required DateTime? eventStartTime,
@@ -101,16 +103,15 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
     if (!confirmed) return;
 
     await _requestRefund(
-      paymentId: paymentId,
-      calculation: calculation,
+      eventId: eventId,
       showError: showError,
       onSuccess: onSuccess,
     );
   }
 
+  // Fix #299: cancelPayment → cancelOrder EF 전환
   Future<void> _requestRefund({
-    required String paymentId,
-    required RefundCalculation calculation,
+    required String eventId,
     required Future<bool> Function(String message) showError,
     required Future<void> Function() onSuccess,
   }) async {
@@ -118,9 +119,8 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
     try {
       await ref
           .read(eventRepositoryProvider)
-          .cancelPayment(
-            paymentId: paymentId,
-            refundAmount: calculation.refundAmount,
+          .cancelOrder(
+            eventId: eventId,
             reason: '사용자 예매 취소',
           );
 
@@ -134,8 +134,7 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
       final retry = await showError(message);
       if (retry) {
         await _requestRefund(
-          paymentId: paymentId,
-          calculation: calculation,
+          eventId: eventId,
           showError: showError,
           onSuccess: onSuccess,
         );

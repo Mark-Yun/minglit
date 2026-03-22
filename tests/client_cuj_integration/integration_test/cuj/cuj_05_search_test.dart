@@ -14,6 +14,9 @@ void main() {
   setUpAll(() async {
     await initializeE2E();
     adminClient = createAdminClient();
+
+    final email = await getTestUserEmail(adminClient, gender: 'male');
+    await signInAsTestUser(email);
   });
 
   tearDownAll(() async {
@@ -21,41 +24,37 @@ void main() {
   });
 
   group('CUJ 05: Search', () {
-    testWidgets('Should search events via PGroonga RPC', (tester) async {
-      // Sign in (RPC might require auth)
-      final email = await getTestUserEmail(adminClient, gender: 'male');
-      await signInAsTestUser(email);
-
+    testWidgets('이벤트 검색 RPC가 정상 동작한다', (tester) async {
       final client = Supabase.instance.client;
 
-      // 1. Search events
-      final eventResults = await retry(() async {
+      final results = await retry(() async {
         return await client.rpc<List<dynamic>>(
           'search_events_pgroonga',
           params: {'query': '직장인'},
         );
       });
 
-      // Events search should return results (seed data has this keyword)
-      // If no results, the test still validates the RPC works without error
-      expect(eventResults, isList);
-      if (eventResults.isNotEmpty) {
-        final first = eventResults.first as Map<String, dynamic>;
+      expect(results, isList);
+      if (results.isNotEmpty) {
+        final first = results.first as Map<String, dynamic>;
         expect(first.containsKey('id'), isTrue);
         expect(first.containsKey('title'), isTrue);
       }
+    });
 
-      // 2. Search parties
-      final partyResults = await retry(() async {
+    testWidgets('파티 검색 RPC가 정상 동작한다', (tester) async {
+      final client = Supabase.instance.client;
+
+      final results = await retry(() async {
         return await client.rpc<List<dynamic>>(
           'search_parties_pgroonga',
           params: {'query': '대학생'},
         );
       });
 
-      expect(partyResults, isList);
-      if (partyResults.isNotEmpty) {
-        final first = partyResults.first as Map<String, dynamic>;
+      expect(results, isList);
+      if (results.isNotEmpty) {
+        final first = results.first as Map<String, dynamic>;
         expect(first.containsKey('id'), isTrue);
         expect(first.containsKey('title'), isTrue);
       }

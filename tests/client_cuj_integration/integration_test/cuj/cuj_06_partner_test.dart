@@ -11,11 +11,20 @@ void main() {
 
   late SupabaseClient adminClient;
   late ScheduledEventContext eventCtx;
+  late String partyId;
 
   setUpAll(() async {
     await initializeE2E();
     adminClient = createAdminClient();
     eventCtx = await findScheduledEvent(adminClient);
+
+    final ownerEmail = await getPartnerOwnerEmail(
+      adminClient,
+      ownerId: eventCtx.ownerId,
+    );
+    await signInAsTestUser(ownerEmail);
+
+    partyId = await _getPartyId(adminClient, eventCtx.partnerId);
   });
 
   tearDownAll(() async {
@@ -23,45 +32,46 @@ void main() {
   });
 
   group('CUJ 06: Partner', () {
-    testWidgets('Should access events and applications as partner owner',
+    testWidgets('파트너 owner가 자신의 이벤트 목록을 조회할 수 있다',
         (tester) async {
-      // 1. Sign in as partner owner
-      final ownerEmail = await getPartnerOwnerEmail(
-        adminClient,
-        ownerId: eventCtx.ownerId,
-      );
-      await signInAsTestUser(ownerEmail);
-
       final client = Supabase.instance.client;
 
-      // 2. Query partner's events
       final events = await client
           .from('events')
           .select('id, title, status')
-          .eq('party_id', await _getPartyId(adminClient, eventCtx.partnerId))
+          .eq('party_id', partyId)
           .order('created_at', ascending: false)
           .limit(5) as List;
 
-      expect(
-        events,
-        isNotEmpty,
-        reason: 'Partner should have at least one event',
-      );
+      expect(events, isNotEmpty,
+          reason: 'Partner should have at least one event',);
 
       final firstEvent = events.first as Map<String, dynamic>;
       expect(firstEvent['id'], isNotNull);
       expect(firstEvent['title'], isNotNull);
+    });
 
-      // 3. Query applications for the event
+    testWidgets('파트너 owner가 이벤트의 신청 목록을 조회할 수 있다',
+        (tester) async {
+      final client = Supabase.instance.client;
+
       final applications = await client
           .from('event_applications')
           .select('id, status, user_id')
-          .eq('event_id', firstEvent['id'] as String) as List;
+          .eq('event_id', eventCtx.eventId) as List;
 
       // Applications list may be empty, but the query should succeed
       expect(applications, isList);
+    });
 
-      // 4. If applications exist, verify data structure
+    testWidgets('신청 데이터 구조가 올바르다', (tester) async {
+      final client = Supabase.instance.client;
+
+      final applications = await client
+          .from('event_applications')
+          .select('id, status, user_id')
+          .eq('event_id', eventCtx.eventId) as List;
+
       if (applications.isNotEmpty) {
         final firstApp = applications.first as Map<String, dynamic>;
         expect(firstApp.containsKey('id'), isTrue);
@@ -72,7 +82,6 @@ void main() {
   });
 }
 
-/// Gets a party ID for a given partner.
 Future<String> _getPartyId(
   SupabaseClient admin,
   String partnerId,

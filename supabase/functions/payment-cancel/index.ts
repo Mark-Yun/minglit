@@ -1,9 +1,10 @@
 // Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
 import { createClient } from "@supabase/supabase-js";
-import { IamportClient } from "../_shared/iamport_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { initSentry, withHandler, log } from "../_shared/logger.ts";
+// Fix #299: 환불 로직을 shared 모듈로 추출 — user-cancel-order와 공유
+import { verifyRefundEligibility, executeRefund, RefundError } from "../_shared/refund_utils.ts";
 
 const FN = "payment-cancel";
 
@@ -83,57 +84,41 @@ Deno.serve(withHandler(async (req) => {
       return errorResponse("Failed to verify refund eligibility", 500);
     }
 
+    // Fix #299: 환불 적격성 검증을 shared 모듈로 위임
     {
       const policy = policyResult.data as Record<string, number>;
       const gracePeriodHours = policy.grace_period_hours ?? 2;
       const cutoffDays = policy.cutoff_days ?? 7;
-      const now = new Date();
-      const paidAt = application.paid_at ? new Date(application.paid_at) : null;
-      const eventStart = new Date(eventResult.data.start_time);
 
-      // Fix #133: 미래 paid_at은 음수 duration으로 grace period를 통과하므로 명시적으로 제외
-      const withinGracePeriod =
-        paidAt !== null &&
-        paidAt.getTime() <= now.getTime() &&
-        now.getTime() - paidAt.getTime() <=
-          gracePeriodHours * 60 * 60 * 1000;
-      const withinCutoff =
-        eventStart.getTime() - now.getTime() >=
-          cutoffDays * 24 * 60 * 60 * 1000;
+      const eligibility = verifyRefundEligibility({
+        paidAt: application.paid_at as string | null,
+        eventStartTime: eventResult.data.start_time,
+        gracePeriodHours,
+        cutoffDays,
+      });
 
-      if (!withinGracePeriod && !withinCutoff) {
+      if (!eligibility.eligible) {
         return errorResponse("refund_not_eligible", 400, {
-          reason: "Refund window has expired",
+          reason: eligibility.reason,
         });
       }
     }
 
-    // 2. Init IamportClient
-    const impKey = Deno.env.get("PORTONE_API_KEY");
-    const impSecret = Deno.env.get("PORTONE_API_SECRET");
-
-    if (!impKey || !impSecret) {
-      log({ function: FN, level: "error", message: "Missing Portone credentials" });
-      return errorResponse("Server configuration error", 500);
-    }
-
-    // 3. Cancel Payment via IamportClient
-    const client = new IamportClient(impKey, impSecret);
+    // Fix #299: PortOne 환불 실행을 shared 모듈로 위임
     let cancelResponse: Record<string, unknown>;
     try {
-      cancelResponse = await client.cancelPayment(
-        payment_id,
-        reason || "심사 반려로 인한 자동 환불",
+      cancelResponse = await executeRefund({
+        paymentId: payment_id,
+        reason: reason || "심사 반려로 인한 자동 환불",
         amount,
         checksum,
-      );
+        fnName: FN,
+      });
     } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
-      log({ function: FN, level: "error", message: `Failed to cancel payment: ${message}` });
-      if (message.startsWith("Failed to get token") || message.startsWith("Iamport Error")) {
-        return errorResponse("Payment provider error", 502);
+      if (e instanceof RefundError) {
+        return errorResponse(e.message, e.status);
       }
-      return errorResponse(message, 400);
+      throw e;
     }
 
     // 4. Update DB: refund_status + refund_amount

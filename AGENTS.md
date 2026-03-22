@@ -136,6 +136,20 @@ CREATE POLICY "users_can_insert" ON public.new_table FOR INSERT TO authenticated
 - `required_linear_history` 활성화 — squash merge만 허용.
 - `--admin` bypass는 **유저가 명시적으로 요청할 때만** 사용한다. CI나 리뷰 우회 목적 금지.
 
+## Issue Priority Labels
+
+이슈에는 우선순위 라벨을 붙여 처리 순서를 관리한다.
+
+| 라벨 | 의미 | 처리 기한 |
+|------|------|-----------|
+| `P0-critical` | 서비스 장애, 즉시 수정 | 당일 |
+| `P1-high` | 핵심 기능 버그 | 이번 주 |
+| `P2-medium` | 일반 버그, 감사 이슈 | 다음 스프린트 |
+| `P3-low` | 테스트 보강, enhancement | 여유 시 |
+
+- AI Worker는 **P0 > P1 > P2 > P3 > 라벨 없음** 순서로 이슈를 처리한다.
+- 같은 우선순위 내에서는 이슈 번호가 낮은(오래된) 것 먼저.
+
 ## PR Conventions
 
 - PR 생성 시 관련 GitHub Issue가 있으면 PR body에 `Closes #이슈번호`를 포함한다.

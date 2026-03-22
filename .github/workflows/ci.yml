@@ -79,18 +79,21 @@ jobs:
             report_name: 'User App Tests'
             artifact_name: app-user-coverage
             coverage_flag: app-user
+            coverage_flag_logic: app-user-logic
           - app: app_partner
             change_key: app_partner
             directory: apps/app_partner
             report_name: 'Partner App Tests'
             artifact_name: app-partner-coverage
             coverage_flag: app-partner
+            coverage_flag_logic: app-partner-logic
           - app: minglit_kit
             change_key: app_user
             directory: shared/packages/minglit_kit
             report_name: 'Minglit Kit Tests'
             artifact_name: minglit-kit-coverage
             coverage_flag: minglit-kit
+            coverage_flag_logic: ''
     steps:
       - uses: actions/checkout@v4
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
@@ -176,6 +179,14 @@ jobs:
           flags: ${{ matrix.coverage_flag }}
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
+      - name: Upload logic layer coverage
+        uses: codecov/codecov-action@v4
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' && matrix.coverage_flag_logic != '' }}
+        with:
+          file: ${{ matrix.directory }}/coverage/lcov.info
+          flags: ${{ matrix.coverage_flag_logic }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
 
   # Landing User CI
   lint-landing-user:
@@ -193,6 +204,8 @@ jobs:
           cache: 'npm'
           cache-dependency-path: ./apps/landing_user/package-lock.json
       - run: npm ci
+      - run: npm audit --audit-level=high
+        continue-on-error: true
       - run: npm run lint
       - run: npm run build
 
@@ -212,6 +225,8 @@ jobs:
           cache: 'npm'
           cache-dependency-path: ./apps/landing_partner/package-lock.json
       - run: npm ci
+      - run: npm audit --audit-level=high
+        continue-on-error: true
       - run: npm run lint
       - run: npm run build
 
@@ -296,13 +311,3 @@ jobs:
 
           echo ""
           echo "✅ All checks passed"
-
-  notify-failure:
-    needs: [check-migration-versions, test-flutter-apps, lint-landing-user, lint-landing-partner, test-supabase, test-edge-functions]
-    if: always()
-    permissions:
-      issues: write
-    uses: ./.github/workflows/notify-failure.yml
-    with:
-      success: ${{ !contains(needs.*.result, 'failure') }}
-      workflow_name: 'CI'

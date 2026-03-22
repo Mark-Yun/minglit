@@ -1,5 +1,6 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { SimConfig, SimLogEntry } from "./sim_types.ts";
+import { getSimUserToken } from "./sim_auth.ts";
 
 export interface SimCreatedData {
   partyIds: string[];
@@ -162,10 +163,14 @@ export async function simDiscoverAndApply(
   config: SimConfig,
   log: (entry: Omit<SimLogEntry, "timestamp">) => void,
   newEventIds: string[],
+  supabaseUrl?: string,
+  anonKey?: string,
 ): Promise<{ applicationIds: string[]; paidApplicationIds: string[]; pendingReviewApplicationIds: string[] }> {
   const applicationIds: string[] = [];
   const paidApplicationIds: string[] = [];
   const pendingReviewApplicationIds: string[] = [];
+
+  const simUserPassword = Deno.env.get("SIM_USER_PASSWORD") ?? "password1234!";
 
   const { data: existingEventsRaw } = await supabase
     .from("events")
@@ -230,17 +235,61 @@ export async function simDiscoverAndApply(
       if (!eligible) continue;
 
       const isHappyPath = Math.random() >= config.error_rate;
-      const status = isHappyPath ? "paid" : "pending_review";
-      const appId = crypto.randomUUID();
+      const mockPaymentId = `e2e_pay_${crypto.randomUUID().slice(0, 8)}`;
 
+      // Attempt to use apply_event RPC with user-scoped client when auth credentials are available
+      if (supabaseUrl && anonKey && user.username) {
+        const userEmail = `${user.username}@test.com`;
+        try {
+          const userToken = await getSimUserToken(supabaseUrl, anonKey, userEmail, simUserPassword);
+          const userClient = createClient(supabaseUrl, anonKey, {
+            auth: { persistSession: false },
+            global: { headers: { Authorization: `Bearer ${userToken}` } },
+          });
+
+          // apply_event RPC: pass verification_data=null for happy path (→ 'paid'), non-null for pending_review
+          const rpcParams = {
+            p_event_id: eventId,
+            p_ticket_id: ticket.id,
+            p_user_id: user.id,
+            p_payment_id: isHappyPath ? mockPaymentId : null,
+            p_payment_amount: isHappyPath ? ticket.price : null,
+            p_verification_data: isHappyPath ? null : { source: "e2e_sim" },
+          };
+
+          const { data: appId, error: rpcErr } = await userClient.rpc("apply_event", rpcParams);
+          if (rpcErr) {
+            log({ level: "warn", phase: "apply", step: "rpc_apply_event", message: `RPC failed for user ${userEmail} event ${eventId}: ${rpcErr.message}` });
+            continue;
+          }
+
+          const newAppId = appId as string;
+          applicationIds.push(newAppId);
+          appliedUserIds.add(user.id);
+          appsCreated++;
+
+          if (isHappyPath) {
+            paidApplicationIds.push(newAppId);
+          } else {
+            pendingReviewApplicationIds.push(newAppId);
+          }
+          continue;
+        } catch (authErr) {
+          // Fall through to service_role direct insert if auth fails (e.g. user not seeded)
+          log({ level: "warn", phase: "apply", step: "auth_fallback", message: `Auth failed for ${user.username}, using direct insert: ${String(authErr)}` });
+        }
+      }
+
+      // Fallback: service_role direct insert (used when auth credentials not available or auth fails)
+      const appId = crypto.randomUUID();
       const { error: appErr } = await supabase.from("event_applications").insert({
         id: appId,
         event_id: eventId,
         ticket_id: ticket.id,
         user_id: user.id,
-        status,
+        status: isHappyPath ? "paid" : "pending_review",
         payment_amount: isHappyPath ? ticket.price : null,
-        payment_id: isHappyPath ? `e2e_pay_${crypto.randomUUID().slice(0, 8)}` : null,
+        payment_id: isHappyPath ? mockPaymentId : null,
         message: "[E2E] 시뮬레이션 신청",
       });
       if (appErr) {

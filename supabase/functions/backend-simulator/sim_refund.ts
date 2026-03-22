@@ -3,6 +3,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { SimLogEntry, SimAssertionResult } from "./sim_types.ts";
 import { simCalcRefund, simAssertRefundProcessed } from "./sim_assertions.ts";
+import { getSimUserToken, callEdgeFunction } from "./sim_auth.ts";
 
 export interface SimRefundResult {
   refundedApplicationIds: string[];
@@ -25,6 +26,8 @@ export async function simRefundRequests(
   paidApplicationIds: string[],
   log: (entry: Omit<SimLogEntry, "timestamp">) => void,
   refundRate: number = 0.2,
+  supabaseUrl?: string,
+  anonKey?: string,
 ): Promise<SimRefundResult> {
   const refundedApplicationIds: string[] = [];
   const assertions: SimAssertionResult[] = [];
@@ -55,11 +58,13 @@ export async function simRefundRequests(
     data: { refundCount: toRefund.length, totalPaid: paidApplicationIds.length, refundRate },
   });
 
+  const simUserPassword = Deno.env.get("SIM_USER_PASSWORD") ?? "password1234!";
+
   for (const appId of toRefund) {
     try {
       const { data: appData, error: appErr } = await supabase
         .from("event_applications")
-        .select("payment_amount, event_id, user_id")
+        .select("payment_amount, payment_id, event_id, user_id")
         .eq("id", appId)
         .single();
 
@@ -76,6 +81,7 @@ export async function simRefundRequests(
       // deno-lint-ignore no-explicit-any
       const app = appData as any;
       const paymentAmount: number = app.payment_amount ?? 0;
+      const paymentId: string | null = app.payment_id ?? null;
       const eventId: string = app.event_id;
       const userId: string = app.user_id;
 
@@ -101,45 +107,98 @@ export async function simRefundRequests(
 
       const refundCalc = simCalcRefund(startTime, paymentAmount, new Date(), null, 2, 7);
 
-      const refundStatus = refundCalc.refund_percentage > 0 ? "completed" : "failed";
-      const { error: updateErr } = await supabase
-        .from("event_applications")
-        .update({
-          status: "cancelled",
-          refund_status: refundStatus,
-          refund_amount: refundCalc.refund_amount,
-        })
-        .eq("id", appId);
+      // Attempt to call payment-cancel EF with user token when credentials and payment_id are available
+      let efSuccess = false;
+      if (supabaseUrl && anonKey && paymentId) {
+        // Look up user email from user_profiles
+        const { data: profileData } = await supabase
+          .from("user_profiles")
+          .select("username")
+          .eq("id", userId)
+          .maybeSingle();
+        const username = (profileData as { username?: string } | null)?.username;
 
-      if (updateErr) {
-        log({
-          level: "error",
-          phase: "refund",
-          step: "update_app",
-          message: `Failed to update app ${appId}: ${updateErr.message}`,
-        });
-        continue;
+        if (username && !username.startsWith("partner_")) {
+          const userEmail = `${username}@test.com`;
+          try {
+            const userToken = await getSimUserToken(supabaseUrl, anonKey, userEmail, simUserPassword);
+            const efResult = await callEdgeFunction(supabaseUrl, "payment-cancel", {
+              payment_id: paymentId,
+              reason: "[E2E] 시뮬레이션 환불",
+              amount: refundCalc.refund_amount > 0 ? refundCalc.refund_amount : undefined,
+            }, userToken);
+
+            if (efResult.status === 200) {
+              efSuccess = true;
+              log({
+                level: "info",
+                phase: "refund",
+                step: "ef_cancel",
+                message: `payment-cancel EF succeeded for app ${appId}`,
+                data: { appId, paymentId, efStatus: efResult.status },
+              });
+            } else {
+              log({
+                level: "warn",
+                phase: "refund",
+                step: "ef_cancel_failed",
+                message: `payment-cancel EF returned ${efResult.status} for app ${appId}, falling back to direct update`,
+                data: { appId, efStatus: efResult.status },
+              });
+            }
+          } catch (authErr) {
+            log({
+              level: "warn",
+              phase: "refund",
+              step: "ef_auth_fallback",
+              message: `Auth failed for ${username}, using direct update: ${String(authErr)}`,
+            });
+          }
+        }
       }
 
-      const { error: deleteErr } = await supabase
-        .from("event_participants")
-        .delete()
-        .eq("event_id", eventId)
-        .eq("user_id", userId);
-
-      if (deleteErr) {
-        // Rollback: participant delete failed — revert application status to avoid cancelled-but-has-participant state
-        await supabase
+      if (!efSuccess) {
+        // Fallback: direct DB update (used when EF call unavailable or failed)
+        const refundStatus = refundCalc.refund_percentage > 0 ? "completed" : "failed";
+        const { error: updateErr } = await supabase
           .from("event_applications")
-          .update({ status: "paid", refund_status: null, refund_amount: null })
+          .update({
+            status: "cancelled",
+            refund_status: refundStatus,
+            refund_amount: refundCalc.refund_amount,
+          })
           .eq("id", appId);
-        log({
-          level: "error",
-          phase: "refund",
-          step: "delete_participant",
-          message: `Participant delete failed, reverted application ${appId}: ${deleteErr.message}`,
-        });
-        continue;
+
+        if (updateErr) {
+          log({
+            level: "error",
+            phase: "refund",
+            step: "update_app",
+            message: `Failed to update app ${appId}: ${updateErr.message}`,
+          });
+          continue;
+        }
+
+        const { error: deleteErr } = await supabase
+          .from("event_participants")
+          .delete()
+          .eq("event_id", eventId)
+          .eq("user_id", userId);
+
+        if (deleteErr) {
+          // Rollback: participant delete failed — revert application status to avoid cancelled-but-has-participant state
+          await supabase
+            .from("event_applications")
+            .update({ status: "paid", refund_status: null, refund_amount: null })
+            .eq("id", appId);
+          log({
+            level: "error",
+            phase: "refund",
+            step: "delete_participant",
+            message: `Participant delete failed, reverted application ${appId}: ${deleteErr.message}`,
+          });
+          continue;
+        }
       }
 
       const assertion = await simAssertRefundProcessed(
@@ -156,13 +215,13 @@ export async function simRefundRequests(
           level: "info",
           phase: "refund",
           step: "refunded",
-          message: `App ${appId} refunded: ${refundCalc.refund_percentage}% (${refundCalc.refund_amount}/${paymentAmount})`,
+          message: `App ${appId} refunded: ${refundCalc.refund_percentage}% (${refundCalc.refund_amount}/${paymentAmount}) via ${efSuccess ? "EF" : "direct"}`,
           data: {
             appId,
             refund_percentage: refundCalc.refund_percentage,
             refund_amount: refundCalc.refund_amount,
             fee_amount: refundCalc.fee_amount,
-            refund_status: refundStatus,
+            via_ef: efSuccess,
           },
         });
       } else {
