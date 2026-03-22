@@ -1,6 +1,5 @@
 import 'package:app_user/src/features/auth/login_page.dart';
 import 'package:app_user/src/features/auth/ui/auth_callback_page.dart';
-import 'package:app_user/src/features/dev/user_dev_map.dart';
 import 'package:app_user/src/features/event/admission/event_application_wizard_page.dart';
 import 'package:app_user/src/features/event/detail/event_detail_page.dart';
 import 'package:app_user/src/features/home/home_page.dart';
@@ -20,16 +19,6 @@ part 'app_routes.g.dart';
 // ---------------------------------------------------------------------------
 // Top-Level Routes (outside the shell)
 // ---------------------------------------------------------------------------
-
-/// **Dev Route**: Development Tools.
-/// Path: `/dev`
-@TypedGoRoute<DevRoute>(path: '/dev')
-class DevRoute extends GoRouteData with $DevRoute {
-  const DevRoute();
-
-  @override
-  Widget build(BuildContext context, GoRouterState state) => const UserDevMap();
-}
 
 /// **Dev User Switch Route**: Screen to switch between test users.
 /// Path: `/dev/switch`

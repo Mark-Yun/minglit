@@ -1,4 +1,5 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
+import { createClient } from "@supabase/supabase-js";
 import { PortoneV2Client, PortoneSettlement } from "../_shared/portone_client.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
 

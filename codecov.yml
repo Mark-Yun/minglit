@@ -22,7 +22,7 @@ coverage:
           - app-partner
     patch:
       default:
-        target: 60%
+        target: 80%
         threshold: 5%
         flags:
           - minglit-kit

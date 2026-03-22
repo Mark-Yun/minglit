@@ -10,122 +10,280 @@ Future<void> pump() async {
   await Future<void>.delayed(const Duration(milliseconds: 50));
 }
 
+Party _makeParty(String id, {List<String> verificationIds = const []}) {
+  final now = DateTime.now();
+  return Party(
+    id: id,
+    partnerId: 'partner-1',
+    title: 'Test Party',
+    createdAt: now,
+    updatedAt: now,
+    requiredVerificationIds: verificationIds,
+  );
+}
+
+TicketTemplate _makeTicket(String id) {
+  final now = DateTime.now();
+  return TicketTemplate(
+    id: id,
+    partyId: 'party-1',
+    name: 'Ticket $id',
+    createdAt: now,
+    updatedAt: now,
+    price: 10000,
+  );
+}
+
+Location _makeLocation(String id) {
+  final now = DateTime.now();
+  return Location(
+    id: id,
+    partnerId: 'partner-1',
+    name: 'Test Location',
+    address: '서울시 강남구',
+    createdAt: now,
+    updatedAt: now,
+  );
+}
+
 void main() {
   late MockPartyRepository mockPartyRepo;
   late MockTicketRepository mockTicketRepo;
   late MockLocationRepository mockLocationRepo;
-  late MockVerificationRepository mockVerificationRepo;
+  late MockVerificationRepository mockVerifRepo;
 
   setUp(() {
     mockPartyRepo = MockPartyRepository();
     mockTicketRepo = MockTicketRepository();
     mockLocationRepo = MockLocationRepository();
-    mockVerificationRepo = MockVerificationRepository();
+    mockVerifRepo = MockVerificationRepository();
   });
 
-  Party makeParty({
-    String id = 'party-1',
-    List<String> verificationIds = const [],
-  }) {
-    return Party(
-      id: id,
-      partnerId: 'partner-1',
-      title: 'Test Party',
-      createdAt: DateTime(2024),
-      updatedAt: DateTime(2024),
-      requiredVerificationIds: verificationIds,
-    );
-  }
-
-  ProviderContainer makeContainer({
-    Party? party,
-    Exception? partyError,
-  }) {
-    if (partyError != null) {
-      when(() => mockPartyRepo.getPartyById(any())).thenThrow(partyError);
-    } else {
-      when(
-        () => mockPartyRepo.getPartyById(any()),
-      ).thenAnswer((_) async => party ?? makeParty());
-    }
-
-    when(
-      () => mockTicketRepo.getTicketTemplatesByPartyId(any()),
-    ).thenAnswer((_) async => []);
-
-    when(
-      () => mockLocationRepo.getLocationById(any()),
-    ).thenAnswer((_) async => null);
-
-    when(
-      () => mockVerificationRepo.getVerificationsByIds(any()),
-    ).thenAnswer((_) async => []);
-
-    return createContainer(
-      overrides: [
-        partyRepositoryProvider.overrideWithValue(mockPartyRepo),
-        ticketRepositoryProvider.overrideWithValue(mockTicketRepo),
-        locationRepositoryProvider.overrideWithValue(mockLocationRepo),
-        verificationRepositoryProvider.overrideWithValue(mockVerificationRepo),
-      ],
-    );
-  }
-
-  group('partyDetailProvider', () {
+  group('partyDetail', () {
     test('returns party when found', () async {
-      final party = makeParty(id: 'party-1');
-      final container = makeContainer(party: party);
-
-      final result = await container.read(partyDetailProvider('party-1').future);
-      expect(result.id, 'party-1');
-    });
-
-    test('returns party with correct partnerId', () async {
-      final party = makeParty(id: 'party-2');
+      final party = _makeParty('party-1');
       when(
-        () => mockPartyRepo.getPartyById('party-2'),
+        () => mockPartyRepo.getPartyById('party-1'),
       ).thenAnswer((_) async => party);
 
-      final container = makeContainer(party: party);
-      final result = await container.read(partyDetailProvider('party-2').future);
-      expect(result.partnerId, 'partner-1');
+      final container = createContainer(
+        overrides: [
+          partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+        ],
+      );
+      final sub = container.listen(
+        partyDetailProvider('party-1'),
+        (_, _) {},
+      );
+      addTearDown(sub.close);
+
+      await pump();
+
+      final state = container.read(partyDetailProvider('party-1'));
+      expect(state.value, isNotNull);
+      expect(state.value!.id, 'party-1');
+    });
+
+    test('throws when party not found', () async {
+      when(
+        () => mockPartyRepo.getPartyById('missing'),
+      ).thenAnswer((_) async => null);
+
+      final container = createContainer(
+        overrides: [
+          partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+        ],
+      );
+      final sub = container.listen(
+        partyDetailProvider('missing'),
+        (_, _) {},
+      );
+      addTearDown(sub.close);
+
+      await pump();
+
+      final state = container.read(partyDetailProvider('missing'));
+      expect(state.hasError, isTrue);
     });
   });
 
-  group('partyTicketsProvider', () {
+  group('partyTickets', () {
+    test('returns ticket list', () async {
+      final tickets = [_makeTicket('t-1'), _makeTicket('t-2')];
+      when(
+        () => mockTicketRepo.getTicketTemplatesByPartyId('party-1'),
+      ).thenAnswer((_) async => tickets);
+
+      final container = createContainer(
+        overrides: [
+          ticketRepositoryProvider.overrideWithValue(mockTicketRepo),
+        ],
+      );
+      final sub = container.listen(
+        partyTicketsProvider('party-1'),
+        (_, _) {},
+      );
+      addTearDown(sub.close);
+
+      await pump();
+
+      final state = container.read(partyTicketsProvider('party-1'));
+      expect(state.value, hasLength(2));
+    });
+
     test('returns empty list when no tickets', () async {
       when(
         () => mockTicketRepo.getTicketTemplatesByPartyId('party-1'),
       ).thenAnswer((_) async => []);
 
-      final container = makeContainer();
-      final result = await container.read(partyTicketsProvider('party-1').future);
-      expect(result, isEmpty);
+      final container = createContainer(
+        overrides: [
+          ticketRepositoryProvider.overrideWithValue(mockTicketRepo),
+        ],
+      );
+      final sub = container.listen(
+        partyTicketsProvider('party-1'),
+        (_, _) {},
+      );
+      addTearDown(sub.close);
+
+      await pump();
+
+      final state = container.read(partyTicketsProvider('party-1'));
+      expect(state.value, isEmpty);
     });
   });
 
-  group('locationDetailProvider', () {
-    test('returns null when locationId is null', () async {
-      final container = makeContainer();
-      final result = await container.read(locationDetailProvider(null).future);
-      expect(result, isNull);
+  group('locationDetail', () {
+    test('returns location when id provided', () async {
+      final location = _makeLocation('loc-1');
+      when(
+        () => mockLocationRepo.getLocationById('loc-1'),
+      ).thenAnswer((_) async => location);
+
+      final container = createContainer(
+        overrides: [
+          locationRepositoryProvider.overrideWithValue(mockLocationRepo),
+        ],
+      );
+      final sub = container.listen(
+        locationDetailProvider('loc-1'),
+        (_, _) {},
+      );
+      addTearDown(sub.close);
+
+      await pump();
+
+      final state = container.read(locationDetailProvider('loc-1'));
+      expect(state.value, isNotNull);
+      expect(state.value!.id, 'loc-1');
     });
 
-    test('returns null when locationId is empty', () async {
-      final container = makeContainer();
-      final result = await container.read(locationDetailProvider('').future);
-      expect(result, isNull);
+    test('returns null when id is null', () async {
+      final container = createContainer(
+        overrides: [
+          locationRepositoryProvider.overrideWithValue(mockLocationRepo),
+        ],
+      );
+      final sub = container.listen(
+        locationDetailProvider(null),
+        (_, _) {},
+      );
+      addTearDown(sub.close);
+
+      await pump();
+
+      final state = container.read(locationDetailProvider(null));
+      expect(state.value, isNull);
+      verifyNever(() => mockLocationRepo.getLocationById(any()));
+    });
+
+    test('returns null when id is empty', () async {
+      final container = createContainer(
+        overrides: [
+          locationRepositoryProvider.overrideWithValue(mockLocationRepo),
+        ],
+      );
+      final sub = container.listen(
+        locationDetailProvider(''),
+        (_, _) {},
+      );
+      addTearDown(sub.close);
+
+      await pump();
+
+      final state = container.read(locationDetailProvider(''));
+      expect(state.value, isNull);
+      verifyNever(() => mockLocationRepo.getLocationById(any()));
     });
   });
 
-  group('partyVerificationsProvider', () {
-    test('returns empty list when party has no required verifications', () async {
-      final party = makeParty(verificationIds: []);
-      final container = makeContainer(party: party);
+  group('partyVerifications', () {
+    test('returns verifications for party with required ids', () async {
+      final party = _makeParty('party-1', verificationIds: ['v-1', 'v-2']);
+      when(
+        () => mockPartyRepo.getPartyById('party-1'),
+      ).thenAnswer((_) async => party);
 
-      final result =
-          await container.read(partyVerificationsProvider('party-1').future);
-      expect(result, isEmpty);
+      final verifications = [
+        const Verification(
+          id: 'v-1',
+          category: VerificationCategory.career,
+          internalName: 'id_verify',
+          displayName: '본인인증',
+        ),
+        const Verification(
+          id: 'v-2',
+          category: VerificationCategory.career,
+          internalName: 'career',
+          displayName: '직장인증',
+        ),
+      ];
+      when(
+        () => mockVerifRepo.getVerificationsByIds(['v-1', 'v-2']),
+      ).thenAnswer((_) async => verifications);
+
+      final container = createContainer(
+        overrides: [
+          partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+          verificationRepositoryProvider.overrideWithValue(mockVerifRepo),
+        ],
+      );
+      final sub = container.listen(
+        partyVerificationsProvider('party-1'),
+        (_, _) {},
+      );
+      addTearDown(sub.close);
+
+      await pump();
+
+      final state = container.read(partyVerificationsProvider('party-1'));
+      expect(state.value, hasLength(2));
+    });
+
+    test('returns empty list when no required verification ids', () async {
+      final party = _makeParty('party-1');
+      when(
+        () => mockPartyRepo.getPartyById('party-1'),
+      ).thenAnswer((_) async => party);
+
+      final container = createContainer(
+        overrides: [
+          partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+          verificationRepositoryProvider.overrideWithValue(mockVerifRepo),
+        ],
+      );
+      final sub = container.listen(
+        partyVerificationsProvider('party-1'),
+        (_, _) {},
+      );
+      addTearDown(sub.close);
+
+      await pump();
+
+      final state = container.read(partyVerificationsProvider('party-1'));
+      expect(state.value, isEmpty);
+      verifyNever(() => mockVerifRepo.getVerificationsByIds(any()));
     });
   });
 }

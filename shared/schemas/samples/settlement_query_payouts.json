@@ -1,0 +1,12 @@
+{
+  "success": true,
+  "payouts": [
+    {
+      "id": "payout_001",
+      "partnerId": "partner-abc",
+      "amount": 95000,
+      "currency": "KRW"
+    }
+  ],
+  "page": { "number": 1, "size": 10 }
+}

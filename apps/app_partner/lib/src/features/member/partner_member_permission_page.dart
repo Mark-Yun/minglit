@@ -111,7 +111,10 @@ class _MemberPermissionFormState extends ConsumerState<_MemberPermissionForm> {
   @override
   void initState() {
     super.initState();
-    _selectedRole = widget.memberData['role'] as String;
+    // Fix #270: dynamic map에서 안전 캐스팅 — Dropdown 항목에 없는 값이면 'staff' 사용
+    final rawRole = widget.memberData['role'] as String?;
+    const allowedRoles = {'owner', 'manager', 'staff'};
+    _selectedRole = allowedRoles.contains(rawRole) ? rawRole! : 'staff';
     _currentPermissions = List<String>.from(
       widget.memberData['permissions'] as Iterable<dynamic>? ?? [],
     );
@@ -121,7 +124,16 @@ class _MemberPermissionFormState extends ConsumerState<_MemberPermissionForm> {
     setState(() => _isSaving = true);
     try {
       final repository = ref.read(partnerRepositoryProvider);
-      final userId = widget.memberData['user_id'] as String;
+      // Fix #270: dynamic map에서 안전 캐스팅
+      final userId = widget.memberData['user_id'] as String?;
+      if (userId == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('사용자 정보를 확인할 수 없습니다')),
+          );
+        }
+        return;
+      }
 
       await repository.updateMemberRole(
         partnerId: widget.partnerId,

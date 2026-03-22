@@ -11,114 +11,170 @@ Future<void> pump() async {
 }
 
 void main() {
-  late MockMatchingRepository mockRepo;
+  late MockMatchingRepository mockMatchingRepo;
 
   setUp(() {
-    mockRepo = MockMatchingRepository();
+    mockMatchingRepo = MockMatchingRepository();
   });
-
-  ProviderContainer makeContainer() {
-    return createContainer(
-      overrides: [
-        matchingRepositoryProvider.overrideWithValue(mockRepo),
-      ],
-    );
-  }
 
   group('MatchingController', () {
-    test('initial state is AsyncData(null)', () {
-      final container = makeContainer();
-      final sub = container.listen(
-        matchingControllerProvider,
-        (_, _) {},
-      );
-      addTearDown(sub.close);
+    group('updateRules', () {
+      test('updates rules successfully', () async {
+        final rules = [
+          {'source_group_id': 'g1', 'target_group_id': 'g2'},
+        ];
 
-      final state = container.read(matchingControllerProvider);
-      expect(state, isA<AsyncData<void>>());
-    });
+        when(
+          () => mockMatchingRepo.updateMatchRules(
+            eventId: 'event_1',
+            rules: rules,
+          ),
+        ).thenAnswer((_) async {});
 
-    test('updateRules transitions to loading then success', () async {
-      when(
-        () => mockRepo.updateMatchRules(
-          eventId: any(named: 'eventId'),
-          rules: any(named: 'rules'),
-        ),
-      ).thenAnswer((_) async {});
+        final container = createContainer(
+          overrides: [
+            matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
+          ],
+        );
 
-      final container = makeContainer();
-      final sub = container.listen(
-        matchingControllerProvider,
-        (_, _) {},
-      );
-      addTearDown(sub.close);
+        // Listen to controller to initialize
+        final sub = container.listen(
+          matchingControllerProvider,
+          (_, _) {},
+        );
+        addTearDown(sub.close);
+        await pump();
 
-      await container
-          .read(matchingControllerProvider.notifier)
-          .updateRules(eventId: 'event-1', rules: []);
+        final notifier = container.read(
+          matchingControllerProvider.notifier,
+        );
 
-      final state = container.read(matchingControllerProvider);
-      expect(state, isA<AsyncData<void>>());
-      verify(
-        () => mockRepo.updateMatchRules(eventId: 'event-1', rules: []),
-      ).called(1);
-    });
+        await notifier.updateRules(eventId: 'event_1', rules: rules);
 
-    test('updateRules sets AsyncError on failure', () async {
-      when(
-        () => mockRepo.updateMatchRules(
-          eventId: any(named: 'eventId'),
-          rules: any(named: 'rules'),
-        ),
-      ).thenThrow(Exception('update failed'));
+        final state = container.read(matchingControllerProvider);
+        expect(state, isA<AsyncData<void>>());
+        verify(
+          () => mockMatchingRepo.updateMatchRules(
+            eventId: 'event_1',
+            rules: rules,
+          ),
+        ).called(1);
+      });
 
-      final container = makeContainer();
-      final sub = container.listen(
-        matchingControllerProvider,
-        (_, _) {},
-      );
-      addTearDown(sub.close);
+      test('sets error state on failure', () async {
+        when(
+          () => mockMatchingRepo.updateMatchRules(
+            eventId: any(named: 'eventId'),
+            rules: any(named: 'rules'),
+          ),
+        ).thenThrow(Exception('Update failed'));
 
-      await container
-          .read(matchingControllerProvider.notifier)
-          .updateRules(eventId: 'event-1', rules: []);
+        final container = createContainer(
+          overrides: [
+            matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
+          ],
+        );
 
-      final state = container.read(matchingControllerProvider);
-      expect(state, isA<AsyncError<void>>());
+        final sub = container.listen(
+          matchingControllerProvider,
+          (_, _) {},
+        );
+        addTearDown(sub.close);
+        await pump();
+
+        final notifier = container.read(
+          matchingControllerProvider.notifier,
+        );
+
+        await notifier.updateRules(
+          eventId: 'event_1',
+          rules: <Map<String, String>>[],
+        );
+
+        final state = container.read(matchingControllerProvider);
+        expect(state, isA<AsyncError<void>>());
+      });
     });
   });
 
-  group('eventMatchRulesProvider', () {
-    test('returns match rules from repository', () async {
+  group('eventMatchRules', () {
+    test('returns match rules for event', () async {
       final rules = [
         MatchRule(
           id: 'rule-1',
-          eventId: 'event-1',
-          sourceGroupId: 'group-a',
-          targetGroupId: 'group-b',
-          createdAt: DateTime(2024),
+          eventId: 'event_1',
+          sourceGroupId: 'g1',
+          targetGroupId: 'g2',
+          createdAt: DateTime.now(),
+        ),
+        MatchRule(
+          id: 'rule-2',
+          eventId: 'event_1',
+          sourceGroupId: 'g2',
+          targetGroupId: 'g1',
+          createdAt: DateTime.now(),
         ),
       ];
+
       when(
-        () => mockRepo.getMatchRules('event-1'),
+        () => mockMatchingRepo.getMatchRules('event_1'),
       ).thenAnswer((_) async => rules);
 
-      final container = makeContainer();
-      final result =
-          await container.read(eventMatchRulesProvider('event-1').future);
-      expect(result.length, 1);
-      expect(result.first.id, 'rule-1');
+      final container = createContainer(
+        overrides: [
+          matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
+        ],
+      );
+
+      final result = await container.read(
+        eventMatchRulesProvider('event_1').future,
+      );
+
+      expect(result, hasLength(2));
+      expect(result.first.sourceGroupId, 'g1');
+      expect(result.last.targetGroupId, 'g1');
+      verify(() => mockMatchingRepo.getMatchRules('event_1')).called(1);
     });
 
     test('returns empty list when no rules exist', () async {
       when(
-        () => mockRepo.getMatchRules('event-empty'),
-      ).thenAnswer((_) async => []);
+        () => mockMatchingRepo.getMatchRules('event_empty'),
+      ).thenAnswer((_) async => <MatchRule>[]);
 
-      final container = makeContainer();
-      final result =
-          await container.read(eventMatchRulesProvider('event-empty').future);
+      final container = createContainer(
+        overrides: [
+          matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
+        ],
+      );
+
+      final result = await container.read(
+        eventMatchRulesProvider('event_empty').future,
+      );
+
       expect(result, isEmpty);
+    });
+
+    test('propagates error when repository throws', () async {
+      when(
+        () => mockMatchingRepo.getMatchRules('event_err'),
+      ).thenAnswer((_) async => throw Exception('DB error'));
+
+      final container = createContainer(
+        overrides: [
+          matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
+        ],
+      );
+
+      final sub = container.listen(
+        eventMatchRulesProvider('event_err'),
+        (_, _) {},
+      );
+      addTearDown(sub.close);
+
+      await pump();
+
+      final state = container.read(eventMatchRulesProvider('event_err'));
+      expect(state.hasError, isTrue);
     });
   });
 }

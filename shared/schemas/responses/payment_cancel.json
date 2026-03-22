@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "payment_cancel_success_response",
+  "title": "payment-cancel success response",
+  "type": "object",
+  "required": ["success", "data"],
+  "properties": {
+    "success": { "type": "boolean", "const": true },
+    "data": { "type": "object" }
+  },
+  "additionalProperties": false
+}

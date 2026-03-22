@@ -10,6 +10,17 @@ Future<void> pump() async {
   await Future<void>.delayed(const Duration(milliseconds: 50));
 }
 
+Party _makeParty(String id) {
+  final now = DateTime.now();
+  return Party(
+    id: id,
+    partnerId: 'partner-1',
+    title: 'Party $id',
+    createdAt: now,
+    updatedAt: now,
+  );
+}
+
 void main() {
   late MockPartnerRepository mockPartnerRepo;
   late MockPartyRepository mockPartyRepo;
@@ -19,97 +30,94 @@ void main() {
     mockPartyRepo = MockPartyRepository();
   });
 
-  ProviderContainer makeContainer({
-    List<Partner> partners = const [],
-    List<Party> parties = const [],
-    Exception? partnerError,
-  }) {
-    if (partnerError != null) {
+  group('partyList', () {
+    test('returns parties for first managed partner', () async {
+      when(() => mockPartnerRepo.getMyManagedPartners()).thenAnswer(
+        (_) async => [const Partner(id: 'partner-1', name: 'Test Partner')],
+      );
+      final parties = [_makeParty('p-1'), _makeParty('p-2')];
+      when(
+        () => mockPartyRepo.getPartiesByPartnerId('partner-1'),
+      ).thenAnswer((_) async => parties);
+
+      final container = createContainer(
+        overrides: [
+          partnerRepositoryProvider.overrideWithValue(mockPartnerRepo),
+          partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+        ],
+      );
+      final sub = container.listen(partyListProvider, (_, _) {});
+      addTearDown(sub.close);
+
+      await pump();
+
+      final state = container.read(partyListProvider);
+      expect(state.value, hasLength(2));
+      expect(state.value!.first.id, 'p-1');
+    });
+
+    test('returns empty list when no managed partners', () async {
       when(
         () => mockPartnerRepo.getMyManagedPartners(),
-      ).thenThrow(partnerError);
-    } else {
-      when(
-        () => mockPartnerRepo.getMyManagedPartners(),
-      ).thenAnswer((_) async => partners);
-    }
+      ).thenAnswer((_) async => []);
 
-    when(
-      () => mockPartyRepo.getPartiesByPartnerId(any()),
-    ).thenAnswer((_) async => parties);
+      final container = createContainer(
+        overrides: [
+          partnerRepositoryProvider.overrideWithValue(mockPartnerRepo),
+          partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+        ],
+      );
+      final sub = container.listen(partyListProvider, (_, _) {});
+      addTearDown(sub.close);
 
-    return createContainer(
-      overrides: [
-        partnerRepositoryProvider.overrideWithValue(mockPartnerRepo),
-        partyRepositoryProvider.overrideWithValue(mockPartyRepo),
-      ],
-    );
-  }
+      await pump();
 
-  group('partyListProvider', () {
-    test('returns empty list when user has no managed partners', () async {
-      final container = makeContainer(partners: []);
-
-      final result = await container.read(partyListProvider.future);
-      expect(result, isEmpty);
+      final state = container.read(partyListProvider);
+      expect(state.value, isEmpty);
       verifyNever(() => mockPartyRepo.getPartiesByPartnerId(any()));
     });
 
-    test('returns parties for first managed partner', () async {
-      final partner = const Partner(id: 'partner-1', name: 'Partner A');
-      final parties = [
-        Party(
-          id: 'p1',
-          partnerId: 'partner-1',
-          title: 'Party 1',
-          createdAt: DateTime(2024),
-          updatedAt: DateTime(2024),
-        ),
-      ];
+    test('propagates error when partner fetch fails', () async {
+      when(
+        () => mockPartnerRepo.getMyManagedPartners(),
+      ).thenThrow(Exception('network error'));
 
-      final container = makeContainer(partners: [partner], parties: parties);
+      final container = createContainer(
+        overrides: [
+          partnerRepositoryProvider.overrideWithValue(mockPartnerRepo),
+          partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+        ],
+      );
+      final sub = container.listen(partyListProvider, (_, _) {});
+      addTearDown(sub.close);
 
-      final result = await container.read(partyListProvider.future);
-      expect(result.length, 1);
-      expect(result.first.id, 'p1');
-      verify(() => mockPartyRepo.getPartiesByPartnerId('partner-1')).called(1);
+      await pump();
+
+      final state = container.read(partyListProvider);
+      expect(state.hasError, isTrue);
     });
 
-    test('uses only the first partner when multiple exist', () async {
-      final partners = [
-        const Partner(id: 'partner-1', name: 'Partner A'),
-        const Partner(id: 'partner-2', name: 'Partner B'),
-      ];
+    test('propagates error when party fetch fails', () async {
+      when(() => mockPartnerRepo.getMyManagedPartners()).thenAnswer(
+        (_) async => [const Partner(id: 'partner-1', name: 'Test Partner')],
+      );
+      when(
+        () => mockPartyRepo.getPartiesByPartnerId('partner-1'),
+      ).thenThrow(Exception('db error'));
 
-      final container = makeContainer(partners: partners, parties: []);
+      final container = createContainer(
+        overrides: [
+          partnerRepositoryProvider.overrideWithValue(mockPartnerRepo),
+          partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+        ],
+      );
+      final sub = container.listen(partyListProvider, (_, _) {});
+      addTearDown(sub.close);
 
-      await container.read(partyListProvider.future);
-      verify(() => mockPartyRepo.getPartiesByPartnerId('partner-1')).called(1);
-      verifyNever(() => mockPartyRepo.getPartiesByPartnerId('partner-2'));
-    });
+      await pump();
 
-    test('returns parties with correct ids for partner', () async {
-      final partner = const Partner(id: 'partner-1', name: 'Partner A');
-      final parties = [
-        Party(
-          id: 'p2',
-          partnerId: 'partner-1',
-          title: 'Party 2',
-          createdAt: DateTime(2024),
-          updatedAt: DateTime(2024),
-        ),
-        Party(
-          id: 'p3',
-          partnerId: 'partner-1',
-          title: 'Party 3',
-          createdAt: DateTime(2024),
-          updatedAt: DateTime(2024),
-        ),
-      ];
-
-      final container = makeContainer(partners: [partner], parties: parties);
-      final result = await container.read(partyListProvider.future);
-      expect(result.map((p) => p.id).toList(), containsAll(['p2', 'p3']));
+      final state = container.read(partyListProvider);
+      expect(state.hasError, isTrue);
     });
   });
 }

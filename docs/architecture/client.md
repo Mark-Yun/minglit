@@ -24,13 +24,14 @@ Minglit의 Flutter 클라이언트 아키텍처를 기술한다.
 ```text
 minglit_kit/lib/src/features/
 ├── auth/           # 로그인, 회원가입, OAuth
-├── dev/            # 개발 유틸리티 (DevMap, 유저 전환, 미리보기)
+├── dev/            # 개발 유틸리티 (세션 스위처, 미리보기)
 ├── iamport/        # 결제 연동 (Iamport SDK 래퍼)
 ├── loading/        # 글로벌 로딩 오버레이
 ├── notification/   # 푸시 알림, FCM, 알림 목록/설정
 ├── search/         # 전문 검색 (PGroonga)
 ├── social/         # 소셜 기능 (좋아요, 구독, 차단)
-└── theme/          # 테마 모드 컨트롤러 (라이트/다크/시스템)
+├── theme/          # 테마 모드 컨트롤러 (라이트/다크/시스템)
+└── verification/   # 인증 UI 컴포넌트 (인증 제출/심사 관련)
 ```
 
 ### 2.2 Coordinator Pattern (Navigation)

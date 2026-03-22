@@ -123,8 +123,9 @@ class LoginPage extends ConsumerWidget {
             );
           }
         },
-        onDevMapTrigger: isDevEnv
-            ? () => const DevRoute().push<void>(
+        // Fix #188: 데브맵 제거 — 5클릭 시 세션 스위처로 직접 이동
+        onDevTrigger: isDevEnv
+            ? () => const DevUserSwitchRoute().push<void>(
                 context,
               )
             : null,

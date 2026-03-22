@@ -300,3 +300,30 @@ class _FakeCountBuilder extends Fake
     ).then(onValue, onError: onError);
   }
 }
+
+/// A fake [PostgrestFilterBuilder] for RPC responses.
+///
+/// Does NOT extend [Fake] (mocktail) to avoid corrupting mocktail state
+/// when returned from `thenAnswer`.
+///
+/// Usage:
+/// ```dart
+/// when(() => client.rpc<String>('fn', params: any(named: 'params')))
+///     .thenAnswer((_) => FakeRpcBuilder('result'));
+/// ```
+class FakeRpcBuilder<T> implements PostgrestFilterBuilder<T> {
+  /// Creates a [FakeRpcBuilder] that resolves to [_data].
+  FakeRpcBuilder(this._data);
+  final T _data;
+
+  @override
+  Future<U> then<U>(
+    FutureOr<U> Function(T) onValue, {
+    Function? onError,
+  }) {
+    return Future<T>.value(_data).then(onValue, onError: onError);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => this;
+}

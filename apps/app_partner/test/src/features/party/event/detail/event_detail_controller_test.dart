@@ -6,8 +6,17 @@ import 'package:mocktail/mocktail.dart';
 import '../../../../../utils/mocks.dart';
 import '../../../../../utils/test_utils.dart';
 
-Future<void> pump() async {
-  await Future<void>.delayed(const Duration(milliseconds: 50));
+Ticket _makeTicket(String id, {String eventId = 'event_1'}) {
+  final now = DateTime.now();
+  return Ticket(
+    id: id,
+    name: 'Ticket $id',
+    eventId: eventId,
+    price: 10000,
+    quantity: 50,
+    createdAt: now,
+    updatedAt: now,
+  );
 }
 
 void main() {
@@ -17,82 +26,69 @@ void main() {
     mockTicketRepo = MockTicketRepository();
   });
 
-  ProviderContainer makeContainer() {
-    return createContainer(
-      overrides: [
-        ticketRepositoryProvider.overrideWithValue(mockTicketRepo),
-      ],
-    );
-  }
-
-  group('eventTicketsProvider', () {
-    test('returns tickets for the given event', () async {
-      final tickets = [
-        Ticket(
-          id: 'ticket-1',
-          eventId: 'event-1',
-          name: 'General',
-          price: 10000,
-          quantity: 50,
-          soldCount: 0,
-          createdAt: DateTime(2024),
-          updatedAt: DateTime(2024),
-        ),
-      ];
-
+  group('eventTickets', () {
+    test('returns tickets for given eventId', () async {
+      final tickets = [_makeTicket('t1'), _makeTicket('t2')];
       when(
-        () => mockTicketRepo.getTicketsByEventId('event-1'),
+        () => mockTicketRepo.getTicketsByEventId('event_1'),
       ).thenAnswer((_) async => tickets);
 
-      final container = makeContainer();
-      final result =
-          await container.read(eventTicketsProvider('event-1').future);
+      final container = createContainer(
+        overrides: [
+          ticketRepositoryProvider.overrideWithValue(mockTicketRepo),
+        ],
+      );
 
-      expect(result.length, 1);
-      expect(result.first.id, 'ticket-1');
+      final result = await container.read(
+        eventTicketsProvider('event_1').future,
+      );
+
+      expect(result, hasLength(2));
+      expect(result.first.id, 't1');
+      expect(result.last.id, 't2');
+      verify(() => mockTicketRepo.getTicketsByEventId('event_1')).called(1);
     });
 
-    test('returns empty list when event has no tickets', () async {
+    test('returns empty list when no tickets exist', () async {
       when(
-        () => mockTicketRepo.getTicketsByEventId('event-empty'),
-      ).thenAnswer((_) async => []);
+        () => mockTicketRepo.getTicketsByEventId('event_empty'),
+      ).thenAnswer((_) async => <Ticket>[]);
 
-      final container = makeContainer();
-      final result =
-          await container.read(eventTicketsProvider('event-empty').future);
+      final container = createContainer(
+        overrides: [
+          ticketRepositoryProvider.overrideWithValue(mockTicketRepo),
+        ],
+      );
+
+      final result = await container.read(
+        eventTicketsProvider('event_empty').future,
+      );
 
       expect(result, isEmpty);
     });
 
-    test('returns different results for different eventIds', () async {
-      final ticketsA = [
-        Ticket(
-          id: 'ticket-a',
-          eventId: 'event-a',
-          name: 'VIP',
-          price: 50000,
-          quantity: 10,
-          soldCount: 0,
-          createdAt: DateTime(2024),
-          updatedAt: DateTime(2024),
-        ),
-      ];
-
+    test('propagates error when repository throws', () async {
       when(
-        () => mockTicketRepo.getTicketsByEventId('event-a'),
-      ).thenAnswer((_) async => ticketsA);
-      when(
-        () => mockTicketRepo.getTicketsByEventId('event-b'),
-      ).thenAnswer((_) async => []);
+        () => mockTicketRepo.getTicketsByEventId('event_err'),
+      ).thenAnswer((_) async => throw Exception('DB error'));
 
-      final container = makeContainer();
-      final resultA =
-          await container.read(eventTicketsProvider('event-a').future);
-      final resultB =
-          await container.read(eventTicketsProvider('event-b').future);
+      final container = createContainer(
+        overrides: [
+          ticketRepositoryProvider.overrideWithValue(mockTicketRepo),
+        ],
+      );
 
-      expect(resultA.length, 1);
-      expect(resultB, isEmpty);
+      final sub = container.listen(
+        eventTicketsProvider('event_err'),
+        (_, _) {},
+      );
+      addTearDown(sub.close);
+
+      // Wait for the provider to settle
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      final state = container.read(eventTicketsProvider('event_err'));
+      expect(state.hasError, isTrue);
     });
   });
 }

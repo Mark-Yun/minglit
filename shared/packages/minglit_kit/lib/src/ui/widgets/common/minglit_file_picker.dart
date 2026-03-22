@@ -141,6 +141,9 @@ class _MinglitFilePickerState extends ConsumerState<MinglitFilePicker> {
       final newUrls = <String>[];
 
       for (final file in files) {
+        // Fix #270: 플랫폼별 bytes/path null 가능 — null이면 건너뛰기
+        if (kIsWeb && file.bytes == null) continue;
+        if (!kIsWeb && file.path == null) continue;
         // Convert PlatformFile to XFile for compatibility
         final xFile = kIsWeb
             ? XFile.fromData(file.bytes!, name: file.name)
