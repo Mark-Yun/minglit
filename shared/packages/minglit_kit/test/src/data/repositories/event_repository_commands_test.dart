@@ -241,6 +241,148 @@ void main() {
       });
     });
 
+    group('createOrderViaEF', () {
+      test('returns CreateOrderResult on success', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-create-order',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {
+              'success': true,
+              'application_id': 'app-ef-1',
+              'amount': 15000,
+              'requires_payment': true,
+              'ticket_name': '일반 티켓',
+            },
+          ),
+        );
+
+        final result = await repository.createOrderViaEF(
+          eventId: 'event_1',
+          ticketId: 'ticket_1',
+        );
+
+        expect(result.applicationId, 'app-ef-1');
+        expect(result.amount, 15000);
+        expect(result.requiresPayment, true);
+        expect(result.ticketName, '일반 티켓');
+      });
+
+      test('returns free order result', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-create-order',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {
+              'success': true,
+              'application_id': 'app-ef-2',
+              'amount': 0,
+              'requires_payment': false,
+              'ticket_name': '무료 티켓',
+            },
+          ),
+        );
+
+        final result = await repository.createOrderViaEF(
+          eventId: 'event_1',
+          ticketId: 'ticket_free',
+        );
+
+        expect(result.amount, 0);
+        expect(result.requiresPayment, false);
+      });
+
+      test('passes verification data when provided', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-create-order',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {
+              'success': true,
+              'application_id': 'app-ef-3',
+              'amount': 15000,
+              'requires_payment': true,
+              'ticket_name': '일반 티켓',
+            },
+          ),
+        );
+
+        await repository.createOrderViaEF(
+          eventId: 'event_1',
+          ticketId: 'ticket_1',
+          verificationData: {
+            'verification_id': 'v_1',
+            'data': {'field': 'value'},
+          },
+        );
+
+        verify(
+          () => mockFunctions.invoke(
+            'user-create-order',
+            body: {
+              'event_id': 'event_1',
+              'ticket_id': 'ticket_1',
+              'verification_data': {
+                'verification_id': 'v_1',
+                'data': {'field': 'value'},
+              },
+            },
+          ),
+        ).called(1);
+      });
+
+      test('throws MinglitUserException on error response', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-create-order',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 400,
+            data: {'error': '티켓이 매진되었습니다.'},
+          ),
+        );
+
+        expect(
+          () => repository.createOrderViaEF(
+            eventId: 'event_1',
+            ticketId: 'ticket_1',
+          ),
+          throwsA(isA<MinglitUserException>()),
+        );
+      });
+
+      test('throws on network error', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-create-order',
+            body: any(named: 'body'),
+          ),
+        ).thenThrow(Exception('network error'));
+
+        await expectLater(
+          repository.createOrderViaEF(
+            eventId: 'event_1',
+            ticketId: 'ticket_1',
+          ),
+          throwsA(anything),
+        );
+      });
+    });
+
     group('createOrder', () {
       test('creates new application when none exists', () async {
         // getApplication returns null (no existing application)

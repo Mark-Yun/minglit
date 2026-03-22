@@ -24,6 +24,21 @@ class EventRepository extends _SupabaseEventContextBase
     : super(supabase ?? Supabase.instance.client);
 }
 
+/// Result from user-create-order Edge Function.
+class CreateOrderResult {
+  const CreateOrderResult({
+    required this.applicationId,
+    required this.amount,
+    required this.requiresPayment,
+    required this.ticketName,
+  });
+
+  final String applicationId;
+  final int amount;
+  final bool requiresPayment;
+  final String ticketName;
+}
+
 abstract class _SupabaseEventContext {
   SupabaseClient get supabaseClient;
 }

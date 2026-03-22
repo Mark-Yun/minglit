@@ -84,6 +84,7 @@ class EventApplicationController extends _$EventApplicationController {
     }
   }
 
+  // Fix #286: uses user-create-order EF for server-side validation
   Future<void> processPayment(BuildContext context) async {
     if (state.selectedTicket == null) return;
     final user = ref.read(currentUserProvider);
@@ -96,12 +97,19 @@ class EventApplicationController extends _$EventApplicationController {
       final ticket = state.selectedTicket!;
       final event = await _loadEvent();
       final verificationData = _buildVerificationPayload(event, ticket);
-      final merchantUid = await _createOrder(
-        repository: repository,
-        ticket: ticket,
-        userId: user.id,
+
+      // Fix #286: Server validates all business rules and determines price
+      final orderResult = await repository.createOrderViaEF(
+        eventId: _event.id,
+        ticketId: ticket.id,
         verificationData: verificationData,
       );
+
+      if (!orderResult.requiresPayment) {
+        // Fix #286: Free event — server already set status='paid'
+        _handlePaymentSuccess();
+        return;
+      }
 
       if (!context.mounted) return;
 
@@ -109,9 +117,8 @@ class EventApplicationController extends _$EventApplicationController {
       final impUid = await _requestPayment(
         context: context,
         userCode: config.userCode,
-        ticket: ticket,
+        orderResult: orderResult,
         user: user,
-        merchantUid: merchantUid,
       );
 
       if (impUid == null) {
@@ -121,7 +128,7 @@ class EventApplicationController extends _$EventApplicationController {
       await _verifyPayment(
         repository: repository,
         impUid: impUid,
-        merchantUid: merchantUid,
+        merchantUid: orderResult.applicationId,
       );
 
       _handlePaymentSuccess();
@@ -130,27 +137,12 @@ class EventApplicationController extends _$EventApplicationController {
     }
   }
 
-  Future<String> _createOrder({
-    required EventRepository repository,
-    required Ticket ticket,
-    required String userId,
-    Map<String, dynamic>? verificationData,
-  }) async {
-    return repository.createOrder(
-      eventId: _event.id,
-      ticketId: ticket.id,
-      userId: userId,
-      amount: ticket.price,
-      verificationData: verificationData,
-    );
-  }
-
+  // Fix #286: Use server-determined amount from EF response
   Future<String?> _requestPayment({
     required BuildContext context,
     required String userCode,
-    required Ticket ticket,
+    required CreateOrderResult orderResult,
     required User user,
-    required String merchantUid,
   }) async {
     return ref
         .read(iamportControllerProvider.notifier)
@@ -160,9 +152,9 @@ class EventApplicationController extends _$EventApplicationController {
           data: {
             'pg': 'html5_inicis',
             'pay_method': 'card',
-            'merchant_uid': merchantUid,
-            'name': ticket.name,
-            'amount': ticket.price,
+            'merchant_uid': orderResult.applicationId,
+            'name': orderResult.ticketName,
+            'amount': orderResult.amount,
             'buyer_name': user.userMetadata?['name'] ?? '게스트',
             'buyer_tel': user.phone ?? '01000000000',
             'buyer_email': user.email ?? 'guest@minglit.com',
@@ -216,6 +208,7 @@ class EventApplicationController extends _$EventApplicationController {
     );
   }
 
+  // Fix #286: uses user-create-order EF for server-side validation
   Future<void> submitApplication() async {
     if (state.selectedTicket == null) return;
 
@@ -230,12 +223,10 @@ class EventApplicationController extends _$EventApplicationController {
       final event = await _loadEvent();
       final vData = _buildVerificationPayload(event, ticket);
 
-      await repository.applyEvent(
+      // Fix #286: Server validates all business rules via EF
+      await repository.createOrderViaEF(
         eventId: _event.id,
         ticketId: ticket.id,
-        userId: user.id,
-        paymentId: 'MOCK_PAY_${DateTime.now().millisecondsSinceEpoch}',
-        paymentAmount: ticket.price,
         verificationData: vData,
       );
 
