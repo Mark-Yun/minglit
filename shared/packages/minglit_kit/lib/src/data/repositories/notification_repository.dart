@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:minglit_kit/src/data/models/user_settings.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -7,26 +9,35 @@ class NotificationRepository {
   NotificationRepository(this._client);
   final SupabaseClient _client;
 
+  static const _efName = 'user-manage-settings';
+
   /// FCM 토큰을 서버에 등록하거나 갱신합니다.
   Future<void> upsertToken({
     required String userId,
     required String token,
     required String deviceType,
   }) async {
-    await _client.from('fcm_tokens').upsert(
-      {
-        'user_id': userId,
+    final response = await _client.functions.invoke(
+      _efName,
+      body: {
+        'action': 'upsert_token',
         'token': token,
         'device_type': deviceType,
-        'last_updated_at': DateTime.now().toIso8601String(),
       },
-      onConflict: 'token', // 토큰이 중복되면 업데이트
     );
+    _ensureSuccess(response);
   }
 
   /// 로그아웃 시 토큰 삭제 (선택 사항)
   Future<void> deleteToken(String token) async {
-    await _client.from('fcm_tokens').delete().eq('token', token);
+    final response = await _client.functions.invoke(
+      _efName,
+      body: {
+        'action': 'delete_token',
+        'token': token,
+      },
+    );
+    _ensureSuccess(response);
   }
 
   /// 알림 목록 조회 (페이지네이션)
@@ -75,14 +86,35 @@ class NotificationRepository {
   }
 
   /// 유저 알림 설정 업데이트
-  Future<void> updateSettings(
+  Future<UserSettings?> updateSettings(
     String userId,
     Map<String, dynamic> updates,
   ) async {
-    await _client.from('user_settings').upsert({
-      'user_id': userId,
-      ...updates,
-      'updated_at': DateTime.now().toIso8601String(),
-    });
+    final response = await _client.functions.invoke(
+      _efName,
+      body: {
+        'action': 'update_settings',
+        'settings': updates,
+      },
+    );
+    _ensureSuccess(response);
+
+    final data = jsonDecode(response.data as String) as Map<String, dynamic>;
+    final settings = data['settings'] as Map<String, dynamic>?;
+    if (settings == null) return null;
+    return UserSettings.fromJson(settings);
+  }
+
+  void _ensureSuccess(FunctionResponse response) {
+    if (response.status != 200) {
+      final body = response.data is String
+          ? response.data as String
+          : jsonEncode(response.data);
+      throw FunctionException(
+        status: response.status,
+        details: body,
+        reasonPhrase: 'Edge function error',
+      );
+    }
   }
 }
