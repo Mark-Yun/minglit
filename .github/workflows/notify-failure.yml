@@ -18,6 +18,10 @@ jobs:
     permissions:
       issues: write
     steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .
+          fetch-depth: 1
       - name: Create or comment on issue for CI failure
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -36,11 +40,12 @@ jobs:
             exit 0
           fi
           
-          EXISTING=$(gh issue list --search "\"${TITLE}\" in:title" --state open --label ci-failure --json number --jq '.[0].number' 2>/dev/null || echo "")
+          REPO="${{ github.repository }}"
+          EXISTING=$(gh issue list --repo "$REPO" --search "\"${TITLE}\" in:title" --state open --label ci-failure --json number --jq '.[0].number' 2>/dev/null || echo "")
           if [ -n "$EXISTING" ]; then
             echo "🔁 Found existing issue #$EXISTING, adding comment..."
-            gh issue comment "$EXISTING" --body "$BODY"
+            gh issue comment "$EXISTING" --repo "$REPO" --body "$BODY"
           else
             echo "🆕 Creating new issue..."
-            gh issue create --title "$TITLE" --body "$BODY" --label "ci-failure"
+            gh issue create --repo "$REPO" --title "$TITLE" --body "$BODY" --label "ci-failure"
           fi

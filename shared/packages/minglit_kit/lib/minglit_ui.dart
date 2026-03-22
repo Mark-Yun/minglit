@@ -6,6 +6,7 @@ export 'src/features/loading/global_loading_controller.dart';
 export 'src/features/loading/minglit_global_loading_overlay.dart';
 export 'src/features/notification/notification_list_screen.dart';
 export 'src/features/notification/notification_settings_screen.dart';
+export 'src/features/permission/app_permission_settings_screen.dart';
 export 'src/features/search/ui/location_search_screen.dart';
 export 'src/features/social/ui/minglit_social_action_chip.dart';
 export 'src/features/social/ui/minglit_social_button.dart';

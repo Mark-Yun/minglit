@@ -1,7 +1,7 @@
 import 'package:app_user/src/features/auth/login_page.dart';
-import 'package:app_user/src/features/dev/user_dev_map.dart';
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:minglit_kit/minglit_dev.dart';
 
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
@@ -53,14 +53,14 @@ void main() {
       expect(find.byType(HomePage), findsOneWidget);
     });
 
-    // Test 4: /dev bypass — accessible without auth
-    testWidgets('/dev 라우트: 비로그인 상태에서도 접근 가능', (tester) async {
+    // Test 4: /dev bypass — accessible without auth (Fix #188: devmap → session switcher)
+    testWidgets('/dev/switch 라우트: 비로그인 상태에서도 접근 가능', (tester) async {
       setKoreanLocale(tester);
-      await tester.pumpWidget(createTestApp(initialLocation: '/dev'));
+      await tester.pumpWidget(createTestApp(initialLocation: '/dev/switch'));
       await tester.pump();
       await tester.pump();
 
-      expect(find.byType(UserDevMap), findsOneWidget);
+      expect(find.byType(DevUserSwitchScreen), findsOneWidget);
       expect(find.byType(LoginPage), findsNothing);
     });
 

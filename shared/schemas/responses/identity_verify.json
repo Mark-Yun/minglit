@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "identity_verify_success_response",
+  "title": "identity-verify success response",
+  "type": "object",
+  "required": ["success", "user"],
+  "properties": {
+    "success": { "type": "boolean", "const": true },
+    "user": { "type": "string", "minLength": 1 }
+  },
+  "additionalProperties": false
+}

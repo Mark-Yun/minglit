@@ -14,272 +14,432 @@ T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$ReportDetail {
+  /// Unique identifier.
+  String get id;
 
-/// Unique identifier.
- String get id;/// ID of the reporting user.
-@JsonKey(name: 'user_id') String get userId;/// ID of the reported target.
-@JsonKey(name: 'target_id') String get targetId;/// Type of the reported target.
-@JsonKey(name: 'target_type') SocialTargetType get targetType;/// Reason category for the report.
- String get reason;/// When the report was created.
-@JsonKey(name: 'created_at') DateTime get createdAt;/// Optional free-text description.
- String? get description;
-/// Create a copy of ReportDetail
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$ReportDetailCopyWith<ReportDetail> get copyWith => _$ReportDetailCopyWithImpl<ReportDetail>(this as ReportDetail, _$identity);
+  /// ID of the reporting user.
+  @JsonKey(name: 'user_id')
+  String get userId;
+
+  /// ID of the reported target.
+  @JsonKey(name: 'target_id')
+  String get targetId;
+
+  /// Type of the reported target.
+  @JsonKey(name: 'target_type')
+  SocialTargetType get targetType;
+
+  /// Reason category for the report.
+  String get reason;
+
+  /// When the report was created.
+  @JsonKey(name: 'created_at')
+  DateTime get createdAt;
+
+  /// Optional free-text description.
+  String? get description;
+
+  /// Create a copy of ReportDetail
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  $ReportDetailCopyWith<ReportDetail> get copyWith =>
+      _$ReportDetailCopyWithImpl<ReportDetail>(
+          this as ReportDetail, _$identity);
 
   /// Serializes this ReportDetail to a JSON map.
   Map<String, dynamic> toJson();
 
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is ReportDetail &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.userId, userId) || other.userId == userId) &&
+            (identical(other.targetId, targetId) ||
+                other.targetId == targetId) &&
+            (identical(other.targetType, targetType) ||
+                other.targetType == targetType) &&
+            (identical(other.reason, reason) || other.reason == reason) &&
+            (identical(other.createdAt, createdAt) ||
+                other.createdAt == createdAt) &&
+            (identical(other.description, description) ||
+                other.description == description));
+  }
 
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReportDetail&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.targetId, targetId) || other.targetId == targetId)&&(identical(other.targetType, targetType) || other.targetType == targetType)&&(identical(other.reason, reason) || other.reason == reason)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.description, description) || other.description == description));
-}
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, id, userId, targetId, targetType,
+      reason, createdAt, description);
 
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,id,userId,targetId,targetType,reason,createdAt,description);
-
-@override
-String toString() {
-  return 'ReportDetail(id: $id, userId: $userId, targetId: $targetId, targetType: $targetType, reason: $reason, createdAt: $createdAt, description: $description)';
-}
-
-
+  @override
+  String toString() {
+    return 'ReportDetail(id: $id, userId: $userId, targetId: $targetId, targetType: $targetType, reason: $reason, createdAt: $createdAt, description: $description)';
+  }
 }
 
 /// @nodoc
-abstract mixin class $ReportDetailCopyWith<$Res>  {
-  factory $ReportDetailCopyWith(ReportDetail value, $Res Function(ReportDetail) _then) = _$ReportDetailCopyWithImpl;
-@useResult
-$Res call({
- String id,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'target_id') String targetId,@JsonKey(name: 'target_type') SocialTargetType targetType, String reason,@JsonKey(name: 'created_at') DateTime createdAt, String? description
-});
-
-
-
-
+abstract mixin class $ReportDetailCopyWith<$Res> {
+  factory $ReportDetailCopyWith(
+          ReportDetail value, $Res Function(ReportDetail) _then) =
+      _$ReportDetailCopyWithImpl;
+  @useResult
+  $Res call(
+      {String id,
+      @JsonKey(name: 'user_id') String userId,
+      @JsonKey(name: 'target_id') String targetId,
+      @JsonKey(name: 'target_type') SocialTargetType targetType,
+      String reason,
+      @JsonKey(name: 'created_at') DateTime createdAt,
+      String? description});
 }
+
 /// @nodoc
-class _$ReportDetailCopyWithImpl<$Res>
-    implements $ReportDetailCopyWith<$Res> {
+class _$ReportDetailCopyWithImpl<$Res> implements $ReportDetailCopyWith<$Res> {
   _$ReportDetailCopyWithImpl(this._self, this._then);
 
   final ReportDetail _self;
   final $Res Function(ReportDetail) _then;
 
-/// Create a copy of ReportDetail
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userId = null,Object? targetId = null,Object? targetType = null,Object? reason = null,Object? createdAt = null,Object? description = freezed,}) {
-  return _then(_self.copyWith(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
-as String,targetId: null == targetId ? _self.targetId : targetId // ignore: cast_nullable_to_non_nullable
-as String,targetType: null == targetType ? _self.targetType : targetType // ignore: cast_nullable_to_non_nullable
-as SocialTargetType,reason: null == reason ? _self.reason : reason // ignore: cast_nullable_to_non_nullable
-as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
-as String?,
-  ));
+  /// Create a copy of ReportDetail
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? userId = null,
+    Object? targetId = null,
+    Object? targetType = null,
+    Object? reason = null,
+    Object? createdAt = null,
+    Object? description = freezed,
+  }) {
+    return _then(_self.copyWith(
+      id: null == id
+          ? _self.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      userId: null == userId
+          ? _self.userId
+          : userId // ignore: cast_nullable_to_non_nullable
+              as String,
+      targetId: null == targetId
+          ? _self.targetId
+          : targetId // ignore: cast_nullable_to_non_nullable
+              as String,
+      targetType: null == targetType
+          ? _self.targetType
+          : targetType // ignore: cast_nullable_to_non_nullable
+              as SocialTargetType,
+      reason: null == reason
+          ? _self.reason
+          : reason // ignore: cast_nullable_to_non_nullable
+              as String,
+      createdAt: null == createdAt
+          ? _self.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+      description: freezed == description
+          ? _self.description
+          : description // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
 }
-
-}
-
 
 /// Adds pattern-matching-related methods to [ReportDetail].
 extension ReportDetailPatterns on ReportDetail {
-/// A variant of `map` that fallback to returning `orElse`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
+  /// A variant of `map` that fallback to returning `orElse`.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case _:
+  ///     return orElse();
+  /// }
+  /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ReportDetail value)?  $default,{required TResult orElse(),}){
-final _that = this;
-switch (_that) {
-case _ReportDetail() when $default != null:
-return $default(_that);case _:
-  return orElse();
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>(
+    TResult Function(_ReportDetail value)? $default, {
+    required TResult orElse(),
+  }) {
+    final _that = this;
+    switch (_that) {
+      case _ReportDetail() when $default != null:
+        return $default(_that);
+      case _:
+        return orElse();
+    }
+  }
 
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// Callbacks receives the raw object, upcasted.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case final Subclass2 value:
-///     return ...;
-/// }
-/// ```
+  /// A `switch`-like method, using callbacks.
+  ///
+  /// Callbacks receives the raw object, upcasted.
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case final Subclass2 value:
+  ///     return ...;
+  /// }
+  /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ReportDetail value)  $default,){
-final _that = this;
-switch (_that) {
-case _ReportDetail():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>(
+    TResult Function(_ReportDetail value) $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _ReportDetail():
+        return $default(_that);
+      case _:
+        throw StateError('Unexpected subclass');
+    }
+  }
 
-}
-}
-/// A variant of `map` that fallback to returning `null`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
+  /// A variant of `map` that fallback to returning `null`.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case _:
+  ///     return null;
+  /// }
+  /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ReportDetail value)?  $default,){
-final _that = this;
-switch (_that) {
-case _ReportDetail() when $default != null:
-return $default(_that);case _:
-  return null;
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>(
+    TResult? Function(_ReportDetail value)? $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _ReportDetail() when $default != null:
+        return $default(_that);
+      case _:
+        return null;
+    }
+  }
 
-}
-}
-/// A variant of `when` that fallback to an `orElse` callback.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
+  /// A variant of `when` that fallback to an `orElse` callback.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case _:
+  ///     return orElse();
+  /// }
+  /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'target_id')  String targetId, @JsonKey(name: 'target_type')  SocialTargetType targetType,  String reason, @JsonKey(name: 'created_at')  DateTime createdAt,  String? description)?  $default,{required TResult orElse(),}) {final _that = this;
-switch (_that) {
-case _ReportDetail() when $default != null:
-return $default(_that.id,_that.userId,_that.targetId,_that.targetType,_that.reason,_that.createdAt,_that.description);case _:
-  return orElse();
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>(
+    TResult Function(
+            String id,
+            @JsonKey(name: 'user_id') String userId,
+            @JsonKey(name: 'target_id') String targetId,
+            @JsonKey(name: 'target_type') SocialTargetType targetType,
+            String reason,
+            @JsonKey(name: 'created_at') DateTime createdAt,
+            String? description)?
+        $default, {
+    required TResult orElse(),
+  }) {
+    final _that = this;
+    switch (_that) {
+      case _ReportDetail() when $default != null:
+        return $default(_that.id, _that.userId, _that.targetId,
+            _that.targetType, _that.reason, _that.createdAt, _that.description);
+      case _:
+        return orElse();
+    }
+  }
 
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// As opposed to `map`, this offers destructuring.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case Subclass2(:final field2):
-///     return ...;
-/// }
-/// ```
+  /// A `switch`-like method, using callbacks.
+  ///
+  /// As opposed to `map`, this offers destructuring.
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case Subclass2(:final field2):
+  ///     return ...;
+  /// }
+  /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'target_id')  String targetId, @JsonKey(name: 'target_type')  SocialTargetType targetType,  String reason, @JsonKey(name: 'created_at')  DateTime createdAt,  String? description)  $default,) {final _that = this;
-switch (_that) {
-case _ReportDetail():
-return $default(_that.id,_that.userId,_that.targetId,_that.targetType,_that.reason,_that.createdAt,_that.description);case _:
-  throw StateError('Unexpected subclass');
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>(
+    TResult Function(
+            String id,
+            @JsonKey(name: 'user_id') String userId,
+            @JsonKey(name: 'target_id') String targetId,
+            @JsonKey(name: 'target_type') SocialTargetType targetType,
+            String reason,
+            @JsonKey(name: 'created_at') DateTime createdAt,
+            String? description)
+        $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _ReportDetail():
+        return $default(_that.id, _that.userId, _that.targetId,
+            _that.targetType, _that.reason, _that.createdAt, _that.description);
+      case _:
+        throw StateError('Unexpected subclass');
+    }
+  }
 
-}
-}
-/// A variant of `when` that fallback to returning `null`
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
+  /// A variant of `when` that fallback to returning `null`
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case _:
+  ///     return null;
+  /// }
+  /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'target_id')  String targetId, @JsonKey(name: 'target_type')  SocialTargetType targetType,  String reason, @JsonKey(name: 'created_at')  DateTime createdAt,  String? description)?  $default,) {final _that = this;
-switch (_that) {
-case _ReportDetail() when $default != null:
-return $default(_that.id,_that.userId,_that.targetId,_that.targetType,_that.reason,_that.createdAt,_that.description);case _:
-  return null;
-
-}
-}
-
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>(
+    TResult? Function(
+            String id,
+            @JsonKey(name: 'user_id') String userId,
+            @JsonKey(name: 'target_id') String targetId,
+            @JsonKey(name: 'target_type') SocialTargetType targetType,
+            String reason,
+            @JsonKey(name: 'created_at') DateTime createdAt,
+            String? description)?
+        $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _ReportDetail() when $default != null:
+        return $default(_that.id, _that.userId, _that.targetId,
+            _that.targetType, _that.reason, _that.createdAt, _that.description);
+      case _:
+        return null;
+    }
+  }
 }
 
 /// @nodoc
 @JsonSerializable()
-
 class _ReportDetail implements ReportDetail {
-  const _ReportDetail({required this.id, @JsonKey(name: 'user_id') required this.userId, @JsonKey(name: 'target_id') required this.targetId, @JsonKey(name: 'target_type') required this.targetType, required this.reason, @JsonKey(name: 'created_at') required this.createdAt, this.description});
-  factory _ReportDetail.fromJson(Map<String, dynamic> json) => _$ReportDetailFromJson(json);
+  const _ReportDetail(
+      {required this.id,
+      @JsonKey(name: 'user_id') required this.userId,
+      @JsonKey(name: 'target_id') required this.targetId,
+      @JsonKey(name: 'target_type') required this.targetType,
+      required this.reason,
+      @JsonKey(name: 'created_at') required this.createdAt,
+      this.description});
+  factory _ReportDetail.fromJson(Map<String, dynamic> json) =>
+      _$ReportDetailFromJson(json);
 
-/// Unique identifier.
-@override final  String id;
-/// ID of the reporting user.
-@override@JsonKey(name: 'user_id') final  String userId;
-/// ID of the reported target.
-@override@JsonKey(name: 'target_id') final  String targetId;
-/// Type of the reported target.
-@override@JsonKey(name: 'target_type') final  SocialTargetType targetType;
-/// Reason category for the report.
-@override final  String reason;
-/// When the report was created.
-@override@JsonKey(name: 'created_at') final  DateTime createdAt;
-/// Optional free-text description.
-@override final  String? description;
+  /// Unique identifier.
+  @override
+  final String id;
 
-/// Create a copy of ReportDetail
-/// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-_$ReportDetailCopyWith<_ReportDetail> get copyWith => __$ReportDetailCopyWithImpl<_ReportDetail>(this, _$identity);
+  /// ID of the reporting user.
+  @override
+  @JsonKey(name: 'user_id')
+  final String userId;
 
-@override
-Map<String, dynamic> toJson() {
-  return _$ReportDetailToJson(this, );
-}
+  /// ID of the reported target.
+  @override
+  @JsonKey(name: 'target_id')
+  final String targetId;
 
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReportDetail&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.targetId, targetId) || other.targetId == targetId)&&(identical(other.targetType, targetType) || other.targetType == targetType)&&(identical(other.reason, reason) || other.reason == reason)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.description, description) || other.description == description));
-}
+  /// Type of the reported target.
+  @override
+  @JsonKey(name: 'target_type')
+  final SocialTargetType targetType;
 
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,id,userId,targetId,targetType,reason,createdAt,description);
+  /// Reason category for the report.
+  @override
+  final String reason;
 
-@override
-String toString() {
-  return 'ReportDetail(id: $id, userId: $userId, targetId: $targetId, targetType: $targetType, reason: $reason, createdAt: $createdAt, description: $description)';
-}
+  /// When the report was created.
+  @override
+  @JsonKey(name: 'created_at')
+  final DateTime createdAt;
 
+  /// Optional free-text description.
+  @override
+  final String? description;
 
+  /// Create a copy of ReportDetail
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  _$ReportDetailCopyWith<_ReportDetail> get copyWith =>
+      __$ReportDetailCopyWithImpl<_ReportDetail>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$ReportDetailToJson(
+      this,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _ReportDetail &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.userId, userId) || other.userId == userId) &&
+            (identical(other.targetId, targetId) ||
+                other.targetId == targetId) &&
+            (identical(other.targetType, targetType) ||
+                other.targetType == targetType) &&
+            (identical(other.reason, reason) || other.reason == reason) &&
+            (identical(other.createdAt, createdAt) ||
+                other.createdAt == createdAt) &&
+            (identical(other.description, description) ||
+                other.description == description));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, id, userId, targetId, targetType,
+      reason, createdAt, description);
+
+  @override
+  String toString() {
+    return 'ReportDetail(id: $id, userId: $userId, targetId: $targetId, targetType: $targetType, reason: $reason, createdAt: $createdAt, description: $description)';
+  }
 }
 
 /// @nodoc
-abstract mixin class _$ReportDetailCopyWith<$Res> implements $ReportDetailCopyWith<$Res> {
-  factory _$ReportDetailCopyWith(_ReportDetail value, $Res Function(_ReportDetail) _then) = __$ReportDetailCopyWithImpl;
-@override @useResult
-$Res call({
- String id,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'target_id') String targetId,@JsonKey(name: 'target_type') SocialTargetType targetType, String reason,@JsonKey(name: 'created_at') DateTime createdAt, String? description
-});
-
-
-
-
+abstract mixin class _$ReportDetailCopyWith<$Res>
+    implements $ReportDetailCopyWith<$Res> {
+  factory _$ReportDetailCopyWith(
+          _ReportDetail value, $Res Function(_ReportDetail) _then) =
+      __$ReportDetailCopyWithImpl;
+  @override
+  @useResult
+  $Res call(
+      {String id,
+      @JsonKey(name: 'user_id') String userId,
+      @JsonKey(name: 'target_id') String targetId,
+      @JsonKey(name: 'target_type') SocialTargetType targetType,
+      String reason,
+      @JsonKey(name: 'created_at') DateTime createdAt,
+      String? description});
 }
+
 /// @nodoc
 class __$ReportDetailCopyWithImpl<$Res>
     implements _$ReportDetailCopyWith<$Res> {
@@ -288,22 +448,50 @@ class __$ReportDetailCopyWithImpl<$Res>
   final _ReportDetail _self;
   final $Res Function(_ReportDetail) _then;
 
-/// Create a copy of ReportDetail
-/// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userId = null,Object? targetId = null,Object? targetType = null,Object? reason = null,Object? createdAt = null,Object? description = freezed,}) {
-  return _then(_ReportDetail(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
-as String,targetId: null == targetId ? _self.targetId : targetId // ignore: cast_nullable_to_non_nullable
-as String,targetType: null == targetType ? _self.targetType : targetType // ignore: cast_nullable_to_non_nullable
-as SocialTargetType,reason: null == reason ? _self.reason : reason // ignore: cast_nullable_to_non_nullable
-as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
-as String?,
-  ));
-}
-
-
+  /// Create a copy of ReportDetail
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $Res call({
+    Object? id = null,
+    Object? userId = null,
+    Object? targetId = null,
+    Object? targetType = null,
+    Object? reason = null,
+    Object? createdAt = null,
+    Object? description = freezed,
+  }) {
+    return _then(_ReportDetail(
+      id: null == id
+          ? _self.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      userId: null == userId
+          ? _self.userId
+          : userId // ignore: cast_nullable_to_non_nullable
+              as String,
+      targetId: null == targetId
+          ? _self.targetId
+          : targetId // ignore: cast_nullable_to_non_nullable
+              as String,
+      targetType: null == targetType
+          ? _self.targetType
+          : targetType // ignore: cast_nullable_to_non_nullable
+              as SocialTargetType,
+      reason: null == reason
+          ? _self.reason
+          : reason // ignore: cast_nullable_to_non_nullable
+              as String,
+      createdAt: null == createdAt
+          ? _self.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+      description: freezed == description
+          ? _self.description
+          : description // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
 }
 
 // dart format on

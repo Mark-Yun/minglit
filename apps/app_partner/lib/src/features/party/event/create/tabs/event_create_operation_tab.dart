@@ -41,7 +41,6 @@ class EventCreateOperationTab extends StatelessWidget {
             ),
           ),
           const SizedBox(height: MinglitSpacing.large),
-
           MinglitEditableSection(
             title: context.l10n.wizard_review_tickets,
             onTap: () {

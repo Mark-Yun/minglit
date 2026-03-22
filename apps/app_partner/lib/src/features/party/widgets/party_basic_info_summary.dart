@@ -103,7 +103,6 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
               ),
             ),
           ),
-
         if (widget.showTitle)
           Row(
             children: [
@@ -147,7 +146,6 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
             ],
           ),
         if (widget.showTitle) const SizedBox(height: MinglitSpacing.small),
-
         if (isDescriptionEmpty)
           Text(
             context.l10n.wizard_review_noDescription,
@@ -183,7 +181,6 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
                 ),
               ),
             ),
-
           if (_isExpanded)
             Container(
               margin: const EdgeInsets.only(top: MinglitSpacing.xsmall),

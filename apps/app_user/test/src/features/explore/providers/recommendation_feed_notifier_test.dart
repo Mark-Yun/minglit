@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:app_user/src/features/explore/logic/eligibility_filter.dart';
 import 'package:app_user/src/features/explore/providers/explore_state_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -260,6 +263,153 @@ void main() {
         // Existing 10 events preserved after error
         expect(state.events, hasLength(10));
         expect(state.isLoadingMore, isFalse);
+      });
+    });
+
+    group('Fix #193: consecutive empty page cap', () {
+      test(
+        'hasMore becomes false after 5 pages with no new visible events',
+        () async {
+          // Page 0 returns 10 events that pass filter → visible
+          stubPage(offset: 0, returns: makeEvents(10));
+
+          // Pages 1-5: all return 10 events, but they are duplicates of page 0
+          // (simulating non-deterministic ORDER BY returning same items).
+          for (var i = 1; i <= 5; i++) {
+            stubPage(offset: i * 10, returns: makeEvents(10));
+          }
+
+          final container = makeContainer();
+          await container.read(recommendationFeedProvider.future);
+
+          // Load 5 more pages — all add 0 new visible events (all duplicates)
+          for (var i = 0; i < 5; i++) {
+            await container
+                .read(recommendationFeedProvider.notifier)
+                .loadMore();
+          }
+
+          final state = await container.read(recommendationFeedProvider.future);
+          expect(
+            state.hasMore,
+            isFalse,
+            reason:
+                '5 consecutive pages with no new visible events '
+                'should stop pagination',
+          );
+        },
+      );
+
+      test('counter resets when new visible events appear', () async {
+        stubPage(offset: 0, returns: makeEvents(10));
+        // Pages 1-3: duplicates (no new visible events)
+        for (var i = 1; i <= 3; i++) {
+          stubPage(offset: i * 10, returns: makeEvents(10));
+        }
+        // Page 4: new unique events → resets counter
+        stubPage(offset: 40, returns: makeEvents(10, startIndex: 10));
+
+        final container = makeContainer();
+        await container.read(recommendationFeedProvider.future);
+
+        // Load 3 empty pages
+        for (var i = 0; i < 3; i++) {
+          await container.read(recommendationFeedProvider.notifier).loadMore();
+        }
+
+        var state = await container.read(recommendationFeedProvider.future);
+        expect(
+          state.hasMore,
+          isTrue,
+          reason: 'only 3 empty pages, below cap of 5',
+        );
+
+        // Page 4 adds new events → counter resets
+        await container.read(recommendationFeedProvider.notifier).loadMore();
+        state = await container.read(recommendationFeedProvider.future);
+        expect(state.hasMore, isTrue);
+        expect(state.events, hasLength(20));
+      });
+    });
+
+    group('Fix #173: eligibility data late arrival re-filters feed', () {
+      test('feed re-filters when eligibility data loads after events', () async {
+        // Events requiring verification 'v_required' that user does NOT have
+        final restrictedEvents = List.generate(
+          10,
+          (i) => Event(
+            id: 'e$i',
+            partyId: 'party1',
+            startTime: now.add(const Duration(days: 1)),
+            endTime: now.add(const Duration(days: 1, hours: 2)),
+            createdAt: now,
+            updatedAt: now,
+            tickets: [
+              Ticket(
+                id: 't$i',
+                name: 'Restricted',
+                price: 10000,
+                createdAt: now,
+                updatedAt: now,
+                requiredVerificationIds: ['v_required'],
+              ),
+            ],
+          ),
+        );
+
+        // Stub page with restricted events
+        when(
+          () => mockEventRepository.getEventsByType(
+            type: EventFeedType.newArrivals,
+            offset: any(named: 'offset'),
+          ),
+        ).thenAnswer((_) async => restrictedEvents);
+
+        // Completer to control when eligibility data arrives
+        final eligibilityCompleter = Completer<BulkEligibilityData?>();
+
+        final container = createContainer(
+          overrides: [
+            eventRepositoryProvider.overrideWithValue(mockEventRepository),
+            // Eligibility data controlled by completer (simulates late arrival)
+            bulkEligibilityDataProvider.overrideWith(
+              (ref) => eligibilityCompleter.future,
+            ),
+          ],
+        );
+
+        // Initial load: eligibility data not yet available -> no filtering
+        final state1 = await container.read(recommendationFeedProvider.future);
+        expect(
+          state1.events,
+          hasLength(10),
+          reason: 'all events shown before eligibility data arrives',
+        );
+
+        // Eligibility data arrives: verified user without v_required
+        eligibilityCompleter.complete(
+          BulkEligibilityData.fromJson({
+            'user_profile': {
+              'gender': 'male',
+              'birth_year': 1995,
+              'is_verified': true,
+            },
+            'approved_verifications': <dynamic>[],
+          }),
+        );
+
+        // Allow async listener to fire
+        await Future<void>.delayed(Duration.zero);
+        await Future<void>.delayed(Duration.zero);
+
+        final state2 = await container.read(recommendationFeedProvider.future);
+        expect(
+          state2.events,
+          hasLength(0),
+          reason:
+              'user without required verification should see '
+              'no events after eligibility data loads',
+        );
       });
     });
   });

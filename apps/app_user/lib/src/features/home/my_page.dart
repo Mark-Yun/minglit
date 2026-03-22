@@ -1,6 +1,5 @@
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
-import 'package:app_user/src/features/settings/app_permissions_page.dart';
 import 'package:app_user/src/features/settings/blocked_partners_page.dart';
 import 'package:app_user/src/features/settings/privacy_page.dart';
 import 'package:flutter/material.dart';
@@ -102,7 +101,7 @@ class MyPage extends ConsumerWidget {
           ),
           const Divider(),
 
-          // 2. Menu Items
+          // 2. Menu Items — 거래
           ListTile(
             leading: const Icon(Icons.receipt_long_outlined),
             title: const Text('구매 내역'),
@@ -115,6 +114,8 @@ class MyPage extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: homeCoordinator.pushPurchaseHistory,
           ),
+          // Fix #187: 그룹별 구분선 추가 — 거래 / 앱 설정
+          const Divider(),
           ListTile(
             leading: const Icon(Icons.notifications_outlined),
             title: const Text('알림 설정'),
@@ -122,6 +123,8 @@ class MyPage extends ConsumerWidget {
             onTap: homeCoordinator.pushNotificationSettings,
           ),
           const ThemeSettingsTile(),
+          // Fix #187: 그룹별 구분선 추가 — 앱 설정 / 개인정보·보안
+          const Divider(),
           // Fix #139: Add privacy and permissions menu items
           ListTile(
             leading: const Icon(Icons.lock_outline),
@@ -138,10 +141,11 @@ class MyPage extends ConsumerWidget {
             leading: const Icon(Icons.admin_panel_settings_outlined),
             title: const Text('권한 설정'),
             trailing: const Icon(Icons.chevron_right),
+            // Fix #186: minglit_kit 공유 권한 설정 화면 사용
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute<void>(
-                builder: (_) => const AppPermissionsPage(),
+                builder: (_) => const AppPermissionSettingsScreen(),
               ),
             ),
           ),

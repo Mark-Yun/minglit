@@ -107,6 +107,20 @@ adb -s adb-R3CX803P2ND-8btuuD._adb-tls-connect._tcp install -r build/app/outputs
 - `required_linear_history` 활성화 — squash merge만 허용.
 - `--admin` bypass는 **유저가 명시적으로 요청할 때만** 사용한다. CI나 리뷰 우회 목적 금지.
 
+## Issue Priority Labels
+
+이슈에는 우선순위 라벨을 붙여 처리 순서를 관리한다.
+
+| 라벨 | 의미 | 처리 기한 |
+|------|------|-----------|
+| `P0-critical` | 서비스 장애, 즉시 수정 | 당일 |
+| `P1-high` | 핵심 기능 버그 | 이번 주 |
+| `P2-medium` | 일반 버그, 감사 이슈 | 다음 스프린트 |
+| `P3-low` | 테스트 보강, enhancement | 여유 시 |
+
+- AI Worker는 **P0 > P1 > P2 > P3 > 라벨 없음** 순서로 이슈를 처리한다.
+- 같은 우선순위 내에서는 이슈 번호가 낮은(오래된) 것 먼저.
+
 ## PR Conventions
 
 - PR 생성 시 관련 GitHub Issue가 있으면 PR body에 `Closes #이슈번호`를 포함한다.
@@ -226,3 +240,27 @@ git push
   final visibility = party.visibility ?? 'public';
   ```
 - 주석은 수정된 코드 바로 위에 작성한다. 파일 상단이나 먼 곳에 남기지 않는다.
+
+## Test Conventions
+
+새 피쳐 구현 또는 버그 수정 시 반드시 [Automation Test Guide](docs/AUTOMATION_TEST_GUIDE.md)를 따른다.
+
+### 필수 테스트 규칙
+- **Repository 변경** → `minglit_kit/test/src/data/repositories/` 에 테스트 추가
+- **Controller/Provider 변경** → `apps/{app}/test/src/features/{feature}/logic/` 에 테스트 추가
+- **DB Migration 추가** → `supabase/tests/database/` 에 pgTAP 스키마/RLS 테스트 추가
+- **Edge Function 추가** → 같은 디렉토리에 `{name}_test.ts` 추가
+- **버그 수정** → 해당 버그를 재현하는 테스트를 반드시 포함
+
+### 테스트 실행 확인
+코드 변경 후 관련 테스트를 실행하여 통과를 확인한다:
+```bash
+# Flutter
+cd {package_dir} && flutter test
+
+# pgTAP
+supabase test db
+
+# Edge Functions
+deno test --allow-all supabase/functions/{function_name}/
+```

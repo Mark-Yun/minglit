@@ -66,7 +66,9 @@ Future<void> main() async {
             Sentry.captureException(error, stackTrace: stackTrace),
       ),
     );
-  } on Object catch (_) {
+  } on Object catch (e, st) {
+    // Fix #270: 초기화 에러 로깅 — 에러 삼킴 방지
+    debugPrint('Sentry init failed: $e\n$st');
     startApp();
   }
 }
@@ -109,7 +111,9 @@ Future<void> appStartup(Ref ref) async {
       if (userId != null) {
         unawaited(StatsigAnalytics.updateUser(userId));
       } else {
-        unawaited(StatsigAnalytics.shutdown());
+        // Fix #155: shutdown() kills _initialized flag, blocking all future events.
+        // Reset to anonymous instead of shutting down the SDK.
+        unawaited(StatsigAnalytics.updateUser(''));
       }
     });
   });

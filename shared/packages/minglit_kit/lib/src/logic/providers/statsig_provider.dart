@@ -4,19 +4,34 @@
 /// No-ops gracefully when STATSIG_CLIENT_KEY is empty or 'FILL_THIS'.
 library;
 
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:statsig/statsig.dart';
+import 'package:uuid/uuid.dart';
 
 /// Event name constants for Statsig analytics.
 /// ONLY these 7 events are tracked.
 class MingLitEvent {
   MingLitEvent._();
 
+  /// Event fired when the app is opened.
   static const String appOpened = 'app_opened';
+
+  /// Event fired when an event detail is viewed.
   static const String eventViewed = 'event_viewed';
+
+  /// Event fired when a user applies to an event.
   static const String eventApplied = 'event_applied';
+
+  /// Event fired when a payment is completed successfully.
   static const String paymentCompleted = 'payment_completed';
+
+  /// Event fired when a payment fails.
   static const String paymentFailed = 'payment_failed';
+
+  /// Event fired with a matching result.
   static const String matchingResult = 'matching_result';
+
+  /// Event fired when an unexpected error occurs.
   static const String errorOccurred = 'error_occurred';
 }
 
@@ -39,17 +54,29 @@ class StatsigAnalytics {
     }
     try {
       await _initializeInternal(clientKey, userId: userId, tier: tier);
-    } catch (_) {
+    } on Object catch (_) {
       // Graceful degradation — never crash on analytics
     }
   }
+
+  static const _stableIdKey = 'statsig_stable_id';
 
   static Future<void> _initializeInternal(
     String clientKey, {
     required String tier,
     String? userId,
   }) async {
-    final user = StatsigUser(userId: userId ?? '');
+    final prefs = await SharedPreferences.getInstance();
+    var stableId = prefs.getString(_stableIdKey);
+    if (stableId == null) {
+      stableId = const Uuid().v4();
+      await prefs.setString(_stableIdKey, stableId);
+    }
+
+    final user = StatsigUser(
+      userId: userId ?? '',
+      customIds: {'stableID': stableId},
+    );
     final options = StatsigOptions(environment: tier);
     await Statsig.initialize(clientKey, user, options);
     _initialized = true;
@@ -60,7 +87,7 @@ class StatsigAnalytics {
     if (!_initialized) return;
     try {
       await Statsig.updateUser(StatsigUser(userId: userId));
-    } catch (_) {}
+    } on Object catch (_) {}
   }
 
   /// Log an analytics event. Use [MingLitEvent] constants.
@@ -72,7 +99,7 @@ class StatsigAnalytics {
     if (!_initialized) return;
     try {
       Statsig.logEvent(eventName, doubleValue: value, metadata: metadata);
-    } catch (_) {}
+    } on Object catch (_) {}
   }
 
   /// Evaluate a feature gate. Returns false if not initialized.
@@ -80,7 +107,7 @@ class StatsigAnalytics {
     if (!_initialized) return false;
     try {
       return Statsig.checkGate(gateName);
-    } catch (_) {
+    } on Object catch (_) {
       return false;
     }
   }
@@ -91,6 +118,6 @@ class StatsigAnalytics {
     try {
       await Statsig.shutdown();
       _initialized = false;
-    } catch (_) {}
+    } on Object catch (_) {}
   }
 }

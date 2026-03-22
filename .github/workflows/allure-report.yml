@@ -2,7 +2,7 @@ name: Allure Report
 
 on:
   schedule:
-    - cron: '0 0 * * 1'  # 매주 월요일 00:00 UTC
+    - cron: '0 0 * * *'  # 매일 00:00 UTC (09:00 KST)
   workflow_dispatch:
 
 concurrency:
@@ -20,6 +20,7 @@ jobs:
           ref: gh-pages
           path: gh-pages-content
 
+      # ── Download Allure Results ──
       - name: Download Allure Results (app_user)
         uses: dawidd6/action-download-artifact@v9
         with:
@@ -47,6 +48,35 @@ jobs:
           if_no_artifact_found: warn
         continue-on-error: true
 
+      # ── Download Coverage Artifacts ──
+      - name: Download Coverage (app_user)
+        uses: dawidd6/action-download-artifact@v9
+        with:
+          workflow: ci.yml
+          name: app-user-coverage
+          path: coverage/app_user/
+          if_no_artifact_found: warn
+        continue-on-error: true
+
+      - name: Download Coverage (app_partner)
+        uses: dawidd6/action-download-artifact@v9
+        with:
+          workflow: ci.yml
+          name: app-partner-coverage
+          path: coverage/app_partner/
+          if_no_artifact_found: warn
+        continue-on-error: true
+
+      - name: Download Coverage (minglit_kit)
+        uses: dawidd6/action-download-artifact@v9
+        with:
+          workflow: ci.yml
+          name: minglit-kit-coverage
+          path: coverage/minglit_kit/
+          if_no_artifact_found: warn
+        continue-on-error: true
+
+      # ── Copy previous history for trend tracking ──
       - name: Copy previous history for trend tracking
         run: |
           if [ -d "gh-pages-content/history" ]; then
@@ -56,6 +86,89 @@ jobs:
             echo "No previous history found — first run"
           fi
 
+      # ── Generate Allure metadata files ──
+      - name: Generate Allure metadata
+        run: |
+          mkdir -p allure-results
+
+          # categories.json — failure type classification
+          printf '%s\n' '[' \
+            '  {"name": "Test Defects", "matchedStatuses": ["failed"]},' \
+            '  {"name": "Infrastructure Issues", "matchedStatuses": ["broken"]},' \
+            '  {"name": "Skipped / Disabled", "matchedStatuses": ["skipped"]}' \
+            ']' > allure-results/categories.json
+
+          # executor.json — CI link
+          printf '{\n  "name": "GitHub Actions",\n  "type": "github",\n  "buildName": "Daily Report #%s",\n  "buildUrl": "%s/%s/actions/runs/%s",\n  "reportUrl": "https://mark-yun.github.io/minglit/"\n}\n' \
+            "${GITHUB_RUN_NUMBER}" "${GITHUB_SERVER_URL}" "${GITHUB_REPOSITORY}" "${GITHUB_RUN_ID}" \
+            > allure-results/executor.json
+
+          # environment.properties — build info + coverage
+          printf 'Report.Date=%s\nFlutter.Channel=stable\nRepository=%s\nBranch=dev\n' \
+            "$(date -u +%Y-%m-%d)" "${GITHUB_REPOSITORY}" \
+            > allure-results/environment.properties
+
+          # Parse coverage from lcov.info and append to environment.properties
+          calc_coverage() {
+            local lcov_file="$1"
+            if [ -f "$lcov_file" ]; then
+              awk -F: '/^LF:/{total+=$2} /^LH:/{hit+=$2} END{if(total>0) printf "%.1f%%", hit/total*100; else print "N/A"}' "$lcov_file"
+            else
+              echo "N/A"
+            fi
+          }
+
+          calc_feature_coverage() {
+            local lcov_file="$1"
+            local project="$2"
+            if [ ! -f "$lcov_file" ]; then return; fi
+
+            # Extract unique feature names from SF: lines (features/<name>/)
+            grep '^SF:' "$lcov_file" | sed -n 's|.*features/\([^/]*\)/.*|\1|p' | sort -u | while read -r feature; do
+              if [ -n "$feature" ]; then
+                # Filter lcov data for this feature and compute coverage
+                local cov
+                cov=$(awk -v feat="features/${feature}/" -F: '
+                  /^SF:/ { match_feat = index($0, feat) > 0 }
+                  match_feat && /^LF:/ { total += $2 }
+                  match_feat && /^LH:/ { hit += $2 }
+                  END { if(total>0) printf "%.1f%%", hit/total*100; else print "N/A" }
+                ' "$lcov_file")
+                echo "Coverage.${project}.${feature}=${cov}" >> allure-results/environment.properties
+              fi
+            done
+          }
+
+          # Project-level coverage
+          TOTAL_LF=0
+          TOTAL_LH=0
+          for proj in app_user app_partner minglit_kit; do
+            lcov="coverage/${proj}/lcov.info"
+            cov=$(calc_coverage "$lcov")
+            echo "Coverage.${proj}=${cov}" >> allure-results/environment.properties
+
+            if [ -f "$lcov" ]; then
+              lf=$(awk -F: '/^LF:/{s+=$2} END{print s+0}' "$lcov")
+              lh=$(awk -F: '/^LH:/{s+=$2} END{print s+0}' "$lcov")
+              TOTAL_LF=$((TOTAL_LF + lf))
+              TOTAL_LH=$((TOTAL_LH + lh))
+            fi
+
+            # Per-feature coverage
+            calc_feature_coverage "$lcov" "$proj"
+          done
+
+          if [ "$TOTAL_LF" -gt 0 ]; then
+            total_pct=$(awk "BEGIN{printf \"%.1f%%\", ${TOTAL_LH}/${TOTAL_LF}*100}")
+          else
+            total_pct="N/A"
+          fi
+          echo "Coverage.Total=${total_pct}" >> allure-results/environment.properties
+
+          echo "📊 Environment properties:"
+          cat allure-results/environment.properties
+
+      # ── Generate and Deploy ──
       - name: Generate Allure Report
         run: npx allure-commandline generate allure-results/ -o allure-report/ --clean
         continue-on-error: true
