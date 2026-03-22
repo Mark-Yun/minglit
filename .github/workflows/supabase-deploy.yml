@@ -34,7 +34,7 @@ jobs:
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DEV_DB_PASSWORD }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_DEV_PROJECT_ID }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_DEV_SECRET_KEY }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_DEV_ANON_KEY }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_ACCESS_TOKEN: ${{ secrets.GH_PAT_FOR_BUG_REPORT }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN_EDGE_FUNCTIONS }}
@@ -59,38 +59,39 @@ jobs:
           fi
           supabase secrets set ENVIRONMENT=development
 
-          # Ensure vault has anon_key for pg_cron → Edge Function auth
-          if [ -z "$SUPABASE_ANON_KEY" ]; then
-            echo "⚠️ SUPABASE_ANON_KEY is not set. Skipping vault injection."
-          else
-            supabase db execute --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD <<EOSQL
+          # Ensure vault has publishable_key for pg_cron → Edge Function auth
+          if [ -z "$SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "::error::SUPABASE_PUBLISHABLE_KEY is not set. Vault injection failed."
+            exit 1
+          fi
+          supabase db execute --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD <<EOSQL
           DO \$\$
+          DECLARE
+            v_publishable_secret_id uuid;
           BEGIN
-            IF NOT EXISTS (SELECT 1 FROM vault.decrypted_secrets WHERE name = 'anon_key') THEN
-              PERFORM vault.create_secret('${SUPABASE_ANON_KEY}', 'anon_key', 'Anon key for EF cron calls');
-              RAISE NOTICE 'vault: anon_key created';
+            SELECT id INTO v_publishable_secret_id
+            FROM vault.decrypted_secrets
+            WHERE name = 'publishable_key'
+            LIMIT 1;
+
+            IF v_publishable_secret_id IS NULL THEN
+              PERFORM vault.create_secret('${SUPABASE_PUBLISHABLE_KEY}', 'publishable_key', 'Publishable key for EF cron calls');
+              RAISE NOTICE 'vault: publishable_key created';
             ELSE
-              RAISE NOTICE 'vault: anon_key already exists';
+              PERFORM vault.update_secret(
+                v_publishable_secret_id,
+                '${SUPABASE_PUBLISHABLE_KEY}',
+                'publishable_key',
+                'Publishable key for EF cron calls'
+              );
+              RAISE NOTICE 'vault: publishable_key updated';
             END IF;
           END \$\$;
           EOSQL
-          fi
 
           supabase db push --password $SUPABASE_DB_PASSWORD --include-all
 
           supabase functions deploy
-
-          SUPABASE_URL="https://${SUPABASE_PROJECT_ID}.supabase.co"
-          echo "🌱 Seeding test data..."
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            -X POST "${SUPABASE_URL}/functions/v1/dev-seed" \
-            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
-            -H "Content-Type: application/json")
-          if [ "$HTTP_STATUS" -eq 200 ]; then
-            echo "✅ Seed data created successfully"
-          else
-            echo "⚠️ Seed request returned HTTP ${HTTP_STATUS} (non-blocking)"
-          fi
 
       - name: Deploy to Main Supabase
         if: github.ref == 'refs/heads/main'
@@ -103,7 +104,7 @@ jobs:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN_EDGE_FUNCTIONS }}
           STATSIG_SERVER_KEY: ${{ secrets.STATSIG_SERVER_KEY }}
           AXIOM_API_TOKEN: ${{ secrets.AXIOM_API_TOKEN }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_MAIN_ANON_KEY }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
         run: |
           supabase link --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD
 
@@ -123,22 +124,35 @@ jobs:
           fi
           supabase secrets set ENVIRONMENT=production
 
-          # Ensure vault has anon_key for pg_cron → Edge Function auth
-          if [ -z "$SUPABASE_ANON_KEY" ]; then
-            echo "⚠️ SUPABASE_ANON_KEY is not set. Skipping vault injection."
-          else
-            supabase db execute --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD <<EOSQL
+          # Ensure vault has publishable_key for pg_cron → Edge Function auth
+          if [ -z "$SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "::error::SUPABASE_PUBLISHABLE_KEY is not set. Vault injection failed."
+            exit 1
+          fi
+          supabase db execute --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD <<EOSQL
           DO \$\$
+          DECLARE
+            v_publishable_secret_id uuid;
           BEGIN
-            IF NOT EXISTS (SELECT 1 FROM vault.decrypted_secrets WHERE name = 'anon_key') THEN
-              PERFORM vault.create_secret('${SUPABASE_ANON_KEY}', 'anon_key', 'Anon key for EF cron calls');
-              RAISE NOTICE 'vault: anon_key created';
+            SELECT id INTO v_publishable_secret_id
+            FROM vault.decrypted_secrets
+            WHERE name = 'publishable_key'
+            LIMIT 1;
+
+            IF v_publishable_secret_id IS NULL THEN
+              PERFORM vault.create_secret('${SUPABASE_PUBLISHABLE_KEY}', 'publishable_key', 'Publishable key for EF cron calls');
+              RAISE NOTICE 'vault: publishable_key created';
             ELSE
-              RAISE NOTICE 'vault: anon_key already exists';
+              PERFORM vault.update_secret(
+                v_publishable_secret_id,
+                '${SUPABASE_PUBLISHABLE_KEY}',
+                'publishable_key',
+                'Publishable key for EF cron calls'
+              );
+              RAISE NOTICE 'vault: publishable_key updated';
             END IF;
           END \$\$;
           EOSQL
-          fi
 
           supabase db push --password $SUPABASE_DB_PASSWORD --include-all
 
