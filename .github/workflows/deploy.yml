@@ -101,8 +101,64 @@ jobs:
           SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
           STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
 
-  notify-failure:
+  smoke-test:
     needs: [deploy-app_user, deploy-landing_user, deploy-landing_partner, deploy-app_partner]
+    if: success()
+    runs-on: ubuntu-latest
+    env:
+      IS_PROD: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' }}
+    steps:
+      - name: Set URLs
+        id: urls
+        run: |
+          if [ "$IS_PROD" = "true" ]; then
+            echo "app_user=https://app.minglit.com" >> "$GITHUB_OUTPUT"
+            echo "app_partner=https://app.partner.minglit.com" >> "$GITHUB_OUTPUT"
+            echo "landing_user=https://minglit.com" >> "$GITHUB_OUTPUT"
+            echo "landing_partner=https://partner.minglit.com" >> "$GITHUB_OUTPUT"
+            echo "supabase=https://cnuahgrfzcqkmdyhunuk.supabase.co" >> "$GITHUB_OUTPUT"
+          else
+            echo "app_user=https://dev.app.minglit.com" >> "$GITHUB_OUTPUT"
+            echo "app_partner=https://dev.app.partner.minglit.com" >> "$GITHUB_OUTPUT"
+            echo "landing_user=https://dev.minglit.com" >> "$GITHUB_OUTPUT"
+            echo "landing_partner=https://dev.partner.minglit.com" >> "$GITHUB_OUTPUT"
+            echo "supabase=${{ secrets.SUPABASE_DEV_URL }}" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Smoke test — Vercel apps
+        run: |
+          failed=0
+          for url in \
+            "${{ steps.urls.outputs.app_user }}" \
+            "${{ steps.urls.outputs.app_partner }}" \
+            "${{ steps.urls.outputs.landing_user }}" \
+            "${{ steps.urls.outputs.landing_partner }}"; do
+            printf "Checking %s ... " "$url"
+            if curl -fsSL -o /dev/null -w "%{http_code}" --max-time 15 "$url"; then
+              echo " ✅"
+            else
+              echo " ❌"
+              failed=1
+            fi
+          done
+          if [ "$failed" -eq 1 ]; then
+            echo "::error::One or more Vercel apps failed smoke test"
+            exit 1
+          fi
+      - name: Smoke test — Edge Function health
+        run: |
+          HEALTH_URL="${{ steps.urls.outputs.supabase }}/functions/v1/health"
+          printf "Checking %s ... " "$HEALTH_URL"
+          STATUS=$(curl -fsSL -o /dev/null -w "%{http_code}" --max-time 15 "$HEALTH_URL" || true)
+          if [ "$STATUS" = "200" ]; then
+            echo "✅"
+          else
+            echo "❌ (HTTP $STATUS)"
+            echo "::error::Edge Function health check failed (HTTP $STATUS)"
+            exit 1
+          fi
+
+  notify-failure:
+    needs: [deploy-app_user, deploy-landing_user, deploy-landing_partner, deploy-app_partner, smoke-test]
     if: always()
     permissions:
       issues: write
