@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/features/home/my_page.dart';
 import 'package:app_user/src/features/payment/logic/purchase_history_controller.dart';
 import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
@@ -118,6 +119,31 @@ void main() {
       expect(find.byType(BlockedPartnersPage), findsOneWidget);
     });
 
+    testWidgets('구매 내역 tap → PurchaseHistoryPage', (tester) async {
+      setKoreanLocale(tester);
+      final user = createMockUserForTest();
+      await tester.pumpWidget(
+        createTestApp(
+          isLoggedIn: true,
+          currentUser: user,
+          initialLocation: '/my',
+          additionalOverrides: [
+            purchaseHistoryControllerProvider.overrideWith(
+              _MockEmptyPurchaseHistory.new,
+            ),
+          ],
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      await tester.tap(find.text('구매 내역'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byType(PurchaseHistoryPage), findsOneWidget);
+    });
+
     testWidgets('로그아웃 tap → 홈으로 이동', (tester) async {
       setKoreanLocale(tester);
       final user = createMockUserForTest();
@@ -136,8 +162,9 @@ void main() {
       // GoRouter.go('/') + Future.delayed(Duration.zero) + signOut
       await tester.pumpAndSettle();
 
-      // 로그아웃 후 홈('/')으로 이동하므로 MyPage가 사라져야 함
+      // 로그아웃 후 홈('/')으로 이동 확인
       expect(find.byType(MyPage), findsNothing);
+      expect(find.byType(HomePage), findsOneWidget);
     });
   });
 
@@ -261,6 +288,16 @@ void main() {
       await tester.pump();
 
       expect(find.text('예매 취소'), findsOneWidget);
+
+      // 예매 취소 탭 → 환불 확인 다이얼로그 (금액/수수료 표시)
+      await tester.tap(find.text('예매 취소'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('예매 취소 확인'), findsOneWidget);
+      expect(find.text('30,000원'), findsWidgets); // 결제 금액
+      expect(find.text('환불 비율'), findsOneWidget);
+      expect(find.text('환불 금액'), findsOneWidget);
+      expect(find.text('수수료'), findsOneWidget);
     });
 
     testWidgets('환불 불가 시 → "예매 취소" 버튼 미표시', (tester) async {
@@ -291,6 +328,8 @@ void main() {
       await tester.pump();
 
       expect(find.text('예매 취소'), findsNothing);
+      // 취소된 상태 배지가 표시되어야 함
+      expect(find.text('취소됨'), findsOneWidget);
     });
   });
 
