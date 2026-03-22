@@ -54,14 +54,17 @@ void main() {
     });
 
     test('CheckinResult enum has all expected values', () {
-      expect(CheckinResult.values, containsAll([
-        CheckinResult.idle,
-        CheckinResult.processing,
-        CheckinResult.success,
-        CheckinResult.alreadyCheckedIn,
-        CheckinResult.invalid,
-        CheckinResult.error,
-      ]));
+      expect(
+        CheckinResult.values,
+        containsAll([
+          CheckinResult.idle,
+          CheckinResult.processing,
+          CheckinResult.success,
+          CheckinResult.alreadyCheckedIn,
+          CheckinResult.invalid,
+          CheckinResult.error,
+        ]),
+      );
     });
   });
 }

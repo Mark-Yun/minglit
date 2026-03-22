@@ -45,9 +45,7 @@ void main() {
         ],
       );
 
-      container
-          .read(moreCoordinatorProvider)
-          .pushMemberList('partner_abc');
+      container.read(moreCoordinatorProvider).pushMemberList('partner_abc');
 
       verify(
         () => mockRouter.push(any(that: contains('partner_abc'))),
