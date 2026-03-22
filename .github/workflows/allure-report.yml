@@ -92,28 +92,32 @@ jobs:
           mkdir -p allure-results
 
           # categories.json — failure type classification
-          echo '[
+          cat > allure-results/categories.json <<'CATEOF'
+[
   {"name": "Test Defects", "matchedStatuses": ["failed"]},
   {"name": "Infrastructure Issues", "matchedStatuses": ["broken"]},
   {"name": "Skipped / Disabled", "matchedStatuses": ["skipped"]}
-]' > allure-results/categories.json
+]
+CATEOF
 
           # executor.json — CI link
-          echo "{
-  \"name\": \"GitHub Actions\",
-  \"type\": \"github\",
-  \"buildName\": \"Daily Report #${GITHUB_RUN_NUMBER}\",
-  \"buildUrl\": \"${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\",
-  \"reportUrl\": \"https://mark-yun.github.io/minglit/\"
-}" > allure-results/executor.json
+          cat > allure-results/executor.json <<EXEOF
+{
+  "name": "GitHub Actions",
+  "type": "github",
+  "buildName": "Daily Report #${GITHUB_RUN_NUMBER}",
+  "buildUrl": "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}",
+  "reportUrl": "https://mark-yun.github.io/minglit/"
+}
+EXEOF
 
           # environment.properties — build info + coverage
-          {
-            echo "Report.Date=$(date -u +%Y-%m-%d)"
-            echo "Flutter.Channel=stable"
-            echo "Repository=${GITHUB_REPOSITORY}"
-            echo "Branch=dev"
-          } > allure-results/environment.properties
+          cat > allure-results/environment.properties <<ENVEOF
+Report.Date=$(date -u +%Y-%m-%d)
+Flutter.Channel=stable
+Repository=${GITHUB_REPOSITORY}
+Branch=dev
+ENVEOF
 
           # Parse coverage from lcov.info and append to environment.properties
           calc_coverage() {
