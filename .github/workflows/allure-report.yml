@@ -22,7 +22,7 @@ jobs:
 
       # ── Download Allure Results ──
       - name: Download Allure Results (app_user)
-        uses: dawidd6/action-download-artifact@v9
+        uses: dawidd6/action-download-artifact@v19
         with:
           workflow: ci.yml
           name: allure-results-app_user
@@ -31,7 +31,7 @@ jobs:
         continue-on-error: true
 
       - name: Download Allure Results (app_partner)
-        uses: dawidd6/action-download-artifact@v9
+        uses: dawidd6/action-download-artifact@v19
         with:
           workflow: ci.yml
           name: allure-results-app_partner
@@ -40,7 +40,7 @@ jobs:
         continue-on-error: true
 
       - name: Download Allure Results (minglit_kit)
-        uses: dawidd6/action-download-artifact@v9
+        uses: dawidd6/action-download-artifact@v19
         with:
           workflow: ci.yml
           name: allure-results-minglit_kit
@@ -50,7 +50,7 @@ jobs:
 
       # ── Download Coverage Artifacts ──
       - name: Download Coverage (app_user)
-        uses: dawidd6/action-download-artifact@v9
+        uses: dawidd6/action-download-artifact@v19
         with:
           workflow: ci.yml
           name: app-user-coverage
@@ -59,7 +59,7 @@ jobs:
         continue-on-error: true
 
       - name: Download Coverage (app_partner)
-        uses: dawidd6/action-download-artifact@v9
+        uses: dawidd6/action-download-artifact@v19
         with:
           workflow: ci.yml
           name: app-partner-coverage
@@ -68,7 +68,7 @@ jobs:
         continue-on-error: true
 
       - name: Download Coverage (minglit_kit)
-        uses: dawidd6/action-download-artifact@v9
+        uses: dawidd6/action-download-artifact@v19
         with:
           workflow: ci.yml
           name: minglit-kit-coverage
