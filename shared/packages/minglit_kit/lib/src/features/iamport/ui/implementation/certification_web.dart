@@ -96,7 +96,13 @@ class _MinglitIamportCertificationState
     final state = ref.read(iamportControllerProvider);
 
     if (state.hasValue && state.value != null && state.value!.success) {
-      widget.onSuccess(state.value!.impUid!);
+      // Fix #270: impUid가 null이면 크래시 대신 실패 콜백 호출
+      final impUid = state.value!.impUid;
+      if (impUid != null) {
+        widget.onSuccess(impUid);
+      } else {
+        widget.onFail('인증은 성공했으나 impUid를 받지 못했습니다');
+      }
     } else if (state.hasError) {
       widget.onFail(state.error.toString());
     } else {

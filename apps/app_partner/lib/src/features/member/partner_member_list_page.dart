@@ -116,7 +116,9 @@ class PartnerMemberListPage extends ConsumerWidget {
         ),
         trailing: const Icon(Icons.settings, size: MinglitIconSize.small),
         onTap: () {
-          final targetUserId = member['user_id'] as String;
+          // Fix #270: dynamic map에서 안전 캐스팅 — null이면 무시
+          final targetUserId = member['user_id'] as String?;
+          if (targetUserId == null) return;
           ref
               .read(memberCoordinatorProvider.notifier)
               .goToMemberPermission(partnerId, targetUserId);

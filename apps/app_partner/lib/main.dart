@@ -67,7 +67,9 @@ Future<void> main() async {
             Sentry.captureException(error, stackTrace: stackTrace),
       ),
     );
-  } on Object catch (_) {
+  } on Object catch (e, st) {
+    // Fix #270: 초기화 에러 로깅 — 에러 삼킴 방지
+    debugPrint('Sentry init failed: $e\n$st');
     startApp();
   }
 }

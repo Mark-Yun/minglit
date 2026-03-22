@@ -7,7 +7,6 @@ part of 'app_routes.dart';
 // **************************************************************************
 
 List<RouteBase> get $appRoutes => [
-  $devMapRoute,
   $devUserSwitchRoute,
   $loginRoute,
   $partnerApplyRoute,
@@ -16,29 +15,6 @@ List<RouteBase> get $appRoutes => [
   $notificationCenterRoute,
   $partnerShellRoute,
 ];
-
-RouteBase get $devMapRoute =>
-    GoRouteData.$route(path: '/dev', factory: $DevMapRoute._fromState);
-
-mixin $DevMapRoute on GoRouteData {
-  static DevMapRoute _fromState(GoRouterState state) => const DevMapRoute();
-
-  @override
-  String get location => GoRouteData.$location('/dev');
-
-  @override
-  void go(BuildContext context) => context.go(location);
-
-  @override
-  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
-
-  @override
-  void pushReplacement(BuildContext context) =>
-      context.pushReplacement(location);
-
-  @override
-  void replace(BuildContext context) => context.replace(location);
-}
 
 RouteBase get $devUserSwitchRoute => GoRouteData.$route(
   path: '/dev/user-switch',
