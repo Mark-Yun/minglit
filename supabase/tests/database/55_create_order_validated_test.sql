@@ -306,11 +306,13 @@ BEGIN
   INSERT INTO public.partners (name) VALUES ('COV Full Partner') RETURNING id INTO v_partner_id;
   INSERT INTO public.parties (partner_id, title, min_confirmed_count, max_participants)
   VALUES (v_partner_id, 'COV Full Party', 0, 1) RETURNING id INTO v_party_id;
-  INSERT INTO public.events (party_id, start_time, end_time, max_participants, current_participants, status)
-  VALUES (v_party_id, now() + interval '1 day', now() + interval '1 day 2 hours', 1, 1, 'scheduled')
+  INSERT INTO public.events (party_id, start_time, end_time, max_participants, status)
+  VALUES (v_party_id, now() + interval '1 day', now() + interval '1 day 2 hours', 1, 'scheduled')
   RETURNING id INTO v_event_id;
   INSERT INTO public.tickets (event_id, name, quantity, price)
   VALUES (v_event_id, 'Full Event Ticket', 1, 5000) RETURNING id INTO v_ticket_id;
+  -- Set current_participants AFTER ticket insert to avoid sync_max_participants overwrite
+  UPDATE public.events SET current_participants = 1 WHERE id = v_event_id;
 
   v_user_id := tests.create_supabase_user('cov_full_user');
   UPDATE public.user_profiles SET is_verified = true WHERE id = v_user_id;
