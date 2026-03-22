@@ -14,6 +14,8 @@ abstract class MatchRule with _$MatchRule {
     @JsonKey(name: 'source_group_id') required String sourceGroupId,
     @JsonKey(name: 'target_group_id') required String targetGroupId,
     @JsonKey(name: 'created_at') required DateTime createdAt,
+    // Fix #305: 그룹별 투표 수 제한
+    @JsonKey(name: 'vote_count') @Default(1) int voteCount,
   }) = _MatchRule;
 
   /// Creates a [MatchRule] from a JSON map.

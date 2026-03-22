@@ -12,6 +12,7 @@ _MatchRule _$MatchRuleFromJson(Map<String, dynamic> json) => _MatchRule(
   sourceGroupId: json['source_group_id'] as String,
   targetGroupId: json['target_group_id'] as String,
   createdAt: DateTime.parse(json['created_at'] as String),
+  voteCount: (json['vote_count'] as num?)?.toInt() ?? 1,
 );
 
 Map<String, dynamic> _$MatchRuleToJson(_MatchRule instance) =>
@@ -21,6 +22,7 @@ Map<String, dynamic> _$MatchRuleToJson(_MatchRule instance) =>
       'source_group_id': instance.sourceGroupId,
       'target_group_id': instance.targetGroupId,
       'created_at': instance.createdAt.toIso8601String(),
+      'vote_count': instance.voteCount,
     };
 
 _MatchVote _$MatchVoteFromJson(Map<String, dynamic> json) => _MatchVote(
