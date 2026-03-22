@@ -2,7 +2,7 @@ name: Allure Report
 
 on:
   schedule:
-    - cron: '0 0 * * 1'  # 매주 월요일 00:00 UTC
+    - cron: '0 0 * * *'  # 매일 00:00 UTC (09:00 KST)
   workflow_dispatch:
 
 concurrency:
