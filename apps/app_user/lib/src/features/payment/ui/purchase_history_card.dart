@@ -267,10 +267,11 @@ class PurchaseHistoryCard extends ConsumerWidget {
       },
       confirmRefund: (calculation) async {
         if (!context.mounted) return false;
+        // Fix #270: paymentAmount가 null일 수 있으므로 안전하게 처리
         final confirmed = await _showRefundConfirmDialog(
           context: context,
           eventName: eventName,
-          paymentAmount: paymentAmount!,
+          paymentAmount: paymentAmount ?? 0,
           calculation: calculation,
         );
         if (!context.mounted) return false;
