@@ -5,6 +5,10 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      ci-actions:
+        patterns:
+          - "*"
 
   # Next.js Landing User
   - package-ecosystem: "npm"
@@ -12,6 +16,10 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    groups:
+      landing-user-deps:
+        patterns:
+          - "*"
 
   # Next.js Landing Partner
   - package-ecosystem: "npm"
@@ -19,6 +27,10 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    groups:
+      landing-partner-deps:
+        patterns:
+          - "*"
 
   # Flutter/Dart (pub)
   - package-ecosystem: "pub"
@@ -26,3 +38,7 @@ updates:
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 5
+    groups:
+      flutter-deps:
+        patterns:
+          - "*"
