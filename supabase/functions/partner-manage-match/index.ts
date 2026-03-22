@@ -18,12 +18,19 @@ interface RuleInput {
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
 
-  // 1. Auth
+  // 1. Environment check (before auth — requireAuth also reads these)
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceRoleKey) {
+    return errorResponse("Missing server configuration", 500);
+  }
+
+  // 2. Auth
   const auth = await requireAuth(req);
   if (auth instanceof Response) return auth;
   const userId = auth;
 
-  // 2. Parse body
+  // 3. Parse body
   let body: Record<string, unknown>;
   try {
     body = await req.json();
@@ -37,24 +44,22 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const eventId = body.event_id as string | undefined;
   if (!eventId) return errorResponse("Missing event_id", 400);
 
-  // 3. Supabase client (service role)
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!supabaseUrl || !serviceRoleKey) {
-    return errorResponse("Missing server configuration", 500);
-  }
+  // 4. Supabase client (service role)
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false },
   });
 
-  // 4. Verify ownership: event → party → partner → has_partner_permission
+  // 5. Verify ownership: event → party → partner
   const { data: event, error: eventError } = await supabase
     .from("events")
     .select("id, status, party:party_id(id, partner_id)")
     .eq("id", eventId)
-    .single();
+    .maybeSingle();
 
-  if (eventError || !event) {
+  if (eventError) {
+    return errorResponse("Failed to load event", 500);
+  }
+  if (!event) {
     return errorResponse("Event not found", 404);
   }
 
@@ -64,12 +69,16 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   // Check partner permission (service_role bypasses RLS, query directly)
-  const { data: perm } = await supabase
+  const { data: perm, error: permError } = await supabase
     .from("partner_member_permissions")
     .select("permissions")
     .eq("partner_id", party.partner_id)
     .eq("user_id", userId)
     .maybeSingle();
+
+  if (permError) {
+    return errorResponse("Failed to verify partner permissions", 500);
+  }
 
   const hasPermission = (perm?.permissions as string[] | null)?.includes("PARTY_MANAGE") ?? false;
   if (!hasPermission) {
@@ -131,32 +140,20 @@ Deno.serve(async (req: Request): Promise<Response> => {
       }
     }
 
-    // Delete existing rules
-    const { error: deleteError } = await supabase
-      .from("match_rules")
-      .delete()
-      .eq("event_id", eventId);
+    // Atomic replace via RPC (advisory lock + delete + insert in one transaction)
+    const records = rules.map((r) => ({
+      source_group_id: r.source_group_id,
+      target_group_id: r.target_group_id,
+      vote_count: r.vote_count ?? 1,
+    }));
 
-    if (deleteError) {
-      return errorResponse("Failed to clear existing rules", 500);
-    }
+    const { error: replaceError } = await supabase.rpc("replace_match_rules", {
+      p_event_id: eventId,
+      p_rules: records,
+    });
 
-    // Insert new rules
-    if (rules.length > 0) {
-      const records = rules.map((r) => ({
-        event_id: eventId,
-        source_group_id: r.source_group_id,
-        target_group_id: r.target_group_id,
-        vote_count: r.vote_count ?? 1,
-      }));
-
-      const { error: insertError } = await supabase
-        .from("match_rules")
-        .insert(records);
-
-      if (insertError) {
-        return errorResponse(`Failed to insert rules: ${insertError.message}`, 500);
-      }
+    if (replaceError) {
+      return errorResponse(`Failed to replace rules: ${replaceError.message}`, 500);
     }
 
     return successResponse({ success: true, count: rules.length });
@@ -164,12 +161,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   // ─── clear_rules ───
   if (action === "clear_rules") {
-    const { error: deleteError } = await supabase
-      .from("match_rules")
-      .delete()
-      .eq("event_id", eventId);
+    // Reuse RPC with empty rules for atomic clear
+    const { error: clearError } = await supabase.rpc("replace_match_rules", {
+      p_event_id: eventId,
+      p_rules: [],
+    });
 
-    if (deleteError) {
+    if (clearError) {
       return errorResponse("Failed to clear rules", 500);
     }
 

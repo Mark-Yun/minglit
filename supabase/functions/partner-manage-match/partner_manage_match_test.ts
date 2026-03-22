@@ -16,7 +16,6 @@ const TEST_PARTY_ID = "party-001";
 const TEST_PARTNER_ID = "partner-001";
 const GROUP_MALE = "group-male";
 const GROUP_FEMALE = "group-female";
-const GROUP_OTHER_EVENT = "group-other-event";
 
 const ENV = {
   SUPABASE_URL: "http://localhost:54321",
@@ -64,32 +63,14 @@ function groupsRoute(validIds: string[] = [GROUP_MALE, GROUP_FEMALE]): FetchRout
   };
 }
 
-// match_rules delete
-function deleteRulesRoute(): FetchRoute {
+// RPC replace_match_rules
+function rpcRoute(success = true): FetchRoute {
   return {
-    matcher: (req) =>
-      req.url.includes("match_rules") && req.method === "DELETE",
-    handler: () => jsonResponse([]),
-  };
-}
-
-// match_rules insert
-function insertRulesRoute(success = true): FetchRoute {
-  return {
-    matcher: (req) =>
-      req.url.includes("match_rules") && req.method === "POST",
+    matcher: (req) => req.url.includes("/rest/v1/rpc/replace_match_rules"),
     handler: () =>
       success
-        ? jsonResponse([{ id: "rule-1" }], { status: 201 })
-        : jsonResponse({ message: "insert error" }, { status: 400 }),
-  };
-}
-
-// match_rules operations (generic — for tests that don't care about method)
-function rulesRoute(): FetchRoute {
-  return {
-    matcher: (req) => req.url.includes("match_rules"),
-    handler: () => jsonResponse([]),
+        ? jsonResponse(2)
+        : jsonResponse({ message: "rpc error" }, { status: 400 }),
   };
 }
 
@@ -165,6 +146,38 @@ Deno.test({
   },
 });
 
+// ─── 500: event DB error ───
+Deno.test({
+  name: "returns 500 when event query fails",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      {
+        matcher: (req) => req.url.includes("/rest/v1/events"),
+        handler: () => jsonResponse({ message: "db error" }, { status: 500 }),
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "set_rules",
+            event_id: TEST_EVENT_ID,
+            rules: [],
+          }),
+        );
+        assertEquals(res.status, 500);
+        const body = await readJson(res);
+        assertEquals(body.error, "Failed to load event");
+      });
+    });
+  },
+});
+
 // ─── 403: no partner permission ───
 Deno.test({
   name: "returns 403 when user lacks PARTY_MANAGE permission",
@@ -188,6 +201,39 @@ Deno.test({
           }),
         );
         assertEquals(res.status, 403);
+      });
+    });
+  },
+});
+
+// ─── 500: permission DB error ───
+Deno.test({
+  name: "returns 500 when permission query fails",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      eventRoute(),
+      {
+        matcher: (req) => req.url.includes("partner_member_permissions"),
+        handler: () => jsonResponse({ message: "db error" }, { status: 500 }),
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "set_rules",
+            event_id: TEST_EVENT_ID,
+            rules: [],
+          }),
+        );
+        assertEquals(res.status, 500);
+        const body = await readJson(res);
+        assertEquals(body.error, "Failed to verify partner permissions");
       });
     });
   },
@@ -223,9 +269,9 @@ Deno.test({
   },
 });
 
-// ─── set_rules: 2 rules with vote_count ───
+// ─── set_rules: 2 rules with vote_count (via RPC) ───
 Deno.test({
-  name: "set_rules: inserts 2 rules with vote_count",
+  name: "set_rules: inserts 2 rules with vote_count via RPC",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
@@ -235,8 +281,7 @@ Deno.test({
       eventRoute(),
       permRoute(),
       groupsRoute(),
-      deleteRulesRoute(),
-      insertRulesRoute(),
+      rpcRoute(),
     ]);
 
     await withEnv(ENV, async () => {
@@ -262,7 +307,7 @@ Deno.test({
 
 // ─── set_rules: empty array clears all rules ───
 Deno.test({
-  name: "set_rules: empty array clears all rules",
+  name: "set_rules: empty array clears all rules via RPC",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
@@ -271,7 +316,7 @@ Deno.test({
       authRoute(),
       eventRoute(),
       permRoute(),
-      deleteRulesRoute(),
+      rpcRoute(),
     ]);
 
     await withEnv(ENV, async () => {
@@ -292,15 +337,14 @@ Deno.test({
   },
 });
 
-// ─── set_rules: re-set replaces existing ───
+// ─── set_rules: verifies RPC is called with correct payload ───
 Deno.test({
-  name: "set_rules: re-set deletes existing then inserts new",
+  name: "set_rules: sends correct payload to replace_match_rules RPC",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    const deleteCalled: boolean[] = [];
-    const insertCalled: boolean[] = [];
+    let rpcBody: string | null = null;
 
     const { fetchMock } = createFetchMock([
       authRoute(),
@@ -308,17 +352,10 @@ Deno.test({
       permRoute(),
       groupsRoute(),
       {
-        matcher: (req) => req.url.includes("match_rules") && req.method === "DELETE",
-        handler: () => {
-          deleteCalled.push(true);
-          return jsonResponse([]);
-        },
-      },
-      {
-        matcher: (req) => req.url.includes("match_rules") && req.method === "POST",
-        handler: () => {
-          insertCalled.push(true);
-          return jsonResponse([{ id: "new-rule" }], { status: 201 });
+        matcher: (req) => req.url.includes("/rest/v1/rpc/replace_match_rules"),
+        handler: async (req) => {
+          rpcBody = await req.clone().text();
+          return jsonResponse(1);
         },
       },
     ]);
@@ -330,13 +367,16 @@ Deno.test({
             action: "set_rules",
             event_id: TEST_EVENT_ID,
             rules: [
-              { source_group_id: GROUP_MALE, target_group_id: GROUP_FEMALE, vote_count: 1 },
+              { source_group_id: GROUP_MALE, target_group_id: GROUP_FEMALE },
             ],
           }),
         );
         assertEquals(res.status, 200);
-        assertEquals(deleteCalled.length, 1);
-        assertEquals(insertCalled.length, 1);
+        // Verify RPC payload includes vote_count default
+        const parsed = JSON.parse(rpcBody!);
+        assertEquals(parsed.p_event_id, TEST_EVENT_ID);
+        assertEquals(Array.isArray(parsed.p_rules), true);
+        assertEquals(parsed.p_rules[0].vote_count, 1);
       });
     });
   },
@@ -439,54 +479,9 @@ Deno.test({
   },
 });
 
-// ─── set_rules: default vote_count = 1 ───
-Deno.test({
-  name: "set_rules: defaults vote_count to 1 when omitted",
-  sanitizeResources: false,
-  sanitizeOps: false,
-  fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    let insertedBody: string | null = null;
-
-    const { fetchMock } = createFetchMock([
-      authRoute(),
-      eventRoute(),
-      permRoute(),
-      groupsRoute(),
-      deleteRulesRoute(),
-      {
-        matcher: (req) => req.url.includes("match_rules") && req.method === "POST",
-        handler: async (req) => {
-          insertedBody = await req.clone().text();
-          return jsonResponse([{ id: "rule-1" }], { status: 201 });
-        },
-      },
-    ]);
-
-    await withEnv(ENV, async () => {
-      await withMockedFetch(fetchMock, async () => {
-        const res = await handler(
-          authenticatedJsonRequest("http://localhost", {
-            action: "set_rules",
-            event_id: TEST_EVENT_ID,
-            rules: [
-              { source_group_id: GROUP_MALE, target_group_id: GROUP_FEMALE },
-            ],
-          }),
-        );
-        assertEquals(res.status, 200);
-        // Verify vote_count=1 was sent in the insert
-        const parsed = JSON.parse(insertedBody!);
-        assertEquals(Array.isArray(parsed), true);
-        assertEquals(parsed[0].vote_count, 1);
-      });
-    });
-  },
-});
-
 // ─── clear_rules ───
 Deno.test({
-  name: "clear_rules: deletes all rules for event",
+  name: "clear_rules: clears all rules via RPC",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
@@ -495,7 +490,7 @@ Deno.test({
       authRoute(),
       eventRoute(),
       permRoute(),
-      deleteRulesRoute(),
+      rpcRoute(),
     ]);
 
     await withEnv(ENV, async () => {

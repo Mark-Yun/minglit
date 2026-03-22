@@ -86,6 +86,25 @@ void main() {
         );
       });
 
+      test('propagates EF error when invoke fails', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-match',
+            body: any(named: 'body'),
+          ),
+        ).thenThrow(Exception('EF failed'));
+
+        expect(
+          () => repository.updateMatchRules(
+            eventId: 'event_1',
+            rules: [
+              {'source_group_id': 'g1', 'target_group_id': 'g2'},
+            ],
+          ),
+          throwsA(isA<Exception>()),
+        );
+      });
+
       test('handles empty rules list via EF', () async {
         when(
           () => mockFunctions.invoke(
@@ -110,6 +129,20 @@ void main() {
     });
 
     group('clearMatchRules', () {
+      test('propagates EF error when invoke fails', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-match',
+            body: any(named: 'body'),
+          ),
+        ).thenThrow(Exception('EF failed'));
+
+        expect(
+          () => repository.clearMatchRules(eventId: 'event_1'),
+          throwsA(isA<Exception>()),
+        );
+      });
+
       test('completes without error via EF', () async {
         when(
           () => mockFunctions.invoke(

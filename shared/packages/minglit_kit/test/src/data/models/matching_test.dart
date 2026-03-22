@@ -29,6 +29,12 @@ void main() {
       expect(rule.voteCount, 3);
     });
 
+    test('serializes vote_count to JSON', () {
+      final rule = MatchRule.fromJson(ruleJson()..['vote_count'] = 3);
+      final json = rule.toJson();
+      expect(json['vote_count'], 3);
+    });
+
     test('serializes to JSON and back', () {
       final original = MatchRule.fromJson(ruleJson());
       final json = original.toJson();
