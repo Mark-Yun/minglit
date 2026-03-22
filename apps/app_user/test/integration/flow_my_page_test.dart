@@ -68,8 +68,9 @@ void main() {
       expect(find.text('준비 중입니다'), findsOneWidget);
     });
 
-    testWidgets('권한 설정 tap → AppPermissionSettingsScreen (Navigator.push)',
-        (tester) async {
+    testWidgets('권한 설정 tap → AppPermissionSettingsScreen (Navigator.push)', (
+      tester,
+    ) async {
       setKoreanLocale(tester);
       final user = createMockUserForTest();
       await tester.pumpWidget(
@@ -92,8 +93,9 @@ void main() {
       expect(find.byType(AppPermissionSettingsScreen), findsOneWidget);
     });
 
-    testWidgets('차단 목록 tap → BlockedPartnersPage (Navigator.push)',
-        (tester) async {
+    testWidgets('차단 목록 tap → BlockedPartnersPage (Navigator.push)', (
+      tester,
+    ) async {
       setKoreanLocale(tester);
       final user = createMockUserForTest();
       await tester.pumpWidget(
@@ -363,13 +365,12 @@ class _MockPurchaseHistoryWithData extends PurchaseHistoryController {
 }
 
 /// NotificationSettingsController — returns valid settings
-class _MockNotificationSettingsWithData
-    extends NotificationSettingsController {
+class _MockNotificationSettingsWithData extends NotificationSettingsController {
   @override
   FutureOr<UserSettings?> build() async => UserSettings(
-        userId: 'test-user-id',
-        updatedAt: DateTime.now(),
-      );
+    userId: 'test-user-id',
+    updatedAt: DateTime.now(),
+  );
 }
 
 /// NotificationSettingsController — returns null
