@@ -61,7 +61,7 @@ void main() {
 
     testWidgets('텍스트 입력 → 500ms 디바운스 → 결과 로딩', (tester) async {
       setKoreanLocale(tester);
-      final mockEvents = createMockEventsForTest(count: 2);
+      final mockEvents = createMockEventsForTest();
 
       await tester.pumpWidget(
         createTestApp(
