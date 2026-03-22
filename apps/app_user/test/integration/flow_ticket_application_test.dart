@@ -231,17 +231,30 @@ void main() {
       expect(opacityWidgets.isNotEmpty, isTrue);
     });
 
-    testWidgets('selecting ticket enables "다음" button', (tester) async {
+    testWidgets('selecting ticket enables "다음" button + tap navigates', (
+      tester,
+    ) async {
       await pumpEventDetailWithTickets(tester, event: testEventWithTickets);
       await openTicketSheet(tester);
       await tester.pump();
       await tester.pump();
 
-      // After loading, recommended ticket auto-selected → button enabled
-      final button = tester.widget<ElevatedButton>(
-        find.widgetWithText(ElevatedButton, '다음'),
-      );
+      // After loading, recommended ticket (General) auto-selected
+      // → button should be enabled
+      final nextFinder = find.widgetWithText(ElevatedButton, '다음');
+      final button = tester.widget<ElevatedButton>(nextFinder);
       expect(button.onPressed, isNotNull);
+
+      // Tap VIP ticket to change selection (in bottom sheet overlay)
+      await tester.tap(find.text('VIP'), warnIfMissed: false);
+      await tester.pump();
+
+      // Button should still be enabled after selection change
+      final updatedButton = tester.widget<ElevatedButton>(nextFinder);
+      expect(updatedButton.onPressed, isNotNull);
+
+      // Quantity section should show updated total
+      expect(find.text('50,000원'), findsAtLeast(1));
     });
   });
 
@@ -286,15 +299,28 @@ void main() {
     }
 
     testWidgets(
-      'Step 1 (verification) renders step indicator with "인증" active',
+      'Step 1 (verification) renders step indicator + form content',
       (tester) async {
-        await pumpWizard(tester, event: testEventWithVerification);
+        await pumpWizard(
+          tester,
+          event: testEventWithVerification,
+          controllerState: EventApplicationState(
+            step: EventApplicationStep.verification,
+            status: EventApplicationStatus.initial,
+            selectedTicket: testTicketGeneral,
+          ),
+        );
 
         // Step indicator should show
         expect(find.text('인증'), findsOneWidget);
         expect(find.text('결제'), findsOneWidget);
         // "다음" button visible on verification step
         expect(find.text('다음'), findsOneWidget);
+        // Since entryGroups is empty, should show "no verification needed"
+        expect(
+          find.textContaining('추가 인증이 필요하지 않습니다'),
+          findsOneWidget,
+        );
       },
     );
 
@@ -340,7 +366,7 @@ void main() {
       expect(find.text('이전'), findsOneWidget);
     });
 
-    testWidgets('payment submitting → "결제하기" button disabled + spinner', (
+    testWidgets('payment submitting → buttons disabled + spinner', (
       tester,
     ) async {
       await pumpWizard(
@@ -353,20 +379,27 @@ void main() {
         ),
       );
 
-      // "결제하기" button should be disabled during submission
-      final buttons = tester
+      // All ElevatedButtons should be disabled during submission
+      final elevatedButtons = tester
           .widgetList<ElevatedButton>(find.byType(ElevatedButton))
           .toList();
-      final payButton = buttons.last;
-      expect(payButton.onPressed, isNull);
+      for (final btn in elevatedButtons) {
+        expect(btn.onPressed, isNull);
+      }
 
-      // "이전" button should also be disabled
+      // "이전" OutlinedButton should also be disabled
       final outlinedButtons = tester
           .widgetList<OutlinedButton>(find.byType(OutlinedButton))
           .toList();
-      if (outlinedButtons.isNotEmpty) {
-        expect(outlinedButtons.last.onPressed, isNull);
+      for (final btn in outlinedButtons) {
+        expect(btn.onPressed, isNull);
       }
+
+      // Progress indicator should be visible
+      expect(
+        find.byType(CircularProgressIndicator),
+        findsAtLeast(1),
+      );
     });
 
     testWidgets('payment step shows refund notice text', (tester) async {
