@@ -35,31 +35,52 @@ class MatchingRepository {
     }
   }
 
-  /// Updates matching rules for an event.
+  /// Updates matching rules for an event via partner-manage-match EF.
   /// Replaces all existing rules with the new list.
+  // Fix #305: RLS write → EF 전환 + vote_count 지원
   Future<void> updateMatchRules({
     required String eventId,
-    required List<Map<String, String>> rules,
+    required List<Map<String, dynamic>> rules,
   }) async {
     try {
-      // 1. Delete existing rules
-      await _supabase.from('match_rules').delete().eq('event_id', eventId);
-
-      // 2. Insert new rules
-      if (rules.isNotEmpty) {
-        final records = rules.map((r) {
-          return {
-            'event_id': eventId,
-            'source_group_id': r['source_group_id'],
-            'target_group_id': r['target_group_id'],
-          };
-        }).toList();
-
-        await _supabase.from('match_rules').insert(records);
-      }
+      await _supabase.functions.invoke(
+        'partner-manage-match',
+        body: {
+          'action': 'set_rules',
+          'event_id': eventId,
+          'rules': rules.map((r) {
+            final rule = <String, dynamic>{
+              'source_group_id': r['source_group_id'],
+              'target_group_id': r['target_group_id'],
+            };
+            if (r['vote_count'] != null) {
+              rule['vote_count'] = r['vote_count'];
+            }
+            return rule;
+          }).toList(),
+        },
+      );
       Log.d('updateMatchRules success | count: ${rules.length}');
     } catch (e, st) {
       Log.e('❌ [MatchingRepo] updateMatchRules Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// Clears all matching rules for an event via partner-manage-match EF.
+  // Fix #305: RLS write → EF 전환
+  Future<void> clearMatchRules({required String eventId}) async {
+    try {
+      await _supabase.functions.invoke(
+        'partner-manage-match',
+        body: {
+          'action': 'clear_rules',
+          'event_id': eventId,
+        },
+      );
+      Log.d('clearMatchRules success | eventId: $eventId');
+    } catch (e, st) {
+      Log.e('❌ [MatchingRepo] clearMatchRules Error', e, st);
       rethrow;
     }
   }
