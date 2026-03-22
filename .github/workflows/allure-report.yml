@@ -174,8 +174,7 @@ jobs:
           else
             total_pct="N/A"
           fi
-          # Prepend total to top of coverage section
-          sed -i "/^Coverage\./i Coverage.Total=${total_pct}" allure-results/environment.properties
+          echo "Coverage.Total=${total_pct}" >> allure-results/environment.properties
 
           echo "📊 Environment properties:"
           cat allure-results/environment.properties
