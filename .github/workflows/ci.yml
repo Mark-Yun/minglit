@@ -247,6 +247,11 @@ jobs:
           cache: true
       - name: Start Supabase
         run: supabase start
+      - name: Validate migrations (dry-run)
+        run: |
+          echo "🔄 Resetting DB and re-applying all migrations from scratch..."
+          supabase db reset
+          echo "✅ All migrations applied successfully"
       - name: Test (pgTAP)
         run: supabase test db
       - name: Stop Supabase
