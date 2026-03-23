@@ -1,6 +1,7 @@
 import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:minglit_kit/src/data/models/partner.dart';
 import 'package:minglit_kit/src/data/models/partner_application.dart';
+import 'package:minglit_kit/src/utils/exceptions.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:path/path.dart' as p;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
