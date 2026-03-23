@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 void main() {
+  // Fix #373: Android 플랫폼 디렉토리 추가로 에뮬레이터 디바이스 인식 문제 해결
   runApp(const E2eAutomationTesterApp());
 }
 
