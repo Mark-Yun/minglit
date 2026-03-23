@@ -89,8 +89,8 @@ class StatsigAnalytics {
     if (!_initialized) return;
     try {
       await Statsig.updateUser(StatsigUser(userId: userId));
-      // Fix #382: 에러 삼킴 방지 — debug 로그 추가
     } on Object catch (e) {
+      // Fix #382: 에러 삼킴 방지 — debug 로그 추가
       Log.d('Statsig updateUser failed: $e');
     }
   }
@@ -104,8 +104,8 @@ class StatsigAnalytics {
     if (!_initialized) return;
     try {
       Statsig.logEvent(eventName, doubleValue: value, metadata: metadata);
-      // Fix #382: 에러 삼킴 방지 — debug 로그 추가
     } on Object catch (e) {
+      // Fix #382: 에러 삼킴 방지 — debug 로그 추가
       Log.d('Statsig logEvent failed: $e');
     }
   }
@@ -115,7 +115,9 @@ class StatsigAnalytics {
     if (!_initialized) return false;
     try {
       return Statsig.checkGate(gateName);
-    } on Object catch (_) {
+    } on Object catch (e) {
+      // Fix #382: 에러 삼킴 방지 — debug 로그 추가
+      Log.d('Statsig checkGate failed: $e');
       return false;
     }
   }
@@ -126,8 +128,8 @@ class StatsigAnalytics {
     try {
       await Statsig.shutdown();
       _initialized = false;
-      // Fix #382: 에러 삼킴 방지 — debug 로그 추가
     } on Object catch (e) {
+      // Fix #382: 에러 삼킴 방지 — debug 로그 추가
       Log.d('Statsig shutdown failed: $e');
     }
   }

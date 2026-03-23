@@ -144,15 +144,17 @@ class _MinglitFilePickerState extends ConsumerState<MinglitFilePicker> {
 
       for (final file in files) {
         // Fix #270: 플랫폼별 bytes/path null 가능 — null이면 건너뛰기
-        if (kIsWeb && file.bytes == null) continue;
-        if (!kIsWeb && file.path == null) continue;
-        // Convert PlatformFile to XFile for compatibility
-        // Fix #382: 강제 언래핑 제거 — local variable로 null 안전성 확보
-        final bytes = file.bytes;
-        final path = file.path;
-        final xFile = kIsWeb
-            ? XFile.fromData(bytes!, name: file.name)
-            : XFile(path!);
+        // Fix #382: 강제 언래핑 제거 — local variable + type promotion으로 null 안전성 확보
+        final XFile xFile;
+        if (kIsWeb) {
+          final bytes = file.bytes;
+          if (bytes == null) continue;
+          xFile = XFile.fromData(bytes, name: file.name);
+        } else {
+          final path = file.path;
+          if (path == null) continue;
+          xFile = XFile(path);
+        }
         final url = await repo.uploadFile(
           file: xFile,
           bucket: bucket,
