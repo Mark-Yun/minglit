@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(173);
+SELECT plan(152);
 
 -- event_applications
 SELECT has_table('event_applications');
@@ -47,7 +47,7 @@ SELECT has_column('verification_submissions', 'verification_id');
 SELECT has_column('verification_submissions', 'application_id');
 SELECT has_column('verification_submissions', 'status');
 SELECT has_column('verification_submissions', 'snapshot_data');
-SELECT has_column('verification_submissions', 'admin_comment');
+-- Fix #301: admin_comment column dropped
 SELECT has_column('verification_submissions', 'reviewed_at');
 SELECT has_column('verification_submissions', 'reviewed_by');
 SELECT has_column('verification_submissions', 'created_at');
@@ -164,27 +164,7 @@ SELECT col_type_is('event_participants', 'updated_at', 'timestamp with time zone
 SELECT col_has_default('event_participants', 'updated_at');
 SELECT col_not_null('event_participants', 'updated_at');
 
--- verification_comments
-SELECT has_table('verification_comments');
-SELECT has_column('verification_comments', 'id');
-SELECT has_column('verification_comments', 'submission_id');
-SELECT has_column('verification_comments', 'author_id');
-SELECT has_column('verification_comments', 'content');
-SELECT has_column('verification_comments', 'created_at');
-SELECT col_type_is('verification_comments', 'id', 'uuid');
-SELECT col_is_pk('verification_comments', 'id');
-SELECT col_has_default('verification_comments', 'id');
-SELECT col_not_null('verification_comments', 'id');
-SELECT col_type_is('verification_comments', 'submission_id', 'uuid');
-SELECT col_is_fk('verification_comments', 'submission_id');
-SELECT col_not_null('verification_comments', 'submission_id');
-SELECT col_type_is('verification_comments', 'author_id', 'uuid');
-SELECT col_is_fk('verification_comments', 'author_id');
-SELECT col_not_null('verification_comments', 'author_id');
-SELECT col_type_is('verification_comments', 'content', 'jsonb');
-SELECT col_not_null('verification_comments', 'content');
-SELECT col_type_is('verification_comments', 'created_at', 'timestamp with time zone');
-SELECT col_has_default('verification_comments', 'created_at');
+-- Fix #301: verification_comments table dropped (comments now in snapshot_data JSON)
 
 SELECT * FROM finish();
 ROLLBACK;

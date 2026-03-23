@@ -6,20 +6,26 @@ void main() {
   final now = DateTime(2026, 1, 15, 12);
 
   group('VerificationSubmission', () {
+    // Fix #301: snapshot_data is now an array of history entries
     Map<String, dynamic> submissionJson() => {
       'id': 'sub_1',
       'partner_id': 'partner_1',
       'user_id': 'user_1',
       'verification_id': 'verif_1',
       'status': 'pending',
-      'snapshot_data': {
-        'company': 'Minglit Inc',
-        'position': 'Developer',
-      },
+      'snapshot_data': [
+        {
+          'submitted_at': '2026-03-15',
+          'data': {'company': 'Minglit Inc', 'position': 'Developer'},
+          'result': null,
+          'reviewed_by': null,
+          'reviewed_at': null,
+          'comments': <dynamic>[],
+        },
+      ],
       'created_at': now.toIso8601String(),
       'updated_at': now.toIso8601String(),
       'application_id': 'app_1',
-      'admin_comment': 'Please resubmit',
       'reviewed_at': now.toIso8601String(),
       'reviewed_by': 'admin_1',
     };
@@ -32,9 +38,9 @@ void main() {
       expect(sub.userId, 'user_1');
       expect(sub.verificationId, 'verif_1');
       expect(sub.status, VerificationStatus.pending);
-      expect(sub.snapshotData['company'], 'Minglit Inc');
+      expect(sub.snapshotData, isA<List<dynamic>>());
+      expect(sub.snapshotData.length, 1);
       expect(sub.applicationId, 'app_1');
-      expect(sub.adminComment, 'Please resubmit');
       expect(sub.reviewedBy, 'admin_1');
     });
 
@@ -45,33 +51,26 @@ void main() {
         'user_id': 'u1',
         'verification_id': 'v1',
         'status': 'approved',
-        'snapshot_data': <String, dynamic>{},
+        'snapshot_data': <dynamic>[],
         'created_at': now.toIso8601String(),
         'updated_at': now.toIso8601String(),
       });
 
       expect(sub.status, VerificationStatus.approved);
       expect(sub.applicationId, isNull);
-      expect(sub.adminComment, isNull);
       expect(sub.reviewedAt, isNull);
       expect(sub.reviewedBy, isNull);
     });
 
     test('parses all status values', () {
-      for (final status in [
-        'pending',
-        'approved',
-        'rejected',
-        'needs_correction',
-        'cancelled',
-      ]) {
+      for (final status in ['pending', 'approved', 'rejected']) {
         final sub = VerificationSubmission.fromJson({
           'id': 'sub_1',
           'partner_id': 'p1',
           'user_id': 'u1',
           'verification_id': 'v1',
           'status': status,
-          'snapshot_data': <String, dynamic>{},
+          'snapshot_data': <dynamic>[],
           'created_at': now.toIso8601String(),
           'updated_at': now.toIso8601String(),
         });
@@ -97,11 +96,9 @@ void main() {
       final sub = VerificationSubmission.fromJson(submissionJson());
       final approved = sub.copyWith(
         status: VerificationStatus.approved,
-        adminComment: 'Approved!',
       );
 
       expect(approved.status, VerificationStatus.approved);
-      expect(approved.adminComment, 'Approved!');
       expect(approved.id, 'sub_1');
     });
   });

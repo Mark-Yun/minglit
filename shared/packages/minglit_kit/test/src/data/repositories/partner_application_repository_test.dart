@@ -2,13 +2,16 @@ import 'dart:async' show unawaited;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/models/partner_application.dart';
 import 'package:minglit_kit/src/data/repositories/partner_repository.dart';
+import 'package:minglit_kit/src/utils/exceptions.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../helpers/mocks.dart';
 import '../../../helpers/supabase_mock_helpers.dart';
 
 void main() {
   late MockSupabaseClient mockClient;
+  late MockFunctionsClient mockFunctions;
   late PartnerRepository repository;
 
   final now = DateTime.now();
@@ -28,6 +31,7 @@ void main() {
   setUp(() {
     mockClient = createMockSupabase(currentUser: mockUser);
     when(() => mockUser.id).thenReturn('user_1');
+    mockFunctions = mockClient.functions as MockFunctionsClient;
     repository = PartnerRepository(supabase: mockClient);
   });
 
@@ -154,6 +158,7 @@ void main() {
       });
     });
 
+    // Fix #311: saveDraft via EF
     group('saveDraft', () {
       test('inserts new draft when id is empty', () async {
         const draftApp = PartnerApplication(
@@ -162,11 +167,24 @@ void main() {
           brandName: 'New Brand',
         );
 
+        when(
+          () => mockFunctions.invoke(
+            'partner-register',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true, 'application_id': 'app_1'},
+          ),
+        );
+
+        // Re-fetch after EF
         unawaited(
           mockTable(
             mockClient,
             'partner_applications',
-            insertReturnData: applicationJson,
+            singleData: applicationJson,
           ),
         );
 
@@ -182,6 +200,19 @@ void main() {
           brandName: 'Existing Brand',
         );
 
+        when(
+          () => mockFunctions.invoke(
+            'partner-register',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true, 'application_id': 'app_1'},
+          ),
+        );
+
+        // Re-fetch after EF
         unawaited(
           mockTable(
             mockClient,
@@ -208,8 +239,33 @@ void main() {
           throwsA(isA<Exception>()),
         );
       });
+
+      test('throws MinglitUserException on EF error', () async {
+        const draftApp = PartnerApplication(
+          id: '',
+          userId: 'user_1',
+        );
+
+        when(
+          () => mockFunctions.invoke(
+            'partner-register',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 403,
+            data: {'error': 'Forbidden: not your application'},
+          ),
+        );
+
+        await expectLater(
+          repository.saveDraft(draftApp),
+          throwsA(isA<MinglitUserException>()),
+        );
+      });
     });
 
+    // Fix #311: updateApplication via EF
     group('updateApplication', () {
       test('returns updated application on success', () async {
         const app = PartnerApplication(
@@ -218,6 +274,19 @@ void main() {
           brandName: 'Updated Brand',
         );
 
+        when(
+          () => mockFunctions.invoke(
+            'partner-register',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true, 'application_id': 'app_1'},
+          ),
+        );
+
+        // Re-fetch after EF
         unawaited(
           mockTable(
             mockClient,
@@ -236,24 +305,43 @@ void main() {
           userId: 'user_1',
         );
 
-        unawaited(
-          mockTable(
-            mockClient,
-            'partner_applications',
-            shouldThrow: Exception('update error'),
+        when(
+          () => mockFunctions.invoke(
+            'partner-register',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 400,
+            data: {'error': 'Application cannot be updated in current status'},
           ),
         );
 
         await expectLater(
           repository.updateApplication(app),
-          throwsA(isA<Exception>()),
+          throwsA(isA<MinglitUserException>()),
         );
       });
     });
 
+    // Fix #311: submitDraft via EF (서버 사이드 검증)
     group('submitDraft', () {
       test('returns submitted application on success', () async {
         final pendingJson = {...applicationJson, 'status': 'pending'};
+
+        when(
+          () => mockFunctions.invoke(
+            'partner-register',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true},
+          ),
+        );
+
+        // Re-fetch after EF
         unawaited(
           mockTable(
             mockClient,
@@ -268,17 +356,21 @@ void main() {
       });
 
       test('throws on error', () async {
-        unawaited(
-          mockTable(
-            mockClient,
-            'partner_applications',
-            shouldThrow: Exception('submit error'),
+        when(
+          () => mockFunctions.invoke(
+            'partner-register',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 400,
+            data: {'error': 'validation_failed'},
           ),
         );
 
         await expectLater(
           repository.submitDraft(applicationId: 'app_1'),
-          throwsA(isA<Exception>()),
+          throwsA(isA<MinglitUserException>()),
         );
       });
     });

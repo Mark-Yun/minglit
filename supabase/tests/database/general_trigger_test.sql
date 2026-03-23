@@ -229,9 +229,9 @@ SELECT ok(
   'Ticket issued on application approval'
 );
 
+-- Fix #301: admin_comment column dropped
 UPDATE public.verification_submissions
-SET status = 'rejected',
-    admin_comment = 'Auto revoke'
+SET status = 'rejected'
 WHERE id = (SELECT submission_id FROM auto_approval_setup);
 
 SELECT ok(

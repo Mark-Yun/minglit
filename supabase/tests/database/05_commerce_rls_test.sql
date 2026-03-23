@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(8);
+SELECT plan(9);
 
 SELECT tests.create_supabase_user('user_a', 'a@test.com');
 SELECT tests.create_supabase_user('user_b', 'b@test.com');
@@ -104,21 +104,35 @@ SELECT ok(
   'event_participants has display_name column'
 );
 
+-- Fix #301: user_verifications is now read-only for authenticated (writes via EF)
 SELECT tests.authenticate_as('user_a');
-SELECT lives_ok(
-  $$UPDATE public.user_verifications
-      SET data = '{"level":"gold"}'::jsonb
-      WHERE user_id = tests.get_supabase_uid('user_a')
-        AND verification_id = current_setting('tests.verification_a')::uuid$$,
-  'users can update their own verifications'
-);
 SELECT results_eq(
   $$SELECT data->>'level'
     FROM public.user_verifications
     WHERE user_id = tests.get_supabase_uid('user_a')
       AND verification_id = current_setting('tests.verification_a')::uuid$$,
-  $$VALUES ('gold')$$,
-  'verification updates persist'
+  $$VALUES ('bronze')$$,
+  'users can read their own verifications'
+);
+SELECT throws_ok(
+  $$UPDATE public.user_verifications
+      SET data = '{"level":"gold"}'::jsonb
+      WHERE user_id = tests.get_supabase_uid('user_a')
+        AND verification_id = current_setting('tests.verification_a')::uuid$$,
+  '42501',
+  NULL,
+  'users cannot update their own verifications (write via EF only)'
+);
+SELECT throws_ok(
+  $$INSERT INTO public.user_verifications (user_id, verification_id, data)
+    VALUES (
+      tests.get_supabase_uid('user_a'),
+      current_setting('tests.verification_b')::uuid,
+      '{"level":"silver"}'::jsonb
+    )$$,
+  '42501',
+  NULL,
+  'users cannot insert verifications directly (write via EF only)'
 );
 
 SELECT tests.authenticate_as('user_b');
@@ -137,7 +151,7 @@ SELECT throws_ok(
       '{"level":"silver"}'::jsonb
     )$$,
   '42501',
-  'new row violates row-level security policy for table "user_verifications"',
+  NULL,
   'users cannot insert verifications for others'
 );
 

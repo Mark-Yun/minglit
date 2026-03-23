@@ -34,7 +34,7 @@ final class MatchingVoteControllerProvider
 }
 
 String _$matchingVoteControllerHash() =>
-    r'7089846363640118c3ced43940bcfd60a096c8e2';
+    r'5902f89f8b54d6d8a0610ef1b8c2c1cfb5a35c3d';
 
 abstract class _$MatchingVoteController extends $AsyncNotifier<void> {
   FutureOr<void> build();
@@ -205,4 +205,218 @@ final class MyMatchesFamily extends $Family
 
   @override
   String toString() => r'myMatchesProvider';
+}
+
+@ProviderFor(myVoteCount)
+const myVoteCountProvider = MyVoteCountFamily._();
+
+final class MyVoteCountProvider
+    extends $FunctionalProvider<AsyncValue<int>, int, FutureOr<int>>
+    with $FutureModifier<int>, $FutureProvider<int> {
+  const MyVoteCountProvider._({
+    required MyVoteCountFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'myVoteCountProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$myVoteCountHash();
+
+  @override
+  String toString() {
+    return r'myVoteCountProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<int> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<int> create(Ref ref) {
+    final argument = this.argument as String;
+    return myVoteCount(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is MyVoteCountProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$myVoteCountHash() => r'c59ff09841424d7727c2428b7b95d69d8d6f8f38';
+
+final class MyVoteCountFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<int>, String> {
+  const MyVoteCountFamily._()
+    : super(
+        retry: null,
+        name: r'myVoteCountProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  MyVoteCountProvider call(String eventId) =>
+      MyVoteCountProvider._(argument: eventId, from: this);
+
+  @override
+  String toString() => r'myVoteCountProvider';
+}
+
+@ProviderFor(myVotedCandidateIds)
+const myVotedCandidateIdsProvider = MyVotedCandidateIdsFamily._();
+
+final class MyVotedCandidateIdsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Set<String>>,
+          Set<String>,
+          FutureOr<Set<String>>
+        >
+    with $FutureModifier<Set<String>>, $FutureProvider<Set<String>> {
+  const MyVotedCandidateIdsProvider._({
+    required MyVotedCandidateIdsFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'myVotedCandidateIdsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$myVotedCandidateIdsHash();
+
+  @override
+  String toString() {
+    return r'myVotedCandidateIdsProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<Set<String>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Set<String>> create(Ref ref) {
+    final argument = this.argument as String;
+    return myVotedCandidateIds(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is MyVotedCandidateIdsProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$myVotedCandidateIdsHash() =>
+    r'c26471f0b1523dc1f4c56c9d9d6086bcd85a6acb';
+
+final class MyVotedCandidateIdsFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<Set<String>>, String> {
+  const MyVotedCandidateIdsFamily._()
+    : super(
+        retry: null,
+        name: r'myVotedCandidateIdsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  MyVotedCandidateIdsProvider call(String eventId) =>
+      MyVotedCandidateIdsProvider._(argument: eventId, from: this);
+
+  @override
+  String toString() => r'myVotedCandidateIdsProvider';
+}
+
+@ProviderFor(maxVoteCount)
+const maxVoteCountProvider = MaxVoteCountFamily._();
+
+final class MaxVoteCountProvider
+    extends $FunctionalProvider<AsyncValue<int>, int, FutureOr<int>>
+    with $FutureModifier<int>, $FutureProvider<int> {
+  const MaxVoteCountProvider._({
+    required MaxVoteCountFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'maxVoteCountProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$maxVoteCountHash();
+
+  @override
+  String toString() {
+    return r'maxVoteCountProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<int> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<int> create(Ref ref) {
+    final argument = this.argument as String;
+    return maxVoteCount(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is MaxVoteCountProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$maxVoteCountHash() => r'3e5c192dc6847792a09e6db41136ad42f12ceca3';
+
+final class MaxVoteCountFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<int>, String> {
+  const MaxVoteCountFamily._()
+    : super(
+        retry: null,
+        name: r'maxVoteCountProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  MaxVoteCountProvider call(String eventId) =>
+      MaxVoteCountProvider._(argument: eventId, from: this);
+
+  @override
+  String toString() => r'maxVoteCountProvider';
 }
