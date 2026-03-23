@@ -71,7 +71,7 @@ void main() {
       ).thenAnswer((_) async => initialSettings);
       when(
         () => mockRepo.updateSettings(any(), any()),
-      ).thenAnswer((_) async => {});
+      ).thenAnswer((_) async => null);
 
       final container = ProviderContainer(
         overrides: [

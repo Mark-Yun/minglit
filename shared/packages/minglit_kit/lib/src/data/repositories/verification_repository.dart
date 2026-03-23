@@ -1,5 +1,6 @@
 import 'package:minglit_kit/src/data/models/verification.dart';
 import 'package:minglit_kit/src/data/models/verification_submission.dart';
+import 'package:minglit_kit/src/utils/exceptions.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -91,7 +92,7 @@ abstract class VerificationRepository {
   Future<void> reviewRequest({
     required String submissionId,
     required VerificationStatus status,
-    String? adminComment,
+    String? comment,
   });
 
   /// User 특정 상태의 모든 요청 조회 (예: 보완 필요 건만 모아보기)
@@ -108,6 +109,7 @@ abstract class VerificationRepository {
   Future<void> submitComment({
     required String submissionId,
     required Map<String, dynamic> content,
+    bool isPartner = false,
   });
 }
 

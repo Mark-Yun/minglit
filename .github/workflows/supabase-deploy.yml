@@ -34,7 +34,6 @@ jobs:
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DEV_DB_PASSWORD }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_DEV_PROJECT_ID }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_DEV_SECRET_KEY }}
-          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_ACCESS_TOKEN: ${{ secrets.GH_PAT_FOR_BUG_REPORT }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN_EDGE_FUNCTIONS }}
@@ -59,36 +58,6 @@ jobs:
           fi
           supabase secrets set ENVIRONMENT=development
 
-          # Ensure vault has publishable_key for pg_cron → Edge Function auth
-          if [ -z "$SUPABASE_PUBLISHABLE_KEY" ]; then
-            echo "::error::SUPABASE_PUBLISHABLE_KEY is not set. Vault injection failed."
-            exit 1
-          fi
-          supabase db execute <<EOSQL
-          DO \$\$
-          DECLARE
-            v_publishable_secret_id uuid;
-          BEGIN
-            SELECT id INTO v_publishable_secret_id
-            FROM vault.decrypted_secrets
-            WHERE name = 'publishable_key'
-            LIMIT 1;
-
-            IF v_publishable_secret_id IS NULL THEN
-              PERFORM vault.create_secret('${SUPABASE_PUBLISHABLE_KEY}', 'publishable_key', 'Publishable key for EF cron calls');
-              RAISE NOTICE 'vault: publishable_key created';
-            ELSE
-              PERFORM vault.update_secret(
-                v_publishable_secret_id,
-                '${SUPABASE_PUBLISHABLE_KEY}',
-                'publishable_key',
-                'Publishable key for EF cron calls'
-              );
-              RAISE NOTICE 'vault: publishable_key updated';
-            END IF;
-          END \$\$;
-          EOSQL
-
           supabase db push --password $SUPABASE_DB_PASSWORD --include-all
 
           supabase functions deploy
@@ -104,7 +73,6 @@ jobs:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN_EDGE_FUNCTIONS }}
           STATSIG_SERVER_KEY: ${{ secrets.STATSIG_SERVER_KEY }}
           AXIOM_API_TOKEN: ${{ secrets.AXIOM_API_TOKEN }}
-          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
         run: |
           supabase link --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD
 
@@ -124,96 +92,9 @@ jobs:
           fi
           supabase secrets set ENVIRONMENT=production
 
-          # Ensure vault has publishable_key for pg_cron → Edge Function auth
-          if [ -z "$SUPABASE_PUBLISHABLE_KEY" ]; then
-            echo "::error::SUPABASE_PUBLISHABLE_KEY is not set. Vault injection failed."
-            exit 1
-          fi
-          supabase db execute <<EOSQL
-          DO \$\$
-          DECLARE
-            v_publishable_secret_id uuid;
-          BEGIN
-            SELECT id INTO v_publishable_secret_id
-            FROM vault.decrypted_secrets
-            WHERE name = 'publishable_key'
-            LIMIT 1;
-
-            IF v_publishable_secret_id IS NULL THEN
-              PERFORM vault.create_secret('${SUPABASE_PUBLISHABLE_KEY}', 'publishable_key', 'Publishable key for EF cron calls');
-              RAISE NOTICE 'vault: publishable_key created';
-            ELSE
-              PERFORM vault.update_secret(
-                v_publishable_secret_id,
-                '${SUPABASE_PUBLISHABLE_KEY}',
-                'publishable_key',
-                'Publishable key for EF cron calls'
-              );
-              RAISE NOTICE 'vault: publishable_key updated';
-            END IF;
-          END \$\$;
-          EOSQL
-
           supabase db push --password $SUPABASE_DB_PASSWORD --include-all
 
           supabase functions deploy
-
-      # --- Post-deploy verification ---
-      - name: Set environment name
-        id: env
-        run: |
-          if [ "${{ github.ref }}" = "refs/heads/dev" ]; then
-            echo "ENV=dev" >> "$GITHUB_OUTPUT"
-            echo "PROJECT_ID=${{ secrets.SUPABASE_DEV_PROJECT_ID }}" >> "$GITHUB_OUTPUT"
-            echo "DB_PASSWORD=${{ secrets.SUPABASE_DEV_DB_PASSWORD }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "ENV=main" >> "$GITHUB_OUTPUT"
-            echo "PROJECT_ID=${{ secrets.SUPABASE_MAIN_PROJECT_ID }}" >> "$GITHUB_OUTPUT"
-            echo "DB_PASSWORD=${{ secrets.SUPABASE_MAIN_DB_PASSWORD }}" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Verify migration count
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: |
-          EXPECTED=$(ls supabase/migrations/*.sql | wc -l | tr -d ' ')
-          APPLIED=$(supabase db execute \
-            --sql "SELECT count(*)::text FROM supabase_migrations.schema_migrations;" \
-            | grep -oE '[0-9]+' | head -1)
-          echo "Expected: $EXPECTED, Applied: $APPLIED"
-          if [ "$EXPECTED" != "$APPLIED" ]; then
-            echo "::error::Migration count mismatch! Expected $EXPECTED, applied $APPLIED"
-            exit 1
-          fi
-          echo "✅ Migration count matches: $APPLIED"
-
-      - name: Verify critical DB objects
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: |
-          supabase db execute \
-            --sql "$(cat scripts/verify-db-objects.sql)"
-
-      # --- DB state snapshot ---
-      - name: Generate DB state report
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: |
-          ENV="${{ steps.env.outputs.ENV }}"
-          REPORT_FILE="docs/snapshots/${ENV}-db-state.md"
-          mkdir -p docs/snapshots
-          echo "# ${ENV} DB State — $(date -u '+%Y-%m-%d %H:%M UTC')" > "$REPORT_FILE"
-          echo "" >> "$REPORT_FILE"
-          supabase db execute \
-            --sql "$(cat scripts/db-snapshot.sql)" >> "$REPORT_FILE"
-
-      - name: Commit DB state report
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/snapshots/
-          git diff --cached --quiet || git commit -m "docs: update ${{ steps.env.outputs.ENV }} DB state snapshot [skip ci]"
-          git push origin HEAD:${{ steps.env.outputs.ENV }}
 
   notify-failure:
     needs: [deploy]

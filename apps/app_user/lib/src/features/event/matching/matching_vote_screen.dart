@@ -14,6 +14,10 @@ class MatchingVoteScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final candidatesAsync = ref.watch(matchCandidatesProvider(eventId));
     final matchesAsync = ref.watch(myMatchesProvider(eventId));
+    // Fix #306: 잔여 투표 수 + 투표 완료 후보 추적
+    final voteCountAsync = ref.watch(myVoteCountProvider(eventId));
+    final maxVoteAsync = ref.watch(maxVoteCountProvider(eventId));
+    final votedIdsAsync = ref.watch(myVotedCandidateIdsProvider(eventId));
 
     // Listen to vote action state
     ref.listen(matchingVoteControllerProvider, (_, state) {
@@ -86,6 +90,44 @@ class MatchingVoteScreen extends ConsumerWidget {
             },
           ),
 
+          // Fix #306: 잔여 투표 수 표시
+          if (voteCountAsync.hasValue && maxVoteAsync.hasValue)
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: MinglitSpacing.medium,
+                vertical: MinglitSpacing.small,
+              ),
+              child: Builder(
+                builder: (context) {
+                  final used = voteCountAsync.value!;
+                  final max = maxVoteAsync.value!;
+                  final remaining = max - used;
+                  final allUsed = remaining <= 0;
+                  return Row(
+                    children: [
+                      Icon(
+                        allUsed ? Icons.check_circle : Icons.how_to_vote,
+                        size: MinglitIconSize.small,
+                        color: allUsed
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: MinglitSpacing.small),
+                      Text(
+                        allUsed ? '투표 완료!' : '남은 투표: $remaining/$max',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: allUsed
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+
           // 2. Candidates
           Expanded(
             child: MinglitAsyncValueWidget(
@@ -94,6 +136,13 @@ class MatchingVoteScreen extends ConsumerWidget {
                 if (candidates.isEmpty) {
                   return const Center(child: Text('투표 가능한 상대가 없습니다.'));
                 }
+                final votedIds = votedIdsAsync.hasValue
+                    ? votedIdsAsync.value!
+                    : <String>{};
+                final allVotesUsed =
+                    voteCountAsync.hasValue &&
+                    maxVoteAsync.hasValue &&
+                    voteCountAsync.value! >= maxVoteAsync.value!;
                 return GridView.builder(
                   padding: const EdgeInsets.all(MinglitSpacing.medium),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -105,7 +154,14 @@ class MatchingVoteScreen extends ConsumerWidget {
                   itemCount: candidates.length,
                   itemBuilder: (context, index) {
                     final candidate = candidates[index];
-                    return _buildCandidateCard(context, ref, candidate);
+                    final isVoted = votedIds.contains(candidate.id);
+                    return _buildCandidateCard(
+                      context,
+                      ref,
+                      candidate,
+                      isVoted: isVoted,
+                      isDisabled: isVoted || allVotesUsed,
+                    );
                   },
                 );
               },
@@ -164,11 +220,14 @@ class MatchingVoteScreen extends ConsumerWidget {
     );
   }
 
+  // Fix #306: isVoted/isDisabled 파라미터 추가
   Widget _buildCandidateCard(
     BuildContext context,
     WidgetRef ref,
-    UserProfile candidate,
-  ) {
+    UserProfile candidate, {
+    bool isVoted = false,
+    bool isDisabled = false,
+  }) {
     final theme = Theme.of(context);
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -185,6 +244,20 @@ class MatchingVoteScreen extends ConsumerWidget {
               ),
             ),
           ),
+          // Fix #306: 투표 완료 체크 오버레이
+          if (isVoted)
+            Positioned.fill(
+              child: ColoredBox(
+                color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                child: Center(
+                  child: Icon(
+                    Icons.check_circle,
+                    size: 48,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ),
+            ),
           // Info Overlay
           Positioned(
             bottom: 0,
@@ -216,17 +289,25 @@ class MatchingVoteScreen extends ConsumerWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
-                        // Confirm Vote
-                        unawaited(_confirmAndVote(context, ref, candidate));
-                      },
+                      // Fix #306: 투표 완료 또는 투표 수 초과 시 비활성화
+                      onPressed: isDisabled
+                          ? null
+                          : () {
+                              unawaited(
+                                _confirmAndVote(context, ref, candidate),
+                              );
+                            },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: theme.colorScheme.onPrimary,
+                        backgroundColor: isVoted
+                            ? theme.colorScheme.surfaceContainerHighest
+                            : theme.colorScheme.primary,
+                        foregroundColor: isVoted
+                            ? theme.colorScheme.onSurfaceVariant
+                            : theme.colorScheme.onPrimary,
                         padding: EdgeInsets.zero,
                         visualDensity: VisualDensity.compact,
                       ),
-                      child: const Text('선택'),
+                      child: Text(isVoted ? '투표 완료' : '선택'),
                     ),
                   ),
                 ],

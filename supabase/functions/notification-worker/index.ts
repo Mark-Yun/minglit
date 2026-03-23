@@ -133,6 +133,11 @@ const NOTIFICATION_TEMPLATES: Record<string, (data: Record<string, unknown>) => 
     title: '[지급 실패]',
     body: `정산 지급에 실패했습니다. 계좌 정보를 확인해 주세요.`,
   }),
+  // Fix #306: 매칭 결과 알림
+  match_result: (d) => ({
+    title: '[매칭 결과]',
+    body: `${(d.event_title as string) || '이벤트'}에서 매칭이 성사되었습니다! 결과를 확인해 보세요.`,
+  }),
 };
 
 // --- Helper: Resolve affected user_id for Schema A events ---

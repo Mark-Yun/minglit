@@ -205,7 +205,13 @@ void main() {
         'user_id': 'u1',
         'verification_id': 'v1',
         'status': 'pending',
-        'snapshot_data': {'company': 'Test'},
+        'snapshot_data': <dynamic>[
+          {
+            'submitted_at': '2026-03-15',
+            'data': {'company': 'Test'},
+            'comments': <dynamic>[],
+          },
+        ],
         'created_at': now.toIso8601String(),
         'updated_at': now.toIso8601String(),
       });

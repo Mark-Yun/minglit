@@ -1,10 +1,10 @@
 part of 'partner_repository.dart';
 
 mixin _PartnerApplicationRepository on _SupabasePartnerContext {
+  // Fix #311: submitApplication via EF (서버 사이드 검증)
   /// **Submit Application**
   ///
-  /// Uploads proof files to Storage and inserts a record into
-  /// `partner_applications`.
+  /// Uploads proof files to Storage, saves a draft via EF, then submits.
   /// Uses a transaction-like flow (manual rollback on error) to ensure
   /// data consistency.
   Future<void> submitApplication({
@@ -24,27 +24,44 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
       bizRegPath = await _uploadFile(userId, bizRegistrationFile, 'biz_reg');
       bankbookPath = await _uploadFile(userId, bankbookFile, 'bankbook');
 
-      await supabaseClient.from('partner_applications').insert({
-        'user_id': userId,
-        ...applicationData,
-        'biz_registration_path': bizRegPath,
-        'bankbook_path': bankbookPath,
-        'status': 'pending',
-      });
+      // Fix #311: save_draft via EF → submit via EF
+      final draftResponse = await supabaseClient.functions.invoke(
+        'partner-register',
+        body: {
+          'action': 'save_draft',
+          'data': {
+            ...applicationData,
+            'biz_registration_path': bizRegPath,
+            'bankbook_path': bankbookPath,
+          },
+        },
+      );
+
+      if (draftResponse.status != 200) {
+        // Draft 생성 실패 시 업로드 파일 롤백
+        await _cleanupFiles([bizRegPath, bankbookPath]);
+        throw _efError(draftResponse, 'Failed to save draft');
+      }
+
+      final draftData = draftResponse.data as Map<String, dynamic>;
+      final applicationId = draftData['application_id'] as String;
+
+      final submitResponse = await supabaseClient.functions.invoke(
+        'partner-register',
+        body: {
+          'action': 'submit',
+          'application_id': applicationId,
+        },
+      );
+
+      if (submitResponse.status != 200) {
+        // Fix #311: submit 실패 시 draft와 파일은 유지 (유저가 수정 후 재제출 가능)
+        throw _efError(submitResponse, '입점 신청에 실패했습니다');
+      }
 
       Log.i('submitApplication success');
     } on Exception catch (e, stackTrace) {
       Log.e('❌ [PartnerRepo] Application Failed', e, stackTrace);
-      // Attempt cleanup (Best effort)
-      try {
-        await supabaseClient.storage
-            .from('partner-proofs')
-            .remove(
-              [bizRegPath, bankbookPath].whereType<String>().toList(),
-            );
-      } on Exception catch (_) {
-        // Ignore cleanup errors
-      }
       rethrow;
     }
   }
@@ -170,10 +187,12 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
     }
   }
 
+  // Fix #311: saveDraft via EF (서버 사이드 소유권 검증)
   /// **Save Draft**
   ///
   /// Inserts a new draft if application.id is empty, otherwise updates the
-  /// existing record. Returns the persisted PartnerApplication with its id.
+  /// existing record via EF. Returns the persisted PartnerApplication with
+  /// its id.
   Future<PartnerApplication> saveDraft(PartnerApplication application) async {
     final userId = supabaseClient.auth.currentUser?.id;
     if (userId == null) throw const AuthException('User not authenticated');
@@ -181,22 +200,30 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
     Log.d('saveDraft called | user: $userId, id: ${application.id}');
 
     try {
-      final Map<String, dynamic> data;
-      if (application.id.isEmpty) {
-        data = await supabaseClient
-            .from('partner_applications')
-            .insert({'user_id': userId, ...application.toDbJson()})
-            .select()
-            .single();
-      } else {
-        data = await supabaseClient
-            .from('partner_applications')
-            .update(application.toDbJson())
-            .eq('id', application.id)
-            .select()
-            .single();
+      final response = await supabaseClient.functions.invoke(
+        'partner-register',
+        body: {
+          'action': 'save_draft',
+          if (application.id.isNotEmpty) 'application_id': application.id,
+          'data': application.toDbJson(),
+        },
+      );
+
+      if (response.status != 200) {
+        throw _efError(response, 'Failed to save draft');
       }
-      final result = PartnerApplication.fromJson(data);
+
+      final data = response.data as Map<String, dynamic>;
+      final applicationId = data['application_id'] as String;
+
+      // Re-fetch the full record since EF only returns the id
+      final fullData = await supabaseClient
+          .from('partner_applications')
+          .select()
+          .eq('id', applicationId)
+          .single();
+
+      final result = PartnerApplication.fromJson(fullData);
       Log.i('saveDraft success | id: ${result.id}');
       return result;
     } catch (e, st) {
@@ -205,9 +232,10 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
     }
   }
 
+  // Fix #311: updateApplication via EF (서버 사이드 상태/소유권 검증)
   /// **Update Application**
   ///
-  /// Updates an existing application by id. The RLS policy enforces that only
+  /// Updates an existing application by id via EF. The EF enforces that only
   /// records in status 'draft' or 'needs_correction' can be updated.
   /// Returns the updated [PartnerApplication].
   Future<PartnerApplication> updateApplication(
@@ -215,13 +243,27 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
   ) async {
     Log.d('updateApplication called | id: ${application.id}');
     try {
-      final data = await supabaseClient
+      final response = await supabaseClient.functions.invoke(
+        'partner-register',
+        body: {
+          'action': 'update',
+          'application_id': application.id,
+          'data': application.toDbJson(),
+        },
+      );
+
+      if (response.status != 200) {
+        throw _efError(response, 'Failed to update application');
+      }
+
+      // Re-fetch the full record
+      final fullData = await supabaseClient
           .from('partner_applications')
-          .update(application.toDbJson())
-          .eq('id', application.id)
           .select()
+          .eq('id', application.id)
           .single();
-      final result = PartnerApplication.fromJson(data);
+
+      final result = PartnerApplication.fromJson(fullData);
       Log.i('updateApplication success | id: ${result.id}');
       return result;
     } catch (e, st) {
@@ -230,22 +272,37 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
     }
   }
 
+  // Fix #311: submitDraft via EF (서버 사이드 필수 필드 + 형식 검증)
   /// **Submit Draft**
   ///
   /// Transitions the application status from 'draft'/'needs_correction' to
-  /// 'pending'. Returns the updated [PartnerApplication].
+  /// 'pending' via EF with server-side validation.
+  /// Returns the updated [PartnerApplication].
   Future<PartnerApplication> submitDraft({
     required String applicationId,
   }) async {
     Log.d('submitDraft called | id: $applicationId');
     try {
-      final data = await supabaseClient
+      final response = await supabaseClient.functions.invoke(
+        'partner-register',
+        body: {
+          'action': 'submit',
+          'application_id': applicationId,
+        },
+      );
+
+      if (response.status != 200) {
+        throw _efError(response, 'Failed to submit draft');
+      }
+
+      // Re-fetch the full record
+      final fullData = await supabaseClient
           .from('partner_applications')
-          .update({'status': 'pending'})
-          .eq('id', applicationId)
           .select()
+          .eq('id', applicationId)
           .single();
-      final result = PartnerApplication.fromJson(data);
+
+      final result = PartnerApplication.fromJson(fullData);
       Log.i('submitDraft success | id: ${result.id}');
       return result;
     } catch (e, st) {
@@ -308,5 +365,33 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
     if (userId == null) throw const AuthException('User not authenticated');
     Log.d('uploadBankbook called | file: ${file.name}');
     return _uploadFile(userId, file, 'bankbook');
+  }
+
+  Future<void> _cleanupFiles(List<String?> paths) async {
+    try {
+      await supabaseClient.storage
+          .from('partner-proofs')
+          .remove(paths.whereType<String>().toList());
+    } on Exception catch (_) {
+      // Best effort cleanup
+    }
+  }
+
+  // Fix #311: EF 에러 응답에서 details (필드별 검증 에러)를 포함한 예외 생성
+  MinglitUserException _efError(FunctionResponse response, String fallback) {
+    final respData = response.data;
+    if (respData is Map) {
+      final rawError = (respData['error'] as String?) ?? fallback;
+      final rawDetails = respData['details'];
+      final details = rawDetails is List
+          ? rawDetails.whereType<Map<String, dynamic>>().toList()
+          : null;
+      // Fix #311: validation_failed 등 기계적 코드를 사용자 친화적 메시지로 변환
+      final errorMsg = rawError == 'validation_failed'
+          ? '입력 정보를 확인해주세요'
+          : rawError;
+      return MinglitUserException(errorMsg, details: details);
+    }
+    return MinglitUserException(fallback);
   }
 }

@@ -272,32 +272,40 @@ void main() {
       });
     });
 
+    // Fix #301: getVerificationComments now reads from snapshot_data JSON
     group('getVerificationComments', () {
-      test('returns list of comments', () async {
-        final commentJson = {
-          'id': 'comment_1',
-          'submission_id': 'sub_1',
-          'content': '수정 필요',
-          'created_at': now.toIso8601String(),
-        };
+      test('returns comments from snapshot_data', () async {
         unawaited(
           mockTable(
             mockClient,
-            'verification_comments',
-            selectData: [commentJson],
+            'verification_submissions',
+            maybeSingleData: {
+              'snapshot_data': [
+                {
+                  'submitted_at': '2026-03-15',
+                  'data': {'university': '서울대'},
+                  'comments': [
+                    {
+                      'author': 'user-1',
+                      'at': '2026-03-16T10:00:00Z',
+                      'text': '다시 올리겠습니다',
+                    },
+                  ],
+                },
+              ],
+            },
           ),
         );
 
         final result = await repository.getVerificationComments('sub_1');
 
         expect(result, hasLength(1));
-        expect(result.first['id'], 'comment_1');
+        expect(result.first['author_id'], 'user-1');
+        expect((result.first['content'] as Map)['text'], '다시 올리겠습니다');
       });
 
-      test('returns empty list when no comments', () async {
-        unawaited(
-          mockTable(mockClient, 'verification_comments', selectData: []),
-        );
+      test('returns empty list when no submission found', () async {
+        unawaited(mockTable(mockClient, 'verification_submissions'));
 
         final result = await repository.getVerificationComments('sub_1');
 
@@ -308,7 +316,7 @@ void main() {
         unawaited(
           mockTable(
             mockClient,
-            'verification_comments',
+            'verification_submissions',
             shouldThrow: Exception('error'),
           ),
         );

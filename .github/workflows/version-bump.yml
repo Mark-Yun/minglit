@@ -3,93 +3,83 @@ name: Version Bump
 on:
   pull_request:
     types: [closed]
-    branches: [main]
+    branches: [dev, main]
 
 concurrency:
-  group: version-bump
+  group: version-bump-${{ github.base_ref }}
   cancel-in-progress: false
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   bump:
-    if: github.event.pull_request.merged == true
+    if: >-
+      github.event.pull_request.merged == true &&
+      !startsWith(github.event.pull_request.title, 'chore: bump version')
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.base_ref }}
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_PAT_VERSION_BUMP }}
 
-      - name: Check PR labels for version bump type
-        id: bump-type
-        run: |
-          LABELS='${{ toJSON(github.event.pull_request.labels.*.name) }}'
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
 
-          if echo "$LABELS" | grep -q '"major"'; then
-            echo "type=major" >> $GITHUB_OUTPUT
-          elif echo "$LABELS" | grep -q '"minor"'; then
-            echo "type=minor" >> $GITHUB_OUTPUT
-          elif echo "$LABELS" | grep -q '"patch"'; then
-            echo "type=patch" >> $GITHUB_OUTPUT
-          else
-            echo "type=skip" >> $GITHUB_OUTPUT
-            echo "No version bump label found (patch/minor/major). Skipping."
-          fi
-
-      - name: Bump version
-        if: steps.bump-type.outputs.type != 'skip'
+      - name: Calculate next CalVer version
         id: version
         run: |
-          CURRENT=$(grep "^version:" apps/app_user/pubspec.yaml | sed 's/version: //' | sed 's/+.*//')
+          BRANCH="${{ github.base_ref }}"
+          CURRENT=$(grep "^version:" apps/app_user/pubspec.yaml | sed 's/version: //' | sed 's/+.*//' | sed 's/-dev$//')
           echo "current=$CURRENT"
 
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
-          BUMP_TYPE="${{ steps.bump-type.outputs.type }}"
+          IFS='.' read -r CUR_YY CUR_MM CUR_PR <<< "$CURRENT"
 
-          case "$BUMP_TYPE" in
-            major)
-              MAJOR=$((MAJOR + 1))
-              MINOR=0
-              PATCH=0
-              ;;
-            minor)
-              MINOR=$((MINOR + 1))
-              PATCH=0
-              ;;
-            patch)
-              PATCH=$((PATCH + 1))
-              ;;
-          esac
+          # Current year/month (2-digit)
+          NOW_YY=$(date -u +%y)
+          NOW_MM=$(date -u +%m)
 
-          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
-          echo "new=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "Bumping $CURRENT → $NEW_VERSION ($BUMP_TYPE)"
+          if [ "$CUR_YY" = "$NOW_YY" ] && [ "$CUR_MM" = "$NOW_MM" ]; then
+            # Same month → increment PR#
+            NEXT_PR=$(( 10#$CUR_PR + 1 ))
+          else
+            # New month → reset PR# to 1
+            NEXT_PR=1
+          fi
 
-      - name: Update pubspec.yaml files
-        if: steps.bump-type.outputs.type != 'skip'
+          BASE="${NOW_YY}.${NOW_MM}.${NEXT_PR}"
+
+          if [ "$BRANCH" = "dev" ]; then
+            NEW_VERSION="${BASE}-dev"
+          else
+            NEW_VERSION="${BASE}"
+          fi
+
+          echo "new=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          echo "Bumping $CURRENT → $NEW_VERSION"
+
+      - name: Run bump-version.sh
+        run: bash scripts/bump-version.sh "${{ steps.version.outputs.new }}"
+
+      - name: Commit and push version bump
         run: |
           NEW_VERSION="${{ steps.version.outputs.new }}"
-          sed -i "s/^version: .*/version: ${NEW_VERSION}+1/" apps/app_user/pubspec.yaml
-          sed -i "s/^version: .*/version: ${NEW_VERSION}+1/" apps/app_partner/pubspec.yaml
+          BRANCH="${{ github.base_ref }}"
 
-          echo "Updated app_user:"
-          grep "^version:" apps/app_user/pubspec.yaml
-          echo "Updated app_partner:"
-          grep "^version:" apps/app_partner/pubspec.yaml
-
-      - name: Commit and tag
-        if: steps.bump-type.outputs.type != 'skip'
-        run: |
-          NEW_VERSION="${{ steps.version.outputs.new }}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add apps/app_user/pubspec.yaml apps/app_partner/pubspec.yaml
-          git commit -m "chore: bump version to v${NEW_VERSION}"
-          git tag "v${NEW_VERSION}"
-          git push origin main --follow-tags
+
+          git add -A
+          git diff --cached --quiet && { echo "No version changes to commit."; exit 0; }
+          git commit -m "chore: bump version to v${NEW_VERSION} [skip ci]"
+          git push origin HEAD:${BRANCH}
 
   notify-failure:
     needs: [bump]

@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(28);
+SELECT plan(24);
 
 -- ===========================================================================
 -- SETUP
@@ -76,13 +76,7 @@ WITH vs AS (
 )
 SELECT set_config('tests.submission_id', id::text, true) FROM vs;
 
--- user_a (partner owner / reviewer) leaves a verification comment
-INSERT INTO public.verification_comments (submission_id, author_id, content)
-VALUES (
-  current_setting('tests.submission_id')::uuid,
-  tests.get_supabase_uid('user_a'),
-  '{"text": "LGTM"}'::jsonb
-);
+-- Fix #301: verification_comments table dropped — comment data now in snapshot_data JSON
 
 -- ===========================================================================
 -- app_roles TESTS (assertions 1–5)
@@ -270,34 +264,7 @@ SELECT is_empty(
   'non-applicant cannot read others partner_applications'
 );
 
--- ===========================================================================
--- verification_comments TESTS (assertions 25–28)
--- No policies or RLS enabled yet on this table
--- ===========================================================================
-
-SELECT tests.rls_enabled('public', 'verification_comments');
-
-SELECT tests.clear_authentication();
-SELECT is_empty(
-  $$SELECT id FROM public.verification_comments LIMIT 1$$,
-  'anon cannot read verification_comments'
-);
-
-SELECT tests.authenticate_as('user_b');
-SELECT results_eq(
-  $$SELECT count(*)::int FROM public.verification_comments
-    WHERE submission_id = current_setting('tests.submission_id')::uuid$$,
-  $$VALUES (1)$$,
-  'submitter can read comments on own submission'
-);
-
-SELECT tests.authenticate_as('user_a');
-SELECT results_eq(
-  $$SELECT count(*)::int FROM public.verification_comments
-    WHERE author_id = tests.get_supabase_uid('user_a')$$,
-  $$VALUES (1)$$,
-  'comment author can read own verification_comments'
-);
+-- Fix #301: verification_comments table dropped — tests removed
 
 SELECT * FROM finish();
 ROLLBACK;
