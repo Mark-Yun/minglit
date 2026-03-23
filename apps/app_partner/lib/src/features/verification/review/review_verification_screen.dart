@@ -60,17 +60,14 @@ class _ReviewVerificationScreenState
   }) async {
     final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
     try {
+      // Fix #309: review + comment in single EF call
       await ref
           .read(verificationRepositoryProvider)
           .reviewRequest(
             submissionId: id,
             status: status,
+            comment: comment,
           );
-      if (comment != null) {
-        await ref
-            .read(verificationRepositoryProvider)
-            .submitComment(submissionId: id, content: {'text': comment});
-      }
 
       if (!mounted) return;
       context.showMinglitSuccess(
