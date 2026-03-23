@@ -1,4 +1,4 @@
-import 'dart:async' show FutureOr, unawaited;
+import 'dart:async' show FutureOr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/repositories/partner_repository.dart';
 import 'package:minglit_kit/src/utils/exceptions.dart';
