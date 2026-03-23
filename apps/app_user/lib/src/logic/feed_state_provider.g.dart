@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'explore_state_provider.dart';
+part of 'feed_state_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -389,7 +389,7 @@ final class RecommendationFeedNotifierProvider
 }
 
 String _$recommendationFeedNotifierHash() =>
-    r'906ac68b337591f121be10802be813e73f8c2832';
+    r'1d4ce67da381689d8e45086b06eee48c05478184';
 
 /// Manages pagination state for the recommendation event feed.
 ///
@@ -433,7 +433,7 @@ abstract class _$RecommendationFeedNotifier
 /// Maps [ExploreSortType] to [EventFeedType]:
 /// - recommended → newArrivals
 /// - closingSoon → closingSoon
-/// - nearestDate → earlyBird
+/// - nearestDate → nearest
 
 @ProviderFor(recommendationEvents)
 const recommendationEventsProvider = RecommendationEventsProvider._();
@@ -443,7 +443,7 @@ const recommendationEventsProvider = RecommendationEventsProvider._();
 /// Maps [ExploreSortType] to [EventFeedType]:
 /// - recommended → newArrivals
 /// - closingSoon → closingSoon
-/// - nearestDate → earlyBird
+/// - nearestDate → nearest
 
 final class RecommendationEventsProvider
     extends
@@ -458,7 +458,7 @@ final class RecommendationEventsProvider
   /// Maps [ExploreSortType] to [EventFeedType]:
   /// - recommended → newArrivals
   /// - closingSoon → closingSoon
-  /// - nearestDate → earlyBird
+  /// - nearestDate → nearest
   const RecommendationEventsProvider._()
     : super(
         from: null,
@@ -486,4 +486,4 @@ final class RecommendationEventsProvider
 }
 
 String _$recommendationEventsHash() =>
-    r'a11a53a26d96e01b4490433b05baef157ae6cafe';
+    r'6c45f80d337359eb151c3c2195073e6f785ad2ec';

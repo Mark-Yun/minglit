@@ -1,7 +1,6 @@
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
-import 'package:app_user/src/features/settings/blocked_partners_page.dart';
-import 'package:app_user/src/features/settings/privacy_page.dart';
+import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -130,12 +129,7 @@ class MyPage extends ConsumerWidget {
             leading: const Icon(Icons.lock_outline),
             title: const Text('개인정보'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute<void>(
-                builder: (_) => const PrivacyPage(),
-              ),
-            ),
+            onTap: () => const PrivacyRoute().push<void>(context),
           ),
           ListTile(
             leading: const Icon(Icons.admin_panel_settings_outlined),
@@ -153,12 +147,7 @@ class MyPage extends ConsumerWidget {
             leading: const Icon(Icons.block),
             title: const Text('차단 목록'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute<void>(
-                builder: (_) => const BlockedPartnersPage(),
-              ),
-            ),
+            onTap: () => const BlockedPartnersRoute().push<void>(context),
           ),
           const Divider(),
           ListTile(

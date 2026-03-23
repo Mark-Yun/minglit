@@ -21,6 +21,8 @@ List<RouteBase> get $appRoutes => [
   $homeRoute,
   $searchRoute,
   $myPageRoute,
+  $privacyRoute,
+  $blockedPartnersRoute,
 ];
 
 RouteBase get $devUserSwitchRoute => GoRouteData.$route(
@@ -456,6 +458,55 @@ mixin $MyPageRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/my');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $privacyRoute =>
+    GoRouteData.$route(path: '/my/privacy', factory: $PrivacyRoute._fromState);
+
+mixin $PrivacyRoute on GoRouteData {
+  static PrivacyRoute _fromState(GoRouterState state) => const PrivacyRoute();
+
+  @override
+  String get location => GoRouteData.$location('/my/privacy');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $blockedPartnersRoute => GoRouteData.$route(
+  path: '/my/blocked-partners',
+  factory: $BlockedPartnersRoute._fromState,
+);
+
+mixin $BlockedPartnersRoute on GoRouteData {
+  static BlockedPartnersRoute _fromState(GoRouterState state) =>
+      const BlockedPartnersRoute();
+
+  @override
+  String get location => GoRouteData.$location('/my/blocked-partners');
 
   @override
   void go(BuildContext context) => context.go(location);
