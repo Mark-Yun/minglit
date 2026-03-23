@@ -381,9 +381,7 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
       final errorMsg = (respData['error'] as String?) ?? fallback;
       final rawDetails = respData['details'];
       final details = rawDetails is List
-          ? rawDetails
-              .whereType<Map<String, dynamic>>()
-              .toList()
+          ? rawDetails.whereType<Map<String, dynamic>>().toList()
           : null;
       return MinglitUserException(errorMsg, details: details);
     }
