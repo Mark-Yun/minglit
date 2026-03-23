@@ -57,11 +57,13 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
             onDetect: (capture) {
               final barcodes = capture.barcodes;
               for (final barcode in barcodes) {
-                if (barcode.rawValue != null) {
+                // Fix #382: 강제 언래핑 제거 — local variable로 null 안전성 확보
+                final rawValue = barcode.rawValue;
+                if (rawValue != null) {
                   unawaited(
                     ref
                         .read(checkinControllerProvider.notifier)
-                        .processQR(barcode.rawValue!),
+                        .processQR(rawValue),
                   );
                 }
               }

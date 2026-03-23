@@ -38,11 +38,13 @@ class IamportController extends _$IamportController {
     try {
       final model = IamportResultModel.fromMap(result);
 
-      if (model.success && model.impUid != null) {
+      // Fix #382: 강제 언래핑 제거 — local variable로 null 안전성 확보
+      final impUid = model.impUid;
+      if (model.success && impUid != null) {
         // 1. Server-side Verification
         await ref
             .read(iamportRepositoryProvider)
-            .verifyCertification(model.impUid!);
+            .verifyCertification(impUid);
 
         // 2. If successful, update state
         state = AsyncData(model);

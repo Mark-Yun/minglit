@@ -52,10 +52,12 @@ class _TicketQRViewerState extends State<TicketQRViewer>
   }
 
   Future<void> _restoreBrightness() async {
-    if (_originalBrightness != null) {
+    // Fix #382: 강제 언래핑 제거 — local variable로 null 안전성 확보
+    final brightness = _originalBrightness;
+    if (brightness != null) {
       try {
         await ScreenBrightness().setApplicationScreenBrightness(
-          _originalBrightness!,
+          brightness,
         );
       } on Object catch (e) {
         Log.e('Failed to restore screen brightness', e);

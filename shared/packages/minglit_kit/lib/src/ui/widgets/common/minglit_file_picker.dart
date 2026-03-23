@@ -129,12 +129,14 @@ class _MinglitFilePickerState extends ConsumerState<MinglitFilePicker> {
     });
     widget.onFilesSelected(_selectedFiles);
 
-    if (widget.autoUpload && widget.uploadBucket != null) {
-      await _uploadFiles(newFiles);
+    // Fix #382: uploadBucket을 local variable로 캡처하여 _uploadFiles 내 강제 언래핑 방지
+    final bucket = widget.uploadBucket;
+    if (widget.autoUpload && bucket != null) {
+      await _uploadFiles(newFiles, bucket);
     }
   }
 
-  Future<void> _uploadFiles(List<PlatformFile> files) async {
+  Future<void> _uploadFiles(List<PlatformFile> files, String bucket) async {
     setState(() => _isUploading = true);
     try {
       final repo = ref.read(storageRepositoryProvider);
@@ -145,12 +147,15 @@ class _MinglitFilePickerState extends ConsumerState<MinglitFilePicker> {
         if (kIsWeb && file.bytes == null) continue;
         if (!kIsWeb && file.path == null) continue;
         // Convert PlatformFile to XFile for compatibility
+        // Fix #382: 강제 언래핑 제거 — local variable로 null 안전성 확보
+        final bytes = file.bytes;
+        final path = file.path;
         final xFile = kIsWeb
-            ? XFile.fromData(file.bytes!, name: file.name)
-            : XFile(file.path!);
+            ? XFile.fromData(bytes!, name: file.name)
+            : XFile(path!);
         final url = await repo.uploadFile(
           file: xFile,
-          bucket: widget.uploadBucket!,
+          bucket: bucket,
           pathPrefix: widget.uploadPathPrefix,
         );
         newUrls.add(url);

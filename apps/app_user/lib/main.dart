@@ -163,7 +163,10 @@ class _AppView extends ConsumerWidget {
           value: startupState,
           data: (_) => BugReporterWrapper(
             navigatorKey: rootNavigatorKey,
-            child: MinglitGlobalLoadingOverlay(child: child!),
+            // Fix #382: child 강제 언래핑 제거 — nullable child에 fallback 추가
+            child: MinglitGlobalLoadingOverlay(
+              child: child ?? const SizedBox.shrink(),
+            ),
           ),
           // Hidden behind native splash — show nothing.
           loading: () => const SizedBox.shrink(),
