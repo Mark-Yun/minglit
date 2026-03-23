@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createServiceClient } from "../_shared/supabase_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { initSentry, withHandler, withSpan, log } from "../_shared/logger.ts";
@@ -34,10 +34,7 @@ Deno.serve(withHandler(async (req) => {
     if (!event_id) return errorResponse("Missing required field: event_id", 400);
     if (!ticket_id) return errorResponse("Missing required field: ticket_id", 400);
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    );
+    const supabase = createServiceClient();
 
     // 2. Fetch event
     const { data: event, error: eventError } = await withSpan(

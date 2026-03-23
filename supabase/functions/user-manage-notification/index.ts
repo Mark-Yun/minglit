@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createServiceClient } from "../_shared/supabase_client.ts";
 import { corsResponse, errorResponse, successResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 
@@ -25,10 +25,7 @@ Deno.serve(async (req) => {
     return errorResponse("Missing required parameter: action", 400);
   }
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-  );
+  const supabase = createServiceClient();
 
   if (action === "mark_read") {
     if (!notification_id) {

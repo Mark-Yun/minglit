@@ -48,3 +48,4 @@ jobs:
     with:
       success: ${{ needs.ios-deploy.result == 'success' }}
       workflow_name: 'iOS Deploy User'
+      job_results: '{"ios-deploy":"${{ needs.ios-deploy.result }}"}'

@@ -3,7 +3,7 @@
 // 추가 필요: 포트원 V1 webhook signature 검증 또는 HMAC 검증
 // 참고: V1은 HMAC 미지원이므로 IP whitelist가 1차 보안. 추가 보안 레이어 검토 필요.
 // Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
-import { createClient } from "@supabase/supabase-js";
+import { createServiceClient } from "../_shared/supabase_client.ts";
 import { IamportClient } from "../_shared/iamport_client.ts";
 import { initSentry, withHandler, log } from "../_shared/logger.ts";
 import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
@@ -61,10 +61,7 @@ Deno.serve(withHandler(async (req) => {
     }
 
     // 4. Update DB (idempotent)
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    const supabase = createServiceClient();
 
     let dbStatus = "pending";
     // Map Iamport status to Minglit status

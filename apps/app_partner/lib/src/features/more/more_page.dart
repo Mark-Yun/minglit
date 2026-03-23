@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:app_partner/src/features/more/more_coordinator.dart';
-import 'package:app_partner/src/features/party/party_providers.dart';
+import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';

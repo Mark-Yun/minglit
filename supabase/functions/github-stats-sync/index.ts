@@ -1,7 +1,7 @@
 // github-stats-sync — Fetch GitHub issue/PR stats and store in analytics.github_daily_stats
 // Triggered daily via pg_cron
 
-import { createClient } from "@supabase/supabase-js";
+import { createServiceClient } from "../_shared/supabase_client.ts";
 import {
   corsResponse,
   errorResponse,
@@ -22,17 +22,16 @@ interface GitHubItem {
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const githubToken = Deno.env.get("GITHUB_ACCESS_TOKEN");
 
-  if (!supabaseUrl || !serviceRoleKey) {
-    return errorResponse("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY", 500);
+  // Fix #380: service role key 검증 추가 — verify_jwt=false이므로 자체 인증 필수
+  const authHeader = req.headers.get("Authorization") ?? "";
+  if (!serviceRoleKey || authHeader !== `Bearer ${serviceRoleKey}`) {
+    return errorResponse("Unauthorized", 401);
   }
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false },
-  });
+  const supabase = createServiceClient();
 
   const headers: Record<string, string> = {
     Accept: "application/vnd.github.v3+json",

@@ -11,6 +11,11 @@ on:
         type: string
         required: true
         description: Name of the workflow that ran
+      job_results:
+        type: string
+        required: false
+        default: ''
+        description: 'JSON string of job results, e.g. {"build":"success","test":"failure"}'
 
 jobs:
   notify:
@@ -25,6 +30,7 @@ jobs:
       - name: Create or comment on issue for CI failure
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JOB_RESULTS: ${{ inputs.job_results }}
         continue-on-error: true
         run: |
           TITLE="🚨 ${{ inputs.workflow_name }} failed on ${{ github.ref_name }}"
@@ -34,12 +40,30 @@ jobs:
           **Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           **Triggered by**: ${{ github.event.head_commit.message || github.event.pull_request.title || 'N/A' }}
           **Actor**: ${{ github.actor }}"
-          
+
+          if [ -n "$JOB_RESULTS" ]; then
+            JOB_LOG=$(echo "$JOB_RESULTS" | python3 -c "
+          import sys, json
+          try:
+            data = json.load(sys.stdin)
+            for k, v in data.items():
+              icon = '✅' if v == 'success' else '⏭️' if v == 'skipped' else '❌'
+              print(f'  {icon} {k}: {v}')
+          except: pass
+          " 2>/dev/null || echo "  (parse error)")
+            BODY="${BODY}
+
+          **Job Results**:
+          ${JOB_LOG}"
+          fi
+
           if [ "${{ inputs.success }}" = "true" ]; then
             echo "✅ Workflow succeeded, no issue needed."
             exit 0
           fi
-          
+
+          echo "::warning::Workflow failed. Creating/updating issue."
+
           REPO="${{ github.repository }}"
           EXISTING=$(gh issue list --repo "$REPO" --search "\"${TITLE}\" in:title" --state open --label ci-failure --json number --jq '.[0].number' 2>/dev/null || echo "")
           if [ -n "$EXISTING" ]; then
