@@ -70,8 +70,10 @@ mixin _PartnerApplyDraft on _$PartnerApplyController {
   Future<void> uploadProfileImage(XFile file) async {
     try {
       final repo = ref.read(partnerRepositoryProvider);
-      if (state.profileImagePath != null) {
-        await repo.deleteUploadedFile(state.profileImagePath!);
+      // Fix #382: 강제 언래핑 제거 — local variable로 null 안전성 확보
+      final oldPath = state.profileImagePath;
+      if (oldPath != null) {
+        await repo.deleteUploadedFile(oldPath);
       }
       final path = await repo.uploadProfileImage(file);
       state = state.copyWith(profileImagePath: path, profileImageFile: file);
@@ -84,8 +86,10 @@ mixin _PartnerApplyDraft on _$PartnerApplyController {
   Future<void> uploadBizRegistration(XFile file) async {
     try {
       final repo = ref.read(partnerRepositoryProvider);
-      if (state.bizRegistrationPath != null) {
-        await repo.deleteUploadedFile(state.bizRegistrationPath!);
+      // Fix #382: 강제 언래핑 제거 — local variable로 null 안전성 확보
+      final oldBizPath = state.bizRegistrationPath;
+      if (oldBizPath != null) {
+        await repo.deleteUploadedFile(oldBizPath);
       }
       final path = await repo.uploadBizRegistration(file);
       state = state.copyWith(
@@ -101,8 +105,10 @@ mixin _PartnerApplyDraft on _$PartnerApplyController {
   Future<void> uploadBankbook(XFile file) async {
     try {
       final repo = ref.read(partnerRepositoryProvider);
-      if (state.bankbookPath != null) {
-        await repo.deleteUploadedFile(state.bankbookPath!);
+      // Fix #382: 강제 언래핑 제거 — local variable로 null 안전성 확보
+      final oldBankbookPath = state.bankbookPath;
+      if (oldBankbookPath != null) {
+        await repo.deleteUploadedFile(oldBankbookPath);
       }
       final path = await repo.uploadBankbook(file);
       state = state.copyWith(bankbookPath: path, bankbookFile: file);
