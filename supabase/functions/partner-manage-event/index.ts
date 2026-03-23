@@ -337,6 +337,10 @@ async function handleUpdate(
     if (et && isNaN(et.getTime())) {
       return errorResponse("Invalid end_time format", 400);
     }
+    // Fix #317: Cross-validate when both are provided
+    if (st && et && st >= et) {
+      return errorResponse("start_time must be before end_time", 400);
+    }
   }
 
   const { error: updateError } = await supabase
