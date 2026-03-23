@@ -26,8 +26,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const githubToken = Deno.env.get("GITHUB_ACCESS_TOKEN");
 
-  if (!supabaseUrl || !serviceRoleKey) {
-    return errorResponse("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY", 500);
+  // Fix #380: service role key 검증 추가 — verify_jwt=false이므로 자체 인증 필수
+  const authHeader = req.headers.get("Authorization") ?? "";
+  if (!serviceRoleKey || authHeader !== `Bearer ${serviceRoleKey}`) {
+    return errorResponse("Unauthorized", 401);
+  }
+
+  if (!supabaseUrl) {
+    return errorResponse("Missing SUPABASE_URL", 500);
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
