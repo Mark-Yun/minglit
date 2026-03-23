@@ -63,8 +63,10 @@ ALTER TABLE public.match_pairs
   ADD COLUMN notification_sent boolean NOT NULL DEFAULT false;
 
 -- ============================================================
--- 3. event_routes에 match_result 이벤트 타입 추가
+-- 3. event_type_name enum에 match_result 추가 + event_routes 등록
 -- ============================================================
+
+ALTER TYPE public.event_type_name ADD VALUE IF NOT EXISTS 'match_result';
 
 INSERT INTO public.event_routes (event_type, target_queue, is_active) VALUES
   ('match_result', 'q_notifications', true)
