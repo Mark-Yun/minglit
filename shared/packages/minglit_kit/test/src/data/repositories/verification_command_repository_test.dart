@@ -291,9 +291,20 @@ void main() {
       });
     });
 
+    // Fix #309: reviewRequest via partner-review-submission EF
     group('reviewRequest', () {
-      test('completes without error', () async {
-        unawaited(mockTable(mockClient, 'verification_submissions'));
+      test('calls partner-review-submission EF with review action', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-review-submission',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true},
+          ),
+        );
 
         await expectLater(
           repository.reviewRequest(
@@ -302,16 +313,79 @@ void main() {
           ),
           completes,
         );
+
+        verify(
+          () => mockFunctions.invoke(
+            'partner-review-submission',
+            body: any(named: 'body'),
+          ),
+        ).called(1);
       });
 
-      test('throws on error', () async {
-        unawaited(
-          mockTable(
-            mockClient,
-            'verification_submissions',
-            shouldThrow: Exception('DB error'),
+      test('includes comment when provided', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-review-submission',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true},
           ),
         );
+
+        await expectLater(
+          repository.reviewRequest(
+            submissionId: 'sub_1',
+            status: VerificationStatus.rejected,
+            comment: '서류가 흐릿합니다',
+          ),
+          completes,
+        );
+
+        verify(
+          () => mockFunctions.invoke(
+            'partner-review-submission',
+            body: {
+              'action': 'review',
+              'submission_id': 'sub_1',
+              'result': 'rejected',
+              'comment': '서류가 흐릿합니다',
+            },
+          ),
+        ).called(1);
+      });
+
+      test('throws MinglitUserException on error response', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-review-submission',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 403,
+            data: {'error': 'Forbidden: insufficient partner permissions'},
+          ),
+        );
+
+        expect(
+          () => repository.reviewRequest(
+            submissionId: 'sub_1',
+            status: VerificationStatus.approved,
+          ),
+          throwsA(isA<MinglitUserException>()),
+        );
+      });
+
+      test('throws on network error', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-review-submission',
+            body: any(named: 'body'),
+          ),
+        ).thenThrow(Exception('network error'));
 
         await expectLater(
           repository.reviewRequest(

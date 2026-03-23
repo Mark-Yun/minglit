@@ -251,23 +251,33 @@ mixin _VerificationCommandRepository on _SupabaseVerificationContext {
     }
   }
 
-  // Fix #301: will be replaced by partner-review-submission EF (#309)
+  // Fix #309: reviewRequest via partner-review-submission EF
   Future<void> reviewRequest({
     required String submissionId,
     required VerificationStatus status,
+    String? comment,
   }) async {
     Log.d(
       'reviewRequest called | submissionId: $submissionId, status: $status',
     );
     try {
-      await supabaseClient
-          .from('verification_submissions')
-          .update({
-            'status': status.name,
-            'reviewed_at': DateTime.now().toIso8601String(),
-            'reviewed_by': supabaseClient.auth.currentUser?.id,
-          })
-          .eq('id', submissionId);
+      final response = await supabaseClient.functions.invoke(
+        'partner-review-submission',
+        body: {
+          'action': 'review',
+          'submission_id': submissionId,
+          'result': status.name,
+          if (comment != null && comment.isNotEmpty) 'comment': comment,
+        },
+      );
+
+      if (response.status != 200) {
+        final respData = response.data;
+        final errorMsg = respData is Map
+            ? (respData['error'] as String?) ?? 'Failed to review submission'
+            : 'Failed to review submission';
+        throw MinglitUserException(errorMsg);
+      }
       Log.d('reviewRequest success');
     } catch (e, st) {
       Log.e('❌ [VerificationRepo] reviewRequest Error', e, st);
@@ -275,16 +285,20 @@ mixin _VerificationCommandRepository on _SupabaseVerificationContext {
     }
   }
 
-  // Fix #301: submitComment via EF (verification_comments table dropped)
+  // Fix #309: submitComment — partner uses partner-review-submission EF,
+  // user uses user-submit-verification EF
   Future<void> submitComment({
     required String submissionId,
     required Map<String, dynamic> content,
+    bool isPartner = false,
   }) async {
     Log.d('submitComment called | submissionId: $submissionId');
     try {
       final text = content['text'] as String? ?? '';
+      final efName =
+          isPartner ? 'partner-review-submission' : 'user-submit-verification';
       final response = await supabaseClient.functions.invoke(
-        'user-submit-verification',
+        efName,
         body: {
           'action': 'comment',
           'submission_id': submissionId,
