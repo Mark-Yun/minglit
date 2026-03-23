@@ -1,16 +1,69 @@
--- Issue #306: 매칭 결과 알림 + 투표 데이터 정리 크론잡
+-- Issue #306: 원자적 투표 RPC + 매칭 결과 알림 + 투표 데이터 정리 크론잡
 
 SET search_path = public, extensions, pgmq, temp;
 
 -- ============================================================
--- 1. match_pairs에 알림 발송 여부 플래그 추가
+-- 1. 원자적 투표 RPC (race condition 방지)
+-- advisory lock으로 동일 voter의 동시 투표를 직렬화
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.cast_match_vote(
+  p_event_id uuid,
+  p_voter_id uuid,
+  p_candidate_id uuid,
+  p_max_vote_count integer
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  current_count integer;
+BEGIN
+  -- Advisory lock on voter+event to serialize concurrent votes
+  PERFORM pg_advisory_xact_lock(
+    hashtext(p_event_id::text || ':' || p_voter_id::text)
+  );
+
+  -- Check current vote count
+  SELECT count(*) INTO current_count
+  FROM public.match_votes
+  WHERE event_id = p_event_id AND voter_id = p_voter_id;
+
+  IF current_count >= p_max_vote_count THEN
+    RAISE EXCEPTION '투표 수를 초과했습니다'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  -- Check duplicate vote
+  IF EXISTS (
+    SELECT 1 FROM public.match_votes
+    WHERE event_id = p_event_id
+      AND voter_id = p_voter_id
+      AND candidate_id = p_candidate_id
+  ) THEN
+    RAISE EXCEPTION '이미 투표한 후보입니다'
+      USING ERRCODE = 'P0002';
+  END IF;
+
+  -- Insert vote (trigger handles match_pairs creation)
+  INSERT INTO public.match_votes (event_id, voter_id, candidate_id)
+  VALUES (p_event_id, p_voter_id, p_candidate_id);
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.cast_match_vote(uuid, uuid, uuid, integer) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.cast_match_vote(uuid, uuid, uuid, integer) TO service_role;
+
+-- ============================================================
+-- 2. match_pairs에 알림 발송 여부 플래그 추가
 -- ============================================================
 
 ALTER TABLE public.match_pairs
   ADD COLUMN notification_sent boolean NOT NULL DEFAULT false;
 
 -- ============================================================
--- 2. event_routes에 match_result 이벤트 타입 추가
+-- 3. event_routes에 match_result 이벤트 타입 추가
 -- ============================================================
 
 INSERT INTO public.event_routes (event_type, target_queue, is_active) VALUES
@@ -18,7 +71,7 @@ INSERT INTO public.event_routes (event_type, target_queue, is_active) VALUES
 ON CONFLICT (event_type, target_queue) DO UPDATE SET is_active = EXCLUDED.is_active;
 
 -- ============================================================
--- 3. 매칭 결과 알림 함수
+-- 4. 매칭 결과 알림 함수 (FOR UPDATE SKIP LOCKED으로 중복 방지)
 -- 이벤트 종료 + 1일 후, 아직 알림 미발송인 match_pairs 처리
 -- ============================================================
 
@@ -41,6 +94,7 @@ BEGIN
     WHERE mp.notification_sent = false
       AND e.vote_end_at IS NOT NULL
       AND e.vote_end_at < now() - interval '1 day'
+    FOR UPDATE OF mp SKIP LOCKED
   LOOP
     -- 양쪽 유저에게 알림 발송
     PERFORM public.fan_out_event('match_result', jsonb_build_object(
@@ -67,7 +121,7 @@ REVOKE EXECUTE ON FUNCTION public.notify_match_results() FROM PUBLIC, anon, auth
 GRANT EXECUTE ON FUNCTION public.notify_match_results() TO service_role;
 
 -- ============================================================
--- 4. 투표 데이터 정리 함수
+-- 5. 투표 데이터 정리 함수
 -- 이벤트 완료 + 30일 후 match_votes 삭제 (match_pairs는 영구 보관)
 -- ============================================================
 
@@ -94,7 +148,7 @@ REVOKE EXECUTE ON FUNCTION public.cleanup_expired_match_votes() FROM PUBLIC, ano
 GRANT EXECUTE ON FUNCTION public.cleanup_expired_match_votes() TO service_role;
 
 -- ============================================================
--- 5. pg_cron 등록
+-- 6. pg_cron 등록
 -- ============================================================
 
 -- 매칭 알림: 매일 09:00 KST (00:00 UTC)

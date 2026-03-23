@@ -34,6 +34,7 @@ function authRoute(): FetchRoute {
 function eventRoute(overrides?: {
   vote_start_at?: string | null;
   vote_end_at?: string | null;
+  end_time?: string | null;
   status?: string;
 }): FetchRoute {
   return {
@@ -48,6 +49,9 @@ function eventRoute(overrides?: {
         vote_end_at: overrides?.vote_end_at !== undefined
           ? overrides.vote_end_at
           : "2099-12-31T23:59:59Z",
+        end_time: overrides?.end_time !== undefined
+          ? overrides.end_time
+          : null,
       }),
   };
 }
@@ -107,35 +111,16 @@ function matchRulesRoute(rules: Array<{ vote_count: number }> = [{ vote_count: 3
   };
 }
 
-// Current vote count (Supabase count: "exact", head: true → HEAD request)
-function voteCountRoute(count = 0): FetchRoute {
+// RPC cast_match_vote
+function rpcCastVoteRoute(success = true, errorMessage?: string): FetchRoute {
   return {
-    matcher: (req) =>
-      req.url.includes("match_votes") &&
-      req.url.includes("select=") &&
-      (req.method === "GET" || req.method === "HEAD"),
-    handler: () =>
-      new Response(null, {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "content-range": `0-${Math.max(0, count - 1)}/${count}`,
-        },
-      }),
-  };
-}
-
-// Insert vote
-function insertVoteRoute(success = true): FetchRoute {
-  return {
-    matcher: (req) =>
-      req.url.includes("match_votes") && req.method === "POST",
+    matcher: (req) => req.url.includes("/rest/v1/rpc/cast_match_vote"),
     handler: () =>
       success
-        ? jsonResponse({ event_id: TEST_EVENT_ID })
+        ? jsonResponse(null)
         : jsonResponse(
-            { message: "duplicate key", code: "23505" },
-            { status: 409 },
+            { message: errorMessage ?? "rpc error" },
+            { status: 400 },
           ),
   };
 }
@@ -150,8 +135,7 @@ function happyPathRoutes(): FetchRoute[] {
     voterTicketRoute(),
     candidateTicketRoute(),
     matchRulesRoute(),
-    voteCountRoute(0),
-    insertVoteRoute(),
+    rpcCastVoteRoute(),
   ];
 }
 
@@ -390,6 +374,38 @@ Deno.test({
   },
 });
 
+// ─── 400: end_time fallback when vote_end_at is null ───
+Deno.test({
+  name: "returns 400 when vote_end_at is null but end_time has passed",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      eventRoute({
+        vote_start_at: "2020-01-01T00:00:00Z",
+        vote_end_at: null,
+        end_time: "2020-12-31T23:59:59Z",
+      }),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            event_id: TEST_EVENT_ID,
+            candidate_id: TEST_CANDIDATE_ID,
+          }),
+        );
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "투표가 마감되었습니다");
+      });
+    });
+  },
+});
+
 // ─── 400: voter not participant ───
 Deno.test({
   name: "returns 400 when voter is not a participant",
@@ -511,6 +527,38 @@ Deno.test({
   },
 });
 
+// ─── 400: empty group IDs (fail-closed) ───
+Deno.test({
+  name: "returns 400 when voter has no group IDs",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      eventRoute(),
+      voterParticipantRoute(),
+      candidateParticipantRoute(),
+      voterTicketRoute([]), // empty groups
+      candidateTicketRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            event_id: TEST_EVENT_ID,
+            candidate_id: TEST_CANDIDATE_ID,
+          }),
+        );
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "그룹 정보를 확인할 수 없습니다");
+      });
+    });
+  },
+});
+
 // ─── 400: match_rules에 없는 그룹간 투표 ───
 Deno.test({
   name: "returns 400 when groups are not in match_rules",
@@ -544,7 +592,7 @@ Deno.test({
   },
 });
 
-// ─── 400: vote count exceeded ───
+// ─── 400: vote count exceeded (via RPC) ───
 Deno.test({
   name: "returns 400 when vote count is exceeded",
   sanitizeResources: false,
@@ -559,7 +607,7 @@ Deno.test({
       voterTicketRoute(),
       candidateTicketRoute(),
       matchRulesRoute([{ vote_count: 2 }]),
-      voteCountRoute(2), // already used all votes
+      rpcCastVoteRoute(false, "투표 수를 초과했습니다"),
     ]);
 
     await withEnv(ENV, async () => {
@@ -603,30 +651,23 @@ Deno.test({
   },
 });
 
-// ─── 400: duplicate vote (DB PK violation) ───
+// ─── 400: duplicate vote (via RPC) ───
 Deno.test({
   name: "returns 400 for duplicate vote",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    const routes = happyPathRoutes().filter(
-      (r) => typeof r.matcher !== "function" || !("" + r.matcher).includes("POST"),
-    );
-    // Replace insert route with duplicate error
-    const routesWithDupError = [
-      ...routes.slice(0, -1), // remove last (insertVoteRoute)
-      {
-        matcher: (req: Request) =>
-          req.url.includes("match_votes") && req.method === "POST",
-        handler: () =>
-          jsonResponse(
-            { message: "duplicate key value violates unique constraint", code: "23505" },
-            { status: 409 },
-          ),
-      } as FetchRoute,
-    ];
-    const { fetchMock } = createFetchMock(routesWithDupError);
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      eventRoute(),
+      voterParticipantRoute(),
+      candidateParticipantRoute(),
+      voterTicketRoute(),
+      candidateTicketRoute(),
+      matchRulesRoute(),
+      rpcCastVoteRoute(false, "이미 투표한 후보입니다"),
+    ]);
 
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {

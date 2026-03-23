@@ -39,10 +39,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (!candidateId) return errorResponse("Missing candidate_id", 400);
   if (candidateId === voterId) return errorResponse("자기 자신에게 투표할 수 없습니다", 400);
 
-  // 1. Fetch event with vote period
+  // 1. Fetch event with vote period + end_time fallback
   const { data: event, error: eventError } = await supabase
     .from("events")
-    .select("id, status, vote_start_at, vote_end_at")
+    .select("id, status, vote_start_at, vote_end_at, end_time")
     .eq("id", eventId)
     .maybeSingle();
 
@@ -58,7 +58,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (now < new Date(event.vote_start_at)) {
     return errorResponse("투표가 아직 시작되지 않았습니다", 400);
   }
-  if (event.vote_end_at && now > new Date(event.vote_end_at)) {
+  // Fix #306: vote_end_at이 없으면 end_time을 fallback deadline으로 사용
+  const deadline = event.vote_end_at ?? event.end_time;
+  if (deadline && now > new Date(deadline)) {
     return errorResponse("투표가 마감되었습니다", 400);
   }
 
@@ -90,68 +92,68 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return errorResponse("후보자가 체크인하지 않았습니다", 400);
   }
 
-  // 5. Fetch voter's group from ticket → target_entry_group_ids
-  const { data: voterTicket } = await supabase
+  // 5. Fetch voter's group from ticket → target_entry_group_ids (fail-closed)
+  const { data: voterTicket, error: voterTicketError } = await supabase
     .from("tickets")
     .select("target_entry_group_ids")
     .eq("id", voterParticipant.ticket_id)
     .maybeSingle();
 
-  const { data: candidateTicket } = await supabase
+  if (voterTicketError) return errorResponse("Failed to load voter ticket", 500);
+
+  const { data: candidateTicket, error: candidateTicketError } = await supabase
     .from("tickets")
     .select("target_entry_group_ids")
     .eq("id", candidateParticipant.ticket_id)
     .maybeSingle();
 
+  if (candidateTicketError) return errorResponse("Failed to load candidate ticket", 500);
+
   const voterGroupIds: string[] = voterTicket?.target_entry_group_ids ?? [];
   const candidateGroupIds: string[] = candidateTicket?.target_entry_group_ids ?? [];
 
-  // 6. Check match_rules: voter's group → candidate's group allowed?
-  if (voterGroupIds.length > 0 && candidateGroupIds.length > 0) {
-    const { data: rules } = await supabase
-      .from("match_rules")
-      .select("vote_count")
-      .eq("event_id", eventId)
-      .in("source_group_id", voterGroupIds)
-      .in("target_group_id", candidateGroupIds);
-
-    if (!rules || rules.length === 0) {
-      return errorResponse("매칭 대상이 아닙니다", 400);
-    }
-
-    // 7. Check vote count limit (use max vote_count from applicable rules)
-    const maxVoteCount = Math.max(...rules.map((r: { vote_count: number }) => r.vote_count));
-
-    const { count: currentVotes } = await supabase
-      .from("match_votes")
-      .select("*", { count: "exact", head: true })
-      .eq("event_id", eventId)
-      .eq("voter_id", voterId);
-
-    if (currentVotes !== null && currentVotes >= maxVoteCount) {
-      return errorResponse("투표 수를 초과했습니다", 400);
-    }
+  // Fix #306: 그룹 정보가 없으면 거부 (fail-closed)
+  if (voterGroupIds.length === 0 || candidateGroupIds.length === 0) {
+    return errorResponse("그룹 정보를 확인할 수 없습니다", 400);
   }
 
-  // 8. Insert vote (DB-level constraints handle duplicates + self-vote)
-  const { error: insertError } = await supabase
-    .from("match_votes")
-    .insert({
-      event_id: eventId,
-      voter_id: voterId,
-      candidate_id: candidateId,
-    });
+  // 6. Check match_rules: voter's group → candidate's group allowed?
+  const { data: rules, error: rulesError } = await supabase
+    .from("match_rules")
+    .select("vote_count")
+    .eq("event_id", eventId)
+    .in("source_group_id", voterGroupIds)
+    .in("target_group_id", candidateGroupIds);
 
-  if (insertError) {
-    // PK violation = duplicate vote
-    if (insertError.code === "23505") {
+  if (rulesError) return errorResponse("Failed to load match rules", 500);
+  if (!rules || rules.length === 0) {
+    return errorResponse("매칭 대상이 아닙니다", 400);
+  }
+
+  // 7. Atomic vote count check + insert via RPC (prevents race condition)
+  const maxVoteCount = Math.max(...rules.map((r: { vote_count: number }) => r.vote_count));
+
+  const { data: rpcResult, error: rpcError } = await supabase.rpc("cast_match_vote", {
+    p_event_id: eventId,
+    p_voter_id: voterId,
+    p_candidate_id: candidateId,
+    p_max_vote_count: maxVoteCount,
+  });
+
+  if (rpcError) {
+    if (rpcError.message?.includes("투표 수를 초과했습니다")) {
+      return errorResponse("투표 수를 초과했습니다", 400);
+    }
+    if (rpcError.message?.includes("이미 투표한 후보입니다")) {
       return errorResponse("이미 투표한 후보입니다", 400);
     }
-    // CHECK violation = self-vote (should be caught above, but safety net)
-    if (insertError.code === "23514") {
+    if (rpcError.code === "23505") {
+      return errorResponse("이미 투표한 후보입니다", 400);
+    }
+    if (rpcError.code === "23514") {
       return errorResponse("자기 자신에게 투표할 수 없습니다", 400);
     }
-    return errorResponse(insertError.message, 500);
+    return errorResponse(rpcError.message, 500);
   }
 
   return successResponse({ success: true });
