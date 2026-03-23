@@ -24,8 +24,6 @@ void main() {
     partnerId: 'partner_1',
     description: 'Career verification',
     iconKey: 'briefcase',
-    formSchema: [],
-    isActive: true,
   );
 
   setUp(() {

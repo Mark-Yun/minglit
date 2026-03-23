@@ -16,16 +16,16 @@ mixin _VerificationCommandRepository on _SupabaseVerificationContext {
           if (verification.description != null)
             'description': verification.description,
           if (verification.iconKey != null) 'icon_key': verification.iconKey,
-          'form_schema':
-              verification.formSchema.map((f) => f.toJson()).toList(),
+          'form_schema': verification.formSchema
+              .map((f) => f.toJson())
+              .toList(),
         },
       );
 
       if (response.status != 200) {
         final respData = response.data;
         final errorMsg = respData is Map
-            ? (respData['error'] as String?) ??
-                'Failed to create verification'
+            ? (respData['error'] as String?) ?? 'Failed to create verification'
             : 'Failed to create verification';
         throw MinglitUserException(errorMsg);
       }
@@ -54,8 +54,9 @@ mixin _VerificationCommandRepository on _SupabaseVerificationContext {
           'display_name': verification.displayName,
           'description': verification.description,
           'icon_key': verification.iconKey,
-          'form_schema':
-              verification.formSchema.map((f) => f.toJson()).toList(),
+          'form_schema': verification.formSchema
+              .map((f) => f.toJson())
+              .toList(),
           'is_active': verification.isActive,
         },
       );
@@ -63,8 +64,7 @@ mixin _VerificationCommandRepository on _SupabaseVerificationContext {
       if (response.status != 200) {
         final respData = response.data;
         final errorMsg = respData is Map
-            ? (respData['error'] as String?) ??
-                'Failed to update verification'
+            ? (respData['error'] as String?) ?? 'Failed to update verification'
             : 'Failed to update verification';
         throw MinglitUserException(errorMsg);
       }
@@ -91,8 +91,7 @@ mixin _VerificationCommandRepository on _SupabaseVerificationContext {
       if (response.status != 200) {
         final respData = response.data;
         final errorMsg = respData is Map
-            ? (respData['error'] as String?) ??
-                'Failed to delete verification'
+            ? (respData['error'] as String?) ?? 'Failed to delete verification'
             : 'Failed to delete verification';
         throw MinglitUserException(errorMsg);
       }
@@ -119,8 +118,7 @@ mixin _VerificationCommandRepository on _SupabaseVerificationContext {
       if (response.status != 200) {
         final respData = response.data;
         final errorMsg = respData is Map
-            ? (respData['error'] as String?) ??
-                'Failed to restore verification'
+            ? (respData['error'] as String?) ?? 'Failed to restore verification'
             : 'Failed to restore verification';
         throw MinglitUserException(errorMsg);
       }
