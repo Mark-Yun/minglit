@@ -339,10 +339,11 @@ class _CommentsView extends ConsumerWidget {
             child: FutureBuilder<List<Map<String, dynamic>>>(
               future: repository.getVerificationComments(submissionId),
               builder: (context, snapshot) {
-                if (!snapshot.hasData) {
+                // Fix #382: snapshot.data null 안전성 확보 — hasData가 true여도 data가 null일 수 있음
+                final comments = snapshot.data;
+                if (comments == null) {
                   return const MinglitCircularProgressIndicator();
                 }
-                final comments = snapshot.data!;
                 return ListView.builder(
                   itemCount: comments.length,
                   itemBuilder: (context, i) {
