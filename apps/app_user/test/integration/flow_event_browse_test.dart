@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:app_user/src/features/event/detail/event_detail_page.dart';
-import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:app_user/src/features/partner/detail/partner_detail_page.dart';
 import 'package:app_user/src/features/partner/detail/partner_events_page.dart';
+import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';

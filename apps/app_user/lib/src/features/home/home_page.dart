@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
-import 'package:app_user/src/logic/feed_state_provider.dart';
-import 'package:app_user/src/widgets/explore_filter_chip_bar.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
+import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:app_user/src/routing/app_routes.dart';
+import 'package:app_user/src/widgets/explore_filter_chip_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 

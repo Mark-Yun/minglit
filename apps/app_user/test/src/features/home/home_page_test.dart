@@ -1,5 +1,5 @@
-import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:app_user/src/features/home/home_page.dart';
+import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
