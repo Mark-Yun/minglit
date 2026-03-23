@@ -41,7 +41,7 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 
 ### 2.1 Table Inventory
 
-총 **49개 테이블(analytics 스키마 4개 포함)** + **4개 뷰** + **3개 PGMQ 큐 테이블**.
+총 **50개 테이블(analytics 스키마 5개 포함)** + **4개 뷰** + **3개 PGMQ 큐 테이블**.
 
 #### Core (사용자/파트너)
 
@@ -121,6 +121,7 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 | `daily_events` | analytics | 일별 이벤트 집계 | date, event_name, count |
 | `daily_revenue` | analytics | 일별 매출 집계 | date, gross, net, refunds |
 | `funnel_daily` | analytics | 일별 퍼널 전환율 | date, step, count, conversion_rate |
+| `github_daily_stats` | analytics | 일별 GitHub 이슈/PR 통계 | date, metric, count |
 
 #### PGMQ Infrastructure
 
@@ -220,11 +221,29 @@ Supabase Edge Functions는 Deno 런타임 기반이며, `supabase/functions/` �
 | `payout-sync` | Payment | 지급 상태 동기화 |
 | `reconciliation-daily` | Payment | 일일 대사 (PG ↔ DB 불일치 검출) |
 | `settlement-register-transfers` | Payment | 정산 이체 등록 |
+| `event-checkin` | Event | 이벤트 참가자 체크인 처리 |
+| `event-matching` | Event | 체크인 완료 참가자 대상 매칭 페어 생성 |
+| `github-stats-sync` | Monitoring | GitHub 이슈/PR 통계 수집 → `analytics.github_daily_stats` 저장 (pg_cron 트리거) |
+| `partner-manage-event` | Partner | 이벤트/티켓/입장그룹 CRUD (RLS write → EF 전환) |
+| `partner-manage-match` | Partner | 매칭 룰 관리 (set_rules, clear_rules) |
+| `partner-manage-party` | Partner | 파티/장소/템플릿 CRUD (RLS write → EF 전환) |
+| `partner-manage-verification` | Partner | 인증 양식 정의 생성/수정 |
+| `partner-register` | Partner | 파트너 입점 신청 (임시저장, 제출, 수정) |
+| `partner-review-submission` | Partner | 인증 제출물 심사 (승인/거절 + 코멘트) |
+| `user-cancel-order` | User | 유저 주문 취소 + 환불 처리 |
+| `user-cast-vote` | User | 매칭 투표 (match_votes 삽입) |
+| `user-create-order` | User | 이벤트 신청 + 결제 주문 생성 |
+| `user-manage-notification` | User | 알림 읽음 처리 등 알림 관리 |
+| `user-manage-settings` | User | 유저 설정 변경 + FCM 토큰 등록/삭제 |
+| `user-manage-social` | User | 소셜 상호작용 (좋아요, 차단, 신고) 관리 |
+| `user-submit-verification` | User | 인증 제출물 제출 |
+| `user-update-verification` | User | 유저 인증 데이터(`user_verifications`) 업데이트 |
 
 ### 3.2 Shared Modules (`_shared/`)
 
 | Module | LOC | Purpose |
 |--------|-----|---------|
+| `supabase_client.ts` | 23 | Supabase 서비스 클라이언트 팩토리 (`createServiceClient()`) |
 | `portone_client.ts` | 209 | Portone V2 API 클라이언트 (결제 검증, 취소) |
 | `iamport_client.ts` | 63 | Iamport V1 레거시 API 래퍼 |
 | `logger.ts` | 124 | 구조화 로깅 (Axiom 연동, Sentry 래퍼) |
@@ -372,6 +391,7 @@ protect_user_profile_fields() → trigger
 | `process-notifications` | 매분 (`* * * * *`) | `notification-worker` Edge Function 호출 (pg_net HTTP POST) |
 | `send-event-reminders` | 매분 (`* * * * *`) | 이벤트 시작 55~65분 전 참가자에게 리마인더 (`produce_event`) |
 | `settlement-status-transition` | 매일 03:00 (`0 3 * * *`) | 7일 경과 정산 `pending` → `ready` 전환 |
+| `sync_github_stats` | 매일 05:30 KST (`30 20 * * *` UTC) | `github-stats-sync` Edge Function 호출 → GitHub 이슈/PR 통계 수집 |
 
 ---
 

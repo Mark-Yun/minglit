@@ -1,5 +1,5 @@
 // Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
-import { createClient } from "@supabase/supabase-js";
+import { createServiceClient } from "../_shared/supabase_client.ts";
 import { IamportClient } from "../_shared/iamport_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
@@ -37,10 +37,7 @@ Deno.serve(withHandler(async (req) => {
     }
 
     // 0. Supabase Client 초기화
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    const supabase = createServiceClient();
 
     // 1. DB에서 주문 정보 조회 (금액 확인)
     const { data: order, error: orderError } = await withSpan(

@@ -1,7 +1,7 @@
 // partner-register — Partner application (save draft, submit, update)
 // Issue #311: RLS write strategy 전환
 
-import { createClient } from "@supabase/supabase-js";
+import { createServiceClient } from "../_shared/supabase_client.ts";
 import {
   corsResponse,
   errorResponse,
@@ -51,12 +51,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 });
 
 async function handleRequest(req: Request): Promise<Response> {
-  // 1. Environment check
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!supabaseUrl || !serviceRoleKey) {
-    return errorResponse("Missing server configuration", 500);
-  }
+  // 1. Environment check (handled by createServiceClient)
 
   // 2. Auth
   const auth = await requireAuth(req);
@@ -79,9 +74,7 @@ async function handleRequest(req: Request): Promise<Response> {
   if (typeof action !== "string" || !action) return errorResponse("Missing action", 400);
 
   // 4. Supabase client (service role)
-  const supabase = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false },
-  });
+  const supabase = createServiceClient();
 
   // ─── save_draft ───
   if (action === "save_draft") {

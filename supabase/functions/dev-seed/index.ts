@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { createServiceClient } from '../_shared/supabase_client.ts'
 
 function isProduction(): boolean {
   const env = Deno.env.get('ENVIRONMENT')
@@ -986,9 +987,7 @@ Deno.serve(async (_req) => {
    }
 
    try {
-     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-     const supabase = createClient(supabaseUrl, serviceRoleKey)
+     const supabase = createServiceClient()
 
     // Seed users
     const createdUsers = await seedUsers(supabase)

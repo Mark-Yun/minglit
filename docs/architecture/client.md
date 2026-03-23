@@ -31,7 +31,7 @@ minglit_kit/lib/src/features/
 ├── search/         # 전문 검색 (PGroonga)
 ├── social/         # 소셜 기능 (좋아요, 구독, 차단)
 ├── theme/          # 테마 모드 컨트롤러 (라이트/다크/시스템)
-└── verification/   # 인증 UI 컴포넌트 (인증 제출/심사 관련)
+└── verification/   # 본인인증 (Identity Verification) — Iamport V2 기반 실명 인증 화면
 ```
 
 ### 2.2 Coordinator Pattern (Navigation)
@@ -95,7 +95,7 @@ Minglit은 **"신뢰(Trust)"**를 가장 중요한 자산으로 취급하며, �
 ### 5.1 Layer 1: Identity (신원)
 *   **정의**: "이 사람은 실존하며, 주장하는 나이/성별이 맞는가?"
 *   **데이터**: `user_profiles` 테이블 (`birth_date`, `gender`, `is_verified`).
-*   **검증 주체**: 플랫폼 (PASS/SMS API).
+*   **검증 주체**: 플랫폼 (Iamport 본인인증 API).
 *   **특징**: 모든 유저가 갖춰야 할 **기본 자격(Base Layer)**. 파트너 승인이 불필요하며, 즉시 필터링(나이 제한 등)에 사용됩니다.
 
 ### 5.2 Layer 2: Qualification (자격)

@@ -1,7 +1,7 @@
 // partner-manage-match — Manage match rules for events (set_rules, clear_rules)
 // Issue #305: RLS write strategy 전환 + vote_count 지원
 
-import { createClient } from "@supabase/supabase-js";
+import { createServiceClient } from "../_shared/supabase_client.ts";
 import {
   corsResponse,
   errorResponse,
@@ -19,14 +19,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
-  // 1. Environment check (before auth — requireAuth also reads these)
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!supabaseUrl || !serviceRoleKey) {
-    return errorResponse("Missing server configuration", 500);
-  }
-
-  // 2. Auth
+  // 1. Auth
   const auth = await requireAuth(req);
   if (auth instanceof Response) return auth;
   const userId = auth;
@@ -50,9 +43,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (typeof eventId !== "string" || !eventId) return errorResponse("Missing event_id", 400);
 
   // 4. Supabase client (service role)
-  const supabase = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false },
-  });
+  const supabase = createServiceClient();
 
   // 5. Verify ownership: event → party → partner
   const { data: event, error: eventError } = await supabase

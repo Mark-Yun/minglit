@@ -1,6 +1,6 @@
 // event-checkin/index.ts — Check-in a participant for an event
 
-import { createClient } from "@supabase/supabase-js";
+import { createServiceClient } from "../_shared/supabase_client.ts";
 import { corsResponse, errorResponse, successResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { initSentry, withHandler, log } from "../_shared/logger.ts";
@@ -31,10 +31,7 @@ Deno.serve(withHandler(async (req) => {
     return errorResponse("Missing required parameters: event_id, participant_id", 400);
   }
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-  );
+  const supabase = createServiceClient();
 
   // Fetch the participant row to validate ownership and current status
   const { data: participant, error: fetchErr } = await supabase

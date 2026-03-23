@@ -1,6 +1,6 @@
 import 'package:app_partner/src/features/more/more_coordinator.dart';
 import 'package:app_partner/src/features/more/more_page.dart';
-import 'package:app_partner/src/features/party/party_providers.dart';
+import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:app_partner/src/routing/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

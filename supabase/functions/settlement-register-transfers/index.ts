@@ -1,5 +1,5 @@
 // Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
-import { createClient } from "@supabase/supabase-js";
+import { createServiceClient } from "../_shared/supabase_client.ts";
 import { PortoneV2Client } from "../_shared/portone_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
@@ -24,10 +24,7 @@ Deno.serve(withHandler(async (req) => {
   if (auth instanceof Response) return auth;
 
   try {
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    );
+    const supabase = createServiceClient();
 
     const { data: pendingItems, error: fetchError } = await supabase
       .from("settlement_items")
