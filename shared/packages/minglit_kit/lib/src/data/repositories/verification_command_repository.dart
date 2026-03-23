@@ -295,8 +295,9 @@ mixin _VerificationCommandRepository on _SupabaseVerificationContext {
     Log.d('submitComment called | submissionId: $submissionId');
     try {
       final text = content['text'] as String? ?? '';
-      final efName =
-          isPartner ? 'partner-review-submission' : 'user-submit-verification';
+      final efName = isPartner
+          ? 'partner-review-submission'
+          : 'user-submit-verification';
       final response = await supabaseClient.functions.invoke(
         efName,
         body: {

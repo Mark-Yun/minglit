@@ -1,5 +1,3 @@
-import 'dart:async' show unawaited;
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/models/verification.dart';
 import 'package:minglit_kit/src/data/repositories/verification_repository.dart';
