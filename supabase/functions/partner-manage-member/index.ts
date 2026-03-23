@@ -145,7 +145,7 @@ async function checkPartnerPermission(
 ): Promise<void | Response> {
   const { data: perm, error: permError } = await supabase
     .from("partner_member_permissions")
-    .select("permissions")
+    .select("role, permissions")
     .eq("partner_id", partnerId)
     .eq("user_id", userId)
     .maybeSingle();
@@ -154,8 +154,9 @@ async function checkPartnerPermission(
     return errorResponse("Failed to verify partner permissions", 500);
   }
 
-  // Fix #313: MEMBER_MANAGE 권한 확인
-  const hasPermission = (perm?.permissions as string[] | null)?.includes("MEMBER_MANAGE") ?? false;
+  // Fix #313: owner role 또는 MEMBER_MANAGE 권한 확인 (defense-in-depth)
+  const hasPermission = perm?.role === "owner" ||
+    ((perm?.permissions as string[] | null)?.includes("MEMBER_MANAGE") ?? false);
   if (!hasPermission) {
     return errorResponse("Forbidden: insufficient partner permissions", 403);
   }

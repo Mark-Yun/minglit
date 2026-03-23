@@ -39,7 +39,7 @@ function permRoute(hasPermission = true): FetchRoute {
     handler: () =>
       jsonResponse(
         hasPermission
-          ? { permissions: ["PARTNER_EDIT", "MEMBER_MANAGE"] }
+          ? { role: "owner", permissions: ["PARTNER_EDIT", "MEMBER_MANAGE"] }
           : null,
       ),
   };
