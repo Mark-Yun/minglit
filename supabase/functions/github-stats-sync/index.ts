@@ -1,7 +1,7 @@
 // github-stats-sync — Fetch GitHub issue/PR stats and store in analytics.github_daily_stats
 // Triggered daily via pg_cron
 
-import { createClient } from "@supabase/supabase-js";
+import { createServiceClient } from "../_shared/supabase_client.ts";
 import {
   corsResponse,
   errorResponse,
@@ -22,7 +22,6 @@ interface GitHubItem {
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const githubToken = Deno.env.get("GITHUB_ACCESS_TOKEN");
 
@@ -32,13 +31,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return errorResponse("Unauthorized", 401);
   }
 
-  if (!supabaseUrl) {
-    return errorResponse("Missing SUPABASE_URL", 500);
-  }
-
-  const supabase = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false },
-  });
+  const supabase = createServiceClient();
 
   const headers: Record<string, string> = {
     Accept: "application/vnd.github.v3+json",

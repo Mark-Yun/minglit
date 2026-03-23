@@ -1,4 +1,4 @@
-import 'package:app_partner/src/features/party/party_providers.dart';
+import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:app_partner/src/features/settlement/settlement_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';

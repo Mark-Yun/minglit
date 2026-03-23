@@ -1,6 +1,6 @@
 // backend-simulator/index.ts — Main Edge Function handler for backend simulation
 
-import { createClient } from "@supabase/supabase-js";
+import { createServiceClient } from "../_shared/supabase_client.ts";
 import {
   corsResponse,
   errorResponse,
@@ -57,15 +57,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
   if (isProduction()) return errorResponse("Dev only", 403);
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-  if (!supabaseUrl || !serviceRoleKey) {
-    return errorResponse("Missing required environment variables", 500);
-  }
-  const supabase = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false },
-  });
+  const supabase = createServiceClient();
 
   // Parse request body
   let body: {

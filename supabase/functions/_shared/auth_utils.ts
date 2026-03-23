@@ -1,5 +1,5 @@
 // Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
-import { createClient } from "jsr:@supabase/supabase-js@2";
+import { createServiceClient } from "./supabase_client.ts";
 import { errorResponse } from "./response_utils.ts";
 
 /**
@@ -25,10 +25,7 @@ export async function requireAuth(
 
   const token = authHeader.replace("Bearer ", "");
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-  );
+  const supabase = createServiceClient();
 
   const { data, error } = await supabase.auth.getUser(token);
   if (error || !data.user) {

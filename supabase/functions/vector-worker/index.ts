@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createServiceClient } from '../_shared/supabase_client.ts'
 import { OpenAIService } from './openai_service.ts'
 import { serializeParty } from './party_serializer.ts'
 import { HybridCalculator } from './calculator.ts'
@@ -24,15 +24,11 @@ Deno.serve(withHandler(async (req) => {
     const payload = await req.json().catch(() => ({}));
     const batchSize = payload.batch_size ?? 50;
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || Deno.env.get('SUPABASE_REST_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const openAiKey = Deno.env.get('OPENAI_API_KEY');
 
-    if (!supabaseUrl) throw new Error("Missing SUPABASE_URL");
-    if (!supabaseKey) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
     if (!openAiKey) throw new Error("Missing OPENAI_API_KEY (Make sure .env is in function folder)");
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createServiceClient();
     const openAi = new OpenAIService(openAiKey);
     const utils = new WorkerUtils(supabase, 'q_vectors');
 

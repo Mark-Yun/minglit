@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createServiceClient } from "../_shared/supabase_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { initSentry, withHandler, withSpan, log } from "../_shared/logger.ts";
@@ -35,10 +35,7 @@ Deno.serve(withHandler(async (req) => {
     }
 
     // 2. Init Supabase (service role)
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    );
+    const supabase = createServiceClient();
 
     switch (action) {
       case "upsert_token": {

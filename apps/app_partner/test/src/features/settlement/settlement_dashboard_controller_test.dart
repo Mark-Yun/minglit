@@ -1,4 +1,4 @@
-import 'package:app_partner/src/features/party/party_providers.dart';
+import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:app_partner/src/features/settlement/settlement_dashboard_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';

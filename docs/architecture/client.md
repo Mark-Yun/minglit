@@ -31,7 +31,7 @@ minglit_kit/lib/src/features/
 ├── search/         # 전문 검색 (PGroonga)
 ├── social/         # 소셜 기능 (좋아요, 구독, 차단)
 ├── theme/          # 테마 모드 컨트롤러 (라이트/다크/시스템)
-└── verification/   # 인증 UI 컴포넌트 (인증 제출/심사 관련)
+└── verification/   # 본인인증 (Identity Verification) — Iamport V2 기반 실명 인증 화면
 ```
 
 ### 2.2 Coordinator Pattern (Navigation)

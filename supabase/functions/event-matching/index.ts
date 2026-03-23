@@ -1,6 +1,6 @@
 // event-matching/index.ts — Create match pairs for checked-in participants of an event
 
-import { createClient } from "@supabase/supabase-js";
+import { createServiceClient } from "../_shared/supabase_client.ts";
 import { corsResponse, errorResponse, successResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { initSentry, withHandler, log } from "../_shared/logger.ts";
@@ -28,10 +28,7 @@ Deno.serve(withHandler(async (req) => {
     return errorResponse("Missing required parameter: event_id", 400);
   }
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-  );
+  const supabase = createServiceClient();
 
   // Only service_role or admin can trigger matching — verify caller has elevated access
   // (requireAuth already validated JWT; for admin check, service_role callers pass a service_role JWT)
