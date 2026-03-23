@@ -138,11 +138,13 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
       final entryGroups = party.entryGroups;
       if (entryGroups != null && entryGroups.isNotEmpty) {
         body['entry_group_templates'] = entryGroups
-            .map((g) => g.toJson()
-              ..remove('id')
-              ..remove('party_id')
-              ..remove('created_at')
-              ..remove('updated_at'))
+            .map(
+              (g) => g.toJson()
+                ..remove('id')
+                ..remove('party_id')
+                ..remove('created_at')
+                ..remove('updated_at'),
+            )
             .toList();
       }
 
