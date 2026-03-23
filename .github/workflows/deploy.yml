@@ -60,6 +60,8 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_LANDING_USER }}
+          dev-domain-alias: dev.minglit.com
+          deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
 
   deploy-landing_partner:
     runs-on: ubuntu-latest
@@ -75,6 +77,8 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_LANDING_PARTNER }}
+          dev-domain-alias: dev.partner.minglit.com
+          deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
 
   deploy-app_partner:
     runs-on: ubuntu-latest
@@ -147,7 +151,7 @@ jobs:
             BYPASS="${BYPASS_MAP[$url]}"
             STATUS=$(curl -sL -o /dev/null -w "%{http_code}" \
               -H "x-vercel-protection-bypass: $BYPASS" \
-              --max-time 15 "$url" || echo "000")
+              --max-time 15 "$url") || STATUS="000"
             if [ "$STATUS" = "200" ]; then
               echo "✅ ($STATUS)"
             else

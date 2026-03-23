@@ -10,6 +10,12 @@ inputs:
     required: true
   vercel-project-id:
     required: true
+  dev-domain-alias:
+    description: 'Domain alias for dev/preview deployments'
+    required: false
+  deploy-branch:
+    description: 'Branch name to determine prod vs preview deployment'
+    required: true
 
 runs:
   using: "composite"
@@ -22,8 +28,14 @@ runs:
         VERCEL_PROJECT_ID: ${{ inputs.vercel-project-id }}
         VERCEL_TOKEN: ${{ inputs.vercel-token }}
       run: |
-        if [[ "${{ github.ref_name }}" == "main" ]]; then
+        if [[ "${{ inputs.deploy-branch }}" == "main" ]]; then
           npx --yes vercel@latest deploy --prod --token=$VERCEL_TOKEN --yes
         else
-          npx --yes vercel@latest deploy --token=$VERCEL_TOKEN --yes
+          # Fix #372: capture preview URL and assign domain alias so dev.*.minglit.com stays reachable
+          DEPLOY_URL=$(npx --yes vercel@latest deploy --token=$VERCEL_TOKEN --yes)
+          echo "✅ Deployed to: $DEPLOY_URL"
+          if [[ -n "${{ inputs.dev-domain-alias }}" ]]; then
+            echo "🔗 Assigning alias: ${{ inputs.dev-domain-alias }}"
+            npx --yes vercel@latest alias set "$DEPLOY_URL" "${{ inputs.dev-domain-alias }}" --token=$VERCEL_TOKEN --scope=$VERCEL_ORG_ID
+          fi
         fi
