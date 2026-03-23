@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:app_partner/src/features/settlement/settlement_models.dart';
+import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
