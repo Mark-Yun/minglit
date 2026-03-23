@@ -38,11 +38,7 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
       );
 
       if (draftResponse.status != 200) {
-        final respData = draftResponse.data;
-        final errorMsg = respData is Map
-            ? (respData['error'] as String?) ?? 'Failed to save draft'
-            : 'Failed to save draft';
-        throw MinglitUserException(errorMsg);
+        throw _efError(draftResponse, 'Failed to save draft');
       }
 
       final draftData = draftResponse.data as Map<String, dynamic>;
@@ -57,11 +53,7 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
       );
 
       if (submitResponse.status != 200) {
-        final respData = submitResponse.data;
-        final errorMsg = respData is Map
-            ? (respData['error'] as String?) ?? 'Failed to submit application'
-            : 'Failed to submit application';
-        throw MinglitUserException(errorMsg);
+        throw _efError(submitResponse, 'Failed to submit application');
       }
 
       Log.i('submitApplication success');
@@ -225,11 +217,7 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
       );
 
       if (response.status != 200) {
-        final respData = response.data;
-        final errorMsg = respData is Map
-            ? (respData['error'] as String?) ?? 'Failed to save draft'
-            : 'Failed to save draft';
-        throw MinglitUserException(errorMsg);
+        throw _efError(response, 'Failed to save draft');
       }
 
       final data = response.data as Map<String, dynamic>;
@@ -272,11 +260,7 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
       );
 
       if (response.status != 200) {
-        final respData = response.data;
-        final errorMsg = respData is Map
-            ? (respData['error'] as String?) ?? 'Failed to update application'
-            : 'Failed to update application';
-        throw MinglitUserException(errorMsg);
+        throw _efError(response, 'Failed to update application');
       }
 
       // Re-fetch the full record
@@ -315,11 +299,7 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
       );
 
       if (response.status != 200) {
-        final respData = response.data;
-        final errorMsg = respData is Map
-            ? (respData['error'] as String?) ?? 'Failed to submit draft'
-            : 'Failed to submit draft';
-        throw MinglitUserException(errorMsg);
+        throw _efError(response, 'Failed to submit draft');
       }
 
       // Re-fetch the full record
@@ -392,5 +372,21 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
     if (userId == null) throw const AuthException('User not authenticated');
     Log.d('uploadBankbook called | file: ${file.name}');
     return _uploadFile(userId, file, 'bankbook');
+  }
+
+  // Fix #311: EF 에러 응답에서 details (필드별 검증 에러)를 포함한 예외 생성
+  MinglitUserException _efError(FunctionResponse response, String fallback) {
+    final respData = response.data;
+    if (respData is Map) {
+      final errorMsg = (respData['error'] as String?) ?? fallback;
+      final rawDetails = respData['details'];
+      final details = rawDetails is List
+          ? rawDetails
+              .whereType<Map<String, dynamic>>()
+              .toList()
+          : null;
+      return MinglitUserException(errorMsg, details: details);
+    }
+    return MinglitUserException(fallback);
   }
 }

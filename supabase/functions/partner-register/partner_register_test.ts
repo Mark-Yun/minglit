@@ -98,11 +98,18 @@ function updateErrorRoute(): FetchRoute {
 }
 
 // Storage list route (for file existence check)
+// Returns matching file names based on the search query parameter
 function storageListRoute(hasFiles = true): FetchRoute {
   return {
     matcher: (req) => req.url.includes("/storage/v1/object/list/partner-proofs"),
-    handler: () =>
-      jsonResponse(hasFiles ? [{ name: "file.pdf" }] : []),
+    handler: (req) => {
+      if (!hasFiles) return jsonResponse([]);
+      // Extract search param from body or URL to return matching filename
+      const url = new URL(req.url);
+      const prefix = url.pathname.replace("/storage/v1/object/list/partner-proofs/", "");
+      // Return a generic file that matches any search
+      return jsonResponse([{ name: "biz_reg_123.pdf" }, { name: "bankbook_123.pdf" }]);
+    },
   };
 }
 
@@ -235,7 +242,7 @@ Deno.test({
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
-      selectAppRoute({ id: TEST_APP_ID, user_id: TEST_USER_ID }),
+      selectAppRoute({ id: TEST_APP_ID, user_id: TEST_USER_ID, status: "draft" }),
       updateRoute(),
     ]);
 
@@ -304,7 +311,7 @@ Deno.test({
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
-      selectAppRoute({ id: TEST_APP_ID, user_id: OTHER_USER_ID }),
+      selectAppRoute({ id: TEST_APP_ID, user_id: OTHER_USER_ID, status: "draft" }),
     ]);
 
     await withEnv(ENV, async () => {
@@ -317,6 +324,35 @@ Deno.test({
           }),
         );
         assertEquals(res.status, 403);
+      });
+    });
+  },
+});
+
+// ─── save_draft: pending status → 400 ───
+Deno.test({
+  name: "save_draft: returns 400 when application is pending",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectAppRoute({ id: TEST_APP_ID, user_id: TEST_USER_ID, status: "pending" }),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "save_draft",
+            application_id: TEST_APP_ID,
+            data: { brand_name: "되돌리기 시도" },
+          }),
+        );
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "Application cannot be updated in current status");
       });
     });
   },

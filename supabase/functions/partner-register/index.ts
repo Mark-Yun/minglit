@@ -97,9 +97,21 @@ async function handleRequest(req: Request): Promise<Response> {
     record.status = "draft";
 
     if (applicationId) {
-      // UPDATE existing draft — verify ownership
-      const ownerCheck = await verifyOwnership(supabase, applicationId, userId);
-      if (ownerCheck instanceof Response) return ownerCheck;
+      // UPDATE existing draft — verify ownership + status guard
+      const { data: app, error: fetchError } = await supabase
+        .from("partner_applications")
+        .select("id, user_id, status")
+        .eq("id", applicationId)
+        .maybeSingle();
+      if (fetchError) return errorResponse("Failed to load application", 500);
+      if (!app) return errorResponse("Application not found", 404);
+      if (app.user_id !== userId) {
+        return errorResponse("Forbidden: not your application", 403);
+      }
+      // Fix #311: pending/approved 신청서는 save_draft로 되돌릴 수 없음
+      if (app.status !== "draft" && app.status !== "needs_correction") {
+        return errorResponse("Application cannot be updated in current status", 400);
+      }
 
       const { error: updateError } = await supabase
         .from("partner_applications")
@@ -200,14 +212,24 @@ async function handleRequest(req: Request): Promise<Response> {
         errors.push({ field, message });
         continue;
       }
-      // Verify file exists in storage
-      const { data: fileData } = await supabase.storage
-        .from("partner-proofs")
-        .list(path.substring(0, path.lastIndexOf("/")), {
-          search: path.substring(path.lastIndexOf("/") + 1),
-        });
+      // Fix #311: 파일 경로가 본인 디렉토리인지 검증
+      if (!path.startsWith(`${userId}/`)) {
+        return errorResponse("Forbidden file path", 403);
+      }
 
-      if (!fileData || fileData.length === 0) {
+      const folder = path.substring(0, path.lastIndexOf("/"));
+      const filename = path.substring(path.lastIndexOf("/") + 1);
+
+      // Verify file exists in storage
+      const { data: fileData, error: fileError } = await supabase.storage
+        .from("partner-proofs")
+        .list(folder, { search: filename });
+
+      if (fileError) {
+        return errorResponse("Failed to verify uploaded files", 500);
+      }
+
+      if (!fileData.some((file) => file.name === filename)) {
         errors.push({ field, message });
       }
     }
@@ -287,25 +309,3 @@ async function handleRequest(req: Request): Promise<Response> {
   return errorResponse(`Unknown action: ${action}`, 400);
 }
 
-// ─── Helper: verify application ownership ───
-async function verifyOwnership(
-  supabase: ReturnType<typeof createClient>,
-  applicationId: string,
-  userId: string,
-): Promise<void | Response> {
-  const { data: app, error } = await supabase
-    .from("partner_applications")
-    .select("id, user_id")
-    .eq("id", applicationId)
-    .maybeSingle();
-
-  if (error) {
-    return errorResponse("Failed to load application", 500);
-  }
-  if (!app) {
-    return errorResponse("Application not found", 404);
-  }
-  if (app.user_id !== userId) {
-    return errorResponse("Forbidden: not your application", 403);
-  }
-}
