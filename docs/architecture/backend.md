@@ -243,6 +243,7 @@ Supabase Edge Functions는 Deno 런타임 기반이며, `supabase/functions/` �
 
 | Module | LOC | Purpose |
 |--------|-----|---------|
+| `supabase_client.ts` | 23 | Supabase 서비스 클라이언트 팩토리 (`createServiceClient()`) |
 | `portone_client.ts` | 209 | Portone V2 API 클라이언트 (결제 검증, 취소) |
 | `iamport_client.ts` | 63 | Iamport V1 레거시 API 래퍼 |
 | `logger.ts` | 124 | 구조화 로깅 (Axiom 연동, Sentry 래퍼) |

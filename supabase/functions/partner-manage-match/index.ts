@@ -19,9 +19,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
-  // 1. Environment check (before auth — requireAuth also reads these)
-
-  // 2. Auth
+  // 1. Auth
   const auth = await requireAuth(req);
   if (auth instanceof Response) return auth;
   const userId = auth;
