@@ -127,3 +127,4 @@ jobs:
     with:
       success: ${{ needs.client-cuj-test.result == 'success' && needs.partner-cuj-test.result == 'success' }}
       workflow_name: 'Daily CUJ'
+      job_results: '{"client-cuj-test":"${{ needs.client-cuj-test.result }}","partner-cuj-test":"${{ needs.partner-cuj-test.result }}"}'

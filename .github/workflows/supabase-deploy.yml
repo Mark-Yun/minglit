@@ -105,3 +105,4 @@ jobs:
     with:
       success: ${{ needs.deploy.result == 'success' }}
       workflow_name: 'Deploy Supabase Migrations'
+      job_results: '{"deploy":"${{ needs.deploy.result }}"}'
