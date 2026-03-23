@@ -27,14 +27,10 @@ const EVENT_FIELDS = [
 ] as const;
 
 // Fields allowed in ticket update
+// Fix #317: 이슈 스펙에 맞게 price/quantity만 허용
 const TICKET_UPDATE_FIELDS = [
   "price",
   "quantity",
-  "name",
-  "description",
-  "status",
-  "target_entry_group_ids",
-  "required_verification_ids",
 ] as const;
 
 Deno.serve(async (req: Request): Promise<Response> => {
@@ -204,14 +200,18 @@ async function handleCreate(
   const eventId = newEvent.id as string;
 
   // Copy entry_group_templates → entry_groups
+  // Fix #317: ID를 포함해서 조회하여 target_entry_group_ids 재매핑에 사용
   const { data: templates, error: tplError } = await supabase
     .from("entry_group_templates")
-    .select("label, gender, birth_year_min, birth_year_max, required_verification_ids")
+    .select("id, label, gender, birth_year_min, birth_year_max, required_verification_ids")
     .eq("party_id", partyId);
 
   if (tplError) {
     return errorResponse(`Failed to fetch entry group templates: ${tplError.message}`, 500);
   }
+
+  // Map: template ID → new entry_group ID (for target_entry_group_ids remapping)
+  const templateToGroupMap = new Map<string, string>();
 
   if (templates && templates.length > 0) {
     const entryGroups = templates.map((t: Record<string, unknown>) => ({
@@ -223,12 +223,23 @@ async function handleCreate(
       required_verification_ids: t.required_verification_ids ?? [],
     }));
 
-    const { error: egError } = await supabase
+    const { data: insertedGroups, error: egError } = await supabase
       .from("entry_groups")
-      .insert(entryGroups);
+      .insert(entryGroups)
+      .select("id");
 
     if (egError) {
       return errorResponse(`Failed to create entry groups: ${egError.message}`, 500);
+    }
+
+    // Build mapping from template ID to new entry_group ID (same order)
+    if (insertedGroups) {
+      for (let i = 0; i < templates.length; i++) {
+        templateToGroupMap.set(
+          templates[i].id as string,
+          (insertedGroups[i] as Record<string, unknown>).id as string,
+        );
+      }
     }
   }
 
@@ -260,13 +271,19 @@ async function handleCreate(
 
     const tickets = ticketInputs.map((input: Record<string, unknown>) => {
       const tpl = templateMap.get(input.template_id) as Record<string, unknown>;
+      // Fix #317: target_entry_group_ids를 새 entry_group ID로 재매핑
+      const originalTargetIds = (tpl.target_entry_group_ids as string[]) ?? [];
+      const remappedTargetIds = originalTargetIds
+        .map((id: string) => templateToGroupMap.get(id))
+        .filter((id): id is string => id !== undefined);
+
       return {
         event_id: eventId,
         name: tpl.name,
         description: tpl.description ?? null,
         price: tpl.price ?? 0,
         quantity: input.quantity,
-        target_entry_group_ids: tpl.target_entry_group_ids ?? [],
+        target_entry_group_ids: remappedTargetIds,
         required_verification_ids: tpl.required_verification_ids ?? [],
       };
     });

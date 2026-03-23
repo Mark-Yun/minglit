@@ -163,7 +163,7 @@ function insertEntryGroupsRoute(): FetchRoute {
   return {
     matcher: (req) =>
       req.url.includes("/rest/v1/entry_groups") && req.method === "POST",
-    handler: () => jsonResponse([]),
+    handler: () => jsonResponse([{ id: "eg-001" }, { id: "eg-002" }]),
   };
 }
 
