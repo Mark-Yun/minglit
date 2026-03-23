@@ -7,7 +7,7 @@ import 'package:app_partner/src/features/home/widgets/closing_soon_events_card.d
 import 'package:app_partner/src/features/home/widgets/location_guide_banner.dart';
 import 'package:app_partner/src/features/home/widgets/pending_applicants_badge_card.dart';
 import 'package:app_partner/src/features/home/widgets/upcoming_events_card.dart';
-import 'package:app_partner/src/features/party/party_providers.dart';
+import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';

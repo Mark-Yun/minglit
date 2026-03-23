@@ -1,7 +1,7 @@
 // user-manage-social — Manage social interactions (like, block, report)
 // Replaces direct client writes to social_interactions + report_details
 
-import { createClient } from "@supabase/supabase-js";
+import { createServiceClient } from "../_shared/supabase_client.ts";
 import {
   corsResponse,
   errorResponse,
@@ -26,14 +26,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (auth instanceof Response) return auth;
   const userId = auth;
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!supabaseUrl || !serviceRoleKey) {
-    return errorResponse("Missing server configuration", 500);
-  }
-  const supabase = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false },
-  });
+  const supabase = createServiceClient();
 
   let body: Record<string, unknown>;
   try {

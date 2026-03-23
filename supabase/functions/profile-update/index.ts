@@ -1,7 +1,7 @@
 // NOTE: This worker is currently unused; the `recommendation_updates` queue
 // is not created by migrations. Keep for reference, but clean up when the
 // queue is removed or renamed.
-import { createClient } from '@supabase/supabase-js'
+import { createServiceClient } from '../_shared/supabase_client.ts'
 import { HybridCalculator } from './calculator.ts'
 import { initSentry, withHandler, log } from '../_shared/logger.ts'
 
@@ -20,9 +20,7 @@ initSentry();
 
 Deno.serve(withHandler(async (_req) => {
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const supabase = createServiceClient()
 
     const { data: queueMsgs, error: qError } = await supabase.rpc('pgmq_pop', {
       queue_name: 'recommendation_updates'

@@ -1,5 +1,5 @@
 // Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
-import { createClient } from "@supabase/supabase-js";
+import { createServiceClient } from "../_shared/supabase_client.ts";
 import { PortoneV2Client, PortoneSettlement } from "../_shared/portone_client.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
 
@@ -99,10 +99,7 @@ Deno.serve(withHandler(async (req) => {
     });
   }
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    serviceRoleKey,
-  );
+  const supabase = createServiceClient();
 
   const nowKst = new Date(Date.now() + 9 * 60 * 60 * 1000);
   const yesterdayKst = new Date(nowKst);

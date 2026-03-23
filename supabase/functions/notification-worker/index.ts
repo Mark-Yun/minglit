@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createServiceClient } from '../_shared/supabase_client.ts'
 import { runWorkerLoop } from './loop_worker.ts'
 import { WorkerUtils } from '../_shared/worker_utils.ts'
 import * as jose from 'https://deno.land/x/jose@v4.14.4/index.ts'
@@ -240,15 +240,13 @@ initSentry();
 
 Deno.serve(withHandler(async (_req) => {
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     const firebaseServiceAccount = Deno.env.get('FIREBASE_SERVICE_ACCOUNT') ?? ''
 
-    if (!supabaseUrl || !supabaseKey || !firebaseServiceAccount) {
-        throw new Error("Missing environment variables (SUPABASE_URL, KEY, or FIREBASE_SERVICE_ACCOUNT)");
+    if (!firebaseServiceAccount) {
+        throw new Error("Missing environment variable: FIREBASE_SERVICE_ACCOUNT");
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const supabase = createServiceClient()
     const utils = new WorkerUtils(supabase, 'q_notifications')
 
     log({ function: FN, level: "info", message: "Notification Worker v2 Started" });
