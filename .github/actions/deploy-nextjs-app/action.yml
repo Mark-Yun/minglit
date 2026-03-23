@@ -36,6 +36,6 @@ runs:
           echo "✅ Deployed to: $DEPLOY_URL"
           if [[ -n "${{ inputs.dev-domain-alias }}" ]]; then
             echo "🔗 Assigning alias: ${{ inputs.dev-domain-alias }}"
-            npx vercel@latest alias set "$DEPLOY_URL" "${{ inputs.dev-domain-alias }}" --token=$VERCEL_TOKEN --scope=$VERCEL_ORG_ID
+            npx --yes vercel@latest alias set "$DEPLOY_URL" "${{ inputs.dev-domain-alias }}" --token=$VERCEL_TOKEN --scope=$VERCEL_ORG_ID
           fi
         fi
