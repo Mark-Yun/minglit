@@ -42,9 +42,7 @@ class IamportController extends _$IamportController {
       final impUid = model.impUid;
       if (model.success && impUid != null) {
         // 1. Server-side Verification
-        await ref
-            .read(iamportRepositoryProvider)
-            .verifyCertification(impUid);
+        await ref.read(iamportRepositoryProvider).verifyCertification(impUid);
 
         // 2. If successful, update state
         state = AsyncData(model);
