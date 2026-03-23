@@ -15,6 +15,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
+  try {
+    return await handleRequest(req);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    return errorResponse(message, 500);
+  }
+});
+
+async function handleRequest(req: Request): Promise<Response> {
   // 1. Environment check
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -62,7 +71,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // Fetch submission
     const { data: submission, error: fetchError } = await supabase
       .from("verification_submissions")
-      .select("id, partner_id, snapshot_data")
+      .select("id, partner_id, status, snapshot_data")
       .eq("id", submissionId)
       .maybeSingle();
 
@@ -71,6 +80,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
     if (!submission) {
       return errorResponse("Submission not found", 404);
+    }
+
+    // Fix #309: 이미 심사 완료된 submission은 재심사 불가
+    if (submission.status !== "pending") {
+      return errorResponse("Submission is already reviewed", 409);
     }
 
     // Check partner permission
@@ -185,7 +199,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   return errorResponse(`Unknown action: ${action}`, 400);
-});
+}
 
 // ─── Helper: check partner permission ───
 async function checkPartnerPermission(

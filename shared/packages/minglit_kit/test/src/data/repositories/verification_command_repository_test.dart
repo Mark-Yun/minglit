@@ -394,5 +394,102 @@ void main() {
         );
       });
     });
+
+    // Fix #309: submitComment isPartner 분기 테스트
+    group('submitComment with isPartner', () {
+      test('calls partner-review-submission EF when isPartner is true',
+          () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-review-submission',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true},
+          ),
+        );
+
+        await expectLater(
+          repository.submitComment(
+            submissionId: 'sub_1',
+            content: {'text': '서류 확인 부탁'},
+            isPartner: true,
+          ),
+          completes,
+        );
+
+        verify(
+          () => mockFunctions.invoke(
+            'partner-review-submission',
+            body: {
+              'action': 'comment',
+              'submission_id': 'sub_1',
+              'text': '서류 확인 부탁',
+            },
+          ),
+        ).called(1);
+      });
+
+      test(
+          'calls user-submit-verification EF when isPartner is false (default)',
+          () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-submit-verification',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true},
+          ),
+        );
+
+        await expectLater(
+          repository.submitComment(
+            submissionId: 'sub_1',
+            content: {'text': '추가 서류 제출합니다'},
+          ),
+          completes,
+        );
+
+        verify(
+          () => mockFunctions.invoke(
+            'user-submit-verification',
+            body: {
+              'action': 'comment',
+              'submission_id': 'sub_1',
+              'text': '추가 서류 제출합니다',
+            },
+          ),
+        ).called(1);
+      });
+
+      test('throws MinglitUserException on error response (partner)',
+          () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-review-submission',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 403,
+            data: {'error': 'Forbidden'},
+          ),
+        );
+
+        expect(
+          () => repository.submitComment(
+            submissionId: 'sub_1',
+            content: {'text': 'test'},
+            isPartner: true,
+          ),
+          throwsA(isA<MinglitUserException>()),
+        );
+      });
+    });
   });
 }

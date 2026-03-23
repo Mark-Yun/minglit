@@ -66,6 +66,7 @@ function permErrorRoute(): FetchRoute {
 function selectSubmissionRoute(
   partnerId = TEST_PARTNER_ID,
   snapshotData = SNAPSHOT_DATA,
+  status = "pending",
 ): FetchRoute {
   return {
     matcher: (req) =>
@@ -76,6 +77,7 @@ function selectSubmissionRoute(
       jsonResponse({
         id: TEST_SUBMISSION_ID,
         partner_id: partnerId,
+        status,
         snapshot_data: snapshotData,
       }),
   };
@@ -630,6 +632,35 @@ Deno.test({
           }),
         );
         assertEquals(res.status, 500);
+      });
+    });
+  },
+});
+
+// ─── REVIEW: already reviewed submission → 409 ───
+Deno.test({
+  name: "review: returns 409 for already reviewed submission",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectSubmissionRoute(TEST_PARTNER_ID, SNAPSHOT_DATA, "approved"),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "review",
+            submission_id: TEST_SUBMISSION_ID,
+            result: "rejected",
+          }),
+        );
+        assertEquals(res.status, 409);
+        const body = await readJson(res);
+        assertEquals(body.error, "Submission is already reviewed");
       });
     });
   },
