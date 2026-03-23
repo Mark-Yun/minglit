@@ -1,4 +1,4 @@
-import 'package:app_user/src/features/explore/providers/explore_state_provider.dart';
+import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

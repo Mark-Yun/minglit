@@ -10,7 +10,7 @@
 | 문서 | 내용 |
 |------|------|
 | [client.md](docs/architecture/client.md) | Flutter 앱 아키텍처 (Feature-first, Coordinator, Repository, Design System) |
-| [backend.md](docs/architecture/backend.md) | Supabase 백엔드 (29 테이블, Edge Functions, RLS, Triggers) |
+| [backend.md](docs/architecture/backend.md) | Supabase 백엔드 (50 테이블, Edge Functions, RLS, Triggers) |
 | [trust-and-verification.md](docs/architecture/trust-and-verification.md) | 2-layer 신뢰 모델 (Identity + Qualification) |
 | [payment-pipeline.md](docs/architecture/payment-pipeline.md) | 결제/정산 파이프라인 |
 | [search-and-recommendation.md](docs/architecture/search-and-recommendation.md) | PGroonga 검색 + pgvector 추천 |

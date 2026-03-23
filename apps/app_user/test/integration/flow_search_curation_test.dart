@@ -1,5 +1,5 @@
 import 'package:app_user/src/features/event/detail/event_detail_page.dart';
-import 'package:app_user/src/features/explore/providers/explore_state_provider.dart';
+import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:app_user/src/features/party/party_curation_page.dart';
 import 'package:app_user/src/features/search/search_page.dart';
 import 'package:flutter/material.dart';
