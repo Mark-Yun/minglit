@@ -9,6 +9,8 @@ import 'package:app_user/src/features/partner/detail/partner_events_page.dart';
 import 'package:app_user/src/features/party/party_curation_page.dart';
 import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
 import 'package:app_user/src/features/search/search_page.dart';
+import 'package:app_user/src/features/settings/blocked_partners_page.dart';
+import 'package:app_user/src/features/settings/privacy_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_dev.dart';
@@ -206,4 +208,26 @@ class MyPageRoute extends GoRouteData with $MyPageRoute {
 
   @override
   Widget build(BuildContext context, GoRouterState state) => const MyPage();
+}
+
+/// **Privacy Route**: Privacy settings page.
+/// Path: `/my/privacy`
+@TypedGoRoute<PrivacyRoute>(path: '/my/privacy')
+class PrivacyRoute extends GoRouteData with $PrivacyRoute {
+  const PrivacyRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const PrivacyPage();
+}
+
+/// **Blocked Partners Route**: Blocked partners list page.
+/// Path: `/my/blocked-partners`
+@TypedGoRoute<BlockedPartnersRoute>(path: '/my/blocked-partners')
+class BlockedPartnersRoute extends GoRouteData with $BlockedPartnersRoute {
+  const BlockedPartnersRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const BlockedPartnersPage();
 }

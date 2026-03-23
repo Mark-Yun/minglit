@@ -1,6 +1,7 @@
-import 'dart:async' show FutureOr, unawaited;
+import 'dart:async' show FutureOr;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/repositories/partner_repository.dart';
+import 'package:minglit_kit/src/utils/exceptions.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -23,6 +24,7 @@ class _FakeRpcResult extends Fake implements PostgrestFilterBuilder<dynamic> {
 void main() {
   late MockSupabaseClient mockClient;
   late PartnerRepository repository;
+  late MockFunctionsClient mockFunctions;
 
   final now = DateTime.now();
   final mockUser = MockUser();
@@ -40,6 +42,7 @@ void main() {
   setUp(() {
     mockClient = createMockSupabase(currentUser: mockUser);
     when(() => mockUser.id).thenReturn('user_1');
+    mockFunctions = mockClient.functions as MockFunctionsClient;
     repository = PartnerRepository(supabase: mockClient);
   });
 
@@ -90,8 +93,50 @@ void main() {
     });
 
     group('updateMemberRole', () {
-      test('completes without error', () async {
-        unawaited(mockTable(mockClient, 'partner_member_permissions'));
+      test('calls partner-manage-member EF with update_role action', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-member',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(status: 200, data: {'success': true}),
+        );
+
+        await expectLater(
+          repository.updateMemberRole(
+            partnerId: 'partner_1',
+            userId: 'user_1',
+            role: 'manager',
+          ),
+          completes,
+        );
+
+        verify(
+          () => mockFunctions.invoke(
+            'partner-manage-member',
+            body: {
+              'action': 'update_role',
+              'partner_id': 'partner_1',
+              'user_id': 'user_1',
+              'role': 'manager',
+            },
+          ),
+        ).called(1);
+      });
+
+      test('throws MinglitUserException on non-200 response', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-member',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 403,
+            data: {'error': 'Forbidden: insufficient partner permissions'},
+          ),
+        );
 
         await expectLater(
           repository.updateMemberRole(
@@ -99,18 +144,17 @@ void main() {
             userId: 'user_1',
             role: 'owner',
           ),
-          completes,
+          throwsA(isA<MinglitUserException>()),
         );
       });
 
-      test('throws on db error', () async {
-        unawaited(
-          mockTable(
-            mockClient,
-            'partner_member_permissions',
-            shouldThrow: Exception('db error'),
+      test('throws on network error', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-member',
+            body: any(named: 'body'),
           ),
-        );
+        ).thenThrow(Exception('network error'));
 
         await expectLater(
           repository.updateMemberRole(
@@ -124,33 +168,77 @@ void main() {
     });
 
     group('updateMemberPermissions', () {
-      test('completes without error', () async {
-        unawaited(mockTable(mockClient, 'partner_member_permissions'));
+      test(
+        'calls partner-manage-member EF with update_permissions action',
+        () async {
+          when(
+            () => mockFunctions.invoke(
+              'partner-manage-member',
+              body: any(named: 'body'),
+            ),
+          ).thenAnswer(
+            (_) async => FunctionResponse(status: 200, data: {'success': true}),
+          );
+
+          await expectLater(
+            repository.updateMemberPermissions(
+              partnerId: 'partner_1',
+              userId: 'user_1',
+              permissions: ['PARTY_MANAGE', 'COMMENT_MANAGE'],
+            ),
+            completes,
+          );
+
+          verify(
+            () => mockFunctions.invoke(
+              'partner-manage-member',
+              body: {
+                'action': 'update_permissions',
+                'partner_id': 'partner_1',
+                'user_id': 'user_1',
+                'permissions': ['PARTY_MANAGE', 'COMMENT_MANAGE'],
+              },
+            ),
+          ).called(1);
+        },
+      );
+
+      test('throws MinglitUserException on non-200 response', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-member',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 400,
+            data: {'error': 'Invalid permission: HACK'},
+          ),
+        );
 
         await expectLater(
           repository.updateMemberPermissions(
             partnerId: 'partner_1',
             userId: 'user_1',
-            permissions: ['view', 'edit'],
+            permissions: ['HACK'],
           ),
-          completes,
+          throwsA(isA<MinglitUserException>()),
         );
       });
 
-      test('throws on db error', () async {
-        unawaited(
-          mockTable(
-            mockClient,
-            'partner_member_permissions',
-            shouldThrow: Exception('permissions update failed'),
+      test('throws on network error', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-member',
+            body: any(named: 'body'),
           ),
-        );
+        ).thenThrow(Exception('network error'));
 
         await expectLater(
           repository.updateMemberPermissions(
             partnerId: 'partner_1',
             userId: 'user_1',
-            permissions: ['view'],
+            permissions: ['PARTY_MANAGE'],
           ),
           throwsA(isA<Exception>()),
         );

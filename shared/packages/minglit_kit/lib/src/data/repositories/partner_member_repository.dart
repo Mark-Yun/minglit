@@ -37,7 +37,7 @@ mixin _PartnerMemberRepository on _SupabasePartnerContext {
     }
   }
 
-  /// Updates a member's role.
+  // Fix #313: updateMemberRole via EF (MEMBER_MANAGE 권한 서버 검증)
   Future<void> updateMemberRole({
     required String partnerId,
     required String userId,
@@ -48,12 +48,23 @@ mixin _PartnerMemberRepository on _SupabasePartnerContext {
       ' role: $role',
     );
     try {
-      await supabaseClient
-          .from('partner_member_permissions')
-          .update({'role': role})
-          .match(
-            {'partner_id': partnerId, 'user_id': userId},
-          );
+      final response = await supabaseClient.functions.invoke(
+        'partner-manage-member',
+        body: {
+          'action': 'update_role',
+          'partner_id': partnerId,
+          'user_id': userId,
+          'role': role,
+        },
+      );
+
+      if (response.status != 200) {
+        final respData = response.data;
+        final errorMsg = respData is Map
+            ? (respData['error'] as String?) ?? 'Failed to update member role'
+            : 'Failed to update member role';
+        throw MinglitUserException(errorMsg);
+      }
       Log.d('updateMemberRole success');
     } catch (e, st) {
       Log.e('❌ [PartnerRepo] updateMemberRole Error', e, st);
@@ -61,7 +72,7 @@ mixin _PartnerMemberRepository on _SupabasePartnerContext {
     }
   }
 
-  /// Updates a member's specific permissions.
+  // Fix #313: updateMemberPermissions via EF (MEMBER_MANAGE 권한 서버 검증)
   Future<void> updateMemberPermissions({
     required String partnerId,
     required String userId,
@@ -72,12 +83,24 @@ mixin _PartnerMemberRepository on _SupabasePartnerContext {
       ' perms: $permissions',
     );
     try {
-      await supabaseClient
-          .from('partner_member_permissions')
-          .update({'permissions': permissions})
-          .match(
-            {'partner_id': partnerId, 'user_id': userId},
-          );
+      final response = await supabaseClient.functions.invoke(
+        'partner-manage-member',
+        body: {
+          'action': 'update_permissions',
+          'partner_id': partnerId,
+          'user_id': userId,
+          'permissions': permissions,
+        },
+      );
+
+      if (response.status != 200) {
+        final respData = response.data;
+        final errorMsg = respData is Map
+            ? (respData['error'] as String?) ??
+                  'Failed to update member permissions'
+            : 'Failed to update member permissions';
+        throw MinglitUserException(errorMsg);
+      }
       Log.d('updateMemberPermissions success');
     } catch (e, st) {
       Log.e('❌ [PartnerRepo] updateMemberPermissions Error', e, st);
