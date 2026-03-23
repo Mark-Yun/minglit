@@ -26,8 +26,10 @@ extension AsyncValueMinglitX<T> on AsyncValue<T> {
   /// });
   /// ```
   void showMinglitError(BuildContext context) {
-    if (!isLoading && hasError) {
-      handleMinglitError(context, error!, stackTrace);
+    // Fix #382: 강제 언래핑 제거 — local variable로 null 안전성 확보
+    final err = error;
+    if (!isLoading && hasError && err != null) {
+      handleMinglitError(context, err, stackTrace);
     }
   }
 }
