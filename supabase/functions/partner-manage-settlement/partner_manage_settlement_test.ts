@@ -225,7 +225,8 @@ Deno.test({
         assertEquals(parsed.partner_id, TEST_PARTNER_ID);
         assertEquals(parsed.bank_name, "카카오뱅크");
         assertEquals(parsed.account_holder, "홍길동");
-        assertEquals(parsed.account_number, "3333-01-1234567");
+        // account_number is normalized: hyphens stripped
+        assertEquals(parsed.account_number, "3333011234567");
       });
     });
   },
@@ -441,6 +442,103 @@ Deno.test({
         assertEquals(res.status, 500);
         const body = await readJson(res);
         assertEquals(body.error, "Failed to verify partner permissions");
+      });
+    });
+  },
+});
+
+// ─── UPSERT: whitespace-only bank_name → 400 ───
+Deno.test({
+  name: "upsert_bank_account: returns 400 for whitespace-only bank_name",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([authRoute()]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "upsert_bank_account",
+            partner_id: TEST_PARTNER_ID,
+            bank_name: "   ",
+            account_holder: "홍길동",
+            account_number: "3333011234567",
+          }),
+        );
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "Missing bank_name");
+      });
+    });
+  },
+});
+
+// ─── UPSERT: invalid account_number format → 400 ───
+Deno.test({
+  name: "upsert_bank_account: returns 400 for invalid account_number format",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([authRoute()]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "upsert_bank_account",
+            partner_id: TEST_PARTNER_ID,
+            bank_name: "카카오뱅크",
+            account_holder: "홍길동",
+            account_number: "abc",
+          }),
+        );
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "Invalid account_number format");
+      });
+    });
+  },
+});
+
+// ─── UPSERT: account_number with hyphens → normalized ───
+Deno.test({
+  name: "upsert_bank_account: normalizes account_number by stripping hyphens",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    let upsertBody: string | null = null;
+
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      permRoute(),
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/partner_settlements") && req.method === "POST",
+        handler: async (req) => {
+          upsertBody = await req.clone().text();
+          return new Response(null, { status: 200 });
+        },
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "upsert_bank_account",
+            partner_id: TEST_PARTNER_ID,
+            bank_name: "카카오뱅크",
+            account_holder: "홍길동",
+            account_number: "3333-01-1234567",
+          }),
+        );
+        assertEquals(res.status, 200);
+        const parsed = JSON.parse(upsertBody!);
+        assertEquals(parsed.account_number, "3333011234567");
       });
     });
   },
