@@ -136,7 +136,9 @@ class MatchingVoteScreen extends ConsumerWidget {
                 if (candidates.isEmpty) {
                   return const Center(child: Text('투표 가능한 상대가 없습니다.'));
                 }
-                final votedIds = votedIdsAsync.valueOrNull ?? {};
+                final votedIds = votedIdsAsync.hasValue
+                    ? votedIdsAsync.value!
+                    : <String>{};
                 final allVotesUsed =
                     voteCountAsync.hasValue &&
                     maxVoteAsync.hasValue &&
