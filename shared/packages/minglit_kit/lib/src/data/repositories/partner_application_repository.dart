@@ -38,6 +38,8 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
       );
 
       if (draftResponse.status != 200) {
+        // Draft 생성 실패 시 업로드 파일 롤백
+        await _cleanupFiles([bizRegPath, bankbookPath]);
         throw _efError(draftResponse, 'Failed to save draft');
       }
 
@@ -53,22 +55,13 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
       );
 
       if (submitResponse.status != 200) {
-        throw _efError(submitResponse, 'Failed to submit application');
+        // Fix #311: submit 실패 시 draft와 파일은 유지 (유저가 수정 후 재제출 가능)
+        throw _efError(submitResponse, '입점 신청에 실패했습니다');
       }
 
       Log.i('submitApplication success');
     } on Exception catch (e, stackTrace) {
       Log.e('❌ [PartnerRepo] Application Failed', e, stackTrace);
-      // Attempt cleanup (Best effort)
-      try {
-        await supabaseClient.storage
-            .from('partner-proofs')
-            .remove(
-              [bizRegPath, bankbookPath].whereType<String>().toList(),
-            );
-      } on Exception catch (_) {
-        // Ignore cleanup errors
-      }
       rethrow;
     }
   }
@@ -374,15 +367,29 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
     return _uploadFile(userId, file, 'bankbook');
   }
 
+  Future<void> _cleanupFiles(List<String?> paths) async {
+    try {
+      await supabaseClient.storage
+          .from('partner-proofs')
+          .remove(paths.whereType<String>().toList());
+    } on Exception catch (_) {
+      // Best effort cleanup
+    }
+  }
+
   // Fix #311: EF 에러 응답에서 details (필드별 검증 에러)를 포함한 예외 생성
   MinglitUserException _efError(FunctionResponse response, String fallback) {
     final respData = response.data;
     if (respData is Map) {
-      final errorMsg = (respData['error'] as String?) ?? fallback;
+      final rawError = (respData['error'] as String?) ?? fallback;
       final rawDetails = respData['details'];
       final details = rawDetails is List
           ? rawDetails.whereType<Map<String, dynamic>>().toList()
           : null;
+      // Fix #311: validation_failed 등 기계적 코드를 사용자 친화적 메시지로 변환
+      final errorMsg = rawError == 'validation_failed'
+          ? '입력 정보를 확인해주세요'
+          : rawError;
       return MinglitUserException(errorMsg, details: details);
     }
     return MinglitUserException(fallback);

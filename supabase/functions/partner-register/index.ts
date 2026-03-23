@@ -113,10 +113,13 @@ async function handleRequest(req: Request): Promise<Response> {
         return errorResponse("Application cannot be updated in current status", 400);
       }
 
-      const { error: updateError } = await supabase
+      // Fix #311: 상태 조건을 UPDATE WHERE에 포함하여 원자적 검사
+      const { error: updateError, count } = await supabase
         .from("partner_applications")
         .update(record)
-        .eq("id", applicationId);
+        .eq("id", applicationId)
+        .eq("user_id", userId)
+        .in("status", ["draft", "needs_correction"]);
 
       if (updateError) {
         return errorResponse(`Failed to update draft: ${updateError.message}`, 500);
@@ -238,11 +241,13 @@ async function handleRequest(req: Request): Promise<Response> {
       return errorResponse("validation_failed", 400, errors);
     }
 
-    // Transition to pending
+    // Fix #311: 상태 조건을 UPDATE WHERE에 포함하여 원자적 검사
     const { error: updateError } = await supabase
       .from("partner_applications")
       .update({ status: "pending" })
-      .eq("id", applicationId);
+      .eq("id", applicationId)
+      .eq("user_id", userId)
+      .in("status", ["draft", "needs_correction"]);
 
     if (updateError) {
       return errorResponse(`Failed to submit application: ${updateError.message}`, 500);
@@ -294,10 +299,13 @@ async function handleRequest(req: Request): Promise<Response> {
       return errorResponse("No fields to update", 400);
     }
 
+    // Fix #311: 상태 조건을 UPDATE WHERE에 포함하여 원자적 검사
     const { error: updateError } = await supabase
       .from("partner_applications")
       .update(updates)
-      .eq("id", applicationId);
+      .eq("id", applicationId)
+      .eq("user_id", userId)
+      .in("status", ["draft", "needs_correction"]);
 
     if (updateError) {
       return errorResponse(`Failed to update application: ${updateError.message}`, 500);

@@ -568,6 +568,72 @@ Deno.test({
   },
 });
 
+// ─── submit: other user's file path → 403 ───
+Deno.test({
+  name: "submit: returns 403 for file path with other user's prefix",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const hackedApp = {
+      ...VALID_APP,
+      biz_number: "1208100088",
+      biz_registration_path: "other-user-id/stolen_file.pdf",
+    };
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectAppRoute(hackedApp),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "submit",
+            application_id: TEST_APP_ID,
+          }),
+        );
+        assertEquals(res.status, 403);
+        const body = await readJson(res);
+        assertEquals(body.error, "Forbidden file path");
+      });
+    });
+  },
+});
+
+// ─── submit: storage error → 500 ───
+Deno.test({
+  name: "submit: returns 500 when storage list fails",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const validApp = { ...VALID_APP, biz_number: "1208100088" };
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectAppRoute(validApp),
+      {
+        matcher: (req) => req.url.includes("/storage/v1/object/list/partner-proofs"),
+        handler: () => jsonResponse({ message: "storage error" }, { status: 500 }),
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "submit",
+            application_id: TEST_APP_ID,
+          }),
+        );
+        assertEquals(res.status, 500);
+        const body = await readJson(res);
+        assertEquals(body.error, "Failed to verify uploaded files");
+      });
+    });
+  },
+});
+
 // ─── submit: pending → re-submit → 400 ───
 Deno.test({
   name: "submit: returns 400 when already pending",
