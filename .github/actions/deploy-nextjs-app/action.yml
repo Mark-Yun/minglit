@@ -36,6 +36,18 @@ runs:
           echo "✅ Deployed to: $DEPLOY_URL"
           if [[ -n "${{ inputs.dev-domain-alias }}" ]]; then
             echo "🔗 Assigning alias: ${{ inputs.dev-domain-alias }}"
-            npx --yes vercel@latest alias set "$DEPLOY_URL" "${{ inputs.dev-domain-alias }}" --token=$VERCEL_TOKEN --scope=$VERCEL_ORG_ID
+            # Fix #383: retry alias with backoff — certificate provisioning can fail transiently
+            for attempt in 1 2 3; do
+              if npx --yes vercel@latest alias set "$DEPLOY_URL" "${{ inputs.dev-domain-alias }}" --token=$VERCEL_TOKEN --scope=$VERCEL_ORG_ID; then
+                echo "✅ Alias assigned successfully"
+                break
+              fi
+              if [[ $attempt -lt 3 ]]; then
+                echo "⚠️ Alias attempt $attempt failed, retrying in $((attempt * 10))s..."
+                sleep $((attempt * 10))
+              else
+                echo "::warning::Alias assignment failed after 3 attempts. Deployment succeeded at: $DEPLOY_URL"
+              fi
+            done
           fi
         fi
