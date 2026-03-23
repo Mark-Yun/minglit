@@ -85,6 +85,12 @@ async function handleRequest(req: Request): Promise<Response> {
 
   // ─── create ───
   if (action === "create") {
+    // Require partner_id from client (supports multi-partner users)
+    const partnerId = body.partner_id;
+    if (typeof partnerId !== "string" || !partnerId) {
+      return errorResponse("Missing partner_id", 400);
+    }
+
     // Validate party fields
     const partyData = body.party;
     if (typeof partyData !== "object" || partyData === null || Array.isArray(partyData)) {
@@ -96,30 +102,50 @@ async function handleRequest(req: Request): Promise<Response> {
       return errorResponse("Missing party title", 400);
     }
 
-    // Resolve partner_id from user's membership
-    const { data: membership, error: memberError } = await supabase
-      .from("partner_member_permissions")
-      .select("partner_id, permissions")
-      .eq("user_id", userId)
-      .maybeSingle();
+    // Check partner permission
+    const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
+    if (permCheck instanceof Response) return permCheck;
 
-    if (memberError) {
-      return errorResponse("Failed to verify partner membership", 500);
-    }
-    if (!membership) {
-      return errorResponse("Forbidden: not a partner member", 403);
-    }
+    // ── Pre-validate all payloads before any DB writes ──
 
-    const hasPermission = (membership.permissions as string[] | null)?.includes("PARTY_MANAGE") ?? false;
-    if (!hasPermission) {
-      return errorResponse("Forbidden: insufficient partner permissions", 403);
+    // Validate status if provided
+    if (party.status !== undefined) {
+      if (typeof party.status !== "string" || !VALID_STATUSES.includes(party.status)) {
+        return errorResponse(`Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}`, 400);
+      }
     }
 
-    const partnerId = membership.partner_id as string;
+    // Validate location input if new location
+    let newLocationInput: Record<string, unknown> | null = null;
+    const existingLocationId = body.location_id;
+    if (body.location && typeof body.location === "object" && !Array.isArray(body.location)) {
+      newLocationInput = body.location as Record<string, unknown>;
+      if (typeof newLocationInput.name !== "string" || !newLocationInput.name.trim()) {
+        return errorResponse("Missing location name", 400);
+      }
+      if (typeof newLocationInput.address !== "string" || !newLocationInput.address.trim()) {
+        return errorResponse("Missing location address", 400);
+      }
+    }
+
+    // Validate entry_group_templates
+    const entryGroupTemplates = body.entry_group_templates;
+    if (Array.isArray(entryGroupTemplates) && entryGroupTemplates.length > 0) {
+      const validationError = validateEntryGroupTemplates(entryGroupTemplates);
+      if (validationError) return validationError;
+    }
+
+    // Validate ticket_templates
+    const ticketTemplates = body.ticket_templates;
+    if (Array.isArray(ticketTemplates) && ticketTemplates.length > 0) {
+      const validationError = validateTicketTemplates(ticketTemplates);
+      if (validationError) return validationError;
+    }
+
+    // ── All validations passed — now perform DB writes ──
 
     // Build location record if provided
     let locationId: string | null = null;
-    const existingLocationId = body.location_id;
     if (typeof existingLocationId === "string" && existingLocationId) {
       // Use existing location — verify it belongs to this partner
       const { data: loc, error: locError } = await supabase
@@ -134,20 +160,11 @@ async function handleRequest(req: Request): Promise<Response> {
         return errorResponse("Forbidden: location belongs to another partner", 403);
       }
       locationId = existingLocationId;
-    } else if (body.location && typeof body.location === "object" && !Array.isArray(body.location)) {
-      // Create new location
-      const locInput = body.location as Record<string, unknown>;
-      if (typeof locInput.name !== "string" || !locInput.name.trim()) {
-        return errorResponse("Missing location name", 400);
-      }
-      if (typeof locInput.address !== "string" || !locInput.address.trim()) {
-        return errorResponse("Missing location address", 400);
-      }
-
+    } else if (newLocationInput) {
       const locRecord: Record<string, unknown> = { partner_id: partnerId };
       for (const field of LOCATION_FIELDS) {
-        if (locInput[field] !== undefined) {
-          locRecord[field] = locInput[field];
+        if (newLocationInput[field] !== undefined) {
+          locRecord[field] = newLocationInput[field];
         }
       }
 
@@ -175,13 +192,6 @@ async function handleRequest(req: Request): Promise<Response> {
       }
     }
 
-    // Validate status if provided
-    if (partyRecord.status !== undefined) {
-      if (typeof partyRecord.status !== "string" || !VALID_STATUSES.includes(partyRecord.status)) {
-        return errorResponse(`Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}`, 400);
-      }
-    }
-
     // Insert party
     const { data: newParty, error: partyInsertError } = await supabase
       .from("parties")
@@ -195,12 +205,8 @@ async function handleRequest(req: Request): Promise<Response> {
 
     const partyId = newParty.id as string;
 
-    // Insert entry_group_templates if provided
-    const entryGroupTemplates = body.entry_group_templates;
+    // Insert entry_group_templates if provided (already validated above)
     if (Array.isArray(entryGroupTemplates) && entryGroupTemplates.length > 0) {
-      const validationError = validateEntryGroupTemplates(entryGroupTemplates);
-      if (validationError) return validationError;
-
       const egt = entryGroupTemplates.map((t: Record<string, unknown>) => ({
         party_id: partyId,
         label: t.label ?? null,
@@ -219,12 +225,8 @@ async function handleRequest(req: Request): Promise<Response> {
       }
     }
 
-    // Insert ticket_templates if provided
-    const ticketTemplates = body.ticket_templates;
+    // Insert ticket_templates if provided (already validated above)
     if (Array.isArray(ticketTemplates) && ticketTemplates.length > 0) {
-      const validationError = validateTicketTemplates(ticketTemplates);
-      if (validationError) return validationError;
-
       const tt = ticketTemplates.map((t: Record<string, unknown>) => ({
         party_id: partyId,
         name: t.name,

@@ -118,12 +118,27 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
 
       final body = <String, dynamic>{
         'action': 'create',
+        'partner_id': party.partnerId,
         'party': partyJson,
       };
 
-      // Attach location_id if present
+      // Fix #316: Pass location data for new location creation via EF
       if (party.locationId != null) {
         body['location_id'] = party.locationId;
+      } else if (party.location != null) {
+        final loc = party.location!;
+        body['location'] = {
+          'name': loc.name,
+          'address': loc.address,
+          if (loc.addressDetail != null)
+            'address_detail': loc.addressDetail,
+          if (loc.region1 != null) 'region_1': loc.region1,
+          if (loc.region2 != null) 'region_2': loc.region2,
+          if (loc.region3 != null) 'region_3': loc.region3,
+          if (loc.directionsGuide != null)
+            'directions_guide': loc.directionsGuide,
+          if (loc.postalCode != null) 'postal_code': loc.postalCode,
+        };
       }
 
       // Attach ticket templates
@@ -286,8 +301,12 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
       final partyUpdates = <String, dynamic>{
         'title': title,
         'description': description,
-        'image_urls': imageUrls,
       };
+
+      // Fix #316: only include imageUrls when provided to avoid null overwrite
+      if (imageUrls != null) {
+        partyUpdates['image_urls'] = imageUrls;
+      }
 
       if (status != null) {
         partyUpdates['status'] = status;

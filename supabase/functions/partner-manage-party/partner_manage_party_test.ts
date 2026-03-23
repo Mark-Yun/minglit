@@ -298,6 +298,7 @@ Deno.test({
       await withMockedFetch(fetchMock, async () => {
         const req = authenticatedJsonRequest("http://localhost", {
           action: "create",
+          partner_id: TEST_PARTNER_ID,
           party: { title: "대학생 밍글", description: {}, max_participants: 20 },
           location: { name: "강남 라운지", address: "서울 강남구", region_1: "서울", region_2: "강남구" },
           entry_group_templates: [
@@ -336,6 +337,7 @@ Deno.test({
       await withMockedFetch(fetchMock, async () => {
         const req = authenticatedJsonRequest("http://localhost", {
           action: "create",
+          partner_id: TEST_PARTNER_ID,
           party: { title: "기존 장소 파티" },
           location_id: TEST_LOCATION_ID,
         });
@@ -361,12 +363,36 @@ Deno.test({
       await withMockedFetch(fetchMock, async () => {
         const req = authenticatedJsonRequest("http://localhost", {
           action: "create",
+          partner_id: TEST_PARTNER_ID,
           party: { description: "no title" },
         });
         const res = await handler(req);
         assertEquals(res.status, 400);
         const body = await readJson(res);
         assertEquals(body.error, "Missing party title");
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "create: missing partner_id returns 400",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([authRoute()]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create",
+          party: { title: "테스트" },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "Missing partner_id");
       });
     });
   },
@@ -384,6 +410,7 @@ Deno.test({
       await withMockedFetch(fetchMock, async () => {
         const req = authenticatedJsonRequest("http://localhost", {
           action: "create",
+          partner_id: TEST_PARTNER_ID,
         });
         const res = await handler(req);
         assertEquals(res.status, 400);
@@ -407,6 +434,7 @@ Deno.test({
       await withMockedFetch(fetchMock, async () => {
         const req = authenticatedJsonRequest("http://localhost", {
           action: "create",
+          partner_id: TEST_PARTNER_ID,
           party: { title: "테스트" },
         });
         const res = await handler(req);
@@ -431,6 +459,7 @@ Deno.test({
       await withMockedFetch(fetchMock, async () => {
         const req = authenticatedJsonRequest("http://localhost", {
           action: "create",
+          partner_id: TEST_PARTNER_ID,
           party: { title: "테스트" },
         });
         const res = await handler(req);
@@ -456,6 +485,7 @@ Deno.test({
       await withMockedFetch(fetchMock, async () => {
         const req = authenticatedJsonRequest("http://localhost", {
           action: "create",
+          partner_id: TEST_PARTNER_ID,
           party: { title: "테스트" },
           entry_group_templates: [{ gender: "invalid" }],
         });
@@ -484,6 +514,7 @@ Deno.test({
       await withMockedFetch(fetchMock, async () => {
         const req = authenticatedJsonRequest("http://localhost", {
           action: "create",
+          partner_id: TEST_PARTNER_ID,
           party: { title: "테스트" },
           ticket_templates: [{ name: "티켓", price: -1000, quantity: 10 }],
         });
@@ -512,6 +543,7 @@ Deno.test({
       await withMockedFetch(fetchMock, async () => {
         const req = authenticatedJsonRequest("http://localhost", {
           action: "create",
+          partner_id: TEST_PARTNER_ID,
           party: { title: "테스트" },
           location_id: TEST_LOCATION_ID,
         });
