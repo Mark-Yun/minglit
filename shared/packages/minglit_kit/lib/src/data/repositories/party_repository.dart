@@ -130,8 +130,7 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
         body['location'] = {
           'name': loc.name,
           'address': loc.address,
-          if (loc.addressDetail != null)
-            'address_detail': loc.addressDetail,
+          if (loc.addressDetail != null) 'address_detail': loc.addressDetail,
           if (loc.region1 != null) 'region_1': loc.region1,
           if (loc.region2 != null) 'region_2': loc.region2,
           if (loc.region3 != null) 'region_3': loc.region3,
