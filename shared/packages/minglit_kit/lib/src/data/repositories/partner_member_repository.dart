@@ -97,7 +97,7 @@ mixin _PartnerMemberRepository on _SupabasePartnerContext {
         final respData = response.data;
         final errorMsg = respData is Map
             ? (respData['error'] as String?) ??
-                'Failed to update member permissions'
+                  'Failed to update member permissions'
             : 'Failed to update member permissions';
         throw MinglitUserException(errorMsg);
       }

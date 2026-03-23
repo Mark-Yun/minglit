@@ -168,38 +168,40 @@ void main() {
     });
 
     group('updateMemberPermissions', () {
-      test('calls partner-manage-member EF with update_permissions action',
-          () async {
-        when(
-          () => mockFunctions.invoke(
-            'partner-manage-member',
-            body: any(named: 'body'),
-          ),
-        ).thenAnswer(
-          (_) async => FunctionResponse(status: 200, data: {'success': true}),
-        );
+      test(
+        'calls partner-manage-member EF with update_permissions action',
+        () async {
+          when(
+            () => mockFunctions.invoke(
+              'partner-manage-member',
+              body: any(named: 'body'),
+            ),
+          ).thenAnswer(
+            (_) async => FunctionResponse(status: 200, data: {'success': true}),
+          );
 
-        await expectLater(
-          repository.updateMemberPermissions(
-            partnerId: 'partner_1',
-            userId: 'user_1',
-            permissions: ['PARTY_MANAGE', 'COMMENT_MANAGE'],
-          ),
-          completes,
-        );
+          await expectLater(
+            repository.updateMemberPermissions(
+              partnerId: 'partner_1',
+              userId: 'user_1',
+              permissions: ['PARTY_MANAGE', 'COMMENT_MANAGE'],
+            ),
+            completes,
+          );
 
-        verify(
-          () => mockFunctions.invoke(
-            'partner-manage-member',
-            body: {
-              'action': 'update_permissions',
-              'partner_id': 'partner_1',
-              'user_id': 'user_1',
-              'permissions': ['PARTY_MANAGE', 'COMMENT_MANAGE'],
-            },
-          ),
-        ).called(1);
-      });
+          verify(
+            () => mockFunctions.invoke(
+              'partner-manage-member',
+              body: {
+                'action': 'update_permissions',
+                'partner_id': 'partner_1',
+                'user_id': 'user_1',
+                'permissions': ['PARTY_MANAGE', 'COMMENT_MANAGE'],
+              },
+            ),
+          ).called(1);
+        },
+      );
 
       test('throws MinglitUserException on non-200 response', () async {
         when(
