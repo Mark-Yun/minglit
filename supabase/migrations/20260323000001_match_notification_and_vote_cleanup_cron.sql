@@ -94,8 +94,8 @@ BEGIN
     FROM public.match_pairs mp
     JOIN public.events e ON e.id = mp.event_id
     WHERE mp.notification_sent = false
-      AND e.vote_end_at IS NOT NULL
-      AND e.vote_end_at < now() - interval '1 day'
+      AND COALESCE(e.vote_end_at, e.end_time) IS NOT NULL
+      AND COALESCE(e.vote_end_at, e.end_time) < now() - interval '1 day'
     FOR UPDATE OF mp SKIP LOCKED
   LOOP
     -- 양쪽 유저에게 알림 발송
@@ -137,8 +137,8 @@ BEGIN
   DELETE FROM public.match_votes
   WHERE event_id IN (
     SELECT id FROM public.events
-    WHERE vote_end_at IS NOT NULL
-      AND vote_end_at < now() - interval '30 days'
+    WHERE COALESCE(vote_end_at, end_time) IS NOT NULL
+      AND COALESCE(vote_end_at, end_time) < now() - interval '30 days'
   );
 
   GET DIAGNOSTICS deleted_count = ROW_COUNT;
@@ -160,7 +160,7 @@ SELECT cron.schedule(
   $$SELECT public.notify_match_results()$$
 );
 
--- 투표 데이터 정리: 매일 03:00 KST (18:00 UTC 전날)
+-- 투표 데이터 정리: 매일 03:00 KST (전날 18:00 UTC)
 SELECT cron.schedule(
   'cleanup-expired-match-votes',
   '0 18 * * *',
