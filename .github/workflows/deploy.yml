@@ -27,7 +27,7 @@ jobs:
     outputs:
       accessible-url: ${{ steps.deploy.outputs.accessible-url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
       - name: Deploy User App
@@ -55,7 +55,7 @@ jobs:
     outputs:
       accessible-url: ${{ steps.deploy.outputs.accessible-url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
       - name: Deploy User Landing
@@ -75,7 +75,7 @@ jobs:
     outputs:
       accessible-url: ${{ steps.deploy.outputs.accessible-url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
       - name: Deploy Partner Landing
@@ -95,7 +95,7 @@ jobs:
     outputs:
       accessible-url: ${{ steps.deploy.outputs.accessible-url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
       - name: Deploy Partner App

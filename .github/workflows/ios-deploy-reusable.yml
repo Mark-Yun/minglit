@@ -66,7 +66,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -78,7 +78,7 @@ jobs:
         run: flutter pub get
 
       - name: Cache CocoaPods
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ${{ inputs.app-directory }}/ios/Pods
@@ -88,7 +88,7 @@ jobs:
             ${{ runner.os }}-cocoapods-
 
       - name: Cache DerivedData
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ env.DERIVED_DATA_PATH }}
           key: ${{ runner.os }}-deriveddata-${{ hashFiles(format('{0}/ios/Podfile.lock', inputs.app-directory), format('{0}/ios/Runner.xcodeproj/project.pbxproj', inputs.app-directory)) }}
