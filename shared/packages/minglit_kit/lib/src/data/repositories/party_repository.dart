@@ -101,7 +101,8 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
     }
   }
 
-  /// Creates a new party.
+  // Fix #316: createParty via EF (partner-manage-party)
+  /// Creates a new party via Edge Function for server-side permission check.
   Future<Party> createParty(
     Party party, {
     Map<String, dynamic>? extraFields,
@@ -109,35 +110,77 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
     Log.d('createParty called | partnerId: ${party.partnerId}');
     try {
       final partyJson = party.toDbJson()..addAll(extraFields ?? {});
+      // Remove partner_id — server injects it from JWT membership
+      partyJson.remove('partner_id');
+      // Remove location — handled separately
+      partyJson.remove('location');
+      partyJson.remove('location_id');
 
-      final data = await supabaseClient
-          .from('parties')
-          .insert(partyJson)
-          .select()
-          .single();
+      final body = <String, dynamic>{
+        'action': 'create',
+        'partner_id': party.partnerId,
+        'party': partyJson,
+      };
 
-      final createdParty = Party.fromJson(data);
+      // Fix #316: Pass location data for new location creation via EF
+      if (party.locationId != null) {
+        body['location_id'] = party.locationId;
+      } else if (party.location != null) {
+        final loc = party.location!;
+        body['location'] = {
+          'name': loc.name,
+          'address': loc.address,
+          if (loc.addressDetail != null) 'address_detail': loc.addressDetail,
+          if (loc.region1 != null) 'region_1': loc.region1,
+          if (loc.region2 != null) 'region_2': loc.region2,
+          if (loc.region3 != null) 'region_3': loc.region3,
+          if (loc.directionsGuide != null)
+            'directions_guide': loc.directionsGuide,
+          if (loc.postalCode != null) 'postal_code': loc.postalCode,
+        };
+      }
 
-      // Create associated ticket templates if provided
+      // Attach ticket templates
       final templates = party.ticketTemplates;
       if (templates != null && templates.isNotEmpty) {
-        final templatesJson = templates
-            .map((t) => t.copyWith(partyId: createdParty.id).toDbJson())
+        body['ticket_templates'] = templates
+            .map((t) => t.toDbJson()..remove('party_id'))
             .toList();
-        await supabaseClient.from('ticket_templates').insert(templatesJson);
       }
 
-      // Create associated entry groups if provided
+      // Attach entry group templates
       final entryGroups = party.entryGroups;
       if (entryGroups != null && entryGroups.isNotEmpty) {
-        final groupsJson = entryGroups
-            .map((g) => g.copyWith(partyId: createdParty.id).toDbJson())
+        body['entry_group_templates'] = entryGroups
+            .map(
+              (g) => g.toJson()
+                ..remove('id')
+                ..remove('party_id')
+                ..remove('created_at')
+                ..remove('updated_at'),
+            )
             .toList();
-        await supabaseClient.from('entry_groups').insert(groupsJson);
       }
 
-      Log.d('createParty success | id: ${createdParty.id}');
-      return createdParty;
+      final response = await supabaseClient.functions.invoke(
+        'partner-manage-party',
+        body: body,
+      );
+
+      if (response.status != 200) {
+        final error = response.data is Map
+            ? (response.data as Map)['error'] ?? 'Unknown error'
+            : 'Failed to create party';
+        throw Exception(error);
+      }
+
+      final data = response.data as Map<String, dynamic>;
+      final partyId = data['party_id'] as String;
+
+      // Fetch the created party with relations
+      final created = await getPartyById(partyId);
+      Log.d('createParty success | id: $partyId');
+      return created!;
     } catch (e, st) {
       Log.e('❌ [PartyRepo] createParty Error', e, st);
       rethrow;
@@ -165,22 +208,35 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
     }
   }
 
-  /// Updates an existing party.
+  // Fix #316: updateParty via EF (partner-manage-party)
+  /// Updates an existing party via Edge Function.
   Future<Party> updateParty(Party party) async {
     Log.d('updateParty called | id: ${party.id}');
     try {
-      final json = party.toDbJson();
+      final partyJson = party.toDbJson();
+      partyJson.remove('partner_id');
+      partyJson.remove('location');
+      partyJson.remove('location_id');
 
-      final data = await supabaseClient
-          .from('parties')
-          .update(json)
-          .eq('id', party.id)
-          .select()
-          .single();
+      final response = await supabaseClient.functions.invoke(
+        'partner-manage-party',
+        body: {
+          'action': 'update',
+          'party_id': party.id,
+          'party': partyJson,
+        },
+      );
 
-      final result = Party.fromJson(data);
-      Log.d('updateParty success | id: ${result.id}');
-      return result;
+      if (response.status != 200) {
+        final error = response.data is Map
+            ? (response.data as Map)['error'] ?? 'Unknown error'
+            : 'Failed to update party';
+        throw Exception(error);
+      }
+
+      final result = await getPartyById(party.id);
+      Log.d('updateParty success | id: ${result?.id}');
+      return result!;
     } catch (e, st) {
       Log.e('❌ [PartyRepo] updateParty Error', e, st);
       rethrow;
@@ -230,7 +286,8 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
     }
   }
 
-  /// Updates basic information of a party.
+  // Fix #316: updatePartyBasicInfo via EF (partner-manage-party)
+  /// Updates basic information of a party via Edge Function.
   Future<void> updatePartyBasicInfo({
     required String partyId,
     required String title,
@@ -240,18 +297,35 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
   }) async {
     Log.d('updatePartyBasicInfo called | partyId: $partyId, title: $title');
     try {
-      final updates = {
+      final partyUpdates = <String, dynamic>{
         'title': title,
         'description': description,
-        'image_urls': imageUrls,
-        'updated_at': DateTime.now().toIso8601String(),
       };
 
-      if (status != null) {
-        updates['status'] = status;
+      // Fix #316: only include imageUrls when provided to avoid null overwrite
+      if (imageUrls != null) {
+        partyUpdates['image_urls'] = imageUrls;
       }
 
-      await supabaseClient.from('parties').update(updates).eq('id', partyId);
+      if (status != null) {
+        partyUpdates['status'] = status;
+      }
+
+      final response = await supabaseClient.functions.invoke(
+        'partner-manage-party',
+        body: {
+          'action': 'update',
+          'party_id': partyId,
+          'party': partyUpdates,
+        },
+      );
+
+      if (response.status != 200) {
+        final error = response.data is Map
+            ? (response.data as Map)['error'] ?? 'Unknown error'
+            : 'Failed to update party';
+        throw Exception(error);
+      }
       Log.d('updatePartyBasicInfo success');
     } catch (e, st) {
       Log.e('❌ [PartyRepo] updatePartyBasicInfo Error', e, st);
@@ -259,14 +333,26 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
     }
   }
 
-  /// Updates only the status of a party.
+  // Fix #316: updatePartyStatus via EF (partner-manage-party)
+  /// Updates only the status of a party via Edge Function.
   Future<void> updatePartyStatus(String partyId, String status) async {
     Log.d('updatePartyStatus called | partyId: $partyId, status: $status');
     try {
-      await supabaseClient
-          .from('parties')
-          .update({'status': status})
-          .eq('id', partyId);
+      final response = await supabaseClient.functions.invoke(
+        'partner-manage-party',
+        body: {
+          'action': 'update_status',
+          'party_id': partyId,
+          'status': status,
+        },
+      );
+
+      if (response.status != 200) {
+        final error = response.data is Map
+            ? (response.data as Map)['error'] ?? 'Unknown error'
+            : 'Failed to update party status';
+        throw Exception(error);
+      }
       Log.d('updatePartyStatus success');
     } catch (e, st) {
       Log.e('❌ [PartyRepo] updatePartyStatus Error', e, st);
@@ -274,16 +360,28 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
     }
   }
 
-  /// Updates the metadata of a party.
+  // Fix #316: updatePartyMetadata via EF (partner-manage-party)
+  /// Updates the metadata of a party via Edge Function.
   Future<void> updatePartyMetadata(
     String partyId,
     Map<String, dynamic> metadata,
   ) async {
     try {
-      await supabaseClient
-          .from('parties')
-          .update({'metadata': metadata})
-          .eq('id', partyId);
+      final response = await supabaseClient.functions.invoke(
+        'partner-manage-party',
+        body: {
+          'action': 'update',
+          'party_id': partyId,
+          'party': {'balance_config': metadata},
+        },
+      );
+
+      if (response.status != 200) {
+        final error = response.data is Map
+            ? (response.data as Map)['error'] ?? 'Unknown error'
+            : 'Failed to update party metadata';
+        throw Exception(error);
+      }
       Log.d('updatePartyMetadata success');
     } catch (e, st) {
       Log.e('❌ [PartyRepo] updatePartyMetadata Error', e, st);
@@ -291,16 +389,28 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
     }
   }
 
-  /// Updates the location of a party.
+  // Fix #316: updatePartyLocation via EF (partner-manage-party)
+  /// Updates the location of a party via Edge Function.
   Future<void> updatePartyLocation(String partyId, String locationId) async {
     Log.d(
       'updatePartyLocation called | partyId: $partyId, locationId: $locationId',
     );
     try {
-      await supabaseClient
-          .from('parties')
-          .update({'location_id': locationId})
-          .eq('id', partyId);
+      final response = await supabaseClient.functions.invoke(
+        'partner-manage-party',
+        body: {
+          'action': 'update',
+          'party_id': partyId,
+          'location_id': locationId,
+        },
+      );
+
+      if (response.status != 200) {
+        final error = response.data is Map
+            ? (response.data as Map)['error'] ?? 'Unknown error'
+            : 'Failed to update party location';
+        throw Exception(error);
+      }
       Log.d('updatePartyLocation success');
     } catch (e, st) {
       Log.e('❌ [PartyRepo] updatePartyLocation Error', e, st);
