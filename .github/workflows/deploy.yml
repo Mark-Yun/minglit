@@ -61,6 +61,7 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_LANDING_USER }}
           dev-domain-alias: dev.minglit.com
+          deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
 
   deploy-landing_partner:
     runs-on: ubuntu-latest
@@ -77,6 +78,7 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_LANDING_PARTNER }}
           dev-domain-alias: dev.partner.minglit.com
+          deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
 
   deploy-app_partner:
     runs-on: ubuntu-latest
