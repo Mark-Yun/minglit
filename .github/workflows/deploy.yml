@@ -24,11 +24,14 @@ jobs:
   deploy-app_user:
     runs-on: ubuntu-latest
     environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
+    outputs:
+      accessible-url: ${{ steps.deploy.outputs.accessible-url }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
       - name: Deploy User App
+        id: deploy
         uses: ./.github/actions/deploy-flutter-app
         with:
           working-directory: ./apps/app_user
@@ -49,11 +52,14 @@ jobs:
   deploy-landing_user:
     runs-on: ubuntu-latest
     environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
+    outputs:
+      accessible-url: ${{ steps.deploy.outputs.accessible-url }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
       - name: Deploy User Landing
+        id: deploy
         uses: ./.github/actions/deploy-nextjs-app
         with:
           working-directory: ./apps/landing_user
@@ -66,11 +72,14 @@ jobs:
   deploy-landing_partner:
     runs-on: ubuntu-latest
     environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
+    outputs:
+      accessible-url: ${{ steps.deploy.outputs.accessible-url }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
       - name: Deploy Partner Landing
+        id: deploy
         uses: ./.github/actions/deploy-nextjs-app
         with:
           working-directory: ./apps/landing_partner
@@ -83,11 +92,14 @@ jobs:
   deploy-app_partner:
     runs-on: ubuntu-latest
     environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
+    outputs:
+      accessible-url: ${{ steps.deploy.outputs.accessible-url }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
       - name: Deploy Partner App
+        id: deploy
         uses: ./.github/actions/deploy-flutter-app
         with:
           working-directory: ./apps/app_partner
@@ -122,10 +134,11 @@ jobs:
             echo "landing_partner=https://partner.minglit.com" >> "$GITHUB_OUTPUT"
             echo "supabase=https://cnuahgrfzcqkmdyhunuk.supabase.co" >> "$GITHUB_OUTPUT"
           else
-            echo "app_user=https://dev.app.minglit.com" >> "$GITHUB_OUTPUT"
-            echo "app_partner=https://dev.app.partner.minglit.com" >> "$GITHUB_OUTPUT"
-            echo "landing_user=https://dev.minglit.com" >> "$GITHUB_OUTPUT"
-            echo "landing_partner=https://dev.partner.minglit.com" >> "$GITHUB_OUTPUT"
+            # Fix #389: use accessible URLs from deploy jobs (falls back to direct deploy URL if alias failed)
+            echo "app_user=${{ needs.deploy-app_user.outputs.accessible-url }}" >> "$GITHUB_OUTPUT"
+            echo "app_partner=${{ needs.deploy-app_partner.outputs.accessible-url }}" >> "$GITHUB_OUTPUT"
+            echo "landing_user=${{ needs.deploy-landing_user.outputs.accessible-url }}" >> "$GITHUB_OUTPUT"
+            echo "landing_partner=${{ needs.deploy-landing_partner.outputs.accessible-url }}" >> "$GITHUB_OUTPUT"
             echo "supabase=${{ secrets.SUPABASE_DEV_URL }}" >> "$GITHUB_OUTPUT"
           fi
       - name: Smoke test — Vercel apps
@@ -136,6 +149,7 @@ jobs:
           BYPASS_LANDING_PARTNER: ${{ secrets.VERCEL_BYPASS_LANDING_PARTNER }}
         run: |
           failed=0
+          # Fix #389: bypass tokens only apply to alias URLs, not direct Vercel deploy URLs
           declare -A BYPASS_MAP=(
             ["${{ steps.urls.outputs.app_user }}"]="$BYPASS_APP_USER"
             ["${{ steps.urls.outputs.app_partner }}"]="$BYPASS_APP_PARTNER"
