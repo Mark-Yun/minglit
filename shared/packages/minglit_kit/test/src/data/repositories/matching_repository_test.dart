@@ -163,9 +163,20 @@ void main() {
       });
     });
 
+    // Fix #306: castVote → EF 전환 후 테스트 업데이트
     group('castVote', () {
-      test('completes when user is authenticated', () async {
-        unawaited(mockTable(mockClient, 'match_votes'));
+      test('completes when EF invoke succeeds', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-cast-vote',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            data: utf8.encode(jsonEncode({'success': true})),
+            status: 200,
+          ),
+        );
 
         await expectLater(
           repository.castVote(
@@ -176,9 +187,13 @@ void main() {
         );
       });
 
-      test('throws when user not authenticated', () async {
-        mockClient = createMockSupabase(); // No user
-        repository = MatchingRepository(supabase: mockClient);
+      test('throws when EF invoke fails', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-cast-vote',
+            body: any(named: 'body'),
+          ),
+        ).thenThrow(Exception('EF failed'));
 
         expect(
           () => repository.castVote(

@@ -1,6 +1,6 @@
 -- Tests for 2-tier queue architecture schema (event_type_name enum, event_routes, produce_event, fan_out_event)
 BEGIN;
-SELECT plan(16);
+SELECT plan(17);
 
 SELECT tests.authenticate_as_service_role();
 
@@ -8,11 +8,11 @@ SELECT tests.authenticate_as_service_role();
 -- PART 1: event_type_name enum validation
 -- ============================================================
 
--- Test 1: event_type_name enum exists and has 12 values
--- (9 original + 3 settlement: settlement_ready, settlement_completed, settlement_failed)
+-- Test 1: event_type_name enum exists and has 13 values
+-- (9 original + 3 settlement + 1 matching: match_result)
 SELECT ok(
-  (SELECT count(*) FROM pg_enum JOIN pg_type ON pg_enum.enumtypid = pg_type.oid WHERE pg_type.typname = 'event_type_name') = 12,
-  'event_type_name enum should have 12 values'
+  (SELECT count(*) FROM pg_enum JOIN pg_type ON pg_enum.enumtypid = pg_type.oid WHERE pg_type.typname = 'event_type_name') = 13,
+  'event_type_name enum should have 13 values'
 );
 
 -- Test 2-10: individual enum values exist
@@ -86,6 +86,14 @@ SELECT ok(
     WHERE pg_type.typname = 'event_type_name' AND enumlabel = 'event_reminder'
   ),
   'event_type_name should have event_reminder'
+);
+
+SELECT ok(
+  EXISTS (
+    SELECT 1 FROM pg_enum JOIN pg_type ON pg_enum.enumtypid = pg_type.oid
+    WHERE pg_type.typname = 'event_type_name' AND enumlabel = 'match_result'
+  ),
+  'event_type_name should have match_result'
 );
 
 -- ============================================================

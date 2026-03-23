@@ -85,20 +85,20 @@ class MatchingRepository {
     }
   }
 
-  /// Casts a vote for a candidate.
+  /// Casts a vote for a candidate via user-cast-vote EF.
+  // Fix #306: RLS write → EF 전환 (direct match_votes INSERT → user-cast-vote EF)
   Future<void> castVote({
     required String eventId,
     required String candidateId,
   }) async {
-    final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) throw Exception('User not authenticated');
-
     try {
-      await _supabase.from('match_votes').insert({
-        'event_id': eventId,
-        'voter_id': userId,
-        'candidate_id': candidateId,
-      });
+      await _supabase.functions.invoke(
+        'user-cast-vote',
+        body: {
+          'event_id': eventId,
+          'candidate_id': candidateId,
+        },
+      );
       Log.d('castVote success | candidate: $candidateId');
     } catch (e, st) {
       Log.e('❌ [MatchingRepo] castVote Error', e, st);
@@ -152,6 +152,50 @@ class MatchingRepository {
       return enrichedMatches;
     } catch (e, st) {
       Log.e('❌ [MatchingRepo] getMyMatches Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// Fetches the voter's current vote count for an event.
+  // Fix #306: 잔여 투표 수 표시용
+  Future<int> getMyVoteCount(String eventId) async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) return 0;
+
+    try {
+      final data =
+          await _supabase
+                  .from('match_votes')
+                  .select()
+                  .eq('event_id', eventId)
+                  .eq('voter_id', userId)
+              as List;
+      return data.length;
+    } catch (e, st) {
+      Log.e('❌ [MatchingRepo] getMyVoteCount Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// Fetches the voted candidate IDs for the current user in an event.
+  // Fix #306: 투표 완료된 후보 비활성화용
+  Future<Set<String>> getMyVotedCandidateIds(String eventId) async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) return {};
+
+    try {
+      final data =
+          await _supabase
+                  .from('match_votes')
+                  .select('candidate_id')
+                  .eq('event_id', eventId)
+                  .eq('voter_id', userId)
+              as List;
+      return data
+          .map((e) => (e as Map<String, dynamic>)['candidate_id'] as String)
+          .toSet();
+    } catch (e, st) {
+      Log.e('❌ [MatchingRepo] getMyVotedCandidateIds Error', e, st);
       rethrow;
     }
   }
