@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:app_user/src/features/explore/providers/explore_state_provider.dart';
+import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:app_user/src/routing/app_router.dart';
 import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';

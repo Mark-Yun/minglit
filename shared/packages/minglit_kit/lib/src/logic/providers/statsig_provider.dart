@@ -4,6 +4,7 @@
 /// No-ops gracefully when STATSIG_CLIENT_KEY is empty or 'FILL_THIS'.
 library;
 
+import 'package:minglit_kit/src/utils/log.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:statsig/statsig.dart';
 import 'package:uuid/uuid.dart';
@@ -54,8 +55,9 @@ class StatsigAnalytics {
     }
     try {
       await _initializeInternal(clientKey, userId: userId, tier: tier);
-    } on Object catch (_) {
-      // Graceful degradation — never crash on analytics
+    } on Object catch (e) {
+      // Fix #382: Graceful degradation — never crash on analytics, but log for debuggability
+      Log.d('Statsig initialize failed: $e');
     }
   }
 
@@ -87,7 +89,10 @@ class StatsigAnalytics {
     if (!_initialized) return;
     try {
       await Statsig.updateUser(StatsigUser(userId: userId));
-    } on Object catch (_) {}
+    } on Object catch (e) {
+      // Fix #382: 에러 삼킴 방지 — debug 로그 추가
+      Log.d('Statsig updateUser failed: $e');
+    }
   }
 
   /// Log an analytics event. Use [MingLitEvent] constants.
@@ -99,7 +104,10 @@ class StatsigAnalytics {
     if (!_initialized) return;
     try {
       Statsig.logEvent(eventName, doubleValue: value, metadata: metadata);
-    } on Object catch (_) {}
+    } on Object catch (e) {
+      // Fix #382: 에러 삼킴 방지 — debug 로그 추가
+      Log.d('Statsig logEvent failed: $e');
+    }
   }
 
   /// Evaluate a feature gate. Returns false if not initialized.
@@ -107,7 +115,9 @@ class StatsigAnalytics {
     if (!_initialized) return false;
     try {
       return Statsig.checkGate(gateName);
-    } on Object catch (_) {
+    } on Object catch (e) {
+      // Fix #382: 에러 삼킴 방지 — debug 로그 추가
+      Log.d('Statsig checkGate failed: $e');
       return false;
     }
   }
@@ -118,6 +128,9 @@ class StatsigAnalytics {
     try {
       await Statsig.shutdown();
       _initialized = false;
-    } on Object catch (_) {}
+    } on Object catch (e) {
+      // Fix #382: 에러 삼킴 방지 — debug 로그 추가
+      Log.d('Statsig shutdown failed: $e');
+    }
   }
 }

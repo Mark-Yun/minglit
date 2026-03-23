@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:app_user/src/features/explore/logic/eligibility_filter.dart';
+import 'package:app_user/src/logic/eligibility_filter.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-part 'explore_state_provider.g.dart';
+part 'feed_state_provider.g.dart';
 
 enum ExploreSortType { recommended, closingSoon, nearestDate }
 
