@@ -58,8 +58,9 @@ Future<Set<String>> myVotedCandidateIds(Ref ref, String eventId) {
 
 @riverpod
 Future<int> maxVoteCount(Ref ref, String eventId) async {
-  final rules =
-      await ref.watch(matchingRepositoryProvider).getMatchRules(eventId);
+  final rules = await ref
+      .watch(matchingRepositoryProvider)
+      .getMatchRules(eventId);
   if (rules.isEmpty) return 1;
   return rules.map((r) => r.voteCount).reduce((a, b) => a > b ? a : b);
 }

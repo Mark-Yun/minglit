@@ -114,9 +114,7 @@ class MatchingVoteScreen extends ConsumerWidget {
                       ),
                       const SizedBox(width: MinglitSpacing.small),
                       Text(
-                        allUsed
-                            ? '투표 완료!'
-                            : '남은 투표: $remaining/$max',
+                        allUsed ? '투표 완료!' : '남은 투표: $remaining/$max',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                           color: allUsed
@@ -139,7 +137,8 @@ class MatchingVoteScreen extends ConsumerWidget {
                   return const Center(child: Text('투표 가능한 상대가 없습니다.'));
                 }
                 final votedIds = votedIdsAsync.valueOrNull ?? {};
-                final allVotesUsed = voteCountAsync.hasValue &&
+                final allVotesUsed =
+                    voteCountAsync.hasValue &&
                     maxVoteAsync.hasValue &&
                     voteCountAsync.value! >= maxVoteAsync.value!;
                 return GridView.builder(
@@ -293,7 +292,8 @@ class MatchingVoteScreen extends ConsumerWidget {
                           ? null
                           : () {
                               unawaited(
-                                  _confirmAndVote(context, ref, candidate));
+                                _confirmAndVote(context, ref, candidate),
+                              );
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: isVoted

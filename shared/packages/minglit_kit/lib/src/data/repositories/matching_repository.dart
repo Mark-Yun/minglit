@@ -163,11 +163,13 @@ class MatchingRepository {
     if (userId == null) return 0;
 
     try {
-      final data = await _supabase
-          .from('match_votes')
-          .select()
-          .eq('event_id', eventId)
-          .eq('voter_id', userId) as List;
+      final data =
+          await _supabase
+                  .from('match_votes')
+                  .select()
+                  .eq('event_id', eventId)
+                  .eq('voter_id', userId)
+              as List;
       return data.length;
     } catch (e, st) {
       Log.e('❌ [MatchingRepo] getMyVoteCount Error', e, st);
@@ -182,11 +184,13 @@ class MatchingRepository {
     if (userId == null) return {};
 
     try {
-      final data = await _supabase
-          .from('match_votes')
-          .select('candidate_id')
-          .eq('event_id', eventId)
-          .eq('voter_id', userId) as List;
+      final data =
+          await _supabase
+                  .from('match_votes')
+                  .select('candidate_id')
+                  .eq('event_id', eventId)
+                  .eq('voter_id', userId)
+              as List;
       return data
           .map((e) => (e as Map<String, dynamic>)['candidate_id'] as String)
           .toSet();
