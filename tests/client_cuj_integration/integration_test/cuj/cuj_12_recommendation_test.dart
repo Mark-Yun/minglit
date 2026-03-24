@@ -30,28 +30,28 @@ void main() {
         (tester) async {
       final client = Supabase.instance.client;
 
-      final result = await client.rpc(
+      final result = await client.rpc<List<dynamic>>(
         'get_personalized_recommendations',
         params: {
           'p_user_id': testUserId,
           'p_limit': 10,
         },
-      ) as List;
+      );
 
       // 임베딩이 없을 경우 빈 리스트도 유효한 결과다
-      expect(result, isA<List>(), reason: 'RPC 결과는 리스트여야 한다');
+      expect(result, isA<List<dynamic>>(), reason: 'RPC 결과는 리스트여야 한다');
     });
 
     testWidgets('추천 결과 데이터 구조가 올바르다', (tester) async {
       final client = Supabase.instance.client;
 
-      final result = await client.rpc(
+      final result = await client.rpc<List<dynamic>>(
         'get_personalized_recommendations',
         params: {
           'p_user_id': testUserId,
           'p_limit': 10,
         },
-      ) as List;
+      );
 
       if (result.isEmpty) {
         // 임베딩 데이터가 없으면 빈 결과는 정상이므로 스킵
