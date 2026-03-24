@@ -18,50 +18,60 @@ Future<ProviderContainer> initializeE2E() async {
 }
 
 /// Finds a scheduled event with ticket, partner, and owner info.
+///
+/// Fix #410: queries multiple events and picks the first one whose partner
+/// has an owner in partner_member_permissions (dev data may be incomplete).
 Future<ScheduledEventContext> findScheduledEvent(
   SupabaseClient client,
 ) async {
-  final eventRes = await client
+  final events = await client
       .from('events')
       .select(
         '*, tickets(*), party:parties(*, partner:partners(*))',
       )
       .eq('status', 'scheduled')
-      .limit(1)
-      .maybeSingle();
+      .limit(10) as List;
 
-  if (eventRes == null) {
+  if (events.isEmpty) {
     throw StateError(
       'No scheduled events found in dev database.',
     );
   }
 
-  final eventId = eventRes['id'] as String;
-  final tickets = eventRes['tickets'] as List;
-  if (tickets.isEmpty) {
-    throw StateError('Event $eventId has no tickets.');
+  for (final eventRes in events) {
+    final event = eventRes as Map<String, dynamic>;
+    final eventId = event['id'] as String;
+    final tickets = event['tickets'] as List;
+    if (tickets.isEmpty) continue;
+
+    final party = event['party'] as Map<String, dynamic>?;
+    if (party == null) continue;
+    final partner = party['partner'] as Map<String, dynamic>?;
+    if (partner == null) continue;
+    final partnerId = partner['id'] as String;
+
+    final ownerRes = await client
+        .from('partner_member_permissions')
+        .select('user_id')
+        .eq('partner_id', partnerId)
+        .eq('role', 'owner')
+        .maybeSingle();
+    if (ownerRes == null) continue;
+
+    final ticketId =
+        (tickets.first as Map<String, dynamic>)['id'] as String;
+    return ScheduledEventContext(
+      eventId: eventId,
+      ticketId: ticketId,
+      partnerId: partnerId,
+      partyId: party['id'] as String,
+      ownerId: ownerRes['user_id'] as String,
+    );
   }
-  final ticketId =
-      (tickets.first as Map<String, dynamic>)['id'] as String;
 
-  final party = eventRes['party'] as Map<String, dynamic>;
-  final partner = party['partner'] as Map<String, dynamic>;
-  final partnerId = partner['id'] as String;
-
-  final ownerRes = await client
-      .from('partner_member_permissions')
-      .select('user_id')
-      .eq('partner_id', partnerId)
-      .eq('role', 'owner')
-      .single();
-  final ownerId = ownerRes['user_id'] as String;
-
-  return ScheduledEventContext(
-    eventId: eventId,
-    ticketId: ticketId,
-    partnerId: partnerId,
-    partyId: party['id'] as String,
-    ownerId: ownerId,
+  throw StateError(
+    'No scheduled event with tickets and a partner owner found '
+    'in dev database.',
   );
 }
 
