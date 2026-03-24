@@ -227,6 +227,7 @@ Supabase Edge Functions는 Deno 런타임 기반이며, `supabase/functions/` �
 | `partner-manage-event` | Partner | 이벤트/티켓/입장그룹 CRUD (RLS write → EF 전환) |
 | `partner-manage-match` | Partner | 매칭 룰 관리 (set_rules, clear_rules) |
 | `partner-manage-party` | Partner | 파티/장소/템플릿 CRUD (RLS write → EF 전환) |
+| `partner-manage-member` | Partner | 파트너 멤버 관리 (초대, 권한 변경, 제거) |
 | `partner-manage-verification` | Partner | 인증 양식 정의 생성/수정 |
 | `partner-register` | Partner | 파트너 입점 신청 (임시저장, 제출, 수정) |
 | `partner-review-submission` | Partner | 인증 제출물 심사 (승인/거절 + 코멘트) |
