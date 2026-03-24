@@ -38,8 +38,7 @@ class PartnerDetailPage extends ConsumerWidget {
           final coordinator = ref.read(homeCoordinatorProvider);
           return PartnerDetailView(
             partner: partner,
-            onEventTap: (event) =>
-                coordinator.pushEventDetail(event.id),
+            onEventTap: (event) => coordinator.pushEventDetail(event.id),
             onMoreEventsTap: () => coordinator.pushPartnerEvents(
               partnerId: partnerId,
               partnerName: partner.name,

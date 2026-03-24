@@ -1,12 +1,12 @@
 import 'dart:async';
 
+import 'package:app_partner/src/features/onboarding/onboarding_coordinator.dart';
 import 'package:app_partner/src/features/onboarding/partner_apply_controller.dart';
 import 'package:app_partner/src/features/onboarding/steps/step1_basic_info.dart';
 import 'package:app_partner/src/features/onboarding/steps/step2_biz_info.dart';
 import 'package:app_partner/src/features/onboarding/steps/step3_contact_settlement.dart';
 import 'package:app_partner/src/features/onboarding/steps/step4_documents.dart';
 import 'package:app_partner/src/features/onboarding/steps/step5_review.dart';
-import 'package:app_partner/src/features/onboarding/onboarding_coordinator.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';

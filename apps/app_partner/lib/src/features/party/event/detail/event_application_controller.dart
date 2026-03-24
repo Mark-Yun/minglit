@@ -31,8 +31,7 @@ class EventApplicationReviewController
       final repo = ref.read(verificationRepositoryProvider);
 
       // Find the submission ID first via repository.
-      final subData =
-          await repo.getSubmissionByApplicationId(applicationId);
+      final subData = await repo.getSubmissionByApplicationId(applicationId);
 
       if (subData != null) {
         final submissionId = subData['id'] as String;
