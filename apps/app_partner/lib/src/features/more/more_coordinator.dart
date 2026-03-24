@@ -25,4 +25,9 @@ class MoreCoordinator {
   void pushVerificationManage() {
     unawaited(_router.push(const VerificationManageRoute().location));
   }
+
+  // Fix #404: Coordinator-based navigation for home route (logout)
+  void goToHome() {
+    _router.go('/');
+  }
 }

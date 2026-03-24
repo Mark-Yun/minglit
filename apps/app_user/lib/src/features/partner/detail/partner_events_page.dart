@@ -1,8 +1,5 @@
-import 'dart:async';
-
-import 'package:app_user/src/routing/app_routes.dart';
+import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 /// Full-page list of events for a specific partner.
@@ -42,15 +39,11 @@ class PartnerEventsPage extends ConsumerWidget {
             itemCount: events.length,
             itemBuilder: (context, index) {
               final event = events[index];
+              // Fix #404: Use coordinator instead of direct GoRouter access
               return MinglitEventCard(
                 event: event,
-                onTap: () {
-                  unawaited(
-                    context.push(
-                      EventDetailRoute(eventId: event.id).location,
-                    ),
-                  );
-                },
+                onTap: () =>
+                    ref.read(homeCoordinatorProvider).pushEventDetail(event.id),
               );
             },
           );

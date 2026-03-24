@@ -6,9 +6,9 @@ import 'package:app_partner/src/features/onboarding/steps/step2_biz_info.dart';
 import 'package:app_partner/src/features/onboarding/steps/step3_contact_settlement.dart';
 import 'package:app_partner/src/features/onboarding/steps/step4_documents.dart';
 import 'package:app_partner/src/features/onboarding/steps/step5_review.dart';
+import 'package:app_partner/src/features/onboarding/onboarding_coordinator.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class PartnerApplyPage extends ConsumerStatefulWidget {
@@ -73,8 +73,9 @@ class _PartnerApplyPageState extends ConsumerState<PartnerApplyPage> {
       ) {
         next.whenOrNull(
           data: (_) {
+            // Fix #404: Use coordinator instead of direct GoRouter access
             if (prev?.isLoading ?? false) {
-              context.go('/apply/status');
+              ref.read(onboardingCoordinatorProvider).goToApplyStatus();
             }
           },
           error: (error, st) {

@@ -30,9 +30,20 @@ minglit_kit/lib/src/features/
 ├── notification/   # 푸시 알림, FCM, 알림 목록/설정
 ├── search/         # 전문 검색 (PGroonga)
 ├── social/         # 소셜 기능 (좋아요, 구독, 차단)
+├── permission/     # 앱 권한 설정 (카메라, 위치 등 시스템 권한 관리 화면)
 ├── theme/          # 테마 모드 컨트롤러 (라이트/다크/시스템)
 └── verification/   # 본인인증 (Identity Verification) — Iamport V2 기반 실명 인증 화면
 ```
+
+### 2.1.1 Shared Packages
+
+`shared/packages/` 디렉토리에는 모노레포 전체에서 공유되는 패키지가 위치합니다.
+
+| 패키지 | 역할 |
+|--------|------|
+| `minglit_kit` | 핵심 공유 라이브러리 (모델, 리포지토리, 위젯, 유틸리티) |
+| `minglit_iamport_v1` | Iamport V1 API 결제 연동 래퍼 |
+| `minglit_lints` | 모노레포 공통 린트 규칙 |
 
 ### 2.2 Coordinator Pattern (Navigation)
 **UI는 "어디로 갈지" 모릅니다.** 단순히 Coordinator에게 "이 버튼이 눌렸다"고 알릴 뿐입니다.
