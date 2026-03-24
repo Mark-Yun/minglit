@@ -1,9 +1,9 @@
 import 'dart:async';
 
+import 'package:app_partner/src/features/onboarding/onboarding_coordinator.dart';
 import 'package:app_partner/src/features/onboarding/widgets/dot_indicator.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 /// Onboarding welcome page shown to new partners before starting the
@@ -105,8 +105,10 @@ class _PartnerWelcomePageState extends ConsumerState<PartnerWelcomePage> {
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(MinglitSpacing.large),
+          // Fix #404: Use coordinator instead of direct GoRouter access
           child: ElevatedButton(
-            onPressed: () => context.go('/apply'),
+            onPressed: () =>
+                ref.read(onboardingCoordinatorProvider).goToApply(),
             style: ElevatedButton.styleFrom(
               backgroundColor: MinglitColors.primary,
               foregroundColor: MinglitColors.background,
