@@ -91,13 +91,14 @@ Deno.test({
       { id: "mp-1", user_lower_id: "user-a", user_higher_id: "user-b" },
     ];
 
-    const { fetchMock } = createFetchMock([
+    const { fetchMock, calls } = createFetchMock([
       {
         matcher: "/auth/v1/user",
         handler: () => jsonResponse({ id: "admin-1", email: "admin@test.com" }),
       },
       {
-        matcher: "/rest/v1/match_pairs",
+        matcher: (req) =>
+          req.url.includes("/rest/v1/match_pairs") && req.method === "GET",
         handler: () => jsonResponse(existingPairs),
       },
     ]);
@@ -113,6 +114,12 @@ Deno.test({
         assertEquals(body.success, true);
         assertEquals(body.idempotent, true);
         assertEquals(body.match_count, 1);
+
+        // Verify no POST was made to match_pairs (idempotent = no insert)
+        const posted = calls.some(
+          (c) => c.url.includes("/rest/v1/match_pairs") && c.method === "POST",
+        );
+        assertEquals(posted, false);
       });
     });
   },
