@@ -61,5 +61,47 @@ void main() {
         () => mockRouter.push(any(that: contains('notification-settings'))),
       ).called(1);
     });
+
+    // Fix #404: Tests for new coordinator methods
+    test('goToHome calls router.go("/")', () {
+      HomeCoordinator(mockRouter).goToHome();
+
+      verify(() => mockRouter.go('/')).called(1);
+    });
+
+    test('pushPrivacy calls router.push', () {
+      HomeCoordinator(mockRouter).pushPrivacy();
+
+      verify(
+        () => mockRouter.push(any(that: contains('privacy'))),
+      ).called(1);
+    });
+
+    test('pushBlockedPartners calls router.push', () {
+      HomeCoordinator(mockRouter).pushBlockedPartners();
+
+      verify(
+        () => mockRouter.push(any(that: contains('blocked-partners'))),
+      ).called(1);
+    });
+
+    test('pushEventDetail calls router.push with eventId', () {
+      HomeCoordinator(mockRouter).pushEventDetail('evt_123');
+
+      verify(
+        () => mockRouter.push(any(that: contains('evt_123'))),
+      ).called(1);
+    });
+
+    test('pushPartnerEvents calls router.push with partnerId', () {
+      HomeCoordinator(mockRouter).pushPartnerEvents(
+        partnerId: 'p_1',
+        partnerName: 'Test Partner',
+      );
+
+      verify(
+        () => mockRouter.push(any(that: contains('p_1'))),
+      ).called(1);
+    });
   });
 }

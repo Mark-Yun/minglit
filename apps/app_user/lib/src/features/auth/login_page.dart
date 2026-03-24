@@ -1,9 +1,8 @@
 import 'dart:async';
 
-import 'package:app_user/src/routing/app_routes.dart';
+import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -43,8 +42,9 @@ class LoginPage extends ConsumerWidget {
     return PopScope(
       canPop: from == null,
       onPopInvokedWithResult: (didPop, _) {
+        // Fix #404: Use coordinator instead of direct GoRouter access
         if (!didPop && context.mounted) {
-          GoRouter.of(context).go('/');
+          ref.read(authCoordinatorProvider).goToHome();
         }
       },
       child: MinglitLoginScreen(
@@ -124,10 +124,9 @@ class LoginPage extends ConsumerWidget {
           }
         },
         // Fix #188: 데브맵 제거 — 5클릭 시 세션 스위처로 직접 이동
+        // Fix #404: Use coordinator instead of direct route push
         onDevTrigger: isDevEnv
-            ? () => const DevUserSwitchRoute().push<void>(
-                context,
-              )
+            ? () => ref.read(authCoordinatorProvider).pushDevUserSwitch()
             : null,
       ),
     );
