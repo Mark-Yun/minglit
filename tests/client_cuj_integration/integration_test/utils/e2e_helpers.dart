@@ -23,11 +23,7 @@ Future<ProviderContainer> initializeE2E() async {
 }
 
 /// Finds a scheduled event with its ticket, partner, and owner info.
-///
-/// Fix #410: queries multiple events and picks the first one whose partner
-/// has an owner in partner_member_permissions (dev data may be incomplete).
-///
-/// Pattern from: `tests/backend_integration/src/utils/test_helpers.dart`
+// Fix #410: iterate candidates to find one with a valid partner owner
 Future<ScheduledEventContext> findScheduledEvent(
   SupabaseClient client,
 ) async {
@@ -35,6 +31,7 @@ Future<ScheduledEventContext> findScheduledEvent(
       .from('events')
       .select('*, tickets(*), party:parties(*, partner:partners(*))')
       .eq('status', 'scheduled')
+      .order('created_at', ascending: false)
       .limit(10) as List;
 
   if (events.isEmpty) {
