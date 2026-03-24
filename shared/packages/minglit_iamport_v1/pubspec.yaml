@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   # Iamport V1 SDK
-  iamport_flutter: ^0.10.0
+  iamport_flutter: ^0.10.19
   # Web support
   # uni_links or similar might be needed for deep links if iamport_flutter doesn't handle everything.
 
