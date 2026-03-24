@@ -300,7 +300,7 @@ mixin _VerificationCommandRepository on _SupabaseVerificationContext {
           .from('event_applications')
           .update({
             'status': status,
-            if (rejectionReason != null) 'rejection_reason': rejectionReason,
+            'rejection_reason': ?rejectionReason,
           })
           .eq('id', applicationId);
       Log.d('updateApplicationStatus success');
