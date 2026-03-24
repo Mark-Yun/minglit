@@ -33,13 +33,6 @@ void main() {
     when(
       () => mockUserRepo.getApprovedVerificationIds(any()),
     ).thenAnswer((_) async => <String>[]);
-    // Stub deleteApplication for rejected → re-apply flow (deprecated, kept for compatibility)
-    when(
-      () => mockEventRepo.deleteApplication(
-        eventId: any(named: 'eventId'),
-        userId: any(named: 'userId'),
-      ),
-    ).thenAnswer((_) async {});
     // Fix #299: cancelOrder EF stub for rejected → re-apply flow
     when(
       () => mockEventRepo.cancelOrder(

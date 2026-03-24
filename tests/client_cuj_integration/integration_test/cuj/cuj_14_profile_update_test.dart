@@ -91,8 +91,11 @@ void main() {
           .eq('id', testUserId)
           .single();
 
-      expect(profile['bio'], equals(originalBio),
-          reason: '프로필 bio가 원래 값으로 복원되어야 한다');
+      expect(
+        profile['bio'],
+        equals(originalBio),
+        reason: '프로필 bio가 원래 값으로 복원되어야 한다',
+      );
     });
   });
 }
