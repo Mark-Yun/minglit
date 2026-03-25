@@ -10,7 +10,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Fix #428: refresh seed data before tests so scheduled events exist
+  refresh-seed-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Refresh dev seed data
+        run: |
+          curl -sf -X POST \
+            "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/dev-seed" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
+            -H "Content-Type: application/json"
+
   client-cuj-test:
+    needs: refresh-seed-data
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -65,6 +78,7 @@ jobs:
             done
 
   partner-cuj-test:
+    needs: refresh-seed-data
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
