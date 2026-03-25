@@ -74,11 +74,13 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) return null;
       final bytes = byteData.buffer.asUint8List();
-      final url = await ref.read(storageRepositoryProvider).uploadBytes(
-        bytes: bytes,
-        bucket: 'bug-report-attachments',
-        pathPrefix: 'screenshots',
-      );
+      final url = await ref
+          .read(storageRepositoryProvider)
+          .uploadBytes(
+            bytes: bytes,
+            bucket: 'bug-report-attachments',
+            pathPrefix: 'screenshots',
+          );
       return url;
     } on Exception catch (e) {
       Log.e('Screenshot capture failed (best-effort)', e);
@@ -119,13 +121,15 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
     String? layoutDumpUrl;
     if (layoutDump != null) {
       try {
-        layoutDumpUrl = await ref.read(storageRepositoryProvider).uploadBytes(
-          bytes: Uint8List.fromList(utf8.encode(layoutDump)),
-          bucket: 'bug-report-attachments',
-          pathPrefix: 'layout-dumps',
-          contentType: 'text/plain',
-          extension: '.txt',
-        );
+        layoutDumpUrl = await ref
+            .read(storageRepositoryProvider)
+            .uploadBytes(
+              bytes: Uint8List.fromList(utf8.encode(layoutDump)),
+              bucket: 'bug-report-attachments',
+              pathPrefix: 'layout-dumps',
+              contentType: 'text/plain',
+              extension: '.txt',
+            );
       } on Object catch (e) {
         Log.e('Layout dump upload failed (best-effort)', e);
       }
