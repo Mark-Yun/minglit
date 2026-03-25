@@ -45,7 +45,10 @@ STEP 3: Golden Test Coverage
 1. List all `*_page.dart` and `*_screen.dart` files under `apps/`.
 2. List all `*_golden_test.dart` files under `apps/` and `tests/`.
 3. For each page/screen file, check if a corresponding golden test exists.
-   Match by: `foo_page.dart` should have `foo_page_golden_test.dart` or `foo_golden_test.dart`.
+   Match rules (any of the following counts as covered):
+   - `foo_page.dart` → `foo_page_golden_test.dart` or `foo_golden_test.dart`
+   - A `*_golden_test.dart` file that imports or references the page/screen widget
+   - A `*_golden_test.dart` file that uses a shared helper (e.g., `golden_test_helpers.dart`) to test the page/screen widget
 4. Report pages/screens WITHOUT golden test coverage.
 
 ────────────────────────────────────────

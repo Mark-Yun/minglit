@@ -13,8 +13,9 @@ PROMPT_FILE="${REPO_ROOT}/scripts/workers/prompts/audit-uiux.txt"
 # ── worktree 준비 ──────────────────────────────────────────────
 setup_worktree() {
   if [ ! -d "$WORKTREE_DIR" ]; then
-    echo "[audit-uiux] Creating worktree at $WORKTREE_DIR (detached HEAD) ..."
-    git -C "$REPO_ROOT" worktree add --detach "$WORKTREE_DIR"
+    echo "[audit-uiux] Creating worktree at $WORKTREE_DIR (detached HEAD from origin/dev) ..."
+    git -C "$REPO_ROOT" fetch origin dev --quiet
+    git -C "$REPO_ROOT" worktree add --detach "$WORKTREE_DIR" origin/dev
   else
     echo "[audit-uiux] Worktree already exists. Updating ..."
     git -C "$WORKTREE_DIR" fetch origin dev --quiet
@@ -28,7 +29,11 @@ run_loop() {
     LOGFILE="/tmp/audit-uiux-$(date +%Y%m%d-%H%M%S).log"
     echo "[audit-uiux] $(date '+%Y-%m-%d %H:%M:%S') — 감사 시작 (log: $LOGFILE)"
 
-    setup_worktree
+    if ! setup_worktree; then
+      echo "[audit-uiux] $(date '+%Y-%m-%d %H:%M:%S') — worktree 준비 실패. ${INTERVAL}초 후 재시도." >> "$LOGFILE"
+      sleep "$INTERVAL"
+      continue
+    fi
 
     claude \
       --print \
