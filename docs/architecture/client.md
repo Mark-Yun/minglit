@@ -35,6 +35,39 @@ minglit_kit/lib/src/features/
 └── verification/   # 본인인증 (Identity Verification) — Iamport V2 기반 실명 인증 화면
 ```
 
+#### app_user Features
+
+```text
+apps/app_user/lib/src/features/
+├── auth/           # 로그인/인증 플로우
+├── event/          # 이벤트 상세, 신청, 입장
+├── home/           # 홈 피드, 마이페이지
+├── partner/        # 파트너 상세 페이지
+├── party/          # 파티 목록/상세
+├── payment/        # 결제 플로우, 결제 완료
+├── search/         # 이벤트/파티 검색
+├── settings/       # 앱 설정
+└── ticket/         # 티켓 선택/관리
+```
+
+#### app_partner Features
+
+```text
+apps/app_partner/lib/src/features/
+├── admin/          # 관리자 기능
+├── auth/           # 파트너 로그인/인증
+├── checkin/        # 이벤트 체크인 관리
+├── home/           # 파트너 대시보드
+├── member/         # 멤버 관리 (초대, 권한)
+├── more/           # 더보기 메뉴
+├── onboarding/     # 파트너 온보딩
+├── party/          # 파티/이벤트 관리
+├── qr/             # QR 스캐너
+├── settlement/     # 정산 관리
+├── ticket/         # 티켓 관리
+└── verification/   # 인증 심사
+```
+
 ### 2.1.1 Shared Packages
 
 `shared/packages/` 디렉토리에는 모노레포 전체에서 공유되는 패키지가 위치합니다.
