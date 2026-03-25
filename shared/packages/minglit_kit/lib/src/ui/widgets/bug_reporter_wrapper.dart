@@ -74,6 +74,7 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) return null;
       final bytes = byteData.buffer.asUint8List();
+      // Fix #412: StorageRepository 직접 생성 → Provider 주입
       final url = await ref
           .read(storageRepositoryProvider)
           .uploadBytes(
@@ -121,6 +122,7 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
     String? layoutDumpUrl;
     if (layoutDump != null) {
       try {
+        // Fix #412: StorageRepository 직접 생성 → Provider 주입
         layoutDumpUrl = await ref
             .read(storageRepositoryProvider)
             .uploadBytes(
