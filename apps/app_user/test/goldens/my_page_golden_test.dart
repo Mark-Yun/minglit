@@ -34,20 +34,18 @@ void main() {
         tester,
         page: const MyPage(),
         goldenFileName: 'goldens/my_page_logged_in.png',
+        currentUser: const User(
+          id: 'u1',
+          appMetadata: {},
+          userMetadata: {
+            'full_name': '홍길동',
+            'avatar_url': null,
+          },
+          aud: 'authenticated',
+          createdAt: '2026-01-01T00:00:00.000Z',
+          email: 'test@minglit.com',
+        ),
         overrides: [
-          currentUserProvider.overrideWith(
-            (_) => const User(
-              id: 'u1',
-              appMetadata: {},
-              userMetadata: {
-                'full_name': '홍길동',
-                'avatar_url': null,
-              },
-              aud: 'authenticated',
-              createdAt: '2026-01-01T00:00:00.000Z',
-              email: 'test@minglit.com',
-            ),
-          ),
           authCoordinatorProvider.overrideWithValue(mockAuth),
           homeCoordinatorProvider.overrideWithValue(mockHome),
           authControllerProvider.overrideWith(_FakeAuthController.new),

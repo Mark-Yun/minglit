@@ -9,6 +9,12 @@ import 'package:minglit_kit/minglit_kit.dart';
 
 import 'golden_test_helpers.dart';
 
+/// Returns an empty string as the initial search query for golden tests.
+class _EmptySearchQuery extends SearchQuery {
+  @override
+  String build() => '';
+}
+
 void main() {
   group('SearchPage golden', () {
     testWidgets('initial empty state', (tester) async {
@@ -20,7 +26,7 @@ void main() {
         goldenFileName: 'goldens/search_page_empty.png',
         overrides: [
           eventCoordinatorProvider.overrideWithValue(mockEvent),
-          searchQueryProvider.overrideWithValue(''),
+          searchQueryProvider.overrideWith(_EmptySearchQuery.new),
           searchResultsProvider.overrideWith((_) async => <Event>[]),
         ],
       );
