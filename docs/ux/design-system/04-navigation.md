@@ -73,7 +73,7 @@
 
 ### 표준 구조
 
-```
+```text
 [DragHandle]                    — 상단 드래그 핸들
 [SafeArea]
   [Padding: MinglitSpacing.medium (16px)]
@@ -104,8 +104,8 @@
 
 | 앱 | 라우터 파일 |
 | :--- | :--- |
-| 유저 앱 | `apps/app_user/lib/src/app/router.dart` |
-| 파트너 앱 | `apps/app_partner/lib/src/app/router.dart` |
+| 유저 앱 | `apps/app_user/lib/src/routing/app_router.dart` |
+| 파트너 앱 | `apps/app_partner/lib/src/routing/app_router.dart` |
 
 ### 규칙
 

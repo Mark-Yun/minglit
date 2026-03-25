@@ -52,7 +52,7 @@
 
 ### 권장 구조
 
-```
+```text
 [Leading Icon/Avatar] [Title + Subtitle] [Trailing Action/Chevron]
       48x48dp            Expanded              IconButton
 ```
@@ -83,7 +83,7 @@
 
 ### 권장 구조
 
-```
+```text
 [Label Text]              — titleSmall (14px, bold)
 [Spacing: small (8px)]
 [Input Field]             — InputDecoration 전역 테마 적용
@@ -108,7 +108,7 @@
 
 ### 권장 구조
 
-```
+```text
 [Center]
   [Icon]                 — MinglitIconSize.xlarge (32px), textSecondary 색상
   [Spacing: medium (16px)]
@@ -154,7 +154,7 @@
 
 ### 권장 구조
 
-```
+```text
 [Center]
   [Icon]                 — Icons.error_outline, error 색상 (#EF4444)
   [Spacing: medium (16px)]
