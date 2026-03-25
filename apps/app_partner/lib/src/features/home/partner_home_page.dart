@@ -102,17 +102,25 @@ class PartnerHomePage extends ConsumerWidget {
               .loadDashboardData(),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(MinglitSpacing.medium),
+            padding: const EdgeInsets.symmetric(
+              vertical: MinglitSpacing.medium,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // 1. Pending Applicants
-                PendingApplicantsBadgeCard(
-                  count: state.pendingReviewCount,
-                  onTap: coordinator.pushApplicationList,
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: MinglitSpacing.medium,
+                  ),
+                  child: PendingApplicantsBadgeCard(
+                    count: state.pendingReviewCount,
+                    onTap: coordinator.pushApplicationList,
+                  ),
                 ),
                 const SizedBox(height: MinglitSpacing.large),
 
+                // Fix #422: 수평 스크롤 섹션은 화면 전체 너비 사용
                 // 2. Upcoming Events
                 UpcomingEventsCard(
                   events: state.upcomingEvents,
@@ -122,6 +130,12 @@ class PartnerHomePage extends ConsumerWidget {
                         partyId: event.partyId,
                         eventId: event.id,
                       ).push<void>(context),
+                    );
+                  },
+                  // Fix #422: 이벤트 요약 자세히 버튼 → 파티 목록
+                  onViewAllTap: () {
+                    unawaited(
+                      const PartyListRoute().push<void>(context),
                     );
                   },
                 ),
@@ -145,24 +159,34 @@ class PartnerHomePage extends ConsumerWidget {
                 const SizedBox(height: MinglitSpacing.large),
 
                 // 4. Closing Soon Events
-                ClosingSoonEventsCard(
-                  events: state.closingSoonEvents,
-                  onEventTap: (event) {
-                    unawaited(
-                      EventDetailRoute(
-                        partyId: event.partyId,
-                        eventId: event.id,
-                      ).push<void>(context),
-                    );
-                  },
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: MinglitSpacing.medium,
+                  ),
+                  child: ClosingSoonEventsCard(
+                    events: state.closingSoonEvents,
+                    onEventTap: (event) {
+                      unawaited(
+                        EventDetailRoute(
+                          partyId: event.partyId,
+                          eventId: event.id,
+                        ).push<void>(context),
+                      );
+                    },
+                  ),
                 ),
                 const SizedBox(height: MinglitSpacing.large),
 
                 // 5. Location Guide Banner
-                LocationGuideBanner(
-                  onTap: () {
-                    const LocationGuideRoute().go(context);
-                  },
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: MinglitSpacing.medium,
+                  ),
+                  child: LocationGuideBanner(
+                    onTap: () {
+                      const LocationGuideRoute().go(context);
+                    },
+                  ),
                 ),
 
                 const SizedBox(height: 100), // Bottom padding for FAB/Nav
