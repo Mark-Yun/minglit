@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:app_partner/src/features/more/more_coordinator.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/minglit_dev.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -182,6 +183,26 @@ class MorePage extends ConsumerWidget {
               );
             },
           ),
+          // Dev-only: Design Catalog (hidden in production)
+          if (const String.fromEnvironment('ENVIRONMENT',
+                      defaultValue: 'production') ==
+                  'local' ||
+              const String.fromEnvironment('ENVIRONMENT',
+                      defaultValue: 'production') ==
+                  'development') ...[
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.palette_outlined),
+              title: const Text('Design Catalog'),
+              subtitle: const Text('Dev Only'),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => const DesignCatalogPage(),
+                ),
+              ),
+            ),
+          ],
           const Divider(),
 
           // ── 섹션 5: 로그아웃 ──
