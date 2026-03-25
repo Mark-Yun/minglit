@@ -15,7 +15,19 @@ class LocationResult {
 
 /// Service for retrieving the device's current GPS position.
 class LocationService {
+  /// Returns true if location permission is granted (whileInUse or always).
+  ///
+  /// Does NOT request permission — only checks current status.
+  Future<bool> hasPermission() async {
+    final permission = await Geolocator.checkPermission();
+    return permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always;
+  }
+
   /// Returns the current position, or null if unavailable or permission denied.
+  ///
+  /// // Fix #419: Try getLastKnownPosition first for instant results,
+  /// then fall back to getCurrentPosition with timeout.
   Future<LocationResult?> getCurrentPosition() async {
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -36,6 +48,16 @@ class LocationService {
       if (permission == LocationPermission.deniedForever) {
         Log.d('[LocationService] Permission denied forever');
         return null;
+      }
+
+      // Fix #419: Try last known position first (instant, no GPS wait).
+      final lastKnown = await Geolocator.getLastKnownPosition();
+      if (lastKnown != null) {
+        Log.d('[LocationService] Using last known position');
+        return LocationResult(
+          latitude: lastKnown.latitude,
+          longitude: lastKnown.longitude,
+        );
       }
 
       final position = await Geolocator.getCurrentPosition(
