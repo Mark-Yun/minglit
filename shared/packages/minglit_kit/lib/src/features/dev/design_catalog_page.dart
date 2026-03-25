@@ -143,7 +143,7 @@ class _ColorChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hex =
-        '#${color.toARGB32().toRadixString(16).padLeft(8, '0').toUpperCase()}';
+        '#${color.value.toRadixString(16).padLeft(8, '0').toUpperCase()}';
     final labelColor = darkBg ? MinglitColorsDark.textPrimary : null;
     return SizedBox(
       width: 100,
