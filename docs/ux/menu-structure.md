@@ -23,7 +23,7 @@
 
 ### 1.2 탑레벨 라우트 트리
 
-```
+```text
 [BottomNav Shell] ─ UserScaffold
 │
 ├── 홈 탭 (/)
@@ -75,7 +75,7 @@
 
 ### 1.3 피처 디렉토리 구조
 
-```
+```text
 apps/app_user/lib/src/features/
 ├── auth/           로그인, OAuth 콜백, AuthGuard
 ├── dev/            개발 도구 (dev only)
@@ -116,7 +116,7 @@ apps/app_user/lib/src/features/
 
 ### 2.2 전체 라우트 트리
 
-```
+```text
 [BottomNav Shell] ─ PartnerScaffold
 │
 ├── 홈 탭 (/)
@@ -184,7 +184,7 @@ apps/app_user/lib/src/features/
 
 ### 2.3 피처 디렉토리 구조
 
-```
+```text
 apps/app_partner/lib/src/features/
 ├── admin/          파트너 신청 관리 (어드민)
 ├── auth/           로그인

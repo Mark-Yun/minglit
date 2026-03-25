@@ -1,9 +1,9 @@
 # Information Architecture
 
-> 소스: GoRouter 라우트 정의에서 추출. 코드와 1:1 대응.
+> 소스: GoRouter 라우트 정의 + redirect/guard 규칙에서 추출.
 >
-> - `apps/app_user/lib/src/routing/app_routes.dart`
-> - `apps/app_partner/lib/src/routing/app_routes.dart`
+> - `apps/app_user/lib/src/routing/app_routes.dart` (`@TypedGoRoute` 정의)
+> - `apps/app_partner/lib/src/routing/app_routes.dart` (`@TypedGoRoute` 정의)
 > - `apps/app_user/lib/src/routing/app_router.dart` (redirect/guard)
 > - `apps/app_partner/lib/src/routing/app_router.dart` (redirect/guard)
 
@@ -206,8 +206,8 @@ GoRouter redirect에서 prefix/suffix 매칭으로 보호:
 | 보호 조건 | 경로 | 설명 |
 |-----------|------|------|
 | prefix `/my` | `/my`, `/my/notification-settings` | 마이페이지 전체 |
-| prefix `/tickets/my` | `/tickets/my/*` | 내 티켓 목록 |
-| prefix `/payment` | `/payment/*` | 결제 관련 |
+| prefix `/tickets/my` | `/tickets/my/*` | 내 티켓 목록 (guard 전용 — 라우트 미정의) |
+| prefix `/payment` | `/payment/*` | 결제 관련 (guard 전용 — 라우트 미정의) |
 | prefix `/purchase-history` | `/purchase-history` | 구매 내역 |
 | prefix `/certification` | `/certification` | 본인인증 |
 | suffix `/apply` | `/events/:eventId/apply` | 이벤트 신청 |
