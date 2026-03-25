@@ -5,18 +5,19 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/data/repositories/bug_report_repository.dart';
 import 'package:minglit_kit/src/data/repositories/storage_repository.dart';
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
-
 import 'package:minglit_kit/src/utils/environment_info.dart';
 import 'package:minglit_kit/src/utils/layout_dump.dart';
 import 'package:minglit_kit/src/utils/log.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Wraps [child] with bug reporting UI.
-class BugReporterWrapper extends StatefulWidget {
+// Fix #412: ConsumerStatefulWidget 전환 — Supabase 직접 접근 제거, Riverpod Provider 주입
+class BugReporterWrapper extends ConsumerStatefulWidget {
   /// Creates a bug reporter wrapper.
   const BugReporterWrapper({
     required this.child,
@@ -39,10 +40,10 @@ class BugReporterWrapper extends StatefulWidget {
   final bool enabled;
 
   @override
-  State<BugReporterWrapper> createState() => _BugReporterWrapperState();
+  ConsumerState<BugReporterWrapper> createState() => _BugReporterWrapperState();
 }
 
-class _BugReporterWrapperState extends State<BugReporterWrapper> {
+class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
   bool _isReportOpen = false;
   bool _isCapturing = false;
   final GlobalKey _boundaryKey = GlobalKey();
@@ -73,11 +74,14 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) return null;
       final bytes = byteData.buffer.asUint8List();
-      final url = await StorageRepository().uploadBytes(
-        bytes: bytes,
-        bucket: 'bug-report-attachments',
-        pathPrefix: 'screenshots',
-      );
+      // Fix #412: StorageRepository 직접 생성 → Provider 주입
+      final url = await ref
+          .read(storageRepositoryProvider)
+          .uploadBytes(
+            bytes: bytes,
+            bucket: 'bug-report-attachments',
+            pathPrefix: 'screenshots',
+          );
       return url;
     } on Exception catch (e) {
       Log.e('Screenshot capture failed (best-effort)', e);
@@ -118,13 +122,16 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
     String? layoutDumpUrl;
     if (layoutDump != null) {
       try {
-        layoutDumpUrl = await StorageRepository().uploadBytes(
-          bytes: Uint8List.fromList(utf8.encode(layoutDump)),
-          bucket: 'bug-report-attachments',
-          pathPrefix: 'layout-dumps',
-          contentType: 'text/plain',
-          extension: '.txt',
-        );
+        // Fix #412: StorageRepository 직접 생성 → Provider 주입
+        layoutDumpUrl = await ref
+            .read(storageRepositoryProvider)
+            .uploadBytes(
+              bytes: Uint8List.fromList(utf8.encode(layoutDump)),
+              bucket: 'bug-report-attachments',
+              pathPrefix: 'layout-dumps',
+              contentType: 'text/plain',
+              extension: '.txt',
+            );
       } on Object catch (e) {
         Log.e('Layout dump upload failed (best-effort)', e);
       }
@@ -265,8 +272,11 @@ class _BugReporterWrapperState extends State<BugReporterWrapper> {
                                     setSheetState(() => isLoading = true);
                                     try {
                                       final logs = Log.export();
+                                      // Fix #412: Provider 주입
                                       final repo = BugReportRepository(
-                                        Supabase.instance.client,
+                                        ref.read(
+                                          supabaseClientProvider,
+                                        ),
                                       );
                                       await repo.reportBug(
                                         title: titleController.text.isEmpty

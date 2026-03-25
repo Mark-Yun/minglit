@@ -26,6 +26,7 @@ class EventRepository extends _SupabaseEventContextBase
 
 /// Result from user-create-order Edge Function.
 class CreateOrderResult {
+  /// Creates a [CreateOrderResult] with the given order details.
   const CreateOrderResult({
     required this.applicationId,
     required this.amount,
@@ -33,9 +34,16 @@ class CreateOrderResult {
     required this.ticketName,
   });
 
+  /// The created application ID (used as merchant_uid for payment).
   final String applicationId;
+
+  /// The server-determined amount for the order in KRW.
   final int amount;
+
+  /// Whether payment processing is required (false for free tickets).
   final bool requiresPayment;
+
+  /// The name of the selected ticket.
   final String ticketName;
 }
 

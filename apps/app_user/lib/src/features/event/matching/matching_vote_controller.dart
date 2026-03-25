@@ -20,9 +20,10 @@ class MatchingVoteController extends _$MatchingVoteController {
       await repo.castVote(eventId: eventId, candidateId: candidateId);
 
       // Fix #306: 투표 후 투표 상태 + 매칭 결과 갱신
-      ref.invalidate(myMatchesProvider(eventId));
-      ref.invalidate(myVotedCandidateIdsProvider(eventId));
-      ref.invalidate(myVoteCountProvider(eventId));
+      ref
+        ..invalidate(myMatchesProvider(eventId))
+        ..invalidate(myVotedCandidateIdsProvider(eventId))
+        ..invalidate(myVoteCountProvider(eventId));
 
       StatsigAnalytics.logEvent(
         MingLitEvent.matchingResult,
