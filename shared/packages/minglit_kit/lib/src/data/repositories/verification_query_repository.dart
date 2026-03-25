@@ -284,6 +284,49 @@ mixin _VerificationQueryRepository on _SupabaseVerificationContext {
     }
   }
 
+  // Fix #404: Storage signed URL via repository (was direct Supabase access in UI)
+  Future<String> getVerificationProofSignedUrl(String path) async {
+    Log.d('getVerificationProofSignedUrl called | path: $path');
+    try {
+      final signedUrl = await supabaseClient.storage
+          .from('verification-proofs')
+          .createSignedUrl(path, 600);
+      return signedUrl;
+    } catch (e, st) {
+      Log.e(
+        '❌ [VerificationRepo] getVerificationProofSignedUrl Error',
+        e,
+        st,
+      );
+      rethrow;
+    }
+  }
+
+  // Fix #404: Query submission by application_id via repository
+  Future<Map<String, dynamic>?> getSubmissionByApplicationId(
+    String applicationId,
+  ) async {
+    Log.d(
+      'getSubmissionByApplicationId called | applicationId: $applicationId',
+    );
+    try {
+      final data = await supabaseClient
+          .from('verification_submissions')
+          .select('id')
+          .eq('application_id', applicationId)
+          .maybeSingle();
+      Log.d('getSubmissionByApplicationId success | found: ${data != null}');
+      return data;
+    } catch (e, st) {
+      Log.e(
+        '❌ [VerificationRepo] getSubmissionByApplicationId Error',
+        e,
+        st,
+      );
+      rethrow;
+    }
+  }
+
   // Fix #301: Comments now live inside snapshot_data JSON array
   Future<List<Map<String, dynamic>>> getVerificationComments(
     String submissionId,

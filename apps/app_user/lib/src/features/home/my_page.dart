@@ -1,8 +1,6 @@
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
-import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class MyPage extends ConsumerWidget {
@@ -129,7 +127,8 @@ class MyPage extends ConsumerWidget {
             leading: const Icon(Icons.lock_outline),
             title: const Text('개인정보'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => const PrivacyRoute().push<void>(context),
+            // Fix #404: Use coordinator instead of direct route push
+            onTap: homeCoordinator.pushPrivacy,
           ),
           ListTile(
             leading: const Icon(Icons.admin_panel_settings_outlined),
@@ -147,7 +146,8 @@ class MyPage extends ConsumerWidget {
             leading: const Icon(Icons.block),
             title: const Text('차단 목록'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => const BlockedPartnersRoute().push<void>(context),
+            // Fix #404: Use coordinator instead of direct route push
+            onTap: homeCoordinator.pushBlockedPartners,
           ),
           const Divider(),
           ListTile(
@@ -159,9 +159,10 @@ class MyPage extends ConsumerWidget {
               ).textTheme.bodyMedium!.copyWith(color: MinglitColors.error),
             ),
             onTap: () async {
+              // Fix #404: Use coordinator instead of direct GoRouter access
               // 먼저 홈으로 이동 후 signOut — /my (protected) 에서 signOut하면
               // GoRouter redirect가 /login으로 보내는 race condition 방지
-              GoRouter.of(context).go('/');
+              homeCoordinator.goToHome();
               // yield: 라우터가 위치를 '/' 로 업데이트한 뒤 signOut
               await Future<void>.delayed(Duration.zero);
               await ref.read(authControllerProvider.notifier).signOut();

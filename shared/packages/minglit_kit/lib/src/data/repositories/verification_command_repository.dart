@@ -285,6 +285,31 @@ mixin _VerificationCommandRepository on _SupabaseVerificationContext {
     }
   }
 
+  // Fix #404: updateApplicationStatus via repository (was direct Supabase in controller)
+  Future<void> updateApplicationStatus({
+    required String applicationId,
+    required String status,
+    String? rejectionReason,
+  }) async {
+    Log.d(
+      'updateApplicationStatus called | applicationId: $applicationId,'
+      ' status: $status',
+    );
+    try {
+      await supabaseClient
+          .from('event_applications')
+          .update({
+            'status': status,
+            'rejection_reason': ?rejectionReason,
+          })
+          .eq('id', applicationId);
+      Log.d('updateApplicationStatus success');
+    } catch (e, st) {
+      Log.e('❌ [VerificationRepo] updateApplicationStatus Error', e, st);
+      rethrow;
+    }
+  }
+
   // Fix #309: submitComment — partner uses partner-review-submission EF,
   // user uses user-submit-verification EF
   Future<void> submitComment({

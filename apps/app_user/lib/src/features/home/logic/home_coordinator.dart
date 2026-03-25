@@ -29,4 +29,35 @@ class HomeCoordinator {
   void pushNotificationSettings() {
     unawaited(_router.push(const NotificationSettingsRoute().location));
   }
+
+  // Fix #404: Coordinator-based navigation for home route
+  void goToHome() {
+    _router.go('/');
+  }
+
+  void pushPrivacy() {
+    unawaited(_router.push(const PrivacyRoute().location));
+  }
+
+  void pushBlockedPartners() {
+    unawaited(_router.push(const BlockedPartnersRoute().location));
+  }
+
+  void pushEventDetail(String eventId) {
+    unawaited(_router.push(EventDetailRoute(eventId: eventId).location));
+  }
+
+  void pushPartnerEvents({
+    required String partnerId,
+    required String partnerName,
+  }) {
+    unawaited(
+      _router.push(
+        PartnerEventsRoute(
+          partnerId: partnerId,
+          partnerName: partnerName,
+        ).location,
+      ),
+    );
+  }
 }
