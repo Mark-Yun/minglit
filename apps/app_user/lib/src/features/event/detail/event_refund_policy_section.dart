@@ -68,7 +68,7 @@ class _RefundPolicySection extends ConsumerWidget {
     final cutoffDate = event.startTime.subtract(Duration(days: cutoffDays));
     final now = DateTime.now();
     // Fix #138: "~까지 환불 가능" 문구와 일치하도록 경계값 포함 비교
-    final isRefundable = !now.isAfter(cutoffDate);
+    final isCutoffRefundable = !now.isAfter(cutoffDate);
     // Fix #190: 요일 추가, D-day 표시로 날짜 인지성 개선
     final dateFormat = DateFormat('M월 d일 (E) HH시', 'ko_KR');
     // Fix #190: 캘린더 일수 기반 계산 — 시간 무관하게 날짜 단위로 비교
@@ -81,75 +81,105 @@ class _RefundPolicySection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Fix #138: 동적 환불 가능 날짜 표시
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(MinglitSpacing.small),
-          decoration: BoxDecoration(
-            color: isRefundable
-                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
-                : theme.colorScheme.errorContainer.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(MinglitRadius.card),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                isRefundable
-                    ? Icons.check_circle_outline
-                    : Icons.cancel_outlined,
-                size: MinglitIconSize.small,
-                color: isRefundable
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.error,
-              ),
-              const SizedBox(width: MinglitSpacing.small),
-              // Fix #190: 날짜만 강조하여 빠른 인지 지원
-              Expanded(
-                child: isRefundable
-                    ? Text.rich(
-                        TextSpan(
-                          style: theme.textTheme.bodyMedium,
-                          children: [
-                            TextSpan(
-                              text: dateFormat.format(cutoffDate),
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.primary,
-                              ),
-                            ),
-                            const TextSpan(text: '까지 환불 가능'),
-                            if (daysLeft >= 0)
-                              TextSpan(
-                                text: daysLeft == 0
-                                    ? ' (오늘)'
-                                    : ' ($daysLeft일 후)',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: theme.colorScheme.primary,
-                                ),
-                              ),
-                          ],
-                        ),
-                      )
-                    : Text(
-                        '환불 가능 기간이 지났습니다',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.error,
-                        ),
-                      ),
-              ),
-            ],
-          ),
-        ),
+        // Fix #423: cutoff 기한 전이면 날짜 기반 환불 가능 배너 표시
+        if (isCutoffRefundable)
+          _buildCutoffBanner(theme, dateFormat, cutoffDate, daysLeft),
+        // Fix #423: cutoff 기한 경과 시 grace period 환불 안내 (기존 "환불 불가" 오해 방지)
+        if (!isCutoffRefundable)
+          _buildGracePeriodBanner(theme, gracePeriodHours),
         const SizedBox(height: MinglitSpacing.small),
         Text(
-          '결제 후 $gracePeriodHours시간 이내 전액 환불',
+          isCutoffRefundable
+              ? '결제 후 $gracePeriodHours시간 이내에도 전액 환불 가능'
+              : '이벤트 시작 $cutoffDays일 전 환불 마감',
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
       ],
+    );
+  }
+
+  // Fix #423: cutoff 기한 내 환불 가능 배너
+  Widget _buildCutoffBanner(
+    ThemeData theme,
+    DateFormat dateFormat,
+    DateTime cutoffDate,
+    int daysLeft,
+  ) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(MinglitSpacing.small),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(MinglitRadius.card),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.check_circle_outline,
+            size: MinglitIconSize.small,
+            color: theme.colorScheme.primary,
+          ),
+          const SizedBox(width: MinglitSpacing.small),
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                style: theme.textTheme.bodyMedium,
+                children: [
+                  TextSpan(
+                    text: dateFormat.format(cutoffDate),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const TextSpan(text: '까지 환불 가능'),
+                  if (daysLeft >= 0)
+                    TextSpan(
+                      text: daysLeft == 0 ? ' (오늘)' : ' ($daysLeft일 후)',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Fix #423: cutoff 경과 후 grace period 환불 안내 배너
+  Widget _buildGracePeriodBanner(ThemeData theme, int gracePeriodHours) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(MinglitSpacing.small),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(MinglitRadius.card),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.schedule,
+            size: MinglitIconSize.small,
+            color: theme.colorScheme.secondary,
+          ),
+          const SizedBox(width: MinglitSpacing.small),
+          Expanded(
+            child: Text(
+              '결제 후 $gracePeriodHours시간 이내 전액 환불 가능',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.secondary,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -198,7 +228,12 @@ class _RefundPolicySection extends ConsumerWidget {
                   '전액 환불',
                 ),
                 const SizedBox(height: MinglitSpacing.small),
-                _buildPolicyRow(context, '그 외', '환불 불가'),
+                _buildPolicyRow(
+                  context,
+                  '그 외',
+                  '환불 불가',
+                  isRefundable: false,
+                ),
                 const SizedBox(height: MinglitSpacing.medium),
                 Text(
                   '자세한 내용은 고객센터로 문의해주세요.',
@@ -235,11 +270,13 @@ class _RefundPolicySection extends ConsumerWidget {
     );
   }
 
+  // Fix #424: 환불 가능은 초록, 불가는 빨강으로 색상 구분하여 의미 전달 개선
   Widget _buildPolicyRow(
     BuildContext context,
     String condition,
-    String policy,
-  ) {
+    String policy, {
+    bool isRefundable = true,
+  }) {
     final theme = Theme.of(context);
     return Row(
       children: [
@@ -253,7 +290,9 @@ class _RefundPolicySection extends ConsumerWidget {
           policy,
           style: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: FontWeight.w600,
-            color: theme.colorScheme.primary,
+            color: isRefundable
+                ? MinglitColors.success
+                : theme.colorScheme.error,
           ),
         ),
       ],
