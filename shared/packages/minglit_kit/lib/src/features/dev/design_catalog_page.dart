@@ -535,7 +535,7 @@ class _InputsSection extends StatelessWidget {
         const SizedBox(height: MinglitSpacing.large),
         Text('With Value', style: theme.textTheme.titleMedium),
         const SizedBox(height: MinglitSpacing.small),
-        const TextFormField(
+        TextFormField(
           initialValue: 'Minglit',
           decoration: InputDecoration(
             labelText: 'Name',
