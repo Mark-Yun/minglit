@@ -537,7 +537,7 @@ class _InputsSection extends StatelessWidget {
         const SizedBox(height: MinglitSpacing.small),
         TextFormField(
           initialValue: 'Minglit',
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             labelText: 'Name',
           ),
         ),
