@@ -75,8 +75,8 @@ class _FakeRecommendationFeedNotifier extends RecommendationFeedNotifier {
   _FakeRecommendationFeedNotifier({
     required List<Event> events,
     required bool hasMore,
-  })  : _events = events,
-        _hasMore = hasMore;
+  }) : _events = events,
+       _hasMore = hasMore;
 
   final List<Event> _events;
   final bool _hasMore;
