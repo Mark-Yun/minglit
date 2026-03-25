@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/features/auth/logic/staff_guard_provider.dart';
 import 'package:minglit_kit/src/features/auth/ui/staff_gate_screen.dart';
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
 import 'package:minglit_kit/src/utils/platform_utils.dart';
@@ -30,8 +31,9 @@ class _StaffGuardWrapperState extends ConsumerState<StaffGuardWrapper> {
   @override
   void initState() {
     super.initState();
-    // Listen to auth changes to catch Magic Link login completion
-    _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen(
+    // Fix #412: Riverpod Provider를 통해 Supabase 클라이언트 주입
+    final client = ref.read(supabaseClientProvider);
+    _authSubscription = client.auth.onAuthStateChange.listen(
       (data) {
         unawaited(_handleAuthChange(data));
       },

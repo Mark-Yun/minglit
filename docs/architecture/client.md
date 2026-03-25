@@ -30,9 +30,53 @@ minglit_kit/lib/src/features/
 ├── notification/   # 푸시 알림, FCM, 알림 목록/설정
 ├── search/         # 전문 검색 (PGroonga)
 ├── social/         # 소셜 기능 (좋아요, 구독, 차단)
+├── permission/     # 앱 권한 설정 (카메라, 위치 등 시스템 권한 관리 화면)
 ├── theme/          # 테마 모드 컨트롤러 (라이트/다크/시스템)
 └── verification/   # 본인인증 (Identity Verification) — Iamport V2 기반 실명 인증 화면
 ```
+
+#### app_user Features
+
+```text
+apps/app_user/lib/src/features/
+├── auth/           # 로그인/인증 플로우
+├── event/          # 이벤트 상세, 신청, 입장
+├── home/           # 홈 피드, 마이페이지
+├── partner/        # 파트너 상세 페이지
+├── party/          # 파티 목록/상세
+├── payment/        # 결제 플로우, 결제 완료
+├── search/         # 이벤트/파티 검색
+├── settings/       # 앱 설정
+└── ticket/         # 티켓 선택/관리
+```
+
+#### app_partner Features
+
+```text
+apps/app_partner/lib/src/features/
+├── admin/          # 관리자 기능
+├── auth/           # 파트너 로그인/인증
+├── checkin/        # 이벤트 체크인 관리
+├── home/           # 파트너 대시보드
+├── member/         # 멤버 관리 (초대, 권한)
+├── more/           # 더보기 메뉴
+├── onboarding/     # 파트너 온보딩
+├── party/          # 파티/이벤트 관리
+├── qr/             # QR 스캐너
+├── settlement/     # 정산 관리
+├── ticket/         # 티켓 관리
+└── verification/   # 인증 심사
+```
+
+### 2.1.1 Shared Packages
+
+`shared/packages/` 디렉토리에는 모노레포 전체에서 공유되는 패키지가 위치합니다.
+
+| 패키지 | 역할 |
+|--------|------|
+| `minglit_kit` | 핵심 공유 라이브러리 (모델, 리포지토리, 위젯, 유틸리티) |
+| `minglit_iamport_v1` | Iamport V1 API 결제 연동 래퍼 |
+| `minglit_lints` | 모노레포 공통 린트 규칙 |
 
 ### 2.2 Coordinator Pattern (Navigation)
 **UI는 "어디로 갈지" 모릅니다.** 단순히 Coordinator에게 "이 버튼이 눌렸다"고 알릴 뿐입니다.

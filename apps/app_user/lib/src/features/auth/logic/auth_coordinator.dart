@@ -28,4 +28,13 @@ class AuthCoordinator {
   void goToReturnLocation(String location) {
     _router.go(location);
   }
+
+  // Fix #404: Coordinator-based navigation for home route
+  void goToHome() {
+    _router.go('/');
+  }
+
+  void pushDevUserSwitch() {
+    unawaited(_router.push(const DevUserSwitchRoute().location));
+  }
 }

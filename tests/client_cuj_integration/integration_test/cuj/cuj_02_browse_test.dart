@@ -27,9 +27,10 @@ void main() {
     testWidgets('이벤트 피드를 조회할 수 있다', (tester) async {
       final client = Supabase.instance.client;
 
+      // Fix #410: events.title is usually null — assert party.title instead
       final events = await client
           .from('events')
-          .select('id, title, status')
+          .select('id, status, party:parties(title)')
           .eq('status', 'scheduled')
           .order('created_at', ascending: false)
           .limit(5) as List;
@@ -37,8 +38,9 @@ void main() {
       expect(events, isNotEmpty, reason: 'Dev server should have events');
 
       final firstEvent = events.first as Map<String, dynamic>;
+      final party = firstEvent['party'] as Map<String, dynamic>?;
       expect(firstEvent['id'], isNotNull);
-      expect(firstEvent['title'], isNotNull);
+      expect(party?['title'], isNotNull);
       expect(firstEvent['status'], equals('scheduled'));
     });
 

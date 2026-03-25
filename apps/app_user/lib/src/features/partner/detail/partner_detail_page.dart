@@ -1,8 +1,5 @@
-import 'dart:async';
-
-import 'package:app_user/src/routing/app_routes.dart';
+import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -37,25 +34,15 @@ class PartnerDetailPage extends ConsumerWidget {
           if (partner == null) {
             return const Center(child: Text('파트너를 찾을 수 없습니다.'));
           }
+          // Fix #404: Use coordinator instead of direct GoRouter access
+          final coordinator = ref.read(homeCoordinatorProvider);
           return PartnerDetailView(
             partner: partner,
-            onEventTap: (event) {
-              unawaited(
-                context.push(
-                  EventDetailRoute(eventId: event.id).location,
-                ),
-              );
-            },
-            onMoreEventsTap: () {
-              unawaited(
-                context.push(
-                  PartnerEventsRoute(
-                    partnerId: partnerId,
-                    partnerName: partner.name,
-                  ).location,
-                ),
-              );
-            },
+            onEventTap: (event) => coordinator.pushEventDetail(event.id),
+            onMoreEventsTap: () => coordinator.pushPartnerEvents(
+              partnerId: partnerId,
+              partnerName: partner.name,
+            ),
           );
         },
       ),

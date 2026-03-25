@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// **Verification Review Page**
 class ReviewVerificationScreen extends ConsumerStatefulWidget {
@@ -155,9 +154,10 @@ class _ReviewVerificationScreenState
 
   Future<void> _showImageDialog(String path) async {
     try {
-      final signedUrl = await Supabase.instance.client.storage
-          .from('verification-proofs')
-          .createSignedUrl(path, 600);
+      // Fix #404: Use repository instead of direct Supabase access
+      final signedUrl = await ref
+          .read(verificationRepositoryProvider)
+          .getVerificationProofSignedUrl(path);
       if (!mounted) return;
       await showDialog<void>(
         // Keep custom dialog for image viewer
@@ -347,9 +347,10 @@ class _CommentsView extends ConsumerWidget {
                 return ListView.builder(
                   itemCount: comments.length,
                   itemBuilder: (context, i) {
+                    // Fix #404: Use currentUserProvider instead of direct Supabase auth access
                     final isPartner =
                         comments[i]['author_id'] ==
-                        Supabase.instance.client.auth.currentUser?.id;
+                        ref.read(currentUserProvider)?.id;
                     final content =
                         comments[i]['content'] as Map<String, dynamic>;
                     final text = content['text'] as String? ?? '';

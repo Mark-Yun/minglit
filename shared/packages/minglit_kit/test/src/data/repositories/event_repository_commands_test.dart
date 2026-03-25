@@ -37,33 +37,36 @@ void main() {
   });
 
   group('EventRepository Commands', () {
-    group('deleteApplication', () {
+    group('cancelOrder', () {
       test('completes without error', () async {
-        unawaited(mockTable(mockClient, 'event_applications'));
+        when(
+          () => mockFunctions.invoke(
+            'user-cancel-order',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true, 'type': 'cancelled'},
+          ),
+        );
 
         await expectLater(
-          repository.deleteApplication(
-            eventId: 'event_1',
-            userId: 'user_1',
-          ),
+          repository.cancelOrder(eventId: 'event_1'),
           completes,
         );
       });
 
       test('throws on error', () async {
-        unawaited(
-          mockTable(
-            mockClient,
-            'event_applications',
-            shouldThrow: Exception('delete error'),
+        when(
+          () => mockFunctions.invoke(
+            'user-cancel-order',
+            body: any(named: 'body'),
           ),
-        );
+        ).thenThrow(Exception('cancel error'));
 
         await expectLater(
-          repository.deleteApplication(
-            eventId: 'event_1',
-            userId: 'user_1',
-          ),
+          repository.cancelOrder(eventId: 'event_1'),
           throwsA(anything),
         );
       });

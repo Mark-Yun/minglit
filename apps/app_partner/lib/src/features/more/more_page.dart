@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:app_partner/src/features/more/more_coordinator.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -195,8 +194,9 @@ class MorePage extends ConsumerWidget {
               ),
             ),
             onTap: () async {
+              // Fix #404: Use coordinator instead of direct GoRouter access
               // GoRouter-first 패턴: '/' 이동 후 signOut — race condition 방지
-              GoRouter.of(context).go('/');
+              ref.read(moreCoordinatorProvider).goToHome();
               await Future<void>.delayed(Duration.zero);
               await ref.read(authControllerProvider.notifier).signOut();
             },
