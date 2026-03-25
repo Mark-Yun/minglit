@@ -39,21 +39,14 @@ jobs:
           CURRENT=$(grep "^version:" apps/app_user/pubspec.yaml | sed 's/version: //' | sed 's/+.*//' | sed 's/-dev$//')
           echo "current=$CURRENT"
 
-          IFS='.' read -r CUR_YY CUR_MM CUR_PR <<< "$CURRENT"
-
           # Current year/month (2-digit)
           NOW_YY=$(date -u +%y)
           NOW_MM=$(date -u +%m)
 
-          if [ "$CUR_YY" = "$NOW_YY" ] && [ "$CUR_MM" = "$NOW_MM" ]; then
-            # Same month → increment PR#
-            NEXT_PR=$(( 10#$CUR_PR + 1 ))
-          else
-            # New month → reset PR# to 1
-            NEXT_PR=1
-          fi
+          # Use the merged PR number as the revision
+          PR_NUM="${{ github.event.pull_request.number }}"
 
-          BASE="${NOW_YY}.${NOW_MM}.${NEXT_PR}"
+          BASE="${NOW_YY}.${NOW_MM}.${PR_NUM}"
 
           if [ "$BRANCH" = "dev" ]; then
             NEW_VERSION="${BASE}-dev"
