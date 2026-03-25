@@ -283,7 +283,7 @@ class _SpacingSection extends StatelessWidget {
                 height: 24,
                 decoration: BoxDecoration(
                   color: MinglitColors.primary.withAlpha(180),
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(MinglitRadius.small),
                 ),
               ),
               const SizedBox(width: MinglitSpacing.small),
@@ -535,7 +535,8 @@ class _InputsSection extends StatelessWidget {
         const SizedBox(height: MinglitSpacing.large),
         Text('With Value', style: theme.textTheme.titleMedium),
         const SizedBox(height: MinglitSpacing.small),
-        const TextField(
+        const TextFormField(
+          initialValue: 'Minglit',
           decoration: InputDecoration(
             labelText: 'Name',
           ),
