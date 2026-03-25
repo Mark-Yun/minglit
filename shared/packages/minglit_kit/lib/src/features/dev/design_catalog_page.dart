@@ -100,16 +100,28 @@ class _ColorsSection extends StatelessWidget {
             spacing: MinglitSpacing.small,
             runSpacing: MinglitSpacing.small,
             children: [
-              _ColorChip('background', MinglitColorsDark.background,
-                  darkBg: true),
+              _ColorChip(
+                'background',
+                MinglitColorsDark.background,
+                darkBg: true,
+              ),
               _ColorChip('surface', MinglitColorsDark.surface, darkBg: true),
-              _ColorChip('textPrimary', MinglitColorsDark.textPrimary,
-                  darkBg: true),
-              _ColorChip('textSecondary', MinglitColorsDark.textSecondary,
-                  darkBg: true),
+              _ColorChip(
+                'textPrimary',
+                MinglitColorsDark.textPrimary,
+                darkBg: true,
+              ),
+              _ColorChip(
+                'textSecondary',
+                MinglitColorsDark.textSecondary,
+                darkBg: true,
+              ),
               _ColorChip('primary', MinglitColorsDark.primary, darkBg: true),
-              _ColorChip('secondary', MinglitColorsDark.secondary,
-                  darkBg: true),
+              _ColorChip(
+                'secondary',
+                MinglitColorsDark.secondary,
+                darkBg: true,
+              ),
               _ColorChip('tertiary', MinglitColorsDark.tertiary, darkBg: true),
               _ColorChip('error', MinglitColorsDark.error, darkBg: true),
               _ColorChip('divider', MinglitColorsDark.divider, darkBg: true),
@@ -154,18 +166,18 @@ class _ColorChip extends StatelessWidget {
           Text(
             name,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: labelColor,
-                ),
+              fontWeight: FontWeight.w600,
+              color: labelColor,
+            ),
             textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
           ),
           Text(
             hex,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontSize: 10,
-                  color: labelColor ?? MinglitColors.textSecondary,
-                ),
+              fontSize: 10,
+              color: labelColor ?? MinglitColors.textSecondary,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -220,8 +232,8 @@ class _TypographySection extends StatelessWidget {
                 'size: ${style?.fontSize ?? "inherit"} '
                 '/ weight: ${style?.fontWeight ?? "inherit"}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: MinglitColors.textSecondary,
-                    ),
+                  color: MinglitColors.textSecondary,
+                ),
               ),
             ],
           ),
@@ -585,23 +597,25 @@ class _DialogsSection extends StatelessWidget {
         const SizedBox(height: MinglitSpacing.medium),
         ElevatedButton(
           onPressed: () {
-            unawaited(showDialog<void>(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                title: const Text('Confirm Action'),
-                content: const Text('Are you sure you want to proceed?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Cancel'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Confirm'),
-                  ),
-                ],
+            unawaited(
+              showDialog<void>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Confirm Action'),
+                  content: const Text('Are you sure you want to proceed?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Cancel'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Confirm'),
+                    ),
+                  ],
+                ),
               ),
-            ));
+            );
           },
           child: const Text('Show AlertDialog'),
         ),
@@ -610,30 +624,32 @@ class _DialogsSection extends StatelessWidget {
         const SizedBox(height: MinglitSpacing.small),
         ElevatedButton(
           onPressed: () {
-            unawaited(showDialog<void>(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                title: const Text('Delete Item'),
-                content: const Text(
-                  'This action cannot be undone. '
-                  'Are you sure you want to delete?',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Cancel'),
+            unawaited(
+              showDialog<void>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Delete Item'),
+                  content: const Text(
+                    'This action cannot be undone. '
+                    'Are you sure you want to delete?',
                   ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      // ignore: minglit_no_hardcoded_colors -- catalog demo
-                      backgroundColor: MinglitColors.error,
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Cancel'),
                     ),
-                    onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Delete'),
-                  ),
-                ],
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        // ignore: minglit_no_hardcoded_colors -- catalog demo
+                        backgroundColor: MinglitColors.error,
+                      ),
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Delete'),
+                    ),
+                  ],
+                ),
               ),
-            ));
+            );
           },
           child: const Text('Show Destructive Dialog'),
         ),
@@ -664,37 +680,39 @@ class _BottomSheetSection extends StatelessWidget {
         const SizedBox(height: MinglitSpacing.medium),
         ElevatedButton(
           onPressed: () {
-            unawaited(showModalBottomSheet<void>(
-              context: context,
-              builder: (ctx) => Padding(
-                padding: const EdgeInsets.all(MinglitSpacing.large),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Example BottomSheet',
-                      style: theme.textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: MinglitSpacing.medium),
-                    Text(
-                      'This is an example modal bottom sheet '
-                      'using the current theme.',
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: MinglitSpacing.large),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        child: const Text('Close'),
+            unawaited(
+              showModalBottomSheet<void>(
+                context: context,
+                builder: (ctx) => Padding(
+                  padding: const EdgeInsets.all(MinglitSpacing.large),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Example BottomSheet',
+                        style: theme.textTheme.titleLarge,
                       ),
-                    ),
-                    const SizedBox(height: MinglitSpacing.medium),
-                  ],
+                      const SizedBox(height: MinglitSpacing.medium),
+                      Text(
+                        'This is an example modal bottom sheet '
+                        'using the current theme.',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: MinglitSpacing.large),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: const Text('Close'),
+                        ),
+                      ),
+                      const SizedBox(height: MinglitSpacing.medium),
+                    ],
+                  ),
                 ),
               ),
-            ));
+            );
           },
           child: const Text('Show BottomSheet'),
         ),

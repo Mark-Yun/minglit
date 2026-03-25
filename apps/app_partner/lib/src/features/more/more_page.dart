@@ -184,11 +184,15 @@ class MorePage extends ConsumerWidget {
             },
           ),
           // Dev-only: Design Catalog (hidden in production)
-          if (const String.fromEnvironment('ENVIRONMENT',
-                      defaultValue: 'production') ==
+          if (const String.fromEnvironment(
+                    'ENVIRONMENT',
+                    defaultValue: 'production',
+                  ) ==
                   'local' ||
-              const String.fromEnvironment('ENVIRONMENT',
-                      defaultValue: 'production') ==
+              const String.fromEnvironment(
+                    'ENVIRONMENT',
+                    defaultValue: 'production',
+                  ) ==
                   'development') ...[
             const Divider(),
             ListTile(
