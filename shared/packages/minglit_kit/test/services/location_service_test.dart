@@ -28,6 +28,9 @@ void main() {
           () => mockGeolocator.checkPermission(),
         ).thenAnswer((_) async => LocationPermission.whileInUse);
         when(
+          () => mockGeolocator.getLastKnownPosition(),
+        ).thenAnswer((_) async => null);
+        when(
           () => mockGeolocator.getCurrentPosition(
             locationSettings: any(named: 'locationSettings'),
           ),
@@ -108,6 +111,9 @@ void main() {
         () => mockGeolocator.requestPermission(),
       ).thenAnswer((_) async => LocationPermission.whileInUse);
       when(
+        () => mockGeolocator.getLastKnownPosition(),
+      ).thenAnswer((_) async => null);
+      when(
         () => mockGeolocator.getCurrentPosition(
           locationSettings: any(named: 'locationSettings'),
         ),
@@ -132,6 +138,126 @@ void main() {
       expect(result, isNotNull);
       expect(result!.latitude, 37.5665);
       verify(() => mockGeolocator.requestPermission()).called(1);
+    });
+
+    // Fix #419: Test getLastKnownPosition fast path
+    test('returns last known position without calling getCurrentPosition',
+        () async {
+      when(
+        () => mockGeolocator.isLocationServiceEnabled(),
+      ).thenAnswer((_) async => true);
+      when(
+        () => mockGeolocator.checkPermission(),
+      ).thenAnswer((_) async => LocationPermission.whileInUse);
+      when(
+        () => mockGeolocator.getLastKnownPosition(),
+      ).thenAnswer(
+        (_) async => Position(
+          latitude: 37.4979,
+          longitude: 127.0276,
+          timestamp: DateTime.now(),
+          accuracy: 10,
+          altitude: 0,
+          altitudeAccuracy: 0,
+          heading: 0,
+          headingAccuracy: 0,
+          speed: 0,
+          speedAccuracy: 0,
+        ),
+      );
+
+      final service = LocationService();
+      final result = await service.getCurrentPosition();
+
+      expect(result, isNotNull);
+      expect(result!.latitude, 37.4979);
+      expect(result.longitude, 127.0276);
+      verifyNever(
+        () => mockGeolocator.getCurrentPosition(
+          locationSettings: any(named: 'locationSettings'),
+        ),
+      );
+    });
+
+    // Fix #419: Test fallback to getCurrentPosition when no last known
+    test('falls back to getCurrentPosition when no last known position',
+        () async {
+      when(
+        () => mockGeolocator.isLocationServiceEnabled(),
+      ).thenAnswer((_) async => true);
+      when(
+        () => mockGeolocator.checkPermission(),
+      ).thenAnswer((_) async => LocationPermission.whileInUse);
+      when(
+        () => mockGeolocator.getLastKnownPosition(),
+      ).thenAnswer((_) async => null);
+      when(
+        () => mockGeolocator.getCurrentPosition(
+          locationSettings: any(named: 'locationSettings'),
+        ),
+      ).thenAnswer(
+        (_) async => Position(
+          latitude: 37.5665,
+          longitude: 126.9780,
+          timestamp: DateTime.now(),
+          accuracy: 10,
+          altitude: 0,
+          altitudeAccuracy: 0,
+          heading: 0,
+          headingAccuracy: 0,
+          speed: 0,
+          speedAccuracy: 0,
+        ),
+      );
+
+      final service = LocationService();
+      final result = await service.getCurrentPosition();
+
+      expect(result, isNotNull);
+      expect(result!.latitude, 37.5665);
+      verify(
+        () => mockGeolocator.getCurrentPosition(
+          locationSettings: any(named: 'locationSettings'),
+        ),
+      ).called(1);
+    });
+  });
+
+  group('LocationService.hasPermission', () {
+    test('returns true when permission is whileInUse', () async {
+      when(
+        () => mockGeolocator.checkPermission(),
+      ).thenAnswer((_) async => LocationPermission.whileInUse);
+
+      final service = LocationService();
+      expect(await service.hasPermission(), isTrue);
+    });
+
+    test('returns true when permission is always', () async {
+      when(
+        () => mockGeolocator.checkPermission(),
+      ).thenAnswer((_) async => LocationPermission.always);
+
+      final service = LocationService();
+      expect(await service.hasPermission(), isTrue);
+    });
+
+    test('returns false when permission is denied', () async {
+      when(
+        () => mockGeolocator.checkPermission(),
+      ).thenAnswer((_) async => LocationPermission.denied);
+
+      final service = LocationService();
+      expect(await service.hasPermission(), isFalse);
+    });
+
+    test('returns false when permission is deniedForever', () async {
+      when(
+        () => mockGeolocator.checkPermission(),
+      ).thenAnswer((_) async => LocationPermission.deniedForever);
+
+      final service = LocationService();
+      expect(await service.hasPermission(), isFalse);
     });
   });
 }
