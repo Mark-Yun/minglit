@@ -270,7 +270,7 @@ class _RefundPolicySection extends ConsumerWidget {
     );
   }
 
-  // Fix #423: 환불 가능/불가에 따라 색상을 구분하여 의미 전달 개선
+  // Fix #424: 환불 가능은 초록, 불가는 빨강으로 색상 구분하여 의미 전달 개선
   Widget _buildPolicyRow(
     BuildContext context,
     String condition,
@@ -291,7 +291,7 @@ class _RefundPolicySection extends ConsumerWidget {
           style: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: FontWeight.w600,
             color: isRefundable
-                ? theme.colorScheme.primary
+                ? MinglitColors.success
                 : theme.colorScheme.error,
           ),
         ),
