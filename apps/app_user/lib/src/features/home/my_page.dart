@@ -1,6 +1,7 @@
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/minglit_dev.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class MyPage extends ConsumerWidget {
@@ -149,6 +150,31 @@ class MyPage extends ConsumerWidget {
             // Fix #404: Use coordinator instead of direct route push
             onTap: homeCoordinator.pushBlockedPartners,
           ),
+          // Dev-only: Design Catalog (hidden in production)
+          if (const String.fromEnvironment(
+                    'ENVIRONMENT',
+                    defaultValue: 'production',
+                  ) ==
+                  'local' ||
+              const String.fromEnvironment(
+                    'ENVIRONMENT',
+                    defaultValue: 'production',
+                  ) ==
+                  'development') ...[
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.palette_outlined),
+              title: const Text('Design Catalog'),
+              subtitle: const Text('Dev Only'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => const DesignCatalogPage(),
+                ),
+              ),
+            ),
+          ],
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout, color: MinglitColors.error),
