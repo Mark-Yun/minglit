@@ -23,8 +23,13 @@ class ActivePartySummaryScroll extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Fix #422: 헤더에 가로 패딩 적용 (수평 스크롤은 화면 전체 사용)
         Padding(
-          padding: const EdgeInsets.only(bottom: MinglitSpacing.small),
+          padding: const EdgeInsets.only(
+            left: MinglitSpacing.medium,
+            right: MinglitSpacing.medium,
+            bottom: MinglitSpacing.small,
+          ),
           child: Row(
             children: [
               Icon(
@@ -66,13 +71,18 @@ class ActivePartySummaryScroll extends StatelessWidget {
           ),
         ),
         if (parties.isEmpty)
-          SizedBox(
-            height: 100,
-            child: Center(
-              child: Text(
-                '운영 중인 파티가 없습니다',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: MinglitSpacing.medium,
+            ),
+            child: SizedBox(
+              height: 100,
+              child: Center(
+                child: Text(
+                  '운영 중인 파티가 없습니다',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ),
@@ -82,6 +92,10 @@ class ActivePartySummaryScroll extends StatelessWidget {
             height: 140,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
+              // Fix #422: 좌우 패딩으로 카드 잘림 방지
+              padding: const EdgeInsets.symmetric(
+                horizontal: MinglitSpacing.medium,
+              ),
               itemCount: parties.length,
               separatorBuilder: (_, _) => const SizedBox(
                 width: MinglitSpacing.small,

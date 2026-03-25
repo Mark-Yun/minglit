@@ -75,19 +75,29 @@ class ExploreFilterChipBar extends ConsumerWidget {
     );
   }
 
+  // Fix #419: Check permission first (instant) instead of blocking UI
+  // for up to 10s on GPS timeout. Toggle filter immediately — the list
+  // auto-updates via Riverpod when location becomes available.
   Future<void> _onNearbyTap(BuildContext context, WidgetRef ref) async {
     final filters = ref.read(activeFiltersProvider);
     if (!filters.nearbyEnabled) {
-      // Fix #154: Invalidate cached location to retry GPS acquisition
-      ref.invalidate(userLocationProvider);
-      final location = await ref.read(userLocationProvider.future);
-      if (location == null) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('위치 권한이 필요합니다')),
-          );
+      final locationService = LocationService();
+      final hasPermission = await locationService.hasPermission();
+      if (!hasPermission) {
+        // Fix #154: Invalidate cached location to trigger permission request
+        ref.invalidate(userLocationProvider);
+        final location = await ref.read(userLocationProvider.future);
+        if (location == null) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('위치 권한이 필요합니다')),
+            );
+          }
+          return;
         }
-        return;
+      } else {
+        // Permission granted — refresh location in background, don't block UI.
+        ref.invalidate(userLocationProvider);
       }
     }
     ref.read(activeFiltersProvider.notifier).toggleNearby();
