@@ -4,8 +4,10 @@ import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Fixed surface size for golden tests — iPhone 14 ratio (390x844).
 const goldenSurfaceSize = Size(390, 844);
@@ -20,7 +22,14 @@ Future<void> expectPageGolden(
   required String goldenFileName,
   Size surfaceSize = goldenSurfaceSize,
   List<dynamic> overrides = const [],
+  User? currentUser,
 }) async {
+  // Prevent MissingPluginException for SharedPreferences in test environment.
+  SharedPreferences.setMockInitialValues({});
+
+  // Ensure intl locale data is available for date formatting widgets.
+  await initializeDateFormatting('ko_KR');
+
   await tester.binding.setSurfaceSize(surfaceSize);
   addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -28,7 +37,7 @@ Future<void> expectPageGolden(
     ProviderScope(
       overrides: [
         // Default safe overrides — prevent platform channel / API errors.
-        currentUserProvider.overrideWith((_) => null),
+        currentUserProvider.overrideWith((_) => currentUser),
         authStateChangesProvider.overrideWith((_) => const Stream.empty()),
         notificationInitializerProvider.overrideWith((_) {}),
         ...overrides.cast(),
@@ -56,14 +65,21 @@ Future<void> expectGolden(
   required String goldenFileName,
   Size surfaceSize = goldenSurfaceSize,
   List<dynamic> overrides = const [],
+  User? currentUser,
 }) async {
+  // Prevent MissingPluginException for SharedPreferences in test environment.
+  SharedPreferences.setMockInitialValues({});
+
+  // Ensure intl locale data is available for date formatting widgets.
+  await initializeDateFormatting('ko_KR');
+
   await tester.binding.setSurfaceSize(surfaceSize);
   addTearDown(() => tester.binding.setSurfaceSize(null));
 
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        currentUserProvider.overrideWith((_) => null),
+        currentUserProvider.overrideWith((_) => currentUser),
         authStateChangesProvider.overrideWith((_) => const Stream.empty()),
         notificationInitializerProvider.overrideWith((_) {}),
         ...overrides.cast(),
