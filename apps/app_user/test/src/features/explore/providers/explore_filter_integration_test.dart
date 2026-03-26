@@ -407,6 +407,38 @@ void main() {
       },
     );
 
+    test('closingSoon uses startTime as tiebreaker for equal slots', () {
+      final events = [
+        makeEvent(
+          id: 'later',
+          maxParticipants: 10,
+          currentParticipants: 7,
+          startTime: now.add(const Duration(days: 3)),
+        ), // 3 remaining, later
+        makeEvent(
+          id: 'earlier',
+          maxParticipants: 10,
+          currentParticipants: 7,
+          startTime: now.add(const Duration(days: 1)),
+        ), // 3 remaining, earlier
+      ];
+
+      final container = createContainer();
+      container.read(activeFiltersProvider.notifier).toggleEligibility();
+      container.read(activeFiltersProvider.notifier).toggleNearby();
+      container
+          .read(activeFiltersProvider.notifier)
+          .setSortType(ExploreSortType.closingSoon);
+
+      final result = container.read(
+        filteredEventsProvider(events: events),
+      );
+
+      // Same remaining slots → earlier startTime first
+      expect(result[0].id, 'earlier');
+      expect(result[1].id, 'later');
+    });
+
     test('events with lat==0 lng==0 go to end of nearby sort', () async {
       final seoulLoc = makeLocation();
       final unknownLoc = makeLocation(lat: 0, lng: 0);
