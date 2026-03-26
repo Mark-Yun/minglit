@@ -46,8 +46,8 @@ pr-care
 |------|------|------|
 | **issue-worker** | 10분 | 이슈 처리 (bug-report, bug, ci-failure, enhancement, refactor 라벨만) |
 | **pr-care-worker** | 30분 | stale PR 케어 (BEHIND 업데이트, 코드리뷰 대응, dependabot close) |
-| **tpm-staff** | 2시간 | audit-report → actionable 이슈 변환 (수정 필요성 판단 + 플랜 작성) |
-
+| **tpm-staff** | 2시간 | audit-report → actionable 이슈 변환 + 구조적 문제 발견 시 report-exec 생성 |
+| **pm-staff** | 주 1회 | 이슈/감사/시장 분석 → 기술 추천/기능 제안 (report-exec) |
 ## 라벨 체계
 
 | 라벨 | 생성 주체 | 처리 주체 |
@@ -63,7 +63,7 @@ pr-care
 | `ci-failure` | CI notify | issue-worker |
 | `enhancement` | 수동 | issue-worker |
 | `refactor` | 수동/tpm | issue-worker |
-| `ai-worker` | issue-worker | issue-worker (PR 케어) |
+| `report-exec` | tpm-staff, pm-staff | 사람 (Mark) || `ai-worker` | issue-worker | issue-worker (PR 케어) |
 
 ## 워커 행동 원칙
 
