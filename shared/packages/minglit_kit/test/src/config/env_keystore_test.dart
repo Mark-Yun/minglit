@@ -12,9 +12,9 @@ void main() {
       test('returns all required keys when none are defined', () {
         final missing = EnvKeyStore.missingRequired();
 
-        expect(missing, contains('SUPABASE_URL')));
-        expect(missing, contains('SUPABASE_PUBLISHABLE_KEY')));
-        expect(missing, contains('ENVIRONMENT')));
+        expect(missing, contains('SUPABASE_URL'));
+        expect(missing, contains('SUPABASE_PUBLISHABLE_KEY'));
+        expect(missing, contains('ENVIRONMENT'));
         expect(missing, hasLength(3));
       });
     });
