@@ -75,7 +75,7 @@ for pr_num in $stale_prs; do
     pr_context="PR #${pr_num} 케어. 상태: ${status}, 작성자: ${author}, 브랜치: ${head_branch}. gh pr checks ${pr_num}로 CI 확인, 리뷰 코멘트 대응, BEHIND면 업데이트, CI 실패면 수정 후 push."
     /usr/local/bin/claude -p "$pr_context" \
         --max-turns 999 \
-        --allowedTools "Bash,Read,Write,Edit,Glob,Grep" \
+        --allowedTools "Bash,Read,Write,Edit,Glob,Grep,Agent" \
         2>&1 | tee "$log_file" &
     claude_pid=$!
     ( sleep "$SESSION_TIMEOUT" && kill "$claude_pid" 2>/dev/null ) &

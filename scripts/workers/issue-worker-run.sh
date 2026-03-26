@@ -42,7 +42,7 @@ if [ -n "$prs" ]; then
         cd "$worktree_dir" 2>/dev/null || continue
         /usr/local/bin/claude -p "$(cat "$PROMPT_FILE")" \
             --max-turns 999 \
-            --allowedTools "Bash,Read,Write,Edit,Glob,Grep" \
+            --allowedTools "Bash,Read,Write,Edit,Glob,Grep,Agent" \
             2>&1 | tee "$LOG_DIR/issue-${issue_num}-$(date +%Y%m%d-%H%M%S).log" &
         local_pid=$!
         ( sleep "$SESSION_TIMEOUT" && kill "$local_pid" 2>/dev/null ) &
@@ -85,7 +85,7 @@ cd "$worktree_dir" || exit 1
 
 /usr/local/bin/claude -p "$(cat "$PROMPT_FILE")" \
     --max-turns 999 \
-    --allowedTools "Bash,Read,Write,Edit,Glob,Grep" \
+    --allowedTools "Bash,Read,Write,Edit,Glob,Grep,Agent" \
     2>&1 | tee "$LOG_DIR/issue-${issue_num}-$(date +%Y%m%d-%H%M%S).log" &
 claude_pid=$!
 ( sleep "$SESSION_TIMEOUT" && kill "$claude_pid" 2>/dev/null ) &

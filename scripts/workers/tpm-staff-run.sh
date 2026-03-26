@@ -20,7 +20,7 @@ cd "$REPO_DIR" || exit 1
 
 /usr/local/bin/claude -p "$(cat "$PROMPT_FILE")" \
     --max-turns 999 \
-    --allowedTools "Bash,Read,Write,Edit,Glob,Grep" \
+    --allowedTools "Bash,Read,Write,Edit,Glob,Grep,Agent" \
     2>&1 | tee "$LOG_DIR/tpm-$(date +%Y%m%d-%H%M%S).log" &
 claude_pid=$!
 ( sleep "$SESSION_TIMEOUT" && kill "$claude_pid" 2>/dev/null ) &

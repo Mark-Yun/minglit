@@ -18,7 +18,7 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] PM staff session starting..."
 
 /usr/local/bin/claude -p "$(cat "$PROMPT_FILE")" \
     --max-turns 999 \
-    --allowedTools "Bash,Read,Write,Edit,Glob,Grep,WebSearch,WebFetch" \
+    --allowedTools "Bash,Read,Write,Edit,Glob,Grep,Agent,WebSearch,WebFetch" \
     2>&1 | tee "$LOG_DIR/pm-staff-$(date +%Y%m%d-%H%M%S).log" &
 claude_pid=$!
 ( sleep "$SESSION_TIMEOUT" && kill "$claude_pid" 2>/dev/null ) &

@@ -23,7 +23,7 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running audit-uiux..."
 
 /usr/local/bin/claude -p "$(cat "$PROMPT_FILE")" \
     --max-turns 999 \
-    --allowedTools "Bash,Read,Write,Edit,Glob,Grep,WebSearch,WebFetch" \
+    --allowedTools "Bash,Read,Write,Edit,Glob,Grep,Agent,WebSearch,WebFetch" \
     2>&1 | tee "/tmp/claude-worker-logs/audit-uiux-$(date +%Y%m%d-%H%M%S).log" &
 claude_pid=$!
 ( sleep "$SESSION_TIMEOUT" && kill "$claude_pid" 2>/dev/null ) &
