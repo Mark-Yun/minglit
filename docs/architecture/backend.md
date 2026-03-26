@@ -256,6 +256,7 @@ Supabase Edge Functions는 Deno 런타임 기반이며, `supabase/functions/` �
 | `response_utils.ts` | 33 | HTTP 응답 헬퍼 (CORS, JSON/에러 응답) |
 | `refund_utils.ts` | — | 환불 관련 유틸리티 |
 | `validation_utils.ts` | — | 입력 검증 유틸리티 |
+| `env_keystore.ts` | 63 | 환경변수 검증 (`env-manifest.json` 기반 per-function/project 단위 키 체크) |
 
 ### 3.3 Dev Guard
 
