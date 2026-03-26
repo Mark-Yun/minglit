@@ -5,7 +5,7 @@
     "required": {
       "SUPABASE_URL": { "desc": "Supabase project URL" },
       "SUPABASE_PUBLISHABLE_KEY": { "desc": "Supabase publishable key" },
-      "ENVIRONMENT": { "desc": "development / production" }
+      "ENVIRONMENT": { "desc": "local / development / production" }
     },
     "optional": {
       "SENTRY_DSN": { "desc": "Sentry error tracking" },
