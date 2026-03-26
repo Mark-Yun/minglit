@@ -19,6 +19,8 @@ Future<void> main() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
+  EnvKeyStore.validate();
+
   const sentryDsn = String.fromEnvironment('SENTRY_DSN');
   const environment = String.fromEnvironment(
     'ENVIRONMENT',
