@@ -13,23 +13,28 @@ class EnvKeyStore {
 
   // ── manifest.flutter.required ──
   static const _supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-  static const _supabasePublishableKey =
-      String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
+  static const _supabasePublishableKey = String.fromEnvironment(
+    'SUPABASE_PUBLISHABLE_KEY',
+  );
   static const _environment = String.fromEnvironment('ENVIRONMENT');
 
   // ── manifest.flutter.optional ──
   static const _sentryDsn = String.fromEnvironment('SENTRY_DSN');
   static const _statsigClientKey = String.fromEnvironment('STATSIG_CLIENT_KEY');
-  static const _googleWebClientId =
-      String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
-  static const _kakaoLocalRestApiKey =
-      String.fromEnvironment('KAKAO_LOCAL_REST_API_KEY');
-  static const _kakaoMapJavascriptKey =
-      String.fromEnvironment('KAKAO_MAP_JAVASCRIPT_KEY');
+  static const _googleWebClientId = String.fromEnvironment(
+    'GOOGLE_WEB_CLIENT_ID',
+  );
+  static const _kakaoLocalRestApiKey = String.fromEnvironment(
+    'KAKAO_LOCAL_REST_API_KEY',
+  );
+  static const _kakaoMapJavascriptKey = String.fromEnvironment(
+    'KAKAO_MAP_JAVASCRIPT_KEY',
+  );
   static const _jusoConfirmKey = String.fromEnvironment('JUSO_CONFIRM_KEY');
   static const _iamportUserCode = String.fromEnvironment('IAMPORT_USER_CODE');
-  static const _mobileRedirectScheme =
-      String.fromEnvironment('MOBILE_REDIRECT_SCHEME');
+  static const _mobileRedirectScheme = String.fromEnvironment(
+    'MOBILE_REDIRECT_SCHEME',
+  );
 
   static const _requiredEntries = <String, String>{
     'SUPABASE_URL': _supabaseUrl,
