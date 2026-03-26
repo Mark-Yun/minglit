@@ -89,7 +89,7 @@ gh run list --workflow "CI" --limit 10 --json conclusion,displayTitle,createdAt 
 
 ## 4단계: 테스트 문서 최신화
 
-감사 결과를 기반으로 `docs/AUTOMATION_TEST_GUIDE.md` 최신화:
+감사 결과를 기반으로 `docs/qa/AUTOMATION_TEST_GUIDE.md` 최신화:
 - 오늘 추가된 테스트 반영
 - 새로 발견된 갭 추가
 - 해소된 갭 제거
@@ -97,7 +97,7 @@ gh run list --workflow "CI" --limit 10 --json conclusion,displayTitle,createdAt 
 문서 변경이 있으면:
 ```bash
 git checkout -b docs/qa-sync-$(date +%Y%m%d) dev
-git add docs/AUTOMATION_TEST_GUIDE.md
+git add docs/qa/AUTOMATION_TEST_GUIDE.md
 git commit -m "docs: 테스트 가이드 최신화 ($(date +%Y-%m-%d) QA 감사 기반)"
 git push -u origin docs/qa-sync-$(date +%Y%m%d)
 gh pr create --base dev --title "docs: 테스트 가이드 최신화" --body "..."

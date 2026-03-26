@@ -54,6 +54,8 @@ STEP 3: Golden Test Coverage
 ────────────────────────────────────────
 STEP 4: Design System Doc-Code Consistency
 ────────────────────────────────────────
+**관리 대상 문서**: `docs/ux/` 전체 (design-system, information-architecture, menu-structure, partner-app)
+
 1. Read `docs/ux/design-system/01-foundation.md` (if it exists).
 2. Read `shared/packages/minglit_kit/lib/src/theme/minglit_design_tokens.dart`.
 3. Extract all public token names from the Dart file (classes: MinglitColors, MinglitColorsDark, MinglitSpacing, MinglitRadius, etc.).

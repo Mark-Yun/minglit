@@ -8,6 +8,8 @@
 
 ## 2단계: 아키텍처 분석
 
+**관리 대상 문서**: `docs/architecture/`, `docs/features/`, `docs/debugging/`
+
 docs/architecture/ 문서를 먼저 읽고, 실제 코드와 비교해.
 
 ### A. Feature-first 구조 위반

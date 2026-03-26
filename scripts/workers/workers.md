@@ -34,11 +34,11 @@ pr-care
 
 | 워커 | 주기 | 역할 | 문서 관리 |
 |------|------|------|-----------|
-| **audit-arch** | 24시간 | Feature 격리, 패턴 준수, 순환 의존성, 코드 중복 | `docs/architecture/` 최신화 + PR |
+| **audit-arch** | 24시간 | Feature 격리, 패턴 준수, 순환 의존성, 코드 중복 | `docs/architecture/`, `docs/features/`, `docs/debugging/` 최신화 + PR |
 | **audit-bug** | 24시간 | null crash, 에러 삼킴, TODO/FIXME, 타입 안전성 | - |
-| **audit-qa** | 24시간 | 일일 PR/버그 기반 테스트 보강 제안, 커버리지 현황 | `docs/AUTOMATION_TEST_GUIDE.md` 최신화 + PR |
+| **audit-qa** | 24시간 | 일일 PR/버그 기반 테스트 보강 제안, 커버리지 현황 | `docs/qa/` 전체 최신화 + PR |
 | **audit-security** | 24시간 | 인증 누락, RLS 미적용, 시크릿 노출, 의존성 취약점 | - |
-| **audit-uiux** | 24시간 | 디자인 토큰 준수, golden test 커버리지, 접근성 | `docs/ux/design-system/` 참조 |
+| **audit-uiux** | 24시간 | 디자인 토큰 준수, golden test 커버리지, 접근성 | `docs/ux/` 전체 |
 
 ### 운영 워커
 
