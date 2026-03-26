@@ -307,8 +307,6 @@ void main() {
     test('closingSoon sorts by remaining slots ASC', () {
       final events = [
         makeEvent(
-          id: 'e1',
-          maxParticipants: 20,
           currentParticipants: 5,
         ), // 15 remaining
         makeEvent(
