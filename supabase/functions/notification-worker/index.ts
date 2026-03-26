@@ -1,4 +1,5 @@
 import { createServiceClient } from '../_shared/supabase_client.ts'
+import { requireEnv } from '../_shared/env_keystore.ts'
 import { runWorkerLoop } from './loop_worker.ts'
 import { WorkerUtils } from '../_shared/worker_utils.ts'
 import * as jose from 'https://deno.land/x/jose@v4.14.4/index.ts'
@@ -239,6 +240,10 @@ async function sendToAllParticipants(
 initSentry();
 
 Deno.serve(withHandler(async (_req) => {
+  // env-manifest: validate all required env vars for this function
+  const envErr = requireEnv("notification-worker");
+  if (envErr) return envErr;
+
   try {
     const firebaseServiceAccount = Deno.env.get('FIREBASE_SERVICE_ACCOUNT') ?? ''
 
