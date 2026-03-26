@@ -11,7 +11,7 @@ audit 워커 (5개)
   → audit-report 라벨 이슈 생성
       │
       ▼
-tpm-worker
+tpm-staff
   → audit-report 분석 + 수정 필요성 판단
   → actionable 이슈 생성 (issue-worker가 처리할 수 있는 수준)
       │
@@ -46,13 +46,13 @@ pr-care
 |------|------|------|
 | **issue-worker** | 10분 | 이슈 처리 (bug-report, bug, ci-failure, enhancement, refactor 라벨만) |
 | **pr-care-worker** | 30분 | stale PR 케어 (BEHIND 업데이트, 코드리뷰 대응, dependabot close) |
-| **tpm-worker** | 2시간 | audit-report → actionable 이슈 변환 (수정 필요성 판단 + 플랜 작성) |
+| **tpm-staff** | 2시간 | audit-report → actionable 이슈 변환 (수정 필요성 판단 + 플랜 작성) |
 
 ## 라벨 체계
 
 | 라벨 | 생성 주체 | 처리 주체 |
 |------|----------|----------|
-| `audit-report` | audit 워커 | tpm-worker |
+| `audit-report` | audit 워커 | tpm-staff |
 | `audit-arch` | audit-arch | (분류용) |
 | `audit-bug` | audit-bug | (분류용) |
 | `audit-qa` | audit-qa | (분류용) |
@@ -106,7 +106,7 @@ scripts/workers/
 │   ├── audit-uiux.txt
 │   ├── issue-worker.txt
 │   ├── pr-care-worker.txt
-│   └── tpm-worker.txt
+│   └── tpm-staff.txt
 ├── launchd/            # macOS LaunchAgent plist
 │   └── com.minglit.*.plist
 └── workers.md          # 이 문서
