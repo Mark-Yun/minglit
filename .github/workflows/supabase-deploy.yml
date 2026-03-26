@@ -116,6 +116,9 @@ jobs:
 
       # --- Post-deploy verification (env-manifest based) ---
 
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
       - name: Verify vault secrets
         env:
           DB_PASSWORD: ${{ steps.env.outputs.DB_PASSWORD }}

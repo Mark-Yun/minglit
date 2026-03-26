@@ -5,7 +5,7 @@
  * caught early (at request time or via the health endpoint).
  */
 
-import manifest from "../../env-manifest.json" with { type: "json" };
+import manifest from "../../../env-manifest.json" with { type: "json" };
 
 type ManifestSection = Record<string, { desc: string }>;
 

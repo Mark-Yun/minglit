@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 
 /// Validates that required environment variables are present at runtime.
@@ -71,8 +70,8 @@ class EnvKeyStore {
 
   /// Validate environment at app start.
   ///
-  /// - **debug**: throws [StateError] so the developer notices immediately.
-  /// - **release**: logs via [Log.e] (would go to Sentry in production).
+  /// Throws [StateError] when required env vars are missing so the app
+  /// fails fast in both debug and release builds.
   static void validate() {
     final missing = missingRequired();
     if (missing.isEmpty) {
@@ -91,9 +90,7 @@ class EnvKeyStore {
         'Run with: flutter run '
         '--dart-define-from-file=../../minglit_env/dev/flutter.env';
 
-    if (kDebugMode) {
-      throw StateError(message);
-    }
     Log.e(message);
+    throw StateError(message);
   }
 }
