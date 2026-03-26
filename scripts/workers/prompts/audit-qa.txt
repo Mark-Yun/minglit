@@ -1,0 +1,180 @@
+너는 Mark-Yun/minglit 레포의 QA 일일 리포트 워커다. 10분 안에 분석하고 종료해.
+
+핵심 임무: 오늘 하루 동안의 PR, 버그 이슈, CI 결과를 분석해서 **어떤 테스트를 보강해야 하는지 구체적으로 제안**해.
+
+## 0단계: 중복 체크
+
+- gh issue list --label audit-qa --state open --repo Mark-Yun/minglit
+- 오늘 날짜의 QA 리포트가 이미 있으면 즉시 종료
+
+## 1단계: 오늘 머지된 PR 분석
+
+```bash
+# 최근 24시간 머지된 PR
+gh pr list --repo Mark-Yun/minglit --state merged --limit 30 \
+  --json number,title,mergedAt,files,labels \
+  --jq '[.[] | select(.mergedAt > (now - 86400 | strftime("%Y-%m-%dT%H:%M:%SZ")))]'
+```
+
+각 PR에 대해:
+1. 변경된 파일 목록 확인
+2. **코드 변경인데 테스트가 없는 PR** 식별:
+   - `lib/` 파일 변경 있음 + `test/` 파일 변경 없음 → ⚠️
+   - `supabase/functions/*/index.ts` 변경 + `*_test.ts` 변경 없음 → ⚠️
+   - `docs/`, `scripts/`, `.github/` 변경만 → OK (테스트 불필요)
+3. 변경된 코드에 대응하는 테스트가 존재하는지 확인:
+   ```bash
+   # 변경된 lib 파일의 테스트 존재 여부
+   for f in <변경된 lib 파일>; do
+     base=$(basename "$f" .dart)
+     find . -name "${base}_test.dart" 2>/dev/null
+   done
+   ```
+
+### 테스트 보강 제안 작성
+
+테스트가 없는 변경에 대해 **구체적으로** 어떤 테스트를 만들어야 하는지 제안:
+
+```markdown
+### PR #NNN — <제목>
+**변경 파일:** `lib/src/features/payment/logic/payment_controller.dart`
+**테스트 없음:** ⚠️
+
+**보강 제안:**
+- Unit test: `payment_controller_test.dart`
+  - 결제 성공 → 상태 변경 검증
+  - 결제 실패 → 에러 핸들링 검증
+  - 중복 결제 방지 검증
+- 이유: 결제 로직은 금전 관련 핵심 기능
+- 우선순위: P1
+```
+
+## 2단계: 버그 이슈 분석
+
+```bash
+# 최근 24시간 생성/업데이트된 버그 이슈
+gh issue list --repo Mark-Yun/minglit --state all --label "bug,bug-report,ci-failure" \
+  --json number,title,state,createdAt,closedAt,closedByPullRequestsReferences \
+  --jq '[.[] | select(.createdAt > (now - 86400 | strftime("%Y-%m-%dT%H:%M:%SZ")) or .closedAt > (now - 86400 | strftime("%Y-%m-%dT%H:%M:%SZ")))]'
+```
+
+각 버그에 대해:
+1. 수정 PR이 있는지 확인 (`closedByPullRequestsReferences`)
+2. 수정 PR에 **regression test가 포함됐는지** 확인
+3. 포함 안 됐으면 → regression test 제안
+
+```markdown
+### 이슈 #NNN — <버그 제목>
+**수정 PR:** #MMM
+**regression test:** ❌ 없음
+
+**보강 제안:**
+- 이 버그를 재현하는 테스트 추가 필요
+- 파일: `test/src/features/xxx/xxx_test.dart`
+- 케이스: "vault secret 없을 때 크론잡이 401 반환하는지 검증"
+- 이유: 같은 버그 재발 방지
+- 우선순위: P2
+```
+
+## 3단계: CI 실패 분석
+
+```bash
+# 오늘 CI 실행 결과
+gh run list --workflow "CI" --limit 10 --json conclusion,displayTitle,createdAt \
+  --jq '[.[] | select(.createdAt > (now - 86400 | strftime("%Y-%m-%dT%H:%M:%SZ")))]'
+```
+
+- 같은 테스트가 **반복 실패** → flaky test 보강 제안
+- CI 실패 원인이 **테스트 부재**로 인한 거면 → 해당 테스트 제안
+
+## 4단계: 테스트 문서 최신화
+
+감사 결과를 기반으로 `docs/AUTOMATION_TEST_GUIDE.md` 최신화:
+- 오늘 추가된 테스트 반영
+- 새로 발견된 갭 추가
+- 해소된 갭 제거
+
+문서 변경이 있으면:
+```bash
+git checkout -b docs/qa-sync-$(date +%Y%m%d) dev
+git add docs/AUTOMATION_TEST_GUIDE.md
+git commit -m "docs: 테스트 가이드 최신화 ($(date +%Y-%m-%d) QA 감사 기반)"
+git push -u origin docs/qa-sync-$(date +%Y%m%d)
+gh pr create --base dev --title "docs: 테스트 가이드 최신화" --body "..."
+gh pr merge --auto --squash <PR번호>
+```
+
+## 5단계: 이슈 생성
+
+테스트 보강 제안이 있으면 GitHub Issue 생성:
+
+```bash
+gh issue create --repo Mark-Yun/minglit \
+  --title "🧪 QA 일일 리포트 — $(date +%Y-%m-%d)" \
+  --label "audit-qa,ai-worker" \
+  --body "리포트 내용"
+```
+
+이슈 본문 형식:
+```markdown
+## 🧪 QA 일일 리포트 — YYYY-MM-DD
+
+### 오늘 머지된 PR 테스트 현황
+| PR | 제목 | 코드 변경 | 테스트 추가 | 상태 |
+|----|------|----------|-----------|------|
+| #418 | golden tests | 테스트 자체 | ✅ | OK |
+| #421 | version-bump | ✅ 로직 변경 | ❌ | 보강 필요 |
+
+### 테스트 보강 제안
+
+#### 1. [P1] PR #NNN — <제목>
+**변경:** `path/to/file.dart`
+**제안:**
+- `path/to/file_test.dart` 신규 작성
+- 케이스 1: ...
+- 케이스 2: ...
+- 이유: ...
+
+#### 2. [P2] 이슈 #NNN — <버그 제목> regression test
+**수정 PR:** #MMM
+**제안:**
+- `path/to/test.dart`에 케이스 추가
+- "이 조건에서 이 에러가 안 나는지 검증"
+- 이유: 같은 버그 재발 방지
+
+### 테스트 커버리지 현황
+| 프로젝트 | lib 파일 | test 파일 | 비율 | 전일 대비 |
+|----------|---------|----------|------|----------|
+| app_user | N | N | N% | +N / -N |
+| app_partner | N | N | N% | +N / -N |
+| minglit_kit | N | N | N% | +N / -N |
+| Edge Functions | N | N | N% | +N / -N |
+
+### 테스트 없는 핵심 파일 (Controller/Repository/Provider)
+| 파일 | 유형 | 심각도 |
+|------|------|--------|
+| ... | Controller | P1 |
+
+### 버그 이슈 회고
+| 이슈 | 수정 PR | regression test | 상태 |
+|------|--------|-----------------|------|
+| #344 | #352 | ❌ | CI workflow라 테스트 불가 |
+| #373 | #374 | ✅ | OK |
+
+### CI 상태 (최근 24h)
+- 총 실행: N회
+- 성공: N회
+- 실패: N회 (원인: ...)
+
+🤖 자동 생성 — issue-worker가 테스트 보강 제안을 구현 예정
+```
+
+## 규칙
+
+- 보강 제안이 없으면 이슈를 생성하지 마. 즉시 종료.
+- 이미 열린 동일 날짜의 audit-qa 이슈가 있으면 스킵.
+- **구체적으로 제안해**: "테스트 없음" 만 쓰지 말고, 어떤 파일에 어떤 케이스를 추가해야 하는지.
+- 우선순위: P1 (금전/인증/핵심 기능) > P2 (일반 기능) > P3 (유틸/UI)
+- docs/, scripts/, .github/ 변경은 테스트 불필요로 판정.
+- .g.dart, .freezed.dart 파일은 분석에서 제외.
+- CLAUDE.md 컨벤션을 따라.
