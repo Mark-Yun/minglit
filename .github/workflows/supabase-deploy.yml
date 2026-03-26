@@ -8,6 +8,7 @@ on:
     paths:
       - 'supabase/migrations/**'
       - 'supabase/functions/**'
+      - 'env-manifest.json'
   workflow_dispatch:
 
 concurrency:
@@ -26,6 +27,23 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+
+      - name: Set environment variables
+        id: env
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/dev" ]; then
+            echo "ENV=dev" >> "$GITHUB_OUTPUT"
+            echo "PROJECT_ID=${{ secrets.SUPABASE_DEV_PROJECT_ID }}" >> "$GITHUB_OUTPUT"
+            echo "DB_PASSWORD=${{ secrets.SUPABASE_DEV_DB_PASSWORD }}" >> "$GITHUB_OUTPUT"
+            echo "PUBLISHABLE_KEY=${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}" >> "$GITHUB_OUTPUT"
+            echo "ENVIRONMENT_VALUE=development" >> "$GITHUB_OUTPUT"
+          else
+            echo "ENV=main" >> "$GITHUB_OUTPUT"
+            echo "PROJECT_ID=${{ secrets.SUPABASE_MAIN_PROJECT_ID }}" >> "$GITHUB_OUTPUT"
+            echo "DB_PASSWORD=${{ secrets.SUPABASE_MAIN_DB_PASSWORD }}" >> "$GITHUB_OUTPUT"
+            echo "PUBLISHABLE_KEY=${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}" >> "$GITHUB_OUTPUT"
+            echo "ENVIRONMENT_VALUE=production" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Deploy to Dev Supabase
         if: github.ref == 'refs/heads/dev'
@@ -46,13 +64,13 @@ jobs:
           supabase secrets set GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN
           supabase secrets set SENTRY_DSN=$SENTRY_DSN
           if [ -z "$AXIOM_API_TOKEN" ]; then
-            echo "⚠️ AXIOM_API_TOKEN is not set. Skipping."
+            echo "AXIOM_API_TOKEN is not set. Skipping."
           else
             supabase secrets set AXIOM_API_TOKEN=$AXIOM_API_TOKEN
             supabase secrets set AXIOM_DATASET=edge-functions
           fi
           if [ -z "$STATSIG_SERVER_KEY" ]; then
-            echo "⚠️ STATSIG_SERVER_KEY is not set. Skipping."
+            echo "STATSIG_SERVER_KEY is not set. Skipping."
           else
             supabase secrets set STATSIG_SERVER_KEY=$STATSIG_SERVER_KEY
           fi
@@ -80,13 +98,13 @@ jobs:
           supabase secrets set GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN
           supabase secrets set SENTRY_DSN=$SENTRY_DSN
           if [ -z "$AXIOM_API_TOKEN" ]; then
-            echo "⚠️ AXIOM_API_TOKEN is not set. Skipping."
+            echo "AXIOM_API_TOKEN is not set. Skipping."
           else
             supabase secrets set AXIOM_API_TOKEN=$AXIOM_API_TOKEN
             supabase secrets set AXIOM_DATASET=edge-functions
           fi
           if [ -z "$STATSIG_SERVER_KEY" ]; then
-            echo "⚠️ STATSIG_SERVER_KEY is not set. Skipping."
+            echo "STATSIG_SERVER_KEY is not set. Skipping."
           else
             supabase secrets set STATSIG_SERVER_KEY=$STATSIG_SERVER_KEY
           fi
@@ -95,6 +113,92 @@ jobs:
           supabase db push --password $SUPABASE_DB_PASSWORD --include-all
 
           supabase functions deploy
+
+      # --- Post-deploy verification (env-manifest based) ---
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Verify vault secrets
+        env:
+          DB_PASSWORD: ${{ steps.env.outputs.DB_PASSWORD }}
+          PROJECT_ID: ${{ steps.env.outputs.PROJECT_ID }}
+        run: |
+          REQUIRED=$(jq -r '.vault.required | keys[]' env-manifest.json)
+          VAULT_MISSING=""
+          for key in $REQUIRED; do
+            EXISTS=$(PGPASSWORD="${DB_PASSWORD}" psql \
+              "postgresql://postgres:${DB_PASSWORD}@db.${PROJECT_ID}.supabase.co:5432/postgres" \
+              -t -A -c "SELECT count(*) FROM vault.decrypted_secrets WHERE name='$key';")
+            if [ "$EXISTS" = "0" ]; then
+              VAULT_MISSING="$VAULT_MISSING $key"
+            fi
+          done
+          if [ -n "$VAULT_MISSING" ]; then
+            echo "::error::Vault secrets missing:$VAULT_MISSING"
+            exit 1
+          fi
+          echo "Vault secrets OK"
+
+      - name: Verify Edge Function env vars
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANON_KEY: ${{ steps.env.outputs.PUBLISHABLE_KEY }}
+          PROJECT_ID: ${{ steps.env.outputs.PROJECT_ID }}
+          ENV_NAME: ${{ steps.env.outputs.ENV }}
+        run: |
+          RESPONSE=$(curl -sf "https://${PROJECT_ID}.supabase.co/functions/v1/health?env=true" \
+            -H "Authorization: Bearer ${ANON_KEY}" --max-time 15) || {
+            echo "::warning::Health endpoint unreachable — skipping EF env check"
+            exit 0
+          }
+
+          if ! echo "$RESPONSE" | jq -e . > /dev/null 2>&1; then
+            echo "::warning::Health endpoint returned invalid JSON — skipping EF env check"
+            exit 0
+          fi
+
+          MISSING=$(echo "$RESPONSE" | jq -r \
+            '.env_check.by_function // {} | to_entries[] | "\(.key): \(.value | join(", "))"')
+
+          if [ -n "$MISSING" ]; then
+            TITLE="Missing env vars after deploy on ${ENV_NAME}"
+            EXISTING=$(gh issue list --search "\"${TITLE}\" in:title" --state open --json number -q '.[0].number')
+            BODY=$(cat <<BODY_EOF
+          **Missing EF env vars:**
+          \`\`\`
+          ${MISSING}
+          \`\`\`
+          **Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          BODY_EOF
+            )
+
+            if [ -n "$EXISTING" ]; then
+              gh issue comment "$EXISTING" --body "$BODY"
+            else
+              gh issue create --title "$TITLE" --label "ci-failure,P0-critical" --body "$BODY"
+            fi
+            echo "::warning::EF env vars missing (issue created/updated)"
+          else
+            echo "EF env vars OK"
+          fi
+
+      - name: Verify GitHub Secrets match manifest
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REQUIRED=$(jq -r '.github_secrets.required | keys[]' env-manifest.json)
+          EXISTING=$(gh secret list --json name -q '.[].name')
+          GH_MISSING=""
+          for key in $REQUIRED; do
+            echo "$EXISTING" | grep -q "^${key}$" || GH_MISSING="$GH_MISSING $key"
+          done
+          if [ -n "$GH_MISSING" ]; then
+            echo "::warning::GitHub Secrets missing from manifest:$GH_MISSING"
+          else
+            echo "GitHub Secrets OK"
+          fi
 
   notify-failure:
     needs: [deploy]
