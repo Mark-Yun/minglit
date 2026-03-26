@@ -73,7 +73,7 @@ If there are ZERO violations and ZERO coverage gaps, do NOT create an issue. Pri
 Otherwise, create a GitHub issue:
 
   gh issue create \
-    --label "audit-uiux,ai-worker" \
+    --label "audit-report" \
     --title "UI/UX Audit — $(date +%Y-%m-%d)" \
     --body "$(cat <<'ISSUE_EOF'
   ## UI/UX Design System Audit — {DATE}

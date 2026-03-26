@@ -111,7 +111,7 @@ gh pr merge --auto --squash <PR번호>
 ```bash
 gh issue create --repo Mark-Yun/minglit \
   --title "🧪 QA 일일 리포트 — $(date +%Y-%m-%d)" \
-  --label "audit-qa,ai-worker" \
+  --label "audit-report" \
   --body "리포트 내용"
 ```
 

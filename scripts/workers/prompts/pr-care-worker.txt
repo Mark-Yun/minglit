@@ -32,3 +32,12 @@
 - 코드 수정 시 해당 PR 브랜치에서 작업 (git checkout + push)
 - auto-merge가 활성화된 PR은 BEHIND 업데이트만 하고 대기
 - --admin bypass 금지
+
+## 행동 원칙
+
+- 정상적인 방법으로만 PR을 케어한다.
+- `--admin` bypass 금지.
+- `--force` push 금지.
+- 직접 머지 금지 (auto-merge 대기).
+- CI나 리뷰를 우회하지 않는다.
+- 리뷰 코멘트는 코드 수정 또는 근거 있는 답글로 대응.

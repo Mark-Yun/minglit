@@ -117,7 +117,7 @@ gh pr merge --auto --squash <PR번호>
 ```bash
 gh issue create --repo Mark-Yun/minglit \
   --title "🏗️ 아키텍처 감사 — $(date +%Y-%m-%d)" \
-  --label "audit-arch,ai-worker" \
+  --label "audit-report" \
   --body "리포트 내용"
 ```
 

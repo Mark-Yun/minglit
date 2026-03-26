@@ -27,8 +27,8 @@ for dir in "$WORKTREE_BASE"/issue-*; do
     fi
 done
 
-# --- PR 케어 (ai-worker 라벨) ---
-prs=$(gh pr list --repo "$REPO" --label ai-worker --state open --json number -q '.[].number')
+# --- PR 케어 (내가 만든 PR) ---
+prs=$(gh pr list --repo "$REPO" --author @me --state open --json number -q '.[].number')
 if [ -n "$prs" ]; then
     for pr_num in $prs; do
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] Caring for PR #${pr_num}..."

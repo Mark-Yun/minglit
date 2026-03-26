@@ -63,7 +63,6 @@ pr-care
 | `ci-failure` | CI notify | issue-worker |
 | `enhancement` | 수동 | issue-worker |
 | `refactor` | 수동/tpm | issue-worker |
-| `report-exec` | tpm-staff, pm-staff | 사람 (Mark) || `ai-worker` | issue-worker | issue-worker (PR 케어) |
 
 ## 워커 행동 원칙
 

@@ -71,7 +71,7 @@ Critical 또는 High 심각도 항목이 있으면 GitHub Issue를 생성해:
 ```bash
 gh issue create --repo Mark-Yun/minglit \
   --title "🔒 보안 감사 — $(date +%Y-%m-%d)" \
-  --label "audit-security,ai-worker" \
+  --label "audit-report" \
   --body "리포트 내용"
 ```
 
