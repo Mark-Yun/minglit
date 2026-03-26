@@ -254,6 +254,8 @@ Supabase Edge Functions는 Deno 런타임 기반이며, `supabase/functions/` �
 | `worker_utils.ts` | 58 | PGMQ 워커 유틸 (중복 체크, DLQ, 지연 로깅) |
 | `auth_utils.ts` | 38 | 인증 유틸 (`requireAuth` — Bearer 토큰 → `auth.getUser()`) |
 | `response_utils.ts` | 33 | HTTP 응답 헬퍼 (CORS, JSON/에러 응답) |
+| `refund_utils.ts` | — | 환불 관련 유틸리티 |
+| `validation_utils.ts` | — | 입력 검증 유틸리티 |
 
 ### 3.3 Dev Guard
 
@@ -393,7 +395,14 @@ protect_user_profile_fields() → trigger
 | `process-notifications` | 매분 (`* * * * *`) | `notification-worker` Edge Function 호출 (pg_net HTTP POST) |
 | `send-event-reminders` | 매분 (`* * * * *`) | 이벤트 시작 55~65분 전 참가자에게 리마인더 (`produce_event`) |
 | `settlement-status-transition` | 매일 03:00 (`0 3 * * *`) | 7일 경과 정산 `pending` → `ready` 전환 |
+| `settlement-reconciliation-daily` | 매일 13:00 UTC / 22:00 KST (`0 13 * * *`) | `reconciliation-daily` Edge Function 호출 (PG ↔ DB 대사) |
+| `settlement-register-transfers` | 매 15분 (`*/15 * * * *`) | `settlement-register-transfers` Edge Function 호출 (이체 등록) |
+| `settlement-payout-sync` | 매일 3회 02:00·05:00·08:00 UTC (`0 2,5,8 * * *`) | `payout-sync` Edge Function 호출 (지급 상태 동기화) |
+| `settlement-alarm-check` | 매 30분 (`*/30 * * * *`) | `metrics-alert` Edge Function 호출 (정산 메트릭 알람) |
 | `sync_github_stats` | 매일 05:30 KST (`30 20 * * *` UTC) | `github-stats-sync` Edge Function 호출 → GitHub 이슈/PR 통계 수집 |
+| `notify-match-results` | 매일 자정 (`0 0 * * *`) | 매칭 결과 알림 발송 (`notify_match_results()`) |
+| `cleanup-expired-match-votes` | 매일 18:00 UTC (`0 18 * * *`) | 만료된 매칭 투표 정리 (`cleanup_expired_match_votes()`) |
+| `backend-simulation` | 매분 (`* * * * *`) | `backend-simulator` Edge Function 호출 (dev only) |
 
 ---
 
