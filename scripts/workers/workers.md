@@ -63,7 +63,7 @@ pr-care
 | `ci-failure` | CI notify | issue-worker |
 | `enhancement` | 수동 | issue-worker |
 | `refactor` | 수동/tpm | issue-worker |
-
+| `report-exec` | tpm-staff, pm-staff | 사람 (Mark) |
 ## 워커 행동 원칙
 
 - 깃헙 이슈를 수정하고 코드 커밋 / PR 서브밋하는 **정상적인 방법으로만** 케어한다.
