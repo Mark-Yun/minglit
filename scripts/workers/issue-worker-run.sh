@@ -13,10 +13,24 @@ LOG_DIR="/tmp/claude-worker-logs"
 mkdir -p "$LOG_DIR"
 [ ! -f "$PROMPT_FILE" ] && echo "Error: Prompt not found" && exit 1
 
+# --- 동시 실행 방지 (flock) ---
+LOCK_FILE="/tmp/issue-worker.lock"
+exec 200>"$LOCK_FILE"
+flock -n 200 || { echo "[$(date '+%Y-%m-%d %H:%M:%S')] Another instance running. Exiting."; exit 0; }
+
+# --- 타이머 정리를 위한 trap ---
+cleanup() { [ -n "${timer_pid:-}" ] && kill "$timer_pid" 2>/dev/null; wait "$timer_pid" 2>/dev/null; }
+trap cleanup EXIT
+
 # --- 머지된 worktree 정리 ---
 for dir in "$WORKTREE_BASE"/issue-*; do
     [ -d "$dir" ] || continue
     issue_num="${dir##*issue-}"
+    # worktree가 현재 사용 중이면 건너뛰기
+    if pgrep -f "$dir" >/dev/null 2>&1; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Skipping issue-${issue_num} — process active."
+        continue
+    fi
     state=$(gh issue view "$issue_num" --repo "$REPO" --json state -q '.state' 2>/dev/null)
     if [ "$state" = "CLOSED" ]; then
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] Cleaning up issue-${issue_num}..."
@@ -34,6 +48,11 @@ if [ -n "$prs" ]; then
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] Caring for PR #${pr_num}..."
         head_branch=$(gh pr view "$pr_num" --repo "$REPO" --json headRefName -q '.headRefName')
         issue_num=$(echo "$head_branch" | grep -oE '[0-9]+' | head -1)
+        # 이슈 번호 추출 실패 시 건너뛰기
+        if [ -z "$issue_num" ]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Cannot extract issue number from branch '${head_branch}'. Skipping."
+            continue
+        fi
         worktree_dir="$WORKTREE_BASE/issue-${issue_num}"
         if [ ! -d "$worktree_dir" ]; then
             git -C "$REPO_DIR" fetch origin "$head_branch" 2>/dev/null
@@ -49,6 +68,7 @@ if [ -n "$prs" ]; then
         timer_pid=$!
         wait "$local_pid" 2>/dev/null
         kill "$timer_pid" 2>/dev/null; wait "$timer_pid" 2>/dev/null
+        timer_pid=""
     done
     exit 0
 fi
@@ -92,3 +112,4 @@ claude_pid=$!
 timer_pid=$!
 wait "$claude_pid" 2>/dev/null
 kill "$timer_pid" 2>/dev/null; wait "$timer_pid" 2>/dev/null
+timer_pid=""

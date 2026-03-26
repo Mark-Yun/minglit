@@ -4,7 +4,6 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="/Users/mark/workspace/minglit"
-PROMPT_FILE="$SCRIPT_DIR/prompts/pr-care-worker.txt"
 SESSION_TIMEOUT=1800
 STALE_THRESHOLD=1800
 REPO="Mark-Yun/minglit"
@@ -48,7 +47,7 @@ for pr_num in $stale_prs; do
     fi
 
     author=$(gh pr view "$pr_num" --repo "$REPO" --json author -q '.author.login')
-    if [[ "$author" == app/dependabot* ]]; then
+    if [[ "$author" == "dependabot[bot]" ]]; then
         fail_count=$(gh pr checks "$pr_num" --repo "$REPO" 2>&1 | grep -v "pass\|skipped" | grep -c "fail" || echo "0")
         if [ "$fail_count" = "0" ]; then
             echo "[$(date '+%Y-%m-%d %H:%M:%S')] Dependabot PR #${pr_num} — merging..."

@@ -3,8 +3,8 @@
 ## 1단계: 중복 체크
 
 먼저 기존 감사 이슈가 있는지 확인해:
-- gh issue list --label audit-arch --state open --repo Mark-Yun/minglit
-- 오늘 날짜의 감사 리포트가 이미 있으면 즉시 종료
+- gh issue list --label audit-report --state open --repo Mark-Yun/minglit
+- 오늘 날짜의 아키텍처 감사 리포트가 이미 있으면 즉시 종료
 
 ## 2단계: 아키텍처 분석
 
@@ -17,7 +17,7 @@ docs/architecture/ 문서를 먼저 읽고, 실제 코드와 비교해.
 - 올바른 경로: feature → shared(minglit_kit) → feature
 ```bash
 # app_partner 피처 간 크로스 import 검색
-grep -rn "import.*features/" apps/app_partner/lib/src/features/ | grep -v "import.*features/$(dirname)" | head -20
+grep -rn "import.*features/" apps/app_partner/lib/src/features/ | grep -v "import.*features/.*/" | head -20
 ```
 
 ### B. Repository 패턴 위반
@@ -62,7 +62,7 @@ grep -rn "createClient" supabase/functions/*/index.ts | wc -l
 ### A. 최근 변경 파악
 ```bash
 # 최근 7일간 머지된 PR 목록
-gh pr list --repo Mark-Yun/minglit --state merged --limit 30 --json title,mergedAt,files --jq '.[] | select(.mergedAt > (now - 7*24*3600 | strftime("%Y-%m-%dT%H:%M:%SZ"))) | {title, files: [.files[].path]}'
+gh pr list --repo Mark-Yun/minglit --state merged --limit 30 --json title,mergedAt,files --jq --arg since "$(date -v-7d +%Y-%m-%dT%H:%M:%SZ)" '.[] | select(.mergedAt > $since) | {title, files: [.files[].path]}'
 
 # 최근 migration 추가
 ls -lt supabase/migrations/*.sql | head -10

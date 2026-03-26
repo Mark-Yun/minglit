@@ -3,8 +3,8 @@
 ## 1단계: 중복 체크
 
 먼저 기존 감사 이슈가 있는지 확인해:
-- gh issue list --label audit-bug --state open --repo Mark-Yun/minglit
-- 오늘 날짜의 감사 리포트가 이미 있으면 즉시 종료
+- gh issue list --label audit-report --state open --repo Mark-Yun/minglit
+- 오늘 날짜의 코드 품질 감사 리포트가 이미 있으면 즉시 종료
 
 ## 2단계: 코드 분석
 
@@ -12,9 +12,9 @@
 
 ### A. 정적 분석
 ```bash
-cd apps/app_partner && flutter analyze --no-fatal-infos 2>&1
-cd apps/app_user && flutter analyze --no-fatal-infos 2>&1
-cd shared/packages/minglit_kit && dart analyze 2>&1
+(cd apps/app_partner && flutter analyze --no-fatal-infos 2>&1)
+(cd apps/app_user && flutter analyze --no-fatal-infos 2>&1)
+(cd shared/packages/minglit_kit && dart analyze 2>&1)
 ```
 - error, warning 레벨만 수집 (info 무시)
 - 커스텀 린트 위반 포함 (minglit_lints 규칙)

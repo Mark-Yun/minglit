@@ -3,8 +3,8 @@
 ## 1단계: 중복 체크
 
 먼저 기존 감사 이슈가 있는지 확인해:
-- gh issue list --label audit-security --state open --repo Mark-Yun/minglit
-- 오늘 날짜의 감사 리포트가 이미 있으면 즉시 종료
+- gh issue list --label audit-report --state open --repo Mark-Yun/minglit
+- 오늘 날짜의 보안 감사 리포트가 이미 있으면 즉시 종료
 
 ## 2단계: 보안 분석
 
@@ -38,7 +38,7 @@ grep -rn "debugPrint\|print(" --include="*.dart" apps/ shared/ | grep -i "user_i
 ```bash
 # 테이블 중 RLS 정책이 없거나 불완전한 것
 grep -l "CREATE TABLE\|ALTER TABLE" supabase/migrations/*.sql | while read f; do
-  tables=$(grep -oP "CREATE TABLE.*?public\.\K\w+" "$f")
+  tables=$(grep -oP "CREATE TABLE[^.]*public\.\K\w+|CREATE TABLE\s+(?:IF NOT EXISTS\s+)?(?:public\.)?\K\w+" "$f")
   for t in $tables; do
     policy_count=$(grep -c "CREATE POLICY.*$t" supabase/migrations/*.sql)
     if [ "$policy_count" -eq 0 ]; then echo "NO RLS: $t"; fi
@@ -54,8 +54,8 @@ grep -rn "Access-Control\|corsResponse\|CORS" supabase/functions/*/index.ts | he
 
 ### G. 의존성 취약점
 ```bash
-cd apps/landing_user && npm audit --json 2>/dev/null | jq '.vulnerabilities | length'
-cd apps/landing_partner && npm audit --json 2>/dev/null | jq '.vulnerabilities | length'
+(cd apps/landing_user && npm audit --json 2>/dev/null | jq '.vulnerabilities | length')
+(cd apps/landing_partner && npm audit --json 2>/dev/null | jq '.vulnerabilities | length')
 ```
 
 ### H. ENVIRONMENT 가드 누락

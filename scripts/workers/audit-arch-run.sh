@@ -19,6 +19,7 @@ fi
 cd "$WORKTREE_DIR" || exit 1
 git fetch origin dev && git reset --hard origin/dev 2>/dev/null
 
+mkdir -p "/tmp/claude-worker-logs"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running audit-arch..."
 
 /usr/local/bin/claude -p "$(cat "$PROMPT_FILE")" \

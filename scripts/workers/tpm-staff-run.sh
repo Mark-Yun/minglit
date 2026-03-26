@@ -1,5 +1,5 @@
 #!/bin/bash
-# tpm-worker-run.sh — 단발성. audit-report 분석 → actionable 이슈 생성.
+# tpm-staff-run.sh — 단발성. audit-report 분석 → actionable 이슈 생성.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
