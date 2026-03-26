@@ -22,10 +22,11 @@ git fetch origin dev && git reset --hard origin/dev 2>/dev/null
 mkdir -p "/tmp/claude-worker-logs"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running audit-arch..."
 
+LOG_FILE="/tmp/claude-worker-logs/audit-arch-$(date +%Y%m%d-%H%M%S).log"
 /usr/local/bin/claude -p "$(cat "$PROMPT_FILE")" \
     --max-turns 999 \
     --allowedTools "Bash,Read,Write,Edit,Glob,Grep,Agent" \
-    2>&1 | tee "/tmp/claude-worker-logs/audit-arch-$(date +%Y%m%d-%H%M%S).log" &
+    > >(tee "$LOG_FILE") 2>&1 &
 claude_pid=$!
 ( sleep "$SESSION_TIMEOUT" && kill "$claude_pid" 2>/dev/null ) &
 timer_pid=$!

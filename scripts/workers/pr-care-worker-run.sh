@@ -65,8 +65,12 @@ for pr_num in $stale_prs; do
     worktree_dir="$WORKTREE_BASE/pr-${pr_num}"
     if [ ! -d "$worktree_dir" ]; then
         mkdir -p "$WORKTREE_BASE"
-        git -C "$REPO_DIR" fetch origin "$head_branch" 2>/dev/null
-        git -C "$REPO_DIR" worktree add "$worktree_dir" "origin/$head_branch" 2>/dev/null || true
+        if ! git -C "$REPO_DIR" fetch origin "$head_branch" 2>&1; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] WARN: fetch failed for $head_branch"
+        fi
+        if ! git -C "$REPO_DIR" worktree add "$worktree_dir" "origin/$head_branch" 2>&1; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] WARN: worktree add failed for pr-${pr_num}, falling back to REPO_DIR"
+        fi
     else
         cd "$worktree_dir" && git fetch origin "$head_branch" && git reset --hard "origin/$head_branch" 2>/dev/null
     fi
@@ -75,7 +79,7 @@ for pr_num in $stale_prs; do
     /usr/local/bin/claude -p "$pr_context" \
         --max-turns 999 \
         --allowedTools "Bash,Read,Write,Edit,Glob,Grep,Agent" \
-        2>&1 | tee "$log_file" &
+        > >(tee "$log_file") 2>&1 &
     claude_pid=$!
     ( sleep "$SESSION_TIMEOUT" && kill "$claude_pid" 2>/dev/null ) &
     timer_pid=$!

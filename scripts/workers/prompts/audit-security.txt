@@ -105,7 +105,7 @@ gh issue create --repo Mark-Yun/minglit \
 ## 규칙
 
 - 발견 항목이 없으면 이슈를 생성하지 마. 즉시 종료.
-- 이미 열린 동일 내용의 audit-security 이슈가 있으면 스킵.
+- 이미 열린 동일 내용의 audit-report 이슈가 있으면 스킵.
 - 테스트 파일, 목 데이터는 분석에서 제외.
 - false positive를 줄이기 위해, 실제로 위험한 경우만 이슈에 포함.
 - CLAUDE.md와 AGENTS.md 컨벤션을 따라.
