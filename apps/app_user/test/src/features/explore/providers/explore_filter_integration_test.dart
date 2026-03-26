@@ -13,6 +13,8 @@ void main() {
     DateTime? startTime,
     Location? location,
     Party? party,
+    int maxParticipants = 20,
+    int currentParticipants = 0,
   }) {
     return Event(
       id: id,
@@ -26,6 +28,8 @@ void main() {
       tickets: tickets,
       location: location,
       party: party,
+      maxParticipants: maxParticipants,
+      currentParticipants: currentParticipants,
     );
   }
 
@@ -299,6 +303,111 @@ void main() {
       expect(result[1].id, 'gangnam');
       expect(result[2].id, 'incheon');
     });
+
+    test('closingSoon sorts by remaining slots ASC', () {
+      final events = [
+        makeEvent(
+          id: 'e1',
+          maxParticipants: 20,
+          currentParticipants: 5,
+        ), // 15 remaining
+        makeEvent(
+          id: 'e2',
+          maxParticipants: 10,
+          currentParticipants: 8,
+        ), // 2 remaining
+        makeEvent(
+          id: 'e3',
+          maxParticipants: 30,
+          currentParticipants: 25,
+        ), // 5 remaining
+      ];
+
+      final container = createContainer();
+      // Disable nearby + eligibility, enable closingSoon sort only
+      container.read(activeFiltersProvider.notifier).toggleEligibility();
+      container.read(activeFiltersProvider.notifier).toggleNearby();
+      container
+          .read(activeFiltersProvider.notifier)
+          .setSortType(ExploreSortType.closingSoon);
+
+      final result = container.read(
+        filteredEventsProvider(events: events),
+      );
+
+      // Sorted: e2 (2) → e3 (5) → e1 (15)
+      expect(result[0].id, 'e2');
+      expect(result[1].id, 'e3');
+      expect(result[2].id, 'e1');
+    });
+
+    test(
+      'closingSoon + eligibility excludes fully booked events',
+      () {
+        final events = [
+          makeEvent(
+            id: 'available',
+            maxParticipants: 10,
+            currentParticipants: 8,
+          ), // 2 remaining
+          makeEvent(
+            id: 'full',
+            maxParticipants: 10,
+            currentParticipants: 10,
+          ), // 0 remaining
+        ];
+
+        final container = createContainer();
+        // eligibility is enabled by default; disable nearby
+        container.read(activeFiltersProvider.notifier).toggleNearby();
+        container
+            .read(activeFiltersProvider.notifier)
+            .setSortType(ExploreSortType.closingSoon);
+
+        final result = container.read(
+          filteredEventsProvider(events: events),
+        );
+
+        // Only 'available' kept (eligibility ON → exclude 0-slot events)
+        expect(result, hasLength(1));
+        expect(result[0].id, 'available');
+      },
+    );
+
+    test(
+      'closingSoon without eligibility includes fully booked events',
+      () {
+        final events = [
+          makeEvent(
+            id: 'available',
+            maxParticipants: 10,
+            currentParticipants: 8,
+          ),
+          makeEvent(
+            id: 'full',
+            maxParticipants: 10,
+            currentParticipants: 10,
+          ),
+        ];
+
+        final container = createContainer();
+        // Disable eligibility + nearby, enable closingSoon
+        container.read(activeFiltersProvider.notifier).toggleEligibility();
+        container.read(activeFiltersProvider.notifier).toggleNearby();
+        container
+            .read(activeFiltersProvider.notifier)
+            .setSortType(ExploreSortType.closingSoon);
+
+        final result = container.read(
+          filteredEventsProvider(events: events),
+        );
+
+        // Both included, sorted by remaining slots ASC
+        expect(result, hasLength(2));
+        expect(result[0].id, 'full'); // 0 remaining
+        expect(result[1].id, 'available'); // 2 remaining
+      },
+    );
 
     test('events with lat==0 lng==0 go to end of nearby sort', () async {
       final seoulLoc = makeLocation();

@@ -137,7 +137,8 @@ Future<BulkEligibilityData?> bulkEligibilityData(Ref ref) async {
 
 /// Applies active filters and nearby sort to a list of events (client-side).
 ///
-/// Filter chain: eligibility → nearby sort
+/// Filter chain: eligibility (+ remaining-slots for closingSoon) → nearby sort
+/// → closingSoon sort
 @riverpod
 List<Event> filteredEvents(
   Ref ref, {
@@ -147,6 +148,7 @@ List<Event> filteredEvents(
   if (!filters.hasActiveFilters) return events;
 
   var result = events;
+  final isClosingSoon = filters.sortType == ExploreSortType.closingSoon;
 
   // 1. Eligibility filter — only apply when user is identity-verified.
   // Unverified users have no approved verifications, so the filter would
@@ -158,6 +160,14 @@ List<Event> filteredEvents(
         events: result,
         eligibilityData: eligibility,
       );
+    }
+
+    // Fix #430: When eligibility filter is ON + closingSoon, also exclude
+    // events with zero remaining slots (fully booked).
+    if (isClosingSoon) {
+      result = result
+          .where((e) => e.maxParticipants - e.currentParticipants > 0)
+          .toList();
     }
   }
 
@@ -191,6 +201,19 @@ List<Event> filteredEvents(
           return distA.compareTo(distB);
         });
     }
+  }
+
+  // Fix #430: closingSoon — sort by remaining slots ASC (fewest first),
+  // then start_time ASC as tiebreaker.
+  if (isClosingSoon) {
+    result = [...result]
+      ..sort((a, b) {
+        final remainA = a.maxParticipants - a.currentParticipants;
+        final remainB = b.maxParticipants - b.currentParticipants;
+        final cmp = remainA.compareTo(remainB);
+        if (cmp != 0) return cmp;
+        return a.startTime.compareTo(b.startTime);
+      });
   }
 
   return result;
