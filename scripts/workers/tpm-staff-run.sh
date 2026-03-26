@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="/Users/mark/workspace/minglit"
-PROMPT_FILE="$SCRIPT_DIR/prompts/tpm-worker.txt"
+PROMPT_FILE="$SCRIPT_DIR/prompts/tpm-staff.txt"
 SESSION_TIMEOUT=1800
 REPO="Mark-Yun/minglit"
 LOG_DIR="/tmp/claude-tpm-logs"

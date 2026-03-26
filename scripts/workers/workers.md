@@ -39,7 +39,7 @@ pr-care
 | **audit-qa** | 24시간 | 일일 PR/버그 기반 테스트 보강 제안, 커버리지 현황 | `docs/qa/` 전체 최신화 + PR |
 | **audit-security** | 24시간 | 인증 누락, RLS 미적용, 시크릿 노출, 의존성 취약점 | - |
 | **audit-uiux** | 24시간 | 디자인 토큰 준수, golden test 커버리지, 접근성 | `docs/ux/` 전체 |
-
+| **audit-legal** | 매주 월 05:00 KST | 법률/개인정보보호법 취약점, 약관/처리방침 검토 | report-exec |
 ### 운영 워커
 
 | 워커 | 주기 | 역할 |
