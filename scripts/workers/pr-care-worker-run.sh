@@ -60,8 +60,19 @@ for pr_num in $stale_prs; do
         continue
     fi
 
-    cd "$REPO_DIR" || exit 1
-    pr_context="PR #${pr_num} 케어. 상태: ${status}, 작성자: ${author}. gh pr checks ${pr_num}로 CI 확인, 리뷰 코멘트 대응, BEHIND면 업데이트, CI 실패면 수정."
+    # PR 브랜치용 worktree 생성
+    WORKTREE_BASE="/Users/mark/workspace/minglit-workers"
+    head_branch=$(gh pr view "$pr_num" --repo "$REPO" --json headRefName -q '.headRefName')
+    worktree_dir="$WORKTREE_BASE/pr-${pr_num}"
+    if [ ! -d "$worktree_dir" ]; then
+        mkdir -p "$WORKTREE_BASE"
+        git -C "$REPO_DIR" fetch origin "$head_branch" 2>/dev/null
+        git -C "$REPO_DIR" worktree add "$worktree_dir" "origin/$head_branch" 2>/dev/null || true
+    else
+        cd "$worktree_dir" && git fetch origin "$head_branch" && git reset --hard "origin/$head_branch" 2>/dev/null
+    fi
+    cd "$worktree_dir" 2>/dev/null || cd "$REPO_DIR" || exit 1
+    pr_context="PR #${pr_num} 케어. 상태: ${status}, 작성자: ${author}, 브랜치: ${head_branch}. gh pr checks ${pr_num}로 CI 확인, 리뷰 코멘트 대응, BEHIND면 업데이트, CI 실패면 수정 후 push."
     /usr/local/bin/claude -p "$pr_context" \
         --max-turns 999 \
         --allowedTools "Bash,Read,Write,Edit,Glob,Grep" \
