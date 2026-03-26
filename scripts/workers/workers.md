@@ -45,7 +45,7 @@ pr-care
 | 워커 | 주기 | 역할 |
 |------|------|------|
 | **issue-worker** | 10분 | 이슈 처리 (bug-report, bug, ci-failure, enhancement, refactor 라벨만) |
-| **pr-care** | 30분 | stale PR 케어 (BEHIND 업데이트, 코드리뷰 대응, dependabot close) |
+| **pr-care-worker** | 30분 | stale PR 케어 (BEHIND 업데이트, 코드리뷰 대응, dependabot close) |
 | **tpm-worker** | 2시간 | audit-report → actionable 이슈 변환 (수정 필요성 판단 + 플랜 작성) |
 
 ## 라벨 체계
@@ -64,6 +64,13 @@ pr-care
 | `enhancement` | 수동 | issue-worker |
 | `refactor` | 수동/tpm | issue-worker |
 | `ai-worker` | issue-worker | issue-worker (PR 케어) |
+
+## 워커 행동 원칙
+
+- 깃헙 이슈를 수정하고 코드 커밋 / PR 서브밋하는 **정상적인 방법으로만** 케어한다.
+- `--admin` bypass, `--force` push, 직접 머지 등 **편법 금지**.
+- PR은 CI 통과 + 리뷰 resolve 후 auto-merge로 머지.
+- 이슈는 PR 머지 후 `Closes #이슈번호`로 자동 종료.
 
 ## 스케줄링
 

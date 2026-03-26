@@ -6,7 +6,7 @@
     <string>com.minglit.pr-care</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/mark/workspace/minglit/scripts/workers/pr-care-run.sh</string>
+        <string>/Users/mark/workspace/minglit/scripts/workers/pr-care-worker-run.sh</string>
     </array>
     <key>StartInterval</key>
     <integer>1800</integer>
