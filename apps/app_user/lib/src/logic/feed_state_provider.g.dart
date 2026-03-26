@@ -241,21 +241,24 @@ String _$bulkEligibilityDataHash() =>
 
 /// Applies active filters and nearby sort to a list of events (client-side).
 ///
-/// Filter chain: eligibility → nearby sort
+/// Filter chain: eligibility (+ remaining-slots for closingSoon) → nearby sort
+/// → closingSoon sort
 
 @ProviderFor(filteredEvents)
 const filteredEventsProvider = FilteredEventsFamily._();
 
 /// Applies active filters and nearby sort to a list of events (client-side).
 ///
-/// Filter chain: eligibility → nearby sort
+/// Filter chain: eligibility (+ remaining-slots for closingSoon) → nearby sort
+/// → closingSoon sort
 
 final class FilteredEventsProvider
     extends $FunctionalProvider<List<Event>, List<Event>, List<Event>>
     with $Provider<List<Event>> {
   /// Applies active filters and nearby sort to a list of events (client-side).
   ///
-  /// Filter chain: eligibility → nearby sort
+  /// Filter chain: eligibility (+ remaining-slots for closingSoon) → nearby sort
+  /// → closingSoon sort
   const FilteredEventsProvider._({
     required FilteredEventsFamily super.from,
     required List<Event> super.argument,
@@ -307,11 +310,12 @@ final class FilteredEventsProvider
   }
 }
 
-String _$filteredEventsHash() => r'ed17a50de476e0a95b2e441b680435c5e94bbbeb';
+String _$filteredEventsHash() => r'209203626d08e3f8d18f2d1266572654ad623169';
 
 /// Applies active filters and nearby sort to a list of events (client-side).
 ///
-/// Filter chain: eligibility → nearby sort
+/// Filter chain: eligibility (+ remaining-slots for closingSoon) → nearby sort
+/// → closingSoon sort
 
 final class FilteredEventsFamily extends $Family
     with $FunctionalFamilyOverride<List<Event>, List<Event>> {
@@ -326,7 +330,8 @@ final class FilteredEventsFamily extends $Family
 
   /// Applies active filters and nearby sort to a list of events (client-side).
   ///
-  /// Filter chain: eligibility → nearby sort
+  /// Filter chain: eligibility (+ remaining-slots for closingSoon) → nearby sort
+  /// → closingSoon sort
 
   FilteredEventsProvider call({required List<Event> events}) =>
       FilteredEventsProvider._(argument: events, from: this);

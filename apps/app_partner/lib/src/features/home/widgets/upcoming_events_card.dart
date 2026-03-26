@@ -7,11 +7,14 @@ class UpcomingEventsCard extends StatelessWidget {
   const UpcomingEventsCard({
     required this.events,
     required this.onEventTap,
+    // Fix #422: 이벤트 요약 자세히 버튼 콜백
+    this.onViewAllTap,
     super.key,
   });
 
   final List<Event> events;
   final void Function(Event event) onEventTap;
+  final VoidCallback? onViewAllTap;
 
   @override
   Widget build(BuildContext context) {
@@ -21,8 +24,13 @@ class UpcomingEventsCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Fix #422: 헤더에 가로 패딩 적용 (수평 스크롤은 화면 전체 사용)
         Padding(
-          padding: const EdgeInsets.only(bottom: MinglitSpacing.small),
+          padding: const EdgeInsets.only(
+            left: MinglitSpacing.medium,
+            right: MinglitSpacing.medium,
+            bottom: MinglitSpacing.small,
+          ),
           child: Row(
             children: [
               Icon(
@@ -37,17 +45,45 @@ class UpcomingEventsCard extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              // Fix #422: 이벤트 요약 자세히 버튼 추가
+              if (onViewAllTap != null) ...[
+                const Spacer(),
+                GestureDetector(
+                  onTap: onViewAllTap,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '자세히',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 16,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         ),
         if (events.isEmpty)
-          SizedBox(
-            height: 100,
-            child: Center(
-              child: Text(
-                '예정된 이벤트가 없습니다',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: MinglitSpacing.medium,
+            ),
+            child: SizedBox(
+              height: 100,
+              child: Center(
+                child: Text(
+                  '예정된 이벤트가 없습니다',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ),
@@ -57,6 +93,10 @@ class UpcomingEventsCard extends StatelessWidget {
             height: 140,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
+              // Fix #422: 좌우 패딩으로 카드 잘림 방지
+              padding: const EdgeInsets.symmetric(
+                horizontal: MinglitSpacing.medium,
+              ),
               itemCount: events.take(5).length,
               separatorBuilder: (_, _) => const SizedBox(
                 width: MinglitSpacing.small,
