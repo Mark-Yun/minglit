@@ -8,22 +8,22 @@
     <array>
         <string>/Users/mark/workspace/minglit/scripts/workers/pm-staff-run.sh</string>
     </array>
-    <key>StartInterval</key>
-    <integer>604800</integer>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key><integer>1</integer>
+        <key>Hour</key><integer>0</integer>
+        <key>Minute</key><integer>0</integer>
+    </dict>
     <key>StandardOutPath</key>
     <string>/tmp/claude-worker-logs/pm-staff.log</string>
     <key>StandardErrorPath</key>
     <string>/tmp/claude-worker-logs/pm-staff.err</string>
     <key>EnvironmentVariables</key>
     <dict>
-        <key>PATH</key>
-        <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin</string>
-        <key>HOME</key>
-        <string>/Users/mark</string>
+        <key>PATH</key><string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin</string>
+        <key>HOME</key><string>/Users/mark</string>
     </dict>
     <key>WorkingDirectory</key>
     <string>/Users/mark/workspace/minglit</string>
-    <key>RunAtLoad</key>
-    <true/>
 </dict>
 </plist>

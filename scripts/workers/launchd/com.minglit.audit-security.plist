@@ -8,22 +8,21 @@
     <array>
         <string>/Users/mark/workspace/minglit/scripts/workers/audit-security-run.sh</string>
     </array>
-    <key>StartInterval</key>
-    <integer>86400</integer>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key><integer>2</integer>
+        <key>Minute</key><integer>30</integer>
+    </dict>
     <key>StandardOutPath</key>
     <string>/tmp/claude-worker-logs/audit-security.log</string>
     <key>StandardErrorPath</key>
     <string>/tmp/claude-worker-logs/audit-security.err</string>
     <key>EnvironmentVariables</key>
     <dict>
-        <key>PATH</key>
-        <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin</string>
-        <key>HOME</key>
-        <string>/Users/mark</string>
+        <key>PATH</key><string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin</string>
+        <key>HOME</key><string>/Users/mark</string>
     </dict>
     <key>WorkingDirectory</key>
     <string>/Users/mark/workspace/minglit</string>
-    <key>RunAtLoad</key>
-    <true/>
 </dict>
 </plist>
