@@ -7,7 +7,7 @@
 ```bash
 gh issue list --repo Mark-Yun/minglit --label "report-exec" --state open --json number,title --jq '.[] | "#\(.number) \(.title)"'
 ```
-- 이번 주에 이미 리포트가 있으면 즉시 종료 (주 1회 리포트)
+- 오늘 이미 리포트가 있으면 즉시 종료 (일 1회 리포트)
 
 ## 1단계: 데이터 수집
 
