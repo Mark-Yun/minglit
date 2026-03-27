@@ -19,8 +19,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
   try {
     return await handleRequest(req);
   } catch (e) {
-    const message = e instanceof Error ? e.message : String(e);
-    return errorResponse(message, 500);
+    console.error("partner-reject-application error:", e);
+    return errorResponse("Internal server error", 500);
   }
 });
 
@@ -67,21 +67,21 @@ async function handleRequest(req: Request): Promise<Response> {
   if (fetchError) return errorResponse("Failed to load application", 500);
   if (!app) return errorResponse("Application not found", 404);
 
-  // Check partner permission first to avoid leaking application state
-  const event = app.events as Record<string, unknown>;
-  const party = event.parties as Record<string, unknown>;
-  const partnerId = party.partner_id as string;
-
-  const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
-  if (permCheck instanceof Response) return permCheck;
-
-  // Verify status is rejectable (after permission check)
+  // Verify status is rejectable
   if (app.status !== "pending" && app.status !== "pending_review") {
     return errorResponse(
       `Cannot reject application with status '${app.status}'`,
       400,
     );
   }
+
+  // Check partner permission
+  const event = app.events as Record<string, unknown>;
+  const party = event.parties as Record<string, unknown>;
+  const partnerId = party.partner_id as string;
+
+  const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
+  if (permCheck instanceof Response) return permCheck;
 
   // Compare-and-set: only update if status is still pending/pending_review
   const { data: updated, error: updateError } = await supabase

@@ -19,8 +19,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
   try {
     return await handleRequest(req);
   } catch (e) {
-    const message = e instanceof Error ? e.message : String(e);
-    return errorResponse(message, 500);
+    console.error("partner-approve-application error:", e);
+    return errorResponse("Internal server error", 500);
   }
 });
 
