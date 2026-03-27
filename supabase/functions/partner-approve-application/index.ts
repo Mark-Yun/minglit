@@ -10,6 +10,8 @@ import {
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
@@ -17,8 +19,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
   try {
     return await handleRequest(req);
   } catch (e) {
-    const message = e instanceof Error ? e.message : String(e);
-    return errorResponse(message, 500);
+    console.error("partner-approve-application error:", e);
+    return errorResponse("Internal server error", 500);
   }
 });
 
@@ -70,6 +72,9 @@ async function handleApprove(
   if (typeof applicationId !== "string" || !applicationId) {
     return errorResponse("Missing application_id", 400);
   }
+  if (!UUID_RE.test(applicationId)) {
+    return errorResponse("Invalid application_id", 400);
+  }
 
   // Fetch application with event → party → partner chain
   const { data: app, error: fetchError } = await supabase
@@ -81,21 +86,21 @@ async function handleApprove(
   if (fetchError) return errorResponse("Failed to load application", 500);
   if (!app) return errorResponse("Application not found", 404);
 
-  // Verify status is approvable
-  if (app.status !== "pending" && app.status !== "pending_review") {
-    return errorResponse(
-      `Cannot approve application with status '${app.status}'`,
-      400,
-    );
-  }
-
-  // Check partner permission
+  // Check partner permission first to avoid leaking application state
   const event = app.events as Record<string, unknown>;
   const party = event.parties as Record<string, unknown>;
   const partnerId = party.partner_id as string;
 
   const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
   if (permCheck instanceof Response) return permCheck;
+
+  // Verify status is approvable (after permission check)
+  if (app.status !== "pending" && app.status !== "pending_review") {
+    return errorResponse(
+      `Cannot approve application with status '${app.status}'`,
+      400,
+    );
+  }
 
   // Compare-and-set: only update if status is still pending/pending_review
   const { data: updated, error: updateError } = await supabase
@@ -122,6 +127,9 @@ async function handleBulkApprove(
   const eventId = body.event_id;
   if (typeof eventId !== "string" || !eventId) {
     return errorResponse("Missing event_id", 400);
+  }
+  if (!UUID_RE.test(eventId)) {
+    return errorResponse("Invalid event_id", 400);
   }
 
   // Fetch event → party → partner chain
