@@ -88,7 +88,7 @@ class EventActionCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final timeFmt = DateFormat('HH:mm');
 
-    // Phase-specific styling
+    // Phase-specific styling — use theme-aware colors for dark mode support
     final (
       phaseLabel,
       phaseColor,
@@ -105,9 +105,9 @@ class EventActionCard extends StatelessWidget {
       EventPhase.recruiting => (
         _recruitingLabel(event),
         MinglitColors.success,
-        const Color(0xFFE8F5E9),
-        const Color(0xFFE8E0FF),
-        const Color(0xFFFAFAFE),
+        MinglitColors.success.withValues(alpha: 0.1),
+        colorScheme.outlineVariant,
+        colorScheme.surfaceContainerLowest,
         '신청 현황 보기',
         Icons.assignment_outlined,
         '이벤트 수정',
@@ -117,10 +117,10 @@ class EventActionCard extends StatelessWidget {
       ),
       EventPhase.preparing => (
         _preparingLabel(event),
-        const Color(0xFFE65100),
-        const Color(0xFFFFF3E0),
-        const Color(0xFFE8E0FF),
-        const Color(0xFFFAFAFE),
+        colorScheme.error,
+        colorScheme.error.withValues(alpha: 0.1),
+        colorScheme.outlineVariant,
+        colorScheme.surfaceContainerLowest,
         '체크인 준비',
         Icons.qr_code_scanner,
         '참석자 명단',
@@ -133,7 +133,7 @@ class EventActionCard extends StatelessWidget {
         colorScheme.primary,
         colorScheme.primary.withValues(alpha: 0.1),
         colorScheme.primary,
-        const Color(0xFFF5F0FF),
+        colorScheme.surfaceContainerLowest,
         '체크인 계속하기',
         Icons.qr_code_scanner,
         '참석 현황',
@@ -143,10 +143,10 @@ class EventActionCard extends StatelessWidget {
       ),
       EventPhase.ended => (
         _endedLabel(event),
-        const Color(0xFF888888),
-        const Color(0xFFF5F5F5),
-        const Color(0xFFE0E0E0),
-        const Color(0xFFFAFAFA),
+        colorScheme.onSurfaceVariant,
+        colorScheme.surfaceContainerHighest,
+        colorScheme.outlineVariant,
+        colorScheme.surfaceContainerLow,
         '다음 회차 만들기',
         Icons.replay,
         '상세 결과',
@@ -211,7 +211,7 @@ class EventActionCard extends StatelessWidget {
                 timeFmt.format(event.startTime),
                 style: theme.textTheme.displayLarge?.copyWith(
                   color: phase == EventPhase.ended
-                      ? const Color(0xFF888888)
+                      ? colorScheme.onSurfaceVariant
                       : colorScheme.primary,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -1,
@@ -249,7 +249,7 @@ class EventActionCard extends StatelessWidget {
                     child: LinearProgressIndicator(
                       value: ratio,
                       minHeight: 6,
-                      backgroundColor: const Color(0xFFE8E0FF),
+                      backgroundColor: colorScheme.outlineVariant,
                       valueColor: AlwaysStoppedAnimation(
                         phase == EventPhase.live
                             ? MinglitColors.success
@@ -393,6 +393,7 @@ class _EndedStatsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final capacity = event.maxParticipants;
     final current = event.currentParticipants;
     final fmt = NumberFormat('#,###');
@@ -406,13 +407,14 @@ class _EndedStatsRow extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(MinglitRadius.input),
-        border: Border.all(color: const Color(0xFFF0F0F0)),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Row(
         children: [
           _StatCell(label: '참석 확정', value: '$current명', theme: theme),
+          // Fix #523: 하드코딩 매출 0 → 실제 티켓 매출 계산
           _StatCell(
             label: '매출',
             value: '₩${fmt.format(totalRevenue)}',
@@ -484,9 +486,9 @@ class EventActionCardEmpty extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(MinglitSpacing.large),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9F9F9),
+        color: theme.colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(MinglitRadius.button),
-        border: Border.all(color: const Color(0xFFF0F0F0)),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Column(
         children: [
