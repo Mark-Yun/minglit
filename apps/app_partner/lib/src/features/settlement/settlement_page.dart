@@ -238,33 +238,6 @@ class _RevenueSummaryCard extends StatelessWidget {
   }
 }
 
-class _DashRow extends StatelessWidget {
-  const _DashRow(this.label, this.value);
-
-  final String label;
-  final String value;
-  final bool bold;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = bold
-        ? Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)
-        : Theme.of(context).textTheme.bodyMedium;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.xsmall),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: style),
-          Text(value, style: style),
-        ],
-      ),
-    );
-  }
-}
-
 class _StatusSummaryGrid extends StatelessWidget {
   const _StatusSummaryGrid({required this.data});
 
