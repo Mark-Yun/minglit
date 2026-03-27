@@ -207,7 +207,6 @@ Supabase Edge Functions는 Deno 런타임 기반이며, `supabase/functions/` �
 | `settlement-transfer` | Payment | 정산 주문 이체 |
 | `notification-worker` | Notification | FCM 푸시 알림 발송 (PGMQ consumer) |
 | `vector-worker` | Recommendation | 파티/유저 임베딩 생성 (PGMQ consumer) |
-| `vectorize-party` | Recommendation | 온디맨드 파티 벡터화 |
 | `profile-update` | User | 프로필 업데이트 + 임베딩 생성 |
 | `identity-verify` | Identity | 본인인증 (Portone V2/PASS) |
 | `partner-sync` | Partner | 플랫폼 파트너 동기화 |
@@ -231,6 +230,8 @@ Supabase Edge Functions는 Deno 런타임 기반이며, `supabase/functions/` �
 | `partner-manage-settlement` | Partner | 파트너 정산 계좌 관리 (등록/수정) |
 | `partner-manage-verification` | Partner | 인증 양식 정의 생성/수정 |
 | `partner-register` | Partner | 파트너 입점 신청 (임시저장, 제출, 수정) |
+| `partner-approve-application` | Partner | 파트너 입점 신청 승인 (moderator 전용) |
+| `partner-reject-application` | Partner | 파트너 입점 신청 거절 (moderator 전용) |
 | `partner-review-submission` | Partner | 인증 제출물 심사 (승인/거절 + 코멘트) |
 | `user-cancel-order` | User | 유저 주문 취소 + 환불 처리 |
 | `user-cast-vote` | User | 매칭 투표 (match_votes 삽입) |
@@ -403,7 +404,6 @@ protect_user_profile_fields() → trigger
 | `sync_github_stats` | 매일 05:30 KST (`30 20 * * *` UTC) | `github-stats-sync` Edge Function 호출 → GitHub 이슈/PR 통계 수집 |
 | `notify-match-results` | 매일 자정 (`0 0 * * *`) | 매칭 결과 알림 발송 (`notify_match_results()`) |
 | `cleanup-expired-match-votes` | 매일 18:00 UTC (`0 18 * * *`) | 만료된 매칭 투표 정리 (`cleanup_expired_match_votes()`) |
-| `backend-simulation` | 매분 (`* * * * *`) | `backend-simulator` Edge Function 호출 (dev only) |
 
 ---
 
