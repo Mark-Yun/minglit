@@ -10,6 +10,8 @@ import {
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
@@ -17,8 +19,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
   try {
     return await handleRequest(req);
   } catch (e) {
-    const message = e instanceof Error ? e.message : String(e);
-    return errorResponse(message, 500);
+    console.error("partner-reject-application error:", e);
+    return errorResponse("Internal server error", 500);
   }
 });
 
@@ -45,6 +47,9 @@ async function handleRequest(req: Request): Promise<Response> {
   const applicationId = body.application_id;
   if (typeof applicationId !== "string" || !applicationId) {
     return errorResponse("Missing application_id", 400);
+  }
+  if (!UUID_RE.test(applicationId)) {
+    return errorResponse("Invalid application_id", 400);
   }
 
   const reason = body.reason;
