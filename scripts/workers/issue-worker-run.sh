@@ -60,7 +60,7 @@ if [ -n "$prs" ]; then
             --allowedTools "Bash,Read,Write,Edit,Glob,Grep,Agent" \
             2>&1 | tee "$LOG_DIR/issue-${issue_num}-$(date +%Y%m%d-%H%M%S).log" &
         local_pid=$!
-        ( sleep "$SESSION_TIMEOUT" && kill "$claude_pid" 2>/dev/null ) &
+        ( sleep "$SESSION_TIMEOUT" && kill "$local_pid" 2>/dev/null ) &
         timer_pid=$!
         wait "$local_pid" 2>/dev/null
         kill "$timer_pid" 2>/dev/null; wait "$timer_pid" 2>/dev/null
