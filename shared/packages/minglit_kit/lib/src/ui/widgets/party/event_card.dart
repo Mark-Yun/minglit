@@ -100,7 +100,9 @@ class MinglitEventCard extends StatelessWidget {
                         end: Alignment.bottomCenter,
                         colors: [
                           MinglitColors.transparent,
-                          MinglitColors.textPrimary.withValues(alpha: 0.45),
+                          MinglitColors.textPrimary.withValues(
+                            alpha: MinglitOpacity.gradient,
+                          ),
                         ],
                         stops: const [0.45, 1.0],
                       ),
@@ -215,7 +217,7 @@ class _ParticipantDDayOverlay extends StatelessWidget {
         ? 2
         : 3;
     final segmentColor = switch (filledCount) {
-      0 => MinglitColors.background.withValues(alpha: 0.3),
+      0 => MinglitColors.background.withValues(alpha: MinglitOpacity.muted),
       1 => MinglitColors.secondary,
       2 => MinglitColors.tertiary,
       _ => MinglitColors.primary,
@@ -234,7 +236,9 @@ class _ParticipantDDayOverlay extends StatelessWidget {
         vertical: MinglitSpacing.xsmall,
       ),
       decoration: BoxDecoration(
-        color: MinglitColors.textPrimary.withValues(alpha: 0.55),
+        color: MinglitColors.textPrimary.withValues(
+          alpha: MinglitOpacity.overlay,
+        ),
         borderRadius: BorderRadius.circular(MinglitRadius.small),
       ),
       child: Row(
@@ -255,7 +259,9 @@ class _ParticipantDDayOverlay extends StatelessWidget {
               decoration: BoxDecoration(
                 color: i < filledCount
                     ? segmentColor
-                    : MinglitColors.background.withValues(alpha: 0.2),
+                    : MinglitColors.background.withValues(
+                        alpha: MinglitOpacity.subtle,
+                      ),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -266,7 +272,9 @@ class _ParticipantDDayOverlay extends StatelessWidget {
           Text(
             '·',
             style: overlayStyle.copyWith(
-              color: MinglitColors.background.withValues(alpha: 0.6),
+              color: MinglitColors.background.withValues(
+                alpha: MinglitOpacity.separator,
+              ),
             ),
           ),
           const SizedBox(width: MinglitSpacing.xsmall),
@@ -297,7 +305,9 @@ class _PartnerOverlay extends StatelessWidget {
         vertical: MinglitSpacing.xsmall,
       ),
       decoration: BoxDecoration(
-        color: MinglitColors.textPrimary.withValues(alpha: 0.55),
+        color: MinglitColors.textPrimary.withValues(
+          alpha: MinglitOpacity.overlay,
+        ),
         borderRadius: BorderRadius.circular(MinglitRadius.small),
       ),
       child: Row(
@@ -308,7 +318,9 @@ class _PartnerOverlay extends StatelessWidget {
             backgroundImage: partner.profileImageUrl != null
                 ? NetworkImage(partner.profileImageUrl!)
                 : null,
-            backgroundColor: MinglitColors.background.withValues(alpha: 0.15),
+            backgroundColor: MinglitColors.background.withValues(
+              alpha: MinglitOpacity.placeholder,
+            ),
             child: partner.profileImageUrl == null
                 ? const Icon(
                     Icons.store,
