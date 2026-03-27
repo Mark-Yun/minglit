@@ -1074,9 +1074,10 @@ Deno.serve(async (req) => {
     }
 
     // Full run (no phase param) — return combined stats
+    // created_users includes partner owner accounts (SEED_PARTNERS + HOT_PLACES)
     return successResponse({
       full_run: true,
-      created_users: createdUsers,
+      created_users: createdUsers + SEED_PARTNERS.length + HOT_PLACES.length,
       created_30s_users: created30sUsers,
       created_partners: totalPartners,
       created_parties: totalParties,
