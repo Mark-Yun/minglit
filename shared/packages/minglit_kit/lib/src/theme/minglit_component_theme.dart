@@ -95,7 +95,7 @@ class _MinglitComponentThemes {
 
   static ChipThemeData get chip => ChipThemeData(
     shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(100),
+      borderRadius: BorderRadius.circular(MinglitRadius.chip),
     ),
     side: BorderSide.none,
     backgroundColor: MinglitColors.surface,
