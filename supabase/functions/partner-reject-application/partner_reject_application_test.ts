@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertStringIncludes } from "@std/assert";
 import {
   authenticatedJsonRequest,
   captureServeHandler,
@@ -82,7 +82,19 @@ function appNotFoundRoute(): FetchRoute {
 function updateRoute(updated = [{ id: TEST_APP_ID }]): FetchRoute {
   return {
     matcher: (req) => req.url.includes("event_applications") && req.method === "PATCH",
-    handler: () => jsonResponse(updated),
+    handler: async (req) => {
+      // Verify the PATCH body contains expected rejection fields
+      const body = await req.json();
+      assertEquals(body.status, "rejected", "PATCH body should set status to 'rejected'");
+      assertEquals(typeof body.rejection_reason, "string", "PATCH body should contain rejection_reason");
+
+      // Verify the URL search params contain the expected application ID
+      const url = new URL(req.url);
+      const idParam = url.searchParams.get("id");
+      assertStringIncludes(idParam ?? "", TEST_APP_ID, "PATCH URL should filter by application ID");
+
+      return jsonResponse(updated);
+    },
   };
 }
 

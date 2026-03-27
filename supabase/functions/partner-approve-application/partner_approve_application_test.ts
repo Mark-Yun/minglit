@@ -215,6 +215,7 @@ Deno.test({
     const { fetchMock } = createFetchMock([
       authRoute(),
       appRoute("approved"),
+      permRoute("owner"),
     ]);
 
     await withEnv(ENV, async () => {
