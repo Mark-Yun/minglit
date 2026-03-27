@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="/Users/mark/workspace/minglit"
 WORKTREE_DIR="/Users/mark/workspace/minglit-workers/audit-security"
 PROMPT_FILE="$SCRIPT_DIR/prompts/audit-security.txt"
-SESSION_TIMEOUT=3600
+COMMON_FILE="$SCRIPT_DIR/prompts/worker-common.txt"SESSION_TIMEOUT=3600
 REPO="Mark-Yun/minglit"
 
 [ ! -f "$PROMPT_FILE" ] && echo "Error: Prompt not found" && exit 1
@@ -24,7 +24,9 @@ mkdir -p "$LOG_DIR"
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running audit-security..."
 
-/usr/local/bin/claude -p "$(cat "$PROMPT_FILE")" \
+/usr/local/bin/claude -p "$(cat "$COMMON_FILE" 2>/dev/null)
+
+$(cat "$PROMPT_FILE")" \
     --max-turns 999 \
     --allowedTools "Bash,Read,Write,Edit,Glob,Grep,Agent" \
     2>&1 | tee "$LOG_DIR/audit-security-$(date +%Y%m%d-%H%M%S).log" &
