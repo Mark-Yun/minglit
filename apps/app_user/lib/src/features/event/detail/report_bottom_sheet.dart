@@ -59,7 +59,9 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
           const SnackBar(content: Text('신고가 접수되었습니다')),
         );
       }
-    } on Object catch (_) {
+      // Fix #459: 신고 실패 시 에러 로깅 추가 + catch 범위를 Exception으로 축소
+    } on Exception catch (e, st) {
+      Log.e('[ReportBottomSheet] _submit failed', e, st);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('신고 처리 중 오류가 발생했습니다')),

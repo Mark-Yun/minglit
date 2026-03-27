@@ -37,7 +37,9 @@ class _BankAccountPageState extends ConsumerState<BankAccountPage> {
           _isLoading = false;
         });
       }
-    } on Exception catch (_) {
+      // Fix #459: 계좌 로딩 실패 시 에러 로깅 추가 — 프로덕션 장애 추적 불가 방지
+    } on Exception catch (e, st) {
+      Log.e('[BankAccountPage] _loadAccount failed', e, st);
       if (mounted) setState(() => _isLoading = false);
     }
   }
