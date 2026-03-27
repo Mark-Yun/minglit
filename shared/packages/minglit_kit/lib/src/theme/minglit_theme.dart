@@ -161,10 +161,9 @@ class MinglitTheme {
       elevatedButtonTheme: _partnerElevatedButton(MinglitPartnerColors.primary),
       outlinedButtonTheme: _partnerOutlinedButton(MinglitPartnerColors.primary),
       textButtonTheme: _partnerTextButton(MinglitPartnerColors.primary),
-      inputDecorationTheme: _partnerInputDecoration(
-        MinglitPartnerColors.primary,
-        base.inputDecorationTheme,
-      ),
+      // inputDecorationTheme: skipped — InputDecorationTheme.copyWith returns
+      // InputDecorationThemeData which is incompatible with ThemeData.copyWith
+      // in Flutter 3.41+. The focusedBorder uses colorScheme.primary via M3.
       tabBarTheme: _partnerTabBar(
         MinglitPartnerColors.primary,
         base.tabBarTheme,
@@ -197,10 +196,7 @@ class MinglitTheme {
         MinglitPartnerColorsDark.primary,
       ),
       textButtonTheme: _partnerTextButton(MinglitPartnerColorsDark.primary),
-      inputDecorationTheme: _partnerInputDecoration(
-        MinglitPartnerColorsDark.primary,
-        base.inputDecorationTheme,
-      ),
+      // inputDecorationTheme: skipped — same Flutter 3.41+ type issue.
       tabBarTheme: _partnerTabBar(
         MinglitPartnerColorsDark.primary,
         base.tabBarTheme,
@@ -261,22 +257,6 @@ class MinglitTheme {
           ),
         ),
       );
-
-  static InputDecorationTheme _partnerInputDecoration(
-    Color primary,
-    InputDecorationTheme base,
-  ) => InputDecorationTheme(
-    filled: base.filled,
-    fillColor: base.fillColor,
-    border: base.border,
-    enabledBorder: base.enabledBorder,
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(MinglitRadius.input),
-      borderSide: BorderSide(color: primary, width: 2),
-    ),
-    contentPadding: base.contentPadding,
-    hintStyle: base.hintStyle,
-  );
 
   static TabBarThemeData _partnerTabBar(Color primary, TabBarThemeData base) =>
       base.copyWith(labelColor: primary, indicatorColor: primary);

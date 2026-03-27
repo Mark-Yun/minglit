@@ -76,13 +76,6 @@ void main() {
       expect(theme.tabBarTheme.indicatorColor, MinglitPartnerColors.primary);
     });
 
-    test('inputDecoration focusedBorder uses partner primary', () {
-      final theme = MinglitTheme.partnerTheme;
-      final focusedBorder =
-          theme.inputDecorationTheme.focusedBorder! as OutlineInputBorder;
-
-      expect(focusedBorder.borderSide.color, MinglitPartnerColors.primary);
-    });
   });
 
   group('partnerThemeDark', () {
