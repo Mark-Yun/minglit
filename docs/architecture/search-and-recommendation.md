@@ -236,19 +236,18 @@ parties INSERT → produce_event('party_created')
 
 | Function | Trigger | Target |
 |----------|---------|--------|
-| `vectorize-party` | API 호출 | 특정 파티 임베딩 (재)생성 |
 | `profile-update` | 프로필 업데이트 | 유저 임베딩 (재)생성 |
+
+> **Note**: `vectorize-party/`는 독립 Edge Function이 아닌 `vector-worker`의 헬퍼 모듈이다 (index.ts 없음).
 
 ### 4.3 Processing Flow
 
 ```mermaid
 flowchart LR
     A[PGMQ q_vectors] --> B[vector-worker]
-    C[API Call] --> D[vectorize-party]
     E[Profile Update] --> F[profile-update]
-    
+
     B --> G[OpenAI API]
-    D --> G
     F --> G
     
     G --> H[party_embeddings]
@@ -261,8 +260,7 @@ flowchart LR
 
 | Function | LOC | Domain | Purpose |
 |----------|-----|--------|---------|
-| `vector-worker` | ~578 | Recommendation | PGMQ consumer, 배치 벡터화 (최대 50건) |
-| `vectorize-party` | ~126 | Recommendation | 온디맨드 파티 벡터화 |
+| `vector-worker` | ~578 | Recommendation | PGMQ consumer, 배치 벡터화 (최대 50건). `vectorize-party/` 헬퍼 모듈 사용 |
 | `profile-update` | ~334 | User | 프로필 업데이트 + 유저 임베딩 생성 |
 
 ---
