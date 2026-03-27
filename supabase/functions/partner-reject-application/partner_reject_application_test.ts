@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertStringIncludes } from "@std/assert";
 import {
   authenticatedJsonRequest,
   captureServeHandler,
@@ -12,8 +12,8 @@ import {
 
 const TEST_USER_ID = "user-partner-owner";
 const TEST_PARTNER_ID = "partner-001";
-const TEST_APP_ID = "app-001";
-const TEST_EVENT_ID = "event-001";
+const TEST_APP_ID = "00000000-0000-1000-8000-000000000001";
+const TEST_EVENT_ID = "00000000-0000-1000-8000-000000000002";
 
 const ENV = {
   SUPABASE_URL: "http://localhost:54321",
@@ -82,7 +82,19 @@ function appNotFoundRoute(): FetchRoute {
 function updateRoute(updated = [{ id: TEST_APP_ID }]): FetchRoute {
   return {
     matcher: (req) => req.url.includes("event_applications") && req.method === "PATCH",
-    handler: () => jsonResponse(updated),
+    handler: async (req) => {
+      // Verify the PATCH body contains expected rejection fields
+      const body = await req.json();
+      assertEquals(body.status, "rejected", "PATCH body should set status to 'rejected'");
+      assertEquals(typeof body.rejection_reason, "string", "PATCH body should contain rejection_reason");
+
+      // Verify the URL search params contain the expected application ID
+      const url = new URL(req.url);
+      const idParam = url.searchParams.get("id");
+      assertStringIncludes(idParam ?? "", TEST_APP_ID, "PATCH URL should filter by application ID");
+
+      return jsonResponse(updated);
+    },
   };
 }
 
@@ -212,7 +224,7 @@ Deno.test({
       await withMockedFetch(fetchMock, async () => {
         const res = await handler(
           authenticatedJsonRequest(BASE_URL, {
-            application_id: "nonexistent",
+            application_id: "00000000-0000-1000-8000-999999999999",
             reason: "Not a good fit",
           }),
         );
@@ -234,6 +246,7 @@ Deno.test({
     const { fetchMock } = createFetchMock([
       authRoute(),
       appRoute("rejected"),
+      permRoute("owner"),
     ]);
 
     await withEnv(ENV, async () => {
