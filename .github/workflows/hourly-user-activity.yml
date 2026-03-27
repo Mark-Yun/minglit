@@ -34,5 +34,6 @@ jobs:
       issues: write
     uses: ./.github/workflows/notify-failure.yml
     with:
-      success: ${{ !contains(needs.*.result, 'failure') }}
+      success: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
       workflow_name: 'Hourly User Activity'
+    secrets: inherit
