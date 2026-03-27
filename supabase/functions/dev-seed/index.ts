@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { createServiceClient } from '../_shared/supabase_client.ts'
+import { errorResponse, successResponse } from '../_shared/response_utils.ts'
 
 function isProduction(): boolean {
   const env = Deno.env.get('ENVIRONMENT')
@@ -1006,64 +1007,97 @@ async function seedUserActivity(sb: SupabaseClient): Promise<void> {
   }
 }
 
-Deno.serve(async (_req) => {
-   if (isProduction()) {
-     return new Response(
-       JSON.stringify({ error: 'Dev-only function. Blocked in production.' }),
-       { status: 403, headers: { 'Content-Type': 'application/json' } },
-     )
-   }
+// Fix #489: phase-split으로 150s wall clock 제한 우회 — phase=1/2/3 개별 호출 또는 미지정 시 전체 실행
+Deno.serve(async (req) => {
+  // Handle CORS preflight before any auth/env checks
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS' } })
+  }
 
-   try {
-     const supabase = createServiceClient()
+  if (isProduction()) {
+    return errorResponse('Dev-only function. Blocked in production.', 403)
+  }
 
-    // Seed users
-    const createdUsers = await seedUsers(supabase)
+  try {
+    const supabase = createServiceClient()
+    const url = new URL(req.url)
+    const phase = url.searchParams.get('phase')
 
-    // Seed 30s users
-    const created30sUsers = await seed30sUsers(supabase)
+    // Reject unknown phase values to prevent accidental full runs
+    if (phase !== null && !['1', '2', '3'].includes(phase)) {
+      return errorResponse(`Invalid phase: ${phase}. Use 1, 2, or 3.`, 400)
+    }
 
-     // Seed global verifications
-     const globalVerifs = await seedGlobalVerifications(supabase)
+    // Phase 1: Users + Global verifications
+    let createdUsers = 0
+    let created30sUsers = 0
+    let globalVerifsCount = 0
+    if (!phase || phase === '1') {
+      createdUsers = await seedUsers(supabase)
+      created30sUsers = await seed30sUsers(supabase)
+      const globalVerifs = await seedGlobalVerifications(supabase)
+      globalVerifsCount = Object.keys(globalVerifs).length
 
-     // Seed defined partners with their locations, verifications, parties, and events
-     const definedPartnerStats = await seedDefinedPartners(supabase, globalVerifs)
-
-     // Seed hot-place partners with all scenarios
-     const hotPlaceStats = await seedHotPlacePartners(supabase, globalVerifs)
-
-    // Upload seed images and update party image_urls
-    const imageUrls = await uploadSeedImages(supabase)
-    await updatePartyImages(supabase, imageUrls)
-
-    // Seed user activity (applications, verifications, participants)
-    await seedUserActivity(supabase)
-
-    // Purge pgmq queues to avoid queue bloat after seeding
-    for (const queue of ['q_global_events', 'q_notifications', 'q_vectors']) {
-      try {
-        await supabase.rpc('pgmq_purge', { queue_name: queue })
-      } catch {
-        // pgmq may not be available in all environments — ignore errors
+      if (phase === '1') {
+        return successResponse({ phase: 1, created_users: createdUsers, created_30s_users: created30sUsers, global_verifications: globalVerifsCount })
       }
     }
 
-     return new Response(
-      JSON.stringify({
-        created_users: createdUsers + SEED_PARTNERS.length + HOT_PLACES.length,
-        created_30s_users: created30sUsers,
-        created_partners: definedPartnerStats.createdPartners + hotPlaceStats.createdPartners,
-        created_parties: definedPartnerStats.createdParties + hotPlaceStats.createdParties,
-        created_events: definedPartnerStats.createdEvents + hotPlaceStats.createdEvents,
-        uploaded_images: imageUrls.length,
-        seeded_activity: true,
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } },
-    )
-   } catch (err) {
-     return new Response(
-       JSON.stringify({ error: (err as Error).message }),
-       { status: 500, headers: { 'Content-Type': 'application/json' } },
-     )
-   }
- })
+    // Phase 2: Partners + Images upload
+    // ensureGlobalVerifications fetches existing records if already created in Phase 1
+    let totalPartners = 0
+    let totalParties = 0
+    let totalEvents = 0
+    let uploadedImages = 0
+    if (!phase || phase === '2') {
+      const globalVerifs = await ensureGlobalVerifications(supabase)
+      const definedPartnerStats = await seedDefinedPartners(supabase, globalVerifs)
+      const hotPlaceStats = await seedHotPlacePartners(supabase, globalVerifs)
+      const imageUrls = await uploadSeedImages(supabase)
+      totalPartners = definedPartnerStats.createdPartners + hotPlaceStats.createdPartners
+      totalParties = definedPartnerStats.createdParties + hotPlaceStats.createdParties
+      totalEvents = definedPartnerStats.createdEvents + hotPlaceStats.createdEvents
+      uploadedImages = imageUrls.length
+
+      if (phase === '2') {
+        return successResponse({ phase: 2, created_partners: totalPartners, created_parties: totalParties, created_events: totalEvents, uploaded_images: uploadedImages })
+      }
+    }
+
+    // Phase 3: Party images + User activity + Queue purge
+    // uploadSeedImages is idempotent — returns existing URLs without re-uploading
+    if (!phase || phase === '3') {
+      const imageUrls = await uploadSeedImages(supabase)
+      await updatePartyImages(supabase, imageUrls)
+      await seedUserActivity(supabase)
+
+      for (const queue of ['q_global_events', 'q_notifications', 'q_vectors']) {
+        try {
+          await supabase.rpc('pgmq_purge', { queue_name: queue })
+        } catch {
+          // pgmq may not be available in all environments — ignore errors
+        }
+      }
+
+      if (phase === '3') {
+        return successResponse({ phase: 3, seeded_activity: true })
+      }
+    }
+
+    // Full run (no phase param) — runs all phases sequentially and returns combined stats.
+    // Note: uploadSeedImages is called in both Phase 2 and Phase 3, but it is idempotent
+    // (skips already-uploaded files), so double-calling is safe and intentional.
+    // For environments with strict 150s wall clock limits, call phase=1/2/3 individually.
+    // created_users includes partner owner accounts (SEED_PARTNERS + HOT_PLACES)
+    return successResponse({
+      full_run: true,
+      created_users: createdUsers + SEED_PARTNERS.length + HOT_PLACES.length,
+      created_30s_users: created30sUsers,
+      created_partners: totalPartners,
+      created_parties: totalParties,
+      created_events: totalEvents,
+    })
+  } catch (err) {
+    return errorResponse((err as Error).message, 500)
+  }
+})
