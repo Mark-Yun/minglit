@@ -158,6 +158,20 @@ class MinglitTheme {
         error: MinglitColors.error,
         onSurfaceVariant: MinglitColors.textSecondary,
       ),
+      elevatedButtonTheme: _partnerElevatedButton(MinglitPartnerColors.primary),
+      outlinedButtonTheme: _partnerOutlinedButton(MinglitPartnerColors.primary),
+      textButtonTheme: _partnerTextButton(MinglitPartnerColors.primary),
+      // inputDecorationTheme: skipped — InputDecorationTheme.copyWith returns
+      // InputDecorationThemeData which is incompatible with ThemeData.copyWith
+      // in Flutter 3.41+. The focusedBorder uses colorScheme.primary via M3.
+      tabBarTheme: _partnerTabBar(
+        MinglitPartnerColors.primary,
+        base.tabBarTheme,
+      ),
+      chipTheme: base.chipTheme.copyWith(
+        secondarySelectedColor: MinglitPartnerColors.primary,
+      ),
+      checkboxTheme: _partnerCheckbox(MinglitPartnerColors.primary),
     );
   }
 
@@ -175,8 +189,90 @@ class MinglitTheme {
         error: MinglitColorsDark.error,
         onSurfaceVariant: MinglitColorsDark.textSecondary,
       ),
+      elevatedButtonTheme: _partnerElevatedButton(
+        MinglitPartnerColorsDark.primary,
+      ),
+      outlinedButtonTheme: _partnerOutlinedButton(
+        MinglitPartnerColorsDark.primary,
+      ),
+      textButtonTheme: _partnerTextButton(MinglitPartnerColorsDark.primary),
+      // inputDecorationTheme: skipped — same Flutter 3.41+ type issue.
+      tabBarTheme: _partnerTabBar(
+        MinglitPartnerColorsDark.primary,
+        base.tabBarTheme,
+      ),
+      chipTheme: base.chipTheme.copyWith(
+        secondarySelectedColor: MinglitPartnerColorsDark.primary,
+      ),
+      checkboxTheme: _partnerCheckbox(MinglitPartnerColorsDark.primary),
     );
   }
+
+  // -- Partner component theme helpers --
+
+  static ElevatedButtonThemeData _partnerElevatedButton(Color primary) =>
+      ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primary,
+          foregroundColor: Colors
+              .white, // ignore: minglit_no_hardcoded_colors -- theme definition
+          minimumSize: const Size(double.infinity, 56),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(MinglitRadius.button),
+          ),
+          elevation: 0,
+          textStyle: const TextStyle(
+            // ignore: minglit_no_hardcoded_text_style -- theme definition
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+
+  static OutlinedButtonThemeData _partnerOutlinedButton(Color primary) =>
+      OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: primary,
+          minimumSize: const Size(double.infinity, 56),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(MinglitRadius.button),
+          ),
+          side: BorderSide(color: primary),
+          textStyle: const TextStyle(
+            // ignore: minglit_no_hardcoded_text_style -- theme definition
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+
+  static TextButtonThemeData _partnerTextButton(Color primary) =>
+      TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: primary,
+          textStyle: const TextStyle(
+            // ignore: minglit_no_hardcoded_text_style -- theme definition
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+
+  static TabBarThemeData _partnerTabBar(Color primary, TabBarThemeData base) =>
+      base.copyWith(labelColor: primary, indicatorColor: primary);
+
+  static CheckboxThemeData _partnerCheckbox(Color primary) => CheckboxThemeData(
+    fillColor: WidgetStateProperty.resolveWith((states) {
+      if (states.contains(WidgetState.selected)) return primary;
+      return null;
+    }),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+    side: const BorderSide(
+      color: Colors.grey,
+      width: 1.5,
+    ), // ignore: minglit_no_hardcoded_colors -- theme definition
+  );
+
 
   static ThemeData get materialThemeDark {
     return ThemeData(

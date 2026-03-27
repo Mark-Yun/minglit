@@ -160,48 +160,78 @@ class _RevenueSummaryCard extends StatelessWidget {
     final fmt = NumberFormat('#,###');
     final totalGross = data?['completed_gross_total'] as int? ?? 0;
     final totalNet = data?['completed_net_total'] as int? ?? 0;
-    final totalFees = totalGross - totalNet;
+    final pendingTotal = data?['pending_gross_total'] as int? ?? 0;
+    final colorScheme = Theme.of(context).colorScheme;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(MinglitSpacing.medium),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('매출 요약', style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: MinglitSpacing.sm),
-            _DashRow('총 매출', '₩${fmt.format(totalGross)}'),
-            _DashRow('총 수수료', '-₩${fmt.format(totalFees)}'),
-            const Divider(),
-            _DashRow('정산금', '₩${fmt.format(totalNet)}', bold: true),
+    return Container(
+      padding: const EdgeInsets.all(MinglitSpacing.large),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            colorScheme.primary,
+            colorScheme.primary.withValues(alpha: 0.8),
           ],
         ),
+        borderRadius: BorderRadius.circular(MinglitRadius.button),
       ),
-    );
-  }
-}
-
-class _DashRow extends StatelessWidget {
-  const _DashRow(this.label, this.value, {this.bold = false});
-
-  final String label;
-  final String value;
-  final bool bold;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = bold
-        ? Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)
-        : Theme.of(context).textTheme.bodyMedium;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.xsmall),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: style),
-          Text(value, style: style),
+          Text(
+            '이번 달 총 매출',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.white.withValues(alpha: 0.8),
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.xsmall),
+          Text(
+            '₩${fmt.format(totalGross)}',
+            style: Theme.of(context).textTheme.displayLarge?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -1,
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.sm),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '정산 완료',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.7),
+                ),
+              ),
+              Text(
+                '₩${fmt.format(totalNet)}',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: MinglitSpacing.xsmall),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '정산 대기',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.7),
+                ),
+              ),
+              Text(
+                '₩${fmt.format(pendingTotal)}',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
