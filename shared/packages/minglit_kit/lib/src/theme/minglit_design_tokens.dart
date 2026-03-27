@@ -86,6 +86,9 @@ class MinglitSpacing {
 
   /// 32px extra-large spacing.
   static const double xlarge = 32;
+
+  /// 48px extra-extra-large spacing.
+  static const double xxlarge = 48;
 }
 
 /// Border radius constants for consistent rounding.
@@ -101,6 +104,9 @@ class MinglitRadius {
 
   /// 12px input border radius.
   static const double input = 12;
+
+  /// 100px chip border radius (pill shape).
+  static const double chip = 100;
 }
 
 /// Icon size constants for consistent icon rendering.
@@ -123,6 +129,9 @@ class MinglitIconSize {
 
 /// Animation duration constants.
 class MinglitAnimation {
+  /// 100ms micro animation duration for micro-interactions.
+  static const Duration micro = Duration(milliseconds: 100);
+
   /// 200ms fast animation duration.
   static const Duration fast = Duration(milliseconds: 200);
 
