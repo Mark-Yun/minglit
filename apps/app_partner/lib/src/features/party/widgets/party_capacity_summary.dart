@@ -1,5 +1,6 @@
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 class PartyCapacitySummary extends StatelessWidget {
   const PartyCapacitySummary({
@@ -22,7 +23,7 @@ class PartyCapacitySummary extends StatelessWidget {
           size: 16,
           color: theme.colorScheme.onSurfaceVariant,
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: MinglitSpacing.small),
         Text(
           context.l10n.partyCreate_label_capacity,
           style: theme.textTheme.bodySmall,

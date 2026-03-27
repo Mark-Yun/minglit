@@ -142,7 +142,7 @@ class _StaffGateScreenState extends ConsumerState<StaffGateScreen> {
                         alpha: 0.5,
                       ),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: MinglitSpacing.xsmall),
                     Text(
                       'Internal Preview Environment',
                       style: theme.textTheme.bodySmall!.copyWith(

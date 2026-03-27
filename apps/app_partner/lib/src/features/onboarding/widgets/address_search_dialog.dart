@@ -147,7 +147,7 @@ class _AddressSearchDialogState extends State<AddressSearchDialog> {
                     onSubmitted: (_) => _search(),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: MinglitSpacing.small),
                 IconButton.filled(
                   icon: const Icon(Icons.search),
                   onPressed: _search,

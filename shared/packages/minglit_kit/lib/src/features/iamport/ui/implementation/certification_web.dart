@@ -120,7 +120,7 @@ class _MinglitIamportCertificationState
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             MinglitCircularProgressIndicator(),
-            SizedBox(height: 16),
+            SizedBox(height: MinglitSpacing.medium),
             Text('본인인증 창을 띄우고 있습니다...'),
           ],
         ),

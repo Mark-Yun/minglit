@@ -51,7 +51,7 @@ class ApprovalWaitingCard extends StatelessWidget {
                         color: colorScheme.onErrorContainer,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: MinglitSpacing.xsmall),
                     Text(
                       '$count명',
                       style: theme.textTheme.displaySmall?.copyWith(

@@ -147,7 +147,7 @@ class EventDateTimeInput extends StatelessWidget {
             Row(
               children: [
                 Icon(icon, size: 14, color: colorScheme.primary),
-                const SizedBox(width: 4),
+                const SizedBox(width: MinglitSpacing.xsmall),
                 Text(
                   label,
                   style: theme.textTheme.labelSmall?.copyWith(
@@ -157,7 +157,7 @@ class EventDateTimeInput extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: MinglitSpacing.small),
             Text(value, style: theme.textTheme.titleMedium),
           ],
         ),

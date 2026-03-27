@@ -86,6 +86,9 @@ class MinglitSpacing {
 
   /// 32px extra-large spacing.
   static const double xlarge = 32;
+
+  /// 48px extra-extra-large spacing.
+  static const double xxlarge = 48;
 }
 
 /// Border radius constants for consistent rounding.

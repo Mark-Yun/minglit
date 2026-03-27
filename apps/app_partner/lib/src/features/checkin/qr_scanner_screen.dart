@@ -119,7 +119,7 @@ class _ResultFeedbackOverlay extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, size: 100, color: MinglitColors.background),
-          const SizedBox(height: 24),
+          const SizedBox(height: MinglitSpacing.large),
           Text(
             title,
             style: Theme.of(context).textTheme.displayLarge!.copyWith(

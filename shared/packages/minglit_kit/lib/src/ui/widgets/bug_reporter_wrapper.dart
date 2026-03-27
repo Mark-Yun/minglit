@@ -193,10 +193,10 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: MinglitSpacing.small),
                     // Screenshot preview (if available)
                     if (_screenshotUrl != null) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: MinglitSpacing.small),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: Image.network(
@@ -221,7 +221,7 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
                               ),
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: MinglitSpacing.xsmall),
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
@@ -234,7 +234,7 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
                         ),
                       ),
                     ],
-                    const SizedBox(height: 16),
+                    const SizedBox(height: MinglitSpacing.medium),
                     // Title field
                     TextField(
                       controller: titleController,
@@ -243,7 +243,7 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
                         border: OutlineInputBorder(),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: MinglitSpacing.small),
                     // Description field
                     TextField(
                       controller: descController,
@@ -253,7 +253,7 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
                       ),
                       maxLines: 3,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: MinglitSpacing.medium),
                     // Buttons row
                     Row(
                       children: [
@@ -263,7 +263,7 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
                             child: const Text('Cancel'),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: MinglitSpacing.small),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: isLoading
@@ -326,7 +326,7 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: MinglitSpacing.small),
                   ],
                 ),
               ),
