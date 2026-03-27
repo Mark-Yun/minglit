@@ -120,11 +120,54 @@
 
 > 대부분의 컴포넌트는 `elevation: 0`을 사용합니다 (flat design).
 
-<!-- TODO: MinglitElevation 클래스 정의 필요 — 현재는 MinglitShadows만 존재 -->
+<!-- Note: flat design 기조(elevation: 0)에 따라 MinglitShadows만 사용. 별도 MinglitElevation 불필요. -->
 
 ---
 
-## 8. Animation Duration — `MinglitAnimation`
+## 8. Borders — `MinglitBorders`
+
+**소스**: `minglit_design_utils.dart:16-22`
+
+| 메서드 | 파라미터 | 반환 | 용도 |
+| :--- | :--- | :--- | :--- |
+| `card()` | `ColorScheme colorScheme`, `{bool isSelected = false}` | `Border` | 선택 가능 카드 테두리 |
+
+동작:
+- `isSelected: false` → `colorScheme.outlineVariant` (기본 테두리)
+- `isSelected: true` → `colorScheme.secondary` (amber 강조)
+
+---
+
+## 9. Decorations — `MinglitDecorations`
+
+**소스**: `minglit_design_utils.dart:25-42`
+
+| 메서드 | 파라미터 | 반환 | 용도 |
+| :--- | :--- | :--- | :--- |
+| `selectableCard()` | `BuildContext context`, `{required bool isSelected}` | `BoxDecoration` | 선택 가능 카드 전체 데코레이션 |
+
+동작:
+- 미선택: `theme.cardColor` 배경 + `MinglitBorders.card(isSelected: false)`
+- 선택: secondary 5% alpha 배경 + secondary 보더 + `MinglitShadows.cardSelected()` 그림자
+
+---
+
+## 10. TextStyles — `MinglitTextStyles`
+
+**소스**: `minglit_design_utils.dart:45-82`
+
+| 메서드 | 기반 스타일 | 커스텀 | 용도 | 라인 |
+| :--- | :--- | :--- | :--- | :--- |
+| `selectableCardTitle()` | `titleSmall` | 선택 시 secondary 색상 | 카드 제목 | :47-55 |
+| `selectableCardSubtitle()` | `labelSmall` | onSurfaceVariant 70% alpha | 카드 부제 | :59-64 |
+| `selectableCardDescription()` | `bodySmall` | onSurfaceVariant 색상 | 카드 설명 | :67-72 |
+| `infoText()` | `bodySmall` | onSurfaceVariant 색상 | 정보 텍스트 | :76-81 |
+
+> `selectableCardSubtitle`과 `infoText`의 하드코딩 fontSize는 #474 (Typography 시스템 정비)에서 TextTheme/ThemeExtension으로 전환 예정.
+
+---
+
+## 11. Animation Duration — `MinglitAnimation`
 
 **소스**: `minglit_design_tokens.dart:125-134`
 
