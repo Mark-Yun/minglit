@@ -15,9 +15,11 @@ class WeeklyStatsRow extends StatelessWidget {
     super.key,
   });
 
-  final int totalRevenue;
+  /// Null means data is not yet available — UI shows '-' placeholder.
+  final int? totalRevenue;
   final int totalApplications;
-  final double checkinRate;
+  /// Null means data is not yet available — UI shows '-' placeholder.
+  final double? checkinRate;
   final double? revenueChange;
   final double? applicationChange;
   final double? checkinRateChange;
@@ -29,13 +31,15 @@ class WeeklyStatsRow extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF0F0F0),
+        color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(MinglitRadius.input),
       ),
       child: Row(
         children: [
           _StatItem(
-            value: '₩${_formatCompact(totalRevenue)}',
+            value: totalRevenue != null
+                ? '₩${_formatCompact(totalRevenue!)}'
+                : '-',
             label: '매출',
             change: revenueChange,
             isFirst: true,
@@ -48,7 +52,7 @@ class WeeklyStatsRow extends StatelessWidget {
             theme: theme,
           ),
           _StatItem(
-            value: '${checkinRate.round()}%',
+            value: checkinRate != null ? '${checkinRate!.round()}%' : '-',
             label: '체크인율',
             change: checkinRateChange,
             isLast: true,
@@ -96,7 +100,7 @@ class _StatItem extends StatelessWidget {
           horizontal: MinglitSpacing.small,
         ),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.colorScheme.surface,
           borderRadius: BorderRadius.horizontal(
             left: isFirst
                 ? const Radius.circular(MinglitRadius.input)
@@ -118,7 +122,7 @@ class _StatItem extends StatelessWidget {
             Text(
               label,
               style: theme.textTheme.labelSmall?.copyWith(
-                color: const Color(0xFF888888),
+                color: theme.colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
               ),
             ),

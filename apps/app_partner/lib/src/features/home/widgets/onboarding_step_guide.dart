@@ -325,11 +325,15 @@ class _StepRow extends StatelessWidget {
               ),
               child: Center(
                 child: isDone
-                    ? const Icon(Icons.check, color: Colors.white, size: 16)
+                    ? Icon(
+                        Icons.check,
+                        color: colorScheme.onPrimary,
+                        size: 16,
+                      )
                     : Text(
                         number.toString(),
                         style: theme.textTheme.labelSmall?.copyWith(
-                          color: isCurrent ? Colors.white : null,
+                          color: isCurrent ? colorScheme.onPrimary : null,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
