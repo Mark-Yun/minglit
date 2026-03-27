@@ -5,6 +5,7 @@ import 'package:app_partner/src/features/home/partner_dashboard_controller.dart'
 import 'package:app_partner/src/features/home/partner_home_coordinator.dart';
 import 'package:app_partner/src/features/home/partner_home_page.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';

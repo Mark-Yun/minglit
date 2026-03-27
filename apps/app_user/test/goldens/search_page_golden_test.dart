@@ -2,6 +2,7 @@
 library;
 
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
+import 'package:flutter/material.dart';
 import 'package:app_user/src/features/search/search_page.dart';
 import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
