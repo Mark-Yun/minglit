@@ -74,6 +74,10 @@ shared/assets/images/*.zip
 **/dist/
 **/.vercel/
 
+# env-manifest.json copies (CI copies root manifest into each app before Vercel deploy)
+apps/landing_user/env-manifest.json
+apps/landing_partner/env-manifest.json
+
 # Testing
 **/coverage/
 

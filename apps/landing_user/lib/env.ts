@@ -1,4 +1,4 @@
-import manifest from "../../../env-manifest.json";
+import manifest from "../env-manifest.json";
 
 /**
  * Validate that all required build-time env vars for landing_user are present.
