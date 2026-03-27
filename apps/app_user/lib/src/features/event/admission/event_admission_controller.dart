@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
-import 'package:app_user/src/features/ticket/ui/ticket_selection_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -9,7 +8,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'event_admission_controller.g.dart';
 part 'admission_action_handler.dart';
-part 'ticket_recommendation_util.dart';
 part 'event_admission_state.dart';
 
 @riverpod
@@ -88,10 +86,12 @@ class EventAdmissionController extends _$EventAdmissionController {
     );
   }
 
+  // Fix #453: showTicketSelection 콜백으로 ticket feature 직접 참조 제거 — 순환 참조 해소
   /// Handles user action based on current admission state.
   Future<void> handleAction({
     required BuildContext context,
     required AdmissionState state,
+    required VoidCallback showTicketSelection,
   }) async {
     switch (state.status) {
       case EventAdmissionStatus.guest:
@@ -110,32 +110,16 @@ class EventAdmissionController extends _$EventAdmissionController {
         }
         return;
       case EventAdmissionStatus.qualificationRequired:
-        await showModalBottomSheet<void>(
-          context: context,
-          isScrollControlled: true,
-          builder: (_) => TicketSelectionSheet(event: event),
-        );
+        showTicketSelection();
         ref.invalidate(eventAdmissionControllerProvider(event));
         return;
       case EventAdmissionStatus.notEligible:
         return;
       case EventAdmissionStatus.eligible:
-        unawaited(
-          showModalBottomSheet<void>(
-            context: context,
-            isScrollControlled: true,
-            builder: (_) => TicketSelectionSheet(event: event),
-          ),
-        );
+        showTicketSelection();
         return;
       case EventAdmissionStatus.pendingPayment:
-        unawaited(
-          showModalBottomSheet<void>(
-            context: context,
-            isScrollControlled: true,
-            builder: (_) => TicketSelectionSheet(event: event),
-          ),
-        );
+        showTicketSelection();
         return;
       case EventAdmissionStatus.applied:
         handleMinglitError(
@@ -167,13 +151,7 @@ class EventAdmissionController extends _$EventAdmissionController {
                 .cancelOrder(eventId: event.id);
             ref.invalidate(eventAdmissionControllerProvider(event));
             if (context.mounted) {
-              unawaited(
-                showModalBottomSheet<void>(
-                  context: context,
-                  isScrollControlled: true,
-                  builder: (_) => TicketSelectionSheet(event: event),
-                ),
-              );
+              showTicketSelection();
             }
           } finally {
             loading.hide();

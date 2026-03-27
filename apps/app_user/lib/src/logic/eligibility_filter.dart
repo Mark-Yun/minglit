@@ -1,4 +1,4 @@
-import 'package:app_user/src/features/event/admission/event_admission_controller.dart';
+import 'package:app_user/src/features/ticket/logic/ticket_recommendation_util.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 /// Parsed user eligibility data from `get_bulk_eligibility_data` RPC.
