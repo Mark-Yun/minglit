@@ -1,8 +1,7 @@
-import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
-import 'package:app_partner/src/features/party/event/detail/event_detail_controller.dart';
 import 'package:app_partner/src/features/ticket/logic/ticket_controller.dart';
-import 'package:app_partner/src/features/ticket/widgets/ticket_form.dart';
+import 'package:app_partner/src/features/ticket/logic/ticket_data_providers.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
+import 'package:app_partner/src/widgets/ticket_form.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -19,7 +18,7 @@ class TicketCreatePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final partyAsync = ref.watch(partyDetailProvider(partyId));
+    final entryGroupsAsync = ref.watch(ticketEntryGroupsProvider(partyId));
 
     Future<void> handleSave({
       required String name,
@@ -43,9 +42,9 @@ class TicketCreatePage extends ConsumerWidget {
           ..pop()
           ..showMinglitSuccess(context.l10n.ticket_message_created);
         if (eventId.isNotEmpty) {
-          ref.invalidate(eventTicketsProvider(eventId));
+          ref.invalidate(ticketsByEventProvider(eventId));
         } else {
-          ref.invalidate(partyTicketsProvider(partyId));
+          ref.invalidate(ticketTemplatesByPartyProvider(partyId));
         }
       } else if (state.hasError && context.mounted) {
         handleMinglitError(context, state.error!, state.stackTrace);
@@ -57,11 +56,11 @@ class TicketCreatePage extends ConsumerWidget {
         title: context.l10n.ticket_title_create,
       ),
       body: MinglitAsyncValueWidget(
-        value: partyAsync,
-        data: (party) => SingleChildScrollView(
+        value: entryGroupsAsync,
+        data: (entryGroups) => SingleChildScrollView(
           padding: const EdgeInsets.all(MinglitSpacing.medium),
           child: TicketForm(
-            entryGroups: party.entryGroups ?? [],
+            entryGroups: entryGroups,
             submitButtonLabel: context.l10n.ticket_button_create,
             onSaved: handleSave,
           ),
