@@ -1,0 +1,57 @@
+## 워커 간 상호작용 프로토콜 (공통)
+
+이 내용은 모든 워커에게 적용되는 상호작용 규칙이다.
+
+### 라우팅 테이블
+
+`scripts/workers/worker-routing.json`에 정의된 라벨 기반으로 워커 간 작업을 주고받는다.
+
+### 내가 처리할 이슈 감지
+
+자기 담당 `needs-*` 라벨이 붙은 열린 이슈가 있으면 처리:
+```bash
+# 예: audit-uiux 워커라면
+gh issue list --repo Mark-Yun/minglit --label "needs-uiux" --state open --json number,title --jq '.[0]'
+```
+
+### 작업 완료 후 라벨 프로토콜
+
+1. **내 라벨 제거** — 처리 완료한 `needs-*` 라벨을 제거
+2. **완료 코멘트** — 무엇을 했는지 코멘트
+3. **다음 워커에게 넘기기** — 후속 작업이 필요하면 해당 `needs-*` 라벨 추가
+
+```bash
+# 1. 내 라벨 제거
+gh issue edit <번호> --remove-label "needs-uiux"
+
+# 2. 완료 코멘트
+gh issue comment <번호> --body "🤖 audit-uiux: [작업 내용]. 완료."
+
+# 3. 후속 작업 필요 시 다음 워커에게 넘기기
+gh issue edit <번호> --add-label "needs-qa"  # 예: 테스트 보강 필요
+```
+
+### 라벨 라우팅 규칙
+
+| 라벨 | 담당 워커 | 설명 |
+|------|----------|------|
+| `needs-arch` | audit-arch | 아키텍처 문서/분석 요청 |
+| `needs-uiux` | audit-uiux | UI/UX 문서/디자인 요청 |
+| `needs-qa` | audit-qa | 테스트 보강 요청 |
+| `needs-security` | audit-security | 보안 검토 요청 |
+| `needs-legal` | audit-legal | 법률/개인정보 검토 요청 |
+| `audit-report` | tpm-staff | 감사 리포트 분석 |
+| `report-exec` | 사람 (Mark) | 의사결정 필요 |
+
+### 라벨 붙이기 예시
+
+- issue-worker가 UI 문서 부족 발견 → `needs-uiux` 라벨
+- audit-uiux가 처리 후 테스트 필요 → `needs-qa` 라벨
+- tpm-staff가 보안 리뷰 필요 판단 → `needs-security` 라벨
+- 사람 판단 필요 → `report-exec` 라벨
+
+### 금지 사항
+
+- 자기 자신에게 라벨 붙이지 마 (무한 루프 방지)
+- 한 이슈에 `needs-*` 라벨 2개 이상 동시에 붙이지 마 (순차 처리)
+- 처리 안 하고 라벨만 제거하지 마 (반드시 코멘트)

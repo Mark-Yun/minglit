@@ -42,15 +42,24 @@ PR 케어 전에, 우선순위 라벨이 없는 열린 이슈를 한번에 라�
 - 이슈 내용 확인이 필요하면 `gh issue view <번호>` 로 본문 읽기
 - 라벨링은 한 사이클에 모든 미라벨 이슈를 한번에 처리 (이슈별 assign 불필요)
 
-## 3단계: 진행 중인 PR 케어 (우선)
+## 3단계: PR 케어 (모든 열린 PR)
 
-내가 만든 열린 PR이 있으면 먼저 케어해:
+열린 PR을 전부 확인하고 케어해:
+
+### 내 PR (--author @me)
 - gh pr checks <번호> 로 CI 확인
-- gh pr view <번호> --json state,mergedAt,mergeStateStatus 로 상태 확인
 - BEHIND → gh api repos/Mark-Yun/minglit/pulls/<번호>/update-branch --method PUT
 - CI 실패 → 원인 파악, ci-result만 실패면 gh run rerun <run_id> --failed
 - 리뷰 코멘트 → 대응하고 push
 - MERGED → 이슈에 '🤖 AI Worker: PR #N 머지 완료.' 코멘트 남기고 다음으로
+
+### stale PR (30분 이상 업데이트 없는)
+- BEHIND → 브랜치 업데이트
+- BLOCKED + 코드리뷰 코멘트 → 대응 (해당 브랜치 worktree에서 수정 후 push)
+
+### dependabot PR
+- CI 통과 → gh pr merge --squash
+- CI 실패 → gh pr close --comment "🤖 CI 실패로 자동 close."
 
 ## 4단계: 새 이슈 처리
 
@@ -76,7 +85,17 @@ PR 케어 전에, 우선순위 라벨이 없는 열린 이슈를 한번에 라�
 - 이슈에: '🤖 AI Worker 상태: [진행 중인 작업 요약]. 다음 사이클에서 계속.'
 - PR에: '🤖 AI Worker 상태: [CI 대기 중 / 리뷰 코멘트 대응 중 / 등]. 다음 사이클에서 확인.'
 
-## 의사 결정이 필요할 때
+## 전문가 조언이 필요할 때
+
+작업 중 다른 전문 영역의 도움이 필요하면 이슈에 코멘트 + 라우팅 라벨:
+- UI/UX 문서 부족 → `needs-uiux` 라벨 + 코멘트: "🤖 UI 문서 보강 필요: [구체적 내용]"
+- 아키텍처 판단 필요 → `needs-arch` 라벨
+- 테스트 전략 필요 → `needs-qa` 라벨
+- 보안 검토 필요 → `needs-security` 라벨
+- 법률 검토 필요 → `needs-legal` 라벨
+- 해당 전문 워커가 다음 사이클에서 처리 후 라벨 제거 + 코멘트로 회신
+
+## 사람의 판단이 필요할 때
 
 정상 동작이 뭔지 모르겠거나, 기획/디자인 판단이 필요하면:
 - 이슈에 코멘트: '🤖 AI Worker: @Mark-Yun [질문]'
@@ -86,4 +105,3 @@ PR 케어 전에, 우선순위 라벨이 없는 열린 이슈를 한번에 라�
 
 - CLAUDE.md 컨벤션을 따라
 - 열린 이슈가 없고 케어할 PR도 없으면 즉시 종료
-- 10분 안에 끝낼 수 없는 작업은 중간 상태를 코멘트로 저장하고 종료
