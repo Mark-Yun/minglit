@@ -23,6 +23,11 @@ on:
         description: 'Production Provisioning Profile Specifier name'
         required: true
         type: string
+      development-team:
+        description: 'Apple Development Team ID'
+        required: false
+        type: string
+        default: 'TAY59SLH9F'
     secrets:
       APPLE_CERTIFICATE_BASE64:
         required: true
@@ -130,28 +135,21 @@ jobs:
           APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
 
-      - name: Install provisioning profile (Dev)
-        if: ${{ github.ref == 'refs/heads/dev' }}
+      - name: Install provisioning profile
         run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "$APPLE_PROVISION_PROFILE_DEV_BASE64" | base64 --decode > profile.mobileprovision
+          if [ "$GITHUB_REF" = "refs/heads/dev" ]; then
+            PROFILE_B64="$APPLE_PROVISION_PROFILE_DEV_BASE64"
+          else
+            PROFILE_B64="$APPLE_PROVISION_PROFILE_PROD_BASE64"
+          fi
+          echo "$PROFILE_B64" | base64 --decode > profile.mobileprovision
           profile_uuid=$(grep -a -A1 UUID profile.mobileprovision | grep -o '[-a-f0-9]\{36\}')
           echo "Provisioning Profile UUID: $profile_uuid"
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$profile_uuid.mobileprovision
           rm -f profile.mobileprovision
         env:
           APPLE_PROVISION_PROFILE_DEV_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_DEV_BASE64 }}
-
-      - name: Install provisioning profile (Main)
-        if: ${{ github.ref == 'refs/heads/main' }}
-        run: |
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "$APPLE_PROVISION_PROFILE_PROD_BASE64" | base64 --decode > profile.mobileprovision
-          profile_uuid=$(grep -a -A1 UUID profile.mobileprovision | grep -o '[-a-f0-9]\{36\}')
-          echo "Provisioning Profile UUID: $profile_uuid"
-          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$profile_uuid.mobileprovision
-          rm -f profile.mobileprovision
-        env:
           APPLE_PROVISION_PROFILE_PROD_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_PROD_BASE64 }}
 
       - name: Create App Store Connect API key
@@ -162,8 +160,7 @@ jobs:
           APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
 
-      - name: Configure manual signing (Dev)
-        if: ${{ github.ref == 'refs/heads/dev' }}
+      - name: Configure manual signing
         run: |
           PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
 
@@ -173,39 +170,19 @@ jobs:
           sed -i '' '/DEVELOPMENT_TEAM/d' "$PBXPROJ"
           sed -i '' '/PROVISIONING_PROFILE_SPECIFIER/d' "$PBXPROJ"
 
-          # Create xcconfig with correct settings
-          cat > ios/CI.xcconfig << 'EOF'
-          CODE_SIGN_STYLE = Manual
-          CODE_SIGN_IDENTITY = Apple Distribution
-          DEVELOPMENT_TEAM = TAY59SLH9F
-          PROVISIONING_PROFILE_SPECIFIER = ${{ inputs.provisioning-profile-dev-specifier }}
-          EOF
-
-          # Include in Release.xcconfig
-          echo '#include "../CI.xcconfig"' >> ios/Flutter/Release.xcconfig
-
-          echo "=== Verify project.pbxproj cleaned ==="
-          grep -E "CODE_SIGN|DEVELOPMENT_TEAM" "$PBXPROJ" || echo "Cleaned successfully"
-          echo "=== CI.xcconfig content ==="
-          cat ios/CI.xcconfig
-
-      - name: Configure manual signing (Main)
-        if: ${{ github.ref == 'refs/heads/main' }}
-        run: |
-          PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
-
-          # Remove conflicting settings from project.pbxproj to let xcconfig take precedence
-          sed -i '' '/CODE_SIGN_IDENTITY/d' "$PBXPROJ"
-          sed -i '' '/CODE_SIGN_STYLE/d' "$PBXPROJ"
-          sed -i '' '/DEVELOPMENT_TEAM/d' "$PBXPROJ"
-          sed -i '' '/PROVISIONING_PROFILE_SPECIFIER/d' "$PBXPROJ"
+          # Select provisioning profile specifier based on branch
+          if [ "$GITHUB_REF" = "refs/heads/dev" ]; then
+            PROFILE_SPECIFIER="${{ inputs.provisioning-profile-dev-specifier }}"
+          else
+            PROFILE_SPECIFIER="${{ inputs.provisioning-profile-prod-specifier }}"
+          fi
 
           # Create xcconfig with correct settings
-          cat > ios/CI.xcconfig << 'EOF'
+          cat > ios/CI.xcconfig << EOF
           CODE_SIGN_STYLE = Manual
           CODE_SIGN_IDENTITY = Apple Distribution
-          DEVELOPMENT_TEAM = TAY59SLH9F
-          PROVISIONING_PROFILE_SPECIFIER = ${{ inputs.provisioning-profile-prod-specifier }}
+          DEVELOPMENT_TEAM = ${{ inputs.development-team }}
+          PROVISIONING_PROFILE_SPECIFIER = $PROFILE_SPECIFIER
           EOF
 
           # Include in Release.xcconfig
