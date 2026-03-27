@@ -238,7 +238,7 @@ parties INSERT → produce_event('party_created')
 |----------|---------|--------|
 | `profile-update` | 프로필 업데이트 | 유저 임베딩 (재)생성 |
 
-> **Note**: `vectorize-party/`는 독립 Edge Function이 아닌 `vector-worker`의 헬퍼 모듈이다 (index.ts 없음).
+> **Note**: `vectorize-party/`는 비활성 디렉토리이다 (index.ts 없음, config.toml에서 disabled). `vector-worker`가 자체 `openai_service.ts`, `party_serializer.ts`를 갖고 있어 `vectorize-party/`를 import하지 않는다.
 
 ### 4.3 Processing Flow
 
@@ -260,7 +260,7 @@ flowchart LR
 
 | Function | LOC | Domain | Purpose |
 |----------|-----|--------|---------|
-| `vector-worker` | ~578 | Recommendation | PGMQ consumer, 배치 벡터화 (최대 50건). `vectorize-party/` 헬퍼 모듈 사용 |
+| `vector-worker` | ~578 | Recommendation | PGMQ consumer, 배치 벡터화 (최대 50건). 자체 openai_service, party_serializer 포함 |
 | `profile-update` | ~334 | User | 프로필 업데이트 + 유저 임베딩 생성 |
 
 ---
