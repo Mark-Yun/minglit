@@ -41,8 +41,7 @@ class CheckinRepository {
   Future<SimplePublicKey> fetchServerPublicKey() async {
     if (_cachedPublicKey != null) return _cachedPublicKey!;
 
-    final result =
-        await _supabase.rpc<String?>('get_ticket_public_key');
+    final result = await _supabase.rpc<String?>('get_ticket_public_key');
     if (result == null || result.isEmpty) {
       throw StateError('Server public key not configured');
     }
