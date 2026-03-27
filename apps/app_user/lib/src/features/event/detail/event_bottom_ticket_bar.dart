@@ -102,11 +102,11 @@ class _BottomTicketBar extends ConsumerWidget {
     final config = controller.buttonConfig(state);
     final onPressed = config.enabled
         ? () => controller.handleAction(
-              context: context,
-              state: state,
-              // Fix #453: ticket feature 직접 참조를 콜백으로 위임
-              showTicketSelection: () => _showTicketSelection(context, ref),
-            )
+            context: context,
+            state: state,
+            // Fix #453: ticket feature 직접 참조를 콜백으로 위임
+            showTicketSelection: () => _showTicketSelection(context, ref),
+          )
         : null;
     Color? backgroundColor;
     switch (config.style) {
