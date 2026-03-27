@@ -2,11 +2,9 @@ import 'dart:async' show unawaited;
 
 import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/features/home/partner_home_coordinator.dart';
-import 'package:app_partner/src/features/home/widgets/active_party_summary_scroll.dart';
-import 'package:app_partner/src/features/home/widgets/closing_soon_events_card.dart';
-import 'package:app_partner/src/features/home/widgets/location_guide_banner.dart';
-import 'package:app_partner/src/features/home/widgets/pending_applicants_badge_card.dart';
-import 'package:app_partner/src/features/home/widgets/upcoming_events_card.dart';
+import 'package:app_partner/src/features/home/widgets/event_action_card.dart';
+import 'package:app_partner/src/features/home/widgets/todo_summary_chips.dart';
+import 'package:app_partner/src/features/home/widgets/weekly_stats_row.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
@@ -29,11 +27,13 @@ class PartnerHomePage extends ConsumerWidget {
           orElse: () => 0,
         );
     final coordinator = ref.read(partnerHomeCoordinatorProvider);
+    final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: MinglitTheme.simpleAppBar(
-        title: partner?.name ?? '파트너 대시보드',
-        showBackButton: false,
+      appBar: AppBar(
+        title: MinglitTheme.appBarLogo(height: 28),
+        centerTitle: false,
+        surfaceTintColor: Colors.transparent,
         actions: [
           Stack(
             clipBehavior: Clip.none,
@@ -56,12 +56,12 @@ class PartnerHomePage extends ConsumerWidget {
                       color: MinglitColors.error,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: Theme.of(context).colorScheme.surface,
+                        color: theme.colorScheme.surface,
                       ),
                     ),
                     child: Text(
                       unreadCount > 99 ? '99+' : unreadCount.toString(),
-                      style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                      style: theme.textTheme.bodySmall!.copyWith(
                         color: MinglitColors.background,
                         fontWeight: FontWeight.bold,
                       ),
@@ -72,28 +72,6 @@ class PartnerHomePage extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final parties = state.activeParties;
-          if (parties.isEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('먼저 파티를 생성해주세요')),
-            );
-            return;
-          }
-          final selected = await showModalBottomSheet<Party>(
-            context: context,
-            builder: (context) => _PartySelectionSheet(parties: parties),
-          );
-          if (selected != null && context.mounted) {
-            unawaited(
-              EventCreateRoute(partyId: selected.id).push<void>(context),
-            );
-          }
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('이벤트 생성'),
-      ),
       body: MinglitAsyncValueWidget(
         value: state.status,
         data: (_) => RefreshIndicator(
@@ -102,38 +80,26 @@ class PartnerHomePage extends ConsumerWidget {
               .loadDashboardData(),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(
-              vertical: MinglitSpacing.medium,
-            ),
+            padding: const EdgeInsets.all(MinglitSpacing.medium),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 1. Pending Applicants
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: MinglitSpacing.medium,
-                  ),
-                  child: PendingApplicantsBadgeCard(
-                    count: state.pendingReviewCount,
-                    onTap: coordinator.pushApplicationList,
-                  ),
+                // 1. Greeting
+                _GreetingSection(
+                  partnerName: partner?.name ?? '파트너',
+                  pendingCount: state.pendingReviewCount,
+                  primaryEvent: selectPrimaryEvent(state.upcomingEvents),
                 ),
-                const SizedBox(height: MinglitSpacing.large),
+                const SizedBox(height: MinglitSpacing.medium),
 
-                // Fix #422: 수평 스크롤 섹션은 화면 전체 너비 사용
-                // 2. Upcoming Events
-                UpcomingEventsCard(
-                  events: state.upcomingEvents,
-                  onEventTap: (event) {
-                    unawaited(
-                      EventDetailRoute(
-                        partyId: event.partyId,
-                        eventId: event.id,
-                      ).push<void>(context),
-                    );
+                // 2. Todo Summary Chips
+                TodoSummaryChips(
+                  pendingApplications: state.pendingReviewCount,
+                  upcomingEvents: state.upcomingEvents.length,
+                  onPendingTap: () {
+                    const ApplicationListRoute().go(context);
                   },
-                  // Fix #422: 이벤트 요약 자세히 버튼 → 파티 목록
-                  onViewAllTap: () {
+                  onUpcomingTap: () {
                     unawaited(
                       const PartyListRoute().push<void>(context),
                     );
@@ -141,59 +107,202 @@ class PartnerHomePage extends ConsumerWidget {
                 ),
                 const SizedBox(height: MinglitSpacing.large),
 
-                // 3. Active Party Summary
-                ActivePartySummaryScroll(
-                  parties: state.activeParties,
-                  onPartyTap: (party) {
-                    unawaited(
-                      PartyDetailRoute(partyId: party.id).push<void>(context),
-                    );
-                  },
-                  // Fix #185: 파티 전체 보기 화면으로 이동
-                  onViewAllTap: () {
-                    unawaited(
-                      const PartyListRoute().push<void>(context),
-                    );
-                  },
-                ),
+                // 3. Event Action Card
+                _buildEventSection(context, ref, state),
                 const SizedBox(height: MinglitSpacing.large),
 
-                // 4. Closing Soon Events
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: MinglitSpacing.medium,
-                  ),
-                  child: ClosingSoonEventsCard(
-                    events: state.closingSoonEvents,
-                    onEventTap: (event) {
-                      unawaited(
-                        EventDetailRoute(
-                          partyId: event.partyId,
-                          eventId: event.id,
-                        ).push<void>(context),
-                      );
-                    },
-                  ),
+                // 4. Weekly Stats
+                _SectionHeader(title: '이번 주 성과'),
+                const SizedBox(height: MinglitSpacing.small),
+                WeeklyStatsRow(
+                  // TODO(#519): wire up weekly stats APIs
+                  totalRevenue: 0,
+                  totalApplications: state.pendingReviewCount,
+                  checkinRate: 0,
+                  revenueChange: null,
+                  applicationChange: null,
+                  checkinRateChange: null,
                 ),
                 const SizedBox(height: MinglitSpacing.large),
-
-                // 5. Location Guide Banner
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: MinglitSpacing.medium,
-                  ),
-                  child: LocationGuideBanner(
-                    onTap: () {
-                      const LocationGuideRoute().go(context);
-                    },
-                  ),
-                ),
-
-                const SizedBox(height: 100), // Bottom padding for FAB/Nav
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildEventSection(
+    BuildContext context,
+    WidgetRef ref,
+    PartnerDashboardState state,
+  ) {
+    final primaryEvent = selectPrimaryEvent(state.upcomingEvents);
+
+    final sectionTitle = switch (primaryEvent != null
+        ? getEventPhase(primaryEvent)
+        : null) {
+      EventPhase.recruiting => '다음 이벤트',
+      EventPhase.preparing => '오늘 이벤트',
+      EventPhase.live => '진행 중 이벤트',
+      EventPhase.ended => '이벤트 결과',
+      null => null,
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (sectionTitle != null) ...[
+          _SectionHeader(title: sectionTitle),
+          const SizedBox(height: MinglitSpacing.small),
+        ],
+        _buildEventActionCard(context, ref, state, primaryEvent),
+      ],
+    );
+  }
+
+  Widget _buildEventActionCard(
+    BuildContext context,
+    WidgetRef ref,
+    PartnerDashboardState state,
+    Event? primaryEvent,
+  ) {
+    if (primaryEvent == null) {
+      return EventActionCardEmpty(
+        hasParties: state.activeParties.isNotEmpty,
+        onCreateEvent: () async {
+          final parties = state.activeParties;
+          if (parties.isEmpty) return;
+          if (parties.length == 1) {
+            unawaited(
+              EventCreateRoute(partyId: parties.first.id).push<void>(context),
+            );
+            return;
+          }
+          final selected = await showModalBottomSheet<Party>(
+            context: context,
+            builder: (ctx) => _PartySelectionSheet(parties: parties),
+          );
+          if (selected != null && context.mounted) {
+            unawaited(
+              EventCreateRoute(partyId: selected.id).push<void>(context),
+            );
+          }
+        },
+        onCreateParty: () {
+          unawaited(const PartyCreateRoute().push<void>(context));
+        },
+      );
+    }
+
+    return EventActionCard(
+      event: primaryEvent,
+      onMainAction: () {
+        switch (phase) {
+          case EventPhase.recruiting:
+            const ApplicationListRoute().go(context);
+          case EventPhase.preparing:
+          case EventPhase.live:
+            const CheckinRoute().go(context);
+          case EventPhase.ended:
+            // "다음 회차 만들기" → 이벤트 생성 (pre-fill은 #520에서 구현)
+            unawaited(
+              EventCreateRoute(partyId: primaryEvent.partyId)
+                  .push<void>(context),
+            );
+        }
+      },
+      onSecondaryAction1: () {
+        switch (phase) {
+          case EventPhase.recruiting:
+            unawaited(
+              EventDetailRoute(
+                partyId: primaryEvent.partyId,
+                eventId: primaryEvent.id,
+              ).push<void>(context),
+            );
+          case EventPhase.preparing:
+          case EventPhase.live:
+            unawaited(
+              EventDetailRoute(
+                partyId: primaryEvent.partyId,
+                eventId: primaryEvent.id,
+              ).push<void>(context),
+            );
+          case EventPhase.ended:
+            unawaited(
+              EventDetailRoute(
+                partyId: primaryEvent.partyId,
+                eventId: primaryEvent.id,
+              ).push<void>(context),
+            );
+        }
+      },
+      onSecondaryAction2: phase == EventPhase.recruiting ||
+              phase == EventPhase.preparing
+          ? () {
+              // 공유/홍보 or 안내 발송 — placeholder
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('준비 중입니다')),
+              );
+            }
+          : null,
+    );
+  }
+}
+
+class _GreetingSection extends StatelessWidget {
+  const _GreetingSection({
+    required this.partnerName,
+    required this.pendingCount,
+    this.primaryEvent,
+  });
+
+  final String partnerName;
+  final int pendingCount;
+  final Event? primaryEvent;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final phase = primaryEvent != null ? getEventPhase(primaryEvent!) : null;
+
+    final subtitle = switch (phase) {
+      EventPhase.live => '이벤트 진행 중!',
+      EventPhase.ended => '오늘 이벤트 수고하셨어요!',
+      _ when pendingCount > 0 => '오늘 할 일 ${pendingCount}건',
+      _ => '오늘 할 일 없음',
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '👋 $partnerName 님',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: MinglitSpacing.xxsmall),
+        Text(
+          subtitle,
+          style: theme.textTheme.bodySmall,
+        ),
+      ],
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title});
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+        fontWeight: FontWeight.w800,
       ),
     );
   }
