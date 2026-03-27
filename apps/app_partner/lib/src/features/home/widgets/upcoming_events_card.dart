@@ -38,7 +38,7 @@ class UpcomingEventsCard extends StatelessWidget {
                 size: 18,
                 color: colorScheme.primary,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: MinglitSpacing.small),
               Text(
                 '다가오는 이벤트',
                 style: theme.textTheme.titleSmall?.copyWith(
@@ -165,7 +165,7 @@ class _EventCard extends StatelessWidget {
                           size: 14,
                           color: colorScheme.onSurfaceVariant,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: MinglitSpacing.xsmall),
                         Text(
                           dateFormat.format(event.startTime),
                           style: theme.textTheme.bodySmall?.copyWith(
@@ -176,7 +176,7 @@ class _EventCard extends StatelessWidget {
                     ),
                     // Fix #185: 파티명 표시
                     if (event.party?.title != null) ...[
-                      const SizedBox(height: 2),
+                      const SizedBox(height: MinglitSpacing.xxsmall),
                       Text(
                         event.party!.title,
                         style: theme.textTheme.bodySmall?.copyWith(

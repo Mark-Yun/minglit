@@ -97,7 +97,7 @@ class EntryGroupDetail extends StatelessWidget {
           size: MinglitIconSize.xsmall,
           color: colorScheme.onSurfaceVariant,
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: MinglitSpacing.xsmall2),
         Text(
           birthYearText,
           style: theme.textTheme.bodyMedium?.copyWith(
@@ -111,7 +111,7 @@ class EntryGroupDetail extends StatelessWidget {
           size: MinglitIconSize.xsmall,
           color: colorScheme.onSurfaceVariant,
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: MinglitSpacing.xsmall2),
         Text(
           genderText,
           style: theme.textTheme.bodyMedium?.copyWith(

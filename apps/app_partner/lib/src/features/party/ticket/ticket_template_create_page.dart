@@ -1,4 +1,4 @@
-import 'package:app_partner/src/features/ticket/widgets/ticket_form.dart';
+import 'package:app_partner/src/widgets/ticket_form.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 

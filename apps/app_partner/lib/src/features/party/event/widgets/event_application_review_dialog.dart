@@ -101,7 +101,7 @@ class _EventApplicationReviewDialogState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(key, style: theme.textTheme.labelSmall),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: MinglitSpacing.xsmall),
                         ClipRRect(
                           borderRadius: BorderRadius.circular(
                             MinglitRadius.small,

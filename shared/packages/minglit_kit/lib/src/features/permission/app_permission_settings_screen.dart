@@ -170,7 +170,7 @@ class _AppPermissionSettingsScreenState
                         : _openAppSettings,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: MinglitSpacing.medium),
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -182,7 +182,7 @@ class _AppPermissionSettingsScreenState
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: MinglitSpacing.small),
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -195,7 +195,7 @@ class _AppPermissionSettingsScreenState
                     label: const Text('시스템 설정 열기'),
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: MinglitSpacing.xlarge),
               ],
             ),
     );
@@ -274,7 +274,7 @@ class _PermissionTile extends StatelessWidget {
             ),
           ),
           if (onTap != null) ...[
-            const SizedBox(width: 4),
+            const SizedBox(width: MinglitSpacing.xsmall),
             Icon(
               Icons.chevron_right,
               color: theme.colorScheme.onSurfaceVariant,
