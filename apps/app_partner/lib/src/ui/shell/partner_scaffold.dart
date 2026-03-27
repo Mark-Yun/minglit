@@ -13,7 +13,13 @@ class PartnerScaffold extends StatelessWidget {
 
   /// Root paths where bottom nav should be visible.
   /// Sub-routes (deeper paths) hide the bottom nav.
-  static const _rootPaths = {'/', '/parties', '/settlement', '/more'};
+  static const _rootPaths = {
+    '/',
+    '/applications',
+    '/checkin',
+    '/settlement',
+    '/more',
+  };
 
   int _calculateSelectedIndex() {
     return navigationShell.currentIndex;
@@ -51,19 +57,24 @@ class PartnerScaffold extends StatelessWidget {
                   label: '홈',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.celebration_outlined),
-                  selectedIcon: Icon(Icons.celebration),
-                  label: '파티관리',
+                  icon: Icon(Icons.assignment_outlined),
+                  selectedIcon: Icon(Icons.assignment),
+                  label: '신청관리',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.attach_money_outlined),
-                  selectedIcon: Icon(Icons.attach_money),
-                  label: '수익관리',
+                  icon: Icon(Icons.qr_code_scanner_outlined),
+                  selectedIcon: Icon(Icons.qr_code_scanner),
+                  label: '체크인',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.settings_outlined),
-                  selectedIcon: Icon(Icons.settings),
-                  label: '설정',
+                  icon: Icon(Icons.account_balance_outlined),
+                  selectedIcon: Icon(Icons.account_balance),
+                  label: '정산',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.more_horiz_outlined),
+                  selectedIcon: Icon(Icons.more_horiz),
+                  label: '더보기',
                 ),
               ],
             )
