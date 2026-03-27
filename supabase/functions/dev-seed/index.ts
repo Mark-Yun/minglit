@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { createServiceClient } from '../_shared/supabase_client.ts'
+import { errorResponse, successResponse } from '../_shared/response_utils.ts'
 
 function isProduction(): boolean {
   const env = Deno.env.get('ENVIRONMENT')
@@ -1008,10 +1009,7 @@ async function seedUserActivity(sb: SupabaseClient): Promise<void> {
 
 Deno.serve(async (req) => {
   if (isProduction()) {
-    return new Response(
-      JSON.stringify({ error: 'Dev-only function. Blocked in production.' }),
-      { status: 403, headers: { 'Content-Type': 'application/json' } },
-    )
+    return errorResponse('Dev-only function. Blocked in production.', 403)
   }
 
   try {
@@ -1020,32 +1018,38 @@ Deno.serve(async (req) => {
     const phase = url.searchParams.get('phase')
 
     // Phase 1: Users + Global verifications
+    let createdUsers = 0
+    let created30sUsers = 0
+    let globalVerifsCount = 0
     if (!phase || phase === '1') {
-      const createdUsers = await seedUsers(supabase)
-      const created30sUsers = await seed30sUsers(supabase)
+      createdUsers = await seedUsers(supabase)
+      created30sUsers = await seed30sUsers(supabase)
       const globalVerifs = await seedGlobalVerifications(supabase)
+      globalVerifsCount = Object.keys(globalVerifs).length
 
       if (phase === '1') {
-        return new Response(
-          JSON.stringify({ phase: 1, created_users: createdUsers, created_30s_users: created30sUsers, global_verifications: Object.keys(globalVerifs).length }),
-          { status: 200, headers: { 'Content-Type': 'application/json' } },
-        )
+        return successResponse({ phase: 1, created_users: createdUsers, created_30s_users: created30sUsers, global_verifications: globalVerifsCount })
       }
     }
 
     // Phase 2: Partners + Images upload
     // ensureGlobalVerifications fetches existing records if already created in Phase 1
+    let totalPartners = 0
+    let totalParties = 0
+    let totalEvents = 0
+    let uploadedImages = 0
     if (!phase || phase === '2') {
       const globalVerifs = await ensureGlobalVerifications(supabase)
       const definedPartnerStats = await seedDefinedPartners(supabase, globalVerifs)
       const hotPlaceStats = await seedHotPlacePartners(supabase, globalVerifs)
       const imageUrls = await uploadSeedImages(supabase)
+      totalPartners = definedPartnerStats.createdPartners + hotPlaceStats.createdPartners
+      totalParties = definedPartnerStats.createdParties + hotPlaceStats.createdParties
+      totalEvents = definedPartnerStats.createdEvents + hotPlaceStats.createdEvents
+      uploadedImages = imageUrls.length
 
       if (phase === '2') {
-        return new Response(
-          JSON.stringify({ phase: 2, created_partners: definedPartnerStats.createdPartners + hotPlaceStats.createdPartners, created_parties: definedPartnerStats.createdParties + hotPlaceStats.createdParties, created_events: definedPartnerStats.createdEvents + hotPlaceStats.createdEvents, uploaded_images: imageUrls.length }),
-          { status: 200, headers: { 'Content-Type': 'application/json' } },
-        )
+        return successResponse({ phase: 2, created_partners: totalPartners, created_parties: totalParties, created_events: totalEvents, uploaded_images: uploadedImages })
       }
     }
 
@@ -1065,22 +1069,20 @@ Deno.serve(async (req) => {
       }
 
       if (phase === '3') {
-        return new Response(
-          JSON.stringify({ phase: 3, seeded_activity: true }),
-          { status: 200, headers: { 'Content-Type': 'application/json' } },
-        )
+        return successResponse({ phase: 3, seeded_activity: true })
       }
     }
 
     // Full run (no phase param) — return combined stats
-    return new Response(
-      JSON.stringify({ full_run: true }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } },
-    )
+    return successResponse({
+      full_run: true,
+      created_users: createdUsers,
+      created_30s_users: created30sUsers,
+      created_partners: totalPartners,
+      created_parties: totalParties,
+      created_events: totalEvents,
+    })
   } catch (err) {
-    return new Response(
-      JSON.stringify({ error: (err as Error).message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } },
-    )
+    return errorResponse((err as Error).message, 500)
   }
 })
