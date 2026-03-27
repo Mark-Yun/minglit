@@ -15,9 +15,12 @@ void main() {
   });
 
   group('MinglitEventCard golden', () {
-    // Use a fixed date so D-day labels are deterministic.
+    // Use fixed dates so D-day labels are deterministic.
+    // currentTime is injected into MinglitEventCard to avoid DateTime.now().
     final baseTime = DateTime(2026, 6, 15, 19);
     final now = DateTime(2026, 6, 15, 10); // same day → "오늘"
+    // 5 days before event → "D-5" (for full_data/sold_out/dark tests)
+    final fiveDaysBefore = DateTime(2026, 6, 10, 12);
 
     const partner = Partner(
       id: 'partner-1',
@@ -82,7 +85,10 @@ void main() {
         tester,
         widget: SizedBox(
           width: 390,
-          child: MinglitEventCard(event: fullDataEvent),
+          child: MinglitEventCard(
+            event: fullDataEvent,
+            currentTime: fiveDaysBefore,
+          ),
         ),
         goldenFileName: 'event_card_full_data.png',
       );
@@ -98,7 +104,10 @@ void main() {
         tester,
         widget: SizedBox(
           width: 390,
-          child: MinglitEventCard(event: soldOutEvent),
+          child: MinglitEventCard(
+            event: soldOutEvent,
+            currentTime: fiveDaysBefore,
+          ),
         ),
         goldenFileName: 'event_card_sold_out.png',
       );
@@ -117,7 +126,10 @@ void main() {
         tester,
         widget: SizedBox(
           width: 390,
-          child: MinglitEventCard(event: todayEvent),
+          child: MinglitEventCard(
+            event: todayEvent,
+            currentTime: now,
+          ),
         ),
         goldenFileName: 'event_card_today.png',
       );
@@ -128,7 +140,10 @@ void main() {
         tester,
         widget: SizedBox(
           width: 390,
-          child: MinglitEventCard(event: fullDataEvent),
+          child: MinglitEventCard(
+            event: fullDataEvent,
+            currentTime: fiveDaysBefore,
+          ),
         ),
         goldenFileName: 'event_card_dark.png',
         brightness: Brightness.dark,

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/src/data/models/event.dart';
@@ -16,6 +17,7 @@ class MinglitEventCard extends StatelessWidget {
     required this.event,
     super.key,
     this.onTap,
+    @visibleForTesting this.currentTime,
   }) : _isLoading = false;
 
   /// Named constructor for loading skeleton state.
@@ -23,6 +25,7 @@ class MinglitEventCard extends StatelessWidget {
     super.key,
     this.event,
     this.onTap,
+    this.currentTime,
   }) : _isLoading = true;
 
   /// Event data to render.
@@ -30,6 +33,9 @@ class MinglitEventCard extends StatelessWidget {
 
   /// Optional tap handler for the card.
   final VoidCallback? onTap;
+
+  /// Override current time for D-day calculation (testing only).
+  final DateTime? currentTime;
 
   /// Internal flag for loading state.
   final bool _isLoading;
@@ -45,7 +51,7 @@ class MinglitEventCard extends StatelessWidget {
     final location = event!.location ?? party?.location;
 
     // Calculate D-Day
-    final now = DateTime.now();
+    final now = currentTime ?? DateTime.now();
     final difference = event!.startTime.difference(now).inDays;
     final dDayLabel = difference == 0
         ? '오늘'
