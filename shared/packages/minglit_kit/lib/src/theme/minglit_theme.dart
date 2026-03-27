@@ -268,7 +268,9 @@ class MinglitTheme {
         ),
       ),
       chipTheme: ChipThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(MinglitRadius.chip),
+        ),
         side: BorderSide.none,
         backgroundColor: MinglitColorsDark.surface,
         secondarySelectedColor: MinglitColorsDark.primary,

@@ -104,6 +104,9 @@ class MinglitRadius {
 
   /// 12px input border radius.
   static const double input = 12;
+
+  /// 100px chip border radius (pill shape).
+  static const double chip = 100;
 }
 
 /// Icon size constants for consistent icon rendering.
@@ -126,6 +129,9 @@ class MinglitIconSize {
 
 /// Animation duration constants.
 class MinglitAnimation {
+  /// 100ms micro animation duration for micro-interactions.
+  static const Duration micro = Duration(milliseconds: 100);
+
   /// 200ms fast animation duration.
   static const Duration fast = Duration(milliseconds: 200);
 
@@ -134,4 +140,31 @@ class MinglitAnimation {
 
   /// 500ms slow animation duration.
   static const Duration slow = Duration(milliseconds: 500);
+}
+
+/// Opacity constants for consistent transparency values.
+class MinglitOpacity {
+  /// 5% opacity — tint fill, selected card background.
+  static const double tintFill = 0.05;
+
+  /// 15% opacity — avatar placeholder background.
+  static const double placeholder = 0.15;
+
+  /// 20% opacity — unfilled gauge segments.
+  static const double subtle = 0.2;
+
+  /// 30% opacity — muted/empty elements.
+  static const double muted = 0.3;
+
+  /// 45% opacity — gradient overlay.
+  static const double gradient = 0.45;
+
+  /// 55% opacity — overlay backgrounds (badges, chips on images).
+  static const double overlay = 0.55;
+
+  /// 60% opacity — separator/divider text.
+  static const double separator = 0.6;
+
+  /// 80% opacity — light scrim.
+  static const double scrimLight = 0.8;
 }

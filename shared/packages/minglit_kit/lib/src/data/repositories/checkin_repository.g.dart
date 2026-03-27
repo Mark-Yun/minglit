@@ -58,4 +58,4 @@ final class CheckinRepositoryProvider
   }
 }
 
-String _$checkinRepositoryHash() => r'6eb7d58a311c46355492205d40aa8c025d8fd97c';
+String _$checkinRepositoryHash() => r'd499621964bafe7b78eb26f4e65a59d0fc5f87cc';
