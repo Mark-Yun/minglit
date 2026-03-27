@@ -6,6 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="/Users/mark/workspace/minglit"
 WORKTREE_DIR="/Users/mark/workspace/minglit-workers/audit-legal"
 PROMPT_FILE="$SCRIPT_DIR/prompts/audit-legal.txt"
+COMMON_FILE="$SCRIPT_DIR/prompts/worker-common.txt"
 SESSION_TIMEOUT=3600
 REPO="Mark-Yun/minglit"
 
@@ -24,7 +25,9 @@ mkdir -p "$LOG_DIR"
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running audit-legal..."
 
-/usr/local/bin/claude -p "$(cat "$PROMPT_FILE")" \
+/usr/local/bin/claude -p "$(cat "$COMMON_FILE" 2>/dev/null)
+
+$(cat "$PROMPT_FILE")" \
     --max-turns 999 \
     --allowedTools "Bash,Read,Write,Edit,Glob,Grep,Agent,WebSearch,WebFetch" \
     2>&1 | tee "$LOG_DIR/audit-legal-$(date +%Y%m%d-%H%M%S).log" &
