@@ -1,0 +1,50 @@
+name: Daily Backend Simulation + CUJ Tests
+
+on:
+  schedule:
+    - cron: '0 22 * * *'  # KST 07:00
+  workflow_dispatch:
+
+jobs:
+  seed-and-simulate:
+    name: Seed and Simulate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Static seed (users/partners)
+        run: |
+          curl -sf -X POST \
+            "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/dev-seed?mode=static" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
+            -H "Content-Type: application/json" \
+            --max-time 180
+
+      - name: Create parties and events
+        run: |
+          curl -sf -X POST \
+            "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/backend-simulator" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"phase":"create"}' \
+            --max-time 120
+
+      - name: Run full simulation
+        run: |
+          for phase in approve refund run settle; do
+            curl -sf -X POST \
+              "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/backend-simulator" \
+              -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
+              -H "Content-Type: application/json" \
+              -d "{\"phase\":\"$phase\"}" \
+              --max-time 120
+          done
+
+  notify-failure:
+    needs: [seed-and-simulate]
+    if: always()
+    permissions:
+      issues: write
+    uses: ./.github/workflows/notify-failure.yml
+    with:
+      success: ${{ needs.seed-and-simulate.result == 'success' }}
+      workflow_name: 'Daily Backend Simulation'

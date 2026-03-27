@@ -1,0 +1,33 @@
+name: Hourly User Activity Simulation
+
+on:
+  schedule:
+    - cron: '30 * * * *'  # Every hour at :30
+  workflow_dispatch:
+
+jobs:
+  simulate:
+    name: Run User Activity Simulation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Run user activity simulation
+        run: |
+          for phase in approve refund run settle; do
+            curl -sf -X POST \
+              "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/backend-simulator" \
+              -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
+              -H "Content-Type: application/json" \
+              -d "{\"phase\":\"$phase\",\"config\":{\"apps_per_event\":2}}" \
+              --max-time 120
+          done
+
+  notify-failure:
+    needs: [simulate]
+    if: always()
+    permissions:
+      issues: write
+    uses: ./.github/workflows/notify-failure.yml
+    with:
+      success: ${{ needs.simulate.result == 'success' }}
+      workflow_name: 'Hourly User Activity'
