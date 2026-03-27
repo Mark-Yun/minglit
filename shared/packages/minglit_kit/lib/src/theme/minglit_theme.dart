@@ -273,7 +273,6 @@ class MinglitTheme {
     ), // ignore: minglit_no_hardcoded_colors -- theme definition
   );
 
-
   static ThemeData get materialThemeDark {
     return ThemeData(
       useMaterial3: true,

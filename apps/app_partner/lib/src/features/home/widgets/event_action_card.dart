@@ -16,7 +16,7 @@ EventPhase getEventPhase(Event event) {
   final start = event.startTime;
   final end = event.endTime;
 
-  if (end != null && now.isAfter(end)) return EventPhase.ended;
+  if (now.isAfter(end)) return EventPhase.ended;
   if (now.isAfter(start)) return EventPhase.live;
   if (start.difference(now).inHours < 3) return EventPhase.preparing;
   return EventPhase.recruiting;
@@ -321,8 +321,7 @@ class EventActionCard extends StatelessWidget {
                       vertical: MinglitSpacing.small,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(MinglitRadius.input),
+                      borderRadius: BorderRadius.circular(MinglitRadius.input),
                     ),
                   ),
                 ),
@@ -344,8 +343,9 @@ class EventActionCard extends StatelessWidget {
                         vertical: MinglitSpacing.small,
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(MinglitRadius.input),
+                        borderRadius: BorderRadius.circular(
+                          MinglitRadius.input,
+                        ),
                       ),
                     ),
                   ),
@@ -369,19 +369,19 @@ class EventActionCard extends StatelessWidget {
     final diff = event.startTime.difference(DateTime.now());
     final hours = diff.inHours;
     final mins = diff.inMinutes % 60;
-    if (hours > 0) return '준비 중 · ${hours}시간 ${mins}분 후';
-    return '준비 중 · ${mins}분 후';
+    if (hours > 0) return '준비 중 · $hours시간 $mins분 후';
+    return '준비 중 · $mins분 후';
   }
 
   static String _liveLabel(Event event) {
     final mins = DateTime.now().difference(event.startTime).inMinutes;
-    return 'LIVE · ${mins}분 경과';
+    return 'LIVE · $mins분 경과';
   }
 
   static String _endedLabel(Event event) {
     final hours = DateTime.now().difference(event.endTime).inHours;
     if (hours < 1) return '종료 · 방금 전';
-    return '종료 · ${hours}시간 전';
+    return '종료 · $hours시간 전';
   }
 }
 
@@ -485,9 +485,7 @@ class EventActionCardEmpty extends StatelessWidget {
           ),
           const SizedBox(height: MinglitSpacing.sm),
           Text(
-            hasParties
-                ? '이벤트를 만들어 신청을 받아보세요'
-                : '첫 파티를 만들어보세요',
+            hasParties ? '이벤트를 만들어 신청을 받아보세요' : '첫 파티를 만들어보세요',
             style: theme.textTheme.titleSmall,
           ),
           const SizedBox(height: MinglitSpacing.medium),

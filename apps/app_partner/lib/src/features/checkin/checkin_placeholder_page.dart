@@ -1,9 +1,9 @@
 import 'package:app_partner/src/features/checkin/qr_scanner_screen.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:riverpod/src/providers/future_provider.dart';
 
 /// Check-in tab entry page.
 ///
@@ -53,7 +53,7 @@ class _CheckinEntryPage extends ConsumerWidget {
       ),
       error: (e, _) => Scaffold(
         appBar: MinglitTheme.simpleAppBar(title: '체크인'),
-        body: Center(child: Text('이벤트를 불러올 수 없습니다')),
+        body: const Center(child: Text('이벤트를 불러올 수 없습니다')),
       ),
       data: (events) {
         // 1 event → direct to scanner
@@ -70,20 +70,20 @@ class _CheckinEntryPage extends ConsumerWidget {
 
 /// Provider that fetches today's events for check-in.
 /// "Today" = events starting within 3 hours before ~ 1 hour after end.
-final todayEventsProvider =
+final FutureProviderFamily<List<Event>, String> todayEventsProvider =
     FutureProvider.family.autoDispose<List<Event>, String>(
-  (ref, partnerId) async {
-    final repo = ref.read(eventRepositoryProvider);
-    final upcoming = await repo.getUpcomingEvents(partnerId);
-    final now = DateTime.now();
+      (ref, partnerId) async {
+        final repo = ref.read(eventRepositoryProvider);
+        final upcoming = await repo.getUpcomingEvents(partnerId);
+        final now = DateTime.now();
 
-    return upcoming.where((e) {
-      final earlyWindow = e.startTime.subtract(const Duration(hours: 3));
-      final lateWindow = e.endTime.add(const Duration(hours: 1));
-      return now.isAfter(earlyWindow) && now.isBefore(lateWindow);
-    }).toList();
-  },
-);
+        return upcoming.where((e) {
+          final earlyWindow = e.startTime.subtract(const Duration(hours: 3));
+          final lateWindow = e.endTime.add(const Duration(hours: 1));
+          return now.isAfter(earlyWindow) && now.isBefore(lateWindow);
+        }).toList();
+      },
+    );
 
 /// Wraps QR scanner with event context (name, count) in dark theme.
 class _ScannerWrapper extends StatelessWidget {
@@ -169,25 +169,24 @@ class _CheckinSelectionPage extends StatelessWidget {
             Expanded(
               child: ListView.separated(
                 itemCount: events.length,
-                separatorBuilder: (_, __) =>
+                separatorBuilder: (_, _) =>
                     const SizedBox(height: MinglitSpacing.small),
                 itemBuilder: (context, index) {
                   final event = events[index];
                   final timeFmt = DateFormat('HH:mm');
                   final now = DateTime.now();
-                  final isLive = now.isAfter(event.startTime) &&
+                  final isLive =
+                      now.isAfter(event.startTime) &&
                       now.isBefore(event.endTime);
 
                   return Card(
                     child: InkWell(
-                      borderRadius:
-                          BorderRadius.circular(MinglitRadius.card),
+                      borderRadius: BorderRadius.circular(MinglitRadius.card),
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute<void>(
-                            builder: (_) =>
-                                _ScannerWrapper(event: event),
+                            builder: (_) => _ScannerWrapper(event: event),
                           ),
                         );
                       },
@@ -198,8 +197,7 @@ class _CheckinSelectionPage extends StatelessWidget {
                             // Time
                             Text(
                               timeFmt.format(event.startTime),
-                              style:
-                                  theme.textTheme.titleLarge?.copyWith(
+                              style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.w900,
                                 color: isLive
                                     ? MinglitColors.success
@@ -210,8 +208,7 @@ class _CheckinSelectionPage extends StatelessWidget {
                             // Info
                             Expanded(
                               child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     event.title ?? '',
@@ -232,16 +229,16 @@ class _CheckinSelectionPage extends StatelessWidget {
                                   vertical: MinglitSpacing.xsmall,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: MinglitColors.success
-                                      .withValues(alpha: 0.1),
+                                  color: MinglitColors.success.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   borderRadius: BorderRadius.circular(
                                     MinglitRadius.small,
                                   ),
                                 ),
                                 child: Text(
                                   'LIVE',
-                                  style:
-                                      theme.textTheme.labelSmall?.copyWith(
+                                  style: theme.textTheme.labelSmall?.copyWith(
                                     color: MinglitColors.success,
                                     fontWeight: FontWeight.w700,
                                   ),

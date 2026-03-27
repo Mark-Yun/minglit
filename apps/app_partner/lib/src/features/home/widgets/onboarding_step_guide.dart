@@ -55,7 +55,9 @@ class OnboardingStepGuide extends StatelessWidget {
 
         // Progress bar
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.xsmall),
+          padding: const EdgeInsets.symmetric(
+            horizontal: MinglitSpacing.xsmall,
+          ),
           child: Column(
             children: [
               Row(
@@ -219,8 +221,9 @@ class OnboardingStepGuide extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(MinglitSpacing.medium),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest
-                  .withValues(alpha: 0.3),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.3,
+              ),
               borderRadius: BorderRadius.circular(MinglitRadius.input),
             ),
             child: Column(
@@ -235,13 +238,33 @@ class OnboardingStepGuide extends StatelessWidget {
                 const SizedBox(height: MinglitSpacing.sm),
                 Row(
                   children: [
-                    _FlowStep(icon: '🎉', label: '파티', sub: '브랜드 설정', theme: theme),
+                    _FlowStep(
+                      icon: '🎉',
+                      label: '파티',
+                      sub: '브랜드 설정',
+                      theme: theme,
+                    ),
                     _FlowArrow(theme: theme),
-                    _FlowStep(icon: '📅', label: '이벤트', sub: '날짜·인원', theme: theme),
+                    _FlowStep(
+                      icon: '📅',
+                      label: '이벤트',
+                      sub: '날짜·인원',
+                      theme: theme,
+                    ),
                     _FlowArrow(theme: theme),
-                    _FlowStep(icon: '👥', label: '신청', sub: '승인·관리', theme: theme),
+                    _FlowStep(
+                      icon: '👥',
+                      label: '신청',
+                      sub: '승인·관리',
+                      theme: theme,
+                    ),
                     _FlowArrow(theme: theme),
-                    _FlowStep(icon: '💰', label: '정산', sub: '자동 입금', theme: theme),
+                    _FlowStep(
+                      icon: '💰',
+                      label: '정산',
+                      sub: '자동 입금',
+                      theme: theme,
+                    ),
                   ],
                 ),
               ],
@@ -281,9 +304,7 @@ class _StepRow extends StatelessWidget {
     return Opacity(
       opacity: opacity,
       child: Container(
-        color: isCurrent
-            ? colorScheme.primary.withValues(alpha: 0.05)
-            : null,
+        color: isCurrent ? colorScheme.primary.withValues(alpha: 0.05) : null,
         padding: const EdgeInsets.symmetric(
           horizontal: MinglitSpacing.medium,
           vertical: MinglitSpacing.sm,
@@ -298,8 +319,8 @@ class _StepRow extends StatelessWidget {
                 color: isDone
                     ? MinglitColors.success
                     : isCurrent
-                        ? colorScheme.primary
-                        : theme.colorScheme.surfaceContainerHighest,
+                    ? colorScheme.primary
+                    : theme.colorScheme.surfaceContainerHighest,
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -325,9 +346,7 @@ class _StepRow extends StatelessWidget {
                     style: theme.textTheme.labelLarge?.copyWith(
                       fontWeight: isCurrent ? FontWeight.w800 : FontWeight.w600,
                       decoration: isDone ? TextDecoration.lineThrough : null,
-                      color: isDone
-                          ? theme.colorScheme.onSurfaceVariant
-                          : null,
+                      color: isDone ? theme.colorScheme.onSurfaceVariant : null,
                     ),
                   ),
                   if (subtitle != null)
