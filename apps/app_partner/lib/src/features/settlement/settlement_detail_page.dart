@@ -66,18 +66,18 @@ class _SettlementDetailPageState extends ConsumerState<SettlementDetailPage> {
                       size: 48,
                       color: Theme.of(context).colorScheme.error,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: MinglitSpacing.medium),
                     Text(
                       '오류가 발생했습니다',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: MinglitSpacing.small),
                     Text(
                       _error!,
                       style: Theme.of(context).textTheme.bodySmall,
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: MinglitSpacing.medium),
                     FilledButton(
                       onPressed: _loadDetail,
                       child: const Text('다시 시도'),
@@ -105,12 +105,12 @@ class _DetailContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           StatusMessageCard(status: detail.status),
-          const SizedBox(height: 16),
+          const SizedBox(height: MinglitSpacing.medium),
           AmountBreakdown(detail: detail),
-          const SizedBox(height: 16),
+          const SizedBox(height: MinglitSpacing.medium),
           if (detail.histories.isNotEmpty) ...[
             StatusTimeline(histories: detail.histories),
-            const SizedBox(height: 16),
+            const SizedBox(height: MinglitSpacing.medium),
           ],
           ActionButtons(detail: detail),
         ],
@@ -145,7 +145,7 @@ class StatusMessageCard extends StatelessWidget {
               status: SettlementStatus.fromString(status),
               compact: false,
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: MinglitSpacing.sm),
             Expanded(
               child: Text(
                 message,
@@ -173,7 +173,7 @@ class AmountBreakdown extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('금액 내역', style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 12),
+            const SizedBox(height: MinglitSpacing.sm),
             _Row('총 매출', fmt.format(detail.grossAmount)),
             _Row('PG 수수료', '-${fmt.format(detail.pgFeeAmount)}'),
             _Row('플랫폼 수수료', '-${fmt.format(detail.platformFeeAmount)}'),
@@ -230,7 +230,7 @@ class StatusTimeline extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('처리 이력', style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 12),
+            const SizedBox(height: MinglitSpacing.sm),
             ...histories.map((h) => _TimelineItem(entry: h)),
           ],
         ),
@@ -258,7 +258,7 @@ class _TimelineItem extends StatelessWidget {
               shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: MinglitSpacing.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,7 +299,7 @@ class ActionButtons extends ConsumerWidget {
             icon: const Icon(Icons.refresh),
             label: const Text('재지급 요청'),
           ),
-        const SizedBox(height: 8),
+        const SizedBox(height: MinglitSpacing.small),
         OutlinedButton.icon(
           onPressed: () => _downloadCsv(context),
           icon: const Icon(Icons.download),
