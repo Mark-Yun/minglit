@@ -12,8 +12,8 @@ import {
 
 const TEST_USER_ID = "user-partner-owner";
 const TEST_PARTNER_ID = "partner-001";
-const TEST_APP_ID = "app-001";
-const TEST_EVENT_ID = "event-001";
+const TEST_APP_ID = "00000000-0000-1000-8000-000000000001";
+const TEST_EVENT_ID = "00000000-0000-1000-8000-000000000002";
 
 const ENV = {
   SUPABASE_URL: "http://localhost:54321",
@@ -224,7 +224,7 @@ Deno.test({
       await withMockedFetch(fetchMock, async () => {
         const res = await handler(
           authenticatedJsonRequest(BASE_URL, {
-            application_id: "nonexistent",
+            application_id: "00000000-0000-1000-8000-999999999999",
             reason: "Not a good fit",
           }),
         );
@@ -246,6 +246,7 @@ Deno.test({
     const { fetchMock } = createFetchMock([
       authRoute(),
       appRoute("rejected"),
+      permRoute("owner"),
     ]);
 
     await withEnv(ENV, async () => {
