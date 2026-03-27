@@ -97,13 +97,18 @@ async function handleApprove(
   const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
   if (permCheck instanceof Response) return permCheck;
 
-  // Update status to approved (triggers issue_ticket_on_approval)
-  const { error: updateError } = await supabase
+  // Compare-and-set: only update if status is still pending/pending_review
+  const { data: updated, error: updateError } = await supabase
     .from("event_applications")
     .update({ status: "approved", updated_at: new Date().toISOString() })
-    .eq("id", applicationId);
+    .eq("id", applicationId)
+    .in("status", ["pending", "pending_review"])
+    .select("id");
 
   if (updateError) return errorResponse("Failed to approve application", 500);
+  if (!updated || updated.length === 0) {
+    return errorResponse("Application already processed", 409);
+  }
 
   return successResponse({ approved: 1, application_id: applicationId });
 }
@@ -135,29 +140,17 @@ async function handleBulkApprove(
   const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
   if (permCheck instanceof Response) return permCheck;
 
-  // Find all pending applications for this event
-  const { data: pendingApps, error: listError } = await supabase
-    .from("event_applications")
-    .select("id")
-    .eq("event_id", eventId)
-    .in("status", ["pending", "pending_review"]);
-
-  if (listError) return errorResponse("Failed to list applications", 500);
-  if (!pendingApps || pendingApps.length === 0) {
-    return successResponse({ approved: 0, message: "No pending applications" });
-  }
-
-  const ids = pendingApps.map((a) => a.id);
-
-  // Bulk update (triggers fire per row)
-  const { error: updateError } = await supabase
+  // Compare-and-set: only update rows still in pending status
+  const { data: updated, error: updateError } = await supabase
     .from("event_applications")
     .update({ status: "approved", updated_at: new Date().toISOString() })
-    .in("id", ids);
+    .eq("event_id", eventId)
+    .in("status", ["pending", "pending_review"])
+    .select("id");
 
   if (updateError) return errorResponse("Failed to bulk approve", 500);
 
-  return successResponse({ approved: ids.length, event_id: eventId });
+  return successResponse({ approved: updated?.length ?? 0, event_id: eventId });
 }
 
 // ── Permission check ──
@@ -168,7 +161,7 @@ async function checkPartnerPermission(
 ): Promise<void | Response> {
   const { data: perm, error: permError } = await supabase
     .from("partner_member_permissions")
-    .select("permissions")
+    .select("permissions, role")
     .eq("partner_id", partnerId)
     .eq("user_id", userId)
     .maybeSingle();
@@ -176,6 +169,9 @@ async function checkPartnerPermission(
   if (permError) {
     return errorResponse("Failed to verify partner permissions", 500);
   }
+
+  // Owner bypass — defense-in-depth even if DB trigger grants all permissions
+  if (perm?.role === "owner") return;
 
   const permissions = (perm?.permissions as string[] | null) ?? [];
   const hasPermission =

@@ -78,17 +78,22 @@ async function handleRequest(req: Request): Promise<Response> {
   const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
   if (permCheck instanceof Response) return permCheck;
 
-  // Update status to rejected (triggers handle_application_rejection → refund)
-  const { error: updateError } = await supabase
+  // Compare-and-set: only update if status is still pending/pending_review
+  const { data: updated, error: updateError } = await supabase
     .from("event_applications")
     .update({
       status: "rejected",
       rejection_reason: reason.trim(),
       updated_at: new Date().toISOString(),
     })
-    .eq("id", applicationId);
+    .eq("id", applicationId)
+    .in("status", ["pending", "pending_review"])
+    .select("id");
 
   if (updateError) return errorResponse("Failed to reject application", 500);
+  if (!updated || updated.length === 0) {
+    return errorResponse("Application already processed", 409);
+  }
 
   return successResponse({
     rejected: 1,
@@ -104,7 +109,7 @@ async function checkPartnerPermission(
 ): Promise<void | Response> {
   const { data: perm, error: permError } = await supabase
     .from("partner_member_permissions")
-    .select("permissions")
+    .select("permissions, role")
     .eq("partner_id", partnerId)
     .eq("user_id", userId)
     .maybeSingle();
@@ -112,6 +117,9 @@ async function checkPartnerPermission(
   if (permError) {
     return errorResponse("Failed to verify partner permissions", 500);
   }
+
+  // Owner bypass — defense-in-depth even if DB trigger grants all permissions
+  if (perm?.role === "owner") return;
 
   const permissions = (perm?.permissions as string[] | null) ?? [];
   const hasPermission =
