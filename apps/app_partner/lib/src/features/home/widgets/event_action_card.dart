@@ -397,7 +397,8 @@ class _EndedStatsRow extends StatelessWidget {
     final current = event.currentParticipants;
     final fmt = NumberFormat('#,###');
     // Fix #523: 하드코딩 매출 0 → 실제 티켓 매출 계산
-    final totalRevenue = event.tickets?.fold<int>(
+    final totalRevenue =
+        event.tickets?.fold<int>(
           0,
           (sum, ticket) => sum + (ticket.price * ticket.soldCount),
         ) ??
