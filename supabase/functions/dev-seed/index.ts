@@ -601,13 +601,17 @@ async function updatePartyImages(supabase: SupabaseClient, imageUrls: string[]):
   const { data: parties } = await supabase.from('parties').select('id').order('created_at')
   if (!parties) return
 
-  for (let i = 0; i < parties.length; i++) {
-    const shuffled = [
+  // Fix #456: batch upsert to avoid Edge Function timeout
+  const updates = parties.map((party: any, i: number) => ({
+    id: party.id,
+    image_urls: [
       imageUrls[i % imageUrls.length],
       imageUrls[(i + 1) % imageUrls.length],
       imageUrls[(i + 2) % imageUrls.length],
-    ]
-    await supabase.from('parties').update({ image_urls: shuffled }).eq('id', parties[i].id)
+    ],
+  }))
+  if (updates.length > 0) {
+    await supabase.from('parties').upsert(updates, { onConflict: 'id' })
   }
 }
 
@@ -757,14 +761,19 @@ async function seedUserActivity(sb: SupabaseClient): Promise<void> {
   const verifiedUsers = users.filter((u: any) => u.is_verified)
   const globalVerifs = verifications.filter((v: any) => v.partner_id === null)
 
+  // Fix #456: batch upsert to avoid Edge Function timeout
+  const uvRows: { user_id: string; verification_id: string; data: { verified: boolean; source: string } }[] = []
   for (const user of verifiedUsers.slice(0, 20)) {
     for (const verif of globalVerifs) {
-      await sb.from('user_verifications').upsert({
+      uvRows.push({
         user_id: user.id,
         verification_id: verif.id,
         data: { verified: true, source: 'seed' },
-      }, { onConflict: 'user_id,verification_id', ignoreDuplicates: true })
+      })
     }
+  }
+  if (uvRows.length > 0) {
+    await sb.from('user_verifications').upsert(uvRows, { onConflict: 'user_id,verification_id', ignoreDuplicates: true })
   }
 
   // ── Step 3: Pick events for activity seeding ─────────────────────────
@@ -888,12 +897,17 @@ async function seedUserActivity(sb: SupabaseClient): Promise<void> {
   const { data: participants } = await sb.from('event_participants').select('id').limit(20)
   if (participants && participants.length > 0) {
     const checkinCount = Math.max(1, Math.floor(participants.length / 3))
-    for (let i = 0; i < checkinCount; i++) {
-      await sb.from('event_participants').update({ status: 'checked_in' }).eq('id', participants[i].id)
-    }
     const noShowCount = Math.max(1, Math.floor(participants.length / 3))
-    for (let i = checkinCount; i < checkinCount + noShowCount && i < participants.length; i++) {
-      await sb.from('event_participants').update({ status: 'no_show' }).eq('id', participants[i].id)
+
+    // Fix #456: batch upsert to avoid Edge Function timeout
+    const checkedInIds = participants.slice(0, checkinCount).map((p: any) => p.id)
+    if (checkedInIds.length > 0) {
+      await sb.from('event_participants').update({ status: 'checked_in' }).in('id', checkedInIds)
+    }
+
+    const noShowIds = participants.slice(checkinCount, checkinCount + noShowCount).map((p: any) => p.id)
+    if (noShowIds.length > 0) {
+      await sb.from('event_participants').update({ status: 'no_show' }).in('id', noShowIds)
     }
   }
 
@@ -942,20 +956,26 @@ async function seedUserActivity(sb: SupabaseClient): Promise<void> {
   const { data: allVerifications } = await sb.from('verifications').select('id, partner_id')
 
   if (allUsers && allPartners && allVerifications) {
+    // Fix #456: batch upsert to avoid Edge Function timeout
+    const pvuRows: { partner_id: string; user_id: string; verification_id: string; verified_at: string }[] = []
+    const now = new Date().toISOString()
     for (const user of allUsers) {
       for (const partner of allPartners) {
         const partnerVerifs = allVerifications.filter((v: any) =>
           v.partner_id === partner.id || v.partner_id === null
         )
         for (const verif of partnerVerifs) {
-          await sb.from('partner_verified_users').upsert({
+          pvuRows.push({
             partner_id: partner.id,
             user_id: user.id,
             verification_id: verif.id,
-            verified_at: new Date().toISOString(),
-          }, { onConflict: 'partner_id,user_id,verification_id' })
+            verified_at: now,
+          })
         }
       }
+    }
+    if (pvuRows.length > 0) {
+      await sb.from('partner_verified_users').upsert(pvuRows, { onConflict: 'partner_id,user_id,verification_id' })
     }
   }
 
@@ -965,15 +985,19 @@ async function seedUserActivity(sb: SupabaseClient): Promise<void> {
     .eq('status', 'scheduled')
 
   if (eventsForRules) {
+    // Fix #456: batch upsert to avoid Edge Function timeout
+    const matchRuleRows: { event_id: string; source_group_id: string; target_group_id: string }[] = []
     for (const event of eventsForRules) {
       const groups = (event as any).entry_groups ?? []
       if (groups.length >= 2) {
-        // Insert bidirectional match rules
-        await sb.from('match_rules').upsert([
+        matchRuleRows.push(
           { event_id: event.id, source_group_id: groups[0].id, target_group_id: groups[1].id },
           { event_id: event.id, source_group_id: groups[1].id, target_group_id: groups[0].id },
-        ], { onConflict: 'event_id,source_group_id,target_group_id', ignoreDuplicates: true })
+        )
       }
+    }
+    if (matchRuleRows.length > 0) {
+      await sb.from('match_rules').upsert(matchRuleRows, { onConflict: 'event_id,source_group_id,target_group_id', ignoreDuplicates: true })
     }
   }
 }
