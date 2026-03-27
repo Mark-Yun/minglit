@@ -124,7 +124,11 @@ void main() {
       //   isCutoffRefundable = !now.isAfter(cutoffDate) = true
       //   daysLeft = 0 (same calendar day) → shows "(오늘)"
       final now = DateTime.now();
-      final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59);
+      final endOfToday = DateTime(
+        now.year,
+        now.month,
+        now.day + 1,
+      ).subtract(const Duration(microseconds: 1));
       final event = _createTestEvent(
         startTime: endOfToday.add(const Duration(days: 7)),
       );
