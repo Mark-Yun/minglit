@@ -127,6 +127,32 @@ class MinglitIconSize {
   static const double xlarge = 32;
 }
 
+/// Partner app brand colors — same purple family, toned down for business feel.
+class MinglitPartnerColors {
+  /// Primary brand indigo (toned-down purple).
+  static const primary = Color(0xFF6C3CE1);
+
+  /// Lighter variant for gradients.
+  static const primaryLight = Color(0xFF8B5CF6);
+
+  /// Surface tint for cards and containers.
+  static const primarySurface = Color(0xFFF5F0FF);
+
+  /// Border color for highlighted cards.
+  static const primaryBorder = Color(0xFFE8E0FF);
+
+  /// Container fill for secondary buttons.
+  static const primaryContainer = Color(0xFFF0EDFF);
+}
+
+/// Partner app dark mode colors.
+class MinglitPartnerColorsDark {
+  // ignore: minglit_no_hardcoded_colors -- partner dark theme definition
+  static const primary = Color(0xFF9B7BEC);
+  // ignore: minglit_no_hardcoded_colors -- partner dark theme definition
+  static const primaryLight = Color(0xFFB39DFF);
+}
+
 /// Animation duration constants.
 class MinglitAnimation {
   /// 100ms micro animation duration for micro-interactions.

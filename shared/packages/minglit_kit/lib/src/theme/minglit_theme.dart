@@ -145,6 +145,39 @@ class MinglitTheme {
     );
   }
 
+  /// Partner app light theme — same structure, different primary color.
+  static ThemeData get partnerTheme {
+    final base = materialTheme;
+    return base.copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: MinglitPartnerColors.primary,
+        primary: MinglitPartnerColors.primary,
+        secondary: MinglitColors.secondary,
+        tertiary: MinglitColors.tertiary,
+        surface: MinglitColors.background,
+        error: MinglitColors.error,
+        onSurfaceVariant: MinglitColors.textSecondary,
+      ),
+    );
+  }
+
+  /// Partner app dark theme.
+  static ThemeData get partnerThemeDark {
+    final base = materialThemeDark;
+    return base.copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: MinglitPartnerColorsDark.primary,
+        brightness: Brightness.dark,
+        primary: MinglitPartnerColorsDark.primary,
+        secondary: MinglitColorsDark.secondary,
+        tertiary: MinglitColorsDark.tertiary,
+        surface: MinglitColorsDark.surface,
+        error: MinglitColorsDark.error,
+        onSurfaceVariant: MinglitColorsDark.textSecondary,
+      ),
+    );
+  }
+
   static ThemeData get materialThemeDark {
     return ThemeData(
       useMaterial3: true,
