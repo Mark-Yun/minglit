@@ -173,7 +173,7 @@ Dark Mode 소스: `minglit_theme.dart:228-232`
 **사용 패턴**:
 - `showModalBottomSheet`로 호출
 - 내부 패딩: `MinglitSpacing.large` (24px)
-- 닫기 버튼: 전체 너비 `ElevatedButton`
+- 닫기/확인 버튼: 용도에 따라 `ElevatedButton` (CTA) 또는 `TextButton` (취소/닫기) 사용
 - drag handle은 Flutter 기본 제공
 
 > 디자인 카탈로그 9번 탭에서 Modal BottomSheet 데모를 확인할 수 있습니다.
