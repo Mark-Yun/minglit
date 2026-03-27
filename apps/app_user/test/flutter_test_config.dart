@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 ///
 /// Loads NotoSansKR font so golden tests render Korean text correctly
 /// instead of showing □□□ (Ahem font fallback).
+// Fix #449: 테스트 환경에서 NotoSansKR를 선로드해 한글 golden 렌더링 깨짐(□)을 방지
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   TestWidgetsFlutterBinding.ensureInitialized();
   await _loadNotoSansKR();
