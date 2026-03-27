@@ -98,7 +98,7 @@ class _SectionCard extends StatelessWidget {
             Row(
               children: [
                 Icon(icon, size: 20, color: iconColor),
-                const SizedBox(width: 8),
+                const SizedBox(width: MinglitSpacing.small),
                 Text(
                   title,
                   style: theme.textTheme.titleSmall?.copyWith(
@@ -172,7 +172,7 @@ class _StepItem extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: MinglitSpacing.small),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(top: MinglitSpacing.xxsmall),

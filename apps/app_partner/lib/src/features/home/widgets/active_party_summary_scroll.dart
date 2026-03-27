@@ -37,7 +37,7 @@ class ActivePartySummaryScroll extends StatelessWidget {
                 size: 18,
                 color: colorScheme.primary,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: MinglitSpacing.small),
               Text(
                 '파티별 요약',
                 style: theme.textTheme.titleSmall?.copyWith(
@@ -160,7 +160,7 @@ class _PartyCard extends StatelessWidget {
                       size: 14,
                       color: colorScheme.onSurfaceVariant,
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: MinglitSpacing.xsmall),
                     Text(
                       '최대 ${party.maxParticipants}명',
                       style: theme.textTheme.bodySmall?.copyWith(

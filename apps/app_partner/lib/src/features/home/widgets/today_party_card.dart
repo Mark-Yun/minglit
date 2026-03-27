@@ -138,7 +138,7 @@ class _EventItem extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: MinglitSpacing.xsmall),
                     Row(
                       children: [
                         Icon(
@@ -146,7 +146,7 @@ class _EventItem extends StatelessWidget {
                           size: 14,
                           color: colorScheme.onSurfaceVariant,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: MinglitSpacing.xsmall),
                         Text(
                           '${timeFormat.format(event.startTime)} ~ '
                           '${timeFormat.format(event.endTime)}',

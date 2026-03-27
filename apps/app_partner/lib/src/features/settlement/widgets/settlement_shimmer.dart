@@ -1,6 +1,7 @@
 import 'dart:async' show unawaited;
 
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 class SettlementListShimmer extends StatefulWidget {
   const SettlementListShimmer({super.key, this.itemCount = 5});
@@ -80,7 +81,7 @@ class _ShimmerItem extends StatelessWidget {
                       highlightColor: highlightColor,
                       value: animation.value,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: MinglitSpacing.small),
                     _ShimmerBox(
                       width: 120,
                       height: 11,
@@ -91,7 +92,7 @@ class _ShimmerItem extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: MinglitSpacing.small),
               _ShimmerBox(
                 width: 56,
                 height: 22,

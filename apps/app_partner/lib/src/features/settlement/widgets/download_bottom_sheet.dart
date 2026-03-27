@@ -39,12 +39,12 @@ class _DownloadBottomSheetState extends State<DownloadBottomSheet> {
               'CSV 다운로드',
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: MinglitSpacing.small),
             Text(
               '정산 내역을 CSV 파일로 저장합니다.',
               style: Theme.of(context).textTheme.bodySmall,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: MinglitSpacing.large),
             FilledButton.icon(
               onPressed: _isGenerating ? null : _generateAndShare,
               icon: _isGenerating
@@ -56,7 +56,7 @@ class _DownloadBottomSheetState extends State<DownloadBottomSheet> {
                   : const Icon(Icons.download),
               label: Text(_isGenerating ? '생성 중...' : 'CSV 저장'),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: MinglitSpacing.small),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('취소'),
