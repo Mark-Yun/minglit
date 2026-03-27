@@ -188,15 +188,18 @@ export async function simRefundRequests(
 
       if (deleteErr) {
         // Rollback: participant delete failed — revert application status to avoid cancelled-but-has-participant state
-        await supabase
+        // Fix #507: capture rollback error to avoid masking failures
+        const { error: rollbackErr } = await supabase
           .from("event_applications")
           .update({ status: "paid", refund_status: null, refund_amount: null })
           .eq("id", appId);
         log({
           level: "error",
           phase: "refund",
-          step: "delete_participant",
-          message: `Participant delete failed, reverted application ${appId}: ${deleteErr.message}`,
+          step: rollbackErr ? "rollback_app_failed" : "delete_participant",
+          message: rollbackErr
+            ? `Participant delete failed and rollback also failed for app ${appId}: ${deleteErr.message}; rollback error: ${rollbackErr.message}`
+            : `Participant delete failed, reverted application ${appId}: ${deleteErr.message}`,
         });
         return null;
       }
