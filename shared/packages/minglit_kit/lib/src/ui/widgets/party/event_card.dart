@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/src/data/models/event.dart';
 import 'package:minglit_kit/src/data/models/partner.dart';
+import 'package:minglit_kit/src/theme/minglit_text_theme_extension.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_image.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_skeleton.dart';
@@ -220,6 +221,13 @@ class _ParticipantDDayOverlay extends StatelessWidget {
       _ => MinglitColors.primary,
     };
 
+    // Fix #474: fontSize 13 → ThemeExtension chipLabel
+    final ext = Theme.of(context).extension<MinglitTextThemeExtension>()!;
+    final overlayStyle = ext.chipLabel.copyWith(
+      color: MinglitColors.background,
+      fontWeight: FontWeight.w400,
+    );
+
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: MinglitSpacing.small,
@@ -253,21 +261,12 @@ class _ParticipantDDayOverlay extends StatelessWidget {
             ),
           ],
           const SizedBox(width: 6),
-          Text(
-            '$current/$max',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: MinglitColors.background,
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
+          Text('$current/$max', style: overlayStyle),
           const SizedBox(width: 4),
           Text(
             '·',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            style: overlayStyle.copyWith(
               color: MinglitColors.background.withValues(alpha: 0.6),
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
             ),
           ),
           const SizedBox(width: 4),
@@ -277,14 +276,7 @@ class _ParticipantDDayOverlay extends StatelessWidget {
             color: MinglitColors.background,
           ),
           const SizedBox(width: 3),
-          Text(
-            dDayLabel,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: MinglitColors.background,
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
+          Text(dDayLabel, style: overlayStyle),
         ],
       ),
     );
@@ -326,15 +318,18 @@ class _PartnerOverlay extends StatelessWidget {
                 : null,
           ),
           const SizedBox(width: 6),
+          // Fix #474: fontSize 13 → ThemeExtension chipLabel
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 130),
             child: Text(
               partner.name,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: MinglitColors.background,
-                fontSize: 13,
-                fontWeight: FontWeight.w400,
-              ),
+              style: Theme.of(context)
+                  .extension<MinglitTextThemeExtension>()!
+                  .chipLabel
+                  .copyWith(
+                    color: MinglitColors.background,
+                    fontWeight: FontWeight.w400,
+                  ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

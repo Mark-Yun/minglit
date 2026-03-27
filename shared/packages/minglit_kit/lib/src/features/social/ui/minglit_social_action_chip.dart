@@ -140,10 +140,10 @@ class MinglitSocialActionChip extends ConsumerWidget {
                     : theme.colorScheme.outlineVariant,
               ),
               const SizedBox(width: 4),
+              // Fix #474: fontSize 14 → labelLarge
               Text(
                 label,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  fontSize: 14,
+                style: theme.textTheme.labelLarge?.copyWith(
                   color: isActive
                       ? MinglitColors.background
                       : theme.colorScheme.onSurfaceVariant,

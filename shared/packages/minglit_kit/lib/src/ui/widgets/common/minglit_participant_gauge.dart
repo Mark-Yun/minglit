@@ -5,6 +5,7 @@ import 'package:minglit_kit/src/theme/minglit_theme.dart';
 const double _kPillRadius = 100;
 const double _kSegmentRadius = 2;
 const double _kSegmentWidth = 10;
+// Fix #474: labelSmall(11px)과 동일하지만 아이콘 크기에도 쓰이므로 상수 유지
 const double _kGaugeTextSize = 11;
 const double _kLowThreshold = 0.33;
 const double _kMedThreshold = 0.66;
@@ -78,11 +79,11 @@ class MinglitParticipantGauge extends StatelessWidget {
             ),
           ],
           const SizedBox(width: MinglitSpacing.xsmall2),
+          // Fix #474: labelSmall이 11px이므로 fontSize 제거
           Text(
             '$current/$max',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: Theme.of(context).colorScheme.onSurface,
-              fontSize: _kGaugeTextSize,
               fontWeight: FontWeight.w700,
             ),
           ),
