@@ -168,13 +168,13 @@ Dark Mode 소스: `minglit_theme.dart:228-232`
 
 ## 11. BottomSheet
 
-현재 `BottomSheetThemeData` 및 `BottomSheetTheme` 설정이 별도로 없으며, Flutter 기본 `showModalBottomSheet` 스타일이 적용됩니다.
+**기본 스타일**: `BottomSheetThemeData` 별도 설정 없음 — Flutter 기본 `showModalBottomSheet` 스타일 적용.
 
-**사용 패턴**:
+**밍릿 권장 패턴**:
 - `showModalBottomSheet`로 호출
 - 내부 패딩: `MinglitSpacing.large` (24px)
 - 닫기/확인 버튼: 용도에 따라 `ElevatedButton` (CTA) 또는 `TextButton` (취소/닫기) 사용
-- drag handle은 Flutter 기본 제공
+- drag handle: Flutter 기본 제공
 
 > 디자인 카탈로그 9번 탭에서 Modal BottomSheet 데모를 확인할 수 있습니다.
 
