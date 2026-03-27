@@ -17,6 +17,9 @@ inputs:
   dev-domain-alias:
     description: 'Domain alias for dev environment'
     required: true
+  deploy-branch:
+    description: 'Branch name to determine prod vs preview deployment'
+    required: true
 
 outputs:
   accessible-url:
@@ -38,7 +41,7 @@ runs:
         echo "📦 Installing workspace dependencies..."
         (cd ../../ && flutter pub get)
 
-        if [[ "${{ github.ref_name }}" == "main" ]]; then
+        if [[ "${{ inputs.deploy-branch }}" == "main" ]]; then
           TARGET="lib/main.dart"
           SB_URL="$SUPABASE_MAIN_URL"
           SB_KEY="$SUPABASE_MAIN_KEY"
@@ -89,7 +92,7 @@ runs:
 
         cd build/web
 
-        if [[ "${{ github.ref_name }}" == "main" ]]; then
+        if [[ "${{ inputs.deploy-branch }}" == "main" ]]; then
           echo "🚀 Deploying to Production (Main)..."
           npx vercel deploy --prod $COMMON_ARGS
           # Fix #389: output the production alias URL for smoke test
