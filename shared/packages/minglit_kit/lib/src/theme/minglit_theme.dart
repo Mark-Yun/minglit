@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:minglit_kit/src/theme/minglit_text_theme_extension.dart';
 
 part 'minglit_design_tokens.dart';
 part 'minglit_design_utils.dart';
@@ -103,7 +104,33 @@ class MinglitTheme {
           fontSize: 16,
           color: MinglitColors.textSecondary,
         ),
+        // Fix #474: 빈 슬롯 채우기 — 하드코딩 fontSize 흡수
+        bodySmall: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 12,
+          color: MinglitColors.textSecondary,
+        ),
+        labelLarge: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: MinglitColors.textPrimary,
+        ),
+        labelMedium: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: MinglitColors.textPrimary,
+        ),
+        labelSmall: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: MinglitColors.textPrimary,
+        ),
       ),
+      // Fix #474: ThemeExtension 등록
+      extensions: const [MinglitTextThemeExtension.light],
       // Layer 2: 컴포넌트 테마 (see minglit_component_theme.dart)
       appBarTheme: _MinglitComponentThemes.appBar,
       elevatedButtonTheme: _MinglitComponentThemes.elevatedButton,
@@ -134,6 +161,8 @@ class MinglitTheme {
         onSurfaceVariant: MinglitColorsDark.textSecondary,
       ),
       scaffoldBackgroundColor: MinglitColorsDark.background,
+      // Fix #474: ThemeExtension 등록
+      extensions: const [MinglitTextThemeExtension.dark],
       textTheme: const TextTheme(
         displayLarge: TextStyle(
           // ignore: minglit_no_hardcoded_text_style -- theme definition
@@ -163,6 +192,30 @@ class MinglitTheme {
           // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 16,
           color: MinglitColorsDark.textSecondary,
+        ),
+        // Fix #474: 빈 슬롯 채우기 — 하드코딩 fontSize 흡수
+        bodySmall: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 12,
+          color: MinglitColorsDark.textSecondary,
+        ),
+        labelLarge: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: MinglitColorsDark.textPrimary,
+        ),
+        labelMedium: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: MinglitColorsDark.textPrimary,
+        ),
+        labelSmall: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: MinglitColorsDark.textPrimary,
         ),
       ),
       appBarTheme: const AppBarTheme(

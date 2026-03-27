@@ -11,6 +11,7 @@ export 'src/features/search/ui/location_search_screen.dart';
 export 'src/features/social/ui/minglit_social_action_chip.dart';
 export 'src/features/social/ui/minglit_social_button.dart';
 export 'src/features/verification/ui/identity_verification_screen.dart';
+export 'src/theme/minglit_text_theme_extension.dart';
 export 'src/theme/minglit_theme.dart';
 export 'src/ui/widgets/bug_reporter_wrapper.dart';
 export 'src/ui/widgets/common/add_action_card.dart';
