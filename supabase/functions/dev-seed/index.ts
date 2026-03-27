@@ -312,10 +312,16 @@ async function createAdminUser(
 
   if (error) {
     if (error.message?.includes('already registered') || (error as any).code === 'email_exists') {
-      // Skip re-creation — find and return the existing user id
+      // Fix #492: 기존 계정 재사용 시 비밀번호·metadata를 seed 값으로 보정 — uploadSeedImages의 signIn이 정상 동작하도록 보장
       const { data: users } = await supabase.auth.admin.listUsers({ perPage: 1000 })
       const existing = users?.users?.find((u: any) => u.email === persona.email)
-      if (existing) return existing.id
+      if (existing) {
+        await supabase.auth.admin.updateUserById(existing.id, {
+          password: persona.password,
+          user_metadata: persona.metadata,
+        })
+        return existing.id
+      }
       throw new Error(`User ${persona.email} reported as existing but not found in listUsers`)
     }
     throw error
@@ -676,32 +682,35 @@ async function seedAllPartners(
 }
 
 async function seedPartnerRoles(supabase: SupabaseClient): Promise<void> {
-  // Assign first 2 seed users as manager/staff to the first partner
+  // Assign first 2 seed users as manager/staff to the first seed partner
+  // Fix #492: biz_number으로 시드 파트너를 정확히 조회 (order/limit 대신)
   const { data: firstPartner } = await supabase
     .from('partners')
     .select('id')
-    .order('created_at')
-    .limit(1)
+    .eq('biz_number', ALL_PARTNERS[0].biz_number)
     .maybeSingle()
 
   if (!firstPartner) return
 
+  // Fix #492: 정확한 seed username 집합으로 조회 (LIKE 패턴 대신)
+  const seedUsernames = ['user_20_m_ok', 'user_20_f_ok']
   const { data: seedUsers } = await supabase
     .from('user_profiles')
     .select('id')
-    .like('username', 'user_%')
-    .order('created_at')
+    .in('username', seedUsernames)
+    .order('username')
     .limit(2)
 
   if (!seedUsers || seedUsers.length < 2) return
 
   const roles = ['manager', 'staff'] as const
   for (let i = 0; i < Math.min(seedUsers.length, roles.length); i++) {
+    // Fix #492: ignoreDuplicates 제거 — 재실행 시 role drift 방지를 위해 onConflict update 허용
     const { error } = await supabase.from('partner_member_permissions').upsert({
       partner_id: firstPartner.id,
       user_id: seedUsers[i].id,
       role: roles[i],
-    }, { onConflict: 'partner_id,user_id', ignoreDuplicates: true })
+    }, { onConflict: 'partner_id,user_id' })
 
     if (error) {
       console.error(`Failed to assign ${roles[i]} role:`, error.message)
