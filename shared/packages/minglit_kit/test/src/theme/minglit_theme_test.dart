@@ -63,7 +63,7 @@ void main() {
       final theme = MinglitTheme.partnerTheme;
       final style = theme.outlinedButtonTheme.style!;
       final fg = style.foregroundColor!.resolve({});
-      final side = style.side!.resolve({});
+      final side = style.side!.resolve({})!;
 
       expect(fg, MinglitPartnerColors.primary);
       expect(side.color, MinglitPartnerColors.primary);
