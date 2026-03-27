@@ -23,6 +23,7 @@ Future<void> expectPageGolden(
   Size surfaceSize = goldenSurfaceSize,
   List<dynamic> overrides = const [],
   User? currentUser,
+  Brightness brightness = Brightness.light,
 }) async {
   // Prevent MissingPluginException for SharedPreferences in test environment.
   SharedPreferences.setMockInitialValues({});
@@ -44,7 +45,9 @@ Future<void> expectPageGolden(
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        theme: MinglitTheme.materialTheme,
+        theme: brightness == Brightness.dark
+            ? MinglitTheme.materialThemeDark
+            : MinglitTheme.materialTheme,
         home: page,
       ),
     ),
@@ -66,6 +69,7 @@ Future<void> expectGolden(
   Size surfaceSize = goldenSurfaceSize,
   List<dynamic> overrides = const [],
   User? currentUser,
+  Brightness brightness = Brightness.light,
 }) async {
   // Prevent MissingPluginException for SharedPreferences in test environment.
   SharedPreferences.setMockInitialValues({});
@@ -86,7 +90,9 @@ Future<void> expectGolden(
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        theme: MinglitTheme.materialTheme,
+        theme: brightness == Brightness.dark
+            ? MinglitTheme.materialThemeDark
+            : MinglitTheme.materialTheme,
         home: Scaffold(body: Center(child: widget)),
       ),
     ),
