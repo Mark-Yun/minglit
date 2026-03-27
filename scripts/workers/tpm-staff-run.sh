@@ -5,7 +5,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="/Users/mark/workspace/minglit"
 PROMPT_FILE="$SCRIPT_DIR/prompts/tpm-staff.txt"
-SESSION_TIMEOUT=1800
+SESSION_TIMEOUT=3600
 REPO="Mark-Yun/minglit"
 LOG_DIR="/tmp/claude-tpm-logs"
 
@@ -13,8 +13,6 @@ mkdir -p "$LOG_DIR"
 [ ! -f "$PROMPT_FILE" ] && echo "Error: Prompt not found" && exit 1
 
 REPORT_COUNT=$(gh issue list --repo "$REPO" --label "audit-report" --state open --json number -q 'length')
-[ "$REPORT_COUNT" -eq 0 ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] No audit reports." && exit 0
-
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Found $REPORT_COUNT audit report(s)."
 cd "$REPO_DIR" || exit 1
 
