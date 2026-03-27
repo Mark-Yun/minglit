@@ -1,6 +1,7 @@
 import 'package:app_partner/src/features/admin/partner_application_detail_page.dart';
 import 'package:app_partner/src/features/admin/partner_application_list_page.dart';
 import 'package:app_partner/src/features/auth/partner_login_page.dart';
+import 'package:app_partner/src/features/checkin/checkin_placeholder_page.dart';
 import 'package:app_partner/src/features/home/guide/location_guide_page.dart';
 import 'package:app_partner/src/features/home/partner_home_page.dart';
 import 'package:app_partner/src/features/member/partner_member_list_page.dart';
@@ -99,49 +100,31 @@ class NotificationCenterRoute extends GoRouteData
         TypedGoRoute<HomeRoute>(
           path: '/',
           routes: [
-            // Sub-routes accessible from Home
-            TypedGoRoute<ApplicationListRoute>(
-              path: 'applications',
-              routes: [
-                TypedGoRoute<ApplicationDetailRoute>(path: ':applicationId'),
-              ],
-            ),
             TypedGoRoute<LocationGuideRoute>(path: 'guide/location'),
           ],
         ),
       ],
     ),
-    // 2. Party Management Branch
-    TypedStatefulShellBranch<PartyBranch>(
+    // 2. Application Management Branch
+    TypedStatefulShellBranch<ApplicationBranch>(
       routes: [
-        TypedGoRoute<PartyListRoute>(
-          path: '/parties',
+        TypedGoRoute<ApplicationListRoute>(
+          path: '/applications',
           routes: [
-            TypedGoRoute<PartyCreateRoute>(path: 'create'),
-            TypedGoRoute<PartyDetailRoute>(
-              path: ':partyId',
-              routes: [
-                TypedGoRoute<PartyEditRoute>(path: 'edit'),
-                TypedGoRoute<PartyTicketEditRoute>(
-                  path: 'tickets/:ticketId/edit',
-                ),
-                TypedGoRoute<EventCreateRoute>(path: 'events/create'),
-                TypedGoRoute<EventDetailRoute>(
-                  path: 'events/:eventId',
-                  routes: [
-                    TypedGoRoute<TicketCreateRoute>(path: 'tickets/create'),
-                    TypedGoRoute<TicketEditRoute>(
-                      path: 'tickets/:ticketId/edit',
-                    ),
-                  ],
-                ),
-              ],
-            ),
+            TypedGoRoute<ApplicationDetailRoute>(path: ':applicationId'),
           ],
         ),
       ],
     ),
-    // 3. Revenue Management Branch
+    // 3. Check-in Branch
+    TypedStatefulShellBranch<CheckinBranch>(
+      routes: [
+        TypedGoRoute<CheckinRoute>(
+          path: '/checkin',
+        ),
+      ],
+    ),
+    // 4. Settlement Branch
     TypedStatefulShellBranch<SettlementBranch>(
       routes: [
         TypedGoRoute<SettlementRoute>(
@@ -153,12 +136,40 @@ class NotificationCenterRoute extends GoRouteData
         ),
       ],
     ),
-    // 4. Settings & Profile Branch
+    // 5. More Branch (Party management, settings, etc.)
     TypedStatefulShellBranch<MoreBranch>(
       routes: [
         TypedGoRoute<MoreRoute>(
           path: '/more',
           routes: [
+            // Party management (moved from dedicated tab)
+            TypedGoRoute<PartyListRoute>(
+              path: 'parties',
+              routes: [
+                TypedGoRoute<PartyCreateRoute>(path: 'create'),
+                TypedGoRoute<PartyDetailRoute>(
+                  path: ':partyId',
+                  routes: [
+                    TypedGoRoute<PartyEditRoute>(path: 'edit'),
+                    TypedGoRoute<PartyTicketEditRoute>(
+                      path: 'tickets/:ticketId/edit',
+                    ),
+                    TypedGoRoute<EventCreateRoute>(path: 'events/create'),
+                    TypedGoRoute<EventDetailRoute>(
+                      path: 'events/:eventId',
+                      routes: [
+                        TypedGoRoute<TicketCreateRoute>(
+                          path: 'tickets/create',
+                        ),
+                        TypedGoRoute<TicketEditRoute>(
+                          path: 'tickets/:ticketId/edit',
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
             // Settings, Profile, etc.
             TypedGoRoute<VerificationManageRoute>(path: 'verifications/manage'),
             TypedGoRoute<CreateVerificationRoute>(path: 'verifications/create'),
@@ -198,8 +209,12 @@ class HomeBranch extends StatefulShellBranchData {
   const HomeBranch();
 }
 
-class PartyBranch extends StatefulShellBranchData {
-  const PartyBranch();
+class ApplicationBranch extends StatefulShellBranchData {
+  const ApplicationBranch();
+}
+
+class CheckinBranch extends StatefulShellBranchData {
+  const CheckinBranch();
 }
 
 class SettlementBranch extends StatefulShellBranchData {
@@ -242,7 +257,15 @@ class LocationGuideRoute extends GoRouteData with $LocationGuideRoute {
       const LocationGuidePage();
 }
 
-// 2. Party
+// 2. Checkin
+class CheckinRoute extends GoRouteData with $CheckinRoute {
+  const CheckinRoute();
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const CheckinPlaceholderPage();
+}
+
+// 3. Party (under More)
 class PartyListRoute extends GoRouteData with $PartyListRoute {
   const PartyListRoute();
   @override
