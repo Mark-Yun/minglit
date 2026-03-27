@@ -48,8 +48,8 @@ for pr_num in $stale_prs; do
 
     author=$(gh pr view "$pr_num" --repo "$REPO" --json author -q '.author.login')
     if [[ "$author" == "dependabot[bot]" ]]; then
-        fail_count=$(gh pr checks "$pr_num" --repo "$REPO" 2>&1 | grep -v "pass\|skipped" | grep -c "fail" || echo "0")
-        if [ "$fail_count" = "0" ]; then
+        fail_count=$(gh pr checks "$pr_num" --repo "$REPO" 2>&1 | grep -v "pass\|skipped" | grep -c "fail" || true)
+        if [ "${fail_count:-0}" = "0" ]; then
             echo "[$(date '+%Y-%m-%d %H:%M:%S')] Dependabot PR #${pr_num} — merging..."
             gh pr merge "$pr_num" --repo "$REPO" --squash 2>&1 | tee "$log_file"
         else

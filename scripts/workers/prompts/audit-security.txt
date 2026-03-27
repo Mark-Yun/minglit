@@ -37,12 +37,11 @@ grep -rn "debugPrint\|print(" --include="*.dart" apps/ shared/ | grep -i "user_i
 ### E. RLS 정책 검증
 ```bash
 # 테이블 중 RLS 정책이 없거나 불완전한 것
-grep -l "CREATE TABLE\|ALTER TABLE" supabase/migrations/*.sql | while read f; do
-  tables=$(grep -oP "CREATE TABLE[^.]*public\.\K\w+|CREATE TABLE\s+(?:IF NOT EXISTS\s+)?(?:public\.)?\K\w+" "$f")
-  for t in $tables; do
-    policy_count=$(grep -c "CREATE POLICY.*$t" supabase/migrations/*.sql)
-    if [ "$policy_count" -eq 0 ]; then echo "NO RLS: $t"; fi
-  done
+# 모든 migration에서 public 스키마 테이블 추출 (대소문자 무시)
+tables=$(grep -ihE "CREATE TABLE\s+(IF NOT EXISTS\s+)?(public\.)?" supabase/migrations/*.sql | grep -ioE "(public\.)?[a-z_][a-z0-9_]*\s*\(" | sed 's/public\.//;s/\s*($//' | sort -u)
+for t in $tables; do
+  policy_count=$(grep -rl "CREATE POLICY.*$t" supabase/migrations/*.sql 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$policy_count" = "0" ]; then echo "NO RLS: $t"; fi
 done
 ```
 

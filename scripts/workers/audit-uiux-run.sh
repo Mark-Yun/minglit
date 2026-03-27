@@ -19,12 +19,15 @@ fi
 cd "$WORKTREE_DIR" || exit 1
 git fetch origin dev && git reset --hard origin/dev 2>/dev/null
 
+LOG_DIR="/tmp/claude-worker-logs"
+mkdir -p "$LOG_DIR"
+
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running audit-uiux..."
 
 /usr/local/bin/claude -p "$(cat "$PROMPT_FILE")" \
     --max-turns 999 \
     --allowedTools "Bash,Read,Write,Edit,Glob,Grep,Agent,WebSearch,WebFetch" \
-    2>&1 | tee "/tmp/claude-worker-logs/audit-uiux-$(date +%Y%m%d-%H%M%S).log" &
+    2>&1 | tee "$LOG_DIR/audit-uiux-$(date +%Y%m%d-%H%M%S).log" &
 claude_pid=$!
 ( sleep "$SESSION_TIMEOUT" && kill "$claude_pid" 2>/dev/null ) &
 timer_pid=$!

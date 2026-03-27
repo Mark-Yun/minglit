@@ -7,7 +7,7 @@ IMPORTANT: Follow CLAUDE.md and AGENTS.md conventions strictly.
 STEP 1: Duplicate Check
 ────────────────────────────────────────
 Run:
-  gh issue list --label audit-uiux --state open --json title --jq '.[].title'
+  gh issue list --label audit-report --state open --json title --jq '.[].title'
 
 If an issue with today's date (format: YYYY-MM-DD) already exists, print "Audit already exists for today. Skipping." and STOP.
 

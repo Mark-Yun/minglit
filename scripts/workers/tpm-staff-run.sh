@@ -13,8 +13,6 @@ mkdir -p "$LOG_DIR"
 [ ! -f "$PROMPT_FILE" ] && echo "Error: Prompt not found" && exit 1
 
 REPORT_COUNT=$(gh issue list --repo "$REPO" --label "audit-report" --state open --json number -q 'length')
-[ "$REPORT_COUNT" -eq 0 ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] No audit reports." && exit 0
-
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Found $REPORT_COUNT audit report(s)."
 cd "$REPO_DIR" || exit 1
 

@@ -11,9 +11,10 @@
 
 ```bash
 # 최근 24시간 머지된 PR
+SINCE=$(date -v-1d +%Y-%m-%dT%H:%M:%SZ)
 gh pr list --repo Mark-Yun/minglit --state merged --limit 30 \
   --json number,title,mergedAt,files,labels \
-  --jq '[.[] | select(.mergedAt > "$(date -v-1d +%Y-%m-%dT%H:%M:%SZ)")]'
+  --jq "[.[] | select(.mergedAt > \"$SINCE\")]"
 ```
 
 각 PR에 대해:
@@ -53,9 +54,10 @@ gh pr list --repo Mark-Yun/minglit --state merged --limit 30 \
 
 ```bash
 # 최근 24시간 생성/업데이트된 버그 이슈
-gh issue list --repo Mark-Yun/minglit --state all --search "label:bug,bug-report,ci-failure" \
+SINCE=$(date -v-1d +%Y-%m-%dT%H:%M:%SZ)
+gh issue list --repo Mark-Yun/minglit --state all --label "bug" --label "bug-report" --label "ci-failure" \
   --json number,title,state,createdAt,closedAt,closedByPullRequestsReferences \
-  --jq '[.[] | select(.createdAt > "$(date -v-1d +%Y-%m-%dT%H:%M:%SZ)" or .closedAt > "$(date -v-1d +%Y-%m-%dT%H:%M:%SZ)")]'
+  --jq "[.[] | select(.createdAt > \"$SINCE\" or .closedAt > \"$SINCE\")]"
 ```
 
 각 버그에 대해:
@@ -80,8 +82,9 @@ gh issue list --repo Mark-Yun/minglit --state all --search "label:bug,bug-report
 
 ```bash
 # 오늘 CI 실행 결과
+SINCE=$(date -v-1d +%Y-%m-%dT%H:%M:%SZ)
 gh run list --workflow "CI" --limit 10 --json conclusion,displayTitle,createdAt \
-  --jq '[.[] | select(.createdAt > "$(date -v-1d +%Y-%m-%dT%H:%M:%SZ)")]'
+  --jq "[.[] | select(.createdAt > \"$SINCE\")]"
 ```
 
 - 같은 테스트가 **반복 실패** → flaky test 보강 제안

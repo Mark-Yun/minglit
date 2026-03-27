@@ -19,7 +19,7 @@ exec 200>"$LOCK_FILE"
 flock -n 200 || { echo "[$(date '+%Y-%m-%d %H:%M:%S')] Another instance running. Exiting."; exit 0; }
 
 # --- 타이머 정리를 위한 trap ---
-cleanup() { [ -n "${timer_pid:-}" ] && kill "$timer_pid" 2>/dev/null; wait "$timer_pid" 2>/dev/null; }
+cleanup() { [ -n "${timer_pid:-}" ] && kill "$timer_pid" 2>/dev/null && wait "$timer_pid" 2>/dev/null; }
 trap cleanup EXIT
 
 # --- 머지된 worktree 정리 ---
@@ -47,7 +47,7 @@ if [ -n "$prs" ]; then
     for pr_num in $prs; do
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] Caring for PR #${pr_num}..."
         head_branch=$(gh pr view "$pr_num" --repo "$REPO" --json headRefName -q '.headRefName')
-        issue_num=$(echo "$head_branch" | grep -oE '[0-9]+' | head -1)
+        issue_num=$(echo "$head_branch" | grep -oE '[0-9]+' | head -1 || true)
         # 이슈 번호 추출 실패 시 건너뛰기
         if [ -z "$issue_num" ]; then
             echo "[$(date '+%Y-%m-%d %H:%M:%S')] Cannot extract issue number from branch '${head_branch}'. Skipping."

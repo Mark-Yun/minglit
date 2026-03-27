@@ -62,7 +62,8 @@ grep -rn "createClient" supabase/functions/*/index.ts | wc -l
 ### A. 최근 변경 파악
 ```bash
 # 최근 7일간 머지된 PR 목록
-gh pr list --repo Mark-Yun/minglit --state merged --limit 30 --json title,mergedAt,files --jq --arg since "$(date -v-7d +%Y-%m-%dT%H:%M:%SZ)" '.[] | select(.mergedAt > $since) | {title, files: [.files[].path]}'
+SINCE=$(date -v-7d +%Y-%m-%dT%H:%M:%SZ)
+gh pr list --repo Mark-Yun/minglit --state merged --limit 30 --json title,mergedAt,files --jq "[.[] | select(.mergedAt > \"$SINCE\") | {title, files: [.files[].path]}]"
 
 # 최근 migration 추가
 ls -lt supabase/migrations/*.sql | head -10

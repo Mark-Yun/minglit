@@ -5,9 +5,10 @@
 ## 0단계: 중복 체크
 
 ```bash
-gh issue list --repo Mark-Yun/minglit --label "report-exec" --state open --json number,title --jq '.[] | select(.title | contains("Legal")) | "#\(.number) \(.title)"'
+WEEK_AGO=$(date -v-7d +%Y-%m-%dT%H:%M:%SZ)
+gh issue list --repo Mark-Yun/minglit --label "report-exec" --state all --json number,title,createdAt --jq "[.[] | select(.title | contains(\"Legal\")) | select(.createdAt > \"$WEEK_AGO\") | \"#\\(.number) \\(.title)\"]"
 ```
-- 이번 주에 이미 리걸 리포트가 있으면 즉시 종료 (주 1회)
+- 최근 7일 이내에 리걸 리포트가 있으면(open/closed 무관) 즉시 종료 (주 1회)
 
 ## 1단계: 관련 법규 최신 현황 (웹 검색 필수)
 
