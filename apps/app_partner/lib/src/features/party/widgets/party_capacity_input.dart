@@ -52,7 +52,7 @@ class PartyCapacityInput extends StatelessWidget {
                         color: colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: MinglitSpacing.xsmall),
                     Text(
                       '$maxCount명',
                       style: theme.textTheme.titleMedium?.copyWith(

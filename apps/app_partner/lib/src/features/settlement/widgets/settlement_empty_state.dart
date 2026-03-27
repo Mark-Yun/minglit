@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 class SettlementEmptyState extends StatelessWidget {
   const SettlementEmptyState({
@@ -26,7 +27,7 @@ class SettlementEmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 64, color: theme.colorScheme.outline),
-            const SizedBox(height: 16),
+            const SizedBox(height: MinglitSpacing.medium),
             Text(
               title,
               style: theme.textTheme.titleMedium?.copyWith(
@@ -35,7 +36,7 @@ class SettlementEmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             if (subtitle != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: MinglitSpacing.small),
               Text(
                 subtitle!,
                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -45,7 +46,7 @@ class SettlementEmptyState extends StatelessWidget {
               ),
             ],
             if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: 24),
+              const SizedBox(height: MinglitSpacing.large),
               FilledButton(
                 onPressed: onAction,
                 child: Text(actionLabel!),

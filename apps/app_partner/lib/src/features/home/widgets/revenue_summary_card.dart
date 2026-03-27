@@ -64,7 +64,7 @@ class RevenueSummaryCard extends ConsumerWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: MinglitSpacing.small),
               currentMonthNetAsync.when(
                 data: (amount) => Text(
                   formatter.format(amount),

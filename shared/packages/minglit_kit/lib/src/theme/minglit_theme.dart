@@ -32,9 +32,9 @@ class MinglitTheme {
       titleSpacing: 0,
       title: Row(
         children: [
-          const SizedBox(width: 16),
+          const SizedBox(width: MinglitSpacing.medium),
           appBarLogo(height: 36),
-          const SizedBox(width: 12),
+          const SizedBox(width: MinglitSpacing.sm),
           Expanded(child: Text(title, overflow: TextOverflow.ellipsis)),
         ],
       ),
