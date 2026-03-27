@@ -234,7 +234,9 @@ class _ParticipantDDayOverlay extends StatelessWidget {
         vertical: MinglitSpacing.xsmall,
       ),
       decoration: BoxDecoration(
-        color: MinglitColors.textPrimary.withValues(alpha: MinglitOpacity.overlay),
+        color: MinglitColors.textPrimary.withValues(
+          alpha: MinglitOpacity.overlay,
+        ),
         borderRadius: BorderRadius.circular(MinglitRadius.small),
       ),
       child: Row(
@@ -255,7 +257,9 @@ class _ParticipantDDayOverlay extends StatelessWidget {
               decoration: BoxDecoration(
                 color: i < filledCount
                     ? segmentColor
-                    : MinglitColors.background.withValues(alpha: MinglitOpacity.placeholder),
+                    : MinglitColors.background.withValues(
+                        alpha: MinglitOpacity.placeholder,
+                      ),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -297,7 +301,9 @@ class _PartnerOverlay extends StatelessWidget {
         vertical: MinglitSpacing.xsmall,
       ),
       decoration: BoxDecoration(
-        color: MinglitColors.textPrimary.withValues(alpha: MinglitOpacity.overlay),
+        color: MinglitColors.textPrimary.withValues(
+          alpha: MinglitOpacity.overlay,
+        ),
         borderRadius: BorderRadius.circular(MinglitRadius.small),
       ),
       child: Row(

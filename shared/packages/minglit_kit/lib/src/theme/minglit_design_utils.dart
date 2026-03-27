@@ -33,7 +33,9 @@ class MinglitDecorations {
     final accentColor = colorScheme.secondary;
 
     return BoxDecoration(
-      color: isSelected ? accentColor.withValues(alpha: MinglitOpacity.tintFill) : theme.cardColor,
+      color: isSelected
+          ? accentColor.withValues(alpha: MinglitOpacity.tintFill)
+          : theme.cardColor,
       borderRadius: BorderRadius.circular(MinglitRadius.card),
       border: MinglitBorders.card(colorScheme, isSelected: isSelected),
       boxShadow: isSelected ? MinglitShadows.cardSelected(accentColor) : null,

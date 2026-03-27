@@ -130,7 +130,9 @@ class Step6Review extends ConsumerWidget {
       decoration: BoxDecoration(
         color: colorScheme.errorContainer.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(MinglitRadius.card),
-        border: Border.all(color: colorScheme.error.withValues(alpha: MinglitOpacity.muted)),
+        border: Border.all(
+          color: colorScheme.error.withValues(alpha: MinglitOpacity.muted),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

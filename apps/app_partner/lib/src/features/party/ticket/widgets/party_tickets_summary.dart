@@ -38,7 +38,9 @@ class PartyTicketsSummary extends StatelessWidget {
           color: theme.colorScheme.errorContainer.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(MinglitRadius.card),
           border: Border.all(
-            color: theme.colorScheme.error.withValues(alpha: MinglitOpacity.muted),
+            color: theme.colorScheme.error.withValues(
+              alpha: MinglitOpacity.muted,
+            ),
           ),
         ),
         child: Text(

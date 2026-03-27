@@ -176,7 +176,9 @@ class PartyListItem extends StatelessWidget {
       child: Center(
         child: Icon(
           Icons.party_mode,
-          color: theme.colorScheme.surface.withValues(alpha: MinglitOpacity.placeholder),
+          color: theme.colorScheme.surface.withValues(
+            alpha: MinglitOpacity.placeholder,
+          ),
           size: MinglitIconSize.xlarge * 1.5,
         ),
       ),
@@ -246,7 +248,9 @@ class _InfoChip extends StatelessWidget {
         color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(100),
         border: Border.all(
-          color: theme.colorScheme.surface.withValues(alpha: MinglitOpacity.placeholder),
+          color: theme.colorScheme.surface.withValues(
+            alpha: MinglitOpacity.placeholder,
+          ),
           width: 0.5,
         ),
       ),

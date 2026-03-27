@@ -200,7 +200,9 @@ class _TicketFormState extends State<TicketForm> {
     return Container(
       padding: const EdgeInsets.all(MinglitSpacing.medium),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: MinglitOpacity.muted),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: MinglitOpacity.muted,
+        ),
         borderRadius: BorderRadius.circular(MinglitRadius.card),
       ),
       child: Text(context.l10n.ticket_empty_groups),

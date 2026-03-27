@@ -78,7 +78,9 @@ class NotificationListScreen extends ConsumerWidget {
                   child: ListTile(
                     tileColor: isRead
                         ? null
-                        : theme.colorScheme.primary.withValues(alpha: MinglitOpacity.tintFill),
+                        : theme.colorScheme.primary.withValues(
+                            alpha: MinglitOpacity.tintFill,
+                          ),
                     title: Text(
                       title,
                       style: theme.textTheme.bodyMedium!.copyWith(

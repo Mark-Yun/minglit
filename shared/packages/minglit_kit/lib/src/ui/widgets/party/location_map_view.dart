@@ -86,7 +86,9 @@ class LocationMapView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(MinglitRadius.card),
                 boxShadow: [
                   BoxShadow(
-                    color: MinglitColors.textPrimary.withValues(alpha: MinglitOpacity.tintFill),
+                    color: MinglitColors.textPrimary.withValues(
+                      alpha: MinglitOpacity.tintFill,
+                    ),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),

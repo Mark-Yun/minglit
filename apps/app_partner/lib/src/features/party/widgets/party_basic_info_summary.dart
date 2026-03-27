@@ -118,7 +118,9 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
                       color: resolvedStatusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(MinglitRadius.small),
                       border: Border.all(
-                        color: resolvedStatusColor.withValues(alpha: MinglitOpacity.muted),
+                        color: resolvedStatusColor.withValues(
+                          alpha: MinglitOpacity.muted,
+                        ),
                       ),
                     ),
                     child: Text(

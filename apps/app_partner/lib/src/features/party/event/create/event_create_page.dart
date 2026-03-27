@@ -110,7 +110,9 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
                 color: theme.scaffoldBackgroundColor,
                 boxShadow: [
                   BoxShadow(
-                    color: theme.shadowColor.withValues(alpha: MinglitOpacity.tintFill),
+                    color: theme.shadowColor.withValues(
+                      alpha: MinglitOpacity.tintFill,
+                    ),
                     blurRadius: 10,
                     offset: const Offset(0, -4),
                   ),
