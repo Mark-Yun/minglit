@@ -541,8 +541,9 @@ async function uploadSeedImages(supabase: SupabaseClient): Promise<string[]> {
   const urls: string[] = []
 
   // Check if images already exist in storage (uploaded externally or by a previous run)
-  const { data: existing } = await supabase.storage.from('party-assets').list('seed-images', { limit: 10 })
-  const existingNames = new Set((existing ?? []).map((f: { name: string }) => f.name))
+  // Use listV2 (cursor-based pagination) over deprecated list() — see #445
+  const { data: existing } = await supabase.storage.from('party-assets').listV2({ prefix: 'seed-images/', limit: 10 })
+  const existingNames = new Set((existing?.objects ?? []).map((f: { name: string }) => f.name.replace('seed-images/', '')))
 
   // If all images already exist, just return their public URLs
   const allExist = imageFiles.every(f => existingNames.has(f))
