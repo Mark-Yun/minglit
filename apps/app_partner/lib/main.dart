@@ -160,8 +160,8 @@ class _AppView extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Minglit Partner',
       debugShowCheckedModeBanner: false,
-      theme: MinglitTheme.materialTheme,
-      darkTheme: MinglitTheme.materialThemeDark,
+      theme: MinglitTheme.partnerTheme,
+      darkTheme: MinglitTheme.partnerThemeDark,
       themeMode: ref.watch(themeControllerProvider),
       routerConfig: goRouter,
       localizationsDelegates: const [
