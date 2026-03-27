@@ -27,8 +27,8 @@ class CheckinRepository {
   CheckinRepository({
     required TicketCrypto crypto,
     required SupabaseClient supabase,
-  })  : _crypto = crypto,
-        _supabase = supabase;
+  }) : _crypto = crypto,
+       _supabase = supabase;
 
   final TicketCrypto _crypto;
   final SupabaseClient _supabase;
