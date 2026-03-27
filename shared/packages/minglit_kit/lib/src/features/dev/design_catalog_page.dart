@@ -833,13 +833,13 @@ class _CheckboxSectionState extends State<_CheckboxSection> {
           value: false,
           onChanged: (v) {},
         ),
-        CheckboxListTile(
-          title: const Text('Disabled (selected)'),
+        const CheckboxListTile(
+          title: Text('Disabled (selected)'),
           value: true,
           onChanged: null,
         ),
-        CheckboxListTile(
-          title: const Text('Disabled (unselected)'),
+        const CheckboxListTile(
+          title: Text('Disabled (unselected)'),
           value: false,
           onChanged: null,
         ),
@@ -983,7 +983,7 @@ class _DividerSection extends StatelessWidget {
                   color: MinglitColorsDark.textPrimary,
                 ),
               ),
-              Divider(color: MinglitColorsDark.divider),
+              const Divider(color: MinglitColorsDark.divider),
               Text(
                 'Content below',
                 style: theme.textTheme.bodyMedium?.copyWith(
