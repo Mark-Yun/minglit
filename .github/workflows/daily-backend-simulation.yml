@@ -6,11 +6,12 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: daily-backend-sim-${{ github.ref }}
-  cancel-in-progress: true
+  group: supabase-dev-simulation
+  cancel-in-progress: false
 
 jobs:
   seed-and-simulate:
+    name: Seed and Simulate
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
