@@ -1,8 +1,7 @@
-import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
-import 'package:app_partner/src/features/party/event/detail/event_detail_controller.dart';
 import 'package:app_partner/src/features/ticket/logic/ticket_controller.dart';
-import 'package:app_partner/src/features/ticket/widgets/ticket_form.dart';
+import 'package:app_partner/src/features/ticket/logic/ticket_data_providers.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
+import 'package:app_partner/src/widgets/ticket_form.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -22,7 +21,7 @@ class TicketEditPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isTemplate = eventId.isEmpty;
-    final partyAsync = ref.watch(partyDetailProvider(partyId));
+    final entryGroupsAsync = ref.watch(ticketEntryGroupsProvider(partyId));
 
     // Dynamic AsyncValue based on mode
     final ticketAsync = isTemplate
@@ -45,18 +44,18 @@ class TicketEditPage extends ConsumerWidget {
         ),
         data: (ticket) {
           return MinglitAsyncValueWidget(
-            value: partyAsync,
+            value: entryGroupsAsync,
             error: (e, s) => Center(
               child: Text(
                 context.l10n.partyDetail_error_partyLoad(e.toString()),
               ),
             ),
-            data: (party) {
+            data: (entryGroups) {
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(MinglitSpacing.medium),
                 child: TicketForm(
                   initialTicket: ticket,
-                  entryGroups: party.entryGroups ?? [],
+                  entryGroups: entryGroups,
                   submitButtonLabel: context.l10n.ticket_button_edit,
                   onSaved:
                       ({
@@ -106,11 +105,13 @@ class TicketEditPage extends ConsumerWidget {
                               ..invalidate(
                                 ticketTemplateDetailProvider(ticketId),
                               )
-                              ..invalidate(partyTicketsProvider(partyId));
+                              ..invalidate(
+                                ticketTemplatesByPartyProvider(partyId),
+                              );
                           } else {
                             ref
                               ..invalidate(ticketDetailProvider(ticketId))
-                              ..invalidate(eventTicketsProvider(eventId));
+                              ..invalidate(ticketsByEventProvider(eventId));
                           }
                         } else if (updatedState.hasError && context.mounted) {
                           handleMinglitError(
