@@ -102,7 +102,7 @@ class MinglitFilterChip extends StatelessWidget {
           children: [
             if (hasIcon) ...[
               Icon(icon, size: iconSize, color: fgColor),
-              const SizedBox(width: 4),
+              const SizedBox(width: MinglitSpacing.xsmall),
             ],
             Text(
               label,

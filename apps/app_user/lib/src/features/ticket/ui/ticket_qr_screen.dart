@@ -31,7 +31,7 @@ class TicketQRScreen extends ConsumerWidget {
                     size: 48,
                     color: MinglitColors.error,
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: MinglitSpacing.medium),
                   Text('티켓 정보를 찾을 수 없습니다.'),
                 ],
               );
