@@ -131,7 +131,7 @@ class MinglitSocialActionChip extends ConsumerWidget {
                       ? MinglitColors.background
                       : theme.colorScheme.onSurfaceVariant,
                 ),
-              const SizedBox(width: 4),
+              const SizedBox(width: MinglitSpacing.xsmall),
               Container(
                 width: 1,
                 height: 14,
@@ -139,7 +139,7 @@ class MinglitSocialActionChip extends ConsumerWidget {
                     ? MinglitColors.background.withValues(alpha: 0.4)
                     : theme.colorScheme.outlineVariant,
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: MinglitSpacing.xsmall),
               // Fix #474: fontSize 14 → labelLarge
               Text(
                 label,

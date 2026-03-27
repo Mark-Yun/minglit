@@ -70,7 +70,7 @@ class PartyContactSummary extends StatelessWidget {
       child: Row(
         children: [
           Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(width: 8),
+          const SizedBox(width: MinglitSpacing.small),
           Text(label, style: theme.textTheme.bodySmall),
           const Spacer(),
           Text(

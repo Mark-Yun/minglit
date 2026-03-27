@@ -58,7 +58,7 @@ class PendingApplicantsBadgeCard extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: MinglitSpacing.xsmall),
                       Text(
                         '새 신청자 승인 대기 중',
                         style: theme.textTheme.bodySmall?.copyWith(
