@@ -265,11 +265,17 @@ class MinglitTheme {
   static InputDecorationTheme _partnerInputDecoration(
     Color primary,
     InputDecorationTheme base,
-  ) => base.copyWith(
+  ) => InputDecorationTheme(
+    filled: base.filled,
+    fillColor: base.fillColor,
+    border: base.border,
+    enabledBorder: base.enabledBorder,
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(MinglitRadius.input),
       borderSide: BorderSide(color: primary, width: 2),
     ),
+    contentPadding: base.contentPadding,
+    hintStyle: base.hintStyle,
   );
 
   static TabBarThemeData _partnerTabBar(Color primary, TabBarThemeData base) =>
