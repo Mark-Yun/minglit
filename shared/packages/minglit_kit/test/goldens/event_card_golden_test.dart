@@ -19,7 +19,7 @@ void main() {
     final baseTime = DateTime(2026, 6, 15, 19);
     final now = DateTime(2026, 6, 15, 10); // same day → "오늘"
 
-    final partner = const Partner(
+    const partner = Partner(
       id: 'partner-1',
       name: '밍글릿 라운지',
     );
@@ -60,7 +60,6 @@ void main() {
       createdAt: baseTime,
       updatedAt: baseTime,
       currentParticipants: 8,
-      maxParticipants: 20,
       party: party,
       location: location,
       tickets: [ticket],
