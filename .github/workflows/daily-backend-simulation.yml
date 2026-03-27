@@ -1,0 +1,115 @@
+name: Daily Backend Simulation + CUJ Tests
+
+on:
+  schedule:
+    - cron: '0 22 * * *'  # KST 07:00
+  workflow_dispatch:
+
+concurrency:
+  group: daily-backend-sim-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  seed-and-simulate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Static seed (users/partners)
+        run: |
+          curl -sf -X POST \
+            "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/dev-seed?mode=static" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
+            -H "Content-Type: application/json" \
+            --max-time 180
+
+      - name: Create parties and events
+        run: |
+          curl -sf -X POST \
+            "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/backend-simulator" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"phase":"create"}' \
+            --max-time 120
+
+      - name: Run full simulation (approve → refund → run → settle)
+        run: |
+          for phase in approve refund run settle; do
+            echo "▶ Running phase: $phase"
+            curl -sf -X POST \
+              "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/backend-simulator" \
+              -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
+              -H "Content-Type: application/json" \
+              -d "{\"phase\":\"$phase\"}" \
+              --max-time 120
+            echo "✅ Phase $phase complete"
+          done
+
+  client-cuj-test:
+    needs: seed-and-simulate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: 'stable'
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run client CUJ tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          arch: x86_64
+          profile: pixel_6
+          script: |
+            cd apps/app_user
+            flutter test integration_test/ \
+              --flavor dev \
+              --dart-define-from-file=../../minglit_env/dev/flutter.env
+
+  partner-cuj-test:
+    needs: seed-and-simulate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: 'stable'
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run partner CUJ tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          arch: x86_64
+          profile: pixel_6
+          script: |
+            cd apps/app_partner
+            flutter test integration_test/ \
+              --flavor dev \
+              --dart-define-from-file=../../minglit_env/dev/flutter.env
+
+  notify-failure:
+    needs: [seed-and-simulate, client-cuj-test, partner-cuj-test]
+    if: always()
+    permissions:
+      issues: write
+    uses: ./.github/workflows/notify-failure.yml
+    with:
+      success: ${{ !contains(needs.*.result, 'failure') }}
+      workflow_name: 'Daily Backend Simulation'
