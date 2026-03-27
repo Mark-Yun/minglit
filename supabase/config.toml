@@ -569,11 +569,12 @@ verify_jwt = false  # JWT verification handled in function code
 import_map = "./deno.json"
 entrypoint = "./functions/user-manage-notification/index.ts"
 
-# [functions.user-manage-settings]  # PR #318 머지 후 활성화
-# enabled = true
-# verify_jwt = false
-# import_map = "./deno.json"
-# entrypoint = "./functions/user-manage-settings/index.ts"
+# Fix #510: 신규 Edge Function 12개 섹션 추가 — Supabase 배포 실패 방지
+[functions.user-manage-settings]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/user-manage-settings/index.ts"
 
 [functions.user-manage-social]
 enabled = true
@@ -586,3 +587,69 @@ enabled = true
 verify_jwt = false
 import_map = "./deno.json"
 entrypoint = "./functions/metrics-alert/index.ts"
+
+[functions.partner-manage-event]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/partner-manage-event/index.ts"
+
+[functions.partner-manage-match]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/partner-manage-match/index.ts"
+
+[functions.partner-manage-member]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/partner-manage-member/index.ts"
+
+[functions.partner-manage-party]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/partner-manage-party/index.ts"
+
+[functions.partner-manage-settlement]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/partner-manage-settlement/index.ts"
+
+[functions.partner-manage-verification]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/partner-manage-verification/index.ts"
+
+[functions.partner-register]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/partner-register/index.ts"
+
+[functions.partner-review-submission]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/partner-review-submission/index.ts"
+
+[functions.user-cast-vote]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/user-cast-vote/index.ts"
+
+[functions.user-submit-verification]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/user-submit-verification/index.ts"
+
+[functions.user-update-verification]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/user-update-verification/index.ts"
