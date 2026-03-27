@@ -19,6 +19,7 @@ Future<void> expectPageGolden(
   required String goldenFileName,
   Size surfaceSize = goldenSurfaceSize,
   List<dynamic> overrides = const [],
+  Brightness brightness = Brightness.light,
 }) async {
   await tester.binding.setSurfaceSize(surfaceSize);
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -35,7 +36,9 @@ Future<void> expectPageGolden(
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        theme: MinglitTheme.materialTheme,
+        theme: brightness == Brightness.dark
+            ? MinglitTheme.materialThemeDark
+            : MinglitTheme.materialTheme,
         locale: const Locale('ko'),
         localizationsDelegates: const [
           AppLocalizations.delegate,

@@ -2,6 +2,7 @@
 library;
 
 import 'package:app_partner/src/features/party/event/widgets/event_card.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -53,6 +54,39 @@ void main() {
           onTap: () {},
         ),
         goldenFileName: 'event_card_no_title.png',
+      );
+    });
+
+    testWidgets('scheduled (dark)', (tester) async {
+      await expectGolden(
+        tester,
+        widget: EventCard(event: baseEvent, onTap: () {}),
+        goldenFileName: 'event_card_scheduled_dark.png',
+        brightness: Brightness.dark,
+      );
+    });
+
+    testWidgets('full capacity (dark)', (tester) async {
+      await expectGolden(
+        tester,
+        widget: EventCard(
+          event: baseEvent.copyWith(currentParticipants: 20),
+          onTap: () {},
+        ),
+        goldenFileName: 'event_card_full_dark.png',
+        brightness: Brightness.dark,
+      );
+    });
+
+    testWidgets('no title (default) (dark)', (tester) async {
+      await expectGolden(
+        tester,
+        widget: EventCard(
+          event: baseEvent.copyWith(title: null),
+          onTap: () {},
+        ),
+        goldenFileName: 'event_card_no_title_dark.png',
+        brightness: Brightness.dark,
       );
     });
   });

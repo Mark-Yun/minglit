@@ -2,6 +2,7 @@
 library;
 
 import 'package:app_partner/src/features/home/widgets/upcoming_events_card.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -49,6 +50,31 @@ void main() {
           onEventTap: (_) {},
         ),
         goldenFileName: 'upcoming_events_with_data.png',
+      );
+    });
+
+    testWidgets('empty state (dark)', (tester) async {
+      await expectGolden(
+        tester,
+        widget: UpcomingEventsCard(events: const [], onEventTap: (_) {}),
+        goldenFileName: 'upcoming_events_empty_dark.png',
+        brightness: Brightness.dark,
+      );
+    });
+
+    testWidgets('with events (dark)', (tester) async {
+      await expectGolden(
+        tester,
+        widget: UpcomingEventsCard(
+          events: [
+            makeEvent('e1', '금요 파티', 1),
+            makeEvent('e2', '토요 모임', 2),
+            makeEvent('e3', '일요 브런치', 3),
+          ],
+          onEventTap: (_) {},
+        ),
+        goldenFileName: 'upcoming_events_with_data_dark.png',
+        brightness: Brightness.dark,
       );
     });
   });
