@@ -41,8 +41,14 @@ class CheckinRepository {
   Future<SimplePublicKey> fetchServerPublicKey() async {
     if (_cachedPublicKey != null) return _cachedPublicKey!;
 
-    final result = await _supabase.rpc<String>('get_ticket_public_key');
-    final keyBytes = base64Url.decode(result);
+    final result =
+        await _supabase.rpc<String?>('get_ticket_public_key');
+    if (result == null || result.isEmpty) {
+      throw StateError('Server public key not configured');
+    }
+    // Support both standard base64 and base64url
+    final normalized = result.replaceAll('+', '-').replaceAll('/', '_');
+    final keyBytes = base64Url.decode(base64Url.normalize(normalized));
     _cachedPublicKey = SimplePublicKey(keyBytes, type: KeyPairType.ed25519);
     return _cachedPublicKey!;
   }
