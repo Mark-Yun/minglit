@@ -18,6 +18,7 @@ class WeeklyStatsRow extends StatelessWidget {
   /// Null means data is not yet available — UI shows '-' placeholder.
   final int? totalRevenue;
   final int totalApplications;
+
   /// Null means data is not yet available — UI shows '-' placeholder.
   final double? checkinRate;
   final double? revenueChange;
