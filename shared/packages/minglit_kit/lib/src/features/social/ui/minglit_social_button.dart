@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/data/models/social_interaction.dart';
 import 'package:minglit_kit/src/features/social/logic/social_interaction_controller.dart';
+import 'package:minglit_kit/src/theme/minglit_text_theme_extension.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
@@ -90,12 +91,14 @@ class MinglitSocialButton extends ConsumerWidget {
     );
 
     if (label != null) {
+      // Fix #474: fontSize 13 → ThemeExtension chipLabel
+      final ext = Theme.of(context).extension<MinglitTextThemeExtension>()!;
       return TextButton.icon(
         onPressed: onPressed,
         icon: icon,
         label: Text(
           label!,
-          style: TextStyle(color: color, fontSize: 13),
+          style: ext.chipLabel.copyWith(color: color),
         ),
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(
