@@ -8,6 +8,20 @@ import {
 } from "./sim_assertions.ts";
 import { getSimUserToken, callEdgeFunction } from "./sim_auth.ts";
 
+async function allSettledInBatches<T>(
+  items: T[],
+  batchSize: number,
+  worker: (item: T) => Promise<void>,
+): Promise<PromiseSettledResult<void>[]> {
+  const results: PromiseSettledResult<void>[] = [];
+  for (let i = 0; i < items.length; i += batchSize) {
+    results.push(
+      ...(await Promise.allSettled(items.slice(i, i + batchSize).map(worker))),
+    );
+  }
+  return results;
+}
+
 export interface SimEventResult {
   checkedInParticipantIds: string[];
   noShowParticipantIds: string[];
@@ -45,9 +59,9 @@ export async function simCheckin(
     return { checkedInParticipantIds, noShowParticipantIds, assertions };
   }
 
-  // Fix #531: Process events in parallel to prevent curl 120s timeout.
+  // Fix #531: Process events in batches to prevent curl 120s timeout.
   // Previously sequential processing caused N * (participants * EF calls) ≈ 120s+.
-  const results = await Promise.allSettled(eventIds.map(async (eventId) => {
+  const results = await allSettledInBatches(eventIds, 10, async (eventId) => {
     // Query participants with ticket_issued or checked_in status
     const { data: participants, error: fetchErr } = await supabase
       .from("event_participants")
@@ -134,7 +148,7 @@ export async function simCheckin(
       message: `Event ${eventId}: ${splitIndex} checked_in, ${eligible.length - splitIndex} no_show`,
       data: { eventId, checkedIn: splitIndex, noShow: eligible.length - splitIndex },
     });
-  }));
+  });
 
   for (const r of results) {
     if (r.status === "rejected") {
@@ -179,8 +193,8 @@ export async function simMatch(
     return { matchPairs, assertions };
   }
 
-  // Fix #531: Process events in parallel to prevent curl 120s timeout.
-  const matchResults = await Promise.allSettled(eventIds.map(async (eventId) => {
+  // Fix #531: Process events in batches to prevent curl 120s timeout.
+  const matchResults = await allSettledInBatches(eventIds, 10, async (eventId) => {
     // Attempt to use event-matching EF with service_role token (admin operation)
     if (supabaseUrl && serviceRoleKey) {
       try {
@@ -315,15 +329,11 @@ export async function simMatch(
         candidate_id: userA,
       });
       if (voteBErr) {
-        // Rollback: A→B was already inserted — delete it to avoid half-applied state
-        await supabase.from("match_votes")
-          .delete()
-          .eq("event_id", eventId)
-          .eq("voter_id", userA)
-          .eq("candidate_id", userB);
+        // Fix #531: Do NOT rollback A→B — handle_new_match_vote() trigger may have
+        // already created match_pairs, so deleting A→B would leave inconsistent state.
         log({
-          level: "error", phase: "match", step: "insert_vote",
-          message: `Vote B→A failed, rolled back A→B for pair (${userA}, ${userB}): ${voteBErr.message}`,
+          level: "warn", phase: "match", step: "insert_vote",
+          message: `Vote B→A failed, keeping A→B as-is for pair (${userA}, ${userB}): ${voteBErr.message}`,
         });
         continue;
       }
@@ -339,7 +349,7 @@ export async function simMatch(
         log({ level: "warn", phase: "match", step: "pair_missing", message: `Match pair assertion failed: ${pairAssertion.details}` });
       }
     }
-  }));
+  });
 
   for (const r of matchResults) {
     if (r.status === "rejected") {
@@ -379,8 +389,8 @@ export async function simCompleteEvents(
     return { completedEventIds, assertions };
   }
 
-  // Fix #531: Process events in parallel to prevent curl 120s timeout.
-  const completeResults = await Promise.allSettled(eventIds.map(async (eventId) => {
+  // Fix #531: Process events in batches to prevent curl 120s timeout.
+  const completeResults = await allSettledInBatches(eventIds, 10, async (eventId) => {
     const { error: updErr } = await supabase
       .from("events")
       .update({ status: "completed" })
@@ -393,7 +403,7 @@ export async function simCompleteEvents(
 
     completedEventIds.push(eventId);
     log({ level: "info", phase: "complete_events", step: "completed", message: `Event ${eventId} marked as completed` });
-  }));
+  });
 
   for (const r of completeResults) {
     if (r.status === "rejected") {
