@@ -57,11 +57,11 @@ class CheckinController extends _$CheckinController {
       // 2. Verify with Repository
       final repo = ref.read(checkinRepositoryProvider);
 
-      // TODO(Checkin): Get actual public key from server
+      // Fix #458: 서버 공개키를 fetch하여 검증 — 임시 키페어 생성 제거
+      final serverPublicKey = await repo.fetchServerPublicKey();
       final success = await repo.verifyAndCheckin(
         token: token,
-        serverPublicKey: await (await TicketCrypto().generateKeyPair())
-            .extractPublicKey(),
+        serverPublicKey: serverPublicKey,
       );
 
       if (success) {
