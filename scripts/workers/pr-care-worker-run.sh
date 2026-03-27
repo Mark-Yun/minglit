@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="/Users/mark/workspace/minglit"
-SESSION_TIMEOUT=1800
+SESSION_TIMEOUT=3600
 STALE_THRESHOLD=1800
 REPO="Mark-Yun/minglit"
 LOG_DIR="/tmp/claude-pr-care-logs"

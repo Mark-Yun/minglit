@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="/Users/mark/workspace/minglit"
 WORKTREE_DIR="/Users/mark/workspace/minglit-workers/audit-uiux"
 PROMPT_FILE="$SCRIPT_DIR/prompts/audit-uiux.txt"
-SESSION_TIMEOUT=1800
+SESSION_TIMEOUT=3600
 REPO="Mark-Yun/minglit"
 
 [ ! -f "$PROMPT_FILE" ] && echo "Error: Prompt not found" && exit 1

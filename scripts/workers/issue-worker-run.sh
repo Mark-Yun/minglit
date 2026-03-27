@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="/Users/mark/workspace/minglit"
 WORKTREE_BASE="/Users/mark/workspace/minglit-workers"
 PROMPT_FILE="$SCRIPT_DIR/prompts/issue-worker.txt"
-SESSION_TIMEOUT=1800
+SESSION_TIMEOUT=3600
 REPO="Mark-Yun/minglit"
 LOG_DIR="/tmp/claude-worker-logs"
 
