@@ -1007,7 +1007,13 @@ async function seedUserActivity(sb: SupabaseClient): Promise<void> {
   }
 }
 
+// Fix #489: phase-split으로 150s wall clock 제한 우회 — phase=1/2/3 개별 호출 또는 미지정 시 전체 실행
 Deno.serve(async (req) => {
+  // Handle CORS preflight before any auth/env checks
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS' } })
+  }
+
   if (isProduction()) {
     return errorResponse('Dev-only function. Blocked in production.', 403)
   }
@@ -1016,6 +1022,11 @@ Deno.serve(async (req) => {
     const supabase = createServiceClient()
     const url = new URL(req.url)
     const phase = url.searchParams.get('phase')
+
+    // Reject unknown phase values to prevent accidental full runs
+    if (phase !== null && !['1', '2', '3'].includes(phase)) {
+      return errorResponse(`Invalid phase: ${phase}. Use 1, 2, or 3.`, 400)
+    }
 
     // Phase 1: Users + Global verifications
     let createdUsers = 0
@@ -1073,7 +1084,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Full run (no phase param) — return combined stats
+    // Full run (no phase param) — runs all phases sequentially and returns combined stats.
+    // Note: uploadSeedImages is called in both Phase 2 and Phase 3, but it is idempotent
+    // (skips already-uploaded files), so double-calling is safe and intentional.
+    // For environments with strict 150s wall clock limits, call phase=1/2/3 individually.
     // created_users includes partner owner accounts (SEED_PARTNERS + HOT_PLACES)
     return successResponse({
       full_run: true,
