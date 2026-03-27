@@ -1,17 +1,22 @@
 import 'dart:async';
 
-import 'package:app_user/src/features/event/admission/event_admission_controller.dart';
-import 'package:app_user/src/features/event/logic/event_coordinator.dart';
+import 'package:app_user/src/features/ticket/logic/ticket_recommendation_util.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 part 'ticket_selection_widgets.dart';
 
+// Fix #453: onTicketSelected 콜백으로 event feature 의존 제거 — 순환 참조 해소
 class TicketSelectionSheet extends ConsumerStatefulWidget {
-  const TicketSelectionSheet({required this.event, super.key});
+  const TicketSelectionSheet({
+    required this.event,
+    required this.onTicketSelected,
+    super.key,
+  });
 
   final Event event;
+  final void Function(String eventId, String? ticketId) onTicketSelected;
 
   @override
   ConsumerState<TicketSelectionSheet> createState() =>
@@ -53,7 +58,9 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
         _isBalanceStatusLoading = false;
       });
       _updateRecommendation();
-    } on Exception catch (_) {
+      // Fix #459: 잔액 조회 실패 시 에러 로깅 추가 — 프로덕션 장애 추적 불가 방지
+    } on Exception catch (e, st) {
+      Log.e('[TicketSelectionSheet] _fetchBalanceStatus failed', e, st);
       if (!mounted) return;
       setState(() => _isBalanceStatusLoading = false);
       _updateRecommendation();
@@ -120,13 +127,8 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
     // Close sheet first
     Navigator.pop(context);
 
-    // Navigate to Application Wizard via Coordinator
-    ref
-        .read(eventCoordinatorProvider)
-        .goToApplicationWizard(
-          widget.event.id,
-          ticketId: _selectedTicketId,
-        );
+    // Fix #453: 콜백으로 네비게이션 위임 — event feature 직접 참조 제거
+    widget.onTicketSelected(widget.event.id, _selectedTicketId);
   }
 
   @override

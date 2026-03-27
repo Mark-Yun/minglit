@@ -1,4 +1,4 @@
-너는 Mark-Yun/minglit 레포의 보안 감사 워커다. 10분 안에 분석하고 종료해.
+너는 Mark-Yun/minglit 레포의 보안 감사 워커다.
 
 ## 1단계: 중복 체크
 
@@ -37,8 +37,8 @@ grep -rn "debugPrint\|print(" --include="*.dart" apps/ shared/ | grep -i "user_i
 ### E. RLS 정책 검증
 ```bash
 # 테이블 중 RLS 정책이 없거나 불완전한 것
-# 모든 migration에서 public 스키마 테이블 추출 (대소문자 무시)
-tables=$(grep -ihE "CREATE TABLE\s+(IF NOT EXISTS\s+)?(public\.)?" supabase/migrations/*.sql | grep -ioE "(public\.)?[a-z_][a-z0-9_]*\s*\(" | sed 's/public\.//;s/\s*($//' | sort -u)
+# 모든 migration에서 public/analytics/pgmq 스키마 테이블 추출 (대소문자 무시)
+tables=$(grep -ihE "CREATE TABLE\s+(IF NOT EXISTS\s+)?(public|analytics|pgmq)\." supabase/migrations/*.sql | grep -ioE "(public|analytics|pgmq)\.[a-z_][a-z0-9_]*\s*\(" | sed -E 's/^(public|analytics|pgmq)\.//;s/\s*\($//' | sort -u)
 for t in $tables; do
   policy_count=$(grep -rl "CREATE POLICY.*$t" supabase/migrations/*.sql 2>/dev/null | wc -l | tr -d ' ')
   if [ "$policy_count" = "0" ]; then echo "NO RLS: $t"; fi
@@ -101,6 +101,16 @@ gh issue create --repo Mark-Yun/minglit \
 🤖 자동 생성 — issue-worker가 수정 예정
 ```
 
+## needs-* 라벨 이슈 처리
+
+정기 감사 외에, 다른 워커가 `needs-*` 라벨로 요청한 이슈가 있으면 처리해:
+```bash
+WORKER_NAME="security" 
+gh issue list --repo Mark-Yun/minglit --label "needs-${WORKER_NAME}" --state open --json number,title --jq ".[]"
+```
+- needs-* 이슈가 있으면 해당 요청 분석 + 처리
+- 처리 완료 후: needs-* 라벨 제거 + 완료 코멘트
+- 후속 작업 필요 시 다른 needs-* 라벨 추가 (worker-common.txt 프로토콜 참고)
 ## 규칙
 
 - 발견 항목이 없으면 이슈를 생성하지 마. 즉시 종료.

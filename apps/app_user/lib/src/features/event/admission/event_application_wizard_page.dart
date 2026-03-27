@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:app_user/src/features/event/admission/event_application_controller.dart';
+import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
+import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:app_user/src/features/payment/ui/payment_success_screen.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -88,12 +90,18 @@ class _WizardBodyState extends ConsumerState<_WizardBody> {
         if (next.status == EventApplicationStatus.success) {
           final ticket = next.selectedTicket;
           if (ticket == null) return;
+          // Fix #453: 콜백으로 coordinator 의존을 wizard 페이지가 소유 — payment → event 순환 제거
           unawaited(
             Navigator.of(context).pushReplacement(
               MaterialPageRoute<void>(
                 builder: (_) => PaymentSuccessScreen(
-                  eventId: widget.event.id,
+                  event: widget.event,
                   ticketId: ticket.id,
+                  onViewTickets: () =>
+                      ref.read(homeCoordinatorProvider).goToPurchaseHistory(),
+                  onBackToEvent: () => ref
+                      .read(eventCoordinatorProvider)
+                      .goToEventDetail(widget.event.id),
                 ),
               ),
             ),

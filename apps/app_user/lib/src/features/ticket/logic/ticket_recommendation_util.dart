@@ -1,4 +1,4 @@
-part of 'event_admission_controller.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 class TicketRecommendationResult {
   const TicketRecommendationResult({

@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { createServiceClient } from '../_shared/supabase_client.ts'
+import { errorResponse, successResponse } from '../_shared/response_utils.ts'
 
 function isProduction(): boolean {
   const env = Deno.env.get('ENVIRONMENT')
@@ -601,14 +602,15 @@ async function updatePartyImages(supabase: SupabaseClient, imageUrls: string[]):
   const { data: parties } = await supabase.from('parties').select('id').order('created_at')
   if (!parties) return
 
-  for (let i = 0; i < parties.length; i++) {
+  // Fix #456: batch update via Promise.all to avoid Edge Function timeout
+  await Promise.all(parties.map((party: any, i: number) => {
     const shuffled = [
       imageUrls[i % imageUrls.length],
       imageUrls[(i + 1) % imageUrls.length],
       imageUrls[(i + 2) % imageUrls.length],
     ]
-    await supabase.from('parties').update({ image_urls: shuffled }).eq('id', parties[i].id)
-  }
+    return supabase.from('parties').update({ image_urls: shuffled }).eq('id', party.id)
+  }))
 }
 
 async function seedGlobalVerifications(supabase: SupabaseClient): Promise<Record<string, string>> {
@@ -757,14 +759,19 @@ async function seedUserActivity(sb: SupabaseClient): Promise<void> {
   const verifiedUsers = users.filter((u: any) => u.is_verified)
   const globalVerifs = verifications.filter((v: any) => v.partner_id === null)
 
+  // Fix #456: batch upsert to avoid Edge Function timeout
+  const uvRows: { user_id: string; verification_id: string; data: { verified: boolean; source: string } }[] = []
   for (const user of verifiedUsers.slice(0, 20)) {
     for (const verif of globalVerifs) {
-      await sb.from('user_verifications').upsert({
+      uvRows.push({
         user_id: user.id,
         verification_id: verif.id,
         data: { verified: true, source: 'seed' },
-      }, { onConflict: 'user_id,verification_id', ignoreDuplicates: true })
+      })
     }
+  }
+  if (uvRows.length > 0) {
+    await sb.from('user_verifications').upsert(uvRows, { onConflict: 'user_id,verification_id', ignoreDuplicates: true }).throwOnError()
   }
 
   // ── Step 3: Pick events for activity seeding ─────────────────────────
@@ -888,12 +895,17 @@ async function seedUserActivity(sb: SupabaseClient): Promise<void> {
   const { data: participants } = await sb.from('event_participants').select('id').limit(20)
   if (participants && participants.length > 0) {
     const checkinCount = Math.max(1, Math.floor(participants.length / 3))
-    for (let i = 0; i < checkinCount; i++) {
-      await sb.from('event_participants').update({ status: 'checked_in' }).eq('id', participants[i].id)
-    }
     const noShowCount = Math.max(1, Math.floor(participants.length / 3))
-    for (let i = checkinCount; i < checkinCount + noShowCount && i < participants.length; i++) {
-      await sb.from('event_participants').update({ status: 'no_show' }).eq('id', participants[i].id)
+
+    // Fix #456: batch upsert to avoid Edge Function timeout
+    const checkedInIds = participants.slice(0, checkinCount).map((p: any) => p.id)
+    if (checkedInIds.length > 0) {
+      await sb.from('event_participants').update({ status: 'checked_in' }).in('id', checkedInIds).throwOnError()
+    }
+
+    const noShowIds = participants.slice(checkinCount, checkinCount + noShowCount).map((p: any) => p.id)
+    if (noShowIds.length > 0) {
+      await sb.from('event_participants').update({ status: 'no_show' }).in('id', noShowIds).throwOnError()
     }
   }
 
@@ -942,19 +954,32 @@ async function seedUserActivity(sb: SupabaseClient): Promise<void> {
   const { data: allVerifications } = await sb.from('verifications').select('id, partner_id')
 
   if (allUsers && allPartners && allVerifications) {
+    // Fix #456: batch upsert to avoid Edge Function timeout
+    const pvuRows: { partner_id: string; user_id: string; verification_id: string; verified_at: string }[] = []
+    const now = new Date().toISOString()
     for (const user of allUsers) {
       for (const partner of allPartners) {
         const partnerVerifs = allVerifications.filter((v: any) =>
           v.partner_id === partner.id || v.partner_id === null
         )
         for (const verif of partnerVerifs) {
-          await sb.from('partner_verified_users').upsert({
+          pvuRows.push({
             partner_id: partner.id,
             user_id: user.id,
             verification_id: verif.id,
-            verified_at: new Date().toISOString(),
-          }, { onConflict: 'partner_id,user_id,verification_id' })
+            verified_at: now,
+          })
         }
+      }
+    }
+    if (pvuRows.length > 0) {
+      // Note: submission_id is NOT NULL — direct upsert may fail.
+      // This step is best-effort; partner_verified_users are normally
+      // populated via the verification_submissions approval trigger.
+      try {
+        await sb.from('partner_verified_users').upsert(pvuRows, { onConflict: 'partner_id,user_id,verification_id' }).throwOnError()
+      } catch (err) {
+        console.error('partner_verified_users batch upsert failed (expected if submission_id NOT NULL):', err)
       }
     }
   }
@@ -965,77 +990,114 @@ async function seedUserActivity(sb: SupabaseClient): Promise<void> {
     .eq('status', 'scheduled')
 
   if (eventsForRules) {
+    // Fix #456: batch upsert to avoid Edge Function timeout
+    const matchRuleRows: { event_id: string; source_group_id: string; target_group_id: string }[] = []
     for (const event of eventsForRules) {
       const groups = (event as any).entry_groups ?? []
       if (groups.length >= 2) {
-        // Insert bidirectional match rules
-        await sb.from('match_rules').upsert([
+        matchRuleRows.push(
           { event_id: event.id, source_group_id: groups[0].id, target_group_id: groups[1].id },
           { event_id: event.id, source_group_id: groups[1].id, target_group_id: groups[0].id },
-        ], { onConflict: 'event_id,source_group_id,target_group_id', ignoreDuplicates: true })
+        )
       }
+    }
+    if (matchRuleRows.length > 0) {
+      await sb.from('match_rules').upsert(matchRuleRows, { onConflict: 'event_id,source_group_id,target_group_id', ignoreDuplicates: true }).throwOnError()
     }
   }
 }
 
-Deno.serve(async (_req) => {
-   if (isProduction()) {
-     return new Response(
-       JSON.stringify({ error: 'Dev-only function. Blocked in production.' }),
-       { status: 403, headers: { 'Content-Type': 'application/json' } },
-     )
-   }
+// Fix #489: phase-split으로 150s wall clock 제한 우회 — phase=1/2/3 개별 호출 또는 미지정 시 전체 실행
+Deno.serve(async (req) => {
+  // Handle CORS preflight before any auth/env checks
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS' } })
+  }
 
-   try {
-     const supabase = createServiceClient()
+  if (isProduction()) {
+    return errorResponse('Dev-only function. Blocked in production.', 403)
+  }
 
-    // Seed users
-    const createdUsers = await seedUsers(supabase)
+  try {
+    const supabase = createServiceClient()
+    const url = new URL(req.url)
+    const phase = url.searchParams.get('phase')
 
-    // Seed 30s users
-    const created30sUsers = await seed30sUsers(supabase)
+    // Reject unknown phase values to prevent accidental full runs
+    if (phase !== null && !['1', '2', '3'].includes(phase)) {
+      return errorResponse(`Invalid phase: ${phase}. Use 1, 2, or 3.`, 400)
+    }
 
-     // Seed global verifications
-     const globalVerifs = await seedGlobalVerifications(supabase)
+    // Phase 1: Users + Global verifications
+    let createdUsers = 0
+    let created30sUsers = 0
+    let globalVerifsCount = 0
+    if (!phase || phase === '1') {
+      createdUsers = await seedUsers(supabase)
+      created30sUsers = await seed30sUsers(supabase)
+      const globalVerifs = await seedGlobalVerifications(supabase)
+      globalVerifsCount = Object.keys(globalVerifs).length
 
-     // Seed defined partners with their locations, verifications, parties, and events
-     const definedPartnerStats = await seedDefinedPartners(supabase, globalVerifs)
-
-     // Seed hot-place partners with all scenarios
-     const hotPlaceStats = await seedHotPlacePartners(supabase, globalVerifs)
-
-    // Upload seed images and update party image_urls
-    const imageUrls = await uploadSeedImages(supabase)
-    await updatePartyImages(supabase, imageUrls)
-
-    // Seed user activity (applications, verifications, participants)
-    await seedUserActivity(supabase)
-
-    // Purge pgmq queues to avoid queue bloat after seeding
-    for (const queue of ['q_global_events', 'q_notifications', 'q_vectors']) {
-      try {
-        await supabase.rpc('pgmq_purge', { queue_name: queue })
-      } catch {
-        // pgmq may not be available in all environments — ignore errors
+      if (phase === '1') {
+        return successResponse({ phase: 1, created_users: createdUsers, created_30s_users: created30sUsers, global_verifications: globalVerifsCount })
       }
     }
 
-     return new Response(
-      JSON.stringify({
-        created_users: createdUsers + SEED_PARTNERS.length + HOT_PLACES.length,
-        created_30s_users: created30sUsers,
-        created_partners: definedPartnerStats.createdPartners + hotPlaceStats.createdPartners,
-        created_parties: definedPartnerStats.createdParties + hotPlaceStats.createdParties,
-        created_events: definedPartnerStats.createdEvents + hotPlaceStats.createdEvents,
-        uploaded_images: imageUrls.length,
-        seeded_activity: true,
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } },
-    )
-   } catch (err) {
-     return new Response(
-       JSON.stringify({ error: (err as Error).message }),
-       { status: 500, headers: { 'Content-Type': 'application/json' } },
-     )
-   }
- })
+    // Phase 2: Partners + Images upload
+    // ensureGlobalVerifications fetches existing records if already created in Phase 1
+    let totalPartners = 0
+    let totalParties = 0
+    let totalEvents = 0
+    let uploadedImages = 0
+    if (!phase || phase === '2') {
+      const globalVerifs = await ensureGlobalVerifications(supabase)
+      const definedPartnerStats = await seedDefinedPartners(supabase, globalVerifs)
+      const hotPlaceStats = await seedHotPlacePartners(supabase, globalVerifs)
+      const imageUrls = await uploadSeedImages(supabase)
+      totalPartners = definedPartnerStats.createdPartners + hotPlaceStats.createdPartners
+      totalParties = definedPartnerStats.createdParties + hotPlaceStats.createdParties
+      totalEvents = definedPartnerStats.createdEvents + hotPlaceStats.createdEvents
+      uploadedImages = imageUrls.length
+
+      if (phase === '2') {
+        return successResponse({ phase: 2, created_partners: totalPartners, created_parties: totalParties, created_events: totalEvents, uploaded_images: uploadedImages })
+      }
+    }
+
+    // Phase 3: Party images + User activity + Queue purge
+    // uploadSeedImages is idempotent — returns existing URLs without re-uploading
+    if (!phase || phase === '3') {
+      const imageUrls = await uploadSeedImages(supabase)
+      await updatePartyImages(supabase, imageUrls)
+      await seedUserActivity(supabase)
+
+      for (const queue of ['q_global_events', 'q_notifications', 'q_vectors']) {
+        try {
+          await supabase.rpc('pgmq_purge', { queue_name: queue })
+        } catch {
+          // pgmq may not be available in all environments — ignore errors
+        }
+      }
+
+      if (phase === '3') {
+        return successResponse({ phase: 3, seeded_activity: true })
+      }
+    }
+
+    // Full run (no phase param) — runs all phases sequentially and returns combined stats.
+    // Note: uploadSeedImages is called in both Phase 2 and Phase 3, but it is idempotent
+    // (skips already-uploaded files), so double-calling is safe and intentional.
+    // For environments with strict 150s wall clock limits, call phase=1/2/3 individually.
+    // created_users includes partner owner accounts (SEED_PARTNERS + HOT_PLACES)
+    return successResponse({
+      full_run: true,
+      created_users: createdUsers + SEED_PARTNERS.length + HOT_PLACES.length,
+      created_30s_users: created30sUsers,
+      created_partners: totalPartners,
+      created_parties: totalParties,
+      created_events: totalEvents,
+    })
+  } catch (err) {
+    return errorResponse((err as Error).message, 500)
+  }
+})

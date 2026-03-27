@@ -152,6 +152,15 @@ gh issue create --repo Mark-Yun/minglit \
 | 탈퇴/파기 절차 | ✅/⚠️/❌ |
 ```
 
+## needs-* 라벨 이슈 처리
+
+다른 워커가 `needs-legal` 라벨로 요청한 이슈가 있으면 처리:
+```bash
+gh issue list --repo Mark-Yun/minglit --label "needs-legal" --state open --json number,title --jq ".[]"
+```
+- needs-legal 이슈가 있으면 해당 요청 분석 + 처리
+- 처리 완료 후: needs-legal 라벨 제거 + 완료 코멘트
+- 후속 작업 필요 시 다른 needs-* 라벨 추가
 ## 규칙
 
 - **웹 검색으로 최신 법규를 반드시 확인해.** 오래된 기준으로 판단하지 마.

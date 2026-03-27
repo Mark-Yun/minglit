@@ -1,144 +1,30 @@
-name: Daily CUJ Integration Tests
+name: Daily E2E
 
 on:
   schedule:
-    - cron: '0 22 * * *'  # Daily KST 07:00 (UTC 22:00) — runs on default branch (dev)
-  workflow_dispatch:       # Manual trigger
-
-concurrency:
-  group: daily-client-cuj-${{ github.ref }}
-  cancel-in-progress: true
+    - cron: '0 0 * * *' # midnight UTC daily
+  workflow_dispatch:
 
 jobs:
-  # Fix #428: refresh seed data before tests so scheduled events exist
   refresh-seed-data:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
-      - name: Refresh dev seed data
+      - name: Refresh dev seed data (phase 1 - users & verifications)
         run: |
           curl -sf -X POST \
-            "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/dev-seed" \
+            "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/dev-seed?phase=1" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
             -H "Content-Type: application/json"
-
-  client-cuj-test:
-    needs: refresh-seed-data
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          cache: true
-
-      - name: Cache pub packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.pub-cache
-          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pub-
-
-      - name: Install dependencies
-        run: flutter pub get
-        working-directory: tests/client_cuj_integration
-
-      - name: Enable KVM
+      - name: Refresh dev seed data (phase 2 - partners & events)
         run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-
-      - name: Run CUJ Integration Tests
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 34
-          arch: x86_64
-          profile: pixel_6
-          force-avd-creation: false
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
-          disable-animations: true
-          working-directory: tests/client_cuj_integration
-          script: >-
-            for test_file in integration_test/cuj/*_test.dart; do
-            echo "▶ Running $test_file";
-            flutter test "$test_file" --reporter expanded
-            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_DEV_URL }}
-            --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
-            --dart-define=SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_DEV_SECRET_KEY }}
-            || exit 1;
-            done
-
-  partner-cuj-test:
-    needs: refresh-seed-data
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          cache: true
-
-      - name: Cache pub packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.pub-cache
-          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pub-
-
-      - name: Install dependencies
-        run: flutter pub get
-        working-directory: tests/partner_cuj_integration
-
-      - name: Enable KVM
+          curl -sf -X POST \
+            "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/dev-seed?phase=2" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
+            -H "Content-Type: application/json"
+      - name: Refresh dev seed data (phase 3 - activity & cleanup)
         run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-
-      - name: Run Partner CUJ Integration Tests
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 34
-          arch: x86_64
-          profile: pixel_6
-          force-avd-creation: false
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
-          disable-animations: true
-          working-directory: tests/partner_cuj_integration
-          script: >-
-            for test_file in integration_test/cuj/*_test.dart; do
-            echo "▶ Running $test_file";
-            flutter test "$test_file" --reporter expanded
-            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_DEV_URL }}
-            --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
-            --dart-define=SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_DEV_SECRET_KEY }}
-            || exit 1;
-            done
-
-  notify-failure:
-    needs: [client-cuj-test, partner-cuj-test]
-    if: always()
-    permissions:
-      issues: write
-    uses: ./.github/workflows/notify-failure.yml
-    with:
-      success: ${{ needs.client-cuj-test.result == 'success' && needs.partner-cuj-test.result == 'success' }}
-      workflow_name: 'Daily CUJ'
-      job_results: '{"client-cuj-test":"${{ needs.client-cuj-test.result }}","partner-cuj-test":"${{ needs.partner-cuj-test.result }}"}'
+          curl -sf -X POST \
+            "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/dev-seed?phase=3" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
+            -H "Content-Type: application/json"

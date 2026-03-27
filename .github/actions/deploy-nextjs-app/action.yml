@@ -25,6 +25,10 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Copy env-manifest.json into app directory
+      shell: bash
+      run: cp -- env-manifest.json "${{ inputs.working-directory }}/env-manifest.json"
+
     - name: Deploy to Vercel
       id: deploy
       shell: bash
