@@ -1,5 +1,6 @@
 import 'package:app_partner/src/features/settlement/widgets/settlement_status_badge.dart';
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 class SettlementCard extends StatelessWidget {
   const SettlementCard({
@@ -33,14 +34,14 @@ class SettlementCard extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: MinglitSpacing.xsmall),
                   Text(
                     createdAt.isNotEmpty ? createdAt.substring(0, 10) : '-',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: MinglitSpacing.xsmall),
                   Text(
                     '₩${_formatAmount(netAmount)}',
                     style: Theme.of(context).textTheme.bodyMedium,

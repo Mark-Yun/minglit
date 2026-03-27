@@ -145,7 +145,7 @@ class MinglitEventCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: MinglitSpacing.xxsmall),
 
                   // Location & Date Row
                   Row(
@@ -248,7 +248,7 @@ class _ParticipantDDayOverlay extends StatelessWidget {
           const SizedBox(width: 3),
           // 3-segment battery gauge
           for (var i = 0; i < 3; i++) ...[
-            if (i > 0) const SizedBox(width: 2),
+            if (i > 0) const SizedBox(width: MinglitSpacing.xxsmall),
             Container(
               width: 10,
               height: 8,
@@ -260,16 +260,16 @@ class _ParticipantDDayOverlay extends StatelessWidget {
               ),
             ),
           ],
-          const SizedBox(width: 6),
+          const SizedBox(width: MinglitSpacing.xsmall2),
           Text('$current/$max', style: overlayStyle),
-          const SizedBox(width: 4),
+          const SizedBox(width: MinglitSpacing.xsmall),
           Text(
             '·',
             style: overlayStyle.copyWith(
               color: MinglitColors.background.withValues(alpha: 0.6),
             ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: MinglitSpacing.xsmall),
           const Icon(
             Icons.calendar_today,
             size: 13,
@@ -317,7 +317,7 @@ class _PartnerOverlay extends StatelessWidget {
                   )
                 : null,
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: MinglitSpacing.xsmall2),
           // Fix #474: fontSize 13 → ThemeExtension chipLabel
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 130),

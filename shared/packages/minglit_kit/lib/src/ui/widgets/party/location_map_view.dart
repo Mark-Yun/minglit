@@ -113,7 +113,7 @@ class LocationMapView extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: MinglitSpacing.xxsmall),
                         Text(
                           location.address,
                           style: theme.textTheme.bodySmall?.copyWith(

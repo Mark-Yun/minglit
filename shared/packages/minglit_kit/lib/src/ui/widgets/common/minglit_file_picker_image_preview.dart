@@ -125,7 +125,7 @@ class MinglitFilePickerImagePreview extends StatelessWidget {
               Icons.insert_drive_file,
               color: Theme.of(context).colorScheme.outline,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: MinglitSpacing.xsmall),
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: MinglitSpacing.xsmall,
