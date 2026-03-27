@@ -6,6 +6,7 @@
 export function validateBuildEnv(): void {
   // Fix #447: lazy require to avoid module resolution failure on Vercel
   // where the monorepo root is outside the build directory
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const manifest = require("../../../env-manifest.json");
   const section = manifest.nextjs.landing_partner;
   const required = Object.keys(section.required);
