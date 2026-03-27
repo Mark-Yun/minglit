@@ -1006,64 +1006,81 @@ async function seedUserActivity(sb: SupabaseClient): Promise<void> {
   }
 }
 
-Deno.serve(async (_req) => {
-   if (isProduction()) {
-     return new Response(
-       JSON.stringify({ error: 'Dev-only function. Blocked in production.' }),
-       { status: 403, headers: { 'Content-Type': 'application/json' } },
-     )
-   }
+Deno.serve(async (req) => {
+  if (isProduction()) {
+    return new Response(
+      JSON.stringify({ error: 'Dev-only function. Blocked in production.' }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } },
+    )
+  }
 
-   try {
-     const supabase = createServiceClient()
+  try {
+    const supabase = createServiceClient()
+    const url = new URL(req.url)
+    const phase = url.searchParams.get('phase')
 
-    // Seed users
-    const createdUsers = await seedUsers(supabase)
+    // Phase 1: Users + Global verifications
+    if (!phase || phase === '1') {
+      const createdUsers = await seedUsers(supabase)
+      const created30sUsers = await seed30sUsers(supabase)
+      const globalVerifs = await seedGlobalVerifications(supabase)
 
-    // Seed 30s users
-    const created30sUsers = await seed30sUsers(supabase)
-
-     // Seed global verifications
-     const globalVerifs = await seedGlobalVerifications(supabase)
-
-     // Seed defined partners with their locations, verifications, parties, and events
-     const definedPartnerStats = await seedDefinedPartners(supabase, globalVerifs)
-
-     // Seed hot-place partners with all scenarios
-     const hotPlaceStats = await seedHotPlacePartners(supabase, globalVerifs)
-
-    // Upload seed images and update party image_urls
-    const imageUrls = await uploadSeedImages(supabase)
-    await updatePartyImages(supabase, imageUrls)
-
-    // Seed user activity (applications, verifications, participants)
-    await seedUserActivity(supabase)
-
-    // Purge pgmq queues to avoid queue bloat after seeding
-    for (const queue of ['q_global_events', 'q_notifications', 'q_vectors']) {
-      try {
-        await supabase.rpc('pgmq_purge', { queue_name: queue })
-      } catch {
-        // pgmq may not be available in all environments — ignore errors
+      if (phase === '1') {
+        return new Response(
+          JSON.stringify({ phase: 1, created_users: createdUsers, created_30s_users: created30sUsers, global_verifications: Object.keys(globalVerifs).length }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        )
       }
     }
 
-     return new Response(
-      JSON.stringify({
-        created_users: createdUsers + SEED_PARTNERS.length + HOT_PLACES.length,
-        created_30s_users: created30sUsers,
-        created_partners: definedPartnerStats.createdPartners + hotPlaceStats.createdPartners,
-        created_parties: definedPartnerStats.createdParties + hotPlaceStats.createdParties,
-        created_events: definedPartnerStats.createdEvents + hotPlaceStats.createdEvents,
-        uploaded_images: imageUrls.length,
-        seeded_activity: true,
-      }),
+    // Phase 2: Partners + Images upload
+    // ensureGlobalVerifications fetches existing records if already created in Phase 1
+    if (!phase || phase === '2') {
+      const globalVerifs = await ensureGlobalVerifications(supabase)
+      const definedPartnerStats = await seedDefinedPartners(supabase, globalVerifs)
+      const hotPlaceStats = await seedHotPlacePartners(supabase, globalVerifs)
+      const imageUrls = await uploadSeedImages(supabase)
+
+      if (phase === '2') {
+        return new Response(
+          JSON.stringify({ phase: 2, created_partners: definedPartnerStats.createdPartners + hotPlaceStats.createdPartners, created_parties: definedPartnerStats.createdParties + hotPlaceStats.createdParties, created_events: definedPartnerStats.createdEvents + hotPlaceStats.createdEvents, uploaded_images: imageUrls.length }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        )
+      }
+    }
+
+    // Phase 3: Party images + User activity + Queue purge
+    // uploadSeedImages is idempotent — returns existing URLs without re-uploading
+    if (!phase || phase === '3') {
+      const imageUrls = await uploadSeedImages(supabase)
+      await updatePartyImages(supabase, imageUrls)
+      await seedUserActivity(supabase)
+
+      for (const queue of ['q_global_events', 'q_notifications', 'q_vectors']) {
+        try {
+          await supabase.rpc('pgmq_purge', { queue_name: queue })
+        } catch {
+          // pgmq may not be available in all environments — ignore errors
+        }
+      }
+
+      if (phase === '3') {
+        return new Response(
+          JSON.stringify({ phase: 3, seeded_activity: true }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        )
+      }
+    }
+
+    // Full run (no phase param) — return combined stats
+    return new Response(
+      JSON.stringify({ full_run: true }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
     )
-   } catch (err) {
-     return new Response(
-       JSON.stringify({ error: (err as Error).message }),
-       { status: 500, headers: { 'Content-Type': 'application/json' } },
-     )
-   }
- })
+  } catch (err) {
+    return new Response(
+      JSON.stringify({ error: (err as Error).message }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } },
+    )
+  }
+})
