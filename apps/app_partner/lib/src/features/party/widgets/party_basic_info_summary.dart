@@ -171,7 +171,7 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
                       size: 18,
                       color: colorScheme.primary,
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: MinglitSpacing.xsmall),
                     Text(
                       _isExpanded ? '상세 설명 접기' : '상세 설명 보기',
                       style: theme.textTheme.bodySmall?.copyWith(

@@ -92,9 +92,9 @@ class NotificationListScreen extends ConsumerWidget {
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 4),
+                        const SizedBox(height: MinglitSpacing.xsmall),
                         Text(body),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: MinglitSpacing.xsmall),
                         Text(
                           DateFormat('MM/dd HH:mm').format(createdAt),
                           style: theme.textTheme.labelSmall?.copyWith(

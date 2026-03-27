@@ -106,13 +106,13 @@ class MinglitChip extends StatelessWidget {
             if (size == MinglitChipSize.small)
               const SizedBox(width: MinglitSpacing.xxsmall)
             else ...[
-              const SizedBox(width: 4),
+              const SizedBox(width: MinglitSpacing.xsmall),
               Container(
                 width: 1,
                 height: iconSize - 2,
                 color: colorScheme.outlineVariant,
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: MinglitSpacing.xsmall),
             ],
           ],
           Text(

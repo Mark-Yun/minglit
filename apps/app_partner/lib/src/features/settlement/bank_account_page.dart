@@ -56,7 +56,7 @@ class _BankAccountPageState extends ConsumerState<BankAccountPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   AccountCard(accountData: _accountData),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: MinglitSpacing.medium),
                   AccountEditForm(
                     accountData: _accountData,
                     onSaved: _loadAccount,
@@ -96,7 +96,7 @@ class AccountCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('현재 계좌', style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 12),
+            const SizedBox(height: MinglitSpacing.sm),
             _InfoRow('은행', bankName),
             _InfoRow('예금주', holder),
             _InfoRow('계좌번호', masked),
@@ -215,21 +215,21 @@ class _AccountEditFormState extends ConsumerState<AccountEditForm> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text('계좌 수정', style: Theme.of(context).textTheme.titleSmall),
-              const SizedBox(height: 12),
+              const SizedBox(height: MinglitSpacing.sm),
               TextFormField(
                 controller: _bankCtrl,
                 decoration: const InputDecoration(labelText: '은행명'),
                 validator: (v) =>
                     (v == null || v.isEmpty) ? '은행명을 입력해 주세요.' : null,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: MinglitSpacing.small),
               TextFormField(
                 controller: _holderCtrl,
                 decoration: const InputDecoration(labelText: '예금주'),
                 validator: (v) =>
                     (v == null || v.isEmpty) ? '예금주를 입력해 주세요.' : null,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: MinglitSpacing.small),
               TextFormField(
                 controller: _numberCtrl,
                 decoration: const InputDecoration(labelText: '계좌번호'),
@@ -237,7 +237,7 @@ class _AccountEditFormState extends ConsumerState<AccountEditForm> {
                 validator: (v) =>
                     (v == null || v.isEmpty) ? '계좌번호를 입력해 주세요.' : null,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: MinglitSpacing.medium),
               FilledButton(
                 onPressed: _isSaving ? null : _save,
                 child: Text(_isSaving ? '저장 중...' : '저장'),

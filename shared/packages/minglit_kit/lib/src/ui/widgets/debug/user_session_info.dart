@@ -75,7 +75,7 @@ class UserSessionInfo extends ConsumerWidget {
             ),
           ),
           SelectableText(user.id, style: theme.textTheme.bodySmall),
-          const SizedBox(height: 12),
+          const SizedBox(height: MinglitSpacing.sm),
           // Fix #474: fontSize 11 → labelSmall
           Text(
             'Full Metadata (JSON)',
@@ -101,7 +101,7 @@ class UserSessionInfo extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: MinglitSpacing.medium),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(

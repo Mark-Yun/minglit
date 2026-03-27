@@ -204,7 +204,7 @@ class MatchingVoteScreen extends ConsumerWidget {
                 size: 12,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: MinglitSpacing.xsmall),
               Expanded(
                 child: Text(
                   match.partnerContact ?? '연락처 없음',

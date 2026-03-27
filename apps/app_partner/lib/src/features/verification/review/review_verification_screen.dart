@@ -100,7 +100,7 @@ class _ReviewVerificationScreenState
                   context.l10n.reviewVerification_dialog_correction_reasonHint,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: MinglitSpacing.medium),
           TextField(
             controller: commentController,
             maxLines: 3,

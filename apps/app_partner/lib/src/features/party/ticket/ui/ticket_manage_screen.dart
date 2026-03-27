@@ -102,7 +102,7 @@ class _TicketManageCard extends ConsumerWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: MinglitSpacing.xxsmall),
                   Text(
                     '${ticket.soldCount} / ${ticket.quantity}매 판매',
                     style: theme.textTheme.bodySmall?.copyWith(

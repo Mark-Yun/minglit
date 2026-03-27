@@ -104,12 +104,12 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
             size: 64,
             color: theme.colorScheme.outline,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: MinglitSpacing.medium),
           Text(
             'No Users Found',
             style: theme.textTheme.titleLarge!.copyWith(fontSize: 18),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: MinglitSpacing.small),
           Text(
             'The database seems empty.\nPlease run the seeder from CLI:\n'
             'flutter test apps/app_user/test/setup_test_data.dart',
