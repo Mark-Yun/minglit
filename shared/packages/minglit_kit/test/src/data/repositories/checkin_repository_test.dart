@@ -2,6 +2,11 @@ import 'package:cryptography/cryptography.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/repositories/checkin_repository.dart';
 import 'package:minglit_kit/src/utils/ticket_crypto.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+/// Minimal [SupabaseClient] for unit tests that don't hit the network.
+SupabaseClient _stubSupabase() =>
+    SupabaseClient('https://stub.supabase.co', 'stub-anon-key');
 
 void main() {
   late CheckinRepository repository;
@@ -16,7 +21,10 @@ void main() {
   });
 
   setUp(() {
-    repository = CheckinRepository(crypto);
+    repository = CheckinRepository(
+      crypto: crypto,
+      supabase: _stubSupabase(),
+    );
   });
 
   group('CheckinRepository', () {
