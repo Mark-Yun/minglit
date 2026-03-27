@@ -66,7 +66,6 @@ if [ -n "$prs" ]; then
         kill "$timer_pid" 2>/dev/null; wait "$timer_pid" 2>/dev/null
         timer_pid=""
     done
-    exit 0
 fi
 
 # --- 새 이슈 처리 (actionable 라벨만) ---
