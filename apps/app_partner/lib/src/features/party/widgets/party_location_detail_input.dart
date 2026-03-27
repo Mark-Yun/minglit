@@ -42,7 +42,7 @@ class PartyLocationDetailInput extends StatelessWidget {
                 : '장소를 먼저 선택해주세요.',
             fillColor: enabled
                 ? null
-                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                : colorScheme.surfaceContainerHighest.withValues(alpha: MinglitOpacity.muted),
             filled: true,
           ),
           onChanged: onAddressDetailChanged,
@@ -64,7 +64,7 @@ class PartyLocationDetailInput extends StatelessWidget {
                 : '장소를 먼저 선택해주세요.',
             fillColor: enabled
                 ? null
-                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                : colorScheme.surfaceContainerHighest.withValues(alpha: MinglitOpacity.muted),
             filled: true,
           ),
           maxLines: 3,

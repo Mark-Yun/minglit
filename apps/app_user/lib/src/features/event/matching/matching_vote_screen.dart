@@ -248,7 +248,7 @@ class MatchingVoteScreen extends ConsumerWidget {
           if (isVoted)
             Positioned.fill(
               child: ColoredBox(
-                color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                color: theme.colorScheme.primary.withValues(alpha: MinglitOpacity.placeholder),
                 child: Center(
                   child: Icon(
                     Icons.check_circle,

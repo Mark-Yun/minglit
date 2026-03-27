@@ -91,7 +91,7 @@ class MinglitChip extends StatelessWidget {
         color: bgColor,
         borderRadius: BorderRadius.circular(MinglitRadius.small),
         border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          color: colorScheme.outlineVariant.withValues(alpha: MinglitOpacity.muted),
           width: 0.5,
         ),
       ),

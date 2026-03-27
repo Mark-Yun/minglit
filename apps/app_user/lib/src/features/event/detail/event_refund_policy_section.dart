@@ -111,7 +111,7 @@ class _RefundPolicySection extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(MinglitSpacing.small),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+        color: theme.colorScheme.primaryContainer.withValues(alpha: MinglitOpacity.muted),
         borderRadius: BorderRadius.circular(MinglitRadius.card),
       ),
       child: Row(
@@ -158,7 +158,7 @@ class _RefundPolicySection extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(MinglitSpacing.small),
       decoration: BoxDecoration(
-        color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.3),
+        color: theme.colorScheme.secondaryContainer.withValues(alpha: MinglitOpacity.muted),
         borderRadius: BorderRadius.circular(MinglitRadius.card),
       ),
       child: Row(

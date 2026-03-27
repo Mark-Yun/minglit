@@ -108,8 +108,8 @@ class _StaffGateScreenState extends ConsumerState<StaffGateScreen> {
                     ),
                     decoration: BoxDecoration(
                       color: _message!.contains('발송되었습니다')
-                          ? colorScheme.primaryContainer.withValues(alpha: 0.3)
-                          : colorScheme.errorContainer.withValues(alpha: 0.3),
+                          ? colorScheme.primaryContainer.withValues(alpha: MinglitOpacity.muted)
+                          : colorScheme.errorContainer.withValues(alpha: MinglitOpacity.muted),
                       borderRadius: BorderRadius.circular(MinglitRadius.input),
                     ),
                     child: Text(

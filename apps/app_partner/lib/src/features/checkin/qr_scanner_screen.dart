@@ -31,9 +31,9 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
 
     Color? overlayColor;
     if (state.result == CheckinResult.success) {
-      overlayColor = MinglitColors.success.withValues(alpha: 0.8);
+      overlayColor = MinglitColors.success.withValues(alpha: MinglitOpacity.scrimLight);
     } else if (state.result != CheckinResult.idle) {
-      overlayColor = theme.colorScheme.error.withValues(alpha: 0.8);
+      overlayColor = theme.colorScheme.error.withValues(alpha: MinglitOpacity.scrimLight);
     }
 
     return Scaffold(

@@ -319,7 +319,7 @@ class TicketListView extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(MinglitSpacing.large),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: MinglitOpacity.muted),
         borderRadius: BorderRadius.circular(MinglitRadius.card),
       ),
       child: Column(

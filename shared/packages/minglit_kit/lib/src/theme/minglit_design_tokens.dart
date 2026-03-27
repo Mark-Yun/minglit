@@ -121,6 +121,24 @@ class MinglitIconSize {
   static const double xlarge = 32;
 }
 
+/// Opacity constants for consistent transparency values.
+class MinglitOpacity {
+  /// 0.05 — very subtle tint fills and divider backgrounds.
+  static const double tintFill = 0.05;
+
+  /// 0.2 — placeholder text and disabled visuals.
+  static const double placeholder = 0.2;
+
+  /// 0.3 — muted/secondary elements and dimmed states.
+  static const double muted = 0.3;
+
+  /// 0.55 — overlay cards and badge backgrounds.
+  static const double overlay = 0.55;
+
+  /// 0.8 — heavy scrims for modals and scanner overlays.
+  static const double scrimLight = 0.8;
+}
+
 /// Animation duration constants.
 class MinglitAnimation {
   /// 200ms fast animation duration.

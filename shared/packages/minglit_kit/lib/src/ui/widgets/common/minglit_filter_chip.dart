@@ -81,7 +81,7 @@ class MinglitFilterChip extends StatelessWidget {
     // Selected: #0f0f0f bg + #fff text
     final bgColor = isSelected
         ? MinglitColors.textPrimary
-        : MinglitColors.textPrimary.withValues(alpha: 0.05);
+        : MinglitColors.textPrimary.withValues(alpha: MinglitOpacity.tintFill);
 
     final fgColor = isSelected
         ? MinglitColors.background

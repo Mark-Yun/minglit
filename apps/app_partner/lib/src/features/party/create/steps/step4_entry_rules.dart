@@ -130,7 +130,7 @@ class Step4EntryRules extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(MinglitSpacing.large),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: MinglitOpacity.muted),
         borderRadius: BorderRadius.circular(MinglitRadius.card),
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),

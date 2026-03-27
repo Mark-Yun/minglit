@@ -87,7 +87,7 @@ class UserSessionInfo extends ConsumerWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(MinglitSpacing.small),
             decoration: BoxDecoration(
-              color: MinglitColors.textPrimary.withValues(alpha: 0.05),
+              color: MinglitColors.textPrimary.withValues(alpha: MinglitOpacity.tintFill),
               borderRadius: BorderRadius.circular(4),
             ),
             // Fix #474: fontSize 11 → labelSmall

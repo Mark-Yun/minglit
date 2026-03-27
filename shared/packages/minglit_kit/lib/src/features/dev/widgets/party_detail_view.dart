@@ -232,7 +232,7 @@ class PartyDetailView extends ConsumerWidget {
         color: theme.colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.05),
+            color: theme.shadowColor.withValues(alpha: MinglitOpacity.tintFill),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),

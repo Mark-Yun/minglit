@@ -107,7 +107,7 @@ class PartyVerificationInput extends StatelessWidget {
                                 '원하는 참가 자격이 없다면 직접 만들어보세요.',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: colorScheme.onSurfaceVariant
-                                      .withValues(alpha: 0.8),
+                                      .withValues(alpha: MinglitOpacity.scrimLight),
                                 ),
                               ),
                             ],

@@ -156,7 +156,7 @@ class _TicketManageCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(MinglitRadius.small),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
+        border: Border.all(color: color.withValues(alpha: MinglitOpacity.placeholder)),
       ),
       child: Text(
         label,

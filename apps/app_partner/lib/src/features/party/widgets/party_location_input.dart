@@ -28,7 +28,7 @@ class _PartyLocationInputState extends State<PartyLocationInput> {
         Container(
           height: 200,
           decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            color: colorScheme.surfaceContainerHighest.withValues(alpha: MinglitOpacity.muted),
             borderRadius: BorderRadius.circular(MinglitRadius.card),
             border: Border.all(
               color: colorScheme.outlineVariant.withValues(alpha: 0.5),

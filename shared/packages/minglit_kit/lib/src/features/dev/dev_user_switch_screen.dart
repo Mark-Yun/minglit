@@ -136,11 +136,11 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
 
         final (Color roleColor, String roleLabel) = switch (username) {
           String u when u.startsWith('partner_owner') => (
-            MinglitColors.warning.withValues(alpha: 0.3),
+            MinglitColors.warning.withValues(alpha: MinglitOpacity.muted),
             'Owner',
           ),
           String u when u.startsWith('partner_') => (
-            MinglitColors.primary.withValues(alpha: 0.2),
+            MinglitColors.primary.withValues(alpha: MinglitOpacity.placeholder),
             'Partner',
           ),
           String u when u.startsWith('staff_') => (
