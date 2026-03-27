@@ -129,7 +129,9 @@ class _StatItem extends StatelessWidget {
                     ? '+${change!.round()}% ↑'
                     : '${change!.round()}% ↓',
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: change! >= 0 ? MinglitColors.success : MinglitColors.error,
+                  color: change! >= 0
+                      ? MinglitColors.success
+                      : MinglitColors.error,
                   fontWeight: FontWeight.w600,
                 ),
               ),

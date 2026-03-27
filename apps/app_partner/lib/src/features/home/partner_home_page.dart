@@ -96,7 +96,6 @@ class PartnerHomePage extends ConsumerWidget {
                     _GreetingSection(
                       partnerName: partner?.name ?? '파트너',
                       pendingCount: 0,
-                      primaryEvent: null,
                     ),
                     const SizedBox(height: MinglitSpacing.medium),
                     OnboardingStepGuide(
@@ -113,21 +112,22 @@ class PartnerHomePage extends ConsumerWidget {
                         final parties = state.activeParties;
                         if (parties.length == 1) {
                           unawaited(
-                            EventCreateRoute(partyId: parties.first.id)
-                                .push<void>(context),
+                            EventCreateRoute(
+                              partyId: parties.first.id,
+                            ).push<void>(context),
                           );
                           return;
                         }
-                        final selected =
-                            await showModalBottomSheet<Party>(
+                        final selected = await showModalBottomSheet<Party>(
                           context: context,
                           builder: (ctx) =>
                               _PartySelectionSheet(parties: parties),
                         );
                         if (selected != null && context.mounted) {
                           unawaited(
-                            EventCreateRoute(partyId: selected.id)
-                                .push<void>(context),
+                            EventCreateRoute(
+                              partyId: selected.id,
+                            ).push<void>(context),
                           );
                         }
                       },
@@ -138,8 +138,7 @@ class PartnerHomePage extends ConsumerWidget {
                     _GreetingSection(
                       partnerName: partner?.name ?? '파트너',
                       pendingCount: state.pendingReviewCount,
-                      primaryEvent:
-                          selectPrimaryEvent(state.upcomingEvents),
+                      primaryEvent: selectPrimaryEvent(state.upcomingEvents),
                     ),
                     const SizedBox(height: MinglitSpacing.medium),
 
@@ -163,7 +162,7 @@ class PartnerHomePage extends ConsumerWidget {
                     const SizedBox(height: MinglitSpacing.large),
 
                     // 4. Weekly Stats
-                    _SectionHeader(title: '이번 주 성과'),
+                    const _SectionHeader(title: '이번 주 성과'),
                     const SizedBox(height: MinglitSpacing.small),
                     WeeklyStatsRow(
                       // TODO(#519): wire up weekly stats APIs
@@ -258,8 +257,9 @@ class PartnerHomePage extends ConsumerWidget {
           case EventPhase.ended:
             // "다음 회차 만들기" → 이벤트 생성 (pre-fill은 #520에서 구현)
             unawaited(
-              EventCreateRoute(partyId: primaryEvent.partyId)
-                  .push<void>(context),
+              EventCreateRoute(
+                partyId: primaryEvent.partyId,
+              ).push<void>(context),
             );
         }
       },
@@ -289,8 +289,8 @@ class PartnerHomePage extends ConsumerWidget {
             );
         }
       },
-      onSecondaryAction2: phase == EventPhase.recruiting ||
-              phase == EventPhase.preparing
+      onSecondaryAction2:
+          phase == EventPhase.recruiting || phase == EventPhase.preparing
           ? () {
               // 공유/홍보 or 안내 발송 — placeholder
               ScaffoldMessenger.of(context).showSnackBar(
@@ -321,7 +321,7 @@ class _GreetingSection extends StatelessWidget {
     final subtitle = switch (phase) {
       EventPhase.live => '이벤트 진행 중!',
       EventPhase.ended => '오늘 이벤트 수고하셨어요!',
-      _ when pendingCount > 0 => '오늘 할 일 ${pendingCount}건',
+      _ when pendingCount > 0 => '오늘 할 일 $pendingCount건',
       _ => '오늘 할 일 없음',
     };
 
