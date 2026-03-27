@@ -4,9 +4,9 @@ library;
 import 'dart:async';
 
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
-import 'package:flutter/material.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:app_user/src/features/home/my_page.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
