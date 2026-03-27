@@ -135,7 +135,7 @@ class PartnerHomePage extends ConsumerWidget {
                   // Fix #422: 이벤트 요약 자세히 버튼 → 파티 목록
                   onViewAllTap: () {
                     unawaited(
-                      const MoreRoute().push<void>(context),
+                      const PartyListRoute().push<void>(context),
                     );
                   },
                 ),
@@ -152,7 +152,7 @@ class PartnerHomePage extends ConsumerWidget {
                   // Fix #185: 파티 전체 보기 화면으로 이동
                   onViewAllTap: () {
                     unawaited(
-                      const MoreRoute().push<void>(context),
+                      const PartyListRoute().push<void>(context),
                     );
                   },
                 ),
