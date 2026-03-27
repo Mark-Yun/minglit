@@ -239,7 +239,7 @@ class _RevenueSummaryCard extends StatelessWidget {
 }
 
 class _DashRow extends StatelessWidget {
-  const _DashRow(this.label, this.value, {this.bold = false});
+  const _DashRow(this.label, this.value);
 
   final String label;
   final String value;
