@@ -9,7 +9,10 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 /// Full-screen camera view to scan user tickets.
 /// Provides immediate visual feedback (Green/Red) based on result.
 class QRScannerScreen extends ConsumerStatefulWidget {
-  const QRScannerScreen({super.key});
+  // Fix #523: event 파라미터 추가 — 어떤 이벤트에 체크인하는지 사용자에게 표시
+  const QRScannerScreen({required this.event, super.key});
+
+  final Event event;
 
   @override
   ConsumerState<QRScannerScreen> createState() => _QRScannerScreenState();
@@ -42,11 +45,22 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
         backgroundColor: theme.colorScheme.surface,
         elevation: 0,
         leading: const CloseButton(color: MinglitColors.background),
-        title: Text(
-          '티켓 스캔',
-          style: theme.textTheme.bodyMedium!.copyWith(
-            color: MinglitColors.background,
-          ),
+        title: Column(
+          children: [
+            Text(
+              '티켓 스캔',
+              style: theme.textTheme.bodyMedium!.copyWith(
+                color: MinglitColors.background,
+              ),
+            ),
+            if (widget.event.title != null)
+              Text(
+                widget.event.title!,
+                style: theme.textTheme.labelSmall!.copyWith(
+                  color: MinglitColors.background.withValues(alpha: 0.7),
+                ),
+              ),
+          ],
         ),
       ),
       body: Stack(
