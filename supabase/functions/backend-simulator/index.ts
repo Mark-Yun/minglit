@@ -133,7 +133,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const { data: pendingApps, error: fetchErr } = await supabase
       .from("event_applications")
       .select("id")
-      .eq("status", "pending_review");
+      .eq("status", "pending_review")
+      .limit(50);
 
     if (fetchErr) {
       return errorResponse(`Failed to fetch pending applications: ${fetchErr.message}`, 500);
@@ -161,7 +162,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const { data: paidApps, error: fetchErr } = await supabase
       .from("event_applications")
       .select("id")
-      .eq("status", "paid");
+      .eq("status", "paid")
+      .limit(50);
 
     if (fetchErr) {
       return errorResponse(`Failed to fetch paid applications: ${fetchErr.message}`, 500);
@@ -191,7 +193,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const { data: scheduledEvents, error: fetchErr } = await supabase
       .from("events")
       .select("id")
-      .eq("status", "scheduled");
+      .eq("status", "scheduled")
+      .limit(50);
 
     if (fetchErr) {
       return errorResponse(`Failed to fetch events: ${fetchErr.message}`, 500);
@@ -233,7 +236,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const { data: completedEvents, error: fetchErr } = await supabase
       .from("events")
       .select("id")
-      .eq("status", "completed");
+      .eq("status", "completed")
+      .limit(50);
 
     if (fetchErr) {
       return errorResponse(`Failed to fetch completed events: ${fetchErr.message}`, 500);
@@ -273,7 +277,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const { data: completedEvents } = await supabase
       .from("events")
       .select("id")
-      .eq("status", "completed");
+      .eq("status", "completed")
+      .limit(50);
 
     const completedEventIds = (
       (completedEvents ?? []) as Array<{ id: string }>
