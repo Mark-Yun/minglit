@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 /// Phase of the nearest event, determines UI and available actions.
