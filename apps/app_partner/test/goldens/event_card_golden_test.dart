@@ -55,5 +55,38 @@ void main() {
         goldenFileName: 'event_card_no_title.png',
       );
     });
+
+    testWidgets('scheduled (dark)', (tester) async {
+      await expectGolden(
+        tester,
+        widget: EventCard(event: baseEvent, onTap: () {}),
+        goldenFileName: 'event_card_scheduled_dark.png',
+        brightness: Brightness.dark,
+      );
+    });
+
+    testWidgets('full capacity (dark)', (tester) async {
+      await expectGolden(
+        tester,
+        widget: EventCard(
+          event: baseEvent.copyWith(currentParticipants: 20),
+          onTap: () {},
+        ),
+        goldenFileName: 'event_card_full_dark.png',
+        brightness: Brightness.dark,
+      );
+    });
+
+    testWidgets('no title (default) (dark)', (tester) async {
+      await expectGolden(
+        tester,
+        widget: EventCard(
+          event: baseEvent.copyWith(title: null),
+          onTap: () {},
+        ),
+        goldenFileName: 'event_card_no_title_dark.png',
+        brightness: Brightness.dark,
+      );
+    });
   });
 }

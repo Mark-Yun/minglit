@@ -31,5 +31,21 @@ void main() {
         ],
       );
     });
+
+    testWidgets('initial empty state (dark)', (tester) async {
+      final mockEvent = MockEventCoordinator();
+
+      await expectPageGolden(
+        tester,
+        page: const SearchPage(),
+        goldenFileName: 'goldens/search_page_empty_dark.png',
+        overrides: [
+          eventCoordinatorProvider.overrideWithValue(mockEvent),
+          searchQueryProvider.overrideWith(_EmptySearchQuery.new),
+          searchResultsProvider.overrideWith((_) async => <Event>[]),
+        ],
+        brightness: Brightness.dark,
+      );
+    });
   });
 }

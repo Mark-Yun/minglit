@@ -57,5 +57,53 @@ void main() {
         ],
       );
     });
+
+    testWidgets('empty state (dark)', (tester) async {
+      await expectPageGolden(
+        tester,
+        page: const PartyListPage(),
+        goldenFileName: 'goldens/party_list_page_empty_dark.png',
+        overrides: [
+          partyListProvider.overrideWith((_) async => <Party>[]),
+        ],
+        brightness: Brightness.dark,
+      );
+    });
+
+    testWidgets('with parties (dark)', (tester) async {
+      final parties = [
+        Party(
+          id: 'party1',
+          partnerId: 'p1',
+          title: '금요 밍글 파티',
+          createdAt: baseTime,
+          updatedAt: baseTime,
+        ),
+        Party(
+          id: 'party2',
+          partnerId: 'p1',
+          title: '주말 브런치 모임',
+          createdAt: baseTime,
+          updatedAt: baseTime,
+        ),
+        Party(
+          id: 'party3',
+          partnerId: 'p1',
+          title: '평일 네트워킹',
+          createdAt: baseTime,
+          updatedAt: baseTime,
+        ),
+      ];
+
+      await expectPageGolden(
+        tester,
+        page: const PartyListPage(),
+        goldenFileName: 'goldens/party_list_page_with_data_dark.png',
+        overrides: [
+          partyListProvider.overrideWith((_) async => parties),
+        ],
+        brightness: Brightness.dark,
+      );
+    });
   });
 }

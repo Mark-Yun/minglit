@@ -55,5 +55,33 @@ void main() {
         goldenFileName: 'closing_soon_multiple.png',
       );
     });
+
+    testWidgets('single event (dark)', (tester) async {
+      await expectGolden(
+        tester,
+        widget: ClosingSoonEventsCard(
+          events: [makeEvent('e1', '금요 파티', 1)],
+          onEventTap: (_) {},
+        ),
+        goldenFileName: 'closing_soon_single_dark.png',
+        brightness: Brightness.dark,
+      );
+    });
+
+    testWidgets('multiple events (dark)', (tester) async {
+      await expectGolden(
+        tester,
+        widget: ClosingSoonEventsCard(
+          events: [
+            makeEvent('e1', '금요 파티', 1),
+            makeEvent('e2', '토요 모임', 2),
+            makeEvent('e3', '일요 브런치', 3),
+          ],
+          onEventTap: (_) {},
+        ),
+        goldenFileName: 'closing_soon_multiple_dark.png',
+        brightness: Brightness.dark,
+      );
+    });
   });
 }

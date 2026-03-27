@@ -68,6 +68,40 @@ void main() {
         overrides: buildOverrides(events: events),
       );
     });
+
+    testWidgets('empty feed (dark)', (tester) async {
+      await expectPageGolden(
+        tester,
+        page: const HomePage(),
+        goldenFileName: 'goldens/home_page_empty_dark.png',
+        overrides: buildOverrides(),
+        brightness: Brightness.dark,
+      );
+    });
+
+    testWidgets('with events (dark)', (tester) async {
+      final events = List.generate(
+        3,
+        (i) => Event(
+          id: 'e$i',
+          partyId: 'p1',
+          startTime: baseTime.add(Duration(days: i + 1)),
+          endTime: baseTime.add(Duration(days: i + 1, hours: 2)),
+          createdAt: baseTime,
+          updatedAt: baseTime,
+          title: '이벤트 ${i + 1}',
+          currentParticipants: (i + 1) * 5,
+        ),
+      );
+
+      await expectPageGolden(
+        tester,
+        page: const HomePage(),
+        goldenFileName: 'goldens/home_page_with_events_dark.png',
+        overrides: buildOverrides(events: events),
+        brightness: Brightness.dark,
+      );
+    });
   });
 }
 
