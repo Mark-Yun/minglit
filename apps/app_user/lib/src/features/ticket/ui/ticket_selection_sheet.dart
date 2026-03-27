@@ -58,7 +58,7 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
         _isBalanceStatusLoading = false;
       });
       _updateRecommendation();
-    // Fix #459: 잔액 조회 실패 시 에러 로깅 추가 — 프로덕션 장애 추적 불가 방지
+      // Fix #459: 잔액 조회 실패 시 에러 로깅 추가 — 프로덕션 장애 추적 불가 방지
     } on Exception catch (e, st) {
       Log.e('[TicketSelectionSheet] _fetchBalanceStatus failed', e, st);
       if (!mounted) return;
