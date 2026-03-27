@@ -75,7 +75,6 @@ void main() {
       expect(theme.tabBarTheme.labelColor, MinglitPartnerColors.primary);
       expect(theme.tabBarTheme.indicatorColor, MinglitPartnerColors.primary);
     });
-
   });
 
   group('partnerThemeDark', () {
