@@ -18,7 +18,8 @@ EventPhase getEventPhase(Event event) {
 
   if (now.isAfter(end)) return EventPhase.ended;
   if (now.isAfter(start)) return EventPhase.live;
-  if (start.difference(now).inHours < 3) return EventPhase.preparing;
+  // Fix #523: <= 3 으로 수정 — enum 문서 "preparing: <= 3시간" 경계와 일치
+  if (start.difference(now).inHours <= 3) return EventPhase.preparing;
   return EventPhase.recruiting;
 }
 
@@ -395,6 +396,14 @@ class _EndedStatsRow extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final capacity = event.maxParticipants;
     final current = event.currentParticipants;
+    final fmt = NumberFormat('#,###');
+    // Fix #523: 하드코딩 매출 0 → 실제 티켓 매출 계산
+    final totalRevenue =
+        event.tickets?.fold<int>(
+          0,
+          (sum, ticket) => sum + (ticket.price * ticket.soldCount),
+        ) ??
+        0;
 
     return Container(
       decoration: BoxDecoration(
@@ -405,8 +414,12 @@ class _EndedStatsRow extends StatelessWidget {
       child: Row(
         children: [
           _StatCell(label: '참석 확정', value: '$current명', theme: theme),
-          // TODO(#519): wire real revenue data from settlement API
-          _StatCell(label: '매출', value: '-', theme: theme),
+          // Fix #523: 하드코딩 매출 0 → 실제 티켓 매출 계산
+          _StatCell(
+            label: '매출',
+            value: '₩${fmt.format(totalRevenue)}',
+            theme: theme,
+          ),
           _StatCell(
             label: '출석률',
             value: capacity > 0
