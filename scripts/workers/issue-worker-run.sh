@@ -13,10 +13,6 @@ LOG_DIR="/tmp/claude-worker-logs"
 mkdir -p "$LOG_DIR"
 [ ! -f "$PROMPT_FILE" ] && echo "Error: Prompt not found" && exit 1
 
-# --- 동시 실행 방지 (flock) ---
-LOCK_FILE="/tmp/issue-worker.lock"
-exec 200>"$LOCK_FILE"
-flock -n 200 || { echo "[$(date '+%Y-%m-%d %H:%M:%S')] Another instance running. Exiting."; exit 0; }
 
 # --- 타이머 정리를 위한 trap ---
 cleanup() { [ -n "${timer_pid:-}" ] && kill "$timer_pid" 2>/dev/null && wait "$timer_pid" 2>/dev/null; }
@@ -70,7 +66,6 @@ if [ -n "$prs" ]; then
         kill "$timer_pid" 2>/dev/null; wait "$timer_pid" 2>/dev/null
         timer_pid=""
     done
-    exit 0
 fi
 
 # --- 새 이슈 처리 (actionable 라벨만) ---
