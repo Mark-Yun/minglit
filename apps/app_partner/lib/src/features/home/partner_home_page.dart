@@ -3,6 +3,7 @@ import 'dart:async' show unawaited;
 import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/features/home/partner_home_coordinator.dart';
 import 'package:app_partner/src/features/home/widgets/event_action_card.dart';
+import 'package:app_partner/src/features/home/widgets/onboarding_step_guide.dart';
 import 'package:app_partner/src/features/home/widgets/todo_summary_chips.dart';
 import 'package:app_partner/src/features/home/widgets/weekly_stats_row.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
@@ -74,60 +75,109 @@ class PartnerHomePage extends ConsumerWidget {
       ),
       body: MinglitAsyncValueWidget(
         value: state.status,
-        data: (_) => RefreshIndicator(
-          onRefresh: () => ref
-              .read(partnerDashboardControllerProvider.notifier)
-              .loadDashboardData(),
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(MinglitSpacing.medium),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // 1. Greeting
-                _GreetingSection(
-                  partnerName: partner?.name ?? '파트너',
-                  pendingCount: state.pendingReviewCount,
-                  primaryEvent: selectPrimaryEvent(state.upcomingEvents),
-                ),
-                const SizedBox(height: MinglitSpacing.medium),
+        data: (_) {
+          // Onboarding: show step guide if no events yet
+          final hasEvents = state.upcomingEvents.isNotEmpty;
+          final hasParties = state.activeParties.isNotEmpty;
+          final showOnboarding = !hasEvents;
 
-                // 2. Todo Summary Chips
-                TodoSummaryChips(
-                  pendingApplications: state.pendingReviewCount,
-                  upcomingEvents: state.upcomingEvents.length,
-                  onPendingTap: () {
-                    const ApplicationListRoute().go(context);
-                  },
-                  onUpcomingTap: () {
-                    unawaited(
-                      const PartyListRoute().push<void>(context),
-                    );
-                  },
-                ),
-                const SizedBox(height: MinglitSpacing.large),
+          return RefreshIndicator(
+            onRefresh: () => ref
+                .read(partnerDashboardControllerProvider.notifier)
+                .loadDashboardData(),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(MinglitSpacing.medium),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (showOnboarding) ...[
+                    // Onboarding Step Guide
+                    _GreetingSection(
+                      partnerName: partner?.name ?? '파트너',
+                      pendingCount: 0,
+                      primaryEvent: null,
+                    ),
+                    const SizedBox(height: MinglitSpacing.medium),
+                    OnboardingStepGuide(
+                      hasParty: hasParties,
+                      partyName: hasParties
+                          ? state.activeParties.first.title
+                          : null,
+                      onCreateParty: () {
+                        unawaited(
+                          const PartyCreateRoute().push<void>(context),
+                        );
+                      },
+                      onCreateEvent: () async {
+                        final parties = state.activeParties;
+                        if (parties.length == 1) {
+                          unawaited(
+                            EventCreateRoute(partyId: parties.first.id)
+                                .push<void>(context),
+                          );
+                          return;
+                        }
+                        final selected =
+                            await showModalBottomSheet<Party>(
+                          context: context,
+                          builder: (ctx) =>
+                              _PartySelectionSheet(parties: parties),
+                        );
+                        if (selected != null && context.mounted) {
+                          unawaited(
+                            EventCreateRoute(partyId: selected.id)
+                                .push<void>(context),
+                          );
+                        }
+                      },
+                    ),
+                  ] else ...[
+                    // Normal Dashboard
+                    // 1. Greeting
+                    _GreetingSection(
+                      partnerName: partner?.name ?? '파트너',
+                      pendingCount: state.pendingReviewCount,
+                      primaryEvent:
+                          selectPrimaryEvent(state.upcomingEvents),
+                    ),
+                    const SizedBox(height: MinglitSpacing.medium),
 
-                // 3. Event Action Card
-                _buildEventSection(context, ref, state),
-                const SizedBox(height: MinglitSpacing.large),
+                    // 2. Todo Summary Chips
+                    TodoSummaryChips(
+                      pendingApplications: state.pendingReviewCount,
+                      upcomingEvents: state.upcomingEvents.length,
+                      onPendingTap: () {
+                        const ApplicationListRoute().go(context);
+                      },
+                      onUpcomingTap: () {
+                        unawaited(
+                          const PartyListRoute().push<void>(context),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: MinglitSpacing.large),
 
-                // 4. Weekly Stats
-                _SectionHeader(title: '이번 주 성과'),
-                const SizedBox(height: MinglitSpacing.small),
-                WeeklyStatsRow(
-                  // TODO(#519): wire up weekly stats APIs
-                  totalRevenue: 0,
-                  totalApplications: state.pendingReviewCount,
-                  checkinRate: 0,
-                  revenueChange: null,
-                  applicationChange: null,
-                  checkinRateChange: null,
-                ),
-                const SizedBox(height: MinglitSpacing.large),
-              ],
+                    // 3. Event Action Card
+                    _buildEventSection(context, ref, state),
+                    const SizedBox(height: MinglitSpacing.large),
+
+                    // 4. Weekly Stats
+                    _SectionHeader(title: '이번 주 성과'),
+                    const SizedBox(height: MinglitSpacing.small),
+                    WeeklyStatsRow(
+                      // TODO(#519): wire up weekly stats APIs
+                      totalRevenue: 0,
+                      totalApplications: state.pendingReviewCount,
+                      checkinRate: 0,
+                    ),
+                    const SizedBox(height: MinglitSpacing.large),
+                  ],
+                ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -195,6 +245,7 @@ class PartnerHomePage extends ConsumerWidget {
       );
     }
 
+    final phase = getEventPhase(primaryEvent);
     return EventActionCard(
       event: primaryEvent,
       onMainAction: () {
