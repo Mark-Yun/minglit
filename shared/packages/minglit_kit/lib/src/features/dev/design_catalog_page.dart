@@ -14,7 +14,7 @@ class DesignCatalogPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 10,
+      length: 15,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Design Catalog'),
@@ -32,6 +32,11 @@ class DesignCatalogPage extends StatelessWidget {
               Tab(text: 'Dialogs'),
               Tab(text: 'BottomSheet'),
               Tab(text: 'Badge/Tag'),
+              Tab(text: 'Checkbox'),
+              Tab(text: 'TabBar'),
+              Tab(text: 'Divider'),
+              Tab(text: 'IconSize'),
+              Tab(text: 'Animation'),
             ],
           ),
         ),
@@ -47,6 +52,11 @@ class DesignCatalogPage extends StatelessWidget {
             _DialogsSection(),
             _BottomSheetSection(),
             _BadgeTagSection(),
+            _CheckboxSection(),
+            _TabBarSection(),
+            _DividerSection(),
+            _IconSizeSection(),
+            _AnimationSection(),
           ],
         ),
       ),
@@ -784,6 +794,345 @@ class _BadgeTagSection extends StatelessWidget {
           'in the design system.',
           style: theme.textTheme.bodyMedium?.copyWith(
             color: MinglitColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Checkbox Section
+// ---------------------------------------------------------------------------
+
+class _CheckboxSection extends StatefulWidget {
+  const _CheckboxSection();
+
+  @override
+  State<_CheckboxSection> createState() => _CheckboxSectionState();
+}
+
+class _CheckboxSectionState extends State<_CheckboxSection> {
+  bool _checked = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ListView(
+      padding: const EdgeInsets.all(MinglitSpacing.medium),
+      children: [
+        Text('Checkbox States', style: theme.textTheme.titleMedium),
+        const SizedBox(height: MinglitSpacing.small),
+        CheckboxListTile(
+          title: const Text('Selected'),
+          value: _checked,
+          onChanged: (v) => setState(() => _checked = v ?? false),
+        ),
+        CheckboxListTile(
+          title: const Text('Unselected'),
+          value: false,
+          onChanged: (v) {},
+        ),
+        const CheckboxListTile(
+          title: Text('Disabled (selected)'),
+          value: true,
+          onChanged: null,
+        ),
+        const CheckboxListTile(
+          title: Text('Disabled (unselected)'),
+          value: false,
+          onChanged: null,
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// TabBar Section
+// ---------------------------------------------------------------------------
+
+class _TabBarSection extends StatelessWidget {
+  const _TabBarSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ListView(
+      padding: const EdgeInsets.all(MinglitSpacing.medium),
+      children: [
+        Text('TabBar (2 tabs)', style: theme.textTheme.titleMedium),
+        const SizedBox(height: MinglitSpacing.small),
+        DefaultTabController(
+          length: 2,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const TabBar(
+                tabs: [
+                  Tab(text: 'Tab A'),
+                  Tab(text: 'Tab B'),
+                ],
+              ),
+              SizedBox(
+                height: 60,
+                child: TabBarView(
+                  children: [
+                    Center(
+                      child: Text(
+                        'Content A',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ),
+                    Center(
+                      child: Text(
+                        'Content B',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: MinglitSpacing.large),
+        Text('TabBar (3 tabs)', style: theme.textTheme.titleMedium),
+        const SizedBox(height: MinglitSpacing.small),
+        DefaultTabController(
+          length: 3,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const TabBar(
+                tabs: [
+                  Tab(text: 'First'),
+                  Tab(text: 'Second'),
+                  Tab(text: 'Third'),
+                ],
+              ),
+              SizedBox(
+                height: 60,
+                child: TabBarView(
+                  children: [
+                    Center(
+                      child: Text(
+                        'Content 1',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ),
+                    Center(
+                      child: Text(
+                        'Content 2',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ),
+                    Center(
+                      child: Text(
+                        'Content 3',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Divider Section
+// ---------------------------------------------------------------------------
+
+class _DividerSection extends StatelessWidget {
+  const _DividerSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ListView(
+      padding: const EdgeInsets.all(MinglitSpacing.medium),
+      children: [
+        Text('Divider (Light)', style: theme.textTheme.titleMedium),
+        const SizedBox(height: MinglitSpacing.small),
+        const Text('Content above divider'),
+        const Divider(),
+        const Text('Content below divider'),
+        const SizedBox(height: MinglitSpacing.large),
+        Text('Divider (Custom Thickness)', style: theme.textTheme.titleMedium),
+        const SizedBox(height: MinglitSpacing.small),
+        const Divider(thickness: 2),
+        const SizedBox(height: MinglitSpacing.large),
+        Text('Divider (Dark Background)', style: theme.textTheme.titleMedium),
+        const SizedBox(height: MinglitSpacing.small),
+        Container(
+          padding: const EdgeInsets.all(MinglitSpacing.medium),
+          decoration: BoxDecoration(
+            color: MinglitColorsDark.background,
+            borderRadius: BorderRadius.circular(MinglitRadius.card),
+          ),
+          child: Column(
+            children: [
+              Text(
+                'Content above',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: MinglitColorsDark.textPrimary,
+                ),
+              ),
+              const Divider(color: MinglitColorsDark.divider),
+              Text(
+                'Content below',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: MinglitColorsDark.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// IconSize Section
+// ---------------------------------------------------------------------------
+
+class _IconSizeSection extends StatelessWidget {
+  const _IconSizeSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    const sizes = <String, double>{
+      'xsmall (16)': MinglitIconSize.xsmall,
+      'small (20)': MinglitIconSize.small,
+      'medium (24)': MinglitIconSize.medium,
+      'large (28)': MinglitIconSize.large,
+      'xlarge (32)': MinglitIconSize.xlarge,
+    };
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(MinglitSpacing.medium),
+      itemCount: sizes.length,
+      itemBuilder: (context, index) {
+        final entry = sizes.entries.elementAt(index);
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.small),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 120,
+                child: Text(entry.key, style: theme.textTheme.bodyMedium),
+              ),
+              Icon(Icons.star, size: entry.value),
+              const SizedBox(width: MinglitSpacing.small),
+              Icon(Icons.favorite, size: entry.value),
+              const SizedBox(width: MinglitSpacing.small),
+              Icon(Icons.notifications, size: entry.value),
+              const SizedBox(width: MinglitSpacing.medium),
+              Text(
+                '${entry.value.toInt()}px',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: MinglitColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Animation Section
+// ---------------------------------------------------------------------------
+
+class _AnimationSection extends StatefulWidget {
+  const _AnimationSection();
+
+  @override
+  State<_AnimationSection> createState() => _AnimationSectionState();
+}
+
+class _AnimationSectionState extends State<_AnimationSection> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final targetWidth = _expanded ? 200.0 : 80.0;
+
+    return ListView(
+      padding: const EdgeInsets.all(MinglitSpacing.medium),
+      children: [
+        Text('Animation Durations', style: theme.textTheme.titleMedium),
+        const SizedBox(height: MinglitSpacing.small),
+        Text(
+          'Tap the button to toggle animated containers.',
+          style: theme.textTheme.bodyMedium,
+        ),
+        const SizedBox(height: MinglitSpacing.medium),
+        ElevatedButton(
+          onPressed: () => setState(() => _expanded = !_expanded),
+          child: Text(_expanded ? 'Collapse' : 'Expand'),
+        ),
+        const SizedBox(height: MinglitSpacing.large),
+        _AnimationRow(
+          label: 'fast (200ms)',
+          duration: MinglitAnimation.fast,
+          targetWidth: targetWidth,
+        ),
+        const SizedBox(height: MinglitSpacing.medium),
+        _AnimationRow(
+          label: 'medium (350ms)',
+          duration: MinglitAnimation.medium,
+          targetWidth: targetWidth,
+        ),
+        const SizedBox(height: MinglitSpacing.medium),
+        _AnimationRow(
+          label: 'slow (500ms)',
+          duration: MinglitAnimation.slow,
+          targetWidth: targetWidth,
+        ),
+      ],
+    );
+  }
+}
+
+class _AnimationRow extends StatelessWidget {
+  const _AnimationRow({
+    required this.label,
+    required this.duration,
+    required this.targetWidth,
+  });
+
+  final String label;
+  final Duration duration;
+  final double targetWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        SizedBox(
+          width: 130,
+          child: Text(label, style: theme.textTheme.bodyMedium),
+        ),
+        AnimatedContainer(
+          duration: duration,
+          curve: Curves.easeInOut,
+          width: targetWidth,
+          height: 40,
+          decoration: BoxDecoration(
+            color: MinglitColors.primary.withAlpha(180),
+            borderRadius: BorderRadius.circular(MinglitRadius.small),
           ),
         ),
       ],

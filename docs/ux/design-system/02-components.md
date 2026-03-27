@@ -166,7 +166,21 @@ Dark Mode 소스: `minglit_theme.dart:228-232`
 
 ---
 
-## 11. Badge / Tag
+## 11. BottomSheet
+
+**기본 스타일**: `BottomSheetThemeData` 별도 설정 없음 — Flutter 기본 `showModalBottomSheet` 스타일 적용.
+
+**밍릿 권장 패턴**:
+- `showModalBottomSheet`로 호출
+- 내부 패딩: `MinglitSpacing.large` (24px)
+- 닫기/확인 버튼: 용도에 따라 `ElevatedButton` (CTA) 또는 `TextButton` (취소/닫기) 사용
+- drag handle: Flutter 기본 제공
+
+> 디자인 카탈로그 9번 탭에서 Modal BottomSheet 데모를 확인할 수 있습니다.
+
+---
+
+## 12. Badge / Tag
 
 <!-- TODO: 커스텀 Badge/Tag 컴포넌트 테마 정의 필요. 현재는 Chip 기반으로 사용 중. -->
 
@@ -174,7 +188,7 @@ Dark Mode 소스: `minglit_theme.dart:228-232`
 
 ---
 
-## 12. Toast / Snackbar
+## 13. Toast / Snackbar
 
 <!-- TODO: SnackBarTheme 정의가 minglit_component_theme.dart에 없음. 별도 SnackBar 테마 추가 필요. -->
 
