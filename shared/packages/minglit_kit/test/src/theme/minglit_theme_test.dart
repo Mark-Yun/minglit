@@ -94,8 +94,7 @@ void main() {
 
     test('elevatedButton uses partner dark primary', () {
       final theme = MinglitTheme.partnerThemeDark;
-      final bg =
-          theme.elevatedButtonTheme.style!.backgroundColor!.resolve({});
+      final bg = theme.elevatedButtonTheme.style!.backgroundColor!.resolve({});
 
       expect(bg, MinglitPartnerColorsDark.primary);
     });

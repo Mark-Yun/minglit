@@ -165,7 +165,10 @@ class MinglitTheme {
         MinglitPartnerColors.primary,
         base.inputDecorationTheme,
       ),
-      tabBarTheme: _partnerTabBar(MinglitPartnerColors.primary, base.tabBarTheme),
+      tabBarTheme: _partnerTabBar(
+        MinglitPartnerColors.primary,
+        base.tabBarTheme,
+      ),
       chipTheme: base.chipTheme.copyWith(
         secondarySelectedColor: MinglitPartnerColors.primary,
       ),
@@ -262,13 +265,12 @@ class MinglitTheme {
   static InputDecorationTheme _partnerInputDecoration(
     Color primary,
     InputDecorationTheme base,
-  ) =>
-      base.copyWith(
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(MinglitRadius.input),
-          borderSide: BorderSide(color: primary, width: 2),
-        ),
-      );
+  ) => base.copyWith(
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(MinglitRadius.input),
+      borderSide: BorderSide(color: primary, width: 2),
+    ),
+  );
 
   static TabBarThemeData _partnerTabBar(Color primary, TabBarThemeData base) =>
       base.copyWith(labelColor: primary, indicatorColor: primary);
