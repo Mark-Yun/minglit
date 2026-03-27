@@ -50,12 +50,14 @@ Deno.test({
         },
       },
       {
-        matcher: (req) => req.url.includes("/storage/v1/object/list/"),
-        handler: () => jsonResponse([
-          { name: "party_cafe_warm.jpg" },
-          { name: "party_lounge_bright.jpg" },
-          { name: "party_premium_lounge.jpg" },
-        ]),
+        matcher: (req) => req.url.includes("/storage/v1/object/list-v2/"),
+        handler: () => jsonResponse({
+          objects: [
+            { name: "seed-images/party_cafe_warm.jpg" },
+            { name: "seed-images/party_lounge_bright.jpg" },
+            { name: "seed-images/party_premium_lounge.jpg" },
+          ],
+        }),
       },
       {
         matcher: (req) => req.url.includes("/rest/v1/") && req.method === "POST",
@@ -165,12 +167,14 @@ Deno.test({
         },
       },
       {
-        matcher: (req) => req.url.includes("/storage/v1/object/list/"),
-        handler: () => jsonResponse([
-          { name: "party_cafe_warm.jpg" },
-          { name: "party_lounge_bright.jpg" },
-          { name: "party_premium_lounge.jpg" },
-        ]),
+        matcher: (req) => req.url.includes("/storage/v1/object/list-v2/"),
+        handler: () => jsonResponse({
+          objects: [
+            { name: "seed-images/party_cafe_warm.jpg" },
+            { name: "seed-images/party_lounge_bright.jpg" },
+            { name: "seed-images/party_premium_lounge.jpg" },
+          ],
+        }),
       },
       {
         matcher: (req) => req.url.includes("/rest/v1/") && req.method === "POST",
