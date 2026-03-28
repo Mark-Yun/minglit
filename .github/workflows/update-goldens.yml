@@ -54,6 +54,8 @@ jobs:
 
       - name: Commit updated goldens
         working-directory: ${{ matrix.working_directory }}
+        env:
+          TARGET_BRANCH: ${{ inputs.branch }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -62,6 +64,6 @@ jobs:
             echo "No golden changes for ${{ matrix.package }}"
           else
             git commit -m "chore(golden): update ${{ matrix.package }} CI goldens on Linux runner"
-            git pull --rebase origin ${{ inputs.branch }}
-            git push origin HEAD:${{ inputs.branch }}
+            git pull --rebase origin "${TARGET_BRANCH}"
+            git push origin HEAD:"${TARGET_BRANCH}"
           fi

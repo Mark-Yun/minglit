@@ -50,7 +50,11 @@ class PurchaseHistoryCard extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                DateFormat('yyyy.MM.dd').format(application.createdAt),
+                // Fix #579: 구매일은 paidAt(실제 결제일)을 표시, 없으면 createdAt 폴백
+                // UTC → 로컬 변환 후 포맷 (KST 등에서 날짜 하루 차이 방지)
+                DateFormat('yyyy.MM.dd').format(
+                  (application.paidAt ?? application.createdAt).toLocal(),
+                ),
                 style: theme.textTheme.labelMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
