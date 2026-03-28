@@ -31,6 +31,16 @@
       "handler": "audit-legal",
       "color": "c5def5",
       "desc": "법률/개인정보 검토 요청"
+    },
+    "needs-tpm": {
+      "handler": "tpm-staff",
+      "color": "c5def5",
+      "desc": "TPM 판단/라우팅 요청"
+    },
+    "needs-dev": {
+      "handler": "issue-worker",
+      "color": "0e8a16",
+      "desc": "구현 준비 완료 — issue-worker 실행"
     }
   },
 
@@ -46,29 +56,29 @@
       "desc": "사람 판단 필요 (Mark)"
     },
     "bug-report": {
-      "handler": "issue-worker",
+      "handler": "tpm-staff",
       "color": "d73a4a",
-      "desc": "유저 버그 리포트"
+      "desc": "유저 버그 리포트 → TPM이 검증 후 needs-dev"
     },
     "bug": {
-      "handler": "issue-worker",
+      "handler": "tpm-staff",
       "color": "d73a4a",
-      "desc": "일반 버그"
+      "desc": "일반 버그 → TPM이 검증 후 needs-dev"
     },
     "ci-failure": {
-      "handler": "issue-worker",
+      "handler": "tpm-staff",
       "color": "b60205",
-      "desc": "CI 실패 수정"
+      "desc": "CI 실패 → TPM이 검증 후 needs-dev"
     },
     "enhancement": {
-      "handler": "issue-worker",
+      "handler": "tpm-staff",
       "color": "a2eeef",
-      "desc": "기능 구현"
+      "desc": "기능 구현 → TPM이 검증 후 needs-dev"
     },
     "refactor": {
-      "handler": "issue-worker",
+      "handler": "tpm-staff",
       "color": "d4c5f9",
-      "desc": "리팩토링"
+      "desc": "리팩토링 → TPM이 검증 후 needs-dev"
     }
   },
 
