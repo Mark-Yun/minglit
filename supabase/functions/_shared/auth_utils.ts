@@ -34,3 +34,29 @@ export async function requireAuth(
 
   return data.user.id;
 }
+
+/**
+ * Verify that the request carries a Bearer token matching the
+ * `SUPABASE_SERVICE_ROLE_KEY` environment variable.
+ *
+ * Use this for system-only Edge Functions that must not be callable
+ * by regular authenticated users.
+ *
+ * Returns `true` when the token matches, or a 401 Response on failure.
+ *
+ * Usage:
+ * ```ts
+ * const auth = requireServiceRole(req);
+ * if (auth instanceof Response) return auth; // 401
+ * ```
+ */
+export function requireServiceRole(req: Request): true | Response {
+  const authHeader = req.headers.get("Authorization");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
+  if (!authHeader || authHeader !== `Bearer ${serviceRoleKey}`) {
+    return errorResponse("Unauthorized", 401);
+  }
+
+  return true;
+}
