@@ -58,7 +58,7 @@ class MinglitSection extends StatelessWidget {
               Expanded(
                 child: Text(title, style: effectiveTitleStyle),
               ),
-              if (trailing != null) trailing!,
+              ?trailing,
             ],
           ),
           SizedBox(height: effectiveSpacing),
