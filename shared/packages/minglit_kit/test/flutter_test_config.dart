@@ -13,10 +13,8 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   TestWidgetsFlutterBinding.ensureInitialized();
   await _loadNotoSansKR();
 
-  // ignore: do_not_use_environment
   final isCI =
-      const bool.fromEnvironment('CI') ||
-      Platform.environment['CI'] == 'true';
+      const bool.fromEnvironment('CI') || Platform.environment['CI'] == 'true';
   return AlchemistConfig.runWithConfig(
     config: AlchemistConfig(
       platformGoldensConfig: PlatformGoldensConfig(
