@@ -176,7 +176,12 @@ jobs:
             echo "No golden changes to commit"
           else
             git commit -m "chore(golden): update CI goldens on Linux runner [skip ci]"
-            git push origin "HEAD:${PR_BRANCH}"
+            for i in 1 2 3; do
+              git pull --rebase origin "${PR_BRANCH}" 2>/dev/null || true
+              git push origin "HEAD:${PR_BRANCH}" && break
+              echo "Push attempt $i failed, retrying in 5s..."
+              sleep 5
+            done
           fi
       - name: Fail if golden comparison detected mismatch
         if: ${{ steps.golden_compare.outcome == 'failure' }}
