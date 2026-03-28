@@ -34,7 +34,8 @@ Future<void> expectGolden(
   if (settle) {
     await tester.pumpAndSettle();
   } else {
-    await tester.pump();
+    // Fix #573: pump 500ms so shimmer animation renders at least one frame
+    await tester.pump(const Duration(milliseconds: 500));
   }
 
   await expectLater(
