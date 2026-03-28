@@ -21,7 +21,7 @@
 | titleTextStyle.fontFamily | NotoSansKR | NotoSansKR | :14 |
 | titleTextStyle.color | `#111827` | `#FFFFFF` | :11 |
 
-Dark Mode 소스: `minglit_theme.dart:168-180`
+Dark Mode 소스: `minglit_theme.dart:395-407`
 
 ---
 
@@ -34,7 +34,7 @@ Dark Mode 소스: `minglit_theme.dart:168-180`
 | backgroundColor | `#9900FF` (`MinglitColors.primary`) | :21 |
 | foregroundColor | `#FFFFFF` (white) | :22-23 |
 | minimumSize | `infinity x 56` (전체 너비, 높이 56) | :24 |
-| borderRadius | 16 (`MinglitRadius.button`) | :25-27 |
+| borderRadius | 12 (`MinglitRadius.button`) | :25-27 |
 | elevation | 0 | :28 |
 | textStyle.fontSize | 16 | :31 |
 | textStyle.fontWeight | bold | :32 |
@@ -49,7 +49,7 @@ Dark Mode 소스: `minglit_theme.dart:168-180`
 | :--- | :--- | :--- |
 | foregroundColor | `#9900FF` (`MinglitColors.primary`) | :39 |
 | minimumSize | `infinity x 56` | :40 |
-| borderRadius | 16 (`MinglitRadius.button`) | :41-43 |
+| borderRadius | 12 (`MinglitRadius.button`) | :41-43 |
 | borderSide.color | `#9900FF` (`MinglitColors.primary`) | :44 |
 | textStyle.fontSize | 16 | :47 |
 | textStyle.fontWeight | bold | :48 |
@@ -76,12 +76,12 @@ Dark Mode 소스: `minglit_theme.dart:168-180`
 
 | 속성 | Light Mode | Dark Mode | 라인 |
 | :--- | :--- | :--- | :--- |
-| borderRadius | 24 (`MinglitRadius.card`) | 24 | :65-67 |
+| borderRadius | 16 (`MinglitRadius.card`) | 16 | :65-67 |
 | elevation | 0 | 0 | :68 |
 | color | `#F9FAFB` (`MinglitColors.surface`) | `#212121` (`MinglitColorsDark.surface`) | :69 |
 | margin | EdgeInsets.zero | EdgeInsets.zero | :70 |
 
-Dark Mode 소스: `minglit_theme.dart:184-191`
+Dark Mode 소스: `minglit_theme.dart:411-418`
 
 ---
 
@@ -102,7 +102,7 @@ Dark Mode 소스: `minglit_theme.dart:184-191`
 | hintStyle.color | `#4B5563` (`MinglitColors.textSecondary`) | `#AAAAAA` (`MinglitColorsDark.textSecondary`) | :91 |
 | hintStyle.fontSize | 14 | 14 | :92 |
 
-Dark Mode 소스: `minglit_theme.dart:192-216`
+Dark Mode 소스: `minglit_theme.dart:419-443`
 
 ---
 
@@ -118,7 +118,7 @@ Dark Mode 소스: `minglit_theme.dart:192-216`
 | secondarySelectedColor | `#9900FF` (`MinglitColors.primary`) | `#AA33FF` (`MinglitColorsDark.primary`) | :102 |
 | labelStyle.fontSize | 13 | 13 | :104 |
 
-Dark Mode 소스: `minglit_theme.dart:217-225`
+Dark Mode 소스: `minglit_theme.dart:444-454`
 
 ---
 
@@ -162,7 +162,7 @@ Dark Mode 소스: `minglit_theme.dart:217-225`
 | thickness | 1 | 1 | :148 |
 | space | 16 (`MinglitSpacing.medium`) | 16 | :149 |
 
-Dark Mode 소스: `minglit_theme.dart:228-232`
+Dark Mode 소스: `minglit_theme.dart:457-461`
 
 ---
 
