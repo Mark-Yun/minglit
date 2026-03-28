@@ -54,8 +54,10 @@ void main() {
           ),
         ),
       );
-      // No numeric badge text should appear when all counts are zero
-      expect(find.text('0'), findsNothing);
+      // Both non-comingSoon chips show '0' text with inactive color
+      expect(find.text('0'), findsNWidgets(2));
+      // comingSoon chip shows '-' instead of count
+      expect(find.text('-'), findsOneWidget);
     });
 
     testWidgets('tapping 승인 대기 chip invokes onPendingTap callback', (
