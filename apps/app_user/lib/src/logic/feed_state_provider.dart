@@ -352,7 +352,9 @@ class RecommendationFeedNotifier extends _$RecommendationFeedNotifier {
       // Discard if a filter change occurred during fetch
       if (updated == null) return;
       state = AsyncData(updated);
-    } on Exception catch (_) {
+      // Fix #544: 에러 삼킴 catch에 로깅 추가
+    } on Exception catch (e, st) {
+      Log.e('❌ [FeedStateProvider] Load more Error', e, st);
       // On error: restore previous state, preserve existing events
       if (!ref.mounted) return;
       state = AsyncData(current.copyWith(isLoadingMore: false));
