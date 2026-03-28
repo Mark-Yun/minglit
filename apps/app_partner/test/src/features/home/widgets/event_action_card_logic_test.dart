@@ -46,16 +46,18 @@ void main() {
       expect(getEventPhase(event), EventPhase.preparing);
     });
 
-    test('returns live when start has passed by 30 minutes and not yet ended',
-        () {
-      final now = DateTime.now();
-      final event = _makeEvent(
-        id: 'e3',
-        startTime: now.subtract(const Duration(minutes: 30)),
-        endTime: now.add(const Duration(hours: 2)),
-      );
-      expect(getEventPhase(event), EventPhase.live);
-    });
+    test(
+      'returns live when start has passed by 30 minutes and not yet ended',
+      () {
+        final now = DateTime.now();
+        final event = _makeEvent(
+          id: 'e3',
+          startTime: now.subtract(const Duration(minutes: 30)),
+          endTime: now.add(const Duration(hours: 2)),
+        );
+        expect(getEventPhase(event), EventPhase.live);
+      },
+    );
 
     test('returns ended when end time has passed by 2 hours', () {
       final now = DateTime.now();
@@ -68,17 +70,18 @@ void main() {
     });
 
     test(
-        'returns preparing when start is exactly 3 hours away (boundary: inHours == 3)',
-        () {
-      final now = DateTime.now();
-      // inHours truncates: 3h0m → inHours == 3 → <= 3 → preparing
-      final event = _makeEvent(
-        id: 'e5',
-        startTime: now.add(const Duration(hours: 3)),
-        endTime: now.add(const Duration(hours: 5)),
-      );
-      expect(getEventPhase(event), EventPhase.preparing);
-    });
+      'returns preparing when start is exactly 3 hours away (boundary: inHours == 3)',
+      () {
+        final now = DateTime.now();
+        // inHours truncates: 3h0m → inHours == 3 → <= 3 → preparing
+        final event = _makeEvent(
+          id: 'e5',
+          startTime: now.add(const Duration(hours: 3)),
+          endTime: now.add(const Duration(hours: 5)),
+        );
+        expect(getEventPhase(event), EventPhase.preparing);
+      },
+    );
   });
 
   group('selectPrimaryEvent', () {
