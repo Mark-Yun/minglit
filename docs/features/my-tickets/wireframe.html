@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>내 티켓 — Wireframe</title>
+<style>
+  :root {
+    /* Foundation Tokens (01-foundation.md) */
+    --background: #FFFFFF;
+    --primary: #9900FF;
+    --secondary: #FF9900;
+    --tertiary: #48C9B0;
+    --surface: #F9FAFB;
+    --error: #EF4444;
+    --text-primary: #111827;
+    --text-secondary: #4B5563;
+    --success: #22C55E;
+    --warning: #F59E0B;
+    --outline-variant: #E5E7EB;
+    --on-surface-variant: #6B7280;
+
+    /* Spacing */
+    --sp-xsmall: 4px;
+    --sp-small: 8px;
+    --sp-sm: 12px;
+    --sp-medium: 16px;
+    --sp-large: 24px;
+    --sp-xlarge: 32px;
+    --sp-screen-edge: 20px;
+    --sp-card-gap: 12px;
+    --sp-card-content-v: 16px;
+    --sp-title-to-body: 4px;
+
+    /* Radius */
+    --radius-small: 8px;
+    --radius-button: 12px;
+    --radius-card: 16px;
+    --radius-chip: 100px;
+
+    /* Typography */
+    --font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-family);
+    background: #F0F0F0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 32px;
+    padding: 32px;
+  }
+
+  /* Mobile Frame */
+  .phone-frame {
+    width: 375px;
+    height: 812px;
+    background: var(--background);
+    border-radius: 40px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .screen-label {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+
+  .screen-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Status Bar */
+  .status-bar {
+    height: 54px;
+    padding: 14px var(--sp-screen-edge) 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex-shrink: 0;
+  }
+  .status-bar .time { font-weight: 700; }
+  .status-icons { display: flex; gap: 4px; align-items: center; }
+  .status-icons svg { width: 16px; height: 16px; }
+
+  /* AppBar */
+  .app-bar {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    flex-shrink: 0;
+  }
+  .app-bar .back-btn {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .app-bar .back-btn svg { width: 24px; height: 24px; fill: var(--text-primary); }
+  .app-bar .title {
+    flex: 1;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-right: 48px; /* balance with back button */
+  }
+
+  /* Content Area */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--sp-medium) var(--sp-screen-edge);
+  }
+
+  /* Ticket Card */
+  .ticket-card {
+    background: var(--surface);
+    border-radius: var(--radius-card);
+    border: 1px solid var(--outline-variant);
+    padding: var(--sp-card-content-v) var(--sp-screen-edge);
+    margin-bottom: var(--sp-card-gap);
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+  }
+  .ticket-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  /* Card Header */
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--sp-sm);
+  }
+
+  /* D-day Badge */
+  .dday-badge {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: var(--radius-chip);
+    line-height: 1.5;
+  }
+  .dday-badge.today {
+    background: var(--primary);
+    color: #FFFFFF;
+  }
+  .dday-badge.soon {
+    background: var(--secondary);
+    color: #FFFFFF;
+  }
+  .dday-badge.later {
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 500;
+    padding: 2px 0;
+  }
+
+  /* Status Chip */
+  .status-chip {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: var(--radius-chip);
+    line-height: 1.45;
+  }
+  .status-chip.paid {
+    background: rgba(34,197,94,0.1);
+    color: var(--success);
+  }
+  .status-chip.approved {
+    background: rgba(153,0,255,0.1);
+    color: var(--primary);
+  }
+
+  /* Event Info Row */
+  .event-info {
+    display: flex;
+    gap: var(--sp-medium);
+    align-items: flex-start;
+  }
+  .event-thumb {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-small);
+    background: linear-gradient(135deg, #E8D5F5, #D5C5E8);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .event-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .event-thumb .placeholder-icon {
+    width: 32px;
+    height: 32px;
+    fill: var(--primary);
+    opacity: 0.4;
+  }
+  .event-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .event-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .event-date {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-top: var(--sp-xsmall);
+  }
+  .event-location {
+    font-size: 13px;
+    color: var(--on-surface-variant);
+    line-height: 1.5;
+  }
+
+  /* Divider */
+  .card-divider {
+    height: 1px;
+    background: var(--outline-variant);
+    margin: var(--sp-sm) 0;
+  }
+
+  /* Card Footer */
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .ticket-name {
+    font-size: 16px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .qr-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--primary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: var(--radius-button);
+    transition: background 0.15s;
+  }
+  .qr-btn:hover {
+    background: rgba(153,0,255,0.05);
+  }
+  .qr-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: var(--primary);
+  }
+
+  /* Empty State */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    height: 100%;
+    padding: var(--sp-xlarge);
+  }
+  .empty-state .icon {
+    width: 64px;
+    height: 64px;
+    fill: var(--on-surface-variant);
+    margin-bottom: var(--sp-medium);
+  }
+  .empty-state .empty-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--sp-small);
+  }
+  .empty-state .empty-desc {
+    font-size: 16px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: var(--sp-large);
+  }
+  .outlined-btn {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    background: transparent;
+    padding: 14px 32px;
+    border-radius: var(--radius-button);
+    cursor: pointer;
+    min-width: 200px;
+  }
+  .outlined-btn:hover {
+    background: rgba(153,0,255,0.05);
+  }
+
+  /* QR Screen */
+  .qr-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--sp-large);
+  }
+  .qr-card-info {
+    width: 100%;
+    background: var(--surface);
+    border-radius: var(--radius-card);
+    border: 1px solid var(--outline-variant);
+    padding: var(--sp-large);
+    margin-bottom: var(--sp-large);
+    text-align: center;
+  }
+  .qr-event-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--sp-xsmall);
+  }
+  .qr-event-date {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: var(--sp-small);
+  }
+  .qr-ticket-name {
+    font-size: 13px;
+    color: var(--on-surface-variant);
+  }
+  .qr-code-box {
+    width: 240px;
+    height: 240px;
+    background: var(--background);
+    border-radius: var(--radius-card);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--sp-large);
+    position: relative;
+    overflow: hidden;
+  }
+  .qr-placeholder {
+    width: 200px;
+    height: 200px;
+    background: repeating-conic-gradient(var(--text-primary) 0% 25%, transparent 0% 50%) 0 0 / 20px 20px;
+    opacity: 0.15;
+    border-radius: 4px;
+  }
+  .scan-line {
+    position: absolute;
+    width: 220px;
+    height: 2px;
+    background: var(--primary);
+    box-shadow: 0 0 8px rgba(153,0,255,0.5);
+    top: 50%;
+    animation: scan 2s ease-in-out infinite alternate;
+  }
+  @keyframes scan {
+    from { top: 20px; }
+    to { top: 220px; }
+  }
+  .qr-help {
+    font-size: 16px;
+    color: var(--on-surface-variant);
+    line-height: 1.5;
+  }
+
+  /* Bottom Nav (마이페이지 참고용) */
+  .bottom-nav {
+    height: 64px;
+    border-top: 1px solid var(--outline-variant);
+    display: flex;
+    flex-shrink: 0;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+  .nav-item.active { color: var(--primary); }
+  .nav-item svg { width: 24px; height: 24px; }
+
+  /* Annotation */
+  .annotation {
+    position: absolute;
+    background: #FEF3C7;
+    border: 1px solid #F59E0B;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+    color: #92400E;
+    white-space: nowrap;
+    z-index: 10;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- Screen 1: 내 티켓 — 티켓 있음 (3장) -->
+<!-- ============================================================ -->
+<div class="screen-wrapper">
+  <div class="screen-label">1. 내 티켓 — 활성 티켓 목록</div>
+  <div class="phone-frame">
+    <div class="status-bar">
+      <span class="time">9:41</span>
+      <div class="status-icons">
+        <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z" fill="currentColor"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z" fill="currentColor"/></svg>
+      </div>
+    </div>
+
+    <div class="app-bar">
+      <div class="back-btn">
+        <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      </div>
+      <div class="title">내 티켓</div>
+    </div>
+
+    <div class="content">
+      <!-- Card 1: D-day (오늘) -->
+      <div class="ticket-card">
+        <div class="card-header">
+          <span class="dday-badge today">오늘!</span>
+          <span class="status-chip paid">결제완료</span>
+        </div>
+        <div class="event-info">
+          <div class="event-thumb">
+            <svg class="placeholder-icon" viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM5 15l3.5-4.5 2.5 3.01L14.5 9l4.5 6H5z"/></svg>
+          </div>
+          <div class="event-text">
+            <div class="event-name">금요일 밤 와인 소셜</div>
+            <div class="event-date">3월 28일 (금) 19:30</div>
+            <div class="event-location">와인 라운지 강남</div>
+          </div>
+        </div>
+        <div class="card-divider"></div>
+        <div class="card-footer">
+          <span class="ticket-name">일반 입장권</span>
+          <button class="qr-btn">
+            <svg viewBox="0 0 24 24"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zm8-2v8h8V3h-8zm6 6h-4V5h4v4zM3 21h8v-8H3v8zm2-6h4v4H5v-4zm13-2h-2v2h2v-2zm0 4h-2v2h2v-2zm-4-4h-2v2h2v-2zm0 4h-2v2h2v-2zm4 0h-2v2h2v-2zm0-4h-2v2h2v-2z"/></svg>
+            QR 보기
+          </button>
+        </div>
+      </div>
+
+      <!-- Card 2: D-2 -->
+      <div class="ticket-card">
+        <div class="card-header">
+          <span class="dday-badge soon">D-2</span>
+          <span class="status-chip approved">승인완료</span>
+        </div>
+        <div class="event-info">
+          <div class="event-thumb" style="background: linear-gradient(135deg, #FFE0B2, #FFCC80);">
+            <svg class="placeholder-icon" viewBox="0 0 24 24" style="fill: var(--secondary);"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM5 15l3.5-4.5 2.5 3.01L14.5 9l4.5 6H5z"/></svg>
+          </div>
+          <div class="event-text">
+            <div class="event-name">주말 보드게임 모임</div>
+            <div class="event-date">3월 30일 (일) 14:00</div>
+            <div class="event-location">보드게임카페 홍대점</div>
+          </div>
+        </div>
+        <div class="card-divider"></div>
+        <div class="card-footer">
+          <span class="ticket-name">참가권 (2시간)</span>
+          <button class="qr-btn">
+            <svg viewBox="0 0 24 24"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zm8-2v8h8V3h-8zm6 6h-4V5h4v4zM3 21h8v-8H3v8zm2-6h4v4H5v-4zm13-2h-2v2h2v-2zm0 4h-2v2h2v-2zm-4-4h-2v2h2v-2zm0 4h-2v2h2v-2zm4 0h-2v2h2v-2zm0-4h-2v2h2v-2z"/></svg>
+            QR 보기
+          </button>
+        </div>
+      </div>
+
+      <!-- Card 3: 먼 미래 -->
+      <div class="ticket-card">
+        <div class="card-header">
+          <span class="dday-badge later">4월 5일</span>
+          <span class="status-chip paid">결제완료</span>
+        </div>
+        <div class="event-info">
+          <div class="event-thumb" style="background: linear-gradient(135deg, #C8E6C9, #A5D6A7);">
+            <svg class="placeholder-icon" viewBox="0 0 24 24" style="fill: var(--success);"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM5 15l3.5-4.5 2.5 3.01L14.5 9l4.5 6H5z"/></svg>
+          </div>
+          <div class="event-text">
+            <div class="event-name">벚꽃 피크닉 소셜링</div>
+            <div class="event-date">4월 5일 (토) 11:00</div>
+            <div class="event-location">여의도 한강공원</div>
+          </div>
+        </div>
+        <div class="card-divider"></div>
+        <div class="card-footer">
+          <span class="ticket-name">피크닉 패키지</span>
+          <button class="qr-btn">
+            <svg viewBox="0 0 24 24"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zm8-2v8h8V3h-8zm6 6h-4V5h4v4zM3 21h8v-8H3v8zm2-6h4v4H5v-4zm13-2h-2v2h2v-2zm0 4h-2v2h2v-2zm-4-4h-2v2h2v-2zm0 4h-2v2h2v-2zm4 0h-2v2h2v-2zm0-4h-2v2h2v-2z"/></svg>
+            QR 보기
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- Screen 2: 내 티켓 — 빈 상태 -->
+<!-- ============================================================ -->
+<div class="screen-wrapper">
+  <div class="screen-label">2. 내 티켓 — 빈 상태</div>
+  <div class="phone-frame">
+    <div class="status-bar">
+      <span class="time">9:41</span>
+      <div class="status-icons">
+        <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z" fill="currentColor"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z" fill="currentColor"/></svg>
+      </div>
+    </div>
+
+    <div class="app-bar">
+      <div class="back-btn">
+        <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      </div>
+      <div class="title">내 티켓</div>
+    </div>
+
+    <div class="content">
+      <div class="empty-state">
+        <svg class="icon" viewBox="0 0 24 24">
+          <path d="M22 10V6c0-1.11-.9-2-2-2H4c-1.1 0-1.99.89-1.99 2v4c1.1 0 1.99.9 1.99 2s-.89 2-2 2v4c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-4c-1.1 0-2-.9-2-2s.9-2 2-2zm-2-1.46c-1.19.69-2 1.99-2 3.46s.81 2.77 2 3.46V18H4v-2.54c1.19-.69 2-1.99 2-3.46 0-1.48-.8-2.77-1.99-3.46L4 6h16v2.54z"/>
+        </svg>
+        <div class="empty-title">예정된 이벤트가 없습니다</div>
+        <div class="empty-desc">이벤트에 참여하면 여기서<br>티켓을 확인할 수 있어요</div>
+        <button class="outlined-btn">이벤트 둘러보기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- Screen 3: QR 보기 화면 (기존 TicketQRScreen 참고) -->
+<!-- ============================================================ -->
+<div class="screen-wrapper">
+  <div class="screen-label">3. QR 보기 (기존 TicketQRScreen)</div>
+  <div class="phone-frame">
+    <div class="status-bar">
+      <span class="time">9:41</span>
+      <div class="status-icons">
+        <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z" fill="currentColor"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z" fill="currentColor"/></svg>
+      </div>
+    </div>
+
+    <div class="app-bar">
+      <div class="back-btn">
+        <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      </div>
+      <div class="title">내 티켓</div>
+    </div>
+
+    <div class="qr-content">
+      <div class="qr-card-info">
+        <div class="qr-event-name">금요일 밤 와인 소셜</div>
+        <div class="qr-event-date">3월 28일 (금) 19:30</div>
+        <div class="qr-ticket-name">일반 입장권</div>
+      </div>
+
+      <div class="qr-code-box">
+        <div class="qr-placeholder"></div>
+        <div class="scan-line"></div>
+      </div>
+
+      <div class="qr-help">입장 시 파트너에게 이 화면을 보여주세요</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- Screen 4: 마이페이지 (내 티켓 진입점 참고) -->
+<!-- ============================================================ -->
+<div class="screen-wrapper">
+  <div class="screen-label">4. 마이페이지 — 진입점 참고</div>
+  <div class="phone-frame">
+    <div class="status-bar">
+      <span class="time">9:41</span>
+      <div class="status-icons">
+        <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z" fill="currentColor"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z" fill="currentColor"/></svg>
+      </div>
+    </div>
+
+    <div class="app-bar">
+      <div class="title" style="margin-right:0;">마이페이지</div>
+    </div>
+
+    <div class="content" style="padding-top:0;">
+      <!-- Profile -->
+      <div style="display:flex; align-items:center; gap:16px; padding:24px 0;">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="var(--on-surface-variant)"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        </div>
+        <div>
+          <div style="font-size:20px;font-weight:700;color:var(--text-primary);">김밍릿</div>
+          <div style="font-size:16px;color:var(--text-secondary);">user@minglit.com</div>
+        </div>
+      </div>
+
+      <div style="height:1px;background:var(--outline-variant);"></div>
+
+      <!-- Menu: 거래 그룹 -->
+      <div style="position:relative;">
+        <!-- 구매내역 -->
+        <div style="display:flex;align-items:center;padding:16px 0;gap:16px;cursor:pointer;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--on-surface-variant)"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+          <span style="flex:1;font-size:16px;color:var(--text-primary);">구매 내역</span>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--on-surface-variant)"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+        </div>
+
+        <!-- 내 티켓 (하이라이트) -->
+        <div style="display:flex;align-items:center;padding:16px 0;gap:16px;cursor:pointer;background:rgba(153,0,255,0.04);margin:0 -20px;padding-left:20px;padding-right:20px;border-left:3px solid var(--primary);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--primary)">
+            <path d="M22 10V6c0-1.11-.9-2-2-2H4c-1.1 0-1.99.89-1.99 2v4c1.1 0 1.99.9 1.99 2s-.89 2-2 2v4c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-4c-1.1 0-2-.9-2-2s.9-2 2-2zm-2-1.46c-1.19.69-2 1.99-2 3.46s.81 2.77 2 3.46V18H4v-2.54c1.19-.69 2-1.99 2-3.46 0-1.48-.8-2.77-1.99-3.46L4 6h16v2.54z"/>
+          </svg>
+          <span style="flex:1;font-size:16px;font-weight:600;color:var(--primary);">내 티켓</span>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--primary)"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+        </div>
+
+        <div class="annotation" style="right:-8px;top:70px;">→ /tickets/my</div>
+      </div>
+
+      <div style="height:1px;background:var(--outline-variant);"></div>
+
+      <!-- 앱 설정 그룹 -->
+      <div style="display:flex;align-items:center;padding:16px 0;gap:16px;cursor:pointer;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--on-surface-variant)"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+        <span style="flex:1;font-size:16px;color:var(--text-primary);">알림 설정</span>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--on-surface-variant)"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+      </div>
+
+      <div style="display:flex;align-items:center;padding:16px 0;gap:16px;cursor:pointer;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--on-surface-variant)"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-1-.01-.83.67-1.5 1.49-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8z"/></svg>
+        <span style="flex:1;font-size:16px;color:var(--text-primary);">테마 설정</span>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--on-surface-variant)"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        <span>홈</span>
+      </div>
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        <span>마이</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
