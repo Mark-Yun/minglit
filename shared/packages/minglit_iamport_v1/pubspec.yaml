@@ -1,6 +1,6 @@
 name: minglit_iamport_v1
 description: "Iamport V1 Payment and Certification package for Minglit."
-version: 26.03.566-dev
+version: 26.03.571-dev
 publish_to: 'none'
 
 environment:

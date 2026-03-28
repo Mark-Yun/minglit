@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:app_user/src/features/ticket/ui/ticket_selection_sheet.dart';
 import 'package:app_user/src/routing/app_router.dart';
 import 'package:app_user/src/routing/app_routes.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -41,6 +43,22 @@ class EventCoordinator {
     unawaited(
       _router.push(
         EventApplicationRoute(eventId: eventId, ticketId: ticketId).location,
+      ),
+    );
+  }
+
+  // Fix #539: ticket feature UI import를 coordinator로 이동 — event → ticket cross-feature 격리
+  void showTicketSelection(BuildContext context, Event event) {
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (_) => TicketSelectionSheet(
+          event: event,
+          onTicketSelected: (eventId, ticketId) {
+            goToApplicationWizard(eventId, ticketId: ticketId);
+          },
+        ),
       ),
     );
   }
