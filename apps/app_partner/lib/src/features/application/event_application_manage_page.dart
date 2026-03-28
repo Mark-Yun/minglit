@@ -1,11 +1,10 @@
 import 'dart:async';
 
+import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-
-import 'package:app_partner/src/logic/current_partner_provider.dart';
+import 'package:riverpod/src/providers/future_provider.dart';
 
 /// Event application management page — grouped by event with inline approve/reject.
 class EventApplicationManagePage extends ConsumerStatefulWidget {
@@ -84,31 +83,38 @@ class _EventApplicationManagePageState
 }
 
 /// Provider to fetch applications grouped by event for a partner.
-final eventApplicationsGroupedProvider = FutureProvider.family
-    .autoDispose<Map<Event, List<EventApplication>>, ({String partnerId, List<String> statusFilter})>(
-  (ref, params) async {
-    final eventRepo = ref.read(eventRepositoryProvider);
+final FutureProviderFamily<
+  Map<Event, List<EventApplication>>,
+  ({String partnerId, List<dynamic> statusFilter})
+>
+eventApplicationsGroupedProvider = FutureProvider.family
+    .autoDispose<
+      Map<Event, List<EventApplication>>,
+      ({String partnerId, List<String> statusFilter})
+    >(
+      (ref, params) async {
+        final eventRepo = ref.read(eventRepositoryProvider);
 
-    // Get all upcoming events for this partner
-    final events = await eventRepo.getUpcomingEvents(params.partnerId);
-    // Also get recent past events (last 7 days)
-    final allEvents = [...events];
+        // Get all upcoming events for this partner
+        final events = await eventRepo.getUpcomingEvents(params.partnerId);
+        // Also get recent past events (last 7 days)
+        final allEvents = [...events];
 
-    final grouped = <Event, List<EventApplication>>{};
+        final grouped = <Event, List<EventApplication>>{};
 
-    for (final event in allEvents) {
-      final apps = await eventRepo.getApplicationsByEventId(event.id);
-      final filtered = apps
-          .where((a) => params.statusFilter.contains(a.status))
-          .toList();
-      if (filtered.isNotEmpty) {
-        grouped[event] = filtered;
-      }
-    }
+        for (final event in allEvents) {
+          final apps = await eventRepo.getApplicationsByEventId(event.id);
+          final filtered = apps
+              .where((a) => params.statusFilter.contains(a.status))
+              .toList();
+          if (filtered.isNotEmpty) {
+            grouped[event] = filtered;
+          }
+        }
 
-    return grouped;
-  },
-);
+        return grouped;
+      },
+    );
 
 class _ApplicationTab extends ConsumerWidget {
   const _ApplicationTab({
@@ -170,8 +176,10 @@ class _ApplicationTab extends ConsumerWidget {
         }
 
         final entries = grouped.entries.toList();
-        final totalPending = grouped.values
-            .fold<int>(0, (sum, apps) => sum + apps.length);
+        final totalPending = grouped.values.fold<int>(
+          0,
+          (sum, apps) => sum + apps.length,
+        );
 
         return Column(
           children: [
@@ -195,7 +203,8 @@ class _ApplicationTab extends ConsumerWidget {
                       applications: apps,
                       showActions: showActions,
                       onApprove: (appId) => _approve(ref, context, appId),
-                      onReject: (appId) => _showRejectDialog(ref, context, appId),
+                      onReject: (appId) =>
+                          _showRejectDialog(ref, context, appId),
                     );
                   },
                 ),
@@ -221,7 +230,11 @@ class _ApplicationTab extends ConsumerWidget {
     );
   }
 
-  Future<void> _approve(WidgetRef ref, BuildContext context, String appId) async {
+  Future<void> _approve(
+    WidgetRef ref,
+    BuildContext context,
+    String appId,
+  ) async {
     try {
       final client = ref.read(supabaseClientProvider);
       await client.functions.invoke(
@@ -377,7 +390,9 @@ class _EventGroupSection extends StatelessWidget {
             horizontal: MinglitSpacing.medium,
             vertical: MinglitSpacing.sm,
           ),
-          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          color: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.3,
+          ),
           child: Row(
             children: [
               Expanded(
@@ -446,8 +461,8 @@ class _ApplicationItem extends StatelessWidget {
     };
 
     final subtitle = [
-      if (age != null) '${age}세',
-      if (genderText != null) genderText,
+      if (age != null) '$age세',
+      ?genderText,
       timeAgo,
     ].join(' · ');
 
@@ -496,7 +511,7 @@ class _ApplicationItem extends StatelessWidget {
           // Actions or status
           if (showActions) ...[
             IconButton(
-              icon: Icon(
+              icon: const Icon(
                 Icons.close,
                 color: MinglitColors.error,
                 size: MinglitIconSize.small,
