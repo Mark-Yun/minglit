@@ -85,7 +85,7 @@ class _EventApplicationManagePageState
 /// Provider to fetch applications grouped by event for a partner.
 final FutureProviderFamily<
   Map<Event, List<EventApplication>>,
-  ({String partnerId, List<dynamic> statusFilter})
+  ({String partnerId, List<String> statusFilter})
 >
 eventApplicationsGroupedProvider = FutureProvider.family
     .autoDispose<
