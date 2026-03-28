@@ -137,6 +137,23 @@ void main() {
         expect(result.partnerId, 'partner_1');
       });
 
+      test('throws when server returns null after creation', () async {
+        // Fix #543: null 반환 시 크래시 방지 검증
+        unawaited(mockTable(mockClient, 'parties', singleData: {}));
+
+        final party = Party.fromJson(partyJson);
+        await expectLater(
+          repository.createParty(party),
+          throwsA(
+            isA<Exception>().having(
+              (e) => e.toString(),
+              'message',
+              contains('Party not found after creation'),
+            ),
+          ),
+        );
+      });
+
       test('throws on error', () async {
         unawaited(
           mockTable(mockClient, 'parties', shouldThrow: Exception('error')),
@@ -160,6 +177,23 @@ void main() {
         final result = await repository.updateParty(party);
 
         expect(result.id, 'party_1');
+      });
+
+      test('throws when server returns null after update', () async {
+        // Fix #543: null 반환 시 크래시 방지 검증
+        unawaited(mockTable(mockClient, 'parties', singleData: {}));
+
+        final party = Party.fromJson(partyJson);
+        await expectLater(
+          repository.updateParty(party),
+          throwsA(
+            isA<Exception>().having(
+              (e) => e.toString(),
+              'message',
+              contains('Party not found after update'),
+            ),
+          ),
+        );
       });
 
       test('throws on error', () async {

@@ -116,6 +116,11 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
           .select()
           .single();
 
+      // Fix #543: createParty null 반환 시 크래시 방지
+      if (data.isEmpty) {
+        throw Exception('Party not found after creation');
+      }
+
       final createdParty = Party.fromJson(data);
 
       // Create associated ticket templates if provided
@@ -177,6 +182,11 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
           .eq('id', party.id)
           .select()
           .single();
+
+      // Fix #543: updateParty null 반환 시 크래시 방지
+      if (data.isEmpty) {
+        throw Exception('Party not found after update');
+      }
 
       final result = Party.fromJson(data);
       Log.d('updateParty success | id: ${result.id}');
