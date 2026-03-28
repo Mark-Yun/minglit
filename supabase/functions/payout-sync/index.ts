@@ -2,7 +2,7 @@
 import { createServiceClient } from "../_shared/supabase_client.ts";
 import { PortoneV2Client } from "../_shared/portone_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
+import { requireServiceRole } from "../_shared/auth_utils.ts";
 import { initSentry, withHandler, log } from "../_shared/logger.ts";
 
 const FN = "payout-sync";
@@ -38,7 +38,8 @@ function classifyError(errorCode: string): { retryable: boolean } {
 Deno.serve(withHandler(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
 
-  const auth = await requireAuth(req);
+  // Fix #593: service_role 전용으로 전환 — 벌크 금융 작업에 일반 유저 접근 차단
+  const auth = requireServiceRole(req);
   if (auth instanceof Response) return auth;
 
   try {

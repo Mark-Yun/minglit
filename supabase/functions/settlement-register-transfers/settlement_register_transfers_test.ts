@@ -16,17 +16,31 @@ const ENV = {
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
 };
 
-const authMockRoute = {
-  matcher: (req: Request) => req.url.includes("/auth/v1/user"),
-  handler: () => jsonResponse({ id: "user-test-id", email: "test@test.com" }),
-};
+Deno.test("settlement-register-transfers - 인증 실패: 잘못된 토큰은 401 반환", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const request = jsonRequest("http://localhost", {}, {
+      headers: { Authorization: "Bearer bad-key" },
+    });
+    const response = await handler(request);
+    assertEquals(response.status, 401);
+  });
+});
+
+Deno.test("settlement-register-transfers - 인증 실패: Authorization 헤더 없으면 401 반환", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const request = new Request("http://localhost", { method: "POST" });
+    const response = await handler(request);
+    assertEquals(response.status, 401);
+  });
+});
 
 Deno.test("settlement-register-transfers - 빈 목록: PENDING items 없으면 processed=0 반환", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
     const { fetchMock } = createFetchMock([
-      authMockRoute,
       {
         matcher: (req) =>
           req.url.includes("/rest/v1/settlement_items") && req.method === "GET",
@@ -56,7 +70,6 @@ Deno.test("settlement-register-transfers - 정상 처리: createOrderTransfer �
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
     const { fetchMock, calls } = createFetchMock([
-      authMockRoute,
       {
         matcher: (req) =>
           req.url.includes("/rest/v1/settlement_items") && req.method === "GET",
@@ -133,7 +146,6 @@ Deno.test("settlement-register-transfers - PortOne 에러: createOrderTransfer �
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
     const { fetchMock } = createFetchMock([
-      authMockRoute,
       {
         matcher: (req) =>
           req.url.includes("/rest/v1/settlement_items") && req.method === "GET",
@@ -189,7 +201,6 @@ Deno.test("settlement-register-transfers - 멱등성: portone_transfer_id IS NUL
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
     const { fetchMock, calls } = createFetchMock([
-      authMockRoute,
       {
         matcher: (req) =>
           req.url.includes("/rest/v1/settlement_items") && req.method === "GET",
