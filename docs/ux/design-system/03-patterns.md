@@ -292,22 +292,22 @@ MinglitSectionDivider.thin()
 
 텍스트 스타일을 4단계로 나누어 일관된 정보 계층을 만듭니다.
 
-| Level | 스타일 | fontSize | fontWeight | height | 용도 |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | `displayLarge` | 32px | bold | 1.25 | 페이지 제목, 히어로 텍스트 |
-| 2 | `titleLarge` | 20px | bold | 1.4 | 섹션 제목, 카드 제목, 다이얼로그 제목 |
-| 3 | `bodyMedium` | 16px | normal | 1.5 | 본문, 설명, 폼 라벨 |
-| 4 | `bodySmall` | 13px | normal | 1.5 | 타임스탬프, 메타데이터, 도움말 |
+| Level | 스타일 | fontSize | fontWeight | height | 색상 | 용도 |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1 | `displayLarge` | 32px | bold | 1.25 | `textPrimary` | 페이지 제목, 히어로 텍스트 |
+| 2 | `titleLarge` | 20px | bold | 1.4 | `textPrimary` | 섹션 제목, 카드 제목, 다이얼로그 제목 |
+| 3 | `bodyMedium` | 16px | normal | 1.5 | `textSecondary` | 본문, 설명, 폼 라벨 |
+| 4 | `bodySmall` | 13px | normal | 1.5 | `textSecondary` | 타임스탬프, 메타데이터, 도움말 |
 
 ### 확장 스타일
 
-| 스타일 | 크기 | 무게 | 용도 |
-| :--- | :--- | :--- | :--- |
-| `headlineSmall` | 24px | bold | 서브 페이지 제목, 대형 카드 헤더 |
-| `titleMedium` | 16px | bold | 강조 라벨, 탭 제목 |
-| `titleSmall` | 14px | bold | 소형 섹션 헤더, 칩 라벨 |
-| `bodyLarge` | 18px | normal | 강조 본문, 인트로 텍스트 |
-| `labelSmall` | 11px | w500 | 세부 사항, 뱃지, 카운터 |
+| 스타일 | 크기 | 무게 | height | 색상 | 용도 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `headlineSmall` | 24px | bold | 1.33 | `textPrimary` | 서브 페이지 제목, 대형 카드 헤더 |
+| `titleMedium` | 16px | bold | 1.5 | `textPrimary` | 강조 라벨, 탭 제목 |
+| `titleSmall` | 14px | bold | 1.43 | `textPrimary` | 소형 섹션 헤더, 칩 라벨 |
+| `bodyLarge` | 18px | normal | 1.33 | `textSecondary` | 부제목, 인트로 텍스트 |
+| `labelSmall` | 11px | w500 | 1.45 | `textPrimary` | 세부 사항, 뱃지, 카운터 |
 
 ---
 
