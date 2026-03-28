@@ -4,6 +4,7 @@ import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:riverpod/src/providers/future_provider.dart';
 
 /// Event application management page — grouped by event with inline approve/reject.
 class EventApplicationManagePage extends ConsumerStatefulWidget {
@@ -82,7 +83,11 @@ class _EventApplicationManagePageState
 }
 
 /// Provider to fetch applications grouped by event for a partner.
-final eventApplicationsGroupedProvider = FutureProvider.family
+final FutureProviderFamily<
+  Map<Event, List<EventApplication>>,
+  ({String partnerId, List<dynamic> statusFilter})
+>
+eventApplicationsGroupedProvider = FutureProvider.family
     .autoDispose<
       Map<Event, List<EventApplication>>,
       ({String partnerId, List<String> statusFilter})
