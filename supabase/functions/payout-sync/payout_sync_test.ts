@@ -36,15 +36,31 @@ function classifyError(errorCode: string): { retryable: boolean } {
   return { retryable: true };
 }
 
+Deno.test("payout-sync - 인증 실패: 잘못된 토큰은 401 반환", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const request = jsonRequest("http://localhost", {}, {
+      headers: { Authorization: "Bearer bad-key" },
+    });
+    const response = await handler(request);
+    assertEquals(response.status, 401);
+  });
+});
+
+Deno.test("payout-sync - 인증 실패: Authorization 헤더 없으면 401 반환", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const request = new Request("http://localhost", { method: "POST" });
+    const response = await handler(request);
+    assertEquals(response.status, 401);
+  });
+});
+
 Deno.test("payout-sync - 빈 목록: 비종결 payouts 없으면 synced=0 반환", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
     const { fetchMock } = createFetchMock([
-      {
-        matcher: (req: Request) => req.url.includes("/auth/v1/user"),
-        handler: () => jsonResponse({ id: "user-test-id", email: "test@test.com" }),
-      },
       {
         matcher: (req) =>
           req.url.includes("/rest/v1/payouts") && req.method === "GET",

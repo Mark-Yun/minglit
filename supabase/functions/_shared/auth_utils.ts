@@ -52,7 +52,12 @@ export async function requireAuth(
  */
 export function requireServiceRole(req: Request): true | Response {
   const authHeader = req.headers.get("Authorization");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+  // Fix #593: fail-closed — env 미설정 시 즉시 차단
+  if (!serviceRoleKey) {
+    return errorResponse("Server misconfigured", 500);
+  }
 
   if (!authHeader || authHeader !== `Bearer ${serviceRoleKey}`) {
     return errorResponse("Unauthorized", 401);
