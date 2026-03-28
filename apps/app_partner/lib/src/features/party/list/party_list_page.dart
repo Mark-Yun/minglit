@@ -1,7 +1,7 @@
 import 'package:app_partner/src/features/party/list/party_list_controller.dart';
 import 'package:app_partner/src/features/party/list/party_list_coordinator.dart';
 import 'package:app_partner/src/features/party/list/widgets/party_list_item.dart';
-import 'package:app_partner/src/features/qr/qr_scanner_screen.dart';
+import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -17,14 +17,11 @@ class PartyListPage extends ConsumerWidget {
       appBar: MinglitTheme.simpleAppBar(
         title: '파티 기획 관리',
         actions: [
+          // Fix #540: route-based navigation to checkin — removes qr→checkin cross-feature import
           IconButton(
             icon: const Icon(Icons.qr_code_scanner),
             tooltip: 'QR 스캔',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const QRScannerScreen(),
-              ),
-            ),
+            onPressed: () => const CheckinRoute().push<void>(context),
           ),
           IconButton(
             icon: const Icon(Icons.add),

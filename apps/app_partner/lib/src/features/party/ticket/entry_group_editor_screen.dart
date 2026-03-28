@@ -204,10 +204,12 @@ class _EntryGroupEditorScreenState
                   }
                 });
               },
+              // Fix #540: pass ref so coordinator can invalidate partyVerificationTypesProvider
               onAddTap: () {
                 final partnerInfo = ref.read(currentPartnerInfoProvider);
                 PartyCreateCoordinator(
                   context,
+                  ref: ref,
                 ).goToCreateVerification(partnerInfo.value?.id);
               },
             ),
