@@ -1,14 +1,16 @@
 import 'dart:async';
 
+import 'package:app_partner/src/features/party/party_providers.dart';
 import 'package:app_partner/src/features/party/ticket/entry_group_editor_screen.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class PartyCreateCoordinator {
-  const PartyCreateCoordinator(this.context);
+  const PartyCreateCoordinator(this.context, {this.ref});
 
   final BuildContext context;
+  final WidgetRef? ref;
 
   void onPartyCreated() {
     Navigator.of(context).pop();
@@ -18,10 +20,11 @@ class PartyCreateCoordinator {
     handleMinglitError(context, e, st);
   }
 
-  void goToCreateVerification(String? partnerId) {
-    unawaited(
-      CreateVerificationRoute(partnerId: partnerId).push<void>(context),
-    );
+  // Fix #540: await navigation return and invalidate partyVerificationTypesProvider
+  // here (party feature) instead of in verification controller (cross-feature).
+  Future<void> goToCreateVerification(String? partnerId) async {
+    await CreateVerificationRoute(partnerId: partnerId).push<void>(context);
+    ref?.invalidate(partyVerificationTypesProvider);
   }
 
   Future<Location?> goToLocationSearch() async {
