@@ -3,6 +3,28 @@ import { createServiceClient } from "./supabase_client.ts";
 import { errorResponse } from "./response_utils.ts";
 
 /**
+ * Verify that the request bears the service_role key.
+ *
+ * Compares the Bearer token in the Authorization header against
+ * `SUPABASE_SERVICE_ROLE_KEY`. Returns `true` on success,
+ * or a 401 Response on failure.
+ *
+ * Usage:
+ * ```ts
+ * const auth = requireServiceRole(req);
+ * if (auth instanceof Response) return auth; // 401
+ * ```
+ */
+export function requireServiceRole(req: Request): true | Response {
+  const authHeader = req.headers.get("Authorization");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  if (!authHeader || authHeader !== `Bearer ${serviceRoleKey}`) {
+    return errorResponse("Unauthorized", 401);
+  }
+  return true;
+}
+
+/**
  * Extract Bearer token from Authorization header and verify it
  * against Supabase Auth using `auth.getUser()`.
  *
