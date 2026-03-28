@@ -68,14 +68,14 @@ issue-worker가 UI 문서 부족 발견
 
 | 워커 | 스케줄 | 역할 |
 |------|--------|------|
-| **tpm-staff** | 4시간마다 | 안을 봄 — audit→actionable 이슈 + 이슈 품질 관리 + 운영 분석 + report-exec |
+| **tpm-staff** | 10분마다 | 안을 봄 — 관제탑. needs-tpm 처리 + audit→needs-dev + 미아 이슈 라우팅 + 피처 이슈 파일링 + report-exec |
 | **pm-staff** | 매일 17:00 | 밖을 봄 — 시장/기술 트렌드 + 기능 완성도 검증 + 기능 제안 → report-exec |
 
 ### 실행 워커
 
 | 워커 | 스케줄 | 역할 |
 |------|--------|------|
-| **issue-worker** | 10분마다 | 이슈 처리 + PR 케어 (BEHIND 업데이트, dependabot, 리뷰 대응) |
+| **issue-worker** | 10분마다 | `needs-dev` 라벨 이슈만 처리 + PR 케어 (BEHIND 업데이트, dependabot, 리뷰 대응) |
 
 ## 라벨 체계
 
