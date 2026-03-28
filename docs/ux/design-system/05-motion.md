@@ -9,13 +9,14 @@
 
 ## 1. Duration — `MinglitAnimation`
 
-**소스**: `shared/packages/minglit_kit/lib/src/theme/minglit_design_tokens.dart:125-134`
+**소스**: `shared/packages/minglit_kit/lib/src/theme/minglit_design_tokens.dart:177-188`
 
 | 토큰명 | 값 (ms) | 용도 | 라인 |
 | :--- | :--- | :--- | :--- |
-| `fast` | 200 | 간단한 상태 변화 (선택, 토글, 호버) | :127 |
-| `medium` | 350 | 화면 전환, 모달/시트 등장/퇴장 | :130 |
-| `slow` | 500 | 복잡한 레이아웃 변화, 확장/축소 | :133 |
+| `micro` | 100 | 즉각 피드백 (ripple, 탭 반응) | :179 |
+| `fast` | 200 | 간단한 상태 변화 (선택, 토글, 호버) | :182 |
+| `medium` | 350 | 화면 전환, 모달/시트 등장/퇴장 | :185 |
+| `slow` | 500 | 복잡한 레이아웃 변화, 확장/축소 | :188 |
 
 ### 사용 가이드
 
