@@ -1,5 +1,5 @@
 import 'package:app_partner/src/features/admin/partner_application_detail_page.dart';
-import 'package:app_partner/src/features/admin/partner_application_list_page.dart';
+import 'package:app_partner/src/features/application/event_application_manage_page.dart';
 import 'package:app_partner/src/features/auth/partner_login_page.dart';
 import 'package:app_partner/src/features/checkin/checkin_placeholder_page.dart';
 import 'package:app_partner/src/features/home/guide/location_guide_page.dart';
@@ -239,7 +239,7 @@ class ApplicationListRoute extends GoRouteData with $ApplicationListRoute {
   const ApplicationListRoute();
   @override
   Widget build(BuildContext context, GoRouterState state) =>
-      const PartnerApplicationListPage();
+      const EventApplicationManagePage();
 }
 
 class ApplicationDetailRoute extends GoRouteData with $ApplicationDetailRoute {
