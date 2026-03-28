@@ -1,8 +1,8 @@
 import { assertEquals } from "@std/assert";
 import {
-  authenticatedJsonRequest,
   captureServeHandler,
   createFetchMock,
+  jsonRequest,
   jsonResponse,
   readJson,
   withEnv,
@@ -16,6 +16,49 @@ const ENV = {
 
 const BASE_URL = "http://localhost";
 
+/** Helper: create a POST request with service_role bearer token */
+function serviceRoleJsonRequest(url: string, body: unknown): Request {
+  return jsonRequest(url, body, {
+    headers: { Authorization: "Bearer test-service-key" },
+  });
+}
+
+// ── Auth tests (Fix #592) ──────────────────────────────────────────
+
+Deno.test({
+  name: "event-matching - returns 401 for regular user JWT",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    await withEnv(ENV, async () => {
+      const request = jsonRequest(BASE_URL, { event_id: "evt-1" }, {
+        headers: { Authorization: "Bearer regular-user-jwt" },
+      });
+      const response = await handler(request);
+      assertEquals(response.status, 401);
+    });
+  },
+});
+
+Deno.test({
+  name: "event-matching - returns 401 when Authorization header is missing",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    await withEnv(ENV, async () => {
+      const request = new Request(BASE_URL, { method: "POST" });
+      const response = await handler(request);
+      assertEquals(response.status, 401);
+    });
+  },
+});
+
+// ── Functional tests ────────────────────────────────────────────────
+
 Deno.test({
   name: "event-matching - creates match pairs from two groups",
   sanitizeResources: false,
@@ -28,10 +71,6 @@ Deno.test({
     ];
 
     const { fetchMock } = createFetchMock([
-      {
-        matcher: "/auth/v1/user",
-        handler: () => jsonResponse({ id: "admin-1", email: "admin@test.com" }),
-      },
       // existing pairs check — empty
       {
         matcher: (req) => req.url.includes("/rest/v1/match_pairs") && req.method === "GET",
@@ -65,7 +104,7 @@ Deno.test({
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
         const response = await handler(
-          authenticatedJsonRequest(BASE_URL, { event_id: "evt-1" }),
+          serviceRoleJsonRequest(BASE_URL, { event_id: "evt-1" }),
         );
         assertEquals(response.status, 200);
 
@@ -93,10 +132,6 @@ Deno.test({
 
     const { fetchMock, calls } = createFetchMock([
       {
-        matcher: "/auth/v1/user",
-        handler: () => jsonResponse({ id: "admin-1", email: "admin@test.com" }),
-      },
-      {
         matcher: (req) =>
           req.url.includes("/rest/v1/match_pairs") && req.method === "GET",
         handler: () => jsonResponse(existingPairs),
@@ -106,7 +141,7 @@ Deno.test({
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
         const response = await handler(
-          authenticatedJsonRequest(BASE_URL, { event_id: "evt-1" }),
+          serviceRoleJsonRequest(BASE_URL, { event_id: "evt-1" }),
         );
         assertEquals(response.status, 200);
 
@@ -132,23 +167,14 @@ Deno.test({
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
-    const { fetchMock } = createFetchMock([
-      {
-        matcher: "/auth/v1/user",
-        handler: () => jsonResponse({ id: "admin-1", email: "admin@test.com" }),
-      },
-    ]);
-
     await withEnv(ENV, async () => {
-      await withMockedFetch(fetchMock, async () => {
-        const response = await handler(
-          authenticatedJsonRequest(BASE_URL, {}),
-        );
-        assertEquals(response.status, 400);
+      const response = await handler(
+        serviceRoleJsonRequest(BASE_URL, {}),
+      );
+      assertEquals(response.status, 400);
 
-        const body = await readJson(response);
-        assertEquals(body.error, "Missing required parameter: event_id");
-      });
+      const body = await readJson(response);
+      assertEquals(body.error, "Missing required parameter: event_id");
     });
   },
 });
@@ -162,10 +188,6 @@ Deno.test({
 
     const { fetchMock } = createFetchMock([
       {
-        matcher: "/auth/v1/user",
-        handler: () => jsonResponse({ id: "admin-1", email: "admin@test.com" }),
-      },
-      {
         matcher: (req) => req.url.includes("/rest/v1/match_pairs") && req.method === "GET",
         handler: () => jsonResponse([]),
       },
@@ -178,7 +200,7 @@ Deno.test({
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
         const response = await handler(
-          authenticatedJsonRequest(BASE_URL, { event_id: "evt-1" }),
+          serviceRoleJsonRequest(BASE_URL, { event_id: "evt-1" }),
         );
         assertEquals(response.status, 400);
 
@@ -197,10 +219,6 @@ Deno.test({
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
     const { fetchMock } = createFetchMock([
-      {
-        matcher: "/auth/v1/user",
-        handler: () => jsonResponse({ id: "admin-1", email: "admin@test.com" }),
-      },
       {
         matcher: (req) => req.url.includes("/rest/v1/match_pairs") && req.method === "GET",
         handler: () => jsonResponse([]),
@@ -226,7 +244,7 @@ Deno.test({
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
         const response = await handler(
-          authenticatedJsonRequest(BASE_URL, { event_id: "evt-1" }),
+          serviceRoleJsonRequest(BASE_URL, { event_id: "evt-1" }),
         );
         assertEquals(response.status, 400);
 
@@ -246,10 +264,6 @@ Deno.test({
 
     // user-z from group A, user-a from group B → lower=user-a, higher=user-z
     const { fetchMock, calls } = createFetchMock([
-      {
-        matcher: "/auth/v1/user",
-        handler: () => jsonResponse({ id: "admin-1", email: "admin@test.com" }),
-      },
       {
         matcher: (req) => req.url.includes("/rest/v1/match_pairs") && req.method === "GET",
         handler: () => jsonResponse([]),
@@ -272,7 +286,7 @@ Deno.test({
       },
       {
         matcher: (req) => req.url.includes("/rest/v1/match_pairs") && req.method === "POST",
-        handler: (req) =>
+        handler: () =>
           jsonResponse(
             [{ id: "mp-1", user_lower_id: "user-a", user_higher_id: "user-z" }],
             { status: 201 },
@@ -283,7 +297,7 @@ Deno.test({
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
         const response = await handler(
-          authenticatedJsonRequest(BASE_URL, { event_id: "evt-1" }),
+          serviceRoleJsonRequest(BASE_URL, { event_id: "evt-1" }),
         );
         assertEquals(response.status, 200);
 
