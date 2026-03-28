@@ -46,7 +46,7 @@ The diagram below illustrates the flow of an event from the database trigger to 
 
 ## 3. Event Types
 
-Minglit tracks nine primary event types. Each type has a specific producer and target queues.
+Minglit tracks ten primary event types. Each type has a specific producer and target queues.
 
 | Event Type | Producer (Trigger/Cron) | Target Queues | Description |
 | :--- | :--- | :--- | :--- |
@@ -59,6 +59,7 @@ Minglit tracks nine primary event types. Each type has a specific producer and t
 | `new_application` | `event_applications` INSERT | `q_notifications` | Notifies partners about a new applicant for their event. |
 | `verification_result` | `verification_submissions` UPDATE | `q_notifications` | Communicates the outcome of a user's ID verification. |
 | `event_reminder` | `send_event_reminders()` cron | `q_notifications` | Sent to participants one hour before an event starts. |
+| `match_result` | `notify_match_results()` cron | `q_notifications` | Notifies matched users of their match result after the event. |
 
 ## 4. Event Routes
 
@@ -77,8 +78,9 @@ The `event_routes` table governs how events move from the global queue to specia
 | `new_application` | ✅ | — |
 | `verification_result` | ✅ | — |
 | `event_reminder` | ✅ | — |
+| `match_result` | ✅ | — |
 
-Total: 11 active routes (q_notifications: 9, q_vectors: 2)
+Total: 12 active routes (q_notifications: 10, q_vectors: 2)
 
 ## 5. Payload Schema
 
@@ -123,6 +125,7 @@ While some legacy triggers still hold text, the system is moving toward a templa
 | `new_application` | `[신규 신청] {title}` | `새로운 이벤트 참가 신청이 도착했습니다.` |
 | `verification_result` | `[인증 승인] {display_name}` | `인증이 승인되었습니다.` |
 | `event_reminder` | `[리마인더] {title}` | `이벤트가 1시간 후 시작됩니다.` |
+| `match_result` | `[매칭 결과]` | `{event_title}에서 매칭이 성사되었습니다! 결과를 확인해 보세요.` |
 
 ## 8. Error Handling
 
