@@ -8,6 +8,16 @@ Event Now Bar는 홈 하단에 당일 이벤트 상태를 실시간 안내하는
 
 **참고**: `docs/qa/AUTOMATION_TEST_GUIDE.md`
 
+### 피처 파이프라인
+
+| 단계 | 담당 | 이슈 | PR | 산출물 | 상태 |
+|------|------|------|-----|--------|------|
+| 기획 | pm-staff | #580 | #584 | spec.md, wireframe.html | 완료 |
+| UX 리뷰 | audit-uiux | #585 | - | 리뷰 코멘트 | 완료 |
+| 기술 설계 | audit-arch | #587 | #598 | plan.md | 완료 |
+| 테스트 계획 | audit-qa | #602 | 현재 PR | test-plan.md | 진행 중 |
+| 이슈 파일링 | tpm-staff | - | - | 에픽 + 서브이슈 | 대기 |
+
 ---
 
 ## 계층별 테스트 계획
@@ -189,6 +199,70 @@ goldenTest(
 
 ---
 
+## Supabase Realtime 모킹 가이드
+
+프로젝트 최초 Realtime 사용이므로 Mock 패턴을 수립한다.
+
+### Mock 구조
+
+```dart
+// test/utils/realtime_mocks.dart
+class MockRealtimeChannel extends Mock implements RealtimeChannel {}
+class MockSupabaseClient extends Mock implements SupabaseClient {
+  final MockRealtimeChannel _channel = MockRealtimeChannel();
+
+  @override
+  RealtimeChannel channel(String name, [RealtimeChannelConfig? config]) {
+    return _channel;
+  }
+}
+```
+
+### 핵심 Mock 시나리오
+
+```text
+1. 정상 구독:
+   - channel() 호출 → MockRealtimeChannel 반환
+   - onPostgresChanges() 체이닝 → subscribe() 호출 검증
+   - callback 직접 호출로 change 이벤트 시뮬레이션
+
+2. 연결 끊김 시뮬레이션:
+   - subscribe()의 status callback에 RealtimeSubscribeStatus.closed 전달
+   - 30초 폴링 fallback 전환 검증 (Timer.periodic 호출 확인)
+
+3. 재연결:
+   - closed 후 다시 subscribe → 폴링 중지 + Realtime 복귀 검증
+
+4. dispose 정리:
+   - ref.onDispose 트리거 → unsubscribe() 호출 검증
+   - 채널 null 처리 검증
+```
+
+### 테스트 예시
+
+```dart
+test('Realtime closed → 30초 폴링 fallback', () async {
+  late void Function(RealtimeSubscribeStatus, [Object?]) statusCallback;
+
+  when(() => mockChannel.subscribe(any())).thenAnswer((inv) {
+    statusCallback = inv.positionalArguments[0];
+    return mockChannel;
+  });
+
+  // Provider 생성 → subscribe 호출
+  container.read(eventRealtimeProvider('event_1'));
+  verify(() => mockChannel.subscribe(any())).called(1);
+
+  // 연결 끊김 시뮬레이션
+  statusCallback(RealtimeSubscribeStatus.closed);
+
+  // 폴링 fallback 전환 검증
+  // (Timer.periodic 호출 또는 폴링 provider invalidate 확인)
+});
+```
+
+---
+
 ## 엣지 케이스 테스트
 
 | 케이스 | 테스트 위치 | 우선순위 |
@@ -217,40 +291,47 @@ goldenTest(
 
 ## 실행 순서
 
-### P1 (필수): 14건
-- `eventNowBarStateProvider` 상태 머신 테스트 (10 케이스)
-- `todayActiveEventsProvider` 테스트 (6 케이스)
-- `eventRealtimeProvider` Realtime + fallback 테스트 (5 케이스)
-- `EventNowBar` 위젯 테스트 (9 케이스)
-- `EventNowBottomSheet` Phase 1~5 위젯 테스트 (13 케이스)
-- `MatchingVoteContent` 추출 검증 (3 케이스)
-- 이벤트 취소/환불 엣지 케이스 (2 케이스)
-- Realtime 끊김 → 폴링 전환 (1 케이스)
-- 매칭 결과 0건 빈 상태 (1 케이스)
+### P1 (필수) — 50 test cases
 
-→ 총 약 50 test cases
+| # | 테스트 그룹 | 파일 | 케이스 수 |
+|---|-----------|------|----------|
+| 1 | `eventNowBarStateProvider` 상태 머신 | `home/logic/event_now_bar_state_provider_test.dart` | 10 |
+| 2 | `todayActiveEventsProvider` 이벤트 조회 | `home/logic/today_active_events_provider_test.dart` | 6 |
+| 3 | `eventRealtimeProvider` Realtime + fallback | `home/logic/event_realtime_provider_test.dart` | 5 |
+| 4 | `EventNowBar` 위젯 | `home/ui/event_now_bar_test.dart` | 9 |
+| 5 | `EventNowBottomSheet` Phase 1~5 | `home/ui/event_now_bottom_sheet_test.dart` | 13 |
+| 6 | `MatchingVoteContent` 추출 검증 | `event/ui/matching_vote_content_test.dart` | 3 |
+| 7 | 엣지: 이벤트 취소/환불 | (1, 4번에 포함) | 2 |
+| 8 | 엣지: Realtime 끊김 → 폴링 | (3번에 포함) | 1 |
+| 9 | 엣지: 매칭 결과 0건 | (5번에 포함) | 1 |
 
-### P2 (권장): 8건
-- 멀티 이벤트 정렬 로직 테스트 (5 케이스)
-- `EventNowMultiStack` 위젯 테스트 (5 케이스)
-- `HomePage` + `EventNowBar` 통합 테스트 (3 케이스)
-- Golden: EventNowBar 6개 상태 (6 시나리오)
-- Golden: EventNowBottomSheet 5개 Phase (5 시나리오)
-- 자정 넘긴 이벤트 (1 케이스)
-- 멀티 Realtime 채널 격리 (1 케이스)
-- 앱 킬 → 복원 (1 케이스)
+> 엣지 케이스(7~9번)는 별도 파일이 아니라 해당 Provider/Widget 테스트 파일 내 group으로 작성.
 
-→ 총 약 27 test cases
+### P2 (권장) — 27 test cases
 
-### P3 (선택): 4건
-- Golden: EventNowMultiStack (2 시나리오)
-- Golden: 오프라인 상태 (1 시나리오)
-- Golden: 빈 매칭 결과 (1 시나리오)
-- pulse 애니메이션 검증 (1 케이스)
-- 긴 이벤트명 말줄임 (1 케이스)
+| # | 테스트 그룹 | 파일 | 케이스 수 |
+|---|-----------|------|----------|
+| 1 | 멀티 이벤트 정렬 로직 | `home/logic/event_now_multi_stack_test.dart` | 5 |
+| 2 | `EventNowMultiStack` 위젯 | `home/ui/event_now_multi_stack_test.dart` | 5 |
+| 3 | `HomePage` + `EventNowBar` 통합 | `home/ui/home_page_now_bar_test.dart` | 3 |
+| 4 | Golden: EventNowBar 6개 상태 | `goldens/event_now_bar_golden_test.dart` | 6 |
+| 5 | Golden: EventNowBottomSheet 5개 Phase | `goldens/event_now_bottom_sheet_golden_test.dart` | 5 |
+| 6 | 엣지: 자정 넘긴 이벤트 | (P1-2번에 포함) | 1 |
+| 7 | 엣지: 멀티 Realtime 채널 격리 | (P1-3번에 포함) | 1 |
+| 8 | 엣지: 앱 킬 → 복원 | (P1-1번에 포함) | 1 |
 
-→ 총 약 6 test cases
+### P3 (선택) — 6 test cases
+
+| # | 테스트 그룹 | 파일 | 케이스 수 |
+|---|-----------|------|----------|
+| 1 | Golden: EventNowMultiStack | `goldens/event_now_multi_stack_golden_test.dart` | 2 |
+| 2 | Golden: 오프라인/빈 매칭 변형 | (P2-4, P2-5번에 시나리오 추가) | 2 |
+| 3 | pulse 애니메이션 검증 | (P1-4번에 포함) | 1 |
+| 4 | 긴 이벤트명 말줄임 | (P1-4번에 포함) | 1 |
 
 ---
 
 **총 83 test cases** (P1: 50건, P2: 27건, P3: 6건)
+
+> 모든 파일 경로는 `apps/app_user/test/src/features/` 기준 상대 경로.
+> Golden 테스트는 `apps/app_user/test/goldens/` 기준.
