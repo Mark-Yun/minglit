@@ -13,10 +13,16 @@ import 'package:flutter_test/flutter_test.dart';
 // Fix #572: CI/로컬 골든 분리를 위해 AlchemistConfig 설정
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   TestWidgetsFlutterBinding.ensureInitialized();
-  await _loadNotoSansKR();
 
+  // ignore: do_not_use_environment
   final isCI =
       const bool.fromEnvironment('CI') || Platform.environment['CI'] == 'true';
+
+  // CI: Ahem 폰트만 사용 (플랫폼 차이 없음, Alchemist CI 골든용)
+  // Local: NotoSansKR 로드 (한글 렌더링, platform 골든용)
+  if (!isCI) {
+    await _loadNotoSansKR();
+  }
   return AlchemistConfig.runWithConfig(
     config: AlchemistConfig(
       platformGoldensConfig: PlatformGoldensConfig(
