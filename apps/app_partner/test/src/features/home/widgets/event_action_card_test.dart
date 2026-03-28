@@ -99,8 +99,9 @@ void main() {
       },
     );
 
-    testWidgets('shows capacity bar with currentParticipants/maxParticipants',
-        (tester) async {
+    testWidgets('shows capacity bar with currentParticipants/maxParticipants', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -108,7 +109,6 @@ void main() {
               event: _makeEvent(
                 phase: 'recruiting',
                 currentParticipants: 4,
-                maxParticipants: 10,
               ),
               onMainAction: () {},
             ),
@@ -118,8 +118,9 @@ void main() {
       expect(find.text('4 / 10'), findsOneWidget);
     });
 
-    testWidgets('onMainAction callback is invoked when CTA tapped',
-        (tester) async {
+    testWidgets('onMainAction callback is invoked when CTA tapped', (
+      tester,
+    ) async {
       var called = false;
       await tester.pumpWidget(
         MaterialApp(

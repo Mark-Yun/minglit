@@ -4,8 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('TodoSummaryChips', () {
-    testWidgets('renders three chips: 승인 대기, 다가오는 이벤트, 준비 중',
-        (tester) async {
+    testWidgets('renders three chips: 승인 대기, 다가오는 이벤트, 준비 중', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -23,8 +22,9 @@ void main() {
       expect(find.text('준비 중'), findsOneWidget);
     });
 
-    testWidgets('count > 0 chip shows count badge with active color',
-        (tester) async {
+    testWidgets('count > 0 chip shows count badge with active color', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -57,8 +57,9 @@ void main() {
       expect(find.text('0'), findsNothing);
     });
 
-    testWidgets('tapping 승인 대기 chip invokes onPendingTap callback',
-        (tester) async {
+    testWidgets('tapping 승인 대기 chip invokes onPendingTap callback', (
+      tester,
+    ) async {
       var called = false;
       await tester.pumpWidget(
         MaterialApp(
