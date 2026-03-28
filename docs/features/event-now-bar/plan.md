@@ -31,7 +31,7 @@
 | 파일 | 변경 내용 |
 |------|----------|
 | `apps/app_user/lib/src/features/event/matching/matching_vote_screen.dart` | `MatchingVoteContent` 위젯 추출 (Scaffold body → 독립 위젯) |
-| `apps/app_user/lib/src/features/home/home_page.dart` | `EventNowBar` 위젯 통합 (BottomNavigationBar 위에 배치) |
+| `apps/app_user/lib/src/features/home/home_page.dart` | `EventNowBar` 위젯 통합 (Scaffold body 하단에 배치) |
 
 ### 백엔드 (신규)
 
@@ -43,32 +43,56 @@
 
 ### 1. 나우바 배치 위치
 
-`app_user`에는 `StatefulShellRoute`가 없고, `HomePage`가 직접 `BottomNavigationBar`를 소유한다.
-나우바는 `HomePage`의 `Scaffold.bottomNavigationBar` 위에 `Column`으로 배치한다.
-새로운 Shell Route 도입은 불필요 — 나우바는 홈 화면 전용이며 다른 탭으로 이동하면 보이지 않아도 된다.
+`app_user`에는 `StatefulShellRoute`도 `BottomNavigationBar`도 없다. `HomePage`는 단일 `Scaffold` + `CustomScrollView`로 구성되어 있다.
+나우바는 `HomePage`의 `Scaffold.bottomSheet` 또는 `Scaffold.body`를 `Column`/`Stack`으로 감싸서 하단에 고정 배치한다.
+`Scaffold.bottomSheet`를 사용하면 `CustomScrollView` 위에 자연스럽게 오버레이되며, 기존 body 레이아웃 변경을 최소화할 수 있다.
 
 ### 2. Supabase Realtime 패턴 (프로젝트 최초)
 
 코드베이스에 Supabase Realtime 사용 사례가 없으므로 패턴을 새로 수립한다:
 
+**supabase_flutter ^2.12.2** 이상 필요.
+
 ```dart
-// eventRealtimeProvider — Riverpod StreamProvider 패턴
+// 권장 패턴: 콜백 기반 Realtime 구독 + Riverpod 라이프사이클 관리
 @riverpod
-Stream<void> eventRealtime(Ref ref, String eventId) {
-  final supabase = ref.watch(supabaseClientProvider);
-  final channel = supabase.channel('event-now-$eventId');
+class EventRealtime extends _$EventRealtime {
+  RealtimeChannel? _channel;
 
-  ref.onDispose(() => channel.unsubscribe());
+  @override
+  void build(String eventId) {
+    final supabase = ref.watch(supabaseClientProvider);
+    _channel = supabase.channel('event-now-$eventId')
+      .onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: 'event_participants',
+        filter: PostgresChangeFilter(
+          type: PostgresChangeFilterType.eq,
+          column: 'event_id',
+          value: eventId,
+        ),
+        callback: (payload) {
+          // 상태 머신 재계산 트리거
+          ref.invalidate(eventNowBarStateProvider(eventId));
+        },
+      )
+      .subscribe((status, [error]) {
+        if (status == RealtimeSubscribeStatus.closed) {
+          // Fallback: 30초 폴링으로 전환
+          _startPollingFallback(eventId);
+        }
+      });
 
-  // event_participants 변경 감지 → 상태 재계산 트리거
-  return channel
-    .onPostgresChanges(...)
-    .subscribe()
-    .asStream();
+    ref.onDispose(() {
+      _channel?.unsubscribe();
+      _channel = null;
+    });
+  }
 }
 ```
 
-**Fallback**: Realtime 연결 실패 시 `Timer.periodic(Duration(seconds: 30))` 폴링.
+**Fallback**: Realtime 연결 실패/`closed` 시 `Timer.periodic(Duration(seconds: 30))` 폴링으로 전환.
 
 ### 3. 상태 머신 구현
 
