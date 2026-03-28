@@ -66,3 +66,14 @@ jobs:
           else
             echo "No formatting changes needed"
           fi
+
+  notify-failure:
+    needs: [auto-format]
+    # Fix #563: Only notify on actual failure, not on cancelled (from cancel-in-progress)
+    if: ${{ always() && needs.auto-format.result == 'failure' }}
+    permissions:
+      issues: write
+    uses: ./.github/workflows/notify-failure.yml
+    with:
+      success: false
+      workflow_name: 'Auto Format'
