@@ -103,12 +103,15 @@ void main() {
       testWidgets('shows TicketSelectionSheet as bottom sheet', (
         tester,
       ) async {
+        final now = DateTime(2026, 4, 1);
         final event = Event(
           id: 'event-1',
           partyId: 'party-1',
           title: 'Test Event',
-          startTime: DateTime(2026, 4),
-          tickets: [],
+          startTime: now,
+          endTime: now.add(const Duration(hours: 2)),
+          createdAt: now,
+          updatedAt: now,
         );
 
         await tester.pumpWidget(
@@ -142,12 +145,15 @@ void main() {
       testWidgets('dismissing bottom sheet does not navigate', (
         tester,
       ) async {
+        final now = DateTime(2026, 4, 1);
         final event = Event(
           id: 'event-2',
           partyId: 'party-2',
           title: 'Test Event 2',
-          startTime: DateTime(2026, 4),
-          tickets: [],
+          startTime: now,
+          endTime: now.add(const Duration(hours: 2)),
+          createdAt: now,
+          updatedAt: now,
         );
 
         await tester.pumpWidget(
