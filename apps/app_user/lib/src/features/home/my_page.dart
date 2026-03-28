@@ -1,11 +1,8 @@
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
-import 'package:app_user/src/features/settings/blocked_partners_page.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:minglit_kit/minglit_dev.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class MyPage extends ConsumerWidget {
   const MyPage({super.key});
@@ -63,7 +60,7 @@ class MyPage extends ConsumerWidget {
       ),
       body: ListView(
         children: [
-          // Profile Section
+          // 1. Profile Section
           Padding(
             padding: const EdgeInsets.all(MinglitSpacing.large),
             child: Row(
@@ -102,7 +99,7 @@ class MyPage extends ConsumerWidget {
           ),
           const Divider(),
 
-          // Section 1: 활동
+          // 2. Menu Items — 거래
           ListTile(
             leading: const Icon(Icons.receipt_long_outlined),
             title: const Text('구매 내역'),
@@ -115,9 +112,8 @@ class MyPage extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: homeCoordinator.pushPurchaseHistory,
           ),
+          // Fix #187: 그룹별 구분선 추가 — 거래 / 앱 설정
           const Divider(),
-
-          // Section 2: 설정
           ListTile(
             leading: const Icon(Icons.notifications_outlined),
             title: const Text('알림 설정'),
@@ -125,59 +121,61 @@ class MyPage extends ConsumerWidget {
             onTap: homeCoordinator.pushNotificationSettings,
           ),
           const ThemeSettingsTile(),
+          // Fix #187: 그룹별 구분선 추가 — 앱 설정 / 개인정보·보안
+          const Divider(),
+          // Fix #139: Add privacy and permissions menu items
+          ListTile(
+            leading: const Icon(Icons.lock_outline),
+            title: const Text('개인정보'),
+            trailing: const Icon(Icons.chevron_right),
+            // Fix #404: Use coordinator instead of direct route push
+            onTap: homeCoordinator.pushPrivacy,
+          ),
+          ListTile(
+            leading: const Icon(Icons.admin_panel_settings_outlined),
+            title: const Text('권한 설정'),
+            trailing: const Icon(Icons.chevron_right),
+            // Fix #186: minglit_kit 공유 권한 설정 화면 사용
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                builder: (_) => const AppPermissionSettingsScreen(),
+              ),
+            ),
+          ),
           ListTile(
             leading: const Icon(Icons.block),
             title: const Text('차단 목록'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute<void>(
-                builder: (_) => const BlockedPartnersPage(),
+            // Fix #404: Use coordinator instead of direct route push
+            onTap: homeCoordinator.pushBlockedPartners,
+          ),
+          // Dev-only: Design Catalog (hidden in production)
+          if (const String.fromEnvironment(
+                    'ENVIRONMENT',
+                    defaultValue: 'production',
+                  ) ==
+                  'local' ||
+              const String.fromEnvironment(
+                    'ENVIRONMENT',
+                    defaultValue: 'production',
+                  ) ==
+                  'development') ...[
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.palette_outlined),
+              title: const Text('Design Catalog'),
+              subtitle: const Text('Dev Only'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => const DesignCatalogPage(),
+                ),
               ),
             ),
-          ),
+          ],
           const Divider(),
-
-          // Section 3: 앱 정보
-          ListTile(
-            leading: const Icon(Icons.security_outlined),
-            title: const Text('권한'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => launchUrl(Uri.parse('app-settings:')),
-          ),
-          ListTile(
-            leading: const Icon(Icons.privacy_tip_outlined),
-            title: const Text('개인정보처리방침'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => launchUrl(Uri.parse('https://minglit.com/privacy')),
-          ),
-          ListTile(
-            leading: const Icon(Icons.description_outlined),
-            title: const Text('이용약관'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => launchUrl(Uri.parse('https://minglit.com/terms')),
-          ),
-          FutureBuilder<PackageInfo>(
-            future: PackageInfo.fromPlatform(),
-            builder: (context, snapshot) {
-              return ListTile(
-                leading: const Icon(Icons.info_outline),
-                title: const Text('앱 버전'),
-                trailing: snapshot.hasData
-                    ? Text(
-                        '${snapshot.data!.version}'
-                        '+${snapshot.data!.buildNumber}',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      )
-                    : null,
-              );
-            },
-          ),
-          const Divider(),
-
-          // Section 4: 계정
           ListTile(
             leading: const Icon(Icons.logout, color: MinglitColors.error),
             title: Text(
@@ -187,7 +185,11 @@ class MyPage extends ConsumerWidget {
               ).textTheme.bodyMedium!.copyWith(color: MinglitColors.error),
             ),
             onTap: () async {
-              GoRouter.of(context).go('/');
+              // Fix #404: Use coordinator instead of direct GoRouter access
+              // 먼저 홈으로 이동 후 signOut — /my (protected) 에서 signOut하면
+              // GoRouter redirect가 /login으로 보내는 race condition 방지
+              homeCoordinator.goToHome();
+              // yield: 라우터가 위치를 '/' 로 업데이트한 뒤 signOut
               await Future<void>.delayed(Duration.zero);
               await ref.read(authControllerProvider.notifier).signOut();
             },

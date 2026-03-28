@@ -1,8 +1,17 @@
-import { createClient } from '@supabase/supabase-js'
+import { createServiceClient } from '../_shared/supabase_client.ts'
+import { requireEnv } from '../_shared/env_keystore.ts'
 import { runWorkerLoop } from './loop_worker.ts'
 import { WorkerUtils } from '../_shared/worker_utils.ts'
 import * as jose from 'https://deno.land/x/jose@v4.14.4/index.ts'
-import { initSentry, withSentryHandler } from '../_shared/sentry_utils.ts'
+import { initSentry, withHandler, log } from '../_shared/logger.ts'
+
+const FN = "notification-worker";
+
+// --- Helper: Mask FCM token for safe logging ---
+function maskToken(token: string): string {
+  if (!token || token.length <= 10) return "***";
+  return `${token.slice(0, 6)}...${token.slice(-4)}`;
+}
 
 // --- Helper: Google OAuth2 Access Token ---
 async function getAccessToken(serviceAccountJson: string) {
@@ -34,7 +43,7 @@ async function getAccessToken(serviceAccountJson: string) {
     const data = await response.json();
     return { token: data.access_token, projectId: serviceAccount.project_id };
   } catch (e) {
-    console.error('Failed to get Access Token:', e);
+    log({ function: FN, level: "error", message: "Failed to get Access Token", metadata: { error: e } });
     throw e;
   }
 }
@@ -42,7 +51,7 @@ async function getAccessToken(serviceAccountJson: string) {
 // --- Helper: Send FCM ---
 async function sendFCM(accessToken: string, projectId: string, fcmToken: string, title: string, body: string, data?: any) {
   const url = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
-  
+
   const payload = {
     message: {
       token: fcmToken,
@@ -65,7 +74,7 @@ async function sendFCM(accessToken: string, projectId: string, fcmToken: string,
 
   if (!res.ok) {
     const errText = await res.text();
-    console.error(`FCM Send Error [${fcmToken}]:`, errText);
+    log({ function: FN, level: "error", message: `FCM Send Error [${maskToken(fcmToken)}]`, metadata: { detail: errText } });
     // If error is 'UNREGISTERED' (token invalid), return specific status to delete it
     if (errText.includes('UNREGISTERED') || errText.includes('INVALID_ARGUMENT')) {
         return 'INVALID';
@@ -113,6 +122,23 @@ const NOTIFICATION_TEMPLATES: Record<string, (data: Record<string, unknown>) => 
     title: '[이벤트 리마인더]',
     body: `${(d.event_title as string) || '이벤트'}이(가) 1시간 후 시작됩니다.`,
   }),
+  settlement_ready: (_d) => ({
+    title: '[정산 확정]',
+    body: `정산이 확정되었습니다. 곧 지급이 시작됩니다.`,
+  }),
+  settlement_completed: (_d) => ({
+    title: '[지급 완료]',
+    body: `정산 지급이 완료되었습니다.`,
+  }),
+  settlement_failed: (_d) => ({
+    title: '[지급 실패]',
+    body: `정산 지급에 실패했습니다. 계좌 정보를 확인해 주세요.`,
+  }),
+  // Fix #306: 매칭 결과 알림
+  match_result: (d) => ({
+    title: '[매칭 결과]',
+    body: `${(d.event_title as string) || '이벤트'}에서 매칭이 성사되었습니다! 결과를 확인해 보세요.`,
+  }),
 };
 
 // --- Helper: Resolve affected user_id for Schema A events ---
@@ -127,6 +153,37 @@ async function getAffectedUserId(supabase: any, eventType: string, data: Record<
       .eq('id', data.event_id)
       .single();
     return event?.parties?.partner_id || null;
+  }
+  // settlement events: partner_id is in data, resolve to partner owner user_id
+  if (
+    (eventType === 'settlement_ready' ||
+      eventType === 'settlement_completed' ||
+      eventType === 'settlement_failed') &&
+    data.settlement_item_id
+  ) {
+    // Get partner_id from settlement_items
+    const { data: item, error: itemError } = await supabase
+      .from('settlement_items')
+      .select('partner_id')
+      .eq('id', data.settlement_item_id)
+      .single();
+    if (itemError) {
+      log({ function: FN, level: "error", message: `Failed to fetch settlement item: ${itemError.message}` });
+      return null;
+    }
+    if (!item?.partner_id) return null;
+    // Get owner user_id from partner_member_permissions (role = 'owner')
+    const { data: perm, error: permError } = await supabase
+      .from('partner_member_permissions')
+      .select('user_id')
+      .eq('partner_id', item.partner_id)
+      .eq('role', 'owner')
+      .single();
+    if (permError) {
+      log({ function: FN, level: "error", message: `Failed to fetch partner owner: ${permError.message}` });
+      return null;
+    }
+    return perm?.user_id || null;
   }
   return null;
 }
@@ -148,11 +205,11 @@ async function sendToAllParticipants(
     .eq('status', 'approved');
 
   if (!applications || applications.length === 0) {
-    console.log(`[fan-out] No approved participants for event ${eventId}`);
+    log({ function: FN, level: "info", message: `[fan-out] No approved participants for event ${eventId}` });
     return;
   }
 
-  console.log(`[fan-out] Sending to ${applications.length} participants for event ${eventId}`);
+  log({ function: FN, level: "info", message: `[fan-out] Sending to ${applications.length} participants for event ${eventId}` });
 
   for (const app of applications) {
     const { data: tokens } = await supabase
@@ -165,7 +222,7 @@ async function sendToAllParticipants(
         const status = await sendFCM(accessToken, projectId, t.token, title, body);
         if (status === 'INVALID') {
           await supabase.from('fcm_tokens').delete().eq('token', t.token);
-          console.log(`Deleted invalid token: ${t.token}`);
+          log({ function: FN, level: "info", message: `Deleted invalid token: ${maskToken(t.token)}` });
         }
       }
     }
@@ -182,20 +239,22 @@ async function sendToAllParticipants(
 
 initSentry();
 
-Deno.serve(withSentryHandler(async (_req) => {
+Deno.serve(withHandler(async (_req) => {
+  // env-manifest: validate all required env vars for this function
+  const envErr = requireEnv("notification-worker");
+  if (envErr) return envErr;
+
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     const firebaseServiceAccount = Deno.env.get('FIREBASE_SERVICE_ACCOUNT') ?? ''
-    
-    if (!supabaseUrl || !supabaseKey || !firebaseServiceAccount) {
-        throw new Error("Missing environment variables (SUPABASE_URL, KEY, or FIREBASE_SERVICE_ACCOUNT)");
+
+    if (!firebaseServiceAccount) {
+        throw new Error("Missing environment variable: FIREBASE_SERVICE_ACCOUNT");
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const supabase = createServiceClient()
     const utils = new WorkerUtils(supabase, 'q_notifications')
 
-    console.log("Notification Worker v2 Started");
+    log({ function: FN, level: "info", message: "Notification Worker v2 Started" });
 
     await runWorkerLoop({ maxDurationMs: 55000, intervalMs: 5000 }, async () => {
       // Use pgmq_read instead of pop for safer retry handling
@@ -206,12 +265,12 @@ Deno.serve(withSentryHandler(async (_req) => {
       });
 
       if (error) {
-        console.error('PGMQ Read Error:', error);
+        log({ function: FN, level: "error", message: "PGMQ Read Error", metadata: { detail: error } });
         return false;
       }
 
       if (!msgs || (Array.isArray(msgs) && msgs.length === 0)) {
-        return false; 
+        return false;
       }
 
       const msg = Array.isArray(msgs) ? msgs[0] : msgs;
@@ -231,7 +290,7 @@ Deno.serve(withSentryHandler(async (_req) => {
 
       // 2. Idempotency Check
       if (await utils.isProcessed(traceId)) {
-        console.log(`[${traceId}] Already processed. Skipping.`);
+        log({ function: FN, level: "info", message: `[${traceId}] Already processed. Skipping.` });
         await supabase.rpc('pgmq_delete', { queue_name: 'q_notifications', msg_id: msg.msg_id });
         return true;
       }
@@ -251,8 +310,8 @@ Deno.serve(withSentryHandler(async (_req) => {
       }
 
       // 4. Actual Processing
-      console.log(`[Notification] Processing ${isSchemaA ? 'Schema A' : 'Schema B'} event (ID: ${traceId})`);
-      
+      log({ function: FN, level: "info", message: `[Notification] Processing ${isSchemaA ? 'Schema A' : 'Schema B'} event (ID: ${traceId})` });
+
       try {
         let userId: string | null;
         let title: string;
@@ -267,7 +326,7 @@ Deno.serve(withSentryHandler(async (_req) => {
 
           const template = NOTIFICATION_TEMPLATES[eventType];
           if (!template) {
-            console.warn(`[${traceId}] Unknown event_type: ${eventType}. Skipping.`);
+            log({ function: FN, level: "warn", message: `[${traceId}] Unknown event_type: ${eventType}. Skipping.` });
             await supabase.rpc('pgmq_delete', { queue_name: 'q_notifications', msg_id: msg.msg_id });
             return true;
           }
@@ -276,7 +335,9 @@ Deno.serve(withSentryHandler(async (_req) => {
           title = t;
           body = b;
           category = 'service';
-          deepLink = undefined;
+          deepLink = eventType.startsWith('settlement_') && data.settlement_item_id
+            ? `minglit-partner://settlement/${data.settlement_item_id}`
+            : undefined;
 
           userId = await getAffectedUserId(supabase, eventType, data);
 
@@ -301,7 +362,7 @@ Deno.serve(withSentryHandler(async (_req) => {
         }
 
         if (!userId) {
-          console.warn(`[${traceId}] No userId resolved. Skipping.`);
+          log({ function: FN, level: "warn", message: `[${traceId}] No userId resolved. Skipping.` });
           await supabase.rpc('pgmq_delete', { queue_name: 'q_notifications', msg_id: msg.msg_id });
           return true;
         }
@@ -314,35 +375,41 @@ Deno.serve(withSentryHandler(async (_req) => {
             .from('fcm_tokens')
             .select('token')
             .eq('user_id', userId);
-        
+
         if (tokenError) {
-            console.error('DB Error fetching tokens:', tokenError);
+            log({ function: FN, level: "error", message: "DB Error fetching tokens", metadata: { detail: tokenError } });
             throw tokenError;
         }
 
         if (tokens && tokens.length > 0) {
             // C. Send Notifications
             const sendPromises = tokens.map(async (t) => {
+                const fcmData = isSchemaA
+                  ? {
+                      event_type: (payload.event_type as string) ?? '',
+                      deep_link: deepLink ?? '',
+                    }
+                  : payload.data;
                 const status = await sendFCM(
-                    accessToken, 
-                    projectId, 
-                    t.token, 
+                    accessToken,
+                    projectId,
+                    t.token,
                     title,
                     body,
-                    payload.data // deep_link, category etc (Schema B compat)
+                    fcmData
                 );
 
                 if (status === 'INVALID') {
                     // Clean up invalid token
                     await supabase.from('fcm_tokens').delete().eq('token', t.token);
-                    console.log(`Deleted invalid token: ${t.token}`);
+                    log({ function: FN, level: "info", message: `Deleted invalid token: ${maskToken(t.token)}` });
                 }
             });
 
             await Promise.all(sendPromises);
-            console.log(`Sent notifications to ${tokens.length} devices.`);
+            log({ function: FN, level: "info", message: `Sent notifications to ${tokens.length} devices.` });
         } else {
-            console.log(`No FCM tokens found for user ${userId}. Skipping push.`);
+            log({ function: FN, level: "info", message: `No FCM tokens found for user ${userId}. Skipping push.` });
         }
 
         // D. Save to Notification History (DB)
@@ -357,7 +424,7 @@ Deno.serve(withSentryHandler(async (_req) => {
 
       } catch (procError) {
           const msg_ = procError instanceof Error ? procError.message : String(procError);
-          console.error(`[${traceId}] Processing Failed: ${msg_}`);
+          log({ function: FN, level: "error", message: `[${traceId}] Processing Failed: ${msg_}` });
           // DLQ Policy: On processing error, message is NOT deleted from queue.
           // PGMQ visibility timeout (30s) will make it available for retry.
           // After 5 retries (read_ct > 5), the DLQ check above moves it to dead_letter_queue.
@@ -372,7 +439,7 @@ Deno.serve(withSentryHandler(async (_req) => {
         msg_id: msg.msg_id
       });
 
-      return true; 
+      return true;
     });
 
     return new Response(JSON.stringify({ status: "done" }), {
@@ -381,9 +448,9 @@ Deno.serve(withSentryHandler(async (_req) => {
 
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : String(err);
-    console.error("Worker Error:", errorMessage);
-    return new Response(JSON.stringify({ error: errorMessage }), { 
-      status: 500, 
+    log({ function: FN, level: "error", message: `Worker Error: ${errorMessage}` });
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      status: 500,
       headers: { "Content-Type": "application/json" }
     })
   }

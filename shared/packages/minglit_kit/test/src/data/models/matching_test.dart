@@ -20,6 +20,19 @@ void main() {
       expect(rule.eventId, 'event_1');
       expect(rule.sourceGroupId, 'group_a');
       expect(rule.targetGroupId, 'group_b');
+      expect(rule.voteCount, 1); // default
+    });
+
+    test('parses vote_count from JSON', () {
+      final json = ruleJson()..['vote_count'] = 3;
+      final rule = MatchRule.fromJson(json);
+      expect(rule.voteCount, 3);
+    });
+
+    test('serializes vote_count to JSON', () {
+      final rule = MatchRule.fromJson(ruleJson()..['vote_count'] = 3);
+      final json = rule.toJson();
+      expect(json['vote_count'], 3);
     });
 
     test('serializes to JSON and back', () {

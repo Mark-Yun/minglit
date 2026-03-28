@@ -45,6 +45,20 @@ export function textRequest(url: string, body: string, init: RequestInit = {}): 
   });
 }
 
+export function authenticatedJsonRequest(url: string, body: unknown, init: RequestInit = {}): Request {
+  const headers = new Headers(init.headers);
+  if (!headers.has("Authorization")) {
+    headers.set("Authorization", "Bearer test-token");
+  }
+  headers.set("Content-Type", "application/json");
+  return new Request(url, {
+    ...init,
+    method: init.method ?? "POST",
+    headers,
+    body: JSON.stringify(body),
+  });
+}
+
 export async function readJson(response: Response) {
   return await response.json();
 }

@@ -19,6 +19,7 @@ Future<List<Event>> fetchEventFeed(
   double? latitude,
   double? longitude,
   int limit = 10,
+  int offset = 0,
 }) {
   // Cache data for 5 minutes
   final link = ref.keepAlive();
@@ -32,6 +33,7 @@ Future<List<Event>> fetchEventFeed(
     latitude: latitude,
     longitude: longitude,
     limit: limit,
+    offset: offset,
   );
 }
 
@@ -97,4 +99,19 @@ Future<List<Event>> partyEvents(Ref ref, String partyId) {
 
   final repository = ref.watch(partyRepositoryProvider);
   return repository.getEventsByPartyId(partyId);
+}
+
+@riverpod
+/// Fetches upcoming events for a specific partner.
+Future<List<Event>> partnerEvents(
+  Ref ref, {
+  required String partnerId,
+}) {
+  // Cache partner events for 5 minutes
+  final link = ref.keepAlive();
+  final timer = Timer(const Duration(minutes: 5), link.close);
+  ref.onDispose(timer.cancel);
+
+  final repository = ref.watch(eventRepositoryProvider);
+  return repository.getEventsByPartnerId(partnerId);
 }

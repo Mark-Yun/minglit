@@ -25,15 +25,15 @@ Deno.test({
 });
 
 Deno.test({
-  name: "dev-seed - seeds users, partners, parties, events",
+  name: "dev-seed - seeds users and partners in static mode (default)",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    
+
     let createUserCallCount = 0;
     let insertCounter = 0;
-    
+
     const { fetchMock } = createFetchMock([
       {
         matcher: (req) => req.url.includes("/auth/v1/admin/users") && req.method === "POST",
@@ -50,21 +50,31 @@ Deno.test({
         },
       },
       {
+        matcher: (req) => req.url.includes("/storage/v1/object/list-v2/"),
+        handler: () => jsonResponse({
+          objects: [
+            { name: "seed-images/party_cafe_warm.jpg" },
+            { name: "seed-images/party_lounge_bright.jpg" },
+            { name: "seed-images/party_premium_lounge.jpg" },
+          ],
+        }),
+      },
+      {
         matcher: (req) => req.url.includes("/rest/v1/") && req.method === "POST",
         handler: async (req) => {
           insertCounter++;
           const id = crypto.randomUUID();
           const url = new URL(req.url);
-          const table = url.pathname.split("/rest/v1/")[1]?.split("?")[0];
-          
+          url.pathname.split("/rest/v1/")[1]?.split("?")[0];
+
           const prefer = req.headers.get("Prefer") ?? "";
           if (prefer.includes("return=representation")) {
-            return jsonResponse({ id }, { 
+            return jsonResponse({ id }, {
               status: 201,
               headers: { "Content-Profile": "public" },
             });
           }
-          return jsonResponse({ id }, { 
+          return jsonResponse({ id }, {
             status: 201,
             headers: { "Content-Profile": "public" },
           });
@@ -77,7 +87,7 @@ Deno.test({
         },
       },
     ]);
-    
+
     await withEnv({
       ENVIRONMENT: "development",
       SUPABASE_URL: "http://localhost:54321",
@@ -88,41 +98,45 @@ Deno.test({
         assertEquals(response.status, 200);
         const body = await readJson(response);
 
-        assertEquals(body.created_users, 25);
+        // static mode (default): 60 users (age 20-34 × 4 variants) + 5 partner owners
+        // created_users counts only generateAllPersonas() results (60), not partner owners
+        assertEquals(body.created_users, 60);
         assertEquals(body.created_partners, 5);
-        assertEquals(body.created_parties, 17);
-        assertEquals(body.created_events, 34);
+        // static mode does not create parties/events — those require ?mode=full
+        assertEquals(body.created_parties, undefined);
+        assertEquals(body.created_events, undefined);
+        assertEquals(body.uploaded_images, 3);
       });
     });
   },
 });
 
 Deno.test({
-  name: "dev-seed - delete-and-retry on duplicate user",
+  name: "dev-seed - skip existing user on duplicate (no delete-and-retry)",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    
+
     let createUserAttempts = 0;
     let deleteUserCalled = false;
     const duplicateEmail = "user_20_m_ok@test.com";
     const existingUserId = crypto.randomUUID();
-    
+
     const { fetchMock } = createFetchMock([
       {
         matcher: (req) => req.url.includes("/auth/v1/admin/users") && req.method === "POST",
         handler: async (req) => {
           createUserAttempts++;
           const body = await req.json();
-          
+
           if (body.email === duplicateEmail && createUserAttempts === 1) {
             return jsonResponse(
               { message: "User already registered" },
               { status: 422 }
             );
           }
-          
+
           return jsonResponse({
             user: {
               id: crypto.randomUUID(),
@@ -153,9 +167,19 @@ Deno.test({
         },
       },
       {
+        matcher: (req) => req.url.includes("/storage/v1/object/list-v2/"),
+        handler: () => jsonResponse({
+          objects: [
+            { name: "seed-images/party_cafe_warm.jpg" },
+            { name: "seed-images/party_lounge_bright.jpg" },
+            { name: "seed-images/party_premium_lounge.jpg" },
+          ],
+        }),
+      },
+      {
         matcher: (req) => req.url.includes("/rest/v1/") && req.method === "POST",
         handler: () => {
-          return jsonResponse({ id: crypto.randomUUID() }, { 
+          return jsonResponse({ id: crypto.randomUUID() }, {
             status: 201,
             headers: { "Content-Profile": "public" },
           });
@@ -168,7 +192,7 @@ Deno.test({
         },
       },
     ]);
-    
+
     await withEnv({
       ENVIRONMENT: "local",
       SUPABASE_URL: "http://localhost:54321",
@@ -178,8 +202,10 @@ Deno.test({
         const response = await handler(new Request("http://localhost"));
         assertEquals(response.status, 200);
         const body = await readJson(response);
-        assertEquals(body.created_users, 25);
-        assertEquals(deleteUserCalled, true);
+        // duplicate user is found via listUsers and returned — still counted, not skipped
+        assertEquals(body.created_users, 60);
+        // duplicate handling: skip existing user without deleting
+        assertEquals(deleteUserCalled, false);
         assertEquals(createUserAttempts >= 21, true);
       });
     });

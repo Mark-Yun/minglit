@@ -41,7 +41,7 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 
 ### 2.1 Table Inventory
 
-총 **29개 테이블** + **4개 뷰** + **3개 PGMQ 큐 테이블**.
+총 **54개 테이블(analytics 스키마 5개 포함)** + **4개 뷰** + **4개 PGMQ 인프라 테이블**.
 
 #### Core (사용자/파트너)
 
@@ -94,8 +94,34 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 | `match_pairs` | 매칭 결과 | event_id, user_lower_id, user_higher_id, matched_at |
 | `minglit_files` | 파일 메타데이터 | storage_object_id, bucket_id, file_path, owner_id |
 | `file_access_grants` | 파일 접근 권한 | file_id, viewer_id, expires_at |
-| `settlements` | 정산 | partner_id, event_id, total_sales, net_amount, status — [상세](./payment-pipeline.md) |
+| `settlements` | 정산 (레거시) | partner_id, event_id, total_sales, net_amount, status — [상세](./payment-pipeline.md) |
 | `report_details` | 신고 상세 정보 | social_interaction_id, target_type, reason, description |
+| `system_settings` | 시스템 설정 키-값 | key (PK), value jsonb, description, updated_at, updated_by |
+| `policies` | 약관/정책 버전 관리 | id (PK uuid), key, value jsonb, version, effective_date, description, created_at |
+
+#### Settlement v2 (정산 파이프라인 v2)
+
+| Table | Purpose | Key Columns |
+|-------|---------|-------------|
+| `settlement_items` | 정산 항목 (v2) | partner_id, source_type, source_id, status, gross_amount, net_amount, version |
+| `settlement_histories` | 정산 상태 변경 이력 | settlement_item_id, event_type, actor_type, from_status, to_status |
+| `payouts` | 지급 건 | partner_id, payout_period_start/end, status, total_net_amount |
+| `payout_transfers` | 지급 이체 시도 | payout_id, provider, status, amount, attempt_no, idempotency_key |
+| `adjustment_items` | 조정 항목 (환불/차감/보정) | partner_id, adjustment_type, amount_signed, status |
+| `business_calendar` | 영업일 달력 | date (PK), is_business_day, reason |
+| `reconciliation_runs` | 일일 대사 실행 | run_date, run_type, status, matched_count, mismatched_count |
+| `reconciliation_results` | 대사 불일치 결과 | run_id, settlement_item_id, mismatch_type, severity |
+| `settlement_alarm_results` | 정산 모니터링 알람 | alarm_type, severity, message, metric_value, threshold |
+
+#### Analytics (분석)
+
+| Table | Schema | Purpose | Key Columns |
+|-------|--------|---------|-------------|
+| `daily_active_users` | analytics | 일별 활성 사용자 | date, app, count |
+| `daily_events` | analytics | 일별 이벤트 집계 | date, event_name, count |
+| `daily_revenue` | analytics | 일별 매출 집계 | date, gross, net, refunds |
+| `funnel_daily` | analytics | 일별 퍼널 전환율 | date, step, count, conversion_rate |
+| `github_daily_stats` | analytics | 일별 GitHub 이슈/PR 통계 | date, metric, count |
 
 #### PGMQ Infrastructure
 
@@ -181,7 +207,6 @@ Supabase Edge Functions는 Deno 런타임 기반이며, `supabase/functions/` �
 | `settlement-transfer` | Payment | 정산 주문 이체 |
 | `notification-worker` | Notification | FCM 푸시 알림 발송 (PGMQ consumer) |
 | `vector-worker` | Recommendation | 파티/유저 임베딩 생성 (PGMQ consumer) |
-| `vectorize-party` | Recommendation | 온디맨드 파티 벡터화 |
 | `profile-update` | User | 프로필 업데이트 + 임베딩 생성 |
 | `identity-verify` | Identity | 본인인증 (Portone V2/PASS) |
 | `partner-sync` | Partner | 플랫폼 파트너 동기화 |
@@ -189,17 +214,50 @@ Supabase Edge Functions는 Deno 런타임 기반이며, `supabase/functions/` �
 | `health` | System | 시스템 헬스 체크 |
 | `dev-seed` | Dev | 테스트 데이터 시딩 (dev only) |
 | `dev-session-switch` | Dev | 테스트 유저 전환 (dev only) |
+| `backend-simulator` | Dev | 백엔드 시뮬레이터 (dev only) |
+| `dev-mock-portone` | Dev | Portone 목업 서버 (dev only) |
+| `metrics-alert` | Monitoring | 정산 메트릭 알람 발송 |
+| `payout-sync` | Payment | 지급 상태 동기화 |
+| `reconciliation-daily` | Payment | 일일 대사 (PG ↔ DB 불일치 검출) |
+| `settlement-register-transfers` | Payment | 정산 이체 등록 |
+| `event-checkin` | Event | 이벤트 참가자 체크인 처리 |
+| `event-matching` | Event | 체크인 완료 참가자 대상 매칭 페어 생성 |
+| `github-stats-sync` | Monitoring | GitHub 이슈/PR 통계 수집 → `analytics.github_daily_stats` 저장 (pg_cron 트리거) |
+| `partner-manage-event` | Partner | 이벤트/티켓/입장그룹 CRUD (RLS write → EF 전환) |
+| `partner-manage-match` | Partner | 매칭 룰 관리 (set_rules, clear_rules) |
+| `partner-manage-party` | Partner | 파티/장소/템플릿 CRUD (RLS write → EF 전환) |
+| `partner-manage-member` | Partner | 파트너 멤버 관리 (초대, 권한 변경, 제거) |
+| `partner-manage-settlement` | Partner | 파트너 정산 계좌 관리 (등록/수정) |
+| `partner-manage-verification` | Partner | 인증 양식 정의 생성/수정 |
+| `partner-register` | Partner | 파트너 입점 신청 (임시저장, 제출, 수정) |
+| `partner-approve-application` | Partner | 파트너 입점 신청 승인 (moderator 전용) |
+| `partner-reject-application` | Partner | 파트너 입점 신청 거절 (moderator 전용) |
+| `partner-review-submission` | Partner | 인증 제출물 심사 (승인/거절 + 코멘트) |
+| `user-cancel-order` | User | 유저 주문 취소 + 환불 처리 |
+| `user-cast-vote` | User | 매칭 투표 (match_votes 삽입) |
+| `user-create-order` | User | 이벤트 신청 + 결제 주문 생성 |
+| `user-manage-notification` | User | 알림 읽음 처리 등 알림 관리 |
+| `user-manage-settings` | User | 유저 설정 변경 + FCM 토큰 등록/삭제 |
+| `user-manage-social` | User | 소셜 상호작용 (좋아요, 차단, 신고) 관리 |
+| `user-submit-verification` | User | 인증 제출물 제출 |
+| `user-update-verification` | User | 유저 인증 데이터(`user_verifications`) 업데이트 |
 
 ### 3.2 Shared Modules (`_shared/`)
 
 | Module | LOC | Purpose |
 |--------|-----|---------|
+| `supabase_client.ts` | 23 | Supabase 서비스 클라이언트 팩토리 (`createServiceClient()`) |
 | `portone_client.ts` | 209 | Portone V2 API 클라이언트 (결제 검증, 취소) |
 | `iamport_client.ts` | 63 | Iamport V1 레거시 API 래퍼 |
-| `sentry_utils.ts` | 105 | Sentry 에러 트래킹 (`withSentry`, `withSentryHandler`) |
+| `logger.ts` | 124 | 구조화 로깅 (Axiom 연동, Sentry 래퍼) |
+| `axiom_logger.ts` | 130 | Axiom 로그 전송 클라이언트 |
+| `statsig_utils.ts` | 115 | Statsig 피처 플래그 / 이벤트 로깅 |
 | `worker_utils.ts` | 58 | PGMQ 워커 유틸 (중복 체크, DLQ, 지연 로깅) |
 | `auth_utils.ts` | 38 | 인증 유틸 (`requireAuth` — Bearer 토큰 → `auth.getUser()`) |
 | `response_utils.ts` | 33 | HTTP 응답 헬퍼 (CORS, JSON/에러 응답) |
+| `refund_utils.ts` | — | 환불 관련 유틸리티 |
+| `validation_utils.ts` | — | 입력 검증 유틸리티 |
+| `env_keystore.ts` | 63 | 환경변수 검증 (`env-manifest.json` 기반 per-function/project 단위 키 체크) |
 
 ### 3.3 Dev Guard
 
@@ -339,6 +397,13 @@ protect_user_profile_fields() → trigger
 | `process-notifications` | 매분 (`* * * * *`) | `notification-worker` Edge Function 호출 (pg_net HTTP POST) |
 | `send-event-reminders` | 매분 (`* * * * *`) | 이벤트 시작 55~65분 전 참가자에게 리마인더 (`produce_event`) |
 | `settlement-status-transition` | 매일 03:00 (`0 3 * * *`) | 7일 경과 정산 `pending` → `ready` 전환 |
+| `settlement-reconciliation-daily` | 매일 13:00 UTC / 22:00 KST (`0 13 * * *`) | `reconciliation-daily` Edge Function 호출 (PG ↔ DB 대사) |
+| `settlement-register-transfers` | 매 15분 (`*/15 * * * *`) | `settlement-register-transfers` Edge Function 호출 (이체 등록) |
+| `settlement-payout-sync` | 매일 3회 02:00·05:00·08:00 UTC (`0 2,5,8 * * *`) | `payout-sync` Edge Function 호출 (지급 상태 동기화) |
+| `settlement-alarm-check` | 매 30분 (`*/30 * * * *`) | `metrics-alert` Edge Function 호출 (정산 메트릭 알람) |
+| `sync_github_stats` | 매일 05:30 KST (`30 20 * * *` UTC) | `github-stats-sync` Edge Function 호출 → GitHub 이슈/PR 통계 수집 |
+| `notify-match-results` | 매일 자정 (`0 0 * * *`) | 매칭 결과 알림 발송 (`notify_match_results()`) |
+| `cleanup-expired-match-votes` | 매일 18:00 UTC (`0 18 * * *`) | 만료된 매칭 투표 정리 (`cleanup_expired_match_votes()`) |
 
 ---
 
@@ -376,13 +441,15 @@ User B ──vote──> User A
 
 ## 10. Error Handling & Monitoring
 
-### Sentry Integration
+### Logging & Monitoring
 
-`sentry_utils.ts`가 Edge Function 에러 트래킹을 담당한다:
+`logger.ts`가 Edge Function의 구조화 로깅과 에러 트래킹을 담당한다:
 
-- `initSentry()` — SENTRY_DSN 환경변수가 있을 때만 초기화 (없으면 no-op)
-- `withSentry()` — `serve()` 패턴용 래퍼
-- `withSentryHandler()` — `Deno.serve()` 패턴용 래퍼
+- `initSentry()` — Sentry 초기화 (SENTRY_DSN 환경변수가 있을 때만, 없으면 no-op)
+- `withHandler()` — `Deno.serve()` 래퍼 (Sentry + 구조화 로깅)
+- `log` — 구조화 로깅 객체 (`log.info()`, `log.error()` 등)
+- `axiom_logger.ts` — Axiom으로 로그 전송
+- `statsig_utils.ts` — Statsig 피처 플래그 및 이벤트 로깅 (`initStatsig()`, `logStatsigEvent()`)
 - 환경 구분: `ENVIRONMENT` 환경변수 (local/dev/prod)
 - `tracesSampleRate`: 0.2 (20%)
 

@@ -73,7 +73,13 @@ abstract class MinglitException implements Exception {
 /// The [message] is safe to display to the user directly.
 class MinglitUserException extends MinglitException {
   /// Creates a user-facing exception with a safe [message].
-  const MinglitUserException(super.message);
+  /// Optionally includes field-level [details] for validation errors.
+  const MinglitUserException(super.message, {this.details});
+
+  // Fix #311: 서버 사이드 검증 실패 시 필드별 에러 상세 정보
+  /// Field-level validation error details from the server.
+  /// Each entry contains `field` and `message` keys.
+  final List<Map<String, dynamic>>? details;
 }
 
 /// **Auth Exception**

@@ -1,8 +1,11 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
+import { createServiceClient } from "../_shared/supabase_client.ts";
 import { PortoneV2Client } from "../_shared/portone_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
+import { initSentry, withHandler, log } from "../_shared/logger.ts";
+
+const FN = "settlement-transfer";
 
 const PORTONE_V2_API_KEY = Deno.env.get("PORTONE_V2_API_KEY");
 
@@ -12,7 +15,7 @@ if (!PORTONE_V2_API_KEY) {
 
 initSentry();
 
-Deno.serve(withSentry(async (req) => {
+Deno.serve(withHandler(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
 
   const auth = await requireAuth(req);
@@ -36,10 +39,7 @@ Deno.serve(withSentry(async (req) => {
       return errorResponse("Missing required fields: partner_id, payment_id, order_amount", 400);
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    const supabase = createServiceClient();
 
     const { data: partner, error: partnerError } = await supabase
       .from("partners")
@@ -70,7 +70,7 @@ Deno.serve(withSentry(async (req) => {
       transfer = await portone.createOrderTransfer(transferBody as Parameters<typeof portone.createOrderTransfer>[0]);
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
-      console.error("PortOne createOrderTransfer error:", message);
+      log({ function: FN, level: "error", message: "PortOne createOrderTransfer error", metadata: { detail: message } });
       return errorResponse("Failed to create order transfer", 502);
     }
 
@@ -78,7 +78,7 @@ Deno.serve(withSentry(async (req) => {
 
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    console.error("Error in settlement-transfer:", message);
+    log({ function: FN, level: "error", message: "Error in settlement-transfer", metadata: { detail: message } });
     return errorResponse(message, 500);
   }
 }));

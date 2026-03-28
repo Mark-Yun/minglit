@@ -1,8 +1,12 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
+import { createServiceClient } from "../_shared/supabase_client.ts";
 import { IamportClient } from "../_shared/iamport_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
+import { initSentry, withHandler, withSpan, log } from "../_shared/logger.ts";
+
+const FN = "payment-verify";
+import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
 
 const IMP_KEY = Deno.env.get("PORTONE_API_KEY");
 const IMP_SECRET = Deno.env.get("PORTONE_API_SECRET");
@@ -12,8 +16,9 @@ if (!IMP_KEY || !IMP_SECRET) {
 }
 
 initSentry();
+initStatsig();
 
-Deno.serve(withSentry(async (req) => {
+Deno.serve(withHandler(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
 
   const auth = await requireAuth(req);
@@ -32,17 +37,18 @@ Deno.serve(withSentry(async (req) => {
     }
 
     // 0. Supabase Client 초기화
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    const supabase = createServiceClient();
 
     // 1. DB에서 주문 정보 조회 (금액 확인)
-    const { data: order, error: orderError } = await supabase
-      .from("event_applications")
-      .select("payment_amount, status")
-      .eq("id", merchant_uid)
-      .single();
+    const { data: order, error: orderError } = await withSpan(
+      'db.query.event_applications',
+      'db.query',
+      async () => supabase
+        .from("event_applications")
+        .select("payment_amount, status")
+        .eq("id", merchant_uid)
+        .single()
+    );
 
     if (orderError || !order) {
       return errorResponse("Order not found", 404);
@@ -59,46 +65,54 @@ Deno.serve(withSentry(async (req) => {
 
     // 3. 결제 상태 및 금액 검증
     if (payment.status !== "paid") {
+      logStatsigEvent(auth, 'payment_failed', undefined, { reason: 'payment_not_completed', imp_uid }).catch(() => {});
       return errorResponse("Payment not completed", 400, { status: payment.status });
     }
 
     if (payment.amount !== order.payment_amount) {
-      client.cancelPayment(imp_uid, "결제 금액 위변조로 자동 취소").catch((e: unknown) => {
+      await client.cancelPayment(imp_uid, "결제 금액 위변조로 자동 취소").catch((e: unknown) => {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error("Cancel on mismatch failed:", msg);
+        log({ function: FN, level: "error", message: "Cancel on mismatch failed", metadata: { detail: msg } });
       });
+      logStatsigEvent(auth, 'payment_failed', undefined, { reason: 'amount_mismatch', imp_uid }).catch(() => {});
       return errorResponse("Amount mismatch", 400, {
         expected: order.payment_amount,
         actual: payment.amount,
       });
     }
 
-    // 4. Supabase DB 업데이트 (티켓 발권 및 신청 상태 변경)
-    // ... rest of the logic ...
-    
-    // Note: We used service role key so auth check via header is optional but good practice if we want to link user.
-    // But since we have merchant_uid which is unique, we can just update.
-    
-    const { error: updateError } = await supabase
-      .from("event_applications")
-      .update({
-        status: "approved",
-        payment_id: imp_uid,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", merchant_uid);
+    // Fix #133: paid_at 없을 때 now 폴백하면 재시도마다 값이 밀려 멱등성 깨짐 — payment-webhook과 동일하게 null 처리
+    const paidAtIso = payment.paid_at && payment.paid_at > 0
+      ? new Date(payment.paid_at * 1000).toISOString()
+      : null;
+
+    const { error: updateError } = await withSpan(
+      'db.update.event_applications',
+      'db.update',
+      async () => supabase
+        .from("event_applications")
+        .update({
+          status: "approved",
+          payment_id: imp_uid,
+          ...(paidAtIso ? { paid_at: paidAtIso } : {}),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", merchant_uid)
+    );
 
     if (updateError) {
-      console.error("DB Update Error:", updateError);
+      log({ function: FN, level: "error", message: "DB Update Error", metadata: { detail: updateError } });
+      logStatsigEvent(auth, 'payment_failed', undefined, { reason: 'db_update_error', imp_uid }).catch(() => {});
       return errorResponse("Failed to update order status", 500);
     }
 
+    logStatsigEvent(auth, 'payment_completed', payment.amount, { imp_uid, merchant_uid }).catch(() => {});
     return successResponse({ success: true, imp_uid });
 
 
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error("Error in payment-verify:", message);
+    log({ function: FN, level: "error", message: "Error in payment-verify", metadata: { detail: message } });
     return errorResponse(message, 500);
   }
 }));

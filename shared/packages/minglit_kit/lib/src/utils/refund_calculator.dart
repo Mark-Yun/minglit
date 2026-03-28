@@ -1,43 +1,47 @@
-/// Holds refund calculation results.
+/// Result of a refund eligibility calculation.
 class RefundCalculation {
-  /// Creates a refund calculation result.
+  /// Creates a [RefundCalculation].
   const RefundCalculation({
     required this.refundPercentage,
     required this.refundAmount,
     required this.feeAmount,
   });
 
-  /// Percentage of the payment to refund.
+  /// Percentage of the payment that is refundable (0 or 100).
   final int refundPercentage;
 
-  /// Amount to refund in currency units.
+  /// Amount to be refunded in the smallest currency unit.
   final int refundAmount;
 
-  /// Amount retained as a fee.
+  /// Non-refundable fee amount.
   final int feeAmount;
 }
 
-/// Calculates refund amounts based on event timing.
+/// Calculates refund eligibility based on event start time and payment date.
 class RefundCalculator {
-  /// Calculates refund results for a payment.
+  /// Calculates refund eligibility.
   static RefundCalculation calculate({
     required DateTime eventStartTime,
     required int paymentAmount,
+    required DateTime? paidAt,
+    required int gracePeriodHours,
+    required int cutoffDays,
     DateTime? now,
   }) {
     final baseTime = now ?? DateTime.now();
-    final diff = eventStartTime.difference(baseTime);
 
-    var percentage = 0;
-    if (diff >= const Duration(days: 7)) {
-      percentage = 100;
-    } else if (diff >= const Duration(days: 3)) {
-      percentage = 80;
-    } else if (diff >= const Duration(days: 1)) {
-      percentage = 50;
-    }
+    // Fix #133: 미래 paidAt는 음수 duration으로 grace period를 통과하므로 명시적으로 제외
+    final withinGracePeriod =
+        paidAt != null &&
+        !paidAt.isAfter(baseTime) &&
+        baseTime.difference(paidAt) <= Duration(hours: gracePeriodHours);
 
-    final refundAmount = (paymentAmount * percentage) ~/ 100;
+    final withinCutoff =
+        eventStartTime.difference(baseTime) >= Duration(days: cutoffDays);
+
+    final isRefundable = withinGracePeriod || withinCutoff;
+    final percentage = isRefundable ? 100 : 0;
+    final refundAmount = isRefundable ? paymentAmount : 0;
     final feeAmount = paymentAmount - refundAmount;
 
     return RefundCalculation(

@@ -13,7 +13,7 @@ void main() {
           child: MaterialApp(
             home: Scaffold(
               body: BugReporterWrapper(
-                enabled: false, // Disable to avoid shake detector setup
+                enabled: false, // Disable FAB rendering
                 child: testChild,
               ),
             ),
@@ -121,8 +121,8 @@ void main() {
     });
   });
 
-  group('Deduplication and cooldown', () {
-    testWidgets('registers and removes WidgetsBindingObserver without crash', (
+  group('Lifecycle', () {
+    testWidgets('disposes cleanly without crash', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -146,7 +146,7 @@ void main() {
           ),
         ),
       );
-      // No crash = observer was properly unregistered
+      // No crash = state was properly cleaned up
     });
 
     testWidgets('renders FAB when enabled', (tester) async {

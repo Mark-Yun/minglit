@@ -34,6 +34,9 @@ enum SocialInteractionType {
 
   /// Indicates a report action.
   report,
+
+  /// Indicates a dislike action.
+  dislike,
 }
 
 /// Represents a user interaction with a social target.

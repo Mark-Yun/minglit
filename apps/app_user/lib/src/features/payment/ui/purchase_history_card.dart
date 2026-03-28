@@ -90,7 +90,7 @@ class PurchaseHistoryCard extends ConsumerWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: MinglitSpacing.xsmall),
                     Text(
                       dateLabel,
                       style: theme.textTheme.bodySmall,
@@ -202,9 +202,11 @@ class PurchaseHistoryCard extends ConsumerWidget {
                       context: context,
                       ref: ref,
                       eventName: eventName,
+                      eventId: application.eventId,
                       paymentId: paymentId,
                       paymentAmount: paymentAmount,
                       eventStartTime: eventStartTime,
+                      paidAt: application.paidAt,
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: theme.colorScheme.errorContainer,
@@ -235,19 +237,24 @@ class PurchaseHistoryCard extends ConsumerWidget {
     return null;
   }
 
+  // Fix #299: eventId 추가 — user-cancel-order EF 전환
   Future<void> _onCancelPressed({
     required BuildContext context,
     required WidgetRef ref,
     required String eventName,
+    required String eventId,
     required String? paymentId,
     required int? paymentAmount,
     required DateTime? eventStartTime,
+    required DateTime? paidAt,
   }) async {
     final controller = ref.read(purchaseHistoryControllerProvider.notifier);
     await controller.runRefundFlow(
+      eventId: eventId,
       paymentId: paymentId,
       paymentAmount: paymentAmount,
       eventStartTime: eventStartTime,
+      paidAt: paidAt,
       showMissingInfo: () async {
         if (!context.mounted) return;
         await context.showMinglitAlert(
@@ -255,12 +262,20 @@ class PurchaseHistoryCard extends ConsumerWidget {
           message: '결제 정보를 다시 확인해주세요.',
         );
       },
+      showNotEligible: () async {
+        if (!context.mounted) return;
+        await context.showMinglitAlert(
+          title: '환불 불가',
+          message: '결제 후 2시간 이내 또는 이벤트 시작 7일 전까지만 환불 가능합니다.',
+        );
+      },
       confirmRefund: (calculation) async {
         if (!context.mounted) return false;
+        // Fix #270: paymentAmount가 null일 수 있으므로 안전하게 처리
         final confirmed = await _showRefundConfirmDialog(
           context: context,
           eventName: eventName,
-          paymentAmount: paymentAmount!,
+          paymentAmount: paymentAmount ?? 0,
           calculation: calculation,
         );
         if (!context.mounted) return false;

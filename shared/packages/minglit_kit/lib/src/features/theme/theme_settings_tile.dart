@@ -12,14 +12,17 @@ class ThemeSettingsTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentMode = ref.watch(themeControllerProvider);
+    // Fix #139: When system mode, show icon matching actual current brightness
+    final systemBrightness = MediaQuery.platformBrightnessOf(context);
+    final icon = currentMode == ThemeMode.dark
+        ? Icons.dark_mode
+        : currentMode == ThemeMode.light
+        ? Icons.light_mode
+        : systemBrightness == Brightness.dark
+        ? Icons.dark_mode
+        : Icons.light_mode;
     return ListTile(
-      leading: Icon(
-        currentMode == ThemeMode.dark
-            ? Icons.dark_mode
-            : currentMode == ThemeMode.light
-            ? Icons.light_mode
-            : Icons.brightness_auto,
-      ),
+      leading: Icon(icon),
       title: const Text('테마'),
       subtitle: Text(
         currentMode == ThemeMode.dark
@@ -28,7 +31,6 @@ class ThemeSettingsTile extends ConsumerWidget {
             ? '라이트 모드'
             : '시스템 설정',
       ),
-      trailing: const Icon(Icons.chevron_right),
       onTap: () {
         unawaited(_showThemePicker(context, ref, currentMode));
       },

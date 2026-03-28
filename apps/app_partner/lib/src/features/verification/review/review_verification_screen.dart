@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// **Verification Review Page**
 class ReviewVerificationScreen extends ConsumerStatefulWidget {
@@ -56,23 +55,18 @@ class _ReviewVerificationScreenState
   Future<void> _reviewRequest(
     String id,
     VerificationStatus status, {
-    String? reason,
     String? comment,
   }) async {
     final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
     try {
+      // Fix #309: review + comment in single EF call
       await ref
           .read(verificationRepositoryProvider)
           .reviewRequest(
             submissionId: id,
             status: status,
-            adminComment: reason,
+            comment: comment,
           );
-      if (comment != null) {
-        await ref
-            .read(verificationRepositoryProvider)
-            .submitComment(submissionId: id, content: {'text': comment});
-      }
 
       if (!mounted) return;
       context.showMinglitSuccess(
@@ -106,7 +100,7 @@ class _ReviewVerificationScreenState
                   context.l10n.reviewVerification_dialog_correction_reasonHint,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: MinglitSpacing.medium),
           TextField(
             controller: commentController,
             maxLines: 3,
@@ -128,12 +122,14 @@ class _ReviewVerificationScreenState
         ElevatedButton(
           onPressed: () {
             Navigator.pop(context);
+            // Fix #301: needsCorrection removed — use rejected with comment
             unawaited(
               _reviewRequest(
                 submissionId,
-                VerificationStatus.needsCorrection,
-                reason: reasonController.text,
-                comment: commentController.text,
+                VerificationStatus.rejected,
+                comment: commentController.text.isNotEmpty
+                    ? '${reasonController.text}\n${commentController.text}'
+                    : reasonController.text,
               ),
             );
           },
@@ -158,9 +154,10 @@ class _ReviewVerificationScreenState
 
   Future<void> _showImageDialog(String path) async {
     try {
-      final signedUrl = await Supabase.instance.client.storage
-          .from('verification-proofs')
-          .createSignedUrl(path, 600);
+      // Fix #404: Use repository instead of direct Supabase access
+      final signedUrl = await ref
+          .read(verificationRepositoryProvider)
+          .getVerificationProofSignedUrl(path);
       if (!mounted) return;
       await showDialog<void>(
         // Keep custom dialog for image viewer
@@ -205,7 +202,13 @@ class _ReviewVerificationScreenState
   Widget _buildRequestCard(Map<String, dynamic> req) {
     final theme = Theme.of(context);
     final user = req['user'] as Map<String, dynamic>? ?? {};
-    final claim = req['snapshot_data'] as Map<String, dynamic>? ?? {};
+    // Fix #301: snapshot_data is now an array of history entries
+    final snapshotRaw = req['snapshot_data'];
+    final snapshotList = snapshotRaw is List ? snapshotRaw : <dynamic>[];
+    final lastEntry = snapshotList.isNotEmpty
+        ? snapshotList.last as Map<String, dynamic>
+        : <String, dynamic>{};
+    final claim = lastEntry['data'] as Map<String, dynamic>? ?? {};
     final images = claim.values
         .whereType<String>()
         .where((val) => val.contains('/'))
@@ -336,16 +339,18 @@ class _CommentsView extends ConsumerWidget {
             child: FutureBuilder<List<Map<String, dynamic>>>(
               future: repository.getVerificationComments(submissionId),
               builder: (context, snapshot) {
-                if (!snapshot.hasData) {
+                // Fix #382: snapshot.data null 안전성 확보 — hasData가 true여도 data가 null일 수 있음
+                final comments = snapshot.data;
+                if (comments == null) {
                   return const MinglitCircularProgressIndicator();
                 }
-                final comments = snapshot.data!;
                 return ListView.builder(
                   itemCount: comments.length,
                   itemBuilder: (context, i) {
+                    // Fix #404: Use currentUserProvider instead of direct Supabase auth access
                     final isPartner =
                         comments[i]['author_id'] ==
-                        Supabase.instance.client.auth.currentUser?.id;
+                        ref.read(currentUserProvider)?.id;
                     final content =
                         comments[i]['content'] as Map<String, dynamic>;
                     final text = content['text'] as String? ?? '';

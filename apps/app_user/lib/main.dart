@@ -19,6 +19,8 @@ Future<void> main() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
+  EnvKeyStore.validate();
+
   const sentryDsn = String.fromEnvironment('SENTRY_DSN');
   const environment = String.fromEnvironment(
     'ENVIRONMENT',
@@ -66,7 +68,9 @@ Future<void> main() async {
             Sentry.captureException(error, stackTrace: stackTrace),
       ),
     );
-  } on Object catch (_) {
+  } on Object catch (e, st) {
+    // Fix #270: 초기화 에러 로깅 — 에러 삼킴 방지
+    debugPrint('Sentry init failed: $e\n$st');
     startApp();
   }
 }
@@ -93,6 +97,28 @@ Future<void> appStartup(Ref ref) async {
   } on Exception catch (e) {
     Log.e('App startup warning', e);
   }
+
+  const statsigClientKey = String.fromEnvironment('STATSIG_CLIENT_KEY');
+  const environment = String.fromEnvironment(
+    'ENVIRONMENT',
+    defaultValue: 'local',
+  );
+  await StatsigAnalytics.initialize(statsigClientKey, tier: environment);
+  StatsigAnalytics.logEvent(MingLitEvent.appOpened);
+
+  // Sync Statsig user context with auth state changes
+  ref.listen(authStateChangesProvider, (_, next) {
+    next.whenData((authState) {
+      final userId = authState.session?.user.id;
+      if (userId != null) {
+        unawaited(StatsigAnalytics.updateUser(userId));
+      } else {
+        // Fix #155: shutdown() kills _initialized flag, blocking all future events.
+        // Reset to anonymous instead of shutting down the SDK.
+        unawaited(StatsigAnalytics.updateUser(''));
+      }
+    });
+  });
 }
 
 class MinglitApp extends StatelessWidget {
@@ -139,7 +165,10 @@ class _AppView extends ConsumerWidget {
           value: startupState,
           data: (_) => BugReporterWrapper(
             navigatorKey: rootNavigatorKey,
-            child: MinglitGlobalLoadingOverlay(child: child!),
+            // Fix #382: child 강제 언래핑 제거 — nullable child에 fallback 추가
+            child: MinglitGlobalLoadingOverlay(
+              child: child ?? const SizedBox.shrink(),
+            ),
           ),
           // Hidden behind native splash — show nothing.
           loading: () => const SizedBox.shrink(),

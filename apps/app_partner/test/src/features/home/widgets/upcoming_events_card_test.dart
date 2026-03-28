@@ -152,7 +152,7 @@ void main() {
       expect(find.text('예정된 이벤트가 없습니다'), findsNothing);
     });
 
-    testWidgets('shows chevron_right icon for each event', (tester) async {
+    testWidgets('shows schedule icon for each event card', (tester) async {
       final now = DateTime.now();
       final events = [
         Event(
@@ -181,7 +181,8 @@ void main() {
           ),
         ),
       );
-      expect(find.byIcon(Icons.chevron_right), findsNWidgets(2));
+      // Fix #185: 카드 레이아웃 변경으로 chevron_right → schedule 아이콘
+      expect(find.byIcon(Icons.schedule), findsNWidgets(2));
     });
   });
 }

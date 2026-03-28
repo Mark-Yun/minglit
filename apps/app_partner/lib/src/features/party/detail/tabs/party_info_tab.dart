@@ -20,7 +20,9 @@ class PartyInfoTab extends ConsumerWidget {
     final locationAsync = ref.watch(locationDetailProvider(party.locationId));
     final coordinator = ref.read(partyDetailCoordinatorProvider);
 
+    // Fix #142: Add padding to match PartyRuleManagementTab
     return SingleChildScrollView(
+      padding: const EdgeInsets.all(MinglitSpacing.medium),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -7,43 +7,23 @@ part of 'app_routes.dart';
 // **************************************************************************
 
 List<RouteBase> get $appRoutes => [
-  $devRoute,
   $devUserSwitchRoute,
   $loginRoute,
   $authCallbackRoute,
   $eventDetailRoute,
   $partnerDetailRoute,
+  $partnerEventsRoute,
   $certificationRoute,
   $eventApplicationRoute,
   $purchaseHistoryRoute,
   $notificationCenterRoute,
   $notificationSettingsRoute,
-  $userShellRoute,
+  $homeRoute,
   $searchRoute,
+  $myPageRoute,
+  $privacyRoute,
+  $blockedPartnersRoute,
 ];
-
-RouteBase get $devRoute =>
-    GoRouteData.$route(path: '/dev', factory: $DevRoute._fromState);
-
-mixin $DevRoute on GoRouteData {
-  static DevRoute _fromState(GoRouterState state) => const DevRoute();
-
-  @override
-  String get location => GoRouteData.$location('/dev');
-
-  @override
-  void go(BuildContext context) => context.go(location);
-
-  @override
-  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
-
-  @override
-  void pushReplacement(BuildContext context) =>
-      context.pushReplacement(location);
-
-  @override
-  void replace(BuildContext context) => context.replace(location);
-}
 
 RouteBase get $devUserSwitchRoute => GoRouteData.$route(
   path: '/dev/switch',
@@ -169,6 +149,40 @@ mixin $PartnerDetailRoute on GoRouteData {
   @override
   String get location => GoRouteData.$location(
     '/partners/${Uri.encodeComponent(_self.partnerId)}',
+  );
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $partnerEventsRoute => GoRouteData.$route(
+  path: '/partners/:partnerId/events',
+  factory: $PartnerEventsRoute._fromState,
+);
+
+mixin $PartnerEventsRoute on GoRouteData {
+  static PartnerEventsRoute _fromState(GoRouterState state) =>
+      PartnerEventsRoute(
+        partnerId: state.pathParameters['partnerId']!,
+        partnerName: state.uri.queryParameters['partner-name']!,
+      );
+
+  PartnerEventsRoute get _self => this as PartnerEventsRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/partners/${Uri.encodeComponent(_self.partnerId)}/events',
+    queryParams: {'partner-name': _self.partnerName},
   );
 
   @override
@@ -323,35 +337,16 @@ mixin $NotificationSettingsRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
-RouteBase get $userShellRoute => StatefulShellRouteData.$route(
-  factory: $UserShellRouteExtension._fromState,
-  branches: [
-    StatefulShellBranchData.$branch(
-      routes: [
-        GoRouteData.$route(
-          path: '/',
-          factory: $HomeRoute._fromState,
-          routes: [
-            GoRouteData.$route(
-              path: 'curation',
-              factory: $EventCurationRoute._fromState,
-            ),
-          ],
-        ),
-      ],
-    ),
-    StatefulShellBranchData.$branch(
-      routes: [
-        GoRouteData.$route(path: '/my', factory: $MyPageRoute._fromState),
-      ],
+RouteBase get $homeRoute => GoRouteData.$route(
+  path: '/',
+  factory: $HomeRoute._fromState,
+  routes: [
+    GoRouteData.$route(
+      path: 'curation',
+      factory: $EventCurationRoute._fromState,
     ),
   ],
 );
-
-extension $UserShellRouteExtension on UserShellRoute {
-  static UserShellRoute _fromState(GoRouterState state) =>
-      const UserShellRoute();
-}
 
 mixin $HomeRoute on GoRouteData {
   static HomeRoute _fromState(GoRouterState state) => const HomeRoute();
@@ -418,26 +413,6 @@ const _$EventFeedTypeEnumMap = {
   EventFeedType.aiRecommended: 'ai-recommended',
 };
 
-mixin $MyPageRoute on GoRouteData {
-  static MyPageRoute _fromState(GoRouterState state) => const MyPageRoute();
-
-  @override
-  String get location => GoRouteData.$location('/my');
-
-  @override
-  void go(BuildContext context) => context.go(location);
-
-  @override
-  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
-
-  @override
-  void pushReplacement(BuildContext context) =>
-      context.pushReplacement(location);
-
-  @override
-  void replace(BuildContext context) => context.replace(location);
-}
-
 T? _$convertMapValue<T>(
   String key,
   Map<String, String> map,
@@ -460,6 +435,78 @@ mixin $SearchRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/search');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $myPageRoute =>
+    GoRouteData.$route(path: '/my', factory: $MyPageRoute._fromState);
+
+mixin $MyPageRoute on GoRouteData {
+  static MyPageRoute _fromState(GoRouterState state) => const MyPageRoute();
+
+  @override
+  String get location => GoRouteData.$location('/my');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $privacyRoute =>
+    GoRouteData.$route(path: '/my/privacy', factory: $PrivacyRoute._fromState);
+
+mixin $PrivacyRoute on GoRouteData {
+  static PrivacyRoute _fromState(GoRouterState state) => const PrivacyRoute();
+
+  @override
+  String get location => GoRouteData.$location('/my/privacy');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $blockedPartnersRoute => GoRouteData.$route(
+  path: '/my/blocked-partners',
+  factory: $BlockedPartnersRoute._fromState,
+);
+
+mixin $BlockedPartnersRoute on GoRouteData {
+  static BlockedPartnersRoute _fromState(GoRouterState state) =>
+      const BlockedPartnersRoute();
+
+  @override
+  String get location => GoRouteData.$location('/my/blocked-partners');
 
   @override
   void go(BuildContext context) => context.go(location);

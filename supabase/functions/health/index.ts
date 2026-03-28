@@ -1,4 +1,8 @@
 import { successResponse, errorResponse } from "../_shared/response_utils.ts";
+import { initSentry, withHandler } from "../_shared/logger.ts";
+import { checkAllFunctions } from "../_shared/env_keystore.ts";
+
+initSentry();
 
 interface CheckResult {
   status: "up" | "down";
@@ -108,10 +112,13 @@ async function checkStorage(): Promise<CheckResult> {
   }
 }
 
-Deno.serve(async (req) => {
+Deno.serve(withHandler(async (req) => {
   if (req.method !== "GET") {
     return errorResponse("Method not allowed", 405);
   }
+
+  const url = new URL(req.url);
+  const includeEnv = url.searchParams.get("env") === "true";
 
   const [database, auth, storage] = await Promise.all([
     checkDatabase(),
@@ -124,7 +131,7 @@ Deno.serve(async (req) => {
     auth.status === "up" &&
     storage.status === "up";
 
-  const body = {
+  const body: Record<string, unknown> = {
     status: allUp ? "healthy" : "unhealthy",
     timestamp: new Date().toISOString(),
     checks: {
@@ -134,8 +141,19 @@ Deno.serve(async (req) => {
     },
   };
 
+  // env-check: report missing env vars per function (key names only, no values)
+  if (includeEnv) {
+    const missingByFunction = checkAllFunctions();
+    const totalMissing = Object.values(missingByFunction).flat().length;
+    body.env_check = {
+      status: totalMissing === 0 ? "ok" : "missing",
+      total_missing: totalMissing,
+      by_function: missingByFunction,
+    };
+  }
+
   if (allUp) {
-    return successResponse(body as unknown as Record<string, unknown>, 200);
+    return successResponse(body, 200);
   }
   return errorResponse("unhealthy", 503, body);
-});
+}));

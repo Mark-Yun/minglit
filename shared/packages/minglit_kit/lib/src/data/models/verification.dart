@@ -35,13 +35,6 @@ enum VerificationStatus {
 
   /// Submission was rejected.
   rejected,
-
-  /// Submission requires user corrections.
-  @JsonValue('needs_correction')
-  needsCorrection,
-
-  /// Submission was cancelled.
-  cancelled,
 }
 
 /// Represents a single field definition in the dynamic form schema.
@@ -90,7 +83,8 @@ abstract class Verification with _$Verification {
 
     /// Partner ID who owns this verification. Null means Global/System verification.
     @JsonKey(name: 'partner_id') String? partnerId,
-    // Fix #42: Handle nullable DB fields — description and icon_key can be null in verifications table
+    // Fix #42: Handle nullable DB fields — description and icon_key can be
+    // null in verifications table
     String? description,
 
     /// Icon identifier (e.g., 'briefcase').
@@ -100,7 +94,6 @@ abstract class Verification with _$Verification {
     @JsonKey(name: 'form_schema')
     @Default([])
     List<VerificationFormField> formSchema,
-
     @JsonKey(name: 'is_active') @Default(true) bool isActive,
     @JsonKey(name: 'created_at') DateTime? createdAt,
   }) = _Verification;

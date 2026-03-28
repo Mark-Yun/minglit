@@ -1,0 +1,145 @@
+{
+  "version": "1.0",
+
+  "flutter": {
+    "required": {
+      "SUPABASE_URL": { "desc": "Supabase project URL" },
+      "SUPABASE_PUBLISHABLE_KEY": { "desc": "Supabase publishable key" },
+      "ENVIRONMENT": { "desc": "local / development / production" }
+    },
+    "optional": {
+      "SENTRY_DSN": { "desc": "Sentry error tracking" },
+      "STATSIG_CLIENT_KEY": { "desc": "Statsig feature flags" },
+      "GOOGLE_WEB_CLIENT_ID": { "desc": "Google OAuth client ID" },
+      "KAKAO_LOCAL_REST_API_KEY": { "desc": "Kakao Local REST API" },
+      "KAKAO_MAP_JAVASCRIPT_KEY": { "desc": "Kakao Map JS key" },
+      "JUSO_CONFIRM_KEY": { "desc": "주소 API 확인키" },
+      "IAMPORT_USER_CODE": { "desc": "PortOne identity verification" },
+      "MOBILE_REDIRECT_SCHEME": { "desc": "OAuth redirect scheme" }
+    }
+  },
+
+  "edge_functions": {
+    "common": {
+      "required": {
+        "SUPABASE_URL": { "desc": "Supabase project URL (auto-injected)" },
+        "SUPABASE_SERVICE_ROLE_KEY": { "desc": "Service role JWT (auto-injected)" }
+      },
+      "optional": {
+        "SENTRY_DSN": { "desc": "Sentry error tracking" },
+        "AXIOM_API_TOKEN": { "desc": "Axiom structured logging" },
+        "AXIOM_DATASET": { "desc": "Axiom dataset name" },
+        "ENVIRONMENT": { "desc": "Runtime environment" },
+        "STATSIG_SERVER_KEY": { "desc": "Statsig server-side" }
+      }
+    },
+    "functions": {
+      "notification-worker": {
+        "required": { "FIREBASE_SERVICE_ACCOUNT": { "desc": "FCM push notifications" } }
+      },
+      "payment-verify": {
+        "required": {
+          "PORTONE_API_KEY": { "desc": "PortOne V1 API key" },
+          "PORTONE_API_SECRET": { "desc": "PortOne V1 API secret" }
+        }
+      },
+      "payment-cancel": {
+        "required": {
+          "PORTONE_API_KEY": { "desc": "PortOne V1 API key" },
+          "PORTONE_API_SECRET": { "desc": "PortOne V1 API secret" }
+        }
+      },
+      "user-cancel-order": {
+        "required": {
+          "PORTONE_API_KEY": { "desc": "PortOne V1 API key" },
+          "PORTONE_API_SECRET": { "desc": "PortOne V1 API secret" }
+        }
+      },
+      "payment-webhook": {
+        "required": {
+          "PORTONE_API_KEY": { "desc": "PortOne V1 API key" },
+          "PORTONE_API_SECRET": { "desc": "PortOne V1 API secret" }
+        }
+      },
+      "settlement-register-transfers": {
+        "required": { "PORTONE_V2_API_KEY": { "desc": "PortOne V2 API key" } }
+      },
+      "payout-sync": {
+        "required": { "PORTONE_V2_API_KEY": { "desc": "PortOne V2 API key" } }
+      },
+      "partner-sync": {
+        "required": { "PORTONE_V2_API_KEY": { "desc": "PortOne V2 API key" } }
+      },
+      "identity-verify": {
+        "required": { "PORTONE_V2_API_KEY": { "desc": "PortOne V2 API key" } }
+      },
+      "reconciliation-daily": {
+        "required": { "PORTONE_V2_API_KEY": { "desc": "PortOne V2 API key" } }
+      },
+      "vector-worker": {
+        "required": { "OPENAI_API_KEY": { "desc": "OpenAI embedding API" } }
+      },
+      "bug-report": {
+        "required": { "GITHUB_ACCESS_TOKEN": { "desc": "GitHub issue creation" } }
+      },
+      "metrics-alert": {
+        "required": { "GITHUB_ACCESS_TOKEN": { "desc": "GitHub issue creation" } }
+      },
+      "github-stats-sync": {
+        "optional": { "GITHUB_ACCESS_TOKEN": { "desc": "GitHub API (higher rate limit)" } }
+      },
+      "backend-simulator": {
+        "required": { "ENVIRONMENT": { "desc": "Dev guard (must be development)" } }
+      }
+    }
+  },
+
+  "nextjs": {
+    "landing_user": {
+      "required": {
+        "NEXT_PUBLIC_SUPABASE_URL": { "desc": "Supabase URL" },
+        "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY": { "desc": "Publishable key" }
+      },
+      "optional": {
+        "NEXT_PUBLIC_STATSIG_CLIENT_KEY": { "desc": "Statsig client-side" }
+      }
+    },
+    "landing_partner": {
+      "required": {
+        "NEXT_PUBLIC_SUPABASE_URL": { "desc": "Supabase URL" },
+        "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY": { "desc": "Publishable key" }
+      },
+      "optional": {
+        "NEXT_PUBLIC_STATSIG_CLIENT_KEY": { "desc": "Statsig client-side" }
+      }
+    }
+  },
+
+  "github_secrets": {
+    "required": {
+      "SUPABASE_ACCESS_TOKEN": { "desc": "Supabase CLI auth" },
+      "SUPABASE_DEV_DB_PASSWORD": { "desc": "Dev DB password" },
+      "SUPABASE_DEV_PROJECT_ID": { "desc": "Dev project ref" },
+      "SUPABASE_DEV_PUBLISHABLE_KEY": { "desc": "Dev publishable key" },
+      "SUPABASE_DEV_SECRET_KEY": { "desc": "Dev service role key" },
+      "SUPABASE_MAIN_DB_PASSWORD": { "desc": "Main DB password" },
+      "SUPABASE_MAIN_PROJECT_ID": { "desc": "Main project ref" },
+      "SUPABASE_MAIN_PUBLISHABLE_KEY": { "desc": "Main publishable key" },
+      "OPENAI_API_KEY": { "desc": "OpenAI API" },
+      "GH_PAT_FOR_BUG_REPORT": { "desc": "GitHub PAT for issues" },
+      "SENTRY_DSN_EDGE_FUNCTIONS": { "desc": "Sentry DSN for EF" }
+    },
+    "optional": {
+      "STATSIG_SERVER_KEY": { "desc": "Statsig server" },
+      "AXIOM_API_TOKEN": { "desc": "Axiom logging" },
+      "CODECOV_TOKEN": { "desc": "Codecov upload" }
+    }
+  },
+
+  "vault": {
+    "required": {
+      "publishable_key": { "desc": "Legacy anon JWT for pg_cron -> EF auth" },
+      "supabase_url": { "desc": "Project URL for pg_cron -> EF calls" }
+    }
+  }
+}

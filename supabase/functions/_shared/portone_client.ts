@@ -51,6 +51,33 @@ export interface PortonePageFilter {
   size?: number;
 }
 
+export interface PortonePayoutRequest {
+  bulkPayoutId?: string;
+  name?: string;
+  partnerSettlementIds: string[];
+  isForTest?: boolean;
+  [key: string]: unknown;
+}
+
+export interface PortonePayoutResponse {
+  bulkPayoutId?: string;
+  bulkPayoutGraphqlId?: string;
+  payoutCount?: number;
+  [key: string]: unknown;
+}
+
+export interface PortoneTransfer {
+  type?: string;
+  id?: string;
+  graphqlId?: string;
+  partnerId?: string;
+  status?: string;
+  settlementDate?: string;
+  settlementAmount?: number;
+  currency?: string;
+  [key: string]: unknown;
+}
+
 export class PortoneV2Client {
   private apiKey: string;
   private baseUrl = Deno.env.get('PORTONE_V2_API_URL') || "https://api.portone.io";
@@ -199,6 +226,63 @@ export class PortoneV2Client {
         "Authorization": `PortOne ${this.apiKey}`,
         "Content-Type": "application/json",
       },
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(JSON.stringify(errorData));
+    }
+    return await response.json();
+  }
+
+  async requestPayout(params: PortonePayoutRequest): Promise<PortonePayoutResponse> {
+    const response = await fetch(`${this.baseUrl}/platform/partner-settlements/complete-payout`, {
+      method: "POST",
+      headers: {
+        "Authorization": `PortOne ${this.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(params),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(JSON.stringify(errorData));
+    }
+    return await response.json();
+  }
+
+  async getPayoutDetail(payoutId: string): Promise<PortonePayout> {
+    const response = await fetch(`${this.baseUrl}/platform/payouts/${payoutId}`, {
+      method: "GET",
+      headers: {
+        "Authorization": `PortOne ${this.apiKey}`,
+        "Content-Type": "application/json",
+      },
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(JSON.stringify(errorData));
+    }
+    return await response.json();
+  }
+
+  async getPartnerTransfers(filter?: {
+    partnerId?: string;
+    page?: PortonePageFilter;
+  }): Promise<{ transferSummaries: PortoneTransfer[]; page: Record<string, unknown> }> {
+    const body: Record<string, unknown> = {};
+    if (filter?.page) {
+      body.page = filter.page;
+    }
+    if (filter?.partnerId) {
+      body.filter = { partnerIds: [filter.partnerId] };
+    }
+    const response = await fetch(`${this.baseUrl}/platform/transfer-summaries`, {
+      method: "GET",
+      headers: {
+        "Authorization": `PortOne ${this.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
     });
     if (!response.ok) {
       const errorData = await response.json();

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/data/models/social_interaction.dart';
 import 'package:minglit_kit/src/features/social/logic/social_interaction_controller.dart';
+import 'package:minglit_kit/src/theme/minglit_text_theme_extension.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
@@ -17,6 +18,7 @@ class MinglitSocialButton extends ConsumerWidget {
     this.inactiveColor,
     this.iconSize = MinglitIconSize.medium,
     this.tooltip,
+    this.label,
     super.key,
   });
 
@@ -40,6 +42,9 @@ class MinglitSocialButton extends ConsumerWidget {
 
   /// Tooltip text shown on long press. Defaults to interaction type label.
   final String? tooltip;
+
+  /// Optional text label displayed next to the icon.
+  final String? label;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -69,21 +74,46 @@ class MinglitSocialButton extends ConsumerWidget {
         ? (activeColor ?? _getDefaultActiveColor(theme))
         : (inactiveColor ?? theme.colorScheme.onSurfaceVariant);
 
+    void onPressed() => ref
+        .read(
+          socialInteractionControllerProvider(
+            targetId: targetId,
+            targetType: targetType,
+            interactionType: interactionType,
+          ).notifier,
+        )
+        .toggle();
+
+    final icon = Icon(
+      _getIcon(isActive),
+      color: color,
+      size: iconSize,
+    );
+
+    if (label != null) {
+      // Fix #474: fontSize 13 → ThemeExtension chipLabel
+      final ext = Theme.of(context).extension<MinglitTextThemeExtension>()!;
+      return TextButton.icon(
+        onPressed: onPressed,
+        icon: icon,
+        label: Text(
+          label!,
+          style: ext.chipLabel.copyWith(color: color),
+        ),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(
+            horizontal: MinglitSpacing.small,
+            vertical: MinglitSpacing.xxsmall,
+          ),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+      );
+    }
+
     return IconButton(
-      onPressed: () => ref
-          .read(
-            socialInteractionControllerProvider(
-              targetId: targetId,
-              targetType: targetType,
-              interactionType: interactionType,
-            ).notifier,
-          )
-          .toggle(),
-      icon: Icon(
-        _getIcon(isActive),
-        color: color,
-        size: iconSize,
-      ),
+      onPressed: onPressed,
+      icon: icon,
       tooltip: tooltip ?? _getDefaultTooltip(),
       constraints: const BoxConstraints(),
       padding: const EdgeInsets.all(MinglitSpacing.xxsmall),
@@ -120,6 +150,8 @@ class MinglitSocialButton extends ConsumerWidget {
         isActive ? Icons.bookmark : Icons.bookmark_border,
       SocialInteractionType.block => Icons.block,
       SocialInteractionType.report => Icons.flag,
+      SocialInteractionType.dislike =>
+        isActive ? Icons.thumb_down : Icons.thumb_down_outlined,
     };
   }
 
@@ -128,6 +160,7 @@ class MinglitSocialButton extends ConsumerWidget {
       SocialInteractionType.like => theme.colorScheme.error,
       SocialInteractionType.subscribe => theme.colorScheme.secondary,
       SocialInteractionType.bookmark => theme.colorScheme.primary,
+      SocialInteractionType.dislike => theme.colorScheme.onSurfaceVariant,
       _ => theme.colorScheme.primary,
     };
   }
@@ -139,6 +172,7 @@ class MinglitSocialButton extends ConsumerWidget {
       SocialInteractionType.bookmark => '저장',
       SocialInteractionType.block => '차단',
       SocialInteractionType.report => '신고',
+      SocialInteractionType.dislike => '싫어요',
     };
   }
 }

@@ -60,8 +60,29 @@ class _AddressSearchDialogState extends State<AddressSearchDialog> {
       client.close();
 
       final decoded = jsonDecode(body) as Map<String, dynamic>;
-      final results = decoded['results'] as Map<String, dynamic>;
-      final common = results['common'] as Map<String, dynamic>;
+      // Fix #270: 외부 API 응답 안전 캐스팅 — API 변경 시 TypeError 방지
+      final results = decoded['results'];
+      if (results is! Map<String, dynamic>) {
+        if (mounted) {
+          setState(() {
+            _errorMessage = '주소 검색 응답 형식이 올바르지 않습니다';
+            _results = [];
+            _isLoading = false;
+          });
+        }
+        return;
+      }
+      final common = results['common'];
+      if (common is! Map<String, dynamic>) {
+        if (mounted) {
+          setState(() {
+            _errorMessage = '주소 검색 응답 형식이 올바르지 않습니다';
+            _results = [];
+            _isLoading = false;
+          });
+        }
+        return;
+      }
       final errorCode = common['errorCode'] as String? ?? '';
 
       if (errorCode != '0') {
@@ -126,7 +147,7 @@ class _AddressSearchDialogState extends State<AddressSearchDialog> {
                     onSubmitted: (_) => _search(),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: MinglitSpacing.small),
                 IconButton.filled(
                   icon: const Icon(Icons.search),
                   onPressed: _search,

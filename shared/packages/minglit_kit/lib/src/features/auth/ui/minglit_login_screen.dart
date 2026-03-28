@@ -16,7 +16,7 @@ class MinglitLoginScreen extends ConsumerWidget {
     this.onKakaoSignIn,
     this.onVerifyIdentity,
     this.isPartner = false,
-    this.onDevMapTrigger,
+    this.onDevTrigger,
   });
 
   /// Callback when Google sign-in is pressed.
@@ -34,8 +34,8 @@ class MinglitLoginScreen extends ConsumerWidget {
   /// Whether this is for the Partner app (theme adjustment).
   final bool isPartner;
 
-  /// Callback to trigger DevMap (hidden gesture). Null in production.
-  final VoidCallback? onDevMapTrigger;
+  /// Callback for hidden dev trigger (5-tap logo). Null in production.
+  final VoidCallback? onDevTrigger;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -65,8 +65,8 @@ class MinglitLoginScreen extends ConsumerWidget {
             children: [
               const Spacer(),
               // 1. Logo & Slogan
-              if (onDevMapTrigger != null)
-                _DevTriggerLogo(onTrigger: onDevMapTrigger!)
+              if (onDevTrigger != null)
+                _DevTriggerLogo(onTrigger: onDevTrigger!)
               else
                 const MinglitImage(
                   path:
@@ -82,7 +82,7 @@ class MinglitLoginScreen extends ConsumerWidget {
                     letterSpacing: 2,
                   ),
                 ),
-              const SizedBox(height: 16),
+              const SizedBox(height: MinglitSpacing.medium),
               Text(
                 slogan,
                 textAlign: TextAlign.center,
@@ -104,7 +104,7 @@ class MinglitLoginScreen extends ConsumerWidget {
                 borderColor: theme.colorScheme.outlineVariant,
               ),
               if (onAppleSignIn != null) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: MinglitSpacing.sm),
                 _LoginButton(
                   onPressed: onAppleSignIn,
                   icon: Icons.apple,
@@ -113,7 +113,7 @@ class MinglitLoginScreen extends ConsumerWidget {
                   foregroundColor: MinglitColors.background,
                 ),
               ],
-              const SizedBox(height: 12),
+              const SizedBox(height: MinglitSpacing.sm),
               _LoginButton(
                 onPressed: onKakaoSignIn,
                 icon: Icons.chat_bubble,
@@ -124,14 +124,14 @@ class MinglitLoginScreen extends ConsumerWidget {
                 ),
               ),
               if (!isPartner && onVerifyIdentity != null) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: MinglitSpacing.sm),
                 TextButton.icon(
                   onPressed: onVerifyIdentity,
                   icon: const Icon(Icons.verified_user_outlined, size: 18),
                   label: const Text('본인인증 테스트'),
                 ),
               ],
-              const SizedBox(height: 12),
+              const SizedBox(height: MinglitSpacing.sm),
               if (isPartner) ...[
                 TextButton(
                   onPressed: () => _launchUrl(urlConfig.partnerInquiryUrl),
@@ -167,7 +167,7 @@ class MinglitLoginScreen extends ConsumerWidget {
                   ),
                 ),
               ],
-              const SizedBox(height: 48),
+              const SizedBox(height: MinglitSpacing.xxlarge),
             ],
           ),
         ),
@@ -264,7 +264,7 @@ class _LoginButton extends StatelessWidget {
                 child: Icon(icon, size: 20, color: foregroundColor),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: MinglitSpacing.small),
             Text(
               label,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(

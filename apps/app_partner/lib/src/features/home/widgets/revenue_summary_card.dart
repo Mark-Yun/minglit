@@ -1,20 +1,37 @@
-import 'package:app_partner/src/routing/app_routes.dart';
+import 'package:app_partner/src/features/settlement/settlement_coordinator.dart';
+import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-/// Revenue summary card — retained for future use in revenue management tab.
-/// Currently not used in any page after dashboard redesign.
-class RevenueSummaryCard extends StatelessWidget {
+part 'revenue_summary_card.g.dart';
+
+/// Loads current month net settlement amount from SettlementRepository.
+@riverpod
+Future<int> currentMonthNet(Ref ref) async {
+  final partner = await ref.read(currentPartnerInfoProvider.future);
+  if (partner == null) return 0;
+  final now = DateTime.now();
+  final repo = ref.read(settlementRepositoryProvider);
+  final data = await repo.getSettlementDashboard(
+    partnerId: partner.id,
+    periodStart: DateTime(now.year, now.month),
+    periodEnd: DateTime(now.year, now.month + 1, 0),
+  );
+  return data['completed_net_total'] as int? ?? 0;
+}
+
+/// Revenue summary card — displays current month net settlement amount.
+class RevenueSummaryCard extends ConsumerWidget {
   const RevenueSummaryCard({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final formatter = NumberFormat.currency(locale: 'ko_KR', symbol: '₩');
-
-    const currentMonthNet = 0;
+    final currentMonthNetAsync = ref.watch(currentMonthNetProvider);
 
     return Card(
       elevation: 0,
@@ -23,7 +40,8 @@ class RevenueSummaryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(MinglitRadius.card),
       ),
       child: InkWell(
-        onTap: () => const SettlementRoute().push<void>(context),
+        onTap: () =>
+            ref.read(settlementCoordinatorProvider.notifier).goToSettlement(),
         borderRadius: BorderRadius.circular(MinglitRadius.card),
         child: Padding(
           padding: const EdgeInsets.all(MinglitSpacing.large),
@@ -46,12 +64,31 @@ class RevenueSummaryCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                formatter.format(currentMonthNet),
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.primary,
+              const SizedBox(height: MinglitSpacing.small),
+              currentMonthNetAsync.when(
+                data: (amount) => Text(
+                  formatter.format(amount),
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                loading: () => SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      colorScheme.primary,
+                    ),
+                  ),
+                ),
+                error: (error, stackTrace) => Text(
+                  formatter.format(0),
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
                 ),
               ),
             ],

@@ -8,6 +8,8 @@
 
 # AI agent workspace
 .sisyphus/
+.claude/
+.omc/
 
 # Local scripts
 **/run_local.sh
@@ -16,6 +18,10 @@
 logs/
 *.log.gz
 *-audit.json
+
+# Allure
+allure-results/
+allure-report/
 
 # Flutter / Dart
 **/.dart_tool/
@@ -67,6 +73,10 @@ shared/assets/images/*.zip
 **/out/
 **/dist/
 **/.vercel/
+
+# env-manifest.json copies (CI copies root manifest into each app before Vercel deploy)
+apps/landing_user/env-manifest.json
+apps/landing_partner/env-manifest.json
 
 # Testing
 **/coverage/

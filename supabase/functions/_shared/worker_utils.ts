@@ -1,4 +1,4 @@
-import { SupabaseClient } from '@supabase/supabase-js'
+import { SupabaseClient } from 'jsr:@supabase/supabase-js@2'
 
 export class WorkerUtils {
   constructor(private supabase: SupabaseClient, private queueName: string) {}

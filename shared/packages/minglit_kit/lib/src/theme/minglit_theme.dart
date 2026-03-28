@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:minglit_kit/src/theme/minglit_text_theme_extension.dart';
 
 part 'minglit_design_tokens.dart';
 part 'minglit_design_utils.dart';
@@ -31,9 +32,9 @@ class MinglitTheme {
       titleSpacing: 0,
       title: Row(
         children: [
-          const SizedBox(width: 16),
+          const SizedBox(width: MinglitSpacing.medium),
           appBarLogo(height: 36),
-          const SizedBox(width: 12),
+          const SizedBox(width: MinglitSpacing.sm),
           Expanded(child: Text(title, overflow: TextOverflow.ellipsis)),
         ],
       ),
@@ -103,7 +104,33 @@ class MinglitTheme {
           fontSize: 16,
           color: MinglitColors.textSecondary,
         ),
+        // Fix #474: 빈 슬롯 채우기 — 하드코딩 fontSize 흡수
+        bodySmall: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 12,
+          color: MinglitColors.textSecondary,
+        ),
+        labelLarge: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: MinglitColors.textPrimary,
+        ),
+        labelMedium: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: MinglitColors.textPrimary,
+        ),
+        labelSmall: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: MinglitColors.textPrimary,
+        ),
       ),
+      // Fix #474: ThemeExtension 등록
+      extensions: const [MinglitTextThemeExtension.light],
       // Layer 2: 컴포넌트 테마 (see minglit_component_theme.dart)
       appBarTheme: _MinglitComponentThemes.appBar,
       elevatedButtonTheme: _MinglitComponentThemes.elevatedButton,
@@ -117,6 +144,134 @@ class MinglitTheme {
       dividerTheme: _MinglitComponentThemes.divider,
     );
   }
+
+  /// Partner app light theme — same structure, different primary color.
+  static ThemeData get partnerTheme {
+    final base = materialTheme;
+    return base.copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: MinglitPartnerColors.primary,
+        primary: MinglitPartnerColors.primary,
+        secondary: MinglitColors.secondary,
+        tertiary: MinglitColors.tertiary,
+        surface: MinglitColors.background,
+        error: MinglitColors.error,
+        onSurfaceVariant: MinglitColors.textSecondary,
+      ),
+      elevatedButtonTheme: _partnerElevatedButton(MinglitPartnerColors.primary),
+      outlinedButtonTheme: _partnerOutlinedButton(MinglitPartnerColors.primary),
+      textButtonTheme: _partnerTextButton(MinglitPartnerColors.primary),
+      // inputDecorationTheme: skipped — InputDecorationTheme.copyWith returns
+      // InputDecorationThemeData which is incompatible with ThemeData.copyWith
+      // in Flutter 3.41+. The focusedBorder uses colorScheme.primary via M3.
+      tabBarTheme: _partnerTabBar(
+        MinglitPartnerColors.primary,
+        base.tabBarTheme,
+      ),
+      chipTheme: base.chipTheme.copyWith(
+        secondarySelectedColor: MinglitPartnerColors.primary,
+      ),
+      checkboxTheme: _partnerCheckbox(MinglitPartnerColors.primary),
+    );
+  }
+
+  /// Partner app dark theme.
+  static ThemeData get partnerThemeDark {
+    final base = materialThemeDark;
+    return base.copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: MinglitPartnerColorsDark.primary,
+        brightness: Brightness.dark,
+        primary: MinglitPartnerColorsDark.primary,
+        secondary: MinglitColorsDark.secondary,
+        tertiary: MinglitColorsDark.tertiary,
+        surface: MinglitColorsDark.surface,
+        error: MinglitColorsDark.error,
+        onSurfaceVariant: MinglitColorsDark.textSecondary,
+      ),
+      elevatedButtonTheme: _partnerElevatedButton(
+        MinglitPartnerColorsDark.primary,
+      ),
+      outlinedButtonTheme: _partnerOutlinedButton(
+        MinglitPartnerColorsDark.primary,
+      ),
+      textButtonTheme: _partnerTextButton(MinglitPartnerColorsDark.primary),
+      // inputDecorationTheme: skipped — same Flutter 3.41+ type issue.
+      tabBarTheme: _partnerTabBar(
+        MinglitPartnerColorsDark.primary,
+        base.tabBarTheme,
+      ),
+      chipTheme: base.chipTheme.copyWith(
+        secondarySelectedColor: MinglitPartnerColorsDark.primary,
+      ),
+      checkboxTheme: _partnerCheckbox(MinglitPartnerColorsDark.primary),
+    );
+  }
+
+  // -- Partner component theme helpers --
+
+  static ElevatedButtonThemeData _partnerElevatedButton(Color primary) =>
+      ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primary,
+          foregroundColor: Colors
+              .white, // ignore: minglit_no_hardcoded_colors -- theme definition
+          minimumSize: const Size(double.infinity, 56),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(MinglitRadius.button),
+          ),
+          elevation: 0,
+          textStyle: const TextStyle(
+            // ignore: minglit_no_hardcoded_text_style -- theme definition
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+
+  static OutlinedButtonThemeData _partnerOutlinedButton(Color primary) =>
+      OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: primary,
+          minimumSize: const Size(double.infinity, 56),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(MinglitRadius.button),
+          ),
+          side: BorderSide(color: primary),
+          textStyle: const TextStyle(
+            // ignore: minglit_no_hardcoded_text_style -- theme definition
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+
+  static TextButtonThemeData _partnerTextButton(Color primary) =>
+      TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: primary,
+          textStyle: const TextStyle(
+            // ignore: minglit_no_hardcoded_text_style -- theme definition
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+
+  static TabBarThemeData _partnerTabBar(Color primary, TabBarThemeData base) =>
+      base.copyWith(labelColor: primary, indicatorColor: primary);
+
+  static CheckboxThemeData _partnerCheckbox(Color primary) => CheckboxThemeData(
+    fillColor: WidgetStateProperty.resolveWith((states) {
+      if (states.contains(WidgetState.selected)) return primary;
+      return null;
+    }),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+    side: const BorderSide(
+      color: Colors.grey,
+      width: 1.5,
+    ), // ignore: minglit_no_hardcoded_colors -- theme definition
+  );
 
   static ThemeData get materialThemeDark {
     return ThemeData(
@@ -134,6 +289,8 @@ class MinglitTheme {
         onSurfaceVariant: MinglitColorsDark.textSecondary,
       ),
       scaffoldBackgroundColor: MinglitColorsDark.background,
+      // Fix #474: ThemeExtension 등록
+      extensions: const [MinglitTextThemeExtension.dark],
       textTheme: const TextTheme(
         displayLarge: TextStyle(
           // ignore: minglit_no_hardcoded_text_style -- theme definition
@@ -163,6 +320,30 @@ class MinglitTheme {
           // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 16,
           color: MinglitColorsDark.textSecondary,
+        ),
+        // Fix #474: 빈 슬롯 채우기 — 하드코딩 fontSize 흡수
+        bodySmall: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 12,
+          color: MinglitColorsDark.textSecondary,
+        ),
+        labelLarge: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: MinglitColorsDark.textPrimary,
+        ),
+        labelMedium: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: MinglitColorsDark.textPrimary,
+        ),
+        labelSmall: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: MinglitColorsDark.textPrimary,
         ),
       ),
       appBarTheme: const AppBarTheme(
@@ -215,7 +396,9 @@ class MinglitTheme {
         ),
       ),
       chipTheme: ChipThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(MinglitRadius.chip),
+        ),
         side: BorderSide.none,
         backgroundColor: MinglitColorsDark.surface,
         secondarySelectedColor: MinglitColorsDark.primary,

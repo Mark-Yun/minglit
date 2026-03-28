@@ -1,5 +1,5 @@
-import 'package:app_user/src/features/explore/providers/explore_state_provider.dart';
 import 'package:app_user/src/features/home/home_page.dart';
+import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -26,12 +26,16 @@ void main() {
           latitude: any(named: 'latitude'),
           longitude: any(named: 'longitude'),
           limit: any(named: 'limit'),
+          offset: any(named: 'offset'),
         ),
       ).thenAnswer((_) async => []);
     }
   });
 
-  Widget createTestWidget({List<dynamic> overrides = const []}) {
+  Widget createTestWidget({
+    User? currentUser,
+    List<dynamic> overrides = const [],
+  }) {
     return ProviderScope(
       overrides: [
         eventRepositoryProvider.overrideWithValue(mockEventRepository),
@@ -39,6 +43,8 @@ void main() {
         activeFiltersProvider.overrideWith(
           _NoFiltersNotifier.new,
         ),
+        // Default: unauthenticated. Pass currentUser to test logged-in state.
+        currentUserProvider.overrideWith((_) => currentUser),
         ...overrides.cast(),
       ],
       child: MaterialApp(
@@ -49,8 +55,15 @@ void main() {
   }
 
   group('HomePage', () {
-    testWidgets('renders notification bell icon', (tester) async {
-      await tester.pumpWidget(createTestWidget());
+    testWidgets('renders notification bell icon when logged in', (
+      tester,
+    ) async {
+      final mockUser = MockUser();
+      when(() => mockUser.id).thenReturn('user1');
+      when(() => mockUser.email).thenReturn('test@example.com');
+      when(() => mockUser.userMetadata).thenReturn({'full_name': 'Test User'});
+
+      await tester.pumpWidget(createTestWidget(currentUser: mockUser));
       await tester.pump();
 
       expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);
@@ -111,6 +124,7 @@ void main() {
           latitude: any(named: 'latitude'),
           longitude: any(named: 'longitude'),
           limit: any(named: 'limit'),
+          offset: any(named: 'offset'),
         ),
       ).thenAnswer((_) async => testEvents);
 
@@ -121,6 +135,70 @@ void main() {
 
       expect(find.text('Test Party Event'), findsOneWidget);
     });
+
+    testWidgets('shows loading indicator when isLoadingMore is true', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        createTestWidget(
+          overrides: [
+            recommendationFeedProvider.overrideWith(
+              _MockLoadingMoreNotifier.new,
+            ),
+          ],
+        ),
+      );
+      await tester.pump();
+
+      // Fix #113: SliverFillRemaining fills viewport, SliverToBoxAdapter skips
+      expect(find.byType(MinglitCircularProgressIndicator), findsOneWidget);
+    });
+
+    testWidgets('wraps content in RefreshIndicator for pull-to-refresh', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createTestWidget());
+      await tester.pump();
+
+      expect(find.byType(RefreshIndicator), findsOneWidget);
+    });
+
+    testWidgets('shows error message with retry button on feed load failure', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        createTestWidget(
+          overrides: [
+            recommendationFeedProvider.overrideWith(
+              _MockErrorNotifier.new,
+            ),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('피드를 불러오지 못했습니다'), findsOneWidget);
+      expect(find.text('다시 시도'), findsOneWidget);
+    });
+
+    testWidgets('does not show loading indicator when hasMore is false', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        createTestWidget(
+          overrides: [
+            recommendationFeedProvider.overrideWith(
+              _MockNoMoreNotifier.new,
+            ),
+          ],
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byType(MinglitCircularProgressIndicator), findsNothing);
+    });
   });
 }
 
@@ -130,4 +208,37 @@ void main() {
 class _NoFiltersNotifier extends ActiveFilters {
   @override
   ExploreFilters build() => const ExploreFilters();
+}
+
+/// A notifier that returns isLoadingMore=true to test the loading indicator.
+class _MockLoadingMoreNotifier extends RecommendationFeedNotifier {
+  @override
+  Future<RecommendationFeedState> build() async {
+    return const RecommendationFeedState(
+      events: [],
+      serverOffset: 0,
+      hasMore: true,
+      isLoadingMore: true,
+    );
+  }
+}
+
+/// A notifier that throws an error to test the error state UI.
+class _MockErrorNotifier extends RecommendationFeedNotifier {
+  @override
+  Future<RecommendationFeedState> build() async {
+    throw Exception('Feed load failed');
+  }
+}
+
+/// A notifier that returns hasMore=false and isLoadingMore=false.
+class _MockNoMoreNotifier extends RecommendationFeedNotifier {
+  @override
+  Future<RecommendationFeedState> build() async {
+    return const RecommendationFeedState(
+      events: [],
+      serverOffset: 0,
+      hasMore: false,
+    );
+  }
 }

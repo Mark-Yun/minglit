@@ -33,7 +33,9 @@ class MinglitDecorations {
     final accentColor = colorScheme.secondary;
 
     return BoxDecoration(
-      color: isSelected ? accentColor.withValues(alpha: 0.05) : theme.cardColor,
+      color: isSelected
+          ? accentColor.withValues(alpha: MinglitOpacity.tintFill)
+          : theme.cardColor,
       borderRadius: BorderRadius.circular(MinglitRadius.card),
       border: MinglitBorders.card(colorScheme, isSelected: isSelected),
       boxShadow: isSelected ? MinglitShadows.cardSelected(accentColor) : null,
@@ -55,11 +57,11 @@ class MinglitTextStyles {
   }
 
   /// Returns a subtitle style for selectable cards.
+  // Fix #474: fontSize 11 → labelSmall (이미 11px)
   static TextStyle selectableCardSubtitle(BuildContext context) {
     final theme = Theme.of(context);
-    return theme.textTheme.bodySmall!.copyWith(
+    return theme.textTheme.labelSmall!.copyWith(
       color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-      fontSize: 11,
     );
   }
 
@@ -72,11 +74,11 @@ class MinglitTextStyles {
   }
 
   /// Returns an info text style.
+  // Fix #474: fontSize 12 → bodySmall (이미 12px)
   static TextStyle infoText(BuildContext context) {
     final theme = Theme.of(context);
     return theme.textTheme.bodySmall!.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
-      fontSize: 12,
     );
   }
 }

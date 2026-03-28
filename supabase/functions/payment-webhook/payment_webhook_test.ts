@@ -144,7 +144,7 @@ Deno.test("payment-webhook - iamport error returns 500", async () => {
   });
 });
 
-Deno.test("payment-webhook - malformed JSON returns 500", async () => {
+Deno.test("payment-webhook - malformed JSON returns 400", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([]);
@@ -155,7 +155,7 @@ Deno.test("payment-webhook - malformed JSON returns 500", async () => {
           headers: { "x-forwarded-for": "127.0.0.1" },
         });
         const response = await handler(request);
-        assertEquals(response.status, 500);
+        assertEquals(response.status, 400);
         assertEquals(typeof (await response.text()), "string");
       });
     });

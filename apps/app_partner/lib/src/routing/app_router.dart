@@ -36,6 +36,7 @@ GoRouter goRouter(Ref ref) {
       final isLoggedIn = ref.read(currentUserProvider) != null;
       final isLoggingIn = state.uri.path == '/login';
       final isApplyPage = state.uri.path.startsWith('/apply');
+      final isWelcomePage = state.uri.path == '/welcome';
 
       // Allow dev pages without authentication
       if (state.uri.path.startsWith('/dev')) return null;
@@ -55,14 +56,28 @@ GoRouter goRouter(Ref ref) {
         final onboarding = ref.read(onboardingStateProvider);
         if (onboarding.hasValue) {
           final onboardingState = onboarding.value!;
-          // Redirect to apply if needs application or has draft
+          // Redirect new applicants to welcome page first
           if (!isApplyPage &&
-              (onboardingState == OnboardingState.needsApplication ||
-                  onboardingState == OnboardingState.draftInProgress)) {
+              !isWelcomePage &&
+              onboardingState == OnboardingState.needsApplication) {
+            return '/welcome';
+          }
+          // Redirect users with draft in progress directly to apply wizard
+          if (!isApplyPage &&
+              !isWelcomePage &&
+              onboardingState == OnboardingState.draftInProgress) {
             return '/apply';
+          }
+          // If on welcome page but no longer needsApplication, redirect away
+          if (isWelcomePage &&
+              onboardingState != OnboardingState.needsApplication) {
+            return onboardingState == OnboardingState.draftInProgress
+                ? '/apply'
+                : '/';
           }
           // Redirect to status if pending/needs_correction
           if (!isApplyPage &&
+              !isWelcomePage &&
               (onboardingState == OnboardingState.pendingReview ||
                   onboardingState == OnboardingState.needsCorrection)) {
             return '/apply/status';

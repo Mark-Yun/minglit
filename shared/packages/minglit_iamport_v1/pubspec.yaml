@@ -1,6 +1,6 @@
 name: minglit_iamport_v1
 description: "Iamport V1 Payment and Certification package for Minglit."
-version: 0.0.1
+version: 26.03.551-dev
 publish_to: 'none'
 
 environment:
@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   # Iamport V1 SDK
-  iamport_flutter: ^0.10.0
+  iamport_flutter: ^0.10.19
   # Web support
   # uni_links or similar might be needed for deep links if iamport_flutter doesn't handle everything.
 

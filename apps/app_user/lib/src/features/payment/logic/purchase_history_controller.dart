@@ -41,18 +41,30 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
   RefundCalculation calculateRefund({
     required DateTime eventStartTime,
     required int paymentAmount,
+    required DateTime? paidAt,
+    required int gracePeriodHours,
+    required int cutoffDays,
+    DateTime? now,
   }) {
     return RefundCalculator.calculate(
       eventStartTime: eventStartTime,
       paymentAmount: paymentAmount,
+      paidAt: paidAt,
+      gracePeriodHours: gracePeriodHours,
+      cutoffDays: cutoffDays,
+      now: now,
     );
   }
 
+  // Fix #299: eventId 기반으로 전환 — user-cancel-order EF가 서버에서 검증
   Future<void> runRefundFlow({
+    required String eventId,
     required String? paymentId,
     required int? paymentAmount,
     required DateTime? eventStartTime,
+    required DateTime? paidAt,
     required Future<void> Function() showMissingInfo,
+    required Future<void> Function() showNotEligible,
     required Future<bool> Function(RefundCalculation calculation) confirmRefund,
     required Future<bool> Function(String message) showError,
     required Future<void> Function() onSuccess,
@@ -62,25 +74,44 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
       return;
     }
 
+    // Fix #133: 정책 조회 실패 시 기본값(2/7)으로 환불 플로우가 계속 진행되도록 보호
+    var gracePeriodHours = 2;
+    var cutoffDays = 7;
+    try {
+      final policyRepo = ref.read(policyRepositoryProvider);
+      final policy = await policyRepo.getRefundPolicy();
+      gracePeriodHours = (policy?['grace_period_hours'] as num?)?.toInt() ?? 2;
+      cutoffDays = (policy?['cutoff_days'] as num?)?.toInt() ?? 7;
+    } on Object {
+      // 정책 조회 실패 시 기본 정책으로 진행
+    }
+
     final calculation = calculateRefund(
       eventStartTime: eventStartTime,
       paymentAmount: paymentAmount,
+      paidAt: paidAt,
+      gracePeriodHours: gracePeriodHours,
+      cutoffDays: cutoffDays,
     );
+
+    if (calculation.refundPercentage == 0) {
+      await showNotEligible();
+      return;
+    }
 
     final confirmed = await confirmRefund(calculation);
     if (!confirmed) return;
 
     await _requestRefund(
-      paymentId: paymentId,
-      calculation: calculation,
+      eventId: eventId,
       showError: showError,
       onSuccess: onSuccess,
     );
   }
 
+  // Fix #299: cancelPayment → cancelOrder EF 전환
   Future<void> _requestRefund({
-    required String paymentId,
-    required RefundCalculation calculation,
+    required String eventId,
     required Future<bool> Function(String message) showError,
     required Future<void> Function() onSuccess,
   }) async {
@@ -88,9 +119,8 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
     try {
       await ref
           .read(eventRepositoryProvider)
-          .cancelPayment(
-            paymentId: paymentId,
-            refundAmount: calculation.refundAmount,
+          .cancelOrder(
+            eventId: eventId,
             reason: '사용자 예매 취소',
           );
 
@@ -104,8 +134,7 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
       final retry = await showError(message);
       if (retry) {
         await _requestRefund(
-          paymentId: paymentId,
-          calculation: calculation,
+          eventId: eventId,
           showError: showError,
           onSuccess: onSuccess,
         );

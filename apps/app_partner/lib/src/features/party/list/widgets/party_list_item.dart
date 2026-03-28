@@ -110,10 +110,11 @@ class PartyListItem extends StatelessWidget {
                           runSpacing: MinglitSpacing.xxsmall,
                           children: [
                             // Location Chip
+                            // Fix #180: 강제 언래핑 제거 — null-safe 접근
                             if (party.location != null)
                               _InfoChip(
                                 icon: Icons.location_on,
-                                label: party.location!.name,
+                                label: party.location?.name ?? '',
                               )
                             else
                               _InfoChip(

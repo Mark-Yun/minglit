@@ -1,8 +1,11 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
+import { createServiceClient } from "../_shared/supabase_client.ts";
 import { PortoneV2Client } from "../_shared/portone_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
+import { initSentry, withHandler, log } from "../_shared/logger.ts";
+
+const FN = "partner-sync";
 
 const PORTONE_V2_API_KEY = Deno.env.get("PORTONE_V2_API_KEY");
 
@@ -12,7 +15,7 @@ if (!PORTONE_V2_API_KEY) {
 
 initSentry();
 
-Deno.serve(withSentry(async (req) => {
+Deno.serve(withHandler(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
 
   const auth = await requireAuth(req);
@@ -30,10 +33,7 @@ Deno.serve(withSentry(async (req) => {
       return errorResponse("Missing partner_id", 400);
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    const supabase = createServiceClient();
 
     const { data: partner, error: partnerError } = await supabase
       .from("partners")
@@ -58,7 +58,7 @@ Deno.serve(withSentry(async (req) => {
       });
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
-      console.error("PortOne createPartner error:", message);
+      log({ function: FN, level: "error", message: "PortOne createPartner error", metadata: { detail: message } });
       return errorResponse("Failed to create PortOne partner", 502);
     }
 
@@ -68,7 +68,7 @@ Deno.serve(withSentry(async (req) => {
       .eq("id", partner_id);
 
     if (updateError) {
-      console.error("DB Update Error:", updateError);
+      log({ function: FN, level: "error", message: "DB Update Error", metadata: { detail: updateError } });
       return errorResponse("Failed to save portone_partner_id", 500);
     }
 
@@ -76,7 +76,7 @@ Deno.serve(withSentry(async (req) => {
 
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    console.error("Error in partner-sync:", message);
+    log({ function: FN, level: "error", message: "Error in partner-sync", metadata: { detail: message } });
     return errorResponse(message, 500);
   }
 }));

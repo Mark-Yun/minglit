@@ -264,25 +264,25 @@ SELECT ok(
 
 DROP TABLE t7_approved;
 
--- Drain and test needs_correction
+-- Drain and test rejected (needs_correction removed in #301)
 CREATE TEMP TABLE _drain7 AS
 SELECT * FROM public.pgmq_read('q_notifications', 60, 1000) AS payload(payload);
 DROP TABLE _drain7;
 
 UPDATE public.verification_submissions
-SET status = 'needs_correction'
+SET status = 'rejected'
 WHERE user_id = (SELECT applicant_user_id FROM trigger_test_setup)
   AND verification_id = (SELECT verification_id FROM trigger_test_setup);
 
-CREATE TEMP TABLE t7_correction AS
+CREATE TEMP TABLE t7_rejection AS
 SELECT * FROM public.pgmq_read('q_notifications', 60, 1000) AS payload(payload);
 
 SELECT ok(
-  (SELECT count(*) > 0 FROM t7_correction WHERE payload->'message'->>'event_type' = 'verification_result'),
-  'T7: needs_correction enqueues verification_result notification'
+  (SELECT count(*) > 0 FROM t7_rejection WHERE payload->'message'->>'event_type' = 'verification_result'),
+  'T7: rejected enqueues verification_result notification'
 );
 
-DROP TABLE t7_correction;
+DROP TABLE t7_rejection;
 
 -- ============================================================
 -- PART 7: T0 — CHECK constraint allows new statuses

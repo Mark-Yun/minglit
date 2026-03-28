@@ -1,13 +1,12 @@
 import 'dart:async';
 
+import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
-import 'package:app_user/src/features/explore/providers/explore_state_provider.dart';
-import 'package:app_user/src/features/explore/widgets/filter_chip_bar.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
+import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:app_user/src/routing/app_routes.dart';
-import 'package:app_user/src/ui/shell/nav_visibility_provider.dart';
+import 'package:app_user/src/widgets/explore_filter_chip_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 /// Home page — explore recommendation content merged into home.
@@ -25,30 +24,48 @@ class _HomePageState extends ConsumerState<HomePage> {
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      unawaited(ref.read(recommendationFeedProvider.notifier).loadMore());
+    }
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _scrollController
+      ..removeListener(_onScroll)
+      ..dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(currentUserProvider);
     final homeCoordinator = ref.read(homeCoordinatorProvider);
     final eventCoordinator = ref.read(eventCoordinatorProvider);
-    final recommendationAsync = ref.watch(recommendationEventsProvider);
+    final recommendationState = ref.watch(recommendationFeedProvider);
+
+    // Auto-fetch next page when first page is completely filtered out
+    // by client-side eligibility/nearby filter (events empty but hasMore=true).
+    ref.listen(recommendationFeedProvider, (_, next) {
+      next.whenData((s) {
+        if (s.events.isEmpty && s.hasMore && !s.isLoadingMore) {
+          unawaited(
+            ref.read(recommendationFeedProvider.notifier).loadMore(),
+          );
+        }
+      });
+    });
 
     return Scaffold(
-      body: NotificationListener<UserScrollNotification>(
-        onNotification: (notification) {
-          if (notification.direction == ScrollDirection.forward) {
-            ref.read(navVisibilityProvider.notifier).show();
-          } else if (notification.direction == ScrollDirection.reverse) {
-            ref.read(navVisibilityProvider.notifier).hide();
-          }
-          return false;
-        },
+      // Fix #192: Pull-to-refresh to reload the explore feed from scratch.
+      body: RefreshIndicator(
+        onRefresh: () =>
+            ref.read(recommendationFeedProvider.notifier).refresh(),
         child: CustomScrollView(
           controller: _scrollController,
           slivers: [
@@ -73,15 +90,45 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                 ],
               ),
+              // Fix #141: Equalize action button spacing and padding alignment
               actions: [
                 IconButton(
                   icon: const Icon(Icons.search),
                   onPressed: () => const SearchRoute().push<void>(context),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.notifications_outlined),
-                  onPressed: homeCoordinator.pushNotificationCenter,
-                ),
+                if (user != null) ...[
+                  IconButton(
+                    icon: const Icon(Icons.notifications_outlined),
+                    onPressed: homeCoordinator.pushNotificationCenter,
+                  ),
+                  // Fix #141: Use IconButton for consistent touch target (48x48)
+                  // and ripple effect with other app bar actions
+                  IconButton(
+                    onPressed: () => const MyPageRoute().push<void>(context),
+                    icon: CircleAvatar(
+                      radius: 14,
+                      backgroundImage: user.userMetadata?['avatar_url'] != null
+                          ? NetworkImage(
+                              user.userMetadata!['avatar_url'] as String,
+                            )
+                          : null,
+                      onBackgroundImageError:
+                          user.userMetadata?['avatar_url'] != null
+                          ? (_, _) {}
+                          : null,
+                      child: user.userMetadata?['avatar_url'] == null
+                          ? const Icon(Icons.person, size: 14)
+                          : null,
+                    ),
+                  ),
+                ] else
+                  IconButton(
+                    icon: const Icon(Icons.person_outline),
+                    // Fix #102: use go (not push) so GoRouter redirect
+                    // fires after login
+                    onPressed: () =>
+                        ref.read(authCoordinatorProvider).goToLogin(from: '/'),
+                  ),
                 const SizedBox(width: MinglitSpacing.small),
               ],
               // Fix #76: use theme color instead of
@@ -96,11 +143,18 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
             ),
             // ignore: use_minglit_async_value_widget, returns Sliver which is incompatible with Widget-based MinglitAsyncValueWidget
-            recommendationAsync.when(
-              data: (events) {
-                if (events.isEmpty) {
+            recommendationState.when(
+              data: (state) {
+                if (state.events.isEmpty && !state.hasMore) {
                   return const SliverFillRemaining(
                     child: Center(child: Text('추천 이벤트가 없습니다')),
+                  );
+                }
+                // First page fully filtered client-side: show loading while
+                // auto-fetch (triggered by ref.listen above) loads next page.
+                if (state.events.isEmpty) {
+                  return const SliverFillRemaining(
+                    child: Center(child: MinglitCircularProgressIndicator()),
                   );
                 }
                 return SliverPadding(
@@ -109,11 +163,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                     bottom: MinglitSpacing.medium,
                   ),
                   sliver: SliverList.separated(
-                    itemCount: events.length,
+                    itemCount: state.events.length,
                     separatorBuilder: (_, _) =>
                         const SizedBox(height: MinglitSpacing.small),
                     itemBuilder: (context, index) {
-                      final event = events[index];
+                      final event = state.events[index];
                       return MinglitEventCard(
                         event: event,
                         onTap: () => eventCoordinator.pushEventDetail(event.id),
@@ -125,10 +179,34 @@ class _HomePageState extends ConsumerState<HomePage> {
               loading: () => const SliverFillRemaining(
                 child: Center(child: MinglitCircularProgressIndicator()),
               ),
-              error: (_, _) => const SliverFillRemaining(
-                child: SizedBox.shrink(),
+              // Fix #192: 피드 로드 실패 시 에러 메시지와 재시도 버튼 표시
+              error: (_, _) => SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('피드를 불러오지 못했습니다'),
+                      const SizedBox(height: MinglitSpacing.small),
+                      TextButton(
+                        onPressed: () =>
+                            ref.invalidate(recommendationFeedProvider),
+                        child: const Text('다시 시도'),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
+            if (recommendationState.value?.isLoadingMore ?? false)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    top: MinglitSpacing.medium,
+                    bottom: MinglitSpacing.medium,
+                  ),
+                  child: Center(child: MinglitCircularProgressIndicator()),
+                ),
+              ),
             const SliverPadding(
               padding: EdgeInsets.only(bottom: MinglitSpacing.xlarge),
             ),

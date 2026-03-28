@@ -1,3 +1,4 @@
+export 'src/features/dev/design_catalog_page.dart';
 export 'src/features/dev/dev_config.dart';
 export 'src/features/dev/dev_user_switch_screen.dart';
 export 'src/features/dev/partner_list_preview_screen.dart';

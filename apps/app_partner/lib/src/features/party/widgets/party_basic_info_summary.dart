@@ -103,7 +103,6 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
               ),
             ),
           ),
-
         if (widget.showTitle)
           Row(
             children: [
@@ -147,7 +146,6 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
             ],
           ),
         if (widget.showTitle) const SizedBox(height: MinglitSpacing.small),
-
         if (isDescriptionEmpty)
           Text(
             context.l10n.wizard_review_noDescription,
@@ -171,7 +169,7 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
                       size: 18,
                       color: colorScheme.primary,
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: MinglitSpacing.xsmall),
                     Text(
                       _isExpanded ? '상세 설명 접기' : '상세 설명 보기',
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -183,7 +181,6 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
                 ),
               ),
             ),
-
           if (_isExpanded)
             Container(
               margin: const EdgeInsets.only(top: MinglitSpacing.xsmall),

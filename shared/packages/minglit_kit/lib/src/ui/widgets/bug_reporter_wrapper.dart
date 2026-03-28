@@ -5,19 +5,19 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/data/repositories/bug_report_repository.dart';
 import 'package:minglit_kit/src/data/repositories/storage_repository.dart';
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
-
 import 'package:minglit_kit/src/utils/environment_info.dart';
 import 'package:minglit_kit/src/utils/layout_dump.dart';
 import 'package:minglit_kit/src/utils/log.dart';
-import 'package:shake/shake.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Wraps [child] with bug reporting UI and shake detection.
-class BugReporterWrapper extends StatefulWidget {
+/// Wraps [child] with bug reporting UI.
+// Fix #412: ConsumerStatefulWidget 전환 — Supabase 직접 접근 제거, Riverpod Provider 주입
+class BugReporterWrapper extends ConsumerStatefulWidget {
   /// Creates a bug reporter wrapper.
   const BugReporterWrapper({
     required this.child,
@@ -40,57 +40,16 @@ class BugReporterWrapper extends StatefulWidget {
   final bool enabled;
 
   @override
-  State<BugReporterWrapper> createState() => _BugReporterWrapperState();
+  ConsumerState<BugReporterWrapper> createState() => _BugReporterWrapperState();
 }
 
-class _BugReporterWrapperState extends State<BugReporterWrapper>
-    with WidgetsBindingObserver {
-  ShakeDetector? _detector;
+class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
   bool _isReportOpen = false;
+  bool _isCapturing = false;
   final GlobalKey _boundaryKey = GlobalKey();
   String? _screenshotUrl;
   Map<String, dynamic>? _environmentInfo;
   String? _layoutDumpUrl;
-  DateTime? _lastShakeTime;
-  static const _shakeCooldown = Duration(seconds: 5);
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    if (widget.enabled &&
-        !kIsWeb &&
-        (defaultTargetPlatform == TargetPlatform.iOS ||
-            defaultTargetPlatform == TargetPlatform.android)) {
-      _detector = ShakeDetector.autoStart(
-        onPhoneShake: (event) {
-          unawaited(_onShakeDetected());
-        },
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _detector?.stopListening();
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (!widget.enabled) return;
-    switch (state) {
-      case AppLifecycleState.paused:
-      case AppLifecycleState.inactive:
-      case AppLifecycleState.hidden:
-      case AppLifecycleState.detached:
-        // Fix #51: pause shake detection when app is not in foreground
-        _detector?.stopListening();
-      case AppLifecycleState.resumed:
-        _detector?.startListening();
-    }
-  }
 
   /// Returns a [BuildContext] that has a [Navigator] ancestor.
   ///
@@ -115,11 +74,14 @@ class _BugReporterWrapperState extends State<BugReporterWrapper>
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) return null;
       final bytes = byteData.buffer.asUint8List();
-      final url = await StorageRepository().uploadBytes(
-        bytes: bytes,
-        bucket: 'bug-report-attachments',
-        pathPrefix: 'screenshots',
-      );
+      // Fix #412: StorageRepository 직접 생성 → Provider 주입
+      final url = await ref
+          .read(storageRepositoryProvider)
+          .uploadBytes(
+            bytes: bytes,
+            bucket: 'bug-report-attachments',
+            pathPrefix: 'screenshots',
+          );
       return url;
     } on Exception catch (e) {
       Log.e('Screenshot capture failed (best-effort)', e);
@@ -127,24 +89,16 @@ class _BugReporterWrapperState extends State<BugReporterWrapper>
     }
   }
 
-  /// Called when shake is detected. Applies cooldown before showing dialog.
-  Future<void> _onShakeDetected() async {
-    // Fix #51: cooldown prevents rapid shake from triggering multiple dialogs
-    if (_lastShakeTime != null &&
-        DateTime.now().difference(_lastShakeTime!) < _shakeCooldown) {
-      return;
-    }
-    _lastShakeTime = DateTime.now();
-    await _showReportDialog();
-  }
-
   Future<void> _showReportDialog() async {
     if (!mounted) return;
     // Fix #51: return early if dialog is already open — do not dismiss+reopen
-    if (_isReportOpen) return;
+    if (_isReportOpen || _isCapturing) return;
     // Capture context BEFORE async gap
     final ctx = _dialogContext;
     if (ctx == null) return;
+
+    // Fix #147: show progress on FAB while capturing screenshot/env info
+    setState(() => _isCapturing = true);
 
     // Capture screenshot AND environment info in parallel BEFORE opening sheet
     final results = await Future.wait([
@@ -152,7 +106,13 @@ class _BugReporterWrapperState extends State<BugReporterWrapper>
       collectEnvironmentInfo(),
       captureLayoutDump(),
     ]);
-    if (!mounted || !ctx.mounted) return;
+
+    if (!mounted) {
+      _isCapturing = false;
+      return;
+    }
+    setState(() => _isCapturing = false);
+    if (!ctx.mounted) return;
 
     final screenshotUrl = results[0] as String?;
     final environment = results[1] as Map<String, dynamic>?;
@@ -162,13 +122,16 @@ class _BugReporterWrapperState extends State<BugReporterWrapper>
     String? layoutDumpUrl;
     if (layoutDump != null) {
       try {
-        layoutDumpUrl = await StorageRepository().uploadBytes(
-          bytes: Uint8List.fromList(utf8.encode(layoutDump)),
-          bucket: 'bug-report-attachments',
-          pathPrefix: 'layout-dumps',
-          contentType: 'text/plain',
-          extension: '.txt',
-        );
+        // Fix #412: StorageRepository 직접 생성 → Provider 주입
+        layoutDumpUrl = await ref
+            .read(storageRepositoryProvider)
+            .uploadBytes(
+              bytes: Uint8List.fromList(utf8.encode(layoutDump)),
+              bucket: 'bug-report-attachments',
+              pathPrefix: 'layout-dumps',
+              contentType: 'text/plain',
+              extension: '.txt',
+            );
       } on Object catch (e) {
         Log.e('Layout dump upload failed (best-effort)', e);
       }
@@ -230,10 +193,10 @@ class _BugReporterWrapperState extends State<BugReporterWrapper>
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: MinglitSpacing.small),
                     // Screenshot preview (if available)
                     if (_screenshotUrl != null) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: MinglitSpacing.small),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: Image.network(
@@ -258,7 +221,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper>
                               ),
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: MinglitSpacing.xsmall),
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
@@ -271,7 +234,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper>
                         ),
                       ),
                     ],
-                    const SizedBox(height: 16),
+                    const SizedBox(height: MinglitSpacing.medium),
                     // Title field
                     TextField(
                       controller: titleController,
@@ -280,7 +243,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper>
                         border: OutlineInputBorder(),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: MinglitSpacing.small),
                     // Description field
                     TextField(
                       controller: descController,
@@ -290,7 +253,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper>
                       ),
                       maxLines: 3,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: MinglitSpacing.medium),
                     // Buttons row
                     Row(
                       children: [
@@ -300,7 +263,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper>
                             child: const Text('Cancel'),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: MinglitSpacing.small),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: isLoading
@@ -309,8 +272,11 @@ class _BugReporterWrapperState extends State<BugReporterWrapper>
                                     setSheetState(() => isLoading = true);
                                     try {
                                       final logs = Log.export();
+                                      // Fix #412: Provider 주입
                                       final repo = BugReportRepository(
-                                        Supabase.instance.client,
+                                        ref.read(
+                                          supabaseClientProvider,
+                                        ),
                                       );
                                       await repo.reportBug(
                                         title: titleController.text.isEmpty
@@ -360,7 +326,7 @@ class _BugReporterWrapperState extends State<BugReporterWrapper>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: MinglitSpacing.small),
                   ],
                 ),
               ),
@@ -384,11 +350,18 @@ class _BugReporterWrapperState extends State<BugReporterWrapper>
             bottom: 16,
             child: Material(
               type: MaterialType.transparency,
+              // Fix #147: show progress indicator while capturing
               child: FloatingActionButton(
                 mini: true,
-                onPressed: _showReportDialog,
+                onPressed: _isCapturing ? null : _showReportDialog,
                 backgroundColor: MinglitColors.error,
-                child: const Icon(Icons.bug_report),
+                child: _isCapturing
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: MinglitCircularProgressIndicator(),
+                      )
+                    : const Icon(Icons.bug_report),
               ),
             ),
           ),

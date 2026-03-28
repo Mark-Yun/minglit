@@ -39,7 +39,7 @@ class ClosingSoonEventsCard extends StatelessWidget {
                   size: 18,
                   color: colorScheme.error,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: MinglitSpacing.small),
                 Text(
                   '마감임박',
                   style: theme.textTheme.titleSmall?.copyWith(
@@ -72,7 +72,7 @@ class ClosingSoonEventsCard extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: MinglitSpacing.xxsmall),
                             Text(
                               dateFormat.format(event.startTime),
                               style: theme.textTheme.bodySmall?.copyWith(
@@ -83,9 +83,11 @@ class ClosingSoonEventsCard extends StatelessWidget {
                         ),
                       ),
                       _DayBadge(
-                        daysUntil: event.startTime
-                            .difference(DateTime.now())
-                            .inDays,
+                        // Fix: calendar day 기준으로 D-day 계산 —
+                        // Duration.inDays는 24h 절사라 타임존에 따라 off-by-one
+                        daysUntil: DateUtils.dateOnly(
+                          event.startTime,
+                        ).difference(DateUtils.dateOnly(DateTime.now())).inDays,
                       ),
                     ],
                   ),

@@ -1,14 +1,15 @@
 import { assertEquals } from "@std/assert";
 import {
+  authenticatedJsonRequest,
   captureServeHandler,
   createFetchMock,
-  jsonRequest,
   jsonResponse,
   readJson,
   withEnv,
   withMockedFetch,
   withNoIntervals,
 } from "../_test_utils/mock_http.ts";
+import { authRoute } from "../_test_utils/fixtures.ts";
 
 const ENV = {
   PORTONE_V2_API_KEY: "test-v2-key",
@@ -21,6 +22,7 @@ Deno.test("settlement-query - settlements type returns settlement list", async (
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
     const { fetchMock } = createFetchMock([
+      authRoute,
       {
         matcher: "https://api.portone.io/platform/partner-settlements",
         handler: () => jsonResponse({ settlements: [{ id: "s1", amount: 10000 }], page: { number: 0, size: 10 } }),
@@ -29,7 +31,7 @@ Deno.test("settlement-query - settlements type returns settlement list", async (
 
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", { type: "settlements" });
+        const request = authenticatedJsonRequest("http://localhost", { type: "settlements" });
         const response = await handler(request);
         const payload = await readJson(response);
 
@@ -47,6 +49,7 @@ Deno.test("settlement-query - payouts type returns payout list", async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
     const { fetchMock } = createFetchMock([
+      authRoute,
       {
         matcher: "https://api.portone.io/platform/payouts",
         handler: () => jsonResponse({ payouts: [{ id: "p1", amount: 50000 }], page: { number: 0, size: 10 } }),
@@ -55,7 +58,7 @@ Deno.test("settlement-query - payouts type returns payout list", async () => {
 
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", { type: "payouts" });
+        const request = authenticatedJsonRequest("http://localhost", { type: "payouts" });
         const response = await handler(request);
         const payload = await readJson(response);
 
@@ -71,11 +74,11 @@ Deno.test("settlement-query - payouts type returns payout list", async () => {
 Deno.test("settlement-query - missing type returns 400", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    const { fetchMock } = createFetchMock([]);
+    const { fetchMock } = createFetchMock([authRoute]);
 
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", { partner_id: "partner-uuid" });
+        const request = authenticatedJsonRequest("http://localhost", { partner_id: "partner-uuid" });
         const response = await handler(request);
         const payload = await readJson(response);
 
@@ -91,6 +94,7 @@ Deno.test("settlement-query - PortOne API error returns 502", async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
     const { fetchMock } = createFetchMock([
+      authRoute,
       {
         matcher: "https://api.portone.io/platform/partner-settlements",
         handler: () => jsonResponse({ message: "unauthorized" }, { status: 401 }),
@@ -99,7 +103,7 @@ Deno.test("settlement-query - PortOne API error returns 502", async () => {
 
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", { type: "settlements" });
+        const request = authenticatedJsonRequest("http://localhost", { type: "settlements" });
         const response = await handler(request);
         const payload = await readJson(response);
 

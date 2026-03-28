@@ -33,6 +33,20 @@ class SocialRepository {
     Log.d('toggleInteraction | type: $interactionType');
 
     try {
+      // 0. Like/dislike mutual exclusivity — remove opposite before toggling
+      if (interactionType == SocialInteractionType.like ||
+          interactionType == SocialInteractionType.dislike) {
+        final opposite = interactionType == SocialInteractionType.like
+            ? SocialInteractionType.dislike
+            : SocialInteractionType.like;
+        await _supabase
+            .from('social_interactions')
+            .delete()
+            .eq('user_id', userId)
+            .eq('target_id', targetId)
+            .eq('interaction_type', opposite.name);
+      }
+
       // 1. Check if interaction already exists
       final existing = await _supabase
           .from('social_interactions')

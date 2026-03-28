@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/src/theme/minglit_text_theme_extension.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_chip.dart';
 
@@ -43,15 +44,15 @@ class MinglitFilterChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // YouTube-style chip sizing
-    // YT: font-size 1.4rem(14px), line-height 2rem(20px), weight 500
-    final (padding, fontSize, iconSize) = switch (size) {
+    // Fix #474: YouTube-style chip sizing — fontSize를 TextTheme/Extension 참조로 변경
+    final ext = Theme.of(context).extension<MinglitTextThemeExtension>()!;
+    final (padding, labelStyle, iconSize) = switch (size) {
       MinglitChipSize.small => (
         const EdgeInsets.symmetric(
           horizontal: MinglitSpacing.small,
           vertical: MinglitSpacing.xxsmall,
         ),
-        12.0,
+        theme.textTheme.labelMedium!, // 12px
         12.0,
       ),
       MinglitChipSize.medium => (
@@ -59,7 +60,7 @@ class MinglitFilterChip extends StatelessWidget {
           horizontal: MinglitSpacing.sm,
           vertical: MinglitSpacing.xsmall2,
         ),
-        13.0,
+        ext.chipLabel, // 13px
         14.0,
       ),
       MinglitChipSize.large => (
@@ -67,7 +68,7 @@ class MinglitFilterChip extends StatelessWidget {
           horizontal: MinglitSpacing.sm,
           vertical: MinglitSpacing.xsmall,
         ),
-        14.0,
+        theme.textTheme.labelLarge!, // 14px
         15.0,
       ),
     };
@@ -101,13 +102,12 @@ class MinglitFilterChip extends StatelessWidget {
           children: [
             if (hasIcon) ...[
               Icon(icon, size: iconSize, color: fgColor),
-              const SizedBox(width: 4),
+              const SizedBox(width: MinglitSpacing.xsmall),
             ],
             Text(
               label,
-              style: theme.textTheme.labelSmall?.copyWith(
-                fontSize: fontSize,
-                height: 20 / fontSize, // YT line-height: 2rem
+              style: labelStyle.copyWith(
+                height: 20 / (labelStyle.fontSize ?? 14),
                 color: fgColor,
                 fontWeight: FontWeight.w500,
               ),

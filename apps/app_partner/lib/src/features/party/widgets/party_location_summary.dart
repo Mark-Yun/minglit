@@ -117,7 +117,7 @@ class PartyLocationSummary extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, size: 14, color: colorScheme.primary),
-        const SizedBox(width: 6),
+        const SizedBox(width: MinglitSpacing.xsmall2),
         Expanded(
           child: Text(
             content,

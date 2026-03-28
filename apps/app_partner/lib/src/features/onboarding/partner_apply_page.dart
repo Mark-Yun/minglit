@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_partner/src/features/onboarding/onboarding_coordinator.dart';
 import 'package:app_partner/src/features/onboarding/partner_apply_controller.dart';
 import 'package:app_partner/src/features/onboarding/steps/step1_basic_info.dart';
 import 'package:app_partner/src/features/onboarding/steps/step2_biz_info.dart';
@@ -8,7 +9,6 @@ import 'package:app_partner/src/features/onboarding/steps/step4_documents.dart';
 import 'package:app_partner/src/features/onboarding/steps/step5_review.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class PartnerApplyPage extends ConsumerStatefulWidget {
@@ -73,8 +73,9 @@ class _PartnerApplyPageState extends ConsumerState<PartnerApplyPage> {
       ) {
         next.whenOrNull(
           data: (_) {
+            // Fix #404: Use coordinator instead of direct GoRouter access
             if (prev?.isLoading ?? false) {
-              context.go('/apply/status');
+              ref.read(onboardingCoordinatorProvider).goToApplyStatus();
             }
           },
           error: (error, st) {
@@ -210,11 +211,12 @@ class _PartnerApplyPageState extends ConsumerState<PartnerApplyPage> {
               ),
               TextButton(
                 onPressed: () async {
+                  // Fix: dialog를 먼저 닫고 signOut — signOut이 GoRouter redirect를
+                  // 트리거하면 dialog context가 무효화되어 검은화면+freeze 발생
                   final authRepo = ref.read(authRepositoryProvider);
+                  Navigator.of(context).pop();
+                  await Future<void>.delayed(Duration.zero);
                   await authRepo.signOut();
-                  if (context.mounted) {
-                    Navigator.of(context).pop();
-                  }
                 },
                 child: Text(context.l10n.home_button_logout),
               ),

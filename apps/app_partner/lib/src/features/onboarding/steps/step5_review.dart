@@ -28,7 +28,6 @@ class Step5Review extends ConsumerWidget {
             value: state.introduction,
           ),
           const SizedBox(height: MinglitSpacing.large),
-
           _SectionHeader(
             title: context.l10n.partnerApplication_section_biz,
             onEdit: () => notifier.setStep(1),
@@ -50,7 +49,6 @@ class Step5Review extends ConsumerWidget {
             value: state.representativeName,
           ),
           const SizedBox(height: MinglitSpacing.large),
-
           _SectionHeader(
             title: context.l10n.partnerApplication_section_account,
             onEdit: () => notifier.setStep(2),
@@ -81,7 +79,6 @@ class Step5Review extends ConsumerWidget {
           ),
           _ReviewItem(label: '세금계산서 수신 이메일', value: state.taxEmail),
           const SizedBox(height: MinglitSpacing.large),
-
           _SectionHeader(
             title: context.l10n.partnerApplication_section_files,
             onEdit: () => notifier.setStep(3),

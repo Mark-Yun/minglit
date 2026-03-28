@@ -73,6 +73,23 @@ class _BottomTicketBar extends ConsumerWidget {
     );
   }
 
+  void _showTicketSelection(BuildContext context, WidgetRef ref) {
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (_) => TicketSelectionSheet(
+          event: event,
+          onTicketSelected: (eventId, ticketId) {
+            ref
+                .read(eventCoordinatorProvider)
+                .goToApplicationWizard(eventId, ticketId: ticketId);
+          },
+        ),
+      ),
+    );
+  }
+
   Widget _buildActionButton(
     BuildContext context,
     WidgetRef ref,
@@ -84,7 +101,12 @@ class _BottomTicketBar extends ConsumerWidget {
     );
     final config = controller.buttonConfig(state);
     final onPressed = config.enabled
-        ? () => controller.handleAction(context: context, state: state)
+        ? () => controller.handleAction(
+            context: context,
+            state: state,
+            // Fix #453: ticket feature 직접 참조를 콜백으로 위임
+            showTicketSelection: () => _showTicketSelection(context, ref),
+          )
         : null;
     Color? backgroundColor;
     switch (config.style) {

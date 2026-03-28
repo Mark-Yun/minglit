@@ -37,6 +37,7 @@ final class FetchEventFeedProvider
       double? latitude,
       double? longitude,
       int limit,
+      int offset,
     })
     super.argument,
   }) : super(
@@ -72,6 +73,7 @@ final class FetchEventFeedProvider
               double? latitude,
               double? longitude,
               int limit,
+              int offset,
             });
     return fetchEventFeed(
       ref,
@@ -79,6 +81,7 @@ final class FetchEventFeedProvider
       latitude: argument.latitude,
       longitude: argument.longitude,
       limit: argument.limit,
+      offset: argument.offset,
     );
   }
 
@@ -93,7 +96,7 @@ final class FetchEventFeedProvider
   }
 }
 
-String _$fetchEventFeedHash() => r'313b437798b1dded197ebdc0230248dac80d0746';
+String _$fetchEventFeedHash() => r'cc7e785c6c9d8ff603939be63f7f6975091ef144';
 
 /// **Raw Data Provider**
 /// Fetches event data from the server.
@@ -103,7 +106,13 @@ final class FetchEventFeedFamily extends $Family
     with
         $FunctionalFamilyOverride<
           FutureOr<List<Event>>,
-          ({EventFeedType type, double? latitude, double? longitude, int limit})
+          ({
+            EventFeedType type,
+            double? latitude,
+            double? longitude,
+            int limit,
+            int offset,
+          })
         > {
   const FetchEventFeedFamily._()
     : super(
@@ -123,12 +132,14 @@ final class FetchEventFeedFamily extends $Family
     double? latitude,
     double? longitude,
     int limit = 10,
+    int offset = 0,
   }) => FetchEventFeedProvider._(
     argument: (
       type: type,
       latitude: latitude,
       longitude: longitude,
       limit: limit,
+      offset: offset,
     ),
     from: this,
   );
@@ -431,4 +442,88 @@ final class PartyEventsFamily extends $Family
 
   @override
   String toString() => r'partyEventsProvider';
+}
+
+/// Fetches upcoming events for a specific partner.
+
+@ProviderFor(partnerEvents)
+const partnerEventsProvider = PartnerEventsFamily._();
+
+/// Fetches upcoming events for a specific partner.
+
+final class PartnerEventsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Event>>,
+          List<Event>,
+          FutureOr<List<Event>>
+        >
+    with $FutureModifier<List<Event>>, $FutureProvider<List<Event>> {
+  /// Fetches upcoming events for a specific partner.
+  const PartnerEventsProvider._({
+    required PartnerEventsFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'partnerEventsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$partnerEventsHash();
+
+  @override
+  String toString() {
+    return r'partnerEventsProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<List<Event>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<Event>> create(Ref ref) {
+    final argument = this.argument as String;
+    return partnerEvents(ref, partnerId: argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is PartnerEventsProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$partnerEventsHash() => r'ef022eb333c7854db57242116f8526e0d862379c';
+
+/// Fetches upcoming events for a specific partner.
+
+final class PartnerEventsFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<List<Event>>, String> {
+  const PartnerEventsFamily._()
+    : super(
+        retry: null,
+        name: r'partnerEventsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Fetches upcoming events for a specific partner.
+
+  PartnerEventsProvider call({required String partnerId}) =>
+      PartnerEventsProvider._(argument: partnerId, from: this);
+
+  @override
+  String toString() => r'partnerEventsProvider';
 }

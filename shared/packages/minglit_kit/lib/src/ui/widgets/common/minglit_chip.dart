@@ -48,14 +48,15 @@ class MinglitChip extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Determine padding and font size based on MinglitChipSize
-    final (padding, fontSize, iconSize) = switch (size) {
+    // Fix #474: Determine padding, text style, icon size based on MinglitChipSize
+    // small(10px)은 M3 슬롯 없음 — 극소 디버그용, fontSize 유지
+    final (padding, labelStyle, iconSize) = switch (size) {
       MinglitChipSize.small => (
         const EdgeInsets.symmetric(
           horizontal: MinglitSpacing.small,
           vertical: MinglitSpacing.xxsmall,
         ),
-        10.0,
+        theme.textTheme.labelSmall!.copyWith(fontSize: 10),
         12.0,
       ),
       MinglitChipSize.medium => (
@@ -63,7 +64,7 @@ class MinglitChip extends StatelessWidget {
           horizontal: MinglitSpacing.small,
           vertical: MinglitSpacing.xsmall,
         ),
-        12.0,
+        theme.textTheme.labelMedium!,
         14.0,
       ),
       MinglitChipSize.large => (
@@ -71,7 +72,7 @@ class MinglitChip extends StatelessWidget {
           horizontal: MinglitSpacing.sm,
           vertical: MinglitSpacing.xsmall2,
         ),
-        14.0,
+        theme.textTheme.labelLarge!,
         16.0,
       ),
     };
@@ -97,14 +98,24 @@ class MinglitChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Fix #136: Add vertical separator between icon and text for medium/large sizes
           if (icon != null) ...[
             Icon(icon, size: iconSize, color: textColor),
-            const SizedBox(width: MinglitSpacing.xxsmall),
+            if (size == MinglitChipSize.small)
+              const SizedBox(width: MinglitSpacing.xxsmall)
+            else ...[
+              const SizedBox(width: MinglitSpacing.xsmall),
+              Container(
+                width: 1,
+                height: iconSize - 2,
+                color: colorScheme.outlineVariant,
+              ),
+              const SizedBox(width: MinglitSpacing.xsmall),
+            ],
           ],
           Text(
             label,
-            style: theme.textTheme.labelSmall?.copyWith(
-              fontSize: fontSize,
+            style: labelStyle.copyWith(
               color: textColor,
               fontWeight: FontWeight.w500,
             ),

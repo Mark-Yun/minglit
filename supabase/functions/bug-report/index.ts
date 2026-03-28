@@ -1,13 +1,15 @@
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withSentry } from "../_shared/sentry_utils.ts";
+import { initSentry, withHandler, log } from "../_shared/logger.ts";
+
+const FN = "bug-report";
 
 const GITHUB_TOKEN = Deno.env.get("GITHUB_ACCESS_TOKEN");
 const GITHUB_REPO = "Mark-Yun/minglit";
 
 initSentry();
 
-Deno.serve(withSentry(async (req) => {
+Deno.serve(withHandler(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
 
   // Verify JWT (ES256-compatible, via Auth server)
@@ -103,7 +105,7 @@ ${screenshotSection}${environmentSection}${layoutDumpSection}`;
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("GitHub API Error:", errorText);
+      log({ function: FN, level: "error", message: "GitHub API Error", metadata: { detail: errorText } });
       throw new Error(`GitHub API Error: ${response.status}`);
     }
 
@@ -113,7 +115,7 @@ ${screenshotSection}${environmentSection}${layoutDumpSection}`;
 
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error("Internal Error:", message);
+    log({ function: FN, level: "error", message: "Internal Error", metadata: { detail: message } });
     return errorResponse(message, 500);
   }
 }));

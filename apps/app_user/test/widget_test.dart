@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:app_user/src/features/explore/providers/explore_state_provider.dart';
 import 'package:app_user/src/features/home/home_page.dart';
+import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -20,6 +20,7 @@ void main() {
           latitude: any(named: 'latitude'),
           longitude: any(named: 'longitude'),
           limit: any(named: 'limit'),
+          offset: any(named: 'offset'),
         ),
       ).thenAnswer((_) async => []);
     }
@@ -39,6 +40,7 @@ void main() {
       ProviderScope(
         overrides: [
           eventRepositoryProvider.overrideWithValue(mockEventRepository),
+          currentUserProvider.overrideWith((_) => null),
         ],
         child: MaterialApp(
           theme: MinglitTheme.materialTheme,
@@ -54,7 +56,18 @@ void main() {
   testWidgets('HomePage shows loading indicator before data resolves', (
     tester,
   ) async {
+    final mockEventRepository = MockEventRepository();
     final completer = Completer<List<Event>>();
+
+    // Mock returns pending future → keeps recommendationFeedProvider loading
+    for (final type in EventFeedType.values) {
+      when(
+        () => mockEventRepository.getEventsByType(
+          type: type,
+          offset: any(named: 'offset'),
+        ),
+      ).thenAnswer((_) => completer.future);
+    }
 
     // Fix overflow and asset loading errors
     await tester.binding.setSurfaceSize(const Size(1080, 1920));
@@ -70,9 +83,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          recommendationEventsProvider.overrideWith(
-            (ref) => completer.future,
-          ),
+          eventRepositoryProvider.overrideWithValue(mockEventRepository),
+          activeFiltersProvider.overrideWith(_NoFiltersNotifier.new),
+          currentUserProvider.overrideWith((_) => null),
         ],
         child: MaterialApp(
           theme: MinglitTheme.materialTheme,
@@ -83,6 +96,7 @@ void main() {
 
     await tester.pump();
     expect(find.byType(MinglitCircularProgressIndicator), findsOneWidget);
+    // completer never resolved → always loading
   });
 
   testWidgets('HomePage shows empty state text when no events returned', (
@@ -97,6 +111,7 @@ void main() {
           latitude: any(named: 'latitude'),
           longitude: any(named: 'longitude'),
           limit: any(named: 'limit'),
+          offset: any(named: 'offset'),
         ),
       ).thenAnswer((_) async => []);
     }
@@ -116,6 +131,7 @@ void main() {
       ProviderScope(
         overrides: [
           eventRepositoryProvider.overrideWithValue(mockEventRepository),
+          currentUserProvider.overrideWith((_) => null),
         ],
         child: MaterialApp(
           theme: MinglitTheme.materialTheme,
@@ -135,6 +151,10 @@ void main() {
     tester,
   ) async {
     final mockEventRepository = MockEventRepository();
+    final mockUser = MockUser();
+    when(() => mockUser.id).thenReturn('user1');
+    when(() => mockUser.email).thenReturn('test@example.com');
+    when(() => mockUser.userMetadata).thenReturn({'full_name': 'Test User'});
 
     for (final type in EventFeedType.values) {
       when(
@@ -143,6 +163,7 @@ void main() {
           latitude: any(named: 'latitude'),
           longitude: any(named: 'longitude'),
           limit: any(named: 'limit'),
+          offset: any(named: 'offset'),
         ),
       ).thenAnswer((_) async => []);
     }
@@ -162,6 +183,7 @@ void main() {
       ProviderScope(
         overrides: [
           eventRepositoryProvider.overrideWithValue(mockEventRepository),
+          currentUserProvider.overrideWith((_) => mockUser),
         ],
         child: MaterialApp(
           theme: MinglitTheme.materialTheme,
@@ -186,6 +208,7 @@ void main() {
           latitude: any(named: 'latitude'),
           longitude: any(named: 'longitude'),
           limit: any(named: 'limit'),
+          offset: any(named: 'offset'),
         ),
       ).thenAnswer((_) async => []);
     }
@@ -205,6 +228,7 @@ void main() {
       ProviderScope(
         overrides: [
           eventRepositoryProvider.overrideWithValue(mockEventRepository),
+          currentUserProvider.overrideWith((_) => null),
         ],
         child: MaterialApp(
           theme: MinglitTheme.materialTheme,
@@ -219,4 +243,12 @@ void main() {
     expect(find.text('마감임박'), findsOneWidget);
     expect(find.text('가까운날짜'), findsOneWidget);
   });
+}
+
+/// A notifier that starts with no active filters (all disabled),
+/// so filteredEventsProvider passes through without triggering
+/// location services or eligibility checks.
+class _NoFiltersNotifier extends ActiveFilters {
+  @override
+  ExploreFilters build() => const ExploreFilters();
 }

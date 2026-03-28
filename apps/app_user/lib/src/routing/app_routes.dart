@@ -1,15 +1,16 @@
 import 'package:app_user/src/features/auth/login_page.dart';
 import 'package:app_user/src/features/auth/ui/auth_callback_page.dart';
-import 'package:app_user/src/features/dev/user_dev_map.dart';
 import 'package:app_user/src/features/event/admission/event_application_wizard_page.dart';
 import 'package:app_user/src/features/event/detail/event_detail_page.dart';
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/features/home/my_page.dart';
 import 'package:app_user/src/features/partner/detail/partner_detail_page.dart';
+import 'package:app_user/src/features/partner/detail/partner_events_page.dart';
 import 'package:app_user/src/features/party/party_curation_page.dart';
 import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
 import 'package:app_user/src/features/search/search_page.dart';
-import 'package:app_user/src/ui/shell/user_scaffold.dart';
+import 'package:app_user/src/features/settings/blocked_partners_page.dart';
+import 'package:app_user/src/features/settings/privacy_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_dev.dart';
@@ -20,16 +21,6 @@ part 'app_routes.g.dart';
 // ---------------------------------------------------------------------------
 // Top-Level Routes (outside the shell)
 // ---------------------------------------------------------------------------
-
-/// **Dev Route**: Development Tools.
-/// Path: `/dev`
-@TypedGoRoute<DevRoute>(path: '/dev')
-class DevRoute extends GoRouteData with $DevRoute {
-  const DevRoute();
-
-  @override
-  Widget build(BuildContext context, GoRouterState state) => const UserDevMap();
-}
 
 /// **Dev User Switch Route**: Screen to switch between test users.
 /// Path: `/dev/switch`
@@ -90,6 +81,23 @@ class PartnerDetailRoute extends GoRouteData with $PartnerDetailRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       PartnerDetailPage(partnerId: partnerId);
+}
+
+/// **Partner Events Route**: Full list of events for a partner.
+/// Path: `/partners/:partnerId/events`
+@TypedGoRoute<PartnerEventsRoute>(path: '/partners/:partnerId/events')
+class PartnerEventsRoute extends GoRouteData with $PartnerEventsRoute {
+  const PartnerEventsRoute({
+    required this.partnerId,
+    required this.partnerName,
+  });
+
+  final String partnerId;
+  final String partnerName;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      PartnerEventsPage(partnerId: partnerId, partnerName: partnerName);
 }
 
 /// **Certification Route**: Identity Verification Screen.
@@ -154,57 +162,15 @@ class NotificationSettingsRoute extends GoRouteData
 }
 
 // ---------------------------------------------------------------------------
-// Stateful Shell Route (Bottom Navigation)
+// Shell Routes (promoted to top-level)
 // ---------------------------------------------------------------------------
-
-@TypedStatefulShellRoute<UserShellRoute>(
-  branches: [
-    // 1. Home Branch
-    TypedStatefulShellBranch<HomeBranch>(
-      routes: [
-        TypedGoRoute<HomeRoute>(
-          path: '/',
-          routes: [
-            TypedGoRoute<EventCurationRoute>(path: 'curation'),
-          ],
-        ),
-      ],
-    ),
-    // 2. My Page Branch
-    TypedStatefulShellBranch<MyPageBranch>(
-      routes: [
-        TypedGoRoute<MyPageRoute>(path: '/my'),
-      ],
-    ),
-  ],
-)
-class UserShellRoute extends StatefulShellRouteData {
-  const UserShellRoute();
-
-  @override
-  Widget builder(
-    BuildContext context,
-    GoRouterState state,
-    StatefulNavigationShell navigationShell,
-  ) {
-    return UserScaffold(navigationShell: navigationShell);
-  }
-}
-
-// --- Branches ---
-
-class HomeBranch extends StatefulShellBranchData {
-  const HomeBranch();
-}
-
-class MyPageBranch extends StatefulShellBranchData {
-  const MyPageBranch();
-}
-
-// --- Route Data Classes ---
 
 /// **Home Route**: Main Dashboard.
 /// Path: `/`
+@TypedGoRoute<HomeRoute>(
+  path: '/',
+  routes: [TypedGoRoute<EventCurationRoute>(path: 'curation')],
+)
 class HomeRoute extends GoRouteData with $HomeRoute {
   const HomeRoute();
 
@@ -236,9 +202,32 @@ class SearchRoute extends GoRouteData with $SearchRoute {
 
 /// **My Page Route**
 /// Path: `/my`
+@TypedGoRoute<MyPageRoute>(path: '/my')
 class MyPageRoute extends GoRouteData with $MyPageRoute {
   const MyPageRoute();
 
   @override
   Widget build(BuildContext context, GoRouterState state) => const MyPage();
+}
+
+/// **Privacy Route**: Privacy settings page.
+/// Path: `/my/privacy`
+@TypedGoRoute<PrivacyRoute>(path: '/my/privacy')
+class PrivacyRoute extends GoRouteData with $PrivacyRoute {
+  const PrivacyRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const PrivacyPage();
+}
+
+/// **Blocked Partners Route**: Blocked partners list page.
+/// Path: `/my/blocked-partners`
+@TypedGoRoute<BlockedPartnersRoute>(path: '/my/blocked-partners')
+class BlockedPartnersRoute extends GoRouteData with $BlockedPartnersRoute {
+  const BlockedPartnersRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const BlockedPartnersPage();
 }

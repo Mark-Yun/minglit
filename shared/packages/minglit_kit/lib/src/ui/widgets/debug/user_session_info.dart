@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/data/repositories/auth_repository.dart';
 import 'package:minglit_kit/src/features/auth/logic/auth_controller.dart';
+import 'package:minglit_kit/src/theme/minglit_text_theme_extension.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
 /// A widget that displays the current user's session information.
@@ -44,17 +45,20 @@ class UserSessionInfo extends ConsumerWidget {
       color: MinglitColors.surface,
       child: ExpansionTile(
         dense: true,
+        // Fix #474: fontSize 13 → ext.chipLabel, fontSize 11 → labelSmall
         title: Text(
           'Session: ${user.email ?? user.id}',
-          style: theme.textTheme.bodySmall!.copyWith(
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
-            color: MinglitColors.textSecondary,
-          ),
+          style: Theme.of(context)
+              .extension<MinglitTextThemeExtension>()!
+              .chipLabel
+              .copyWith(
+                fontWeight: FontWeight.bold,
+                color: MinglitColors.textSecondary,
+              ),
         ),
         subtitle: Text(
           'Tap to view full session JSON',
-          style: theme.textTheme.bodySmall!.copyWith(fontSize: 11),
+          style: theme.textTheme.labelSmall,
         ),
         leading: const Icon(
           Icons.account_circle,
@@ -63,20 +67,20 @@ class UserSessionInfo extends ConsumerWidget {
         childrenPadding: const EdgeInsets.all(MinglitSpacing.medium),
         expandedCrossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Fix #474: fontSize 11 → labelSmall
           Text(
             'User ID',
-            style: theme.textTheme.bodySmall!.copyWith(
+            style: theme.textTheme.labelSmall?.copyWith(
               fontWeight: FontWeight.bold,
-              fontSize: 11,
             ),
           ),
           SelectableText(user.id, style: theme.textTheme.bodySmall),
-          const SizedBox(height: 12),
+          const SizedBox(height: MinglitSpacing.sm),
+          // Fix #474: fontSize 11 → labelSmall
           Text(
             'Full Metadata (JSON)',
-            style: theme.textTheme.bodySmall!.copyWith(
+            style: theme.textTheme.labelSmall?.copyWith(
               fontWeight: FontWeight.bold,
-              fontSize: 11,
             ),
           ),
           Container(
@@ -86,16 +90,16 @@ class UserSessionInfo extends ConsumerWidget {
               color: MinglitColors.textPrimary.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(4),
             ),
+            // Fix #474: fontSize 11 → labelSmall
             child: SelectableText(
               prettyMetadata,
-              style: theme.textTheme.bodySmall!.copyWith(
+              style: theme.textTheme.labelSmall?.copyWith(
                 fontFamily: 'monospace',
-                fontSize: 11,
                 color: MinglitColors.textSecondary,
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: MinglitSpacing.medium),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(

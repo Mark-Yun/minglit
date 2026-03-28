@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MatchRule {
 
- String get id;@JsonKey(name: 'event_id') String get eventId;@JsonKey(name: 'source_group_id') String get sourceGroupId;@JsonKey(name: 'target_group_id') String get targetGroupId;@JsonKey(name: 'created_at') DateTime get createdAt;
+ String get id;@JsonKey(name: 'event_id') String get eventId;@JsonKey(name: 'source_group_id') String get sourceGroupId;@JsonKey(name: 'target_group_id') String get targetGroupId;@JsonKey(name: 'created_at') DateTime get createdAt;// Fix #305: 그룹별 투표 수 제한
+@JsonKey(name: 'vote_count') int get voteCount;
 /// Create a copy of MatchRule
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +29,16 @@ $MatchRuleCopyWith<MatchRule> get copyWith => _$MatchRuleCopyWithImpl<MatchRule>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MatchRule&&(identical(other.id, id) || other.id == id)&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.sourceGroupId, sourceGroupId) || other.sourceGroupId == sourceGroupId)&&(identical(other.targetGroupId, targetGroupId) || other.targetGroupId == targetGroupId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MatchRule&&(identical(other.id, id) || other.id == id)&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.sourceGroupId, sourceGroupId) || other.sourceGroupId == sourceGroupId)&&(identical(other.targetGroupId, targetGroupId) || other.targetGroupId == targetGroupId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.voteCount, voteCount) || other.voteCount == voteCount));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,eventId,sourceGroupId,targetGroupId,createdAt);
+int get hashCode => Object.hash(runtimeType,id,eventId,sourceGroupId,targetGroupId,createdAt,voteCount);
 
 @override
 String toString() {
-  return 'MatchRule(id: $id, eventId: $eventId, sourceGroupId: $sourceGroupId, targetGroupId: $targetGroupId, createdAt: $createdAt)';
+  return 'MatchRule(id: $id, eventId: $eventId, sourceGroupId: $sourceGroupId, targetGroupId: $targetGroupId, createdAt: $createdAt, voteCount: $voteCount)';
 }
 
 
@@ -48,7 +49,7 @@ abstract mixin class $MatchRuleCopyWith<$Res>  {
   factory $MatchRuleCopyWith(MatchRule value, $Res Function(MatchRule) _then) = _$MatchRuleCopyWithImpl;
 @useResult
 $Res call({
- String id,@JsonKey(name: 'event_id') String eventId,@JsonKey(name: 'source_group_id') String sourceGroupId,@JsonKey(name: 'target_group_id') String targetGroupId,@JsonKey(name: 'created_at') DateTime createdAt
+ String id,@JsonKey(name: 'event_id') String eventId,@JsonKey(name: 'source_group_id') String sourceGroupId,@JsonKey(name: 'target_group_id') String targetGroupId,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'vote_count') int voteCount
 });
 
 
@@ -65,14 +66,15 @@ class _$MatchRuleCopyWithImpl<$Res>
 
 /// Create a copy of MatchRule
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? eventId = null,Object? sourceGroupId = null,Object? targetGroupId = null,Object? createdAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? eventId = null,Object? sourceGroupId = null,Object? targetGroupId = null,Object? createdAt = null,Object? voteCount = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,eventId: null == eventId ? _self.eventId : eventId // ignore: cast_nullable_to_non_nullable
 as String,sourceGroupId: null == sourceGroupId ? _self.sourceGroupId : sourceGroupId // ignore: cast_nullable_to_non_nullable
 as String,targetGroupId: null == targetGroupId ? _self.targetGroupId : targetGroupId // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,voteCount: null == voteCount ? _self.voteCount : voteCount // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 
@@ -157,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'event_id')  String eventId, @JsonKey(name: 'source_group_id')  String sourceGroupId, @JsonKey(name: 'target_group_id')  String targetGroupId, @JsonKey(name: 'created_at')  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'event_id')  String eventId, @JsonKey(name: 'source_group_id')  String sourceGroupId, @JsonKey(name: 'target_group_id')  String targetGroupId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'vote_count')  int voteCount)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MatchRule() when $default != null:
-return $default(_that.id,_that.eventId,_that.sourceGroupId,_that.targetGroupId,_that.createdAt);case _:
+return $default(_that.id,_that.eventId,_that.sourceGroupId,_that.targetGroupId,_that.createdAt,_that.voteCount);case _:
   return orElse();
 
 }
@@ -178,10 +180,10 @@ return $default(_that.id,_that.eventId,_that.sourceGroupId,_that.targetGroupId,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'event_id')  String eventId, @JsonKey(name: 'source_group_id')  String sourceGroupId, @JsonKey(name: 'target_group_id')  String targetGroupId, @JsonKey(name: 'created_at')  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'event_id')  String eventId, @JsonKey(name: 'source_group_id')  String sourceGroupId, @JsonKey(name: 'target_group_id')  String targetGroupId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'vote_count')  int voteCount)  $default,) {final _that = this;
 switch (_that) {
 case _MatchRule():
-return $default(_that.id,_that.eventId,_that.sourceGroupId,_that.targetGroupId,_that.createdAt);case _:
+return $default(_that.id,_that.eventId,_that.sourceGroupId,_that.targetGroupId,_that.createdAt,_that.voteCount);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +200,10 @@ return $default(_that.id,_that.eventId,_that.sourceGroupId,_that.targetGroupId,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'event_id')  String eventId, @JsonKey(name: 'source_group_id')  String sourceGroupId, @JsonKey(name: 'target_group_id')  String targetGroupId, @JsonKey(name: 'created_at')  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'event_id')  String eventId, @JsonKey(name: 'source_group_id')  String sourceGroupId, @JsonKey(name: 'target_group_id')  String targetGroupId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'vote_count')  int voteCount)?  $default,) {final _that = this;
 switch (_that) {
 case _MatchRule() when $default != null:
-return $default(_that.id,_that.eventId,_that.sourceGroupId,_that.targetGroupId,_that.createdAt);case _:
+return $default(_that.id,_that.eventId,_that.sourceGroupId,_that.targetGroupId,_that.createdAt,_that.voteCount);case _:
   return null;
 
 }
@@ -213,7 +215,7 @@ return $default(_that.id,_that.eventId,_that.sourceGroupId,_that.targetGroupId,_
 @JsonSerializable()
 
 class _MatchRule implements MatchRule {
-  const _MatchRule({required this.id, @JsonKey(name: 'event_id') required this.eventId, @JsonKey(name: 'source_group_id') required this.sourceGroupId, @JsonKey(name: 'target_group_id') required this.targetGroupId, @JsonKey(name: 'created_at') required this.createdAt});
+  const _MatchRule({required this.id, @JsonKey(name: 'event_id') required this.eventId, @JsonKey(name: 'source_group_id') required this.sourceGroupId, @JsonKey(name: 'target_group_id') required this.targetGroupId, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'vote_count') this.voteCount = 1});
   factory _MatchRule.fromJson(Map<String, dynamic> json) => _$MatchRuleFromJson(json);
 
 @override final  String id;
@@ -221,6 +223,8 @@ class _MatchRule implements MatchRule {
 @override@JsonKey(name: 'source_group_id') final  String sourceGroupId;
 @override@JsonKey(name: 'target_group_id') final  String targetGroupId;
 @override@JsonKey(name: 'created_at') final  DateTime createdAt;
+// Fix #305: 그룹별 투표 수 제한
+@override@JsonKey(name: 'vote_count') final  int voteCount;
 
 /// Create a copy of MatchRule
 /// with the given fields replaced by the non-null parameter values.
@@ -235,16 +239,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MatchRule&&(identical(other.id, id) || other.id == id)&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.sourceGroupId, sourceGroupId) || other.sourceGroupId == sourceGroupId)&&(identical(other.targetGroupId, targetGroupId) || other.targetGroupId == targetGroupId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MatchRule&&(identical(other.id, id) || other.id == id)&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.sourceGroupId, sourceGroupId) || other.sourceGroupId == sourceGroupId)&&(identical(other.targetGroupId, targetGroupId) || other.targetGroupId == targetGroupId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.voteCount, voteCount) || other.voteCount == voteCount));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,eventId,sourceGroupId,targetGroupId,createdAt);
+int get hashCode => Object.hash(runtimeType,id,eventId,sourceGroupId,targetGroupId,createdAt,voteCount);
 
 @override
 String toString() {
-  return 'MatchRule(id: $id, eventId: $eventId, sourceGroupId: $sourceGroupId, targetGroupId: $targetGroupId, createdAt: $createdAt)';
+  return 'MatchRule(id: $id, eventId: $eventId, sourceGroupId: $sourceGroupId, targetGroupId: $targetGroupId, createdAt: $createdAt, voteCount: $voteCount)';
 }
 
 
@@ -255,7 +259,7 @@ abstract mixin class _$MatchRuleCopyWith<$Res> implements $MatchRuleCopyWith<$Re
   factory _$MatchRuleCopyWith(_MatchRule value, $Res Function(_MatchRule) _then) = __$MatchRuleCopyWithImpl;
 @override @useResult
 $Res call({
- String id,@JsonKey(name: 'event_id') String eventId,@JsonKey(name: 'source_group_id') String sourceGroupId,@JsonKey(name: 'target_group_id') String targetGroupId,@JsonKey(name: 'created_at') DateTime createdAt
+ String id,@JsonKey(name: 'event_id') String eventId,@JsonKey(name: 'source_group_id') String sourceGroupId,@JsonKey(name: 'target_group_id') String targetGroupId,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'vote_count') int voteCount
 });
 
 
@@ -272,14 +276,15 @@ class __$MatchRuleCopyWithImpl<$Res>
 
 /// Create a copy of MatchRule
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? eventId = null,Object? sourceGroupId = null,Object? targetGroupId = null,Object? createdAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? eventId = null,Object? sourceGroupId = null,Object? targetGroupId = null,Object? createdAt = null,Object? voteCount = null,}) {
   return _then(_MatchRule(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,eventId: null == eventId ? _self.eventId : eventId // ignore: cast_nullable_to_non_nullable
 as String,sourceGroupId: null == sourceGroupId ? _self.sourceGroupId : sourceGroupId // ignore: cast_nullable_to_non_nullable
 as String,targetGroupId: null == targetGroupId ? _self.targetGroupId : targetGroupId // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,voteCount: null == voteCount ? _self.voteCount : voteCount // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 

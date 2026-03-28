@@ -1,9 +1,11 @@
 // NOTE: This worker is currently unused; the `recommendation_updates` queue
 // is not created by migrations. Keep for reference, but clean up when the
 // queue is removed or renamed.
-import { createClient } from '@supabase/supabase-js'
+import { createServiceClient } from '../_shared/supabase_client.ts'
 import { HybridCalculator } from './calculator.ts'
-import { initSentry, withSentryHandler } from '../_shared/sentry_utils.ts'
+import { initSentry, withHandler, log } from '../_shared/logger.ts'
+
+const FN = "profile-update";
 
 const WEIGHTS: Record<string, number> = {
   view: 1,
@@ -16,18 +18,16 @@ const calculator = new HybridCalculator({ decayRate: 0.05 });
 
 initSentry();
 
-Deno.serve(withSentryHandler(async (_req) => {
+Deno.serve(withHandler(async (_req) => {
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const supabase = createServiceClient()
 
     const { data: queueMsgs, error: qError } = await supabase.rpc('pgmq_pop', {
       queue_name: 'recommendation_updates'
     });
 
     if (qError) {
-        console.error('PGMQ Pop Error:', qError);
+        log({ function: FN, level: "error", message: "PGMQ Pop Error", metadata: { detail: qError } });
         throw qError;
     }
     
@@ -42,7 +42,8 @@ Deno.serve(withSentryHandler(async (_req) => {
     const { user_id, party_id, action_type } = msg.message;
     const weight = WEIGHTS[action_type] ?? 0;
 
-    console.log(`Processing action: ${action_type} (w:${weight}) for user ${user_id}`);
+    // Fix #167: user_id 평문 로깅 방지
+log({ function: FN, level: "info", message: `Processing action: ${action_type} (w:${weight}) for user ${typeof user_id === "string" ? user_id.slice(0, 8) : "unknown"}...` });
 
     const [userRes, partyRes] = await Promise.all([
       supabase.from('user_embeddings').select('embedding').eq('user_id', user_id).maybeSingle(),
@@ -50,7 +51,7 @@ Deno.serve(withSentryHandler(async (_req) => {
     ]);
 
     if (partyRes.error || !partyRes.data) {
-        console.warn(`Party embedding not found for ${party_id}. Skipping.`);
+        log({ function: FN, level: "warn", message: `Party embedding not found for ${party_id}. Skipping.` });
         return new Response(JSON.stringify({ error: "Party embedding missing" }), { status: 404 });
     }
 
@@ -76,7 +77,7 @@ Deno.serve(withSentryHandler(async (_req) => {
 
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : String(err);
-    console.error('Error:', errorMessage);
+    log({ function: FN, level: "error", message: "Error", metadata: { detail: errorMessage } });
     return new Response(JSON.stringify({ error: errorMessage }), { 
       status: 500,
       headers: { "Content-Type": "application/json" }

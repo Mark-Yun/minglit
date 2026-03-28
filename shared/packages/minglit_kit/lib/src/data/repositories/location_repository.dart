@@ -64,7 +64,12 @@ class LocationRepository {
     }
   }
 
-  /// Creates a new location entry.
+  // Fix #316: createLocation via EF (partner-manage-party create action)
+  /// Creates a new location entry via Edge Function.
+  ///
+  /// Note: Location creation is handled atomically within the
+  /// partner-manage-party EF create action. This method is kept for
+  /// standalone location creation when not part of a party creation flow.
   Future<Location> createLocation(Location location) async {
     Log.d('createLocation called | name: ${location.name}');
     try {
@@ -105,6 +110,10 @@ class LocationRepository {
   }
 
   /// Updates location details (address detail and directions guide).
+  ///
+  /// Note: Location update is also available via partner-manage-party EF
+  /// update action. This direct method is kept for cases where only
+  /// location details need updating without party context.
   Future<void> updateLocationDetails({
     required String locationId,
     String? addressDetail,

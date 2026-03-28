@@ -1,7 +1,7 @@
 import 'package:app_partner/src/features/admin/partner_application_detail_page.dart';
 import 'package:app_partner/src/features/admin/partner_application_list_page.dart';
 import 'package:app_partner/src/features/auth/partner_login_page.dart';
-import 'package:app_partner/src/features/dev/partner_dev_map.dart';
+import 'package:app_partner/src/features/checkin/checkin_placeholder_page.dart';
 import 'package:app_partner/src/features/home/guide/location_guide_page.dart';
 import 'package:app_partner/src/features/home/partner_home_page.dart';
 import 'package:app_partner/src/features/member/partner_member_list_page.dart';
@@ -9,11 +9,14 @@ import 'package:app_partner/src/features/member/partner_member_permission_page.d
 import 'package:app_partner/src/features/more/more_page.dart';
 import 'package:app_partner/src/features/onboarding/partner_apply_page.dart';
 import 'package:app_partner/src/features/onboarding/partner_apply_status_page.dart';
+import 'package:app_partner/src/features/onboarding/partner_welcome_page.dart';
 import 'package:app_partner/src/features/party/create/party_create_wizard_page.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_page.dart';
 import 'package:app_partner/src/features/party/event/create/event_create_page.dart';
 import 'package:app_partner/src/features/party/event/detail/event_detail_page.dart';
 import 'package:app_partner/src/features/party/list/party_list_page.dart';
+import 'package:app_partner/src/features/settlement/bank_account_page.dart';
+import 'package:app_partner/src/features/settlement/settlement_detail_page.dart';
 import 'package:app_partner/src/features/settlement/settlement_page.dart';
 import 'package:app_partner/src/features/ticket/create/ticket_create_page.dart';
 import 'package:app_partner/src/features/ticket/edit/ticket_edit_page.dart';
@@ -29,15 +32,7 @@ part 'app_routes.g.dart';
 
 // --- Top Level Routes (No Shell) ---
 
-/// **Dev: Dev Map Route**
-@TypedGoRoute<DevMapRoute>(path: '/dev')
-class DevMapRoute extends GoRouteData with $DevMapRoute {
-  const DevMapRoute();
-  @override
-  Widget build(BuildContext context, GoRouterState state) =>
-      const PartnerDevMap();
-}
-
+/// **Dev User Switch Route**: Screen to switch between test users.
 @TypedGoRoute<DevUserSwitchRoute>(path: '/dev/user-switch')
 class DevUserSwitchRoute extends GoRouteData with $DevUserSwitchRoute {
   const DevUserSwitchRoute();
@@ -74,6 +69,15 @@ class PartnerApplyStatusRoute extends GoRouteData
       const PartnerApplyStatusPage();
 }
 
+/// **Partner Welcome Route**: Onboarding page before application wizard.
+@TypedGoRoute<PartnerWelcomeRoute>(path: '/welcome')
+class PartnerWelcomeRoute extends GoRouteData with $PartnerWelcomeRoute {
+  const PartnerWelcomeRoute();
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const PartnerWelcomePage();
+}
+
 /// **Notification Center Route**
 /// Path: `/notifications`
 @TypedGoRoute<NotificationCenterRoute>(path: '/notifications')
@@ -96,66 +100,81 @@ class NotificationCenterRoute extends GoRouteData
         TypedGoRoute<HomeRoute>(
           path: '/',
           routes: [
-            // Sub-routes accessible from Home
-            TypedGoRoute<ApplicationListRoute>(
-              path: 'applications',
-              routes: [
-                TypedGoRoute<ApplicationDetailRoute>(path: ':applicationId'),
-              ],
-            ),
             TypedGoRoute<LocationGuideRoute>(path: 'guide/location'),
           ],
         ),
       ],
     ),
-    // 2. Party Management Branch
-    TypedStatefulShellBranch<PartyBranch>(
+    // 2. Application Management Branch
+    TypedStatefulShellBranch<ApplicationBranch>(
       routes: [
-        TypedGoRoute<PartyListRoute>(
-          path: '/parties',
+        TypedGoRoute<ApplicationListRoute>(
+          path: '/applications',
           routes: [
-            TypedGoRoute<PartyCreateRoute>(path: 'create'),
-            TypedGoRoute<PartyDetailRoute>(
-              path: ':partyId',
-              routes: [
-                TypedGoRoute<PartyEditRoute>(path: 'edit'),
-                TypedGoRoute<PartyTicketEditRoute>(
-                  path: 'tickets/:ticketId/edit',
-                ),
-                TypedGoRoute<EventCreateRoute>(path: 'events/create'),
-                TypedGoRoute<EventDetailRoute>(
-                  path: 'events/:eventId',
-                  routes: [
-                    TypedGoRoute<TicketCreateRoute>(path: 'tickets/create'),
-                    TypedGoRoute<TicketEditRoute>(
-                      path: 'tickets/:ticketId/edit',
-                    ),
-                  ],
-                ),
-              ],
-            ),
+            TypedGoRoute<ApplicationDetailRoute>(path: ':applicationId'),
           ],
         ),
       ],
     ),
-    // 3. Revenue Management Branch
-    TypedStatefulShellBranch<SettlementBranch>(
+    // 3. Check-in Branch
+    TypedStatefulShellBranch<CheckinBranch>(
       routes: [
-        TypedGoRoute<SettlementRoute>(path: '/settlement'),
+        TypedGoRoute<CheckinRoute>(
+          path: '/checkin',
+        ),
       ],
     ),
-    // 4. Settings & Profile Branch
+    // 4. Settlement Branch
+    TypedStatefulShellBranch<SettlementBranch>(
+      routes: [
+        TypedGoRoute<SettlementRoute>(
+          path: '/settlement',
+          routes: [
+            TypedGoRoute<BankAccountRoute>(path: 'bank-account'),
+            TypedGoRoute<SettlementDetailRoute>(path: ':id'),
+          ],
+        ),
+      ],
+    ),
+    // 5. More Branch (Party management, settings, etc.)
     TypedStatefulShellBranch<MoreBranch>(
       routes: [
         TypedGoRoute<MoreRoute>(
           path: '/more',
           routes: [
-            // Settings, Profile, etc.
-            TypedGoRoute<VerificationManageRoute>(
-              path: 'verifications/manage',
+            // Party management (moved from dedicated tab)
+            TypedGoRoute<PartyListRoute>(
+              path: 'parties',
+              routes: [
+                TypedGoRoute<PartyCreateRoute>(path: 'create'),
+                TypedGoRoute<PartyDetailRoute>(
+                  path: ':partyId',
+                  routes: [
+                    TypedGoRoute<PartyEditRoute>(path: 'edit'),
+                    TypedGoRoute<PartyTicketEditRoute>(
+                      path: 'tickets/:ticketId/edit',
+                    ),
+                    TypedGoRoute<EventCreateRoute>(path: 'events/create'),
+                    TypedGoRoute<EventDetailRoute>(
+                      path: 'events/:eventId',
+                      routes: [
+                        TypedGoRoute<TicketCreateRoute>(
+                          path: 'tickets/create',
+                        ),
+                        TypedGoRoute<TicketEditRoute>(
+                          path: 'tickets/:ticketId/edit',
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
             ),
-            TypedGoRoute<CreateVerificationRoute>(
-              path: 'verifications/create',
+            // Settings, Profile, etc.
+            TypedGoRoute<VerificationManageRoute>(path: 'verifications/manage'),
+            TypedGoRoute<CreateVerificationRoute>(path: 'verifications/create'),
+            TypedGoRoute<NotificationSettingsRoute>(
+              path: 'notification-settings',
             ),
             TypedGoRoute<MemberListRoute>(
               path: 'partners/:partnerId/members',
@@ -190,8 +209,12 @@ class HomeBranch extends StatefulShellBranchData {
   const HomeBranch();
 }
 
-class PartyBranch extends StatefulShellBranchData {
-  const PartyBranch();
+class ApplicationBranch extends StatefulShellBranchData {
+  const ApplicationBranch();
+}
+
+class CheckinBranch extends StatefulShellBranchData {
+  const CheckinBranch();
 }
 
 class SettlementBranch extends StatefulShellBranchData {
@@ -234,7 +257,15 @@ class LocationGuideRoute extends GoRouteData with $LocationGuideRoute {
       const LocationGuidePage();
 }
 
-// 2. Party
+// 2. Checkin
+class CheckinRoute extends GoRouteData with $CheckinRoute {
+  const CheckinRoute();
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const CheckinPlaceholderPage();
+}
+
+// 3. Party (under More)
 class PartyListRoute extends GoRouteData with $PartyListRoute {
   const PartyListRoute();
   @override
@@ -322,6 +353,21 @@ class SettlementRoute extends GoRouteData with $SettlementRoute {
       const SettlementPage();
 }
 
+class SettlementDetailRoute extends GoRouteData with $SettlementDetailRoute {
+  const SettlementDetailRoute({required this.id});
+  final String id;
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      SettlementDetailPage(itemId: id);
+}
+
+class BankAccountRoute extends GoRouteData with $BankAccountRoute {
+  const BankAccountRoute();
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const BankAccountPage();
+}
+
 // 4. More
 class MoreRoute extends GoRouteData with $MoreRoute {
   const MoreRoute();
@@ -367,4 +413,12 @@ class MemberPermissionRoute extends GoRouteData with $MemberPermissionRoute {
         partnerId: partnerId,
         targetUserId: targetUserId,
       );
+}
+
+class NotificationSettingsRoute extends GoRouteData
+    with $NotificationSettingsRoute {
+  const NotificationSettingsRoute();
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const NotificationSettingsScreen();
 }

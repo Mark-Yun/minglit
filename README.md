@@ -10,7 +10,6 @@ apps/
   app_partner/           # Flutter 파트너 앱
   landing_user/          # Next.js 유저 랜딩
   landing_partner/       # Next.js 파트너 랜딩
-  integration_scenario_tester/
 
 shared/packages/
   minglit_kit/           # 공유 UI/로직 패키지
@@ -112,6 +111,11 @@ cd supabase/functions/dev-seed && deno test --allow-env --allow-net
 # Lint
 flutter analyze
 ```
+
+## Test Reports
+
+- **Coverage**: [Codecov Dashboard](https://app.codecov.io/gh/Mark-Yun/minglit)
+- **Test Report**: [Allure Report](https://mark-yun.github.io/minglit/) (weekly update)
 
 ## Edge Functions
 

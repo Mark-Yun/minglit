@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { StatsigAnalyticsProvider } from "@/components/statsig-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -27,7 +28,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <StatsigAnalyticsProvider>
+          {children}
+        </StatsigAnalyticsProvider>
       </body>
     </html>
   );

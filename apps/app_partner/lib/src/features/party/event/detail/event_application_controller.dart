@@ -1,6 +1,5 @@
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'event_application_controller.g.dart';
 
@@ -28,34 +27,28 @@ class EventApplicationReviewController
   }) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
+      // Fix #404: Use repository instead of direct Supabase access
       final repo = ref.read(verificationRepositoryProvider);
 
-      // Find the submission ID first.
-      final supabase = Supabase.instance.client;
-      final subData = await supabase
-          .from('verification_submissions')
-          .select('id')
-          .eq('application_id', applicationId)
-          .maybeSingle();
+      // Find the submission ID first via repository.
+      final subData = await repo.getSubmissionByApplicationId(applicationId);
 
       if (subData != null) {
         final submissionId = subData['id'] as String;
+        // Fix #301: adminComment removed — will be handled by partner EF (#309)
         await repo.reviewRequest(
           submissionId: submissionId,
           status: status == 'approved'
               ? VerificationStatus.approved
               : VerificationStatus.rejected,
-          adminComment: reason,
         );
       } else {
-        // No submission, handle direct application status update
-        await supabase
-            .from('event_applications')
-            .update({
-              'status': status,
-              'rejection_reason': reason,
-            })
-            .eq('id', applicationId);
+        // No submission, handle direct application status update via repository
+        await repo.updateApplicationStatus(
+          applicationId: applicationId,
+          status: status,
+          rejectionReason: reason,
+        );
       }
     });
   }

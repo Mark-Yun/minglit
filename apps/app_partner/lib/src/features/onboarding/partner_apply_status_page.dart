@@ -117,8 +117,9 @@ class PartnerApplyStatusPage extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: MinglitSpacing.small),
+                  // Fix #180: 이중 강제 언래핑 제거 — null-safe 접근으로 crash 방지
                   Text(
-                    application!.adminComment!,
+                    application?.adminComment ?? '',
                     style: theme.textTheme.bodyMedium,
                   ),
                 ],
@@ -151,6 +152,7 @@ class PartnerApplyStatusPage extends ConsumerWidget {
   ) {
     return OutlinedButton(
       onPressed: () async {
+        // Fix: GoRouter redirect가 signOut 중 widget tree를 변경하는 race condition 방지
         final authRepo = ref.read(authRepositoryProvider);
         await authRepo.signOut();
       },
