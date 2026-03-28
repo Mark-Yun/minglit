@@ -2,6 +2,11 @@
   "$comment": "워커 라우팅 테이블 — 라벨 기반 워커 간 상호작용 정의",
 
   "routing": {
+    "needs-pm": {
+      "handler": "pm-staff",
+      "color": "c5def5",
+      "desc": "피처 기획 요청"
+    },
     "needs-arch": {
       "handler": "audit-arch",
       "color": "c5def5",

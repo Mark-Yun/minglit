@@ -1,6 +1,7 @@
 @Tags(['golden'])
 library;
 
+import 'package:alchemist/alchemist.dart';
 import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/features/home/partner_home_coordinator.dart';
 import 'package:app_partner/src/features/home/partner_home_page.dart';
@@ -17,28 +18,50 @@ void main() {
     await initializeDateFormatting('ko_KR');
   });
 
-  group('PartnerHomePage golden', () {
-    final baseTime = DateTime(2026, 5, 10, 19);
-    final mockCoordinator = MockPartnerHomeCoordinator();
+  final baseTime = DateTime(2026, 5, 10, 19);
+  final mockCoordinator = MockPartnerHomeCoordinator();
 
-    testWidgets('empty dashboard', (tester) async {
-      await expectPageGolden(
-        tester,
-        page: const PartnerHomePage(),
-        goldenFileName: 'goldens/partner_home_page_empty.png',
-        overrides: [
-          currentPartnerInfoProvider.overrideWith(
-            (_) async => const Partner(id: 'p1', name: '테스트 파트너'),
+  goldenTest(
+    'PartnerHomePage empty dashboard',
+    fileName: 'partner_home_page_empty',
+    pumpBeforeTest: (tester) async {
+      await tester.pumpAndSettle();
+    },
+    builder: () => GoldenTestGroup(
+      columnWidthBuilder: (_) => const FixedColumnWidth(400),
+      children: [
+        GoldenTestScenario(
+          name: 'empty dashboard',
+          child: SizedBox(
+            width: 390,
+            height: 844,
+            child: PartnerGoldenPageWrapper(
+              page: const PartnerHomePage(),
+              overrides: [
+                currentPartnerInfoProvider.overrideWith(
+                  (_) async => const Partner(id: 'p1', name: '테스트 파트너'),
+                ),
+                partnerHomeCoordinatorProvider.overrideWithValue(
+                  mockCoordinator,
+                ),
+                partnerDashboardControllerProvider.overrideWith(
+                  _EmptyDashboardController.new,
+                ),
+              ],
+            ),
           ),
-          partnerHomeCoordinatorProvider.overrideWithValue(mockCoordinator),
-          partnerDashboardControllerProvider.overrideWith(
-            _EmptyDashboardController.new,
-          ),
-        ],
-      );
-    });
+        ),
+      ],
+    ),
+  );
 
-    testWidgets('with data', (tester) async {
+  goldenTest(
+    'PartnerHomePage with data',
+    fileName: 'partner_home_page_with_data',
+    pumpBeforeTest: (tester) async {
+      await tester.pumpAndSettle();
+    },
+    builder: () {
       final events = List.generate(
         2,
         (i) => Event(
@@ -62,46 +85,82 @@ void main() {
         ),
       ];
 
-      await expectPageGolden(
-        tester,
-        page: const PartnerHomePage(),
-        goldenFileName: 'goldens/partner_home_page_with_data.png',
-        overrides: [
-          currentPartnerInfoProvider.overrideWith(
-            (_) async => const Partner(id: 'p1', name: '테스트 파트너'),
-          ),
-          partnerHomeCoordinatorProvider.overrideWithValue(mockCoordinator),
-          partnerDashboardControllerProvider.overrideWith(
-            () => _LoadedDashboardController(
-              pendingCount: 3,
-              upcoming: events,
-              closingSoon: [events.first],
-              active: parties,
+      return GoldenTestGroup(
+        columnWidthBuilder: (_) => const FixedColumnWidth(400),
+        children: [
+          GoldenTestScenario(
+            name: 'with data',
+            child: SizedBox(
+              width: 390,
+              height: 844,
+              child: PartnerGoldenPageWrapper(
+                page: const PartnerHomePage(),
+                overrides: [
+                  currentPartnerInfoProvider.overrideWith(
+                    (_) async => const Partner(id: 'p1', name: '테스트 파트너'),
+                  ),
+                  partnerHomeCoordinatorProvider.overrideWithValue(
+                    mockCoordinator,
+                  ),
+                  partnerDashboardControllerProvider.overrideWith(
+                    () => _LoadedDashboardController(
+                      pendingCount: 3,
+                      upcoming: events,
+                      closingSoon: [events.first],
+                      active: parties,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       );
-    });
+    },
+  );
 
-    testWidgets('empty dashboard (dark)', (tester) async {
-      await expectPageGolden(
-        tester,
-        page: const PartnerHomePage(),
-        goldenFileName: 'goldens/partner_home_page_empty_dark.png',
-        overrides: [
-          currentPartnerInfoProvider.overrideWith(
-            (_) async => const Partner(id: 'p1', name: '테스트 파트너'),
+  goldenTest(
+    'PartnerHomePage empty dashboard (dark)',
+    fileName: 'partner_home_page_empty_dark',
+    pumpBeforeTest: (tester) async {
+      await tester.pumpAndSettle();
+    },
+    builder: () => GoldenTestGroup(
+      columnWidthBuilder: (_) => const FixedColumnWidth(400),
+      children: [
+        GoldenTestScenario(
+          name: 'empty dashboard (dark)',
+          child: SizedBox(
+            width: 390,
+            height: 844,
+            child: PartnerGoldenPageWrapper(
+              page: const PartnerHomePage(),
+              brightness: Brightness.dark,
+              overrides: [
+                currentPartnerInfoProvider.overrideWith(
+                  (_) async => const Partner(id: 'p1', name: '테스트 파트너'),
+                ),
+                partnerHomeCoordinatorProvider.overrideWithValue(
+                  mockCoordinator,
+                ),
+                partnerDashboardControllerProvider.overrideWith(
+                  _EmptyDashboardController.new,
+                ),
+              ],
+            ),
           ),
-          partnerHomeCoordinatorProvider.overrideWithValue(mockCoordinator),
-          partnerDashboardControllerProvider.overrideWith(
-            _EmptyDashboardController.new,
-          ),
-        ],
-        brightness: Brightness.dark,
-      );
-    });
+        ),
+      ],
+    ),
+  );
 
-    testWidgets('with data (dark)', (tester) async {
+  goldenTest(
+    'PartnerHomePage with data (dark)',
+    fileName: 'partner_home_page_with_data_dark',
+    pumpBeforeTest: (tester) async {
+      await tester.pumpAndSettle();
+    },
+    builder: () {
       final events = List.generate(
         2,
         (i) => Event(
@@ -125,28 +184,40 @@ void main() {
         ),
       ];
 
-      await expectPageGolden(
-        tester,
-        page: const PartnerHomePage(),
-        goldenFileName: 'goldens/partner_home_page_with_data_dark.png',
-        overrides: [
-          currentPartnerInfoProvider.overrideWith(
-            (_) async => const Partner(id: 'p1', name: '테스트 파트너'),
-          ),
-          partnerHomeCoordinatorProvider.overrideWithValue(mockCoordinator),
-          partnerDashboardControllerProvider.overrideWith(
-            () => _LoadedDashboardController(
-              pendingCount: 3,
-              upcoming: events,
-              closingSoon: [events.first],
-              active: parties,
+      return GoldenTestGroup(
+        columnWidthBuilder: (_) => const FixedColumnWidth(400),
+        children: [
+          GoldenTestScenario(
+            name: 'with data (dark)',
+            child: SizedBox(
+              width: 390,
+              height: 844,
+              child: PartnerGoldenPageWrapper(
+                page: const PartnerHomePage(),
+                brightness: Brightness.dark,
+                overrides: [
+                  currentPartnerInfoProvider.overrideWith(
+                    (_) async => const Partner(id: 'p1', name: '테스트 파트너'),
+                  ),
+                  partnerHomeCoordinatorProvider.overrideWithValue(
+                    mockCoordinator,
+                  ),
+                  partnerDashboardControllerProvider.overrideWith(
+                    () => _LoadedDashboardController(
+                      pendingCount: 3,
+                      upcoming: events,
+                      closingSoon: [events.first],
+                      active: parties,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
-        brightness: Brightness.dark,
       );
-    });
-  });
+    },
+  );
 }
 
 class _EmptyDashboardController extends PartnerDashboardController {

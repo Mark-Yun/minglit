@@ -42,6 +42,7 @@ issue-worker가 UI 문서 부족 발견
 
 | 라벨 | 담당 워커 | 설명 |
 |------|----------|------|
+| `needs-pm` | pm-staff | 피처 기획 요청 |
 | `needs-arch` | audit-arch | 아키텍처 문서/분석 요청 |
 | `needs-uiux` | audit-uiux | UI/UX 문서/디자인 요청 |
 | `needs-qa` | audit-qa | 테스트 보강 요청 |
