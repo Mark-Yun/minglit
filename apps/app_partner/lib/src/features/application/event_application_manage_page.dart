@@ -529,9 +529,9 @@ class _ApplicationItem extends StatelessWidget {
             ),
             const SizedBox(width: MinglitSpacing.xsmall),
             IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.check,
-                color: Colors.white,
+                color: theme.colorScheme.onPrimary,
                 size: MinglitIconSize.small,
               ),
               onPressed: onApprove,
