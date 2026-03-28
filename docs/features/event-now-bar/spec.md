@@ -71,7 +71,7 @@
 
 홈 화면 하단, BottomNavigationBar 바로 위에 고정되는 컴팩트 바.
 
-```
+```text
 ┌─────────────────────────────────────────────┐
 │ 🟣 강남 밍릿파티 · 체크인 대기 중    19:00 → │
 └─────────────────────────────────────────────┘
@@ -109,7 +109,7 @@
 
 #### Phase 1: 체크인 전 (이벤트 시작 3시간 전 ~ 체크인 시점)
 
-```
+```text
 ┌─────────────────────────────────────┐
 │  ── drag handle ──                  │
 │                                     │
@@ -133,7 +133,7 @@
 
 #### Phase 2: 체크인 완료 → 매칭 대기
 
-```
+```text
 ┌─────────────────────────────────────┐
 │  ── drag handle ──                  │
 │                                     │
@@ -154,7 +154,7 @@
 
 #### Phase 3: 매칭 투표 중
 
-```
+```text
 ┌─────────────────────────────────────┐
 │  ── drag handle ──                  │
 │                                     │
@@ -173,9 +173,13 @@
 - `isScrollControlled: true` + `DraggableScrollableSheet`로 풀스크린까지 확장 가능
 - 높이: 화면의 ~85% (기본), 풀스크린 확장 가능
 
+> **NOTE**: 현재 `MatchingVoteScreen`은 `Scaffold`를 반환하므로 바텀시트에 직접 임베드할 수 없다.
+> 구현 시 `MatchingVoteContent` 위젯을 추출하여, 풀스크린 모드(`Scaffold` 포함)와
+> 바텀시트 임베드 모드 양쪽에서 재사용할 수 있도록 리팩터링이 필요하다.
+
 #### Phase 4: 매칭 결과
 
-```
+```text
 ┌─────────────────────────────────────┐
 │  ── drag handle ──                  │
 │                                     │
@@ -201,7 +205,7 @@
 
 #### Phase 5: 이벤트 종료
 
-```
+```text
 ┌─────────────────────────────────────┐
 │  ── drag handle ──                  │
 │                                     │
@@ -225,7 +229,7 @@
 
 2개 이상 활성 이벤트 시:
 
-```
+```text
 ┌─────────────────────────────────────────────┐
 │ 🟣 강남 밍릿파티 · 체크인 중         2 ▼ │
 └─────────────────────────────────────────────┘
@@ -261,7 +265,11 @@
 
 ### 상태 머신
 
-```
+> **NOTE**: DB `events.status` 컬럼은 `scheduled`, `cancelled`, `completed` 값만 가진다.
+> 매칭 관련 상태(MATCHING, RESULTS)는 `events.status`가 아니라
+> `event_participants`, 매칭 후보/결과 테이블 등에서 파생하여 클라이언트 상태 머신이 결정한다.
+
+```text
 시작 3시간 전 도달
   │
   ▼
@@ -275,15 +283,15 @@ CHECK_IN_READY (체크인 가능) ─── event.startTime ≤ now
   ▼
 CHECKED_IN (체크인 완료) ─── 매칭 투표 대기
   │
-  │ (event.status = 'matching' 또는 서버 이벤트)
+  │ (matchCandidatesProvider가 비어있지 않음 — 매칭 상태는 event_participants 및 매칭 관련 테이블에서 파생)
   ▼
 MATCHING (매칭 투표 중) ─── 투표 진행
   │
-  │ (event.status = 'matching_done')
+  │ (myMatchesProvider 결과 존재 — 매칭 완료 여부는 매칭 결과 테이블에서 파생)
   ▼
 RESULTS (매칭 결과) ─── 결과 확인
   │
-  │ (event.status = 'ended')
+  │ (events.status = 'completed')
   ▼
 ENDED (종료) ─── 리뷰 작성 + 다음 추천
   │
@@ -321,7 +329,7 @@ supabase.channel('event-now-bar')
 
 ### 신규 위젯 경로
 
-```
+```text
 apps/app_user/lib/src/features/home/widgets/
 ├── event_now_bar.dart              ← 퍼시스턴트 미니바
 ├── event_now_bar_controller.dart   ← 상태 머신 + 로직
