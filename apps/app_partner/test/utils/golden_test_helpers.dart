@@ -1,38 +1,41 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 /// Fixed surface size for golden tests (consistency across environments).
 const goldenSurfaceSize = Size(400, 800);
 
-/// Pumps [widget] inside a [MaterialApp] + [Scaffold] with a fixed size,
-/// then compares against [goldenFileName].
+/// Wraps a component widget in [MaterialApp] + [Scaffold] for Alchemist
+/// [GoldenTestScenario] use. Unlike page wrappers, this is for standalone
+/// components that don't need [ProviderScope].
 ///
-/// Use [surfaceSize] to override the default 400x800 canvas.
-/// Use [brightness] to switch between light and dark theme.
-Future<void> expectGolden(
-  WidgetTester tester, {
-  required Widget widget,
-  required String goldenFileName,
-  Size surfaceSize = goldenSurfaceSize,
-  Brightness brightness = Brightness.light,
-}) async {
-  await tester.binding.setSurfaceSize(surfaceSize);
-  addTearDown(() => tester.binding.setSurfaceSize(null));
+/// Includes explicit size constraints to prevent infinite-size errors
+/// inside [GoldenTestGroup]'s Table layout.
+class GoldenComponentWrapper extends StatelessWidget {
+  const GoldenComponentWrapper({
+    required this.child,
+    this.brightness = Brightness.light,
+    this.width = 400,
+    this.height = 800,
+    super.key,
+  });
 
-  await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: brightness == Brightness.dark
-          ? MinglitTheme.materialThemeDark
-          : MinglitTheme.materialTheme,
-      home: Scaffold(body: Center(child: widget)),
-    ),
-  );
-  await tester.pumpAndSettle();
+  final Widget child;
+  final Brightness brightness;
+  final double width;
+  final double height;
 
-  await expectLater(
-    find.byType(MaterialApp),
-    matchesGoldenFile(goldenFileName),
-  );
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width,
+      height: height,
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: brightness == Brightness.dark
+            ? MinglitTheme.materialThemeDark
+            : MinglitTheme.materialTheme,
+        home: Scaffold(body: Center(child: child)),
+      ),
+    );
+  }
 }

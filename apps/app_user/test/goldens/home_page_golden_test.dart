@@ -1,6 +1,7 @@
 @Tags(['golden'])
 library;
 
+import 'package:alchemist/alchemist.dart';
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/features/home/home_page.dart';
@@ -13,41 +14,63 @@ import 'package:minglit_kit/minglit_kit.dart';
 import 'golden_test_helpers.dart';
 
 void main() {
-  group('HomePage golden', () {
-    final baseTime = DateTime(2026, 5, 10, 19);
+  final baseTime = DateTime(2026, 5, 10, 19);
 
-    List<dynamic> buildOverrides({
-      List<Event> events = const [],
-      bool hasMore = false,
-    }) {
-      final mockHome = MockHomeCoordinator();
-      final mockEvent = MockEventCoordinator();
-      final mockAuth = MockAuthCoordinator();
+  List<dynamic> buildOverrides({
+    List<Event> events = const [],
+    bool hasMore = false,
+  }) {
+    final mockHome = MockHomeCoordinator();
+    final mockEvent = MockEventCoordinator();
+    final mockAuth = MockAuthCoordinator();
 
-      return [
-        homeCoordinatorProvider.overrideWithValue(mockHome),
-        eventCoordinatorProvider.overrideWithValue(mockEvent),
-        authCoordinatorProvider.overrideWithValue(mockAuth),
-        activeFiltersProvider.overrideWith(NoFiltersNotifier.new),
-        recommendationFeedProvider.overrideWith(
-          () => _FakeRecommendationFeedNotifier(
-            events: events,
-            hasMore: hasMore,
+    return [
+      homeCoordinatorProvider.overrideWithValue(mockHome),
+      eventCoordinatorProvider.overrideWithValue(mockEvent),
+      authCoordinatorProvider.overrideWithValue(mockAuth),
+      activeFiltersProvider.overrideWith(NoFiltersNotifier.new),
+      recommendationFeedProvider.overrideWith(
+        () => _FakeRecommendationFeedNotifier(
+          events: events,
+          hasMore: hasMore,
+        ),
+      ),
+    ];
+  }
+
+  goldenTest(
+    'HomePage empty feed',
+    fileName: 'home_page_empty',
+    pumpBeforeTest: (tester) async {
+      await initGoldenDeps();
+      await tester.pumpAndSettle();
+    },
+    builder: () => GoldenTestGroup(
+      columnWidthBuilder: (_) => const FixedColumnWidth(400),
+      children: [
+        GoldenTestScenario(
+          name: 'empty feed',
+          child: SizedBox(
+            width: 390,
+            height: 844,
+            child: GoldenPageWrapper(
+              page: const HomePage(),
+              overrides: buildOverrides(),
+            ),
           ),
         ),
-      ];
-    }
+      ],
+    ),
+  );
 
-    testWidgets('empty feed', (tester) async {
-      await expectPageGolden(
-        tester,
-        page: const HomePage(),
-        goldenFileName: 'goldens/home_page_empty.png',
-        overrides: buildOverrides(),
-      );
-    });
-
-    testWidgets('with events', (tester) async {
+  goldenTest(
+    'HomePage with events',
+    fileName: 'home_page_with_events',
+    pumpBeforeTest: (tester) async {
+      await initGoldenDeps();
+      await tester.pumpAndSettle();
+    },
+    builder: () {
       final events = List.generate(
         3,
         (i) => Event(
@@ -61,26 +84,59 @@ void main() {
           currentParticipants: (i + 1) * 5,
         ),
       );
-
-      await expectPageGolden(
-        tester,
-        page: const HomePage(),
-        goldenFileName: 'goldens/home_page_with_events.png',
-        overrides: buildOverrides(events: events),
+      return GoldenTestGroup(
+        columnWidthBuilder: (_) => const FixedColumnWidth(400),
+        children: [
+          GoldenTestScenario(
+            name: 'with events',
+            child: SizedBox(
+              width: 390,
+              height: 844,
+              child: GoldenPageWrapper(
+                page: const HomePage(),
+                overrides: buildOverrides(events: events),
+              ),
+            ),
+          ),
+        ],
       );
-    });
+    },
+  );
 
-    testWidgets('empty feed (dark)', (tester) async {
-      await expectPageGolden(
-        tester,
-        page: const HomePage(),
-        goldenFileName: 'goldens/home_page_empty_dark.png',
-        overrides: buildOverrides(),
-        brightness: Brightness.dark,
-      );
-    });
+  goldenTest(
+    'HomePage empty feed (dark)',
+    fileName: 'home_page_empty_dark',
+    pumpBeforeTest: (tester) async {
+      await initGoldenDeps();
+      await tester.pumpAndSettle();
+    },
+    builder: () => GoldenTestGroup(
+      columnWidthBuilder: (_) => const FixedColumnWidth(400),
+      children: [
+        GoldenTestScenario(
+          name: 'empty feed (dark)',
+          child: SizedBox(
+            width: 390,
+            height: 844,
+            child: GoldenPageWrapper(
+              page: const HomePage(),
+              overrides: buildOverrides(),
+              brightness: Brightness.dark,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 
-    testWidgets('with events (dark)', (tester) async {
+  goldenTest(
+    'HomePage with events (dark)',
+    fileName: 'home_page_with_events_dark',
+    pumpBeforeTest: (tester) async {
+      await initGoldenDeps();
+      await tester.pumpAndSettle();
+    },
+    builder: () {
       final events = List.generate(
         3,
         (i) => Event(
@@ -94,16 +150,25 @@ void main() {
           currentParticipants: (i + 1) * 5,
         ),
       );
-
-      await expectPageGolden(
-        tester,
-        page: const HomePage(),
-        goldenFileName: 'goldens/home_page_with_events_dark.png',
-        overrides: buildOverrides(events: events),
-        brightness: Brightness.dark,
+      return GoldenTestGroup(
+        columnWidthBuilder: (_) => const FixedColumnWidth(400),
+        children: [
+          GoldenTestScenario(
+            name: 'with events (dark)',
+            child: SizedBox(
+              width: 390,
+              height: 844,
+              child: GoldenPageWrapper(
+                page: const HomePage(),
+                overrides: buildOverrides(events: events),
+                brightness: Brightness.dark,
+              ),
+            ),
+          ),
+        ],
       );
-    });
-  });
+    },
+  );
 }
 
 class _FakeRecommendationFeedNotifier extends RecommendationFeedNotifier {

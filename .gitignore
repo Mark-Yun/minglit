@@ -81,6 +81,12 @@ apps/landing_partner/env-manifest.json
 # Testing
 **/coverage/
 
+# Platform goldens (local only, Alchemist)
+**/test/**/goldens/macos/
+**/test/**/goldens/linux/
+# Golden test failure outputs
+**/test/**/failures/
+
 # Misc
 tmp/
 .env*.local

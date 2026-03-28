@@ -1,6 +1,7 @@
 @Tags(['golden'])
 library;
 
+import 'package:alchemist/alchemist.dart';
 import 'package:app_partner/src/features/party/event/widgets/event_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,80 +15,126 @@ void main() {
     await initializeDateFormatting('ko_KR');
   });
 
-  group('EventCard golden', () {
-    final baseTime = DateTime(2026, 4, 15, 19);
-    final baseEvent = Event(
-      id: 'e1',
-      partyId: 'p1',
-      startTime: baseTime,
-      endTime: baseTime.add(const Duration(hours: 2)),
-      createdAt: baseTime,
-      updatedAt: baseTime,
-      title: '금요 파티',
-      currentParticipants: 12,
-    );
+  final baseTime = DateTime(2026, 4, 15, 19);
+  final baseEvent = Event(
+    id: 'e1',
+    partyId: 'p1',
+    startTime: baseTime,
+    endTime: baseTime.add(const Duration(hours: 2)),
+    createdAt: baseTime,
+    updatedAt: baseTime,
+    title: '금요 파티',
+    currentParticipants: 12,
+  );
 
-    testWidgets('scheduled', (tester) async {
-      await expectGolden(
-        tester,
-        widget: EventCard(event: baseEvent, onTap: () {}),
-        goldenFileName: 'event_card_scheduled.png',
-      );
-    });
-
-    testWidgets('full capacity', (tester) async {
-      await expectGolden(
-        tester,
-        widget: EventCard(
-          event: baseEvent.copyWith(currentParticipants: 20),
-          onTap: () {},
+  goldenTest(
+    'scheduled',
+    fileName: 'event_card_scheduled',
+    builder: () => GoldenTestGroup(
+      columnWidthBuilder: (_) => const FixedColumnWidth(420),
+      children: [
+        GoldenTestScenario(
+          name: 'scheduled',
+          child: GoldenComponentWrapper(
+            child: EventCard(event: baseEvent, onTap: () {}),
+          ),
         ),
-        goldenFileName: 'event_card_full.png',
-      );
-    });
+      ],
+    ),
+  );
 
-    testWidgets('no title (default)', (tester) async {
-      await expectGolden(
-        tester,
-        widget: EventCard(
-          event: baseEvent.copyWith(title: null),
-          onTap: () {},
+  goldenTest(
+    'full capacity',
+    fileName: 'event_card_full',
+    builder: () => GoldenTestGroup(
+      columnWidthBuilder: (_) => const FixedColumnWidth(420),
+      children: [
+        GoldenTestScenario(
+          name: 'full capacity',
+          child: GoldenComponentWrapper(
+            child: EventCard(
+              event: baseEvent.copyWith(currentParticipants: 20),
+              onTap: () {},
+            ),
+          ),
         ),
-        goldenFileName: 'event_card_no_title.png',
-      );
-    });
+      ],
+    ),
+  );
 
-    testWidgets('scheduled (dark)', (tester) async {
-      await expectGolden(
-        tester,
-        widget: EventCard(event: baseEvent, onTap: () {}),
-        goldenFileName: 'event_card_scheduled_dark.png',
-        brightness: Brightness.dark,
-      );
-    });
-
-    testWidgets('full capacity (dark)', (tester) async {
-      await expectGolden(
-        tester,
-        widget: EventCard(
-          event: baseEvent.copyWith(currentParticipants: 20),
-          onTap: () {},
+  goldenTest(
+    'no title (default)',
+    fileName: 'event_card_no_title',
+    builder: () => GoldenTestGroup(
+      columnWidthBuilder: (_) => const FixedColumnWidth(420),
+      children: [
+        GoldenTestScenario(
+          name: 'no title',
+          child: GoldenComponentWrapper(
+            child: EventCard(
+              event: baseEvent.copyWith(title: null),
+              onTap: () {},
+            ),
+          ),
         ),
-        goldenFileName: 'event_card_full_dark.png',
-        brightness: Brightness.dark,
-      );
-    });
+      ],
+    ),
+  );
 
-    testWidgets('no title (default) (dark)', (tester) async {
-      await expectGolden(
-        tester,
-        widget: EventCard(
-          event: baseEvent.copyWith(title: null),
-          onTap: () {},
+  goldenTest(
+    'scheduled (dark)',
+    fileName: 'event_card_scheduled_dark',
+    builder: () => GoldenTestGroup(
+      columnWidthBuilder: (_) => const FixedColumnWidth(420),
+      children: [
+        GoldenTestScenario(
+          name: 'scheduled (dark)',
+          child: GoldenComponentWrapper(
+            brightness: Brightness.dark,
+            child: EventCard(event: baseEvent, onTap: () {}),
+          ),
         ),
-        goldenFileName: 'event_card_no_title_dark.png',
-        brightness: Brightness.dark,
-      );
-    });
-  });
+      ],
+    ),
+  );
+
+  goldenTest(
+    'full capacity (dark)',
+    fileName: 'event_card_full_dark',
+    builder: () => GoldenTestGroup(
+      columnWidthBuilder: (_) => const FixedColumnWidth(420),
+      children: [
+        GoldenTestScenario(
+          name: 'full capacity (dark)',
+          child: GoldenComponentWrapper(
+            brightness: Brightness.dark,
+            child: EventCard(
+              event: baseEvent.copyWith(currentParticipants: 20),
+              onTap: () {},
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  goldenTest(
+    'no title (default) (dark)',
+    fileName: 'event_card_no_title_dark',
+    builder: () => GoldenTestGroup(
+      columnWidthBuilder: (_) => const FixedColumnWidth(420),
+      children: [
+        GoldenTestScenario(
+          name: 'no title (dark)',
+          child: GoldenComponentWrapper(
+            brightness: Brightness.dark,
+            child: EventCard(
+              event: baseEvent.copyWith(title: null),
+              onTap: () {},
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }

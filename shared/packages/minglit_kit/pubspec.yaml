@@ -53,6 +53,7 @@ dependencies:
   web: ^1.1.1
 
 dev_dependencies:
+  alchemist: ^0.14.0
   allure_report: ^1.0.0
   build_runner: ^2.10.4
   flutter_lints: ^5.0.0
