@@ -1,10 +1,16 @@
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
+import 'package:app_user/src/features/ticket/ui/ticket_selection_sheet.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockGoRouter extends Mock implements GoRouter {}
+
+class MockEventRepository extends Mock implements EventRepository {}
+
+class MockUserRepository extends Mock implements UserRepository {}
 
 void main() {
   late MockGoRouter mockRouter;
@@ -73,6 +79,117 @@ void main() {
       verify(
         () => mockRouter.push('/events/event-abc/apply?ticket-id=ticket-1'),
       ).called(1);
+    });
+
+    group('showTicketSelection', () {
+      late MockEventRepository mockEventRepository;
+      late MockUserRepository mockUserRepository;
+
+      setUp(() {
+        mockEventRepository = MockEventRepository();
+        mockUserRepository = MockUserRepository();
+
+        when(
+          () => mockEventRepository.getTicketBalanceStatus(any()),
+        ).thenAnswer((_) async => <String, bool>{});
+        when(
+          () => mockUserRepository.getUserProfile(any()),
+        ).thenAnswer((_) async => null);
+        when(
+          () => mockUserRepository.getApprovedVerificationIds(any()),
+        ).thenAnswer((_) async => <String>[]);
+      });
+
+      testWidgets('shows TicketSelectionSheet as bottom sheet', (
+        tester,
+      ) async {
+        final now = DateTime(2026, 4);
+        final event = Event(
+          id: 'event-1',
+          partyId: 'party-1',
+          title: 'Test Event',
+          startTime: now,
+          endTime: now.add(const Duration(hours: 2)),
+          createdAt: now,
+          updatedAt: now,
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              eventRepositoryProvider.overrideWithValue(mockEventRepository),
+              currentUserProvider.overrideWith((_) => null),
+              userRepositoryProvider.overrideWithValue(mockUserRepository),
+            ],
+            child: MaterialApp(
+              theme: MinglitTheme.materialTheme,
+              home: Builder(
+                builder: (context) => Scaffold(
+                  body: ElevatedButton(
+                    onPressed: () =>
+                        coordinator.showTicketSelection(context, event),
+                    child: const Text('Show'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Show'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(TicketSelectionSheet), findsOneWidget);
+      });
+
+      testWidgets('dismissing bottom sheet does not navigate', (
+        tester,
+      ) async {
+        final now = DateTime(2026, 4);
+        final event = Event(
+          id: 'event-2',
+          partyId: 'party-2',
+          title: 'Test Event 2',
+          startTime: now,
+          endTime: now.add(const Duration(hours: 2)),
+          createdAt: now,
+          updatedAt: now,
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              eventRepositoryProvider.overrideWithValue(mockEventRepository),
+              currentUserProvider.overrideWith((_) => null),
+              userRepositoryProvider.overrideWithValue(mockUserRepository),
+            ],
+            child: MaterialApp(
+              theme: MinglitTheme.materialTheme,
+              home: Builder(
+                builder: (context) => Scaffold(
+                  body: ElevatedButton(
+                    onPressed: () =>
+                        coordinator.showTicketSelection(context, event),
+                    child: const Text('Show'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        // Open sheet
+        await tester.tap(find.text('Show'));
+        await tester.pumpAndSettle();
+        expect(find.byType(TicketSelectionSheet), findsOneWidget);
+
+        // Dismiss by tapping the barrier
+        await tester.tapAt(Offset.zero);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(TicketSelectionSheet), findsNothing);
+        verifyNever(() => mockRouter.push(any()));
+      });
     });
   });
 }
