@@ -64,7 +64,7 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 |-------|---------|-------------|
 | `parties` | 파티 (이벤트 템플릿) | partner_id, title, image_urls[], balance_config, status (draft/active/closed), visibility (public/private) |
 | `party_embeddings` | 파티 임베딩 | party_id (PK), embedding vector(1536) |
-| `events` | 실제 이벤트 회차 | party_id, start_time, end_time, status (scheduled/cancelled/completed), visibility (public/private) |
+| `events` | 실제 이벤트 회차 | party_id, start_time, end_time, vote_start_at, vote_end_at, status (scheduled/cancelled/completed), visibility (public/private) |
 | `entry_group_templates` | 입장 그룹 템플릿 (파티) | party_id, gender, birth_year_min/max |
 | `entry_groups` | 입장 그룹 (이벤트) | event_id, gender, birth_year_min/max |
 | `ticket_templates` | 티켓 템플릿 (파티) | party_id, name, price, quantity |
@@ -89,7 +89,7 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 | `fcm_tokens` | FCM 푸시 토큰 | user_id, token, device_type (android/ios/web) |
 | `user_settings` | 알림 설정 | user_id, marketing_consent, service_notification |
 | `social_interactions` | 소셜 상호작용 | user_id, target_id, target_type, interaction_type (like/subscribe/bookmark/block) |
-| `match_rules` | 매칭 규칙 | event_id, source_group_id, target_group_id |
+| `match_rules` | 매칭 규칙 | event_id, source_group_id, target_group_id, vote_count |
 | `match_votes` | 매칭 투표 | event_id, voter_id, candidate_id |
 | `match_pairs` | 매칭 결과 | event_id, user_lower_id, user_higher_id, matched_at |
 | `minglit_files` | 파일 메타데이터 | storage_object_id, bucket_id, file_path, owner_id |
@@ -185,7 +185,7 @@ partners
 | `partner_application_status` | pending, approved, rejected, needs_correction |
 | `user_action_type` | view, like, dislike, purchase |
 | `event_queue_name` | q_global_events, q_notifications, q_vectors |
-| `event_type_name` | party_created, user_interaction, application_approved, application_rejected, event_updated, event_cancelled, new_application, verification_result, event_reminder |
+| `event_type_name` | party_created, user_interaction, application_approved, application_rejected, event_updated, event_cancelled, new_application, verification_result, event_reminder, match_result |
 | `social_target_type` | party, partner, review, comment |
 | `social_interaction_type` | like, subscribe, bookmark, block, report |
 | `notification_category` | marketing, service, social |
@@ -388,6 +388,10 @@ protect_user_profile_fields() → trigger
 | `get_entry_group_participant_counts()` | 입장 그룹별 참가자 수 조회 | SECURITY DEFINER |
 | `search_events_pgroonga()` | 이벤트 전문 검색 | SECURITY INVOKER |
 | `search_parties_pgroonga()` | 파티 전문 검색 | SECURITY INVOKER |
+| `replace_match_rules()` | 매칭 규칙 원자적 교체 (delete + insert) | SECURITY DEFINER |
+| `get_ticket_public_key()` | 티켓 QR 서명 검증용 Ed25519 공개키 조회 | SECURITY DEFINER |
+| `notify_match_results()` | 매칭 결과 알림 발송 (크론 호출) | SECURITY DEFINER |
+| `cleanup_expired_match_votes()` | 만료된 매칭 투표 정리 (크론 호출) | SECURITY DEFINER |
 
 ---
 
