@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=375, initial-scale=1.0">
+<title>Event Now Bar — Wireframe</title>
+<style>
+  /* ── Minglit Design Tokens ── */
+  :root {
+    --color-background: #FFFFFF;
+    --color-primary: #9900FF;
+    --color-secondary: #FF9900;
+    --color-tertiary: #48C9B0;
+    --color-surface: #F9FAFB;
+    --color-error: #EF4444;
+    --color-text-primary: #111827;
+    --color-text-secondary: #4B5563;
+    --color-success: #22C55E;
+    --color-warning: #F59E0B;
+    --color-scrim: rgba(0,0,0,0.5);
+    --color-divider: #E5E7EB;
+
+    --spacing-xxsmall: 2px;
+    --spacing-xsmall: 4px;
+    --spacing-small: 8px;
+    --spacing-sm: 12px;
+    --spacing-medium: 16px;
+    --spacing-screen-edge: 20px;
+    --spacing-large: 24px;
+    --spacing-xlarge: 32px;
+    --spacing-section-gap: 40px;
+    --spacing-card-gap: 12px;
+
+    --radius-small: 8px;
+    --radius-button: 12px;
+    --radius-card: 16px;
+    --radius-chip: 100px;
+
+    --font-family: 'Noto Sans KR', -apple-system, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-family);
+    background: #E8E0FF;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    padding: 32px;
+    justify-content: center;
+  }
+
+  /* ── Phone Frame ── */
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: var(--color-background);
+    border-radius: 40px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+  }
+
+  .phone-label {
+    text-align: center;
+    font-family: var(--font-family);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 8px;
+  }
+  .phone-sublabel {
+    text-align: center;
+    font-family: var(--font-family);
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    margin-bottom: 12px;
+  }
+
+  .screen {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* ── Status Bar ── */
+  .status-bar {
+    height: 54px;
+    padding: 14px var(--spacing-screen-edge) 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+  .status-bar-right {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 12px;
+  }
+
+  /* ── App Bar ── */
+  .app-bar {
+    height: 56px;
+    padding: 0 var(--spacing-screen-edge);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--color-background);
+  }
+  .app-bar-logo {
+    height: 24px;
+  }
+  .app-bar-icons {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+  }
+  .icon-btn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-primary);
+    font-size: 18px;
+  }
+
+  /* ── Filter Chips ── */
+  .filter-chips {
+    padding: var(--spacing-small) var(--spacing-screen-edge);
+    display: flex;
+    gap: var(--spacing-small);
+    overflow-x: auto;
+  }
+  .chip {
+    padding: 6px 14px;
+    border-radius: var(--radius-chip);
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+  }
+  .chip.active {
+    background: var(--color-primary);
+    color: white;
+  }
+
+  /* ── Feed Content ── */
+  .feed {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-medium) var(--spacing-screen-edge);
+  }
+  .event-card {
+    background: var(--color-surface);
+    border-radius: var(--radius-card);
+    margin-bottom: var(--spacing-card-gap);
+    overflow: hidden;
+  }
+  .event-card-image {
+    width: 100%;
+    height: 180px;
+    background: linear-gradient(135deg, #ddd 0%, #eee 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #bbb;
+    font-size: 13px;
+  }
+  .event-card-body {
+    padding: var(--spacing-medium);
+  }
+  .event-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-xsmall);
+  }
+  .event-card-meta {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+  }
+  .event-card-price {
+    margin-top: var(--spacing-small);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-primary);
+  }
+
+  /* ── NOW BAR (Core Component) ── */
+  .now-bar {
+    height: 56px;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-divider);
+    padding: 0 var(--spacing-screen-edge);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-small);
+    cursor: pointer;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+    position: relative;
+    z-index: 10;
+  }
+  .now-bar-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .now-bar-dot.waiting { background: var(--color-text-secondary); }
+  .now-bar-dot.checkin-ready { background: var(--color-primary); }
+  .now-bar-dot.checked-in { background: var(--color-success); }
+  .now-bar-dot.matching { background: var(--color-secondary); }
+  .now-bar-dot.results {
+    background: var(--color-primary);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  .now-bar-dot.ended { background: var(--color-text-secondary); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.4); }
+  }
+
+  .now-bar-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .now-bar-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .now-bar-status {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .now-bar-action {
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+  .now-bar-badge {
+    flex-shrink: 0;
+    background: var(--color-primary);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .now-bar-chevron {
+    flex-shrink: 0;
+    color: var(--color-text-secondary);
+    font-size: 16px;
+  }
+
+  /* ── Bottom Navigation ── */
+  .bottom-nav {
+    height: 56px;
+    background: var(--color-background);
+    border-top: 1px solid var(--color-divider);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding-bottom: 4px;
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: 10px;
+    color: var(--color-text-secondary);
+  }
+  .nav-item.active { color: var(--color-primary); }
+  .nav-icon { font-size: 22px; }
+
+  /* ── Bottom Sheet Overlay ── */
+  .sheet-overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--color-scrim);
+    z-index: 20;
+    display: flex;
+    align-items: flex-end;
+  }
+  .bottom-sheet {
+    width: 100%;
+    background: var(--color-background);
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+    padding: var(--spacing-small) var(--spacing-screen-edge) var(--spacing-large);
+    max-height: 85%;
+    overflow-y: auto;
+  }
+  .drag-handle {
+    width: 36px;
+    height: 4px;
+    background: var(--color-divider);
+    border-radius: 2px;
+    margin: 0 auto var(--spacing-medium);
+  }
+  .sheet-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-xsmall);
+  }
+  .sheet-subtitle {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-large);
+    line-height: 1.5;
+  }
+
+  /* ── QR Code ── */
+  .qr-container {
+    background: var(--color-surface);
+    border-radius: var(--radius-card);
+    padding: var(--spacing-large);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-medium);
+    margin-bottom: var(--spacing-large);
+  }
+  .qr-code {
+    width: 200px;
+    height: 200px;
+    border: 2px solid var(--color-divider);
+    border-radius: var(--radius-small);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    position: relative;
+  }
+  .qr-grid {
+    width: 160px;
+    height: 160px;
+    display: grid;
+    grid-template-columns: repeat(8,1fr);
+    grid-template-rows: repeat(8,1fr);
+    gap: 2px;
+  }
+  .qr-cell {
+    border-radius: 1px;
+  }
+  .qr-cell.dark { background: var(--color-text-primary); }
+  .qr-cell.light { background: transparent; }
+  .qr-label {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+  }
+
+  /* ── Link Row ── */
+  .link-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-medium) 0;
+    border-top: 1px solid var(--color-divider);
+    font-size: 14px;
+    color: var(--color-text-primary);
+    cursor: pointer;
+  }
+  .link-row-arrow { color: var(--color-text-secondary); }
+
+  /* ── Checked In State ── */
+  .checkin-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-success);
+    margin-bottom: var(--spacing-small);
+  }
+  .avatar-row {
+    display: flex;
+    gap: -4px;
+    align-items: center;
+    margin-top: var(--spacing-medium);
+  }
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    margin-left: -8px;
+  }
+  .avatar:first-child { margin-left: 0; }
+  .avatar-more {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--color-surface);
+    border: 2px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    margin-left: -8px;
+  }
+
+  .waiting-card {
+    background: var(--color-surface);
+    border-radius: var(--radius-card);
+    padding: var(--spacing-large);
+    text-align: center;
+    margin-top: var(--spacing-medium);
+  }
+  .waiting-icon {
+    font-size: 32px;
+    margin-bottom: var(--spacing-small);
+  }
+  .waiting-text {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+  }
+
+  /* ── Matching Vote ── */
+  .vote-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-medium);
+  }
+  .vote-count {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+  }
+  .vote-count strong {
+    color: var(--color-secondary);
+  }
+  .candidate-card {
+    display: flex;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-medium);
+    background: var(--color-surface);
+    border-radius: var(--radius-card);
+    margin-bottom: var(--spacing-small);
+    align-items: center;
+  }
+  .candidate-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: white;
+    font-weight: 700;
+  }
+  .candidate-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .candidate-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 2px;
+  }
+  .candidate-bio {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .vote-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid var(--color-divider);
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .vote-btn.voted {
+    border-color: var(--color-error);
+    background: #FEF2F2;
+  }
+
+  /* ── Match Result ── */
+  .match-card {
+    background: linear-gradient(135deg, rgba(153,0,255,0.05), rgba(255,153,0,0.05));
+    border: 1px solid rgba(153,0,255,0.15);
+    border-radius: var(--radius-card);
+    padding: var(--spacing-medium);
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+  }
+  .match-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    color: white;
+    font-weight: 700;
+  }
+  .match-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 2px;
+  }
+  .match-bio {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.4;
+  }
+  .mutual-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: rgba(255,153,0,0.1);
+    color: var(--color-secondary);
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: var(--radius-chip);
+    margin-top: 4px;
+  }
+
+  /* ── Empty State ── */
+  .empty-state {
+    text-align: center;
+    padding: var(--spacing-xlarge) var(--spacing-medium);
+  }
+  .empty-icon { font-size: 48px; margin-bottom: var(--spacing-medium); }
+  .empty-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-small);
+  }
+  .empty-desc {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+  }
+
+  /* ── Review / End ── */
+  .star-row {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin: var(--spacing-medium) 0;
+    font-size: 32px;
+  }
+  .star { color: var(--color-divider); cursor: pointer; }
+  .star.filled { color: var(--color-secondary); }
+
+  .cta-btn {
+    width: 100%;
+    height: 56px;
+    border: none;
+    border-radius: var(--radius-button);
+    font-size: 16px;
+    font-weight: 700;
+    font-family: var(--font-family);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: var(--spacing-medium);
+  }
+  .cta-btn.primary {
+    background: var(--color-primary);
+    color: white;
+  }
+  .cta-btn.outline {
+    background: transparent;
+    border: 1px solid var(--color-primary);
+    color: var(--color-primary);
+  }
+
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--color-divider);
+    margin: var(--spacing-large) 0;
+  }
+  .section-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-sm);
+  }
+  .mini-event-card {
+    display: flex;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: var(--color-surface);
+    border-radius: var(--radius-card);
+    align-items: center;
+  }
+  .mini-event-thumb {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-small);
+    background: linear-gradient(135deg, #ddd, #eee);
+    flex-shrink: 0;
+  }
+  .mini-event-info { flex: 1; }
+  .mini-event-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 2px;
+  }
+  .mini-event-meta {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+
+  /* ── Multi-Event Stack ── */
+  .multi-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-small);
+    margin-bottom: var(--spacing-large);
+  }
+  .multi-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-medium);
+    background: var(--color-surface);
+    border-radius: var(--radius-card);
+    cursor: pointer;
+  }
+  .multi-item.active {
+    border: 1.5px solid var(--color-primary);
+    background: rgba(153,0,255,0.03);
+  }
+  .multi-item-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .multi-item-content { flex: 1; }
+  .multi-item-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+  .multi-item-status {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+  .multi-item-time {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary);
+    flex-shrink: 0;
+  }
+
+  /* ── Wrapper ── */
+  .frame-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── Shimmer ── */
+  .shimmer {
+    background: linear-gradient(90deg, var(--color-surface) 25%, #f0f0f0 50%, var(--color-surface) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================ -->
+<!-- SCREEN 1: Home + Now Bar (Waiting)           -->
+<!-- ============================================ -->
+<div class="frame-wrap">
+  <div class="phone-label">Phase 0: 대기</div>
+  <div class="phone-sublabel">이벤트 시작 3시간 전 ~ 시작 전</div>
+  <div class="phone">
+    <div class="screen">
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="status-bar-right">
+          <span>LTE</span> <span>100%</span>
+        </div>
+      </div>
+
+      <div class="app-bar">
+        <svg height="24" viewBox="79 97 182 55" preserveAspectRatio="xMidYMid meet">
+          <g fill="#9900FF"><text x="80" y="140" font-size="36" font-weight="bold" font-family="sans-serif">minglit</text></g>
+        </svg>
+        <div class="app-bar-icons">
+          <div class="icon-btn">&#x1F50D;</div>
+          <div class="icon-btn">&#x1F514;</div>
+          <div class="icon-btn">&#x1F464;</div>
+        </div>
+      </div>
+
+      <div class="filter-chips">
+        <div class="chip active">추천</div>
+        <div class="chip">주말</div>
+        <div class="chip">소셜</div>
+        <div class="chip">브런치</div>
+        <div class="chip">액티비티</div>
+      </div>
+
+      <div class="feed">
+        <div class="event-card">
+          <div class="event-card-image">375 x 180</div>
+          <div class="event-card-body">
+            <div class="event-card-title">강남 소셜 파티</div>
+            <div class="event-card-meta">3/29 (토) 19:00 · 강남역 3번 출구</div>
+            <div class="event-card-price">35,000원</div>
+          </div>
+        </div>
+        <div class="event-card">
+          <div class="event-card-image">375 x 180</div>
+          <div class="event-card-body">
+            <div class="event-card-title">홍대 와인 모임</div>
+            <div class="event-card-meta">3/30 (일) 15:00 · 홍대입구역</div>
+            <div class="event-card-price">28,000원</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOW BAR: Waiting -->
+      <div class="now-bar">
+        <div class="now-bar-dot waiting"></div>
+        <div class="now-bar-content">
+          <div class="now-bar-title">강남 밍릿파티</div>
+          <div class="now-bar-status">오늘 19:00 시작</div>
+        </div>
+        <div class="now-bar-action">19:00</div>
+        <div class="now-bar-chevron">&#x203A;</div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item active">
+          <div class="nav-icon">&#x1F3E0;</div>
+          <span>홈</span>
+        </div>
+        <div class="nav-item">
+          <div class="nav-icon">&#x1F464;</div>
+          <span>마이</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SCREEN 2: Check-in Ready + QR Bottom Sheet  -->
+<!-- ============================================ -->
+<div class="frame-wrap">
+  <div class="phone-label">Phase 1: 체크인</div>
+  <div class="phone-sublabel">나우바 탭 → QR 바텀시트</div>
+  <div class="phone">
+    <div class="screen">
+      <div class="status-bar"><span>18:50</span><div class="status-bar-right"><span>LTE</span><span>87%</span></div></div>
+      <div class="app-bar">
+        <svg height="24" viewBox="79 97 182 55" preserveAspectRatio="xMidYMid meet">
+          <g fill="#9900FF"><text x="80" y="140" font-size="36" font-weight="bold" font-family="sans-serif">minglit</text></g>
+        </svg>
+        <div class="app-bar-icons">
+          <div class="icon-btn">&#x1F50D;</div>
+          <div class="icon-btn">&#x1F514;</div>
+          <div class="icon-btn">&#x1F464;</div>
+        </div>
+      </div>
+      <div class="filter-chips">
+        <div class="chip active">추천</div>
+        <div class="chip">주말</div>
+        <div class="chip">소셜</div>
+      </div>
+      <div class="feed" style="opacity:0.3; pointer-events:none;">
+        <div class="event-card"><div class="event-card-image">375 x 180</div><div class="event-card-body"><div class="event-card-title">강남 소셜 파티</div></div></div>
+      </div>
+
+      <!-- Now Bar (behind sheet) -->
+      <div class="now-bar">
+        <div class="now-bar-dot checkin-ready"></div>
+        <div class="now-bar-content">
+          <div class="now-bar-title">강남 밍릿파티</div>
+          <div class="now-bar-status">체크인 대기 중</div>
+        </div>
+        <div class="now-bar-action" style="color:var(--color-primary);">체크인</div>
+        <div class="now-bar-chevron">&#x203A;</div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item active"><div class="nav-icon">&#x1F3E0;</div><span>홈</span></div>
+        <div class="nav-item"><div class="nav-icon">&#x1F464;</div><span>마이</span></div>
+      </div>
+
+      <!-- Bottom Sheet: QR Check-in -->
+      <div class="sheet-overlay">
+        <div class="bottom-sheet">
+          <div class="drag-handle"></div>
+          <div class="sheet-title">강남 밍릿파티</div>
+          <div class="sheet-subtitle">오늘 19:00 · 강남역 3번 출구 카페</div>
+
+          <div class="qr-container">
+            <div class="qr-code">
+              <div class="qr-grid">
+                <div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell light"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell light"></div>
+                <div class="qr-cell dark"></div><div class="qr-cell light"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell light"></div><div class="qr-cell dark"></div><div class="qr-cell light"></div><div class="qr-cell dark"></div>
+                <div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell light"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell light"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div>
+                <div class="qr-cell light"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell light"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell light"></div><div class="qr-cell dark"></div>
+                <div class="qr-cell dark"></div><div class="qr-cell light"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell light"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell light"></div>
+                <div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell light"></div><div class="qr-cell light"></div><div class="qr-cell dark"></div><div class="qr-cell light"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div>
+                <div class="qr-cell light"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell light"></div><div class="qr-cell dark"></div><div class="qr-cell light"></div><div class="qr-cell dark"></div>
+                <div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell light"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell light"></div>
+              </div>
+            </div>
+            <div class="qr-label">파트너에게 보여주세요</div>
+          </div>
+
+          <div class="link-row">
+            <span>위치 안내 보기</span>
+            <span class="link-row-arrow">&#x203A;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SCREEN 3: Checked In → Waiting for Matching  -->
+<!-- ============================================ -->
+<div class="frame-wrap">
+  <div class="phone-label">Phase 2: 체크인 완료</div>
+  <div class="phone-sublabel">매칭 투표 대기</div>
+  <div class="phone">
+    <div class="screen">
+      <div class="status-bar"><span>18:55</span><div class="status-bar-right"><span>LTE</span><span>85%</span></div></div>
+      <div class="app-bar">
+        <svg height="24" viewBox="79 97 182 55" preserveAspectRatio="xMidYMid meet">
+          <g fill="#9900FF"><text x="80" y="140" font-size="36" font-weight="bold" font-family="sans-serif">minglit</text></g>
+        </svg>
+        <div class="app-bar-icons">
+          <div class="icon-btn">&#x1F50D;</div>
+          <div class="icon-btn">&#x1F514;</div>
+          <div class="icon-btn">&#x1F464;</div>
+        </div>
+      </div>
+      <div class="filter-chips">
+        <div class="chip active">추천</div><div class="chip">주말</div><div class="chip">소셜</div>
+      </div>
+      <div class="feed" style="opacity:0.3;">
+        <div class="event-card"><div class="event-card-image">375 x 180</div><div class="event-card-body"><div class="event-card-title">강남 소셜 파티</div></div></div>
+      </div>
+
+      <div class="now-bar">
+        <div class="now-bar-dot checked-in"></div>
+        <div class="now-bar-content">
+          <div class="now-bar-title">강남 밍릿파티</div>
+          <div class="now-bar-status">체크인 완료! 매칭 투표 대기 중</div>
+        </div>
+        <div class="now-bar-chevron">&#x203A;</div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item active"><div class="nav-icon">&#x1F3E0;</div><span>홈</span></div>
+        <div class="nav-item"><div class="nav-icon">&#x1F464;</div><span>마이</span></div>
+      </div>
+
+      <!-- Bottom Sheet: Checked In -->
+      <div class="sheet-overlay">
+        <div class="bottom-sheet">
+          <div class="drag-handle"></div>
+          <div class="checkin-badge">&#x2705; 체크인 완료!</div>
+          <div class="sheet-title">강남 밍릿파티</div>
+          <div class="sheet-subtitle">참석자 12/16명</div>
+
+          <div class="avatar-row">
+            <div class="avatar" style="background:#9900FF;">J</div>
+            <div class="avatar" style="background:#FF9900;">M</div>
+            <div class="avatar" style="background:#48C9B0;">S</div>
+            <div class="avatar" style="background:#EF4444;">K</div>
+            <div class="avatar" style="background:#22C55E;">H</div>
+            <div class="avatar-more">+7</div>
+          </div>
+
+          <div class="waiting-card">
+            <div class="waiting-icon">&#x23F3;</div>
+            <div class="waiting-text">매칭 투표가 곧 시작됩니다<br>시작되면 알려드릴게요</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SCREEN 4: Matching Vote                      -->
+<!-- ============================================ -->
+<div class="frame-wrap">
+  <div class="phone-label">Phase 3: 매칭 투표</div>
+  <div class="phone-sublabel">후보 프로필 + 투표 UI</div>
+  <div class="phone">
+    <div class="screen">
+      <div class="status-bar"><span>19:30</span><div class="status-bar-right"><span>LTE</span><span>78%</span></div></div>
+      <div class="app-bar">
+        <svg height="24" viewBox="79 97 182 55" preserveAspectRatio="xMidYMid meet">
+          <g fill="#9900FF"><text x="80" y="140" font-size="36" font-weight="bold" font-family="sans-serif">minglit</text></g>
+        </svg>
+        <div class="app-bar-icons">
+          <div class="icon-btn">&#x1F50D;</div>
+          <div class="icon-btn">&#x1F514;</div>
+          <div class="icon-btn">&#x1F464;</div>
+        </div>
+      </div>
+      <div class="filter-chips" style="opacity:0.3;"><div class="chip active">추천</div></div>
+      <div class="feed" style="opacity:0.15;">
+        <div class="event-card"><div class="event-card-image" style="height:100px;"></div></div>
+      </div>
+
+      <div class="now-bar">
+        <div class="now-bar-dot matching"></div>
+        <div class="now-bar-content">
+          <div class="now-bar-title">강남 밍릿파티</div>
+          <div class="now-bar-status">매칭 투표 중 · 남은 8표</div>
+        </div>
+        <div class="now-bar-action" style="color:var(--color-secondary);">투표</div>
+        <div class="now-bar-chevron">&#x203A;</div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item active"><div class="nav-icon">&#x1F3E0;</div><span>홈</span></div>
+        <div class="nav-item"><div class="nav-icon">&#x1F464;</div><span>마이</span></div>
+      </div>
+
+      <!-- Bottom Sheet: Matching Vote -->
+      <div class="sheet-overlay">
+        <div class="bottom-sheet" style="max-height:85%;">
+          <div class="drag-handle"></div>
+          <div class="sheet-title" style="font-size:18px;">&#x1F49B; 매칭 투표</div>
+
+          <div class="vote-header">
+            <div class="vote-count">남은 투표: <strong>8/10표</strong></div>
+          </div>
+
+          <div class="candidate-card">
+            <div class="candidate-avatar" style="background:linear-gradient(135deg,#FF9900,#EF4444);">A</div>
+            <div class="candidate-info">
+              <div class="candidate-name">김서연</div>
+              <div class="candidate-bio">여행과 와인을 좋아해요</div>
+            </div>
+            <div class="vote-btn voted">&#x2764;&#xFE0F;</div>
+          </div>
+
+          <div class="candidate-card">
+            <div class="candidate-avatar" style="background:linear-gradient(135deg,#48C9B0,#9900FF);">B</div>
+            <div class="candidate-info">
+              <div class="candidate-name">이지은</div>
+              <div class="candidate-bio">카페 투어가 취미입니다</div>
+            </div>
+            <div class="vote-btn">&#x1F90D;</div>
+          </div>
+
+          <div class="candidate-card">
+            <div class="candidate-avatar" style="background:linear-gradient(135deg,#9900FF,#FF9900);">C</div>
+            <div class="candidate-info">
+              <div class="candidate-name">박하은</div>
+              <div class="candidate-bio">요리와 등산을 즐기는 개발자</div>
+            </div>
+            <div class="vote-btn">&#x1F90D;</div>
+          </div>
+
+          <div class="candidate-card">
+            <div class="candidate-avatar" style="background:linear-gradient(135deg,#22C55E,#48C9B0);">D</div>
+            <div class="candidate-info">
+              <div class="candidate-name">최유진</div>
+              <div class="candidate-bio">음악 듣는 걸 좋아합니다</div>
+            </div>
+            <div class="vote-btn voted">&#x2764;&#xFE0F;</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SCREEN 5: Match Results                      -->
+<!-- ============================================ -->
+<div class="frame-wrap">
+  <div class="phone-label">Phase 4: 매칭 결과</div>
+  <div class="phone-sublabel">매칭 상대 확인</div>
+  <div class="phone">
+    <div class="screen">
+      <div class="status-bar"><span>20:15</span><div class="status-bar-right"><span>LTE</span><span>72%</span></div></div>
+      <div class="app-bar">
+        <svg height="24" viewBox="79 97 182 55" preserveAspectRatio="xMidYMid meet">
+          <g fill="#9900FF"><text x="80" y="140" font-size="36" font-weight="bold" font-family="sans-serif">minglit</text></g>
+        </svg>
+        <div class="app-bar-icons">
+          <div class="icon-btn">&#x1F50D;</div>
+          <div class="icon-btn">&#x1F514;</div>
+          <div class="icon-btn">&#x1F464;</div>
+        </div>
+      </div>
+      <div class="filter-chips" style="opacity:0.3;"><div class="chip active">추천</div></div>
+      <div class="feed" style="opacity:0.15;">
+        <div class="event-card"><div class="event-card-image" style="height:80px;"></div></div>
+      </div>
+
+      <div class="now-bar">
+        <div class="now-bar-dot results"></div>
+        <div class="now-bar-content">
+          <div class="now-bar-title">강남 밍릿파티</div>
+          <div class="now-bar-status">매칭 결과 발표!</div>
+        </div>
+        <div class="now-bar-action" style="color:var(--color-primary);">확인</div>
+        <div class="now-bar-chevron">&#x203A;</div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item active"><div class="nav-icon">&#x1F3E0;</div><span>홈</span></div>
+        <div class="nav-item"><div class="nav-icon">&#x1F464;</div><span>마이</span></div>
+      </div>
+
+      <!-- Bottom Sheet: Results -->
+      <div class="sheet-overlay">
+        <div class="bottom-sheet">
+          <div class="drag-handle"></div>
+          <div class="sheet-title">&#x1F389; 매칭 결과</div>
+          <div class="sheet-subtitle">서로 좋아요를 보낸 분이에요!</div>
+
+          <div class="match-card">
+            <div class="match-avatar" style="background:linear-gradient(135deg,#FF9900,#EF4444);">A</div>
+            <div style="flex:1;">
+              <div class="match-name">김서연</div>
+              <div class="match-bio">여행과 와인을 좋아해요</div>
+              <div class="mutual-badge">&#x1F49B; 서로 좋아요</div>
+            </div>
+          </div>
+
+          <div class="match-card">
+            <div class="match-avatar" style="background:linear-gradient(135deg,#22C55E,#48C9B0);">D</div>
+            <div style="flex:1;">
+              <div class="match-name">최유진</div>
+              <div class="match-bio">음악 듣는 걸 좋아합니다</div>
+              <div class="mutual-badge">&#x1F49B; 서로 좋아요</div>
+            </div>
+          </div>
+
+          <button class="cta-btn primary" style="margin-top:var(--spacing-large);">매칭 상대와 대화하기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SCREEN 6: Event Ended (Review + Next)        -->
+<!-- ============================================ -->
+<div class="frame-wrap">
+  <div class="phone-label">Phase 5: 이벤트 종료</div>
+  <div class="phone-sublabel">리뷰 + 다음 이벤트 추천</div>
+  <div class="phone">
+    <div class="screen">
+      <div class="status-bar"><span>20:30</span><div class="status-bar-right"><span>LTE</span><span>68%</span></div></div>
+      <div class="app-bar">
+        <svg height="24" viewBox="79 97 182 55" preserveAspectRatio="xMidYMid meet">
+          <g fill="#9900FF"><text x="80" y="140" font-size="36" font-weight="bold" font-family="sans-serif">minglit</text></g>
+        </svg>
+        <div class="app-bar-icons">
+          <div class="icon-btn">&#x1F50D;</div>
+          <div class="icon-btn">&#x1F514;</div>
+          <div class="icon-btn">&#x1F464;</div>
+        </div>
+      </div>
+      <div class="filter-chips" style="opacity:0.3;"><div class="chip active">추천</div></div>
+      <div class="feed" style="opacity:0.15;">
+        <div class="event-card"><div class="event-card-image" style="height:80px;"></div></div>
+      </div>
+
+      <div class="now-bar">
+        <div class="now-bar-dot ended"></div>
+        <div class="now-bar-content">
+          <div class="now-bar-title">강남 밍릿파티</div>
+          <div class="now-bar-status">오늘 이벤트 끝!</div>
+        </div>
+        <div class="now-bar-action">리뷰</div>
+        <div class="now-bar-chevron">&#x203A;</div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item active"><div class="nav-icon">&#x1F3E0;</div><span>홈</span></div>
+        <div class="nav-item"><div class="nav-icon">&#x1F464;</div><span>마이</span></div>
+      </div>
+
+      <!-- Bottom Sheet: Review -->
+      <div class="sheet-overlay">
+        <div class="bottom-sheet">
+          <div class="drag-handle"></div>
+          <div class="sheet-title">오늘 이벤트가 끝났어요!</div>
+          <div class="sheet-subtitle">강남 밍릿파티</div>
+
+          <div style="text-align:center;">
+            <div class="star-row">
+              <span class="star filled">&#x2605;</span>
+              <span class="star filled">&#x2605;</span>
+              <span class="star filled">&#x2605;</span>
+              <span class="star filled">&#x2605;</span>
+              <span class="star">&#x2605;</span>
+            </div>
+            <div style="font-size:14px; color:var(--color-text-secondary); margin-bottom:var(--spacing-medium);">이벤트는 어땠나요?</div>
+          </div>
+
+          <button class="cta-btn primary">리뷰 작성하기</button>
+
+          <hr class="section-divider">
+
+          <div class="section-label">다음 추천 이벤트</div>
+          <div class="mini-event-card">
+            <div class="mini-event-thumb"></div>
+            <div class="mini-event-info">
+              <div class="mini-event-title">홍대 와인 모임</div>
+              <div class="mini-event-meta">3/30 (일) 15:00 · 28,000원</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SCREEN 7: Multi-Event Stack                  -->
+<!-- ============================================ -->
+<div class="frame-wrap">
+  <div class="phone-label">멀티 이벤트</div>
+  <div class="phone-sublabel">2개 동시 이벤트 스택</div>
+  <div class="phone">
+    <div class="screen">
+      <div class="status-bar"><span>11:30</span><div class="status-bar-right"><span>LTE</span><span>91%</span></div></div>
+      <div class="app-bar">
+        <svg height="24" viewBox="79 97 182 55" preserveAspectRatio="xMidYMid meet">
+          <g fill="#9900FF"><text x="80" y="140" font-size="36" font-weight="bold" font-family="sans-serif">minglit</text></g>
+        </svg>
+        <div class="app-bar-icons">
+          <div class="icon-btn">&#x1F50D;</div>
+          <div class="icon-btn">&#x1F514;</div>
+          <div class="icon-btn">&#x1F464;</div>
+        </div>
+      </div>
+      <div class="filter-chips">
+        <div class="chip active">추천</div><div class="chip">주말</div><div class="chip">소셜</div>
+      </div>
+      <div class="feed" style="opacity:0.3;">
+        <div class="event-card"><div class="event-card-image" style="height:120px;"></div></div>
+      </div>
+
+      <!-- Multi Now Bar -->
+      <div class="now-bar">
+        <div class="now-bar-dot checked-in"></div>
+        <div class="now-bar-content">
+          <div class="now-bar-title">강남 브런치 파티</div>
+          <div class="now-bar-status">체크인 완료!</div>
+        </div>
+        <div class="now-bar-badge">2</div>
+        <div class="now-bar-chevron" style="font-size:12px;">&#x25BC;</div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item active"><div class="nav-icon">&#x1F3E0;</div><span>홈</span></div>
+        <div class="nav-item"><div class="nav-icon">&#x1F464;</div><span>마이</span></div>
+      </div>
+
+      <!-- Bottom Sheet: Multi-Event List -->
+      <div class="sheet-overlay">
+        <div class="bottom-sheet">
+          <div class="drag-handle"></div>
+          <div class="sheet-title">오늘의 이벤트</div>
+          <div class="sheet-subtitle">2개 이벤트가 진행 중이에요</div>
+
+          <div class="multi-list">
+            <div class="multi-item active">
+              <div class="multi-item-dot" style="background:var(--color-success);"></div>
+              <div class="multi-item-content">
+                <div class="multi-item-title">강남 브런치 파티</div>
+                <div class="multi-item-status">체크인 완료 · 매칭 투표 대기</div>
+              </div>
+              <div class="multi-item-time">진행 중</div>
+            </div>
+
+            <div class="multi-item">
+              <div class="multi-item-dot" style="background:var(--color-text-secondary);"></div>
+              <div class="multi-item-content">
+                <div class="multi-item-title">홍대 소셜 파티</div>
+                <div class="multi-item-status">오늘 19:00 시작</div>
+              </div>
+              <div class="multi-item-time">19:00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SCREEN 8: Empty Match Result                 -->
+<!-- ============================================ -->
+<div class="frame-wrap">
+  <div class="phone-label">빈 상태: 매칭 없음</div>
+  <div class="phone-sublabel">매칭 결과 0건</div>
+  <div class="phone">
+    <div class="screen">
+      <div class="status-bar"><span>20:15</span><div class="status-bar-right"><span>LTE</span><span>72%</span></div></div>
+      <div class="app-bar">
+        <svg height="24" viewBox="79 97 182 55" preserveAspectRatio="xMidYMid meet">
+          <g fill="#9900FF"><text x="80" y="140" font-size="36" font-weight="bold" font-family="sans-serif">minglit</text></g>
+        </svg>
+        <div class="app-bar-icons">
+          <div class="icon-btn">&#x1F50D;</div>
+          <div class="icon-btn">&#x1F514;</div>
+          <div class="icon-btn">&#x1F464;</div>
+        </div>
+      </div>
+      <div class="filter-chips" style="opacity:0.3;"><div class="chip active">추천</div></div>
+      <div class="feed" style="opacity:0.15;">
+        <div class="event-card"><div class="event-card-image" style="height:80px;"></div></div>
+      </div>
+
+      <div class="now-bar">
+        <div class="now-bar-dot results"></div>
+        <div class="now-bar-content">
+          <div class="now-bar-title">강남 밍릿파티</div>
+          <div class="now-bar-status">매칭 결과 확인</div>
+        </div>
+        <div class="now-bar-chevron">&#x203A;</div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item active"><div class="nav-icon">&#x1F3E0;</div><span>홈</span></div>
+        <div class="nav-item"><div class="nav-icon">&#x1F464;</div><span>마이</span></div>
+      </div>
+
+      <!-- Bottom Sheet: No Match -->
+      <div class="sheet-overlay">
+        <div class="bottom-sheet">
+          <div class="drag-handle"></div>
+          <div class="sheet-title">매칭 결과</div>
+
+          <div class="empty-state">
+            <div class="empty-icon">&#x1F33F;</div>
+            <div class="empty-title">이번엔 아쉽지만, 다음 기회에!</div>
+            <div class="empty-desc">서로 좋아요를 보낸 분이 없어요.<br>다음 이벤트에서 다시 만나요.</div>
+          </div>
+
+          <button class="cta-btn outline">다음 이벤트 둘러보기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
