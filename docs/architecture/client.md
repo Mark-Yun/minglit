@@ -56,13 +56,13 @@ apps/app_user/lib/src/features/
 apps/app_partner/lib/src/features/
 ├── admin/          # 관리자 기능
 ├── auth/           # 파트너 로그인/인증
+├── application/    # 이벤트 신청 관리 (승인/거절)
 ├── checkin/        # 이벤트 체크인 관리
 ├── home/           # 파트너 대시보드
 ├── member/         # 멤버 관리 (초대, 권한)
 ├── more/           # 더보기 메뉴
 ├── onboarding/     # 파트너 온보딩
 ├── party/          # 파티/이벤트 관리
-├── qr/             # QR 스캐너
 ├── settlement/     # 정산 관리
 ├── ticket/         # 티켓 관리
 └── verification/   # 인증 심사

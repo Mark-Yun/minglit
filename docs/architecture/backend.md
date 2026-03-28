@@ -241,6 +241,7 @@ Supabase Edge Functions는 Deno 런타임 기반이며, `supabase/functions/` �
 | `user-manage-social` | User | 소셜 상호작용 (좋아요, 차단, 신고) 관리 |
 | `user-submit-verification` | User | 인증 제출물 제출 |
 | `user-update-verification` | User | 유저 인증 데이터(`user_verifications`) 업데이트 |
+| `vectorize-party` | Recommendation | 파티 벡터화 (OpenAI 임베딩 생성 → `party_embeddings`) |
 
 ### 3.2 Shared Modules (`_shared/`)
 
