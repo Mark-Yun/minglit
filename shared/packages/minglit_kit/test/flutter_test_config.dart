@@ -12,7 +12,6 @@ import 'package:flutter_test/flutter_test.dart';
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  // ignore: do_not_use_environment
   final isCI =
       const bool.fromEnvironment('CI') || Platform.environment['CI'] == 'true';
 
