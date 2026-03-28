@@ -1,3 +1,5 @@
+import 'package:alchemist/alchemist.dart'
+    show GoldenTestGroup, GoldenTestScenario;
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 

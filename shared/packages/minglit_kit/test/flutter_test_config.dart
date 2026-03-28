@@ -3,12 +3,10 @@ import 'dart:async';
 import 'package:alchemist/alchemist.dart';
 
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
-  final isCI = bool.fromEnvironment('CI', defaultValue: false);
+  const isCI = bool.fromEnvironment('CI');
   return AlchemistConfig.runWithConfig(
-    config: AlchemistConfig(
-      platformGoldensConfig: PlatformGoldensConfig(
-        enabled: !isCI,
-      ),
+    config: const AlchemistConfig(
+      platformGoldensConfig: PlatformGoldensConfig(),
     ),
     run: testMain,
   );

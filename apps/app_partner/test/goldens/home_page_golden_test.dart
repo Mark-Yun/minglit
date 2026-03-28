@@ -41,8 +41,9 @@ void main() {
                 currentPartnerInfoProvider.overrideWith(
                   (_) async => const Partner(id: 'p1', name: '테스트 파트너'),
                 ),
-                partnerHomeCoordinatorProvider
-                    .overrideWithValue(mockCoordinator),
+                partnerHomeCoordinatorProvider.overrideWithValue(
+                  mockCoordinator,
+                ),
                 partnerDashboardControllerProvider.overrideWith(
                   _EmptyDashboardController.new,
                 ),
@@ -98,8 +99,9 @@ void main() {
                   currentPartnerInfoProvider.overrideWith(
                     (_) async => const Partner(id: 'p1', name: '테스트 파트너'),
                   ),
-                  partnerHomeCoordinatorProvider
-                      .overrideWithValue(mockCoordinator),
+                  partnerHomeCoordinatorProvider.overrideWithValue(
+                    mockCoordinator,
+                  ),
                   partnerDashboardControllerProvider.overrideWith(
                     () => _LoadedDashboardController(
                       pendingCount: 3,
@@ -138,8 +140,9 @@ void main() {
                 currentPartnerInfoProvider.overrideWith(
                   (_) async => const Partner(id: 'p1', name: '테스트 파트너'),
                 ),
-                partnerHomeCoordinatorProvider
-                    .overrideWithValue(mockCoordinator),
+                partnerHomeCoordinatorProvider.overrideWithValue(
+                  mockCoordinator,
+                ),
                 partnerDashboardControllerProvider.overrideWith(
                   _EmptyDashboardController.new,
                 ),
@@ -196,8 +199,9 @@ void main() {
                   currentPartnerInfoProvider.overrideWith(
                     (_) async => const Partner(id: 'p1', name: '테스트 파트너'),
                   ),
-                  partnerHomeCoordinatorProvider
-                      .overrideWithValue(mockCoordinator),
+                  partnerHomeCoordinatorProvider.overrideWithValue(
+                    mockCoordinator,
+                  ),
                   partnerDashboardControllerProvider.overrideWith(
                     () => _LoadedDashboardController(
                       pendingCount: 3,

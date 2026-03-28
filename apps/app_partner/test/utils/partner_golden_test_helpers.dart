@@ -1,3 +1,4 @@
+import 'package:alchemist/alchemist.dart' show GoldenTestScenario;
 import 'package:app_partner/src/features/home/partner_home_coordinator.dart';
 import 'package:app_partner/src/features/more/more_coordinator.dart';
 import 'package:app_partner/src/l10n/generated/app_localizations.dart';
