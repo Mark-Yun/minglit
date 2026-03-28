@@ -225,17 +225,18 @@ import 'package:alchemist/alchemist.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../utils/golden_test_helpers.dart';
+
 void main() {
   goldenTest(
     'EventCard scheduled',
     fileName: 'event_card_scheduled',
-    pumpBeforeTest: precacheImages,
     builder: () => GoldenTestGroup(
+      columnWidthBuilder: (_) => const FixedColumnWidth(420),
       children: [
         GoldenTestScenario(
           name: 'scheduled',
-          child: SizedBox(
-            width: 390,
+          child: GoldenComponentWrapper(
             child: EventCard(event: mockEvent, onTap: () {}),
           ),
         ),

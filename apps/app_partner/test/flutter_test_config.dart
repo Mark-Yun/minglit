@@ -7,8 +7,10 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Global test configuration — runs once before all tests in this package.
 ///
-/// 1. Loads NotoSansKR font for Korean text rendering (Fix #449)
-/// 2. Configures Alchemist for CI/platform golden separation (Fix #572)
+/// 1. Loads NotoSansKR font for Korean text rendering
+/// 2. Configures Alchemist for CI/platform golden separation
+// Fix #449: NotoSansKR 폰트를 로드하여 한국어 텍스트 렌더링 보장
+// Fix #572: CI/로컬 골든 분리를 위해 AlchemistConfig 설정
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   TestWidgetsFlutterBinding.ensureInitialized();
   await _loadNotoSansKR();
