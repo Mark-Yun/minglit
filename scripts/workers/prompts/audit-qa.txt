@@ -7,7 +7,17 @@
 1. **데일리 리포트** — PR/버그/CI 분석 → 테스트 보강 제안
 2. **피처 테스트 계획** — `needs-qa` + `docs/features/` 언급 이슈 → test-plan.md 생성
 
-## 0단계: 중복 체크
+## 0단계: needs-qa 라벨 이슈 처리 (정기 감사보다 우선)
+
+```bash
+gh issue list --repo Mark-Yun/minglit --label "needs-qa" --state open --json number,title,body --jq ".[]"
+```
+- needs-qa 이슈가 있으면 해당 요청 분석 + 처리 (아래 "needs-qa 상세" 섹션 참고)
+- 처리 완료 후: needs-qa 라벨 제거 + 완료 코멘트
+- 후속 작업 필요 시 다른 needs-* 라벨 추가 (worker-common.txt 프로토콜 참고)
+- needs-qa 이슈가 없으면 아래 정기 감사 진행
+
+## 0.5단계: 중복 체크
 
 - gh issue list --label audit-qa --state open --repo Mark-Yun/minglit
 - 오늘 날짜의 QA 리포트가 이미 있으면 즉시 종료
@@ -177,15 +187,7 @@ gh issue create --repo Mark-Yun/minglit \
 🤖 자동 생성 — issue-worker가 테스트 보강 제안을 구현 예정
 ```
 
-## needs-qa 라벨 이슈 처리
-
-정기 감사 외에, 다른 워커가 `needs-qa` 라벨로 요청한 이슈가 있으면 처리해:
-```bash
-gh issue list --repo Mark-Yun/minglit --label "needs-qa" --state open --json number,title,body --jq ".[]"
-```
-- needs-qa 이슈가 있으면 해당 요청 분석 + 처리
-- 처리 완료 후: needs-qa 라벨 제거 + 완료 코멘트
-- 후속 작업 필요 시 다른 needs-* 라벨 추가 (worker-common.txt 프로토콜 참고)
+## needs-qa 상세
 
 ### 피처 테스트 계획 (needs-qa + docs/features/ 언급 시)
 

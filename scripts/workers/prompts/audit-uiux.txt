@@ -7,7 +7,17 @@
 1. **정기 감사** — 디자인 토큰 준수, golden test 커버리지, 접근성 감사. `docs/ux/` 문서 관리의 주체.
 2. **피처 UX 리뷰** — `needs-uiux` 라벨 이슈에 `docs/features/` 와이어프레임이 있으면 디자인 시스템 관점에서 검토.
 
-## 0단계: 중복 체크
+## 0단계: needs-uiux 라벨 이슈 처리 (정기 감사보다 우선)
+
+```bash
+gh issue list --repo Mark-Yun/minglit --label "needs-uiux" --state open --json number,title,body --jq '.[]'
+```
+- needs-uiux 이슈가 있으면 해당 요청 분석 + 처리 (아래 "needs-uiux 상세" 섹션 참고)
+- 처리 완료 후: needs-uiux 라벨 제거 + 완료 코멘트
+- 후속 작업 필요 시 다른 needs-* 라벨 추가
+- needs-uiux 이슈가 없으면 아래 정기 감사 진행
+
+## 0.5단계: 중복 체크
 
 ```bash
 gh issue list --repo Mark-Yun/minglit --label "audit-report" --state open --json title --jq '.[].title'
@@ -118,15 +128,7 @@ gh issue create --repo Mark-Yun/minglit \
 ```
 - 구체적 제안이 있을 때만 생성 (모호하면 생성 안 함)
 
-## needs-uiux 라벨 이슈 처리
-
-다른 워커가 `needs-uiux` 라벨로 요청한 이슈가 있으면 처리:
-```bash
-gh issue list --repo Mark-Yun/minglit --label "needs-uiux" --state open --json number,title,body --jq '.[]'
-```
-- needs-uiux 이슈가 있으면 해당 요청 분석 + 처리
-- 처리 완료 후: needs-uiux 라벨 제거 + 완료 코멘트
-- 후속 작업 필요 시 다른 needs-* 라벨 추가
+## needs-uiux 상세
 
 ### 피처 와이어프레임 리뷰 (needs-uiux + docs/features/ 언급 시)
 
