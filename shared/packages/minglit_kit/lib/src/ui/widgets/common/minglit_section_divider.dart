@@ -10,11 +10,11 @@ class MinglitSectionDivider extends StatelessWidget {
 
   /// Creates a thick section divider (8px, surface color).
   const MinglitSectionDivider.thick({Key? key})
-      : this._(isThick: true, key: key);
+    : this._(isThick: true, key: key);
 
   /// Creates a thin section divider (1px, divider color).
   const MinglitSectionDivider.thin({Key? key})
-      : this._(isThick: false, key: key);
+    : this._(isThick: false, key: key);
 
   /// Whether this divider uses the thick (8px) variant.
   final bool isThick;
