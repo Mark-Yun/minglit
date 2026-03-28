@@ -89,6 +89,26 @@ class MinglitSpacing {
 
   /// 48px extra-extra-large spacing.
   static const double xxlarge = 48;
+
+  /// 64px extra-extra-extra-large spacing.
+  static const double xxxlarge = 64;
+
+  // 시맨틱 토큰 (용도별)
+
+  /// 20px screen edge padding (left/right).
+  static const double screenEdge = 20;
+
+  /// 12px gap between cards.
+  static const double cardGap = 12;
+
+  /// 16px card internal vertical padding.
+  static const double cardContentV = 16;
+
+  /// 4px title-to-body spacing.
+  static const double titleToBody = 4;
+
+  /// 40px section gap.
+  static const double sectionGap = 40;
 }
 
 /// Border radius constants for consistent rounding.
@@ -96,16 +116,16 @@ class MinglitRadius {
   /// 8px small border radius.
   static const double small = 8;
 
-  /// 16px button border radius.
-  static const double button = 16;
+  /// 12px button border radius.
+  static const double button = 12;
 
-  /// 24px card border radius.
-  static const double card = 24;
+  /// 16px card border radius.
+  static const double card = 16;
 
   /// 12px input border radius.
   static const double input = 12;
 
-  /// 100px chip border radius (pill shape).
+  /// 100px chip border radius (fully rounded).
   static const double chip = 100;
 }
 
