@@ -21,7 +21,7 @@
 | titleTextStyle.fontFamily | NotoSansKR | NotoSansKR | :14 |
 | titleTextStyle.color | `#111827` | `#FFFFFF` | :11 |
 
-Dark Mode 소스: `minglit_theme.dart:168-180`
+Dark Mode 소스: `minglit_theme.dart:395-407`
 
 ---
 
@@ -81,7 +81,7 @@ Dark Mode 소스: `minglit_theme.dart:168-180`
 | color | `#F9FAFB` (`MinglitColors.surface`) | `#212121` (`MinglitColorsDark.surface`) | :69 |
 | margin | EdgeInsets.zero | EdgeInsets.zero | :70 |
 
-Dark Mode 소스: `minglit_theme.dart:184-191`
+Dark Mode 소스: `minglit_theme.dart:411-418`
 
 ---
 
@@ -102,7 +102,7 @@ Dark Mode 소스: `minglit_theme.dart:184-191`
 | hintStyle.color | `#4B5563` (`MinglitColors.textSecondary`) | `#AAAAAA` (`MinglitColorsDark.textSecondary`) | :91 |
 | hintStyle.fontSize | 14 | 14 | :92 |
 
-Dark Mode 소스: `minglit_theme.dart:192-216`
+Dark Mode 소스: `minglit_theme.dart:419-443`
 
 ---
 
@@ -118,7 +118,7 @@ Dark Mode 소스: `minglit_theme.dart:192-216`
 | secondarySelectedColor | `#9900FF` (`MinglitColors.primary`) | `#AA33FF` (`MinglitColorsDark.primary`) | :102 |
 | labelStyle.fontSize | 13 | 13 | :104 |
 
-Dark Mode 소스: `minglit_theme.dart:217-225`
+Dark Mode 소스: `minglit_theme.dart:444-454`
 
 ---
 
@@ -162,7 +162,7 @@ Dark Mode 소스: `minglit_theme.dart:217-225`
 | thickness | 1 | 1 | :148 |
 | space | 16 (`MinglitSpacing.medium`) | 16 | :149 |
 
-Dark Mode 소스: `minglit_theme.dart:228-232`
+Dark Mode 소스: `minglit_theme.dart:457-461`
 
 ---
 
