@@ -97,12 +97,10 @@ eventApplicationsGroupedProvider = FutureProvider.family
 
         // Get all upcoming events for this partner
         final events = await eventRepo.getUpcomingEvents(params.partnerId);
-        // Also get recent past events (last 7 days)
-        final allEvents = [...events];
 
         final grouped = <Event, List<EventApplication>>{};
 
-        for (final event in allEvents) {
+        for (final event in events) {
           final apps = await eventRepo.getApplicationsByEventId(event.id);
           final filtered = apps
               .where((a) => params.statusFilter.contains(a.status))
@@ -336,26 +334,33 @@ class _ApplicationTab extends ConsumerWidget {
 
     if (confirmed != true) return;
 
-    try {
-      final client = ref.read(supabaseClientProvider);
-      for (final event in grouped.keys) {
+    final client = ref.read(supabaseClientProvider);
+    final failures = <String>[];
+    for (final event in grouped.keys) {
+      try {
         await client.functions.invoke(
           'partner-approve-application',
           body: {'action': 'bulk_approve', 'event_id': event.id},
         );
+      } on Exception catch (e) {
+        failures.add('${event.title}: $e');
       }
-      if (context.mounted) {
+    }
+    if (context.mounted) {
+      if (failures.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('$total건 승인 완료')),
         );
-        ref.invalidate(eventApplicationsGroupedProvider);
-      }
-    } on Exception catch (e) {
-      if (context.mounted) {
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('일괄 승인 실패: $e')),
+          SnackBar(
+            content: Text(
+              '일부 승인 실패 (${failures.length}건): ${failures.first}',
+            ),
+          ),
         );
       }
+      ref.invalidate(eventApplicationsGroupedProvider);
     }
   }
 }
