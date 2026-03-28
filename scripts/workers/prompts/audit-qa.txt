@@ -7,17 +7,7 @@
 1. **데일리 리포트** — PR/버그/CI 분석 → 테스트 보강 제안
 2. **피처 테스트 계획** — `needs-qa` + `docs/features/` 언급 이슈 → test-plan.md 생성
 
-## 0단계: needs-qa 라벨 이슈 처리 (정기 감사보다 우선)
-
-```bash
-gh issue list --repo Mark-Yun/minglit --label "needs-qa" --state open --json number,title,body --jq ".[]"
-```
-- needs-qa 이슈가 있으면 해당 요청 분석 + 처리 (아래 "needs-qa 상세" 섹션 참고)
-- 처리 완료 후: needs-qa 라벨 제거 + 완료 코멘트
-- 후속 작업 필요 시 다른 needs-* 라벨 추가 (worker-common.txt 프로토콜 참고)
-- needs-qa 이슈가 없으면 아래 정기 감사 진행
-
-## 0.5단계: 중복 체크
+## 0단계: 중복 체크
 
 - gh issue list --label audit-qa --state open --repo Mark-Yun/minglit
 - 오늘 날짜의 QA 리포트가 이미 있으면 즉시 종료
@@ -187,7 +177,15 @@ gh issue create --repo Mark-Yun/minglit \
 🤖 자동 생성 — issue-worker가 테스트 보강 제안을 구현 예정
 ```
 
-## needs-qa 상세
+## needs-qa 라벨 이슈 처리
+
+정기 감사 외에, 다른 워커가 `needs-qa` 라벨로 요청한 이슈가 있으면 처리해:
+```bash
+gh issue list --repo Mark-Yun/minglit --label "needs-qa" --state open --json number,title,body --jq ".[]"
+```
+- needs-qa 이슈가 있으면 해당 요청 분석 + 처리
+- 처리 완료 후: needs-qa 라벨 제거 + 완료 코멘트
+- 후속 작업 필요 시 다른 needs-* 라벨 추가 (worker-common.txt 프로토콜 참고)
 
 ### 피처 테스트 계획 (needs-qa + docs/features/ 언급 시)
 
@@ -223,10 +221,22 @@ P3 (선택): N건
 총 N건
 ```
 
-#### 완료 후
-- test-plan.md 커밋 + PR (또는 기존 PR에 추가)
-- needs-qa 라벨 제거
-- 완료 코멘트: "🤖 audit-qa: 테스트 계획 작성 완료 (N건). tpm-staff가 이슈 파일링 예정."
+#### 완료 후 — 이슈 체이닝
+
+```bash
+# 1. test-plan.md 커밋 + PR (Closes needs-qa 이슈)
+git checkout -b docs/feature-{name}-test-plan dev
+git add docs/features/{name}/test-plan.md
+git commit -m "docs: {feature-name} 테스트 계획 (test-plan.md)"
+git push -u origin docs/feature-{name}-test-plan
+gh pr create --base dev --title "docs: {feature-name} 테스트 계획" \
+  --body "Closes #<needs-qa 이슈번호>"
+
+# 2. 이슈에 완료 코멘트 (tpm-staff가 자동 감지)
+gh issue comment <이슈번호> --body "🤖 audit-qa: 테스트 계획 작성 완료 (N건). tpm-staff가 이슈 파일링 예정."
+```
+
+tpm-staff가 `docs/features/{name}/`에 plan.md + test-plan.md 존재를 자동 감지하여 에픽 + 서브이슈를 생성한다.
 ## 규칙
 
 - 보강 제안이 없으면 이슈를 생성하지 마. 즉시 종료.
