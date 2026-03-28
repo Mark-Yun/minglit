@@ -241,9 +241,13 @@ Supabase Edge Functions는 Deno 런타임 기반이며, `supabase/functions/` �
 | `user-manage-social` | User | 소셜 상호작용 (좋아요, 차단, 신고) 관리 |
 | `user-submit-verification` | User | 인증 제출물 제출 |
 | `user-update-verification` | User | 유저 인증 데이터(`user_verifications`) 업데이트 |
-| `vectorize-party` | Recommendation | 파티 벡터화 (OpenAI 임베딩 생성 → `party_embeddings`) |
+### 3.2 Internal Modules (non-deployable)
 
-### 3.2 Shared Modules (`_shared/`)
+| Module | Directory | Purpose |
+|--------|-----------|---------|
+| `vectorize-party` | `supabase/functions/vectorize-party/` | 파티 벡터화 라이브러리 (OpenAI 임베딩 생성). `vector-worker`가 import하여 사용. `index.ts` 없음 — 단독 배포 불가. |
+
+### 3.3 Shared Modules (`_shared/`)
 
 | Module | LOC | Purpose |
 |--------|-----|---------|
@@ -260,7 +264,7 @@ Supabase Edge Functions는 Deno 런타임 기반이며, `supabase/functions/` �
 | `validation_utils.ts` | — | 입력 검증 유틸리티 |
 | `env_keystore.ts` | 63 | 환경변수 검증 (`env-manifest.json` 기반 per-function/project 단위 키 체크) |
 
-### 3.3 Dev Guard
+### 3.4 Dev Guard
 
 `dev-seed`, `dev-session-switch`은 프로덕션 배포 시 `DENO_DEPLOYMENT_ID` 환경변수를 체크하여 403을 반환한다.
 
