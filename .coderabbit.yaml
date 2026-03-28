@@ -25,7 +25,7 @@ reviews:
     - "!**/assets/**"
     - "!.omc/**"
     - "!coverage/**"
-    - "!**/launchd/**"
+    - "!**/launchd/**/*.plist"
   path_instructions:
     - path: "**/*.dart"
       instructions: |
