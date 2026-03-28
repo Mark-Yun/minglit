@@ -18,6 +18,14 @@ reviews:
     - "!**/pubspec.lock"
     - "!**/.sisyphus/**"
     - "!**/minglit_env/**"
+    - "!docs/**"
+    - "!scripts/**"
+    - "!**/*.png"
+    - "!**/*.svg"
+    - "!**/assets/**"
+    - "!.omc/**"
+    - "!coverage/**"
+    - "!**/launchd/**"
   path_instructions:
     - path: "**/*.dart"
       instructions: |

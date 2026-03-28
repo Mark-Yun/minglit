@@ -2,7 +2,8 @@
 
 import { createServiceClient } from "../_shared/supabase_client.ts";
 import { corsResponse, errorResponse, successResponse } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
+// Fix #592: requireAuth(일반 JWT) → requireServiceRole로 전환하여 인가 우회 차단
+import { requireServiceRole } from "../_shared/auth_utils.ts";
 import { initSentry, withHandler, log } from "../_shared/logger.ts";
 
 const FN = "event-matching";
@@ -12,7 +13,8 @@ initSentry();
 Deno.serve(withHandler(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
 
-  const auth = await requireAuth(req);
+  // Fix #592: service_role 전용 — 일반 유저 JWT로 호출 불가
+  const auth = requireServiceRole(req);
   if (auth instanceof Response) return auth;
 
   let reqBody: Record<string, unknown>;
@@ -29,11 +31,6 @@ Deno.serve(withHandler(async (req) => {
   }
 
   const supabase = createServiceClient();
-
-  // Only service_role or admin can trigger matching — verify caller has elevated access
-  // (requireAuth already validated JWT; for admin check, service_role callers pass a service_role JWT)
-  // For backend-simulator calls with service_role token, auth will be the service_role user id.
-  // This is acceptable since event-matching is an admin-only operation.
 
   // Check idempotency: if match_pairs already exist for this event, return existing
   const { data: existingPairs, error: existingErr } = await supabase
@@ -122,7 +119,7 @@ Deno.serve(withHandler(async (req) => {
 
   const resultPairs = (insertedPairs ?? []) as Array<{ id: string; user_lower_id: string; user_higher_id: string }>;
 
-  log({ function: FN, level: "info", message: "Match pairs created", metadata: { event_id, match_count: resultPairs.length, triggered_by: auth } });
+  log({ function: FN, level: "info", message: "Match pairs created", metadata: { event_id, match_count: resultPairs.length } });
 
   return successResponse({
     success: true,
