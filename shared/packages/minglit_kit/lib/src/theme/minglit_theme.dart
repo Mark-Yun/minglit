@@ -79,53 +79,76 @@ class MinglitTheme {
           // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 32,
           fontWeight: FontWeight.bold,
+          height: 1.25,
+          color: MinglitColors.textPrimary,
+        ),
+        headlineSmall: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          height: 1.33,
           color: MinglitColors.textPrimary,
         ),
         titleLarge: TextStyle(
           // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 20,
           fontWeight: FontWeight.bold,
+          height: 1.4,
           color: MinglitColors.textPrimary,
         ),
         titleMedium: TextStyle(
           // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 16,
           fontWeight: FontWeight.bold,
+          height: 1.5,
           color: MinglitColors.textPrimary,
         ),
         titleSmall: TextStyle(
           // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 14,
           fontWeight: FontWeight.bold,
+          height: 1.43,
           color: MinglitColors.textPrimary,
+        ),
+        bodyLarge: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 18,
+          height: 1.33,
+          color: MinglitColors.textSecondary,
         ),
         bodyMedium: TextStyle(
           // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 16,
+          height: 1.5,
+          color: MinglitColors.textSecondary,
+        ),
+        // Fix #568: bodySmall 12→13, height 추가
+        bodySmall: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 13,
+          height: 1.5,
           color: MinglitColors.textSecondary,
         ),
         // Fix #474: 빈 슬롯 채우기 — 하드코딩 fontSize 흡수
-        bodySmall: TextStyle(
-          // ignore: minglit_no_hardcoded_text_style -- theme definition
-          fontSize: 12,
-          color: MinglitColors.textSecondary,
-        ),
         labelLarge: TextStyle(
           // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 14,
           fontWeight: FontWeight.w500,
+          height: 1.43,
           color: MinglitColors.textPrimary,
         ),
         labelMedium: TextStyle(
           // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 12,
           fontWeight: FontWeight.w500,
+          height: 1.5,
           color: MinglitColors.textPrimary,
         ),
         labelSmall: TextStyle(
           // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 11,
           fontWeight: FontWeight.w500,
+          height: 1.45,
           color: MinglitColors.textPrimary,
         ),
       ),
@@ -296,53 +319,76 @@ class MinglitTheme {
           // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 32,
           fontWeight: FontWeight.bold,
+          height: 1.25,
+          color: MinglitColorsDark.textPrimary,
+        ),
+        headlineSmall: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          height: 1.33,
           color: MinglitColorsDark.textPrimary,
         ),
         titleLarge: TextStyle(
           // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 20,
           fontWeight: FontWeight.bold,
+          height: 1.4,
           color: MinglitColorsDark.textPrimary,
         ),
         titleMedium: TextStyle(
           // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 16,
           fontWeight: FontWeight.bold,
+          height: 1.5,
           color: MinglitColorsDark.textPrimary,
         ),
         titleSmall: TextStyle(
           // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 14,
           fontWeight: FontWeight.bold,
+          height: 1.43,
           color: MinglitColorsDark.textPrimary,
+        ),
+        bodyLarge: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 18,
+          height: 1.33,
+          color: MinglitColorsDark.textSecondary,
         ),
         bodyMedium: TextStyle(
           // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 16,
+          height: 1.5,
+          color: MinglitColorsDark.textSecondary,
+        ),
+        // Fix #568: bodySmall 12→13, height 추가
+        bodySmall: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 13,
+          height: 1.5,
           color: MinglitColorsDark.textSecondary,
         ),
         // Fix #474: 빈 슬롯 채우기 — 하드코딩 fontSize 흡수
-        bodySmall: TextStyle(
-          // ignore: minglit_no_hardcoded_text_style -- theme definition
-          fontSize: 12,
-          color: MinglitColorsDark.textSecondary,
-        ),
         labelLarge: TextStyle(
           // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 14,
           fontWeight: FontWeight.w500,
+          height: 1.43,
           color: MinglitColorsDark.textPrimary,
         ),
         labelMedium: TextStyle(
           // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 12,
           fontWeight: FontWeight.w500,
+          height: 1.5,
           color: MinglitColorsDark.textPrimary,
         ),
         labelSmall: TextStyle(
           // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 11,
           fontWeight: FontWeight.w500,
+          height: 1.45,
           color: MinglitColorsDark.textPrimary,
         ),
       ),
