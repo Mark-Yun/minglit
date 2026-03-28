@@ -73,21 +73,9 @@ class _BottomTicketBar extends ConsumerWidget {
     );
   }
 
+  // Fix #539: coordinator 경유로 ticket feature UI 직접 참조 제거
   void _showTicketSelection(BuildContext context, WidgetRef ref) {
-    unawaited(
-      showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        builder: (_) => TicketSelectionSheet(
-          event: event,
-          onTicketSelected: (eventId, ticketId) {
-            ref
-                .read(eventCoordinatorProvider)
-                .goToApplicationWizard(eventId, ticketId: ticketId);
-          },
-        ),
-      ),
-    );
+    ref.read(eventCoordinatorProvider).showTicketSelection(context, event);
   }
 
   Widget _buildActionButton(
