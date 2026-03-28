@@ -57,10 +57,16 @@ class MinglitContentCard extends StatelessWidget {
     );
 
     if (onTap != null) {
-      return InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(MinglitRadius.card),
-        child: card,
+      return Material(
+        color: Colors.transparent,
+        child: Ink(
+          decoration: decoration,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(MinglitRadius.card),
+            child: Padding(padding: effectivePadding, child: child),
+          ),
+        ),
       );
     }
 
