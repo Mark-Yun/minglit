@@ -1,7 +1,6 @@
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/features/ticket/ui/ticket_selection_sheet.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -108,7 +107,7 @@ void main() {
           id: 'event-1',
           partyId: 'party-1',
           title: 'Test Event',
-          startTime: DateTime(2026, 4, 1),
+          startTime: DateTime(2026, 4),
           tickets: [],
         );
 
@@ -147,7 +146,7 @@ void main() {
           id: 'event-2',
           partyId: 'party-2',
           title: 'Test Event 2',
-          startTime: DateTime(2026, 4, 1),
+          startTime: DateTime(2026, 4),
           tickets: [],
         );
 
