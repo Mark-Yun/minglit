@@ -108,7 +108,7 @@ class _AddressSearchDialogState extends State<AddressSearchDialog> {
         _results = juso.cast<Map<String, dynamic>>();
         _isLoading = false;
       });
-    // Fix #544: 에러 삼킴 catch에 로깅 추가
+      // Fix #544: 에러 삼킴 catch에 로깅 추가
     } on Exception catch (e, st) {
       Log.e('❌ [AddressSearchDialog] Address search Error', e, st);
       if (!mounted) return;
