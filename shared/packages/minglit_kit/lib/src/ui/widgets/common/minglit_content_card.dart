@@ -35,7 +35,8 @@ class MinglitContentCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final isHighlighted = highlighted ?? false;
 
-    final effectivePadding = padding ??
+    final effectivePadding =
+        padding ??
         const EdgeInsets.symmetric(
           vertical: MinglitSpacing.cardContentV,
           horizontal: MinglitSpacing.medium,
@@ -45,9 +46,7 @@ class MinglitContentCard extends StatelessWidget {
       color: colorScheme.surface,
       borderRadius: BorderRadius.circular(MinglitRadius.card),
       border: Border.all(
-        color: isHighlighted
-            ? colorScheme.primary
-            : colorScheme.outlineVariant,
+        color: isHighlighted ? colorScheme.primary : colorScheme.outlineVariant,
       ),
     );
 

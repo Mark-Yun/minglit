@@ -39,9 +39,11 @@ class MinglitSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final effectivePadding = padding ??
+    final effectivePadding =
+        padding ??
         const EdgeInsets.symmetric(horizontal: MinglitSpacing.screenEdge);
-    final effectiveTitleStyle = titleStyle ??
+    final effectiveTitleStyle =
+        titleStyle ??
         theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold);
     final effectiveSpacing = spacing ?? MinglitSpacing.sm;
 
