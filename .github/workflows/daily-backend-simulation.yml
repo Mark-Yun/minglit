@@ -71,9 +71,12 @@ jobs:
           profile: pixel_6
           script: |
             cd apps/app_user
-            flutter test integration_test/ \
-              --flavor dev \
-              --dart-define-from-file=../../minglit_env/dev/flutter.env
+            for f in integration_test/*_test.dart; do
+              echo "▶ Running: $f"
+              flutter test "$f" \
+                --flavor dev \
+                --dart-define-from-file=../../minglit_env/dev/flutter.env
+            done
 
   partner-cuj-test:
     needs: seed-and-simulate
@@ -101,9 +104,18 @@ jobs:
           profile: pixel_6
           script: |
             cd apps/app_partner
-            flutter test integration_test/ \
-              --flavor dev \
-              --dart-define-from-file=../../minglit_env/dev/flutter.env
+            shopt -s nullglob
+            files=(integration_test/*_test.dart)
+            if [ ${#files[@]} -eq 0 ]; then
+              echo "⏭ No integration tests found, skipping."
+              exit 0
+            fi
+            for f in "${files[@]}"; do
+              echo "▶ Running: $f"
+              flutter test "$f" \
+                --flavor dev \
+                --dart-define-from-file=../../minglit_env/dev/flutter.env
+            done
 
   notify-failure:
     needs: [seed-and-simulate, client-cuj-test, partner-cuj-test]
