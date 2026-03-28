@@ -76,6 +76,22 @@ CREATE TABLE user_interest_tags (
 **트리거:**
 - `party_tags` INSERT/DELETE 시 `tags.usage_count` 자동 증감
 
+**일별 집계 테이블 (트렌딩 계산용):**
+
+`tags.usage_count`는 누적 합계이므로 "최근 N일 증가율"을 직접 계산할 수 없다. 트렌딩 로직을 위해 일별 스냅샷 테이블을 추가한다:
+
+```sql
+-- 일별 태그 사용량 스냅샷 (pg_cron으로 매일 집계)
+CREATE TABLE tag_usage_daily (
+  tag_id uuid REFERENCES tags(id) ON DELETE CASCADE,
+  date date NOT NULL DEFAULT CURRENT_DATE,
+  daily_count integer NOT NULL DEFAULT 0,  -- 해당 날짜의 신규 party_tags 연결 수
+  PRIMARY KEY (tag_id, date)
+);
+```
+
+`get_trending_tags(limit, days)`는 `tag_usage_daily`에서 최근 N일간 `SUM(daily_count)` 상위를 반환한다. `pg_cron`으로 매일 자정에 전일 신규 연결 수를 집계한다.
+
 **시드 데이터 (인기 태그 25개):**
 
 | 태그 | 대상 유저 | 비고 |
@@ -111,14 +127,14 @@ CREATE TABLE user_interest_tags (
 | 함수 | 파라미터 | 반환 | 용도 |
 |------|---------|------|------|
 | `get_featured_tags()` | 없음 | `tags[]` | 홈 칩바 + 온보딩 (is_featured=true, usage_count DESC) |
-| `get_trending_tags(limit, days)` | `limit int, days int` | `tags[]` | 🔥 핫 태그 (최근 N일 usage_count 증가율 기준) |
+| `get_trending_tags(limit, days)` | `limit int, days int` | `tags[]` | 🔥 핫 태그 (최근 N일 신규 연결 수 기준, `tag_usage_daily` 집계 테이블 필요 — 아래 참고) |
 | `get_parties_by_tag(tag_id, limit, offset)` | `tag_id uuid, limit int, offset int` | `events[]` | 태그별 이벤트 조회 (활성 이벤트만, 시작일 ASC) |
 | `get_tag_recommendations(user_id, limit)` | `user_id uuid, limit int` | `events[]` | 유저 관심 태그 ∩ 파티 태그 → 스코어링 |
 | `search_tags(query)` | `query text` | `tags[]` | 태그 검색 (자동완성, PGroonga prefix match) |
 | `upsert_user_interest_tags(tag_ids)` | `tag_ids uuid[]` | void | 유저 관심 태그 설정 (최대 5개 검증) |
 
 **파티 생성/수정 EF 변경:**
-- 기존 `create-party` / `update-party` EF에 `tag_ids: uuid[]` 파라미터 추가
+- 기존 `partner-manage-party` EF (`action=create` / `action=update`)에 `tag_ids: uuid[]` 파라미터 추가
 - EF 내부에서 `party_tags` INSERT/DELETE 처리 (최대 5개 검증)
 
 ### 3. 클라이언트 모델 + Provider
@@ -165,7 +181,7 @@ class TagRepository {
 
 #### 4.1 홈 피드 상단: 인기 태그 칩바
 
-```
+```text
 ┌─────────────────────────────────────┐
 │ [SliverAppBar: 밍릿 로고]            │
 ├─────────────────────────────────────┤
@@ -204,7 +220,7 @@ class TagRepository {
 
 인기 태그 칩을 탭하면 해당 태그의 이벤트 리스트를 표시:
 
-```
+```text
 ┌─────────────────────────────────────┐
 │ ← #소개팅                            │  ← AppBar: 태그명
 ├─────────────────────────────────────┤
@@ -225,7 +241,7 @@ class TagRepository {
 
 기존 이벤트 카드 하단에 태그 칩 표시:
 
-```
+```text
 ┌─────────────────────────────────────┐
 │ [이벤트 이미지]                      │
 │ 이벤트 제목                          │
@@ -243,7 +259,7 @@ class TagRepository {
 
 기존 PGroonga 검색에 태그 자동완성 추가:
 
-```
+```text
 ┌─────────────────────────────────────┐
 │ 🔍 러닝                              │  ← 검색 입력
 ├─────────────────────────────────────┤
@@ -263,7 +279,7 @@ class TagRepository {
 
 기존 인증 완료 후, 관심 태그 선택 화면 삽입:
 
-```
+```text
 ┌─────────────────────────────────────┐
 │                                     │
 │  어떤 모임에 관심 있으세요?           │  ← headlineSmall (24px, bold)
@@ -302,7 +318,7 @@ class TagRepository {
 
 기존 Step 1 (기본정보: 제목, 설명, 이미지, 공개설정) 하단에 태그 선택 추가:
 
-```
+```text
 ┌─────────────────────────────────────┐
 │ Step 1. 기본정보                     │
 ├─────────────────────────────────────┤
@@ -338,7 +354,7 @@ class TagRepository {
 
 ### 6. 홈 피드 최종 구조
 
-```
+```text
 홈 피드:
   ├─ [SliverAppBar] 밍릿 로고 + 알림 + 검색
   ├─ [기존] ExploreFilterChipBar (추천순/마감임박/가까운날짜)
@@ -408,7 +424,7 @@ class TagRepository {
 | 2 | 시드 데이터: 인기 태그 25개 INSERT | #1 | backend |
 | 3 | RPC: get_featured_tags, get_trending_tags, search_tags | #1 | backend |
 | 4 | RPC: get_parties_by_tag, get_tag_recommendations | #1 | backend |
-| 5 | EF: create-party / update-party에 tag_ids 파라미터 추가 | #1 | backend |
+| 5 | EF: partner-manage-party (action=create/update)에 tag_ids 파라미터 추가 | #1 | backend |
 | 6 | pgTAP: 태그 스키마 + RPC 테스트 | #3, #4 | backend |
 | 7 | Dart 모델: Tag (Freezed) + TagRepository | #3 | shared |
 | 8 | Provider: featuredTagsProvider, trendingTagsProvider, tagSearchProvider | #7 | shared |
