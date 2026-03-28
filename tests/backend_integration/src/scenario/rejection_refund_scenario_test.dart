@@ -94,8 +94,9 @@ void main() {
 
       expect(updatedApp['status'], equals('rejected'),
           reason: 'Application should be rejected');
-      expect(updatedApp['rejection_reason'], equals('Invalid proof'),
-          reason: 'Rejection reason should be synced');
+      expect(updatedApp['rejection_reason'], isNull,
+          reason:
+              'rejection_reason is no longer copied from admin_comment after schema simplify migration');
       expect(updatedApp['refund_status'], equals('requested'),
           reason: 'Refund should be requested when payment exists');
     });
