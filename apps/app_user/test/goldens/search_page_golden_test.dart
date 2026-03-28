@@ -1,6 +1,7 @@
 @Tags(['golden'])
 library;
 
+import 'package:alchemist/alchemist.dart';
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/features/search/search_page.dart';
 import 'package:app_user/src/logic/feed_state_provider.dart';
@@ -17,36 +18,66 @@ class _EmptySearchQuery extends SearchQuery {
 }
 
 void main() {
-  group('SearchPage golden', () {
-    testWidgets('initial empty state', (tester) async {
-      final mockEvent = MockEventCoordinator();
+  goldenTest(
+    'SearchPage initial empty state',
+    fileName: 'search_page_empty',
+    pumpBeforeTest: (tester) async {
+      await initGoldenDeps();
+      await tester.pumpAndSettle();
+    },
+    builder: () => GoldenTestGroup(
+      columnWidthBuilder: (_) => const FixedColumnWidth(400),
+      children: [
+        GoldenTestScenario(
+          name: 'initial empty state',
+          child: SizedBox(
+            width: 390,
+            height: 844,
+            child: GoldenPageWrapper(
+              page: const SearchPage(),
+              overrides: [
+                eventCoordinatorProvider.overrideWithValue(
+                  MockEventCoordinator(),
+                ),
+                searchQueryProvider.overrideWith(_EmptySearchQuery.new),
+                searchResultsProvider.overrideWith((_) async => <Event>[]),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 
-      await expectPageGolden(
-        tester,
-        page: const SearchPage(),
-        goldenFileName: 'goldens/search_page_empty.png',
-        overrides: [
-          eventCoordinatorProvider.overrideWithValue(mockEvent),
-          searchQueryProvider.overrideWith(_EmptySearchQuery.new),
-          searchResultsProvider.overrideWith((_) async => <Event>[]),
-        ],
-      );
-    });
-
-    testWidgets('initial empty state (dark)', (tester) async {
-      final mockEvent = MockEventCoordinator();
-
-      await expectPageGolden(
-        tester,
-        page: const SearchPage(),
-        goldenFileName: 'goldens/search_page_empty_dark.png',
-        overrides: [
-          eventCoordinatorProvider.overrideWithValue(mockEvent),
-          searchQueryProvider.overrideWith(_EmptySearchQuery.new),
-          searchResultsProvider.overrideWith((_) async => <Event>[]),
-        ],
-        brightness: Brightness.dark,
-      );
-    });
-  });
+  goldenTest(
+    'SearchPage initial empty state (dark)',
+    fileName: 'search_page_empty_dark',
+    pumpBeforeTest: (tester) async {
+      await initGoldenDeps();
+      await tester.pumpAndSettle();
+    },
+    builder: () => GoldenTestGroup(
+      columnWidthBuilder: (_) => const FixedColumnWidth(400),
+      children: [
+        GoldenTestScenario(
+          name: 'initial empty state (dark)',
+          child: SizedBox(
+            width: 390,
+            height: 844,
+            child: GoldenPageWrapper(
+              page: const SearchPage(),
+              brightness: Brightness.dark,
+              overrides: [
+                eventCoordinatorProvider.overrideWithValue(
+                  MockEventCoordinator(),
+                ),
+                searchQueryProvider.overrideWith(_EmptySearchQuery.new),
+                searchResultsProvider.overrideWith((_) async => <Event>[]),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }
