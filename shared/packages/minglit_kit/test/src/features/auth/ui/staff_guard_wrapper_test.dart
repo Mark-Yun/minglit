@@ -29,10 +29,12 @@ void main() {
       authStreamController = StreamController<AuthState>.broadcast();
 
       when(() => mockClient.auth).thenReturn(mockAuth);
-      when(() => mockAuth.onAuthStateChange)
-          .thenAnswer((_) => authStreamController.stream);
-      when(() => mockStaffRepo.verifyStaffStatus())
-          .thenAnswer((_) async => null);
+      when(
+        () => mockAuth.onAuthStateChange,
+      ).thenAnswer((_) => authStreamController.stream);
+      when(
+        () => mockStaffRepo.verifyStaffStatus(),
+      ).thenAnswer((_) async => null);
     });
 
     tearDown(() async {
@@ -85,8 +87,9 @@ void main() {
         final mockSession = MockSession();
         when(() => mockSession.user).thenReturn(mockUser);
         when(() => mockSession.accessToken).thenReturn('test-token');
-        when(() => mockStaffRepo.saveStaffToken('test-token'))
-            .thenAnswer((_) async {});
+        when(
+          () => mockStaffRepo.saveStaffToken('test-token'),
+        ).thenAnswer((_) async {});
 
         await tester.pumpWidget(buildSubject());
 
@@ -171,8 +174,9 @@ void main() {
       'still renders child widget even when staffGuard has data',
       (tester) async {
         final mockUser = MockUser();
-        when(() => mockStaffRepo.verifyStaffStatus())
-            .thenAnswer((_) async => mockUser);
+        when(
+          () => mockStaffRepo.verifyStaffStatus(),
+        ).thenAnswer((_) async => mockUser);
 
         await tester.pumpWidget(buildSubject());
         await tester.pumpAndSettle();
