@@ -1,6 +1,7 @@
 import 'package:app_partner/src/features/home/widgets/weekly_stats_row.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 void main() {
   group('WeeklyStatsRow', () {
@@ -47,7 +48,7 @@ void main() {
         expect(find.text('+12% ↑'), findsOneWidget);
 
         final changeText = tester.widget<Text>(find.text('+12% ↑'));
-        expect(changeText.style?.color, isNotNull);
+        expect(changeText.style?.color, MinglitColors.success);
       },
     );
 
