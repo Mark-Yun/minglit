@@ -91,7 +91,7 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 | `social_interactions` | 소셜 상호작용 | user_id, target_id, target_type, interaction_type (like/subscribe/bookmark/block) |
 | `match_rules` | 매칭 규칙 | event_id, source_group_id, target_group_id, vote_count |
 | `match_votes` | 매칭 투표 | event_id, voter_id, candidate_id |
-| `match_pairs` | 매칭 결과 | event_id, user_lower_id, user_higher_id, matched_at |
+| `match_pairs` | 매칭 결과 | event_id, user_lower_id, user_higher_id, matched_at, notification_sent |
 | `minglit_files` | 파일 메타데이터 | storage_object_id, bucket_id, file_path, owner_id |
 | `file_access_grants` | 파일 접근 권한 | file_id, viewer_id, expires_at |
 | `settlements` | 정산 (레거시) | partner_id, event_id, total_sales, net_amount, status — [상세](./payment-pipeline.md) |
@@ -388,6 +388,7 @@ protect_user_profile_fields() → trigger
 | `get_entry_group_participant_counts()` | 입장 그룹별 참가자 수 조회 | SECURITY DEFINER |
 | `search_events_pgroonga()` | 이벤트 전문 검색 | SECURITY INVOKER |
 | `search_parties_pgroonga()` | 파티 전문 검색 | SECURITY INVOKER |
+| `cast_match_vote()` | 매칭 투표 (advisory lock 기반 원자적 투표 + 상호 매칭 감지) | SECURITY DEFINER |
 | `replace_match_rules()` | 매칭 규칙 원자적 교체 (delete + insert) | SECURITY DEFINER |
 | `get_ticket_public_key()` | 티켓 QR 서명 검증용 Ed25519 공개키 조회 | SECURITY DEFINER |
 | `notify_match_results()` | 매칭 결과 알림 발송 (크론 호출) | SECURITY DEFINER |
