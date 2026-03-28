@@ -4,21 +4,22 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('TodoSummaryChips', () {
-    testWidgets('renders three chips: 승인 대기, 다가오는 이벤트, 준비 중', (tester) async {
+    testWidgets('renders three chips: 승인 대기, 다가오는 이벤트, 미답변 리뷰', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: TodoSummaryChips(
-              pendingCount: 0,
-              upcomingCount: 0,
-              preparingCount: 0,
+              pendingApplications: 0,
+              upcomingEvents: 0,
               onPendingTap: () {},
+              onUpcomingTap: () {},
             ),
           ),
         ),
       );
       expect(find.text('승인 대기'), findsOneWidget);
       expect(find.text('다가오는 이벤트'), findsOneWidget);
+      // Third chip is '미답변 리뷰' but comingSoon renders '준비 중'
       expect(find.text('준비 중'), findsOneWidget);
     });
 
@@ -29,10 +30,10 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: TodoSummaryChips(
-              pendingCount: 3,
-              upcomingCount: 0,
-              preparingCount: 0,
+              pendingApplications: 3,
+              upcomingEvents: 0,
               onPendingTap: () {},
+              onUpcomingTap: () {},
             ),
           ),
         ),
@@ -45,10 +46,10 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: TodoSummaryChips(
-              pendingCount: 0,
-              upcomingCount: 0,
-              preparingCount: 0,
+              pendingApplications: 0,
+              upcomingEvents: 0,
               onPendingTap: () {},
+              onUpcomingTap: () {},
             ),
           ),
         ),
@@ -65,10 +66,10 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: TodoSummaryChips(
-              pendingCount: 2,
-              upcomingCount: 0,
-              preparingCount: 0,
+              pendingApplications: 2,
+              upcomingEvents: 0,
               onPendingTap: () => called = true,
+              onUpcomingTap: () {},
             ),
           ),
         ),
@@ -77,19 +78,20 @@ void main() {
       expect(called, isTrue);
     });
 
-    testWidgets('tapping 준비 중 chip shows a SnackBar', (tester) async {
+    testWidgets('tapping 미답변 리뷰 chip shows a SnackBar', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: TodoSummaryChips(
-              pendingCount: 0,
-              upcomingCount: 0,
-              preparingCount: 1,
+              pendingApplications: 0,
+              upcomingEvents: 0,
               onPendingTap: () {},
+              onUpcomingTap: () {},
             ),
           ),
         ),
       );
+      // comingSoon chip renders '준비 중' as its display text
       await tester.tap(find.text('준비 중'));
       await tester.pump();
       expect(find.byType(SnackBar), findsOneWidget);

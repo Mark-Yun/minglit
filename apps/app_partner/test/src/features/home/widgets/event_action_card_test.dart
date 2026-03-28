@@ -11,17 +11,42 @@ Event _makeEvent({
   String? title,
 }) {
   final now = DateTime.now();
+
+  // Set startTime/endTime so that getEventPhase() returns the expected phase.
+  final DateTime startTime;
+  final DateTime endTime;
+  switch (phase) {
+    case 'recruiting':
+      // > 3 hours until start
+      startTime = now.add(const Duration(days: 5));
+      endTime = now.add(const Duration(days: 5, hours: 2));
+    case 'preparing':
+      // <= 3 hours until start
+      startTime = now.add(const Duration(hours: 1));
+      endTime = now.add(const Duration(hours: 3));
+    case 'live':
+      // started but not ended
+      startTime = now.subtract(const Duration(hours: 1));
+      endTime = now.add(const Duration(hours: 2));
+    case 'ended':
+      // ended within 24 hours
+      startTime = now.subtract(const Duration(hours: 3));
+      endTime = now.subtract(const Duration(hours: 1));
+    default:
+      startTime = now.add(const Duration(hours: 1));
+      endTime = now.add(const Duration(hours: 3));
+  }
+
   return Event(
     id: 'e1',
     partyId: partyId,
-    startTime: now.add(const Duration(hours: 1)),
-    endTime: now.add(const Duration(hours: 3)),
+    startTime: startTime,
+    endTime: endTime,
     createdAt: now,
     updatedAt: now,
     currentParticipants: currentParticipants,
     maxParticipants: maxParticipants,
     title: title,
-    metadata: {'phase': phase},
   );
 }
 
@@ -36,11 +61,13 @@ void main() {
               body: EventActionCard(
                 event: _makeEvent(phase: 'recruiting'),
                 onMainAction: () {},
+                onSecondaryAction1: () {},
+                onSecondaryAction2: () {},
               ),
             ),
           ),
         );
-        expect(find.text('모집 중'), findsOneWidget);
+        expect(find.textContaining('모집 중'), findsOneWidget);
         expect(find.text('신청 현황 보기'), findsOneWidget);
       },
     );
@@ -54,11 +81,13 @@ void main() {
               body: EventActionCard(
                 event: _makeEvent(phase: 'preparing'),
                 onMainAction: () {},
+                onSecondaryAction1: () {},
+                onSecondaryAction2: () {},
               ),
             ),
           ),
         );
-        expect(find.text('준비 중'), findsOneWidget);
+        expect(find.textContaining('준비 중'), findsOneWidget);
         expect(find.text('체크인 준비'), findsOneWidget);
       },
     );
@@ -72,11 +101,13 @@ void main() {
               body: EventActionCard(
                 event: _makeEvent(phase: 'live'),
                 onMainAction: () {},
+                onSecondaryAction1: () {},
+                onSecondaryAction2: null,
               ),
             ),
           ),
         );
-        expect(find.text('LIVE'), findsOneWidget);
+        expect(find.textContaining('LIVE'), findsOneWidget);
         expect(find.text('체크인 계속하기'), findsOneWidget);
       },
     );
@@ -90,11 +121,13 @@ void main() {
               body: EventActionCard(
                 event: _makeEvent(phase: 'ended'),
                 onMainAction: () {},
+                onSecondaryAction1: () {},
+                onSecondaryAction2: null,
               ),
             ),
           ),
         );
-        expect(find.text('종료'), findsOneWidget);
+        expect(find.textContaining('종료'), findsOneWidget);
         expect(find.text('다음 회차 만들기'), findsOneWidget);
       },
     );
@@ -111,11 +144,13 @@ void main() {
                 currentParticipants: 4,
               ),
               onMainAction: () {},
+              onSecondaryAction1: () {},
+              onSecondaryAction2: () {},
             ),
           ),
         ),
       );
-      expect(find.text('4 / 10'), findsOneWidget);
+      expect(find.text('4/10명'), findsOneWidget);
     });
 
     testWidgets('onMainAction callback is invoked when CTA tapped', (
@@ -128,6 +163,8 @@ void main() {
             body: EventActionCard(
               event: _makeEvent(phase: 'recruiting'),
               onMainAction: () => called = true,
+              onSecondaryAction1: () {},
+              onSecondaryAction2: () {},
             ),
           ),
         ),
