@@ -192,6 +192,164 @@ RefreshIndicator(
 
 ---
 
+## 8. Screen Layout
+
+표준 화면 레이아웃 패턴입니다.
+
+```dart
+SafeArea(
+  child: Padding(
+    padding: EdgeInsets.symmetric(
+      horizontal: MinglitSpacing.screenEdge, // 20px
+    ),
+    child: content,
+  ),
+)
+```
+
+- 항상 최상위 화면을 `SafeArea`로 감쌈
+- 좌우 패딩: `screenEdge` (20px) — 토스 20dp 표준
+- 하단 패딩: 네비게이션 바 높이 고려
+
+---
+
+## 9. Card Layout
+
+카드 내부/외부 간격 패턴입니다.
+
+| 간격 | 토큰 | 값 | 용도 |
+| :--- | :--- | :--- | :--- |
+| 카드 간 | `cardGap` | 12px | 카드 리스트에서 카드 사이 간격 |
+| 카드 내부 세로 | `cardContentV` | 16px | 카드 내부 상하 패딩 |
+| 카드 내부 가로 | `screenEdge` | 20px | 카드 내부 좌우 패딩 |
+| 제목-본문 | `titleToBody` | 4px | 제목과 부제/본문 사이 간격 |
+
+```dart
+Column(
+  children: [
+    for (final item in items)
+      Padding(
+        padding: EdgeInsets.only(bottom: MinglitSpacing.cardGap),
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              vertical: MinglitSpacing.cardContentV,
+              horizontal: MinglitSpacing.screenEdge,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item.title, style: theme.textTheme.titleMedium),
+                SizedBox(height: MinglitSpacing.titleToBody),
+                Text(item.body, style: theme.textTheme.bodyMedium),
+              ],
+            ),
+          ),
+        ),
+      ),
+  ],
+)
+```
+
+---
+
+## 10. Section Divider
+
+`MinglitSectionDivider` 위젯으로 콘텐츠 섹션을 구분합니다.
+
+**소스**: `minglit_kit/lib/src/ui/widgets/common/minglit_section_divider.dart`
+
+### Thick (8px)
+
+주요 섹션 구분. 피드/리스트 화면에서 사용.
+
+```dart
+MinglitSectionDivider.thick()
+// 높이: 8px, 색상: surfaceContainerHighest
+```
+
+### Thin (1px)
+
+섹션 내부 경미한 구분.
+
+```dart
+MinglitSectionDivider.thin()
+// 높이: 1px, 색상: dividerColor
+```
+
+### 사용 가이드
+
+| 컨텍스트 | 디바이더 유형 |
+| :--- | :--- |
+| 주요 피드 섹션 사이 | thick |
+| 리스트 아이템 사이 | thin |
+| 설정 그룹 사이 | thick |
+| 카드 내부 행 구분 | thin |
+
+---
+
+## 11. Information Hierarchy
+
+텍스트 스타일을 4단계로 나누어 일관된 정보 계층을 만듭니다.
+
+| Level | 스타일 | fontSize | fontWeight | height | 색상 | 용도 |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1 | `displayLarge` | 32px | bold | 1.25 | `textPrimary` | 페이지 제목, 히어로 텍스트 |
+| 2 | `titleLarge` | 20px | bold | 1.4 | `textPrimary` | 섹션 제목, 카드 제목, 다이얼로그 제목 |
+| 3 | `bodyMedium` | 16px | normal | 1.5 | `textSecondary` | 본문, 설명, 폼 라벨 |
+| 4 | `bodySmall` | 13px | normal | 1.5 | `textSecondary` | 타임스탬프, 메타데이터, 도움말 |
+
+### 확장 스타일
+
+| 스타일 | 크기 | 무게 | height | 색상 | 용도 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `headlineSmall` | 24px | bold | 1.33 | `textPrimary` | 서브 페이지 제목, 대형 카드 헤더 |
+| `titleMedium` | 16px | bold | 1.5 | `textPrimary` | 강조 라벨, 탭 제목 |
+| `titleSmall` | 14px | bold | 1.43 | `textPrimary` | 소형 섹션 헤더, 칩 라벨 |
+| `bodyLarge` | 18px | normal | 1.33 | `textSecondary` | 부제목, 인트로 텍스트 |
+| `labelSmall` | 11px | w500 | 1.45 | `textPrimary` | 세부 사항, 뱃지, 카운터 |
+
+---
+
+## 12. Content Density
+
+화면 컨텍스트에 따른 3단계 밀도 가이드입니다.
+
+### 기본 (Default)
+
+대부분의 화면에서 사용.
+
+| 요소 | 토큰 | 값 |
+| :--- | :--- | :--- |
+| 화면 가장자리 | `screenEdge` | 20px |
+| 카드 간격 | `cardGap` | 12px |
+| 카드 내부 패딩 | `cardContentV` | 16px |
+| 섹션 간격 | `sectionGap` | 40px |
+
+### 밀집 (Compact)
+
+정보 밀도가 높은 화면 (테이블, 설정, 리스트).
+
+| 요소 | 토큰 | 값 |
+| :--- | :--- | :--- |
+| 화면 가장자리 | `medium` | 16px |
+| 아이템 간격 | `small` | 8px |
+| 아이템 내부 패딩 | `sm` | 12px |
+| 섹션 간격 | `large` | 24px |
+
+### 여유 (Relaxed)
+
+마케팅/온보딩 화면.
+
+| 요소 | 토큰 | 값 |
+| :--- | :--- | :--- |
+| 화면 가장자리 | `large` | 24px |
+| 카드 간격 | `medium` | 16px |
+| 카드 내부 패딩 | `large` | 24px |
+| 섹션 간격 | `xxxlarge` | 64px |
+
+---
+
 ## 관련 문서
 
 - [01-foundation.md](01-foundation.md) -- 디자인 토큰
