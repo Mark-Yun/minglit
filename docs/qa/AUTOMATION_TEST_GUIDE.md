@@ -207,38 +207,60 @@ void main() {
 }
 ```
 
-### Layer 3.5: Golden (Snapshot) 테스트
+### Layer 3.5: Golden (Snapshot) 테스트 — Alchemist
 
-**위치:** `apps/{app}/test/goldens/`
+**위치:** `apps/{app}/test/goldens/`, `shared/packages/minglit_kit/test/goldens/`
 **우선순위:** 디자인 토큰 변경, 레이아웃 회귀 방지
+**패키지:** [alchemist](https://pub.dev/packages/alchemist) (VGV + Betterment)
 
 Golden Test는 위젯 렌더링 결과를 이미지로 저장해두고 이후 픽셀 비교로 시각적 회귀를 감지한다.
+Alchemist를 사용하여 CI(Ahem 폰트) / 로컬(플랫폼 폰트) 골든을 분리 관리한다.
 
 ```dart
 // 파일명: {widget_name}_golden_test.dart
 @Tags(['golden'])
+library;
+
+import 'package:alchemist/alchemist.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../utils/golden_test_helpers.dart';
 
 void main() {
-  testWidgets('EventCard matches golden', (tester) async {
-    await expectGolden(
-      tester,
-      widget: EventCard(event: mockEvent, onTap: () {}),
-      goldenFileName: 'goldens/event_card_scheduled.png',
-    );
-  });
+  goldenTest(
+    'EventCard scheduled',
+    fileName: 'event_card_scheduled',
+    builder: () => GoldenTestGroup(
+      columnWidthBuilder: (_) => const FixedColumnWidth(420),
+      children: [
+        GoldenTestScenario(
+          name: 'scheduled',
+          child: GoldenComponentWrapper(
+            child: EventCard(event: mockEvent, onTap: () {}),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 ```
 
+**CI 비교 모드 동작:**
+- **CI** (`flutter test --dart-define=CI=true --tags golden`): Ahem 폰트 기반 CI 골든과 비교 → 다르면 FAIL + `failures/` diff 이미지 아티팩트 업로드
+- **로컬**: 플랫폼별 골든(macOS/Linux)으로 비교 — `.gitignore`로 커밋 제외
+
+**의도된 UI 변경 시 워크플로우:**
+1. 로컬에서 `flutter test --update-goldens --tags golden --dart-define=CI=true`
+2. 새 CI 골든 PNG 커밋 → push
+3. CI 재실행 → PASS
+
 **핵심 규칙:**
 - `@Tags(['golden'])`으로 태깅하여 일반 테스트와 분리 실행
-- CI 환경(Linux)에서만 golden 생성/검증 — macOS/Linux 폰트 렌더링 차이
-- golden 업데이트: `flutter test --update-goldens --tags golden`
-- 의도적 UI 변경 시 golden 파일도 함께 업데이트
+- `flutter_test_config.dart`에서 `AlchemistConfig`로 CI/플랫폼 모드 자동 전환
+- CI 골든은 Ahem 폰트 → OS 무관 일관성 보장
+- 플랫폼 골든(`test/**/goldens/macos/`, `linux/`)은 `.gitignore`로 제외
 - CI에서 golden 불일치 시 diff 이미지가 `golden-failures-{app}` artifact로 업로드됨
-- 헬퍼: `expectGolden()` — `apps/{app}/test/utils/golden_test_helpers.dart`
 
 ### Layer 4: Database 테스트 (pgTAP)
 
