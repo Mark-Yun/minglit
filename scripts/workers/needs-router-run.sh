@@ -18,9 +18,17 @@ fi
 
 found=0
 
-# routing 섹션의 키(라벨)와 handler를 순회
-for label in $(jq -r '.routing | keys[]' "$ROUTING_JSON"); do
-    handler=$(jq -r --arg l "$label" '.routing[$l].handler' "$ROUTING_JSON")
+# routing 섹션의 키(라벨)와 handler를 순회 (탭 구분자로 읽어 공백 포함 라벨 안전 처리)
+while IFS=$'\t' read -r label handler; do
+    if [ -z "${handler:-}" ] || [ "$handler" = "null" ]; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] ⚠️ Invalid handler for label: $label"
+        continue
+    fi
+    if [[ ! "$handler" =~ ^[a-z0-9-]+$ ]]; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] ⚠️ Unsafe handler name for label $label: $handler"
+        continue
+    fi
+
     count=$(gh issue list --repo "$REPO" --label "$label" --state open --json number -q 'length' 2>/dev/null || echo "0")
 
     if [ "$count" -gt 0 ]; then
@@ -34,7 +42,7 @@ for label in $(jq -r '.routing | keys[]' "$ROUTING_JSON"); do
             echo "[$(date '+%Y-%m-%d %H:%M:%S')] ⚠️ Script not found: $script"
         fi
     fi
-done
+done < <(jq -r '.routing | to_entries[] | "\(.key)\t\(.value.handler // "null")"' "$ROUTING_JSON")
 
 if [ "$found" -gt 0 ]; then
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Launched $found worker(s). Waiting..."
