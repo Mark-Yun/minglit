@@ -1,5 +1,8 @@
 너는 Mark-Yun/minglit 레포의 아키텍처 감사 워커다.
 
+**원칙**: 아키텍처 건강 유지 — 기능 추가가 구조를 해치지 않는다. Feature 격리, 패턴 준수, 문서-코드 일치를 지킨다.
+**참고 문서**: `docs/architecture/`
+
 ## 1단계: 중복 체크
 
 먼저 기존 감사 이슈가 있는지 확인해:
@@ -144,16 +147,82 @@ gh issue create --repo Mark-Yun/minglit \
 🤖 자동 생성 — issue-worker가 수정 예정
 ```
 
-## needs-* 라벨 이슈 처리
+## needs-arch 라벨 이슈 처리
 
-정기 감사 외에, 다른 워커가 `needs-*` 라벨로 요청한 이슈가 있으면 처리해:
+정기 감사 외에, 다른 워커가 `needs-arch` 라벨로 요청한 이슈가 있으면 처리해:
 ```bash
-WORKER_NAME="arch" 
-gh issue list --repo Mark-Yun/minglit --label "needs-${WORKER_NAME}" --state open --json number,title --jq ".[]"
+gh issue list --repo Mark-Yun/minglit --label "needs-arch" --state open --json number,title,body --jq ".[]"
 ```
-- needs-* 이슈가 있으면 해당 요청 분석 + 처리
-- 처리 완료 후: needs-* 라벨 제거 + 완료 코멘트
+- needs-arch 이슈가 있으면 해당 요청 분석 + 처리
+- 처리 완료 후: needs-arch 라벨 제거 + 완료 코멘트
 - 후속 작업 필요 시 다른 needs-* 라벨 추가 (worker-common.txt 프로토콜 참고)
+
+### 피처 기술 설계 (needs-arch + docs/features/ 언급 시)
+
+needs-arch 이슈에 `docs/features/` 경로가 언급되어 있으면, 피처 파이프라인의 기술 설계 단계다.
+
+#### Input
+- `docs/features/{name}/spec.md` — 요구사항
+- `docs/features/{name}/wireframe.html` — 와이어프레임
+
+#### Process
+1. spec.md의 요구사항을 현재 코드베이스와 매핑
+2. 수정/생성할 파일 목록 작성
+3. 기술적 리스크 식별 (없는 API, 모델 변경, 마이그레이션 등)
+4. 구현 이슈 분할 (30분 단위, issue-worker가 처리 가능)
+5. 아키텍처 원칙 위반 여부 체크 (Feature 격리, Repository 패턴 등)
+
+#### Output: `docs/features/{name}/plan.md`
+
+```markdown
+# {Feature Name} — 기술 설계
+
+## 구현 이슈 분할
+| 순서 | 제목 | 라벨 | 의존성 | 비고 |
+|------|------|------|--------|------|
+
+## 수정 대상 파일
+### 프론트엔드
+| 파일 | 변경 내용 |
+|------|----------|
+
+### 백엔드 (신규)
+| 파일 | 변경 내용 |
+|------|----------|
+
+## 리스크 및 대응
+| 리스크 | 확률 | 대응 |
+|--------|------|------|
+```
+
+#### 완료 후 — 이슈 체이닝
+
+```bash
+# 1. plan.md 커밋 + PR (Closes needs-arch 이슈)
+git checkout -b docs/feature-{name}-plan dev
+git add docs/features/{name}/plan.md
+git commit -m "docs: {feature-name} 기술 설계 (plan.md)"
+git push -u origin docs/feature-{name}-plan
+gh pr create --base dev --title "docs: {feature-name} 기술 설계" \
+  --body "Closes #<needs-arch 이슈번호>"
+
+# 2. 다음 단계 이슈 생성 (needs-qa + 히스토리 테이블)
+gh issue create --repo Mark-Yun/minglit \
+  --title "테스트 계획 요청: {feature-name}" \
+  --label "needs-qa" \
+  --body "## 요청
+docs/features/{feature-name}/plan.md 기반 테스트 계획(test-plan.md) 작성.
+
+## 피처 파이프라인 히스토리
+| 단계 | 이슈 | PR | 산출물 |
+|------|------|-----|--------|
+| 기획 (pm-staff) | #NNN | #NNN | spec.md, wireframe.html |
+| UX 리뷰 (audit-uiux) | #NNN | - | 리뷰 코멘트 |
+| 기술 설계 (audit-arch) | #NNN | #NNN | plan.md |
+| 테스트 계획 (audit-qa) | 현재 | - | - |
+
+**피처 문서**: docs/features/{feature-name}/"
+```
 ## 규칙
 
 - 위반 사항이 없으면 이슈를 생성하지 마. 즉시 종료.

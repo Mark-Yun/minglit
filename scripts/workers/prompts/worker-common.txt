@@ -35,6 +35,7 @@ gh issue edit <번호> --add-label "needs-qa"  # 예: 테스트 보강 필요
 
 | 라벨 | 담당 워커 | 설명 |
 |------|----------|------|
+| `needs-pm` | pm-staff | 피처 기획 요청 |
 | `needs-arch` | audit-arch | 아키텍처 문서/분석 요청 |
 | `needs-uiux` | audit-uiux | UI/UX 문서/디자인 요청 |
 | `needs-qa` | audit-qa | 테스트 보강 요청 |
@@ -50,8 +51,107 @@ gh issue edit <번호> --add-label "needs-qa"  # 예: 테스트 보강 필요
 - tpm-staff가 보안 리뷰 필요 판단 → `needs-security` 라벨
 - 사람 판단 필요 → `report-exec` 라벨
 
+### 피처 파이프라인
+
+신규 기능을 기획 → 설계 → 구현하는 전체 흐름. 각 워커는 자기 단계를 수행하고 다음 워커에게 넘긴다.
+
+```
+needs-pm 라벨 이슈 (사람 또는 다른 워커가 생성)
+  ▼
+pm-staff (기획)
+  │ 시장 조사 + 유저 시뮬레이션
+  │ → docs/features/{name}/spec.md + wireframe.html
+  │ → PR 생성 (Closes needs-pm 이슈)
+  │ → 새 이슈 생성 (needs-uiux 라벨 + 히스토리 테이블)
+  ▼
+사람 승인 → audit-uiux 가 감지
+  ▼
+audit-uiux (UX 리뷰)
+  │ 와이어프레임 + 스펙을 디자인 시스템 기준으로 검토
+  │ → Closes needs-uiux 이슈
+  │ → 새 이슈 생성 (needs-arch 라벨 + 히스토리 테이블)
+  ▼
+audit-arch (기술 설계)
+  │ input: spec.md + wireframe.html
+  │ → docs/features/{name}/plan.md
+  │ → Closes needs-arch 이슈
+  │ → 새 이슈 생성 (needs-qa 라벨 + 히스토리 테이블)
+  ▼
+audit-qa (테스트 계획)
+  │ input: plan.md
+  │ → docs/features/{name}/test-plan.md
+  │ → Closes needs-qa 이슈
+  ▼
+tpm-staff (이슈 파일링)
+  │ docs/features/{name}/ 에 plan.md + test-plan.md 감지
+  │ → GitHub 에픽 이슈 + 서브이슈 (히스토리 테이블 전체 포함)
+  ▼
+issue-worker (실행)
+  │ 이슈 처리 → PR → 머지
+```
+
+#### 이슈 체이닝 규칙
+
+각 워커가 다음 단계 이슈를 생성할 때, **파이프라인 히스토리 테이블**을 포함한다.
+이전 단계의 이슈/PR 번호가 누적되어 전체 흐름을 한눈에 파악할 수 있다.
+
+```markdown
+## 피처 파이프라인 히스토리
+| 단계 | 이슈 | PR | 산출물 |
+|------|------|-----|--------|
+| 기획 (pm-staff) | #100 | #105 | spec.md, wireframe.html |
+| UX 리뷰 (audit-uiux) | #110 | - | 리뷰 코멘트 |
+| 기술 설계 (audit-arch) | #115 (현재) | - | - |
+
+**피처 문서**: `docs/features/{feature-name}/`
+```
+
+각 워커는:
+1. 자기 이슈를 **Closes** 로 닫는다 (PR 또는 코멘트)
+2. 다음 워커용 **새 이슈를 생성**한다 (needs-* 라벨)
+3. 새 이슈에 **히스토리 테이블을 복사 + 자기 행 추가**
+
+#### 역방향 리뷰 요청
+
+파이프라인 진행 중 이전 단계의 재검토가 필요하면, 해당 워커에게 다시 요청할 수 있다.
+
+예시:
+- audit-arch가 기술 설계 중 스펙 모호한 부분 발견 → `needs-pm` 이슈 생성 (스펙 보완 요청)
+- audit-qa가 테스트 계획 중 아키텍처 우려 발견 → `needs-arch` 이슈 생성 (설계 재검토)
+- tpm-staff가 이슈 파일링 중 UX 변경 필요 → `needs-uiux` 이슈 생성
+
+역방향 이슈에도 히스토리 테이블을 포함하고, 어떤 부분을 재검토해야 하는지 구체적으로 명시한다.
+
+#### 피처 문서 구조
+
+```
+docs/features/{feature-name}/
+├── spec.md           ← PM이 생성 (요구사항, 데이터소스, 라우트)
+├── wireframe.html    ← PM이 생성 (HTML 모바일 와이어프레임)
+├── plan.md           ← Architect가 생성 (기술 설계, 파일 목록, 리스크)
+└── test-plan.md      ← QA가 생성 (테스트 전략, 케이스)
+```
+
+#### 피처 파이프라인 라벨 흐름
+
+| 단계 | 워커가 처리 | 이슈 닫고 → 새 이슈 라벨 |
+|------|-----------|----------------------|
+| 기획 요청 | pm-staff | Closes needs-pm → 새 이슈 needs-uiux |
+| UX 리뷰 | audit-uiux | Closes needs-uiux → 새 이슈 needs-arch |
+| 기술 설계 | audit-arch | Closes needs-arch → 새 이슈 needs-qa |
+| 테스트 계획 | audit-qa | Closes needs-qa (tpm이 자동 감지) |
+| 이슈 파일링 | tpm-staff | 에픽 + 서브이슈 생성 |
+
+### 워크트리 규칙
+
+- **메인 레포(`/Users/mark/workspace/minglit`)를 절대 건드리지 마.** 다른 워커나 사람이 사용 중일 수 있음.
+- 코드 수정이 필요하면 **반드시 별도 워크트리**에서 작업해. 스크립트가 워크트리를 생성해줌.
+- 워크트리에서 브랜치 생성 → 수정 → 커밋 → push → PR 생성.
+- 메인 레포에서 `git checkout`, `git merge`, `git reset` 등 실행 금지.
+
 ### 금지 사항
 
+- 메인 레포 직접 수정 금지 (위 워크트리 규칙 참고)
 - 자기 자신에게 라벨 붙이지 마 (무한 루프 방지)
 - 한 이슈에 `needs-*` 라벨 2개 이상 동시에 붙이지 마 (순차 처리)
 - 처리 안 하고 라벨만 제거하지 마 (반드시 코멘트)
