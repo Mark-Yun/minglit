@@ -35,6 +35,7 @@ gh issue edit <번호> --add-label "needs-qa"  # 예: 테스트 보강 필요
 
 | 라벨 | 담당 워커 | 설명 |
 |------|----------|------|
+| `needs-pm` | pm-staff | 피처 기획 요청 |
 | `needs-arch` | audit-arch | 아키텍처 문서/분석 요청 |
 | `needs-uiux` | audit-uiux | UI/UX 문서/디자인 요청 |
 | `needs-qa` | audit-qa | 테스트 보강 요청 |
@@ -50,8 +51,76 @@ gh issue edit <번호> --add-label "needs-qa"  # 예: 테스트 보강 필요
 - tpm-staff가 보안 리뷰 필요 판단 → `needs-security` 라벨
 - 사람 판단 필요 → `report-exec` 라벨
 
+### 피처 파이프라인
+
+신규 기능을 기획 → 설계 → 구현하는 전체 흐름. 각 워커는 자기 단계를 수행하고 다음 워커에게 넘긴다.
+
+```
+needs-pm 라벨 이슈 (사람 또는 다른 워커가 생성)
+  ▼
+pm-staff (기획)
+  │ 시장 조사 + 유저 시뮬레이션
+  │ → docs/features/{name}/spec.md + wireframe.html
+  │ → PR 생성 + report-exec 라벨 (사람 승인 대기)
+  ▼
+사람 승인 → needs-uiux 라벨
+  ▼
+audit-uiux (UX 리뷰)
+  │ 와이어프레임 + 스펙을 디자인 시스템 기준으로 검토/보완
+  │ → report-exec 라벨 (사람 최종 승인)
+  ▼
+사람 승인 → needs-arch 라벨
+  ▼
+audit-arch (기술 설계)
+  │ input: spec.md + wireframe.html
+  │ → docs/features/{name}/plan.md (기술 설계, 파일 목록, 리스크)
+  │ → needs-qa 라벨
+  ▼
+audit-qa (테스트 계획)
+  │ input: plan.md
+  │ → docs/features/{name}/test-plan.md
+  │ → 완료 코멘트
+  ▼
+tpm-staff (이슈 파일링)
+  │ input: plan.md + test-plan.md
+  │ → GitHub 에픽 이슈 + 서브이슈 (issue-worker가 처리 가능한 단위)
+  ▼
+issue-worker (실행)
+  │ 이슈 처리 → PR → 머지
+```
+
+#### 피처 문서 구조
+
+```
+docs/features/{feature-name}/
+├── spec.md           ← PM이 생성 (요구사항, 데이터소스, 라우트)
+├── wireframe.html    ← PM이 생성 (HTML 모바일 와이어프레임)
+├── plan.md           ← Architect가 생성 (기술 설계, 파일 목록, 리스크)
+└── test-plan.md      ← QA가 생성 (테스트 전략, 케이스)
+```
+
+#### 피처 파이프라인 라벨 흐름
+
+| 단계 | 라벨 | 누가 붙이나 | 누가 처리하나 |
+|------|------|-----------|-------------|
+| 기획 요청 | `needs-pm` | 사람/워커 | pm-staff |
+| PM 기획 완료 | `report-exec` | pm-staff | 사람 |
+| UX 리뷰 요청 | `needs-uiux` | 사람 | audit-uiux |
+| UX 리뷰 완료 | `report-exec` | audit-uiux | 사람 |
+| 기술 설계 요청 | `needs-arch` | 사람 | audit-arch |
+| 테스트 계획 요청 | `needs-qa` | audit-arch | audit-qa |
+| 이슈 파일링 | 자동 감지 | - | tpm-staff |
+
+### 워크트리 규칙
+
+- **메인 레포(`/Users/mark/workspace/minglit`)를 절대 건드리지 마.** 다른 워커나 사람이 사용 중일 수 있음.
+- 코드 수정이 필요하면 **반드시 별도 워크트리**에서 작업해. 스크립트가 워크트리를 생성해줌.
+- 워크트리에서 브랜치 생성 → 수정 → 커밋 → push → PR 생성.
+- 메인 레포에서 `git checkout`, `git merge`, `git reset` 등 실행 금지.
+
 ### 금지 사항
 
+- 메인 레포 직접 수정 금지 (위 워크트리 규칙 참고)
 - 자기 자신에게 라벨 붙이지 마 (무한 루프 방지)
 - 한 이슈에 `needs-*` 라벨 2개 이상 동시에 붙이지 마 (순차 처리)
 - 처리 안 하고 라벨만 제거하지 마 (반드시 코멘트)
