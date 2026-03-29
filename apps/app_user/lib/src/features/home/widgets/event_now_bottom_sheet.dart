@@ -375,9 +375,7 @@ class _MatchingContent extends ConsumerWidget {
     return Text(
       text,
       style: theme.textTheme.bodySmall?.copyWith(
-        color: remaining > 0
-            ? MinglitColors.secondary
-            : MinglitColors.success,
+        color: remaining > 0 ? MinglitColors.secondary : MinglitColors.success,
         fontWeight: FontWeight.w600,
       ),
     );
@@ -484,8 +482,7 @@ class _QRErrorWidget extends ConsumerWidget {
           ),
           const SizedBox(height: MinglitSpacing.medium),
           TextButton.icon(
-            onPressed: () =>
-                ref.invalidate(eventTicketTokenProvider(eventId)),
+            onPressed: () => ref.invalidate(eventTicketTokenProvider(eventId)),
             icon: const Icon(Icons.refresh),
             label: const Text('다시 시도'),
           ),
@@ -550,8 +547,10 @@ class _ParticipantAvatarRow extends StatelessWidget {
 ///
 /// Returns `null` if no matching token is found (e.g., not yet minted).
 // ignore: specify_nonobvious_property_types, Reason: Type is inferred correctly by FutureProvider.family
-final eventTicketTokenProvider =
-    FutureProvider.family<TicketToken?, String>((ref, eventId) async {
+final eventTicketTokenProvider = FutureProvider.family<TicketToken?, String>((
+  ref,
+  eventId,
+) async {
   final wallet = ref.watch(ticketWalletRepositoryProvider);
   final ids = await wallet.listAllTicketIds();
 

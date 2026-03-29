@@ -141,10 +141,11 @@ class _EventNowBarContentState extends ConsumerState<_EventNowBarContent>
 
     return GestureDetector(
       // Fix #663: default tap opens EventNowBottomSheet when no explicit onTap
-      onTap: widget.onTap ??
+      onTap:
+          widget.onTap ??
           () => unawaited(
-                showEventNowBottomSheet(context, ref, widget.activeEvent),
-              ),
+            showEventNowBottomSheet(context, ref, widget.activeEvent),
+          ),
       child: Container(
         height: 56,
         decoration: _barDecoration(),
