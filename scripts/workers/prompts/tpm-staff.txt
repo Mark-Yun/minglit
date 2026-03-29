@@ -219,7 +219,38 @@ gh issue create --repo Mark-Yun/minglit \
 - 법률 검토 → `needs-legal` 라벨
 - 사람 판단 → `report-exec` 라벨
 
-## 5단계: 피처 이슈 파일링
+## 5단계: 미아 이슈/PR 탐색 → 워크플로우 복귀
+
+라벨이 없거나 워크플로우에서 이탈한 이슈/PR을 찾아 다시 태운다.
+
+### A. 미아 이슈 — 라벨 없이 열려있는 이슈
+```bash
+gh issue list --repo Mark-Yun/minglit --state open --json number,title,labels,createdAt \
+  -q '[.[] | select(.labels | length == 0)]'
+```
+- 내용을 읽고 적절한 `needs-*` 라벨을 부여한다
+- 판단이 어려우면 `needs-tpm`으로 다음 사이클에 재분석
+
+### B. 미아 PR — 리뷰/진행 없이 방치된 PR
+```bash
+gh pr list --repo Mark-Yun/minglit --state open --json number,title,updatedAt,reviewDecision \
+  -q '[.[] | select(.updatedAt < (now - 7200 | strftime("%Y-%m-%dT%H:%M:%SZ")))]'
+```
+- 2시간 이상 업데이트 없는 PR을 탐색
+- CI 실패 방치 → 원인 파악 후 `needs-dev` 라벨로 수정 요청
+- 리뷰 없이 방치 → `needs-review` 라벨 부여
+- dev 대비 뒤처짐 → 브랜치 업데이트 시도
+- 이미 의미 없는 PR (중복, 철회) → close + 사유 코멘트
+
+### C. 라벨은 있지만 진행 안 되는 이슈
+```bash
+gh issue list --repo Mark-Yun/minglit --state open --json number,title,labels,updatedAt \
+  -q '[.[] | select((.labels | length > 0) and (.updatedAt < (now - 7*86400 | strftime("%Y-%m-%dT%H:%M:%SZ"))))]'
+```
+- 7일 이상 업데이트 없는 라벨 붙은 이슈
+- 워커가 처리 실패했을 가능성 → 라벨 재부여하거나 이슈 내용을 보강하여 워커가 다시 시도할 수 있게 한다
+
+## 6단계: 피처 이슈 파일링
 
 `docs/features/` 폴더에 plan.md + test-plan.md가 모두 존재하고, 아직 에픽 이슈가 없는 피처가 있으면 이슈를 파일링한다.
 
