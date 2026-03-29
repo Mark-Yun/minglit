@@ -1,3 +1,4 @@
+import 'package:app_user/src/common/widgets/status_badge.dart';
 import 'package:app_user/src/features/payment/logic/purchase_history_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -6,7 +7,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 part 'purchase_history_card.dart';
 part 'purchase_history_refund_row.dart';
-part 'purchase_history_status_badge.dart';
 
 class PurchaseHistoryPage extends ConsumerWidget {
   const PurchaseHistoryPage({super.key});
