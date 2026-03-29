@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
 /// **Minglit Key-Value Row**
 ///
@@ -32,7 +33,7 @@ class MinglitKeyValueRow extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.xsmall),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

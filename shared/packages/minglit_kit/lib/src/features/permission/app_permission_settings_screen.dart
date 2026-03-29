@@ -153,7 +153,7 @@ class _AppPermissionSettingsScreenState
           : ListView(
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(MinglitSpacing.medium),
                   child: Text(
                     '앱에서 사용하는 권한을 확인하고 '
                     '관리할 수 있습니다.',
@@ -266,7 +266,7 @@ class _PermissionTile extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               color: statusColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(MinglitRadius.input),
             ),
             child: Text(
               statusText,

@@ -58,7 +58,7 @@ class PartnerHomePage extends ConsumerWidget {
                     ),
                     decoration: BoxDecoration(
                       color: MinglitColors.error,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(MinglitRadius.button),
                       border: Border.all(
                         color: theme.colorScheme.surface,
                       ),

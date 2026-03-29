@@ -115,7 +115,7 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.xsmall),
       child: Row(
         children: [
           SizedBox(

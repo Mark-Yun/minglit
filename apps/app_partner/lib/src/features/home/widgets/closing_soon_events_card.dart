@@ -53,7 +53,7 @@ class ClosingSoonEventsCard extends StatelessWidget {
             ...events.map(
               (event) => InkWell(
                 onTap: () => onEventTap(event),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(MinglitRadius.small),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     vertical: MinglitSpacing.small,
@@ -68,6 +68,7 @@ class ClosingSoonEventsCard extends StatelessWidget {
                               event.title ?? '이벤트',
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
+                                color: colorScheme.onErrorContainer,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -76,7 +77,7 @@ class ClosingSoonEventsCard extends StatelessWidget {
                             Text(
                               dateFormat.format(event.startTime),
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
+                                color: colorScheme.onErrorContainer,
                               ),
                             ),
                           ],
@@ -117,7 +118,7 @@ class _DayBadge extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: colorScheme.error,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(MinglitRadius.button),
       ),
       child: Text(
         'D-$daysUntil',

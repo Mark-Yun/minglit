@@ -208,7 +208,7 @@ class PartyListItem extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(MinglitSpacing.xxsmall),
+        borderRadius: BorderRadius.circular(MinglitRadius.small),
         boxShadow: [
           BoxShadow(
             color: theme.shadowColor.withValues(alpha: 0.26),
@@ -244,7 +244,7 @@ class _InfoChip extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(100),
+        borderRadius: BorderRadius.circular(MinglitRadius.chip),
         border: Border.all(
           color: theme.colorScheme.surface.withValues(alpha: 0.2),
           width: 0.5,
