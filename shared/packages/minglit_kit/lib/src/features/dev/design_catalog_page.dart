@@ -5,6 +5,7 @@ import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_bottom_sheet.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_content_card.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_key_value_row.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_list_tile.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_section.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_tag.dart';
 
@@ -1292,6 +1293,35 @@ class _LayoutSection extends StatelessWidget {
               ],
             ),
           ),
+        ),
+
+        const Divider(height: MinglitSpacing.xxlarge),
+
+        // 5. MinglitListTile
+        Text('MinglitListTile', style: titleLarge),
+        const SizedBox(height: MinglitSpacing.medium),
+        const MinglitListTile(title: '기본 타일 (title only)'),
+        const SizedBox(height: MinglitSpacing.small),
+        const MinglitListTile(
+          title: '홍길동',
+          subtitle: '파트너 매니저',
+        ),
+        const SizedBox(height: MinglitSpacing.small),
+        MinglitListTile(
+          title: '아바타 + trailing',
+          subtitle: '네트워크 이미지 예시',
+          avatar: const AssetImage(
+            'packages/minglit_kit/assets/images/minglit_app_bar_logo.png',
+          ),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {},
+        ),
+        const SizedBox(height: MinglitSpacing.small),
+        const MinglitListTile(
+          title: '비활성 타일',
+          subtitle: 'enabled: false',
+          leading: Icon(Icons.block),
+          enabled: false,
         ),
       ],
     );
