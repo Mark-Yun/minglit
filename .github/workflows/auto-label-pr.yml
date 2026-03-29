@@ -1,0 +1,17 @@
+name: Auto Label PR
+
+on:
+  pull_request:
+    types: [opened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  add-needs-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add needs-review label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr edit ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --add-label "needs-review"
