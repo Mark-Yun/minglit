@@ -90,7 +90,9 @@ void main() {
 
       verify(
         () => mockRouter.push(
-          any(that: allOf(contains('/login'), contains('from=%2Fevents%2F123'))),
+          any(
+            that: allOf(contains('/login'), contains('from=%2Fevents%2F123')),
+          ),
         ),
       ).called(1);
     });
