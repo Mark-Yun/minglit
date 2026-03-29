@@ -514,13 +514,12 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
         final participants = map['participant'] as List<dynamic>?;
         final participantStatus =
             (participants?.firstOrNull as Map<String, dynamic>?)?['status']
-                    as String? ??
-                'ticket_issued';
+                as String? ??
+            'ticket_issued';
 
         // Remove participant array before parsing Event
         // (Event model doesn't include it)
-        final eventMap = Map<String, dynamic>.from(map)
-          ..remove('participant');
+        final eventMap = Map<String, dynamic>.from(map)..remove('participant');
         final event = Event.fromJson(eventMap);
         events.add(
           TodayActiveEvent(event: event, participantStatus: participantStatus),
@@ -540,8 +539,7 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
 
         final refundedEventIds = <String>{};
         for (final app in appData) {
-          final refundStatus =
-              app['refund_status'] as String?;
+          final refundStatus = app['refund_status'] as String?;
           if (refundStatus == 'refunded') {
             refundedEventIds.add(app['event_id'] as String);
           }

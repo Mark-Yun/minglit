@@ -16,7 +16,7 @@ void main() {
     when(() => mockUser.id).thenReturn('user_123');
   });
 
-  TodayActiveEvent _makeActiveEvent({
+  TodayActiveEvent makeActiveEvent({
     String id = 'event_1',
     String status = 'scheduled',
     String participantStatus = 'ticket_issued',
@@ -61,8 +61,8 @@ void main() {
 
     test('returns active events when user is logged in (happy path)', () async {
       final activeEvents = [
-        _makeActiveEvent(id: 'event_1'),
-        _makeActiveEvent(id: 'event_2', participantStatus: 'checked_in'),
+        makeActiveEvent(),
+        makeActiveEvent(id: 'event_2', participantStatus: 'checked_in'),
       ];
 
       when(
@@ -108,7 +108,7 @@ void main() {
 
     test('includes cancelled events', () async {
       final activeEvents = [
-        _makeActiveEvent(id: 'event_1', status: 'cancelled'),
+        makeActiveEvent(status: 'cancelled'),
       ];
 
       when(
@@ -133,7 +133,7 @@ void main() {
     test('includes events crossing midnight (endTime-based)', () async {
       final now = DateTime.now();
       final activeEvents = [
-        _makeActiveEvent(
+        makeActiveEvent(
           id: 'midnight_event',
           startTime: DateTime(now.year, now.month, now.day - 1, 22), // 어제 22시
           endTime: DateTime(now.year, now.month, now.day, 2), // 오늘 02시
@@ -173,7 +173,7 @@ void main() {
 
       final sub = container.listen(
         todayActiveEventsProvider,
-        (_, __) {},
+        (_, _) {},
       );
 
       // Wait for the provider to settle
