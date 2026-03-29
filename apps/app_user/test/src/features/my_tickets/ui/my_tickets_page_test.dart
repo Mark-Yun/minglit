@@ -1,5 +1,4 @@
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
-import 'package:app_user/src/features/my_tickets/logic/my_tickets_controller.dart';
 import 'package:app_user/src/features/my_tickets/ui/my_ticket_card.dart';
 import 'package:app_user/src/features/my_tickets/ui/my_tickets_page.dart';
 import 'package:flutter/material.dart';
@@ -42,7 +41,7 @@ void main() {
     );
   }
 
-  EventApplication _makeApplication({
+  EventApplication makeApplication({
     required String id,
     required String status,
     required DateTime startTime,
@@ -84,7 +83,7 @@ void main() {
     );
   }
 
-  Future<void> _pumpAndSettle(WidgetTester tester) async {
+  Future<void> pumpAndSettle(WidgetTester tester) async {
     await tester.pump();
     await tester.pump();
     await tester.pump();
@@ -97,7 +96,7 @@ void main() {
       ).thenAnswer((_) async => []);
 
       await tester.pumpWidget(createTestWidget());
-      await _pumpAndSettle(tester);
+      await pumpAndSettle(tester);
 
       expect(find.text('내 티켓'), findsOneWidget);
       expect(find.text('아직 티켓이 없어요'), findsOneWidget);
@@ -110,21 +109,20 @@ void main() {
       ).thenAnswer((_) async => []);
 
       await tester.pumpWidget(createTestWidget());
-      await _pumpAndSettle(tester);
+      await pumpAndSettle(tester);
 
       await tester.tap(find.text('이벤트 둘러보기'));
       verify(() => mockHomeCoordinator.goToHome()).called(1);
     });
 
     testWidgets('renders upcoming and past sections', (tester) async {
-      final upcoming = _makeApplication(
+      final upcoming = makeApplication(
         id: '1',
         status: 'paid',
         startTime: DateTime.now().add(const Duration(days: 3)),
         eventTitle: '강남 소셜 파티',
-        ticketName: '일반 입장권',
       );
-      final past = _makeApplication(
+      final past = makeApplication(
         id: '2',
         status: 'paid',
         startTime: DateTime.now().subtract(const Duration(days: 5)),
@@ -137,7 +135,7 @@ void main() {
       ).thenAnswer((_) async => [upcoming, past]);
 
       await tester.pumpWidget(createTestWidget());
-      await _pumpAndSettle(tester);
+      await pumpAndSettle(tester);
 
       expect(find.text('다가오는 이벤트'), findsOneWidget);
       expect(find.text('강남 소셜 파티'), findsOneWidget);
@@ -148,11 +146,10 @@ void main() {
       expect(find.text('VIP 입장권'), findsOneWidget);
     });
 
-    testWidgets('renders today banner when today event exists',
-        (tester) async {
+    testWidgets('renders today banner when today event exists', (tester) async {
       // Create an event starting later today
       final now = DateTime.now();
-      final todayEvent = _makeApplication(
+      final todayEvent = makeApplication(
         id: '1',
         status: 'paid',
         startTime: DateTime(now.year, now.month, now.day, 23, 59),
@@ -164,7 +161,7 @@ void main() {
       ).thenAnswer((_) async => [todayEvent]);
 
       await tester.pumpWidget(createTestWidget());
-      await _pumpAndSettle(tester);
+      await pumpAndSettle(tester);
 
       // Banner should show event name and time
       expect(find.text('오늘의 파티'), findsAtLeast(1));
@@ -173,7 +170,7 @@ void main() {
     });
 
     testWidgets('past cards have no QR button', (tester) async {
-      final past = _makeApplication(
+      final past = makeApplication(
         id: '1',
         status: 'paid',
         startTime: DateTime.now().subtract(const Duration(days: 5)),
@@ -185,7 +182,7 @@ void main() {
       ).thenAnswer((_) async => [past]);
 
       await tester.pumpWidget(createTestWidget());
-      await _pumpAndSettle(tester);
+      await pumpAndSettle(tester);
 
       expect(find.text('종료된 이벤트'), findsOneWidget);
       // Past cards should show "종료" chip, not QR button
@@ -195,7 +192,7 @@ void main() {
     });
 
     testWidgets('upcoming cards show QR button', (tester) async {
-      final upcoming = _makeApplication(
+      final upcoming = makeApplication(
         id: '1',
         status: 'paid',
         startTime: DateTime.now().add(const Duration(days: 3)),
@@ -207,14 +204,14 @@ void main() {
       ).thenAnswer((_) async => [upcoming]);
 
       await tester.pumpWidget(createTestWidget());
-      await _pumpAndSettle(tester);
+      await pumpAndSettle(tester);
 
       expect(find.text('다가오는 이벤트'), findsAtLeast(1));
       expect(find.text('입장 QR'), findsOneWidget);
     });
 
     testWidgets('tapping card calls pushEventDetail', (tester) async {
-      final upcoming = _makeApplication(
+      final upcoming = makeApplication(
         id: '1',
         status: 'paid',
         startTime: DateTime.now().add(const Duration(days: 3)),
@@ -226,7 +223,7 @@ void main() {
       ).thenAnswer((_) async => [upcoming]);
 
       await tester.pumpWidget(createTestWidget());
-      await _pumpAndSettle(tester);
+      await pumpAndSettle(tester);
 
       await tester.tap(find.text('탭 테스트 이벤트'));
       verify(
@@ -238,7 +235,7 @@ void main() {
   group('MyTicketCard', () {
     testWidgets('shows D-Day chip for today event', (tester) async {
       final now = DateTime(2026, 3, 29, 12);
-      final app = _makeApplication(
+      final app = makeApplication(
         id: '1',
         status: 'paid',
         startTime: DateTime(2026, 3, 29, 19),
@@ -262,7 +259,7 @@ void main() {
 
     testWidgets('shows D-N chip for future event', (tester) async {
       final now = DateTime(2026, 3, 29, 12);
-      final app = _makeApplication(
+      final app = makeApplication(
         id: '1',
         status: 'paid',
         startTime: DateTime(2026, 4, 1, 19),
@@ -286,7 +283,7 @@ void main() {
 
     testWidgets('shows 종료 chip for past event', (tester) async {
       final now = DateTime(2026, 3, 29, 12);
-      final app = _makeApplication(
+      final app = makeApplication(
         id: '1',
         status: 'paid',
         startTime: DateTime(2026, 3, 22, 18),
@@ -309,7 +306,7 @@ void main() {
     });
 
     testWidgets('shows status badge', (tester) async {
-      final app = _makeApplication(
+      final app = makeApplication(
         id: '1',
         status: 'paid',
         startTime: DateTime.now().add(const Duration(days: 3)),
@@ -330,7 +327,7 @@ void main() {
     });
 
     testWidgets('shows location name', (tester) async {
-      final app = _makeApplication(
+      final app = makeApplication(
         id: '1',
         status: 'approved',
         startTime: DateTime.now().add(const Duration(days: 5)),

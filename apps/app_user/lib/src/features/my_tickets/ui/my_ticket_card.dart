@@ -212,8 +212,9 @@ class MyTicketCard extends StatelessWidget {
             label: const Text('입장 QR'),
             style: TextButton.styleFrom(
               foregroundColor: theme.colorScheme.primary,
-              backgroundColor:
-                  theme.colorScheme.primary.withValues(alpha: 0.08),
+              backgroundColor: theme.colorScheme.primary.withValues(
+                alpha: 0.08,
+              ),
               padding: const EdgeInsets.symmetric(
                 horizontal: MinglitSpacing.sm,
                 vertical: MinglitSpacing.xsmall2,

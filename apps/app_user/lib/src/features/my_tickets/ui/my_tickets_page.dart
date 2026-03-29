@@ -38,7 +38,7 @@ class MyTicketsPage extends ConsumerWidget {
 
               // Upcoming section
               if (state.upcoming.isNotEmpty) ...[
-                _SectionHeader(title: '다가오는 이벤트'),
+                const _SectionHeader(title: '다가오는 이벤트'),
                 ...state.upcoming.map(
                   (app) => MyTicketCard(
                     application: app,
@@ -50,7 +50,7 @@ class MyTicketsPage extends ConsumerWidget {
 
               // Past section
               if (state.past.isNotEmpty) ...[
-                _SectionHeader(title: '지난 이벤트'),
+                const _SectionHeader(title: '지난 이벤트'),
                 ...state.past.map(
                   (app) => MyTicketCard(
                     application: app,
