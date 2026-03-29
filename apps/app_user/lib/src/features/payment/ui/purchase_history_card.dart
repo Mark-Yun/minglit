@@ -59,7 +59,7 @@ class PurchaseHistoryCard extends ConsumerWidget {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-              _StatusBadge(status: application.status),
+              StatusBadge(status: application.status),
             ],
           ),
           const SizedBox(height: MinglitSpacing.medium),
