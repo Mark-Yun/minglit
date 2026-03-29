@@ -1,4 +1,4 @@
-import 'package:app_partner/src/features/settlement/settlement_coordinator.dart';
+import 'package:app_partner/src/features/home/partner_home_coordinator.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -40,8 +40,7 @@ class RevenueSummaryCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(MinglitRadius.card),
       ),
       child: InkWell(
-        onTap: () =>
-            ref.read(settlementCoordinatorProvider.notifier).goToSettlement(),
+        onTap: () => ref.read(partnerHomeCoordinatorProvider).goToSettlement(),
         borderRadius: BorderRadius.circular(MinglitRadius.card),
         child: Padding(
           padding: const EdgeInsets.all(MinglitSpacing.large),

@@ -4,6 +4,8 @@ import { PortoneV2Client } from "../_shared/portone_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { initSentry, withHandler, log } from "../_shared/logger.ts";
+// Fix #763: Portone 에러 응답에 PII 포함 가능 — JSON 문자열 내 PII 마스킹
+import { maskJsonString } from "../_shared/pii_masker.ts";
 
 const FN = "identity-verify";
 
@@ -34,9 +36,12 @@ Deno.serve(withHandler(async (req) => {
     try {
       verification = await portone.getIdentityVerification(identity_verification_id);
     } catch (fetchError) {
-      const msg = fetchError instanceof Error ? fetchError.message : String(fetchError);
-      log({ function: FN, level: "error", message: "Portone V2 API Error", metadata: { detail: msg } });
-      return errorResponse("Failed to fetch verification info", 502, msg);
+      // Fix #763: Portone 에러에 이름/전화번호 등 PII 포함 가능.
+      // JSON 파싱 시도하여 필드 단위 마스킹, 실패 시 상세 내용 로깅하지 않음.
+      const rawMsg = fetchError instanceof Error ? fetchError.message : String(fetchError);
+      const maskedMsg = maskJsonString(rawMsg);
+      log({ function: FN, level: "error", message: "Portone V2 API Error", metadata: { detail: maskedMsg } });
+      return errorResponse("Failed to fetch verification info", 502, maskedMsg);
     }
 
     if (verification.status !== "VERIFIED") {

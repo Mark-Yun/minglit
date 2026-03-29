@@ -373,9 +373,10 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                             activeIcon: Icons.thumb_up,
                             inactiveIcon: Icons.thumb_up_outlined,
                             activeColor: MinglitColors.primary,
+                            // Fix #634: auth_coordinator 직접 참조 → event_coordinator.pushLogin 전환
                             onUnauthenticatedTap: user == null
                                 ? () => ref
-                                      .read(authCoordinatorProvider)
+                                      .read(eventCoordinatorProvider)
                                       .pushLogin()
                                 : null,
                           ),
