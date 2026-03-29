@@ -61,8 +61,9 @@ void main() {
       expect(find.byType(Text), findsOneWidget);
     });
 
-    testWidgets('renders retry button when onRetry is provided',
-        (tester) async {
+    testWidgets('renders retry button when onRetry is provided', (
+      tester,
+    ) async {
       var retried = false;
 
       await tester.pumpWidget(

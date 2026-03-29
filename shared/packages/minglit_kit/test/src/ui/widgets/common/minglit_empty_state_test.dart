@@ -57,8 +57,9 @@ void main() {
       expect(find.byType(Text), findsOneWidget);
     });
 
-    testWidgets('renders action button when both label and callback provided',
-        (tester) async {
+    testWidgets('renders action button when both label and callback provided', (
+      tester,
+    ) async {
       var tapped = false;
 
       await tester.pumpWidget(
@@ -78,8 +79,9 @@ void main() {
       expect(tapped, isTrue);
     });
 
-    testWidgets('does not render button when only actionLabel is provided',
-        (tester) async {
+    testWidgets('does not render button when only actionLabel is provided', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         wrap(
           const MinglitEmptyState(
@@ -92,8 +94,9 @@ void main() {
       expect(find.byType(FilledButton), findsNothing);
     });
 
-    testWidgets('does not render button when only onAction is provided',
-        (tester) async {
+    testWidgets('does not render button when only onAction is provided', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         wrap(MinglitEmptyState(title: '빈 상태', onAction: () {})),
       );
