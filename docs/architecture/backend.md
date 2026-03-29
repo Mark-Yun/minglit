@@ -261,6 +261,7 @@ Supabase Edge Functions는 Deno 런타임 기반이며, `supabase/functions/` �
 | `response_utils.ts` | 33 | HTTP 응답 헬퍼 (CORS, JSON/에러 응답) |
 | `refund_utils.ts` | — | 환불 관련 유틸리티 |
 | `validation_utils.ts` | — | 입력 검증 유틸리티 |
+| `pii_masker.ts` | 158 | 개인정보 마스킹 (`maskPII()` — CI/DI, 전화번호, 생년월일 등 로그 내 PII 자동 치환) |
 | `env_keystore.ts` | 63 | 환경변수 검증 (`env-manifest.json` 기반 per-function/project 단위 키 체크) |
 
 ### 3.4 Dev Guard
@@ -508,7 +509,7 @@ Edge Function에서 사용하는 주요 환경변수:
 - **스키마 분리 미적용**: 모든 테이블이 `public` 스키마에 위치. payment/settlement 분리 계획 있음.
 - **계좌번호 평문 저장**: `partner_settlements.account_number`가 암호화 없이 저장됨.
 - **수수료 하드코딩**: PG 수수료 3.5%, 플랫폼 수수료 5%가 함수 내 하드코딩.
-- **CAS/Version 미구현**: 정산 상태 변경에 낙관적 잠금(Optimistic Lock) 미적용.
+- ~~**CAS/Version 미구현**~~: ✅ Phase 2에서 해결됨 — `transition_settlement_status()`에 CAS(낙관적 잠금) 적용 완료.
 - **RLS 복잡도**: 일부 정책이 다단 JOIN을 포함하여 성능 영향 가능성.
 - **크론 해상도**: `pg_cron` 최소 1분 단위로, 실시간 처리에 한계.
 - **신고(report) 시스템 미비**: 신고(report) 시스템은 기본 구현만 완료. 신고 처리 워크플로우(관리자 심사, 제재 등) 미구현.
