@@ -152,8 +152,9 @@ Deno.test("contract: identity-verify response matches schema", async () => {
         handler: () => jsonResponse(mockPortoneVerification),
       },
       {
-        matcher: (req) => req.url.includes("/rest/v1/user_profiles") && req.method === "PATCH",
-        handler: () => jsonResponse({}),
+        // Fix #808: RPC 호출 모킹 (PATCH → POST /rpc/update_user_identity)
+        matcher: (req) => req.url.includes("/rest/v1/rpc/update_user_identity") && req.method === "POST",
+        handler: () => jsonResponse(null),
       },
     ]);
 
