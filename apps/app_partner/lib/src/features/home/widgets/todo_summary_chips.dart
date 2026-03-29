@@ -18,6 +18,7 @@ class TodoSummaryChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
     return Row(
       children: [
         Expanded(
@@ -25,7 +26,6 @@ class TodoSummaryChips extends StatelessWidget {
             count: pendingApplications,
             label: '승인 대기',
             activeColor: MinglitColors.error,
-            activeBackground: const Color(0xFFFFF0F0),
             onTap: onPendingTap,
           ),
         ),
@@ -34,8 +34,7 @@ class TodoSummaryChips extends StatelessWidget {
           child: _TodoChip(
             count: upcomingEvents,
             label: '다가오는 이벤트',
-            activeColor: Theme.of(context).colorScheme.primary,
-            activeBackground: const Color(0xFFF0F0FF),
+            activeColor: primaryColor,
             onTap: onUpcomingTap,
           ),
         ),
@@ -45,7 +44,6 @@ class TodoSummaryChips extends StatelessWidget {
             count: 0,
             label: '미답변 리뷰',
             activeColor: MinglitColors.warning,
-            activeBackground: const Color(0xFFFFF8E1),
             comingSoon: true,
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -67,7 +65,6 @@ class _TodoChip extends StatelessWidget {
     required this.count,
     required this.label,
     required this.activeColor,
-    required this.activeBackground,
     required this.onTap,
     this.comingSoon = false,
   });
@@ -75,7 +72,6 @@ class _TodoChip extends StatelessWidget {
   final int count;
   final String label;
   final Color activeColor;
-  final Color activeBackground;
   final VoidCallback onTap;
   final bool comingSoon;
 
@@ -83,6 +79,7 @@ class _TodoChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final isActive = count > 0 && !comingSoon;
     final theme = Theme.of(context);
+    final inactiveColor = theme.colorScheme.onSurfaceVariant;
 
     return GestureDetector(
       onTap: onTap,
@@ -92,7 +89,9 @@ class _TodoChip extends StatelessWidget {
           vertical: MinglitSpacing.medium,
         ),
         decoration: BoxDecoration(
-          color: isActive ? activeBackground : const Color(0xFFF5F5F5),
+          color: isActive
+              ? activeColor.withValues(alpha: 0.08)
+              : theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(MinglitRadius.input),
         ),
         child: Column(
@@ -102,7 +101,7 @@ class _TodoChip extends StatelessWidget {
                 '-',
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFFAAAAAA),
+                  color: inactiveColor,
                 ),
               )
             else
@@ -110,7 +109,7 @@ class _TodoChip extends StatelessWidget {
                 count.toString(),
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: isActive ? activeColor : const Color(0xFFAAAAAA),
+                  color: isActive ? activeColor : inactiveColor,
                 ),
               ),
             const SizedBox(height: MinglitSpacing.xxsmall),
@@ -118,7 +117,7 @@ class _TodoChip extends StatelessWidget {
               comingSoon ? '준비 중' : label,
               style: theme.textTheme.labelSmall?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: isActive ? activeColor : const Color(0xFFAAAAAA),
+                color: isActive ? activeColor : inactiveColor,
               ),
             ),
           ],

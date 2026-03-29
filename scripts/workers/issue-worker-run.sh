@@ -1,5 +1,5 @@
 #!/bin/bash
-# issue-worker-run.sh — 단발성 실행. launchd가 주기적으로 호출.
+# issue-worker-run.sh — loop+sleep 데몬. launchd KeepAlive로 유지.
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -10,33 +10,52 @@ COMMON_FILE="$SCRIPT_DIR/prompts/worker-common.txt"
 SESSION_TIMEOUT=3600
 REPO="Mark-Yun/minglit"
 LOG_DIR="/tmp/claude-worker-logs"
+SLEEP_INTERVAL=600
+MAX_CONCURRENT=6
 
 mkdir -p "$LOG_DIR"
 [ ! -f "$PROMPT_FILE" ] && echo "Error: Prompt not found" && exit 1
 
+while true; do
 
-# --- 타이머 정리를 위한 trap ---
-cleanup() { [ -n "${timer_pid:-}" ] && kill "$timer_pid" 2>/dev/null && wait "$timer_pid" 2>/dev/null; }
-trap cleanup EXIT
-
-# --- 머지된 worktree 정리 ---
+# --- 머지된 PR의 claude 세션 종료 + worktree 정리 ---
 for dir in "$WORKTREE_BASE"/issue-*; do
     [ -d "$dir" ] || continue
     issue_num="${dir##*issue-}"
-    # worktree가 현재 사용 중이면 건너뛰기
-    if pgrep -f "$dir" >/dev/null 2>&1; then
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Skipping issue-${issue_num} — process active."
-        continue
+    branch=$(git -C "$dir" branch --show-current 2>/dev/null || true)
+
+    # PR이 머지됐으면 claude 세션 kill + worktree 정리
+    if [ -n "$branch" ] && [ "$branch" != "dev" ]; then
+        pr_state=$(gh pr list --repo "$REPO" --head "$branch" --json state -q '.[0].state' 2>/dev/null || true)
+        if [ "$pr_state" = "MERGED" ]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] PR merged for issue-${issue_num} — killing claude session + cleanup."
+            pkill -f "issue-${issue_num}" 2>/dev/null || true
+            rm -rf "$dir"
+            git -C "$REPO_DIR" worktree prune 2>/dev/null
+            git -C "$REPO_DIR" branch -D "$branch" 2>/dev/null || true
+            continue
+        fi
     fi
-    state=$(gh issue view "$issue_num" --repo "$REPO" --json state -q '.state' 2>/dev/null)
-    if [ "$state" = "CLOSED" ]; then
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Cleaning up issue-${issue_num}..."
-        branch=$(git -C "$dir" branch --show-current 2>/dev/null)
-        rm -rf "$dir"
-        git -C "$REPO_DIR" worktree prune 2>/dev/null
-        [ -n "$branch" ] && [ "$branch" != "dev" ] && git -C "$REPO_DIR" branch -D "$branch" 2>/dev/null
+
+    # 이슈가 닫혔으면 (PR 없이 닫힌 경우) 동일 정리
+    if ! pgrep -f "$dir" >/dev/null 2>&1; then
+        state=$(gh issue view "$issue_num" --repo "$REPO" --json state -q '.state' 2>/dev/null)
+        if [ "$state" = "CLOSED" ]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Cleaning up issue-${issue_num}..."
+            rm -rf "$dir"
+            git -C "$REPO_DIR" worktree prune 2>/dev/null
+            [ -n "$branch" ] && [ "$branch" != "dev" ] && git -C "$REPO_DIR" branch -D "$branch" 2>/dev/null
+        fi
     fi
 done
+
+# --- 동시 실행 세션 수 제한 ---
+active_count=$(pgrep -f "/usr/local/bin/claude" | wc -l | tr -d ' ')
+if [ "$active_count" -ge "$MAX_CONCURRENT" ]; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Max concurrent sessions ($MAX_CONCURRENT) reached. Skipping this cycle."
+    sleep "$SLEEP_INTERVAL"
+    continue
+fi
 
 # --- PR 케어 (전체 열린 PR) ---
 
@@ -60,7 +79,7 @@ for pr_num in $dep_prs; do
     fi
 done
 
-# 3. 내 PR → claude 세션으로 케어 (리뷰 대응 등)
+# 3. 내 PR → claude 세션으로 케어 (리뷰 대응 등) — 백그라운드 발사
 my_prs=$(gh pr list --repo "$REPO" --author @me --state open --json number -q '.[].number')
 for pr_num in $my_prs; do
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Caring for my PR #${pr_num}..."
@@ -68,6 +87,11 @@ for pr_num in $my_prs; do
     issue_num=$(echo "$head_branch" | grep -oE '[0-9]+' | head -1 || true)
     if [ -z "$issue_num" ]; then
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] Cannot extract issue number from branch '${head_branch}'. Skipping."
+        continue
+    fi
+    # 중복 실행 방지: 해당 이슈가 이미 처리 중이면 스킵
+    if pgrep -f "issue-${issue_num}" >/dev/null 2>&1; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Issue #${issue_num} already in progress. Skipping PR care."
         continue
     fi
     worktree_dir="$WORKTREE_BASE/issue-${issue_num}"
@@ -84,10 +108,7 @@ $(cat "$PROMPT_FILE")" \
         2>&1 | tee "$LOG_DIR/issue-${issue_num}-$(date +%Y%m%d-%H%M%S).log" &
     local_pid=$!
     ( sleep "$SESSION_TIMEOUT" && kill "$local_pid" 2>/dev/null ) &
-    timer_pid=$!
-    wait "$local_pid" 2>/dev/null
-    kill "$timer_pid" 2>/dev/null; wait "$timer_pid" 2>/dev/null
-    timer_pid=""
+    # 백그라운드 발사 — wait 없이 다음으로 진행
 done
 
 # --- 새 이슈 처리 (needs-dev 라벨만) ---
@@ -102,7 +123,18 @@ issue_num=$(gh issue list --repo "$REPO" --label "needs-dev" --state open \
             else 4 end
         )}] | sort_by(.priority, .number) | .[0].number // empty')
 
-[ -z "$issue_num" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] No work found." && exit 0
+if [ -z "${issue_num:-}" ]; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] No work found."
+    sleep "$SLEEP_INTERVAL"
+    continue
+fi
+
+# 중복 실행 방지: 해당 이슈가 이미 처리 중이면 스킵
+if pgrep -f "issue-${issue_num}" >/dev/null 2>&1; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Issue #${issue_num} already in progress. Skipping."
+    sleep "$SLEEP_INTERVAL"
+    continue
+fi
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Working on issue #${issue_num}..."
 worktree_dir="$WORKTREE_BASE/issue-${issue_num}"
@@ -117,7 +149,7 @@ else
     git diff --quiet && git diff --cached --quiet && git merge origin/dev --no-edit 2>/dev/null || true
 fi
 
-cd "$worktree_dir" || exit 1
+cd "$worktree_dir" || { sleep "$SLEEP_INTERVAL"; continue; }
 
 /usr/local/bin/claude -p "$(cat "$COMMON_FILE" 2>/dev/null)
 
@@ -125,9 +157,9 @@ $(cat "$PROMPT_FILE")" \
     --max-turns 999 \
     --allowedTools "Bash,Read,Write,Edit,Glob,Grep,Agent" \
     2>&1 | tee "$LOG_DIR/issue-${issue_num}-$(date +%Y%m%d-%H%M%S).log" &
-claude_pid=$!
-( sleep "$SESSION_TIMEOUT" && kill "$claude_pid" 2>/dev/null ) &
-timer_pid=$!
-wait "$claude_pid" 2>/dev/null
-kill "$timer_pid" 2>/dev/null; wait "$timer_pid" 2>/dev/null
-timer_pid=""
+local_pid=$!
+( sleep "$SESSION_TIMEOUT" && kill "$local_pid" 2>/dev/null ) &
+# 백그라운드 발사 — wait 없이 다음 사이클로
+
+sleep "$SLEEP_INTERVAL"
+done
