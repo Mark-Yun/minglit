@@ -1,6 +1,6 @@
 #!/bin/bash
 # issue-worker-run.sh — 단발성 실행. launchd가 주기적으로 호출.
-set -euo pipefail
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="/Users/mark/workspace/minglit"

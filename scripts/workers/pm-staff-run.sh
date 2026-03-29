@@ -1,6 +1,6 @@
 #!/bin/bash
 # pm-staff-run.sh — 단발성. 시장/기술 조사 → 기능 제안/기술 추천 리포트.
-set -euo pipefail
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="/Users/mark/workspace/minglit"
