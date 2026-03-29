@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-// Fix #638: StatusBadge를 공유 위젯으로 추출 — purchase_history 전용 private 위젯에서 공통 위젯으로 승격
+/// Fix #638: _StatusBadge → StatusBadge 공유 위젯 승격
+/// purchase_history, my_tickets 등에서 상태 배지로 재사용
 class StatusBadge extends StatelessWidget {
   const StatusBadge({required this.status, super.key});
 
