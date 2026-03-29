@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/event/admission/event_admission_controller.dart';
 import 'package:app_user/src/features/event/detail/open_in_app_dialog.dart';
 import 'package:app_user/src/features/event/detail/report_bottom_sheet.dart';
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
+import 'package:app_user/src/features/ticket/logic/ticket_coordinator.dart';
 import 'package:app_user/src/utils/share_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
