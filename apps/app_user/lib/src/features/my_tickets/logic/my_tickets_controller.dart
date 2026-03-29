@@ -95,5 +95,6 @@ class MyTicketsState {
   /// The most imminent event starting today, or null.
   final EventApplication? todayEvent;
 
-  bool get isEmpty => upcoming.isEmpty && past.isEmpty;
+  // Fix #660: include todayEvent in emptiness check
+  bool get isEmpty => upcoming.isEmpty && past.isEmpty && todayEvent == null;
 }
