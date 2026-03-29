@@ -51,7 +51,7 @@ class _BankAccountPageState extends ConsumerState<BankAccountPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(MinglitSpacing.medium),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -77,7 +77,7 @@ class AccountCard extends StatelessWidget {
     if (accountData == null) {
       return const Card(
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(MinglitSpacing.medium),
           child: Text('등록된 계좌 정보가 없습니다.'),
         ),
       );
@@ -91,7 +91,7 @@ class AccountCard extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(MinglitSpacing.medium),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -208,7 +208,7 @@ class _AccountEditFormState extends ConsumerState<AccountEditForm> {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(MinglitSpacing.medium),
         child: Form(
           key: _formKey,
           child: Column(
