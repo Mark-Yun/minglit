@@ -96,6 +96,5 @@ class MyTicketsState {
   final EventApplication? todayEvent;
 
   // Fix #660: include todayEvent in emptiness check
-  bool get isEmpty =>
-      upcoming.isEmpty && past.isEmpty && todayEvent == null;
+  bool get isEmpty => upcoming.isEmpty && past.isEmpty && todayEvent == null;
 }
