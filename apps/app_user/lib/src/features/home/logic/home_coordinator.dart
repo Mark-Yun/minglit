@@ -27,6 +27,11 @@ class HomeCoordinator {
     unawaited(_router.push(const PurchaseHistoryRoute().location));
   }
 
+  // Fix #641: MyTicketsRoute 네비게이션 — "내 티켓" 탭에서 MyTicketsPage로 이동
+  void pushMyTickets() {
+    unawaited(_router.push(const MyTicketsRoute().location));
+  }
+
   void goToPurchaseHistory() {
     _router.go(const PurchaseHistoryRoute().location);
   }
