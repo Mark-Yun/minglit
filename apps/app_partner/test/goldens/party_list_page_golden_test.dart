@@ -1,8 +1,6 @@
 @Tags(['golden'])
 library;
 
-import 'dart:io';
-
 import 'package:alchemist/alchemist.dart';
 import 'package:app_partner/src/features/party/list/party_list_controller.dart';
 import 'package:app_partner/src/features/party/list/party_list_page.dart';
@@ -10,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
+import '../utils/golden_test_helpers.dart' show pumpAndDumpTree;
 import '../utils/partner_golden_test_helpers.dart';
 
 void main() {
@@ -18,13 +17,7 @@ void main() {
   goldenTest(
     'PartyListPage empty state',
     fileName: 'party_list_page_empty',
-    pumpBeforeTest: (tester) async {
-      await tester.pumpAndSettle();
-      final dump = tester.binding.renderViews.first.toStringDeep();
-      File(
-        'test/goldens/party_list_page_empty.render.txt',
-      ).writeAsStringSync(dump);
-    },
+    pumpBeforeTest: pumpAndDumpTree('party_list_page_empty'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(400),
       children: [
@@ -48,13 +41,7 @@ void main() {
   goldenTest(
     'PartyListPage with parties',
     fileName: 'party_list_page_with_data',
-    pumpBeforeTest: (tester) async {
-      await tester.pumpAndSettle();
-      final dump = tester.binding.renderViews.first.toStringDeep();
-      File(
-        'test/goldens/party_list_page_with_data.render.txt',
-      ).writeAsStringSync(dump);
-    },
+    pumpBeforeTest: pumpAndDumpTree('party_list_page_with_data'),
     builder: () {
       final parties = [
         Party(
@@ -104,13 +91,7 @@ void main() {
   goldenTest(
     'PartyListPage empty state (dark)',
     fileName: 'party_list_page_empty_dark',
-    pumpBeforeTest: (tester) async {
-      await tester.pumpAndSettle();
-      final dump = tester.binding.renderViews.first.toStringDeep();
-      File(
-        'test/goldens/party_list_page_empty_dark.render.txt',
-      ).writeAsStringSync(dump);
-    },
+    pumpBeforeTest: pumpAndDumpTree('party_list_page_empty_dark'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(400),
       children: [
@@ -135,13 +116,7 @@ void main() {
   goldenTest(
     'PartyListPage with parties (dark)',
     fileName: 'party_list_page_with_data_dark',
-    pumpBeforeTest: (tester) async {
-      await tester.pumpAndSettle();
-      final dump = tester.binding.renderViews.first.toStringDeep();
-      File(
-        'test/goldens/party_list_page_with_data_dark.render.txt',
-      ).writeAsStringSync(dump);
-    },
+    pumpBeforeTest: pumpAndDumpTree('party_list_page_with_data_dark'),
     builder: () {
       final parties = [
         Party(

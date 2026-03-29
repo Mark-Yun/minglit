@@ -82,6 +82,7 @@ class NoFiltersNotifier extends ActiveFilters {
 /// [RenderObject] — useful for automated spacing/alignment analysis.
 Future<void> Function(WidgetTester) pumpAndDumpTree(String fileName) {
   return (WidgetTester tester) async {
+    await initGoldenDeps();
     await onlyPumpAndSettle(tester);
     final dump = tester.binding.renderViews.first.toStringDeep();
     File('test/goldens/$fileName.render.txt').writeAsStringSync(dump);

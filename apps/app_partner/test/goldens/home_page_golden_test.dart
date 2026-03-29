@@ -1,8 +1,6 @@
 @Tags(['golden'])
 library;
 
-import 'dart:io';
-
 import 'package:alchemist/alchemist.dart';
 import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/features/home/partner_home_coordinator.dart';
@@ -13,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
+import '../utils/golden_test_helpers.dart' show pumpAndDumpTree;
 import '../utils/partner_golden_test_helpers.dart';
 
 void main() {
@@ -26,13 +25,7 @@ void main() {
   goldenTest(
     'PartnerHomePage empty dashboard',
     fileName: 'partner_home_page_empty',
-    pumpBeforeTest: (tester) async {
-      await tester.pumpAndSettle();
-      final dump = tester.binding.renderViews.first.toStringDeep();
-      File(
-        'test/goldens/partner_home_page_empty.render.txt',
-      ).writeAsStringSync(dump);
-    },
+    pumpBeforeTest: pumpAndDumpTree('partner_home_page_empty'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(400),
       children: [
@@ -64,13 +57,7 @@ void main() {
   goldenTest(
     'PartnerHomePage with data',
     fileName: 'partner_home_page_with_data',
-    pumpBeforeTest: (tester) async {
-      await tester.pumpAndSettle();
-      final dump = tester.binding.renderViews.first.toStringDeep();
-      File(
-        'test/goldens/partner_home_page_with_data.render.txt',
-      ).writeAsStringSync(dump);
-    },
+    pumpBeforeTest: pumpAndDumpTree('partner_home_page_with_data'),
     builder: () {
       final events = List.generate(
         2,
@@ -132,13 +119,7 @@ void main() {
   goldenTest(
     'PartnerHomePage empty dashboard (dark)',
     fileName: 'partner_home_page_empty_dark',
-    pumpBeforeTest: (tester) async {
-      await tester.pumpAndSettle();
-      final dump = tester.binding.renderViews.first.toStringDeep();
-      File(
-        'test/goldens/partner_home_page_empty_dark.render.txt',
-      ).writeAsStringSync(dump);
-    },
+    pumpBeforeTest: pumpAndDumpTree('partner_home_page_empty_dark'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(400),
       children: [
@@ -171,13 +152,7 @@ void main() {
   goldenTest(
     'PartnerHomePage with data (dark)',
     fileName: 'partner_home_page_with_data_dark',
-    pumpBeforeTest: (tester) async {
-      await tester.pumpAndSettle();
-      final dump = tester.binding.renderViews.first.toStringDeep();
-      File(
-        'test/goldens/partner_home_page_with_data_dark.render.txt',
-      ).writeAsStringSync(dump);
-    },
+    pumpBeforeTest: pumpAndDumpTree('partner_home_page_with_data_dark'),
     builder: () {
       final events = List.generate(
         2,
