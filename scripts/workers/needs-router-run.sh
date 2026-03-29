@@ -2,7 +2,7 @@
 # needs-router-run.sh — needs-* 라벨 감지 → 해당 워커 실행
 # launchd가 30분마다 호출. 라벨 없으면 즉시 종료 (토큰 절약).
 # 라벨→핸들러 매핑은 worker-routing.json의 routing 섹션을 따른다.
-set -euo pipefail
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO="Mark-Yun/minglit"
