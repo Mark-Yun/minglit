@@ -175,8 +175,8 @@ void main() {
       when(() => mockUser.id).thenReturn(userId);
 
       final now = DateTime.now();
-      // Two events today: one sooner, one later
-      final todaySoon = DateTime(now.year, now.month, now.day, now.hour + 1);
+      // Fix #639: Use fixed hour literals to avoid flakiness near midnight
+      final todaySoon = DateTime(now.year, now.month, now.day, 22);
       final todayLate = DateTime(now.year, now.month, now.day, 23);
       final tomorrow = now.add(const Duration(days: 1));
 

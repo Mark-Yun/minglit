@@ -12,7 +12,7 @@ class MyTicketsController extends _$MyTicketsController {
   FutureOr<MyTicketsState> build() async {
     final user = ref.watch(currentUserProvider);
     if (user == null) {
-      return const MyTicketsState(
+      return MyTicketsState(
         upcoming: [],
         past: [],
         todayEvent: null,
@@ -82,11 +82,12 @@ class MyTicketsController extends _$MyTicketsController {
 
 /// Immutable state holding split ticket lists.
 class MyTicketsState {
-  const MyTicketsState({
-    required this.upcoming,
-    required this.past,
+  MyTicketsState({
+    required List<EventApplication> upcoming,
+    required List<EventApplication> past,
     required this.todayEvent,
-  });
+  })  : upcoming = List.unmodifiable(upcoming),
+        past = List.unmodifiable(past);
 
   final List<EventApplication> upcoming;
   final List<EventApplication> past;
