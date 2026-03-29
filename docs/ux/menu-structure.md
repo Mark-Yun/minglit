@@ -3,7 +3,6 @@
 > 소스: GoRouter 라우트 정의 + Scaffold BottomNav에서 추출.
 >
 > - `apps/app_user/lib/src/routing/app_routes.dart`
-> - `apps/app_user/lib/src/ui/shell/user_scaffold.dart`
 > - `apps/app_partner/lib/src/routing/app_routes.dart`
 > - `apps/app_partner/lib/src/ui/shell/partner_scaffold.dart`
 
@@ -11,30 +10,33 @@
 
 ## 1. 유저 앱 (app_user)
 
-### 1.1 BottomNav (2탭)
+### 1.1 네비게이션 (BottomNav 없음)
 
-| # | 아이콘 | 라벨 | 경로 | 소스 파일 |
-|---|--------|------|------|-----------|
-| 1 | `home` | 홈 | `/` | `user_scaffold.dart` |
-| 2 | `person` | 마이 | `/my` | `user_scaffold.dart` |
+유저 앱은 StatefulShellRoute를 사용하지 않으며, 모든 라우트가 독립 top-level로 구성됨.
 
-> BottomNav 정의: `apps/app_user/lib/src/ui/shell/user_scaffold.dart`
-> - Blur 배경 + 스크롤 시 자동 숨김/표시 (`NavVisibilityProvider`)
+> 라우트 정의: `apps/app_user/lib/src/routing/app_routes.dart`
 
 ### 1.2 탑레벨 라우트 트리
 
 ```text
-[BottomNav Shell] ─ UserScaffold
+[Top-Level Routes — Shell 없음]
 │
-├── 홈 탭 (/)
-│   ├── HomePage                      apps/app_user/lib/src/features/home/home_page.dart
-│   └── 큐레이션 목록 (/curation)
-│       └── PartyCurationPage         apps/app_user/lib/src/features/party/party_curation_page.dart
+├── 홈 (/)
+│   └── HomePage                      apps/app_user/lib/src/features/home/home_page.dart
+│       └── 큐레이션 목록 (/curation)
+│           └── PartyCurationPage     apps/app_user/lib/src/features/party/party_curation_page.dart
 │
-└── 마이 탭 (/my)
-    └── MyPage                        apps/app_user/lib/src/features/home/my_page.dart
-
-[Shell 외부 독립 화면]
+├── 검색 (/search)
+│   └── SearchPage                    apps/app_user/lib/src/features/search/search_page.dart
+│
+├── 마이페이지 (/my)
+│   └── MyPage                        apps/app_user/lib/src/features/home/my_page.dart
+│
+├── 개인정보 설정 (/my/privacy)
+│   └── PrivacyPage                   apps/app_user/lib/src/features/settings/privacy_page.dart
+│
+├── 차단 파트너 관리 (/my/blocked-partners)
+│   └── BlockedPartnersPage           apps/app_user/lib/src/features/settings/blocked_partners_page.dart
 │
 ├── 로그인 (/login)
 │   └── LoginPage                     apps/app_user/lib/src/features/auth/login_page.dart
@@ -45,9 +47,6 @@
 ├── 본인인증 (/certification)
 │   └── IdentityVerificationScreen    (minglit_kit)
 │
-├── 검색 (/search)
-│   └── SearchPage                    apps/app_user/lib/src/features/search/search_page.dart
-│
 ├── 이벤트 상세 (/events/:eventId)
 │   └── EventDetailPage               apps/app_user/lib/src/features/event/detail/event_detail_page.dart
 │
@@ -56,6 +55,9 @@
 │
 ├── 파트너 상세 (/partners/:partnerId)
 │   └── PartnerDetailPage             apps/app_user/lib/src/features/partner/detail/partner_detail_page.dart
+│
+├── 파트너 이벤트 목록 (/partners/:partnerId/events)
+│   └── PartnerEventsPage             apps/app_user/lib/src/features/partner/detail/partner_events_page.dart
 │
 ├── 구매 내역 (/purchase-history)
 │   └── PurchaseHistoryPage           apps/app_user/lib/src/features/payment/ui/purchase_history_page.dart
@@ -92,7 +94,7 @@ apps/app_user/lib/src/features/
 │   ├── logic/      결제 코디네이터, 구매 내역 컨트롤러
 │   └── ui/         구매 내역 페이지, 결제 성공 화면
 ├── search/         검색 페이지
-├── settings/       차단 파트너 관리
+├── settings/       차단 파트너 관리, 개인정보 설정
 └── ticket/         티켓 QR, 티켓 선택
     ├── data/       티켓 월렛 리포지토리
     ├── logic/      티켓 코디네이터
@@ -103,16 +105,18 @@ apps/app_user/lib/src/features/
 
 ## 2. 파트너 앱 (app_partner)
 
-### 2.1 BottomNav (4탭)
+### 2.1 BottomNav (5탭)
 
 | # | 아이콘 | 라벨 | 경로 | 소스 파일 |
 |---|--------|------|------|-----------|
 | 1 | `home` | 홈 | `/` | `partner_scaffold.dart` |
-| 2 | `celebration` | 파티관리 | `/parties` | `partner_scaffold.dart` |
-| 3 | `attach_money` | 수익관리 | `/settlement` | `partner_scaffold.dart` |
-| 4 | `settings` | 설정 | `/more` | `partner_scaffold.dart` |
+| 2 | `assignment` | 신청관리 | `/applications` | `partner_scaffold.dart` |
+| 3 | `qr_code_scanner` | 체크인 | `/checkin` | `partner_scaffold.dart` |
+| 4 | `account_balance` | 정산 | `/settlement` | `partner_scaffold.dart` |
+| 5 | `more_horiz` | 더보기 | `/more` | `partner_scaffold.dart` |
 
 > BottomNav 정의: `apps/app_partner/lib/src/ui/shell/partner_scaffold.dart`
+> - Root path에서만 BottomNav 표시, sub-route에서는 자동 숨김
 
 ### 2.2 전체 라우트 트리
 
@@ -121,41 +125,50 @@ apps/app_user/lib/src/features/
 │
 ├── 홈 탭 (/)
 │   ├── PartnerHomePage                    apps/app_partner/lib/src/features/home/partner_home_page.dart
-│   ├── 파트너 신청 목록 (/applications)
-│   │   ├── PartnerApplicationListPage     apps/app_partner/lib/src/features/admin/partner_application_list_page.dart
-│   │   └── 신청 상세 (/applications/:applicationId)
-│   │       └── PartnerApplicationDetailPage apps/app_partner/lib/src/features/admin/partner_application_detail_page.dart
 │   └── 장소 가이드 (/guide/location)
 │       └── LocationGuidePage              apps/app_partner/lib/src/features/home/guide/location_guide_page.dart
 │
-├── 파티관리 탭 (/parties)
-│   ├── PartyListPage                      apps/app_partner/lib/src/features/party/list/party_list_page.dart
-│   ├── 파티 생성 (/parties/create)
-│   │   └── PartyCreateWizardPage          apps/app_partner/lib/src/features/party/create/party_create_wizard_page.dart
-│   └── 파티 상세 (/parties/:partyId)
-│       ├── PartyDetailPage                apps/app_partner/lib/src/features/party/detail/party_detail_page.dart
-│       ├── 파티 편집 (/parties/:partyId/edit)
-│       │   └── PartyCreateWizardPage      apps/app_partner/lib/src/features/party/create/party_create_wizard_page.dart
-│       ├── 파티 티켓 편집 (/parties/:partyId/tickets/:ticketId/edit)
-│       │   └── TicketEditPage             apps/app_partner/lib/src/features/ticket/edit/ticket_edit_page.dart
-│       ├── 이벤트 생성 (/parties/:partyId/events/create)
-│       │   └── EventCreatePage            apps/app_partner/lib/src/features/party/event/create/event_create_page.dart
-│       └── 이벤트 상세 (/parties/:partyId/events/:eventId)
-│           ├── EventDetailPage            apps/app_partner/lib/src/features/party/event/detail/event_detail_page.dart
-│           ├── 티켓 생성 (.../tickets/create)
-│           │   └── TicketCreatePage       apps/app_partner/lib/src/features/ticket/create/ticket_create_page.dart
-│           └── 티켓 편집 (.../tickets/:ticketId/edit)
-│               └── TicketEditPage         apps/app_partner/lib/src/features/ticket/edit/ticket_edit_page.dart
+├── 신청관리 탭 (/applications)
+│   ├── EventApplicationManagePage         apps/app_partner/lib/src/features/application/event_application_manage_page.dart
+│   └── 신청 상세 (/applications/:applicationId)
+│       └── PartnerApplicationDetailPage   apps/app_partner/lib/src/features/admin/partner_application_detail_page.dart
 │
-├── 수익관리 탭 (/settlement)
-│   └── SettlementPage                     apps/app_partner/lib/src/features/settlement/settlement_page.dart
+├── 체크인 탭 (/checkin)
+│   └── CheckinPlaceholderPage             apps/app_partner/lib/src/features/checkin/checkin_placeholder_page.dart
 │
-└── 설정 탭 (/more)
+├── 정산 탭 (/settlement)
+│   ├── SettlementPage                     apps/app_partner/lib/src/features/settlement/settlement_page.dart
+│   ├── 계좌 관리 (/settlement/bank-account)
+│   │   └── BankAccountPage               apps/app_partner/lib/src/features/settlement/bank_account_page.dart
+│   └── 정산 상세 (/settlement/:id)
+│       └── SettlementDetailPage           apps/app_partner/lib/src/features/settlement/settlement_detail_page.dart
+│
+└── 더보기 탭 (/more)
     ├── MorePage                           apps/app_partner/lib/src/features/more/more_page.dart
+    ├── 파티 관리 (/more/parties)
+    │   ├── PartyListPage                  apps/app_partner/lib/src/features/party/list/party_list_page.dart
+    │   ├── 파티 생성 (/more/parties/create)
+    │   │   └── PartyCreateWizardPage      apps/app_partner/lib/src/features/party/create/party_create_wizard_page.dart
+    │   └── 파티 상세 (/more/parties/:partyId)
+    │       ├── PartyDetailPage            apps/app_partner/lib/src/features/party/detail/party_detail_page.dart
+    │       ├── 파티 편집 (/more/parties/:partyId/edit)
+    │       │   └── PartyCreateWizardPage  (편집 모드)
+    │       ├── 파티 티켓 편집 (/more/parties/:partyId/tickets/:ticketId/edit)
+    │       │   └── TicketEditPage         apps/app_partner/lib/src/features/ticket/edit/ticket_edit_page.dart
+    │       ├── 이벤트 생성 (/more/parties/:partyId/events/create)
+    │       │   └── EventCreatePage        apps/app_partner/lib/src/features/party/event/create/event_create_page.dart
+    │       └── 이벤트 상세 (/more/parties/:partyId/events/:eventId)
+    │           ├── EventDetailPage        apps/app_partner/lib/src/features/party/event/detail/event_detail_page.dart
+    │           ├── 티켓 생성 (.../tickets/create)
+    │           │   └── TicketCreatePage   apps/app_partner/lib/src/features/ticket/create/ticket_create_page.dart
+    │           └── 티켓 편집 (.../tickets/:ticketId/edit)
+    │               └── TicketEditPage     apps/app_partner/lib/src/features/ticket/edit/ticket_edit_page.dart
     ├── 인증 관리 (/more/verifications/manage)
     │   └── VerificationManagePage         apps/app_partner/lib/src/features/verification/manage/verification_manage_page.dart
     ├── 인증 생성 (/more/verifications/create)
     │   └── CreateVerificationPage         apps/app_partner/lib/src/features/verification/create/create_verification_page.dart
+    ├── 알림 설정 (/more/notification-settings)
+    │   └── NotificationSettingsScreen     (minglit_kit)
     └── 멤버 관리 (/more/partners/:partnerId/members)
         ├── PartnerMemberListPage          apps/app_partner/lib/src/features/member/partner_member_list_page.dart
         └── 멤버 권한 (.../members/:targetUserId/permission)
@@ -165,6 +178,9 @@ apps/app_user/lib/src/features/
 │
 ├── 로그인 (/login)
 │   └── PartnerLoginPage                   apps/app_partner/lib/src/features/auth/partner_login_page.dart
+│
+├── 웰컴 (/welcome)
+│   └── PartnerWelcomePage                 apps/app_partner/lib/src/features/onboarding/partner_welcome_page.dart
 │
 ├── 파트너 신청 (/apply)
 │   └── PartnerApplyPage                   apps/app_partner/lib/src/features/onboarding/partner_apply_page.dart
@@ -186,9 +202,10 @@ apps/app_user/lib/src/features/
 
 ```text
 apps/app_partner/lib/src/features/
-├── admin/          파트너 신청 관리 (어드민)
+├── admin/          파트너 신청 심사 (어드민)
+├── application/    이벤트 신청 관리
 ├── auth/           로그인
-├── checkin/        QR 체크인
+├── checkin/        QR 체크인 (플레이스홀더)
 ├── dev/            개발 도구 (dev only)
 ├── home/           대시보드 홈
 │   ├── guide/      장소 가이드

@@ -8,24 +8,27 @@
 
 ### 유저 앱
 
-<!-- TODO: 유저 앱 BottomNav 구성 코드 확인 후 업데이트 필요 -->
+유저 앱은 BottomNav Shell을 사용하지 않음. 모든 라우트가 독립 top-level.
 
-| 탭 | 아이콘 | 라벨 |
-| :--- | :--- | :--- |
-| 홈 | <!-- TODO --> | 홈 |
-| 검색 | <!-- TODO --> | 검색 |
-| 마이 | <!-- TODO --> | 마이 |
+**소스**: `apps/app_user/lib/src/routing/app_routes.dart`
+
+| 주요 경로 | 페이지 |
+| :--- | :--- |
+| `/` | HomePage |
+| `/search` | SearchPage |
+| `/my` | MyPage |
 
 ### 파트너 앱
 
-<!-- TODO: 파트너 앱 BottomNav 구성 코드 확인 후 업데이트 필요 -->
+**소스**: `apps/app_partner/lib/src/ui/shell/partner_scaffold.dart:53-79`
 
-| 탭 | 아이콘 | 라벨 |
-| :--- | :--- | :--- |
-| 홈 | <!-- TODO --> | 홈 |
-| 파티 | <!-- TODO --> | 파티 |
-| 정산 | <!-- TODO --> | 정산 |
-| 설정 | <!-- TODO --> | 설정 |
+| # | 아이콘 | 라벨 | 경로 |
+| :--- | :--- | :--- | :--- |
+| 1 | `home` / `home_outlined` | 홈 | `/` |
+| 2 | `assignment` / `assignment_outlined` | 신청관리 | `/applications` |
+| 3 | `qr_code_scanner` / `qr_code_scanner_outlined` | 체크인 | `/checkin` |
+| 4 | `account_balance` / `account_balance_outlined` | 정산 | `/settlement` |
+| 5 | `more_horiz` / `more_horiz_outlined` | 더보기 | `/more` |
 
 ### 스타일 규칙
 
@@ -85,7 +88,7 @@
 
 ### 스타일 규칙
 
-- 곡률: `MinglitRadius.card` (24px) — 상단 모서리
+- 곡률: `MinglitRadius.card` (16px) — 상단 모서리
 - 패딩: `MinglitSpacing.medium` (16px)
 - 옵션 선택: `MinglitColors.primary` 강조 + `Icons.check_circle`
 - 오버레이: `MinglitColors.scrim` (`#80000000`) — `minglit_design_tokens.dart:40`
