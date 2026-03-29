@@ -88,9 +88,11 @@ void main() {
     test('pushLogin with from param includes query param', () {
       coordinator.pushLogin(from: '/events/123');
 
-      final captured = verify(
-        () => mockRouter.push(captureAny()),
-      ).captured.single as String;
+      final captured =
+          verify(
+                () => mockRouter.push(captureAny()),
+              ).captured.single
+              as String;
 
       final uri = Uri.parse(captured);
       expect(uri.path, '/login');
