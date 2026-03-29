@@ -5,6 +5,7 @@ import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_content_card.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_key_value_row.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_section.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_tag.dart';
 
 /// Dev-only design catalog page displaying all design tokens and components.
 ///
@@ -792,14 +793,52 @@ class _BadgeTagSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: MinglitSpacing.large),
-        Text('TODO', style: theme.textTheme.titleMedium),
+        Text('MinglitTag', style: theme.textTheme.titleMedium),
         const SizedBox(height: MinglitSpacing.small),
         Text(
-          'Custom Badge/Tag components will be added here when defined '
-          'in the design system.',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: MinglitColors.textSecondary,
-          ),
+          'Read-only color tags for categories and status indicators.',
+          style: theme.textTheme.bodyMedium,
+        ),
+        const SizedBox(height: MinglitSpacing.medium),
+        const Wrap(
+          spacing: MinglitSpacing.small,
+          runSpacing: MinglitSpacing.small,
+          children: [
+            MinglitTag(label: '음악', color: MinglitColors.primary),
+            MinglitTag(label: '승인', color: MinglitColors.success),
+            MinglitTag(label: '대기', color: MinglitColors.warning),
+            MinglitTag(label: '취소', color: MinglitColors.error),
+            MinglitTag(
+              label: '카테고리',
+              color: MinglitColors.primary,
+              icon: Icons.category,
+            ),
+          ],
+        ),
+        const SizedBox(height: MinglitSpacing.medium),
+        Text('Small', style: theme.textTheme.titleSmall),
+        const SizedBox(height: MinglitSpacing.small),
+        const Wrap(
+          spacing: MinglitSpacing.small,
+          runSpacing: MinglitSpacing.small,
+          children: [
+            MinglitTag(
+              label: '음악',
+              color: MinglitColors.primary,
+              size: MinglitTagSize.small,
+            ),
+            MinglitTag(
+              label: '승인',
+              color: MinglitColors.success,
+              size: MinglitTagSize.small,
+            ),
+            MinglitTag(
+              label: '아이콘',
+              color: MinglitColors.warning,
+              size: MinglitTagSize.small,
+              icon: Icons.star,
+            ),
+          ],
         ),
       ],
     );
