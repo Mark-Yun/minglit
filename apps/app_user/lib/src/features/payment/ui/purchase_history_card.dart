@@ -59,6 +59,7 @@ class PurchaseHistoryCard extends ConsumerWidget {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
+              // Fix #638: StatusBadge를 공용 위젯으로 승격하여 재사용
               StatusBadge(status: application.status),
             ],
           ),
