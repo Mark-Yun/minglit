@@ -41,7 +41,7 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 
 ### 2.1 Table Inventory
 
-총 **54개 테이블(analytics 스키마 5개 포함)** + **4개 뷰** + **4개 PGMQ 인프라 테이블**.
+총 **53개 테이블(analytics 스키마 5개 포함)** + **4개 뷰** + **4개 PGMQ 인프라 테이블**.
 
 #### Core (사용자/파트너)
 
@@ -79,7 +79,6 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 | `user_verifications` | 유저 인증 데이터 | user_id, verification_id, data jsonb |
 | `partner_verified_users` | 인증 완료 유저 | partner_id, user_id, verification_id, verified_at, valid_until |
 | `event_participants` | 참가 확정 | event_id, ticket_id, user_id, ticket_code, status |
-| `verification_comments` | 인증 심사 코멘트 | submission_id, author_id, content jsonb |
 
 #### System (알림/소셜/매칭/파일/정산)
 
@@ -180,7 +179,7 @@ partners
 |------|--------|
 | `gender` | male, female |
 | `partner_role` | owner, manager, staff |
-| `verification_status` | pending, approved, rejected, needs_correction, cancelled |
+| `verification_status` | pending, approved, rejected |
 | `verification_category` | career, asset, marriage, academic, vehicle, etc |
 | `partner_application_status` | pending, approved, rejected, needs_correction |
 | `user_action_type` | view, like, dislike, purchase |
@@ -340,7 +339,6 @@ protect_user_profile_fields() → trigger
 | events | 2 | Public read + Partner/Admin write |
 | event_applications | 4 | Self (read, create, update) + Partner staff read |
 | verification_submissions | 4 | Self + Partner staff (read, update) |
-| verification_comments | 4 | Multi-role (read, insert, update, delete) |
 | settlements | 1 | Admin + SETTLEMENT_VIEW |
 | storage.objects | 9 | Bucket-specific (verification-proofs, party-assets, partner-proofs) |
 
