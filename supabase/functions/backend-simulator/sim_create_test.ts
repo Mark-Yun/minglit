@@ -214,3 +214,67 @@ Deno.test("simDiscoverAndApply - prevents duplicate applications", async () => {
 
   assertEquals(insertCount, 0);
 });
+
+Deno.test("simDiscoverAndApply - processes multiple events concurrently", async () => {
+  const processedEventIds: string[] = [];
+  let appCounter = 0;
+
+  const mock = createMockSupabaseClient({
+    tables: {
+      events: { select: () => ({ data: [], error: null }) },
+      user_profiles: {
+        select: () => ({
+          data: Array.from({ length: 10 }, (_, i) => ({
+            id: `user-${i}`,
+            gender: i % 2 === 0 ? "male" : "female",
+            birth_date: "1998-01-01",
+            username: `user${i}`,
+          })),
+          error: null,
+        }),
+      },
+      entry_groups: {
+        select: () => ({
+          data: [
+            { id: "group-male", gender: "male", birth_year_min: 1990, birth_year_max: 2005 },
+            { id: "group-female", gender: "female", birth_year_min: 1990, birth_year_max: 2005 },
+          ],
+          error: null,
+        }),
+      },
+      tickets: {
+        select: () => ({
+          data: [{ id: "ticket-1", price: 20000, status: "on_sale" }],
+          error: null,
+        }),
+      },
+      event_applications: {
+        select: (_opts: unknown) => ({ data: [], error: null }),
+        insert: ({ values }) => {
+          appCounter++;
+          const v = values as { event_id: string };
+          processedEventIds.push(v.event_id);
+          return { data: { id: `app-${appCounter}` }, error: null };
+        },
+      },
+      event_participants: {
+        insert: () => ({ data: null, error: null }),
+      },
+    },
+  });
+
+  // Fix #705: 6 events to test that batched concurrency processes all of them
+  const eventIds = ["ev-1", "ev-2", "ev-3", "ev-4", "ev-5", "ev-6"];
+  const config: SimConfig = { ...DEFAULT_CONFIG, error_rate: 0.0, apps_per_event: 2 };
+  const result = await simDiscoverAndApply(
+    mock as unknown as SupabaseClient,
+    config,
+    noop,
+    eventIds,
+  );
+
+  // All 6 events should have been processed
+  const uniqueEvents = new Set(processedEventIds);
+  assertEquals(uniqueEvents.size, 6);
+  assertEquals(result.applicationIds.length > 0, true);
+});
