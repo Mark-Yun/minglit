@@ -19,7 +19,13 @@ void main() {
     test('5 branches correspond to expected root paths', () {
       // These paths must match PartnerScaffold._rootPaths exactly.
       // If a path is added/removed, this test catches the mismatch.
-      const expectedPaths = {'/', '/applications', '/checkin', '/settlement', '/more'};
+      const expectedPaths = {
+        '/',
+        '/applications',
+        '/checkin',
+        '/settlement',
+        '/more',
+      };
       expect(expectedPaths.length, 5);
     });
   });
@@ -48,7 +54,7 @@ void main() {
       coordinator.onItemTapped(3);
 
       verify(
-        () => mockShell.goBranch(3, initialLocation: false),
+        () => mockShell.goBranch(3),
       ).called(1);
     });
 
@@ -90,7 +96,7 @@ void main() {
       coordinator.onItemTapped(4);
 
       verify(
-        () => mockShell.goBranch(4, initialLocation: false),
+        () => mockShell.goBranch(4),
       ).called(1);
     });
   });
@@ -175,8 +181,7 @@ void main() {
       await tester.pumpWidget(MaterialApp.router(routerConfig: router));
       await tester.pumpAndSettle();
 
-      final navBar =
-          tester.widget<NavigationBar>(find.byType(NavigationBar));
+      final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
       expect(navBar.selectedIndex, 3);
     });
 

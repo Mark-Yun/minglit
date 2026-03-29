@@ -91,15 +91,15 @@ void main() {
 
       test('Settlement branch has sub-routes bank-account and :id', () {
         final route = shellRoute.branches[3].routes.first as GoRoute;
-        final subPaths =
-            route.routes.map((r) => (r as GoRoute).path).toList();
+        final subPaths = route.routes.map((r) => (r as GoRoute).path).toList();
         expect(subPaths, containsAll(['bank-account', ':id']));
       });
 
       test('More branch contains party management routes', () {
         final moreRoute = shellRoute.branches[4].routes.first as GoRoute;
-        final subPaths =
-            moreRoute.routes.map((r) => (r as GoRoute).path).toList();
+        final subPaths = moreRoute.routes
+            .map((r) => (r as GoRoute).path)
+            .toList();
         expect(subPaths, contains('parties'));
       });
     });
