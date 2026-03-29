@@ -1,6 +1,6 @@
 #!/bin/bash
 # audit-legal-run.sh — 단발성. 법률/개인정보보호 감사.
-set -euo pipefail
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="/Users/mark/workspace/minglit"
