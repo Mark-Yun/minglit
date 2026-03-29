@@ -1,6 +1,6 @@
 {
   "name": "minglit-root",
-  "version": "26.03.751-dev",
+  "version": "26.03.746-dev",
   "private": true,
   "workspaces": [
     "apps/*"
