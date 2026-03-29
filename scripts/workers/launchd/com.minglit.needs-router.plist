@@ -9,7 +9,7 @@
         <string>/Users/mark/workspace/minglit/scripts/workers/needs-router-run.sh</string>
     </array>
     <key>StartInterval</key>
-    <integer>1800</integer>
+    <integer>600</integer>
     <key>StandardOutPath</key>
     <string>/tmp/claude-worker-logs/needs-router.log</string>
     <key>StandardErrorPath</key>
