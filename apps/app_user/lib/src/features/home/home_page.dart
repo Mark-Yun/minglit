@@ -168,7 +168,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       return MinglitEventCard(
                         event: event,
                         // Fix #634: event_coordinator 직접 참조 → home_coordinator 전환
-                    onTap: () => homeCoordinator.pushEventDetail(event.id),
+                        onTap: () => homeCoordinator.pushEventDetail(event.id),
                       );
                     },
                   ),

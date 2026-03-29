@@ -76,13 +76,15 @@ class _BottomTicketBar extends ConsumerWidget {
   // Fix #634: ticket UI를 ticket_coordinator로 위임 — event → ticket cross-feature 격리
   void _showTicketSelection(BuildContext context, WidgetRef ref) {
     final eventCoordinator = ref.read(eventCoordinatorProvider);
-    ref.read(ticketCoordinatorProvider).showTicketSelection(
-      context,
-      event,
-      onTicketSelected: (eventId, ticketId) {
-        eventCoordinator.goToApplicationWizard(eventId, ticketId: ticketId);
-      },
-    );
+    ref
+        .read(ticketCoordinatorProvider)
+        .showTicketSelection(
+          context,
+          event,
+          onTicketSelected: (eventId, ticketId) {
+            eventCoordinator.goToApplicationWizard(eventId, ticketId: ticketId);
+          },
+        );
   }
 
   Widget _buildActionButton(

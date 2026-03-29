@@ -42,8 +42,9 @@ class PartnerEventsPage extends ConsumerWidget {
               // Fix #634: home_coordinator 직접 참조 → partner_coordinator 전환
               return MinglitEventCard(
                 event: event,
-                onTap: () =>
-                    ref.read(partnerCoordinatorProvider).pushEventDetail(event.id),
+                onTap: () => ref
+                    .read(partnerCoordinatorProvider)
+                    .pushEventDetail(event.id),
               );
             },
           );
