@@ -1,14 +1,14 @@
-_ReusableRenderView#306f0
+_ReusableRenderView#93ea7
  │ debug mode enabled - linux
  │ view size: Size(2400.0, 1800.0) (in physical pixels)
  │ device pixel ratio: 1.0 (physical pixels per logical pixel)
  │ configuration: BoxConstraints(w=2400.0, h=1800.0) at 1.0x (in
  │   logical pixels)
  │
- └─child: RenderSemanticsAnnotations#81414
+ └─child: RenderSemanticsAnnotations#42c48
    │ needs compositing
    │ creator: Semantics ← Localizations ← _LocalizationWrapper ←
-   │   FlutterGoldenTestWrapper-[#e6606] ← _FocusInheritedScope ←
+   │   FlutterGoldenTestWrapper-[#d4538] ← _FocusInheritedScope ←
    │   _FocusScopeWithExternalFocusNode ← _FocusInheritedScope ← Focus
    │   ← FocusTraversalGroup ← MediaQuery ← _MediaQueryFromView ←
    │   _PipelineOwnerScope ← ⋯
@@ -18,7 +18,7 @@ _ReusableRenderView#306f0
    │ semantic boundary
    │ size: Size(2400.0, 1800.0)
    │
-   └─child: RenderPointerListener#8089b
+   └─child: RenderPointerListener#05b37
      │ needs compositing
      │ creator: Listener ← NotificationListener<NavigationNotification>
      │   ← HeroControllerScope ← Navigator ← _NavigatorWrapper ←
@@ -31,7 +31,7 @@ _ReusableRenderView#306f0
      │ behavior: deferToChild
      │ listeners: down, up, cancel
      │
-     └─child: RenderAbsorbPointer#a1252
+     └─child: RenderAbsorbPointer#90e15
        │ needs compositing
        │ creator: AbsorbPointer ← Listener ←
        │   NotificationListener<NavigationNotification> ←
@@ -44,10 +44,10 @@ _ReusableRenderView#306f0
        │ absorbing: false
        │ ignoringSemantics: null
        │
-       └─child: _RenderTheater#0b23f
+       └─child: _RenderTheater#78e73
          │ needs compositing
          │ creator: _Theater ←
-         │   Overlay-[LabeledGlobalKey<OverlayState>#d157b] ←
+         │   Overlay-[LabeledGlobalKey<OverlayState>#23c43] ←
          │   UnmanagedRestorationScope ← _FocusInheritedScope ← Focus ←
          │   _FocusInheritedScope ← Focus ← FocusTraversalGroup ←
          │   AbsorbPointer ← Listener ←
@@ -59,11 +59,11 @@ _ReusableRenderView#306f0
          │ skipCount: 0
          │ textDirection: ltr
          │
-         ├─onstage 1: RenderIgnorePointer#83e96
+         ├─onstage 1: RenderIgnorePointer#0d8ba
          │ │ creator: IgnorePointer ← Builder ← _RenderTheaterMarker ←
          │ │   _EffectiveTickerMode ← TickerMode ←
-         │ │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#86ab4]
-         │ │   ← _Theater ← Overlay-[LabeledGlobalKey<OverlayState>#d157b] ←
+         │ │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#336f6]
+         │ │   ← _Theater ← Overlay-[LabeledGlobalKey<OverlayState>#23c43] ←
          │ │   UnmanagedRestorationScope ← _FocusInheritedScope ← Focus ←
          │ │   _FocusInheritedScope ← ⋯
          │ │ parentData: not positioned; offset=Offset(0.0, 0.0) (can use
@@ -73,11 +73,11 @@ _ReusableRenderView#306f0
          │ │ ignoring: false
          │ │ ignoringSemantics: null
          │ │
-         │ └─child: RenderBlockSemantics#6110f
+         │ └─child: RenderBlockSemantics#dfe5e
          │   │ creator: BlockSemantics ← ModalBarrier ← IgnorePointer ← Builder
          │   │   ← _RenderTheaterMarker ← _EffectiveTickerMode ← TickerMode ←
-         │   │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#86ab4]
-         │   │   ← _Theater ← Overlay-[LabeledGlobalKey<OverlayState>#d157b] ←
+         │   │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#336f6]
+         │   │   ← _Theater ← Overlay-[LabeledGlobalKey<OverlayState>#23c43] ←
          │   │   UnmanagedRestorationScope ← _FocusInheritedScope ← ⋯
          │   │ parentData: <none> (can use size)
          │   │ constraints: BoxConstraints(w=2400.0, h=1800.0)
@@ -86,24 +86,24 @@ _ReusableRenderView#306f0
          │   │ size: Size(2400.0, 1800.0)
          │   │ blocking: true
          │   │
-         │   └─child: RenderExcludeSemantics#c76c6
+         │   └─child: RenderExcludeSemantics#c20e6
          │     │ creator: ExcludeSemantics ← BlockSemantics ← ModalBarrier ←
          │     │   IgnorePointer ← Builder ← _RenderTheaterMarker ←
          │     │   _EffectiveTickerMode ← TickerMode ←
-         │     │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#86ab4]
-         │     │   ← _Theater ← Overlay-[LabeledGlobalKey<OverlayState>#d157b] ←
+         │     │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#336f6]
+         │     │   ← _Theater ← Overlay-[LabeledGlobalKey<OverlayState>#23c43] ←
          │     │   UnmanagedRestorationScope ← ⋯
          │     │ parentData: <none> (can use size)
          │     │ constraints: BoxConstraints(w=2400.0, h=1800.0)
          │     │ size: Size(2400.0, 1800.0)
          │     │ excluding: true
          │     │
-         │     └─child: RenderSemanticsGestureHandler#d9a4b
+         │     └─child: RenderSemanticsGestureHandler#44fde
          │       │ creator: _GestureSemantics ← RawGestureDetector ←
          │       │   _ModalBarrierGestureDetector ← ExcludeSemantics ←
          │       │   BlockSemantics ← ModalBarrier ← IgnorePointer ← Builder ←
          │       │   _RenderTheaterMarker ← _EffectiveTickerMode ← TickerMode ←
-         │       │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#86ab4]
+         │       │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#336f6]
          │       │   ← ⋯
          │       │ parentData: <none> (can use size)
          │       │ constraints: BoxConstraints(w=2400.0, h=1800.0)
@@ -111,7 +111,7 @@ _ReusableRenderView#306f0
          │       │ behavior: opaque
          │       │ gestures: <none>
          │       │
-         │       └─child: RenderPointerListener#cb8d3
+         │       └─child: RenderPointerListener#36e06
          │         │ creator: Listener ← _GestureSemantics ← RawGestureDetector ←
          │         │   _ModalBarrierGestureDetector ← ExcludeSemantics ←
          │         │   BlockSemantics ← ModalBarrier ← IgnorePointer ← Builder ←
@@ -122,7 +122,7 @@ _ReusableRenderView#306f0
          │         │ behavior: opaque
          │         │ listeners: down, panZoomStart
          │         │
-         │         └─child: RenderSemanticsAnnotations#040dc
+         │         └─child: RenderSemanticsAnnotations#c0df7
          │           │ creator: Semantics ← Listener ← _GestureSemantics ←
          │           │   RawGestureDetector ← _ModalBarrierGestureDetector ←
          │           │   ExcludeSemantics ← BlockSemantics ← ModalBarrier ←
@@ -132,7 +132,7 @@ _ReusableRenderView#306f0
          │           │ constraints: BoxConstraints(w=2400.0, h=1800.0)
          │           │ size: Size(2400.0, 1800.0)
          │           │
-         │           └─child: RenderMouseRegion#495cd
+         │           └─child: RenderMouseRegion#20202
          │             │ creator: MouseRegion ← Semantics ← Listener ← _GestureSemantics ←
          │             │   RawGestureDetector ← _ModalBarrierGestureDetector ←
          │             │   ExcludeSemantics ← BlockSemantics ← ModalBarrier ←
@@ -144,7 +144,7 @@ _ReusableRenderView#306f0
          │             │ listeners: <none>
          │             │ cursor: SystemMouseCursor(basic)
          │             │
-         │             └─child: RenderConstrainedBox#07a38
+         │             └─child: RenderConstrainedBox#26438
          │                 creator: ConstrainedBox ← MouseRegion ← Semantics ← Listener ←
          │                   _GestureSemantics ← RawGestureDetector ←
          │                   _ModalBarrierGestureDetector ← ExcludeSemantics ←
@@ -154,12 +154,12 @@ _ReusableRenderView#306f0
          │                 size: Size(2400.0, 1800.0)
          │                 additionalConstraints: BoxConstraints(biggest)
          │
-         ├─onstage 2: RenderSemanticsAnnotations#e814c
+         ├─onstage 2: RenderSemanticsAnnotations#994b0
          ╎ │ needs compositing
          ╎ │ creator: Semantics ← Builder ← _RenderTheaterMarker ←
          ╎ │   _EffectiveTickerMode ← TickerMode ←
-         ╎ │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#068f4]
-         ╎ │   ← _Theater ← Overlay-[LabeledGlobalKey<OverlayState>#d157b] ←
+         ╎ │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#c3045]
+         ╎ │   ← _Theater ← Overlay-[LabeledGlobalKey<OverlayState>#23c43] ←
          ╎ │   UnmanagedRestorationScope ← _FocusInheritedScope ← Focus ←
          ╎ │   _FocusInheritedScope ← ⋯
          ╎ │ parentData: not positioned; offset=Offset(0.0, 0.0) (can use
@@ -168,21 +168,21 @@ _ReusableRenderView#306f0
          ╎ │ semantics node: SemanticsNode#2
          ╎ │ size: Size(2400.0, 1800.0)
          ╎ │
-         ╎ └─child: RenderOffstage#e12fb
+         ╎ └─child: RenderOffstage#18a98
          ╎   │ needs compositing
          ╎   │ creator: Offstage ← _ModalScopeStatus ← UnmanagedRestorationScope
          ╎   │   ← RestorationScope ← AnimatedBuilder ←
-         ╎   │   _ModalScope<void>-[LabeledGlobalKey<_ModalScopeState<void>>#396ea]
+         ╎   │   _ModalScope<void>-[LabeledGlobalKey<_ModalScopeState<void>>#c5ad7]
          ╎   │   ← Semantics ← Builder ← _RenderTheaterMarker ←
          ╎   │   _EffectiveTickerMode ← TickerMode ←
-         ╎   │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#068f4]
+         ╎   │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#c3045]
          ╎   │   ← ⋯
          ╎   │ parentData: <none> (can use size)
          ╎   │ constraints: BoxConstraints(w=2400.0, h=1800.0)
          ╎   │ size: Size(2400.0, 1800.0)
          ╎   │ offstage: false
          ╎   │
-         ╎   └─child: RenderSemanticsAnnotations#24d29
+         ╎   └─child: RenderSemanticsAnnotations#c7cc2
          ╎     │ needs compositing
          ╎     │ creator: Semantics ← _FocusScopeWithExternalFocusNode ←
          ╎     │   PrimaryScrollController ← _ActionsScope ← Actions ← Builder ←
@@ -193,7 +193,7 @@ _ReusableRenderView#306f0
          ╎     │ constraints: BoxConstraints(w=2400.0, h=1800.0)
          ╎     │ size: Size(2400.0, 1800.0)
          ╎     │
-         ╎     └─child: RenderRepaintBoundary#9148a
+         ╎     └─child: RenderRepaintBoundary#7f254
          ╎       │ needs compositing
          ╎       │ creator: RepaintBoundary ← _FocusInheritedScope ← Semantics ←
          ╎       │   _FocusScopeWithExternalFocusNode ← PrimaryScrollController ←
@@ -201,13 +201,13 @@ _ReusableRenderView#306f0
          ╎       │   _ModalScopeStatus ← UnmanagedRestorationScope ← ⋯
          ╎       │ parentData: <none> (can use size)
          ╎       │ constraints: BoxConstraints(w=2400.0, h=1800.0)
-         ╎       │ layer: OffsetLayer#67ae7
+         ╎       │ layer: OffsetLayer#6cc19
          ╎       │ size: Size(2400.0, 1800.0)
          ╎       │ metrics: 0.0% useful (1 bad vs 0 good)
          ╎       │ diagnosis: insufficient data to draw conclusion (less than five
          ╎       │   repaints)
          ╎       │
-         ╎       └─child: RenderAnimatedOpacity#c2f2d
+         ╎       └─child: RenderAnimatedOpacity#7794a
          ╎         │ needs compositing
          ╎         │ creator: FadeTransition ← DualTransitionBuilder ←
          ╎         │   _FadeForwardsPageTransition ← _PredictiveBackGestureDetector ←
@@ -217,13 +217,13 @@ _ReusableRenderView#306f0
          ╎         │   _ActionsScope ← ⋯
          ╎         │ parentData: <none> (can use size)
          ╎         │ constraints: BoxConstraints(w=2400.0, h=1800.0)
-         ╎         │ layer: OpacityLayer#f560e
+         ╎         │ layer: OpacityLayer#f7457
          ╎         │ size: Size(2400.0, 1800.0)
          ╎         │ opacity:
          ╎         │   kAlwaysCompleteAnimation➩ProxyAnimation➩CurveTween(curve:
          ╎         │   Interval(0.0⋯0.75))➩Tween<double>(0.0 → 1.0)➩1.0
          ╎         │
-         ╎         └─child: RenderFractionalTranslation#fe74a
+         ╎         └─child: RenderFractionalTranslation#ce6c6
          ╎           │ needs compositing
          ╎           │ creator: FractionalTranslation ← SlideTransition ← FadeTransition
          ╎           │   ← DualTransitionBuilder ← _FadeForwardsPageTransition ←
@@ -237,7 +237,7 @@ _ReusableRenderView#306f0
          ╎           │ translation: Offset(0.0, 0.0)
          ╎           │ transformHitTests: true
          ╎           │
-         ╎           └─child: RenderIgnorePointer#0dd51
+         ╎           └─child: RenderIgnorePointer#15fa1
          ╎             │ needs compositing
          ╎             │ creator: IgnorePointer ← FractionalTranslation ← SlideTransition
          ╎             │   ← FadeTransition ← DualTransitionBuilder ←
@@ -250,7 +250,7 @@ _ReusableRenderView#306f0
          ╎             │ ignoring: false
          ╎             │ ignoringSemantics: null
          ╎             │
-         ╎             └─child: RenderAnimatedOpacity#c5cfd
+         ╎             └─child: RenderAnimatedOpacity#7d276
          ╎               │ needs compositing
          ╎               │ creator: FadeTransition ← IgnorePointer ← FractionalTranslation ←
          ╎               │   SlideTransition ← FadeTransition ← DualTransitionBuilder ←
@@ -259,13 +259,13 @@ _ReusableRenderView#306f0
          ╎               │   RepaintBoundary ← _FocusInheritedScope ← ⋯
          ╎               │ parentData: <none> (can use size)
          ╎               │ constraints: BoxConstraints(w=2400.0, h=1800.0)
-         ╎               │ layer: OpacityLayer#9b386
+         ╎               │ layer: OpacityLayer#0383c
          ╎               │ size: Size(2400.0, 1800.0)
-         ╎               │ opacity: AnimationController#7ff0d(⏭ 1.000; paused; for
+         ╎               │ opacity: AnimationController#db574(⏭ 1.000; paused; for
          ╎               │   MaterialPageRoute<void>(null))➩ProxyAnimation➪ReverseAnimation➩ProxyAnimation➩CurveTween(curve:
          ╎               │   Interval(0.0⋯0.25))➩Tween<double>(1.0 → 0.0)➩1.0
          ╎               │
-         ╎               └─child: RenderFractionalTranslation#54e64
+         ╎               └─child: RenderFractionalTranslation#2bbda
          ╎                 │ needs compositing
          ╎                 │ creator: FractionalTranslation ← SlideTransition ← FadeTransition
          ╎                 │   ← IgnorePointer ← FractionalTranslation ← SlideTransition ←
@@ -278,7 +278,7 @@ _ReusableRenderView#306f0
          ╎                 │ translation: Offset(0.0, 0.0)
          ╎                 │ transformHitTests: true
          ╎                 │
-         ╎                 └─child: _RenderColoredBox#7b77a
+         ╎                 └─child: _RenderColoredBox#47bb8
          ╎                   │ needs compositing
          ╎                   │ creator: ColoredBox ← FractionalTranslation ← SlideTransition ←
          ╎                   │   FadeTransition ← IgnorePointer ← FractionalTranslation ←
@@ -290,7 +290,7 @@ _ReusableRenderView#306f0
          ╎                   │ size: Size(2400.0, 1800.0)
          ╎                   │ behavior: opaque
          ╎                   │
-         ╎                   └─child: RenderAnimatedOpacity#2d555
+         ╎                   └─child: RenderAnimatedOpacity#6eda7
          ╎                     │ needs compositing
          ╎                     │ creator: FadeTransition ← DualTransitionBuilder ← ColoredBox ←
          ╎                     │   FractionalTranslation ← SlideTransition ← FadeTransition ←
@@ -299,13 +299,13 @@ _ReusableRenderView#306f0
          ╎                     │   _FadeForwardsPageTransition ← ⋯
          ╎                     │ parentData: <none> (can use size)
          ╎                     │ constraints: BoxConstraints(w=2400.0, h=1800.0)
-         ╎                     │ layer: OpacityLayer#5b3b6
+         ╎                     │ layer: OpacityLayer#828c4
          ╎                     │ size: Size(2400.0, 1800.0)
          ╎                     │ opacity:
          ╎                     │   kAlwaysCompleteAnimation➩ProxyAnimation➩CurveTween(curve:
          ╎                     │   Interval(0.0⋯0.75))➩Tween<double>(0.0 → 1.0)➩1.0
          ╎                     │
-         ╎                     └─child: RenderFractionalTranslation#3ab5c
+         ╎                     └─child: RenderFractionalTranslation#ec4a9
          ╎                       │ needs compositing
          ╎                       │ creator: FractionalTranslation ← SlideTransition ← FadeTransition
          ╎                       │   ← DualTransitionBuilder ← ColoredBox ← FractionalTranslation ←
@@ -317,7 +317,7 @@ _ReusableRenderView#306f0
          ╎                       │ translation: Offset(0.0, 0.0)
          ╎                       │ transformHitTests: true
          ╎                       │
-         ╎                       └─child: RenderAnimatedOpacity#6ee2d
+         ╎                       └─child: RenderAnimatedOpacity#71b3b
          ╎                         │ needs compositing
          ╎                         │ creator: FadeTransition ← FractionalTranslation ← SlideTransition
          ╎                         │   ← FadeTransition ← DualTransitionBuilder ← ColoredBox ←
@@ -325,13 +325,13 @@ _ReusableRenderView#306f0
          ╎                         │   IgnorePointer ← FractionalTranslation ← SlideTransition ← ⋯
          ╎                         │ parentData: <none> (can use size)
          ╎                         │ constraints: BoxConstraints(w=2400.0, h=1800.0)
-         ╎                         │ layer: OpacityLayer#9f353
+         ╎                         │ layer: OpacityLayer#f7c39
          ╎                         │ size: Size(2400.0, 1800.0)
          ╎                         │ opacity:
          ╎                         │   kAlwaysDismissedAnimation➩ProxyAnimation➩ProxyAnimation➪ReverseAnimation➪ReverseAnimation➩ProxyAnimation➩CurveTween(curve:
          ╎                         │   Interval(0.0⋯0.25))➩Tween<double>(1.0 → 0.0)➩1.0
          ╎                         │
-         ╎                         └─child: RenderFractionalTranslation#a875c
+         ╎                         └─child: RenderFractionalTranslation#c3e7f
          ╎                           │ needs compositing
          ╎                           │ creator: FractionalTranslation ← SlideTransition ← FadeTransition
          ╎                           │   ← FractionalTranslation ← SlideTransition ← FadeTransition ←
@@ -343,7 +343,7 @@ _ReusableRenderView#306f0
          ╎                           │ translation: Offset(0.0, 0.0)
          ╎                           │ transformHitTests: true
          ╎                           │
-         ╎                           └─child: RenderIgnorePointer#f7f08
+         ╎                           └─child: RenderIgnorePointer#c3fc0
          ╎                             │ needs compositing
          ╎                             │ creator: IgnorePointer ← ListenableBuilder ←
          ╎                             │   FractionalTranslation ← SlideTransition ← FadeTransition ←
@@ -356,24 +356,24 @@ _ReusableRenderView#306f0
          ╎                             │ ignoring: false
          ╎                             │ ignoringSemantics: null
          ╎                             │
-         ╎                             └─child: RenderRepaintBoundary#e61ca
+         ╎                             └─child: RenderRepaintBoundary#9e0f3
          ╎                               │ needs compositing
-         ╎                               │ creator: RepaintBoundary-[GlobalKey#25a90] ← IgnorePointer ←
+         ╎                               │ creator: RepaintBoundary-[GlobalKey#76c00] ← IgnorePointer ←
          ╎                               │   ListenableBuilder ← FractionalTranslation ← SlideTransition ←
          ╎                               │   FadeTransition ← FractionalTranslation ← SlideTransition ←
          ╎                               │   FadeTransition ← DualTransitionBuilder ← ColoredBox ←
          ╎                               │   FractionalTranslation ← ⋯
          ╎                               │ parentData: <none> (can use size)
          ╎                               │ constraints: BoxConstraints(w=2400.0, h=1800.0)
-         ╎                               │ layer: OffsetLayer#e7d96
+         ╎                               │ layer: OffsetLayer#65f33
          ╎                               │ size: Size(2400.0, 1800.0)
          ╎                               │ metrics: 0.0% useful (1 bad vs 0 good)
          ╎                               │ diagnosis: insufficient data to draw conclusion (less than five
          ╎                               │   repaints)
          ╎                               │
-         ╎                               └─child: RenderSemanticsAnnotations#79fd3
+         ╎                               └─child: RenderSemanticsAnnotations#2591f
          ╎                                 │ needs compositing
-         ╎                                 │ creator: Semantics ← Builder ← RepaintBoundary-[GlobalKey#25a90]
+         ╎                                 │ creator: Semantics ← Builder ← RepaintBoundary-[GlobalKey#76c00]
          ╎                                 │   ← IgnorePointer ← ListenableBuilder ← FractionalTranslation ←
          ╎                                 │   SlideTransition ← FadeTransition ← FractionalTranslation ←
          ╎                                 │   SlideTransition ← FadeTransition ← DualTransitionBuilder ← ⋯
@@ -382,43 +382,43 @@ _ReusableRenderView#306f0
          ╎                                 │ semantics node: SemanticsNode#3
          ╎                                 │ size: Size(2400.0, 1800.0)
          ╎                                 │
-         ╎                                 └─child: RenderClipPath#8af3f
+         ╎                                 └─child: RenderClipPath#f81ff
          ╎                                   │ needs compositing
          ╎                                   │ creator: ClipPath ← Material ← DefaultAssetBundle ← Semantics ←
-         ╎                                   │   Builder ← RepaintBoundary-[GlobalKey#25a90] ← IgnorePointer ←
+         ╎                                   │   Builder ← RepaintBoundary-[GlobalKey#76c00] ← IgnorePointer ←
          ╎                                   │   ListenableBuilder ← FractionalTranslation ← SlideTransition ←
          ╎                                   │   FadeTransition ← FractionalTranslation ← ⋯
          ╎                                   │ parentData: <none> (can use size)
          ╎                                   │ constraints: BoxConstraints(w=2400.0, h=1800.0)
          ╎                                   │ size: Size(2400.0, 1800.0)
          ╎                                   │
-         ╎                                   └─child: RenderCustomPaint#db887
+         ╎                                   └─child: RenderCustomPaint#a3050
          ╎                                     │ needs compositing
          ╎                                     │ creator: CustomPaint ← _ShapeBorderPaint ← ClipPath ← Material ←
          ╎                                     │   DefaultAssetBundle ← Semantics ← Builder ←
-         ╎                                     │   RepaintBoundary-[GlobalKey#25a90] ← IgnorePointer ←
+         ╎                                     │   RepaintBoundary-[GlobalKey#76c00] ← IgnorePointer ←
          ╎                                     │   ListenableBuilder ← FractionalTranslation ← SlideTransition ← ⋯
          ╎                                     │ parentData: <none> (can use size)
          ╎                                     │ constraints: BoxConstraints(w=2400.0, h=1800.0)
          ╎                                     │ size: Size(2400.0, 1800.0)
          ╎                                     │ painter: null
-         ╎                                     │ foregroundPainter: _ShapeBorderPainter#e87e8()
+         ╎                                     │ foregroundPainter: _ShapeBorderPainter#6b212()
          ╎                                     │
-         ╎                                     └─child: _RenderInkFeatures#d4eeb
+         ╎                                     └─child: _RenderInkFeatures#704c5
          ╎                                       │ needs compositing
-         ╎                                       │ creator: _InkFeatures-[GlobalKey#6f6d6 ink renderer] ←
+         ╎                                       │ creator: _InkFeatures-[GlobalKey#f421e ink renderer] ←
          ╎                                       │   NotificationListener<LayoutChangedNotification> ← CustomPaint ←
          ╎                                       │   _ShapeBorderPaint ← ClipPath ← Material ← DefaultAssetBundle ←
-         ╎                                       │   Semantics ← Builder ← RepaintBoundary-[GlobalKey#25a90] ←
+         ╎                                       │   Semantics ← Builder ← RepaintBoundary-[GlobalKey#76c00] ←
          ╎                                       │   IgnorePointer ← ListenableBuilder ← ⋯
          ╎                                       │ parentData: <none> (can use size)
          ╎                                       │ constraints: BoxConstraints(w=2400.0, h=1800.0)
          ╎                                       │ size: Size(2400.0, 1800.0)
          ╎                                       │
-         ╎                                       └─child: RenderPositionedBox#1aa42
+         ╎                                       └─child: RenderPositionedBox#da439
          ╎                                         │ needs compositing
          ╎                                         │ creator: Align ← DefaultTextStyle ← AnimatedDefaultTextStyle ←
-         ╎                                         │   _InkFeatures-[GlobalKey#6f6d6 ink renderer] ←
+         ╎                                         │   _InkFeatures-[GlobalKey#f421e ink renderer] ←
          ╎                                         │   NotificationListener<LayoutChangedNotification> ← CustomPaint ←
          ╎                                         │   _ShapeBorderPaint ← ClipPath ← Material ← DefaultAssetBundle ←
          ╎                                         │   Semantics ← Builder ← ⋯
@@ -430,10 +430,10 @@ _ReusableRenderView#306f0
          ╎                                         │ widthFactor: expand
          ╎                                         │ heightFactor: expand
          ╎                                         │
-         ╎                                         └─child: _RenderColoredBox#8fe21 relayoutBoundary=up1
+         ╎                                         └─child: _RenderColoredBox#1bc99 relayoutBoundary=up1
          ╎                                           │ needs compositing
          ╎                                           │ creator: ColoredBox ← Builder ← Align ← DefaultTextStyle ←
-         ╎                                           │   AnimatedDefaultTextStyle ← _InkFeatures-[GlobalKey#6f6d6 ink
+         ╎                                           │   AnimatedDefaultTextStyle ← _InkFeatures-[GlobalKey#f421e ink
          ╎                                           │   renderer] ← NotificationListener<LayoutChangedNotification> ←
          ╎                                           │   CustomPaint ← _ShapeBorderPaint ← ClipPath ← Material ←
          ╎                                           │   DefaultAssetBundle ← ⋯
@@ -442,11 +442,11 @@ _ReusableRenderView#306f0
          ╎                                           │ size: Size(2400.0, 1800.0)
          ╎                                           │ behavior: opaque
          ╎                                           │
-         ╎                                           └─child: RenderConstrainedOverflowBox#0f6b2
+         ╎                                           └─child: RenderConstrainedOverflowBox#74a1a
          ╎                                             │ needs compositing
          ╎                                             │ creator: OverflowBox ← ColoredBox ← Builder ← Align ←
          ╎                                             │   DefaultTextStyle ← AnimatedDefaultTextStyle ←
-         ╎                                             │   _InkFeatures-[GlobalKey#6f6d6 ink renderer] ←
+         ╎                                             │   _InkFeatures-[GlobalKey#f421e ink renderer] ←
          ╎                                             │   NotificationListener<LayoutChangedNotification> ← CustomPaint ←
          ╎                                             │   _ShapeBorderPaint ← ClipPath ← Material ← ⋯
          ╎                                             │ parentData: <none> (can use size)
@@ -460,11 +460,11 @@ _ReusableRenderView#306f0
          ╎                                             │ maxHeight: Infinity
          ╎                                             │ fit: max
          ╎                                             │
-         ╎                                             └─child: RenderPositionedBox#7f872 relayoutBoundary=up1
+         ╎                                             └─child: RenderPositionedBox#4df3b relayoutBoundary=up1
          ╎                                               │ needs compositing
-         ╎                                               │ creator: Center-[#d7bd8] ← OverflowBox ← ColoredBox ← Builder ←
+         ╎                                               │ creator: Center-[#42c80] ← OverflowBox ← ColoredBox ← Builder ←
          ╎                                               │   Align ← DefaultTextStyle ← AnimatedDefaultTextStyle ←
-         ╎                                               │   _InkFeatures-[GlobalKey#6f6d6 ink renderer] ←
+         ╎                                               │   _InkFeatures-[GlobalKey#f421e ink renderer] ←
          ╎                                               │   NotificationListener<LayoutChangedNotification> ← CustomPaint ←
          ╎                                               │   _ShapeBorderPaint ← ClipPath ← ⋯
          ╎                                               │ parentData: offset=Offset(0.0, 0.0) (can use size)
@@ -475,11 +475,11 @@ _ReusableRenderView#306f0
          ╎                                               │ widthFactor: expand
          ╎                                               │ heightFactor: expand
          ╎                                               │
-         ╎                                               └─child: RenderPadding#50d09 relayoutBoundary=up2
+         ╎                                               └─child: RenderPadding#cfbdd relayoutBoundary=up2
          ╎                                                 │ needs compositing
-         ╎                                                 │ creator: Padding ← Center-[#d7bd8] ← OverflowBox ← ColoredBox ←
+         ╎                                                 │ creator: Padding ← Center-[#42c80] ← OverflowBox ← ColoredBox ←
          ╎                                                 │   Builder ← Align ← DefaultTextStyle ← AnimatedDefaultTextStyle ←
-         ╎                                                 │   _InkFeatures-[GlobalKey#6f6d6 ink renderer] ←
+         ╎                                                 │   _InkFeatures-[GlobalKey#f421e ink renderer] ←
          ╎                                                 │   NotificationListener<LayoutChangedNotification> ← CustomPaint ←
          ╎                                                 │   _ShapeBorderPaint ← ⋯
          ╎                                                 │ parentData: offset=Offset(0.0, 0.0) (can use size)
@@ -488,12 +488,12 @@ _ReusableRenderView#306f0
          ╎                                                 │ padding: EdgeInsets.zero
          ╎                                                 │ textDirection: ltr
          ╎                                                 │
-         ╎                                                 └─child: RenderTable#64db2 relayoutBoundary=up3
+         ╎                                                 └─child: RenderTable#91a00 relayoutBoundary=up3
          ╎                                                   │ needs compositing
          ╎                                                   │ creator: Table ← GoldenTestScenarioConstraints ← GoldenTestGroup
-         ╎                                                   │   ← Padding ← Center-[#d7bd8] ← OverflowBox ← ColoredBox ←
+         ╎                                                   │   ← Padding ← Center-[#42c80] ← OverflowBox ← ColoredBox ←
          ╎                                                   │   Builder ← Align ← DefaultTextStyle ← AnimatedDefaultTextStyle ←
-         ╎                                                   │   _InkFeatures-[GlobalKey#6f6d6 ink renderer] ← ⋯
+         ╎                                                   │   _InkFeatures-[GlobalKey#f421e ink renderer] ← ⋯
          ╎                                                   │ parentData: offset=Offset(0.0, 0.0) (can use size)
          ╎                                                   │ constraints: BoxConstraints(unconstrained)
          ╎                                                   │ semantics node: SemanticsNode#4
@@ -513,11 +513,11 @@ _ReusableRenderView#306f0
          ╎                                                   │ column offsets: 0.0
          ╎                                                   │ row offsets: 0.0, 830.0
          ╎                                                   │
-         ╎                                                   └─child (0, 0): RenderPadding#a1cd2 relayoutBoundary=up4
+         ╎                                                   └─child (0, 0): RenderPadding#d1919 relayoutBoundary=up4
          ╎                                                     │ needs compositing
          ╎                                                     │ creator: Padding ← GoldenTestScenario ← Table ←
          ╎                                                     │   GoldenTestScenarioConstraints ← GoldenTestGroup ← Padding ←
-         ╎                                                     │   Center-[#d7bd8] ← OverflowBox ← ColoredBox ← Builder ← Align ←
+         ╎                                                     │   Center-[#42c80] ← OverflowBox ← ColoredBox ← Builder ← Align ←
          ╎                                                     │   DefaultTextStyle ← ⋯
          ╎                                                     │ parentData: offset=Offset(0.0, 0.0); default vertical alignment
          ╎                                                     │   (can use size)
@@ -526,11 +526,11 @@ _ReusableRenderView#306f0
          ╎                                                     │ padding: EdgeInsets.zero
          ╎                                                     │ textDirection: ltr
          ╎                                                     │
-         ╎                                                     └─child: RenderFlex#2787c relayoutBoundary=up5
+         ╎                                                     └─child: RenderFlex#d64d4 relayoutBoundary=up5
          ╎                                                       │ needs compositing
          ╎                                                       │ creator: Column ← Padding ← GoldenTestScenario ← Table ←
          ╎                                                       │   GoldenTestScenarioConstraints ← GoldenTestGroup ← Padding ←
-         ╎                                                       │   Center-[#d7bd8] ← OverflowBox ← ColoredBox ← Builder ← Align ←
+         ╎                                                       │   Center-[#42c80] ← OverflowBox ← ColoredBox ← Builder ← Align ←
          ╎                                                       │   ⋯
          ╎                                                       │ parentData: offset=Offset(0.0, 0.0) (can use size)
          ╎                                                       │ constraints: BoxConstraints(w=420.0, 0.0<=h<=Infinity)
@@ -543,10 +543,10 @@ _ReusableRenderView#306f0
          ╎                                                       │ verticalDirection: down
          ╎                                                       │ spacing: 0.0
          ╎                                                       │
-         ╎                                                       ├─child 1: RenderParagraph#cbf9e relayoutBoundary=up6
+         ╎                                                       ├─child 1: RenderParagraph#4d72c relayoutBoundary=up6
          ╎                                                       │ │ creator: RichText ← Text ← Column ← Padding ← GoldenTestScenario
          ╎                                                       │ │   ← Table ← GoldenTestScenarioConstraints ← GoldenTestGroup ←
-         ╎                                                       │ │   Padding ← Center-[#d7bd8] ← OverflowBox ← ColoredBox ← ⋯
+         ╎                                                       │ │   Padding ← Center-[#42c80] ← OverflowBox ← ColoredBox ← ⋯
          ╎                                                       │ │ parentData: offset=Offset(0.0, 0.0); flex=null; fit=null (can use
          ╎                                                       │ │   size)
          ╎                                                       │ │ constraints: BoxConstraints(0.0<=w<=420.0, 0.0<=h<=Infinity)
@@ -576,21 +576,21 @@ _ReusableRenderView#306f0
          ╎                                                       │   ║     blue: 0.1255, colorSpace: ColorSpace.sRGB) TextDecoration.none
          ╎                                                       │   ║   "with subtitle (dark)"
          ╎                                                       │   ╚═══════════
-         ╎                                                       ├─child 2: RenderConstrainedBox#24980 relayoutBoundary=up6
+         ╎                                                       ├─child 2: RenderConstrainedBox#8b705 relayoutBoundary=up6
          ╎                                                       │   creator: SizedBox ← Column ← Padding ← GoldenTestScenario ← Table
          ╎                                                       │     ← GoldenTestScenarioConstraints ← GoldenTestGroup ← Padding ←
-         ╎                                                       │     Center-[#d7bd8] ← OverflowBox ← ColoredBox ← Builder ← ⋯
+         ╎                                                       │     Center-[#42c80] ← OverflowBox ← ColoredBox ← Builder ← ⋯
          ╎                                                       │   parentData: offset=Offset(0.0, 22.0); flex=null; fit=null (can
          ╎                                                       │     use size)
          ╎                                                       │   constraints: BoxConstraints(0.0<=w<=420.0, 0.0<=h<=Infinity)
          ╎                                                       │   size: Size(0.0, 8.0)
          ╎                                                       │   additionalConstraints: BoxConstraints(0.0<=w<=Infinity, h=8.0)
          ╎                                                       │
-         ╎                                                       └─child 3: RenderConstrainedBox#737bd relayoutBoundary=up6
+         ╎                                                       └─child 3: RenderConstrainedBox#ff859 relayoutBoundary=up6
          ╎                                                         │ needs compositing
          ╎                                                         │ creator: ConstrainedBox ← Column ← Padding ← GoldenTestScenario ←
          ╎                                                         │   Table ← GoldenTestScenarioConstraints ← GoldenTestGroup ←
-         ╎                                                         │   Padding ← Center-[#d7bd8] ← OverflowBox ← ColoredBox ← Builder
+         ╎                                                         │   Padding ← Center-[#42c80] ← OverflowBox ← ColoredBox ← Builder
          ╎                                                         │   ← ⋯
          ╎                                                         │ parentData: offset=Offset(0.0, 30.0); flex=null; fit=null (can
          ╎                                                         │   use size)
@@ -598,30 +598,30 @@ _ReusableRenderView#306f0
          ╎                                                         │ size: Size(400.0, 800.0)
          ╎                                                         │ additionalConstraints: BoxConstraints(unconstrained)
          ╎                                                         │
-         ╎                                                         └─child: RenderConstrainedBox#834f8 relayoutBoundary=up7
+         ╎                                                         └─child: RenderConstrainedBox#88f3f relayoutBoundary=up7
          ╎                                                           │ needs compositing
          ╎                                                           │ creator: SizedBox ← GoldenComponentWrapper ← Builder ←
          ╎                                                           │   ConstrainedBox ← Column ← Padding ← GoldenTestScenario ← Table
          ╎                                                           │   ← GoldenTestScenarioConstraints ← GoldenTestGroup ← Padding ←
-         ╎                                                           │   Center-[#d7bd8] ← ⋯
+         ╎                                                           │   Center-[#42c80] ← ⋯
          ╎                                                           │ parentData: <none> (can use size)
          ╎                                                           │ constraints: BoxConstraints(0.0<=w<=420.0, 0.0<=h<=Infinity)
          ╎                                                           │ size: Size(400.0, 800.0)
          ╎                                                           │ additionalConstraints: BoxConstraints(w=400.0, h=800.0)
          ╎                                                           │
-         ╎                                                           └─child: RenderSemanticsAnnotations#66202
+         ╎                                                           └─child: RenderSemanticsAnnotations#ad591
          ╎                                                             │ needs compositing
          ╎                                                             │ creator: Semantics ← _FocusInheritedScope ← Focus ← Shortcuts ←
          ╎                                                             │   NotificationListener<NavigationNotification> ← _SharedAppModel
          ╎                                                             │   ← SharedAppData ← UnmanagedRestorationScope ← RestorationScope
          ╎                                                             │   ← UnmanagedRestorationScope ← RootRestorationScope ←
-         ╎                                                             │   WidgetsApp-[GlobalObjectKey _MaterialAppState#2a0b5] ← ⋯
+         ╎                                                             │   WidgetsApp-[GlobalObjectKey _MaterialAppState#bf289] ← ⋯
          ╎                                                             │ parentData: <none> (can use size)
          ╎                                                             │ constraints: BoxConstraints(w=400.0, h=800.0)
          ╎                                                             │ semantics node: SemanticsNode#5
          ╎                                                             │ size: Size(400.0, 800.0)
          ╎                                                             │
-         ╎                                                             └─child: RenderSemanticsAnnotations#6f7f7
+         ╎                                                             └─child: RenderSemanticsAnnotations#fdc3a
          ╎                                                               │ needs compositing
          ╎                                                               │ creator: Semantics ← _FocusInheritedScope ← Focus ← Shortcuts ←
          ╎                                                               │   DefaultTextEditingShortcuts ← Semantics ← _FocusInheritedScope
@@ -632,7 +632,7 @@ _ReusableRenderView#306f0
          ╎                                                               │ constraints: BoxConstraints(w=400.0, h=800.0)
          ╎                                                               │ size: Size(400.0, 800.0)
          ╎                                                               │
-         ╎                                                               └─child: RenderTapRegionSurface#b90d4
+         ╎                                                               └─child: RenderTapRegionSurface#c93fd
          ╎                                                                 │ needs compositing
          ╎                                                                 │ creator: TapRegionSurface ← _FocusInheritedScope ← Focus ←
          ╎                                                                 │   FocusTraversalGroup ← _ActionsScope ← Actions ← Semantics ←
@@ -643,7 +643,7 @@ _ReusableRenderView#306f0
          ╎                                                                 │ size: Size(400.0, 800.0)
          ╎                                                                 │ behavior: deferToChild
          ╎                                                                 │
-         ╎                                                                 └─child: RenderSemanticsAnnotations#94b88
+         ╎                                                                 └─child: RenderSemanticsAnnotations#c5624
          ╎                                                                   │ needs compositing
          ╎                                                                   │ creator: Semantics ← _FocusInheritedScope ← Focus ← Shortcuts ←
          ╎                                                                   │   _ShortcutRegistrarScope ← ShortcutRegistrar ← TapRegionSurface
@@ -653,7 +653,7 @@ _ReusableRenderView#306f0
          ╎                                                                   │ constraints: BoxConstraints(w=400.0, h=800.0)
          ╎                                                                   │ size: Size(400.0, 800.0)
          ╎                                                                   │
-         ╎                                                                   └─child: RenderSemanticsAnnotations#ae3ba
+         ╎                                                                   └─child: RenderSemanticsAnnotations#fbeb4
          ╎                                                                     │ needs compositing
          ╎                                                                     │ creator: Semantics ← Localizations ← ListenableBuilder ←
          ╎                                                                     │   Semantics ← _FocusInheritedScope ← Focus ← Shortcuts ←
@@ -663,17 +663,17 @@ _ReusableRenderView#306f0
          ╎                                                                     │ constraints: BoxConstraints(w=400.0, h=800.0)
          ╎                                                                     │ size: Size(400.0, 800.0)
          ╎                                                                     │
-         ╎                                                                     └─child: RenderSemanticsAnnotations#bf5c1
+         ╎                                                                     └─child: RenderSemanticsAnnotations#4d466
          ╎                                                                       │ needs compositing
          ╎                                                                       │ creator: Semantics ← _FocusInheritedScope ← Focus ← Title ←
-         ╎                                                                       │   Directionality ← _LocalizationsScope-[GlobalKey#58121] ←
+         ╎                                                                       │   Directionality ← _LocalizationsScope-[GlobalKey#179fa] ←
          ╎                                                                       │   Semantics ← Localizations ← ListenableBuilder ← Semantics ←
          ╎                                                                       │   _FocusInheritedScope ← Focus ← ⋯
          ╎                                                                       │ parentData: <none> (can use size)
          ╎                                                                       │ constraints: BoxConstraints(w=400.0, h=800.0)
          ╎                                                                       │ size: Size(400.0, 800.0)
          ╎                                                                       │
-         ╎                                                                       └─child: RenderSemanticsAnnotations#85bc9
+         ╎                                                                       └─child: RenderSemanticsAnnotations#d083f
          ╎                                                                         │ needs compositing
          ╎                                                                         │ creator: Semantics ← FocusScope ← DefaultSelectionStyle ←
          ╎                                                                         │   _ScaffoldMessengerScope ← ScaffoldMessenger ←
@@ -684,12 +684,12 @@ _ReusableRenderView#306f0
          ╎                                                                         │ constraints: BoxConstraints(w=400.0, h=800.0)
          ╎                                                                         │ size: Size(400.0, 800.0)
          ╎                                                                         │
-         ╎                                                                         └─child: RenderPointerListener#6e5e5
+         ╎                                                                         └─child: RenderPointerListener#b9960
          ╎                                                                           │ needs compositing
          ╎                                                                           │ creator: Listener ← NotificationListener<NavigationNotification>
          ╎                                                                           │   ← HeroControllerScope ←
          ╎                                                                           │   Navigator-[GlobalObjectKey<NavigatorState>
-         ╎                                                                           │   _WidgetsAppState#22759] ← _FocusInheritedScope ← Semantics ←
+         ╎                                                                           │   _WidgetsAppState#c2863] ← _FocusInheritedScope ← Semantics ←
          ╎                                                                           │   FocusScope ← DefaultSelectionStyle ← _ScaffoldMessengerScope ←
          ╎                                                                           │   ScaffoldMessenger ← DefaultSelectionStyle ← IconTheme ← ⋯
          ╎                                                                           │ parentData: <none> (can use size)
@@ -698,13 +698,13 @@ _ReusableRenderView#306f0
          ╎                                                                           │ behavior: deferToChild
          ╎                                                                           │ listeners: down, up, cancel
          ╎                                                                           │
-         ╎                                                                           └─child: RenderAbsorbPointer#56302
+         ╎                                                                           └─child: RenderAbsorbPointer#dd086
          ╎                                                                             │ needs compositing
          ╎                                                                             │ creator: AbsorbPointer ← Listener ←
          ╎                                                                             │   NotificationListener<NavigationNotification> ←
          ╎                                                                             │   HeroControllerScope ←
          ╎                                                                             │   Navigator-[GlobalObjectKey<NavigatorState>
-         ╎                                                                             │   _WidgetsAppState#22759] ← _FocusInheritedScope ← Semantics ←
+         ╎                                                                             │   _WidgetsAppState#c2863] ← _FocusInheritedScope ← Semantics ←
          ╎                                                                             │   FocusScope ← DefaultSelectionStyle ← _ScaffoldMessengerScope ←
          ╎                                                                             │   ScaffoldMessenger ← DefaultSelectionStyle ← ⋯
          ╎                                                                             │ parentData: <none> (can use size)
@@ -713,10 +713,10 @@ _ReusableRenderView#306f0
          ╎                                                                             │ absorbing: false
          ╎                                                                             │ ignoringSemantics: null
          ╎                                                                             │
-         ╎                                                                             └─child: _RenderTheater#f04b2
+         ╎                                                                             └─child: _RenderTheater#3a608
          ╎                                                                               │ needs compositing
          ╎                                                                               │ creator: _Theater ←
-         ╎                                                                               │   Overlay-[LabeledGlobalKey<OverlayState>#8ddb7] ←
+         ╎                                                                               │   Overlay-[LabeledGlobalKey<OverlayState>#618a4] ←
          ╎                                                                               │   UnmanagedRestorationScope ← _FocusInheritedScope ← Focus ←
          ╎                                                                               │   _FocusInheritedScope ← Focus ← FocusTraversalGroup ←
          ╎                                                                               │   AbsorbPointer ← Listener ←
@@ -728,11 +728,11 @@ _ReusableRenderView#306f0
          ╎                                                                               │ skipCount: 0
          ╎                                                                               │ textDirection: ltr
          ╎                                                                               │
-         ╎                                                                               ├─onstage 1: RenderIgnorePointer#3bc70
+         ╎                                                                               ├─onstage 1: RenderIgnorePointer#a876f
          ╎                                                                               │ │ creator: IgnorePointer ← Builder ← _RenderTheaterMarker ←
          ╎                                                                               │ │   _EffectiveTickerMode ← TickerMode ←
-         ╎                                                                               │ │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#10a09]
-         ╎                                                                               │ │   ← _Theater ← Overlay-[LabeledGlobalKey<OverlayState>#8ddb7] ←
+         ╎                                                                               │ │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#2f910]
+         ╎                                                                               │ │   ← _Theater ← Overlay-[LabeledGlobalKey<OverlayState>#618a4] ←
          ╎                                                                               │ │   UnmanagedRestorationScope ← _FocusInheritedScope ← Focus ←
          ╎                                                                               │ │   _FocusInheritedScope ← ⋯
          ╎                                                                               │ │ parentData: not positioned; offset=Offset(0.0, 0.0) (can use
@@ -742,11 +742,11 @@ _ReusableRenderView#306f0
          ╎                                                                               │ │ ignoring: false
          ╎                                                                               │ │ ignoringSemantics: null
          ╎                                                                               │ │
-         ╎                                                                               │ └─child: RenderBlockSemantics#0a807
+         ╎                                                                               │ └─child: RenderBlockSemantics#664b3
          ╎                                                                               │   │ creator: BlockSemantics ← ModalBarrier ← IgnorePointer ← Builder
          ╎                                                                               │   │   ← _RenderTheaterMarker ← _EffectiveTickerMode ← TickerMode ←
-         ╎                                                                               │   │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#10a09]
-         ╎                                                                               │   │   ← _Theater ← Overlay-[LabeledGlobalKey<OverlayState>#8ddb7] ←
+         ╎                                                                               │   │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#2f910]
+         ╎                                                                               │   │   ← _Theater ← Overlay-[LabeledGlobalKey<OverlayState>#618a4] ←
          ╎                                                                               │   │   UnmanagedRestorationScope ← _FocusInheritedScope ← ⋯
          ╎                                                                               │   │ parentData: <none> (can use size)
          ╎                                                                               │   │ constraints: BoxConstraints(w=400.0, h=800.0)
@@ -755,24 +755,24 @@ _ReusableRenderView#306f0
          ╎                                                                               │   │ size: Size(400.0, 800.0)
          ╎                                                                               │   │ blocking: true
          ╎                                                                               │   │
-         ╎                                                                               │   └─child: RenderExcludeSemantics#24bd2
+         ╎                                                                               │   └─child: RenderExcludeSemantics#4004b
          ╎                                                                               │     │ creator: ExcludeSemantics ← BlockSemantics ← ModalBarrier ←
          ╎                                                                               │     │   IgnorePointer ← Builder ← _RenderTheaterMarker ←
          ╎                                                                               │     │   _EffectiveTickerMode ← TickerMode ←
-         ╎                                                                               │     │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#10a09]
-         ╎                                                                               │     │   ← _Theater ← Overlay-[LabeledGlobalKey<OverlayState>#8ddb7] ←
+         ╎                                                                               │     │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#2f910]
+         ╎                                                                               │     │   ← _Theater ← Overlay-[LabeledGlobalKey<OverlayState>#618a4] ←
          ╎                                                                               │     │   UnmanagedRestorationScope ← ⋯
          ╎                                                                               │     │ parentData: <none> (can use size)
          ╎                                                                               │     │ constraints: BoxConstraints(w=400.0, h=800.0)
          ╎                                                                               │     │ size: Size(400.0, 800.0)
          ╎                                                                               │     │ excluding: true
          ╎                                                                               │     │
-         ╎                                                                               │     └─child: RenderSemanticsGestureHandler#e1488
+         ╎                                                                               │     └─child: RenderSemanticsGestureHandler#f504a
          ╎                                                                               │       │ creator: _GestureSemantics ← RawGestureDetector ←
          ╎                                                                               │       │   _ModalBarrierGestureDetector ← ExcludeSemantics ←
          ╎                                                                               │       │   BlockSemantics ← ModalBarrier ← IgnorePointer ← Builder ←
          ╎                                                                               │       │   _RenderTheaterMarker ← _EffectiveTickerMode ← TickerMode ←
-         ╎                                                                               │       │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#10a09]
+         ╎                                                                               │       │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#2f910]
          ╎                                                                               │       │   ← ⋯
          ╎                                                                               │       │ parentData: <none> (can use size)
          ╎                                                                               │       │ constraints: BoxConstraints(w=400.0, h=800.0)
@@ -780,7 +780,7 @@ _ReusableRenderView#306f0
          ╎                                                                               │       │ behavior: opaque
          ╎                                                                               │       │ gestures: <none>
          ╎                                                                               │       │
-         ╎                                                                               │       └─child: RenderPointerListener#bd736
+         ╎                                                                               │       └─child: RenderPointerListener#65224
          ╎                                                                               │         │ creator: Listener ← _GestureSemantics ← RawGestureDetector ←
          ╎                                                                               │         │   _ModalBarrierGestureDetector ← ExcludeSemantics ←
          ╎                                                                               │         │   BlockSemantics ← ModalBarrier ← IgnorePointer ← Builder ←
@@ -791,7 +791,7 @@ _ReusableRenderView#306f0
          ╎                                                                               │         │ behavior: opaque
          ╎                                                                               │         │ listeners: down, panZoomStart
          ╎                                                                               │         │
-         ╎                                                                               │         └─child: RenderSemanticsAnnotations#89748
+         ╎                                                                               │         └─child: RenderSemanticsAnnotations#31714
          ╎                                                                               │           │ creator: Semantics ← Listener ← _GestureSemantics ←
          ╎                                                                               │           │   RawGestureDetector ← _ModalBarrierGestureDetector ←
          ╎                                                                               │           │   ExcludeSemantics ← BlockSemantics ← ModalBarrier ←
@@ -801,7 +801,7 @@ _ReusableRenderView#306f0
          ╎                                                                               │           │ constraints: BoxConstraints(w=400.0, h=800.0)
          ╎                                                                               │           │ size: Size(400.0, 800.0)
          ╎                                                                               │           │
-         ╎                                                                               │           └─child: RenderMouseRegion#86b3f
+         ╎                                                                               │           └─child: RenderMouseRegion#51009
          ╎                                                                               │             │ creator: MouseRegion ← Semantics ← Listener ← _GestureSemantics ←
          ╎                                                                               │             │   RawGestureDetector ← _ModalBarrierGestureDetector ←
          ╎                                                                               │             │   ExcludeSemantics ← BlockSemantics ← ModalBarrier ←
@@ -813,7 +813,7 @@ _ReusableRenderView#306f0
          ╎                                                                               │             │ listeners: <none>
          ╎                                                                               │             │ cursor: SystemMouseCursor(basic)
          ╎                                                                               │             │
-         ╎                                                                               │             └─child: RenderConstrainedBox#dc07d
+         ╎                                                                               │             └─child: RenderConstrainedBox#cd0cd
          ╎                                                                               │                 creator: ConstrainedBox ← MouseRegion ← Semantics ← Listener ←
          ╎                                                                               │                   _GestureSemantics ← RawGestureDetector ←
          ╎                                                                               │                   _ModalBarrierGestureDetector ← ExcludeSemantics ←
@@ -823,12 +823,12 @@ _ReusableRenderView#306f0
          ╎                                                                               │                 size: Size(400.0, 800.0)
          ╎                                                                               │                 additionalConstraints: BoxConstraints(biggest)
          ╎                                                                               │
-         ╎                                                                               ├─onstage 2: RenderSemanticsAnnotations#bc808
+         ╎                                                                               ├─onstage 2: RenderSemanticsAnnotations#19ded
          ╎                                                                               ╎ │ needs compositing
          ╎                                                                               ╎ │ creator: Semantics ← Builder ← _RenderTheaterMarker ←
          ╎                                                                               ╎ │   _EffectiveTickerMode ← TickerMode ←
-         ╎                                                                               ╎ │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#10d76]
-         ╎                                                                               ╎ │   ← _Theater ← Overlay-[LabeledGlobalKey<OverlayState>#8ddb7] ←
+         ╎                                                                               ╎ │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#cee8e]
+         ╎                                                                               ╎ │   ← _Theater ← Overlay-[LabeledGlobalKey<OverlayState>#618a4] ←
          ╎                                                                               ╎ │   UnmanagedRestorationScope ← _FocusInheritedScope ← Focus ←
          ╎                                                                               ╎ │   _FocusInheritedScope ← ⋯
          ╎                                                                               ╎ │ parentData: not positioned; offset=Offset(0.0, 0.0) (can use
@@ -837,21 +837,21 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎ │ semantics node: SemanticsNode#6
          ╎                                                                               ╎ │ size: Size(400.0, 800.0)
          ╎                                                                               ╎ │
-         ╎                                                                               ╎ └─child: RenderOffstage#34325
+         ╎                                                                               ╎ └─child: RenderOffstage#871e4
          ╎                                                                               ╎   │ needs compositing
          ╎                                                                               ╎   │ creator: Offstage ← _ModalScopeStatus ← UnmanagedRestorationScope
          ╎                                                                               ╎   │   ← RestorationScope ← AnimatedBuilder ←
-         ╎                                                                               ╎   │   _ModalScope<dynamic>-[LabeledGlobalKey<_ModalScopeState<dynamic>>#a617e]
+         ╎                                                                               ╎   │   _ModalScope<dynamic>-[LabeledGlobalKey<_ModalScopeState<dynamic>>#3498b]
          ╎                                                                               ╎   │   ← Semantics ← Builder ← _RenderTheaterMarker ←
          ╎                                                                               ╎   │   _EffectiveTickerMode ← TickerMode ←
-         ╎                                                                               ╎   │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#10d76]
+         ╎                                                                               ╎   │   _OverlayEntryWidget-[LabeledGlobalKey<_OverlayEntryWidgetState>#cee8e]
          ╎                                                                               ╎   │   ← ⋯
          ╎                                                                               ╎   │ parentData: <none> (can use size)
          ╎                                                                               ╎   │ constraints: BoxConstraints(w=400.0, h=800.0)
          ╎                                                                               ╎   │ size: Size(400.0, 800.0)
          ╎                                                                               ╎   │ offstage: false
          ╎                                                                               ╎   │
-         ╎                                                                               ╎   └─child: RenderSemanticsAnnotations#0b90d
+         ╎                                                                               ╎   └─child: RenderSemanticsAnnotations#ce396
          ╎                                                                               ╎     │ needs compositing
          ╎                                                                               ╎     │ creator: Semantics ← _FocusScopeWithExternalFocusNode ←
          ╎                                                                               ╎     │   PrimaryScrollController ← _ActionsScope ← Actions ← Builder ←
@@ -862,7 +862,7 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎     │ constraints: BoxConstraints(w=400.0, h=800.0)
          ╎                                                                               ╎     │ size: Size(400.0, 800.0)
          ╎                                                                               ╎     │
-         ╎                                                                               ╎     └─child: RenderRepaintBoundary#15978
+         ╎                                                                               ╎     └─child: RenderRepaintBoundary#24711
          ╎                                                                               ╎       │ needs compositing
          ╎                                                                               ╎       │ creator: RepaintBoundary ← _FocusInheritedScope ← Semantics ←
          ╎                                                                               ╎       │   _FocusScopeWithExternalFocusNode ← PrimaryScrollController ←
@@ -870,13 +870,13 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎       │   _ModalScopeStatus ← UnmanagedRestorationScope ← ⋯
          ╎                                                                               ╎       │ parentData: <none> (can use size)
          ╎                                                                               ╎       │ constraints: BoxConstraints(w=400.0, h=800.0)
-         ╎                                                                               ╎       │ layer: OffsetLayer#bbe9c
+         ╎                                                                               ╎       │ layer: OffsetLayer#d3878
          ╎                                                                               ╎       │ size: Size(400.0, 800.0)
          ╎                                                                               ╎       │ metrics: 0.0% useful (1 bad vs 0 good)
          ╎                                                                               ╎       │ diagnosis: insufficient data to draw conclusion (less than five
          ╎                                                                               ╎       │   repaints)
          ╎                                                                               ╎       │
-         ╎                                                                               ╎       └─child: RenderAnimatedOpacity#8299f
+         ╎                                                                               ╎       └─child: RenderAnimatedOpacity#e7d11
          ╎                                                                               ╎         │ needs compositing
          ╎                                                                               ╎         │ creator: FadeTransition ← DualTransitionBuilder ←
          ╎                                                                               ╎         │   _FadeForwardsPageTransition ← _PredictiveBackGestureDetector ←
@@ -886,13 +886,13 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎         │   _ActionsScope ← ⋯
          ╎                                                                               ╎         │ parentData: <none> (can use size)
          ╎                                                                               ╎         │ constraints: BoxConstraints(w=400.0, h=800.0)
-         ╎                                                                               ╎         │ layer: OpacityLayer#94c97
+         ╎                                                                               ╎         │ layer: OpacityLayer#2ced7
          ╎                                                                               ╎         │ size: Size(400.0, 800.0)
          ╎                                                                               ╎         │ opacity:
          ╎                                                                               ╎         │   kAlwaysCompleteAnimation➩ProxyAnimation➩CurveTween(curve:
          ╎                                                                               ╎         │   Interval(0.0⋯0.75))➩Tween<double>(0.0 → 1.0)➩1.0
          ╎                                                                               ╎         │
-         ╎                                                                               ╎         └─child: RenderFractionalTranslation#3526d
+         ╎                                                                               ╎         └─child: RenderFractionalTranslation#9a108
          ╎                                                                               ╎           │ needs compositing
          ╎                                                                               ╎           │ creator: FractionalTranslation ← SlideTransition ← FadeTransition
          ╎                                                                               ╎           │   ← DualTransitionBuilder ← _FadeForwardsPageTransition ←
@@ -906,7 +906,7 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎           │ translation: Offset(0.0, 0.0)
          ╎                                                                               ╎           │ transformHitTests: true
          ╎                                                                               ╎           │
-         ╎                                                                               ╎           └─child: RenderIgnorePointer#f501d
+         ╎                                                                               ╎           └─child: RenderIgnorePointer#19c78
          ╎                                                                               ╎             │ needs compositing
          ╎                                                                               ╎             │ creator: IgnorePointer ← FractionalTranslation ← SlideTransition
          ╎                                                                               ╎             │   ← FadeTransition ← DualTransitionBuilder ←
@@ -919,7 +919,7 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎             │ ignoring: false
          ╎                                                                               ╎             │ ignoringSemantics: null
          ╎                                                                               ╎             │
-         ╎                                                                               ╎             └─child: RenderAnimatedOpacity#d7839
+         ╎                                                                               ╎             └─child: RenderAnimatedOpacity#899e6
          ╎                                                                               ╎               │ needs compositing
          ╎                                                                               ╎               │ creator: FadeTransition ← IgnorePointer ← FractionalTranslation ←
          ╎                                                                               ╎               │   SlideTransition ← FadeTransition ← DualTransitionBuilder ←
@@ -928,13 +928,13 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎               │   RepaintBoundary ← _FocusInheritedScope ← ⋯
          ╎                                                                               ╎               │ parentData: <none> (can use size)
          ╎                                                                               ╎               │ constraints: BoxConstraints(w=400.0, h=800.0)
-         ╎                                                                               ╎               │ layer: OpacityLayer#c5e62
+         ╎                                                                               ╎               │ layer: OpacityLayer#c1830
          ╎                                                                               ╎               │ size: Size(400.0, 800.0)
-         ╎                                                                               ╎               │ opacity: AnimationController#c774a(⏭ 1.000; paused; for
+         ╎                                                                               ╎               │ opacity: AnimationController#f910d(⏭ 1.000; paused; for
          ╎                                                                               ╎               │   MaterialPageRoute<dynamic>(/))➩ProxyAnimation➪ReverseAnimation➩ProxyAnimation➩CurveTween(curve:
          ╎                                                                               ╎               │   Interval(0.0⋯0.25))➩Tween<double>(1.0 → 0.0)➩1.0
          ╎                                                                               ╎               │
-         ╎                                                                               ╎               └─child: RenderFractionalTranslation#07400
+         ╎                                                                               ╎               └─child: RenderFractionalTranslation#a0c68
          ╎                                                                               ╎                 │ needs compositing
          ╎                                                                               ╎                 │ creator: FractionalTranslation ← SlideTransition ← FadeTransition
          ╎                                                                               ╎                 │   ← IgnorePointer ← FractionalTranslation ← SlideTransition ←
@@ -948,7 +948,7 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                 │ translation: Offset(0.0, 0.0)
          ╎                                                                               ╎                 │ transformHitTests: true
          ╎                                                                               ╎                 │
-         ╎                                                                               ╎                 └─child: _RenderColoredBox#05819
+         ╎                                                                               ╎                 └─child: _RenderColoredBox#6cc38
          ╎                                                                               ╎                   │ needs compositing
          ╎                                                                               ╎                   │ creator: ColoredBox ← FractionalTranslation ← SlideTransition ←
          ╎                                                                               ╎                   │   FadeTransition ← IgnorePointer ← FractionalTranslation ←
@@ -960,7 +960,7 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                   │ size: Size(400.0, 800.0)
          ╎                                                                               ╎                   │ behavior: opaque
          ╎                                                                               ╎                   │
-         ╎                                                                               ╎                   └─child: RenderAnimatedOpacity#62fe6
+         ╎                                                                               ╎                   └─child: RenderAnimatedOpacity#45da4
          ╎                                                                               ╎                     │ needs compositing
          ╎                                                                               ╎                     │ creator: FadeTransition ← DualTransitionBuilder ← ColoredBox ←
          ╎                                                                               ╎                     │   FractionalTranslation ← SlideTransition ← FadeTransition ←
@@ -969,13 +969,13 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                     │   _FadeForwardsPageTransition ← ⋯
          ╎                                                                               ╎                     │ parentData: <none> (can use size)
          ╎                                                                               ╎                     │ constraints: BoxConstraints(w=400.0, h=800.0)
-         ╎                                                                               ╎                     │ layer: OpacityLayer#e19be
+         ╎                                                                               ╎                     │ layer: OpacityLayer#d0c82
          ╎                                                                               ╎                     │ size: Size(400.0, 800.0)
          ╎                                                                               ╎                     │ opacity:
          ╎                                                                               ╎                     │   kAlwaysCompleteAnimation➩ProxyAnimation➩CurveTween(curve:
          ╎                                                                               ╎                     │   Interval(0.0⋯0.75))➩Tween<double>(0.0 → 1.0)➩1.0
          ╎                                                                               ╎                     │
-         ╎                                                                               ╎                     └─child: RenderFractionalTranslation#5dcc7
+         ╎                                                                               ╎                     └─child: RenderFractionalTranslation#d3497
          ╎                                                                               ╎                       │ needs compositing
          ╎                                                                               ╎                       │ creator: FractionalTranslation ← SlideTransition ← FadeTransition
          ╎                                                                               ╎                       │   ← DualTransitionBuilder ← ColoredBox ← FractionalTranslation ←
@@ -987,7 +987,7 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                       │ translation: Offset(0.0, 0.0)
          ╎                                                                               ╎                       │ transformHitTests: true
          ╎                                                                               ╎                       │
-         ╎                                                                               ╎                       └─child: RenderAnimatedOpacity#18399
+         ╎                                                                               ╎                       └─child: RenderAnimatedOpacity#7948c
          ╎                                                                               ╎                         │ needs compositing
          ╎                                                                               ╎                         │ creator: FadeTransition ← FractionalTranslation ← SlideTransition
          ╎                                                                               ╎                         │   ← FadeTransition ← DualTransitionBuilder ← ColoredBox ←
@@ -995,13 +995,13 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                         │   IgnorePointer ← FractionalTranslation ← SlideTransition ← ⋯
          ╎                                                                               ╎                         │ parentData: <none> (can use size)
          ╎                                                                               ╎                         │ constraints: BoxConstraints(w=400.0, h=800.0)
-         ╎                                                                               ╎                         │ layer: OpacityLayer#1312d
+         ╎                                                                               ╎                         │ layer: OpacityLayer#f7437
          ╎                                                                               ╎                         │ size: Size(400.0, 800.0)
          ╎                                                                               ╎                         │ opacity:
          ╎                                                                               ╎                         │   kAlwaysDismissedAnimation➩ProxyAnimation➩ProxyAnimation➪ReverseAnimation➪ReverseAnimation➩ProxyAnimation➩CurveTween(curve:
          ╎                                                                               ╎                         │   Interval(0.0⋯0.25))➩Tween<double>(1.0 → 0.0)➩1.0
          ╎                                                                               ╎                         │
-         ╎                                                                               ╎                         └─child: RenderFractionalTranslation#ccb71
+         ╎                                                                               ╎                         └─child: RenderFractionalTranslation#801b2
          ╎                                                                               ╎                           │ needs compositing
          ╎                                                                               ╎                           │ creator: FractionalTranslation ← SlideTransition ← FadeTransition
          ╎                                                                               ╎                           │   ← FractionalTranslation ← SlideTransition ← FadeTransition ←
@@ -1013,7 +1013,7 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                           │ translation: Offset(0.0, 0.0)
          ╎                                                                               ╎                           │ transformHitTests: true
          ╎                                                                               ╎                           │
-         ╎                                                                               ╎                           └─child: RenderIgnorePointer#77105
+         ╎                                                                               ╎                           └─child: RenderIgnorePointer#79097
          ╎                                                                               ╎                             │ needs compositing
          ╎                                                                               ╎                             │ creator: IgnorePointer ← ListenableBuilder ←
          ╎                                                                               ╎                             │   FractionalTranslation ← SlideTransition ← FadeTransition ←
@@ -1026,23 +1026,23 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                             │ ignoring: false
          ╎                                                                               ╎                             │ ignoringSemantics: null
          ╎                                                                               ╎                             │
-         ╎                                                                               ╎                             └─child: RenderRepaintBoundary#7df62
+         ╎                                                                               ╎                             └─child: RenderRepaintBoundary#f3e32
          ╎                                                                               ╎                               │ needs compositing
-         ╎                                                                               ╎                               │ creator: RepaintBoundary-[GlobalKey#18ded] ← IgnorePointer ←
+         ╎                                                                               ╎                               │ creator: RepaintBoundary-[GlobalKey#dbd67] ← IgnorePointer ←
          ╎                                                                               ╎                               │   ListenableBuilder ← FractionalTranslation ← SlideTransition ←
          ╎                                                                               ╎                               │   FadeTransition ← FractionalTranslation ← SlideTransition ←
          ╎                                                                               ╎                               │   FadeTransition ← DualTransitionBuilder ← ColoredBox ←
          ╎                                                                               ╎                               │   FractionalTranslation ← ⋯
          ╎                                                                               ╎                               │ parentData: <none> (can use size)
          ╎                                                                               ╎                               │ constraints: BoxConstraints(w=400.0, h=800.0)
-         ╎                                                                               ╎                               │ layer: OffsetLayer#a7baa
+         ╎                                                                               ╎                               │ layer: OffsetLayer#29246
          ╎                                                                               ╎                               │ size: Size(400.0, 800.0)
          ╎                                                                               ╎                               │ metrics: 0.0% useful (1 bad vs 0 good)
          ╎                                                                               ╎                               │ diagnosis: insufficient data to draw conclusion (less than five
          ╎                                                                               ╎                               │   repaints)
          ╎                                                                               ╎                               │
-         ╎                                                                               ╎                               └─child: RenderSemanticsAnnotations#57768
-         ╎                                                                               ╎                                 │ creator: Semantics ← Builder ← RepaintBoundary-[GlobalKey#18ded]
+         ╎                                                                               ╎                               └─child: RenderSemanticsAnnotations#242f7
+         ╎                                                                               ╎                                 │ creator: Semantics ← Builder ← RepaintBoundary-[GlobalKey#dbd67]
          ╎                                                                               ╎                                 │   ← IgnorePointer ← ListenableBuilder ← FractionalTranslation ←
          ╎                                                                               ╎                                 │   SlideTransition ← FadeTransition ← FractionalTranslation ←
          ╎                                                                               ╎                                 │   SlideTransition ← FadeTransition ← DualTransitionBuilder ← ⋯
@@ -1051,13 +1051,13 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                                 │ semantics node: SemanticsNode#7
          ╎                                                                               ╎                                 │ size: Size(400.0, 800.0)
          ╎                                                                               ╎                                 │
-         ╎                                                                               ╎                                 └─child: RenderPhysicalModel#32e2b
+         ╎                                                                               ╎                                 └─child: RenderPhysicalModel#d3a57
          ╎                                                                               ╎                                   │ creator: PhysicalModel ← AnimatedPhysicalModel ← Material ←
          ╎                                                                               ╎                                   │   _ScrollNotificationObserverScope ←
          ╎                                                                               ╎                                   │   NotificationListener<ScrollNotification> ←
          ╎                                                                               ╎                                   │   NotificationListener<ScrollMetricsNotification> ←
          ╎                                                                               ╎                                   │   ScrollNotificationObserver ← _ScaffoldScope ← Scaffold ←
-         ╎                                                                               ╎                                   │   Semantics ← Builder ← RepaintBoundary-[GlobalKey#18ded] ← ⋯
+         ╎                                                                               ╎                                   │   Semantics ← Builder ← RepaintBoundary-[GlobalKey#dbd67] ← ⋯
          ╎                                                                               ╎                                   │ parentData: <none> (can use size)
          ╎                                                                               ╎                                   │ constraints: BoxConstraints(w=400.0, h=800.0)
          ╎                                                                               ╎                                   │ size: Size(400.0, 800.0)
@@ -1069,8 +1069,8 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                                   │ shape: BoxShape.rectangle
          ╎                                                                               ╎                                   │ borderRadius: BorderRadius.zero
          ╎                                                                               ╎                                   │
-         ╎                                                                               ╎                                   └─child: _RenderInkFeatures#f794a
-         ╎                                                                               ╎                                     │ creator: _InkFeatures-[GlobalKey#4dcd9 ink renderer] ←
+         ╎                                                                               ╎                                   └─child: _RenderInkFeatures#c5e0f
+         ╎                                                                               ╎                                     │ creator: _InkFeatures-[GlobalKey#e2de1 ink renderer] ←
          ╎                                                                               ╎                                     │   NotificationListener<LayoutChangedNotification> ← PhysicalModel
          ╎                                                                               ╎                                     │   ← AnimatedPhysicalModel ← Material ←
          ╎                                                                               ╎                                     │   _ScrollNotificationObserverScope ←
@@ -1082,10 +1082,10 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                                     │ constraints: BoxConstraints(w=400.0, h=800.0)
          ╎                                                                               ╎                                     │ size: Size(400.0, 800.0)
          ╎                                                                               ╎                                     │
-         ╎                                                                               ╎                                     └─child: RenderCustomMultiChildLayoutBox#f056d
+         ╎                                                                               ╎                                     └─child: RenderCustomMultiChildLayoutBox#68fc8
          ╎                                                                               ╎                                       │ creator: CustomMultiChildLayout ← _ActionsScope ← Actions ←
          ╎                                                                               ╎                                       │   AnimatedBuilder ← DefaultTextStyle ← AnimatedDefaultTextStyle ←
-         ╎                                                                               ╎                                       │   _InkFeatures-[GlobalKey#4dcd9 ink renderer] ←
+         ╎                                                                               ╎                                       │   _InkFeatures-[GlobalKey#e2de1 ink renderer] ←
          ╎                                                                               ╎                                       │   NotificationListener<LayoutChangedNotification> ← PhysicalModel
          ╎                                                                               ╎                                       │   ← AnimatedPhysicalModel ← Material ←
          ╎                                                                               ╎                                       │   _ScrollNotificationObserverScope ← ⋯
@@ -1093,12 +1093,12 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                                       │ constraints: BoxConstraints(w=400.0, h=800.0)
          ╎                                                                               ╎                                       │ size: Size(400.0, 800.0)
          ╎                                                                               ╎                                       │
-         ╎                                                                               ╎                                       ├─child 1: RenderPositionedBox#49990 relayoutBoundary=up1
-         ╎                                                                               ╎                                       │ │ creator: Center ← KeyedSubtree-[GlobalKey#a95fd] ← _BodyBuilder ←
+         ╎                                                                               ╎                                       ├─child 1: RenderPositionedBox#ad7a5 relayoutBoundary=up1
+         ╎                                                                               ╎                                       │ │ creator: Center ← KeyedSubtree-[GlobalKey#6b3cf] ← _BodyBuilder ←
          ╎                                                                               ╎                                       │ │   MediaQuery ← LayoutId-[<_ScaffoldSlot.body>] ←
          ╎                                                                               ╎                                       │ │   CustomMultiChildLayout ← _ActionsScope ← Actions ←
          ╎                                                                               ╎                                       │ │   AnimatedBuilder ← DefaultTextStyle ← AnimatedDefaultTextStyle ←
-         ╎                                                                               ╎                                       │ │   _InkFeatures-[GlobalKey#4dcd9 ink renderer] ← ⋯
+         ╎                                                                               ╎                                       │ │   _InkFeatures-[GlobalKey#e2de1 ink renderer] ← ⋯
          ╎                                                                               ╎                                       │ │ parentData: offset=Offset(0.0, 0.0); id=_ScaffoldSlot.body (can
          ╎                                                                               ╎                                       │ │   use size)
          ╎                                                                               ╎                                       │ │ constraints: BoxConstraints(0.0<=w<=400.0, 0.0<=h<=800.0)
@@ -1108,9 +1108,9 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                                       │ │ widthFactor: expand
          ╎                                                                               ╎                                       │ │ heightFactor: expand
          ╎                                                                               ╎                                       │ │
-         ╎                                                                               ╎                                       │ └─child: RenderPositionedBox#2565e relayoutBoundary=up2
+         ╎                                                                               ╎                                       │ └─child: RenderPositionedBox#10f25 relayoutBoundary=up2
          ╎                                                                               ╎                                       │   │ creator: Center ← SettlementEmptyState ← Center ←
-         ╎                                                                               ╎                                       │   │   KeyedSubtree-[GlobalKey#a95fd] ← _BodyBuilder ← MediaQuery ←
+         ╎                                                                               ╎                                       │   │   KeyedSubtree-[GlobalKey#6b3cf] ← _BodyBuilder ← MediaQuery ←
          ╎                                                                               ╎                                       │   │   LayoutId-[<_ScaffoldSlot.body>] ← CustomMultiChildLayout ←
          ╎                                                                               ╎                                       │   │   _ActionsScope ← Actions ← AnimatedBuilder ← DefaultTextStyle ←
          ╎                                                                               ╎                                       │   │   ⋯
@@ -1122,9 +1122,9 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                                       │   │ widthFactor: expand
          ╎                                                                               ╎                                       │   │ heightFactor: expand
          ╎                                                                               ╎                                       │   │
-         ╎                                                                               ╎                                       │   └─child: RenderPadding#fb21d relayoutBoundary=up3
+         ╎                                                                               ╎                                       │   └─child: RenderPadding#dcbad relayoutBoundary=up3
          ╎                                                                               ╎                                       │     │ creator: Padding ← Center ← SettlementEmptyState ← Center ←
-         ╎                                                                               ╎                                       │     │   KeyedSubtree-[GlobalKey#a95fd] ← _BodyBuilder ← MediaQuery ←
+         ╎                                                                               ╎                                       │     │   KeyedSubtree-[GlobalKey#6b3cf] ← _BodyBuilder ← MediaQuery ←
          ╎                                                                               ╎                                       │     │   LayoutId-[<_ScaffoldSlot.body>] ← CustomMultiChildLayout ←
          ╎                                                                               ╎                                       │     │   _ActionsScope ← Actions ← AnimatedBuilder ← ⋯
          ╎                                                                               ╎                                       │     │ parentData: offset=Offset(0.0, 288.0) (can use size)
@@ -1133,9 +1133,9 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                                       │     │ padding: EdgeInsets.all(32.0)
          ╎                                                                               ╎                                       │     │ textDirection: ltr
          ╎                                                                               ╎                                       │     │
-         ╎                                                                               ╎                                       │     └─child: RenderFlex#46915 relayoutBoundary=up4
+         ╎                                                                               ╎                                       │     └─child: RenderFlex#f8384 relayoutBoundary=up4
          ╎                                                                               ╎                                       │       │ creator: Column ← Padding ← Center ← SettlementEmptyState ←
-         ╎                                                                               ╎                                       │       │   Center ← KeyedSubtree-[GlobalKey#a95fd] ← _BodyBuilder ←
+         ╎                                                                               ╎                                       │       │   Center ← KeyedSubtree-[GlobalKey#6b3cf] ← _BodyBuilder ←
          ╎                                                                               ╎                                       │       │   MediaQuery ← LayoutId-[<_ScaffoldSlot.body>] ←
          ╎                                                                               ╎                                       │       │   CustomMultiChildLayout ← _ActionsScope ← Actions ← ⋯
          ╎                                                                               ╎                                       │       │ parentData: offset=Offset(32.0, 32.0) (can use size)
@@ -1148,9 +1148,9 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                                       │       │ verticalDirection: down
          ╎                                                                               ╎                                       │       │ spacing: 0.0
          ╎                                                                               ╎                                       │       │
-         ╎                                                                               ╎                                       │       ├─child 1: RenderSemanticsAnnotations#240e9 relayoutBoundary=up5
+         ╎                                                                               ╎                                       │       ├─child 1: RenderSemanticsAnnotations#8ef9c relayoutBoundary=up5
          ╎                                                                               ╎                                       │       │ │ creator: Semantics ← Icon ← Column ← Padding ← Center ←
-         ╎                                                                               ╎                                       │       │ │   SettlementEmptyState ← Center ← KeyedSubtree-[GlobalKey#a95fd]
+         ╎                                                                               ╎                                       │       │ │   SettlementEmptyState ← Center ← KeyedSubtree-[GlobalKey#6b3cf]
          ╎                                                                               ╎                                       │       │ │   ← _BodyBuilder ← MediaQuery ← LayoutId-[<_ScaffoldSlot.body>] ←
          ╎                                                                               ╎                                       │       │ │   CustomMultiChildLayout ← ⋯
          ╎                                                                               ╎                                       │       │ │ parentData: offset=Offset(136.0, 0.0); flex=null; fit=null (can
@@ -1158,29 +1158,29 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                                       │       │ │ constraints: BoxConstraints(0.0<=w<=336.0, 0.0<=h<=Infinity)
          ╎                                                                               ╎                                       │       │ │ size: Size(64.0, 64.0)
          ╎                                                                               ╎                                       │       │ │
-         ╎                                                                               ╎                                       │       │ └─child: RenderExcludeSemantics#c52b2 relayoutBoundary=up6
+         ╎                                                                               ╎                                       │       │ └─child: RenderExcludeSemantics#12035 relayoutBoundary=up6
          ╎                                                                               ╎                                       │       │   │ creator: ExcludeSemantics ← Semantics ← Icon ← Column ← Padding ←
          ╎                                                                               ╎                                       │       │   │   Center ← SettlementEmptyState ← Center ←
-         ╎                                                                               ╎                                       │       │   │   KeyedSubtree-[GlobalKey#a95fd] ← _BodyBuilder ← MediaQuery ←
+         ╎                                                                               ╎                                       │       │   │   KeyedSubtree-[GlobalKey#6b3cf] ← _BodyBuilder ← MediaQuery ←
          ╎                                                                               ╎                                       │       │   │   LayoutId-[<_ScaffoldSlot.body>] ← ⋯
          ╎                                                                               ╎                                       │       │   │ parentData: <none> (can use size)
          ╎                                                                               ╎                                       │       │   │ constraints: BoxConstraints(0.0<=w<=336.0, 0.0<=h<=Infinity)
          ╎                                                                               ╎                                       │       │   │ size: Size(64.0, 64.0)
          ╎                                                                               ╎                                       │       │   │ excluding: true
          ╎                                                                               ╎                                       │       │   │
-         ╎                                                                               ╎                                       │       │   └─child: RenderConstrainedBox#71114 relayoutBoundary=up7
+         ╎                                                                               ╎                                       │       │   └─child: RenderConstrainedBox#e345f relayoutBoundary=up7
          ╎                                                                               ╎                                       │       │     │ creator: SizedBox ← ExcludeSemantics ← Semantics ← Icon ← Column
          ╎                                                                               ╎                                       │       │     │   ← Padding ← Center ← SettlementEmptyState ← Center ←
-         ╎                                                                               ╎                                       │       │     │   KeyedSubtree-[GlobalKey#a95fd] ← _BodyBuilder ← MediaQuery ← ⋯
+         ╎                                                                               ╎                                       │       │     │   KeyedSubtree-[GlobalKey#6b3cf] ← _BodyBuilder ← MediaQuery ← ⋯
          ╎                                                                               ╎                                       │       │     │ parentData: <none> (can use size)
          ╎                                                                               ╎                                       │       │     │ constraints: BoxConstraints(0.0<=w<=336.0, 0.0<=h<=Infinity)
          ╎                                                                               ╎                                       │       │     │ size: Size(64.0, 64.0)
          ╎                                                                               ╎                                       │       │     │ additionalConstraints: BoxConstraints(w=64.0, h=64.0)
          ╎                                                                               ╎                                       │       │     │
-         ╎                                                                               ╎                                       │       │     └─child: RenderPositionedBox#0c098
+         ╎                                                                               ╎                                       │       │     └─child: RenderPositionedBox#cc7cb
          ╎                                                                               ╎                                       │       │       │ creator: Center ← SizedBox ← ExcludeSemantics ← Semantics ← Icon
          ╎                                                                               ╎                                       │       │       │   ← Column ← Padding ← Center ← SettlementEmptyState ← Center ←
-         ╎                                                                               ╎                                       │       │       │   KeyedSubtree-[GlobalKey#a95fd] ← _BodyBuilder ← ⋯
+         ╎                                                                               ╎                                       │       │       │   KeyedSubtree-[GlobalKey#6b3cf] ← _BodyBuilder ← ⋯
          ╎                                                                               ╎                                       │       │       │ parentData: <none> (can use size)
          ╎                                                                               ╎                                       │       │       │ constraints: BoxConstraints(w=64.0, h=64.0)
          ╎                                                                               ╎                                       │       │       │ size: Size(64.0, 64.0)
@@ -1189,10 +1189,10 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                                       │       │       │ widthFactor: expand
          ╎                                                                               ╎                                       │       │       │ heightFactor: expand
          ╎                                                                               ╎                                       │       │       │
-         ╎                                                                               ╎                                       │       │       └─child: RenderParagraph#d3992 relayoutBoundary=up1
+         ╎                                                                               ╎                                       │       │       └─child: RenderParagraph#214a4 relayoutBoundary=up1
          ╎                                                                               ╎                                       │       │         │ creator: RichText ← Center ← SizedBox ← ExcludeSemantics ←
          ╎                                                                               ╎                                       │       │         │   Semantics ← Icon ← Column ← Padding ← Center ←
-         ╎                                                                               ╎                                       │       │         │   SettlementEmptyState ← Center ← KeyedSubtree-[GlobalKey#a95fd]
+         ╎                                                                               ╎                                       │       │         │   SettlementEmptyState ← Center ← KeyedSubtree-[GlobalKey#6b3cf]
          ╎                                                                               ╎                                       │       │         │   ← ⋯
          ╎                                                                               ╎                                       │       │         │ parentData: offset=Offset(0.0, 0.0) (can use size)
          ╎                                                                               ╎                                       │       │         │ constraints: BoxConstraints(0.0<=w<=64.0, 0.0<=h<=64.0)
@@ -1214,9 +1214,9 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                                       │       │           ║   leadingDistribution: even
          ╎                                                                               ╎                                       │       │           ║   ""
          ╎                                                                               ╎                                       │       │           ╚═══════════
-         ╎                                                                               ╎                                       │       ├─child 2: RenderConstrainedBox#962f2 relayoutBoundary=up5
+         ╎                                                                               ╎                                       │       ├─child 2: RenderConstrainedBox#dc35a relayoutBoundary=up5
          ╎                                                                               ╎                                       │       │   creator: SizedBox ← Column ← Padding ← Center ←
-         ╎                                                                               ╎                                       │       │     SettlementEmptyState ← Center ← KeyedSubtree-[GlobalKey#a95fd]
+         ╎                                                                               ╎                                       │       │     SettlementEmptyState ← Center ← KeyedSubtree-[GlobalKey#6b3cf]
          ╎                                                                               ╎                                       │       │     ← _BodyBuilder ← MediaQuery ← LayoutId-[<_ScaffoldSlot.body>] ←
          ╎                                                                               ╎                                       │       │     CustomMultiChildLayout ← _ActionsScope ← ⋯
          ╎                                                                               ╎                                       │       │   parentData: offset=Offset(168.0, 64.0); flex=null; fit=null (can
@@ -1225,9 +1225,9 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                                       │       │   size: Size(0.0, 16.0)
          ╎                                                                               ╎                                       │       │   additionalConstraints: BoxConstraints(0.0<=w<=Infinity, h=16.0)
          ╎                                                                               ╎                                       │       │
-         ╎                                                                               ╎                                       │       ├─child 3: RenderParagraph#3cf3a relayoutBoundary=up5
+         ╎                                                                               ╎                                       │       ├─child 3: RenderParagraph#e461f relayoutBoundary=up5
          ╎                                                                               ╎                                       │       │ │ creator: RichText ← Text ← Column ← Padding ← Center ←
-         ╎                                                                               ╎                                       │       │ │   SettlementEmptyState ← Center ← KeyedSubtree-[GlobalKey#a95fd]
+         ╎                                                                               ╎                                       │       │ │   SettlementEmptyState ← Center ← KeyedSubtree-[GlobalKey#6b3cf]
          ╎                                                                               ╎                                       │       │ │   ← _BodyBuilder ← MediaQuery ← LayoutId-[<_ScaffoldSlot.body>] ←
          ╎                                                                               ╎                                       │       │ │   CustomMultiChildLayout ← ⋯
          ╎                                                                               ╎                                       │       │ │ parentData: offset=Offset(79.2, 80.0); flex=null; fit=null (can
@@ -1260,9 +1260,9 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                                       │       │   ║     blue: 0.9098, colorSpace: ColorSpace.sRGB) TextDecoration.none
          ╎                                                                               ╎                                       │       │   ║   "정산 내역이 없습니다"
          ╎                                                                               ╎                                       │       │   ╚═══════════
-         ╎                                                                               ╎                                       │       ├─child 4: RenderConstrainedBox#f5230 relayoutBoundary=up5
+         ╎                                                                               ╎                                       │       ├─child 4: RenderConstrainedBox#4606d relayoutBoundary=up5
          ╎                                                                               ╎                                       │       │   creator: SizedBox ← Column ← Padding ← Center ←
-         ╎                                                                               ╎                                       │       │     SettlementEmptyState ← Center ← KeyedSubtree-[GlobalKey#a95fd]
+         ╎                                                                               ╎                                       │       │     SettlementEmptyState ← Center ← KeyedSubtree-[GlobalKey#6b3cf]
          ╎                                                                               ╎                                       │       │     ← _BodyBuilder ← MediaQuery ← LayoutId-[<_ScaffoldSlot.body>] ←
          ╎                                                                               ╎                                       │       │     CustomMultiChildLayout ← _ActionsScope ← ⋯
          ╎                                                                               ╎                                       │       │   parentData: offset=Offset(168.0, 104.0); flex=null; fit=null (can
@@ -1271,9 +1271,9 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                                       │       │   size: Size(0.0, 8.0)
          ╎                                                                               ╎                                       │       │   additionalConstraints: BoxConstraints(0.0<=w<=Infinity, h=8.0)
          ╎                                                                               ╎                                       │       │
-         ╎                                                                               ╎                                       │       └─child 5: RenderParagraph#c0ed7 relayoutBoundary=up5
+         ╎                                                                               ╎                                       │       └─child 5: RenderParagraph#1f9da relayoutBoundary=up5
          ╎                                                                               ╎                                       │         │ creator: RichText ← Text ← Column ← Padding ← Center ←
-         ╎                                                                               ╎                                       │         │   SettlementEmptyState ← Center ← KeyedSubtree-[GlobalKey#a95fd]
+         ╎                                                                               ╎                                       │         │   SettlementEmptyState ← Center ← KeyedSubtree-[GlobalKey#6b3cf]
          ╎                                                                               ╎                                       │         │   ← _BodyBuilder ← MediaQuery ← LayoutId-[<_ScaffoldSlot.body>] ←
          ╎                                                                               ╎                                       │         │   CustomMultiChildLayout ← ⋯
          ╎                                                                               ╎                                       │         │ parentData: offset=Offset(0.0, 112.0); flex=null; fit=null (can
@@ -1306,12 +1306,12 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                                       │           ║     blue: 0.9098, colorSpace: ColorSpace.sRGB) TextDecoration.none
          ╎                                                                               ╎                                       │           ║   "이벤트를 등록하면 정산 내역이 표시됩니다."
          ╎                                                                               ╎                                       │           ╚═══════════
-         ╎                                                                               ╎                                       └─child 2: RenderStack#637b1 relayoutBoundary=up1
+         ╎                                                                               ╎                                       └─child 2: RenderStack#b2478 relayoutBoundary=up1
          ╎                                                                               ╎                                         │ creator: Stack ← _FloatingActionButtonTransition ← MediaQuery ←
          ╎                                                                               ╎                                         │   LayoutId-[<_ScaffoldSlot.floatingActionButton>] ←
          ╎                                                                               ╎                                         │   CustomMultiChildLayout ← _ActionsScope ← Actions ←
          ╎                                                                               ╎                                         │   AnimatedBuilder ← DefaultTextStyle ← AnimatedDefaultTextStyle ←
-         ╎                                                                               ╎                                         │   _InkFeatures-[GlobalKey#4dcd9 ink renderer] ←
+         ╎                                                                               ╎                                         │   _InkFeatures-[GlobalKey#e2de1 ink renderer] ←
          ╎                                                                               ╎                                         │   NotificationListener<LayoutChangedNotification> ← ⋯
          ╎                                                                               ╎                                         │ parentData: offset=Offset(384.0, 784.0);
          ╎                                                                               ╎                                         │   id=_ScaffoldSlot.floatingActionButton (can use size)
@@ -1321,7 +1321,7 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                                         │ textDirection: ltr
          ╎                                                                               ╎                                         │ fit: loose
          ╎                                                                               ╎                                         │
-         ╎                                                                               ╎                                         └─child 1: RenderTransform#44e77 relayoutBoundary=up2
+         ╎                                                                               ╎                                         └─child 1: RenderTransform#606ac relayoutBoundary=up2
          ╎                                                                               ╎                                           │ creator: Transform ← ScaleTransition ← Stack ←
          ╎                                                                               ╎                                           │   _FloatingActionButtonTransition ← MediaQuery ←
          ╎                                                                               ╎                                           │   LayoutId-[<_ScaffoldSlot.floatingActionButton>] ←
@@ -1342,7 +1342,7 @@ _ReusableRenderView#306f0
          ╎                                                                               ╎                                           │ textDirection: ltr
          ╎                                                                               ╎                                           │ transformHitTests: true
          ╎                                                                               ╎                                           │
-         ╎                                                                               ╎                                           └─child: RenderTransform#b56bb relayoutBoundary=up3 NEEDS-PAINT
+         ╎                                                                               ╎                                           └─child: RenderTransform#f4dc2 relayoutBoundary=up3 NEEDS-PAINT
          ╎                                                                               ╎                                               creator: Transform ← RotationTransition ← Transform ←
          ╎                                                                               ╎                                                 ScaleTransition ← Stack ← _FloatingActionButtonTransition ←
          ╎                                                                               ╎                                                 MediaQuery ← LayoutId-[<_ScaffoldSlot.floatingActionButton>] ←
