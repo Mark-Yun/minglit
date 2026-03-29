@@ -82,8 +82,9 @@ void main() {
     });
 
     // Fix #652: 하드코딩 색상 → 시맨틱 컬러 교체 회귀 방지
-    testWidgets('active chip uses tinted activeColor background (light mode)',
-        (tester) async {
+    testWidgets('active chip uses tinted activeColor background (light mode)', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData(
@@ -117,8 +118,9 @@ void main() {
     });
 
     // Fix #652: 다크모드에서 inactive 칩이 colorScheme 시맨틱 컬러 사용 확인
-    testWidgets('inactive chip uses colorScheme color (dark mode)',
-        (tester) async {
+    testWidgets('inactive chip uses colorScheme color (dark mode)', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData.dark().copyWith(
