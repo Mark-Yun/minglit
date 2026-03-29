@@ -1,4 +1,3 @@
-import 'package:app_user/src/features/event/matching/matching_vote_controller.dart';
 import 'package:app_user/src/features/event/matching/matching_vote_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -38,30 +37,36 @@ void main() {
     int maxVotes = 3,
     Set<String> votedIds = const {},
   }) {
-    when(() => mockMatchingRepo.getMatchingCandidates('event_1'))
-        .thenAnswer((_) async => candidates);
-    when(() => mockMatchingRepo.getMyMatches('event_1'))
-        .thenAnswer((_) async => matches);
-    when(() => mockMatchingRepo.getMyVoteCount('event_1'))
-        .thenAnswer((_) async => voteCount);
-    when(() => mockMatchingRepo.getMyVotedCandidateIds('event_1'))
-        .thenAnswer((_) async => votedIds);
-    when(() => mockMatchingRepo.getMatchRules('event_1'))
-        .thenAnswer((_) async => [
-              MatchRule(
-                id: 'rule_1',
-                eventId: 'event_1',
-                sourceGroupId: 'g_1',
-                targetGroupId: 'g_2',
-                voteCount: maxVotes,
-                createdAt: DateTime(2024),
-              ),
-            ]);
+    when(
+      () => mockMatchingRepo.getMatchingCandidates('event_1'),
+    ).thenAnswer((_) async => candidates);
+    when(
+      () => mockMatchingRepo.getMyMatches('event_1'),
+    ).thenAnswer((_) async => matches);
+    when(
+      () => mockMatchingRepo.getMyVoteCount('event_1'),
+    ).thenAnswer((_) async => voteCount);
+    when(
+      () => mockMatchingRepo.getMyVotedCandidateIds('event_1'),
+    ).thenAnswer((_) async => votedIds);
+    when(() => mockMatchingRepo.getMatchRules('event_1')).thenAnswer(
+      (_) async => [
+        MatchRule(
+          id: 'rule_1',
+          eventId: 'event_1',
+          sourceGroupId: 'g_1',
+          targetGroupId: 'g_2',
+          voteCount: maxVotes,
+          createdAt: DateTime(2024),
+        ),
+      ],
+    );
   }
 
   group('MatchingVoteContent', () {
-    testWidgets('renders without Scaffold — embeddable in any host',
-        (tester) async {
+    testWidgets('renders without Scaffold — embeddable in any host', (
+      tester,
+    ) async {
       stubDefaultProviders();
 
       await tester.pumpWidget(createTestWidget());
@@ -112,7 +117,6 @@ void main() {
           const UserProfile(id: 'c_1', name: '홍길동', username: 'hong'),
         ],
         voteCount: 1,
-        maxVotes: 3,
       );
 
       await tester.pumpWidget(createTestWidget());
@@ -127,7 +131,6 @@ void main() {
           const UserProfile(id: 'c_1', name: '홍길동', username: 'hong'),
         ],
         voteCount: 3,
-        maxVotes: 3,
         votedIds: {'c_1'},
       );
 
@@ -162,8 +165,9 @@ void main() {
       expect(find.text('이영희'), findsOneWidget);
     });
 
-    testWidgets('MatchingVoteScreen wraps content with Scaffold and AppBar',
-        (tester) async {
+    testWidgets('MatchingVoteScreen wraps content with Scaffold and AppBar', (
+      tester,
+    ) async {
       stubDefaultProviders();
 
       await tester.pumpWidget(
