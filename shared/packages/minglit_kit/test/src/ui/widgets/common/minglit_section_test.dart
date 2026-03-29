@@ -101,5 +101,27 @@ void main() {
       expect(titleText.style?.fontSize, 24);
       expect(titleText.style?.color, Colors.red);
     });
+
+    testWidgets('applies custom padding', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          const MinglitSection(
+            title: '제목',
+            padding: EdgeInsets.all(32),
+            child: Text('내용'),
+          ),
+        ),
+      );
+
+      final padding = tester.widget<Padding>(
+        find
+            .ancestor(
+              of: find.byType(Column),
+              matching: find.byType(Padding),
+            )
+            .first,
+      );
+      expect(padding.padding, const EdgeInsets.all(32));
+    });
   });
 }
