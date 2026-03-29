@@ -38,7 +38,7 @@ export const minglitSpacing = {
 
 export const minglitRadius = {
   small: '8px',
-  button: '16px',
-  card: '24px',
+  button: '12px',
+  card: '16px',
   input: '12px',
 };
