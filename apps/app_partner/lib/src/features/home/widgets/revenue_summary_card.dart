@@ -40,8 +40,7 @@ class RevenueSummaryCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(MinglitRadius.card),
       ),
       child: InkWell(
-        onTap: () =>
-            ref.read(partnerHomeCoordinatorProvider).goToSettlement(),
+        onTap: () => ref.read(partnerHomeCoordinatorProvider).goToSettlement(),
         borderRadius: BorderRadius.circular(MinglitRadius.card),
         child: Padding(
           padding: const EdgeInsets.all(MinglitSpacing.large),
