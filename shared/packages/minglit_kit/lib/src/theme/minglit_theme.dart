@@ -72,7 +72,7 @@ class MinglitTheme {
         error: MinglitColors.error,
         onSurfaceVariant: MinglitColors.textSecondary,
       ),
-      scaffoldBackgroundColor: MinglitColors.background,
+      scaffoldBackgroundColor: MinglitColors.surface,
       // Layer 1: 텍스트 통일성 (Using local fontFamily 'NotoSansKR')
       textTheme: const TextTheme(
         displayLarge: TextStyle(
