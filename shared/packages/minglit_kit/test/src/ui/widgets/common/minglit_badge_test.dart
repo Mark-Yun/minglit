@@ -68,8 +68,9 @@ void main() {
       expect(find.text('대기'), findsOneWidget);
 
       // Verify each badge has distinct background color via DecoratedBox
-      final decoratedBoxes =
-          tester.widgetList<DecoratedBox>(find.byType(DecoratedBox));
+      final decoratedBoxes = tester.widgetList<DecoratedBox>(
+        find.byType(DecoratedBox),
+      );
       final colors = <Color>{};
       for (final box in decoratedBoxes) {
         final decoration = box.decoration;
@@ -98,8 +99,7 @@ void main() {
         wrap(const MinglitBadge(label: 'test', color: Colors.blue)),
       );
 
-      final badge =
-          tester.widget<MinglitBadge>(find.byType(MinglitBadge));
+      final badge = tester.widget<MinglitBadge>(find.byType(MinglitBadge));
       expect(badge.compact, isFalse);
     });
 
@@ -108,8 +108,9 @@ void main() {
         wrap(const MinglitBadge(label: 'badge', color: Colors.purple)),
       );
 
-      final decoratedBox =
-          tester.widget<DecoratedBox>(find.byType(DecoratedBox).first);
+      final decoratedBox = tester.widget<DecoratedBox>(
+        find.byType(DecoratedBox).first,
+      );
       final decoration = decoratedBox.decoration as BoxDecoration;
 
       expect(decoration.borderRadius, isNotNull);

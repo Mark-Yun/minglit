@@ -47,27 +47,25 @@ class MinglitBadge extends StatelessWidget {
 
     final bgColor = color.withValues(alpha: MinglitOpacity.subtle);
 
-    final padding =
-        compact
-            ? const EdgeInsets.symmetric(
-              horizontal: MinglitSpacing.small,
-              vertical: MinglitSpacing.xxsmall,
-            )
-            : const EdgeInsets.symmetric(
-              horizontal: MinglitSpacing.sm,
-              vertical: MinglitSpacing.xsmall,
-            );
+    final padding = compact
+        ? const EdgeInsets.symmetric(
+            horizontal: MinglitSpacing.small,
+            vertical: MinglitSpacing.xxsmall,
+          )
+        : const EdgeInsets.symmetric(
+            horizontal: MinglitSpacing.sm,
+            vertical: MinglitSpacing.xsmall,
+          );
 
-    final textStyle =
-        compact
-            ? theme.textTheme.labelSmall!.copyWith(
-              color: color,
-              fontWeight: FontWeight.w600,
-            )
-            : theme.textTheme.labelMedium!.copyWith(
-              color: color,
-              fontWeight: FontWeight.w600,
-            );
+    final textStyle = compact
+        ? theme.textTheme.labelSmall!.copyWith(
+            color: color,
+            fontWeight: FontWeight.w600,
+          )
+        : theme.textTheme.labelMedium!.copyWith(
+            color: color,
+            fontWeight: FontWeight.w600,
+          );
 
     return DecoratedBox(
       decoration: BoxDecoration(
