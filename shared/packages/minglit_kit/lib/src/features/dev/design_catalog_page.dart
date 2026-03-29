@@ -6,6 +6,7 @@ import 'package:minglit_kit/src/ui/widgets/common/minglit_content_card.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_key_value_row.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_section.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_tag.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_text_field.dart';
 
 /// Dev-only design catalog page displaying all design tokens and components.
 ///
@@ -540,52 +541,64 @@ class _InputsSection extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(MinglitSpacing.medium),
       children: [
-        Text('Normal', style: theme.textTheme.titleMedium),
+        Text('MinglitTextField', style: theme.textTheme.titleLarge),
+        const SizedBox(height: MinglitSpacing.medium),
+        Text('Basic', style: theme.textTheme.titleMedium),
         const SizedBox(height: MinglitSpacing.small),
-        const TextField(
-          decoration: InputDecoration(
-            hintText: 'Normal input field',
-            labelText: 'Label',
-          ),
+        const MinglitTextField(
+          label: 'Label',
+          hintText: 'Normal input field',
         ),
         const SizedBox(height: MinglitSpacing.large),
-        Text('With Value', style: theme.textTheme.titleMedium),
+        Text('With Helper Text', style: theme.textTheme.titleMedium),
         const SizedBox(height: MinglitSpacing.small),
-        TextFormField(
-          initialValue: 'Minglit',
-          decoration: const InputDecoration(
-            labelText: 'Name',
-          ),
+        const MinglitTextField(
+          label: '이메일',
+          hintText: 'example@minglit.com',
+          helperText: '로그인에 사용할 이메일을 입력하세요',
+          keyboardType: TextInputType.emailAddress,
         ),
         const SizedBox(height: MinglitSpacing.large),
         Text('Error State', style: theme.textTheme.titleMedium),
         const SizedBox(height: MinglitSpacing.small),
-        const TextField(
-          decoration: InputDecoration(
-            hintText: 'Error input',
-            labelText: 'Email',
-            errorText: 'Invalid email format',
-          ),
+        const MinglitTextField(
+          label: '이메일',
+          hintText: 'Error input',
+          errorText: '올바른 이메일 형식이 아닙니다',
         ),
         const SizedBox(height: MinglitSpacing.large),
         Text('Disabled', style: theme.textTheme.titleMedium),
         const SizedBox(height: MinglitSpacing.small),
-        const TextField(
+        const MinglitTextField(
+          label: '비활성',
+          hintText: 'Disabled input field',
           enabled: false,
-          decoration: InputDecoration(
-            hintText: 'Disabled input field',
-            labelText: 'Disabled',
-          ),
+        ),
+        const SizedBox(height: MinglitSpacing.large),
+        Text('Password', style: theme.textTheme.titleMedium),
+        const SizedBox(height: MinglitSpacing.small),
+        const MinglitTextField(
+          label: '비밀번호',
+          hintText: '비밀번호를 입력하세요',
+          obscureText: true,
+          prefixIcon: Icon(Icons.lock_outline),
         ),
         const SizedBox(height: MinglitSpacing.large),
         Text('With Prefix & Suffix', style: theme.textTheme.titleMedium),
         const SizedBox(height: MinglitSpacing.small),
-        const TextField(
-          decoration: InputDecoration(
-            hintText: 'Search...',
-            prefixIcon: Icon(Icons.search),
-            suffixIcon: Icon(Icons.clear),
-          ),
+        const MinglitTextField(
+          label: '검색',
+          hintText: 'Search...',
+          prefixIcon: Icon(Icons.search),
+          suffixIcon: Icon(Icons.clear),
+        ),
+        const SizedBox(height: MinglitSpacing.large),
+        Text('Multiline', style: theme.textTheme.titleMedium),
+        const SizedBox(height: MinglitSpacing.small),
+        const MinglitTextField(
+          label: '메모',
+          hintText: '여러 줄 입력이 가능합니다',
+          maxLines: 3,
         ),
       ],
     );
