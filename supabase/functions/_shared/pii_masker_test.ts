@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { maskValue, maskPii, maskMetadata } from "./pii_masker.ts";
+import { maskValue, maskPii, maskMetadata, maskJsonString } from "./pii_masker.ts";
 
 // --- maskValue ---
 
@@ -116,6 +116,123 @@ Deno.test("maskPii - handles non-string PII values gracefully", () => {
   const result = maskPii(input) as Record<string, unknown>;
   assertEquals(result.name, 12345);
   assertEquals(result.phone, null);
+});
+
+// --- Fix #763: depth limit returns original object ---
+
+Deno.test("maskPii - depth limit returns original object (not string)", () => {
+  const deepObj = { level: "deep", name: "홍길동" };
+  const result = maskPii(deepObj, 11); // MAX_DEPTH(10) 초과
+  assertEquals(result, deepObj); // 원본 객체 그대로 반환
+  assertEquals(typeof result, "object"); // 문자열이 아닌 객체
+});
+
+Deno.test("maskPii - depth limit preserves array type", () => {
+  const deepArr = [{ name: "홍길동" }];
+  const result = maskPii(deepArr, 11);
+  assertEquals(result, deepArr);
+  assertEquals(Array.isArray(result), true);
+});
+
+Deno.test("maskPii - deeply nested object returns object at depth limit", () => {
+  // deno-lint-ignore no-explicit-any
+  let deep: any = { name: "홍길동" };
+  for (let i = 0; i < 12; i++) {
+    deep = { nested: deep };
+  }
+  const result = maskPii(deep) as Record<string, unknown>;
+  // 깊이 초과 시 원본 객체를 반환해야 함 (문자열 "[depth limit]"이 아닌)
+  assertEquals(typeof result, "object");
+
+  // 깊이 내의 레벨까지는 정상 순회되어야 함
+  let cursor = result;
+  for (let i = 0; i < 10; i++) {
+    assertEquals(typeof cursor.nested, "object");
+    cursor = cursor.nested as Record<string, unknown>;
+  }
+});
+
+// --- Fix #763: Sentry structural parent exclusion ---
+
+Deno.test("maskPii - Sentry exception.values[].name is NOT masked", () => {
+  const sentryEvent = {
+    exception: {
+      values: [{ type: "TypeError", name: "TypeError", value: "cannot read property" }],
+    },
+    user: { name: "홍길동" },
+  };
+  const result = maskPii(sentryEvent) as Record<string, unknown>;
+
+  // exception 아래의 values 아래의 name은 마스킹하지 않아야 한다
+  const exception = result.exception as Record<string, unknown>;
+  const values = exception.values as Record<string, unknown>[];
+  assertEquals(values[0].name, "TypeError"); // 마스킹 안됨
+  assertEquals(values[0].type, "TypeError");
+
+  // 일반 user.name은 여전히 마스킹되어야 한다
+  const user = result.user as Record<string, unknown>;
+  assertEquals(user.name, "홍*동");
+});
+
+Deno.test("maskPii - Sentry mechanism children are NOT masked", () => {
+  const input = {
+    mechanism: { type: "onerror", name: "window.onerror", handled: false },
+  };
+  const result = maskPii(input) as Record<string, unknown>;
+  const mechanism = result.mechanism as Record<string, unknown>;
+  assertEquals(mechanism.name, "window.onerror"); // 마스킹 안됨
+});
+
+Deno.test("maskPii - Sentry breadcrumbs items preserve name", () => {
+  const input = {
+    breadcrumbs: [
+      { category: "navigation", name: "main_screen", timestamp: 1234 },
+    ],
+  };
+  const result = maskPii(input) as Record<string, unknown>;
+  const breadcrumbs = result.breadcrumbs as Record<string, unknown>[];
+  assertEquals(breadcrumbs[0].name, "main_screen"); // 마스킹 안됨
+});
+
+Deno.test("maskPii - top-level name is still masked (no structural parent)", () => {
+  const input = { name: "홍길동", id: "user-1" };
+  const result = maskPii(input) as Record<string, unknown>;
+  assertEquals(result.name, "홍*동"); // 마스킹 됨
+});
+
+Deno.test("maskPii - non-structural parent still masks name", () => {
+  // "user"는 SENTRY_STRUCTURAL_PARENTS에 없으므로 name은 마스킹되어야 한다
+  const input = { user: { name: "홍길동", email: "test@example.com" } };
+  const result = maskPii(input) as Record<string, unknown>;
+  const user = result.user as Record<string, unknown>;
+  assertEquals(user.name, "홍*동");
+  assertEquals(user.email, "t***@example.com");
+});
+
+// --- maskJsonString ---
+
+Deno.test("maskJsonString - masks PII in JSON string", () => {
+  const jsonStr = JSON.stringify({ name: "홍길동", phone: "010-1234-5678", code: "ERR001" });
+  const result = maskJsonString(jsonStr);
+  const parsed = JSON.parse(result);
+  assertEquals(parsed.name, "홍*동");
+  assertEquals(parsed.phone, "010-****-5678");
+  assertEquals(parsed.code, "ERR001");
+});
+
+Deno.test("maskJsonString - returns fallback for non-JSON string", () => {
+  const result = maskJsonString("not a json string");
+  assertEquals(result, "[masked: unparseable error]");
+});
+
+Deno.test("maskJsonString - returns custom fallback", () => {
+  const result = maskJsonString("not json", "custom fallback");
+  assertEquals(result, "custom fallback");
+});
+
+Deno.test("maskJsonString - returns fallback for non-object JSON", () => {
+  const result = maskJsonString('"just a string"');
+  assertEquals(result, "[masked: unparseable error]");
 });
 
 // --- maskMetadata ---

@@ -36,11 +36,23 @@ Deno.serve(withHandler(async (req) => {
     try {
       verification = await portone.getIdentityVerification(identity_verification_id);
     } catch (fetchError) {
-      // Fix #763: Portone 에러 메시지에 이름/전화번호 등 PII 포함 가능 — 마스킹 후 로깅
+      // Fix #763: Portone 에러 메시지에 이름/전화번호 등 PII 포함 가능 — JSON 파싱 후 마스킹
       const rawMsg = fetchError instanceof Error ? fetchError.message : String(fetchError);
-      const maskedMsg = String(maskPii({ detail: rawMsg }).detail);
-      log({ function: FN, level: "error", message: "Portone V2 API Error", metadata: { detail: maskedMsg } });
-      return errorResponse("Failed to fetch verification info", 502, maskedMsg);
+      let maskedDetail: string;
+      try {
+        const parsed = JSON.parse(rawMsg);
+        if (typeof parsed === "object" && parsed !== null) {
+          maskedDetail = JSON.stringify(maskPii(parsed));
+        } else {
+          // Fix #763: JSON이지만 객체가 아닌 경우 PII 유출 방지
+          maskedDetail = "[error detail removed]";
+        }
+      } catch {
+        // Fix #763: JSON 파싱 실패 시 PII 유출 방지를 위해 원본 제거
+        maskedDetail = "[error detail removed]";
+      }
+      log({ function: FN, level: "error", message: "Portone V2 API Error", metadata: { detail: maskedDetail } });
+      return errorResponse("Failed to fetch verification info", 502, maskedDetail);
     }
 
     if (verification.status !== "VERIFIED") {

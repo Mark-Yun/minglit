@@ -22,6 +22,20 @@ const PII_FIELD_NAMES = new Set([
   "address",
 ]);
 
+/**
+ * Fix #763: Sentry 구조적 부모 키 — 이 키 아래의 "name" 등 PII 필드는
+ * exception type name, sdk name 등 구조적 데이터이므로 마스킹하지 않는다.
+ */
+const SENTRY_STRUCTURAL_PARENTS = new Set([
+  "exception",
+  "mechanism",
+  "stacktrace",
+  "breadcrumbs",
+  "debug_meta",
+  "frames",
+  "values",
+]);
+
 /** 최대 재귀 깊이 — 순환 참조 방지 */
 const MAX_DEPTH = 10;
 
@@ -79,26 +93,32 @@ function maskPiiValue(fieldName: string, value: unknown): unknown {
 /**
  * 객체를 재귀적으로 순회하며 PII 필드를 마스킹한 새 객체를 반환한다.
  * 원본 객체는 변경하지 않는다 (immutable).
+ *
+ * @param parentKey - 부모 객체에서 이 obj를 가리키는 키 (Sentry 구조적 키 판별용)
  */
-export function maskPii(obj: unknown, depth = 0): unknown {
-  if (depth > MAX_DEPTH) return "[depth limit]";
+export function maskPii(obj: unknown, depth = 0, parentKey?: string): unknown {
+  // Fix #763: depth limit 도달 시 원본 반환 — 문자열 반환 시 Sentry beforeSend 등 호출자 타입 깨짐
+  if (depth > MAX_DEPTH) return obj;
 
   if (obj === null || obj === undefined) return obj;
   if (typeof obj === "string") return obj;
   if (typeof obj === "number" || typeof obj === "boolean") return obj;
 
   if (Array.isArray(obj)) {
-    return obj.map((item) => maskPii(item, depth + 1));
+    return obj.map((item) => maskPii(item, depth + 1, parentKey));
   }
 
   if (typeof obj === "object") {
     const result: Record<string, unknown> = {};
+    // Fix #763: Sentry 구조적 부모 키 아래에서는 PII 필드 마스킹 스킵
+    const isSentryStructural = parentKey !== undefined &&
+      SENTRY_STRUCTURAL_PARENTS.has(parentKey.toLowerCase());
     for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
       const lowerKey = key.toLowerCase();
-      if (PII_FIELD_NAMES.has(lowerKey)) {
+      if (PII_FIELD_NAMES.has(lowerKey) && !isSentryStructural) {
         result[key] = maskPiiValue(key, value);
       } else if (typeof value === "object" && value !== null) {
-        result[key] = maskPii(value, depth + 1);
+        result[key] = maskPii(value, depth + 1, key);
       } else {
         result[key] = value;
       }
@@ -107,6 +127,26 @@ export function maskPii(obj: unknown, depth = 0): unknown {
   }
 
   return obj;
+}
+
+/**
+ * JSON 문자열 내 PII를 마스킹한다.
+ * Portone 등 외부 API 에러 메시지가 JSON.stringify된 경우 파싱 후 마스킹.
+ * 파싱 실패 시 PII 유출 방지를 위해 fallback 메시지를 반환한다.
+ */
+export function maskJsonString(
+  str: string,
+  fallback = "[masked: unparseable error]",
+): string {
+  try {
+    const parsed = JSON.parse(str);
+    if (typeof parsed === "object" && parsed !== null) {
+      return JSON.stringify(maskPii(parsed));
+    }
+  } catch {
+    // JSON 파싱 실패 — PII 포함 가능성이 있으므로 fallback 반환
+  }
+  return fallback;
 }
 
 /**
