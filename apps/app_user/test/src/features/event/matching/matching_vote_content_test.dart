@@ -13,7 +13,7 @@ void main() {
     mockMatchingRepo = MockMatchingRepository();
   });
 
-  Widget buildSubject({List<dynamic> overrides = const []}) {
+  Widget buildSubject({List<Override> overrides = const []}) {
     return ProviderScope(
       overrides: [
         matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
