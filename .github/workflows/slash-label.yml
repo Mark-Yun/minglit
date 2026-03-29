@@ -11,8 +11,12 @@ jobs:
   slash-label:
     if: >-
       github.event.issue.pull_request == null &&
-      contains(github.event.comment.body, '/needs-')
+      contains(github.event.comment.body, '/needs-') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
     runs-on: ubuntu-latest
+    concurrency:
+      group: slash-label-issue-${{ github.event.issue.number }}
+      cancel-in-progress: false
     steps:
       - name: Extract and apply label
         env:
@@ -32,8 +36,9 @@ jobs:
           # Verify label exists
           if ! gh label list --repo "$REPO" --json name -q '.[].name' | grep -q "^${label}$"; then
             echo "Label '$label' does not exist"
+            available_labels=$(gh label list --repo "$REPO" --json name -q '.[].name' | grep '^needs-' | paste -sd ', ' -)
             gh issue comment "$ISSUE_NUMBER" --repo "$REPO" \
-              --body "⚠️ 라벨 \`$label\`이 존재하지 않습니다. 사용 가능: needs-pm, needs-uiux, needs-arch, needs-qa, needs-security, needs-legal, needs-tpm, needs-dev"
+              --body "⚠️ 라벨 \`$label\`이 존재하지 않습니다. 사용 가능: ${available_labels:-needs-* 라벨 없음}"
             exit 0
           fi
 
