@@ -1,6 +1,6 @@
 #!/bin/bash
 # issue-worker-run.sh — 단발성 실행. launchd가 주기적으로 호출.
-set -euo pipefail
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="/Users/mark/workspace/minglit"
@@ -90,11 +90,10 @@ $(cat "$PROMPT_FILE")" \
     timer_pid=""
 done
 
-# --- 새 이슈 처리 (actionable 라벨만) ---
-issue_num=$(gh issue list --repo "$REPO" --state open \
+# --- 새 이슈 처리 (needs-dev 라벨만) ---
+issue_num=$(gh issue list --repo "$REPO" --label "needs-dev" --state open \
     --json number,assignees,labels \
     -q '[.[] | select(.assignees | length == 0) |
-        select(.labels | map(.name) | any(. == "bug-report" or . == "bug" or . == "ci-failure" or . == "enhancement" or . == "refactor")) |
         {number, priority: (
             if (.labels | map(.name) | any(. == "P0-critical")) then 0
             elif (.labels | map(.name) | any(. == "P1-high")) then 1
