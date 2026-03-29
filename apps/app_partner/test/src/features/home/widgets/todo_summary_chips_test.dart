@@ -101,34 +101,38 @@ void main() {
         ),
       );
 
-      // Active chip (pendingApplications > 0) should use tinted background
-      final containers = tester.widgetList<Container>(find.byType(Container));
-      final activeChip = containers.firstWhere(
-        (c) =>
-            c.decoration is BoxDecoration &&
-            (c.decoration! as BoxDecoration).color != null &&
-            (c.decoration! as BoxDecoration).color!.alpha < 255 &&
-            (c.decoration! as BoxDecoration).color!.alpha > 0,
-        orElse: () => throw StateError('No tinted chip background found'),
+      // 승인 대기 chip (active) should use error color tint
+      final expected = MinglitColors.error.withValues(alpha: 0.08);
+      final chipContainers = tester.widgetList<Container>(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration! as BoxDecoration).borderRadius != null,
+        ),
       );
-      final bgColor = (activeChip.decoration! as BoxDecoration).color!;
-      // Should NOT be a hardcoded Color(0xFFFFF0F0) etc. — alpha < 1.0 means
-      // it uses the activeColor.withValues(alpha: 0.08) pattern
-      expect(bgColor.alpha, lessThan(255));
+      expect(
+        chipContainers.any(
+          (c) => (c.decoration! as BoxDecoration).color == expected,
+        ),
+        isTrue,
+        reason: 'Active chip should use activeColor.withValues(alpha: 0.08)',
+      );
     });
 
     // Fix #652: 다크모드에서 inactive 칩이 colorScheme 시맨틱 컬러 사용 확인
     testWidgets('inactive chip uses colorScheme color (dark mode)', (
       tester,
     ) async {
+      final darkTheme = ThemeData.dark().copyWith(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: MinglitColors.primary,
+          brightness: Brightness.dark,
+        ),
+      );
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData.dark().copyWith(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: MinglitColors.primary,
-              brightness: Brightness.dark,
-            ),
-          ),
+          theme: darkTheme,
           home: Scaffold(
             body: TodoSummaryChips(
               pendingApplications: 0,
@@ -140,18 +144,21 @@ void main() {
         ),
       );
 
-      // All chips inactive → should use surfaceContainerHighest, not 0xFFF5F5F5
-      final containers = tester.widgetList<Container>(find.byType(Container));
-      final chipContainers = containers.where(
-        (c) =>
-            c.decoration is BoxDecoration &&
-            (c.decoration! as BoxDecoration).borderRadius != null,
+      // All chips inactive → should use surfaceContainerHighest
+      final context = tester.element(find.byType(TodoSummaryChips));
+      final expected = Theme.of(context).colorScheme.surfaceContainerHighest;
+      final chipContainers = tester.widgetList<Container>(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration! as BoxDecoration).borderRadius != null,
+        ),
       );
       for (final chip in chipContainers) {
         final color = (chip.decoration! as BoxDecoration).color;
         if (color != null) {
-          // Must NOT be the old hardcoded light-mode Color(0xFFF5F5F5)
-          expect(color, isNot(equals(const Color(0xFFF5F5F5))));
+          expect(color, equals(expected));
         }
       }
     });
