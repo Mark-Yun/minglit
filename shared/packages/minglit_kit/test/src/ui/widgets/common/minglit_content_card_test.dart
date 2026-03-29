@@ -1,44 +1,90 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_content_card.dart';
 
 void main() {
   Widget wrap(Widget child) {
-    return MaterialApp(home: Scaffold(body: child));
+    return MaterialApp(
+      home: Scaffold(body: child),
+    );
   }
 
   group('MinglitContentCard', () {
-    testWidgets('renders child content', (tester) async {
+    testWidgets('renders with required params only', (tester) async {
       await tester.pumpWidget(
-        wrap(
-          const MinglitContentCard(child: Text('카드 내용')),
-        ),
+        wrap(const MinglitContentCard(child: Text('content'))),
       );
 
-      expect(find.text('카드 내용'), findsOneWidget);
+      expect(find.text('content'), findsOneWidget);
+      expect(find.byType(MinglitContentCard), findsOneWidget);
     });
 
-    testWidgets('is tappable when onTap is provided', (tester) async {
-      var tapped = false;
+    testWidgets('renders child widget', (tester) async {
       await tester.pumpWidget(
         wrap(
-          MinglitContentCard(
-            onTap: () => tapped = true,
-            child: const Text('탭 가능'),
+          const MinglitContentCard(
+            child: Column(
+              children: [
+                Text('first'),
+                Text('second'),
+              ],
+            ),
           ),
         ),
       );
 
-      await tester.tap(find.text('탭 가능'));
+      expect(find.text('first'), findsOneWidget);
+      expect(find.text('second'), findsOneWidget);
+    });
+
+    testWidgets('renders with empty content child', (tester) async {
+      await tester.pumpWidget(
+        wrap(const MinglitContentCard(child: SizedBox.shrink())),
+      );
+
+      expect(find.byType(MinglitContentCard), findsOneWidget);
+    });
+
+    testWidgets('applies custom padding', (tester) async {
+      const customPadding = EdgeInsets.all(24);
+
+      await tester.pumpWidget(
+        wrap(
+          const MinglitContentCard(
+            padding: customPadding,
+            child: Text('padded'),
+          ),
+        ),
+      );
+
+      expect(find.text('padded'), findsOneWidget);
+
+      final container = tester.widget<Container>(find.byType(Container).first);
+      expect(container.padding, equals(customPadding));
+    });
+
+    testWidgets('calls onTap when tapped', (tester) async {
+      var tapped = false;
+
+      await tester.pumpWidget(
+        wrap(
+          MinglitContentCard(
+            onTap: () => tapped = true,
+            child: const Text('tappable'),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('tappable'));
       expect(tapped, isTrue);
     });
 
-    testWidgets('wraps in InkWell when onTap is provided', (tester) async {
+    testWidgets('wraps with InkWell when onTap is provided', (tester) async {
       await tester.pumpWidget(
         wrap(
           MinglitContentCard(
             onTap: () {},
-            child: const Text('내용'),
+            child: const Text('tappable'),
           ),
         ),
       );
@@ -46,34 +92,36 @@ void main() {
       expect(find.byType(InkWell), findsOneWidget);
     });
 
-    testWidgets('does not wrap in InkWell when onTap is null', (tester) async {
+    testWidgets('does not use InkWell when onTap is null', (tester) async {
       await tester.pumpWidget(
-        wrap(
-          const MinglitContentCard(child: Text('내용')),
-        ),
+        wrap(const MinglitContentCard(child: Text('static'))),
       );
 
       expect(find.byType(InkWell), findsNothing);
     });
 
-    testWidgets('applies highlighted border when highlighted is true', (
+    testWidgets('renders highlighted border when highlighted is true', (
       tester,
     ) async {
       await tester.pumpWidget(
         wrap(
           const MinglitContentCard(
             highlighted: true,
-            child: Text('강조'),
+            child: Text('highlighted'),
           ),
         ),
       );
 
+      expect(find.text('highlighted'), findsOneWidget);
+      expect(find.byType(MinglitContentCard), findsOneWidget);
+
       final container = tester.widget<Container>(find.byType(Container).first);
       final decoration = container.decoration! as BoxDecoration;
-      final border = decoration.border! as Border;
-      // Highlighted border should use primary color (not outlineVariant)
-      final theme = Theme.of(tester.element(find.text('강조')));
-      expect(border.top.color, theme.colorScheme.primary);
+      final borderSide = (decoration.border! as Border).top;
+      final colorScheme = Theme.of(
+        tester.element(find.byType(MinglitContentCard)),
+      ).colorScheme;
+      expect(borderSide.color, equals(colorScheme.primary));
     });
   });
 }
