@@ -72,16 +72,16 @@ class MinglitBottomCTA extends StatelessWidget {
   /// 버튼 활성화 여부.
   final bool enabled;
 
-  /// [dual] 변형의 보조 버튼 텍스트.
+  /// `MinglitBottomCTA.dual` 변형의 보조 버튼 텍스트.
   final String? secondaryLabel;
 
-  /// [dual] 변형의 보조 버튼 콜백.
+  /// `MinglitBottomCTA.dual` 변형의 보조 버튼 콜백.
   final VoidCallback? onSecondaryPressed;
 
-  /// [withPrice] 변형의 가격 텍스트 (예: "20,000원~").
+  /// `MinglitBottomCTA.withPrice` 변형의 가격 텍스트 (예: "20,000원~").
   final String? priceText;
 
-  /// [withPrice] 변형의 가격 부가 텍스트 (예: "최저가").
+  /// `MinglitBottomCTA.withPrice` 변형의 가격 부가 텍스트 (예: "최저가").
   final String? priceSubText;
 
   final _BottomCTAVariant _variant;
