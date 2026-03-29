@@ -14,7 +14,8 @@ import 'package:minglit_kit/src/ui/widgets/common/minglit_filter_chip.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_image.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_key_value_row.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_list_tile.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_participant_gauge.dart';import 'package:minglit_kit/src/ui/widgets/common/minglit_tag.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_participant_gauge.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_tag.dart';
 
 /// Dev-only design catalog page displaying all design tokens and components.
 ///
@@ -785,14 +786,12 @@ class _ButtonsSectionState extends State<_ButtonsSection> {
               label: '최신순',
               isSelected: _filterSelected,
               icon: Icons.sort,
-              onTap: () =>
-                  setState(() => _filterSelected = !_filterSelected),
+              onTap: () => setState(() => _filterSelected = !_filterSelected),
             ),
             MinglitFilterChip(
               label: '인기순',
               isSelected: !_filterSelected,
-              onTap: () =>
-                  setState(() => _filterSelected = !_filterSelected),
+              onTap: () => setState(() => _filterSelected = !_filterSelected),
             ),
           ],
         ),

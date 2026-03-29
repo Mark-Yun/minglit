@@ -39,9 +39,7 @@ void main() {
       await tester.pumpWidget(buildApp());
 
       final tabBar = tester.widget<TabBar>(find.byType(TabBar));
-      final labels = tabBar.tabs
-          .map((tab) => ((tab as Tab).text))
-          .toList();
+      final labels = tabBar.tabs.map((tab) => (tab as Tab).text).toList();
 
       expect(labels, [
         // Tokens (6)
@@ -91,8 +89,7 @@ void main() {
       expect(find.text('Card Elevations'), findsOneWidget);
     });
 
-    testWidgets('Data tab (12) shows MinglitParticipantGauge',
-        (tester) async {
+    testWidgets('Data tab (12) shows MinglitParticipantGauge', (tester) async {
       await tester.pumpWidget(buildApp());
       await switchToTab(tester, 12);
       expect(find.text('MinglitParticipantGauge'), findsOneWidget);
