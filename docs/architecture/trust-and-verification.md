@@ -49,7 +49,7 @@ User: user_verifications에 데이터 저장 (내 서랍)
     ↓
 User: verification_submissions 제출
     ↓
-Partner: 심사 (approve/reject/needs_correction)
+Partner: 심사 (approve/reject)
     ↓
 Trigger: partner_verified_users 생성 (승인 시)
 ```
@@ -143,32 +143,15 @@ CREATE TABLE public.partner_verified_users (
 );
 ```
 
-### 4.5 `verification_comments` table
-심사 과정에서 파트너가 남기는 코멘트다.
-
-```sql
-CREATE TABLE public.verification_comments (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  submission_id uuid NOT NULL REFERENCES public.verification_submissions(id) ON DELETE CASCADE,
-  author_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE SET NULL,
-  content jsonb NOT NULL DEFAULT '{}'::jsonb,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
-);
-```
-
 ---
 
 ## 5. Status Machine
 
-`verification_status` enum: pending, approved, rejected, needs_correction, cancelled
+`verification_status` enum: pending, approved, rejected
 
 ```text
 pending ──(파트너 승인)──> approved
 pending ──(파트너 반려)──> rejected
-pending ──(보완 요청)──> needs_correction
-needs_correction ──(재제출)──> pending
-* ──(유저 취소)──> cancelled
 ```
 
 ---
@@ -186,7 +169,7 @@ needs_correction ──(재제출)──> pending
 ## 7. Event Pipeline Integration
 
 `trigger_produce_event_verification()` 트리거가 작동한다.
-상태가 approved, rejected, 혹은 needs_correction으로 변경될 때 `verification_result` 이벤트를 global queue에 생성한다. 이후 notification-worker가 이를 감지하여 유저에게 푸시 알림을 보낸다.
+상태가 approved 혹은 rejected로 변경될 때 `verification_result` 이벤트를 global queue에 생성한다. 이후 notification-worker가 이를 감지하여 유저에게 푸시 알림을 보낸다.
 
 ---
 
@@ -198,7 +181,6 @@ needs_correction ──(재제출)──> pending
 | verification_submissions | User self read/create, Partner VERIFY_LIST_VIEW read, Partner VERIFY_REVIEW update |
 | user_verifications | User self read/write |
 | partner_verified_users | User self read |
-| verification_comments | Multi-role read (Admin, Author, Submission user, Partner VERIFY_REVIEW), Partner VERIFY_REVIEW insert, Admin/Author update/delete |
 
 ---
 
