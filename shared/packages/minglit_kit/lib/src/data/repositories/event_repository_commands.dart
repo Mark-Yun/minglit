@@ -266,4 +266,52 @@ mixin _EventRepositoryCommands
       rethrow;
     }
   }
+
+  /// Fix #653: Approves a single event application via Edge Function.
+  Future<void> approveApplication({required String applicationId}) async {
+    Log.d('approveApplication called | applicationId: $applicationId');
+    try {
+      await supabaseClient.functions.invoke(
+        'partner-approve-application',
+        body: {'action': 'approve', 'application_id': applicationId},
+      );
+      Log.i('✅ [EventRepo] Application approved: $applicationId');
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] approveApplication Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// Fix #653: Rejects a single event application via Edge Function.
+  Future<void> rejectApplication({
+    required String applicationId,
+    required String reason,
+  }) async {
+    Log.d('rejectApplication called | applicationId: $applicationId');
+    try {
+      await supabaseClient.functions.invoke(
+        'partner-reject-application',
+        body: {'application_id': applicationId, 'reason': reason},
+      );
+      Log.i('✅ [EventRepo] Application rejected: $applicationId');
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] rejectApplication Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// Fix #653: Bulk-approves all pending applications for a given event.
+  Future<void> bulkApproveApplications({required String eventId}) async {
+    Log.d('bulkApproveApplications called | eventId: $eventId');
+    try {
+      await supabaseClient.functions.invoke(
+        'partner-approve-application',
+        body: {'action': 'bulk_approve', 'event_id': eventId},
+      );
+      Log.i('✅ [EventRepo] Bulk approve completed for event: $eventId');
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] bulkApproveApplications Error', e, st);
+      rethrow;
+    }
+  }
 }
