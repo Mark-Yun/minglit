@@ -85,16 +85,18 @@ for pr_num in $my_prs; do
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Caring for my PR #${pr_num}..."
     head_branch=$(gh pr view "$pr_num" --repo "$REPO" --json headRefName -q '.headRefName')
     issue_num=$(echo "$head_branch" | grep -oE '[0-9]+' | head -1 || true)
+    # Fix #674: 이슈번호 없는 브랜치도 PR번호로 worktree 생성
     if [ -z "$issue_num" ]; then
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Cannot extract issue number from branch '${head_branch}'. Skipping."
+        worktree_id="pr-${pr_num}"
+    else
+        worktree_id="issue-${issue_num}"
+    fi
+    # 중복 실행 방지: 해당 worktree가 이미 처리 중이면 스킵
+    if pgrep -f "${worktree_id}" >/dev/null 2>&1; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] ${worktree_id} already in progress. Skipping PR care."
         continue
     fi
-    # 중복 실행 방지: 해당 이슈가 이미 처리 중이면 스킵
-    if pgrep -f "issue-${issue_num}" >/dev/null 2>&1; then
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Issue #${issue_num} already in progress. Skipping PR care."
-        continue
-    fi
-    worktree_dir="$WORKTREE_BASE/issue-${issue_num}"
+    worktree_dir="$WORKTREE_BASE/${worktree_id}"
     if [ ! -d "$worktree_dir" ]; then
         git -C "$REPO_DIR" fetch origin "$head_branch" 2>/dev/null
         git -C "$REPO_DIR" worktree add "$worktree_dir" "origin/$head_branch" 2>/dev/null || true
@@ -105,7 +107,7 @@ for pr_num in $my_prs; do
 $(cat "$PROMPT_FILE")" \
         --max-turns 999 \
         --allowedTools "Bash,Read,Write,Edit,Glob,Grep,Agent" \
-        2>&1 | tee "$LOG_DIR/issue-${issue_num}-$(date +%Y%m%d-%H%M%S).log" &
+        2>&1 | tee "$LOG_DIR/${worktree_id}-$(date +%Y%m%d-%H%M%S).log" &
     local_pid=$!
     ( sleep "$SESSION_TIMEOUT" && kill "$local_pid" 2>/dev/null ) &
     # 백그라운드 발사 — wait 없이 다음으로 진행
