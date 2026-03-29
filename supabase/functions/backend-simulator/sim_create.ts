@@ -158,6 +158,189 @@ export async function simCreateParties(
   return { partyIds, eventIds };
 }
 
+// Fix #705: Pre-warm auth tokens in parallel to avoid sequential latency per-application
+async function prewarmAuthTokens(
+  users: { username: string }[],
+  supabaseUrl: string,
+  anonKey: string,
+  simUserPassword: string,
+  log: (entry: Omit<SimLogEntry, "timestamp">) => void,
+): Promise<void> {
+  const BATCH_SIZE = 10;
+  const uniqueUsernames = [...new Set(users.map((u) => u.username).filter(Boolean))];
+  let warmed = 0;
+  let failed = 0;
+
+  for (let i = 0; i < uniqueUsernames.length; i += BATCH_SIZE) {
+    const batch = uniqueUsernames.slice(i, i + BATCH_SIZE);
+    const results = await Promise.allSettled(
+      batch.map((username) =>
+        getSimUserToken(supabaseUrl, anonKey, `${username}@test.com`, simUserPassword)
+      ),
+    );
+    for (const r of results) {
+      if (r.status === "fulfilled") warmed++;
+      else failed++;
+    }
+  }
+
+  log({
+    level: "info",
+    phase: "apply",
+    step: "prewarm_auth",
+    message: `Auth tokens pre-warmed: ${warmed} ok, ${failed} failed (${uniqueUsernames.length} total)`,
+  });
+}
+
+// Fix #705: Process a single event's applications (extracted for parallel execution)
+async function applyForEvent(
+  supabase: SupabaseClient,
+  eventId: string,
+  // deno-lint-ignore no-explicit-any
+  users: any[],
+  config: SimConfig,
+  log: (entry: Omit<SimLogEntry, "timestamp">) => void,
+  supabaseUrl?: string,
+  anonKey?: string,
+  simUserPassword?: string,
+): Promise<{ applicationIds: string[]; paidApplicationIds: string[]; pendingReviewApplicationIds: string[] }> {
+  const applicationIds: string[] = [];
+  const paidApplicationIds: string[] = [];
+  const pendingReviewApplicationIds: string[] = [];
+
+  const { data: entryGroups } = await supabase
+    .from("entry_groups")
+    .select("id, gender, birth_year_min, birth_year_max")
+    .eq("event_id", eventId);
+  if (!entryGroups || entryGroups.length === 0) {
+    return { applicationIds, paidApplicationIds, pendingReviewApplicationIds };
+  }
+
+  const { data: ticketsRaw } = await supabase
+    .from("tickets")
+    .select("id, price, status")
+    .eq("event_id", eventId);
+  const tickets = (ticketsRaw ?? []).filter((t: { status: string }) => t.status === "on_sale");
+  if (tickets.length === 0) {
+    return { applicationIds, paidApplicationIds, pendingReviewApplicationIds };
+  }
+  const ticket = tickets[0] as { id: string; price: number };
+
+  const { data: existingApps } = await supabase
+    .from("event_applications")
+    .select("user_id")
+    .eq("event_id", eventId);
+  const appliedUserIds = new Set((existingApps ?? []).map((a: { user_id: string }) => a.user_id));
+
+  let appsCreated = 0;
+  const shuffledUsers = [...users].sort(() => Math.random() - 0.5);
+
+  for (const user of shuffledUsers) {
+    if (appsCreated >= config.apps_per_event) break;
+    if (appliedUserIds.has(user.id)) continue;
+
+    const birthYear = user.birth_date ? new Date(user.birth_date).getFullYear() : 1995;
+    const eligible = (entryGroups as { gender: string; birth_year_min: number; birth_year_max: number }[]).some(
+      (g) => g.gender === user.gender && birthYear >= g.birth_year_min && birthYear <= g.birth_year_max
+    );
+    if (!eligible) continue;
+
+    const isHappyPath = Math.random() >= config.error_rate;
+    const mockPaymentId = `e2e_pay_${crypto.randomUUID().slice(0, 8)}`;
+
+    // Attempt to use apply_event RPC with user-scoped client when auth credentials are available
+    if (supabaseUrl && anonKey && simUserPassword && user.username) {
+      const userEmail = `${user.username}@test.com`;
+      try {
+        const userToken = await getSimUserToken(supabaseUrl, anonKey, userEmail, simUserPassword);
+        const userClient = createClient(supabaseUrl, anonKey, {
+          auth: { persistSession: false },
+          global: { headers: { Authorization: `Bearer ${userToken}` } },
+        });
+
+        // apply_event RPC: pass verification_data=null for happy path (→ 'paid'), non-null for pending_review
+        const rpcParams = {
+          p_event_id: eventId,
+          p_ticket_id: ticket.id,
+          p_user_id: user.id,
+          p_payment_id: isHappyPath ? mockPaymentId : null,
+          p_payment_amount: isHappyPath ? ticket.price : null,
+          p_verification_data: isHappyPath ? null : { source: "e2e_sim" },
+        };
+
+        const { data: appId, error: rpcErr } = await userClient.rpc("apply_event", rpcParams);
+        if (rpcErr) {
+          log({ level: "warn", phase: "apply", step: "rpc_apply_event", message: `RPC failed for user ${userEmail} event ${eventId}: ${rpcErr.message}` });
+          continue;
+        }
+
+        const newAppId = appId as string;
+        applicationIds.push(newAppId);
+        appliedUserIds.add(user.id);
+        appsCreated++;
+
+        if (isHappyPath) {
+          paidApplicationIds.push(newAppId);
+        } else {
+          pendingReviewApplicationIds.push(newAppId);
+        }
+        continue;
+      } catch (authErr) {
+        // Fall through to service_role direct insert if auth fails (e.g. user not seeded)
+        log({ level: "warn", phase: "apply", step: "auth_fallback", message: `Auth failed for ${user.username}, using direct insert: ${String(authErr)}` });
+      }
+    }
+
+    // Fallback: service_role direct insert (used when auth credentials not available or auth fails)
+    const appId = crypto.randomUUID();
+    const { error: appErr } = await supabase.from("event_applications").insert({
+      id: appId,
+      event_id: eventId,
+      ticket_id: ticket.id,
+      user_id: user.id,
+      status: isHappyPath ? "paid" : "pending_review",
+      payment_amount: isHappyPath ? ticket.price : null,
+      payment_id: isHappyPath ? mockPaymentId : null,
+      message: "[E2E] 시뮬레이션 신청",
+    });
+    if (appErr) {
+      log({ level: "warn", phase: "apply", step: "create_application", message: `Failed: ${appErr.message}` });
+      continue;
+    }
+
+    applicationIds.push(appId);
+    appliedUserIds.add(user.id);
+    appsCreated++;
+
+    if (isHappyPath) {
+      paidApplicationIds.push(appId);
+      const { error: participantErr } = await supabase.from("event_participants").insert({
+        id: crypto.randomUUID(),
+        event_id: eventId,
+        ticket_id: ticket.id,
+        user_id: user.id,
+        application_id: appId,
+        status: "ticket_issued",
+        birth_year: birthYear,
+      });
+      if (participantErr) {
+        log({ level: "warn", phase: "create", step: "create_participant", message: `Failed to create participant: ${participantErr.message}` });
+      }
+    } else {
+      pendingReviewApplicationIds.push(appId);
+    }
+  }
+
+  if (appsCreated > 0) {
+    log({ level: "info", phase: "apply", step: "event_applied", message: `Event ${eventId}: ${appsCreated} applications` });
+  }
+
+  return { applicationIds, paidApplicationIds, pendingReviewApplicationIds };
+}
+
+// Fix #705: Concurrency limit for parallel event processing to avoid overwhelming DB
+const EVENT_CONCURRENCY = 5;
+
 export async function simDiscoverAndApply(
   supabase: SupabaseClient,
   config: SimConfig,
@@ -200,128 +383,26 @@ export async function simDiscoverAndApply(
     return { applicationIds, paidApplicationIds, pendingReviewApplicationIds };
   }
 
-  for (const eventId of allEventIds) {
-    const { data: entryGroups } = await supabase
-      .from("entry_groups")
-      .select("id, gender, birth_year_min, birth_year_max")
-      .eq("event_id", eventId);
-    if (!entryGroups || entryGroups.length === 0) continue;
+  // Fix #705: Pre-warm auth token cache to eliminate sequential auth latency in the apply loop
+  if (supabaseUrl && anonKey) {
+    await prewarmAuthTokens(users as { username: string }[], supabaseUrl, anonKey, simUserPassword, log);
+  }
 
-    const { data: ticketsRaw } = await supabase
-      .from("tickets")
-      .select("id, price, status")
-      .eq("event_id", eventId);
-    const tickets = (ticketsRaw ?? []).filter((t: { status: string }) => t.status === "on_sale");
-    if (tickets.length === 0) continue;
-    const ticket = tickets[0] as { id: string; price: number };
+  // Fix #705: Process events in parallel batches instead of sequentially
+  for (let i = 0; i < allEventIds.length; i += EVENT_CONCURRENCY) {
+    const batch = allEventIds.slice(i, i + EVENT_CONCURRENCY);
+    const results = await Promise.allSettled(
+      batch.map((eventId) =>
+        applyForEvent(supabase, eventId, users, config, log, supabaseUrl, anonKey, simUserPassword)
+      ),
+    );
 
-    const { data: existingApps } = await supabase
-      .from("event_applications")
-      .select("user_id")
-      .eq("event_id", eventId);
-    const appliedUserIds = new Set((existingApps ?? []).map((a: { user_id: string }) => a.user_id));
-
-    let appsCreated = 0;
-    const shuffledUsers = [...users].sort(() => Math.random() - 0.5);
-
-    for (const user of shuffledUsers) {
-      if (appsCreated >= config.apps_per_event) break;
-      if (appliedUserIds.has(user.id)) continue;
-
-      const birthYear = user.birth_date ? new Date(user.birth_date).getFullYear() : 1995;
-      const eligible = (entryGroups as { gender: string; birth_year_min: number; birth_year_max: number }[]).some(
-        (g) => g.gender === user.gender && birthYear >= g.birth_year_min && birthYear <= g.birth_year_max
-      );
-      if (!eligible) continue;
-
-      const isHappyPath = Math.random() >= config.error_rate;
-      const mockPaymentId = `e2e_pay_${crypto.randomUUID().slice(0, 8)}`;
-
-      // Attempt to use apply_event RPC with user-scoped client when auth credentials are available
-      if (supabaseUrl && anonKey && user.username) {
-        const userEmail = `${user.username}@test.com`;
-        try {
-          const userToken = await getSimUserToken(supabaseUrl, anonKey, userEmail, simUserPassword);
-          const userClient = createClient(supabaseUrl, anonKey, {
-            auth: { persistSession: false },
-            global: { headers: { Authorization: `Bearer ${userToken}` } },
-          });
-
-          // apply_event RPC: pass verification_data=null for happy path (→ 'paid'), non-null for pending_review
-          const rpcParams = {
-            p_event_id: eventId,
-            p_ticket_id: ticket.id,
-            p_user_id: user.id,
-            p_payment_id: isHappyPath ? mockPaymentId : null,
-            p_payment_amount: isHappyPath ? ticket.price : null,
-            p_verification_data: isHappyPath ? null : { source: "e2e_sim" },
-          };
-
-          const { data: appId, error: rpcErr } = await userClient.rpc("apply_event", rpcParams);
-          if (rpcErr) {
-            log({ level: "warn", phase: "apply", step: "rpc_apply_event", message: `RPC failed for user ${userEmail} event ${eventId}: ${rpcErr.message}` });
-            continue;
-          }
-
-          const newAppId = appId as string;
-          applicationIds.push(newAppId);
-          appliedUserIds.add(user.id);
-          appsCreated++;
-
-          if (isHappyPath) {
-            paidApplicationIds.push(newAppId);
-          } else {
-            pendingReviewApplicationIds.push(newAppId);
-          }
-          continue;
-        } catch (authErr) {
-          // Fall through to service_role direct insert if auth fails (e.g. user not seeded)
-          log({ level: "warn", phase: "apply", step: "auth_fallback", message: `Auth failed for ${user.username}, using direct insert: ${String(authErr)}` });
-        }
+    for (const result of results) {
+      if (result.status === "fulfilled") {
+        applicationIds.push(...result.value.applicationIds);
+        paidApplicationIds.push(...result.value.paidApplicationIds);
+        pendingReviewApplicationIds.push(...result.value.pendingReviewApplicationIds);
       }
-
-      // Fallback: service_role direct insert (used when auth credentials not available or auth fails)
-      const appId = crypto.randomUUID();
-      const { error: appErr } = await supabase.from("event_applications").insert({
-        id: appId,
-        event_id: eventId,
-        ticket_id: ticket.id,
-        user_id: user.id,
-        status: isHappyPath ? "paid" : "pending_review",
-        payment_amount: isHappyPath ? ticket.price : null,
-        payment_id: isHappyPath ? mockPaymentId : null,
-        message: "[E2E] 시뮬레이션 신청",
-      });
-      if (appErr) {
-        log({ level: "warn", phase: "apply", step: "create_application", message: `Failed: ${appErr.message}` });
-        continue;
-      }
-
-      applicationIds.push(appId);
-      appliedUserIds.add(user.id);
-      appsCreated++;
-
-      if (isHappyPath) {
-        paidApplicationIds.push(appId);
-        const { error: participantErr } = await supabase.from("event_participants").insert({
-          id: crypto.randomUUID(),
-          event_id: eventId,
-          ticket_id: ticket.id,
-          user_id: user.id,
-          application_id: appId,
-          status: "ticket_issued",
-          birth_year: birthYear,
-        });
-        if (participantErr) {
-          log({ level: "warn", phase: "create", step: "create_participant", message: `Failed to create participant: ${participantErr.message}` });
-        }
-      } else {
-        pendingReviewApplicationIds.push(appId);
-      }
-    }
-
-    if (appsCreated > 0) {
-      log({ level: "info", phase: "apply", step: "event_applied", message: `Event ${eventId}: ${appsCreated} applications` });
     }
   }
 
