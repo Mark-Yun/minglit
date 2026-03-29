@@ -1,0 +1,45 @@
+name: Slash Label Command
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+
+jobs:
+  slash-label:
+    if: >-
+      github.event.issue.pull_request == null &&
+      contains(github.event.comment.body, '/needs-')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract and apply label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMENT: ${{ github.event.comment.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          # Extract /needs-xxx from comment (first match only)
+          label=$(echo "$COMMENT" | grep -oE '/needs-[a-z]+' | head -1 | sed 's|^/||')
+
+          if [ -z "$label" ]; then
+            echo "No valid /needs- command found"
+            exit 0
+          fi
+
+          # Verify label exists
+          if ! gh label list --repo "$REPO" --json name -q '.[].name' | grep -q "^${label}$"; then
+            echo "Label '$label' does not exist"
+            gh issue comment "$ISSUE_NUMBER" --repo "$REPO" \
+              --body "⚠️ 라벨 \`$label\`이 존재하지 않습니다. 사용 가능: needs-pm, needs-uiux, needs-arch, needs-qa, needs-security, needs-legal, needs-tpm, needs-dev"
+            exit 0
+          fi
+
+          echo "Adding label: $label to issue #$ISSUE_NUMBER"
+          gh issue edit "$ISSUE_NUMBER" --repo "$REPO" --add-label "$label"
+
+          # React to comment to confirm
+          gh api repos/$REPO/issues/comments/${{ github.event.comment.id }}/reactions \
+            --method POST -f content='+1' || true
