@@ -18,22 +18,34 @@ mkdir -p "$LOG_DIR"
 
 while true; do
 
-# --- 머지된 worktree 정리 ---
+# --- 머지된 PR의 claude 세션 종료 + worktree 정리 ---
 for dir in "$WORKTREE_BASE"/issue-*; do
     [ -d "$dir" ] || continue
     issue_num="${dir##*issue-}"
-    # worktree가 현재 사용 중이면 건너뛰기
-    if pgrep -f "$dir" >/dev/null 2>&1; then
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Skipping issue-${issue_num} — process active."
-        continue
+    branch=$(git -C "$dir" branch --show-current 2>/dev/null || true)
+
+    # PR이 머지됐으면 claude 세션 kill + worktree 정리
+    if [ -n "$branch" ] && [ "$branch" != "dev" ]; then
+        pr_state=$(gh pr list --repo "$REPO" --head "$branch" --json state -q '.[0].state' 2>/dev/null || true)
+        if [ "$pr_state" = "MERGED" ]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] PR merged for issue-${issue_num} — killing claude session + cleanup."
+            pkill -f "issue-${issue_num}" 2>/dev/null || true
+            rm -rf "$dir"
+            git -C "$REPO_DIR" worktree prune 2>/dev/null
+            git -C "$REPO_DIR" branch -D "$branch" 2>/dev/null || true
+            continue
+        fi
     fi
-    state=$(gh issue view "$issue_num" --repo "$REPO" --json state -q '.state' 2>/dev/null)
-    if [ "$state" = "CLOSED" ]; then
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Cleaning up issue-${issue_num}..."
-        branch=$(git -C "$dir" branch --show-current 2>/dev/null)
-        rm -rf "$dir"
-        git -C "$REPO_DIR" worktree prune 2>/dev/null
-        [ -n "$branch" ] && [ "$branch" != "dev" ] && git -C "$REPO_DIR" branch -D "$branch" 2>/dev/null
+
+    # 이슈가 닫혔으면 (PR 없이 닫힌 경우) 동일 정리
+    if ! pgrep -f "$dir" >/dev/null 2>&1; then
+        state=$(gh issue view "$issue_num" --repo "$REPO" --json state -q '.state' 2>/dev/null)
+        if [ "$state" = "CLOSED" ]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Cleaning up issue-${issue_num}..."
+            rm -rf "$dir"
+            git -C "$REPO_DIR" worktree prune 2>/dev/null
+            [ -n "$branch" ] && [ "$branch" != "dev" ] && git -C "$REPO_DIR" branch -D "$branch" 2>/dev/null
+        fi
     fi
 done
 
