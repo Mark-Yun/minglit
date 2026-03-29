@@ -1,7 +1,9 @@
-part of 'purchase_history_page.dart';
+import 'package:flutter/material.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.status});
+// Fix #638: StatusBadge를 공유 위젯으로 추출 — purchase_history 전용 private 위젯에서 공통 위젯으로 승격
+class StatusBadge extends StatelessWidget {
+  const StatusBadge({required this.status, super.key});
 
   final String status;
 
