@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { maskValue, maskPii, maskMetadata, maskJsonString } from "./pii_masker.ts";
+import { maskValue, maskPii, maskMetadata, maskJsonString, EXCLUDED_KEYS } from "./pii_masker.ts";
 
 // --- maskValue ---
 
@@ -152,61 +152,41 @@ Deno.test("maskPii - deeply nested object returns object at depth limit", () => 
   }
 });
 
-// --- Fix #763: Sentry structural parent exclusion ---
+// --- Fix #763: EXCLUDED_KEYS ---
 
-Deno.test("maskPii - Sentry exception.values[].name is NOT masked", () => {
-  const sentryEvent = {
-    exception: {
-      values: [{ type: "TypeError", name: "TypeError", value: "cannot read property" }],
-    },
-    user: { name: "홍길동" },
-  };
-  const result = maskPii(sentryEvent) as Record<string, unknown>;
-
-  // exception 아래의 values 아래의 name은 마스킹하지 않아야 한다
-  const exception = result.exception as Record<string, unknown>;
-  const values = exception.values as Record<string, unknown>[];
-  assertEquals(values[0].name, "TypeError"); // 마스킹 안됨
-  assertEquals(values[0].type, "TypeError");
-
-  // 일반 user.name은 여전히 마스킹되어야 한다
-  const user = result.user as Record<string, unknown>;
-  assertEquals(user.name, "홍*동");
-});
-
-Deno.test("maskPii - Sentry mechanism children are NOT masked", () => {
+Deno.test("maskPii - EXCLUDED_KEYS are not masked even if in PII_FIELD_NAMES", () => {
+  // "type", "module" 등 Sentry 구조적 키는 마스킹하지 않는다
   const input = {
-    mechanism: { type: "onerror", name: "window.onerror", handled: false },
+    type: "TypeError",
+    module: "auth",
+    mechanism: "unhandledrejection",
+    handled: "false",
+    category: "error",
+    level: "fatal",
   };
   const result = maskPii(input) as Record<string, unknown>;
-  const mechanism = result.mechanism as Record<string, unknown>;
-  assertEquals(mechanism.name, "window.onerror"); // 마스킹 안됨
+  assertEquals(result.type, "TypeError");
+  assertEquals(result.module, "auth");
+  assertEquals(result.mechanism, "unhandledrejection");
+  assertEquals(result.handled, "false");
+  assertEquals(result.category, "error");
+  assertEquals(result.level, "fatal");
 });
 
-Deno.test("maskPii - Sentry breadcrumbs items preserve name", () => {
-  const input = {
-    breadcrumbs: [
-      { category: "navigation", name: "main_screen", timestamp: 1234 },
-    ],
-  };
-  const result = maskPii(input) as Record<string, unknown>;
-  const breadcrumbs = result.breadcrumbs as Record<string, unknown>[];
-  assertEquals(breadcrumbs[0].name, "main_screen"); // 마스킹 안됨
+Deno.test("maskPii - EXCLUDED_KEYS set contains expected Sentry structural keys", () => {
+  assertEquals(EXCLUDED_KEYS.has("type"), true);
+  assertEquals(EXCLUDED_KEYS.has("module"), true);
+  assertEquals(EXCLUDED_KEYS.has("mechanism"), true);
+  assertEquals(EXCLUDED_KEYS.has("handled"), true);
+  assertEquals(EXCLUDED_KEYS.has("synthetic"), true);
+  assertEquals(EXCLUDED_KEYS.has("category"), true);
+  assertEquals(EXCLUDED_KEYS.has("level"), true);
 });
 
-Deno.test("maskPii - top-level name is still masked (no structural parent)", () => {
+Deno.test("maskPii - name field is still masked (not in EXCLUDED_KEYS)", () => {
   const input = { name: "홍길동", id: "user-1" };
   const result = maskPii(input) as Record<string, unknown>;
-  assertEquals(result.name, "홍*동"); // 마스킹 됨
-});
-
-Deno.test("maskPii - non-structural parent still masks name", () => {
-  // "user"는 SENTRY_STRUCTURAL_PARENTS에 없으므로 name은 마스킹되어야 한다
-  const input = { user: { name: "홍길동", email: "test@example.com" } };
-  const result = maskPii(input) as Record<string, unknown>;
-  const user = result.user as Record<string, unknown>;
-  assertEquals(user.name, "홍*동");
-  assertEquals(user.email, "t***@example.com");
+  assertEquals(result.name, "홍*동");
 });
 
 // --- maskJsonString ---
