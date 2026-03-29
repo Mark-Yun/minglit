@@ -69,8 +69,7 @@ void main() {
         id: id,
         partyId: 'party_1',
         title: title,
-        startTime: startTime ??
-            now.subtract(const Duration(minutes: 10)),
+        startTime: startTime ?? now.subtract(const Duration(minutes: 10)),
         endTime: endTime ?? now.add(const Duration(hours: 3)),
         createdAt: now,
         updatedAt: now,
@@ -197,8 +196,6 @@ void main() {
       (tester) async {
         final event = makeActiveEvent(
           participantStatus: 'checked_in',
-          currentParticipants: 8,
-          maxParticipants: 20,
         );
         await tester.pumpWidget(
           createTestWidget(event, EventNowBarState.checkedIn),
