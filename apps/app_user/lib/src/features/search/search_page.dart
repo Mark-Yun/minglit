@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:app_user/src/features/event/logic/event_coordinator.dart';
+import 'package:app_user/src/features/search/logic/search_coordinator.dart';
 import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -49,7 +49,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   Widget build(BuildContext context) {
     final query = ref.watch(searchQueryProvider);
     final searchAsync = ref.watch(searchResultsProvider);
-    final eventCoordinator = ref.read(eventCoordinatorProvider);
+    // Fix #634: event_coordinator 직접 참조 → search_coordinator 전환
+    final searchCoordinator = ref.read(searchCoordinatorProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -123,7 +124,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   final event = events[index];
                   return MinglitEventCard(
                     event: event,
-                    onTap: () => eventCoordinator.pushEventDetail(event.id),
+                    onTap: () => searchCoordinator.pushEventDetail(event.id),
                   );
                 },
               );
