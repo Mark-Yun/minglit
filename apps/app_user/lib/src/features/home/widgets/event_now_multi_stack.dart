@@ -57,8 +57,7 @@ class EventNowMultiStack extends ConsumerStatefulWidget {
   final void Function(TodayActiveEvent event)? onEventTap;
 
   @override
-  ConsumerState<EventNowMultiStack> createState() =>
-      _EventNowMultiStackState();
+  ConsumerState<EventNowMultiStack> createState() => _EventNowMultiStackState();
 }
 
 class _EventNowMultiStackState extends ConsumerState<EventNowMultiStack> {
