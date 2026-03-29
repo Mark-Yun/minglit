@@ -35,6 +35,7 @@ export 'src/ui/widgets/common/minglit_participant_gauge.dart';
 export 'src/ui/widgets/common/minglit_section.dart';
 export 'src/ui/widgets/common/minglit_section_divider.dart';
 export 'src/ui/widgets/common/minglit_skeleton.dart';
+export 'src/ui/widgets/common/minglit_tag.dart';
 export 'src/ui/widgets/common/number_stepper_input.dart';
 export 'src/ui/widgets/common/verification_card.dart';
 export 'src/ui/widgets/common/verification_select_card.dart';
