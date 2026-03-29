@@ -9,6 +9,7 @@ export 'src/data/models/event.dart';
 export 'src/data/models/event_application.dart';
 export 'src/data/models/event_feed_type.dart';
 export 'src/data/models/event_participant.dart';
+export 'src/data/models/today_active_event.dart';
 export 'src/data/models/matching.dart';
 export 'src/data/models/metadata_key.dart';
 export 'src/data/models/partner.dart';
