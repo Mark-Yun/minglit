@@ -26,6 +26,8 @@ export default function PrivacyPage() {
               <li><strong>본인확인:</strong> 이름, 생년월일, 성별, 내/외국인 정보, 휴대폰 번호, CI/DI (연계정보)</li>
               <li><strong>자격 인증(선택):</strong> 직업, 소속, 직무, 증빙 서류(명함, 재직증명서, 자격증 사본 등)</li>
               <li><strong>결제 및 서비스 이용:</strong> 결제 기록(카드사, 승인번호 등), 접속 로그, 쿠키, 서비스 이용 기록</li>
+              {/* Fix #762: marketing_consent 수집 항목 추가 */}
+              <li><strong>마케팅 수신 동의(선택):</strong> 마케팅 수신 동의 여부</li>
             </ul>
           </div>
 
@@ -127,18 +129,75 @@ export default function PrivacyPage() {
         </p>
       </section>
 
+      {/* Fix #762: 제4조 해외 이전 고지 + 위탁 업체 업데이트 */}
       {/* 4. 처리 위탁 */}
       <section className="mb-12">
         <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
           <span className="w-1 h-5 bg-gray-400 mr-3 rounded-full" />
           4. 개인정보 처리의 위탁
         </h2>
-        <ul className="list-disc pl-5 space-y-2 text-sm text-gray-600">
+
+        <h3 className="font-bold mb-3 text-gray-900 text-base">1) 국내 위탁</h3>
+        <ul className="list-disc pl-5 mb-6 space-y-2 text-sm text-gray-600">
           <li><strong>결제 처리:</strong> 포트원, KG이니시스 등 PG사</li>
           <li><strong>본인 확인:</strong> 다날, 나이스평가정보 등 본인확인 기관</li>
           <li><strong>알림 발송:</strong> 카카오(알림톡), 문자 발송 대행사</li>
-          <li><strong>서버 운영:</strong> Supabase, Vercel</li>
         </ul>
+
+        <h3 className="font-bold mb-3 text-gray-900 text-base">2) 국외 이전 (개인정보보호법 제28조의8)</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          회사는 서비스 제공을 위해 아래와 같이 개인정보를 국외로 이전하고 있습니다.
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs text-left border-collapse border border-gray-200">
+            <thead className="bg-gray-50 text-gray-700">
+              <tr>
+                <th className="p-3 border border-gray-200">수탁자</th>
+                <th className="p-3 border border-gray-200">국가</th>
+                <th className="p-3 border border-gray-200">위탁 업무</th>
+                <th className="p-3 border border-gray-200">이전 항목</th>
+              </tr>
+            </thead>
+            <tbody className="text-gray-600">
+              <tr>
+                <td className="p-3 border border-gray-200 font-bold text-gray-900">Supabase Inc.</td>
+                <td className="p-3 border border-gray-200">미국</td>
+                <td className="p-3 border border-gray-200">서버 운영, DB 호스팅</td>
+                <td className="p-3 border border-gray-200">전체 개인정보</td>
+              </tr>
+              <tr>
+                <td className="p-3 border border-gray-200 font-bold text-gray-900">Vercel Inc.</td>
+                <td className="p-3 border border-gray-200">미국</td>
+                <td className="p-3 border border-gray-200">웹 호스팅</td>
+                <td className="p-3 border border-gray-200">접속 로그</td>
+              </tr>
+              <tr>
+                <td className="p-3 border border-gray-200 font-bold text-gray-900">Sentry (Functional Software Inc.)</td>
+                <td className="p-3 border border-gray-200">미국</td>
+                <td className="p-3 border border-gray-200">에러 모니터링</td>
+                <td className="p-3 border border-gray-200">에러 로그 (개인정보 포함 가능)</td>
+              </tr>
+              <tr>
+                <td className="p-3 border border-gray-200 font-bold text-gray-900">Axiom Inc.</td>
+                <td className="p-3 border border-gray-200">미국</td>
+                <td className="p-3 border border-gray-200">로그 수집</td>
+                <td className="p-3 border border-gray-200">서비스 로그 (개인정보 포함 가능)</td>
+              </tr>
+              <tr>
+                <td className="p-3 border border-gray-200 font-bold text-gray-900">Statsig Inc.</td>
+                <td className="p-3 border border-gray-200">미국</td>
+                <td className="p-3 border border-gray-200">서비스 분석</td>
+                <td className="p-3 border border-gray-200">이용자 ID, 이벤트 데이터</td>
+              </tr>
+              <tr>
+                <td className="p-3 border border-gray-200 font-bold text-gray-900">OpenAI Inc.</td>
+                <td className="p-3 border border-gray-200">미국</td>
+                <td className="p-3 border border-gray-200">프로필 임베딩 생성</td>
+                <td className="p-3 border border-gray-200">프로필 텍스트</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
       {/* 5. 파기 절차 및 방법 */}
@@ -180,8 +239,8 @@ export default function PrivacyPage() {
       </section>
 
       <footer className="mt-20 pt-10 border-t border-gray-100 text-xs text-gray-400 space-y-1">
-        <p>공고일자: 2026년 1월 8일</p>
-        <p>시행일자: 2026년 1월 15일</p>
+        <p>공고일자: 2026년 3월 29일</p>
+        <p>시행일자: 2026년 4월 5일</p>
         <p className="mt-4">© 2026 Minglit. All rights reserved.</p>
       </footer>
     </div>
