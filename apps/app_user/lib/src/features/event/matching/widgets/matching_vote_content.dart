@@ -23,13 +23,16 @@ class MatchingVoteContent extends ConsumerWidget {
     final votedIdsAsync = ref.watch(myVotedCandidateIdsProvider(eventId));
 
     // Vote meta state helpers
-    final voteMetaLoading = voteCountAsync.isLoading ||
+    final voteMetaLoading =
+        voteCountAsync.isLoading ||
         maxVoteAsync.isLoading ||
         votedIdsAsync.isLoading;
-    final voteMetaError = voteCountAsync.hasError ||
+    final voteMetaError =
+        voteCountAsync.hasError ||
         maxVoteAsync.hasError ||
         votedIdsAsync.hasError;
-    final hasVoteMeta = voteCountAsync.hasValue &&
+    final hasVoteMeta =
+        voteCountAsync.hasValue &&
         maxVoteAsync.hasValue &&
         votedIdsAsync.hasValue;
 
