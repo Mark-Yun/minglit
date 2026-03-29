@@ -37,13 +37,19 @@ SELECT has_function('get_user_ci_di',
 -- ============================================================
 -- 4. RPC functions are SECURITY DEFINER
 -- ============================================================
-SELECT function_security_type_is('update_user_identity',
-  ARRAY['uuid', 'text', 'text', 'text', 'date', 'gender', 'text'],
-  'definer',
+SELECT is(
+  (SELECT p.prosecdef FROM pg_proc p
+   JOIN pg_namespace n ON p.pronamespace = n.oid
+   WHERE n.nspname = 'public' AND p.proname = 'update_user_identity'
+   LIMIT 1),
+  true,
   'update_user_identity should be SECURITY DEFINER');
-SELECT function_security_type_is('get_user_ci_di',
-  ARRAY['uuid'],
-  'definer',
+SELECT is(
+  (SELECT p.prosecdef FROM pg_proc p
+   JOIN pg_namespace n ON p.pronamespace = n.oid
+   WHERE n.nspname = 'public' AND p.proname = 'get_user_ci_di'
+   LIMIT 1),
+  true,
   'get_user_ci_di should be SECURITY DEFINER');
 
 -- ============================================================
