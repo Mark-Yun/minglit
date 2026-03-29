@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
+import 'package:app_user/src/features/home/widgets/event_now_bar.dart';
 import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:app_user/src/routing/app_routes.dart';
 import 'package:app_user/src/widgets/explore_filter_chip_bar.dart';
@@ -62,6 +63,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     });
 
     return Scaffold(
+      bottomSheet: const EventNowBar(),
       // Fix #192: Pull-to-refresh to reload the explore feed from scratch.
       body: RefreshIndicator(
         onRefresh: () =>
