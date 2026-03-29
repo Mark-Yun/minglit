@@ -21,6 +21,7 @@ export 'src/data/models/social_interaction.dart';
 export 'src/data/models/ticket.dart';
 export 'src/data/models/ticket_template.dart';
 export 'src/data/models/ticket_token.dart';
+export 'src/data/models/today_active_event.dart';
 export 'src/data/models/user_profile.dart';
 export 'src/data/models/user_settings.dart';
 export 'src/data/models/verification.dart';

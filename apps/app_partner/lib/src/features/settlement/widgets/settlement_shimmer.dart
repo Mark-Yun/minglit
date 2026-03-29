@@ -55,13 +55,9 @@ class _ShimmerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseColor = isDark
-        ? const Color(0xFF3A3A3A)
-        : const Color(0xFFE0E0E0);
-    final highlightColor = isDark
-        ? const Color(0xFF4A4A4A)
-        : const Color(0xFFF5F5F5);
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final baseColor = onSurface.withValues(alpha: 0.12);
+    final highlightColor = onSurface.withValues(alpha: 0.04);
 
     return AnimatedBuilder(
       animation: animation,

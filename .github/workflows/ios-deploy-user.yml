@@ -17,27 +17,36 @@ concurrency:
 
 jobs:
   ios-deploy:
-    uses: ./.github/workflows/ios-deploy-reusable.yml
-    with:
-      app-name: user
-      app-directory: apps/app_user
-      bundle-id: com.minglit.appUser
-      provisioning-profile-dev-specifier: Minglit User App DEV Profile
-      provisioning-profile-prod-specifier: Minglit User App Store Profile
-    secrets:
-      APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
-      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-      APPLE_PROVISION_PROFILE_DEV_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_USER_DEV_BASE64 }}
-      APPLE_PROVISION_PROFILE_PROD_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_USER_BASE64 }}
-      APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
-      APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-      SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
-      SUPABASE_DEV_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
-      KAKAO_LOCAL_REST_API_KEY: ${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
-      SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
-      SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
-      SUPABASE_MAIN_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
+    runs-on: macos-latest
+    timeout-minutes: 60
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: iOS Deploy
+        uses: ./.github/actions/ios-deploy
+        with:
+          app-name: user
+          app-directory: apps/app_user
+          bundle-id: com.minglit.appUser
+          provisioning-profile-dev-specifier: Minglit User App DEV Profile
+          provisioning-profile-prod-specifier: Minglit User App Store Profile
+          git-ref: ${{ github.ref }}
+          run-number: ${{ github.run_number }}
+          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_PROVISION_PROFILE_DEV_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_USER_DEV_BASE64 }}
+          APPLE_PROVISION_PROFILE_PROD_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_USER_BASE64 }}
+          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_DEV_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+          KAKAO_LOCAL_REST_API_KEY: ${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
+          SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
+          SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
+          SUPABASE_MAIN_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
 
   notify-failure:
     needs: [ios-deploy]

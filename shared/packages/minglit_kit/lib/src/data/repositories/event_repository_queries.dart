@@ -271,6 +271,32 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
     }
   }
 
+  /// Fetches the current user's active tickets (paid/approved only).
+  Future<List<EventApplication>> getMyTickets(String userId) async {
+    Log.d('getMyTickets called | userId: $userId');
+    try {
+      final data = await supabaseClient
+          .from('event_applications')
+          .select(
+            '*, '
+            'event:events(*, party:parties(*, location:locations(*))), '
+            'ticket:tickets(*)',
+          )
+          .eq('user_id', userId)
+          .inFilter('status', ['paid', 'approved'])
+          .order('created_at', ascending: false);
+      final result = data.map((json) {
+        return EventApplication.fromJson(json);
+      }).toList();
+
+      Log.d('getMyTickets success | count: ${result.length}');
+      return result;
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] getMyTickets Error', e, st);
+      rethrow;
+    }
+  }
+
   /// [Partner Dashboard]
   /// Counts pending review applications for a specific partner.
   Future<int> getPendingApplicationCount(String partnerId) async {
@@ -474,6 +500,86 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
       }).toList();
     } catch (e, st) {
       Log.e('❌ [EventRepo] getClosingSoonEvents Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// Fetches today's active events for a user (Event Now Bar).
+  ///
+  /// Returns events where the user is a participant and the event is within
+  /// the active window: start_time - 3h <= now <= end_time.
+  /// Includes cancelled events (shown as "cancelled" in the now bar).
+  /// Excludes refunded participants via event_applications.refund_status.
+  Future<List<TodayActiveEvent>> getTodayActiveEventsForUser(
+    String userId,
+  ) async {
+    Log.d('getTodayActiveEventsForUser called | userId: $userId');
+    try {
+      final now = DateTime.now();
+      final threeHoursFromNow = now.add(const Duration(hours: 3));
+
+      // Query events where this user has a participant record
+      // and the event is within the active window.
+      final data = await supabaseClient
+          .from('events')
+          .select(
+            '*, '
+            'participant:event_participants!inner(id, user_id, status), '
+            'party:parties(*, location:locations(*), partner:partners(*)), '
+            'tickets(*)',
+          )
+          .eq('participant.user_id', userId)
+          .lte('start_time', threeHoursFromNow.toIso8601String())
+          .gte('end_time', now.toIso8601String())
+          .order('start_time');
+
+      final events = <TodayActiveEvent>[];
+      for (final json in data) {
+        final map = json;
+        // Extract participant status from the joined data
+        final participants = map['participant'] as List<dynamic>?;
+        final participantStatus =
+            (participants?.firstOrNull as Map<String, dynamic>?)?['status']
+                as String? ??
+            'ticket_issued';
+
+        // Remove participant array before parsing Event
+        // (Event model doesn't include it)
+        final eventMap = Map<String, dynamic>.from(map)..remove('participant');
+        final event = Event.fromJson(eventMap);
+        events.add(
+          TodayActiveEvent(event: event, participantStatus: participantStatus),
+        );
+      }
+
+      // Filter out refunded participants by checking event_applications
+      if (events.isNotEmpty) {
+        final appData = await supabaseClient
+            .from('event_applications')
+            .select('event_id, refund_status')
+            .eq('user_id', userId)
+            .inFilter(
+              'event_id',
+              events.map((e) => e.event.id).toList(),
+            );
+
+        final refundedEventIds = <String>{};
+        for (final app in appData) {
+          final refundStatus = app['refund_status'] as String?;
+          if (refundStatus == 'refunded') {
+            refundedEventIds.add(app['event_id'] as String);
+          }
+        }
+
+        if (refundedEventIds.isNotEmpty) {
+          events.removeWhere((e) => refundedEventIds.contains(e.event.id));
+        }
+      }
+
+      Log.d('getTodayActiveEventsForUser success | count: ${events.length}');
+      return events;
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] getTodayActiveEventsForUser Error', e, st);
       rethrow;
     }
   }
