@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:app_user/src/features/event/logic/event_coordinator.dart';
+import 'package:app_user/src/features/party/logic/party_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -28,7 +28,8 @@ class _PartyCurationPageState extends ConsumerState<PartyCurationPage> {
   @override
   Widget build(BuildContext context) {
     final eventsAsync = ref.watch(eventFeedProvider(type: widget.type));
-    final eventCoordinator = ref.read(eventCoordinatorProvider);
+    // Fix #634: event_coordinator 직접 참조 → party_coordinator 전환
+    final partyCoordinator = ref.read(partyCoordinatorProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.type.title), centerTitle: true),
@@ -62,7 +63,7 @@ class _PartyCurationPageState extends ConsumerState<PartyCurationPage> {
                 return MinglitEventCard(
                   event: event,
                   onTap: () {
-                    eventCoordinator.pushEventDetail(event.id);
+                    partyCoordinator.pushEventDetail(event.id);
                   },
                 );
               },

@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
-import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:app_user/src/features/home/widgets/event_now_bar.dart';
 import 'package:app_user/src/logic/feed_state_provider.dart';
@@ -47,7 +45,6 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     final homeCoordinator = ref.read(homeCoordinatorProvider);
-    final eventCoordinator = ref.read(eventCoordinatorProvider);
     final recommendationState = ref.watch(recommendationFeedProvider);
 
     // Auto-fetch next page when first page is completely filtered out
@@ -128,8 +125,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                     icon: const Icon(Icons.person_outline),
                     // Fix #102: use go (not push) so GoRouter redirect
                     // fires after login
-                    onPressed: () =>
-                        ref.read(authCoordinatorProvider).goToLogin(from: '/'),
+                    // Fix #634: auth_coordinator 직접 참조 → home_coordinator.goToLogin 전환
+                    onPressed: () => homeCoordinator.goToLogin(from: '/'),
                   ),
                 const SizedBox(width: MinglitSpacing.small),
               ],
@@ -172,7 +169,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                       final event = state.events[index];
                       return MinglitEventCard(
                         event: event,
-                        onTap: () => eventCoordinator.pushEventDetail(event.id),
+                        // Fix #634: event_coordinator 직접 참조 → home_coordinator 전환
+                        onTap: () => homeCoordinator.pushEventDetail(event.id),
                       );
                     },
                   ),
