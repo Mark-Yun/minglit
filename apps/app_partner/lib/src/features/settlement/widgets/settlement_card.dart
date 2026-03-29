@@ -21,7 +21,10 @@ class SettlementCard extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.medium,
+          vertical: MinglitSpacing.sm,
+        ),
         child: Row(
           children: [
             Expanded(
