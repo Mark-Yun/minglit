@@ -22,7 +22,7 @@ class SettlementEmptyState extends StatelessWidget {
     final theme = Theme.of(context);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(MinglitSpacing.xlarge),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
