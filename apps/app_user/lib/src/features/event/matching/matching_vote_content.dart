@@ -18,8 +18,7 @@ class MatchingVoteContent extends ConsumerWidget {
     final matchesAsync = ref.watch(myMatchesProvider(eventId));
     final voteCountAsync = ref.watch(myVoteCountProvider(eventId));
     final maxVoteAsync = ref.watch(maxVoteCountProvider(eventId));
-    final votedIdsAsync =
-        ref.watch(myVotedCandidateIdsProvider(eventId));
+    final votedIdsAsync = ref.watch(myVotedCandidateIdsProvider(eventId));
 
     ref.listen(matchingVoteControllerProvider, (_, state) {
       if (state.hasError) {
@@ -41,11 +40,11 @@ class MatchingVoteContent extends ConsumerWidget {
           data: (matches) {
             if (matches.isEmpty) return const SizedBox.shrink();
             return ColoredBox(
-              color: theme.colorScheme.secondaryContainer
-                  .withValues(alpha: 0.2),
+              color: theme.colorScheme.secondaryContainer.withValues(
+                alpha: 0.2,
+              ),
               child: Padding(
-                padding:
-                    const EdgeInsets.all(MinglitSpacing.medium),
+                padding: const EdgeInsets.all(MinglitSpacing.medium),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -61,8 +60,7 @@ class MatchingVoteContent extends ConsumerWidget {
                         ),
                         Text(
                           '매칭 성공! (${matches.length}명)',
-                          style:
-                              theme.textTheme.titleSmall?.copyWith(
+                          style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: theme.colorScheme.error,
                           ),
@@ -75,8 +73,7 @@ class MatchingVoteContent extends ConsumerWidget {
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         itemCount: matches.length,
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(
+                        separatorBuilder: (context, index) => const SizedBox(
                           width: MinglitSpacing.medium,
                         ),
                         itemBuilder: (context, index) {
@@ -108,9 +105,7 @@ class MatchingVoteContent extends ConsumerWidget {
                 return Row(
                   children: [
                     Icon(
-                      allUsed
-                          ? Icons.check_circle
-                          : Icons.how_to_vote,
+                      allUsed ? Icons.check_circle : Icons.how_to_vote,
                       size: MinglitIconSize.small,
                       color: allUsed
                           ? theme.colorScheme.primary
@@ -118,11 +113,8 @@ class MatchingVoteContent extends ConsumerWidget {
                     ),
                     const SizedBox(width: MinglitSpacing.small),
                     Text(
-                      allUsed
-                          ? '투표 완료!'
-                          : '남은 투표: $remaining/$max',
-                      style:
-                          theme.textTheme.bodyMedium?.copyWith(
+                      allUsed ? '투표 완료!' : '남은 투표: $remaining/$max',
+                      style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: allUsed
                             ? theme.colorScheme.primary
@@ -148,14 +140,13 @@ class MatchingVoteContent extends ConsumerWidget {
               final votedIds = votedIdsAsync.hasValue
                   ? votedIdsAsync.value!
                   : <String>{};
-              final allVotesUsed = voteCountAsync.hasValue &&
+              final allVotesUsed =
+                  voteCountAsync.hasValue &&
                   maxVoteAsync.hasValue &&
                   voteCountAsync.value! >= maxVoteAsync.value!;
               return GridView.builder(
-                padding:
-                    const EdgeInsets.all(MinglitSpacing.medium),
-                gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
+                padding: const EdgeInsets.all(MinglitSpacing.medium),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   childAspectRatio: 0.8,
                   mainAxisSpacing: MinglitSpacing.medium,
@@ -164,8 +155,7 @@ class MatchingVoteContent extends ConsumerWidget {
                 itemCount: candidates.length,
                 itemBuilder: (context, index) {
                   final candidate = candidates[index];
-                  final isVoted =
-                      votedIds.contains(candidate.id);
+                  final isVoted = votedIds.contains(candidate.id);
                   return _buildCandidateCard(
                     context,
                     ref,
@@ -257,8 +247,7 @@ class MatchingVoteContent extends ConsumerWidget {
           if (isVoted)
             Positioned.fill(
               child: ColoredBox(
-                color: theme.colorScheme.primary
-                    .withValues(alpha: 0.2),
+                color: theme.colorScheme.primary.withValues(alpha: 0.2),
                 child: Center(
                   child: Icon(
                     Icons.check_circle,
@@ -273,15 +262,13 @@ class MatchingVoteContent extends ConsumerWidget {
             left: 0,
             right: 0,
             child: Container(
-              padding:
-                  const EdgeInsets.all(MinglitSpacing.small),
+              padding: const EdgeInsets.all(MinglitSpacing.small),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: [
-                    MinglitColors.textPrimary
-                        .withValues(alpha: 0.87),
+                    MinglitColors.textPrimary.withValues(alpha: 0.87),
                     MinglitColors.transparent,
                   ],
                 ),
@@ -314,8 +301,7 @@ class MatchingVoteContent extends ConsumerWidget {
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: isVoted
-                            ? theme.colorScheme
-                                .surfaceContainerHighest
+                            ? theme.colorScheme.surfaceContainerHighest
                             : theme.colorScheme.primary,
                         foregroundColor: isVoted
                             ? theme.colorScheme.onSurfaceVariant
@@ -323,8 +309,7 @@ class MatchingVoteContent extends ConsumerWidget {
                         padding: EdgeInsets.zero,
                         visualDensity: VisualDensity.compact,
                       ),
-                      child:
-                          Text(isVoted ? '투표 완료' : '선택'),
+                      child: Text(isVoted ? '투표 완료' : '선택'),
                     ),
                   ),
                 ],

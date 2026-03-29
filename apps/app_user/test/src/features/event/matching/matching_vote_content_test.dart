@@ -6,21 +6,21 @@ import 'package:minglit_kit/minglit_kit.dart';
 
 void main() {
   group('MatchingVoteContent', () {
-    testWidgets('renders empty state when no candidates',
-        (tester) async {
+    testWidgets('renders empty state when no candidates', (tester) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            matchCandidatesProvider('event_1')
-                .overrideWith((_) async => <UserProfile>[]),
-            myMatchesProvider('event_1')
-                .overrideWith((_) async => <MatchPair>[]),
-            myVoteCountProvider('event_1')
-                .overrideWith((_) async => 0),
-            maxVoteCountProvider('event_1')
-                .overrideWith((_) async => 3),
-            myVotedCandidateIdsProvider('event_1')
-                .overrideWith((_) async => <String>{}),
+            matchCandidatesProvider(
+              'event_1',
+            ).overrideWith((_) async => <UserProfile>[]),
+            myMatchesProvider(
+              'event_1',
+            ).overrideWith((_) async => <MatchPair>[]),
+            myVoteCountProvider('event_1').overrideWith((_) async => 0),
+            maxVoteCountProvider('event_1').overrideWith((_) async => 3),
+            myVotedCandidateIdsProvider(
+              'event_1',
+            ).overrideWith((_) async => <String>{}),
           ],
           child: const MaterialApp(
             home: Scaffold(
@@ -40,8 +40,7 @@ void main() {
       );
     });
 
-    testWidgets('renders candidates when data is available',
-        (tester) async {
+    testWidgets('renders candidates when data is available', (tester) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -56,14 +55,14 @@ void main() {
                 ),
               ],
             ),
-            myMatchesProvider('event_1')
-                .overrideWith((_) async => <MatchPair>[]),
-            myVoteCountProvider('event_1')
-                .overrideWith((_) async => 0),
-            maxVoteCountProvider('event_1')
-                .overrideWith((_) async => 3),
-            myVotedCandidateIdsProvider('event_1')
-                .overrideWith((_) async => <String>{}),
+            myMatchesProvider(
+              'event_1',
+            ).overrideWith((_) async => <MatchPair>[]),
+            myVoteCountProvider('event_1').overrideWith((_) async => 0),
+            maxVoteCountProvider('event_1').overrideWith((_) async => 3),
+            myVotedCandidateIdsProvider(
+              'event_1',
+            ).overrideWith((_) async => <String>{}),
           ],
           child: const MaterialApp(
             home: Scaffold(
@@ -81,23 +80,23 @@ void main() {
       expect(find.text('선택'), findsOneWidget);
     });
 
-    testWidgets('can be embedded without Scaffold',
-        (tester) async {
+    testWidgets('can be embedded without Scaffold', (tester) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            matchCandidatesProvider('event_1')
-                .overrideWith((_) async => <UserProfile>[]),
-            myMatchesProvider('event_1')
-                .overrideWith((_) async => <MatchPair>[]),
-            myVoteCountProvider('event_1')
-                .overrideWith((_) async => 0),
-            maxVoteCountProvider('event_1')
-                .overrideWith((_) async => 3),
-            myVotedCandidateIdsProvider('event_1')
-                .overrideWith((_) async => <String>{}),
+            matchCandidatesProvider(
+              'event_1',
+            ).overrideWith((_) async => <UserProfile>[]),
+            myMatchesProvider(
+              'event_1',
+            ).overrideWith((_) async => <MatchPair>[]),
+            myVoteCountProvider('event_1').overrideWith((_) async => 0),
+            maxVoteCountProvider('event_1').overrideWith((_) async => 3),
+            myVotedCandidateIdsProvider(
+              'event_1',
+            ).overrideWith((_) async => <String>{}),
           ],
-          child: MaterialApp(
+          child: const MaterialApp(
             home: SizedBox(
               height: 400,
               child: MatchingVoteContent(eventId: 'event_1'),
