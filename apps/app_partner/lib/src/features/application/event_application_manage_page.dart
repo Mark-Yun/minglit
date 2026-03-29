@@ -228,17 +228,15 @@ class _ApplicationTab extends ConsumerWidget {
     );
   }
 
+  // Fix #653: Supabase 직접 접근 → EventRepository 분리
   Future<void> _approve(
     WidgetRef ref,
     BuildContext context,
     String appId,
   ) async {
     try {
-      final client = ref.read(supabaseClientProvider);
-      await client.functions.invoke(
-        'partner-approve-application',
-        body: {'action': 'approve', 'application_id': appId},
-      );
+      final eventRepo = ref.read(eventRepositoryProvider);
+      await eventRepo.approveApplication(applicationId: appId);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('승인되었습니다')),
@@ -287,11 +285,12 @@ class _ApplicationTab extends ConsumerWidget {
 
     if (reason == null || reason.trim().isEmpty) return;
 
+    // Fix #653: Supabase 직접 접근 → EventRepository 분리
     try {
-      final client = ref.read(supabaseClientProvider);
-      await client.functions.invoke(
-        'partner-reject-application',
-        body: {'application_id': appId, 'reason': reason.trim()},
+      final eventRepo = ref.read(eventRepositoryProvider);
+      await eventRepo.rejectApplication(
+        applicationId: appId,
+        reason: reason.trim(),
       );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -334,14 +333,12 @@ class _ApplicationTab extends ConsumerWidget {
 
     if (confirmed != true) return;
 
-    final client = ref.read(supabaseClientProvider);
+    // Fix #653: Supabase 직접 접근 → EventRepository 분리
+    final eventRepo = ref.read(eventRepositoryProvider);
     final failures = <String>[];
     for (final event in grouped.keys) {
       try {
-        await client.functions.invoke(
-          'partner-approve-application',
-          body: {'action': 'bulk_approve', 'event_id': event.id},
-        );
+        await eventRepo.bulkApproveApplications(eventId: event.id);
       } on Exception catch (e) {
         failures.add('${event.title}: $e');
       }
