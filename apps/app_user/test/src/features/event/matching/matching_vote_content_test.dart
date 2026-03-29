@@ -1,6 +1,5 @@
 import 'package:app_user/src/features/event/matching/matching_vote_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -14,11 +13,10 @@ void main() {
     mockMatchingRepo = MockMatchingRepository();
   });
 
-  Widget buildSubject({List<Override> overrides = const []}) {
+  Widget buildSubject() {
     return ProviderScope(
       overrides: [
         matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
-        ...overrides,
       ],
       child: MaterialApp(
         theme: MinglitTheme.materialTheme,
