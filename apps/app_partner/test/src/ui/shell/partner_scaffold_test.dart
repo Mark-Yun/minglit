@@ -21,7 +21,6 @@ class _FakeNavigationShell extends StatefulWidget
   @override
   void goBranch(int index, {bool initialLocation = false}) {}
 
-  @override
   Widget get child => throw UnimplementedError();
 
   @override
