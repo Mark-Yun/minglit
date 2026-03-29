@@ -209,6 +209,86 @@ void main() {
       });
     });
 
+    group('getMyTickets', () {
+      test('returns only paid/approved tickets', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
+            selectData: [
+              {...applicationJson, 'status': 'paid'},
+              {...applicationJson, 'id': 'app_2', 'status': 'approved'},
+            ],
+          ),
+        );
+
+        final result = await repository.getMyTickets('user_1');
+
+        expect(result, hasLength(2));
+        expect(result.first.id, 'app_1');
+        expect(result.first.status, 'paid');
+        expect(result.last.id, 'app_2');
+        expect(result.last.status, 'approved');
+      });
+
+      test('returns empty list when no active tickets', () async {
+        unawaited(
+          mockTable(mockClient, 'event_applications', selectData: []),
+        );
+
+        final result = await repository.getMyTickets('user_1');
+
+        expect(result, isEmpty);
+      });
+
+      test('includes event and ticket relations', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
+            selectData: [
+              {
+                ...applicationJson,
+                'status': 'paid',
+                'event': eventJson,
+                'ticket': {
+                  'id': 'ticket_1',
+                  'event_id': 'event_1',
+                  'name': '일반 티켓',
+                  'price': 30000,
+                  'created_at': DateTime.now().toIso8601String(),
+                  'updated_at': DateTime.now().toIso8601String(),
+                },
+              },
+            ],
+          ),
+        );
+
+        final result = await repository.getMyTickets('user_1');
+
+        expect(result, hasLength(1));
+        expect(result.first.event, isNotNull);
+        expect(result.first.event!.id, 'event_1');
+        expect(result.first.ticket, isNotNull);
+        expect(result.first.ticket!.id, 'ticket_1');
+      });
+
+      test('throws on error', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
+            shouldThrow: Exception('tickets error'),
+          ),
+        );
+
+        await expectLater(
+          repository.getMyTickets('user_1'),
+          throwsA(anything),
+        );
+      });
+    });
+
     group('getPendingApplicationCount', () {
       test('returns pending count', () async {
         unawaited(

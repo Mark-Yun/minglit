@@ -271,6 +271,32 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
     }
   }
 
+  /// Fetches the current user's active tickets (paid/approved only).
+  Future<List<EventApplication>> getMyTickets(String userId) async {
+    Log.d('getMyTickets called | userId: $userId');
+    try {
+      final data = await supabaseClient
+          .from('event_applications')
+          .select(
+            '*, '
+            'event:events(*, party:parties(*, location:locations(*))), '
+            'ticket:tickets(*)',
+          )
+          .eq('user_id', userId)
+          .inFilter('status', ['paid', 'approved'])
+          .order('created_at', ascending: false);
+      final result = data.map((json) {
+        return EventApplication.fromJson(json);
+      }).toList();
+
+      Log.d('getMyTickets success | count: ${result.length}');
+      return result;
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] getMyTickets Error', e, st);
+      rethrow;
+    }
+  }
+
   /// [Partner Dashboard]
   /// Counts pending review applications for a specific partner.
   Future<int> getPendingApplicationCount(String partnerId) async {
