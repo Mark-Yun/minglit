@@ -1,7 +1,6 @@
 import 'package:app_partner/src/features/application/event_application_manage_page.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -226,7 +225,7 @@ void main() {
     group('partner null state', () {
       testWidgets('shows error message when partner is null', (tester) async {
         await tester.pumpWidget(
-          _buildPage(partner: null),
+          _buildPage(),
         );
         await tester.pumpAndSettle();
 
@@ -306,13 +305,11 @@ void main() {
     // ------------------------------------------------------------------
     group('event grouping', () {
       testWidgets('shows applications grouped by event', (tester) async {
-        final event1 = _makeEvent(id: 'e1', title: '이벤트 A');
+        final event1 = _makeEvent(title: '이벤트 A');
         final event2 = _makeEvent(id: 'e2', title: '이벤트 B');
 
         final app1 = _makeApplication(
-          id: 'a1',
-          eventId: 'e1',
-          user: _makeUser(id: 'u1', name: '김철수'),
+          user: _makeUser(name: '김철수'),
         );
         final app2 = _makeApplication(
           id: 'a2',
@@ -342,15 +339,13 @@ void main() {
 
       testWidgets('shows application count per event group', (tester) async {
         final event = _makeEvent(
-          id: 'e1',
           title: '파티',
           maxParticipants: 10,
           currentParticipants: 3,
         );
         final apps = [
           _makeApplication(
-            id: 'a1',
-            user: _makeUser(id: 'u1', name: '김철수'),
+            user: _makeUser(name: '김철수'),
           ),
           _makeApplication(
             id: 'a2',
@@ -377,9 +372,8 @@ void main() {
     // ------------------------------------------------------------------
     group('action buttons in pending tab', () {
       testWidgets('approve button is visible', (tester) async {
-        final event = _makeEvent(id: 'e1', title: '파티');
+        final event = _makeEvent(title: '파티');
         final app = _makeApplication(
-          id: 'a1',
           user: _makeUser(),
         );
 
@@ -398,9 +392,8 @@ void main() {
       });
 
       testWidgets('reject button is visible', (tester) async {
-        final event = _makeEvent(id: 'e1', title: '파티');
+        final event = _makeEvent(title: '파티');
         final app = _makeApplication(
-          id: 'a1',
           user: _makeUser(),
         );
 
@@ -421,11 +414,10 @@ void main() {
       testWidgets('shows approve and reject for each application', (
         tester,
       ) async {
-        final event = _makeEvent(id: 'e1', title: '파티');
+        final event = _makeEvent(title: '파티');
         final apps = [
           _makeApplication(
-            id: 'a1',
-            user: _makeUser(id: 'u1', name: '김철수'),
+            user: _makeUser(name: '김철수'),
           ),
           _makeApplication(
             id: 'a2',
@@ -454,9 +446,8 @@ void main() {
       testWidgets('approved tab shows 승인 badge instead of action buttons', (
         tester,
       ) async {
-        final event = _makeEvent(id: 'e1', title: '파티');
+        final event = _makeEvent(title: '파티');
         final app = _makeApplication(
-          id: 'a1',
           status: 'approved',
           user: _makeUser(),
         );
@@ -486,9 +477,8 @@ void main() {
       testWidgets('rejected tab shows 거절 badge instead of action buttons', (
         tester,
       ) async {
-        final event = _makeEvent(id: 'e1', title: '파티');
+        final event = _makeEvent(title: '파티');
         final app = _makeApplication(
-          id: 'a1',
           status: 'rejected',
           user: _makeUser(),
         );
@@ -516,9 +506,8 @@ void main() {
       });
 
       testWidgets('paid status also shows 승인 badge', (tester) async {
-        final event = _makeEvent(id: 'e1', title: '파티');
+        final event = _makeEvent(title: '파티');
         final app = _makeApplication(
-          id: 'a1',
           status: 'paid',
           user: _makeUser(),
         );
@@ -547,7 +536,7 @@ void main() {
       testWidgets('shows bulk approve button with total count', (
         tester,
       ) async {
-        final event1 = _makeEvent(id: 'e1', title: '이벤트 A');
+        final event1 = _makeEvent(title: '이벤트 A');
         final event2 = _makeEvent(id: 'e2', title: '이벤트 B');
 
         await tester.pumpWidget(
@@ -556,8 +545,7 @@ void main() {
             pendingData: {
               event1: [
                 _makeApplication(
-                  id: 'a1',
-                  user: _makeUser(id: 'u1', name: '김철수'),
+                  user: _makeUser(name: '김철수'),
                 ),
                 _makeApplication(
                   id: 'a2',
@@ -583,9 +571,8 @@ void main() {
       testWidgets('does not show bulk approve button on approved tab', (
         tester,
       ) async {
-        final event = _makeEvent(id: 'e1', title: '파티');
+        final event = _makeEvent(title: '파티');
         final app = _makeApplication(
-          id: 'a1',
           status: 'approved',
           user: _makeUser(),
         );
@@ -620,7 +607,7 @@ void main() {
       testWidgets('tapping bulk approve shows confirmation dialog', (
         tester,
       ) async {
-        final event = _makeEvent(id: 'e1', title: '파티');
+        final event = _makeEvent(title: '파티');
 
         await tester.pumpWidget(
           _buildPage(
@@ -628,8 +615,7 @@ void main() {
             pendingData: {
               event: [
                 _makeApplication(
-                  id: 'a1',
-                  user: _makeUser(id: 'u1', name: '김철수'),
+                  user: _makeUser(name: '김철수'),
                 ),
               ],
             },
@@ -651,14 +637,9 @@ void main() {
     // ------------------------------------------------------------------
     group('user info display', () {
       testWidgets('shows user name and demographics', (tester) async {
-        final event = _makeEvent(id: 'e1', title: '파티');
+        final event = _makeEvent(title: '파티');
         final app = _makeApplication(
-          id: 'a1',
-          user: _makeUser(
-            name: '홍길동',
-            birthYear: 1995,
-            gender: 'male',
-          ),
+          user: _makeUser(),
         );
 
         await tester.pumpWidget(
@@ -674,13 +655,13 @@ void main() {
         expect(find.text('홍길동'), findsOneWidget);
         // Age calculation: current year - 1995
         final expectedAge = DateTime.now().year - 1995;
-        expect(find.textContaining('${expectedAge}세'), findsOneWidget);
+        expect(find.textContaining('$expectedAge세'), findsOneWidget);
         expect(find.textContaining('남'), findsOneWidget);
       });
 
       testWidgets('shows "이름 없음" when user is null', (tester) async {
-        final event = _makeEvent(id: 'e1', title: '파티');
-        final app = _makeApplication(id: 'a1', user: null);
+        final event = _makeEvent(title: '파티');
+        final app = _makeApplication();
 
         await tester.pumpWidget(
           _buildPage(
@@ -696,9 +677,8 @@ void main() {
       });
 
       testWidgets('shows avatar with first character of name', (tester) async {
-        final event = _makeEvent(id: 'e1', title: '파티');
+        final event = _makeEvent(title: '파티');
         final app = _makeApplication(
-          id: 'a1',
           user: _makeUser(name: '김철수'),
         );
 
