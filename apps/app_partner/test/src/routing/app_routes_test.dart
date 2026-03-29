@@ -102,8 +102,9 @@ void main() {
     test('Settlement branch has bank-account sub-route', () {
       final settlementBranch = shellRoute.branches[3];
       final settlementRoute = settlementBranch.routes.first as GoRoute;
-      final subPaths =
-          settlementRoute.routes.cast<GoRoute>().map((r) => r.path);
+      final subPaths = settlementRoute.routes.cast<GoRoute>().map(
+        (r) => r.path,
+      );
       expect(subPaths, contains('bank-account'));
     });
 

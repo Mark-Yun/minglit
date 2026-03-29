@@ -83,7 +83,7 @@ void main() {
     });
 
     testWidgets('selectedIndex defaults to 0 (홈)', (tester) async {
-      await tester.pumpWidget(buildSubject(currentIndex: 0));
+      await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
       final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
