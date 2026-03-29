@@ -12,7 +12,7 @@ void main() {
 
   final now = DateTime(2026, 3, 29, 14);
 
-  final testPartner = Partner(id: 'partner_1', name: 'Test Partner');
+  const testPartner = Partner(id: 'partner_1', name: 'Test Partner');
 
   final testEvent = Event(
     id: 'event_1',
@@ -22,7 +22,6 @@ void main() {
     endTime: now.add(const Duration(hours: 5)),
     createdAt: now,
     updatedAt: now,
-    maxParticipants: 20,
     currentParticipants: 5,
   );
 
@@ -96,8 +95,9 @@ void main() {
       expect(find.text('거절됨'), findsOneWidget);
     });
 
-    testWidgets('shows empty state when no pending applications',
-        (tester) async {
+    testWidgets('shows empty state when no pending applications', (
+      tester,
+    ) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
@@ -139,8 +139,7 @@ void main() {
       expect(find.text('김영희'), findsOneWidget);
     });
 
-    testWidgets('shows approve/reject buttons for pending tab',
-        (tester) async {
+    testWidgets('shows approve/reject buttons for pending tab', (tester) async {
       await tester.pumpWidget(
         createTestWidget(
           pendingGrouped: {
@@ -158,8 +157,9 @@ void main() {
       expect(find.byIcon(Icons.close), findsOneWidget);
     });
 
-    testWidgets('shows bulk approve button when pending applications exist',
-        (tester) async {
+    testWidgets('shows bulk approve button when pending applications exist', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         createTestWidget(
           pendingGrouped: {
@@ -175,8 +175,9 @@ void main() {
       expect(find.text('전체 승인 (2건)'), findsOneWidget);
     });
 
-    testWidgets('approved tab shows status badge without action buttons',
-        (tester) async {
+    testWidgets('approved tab shows status badge without action buttons', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         createTestWidget(
           approvedGrouped: {
