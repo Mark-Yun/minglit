@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:alchemist/alchemist.dart'
-    show GoldenTestScenario, onlyPumpAndSettle;
+    show GoldenTestScenario, PumpAction, onlyPumpAndSettle;
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';

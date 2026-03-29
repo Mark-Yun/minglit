@@ -60,7 +60,9 @@ void main() {
       await initGoldenDeps();
       await tester.pumpAndSettle();
       final dump = tester.binding.renderViews.first.toStringDeep();
-      File('test/goldens/search_page_empty_dark.render.txt').writeAsStringSync(dump);
+      File(
+        'test/goldens/search_page_empty_dark.render.txt',
+      ).writeAsStringSync(dump);
     },
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(400),

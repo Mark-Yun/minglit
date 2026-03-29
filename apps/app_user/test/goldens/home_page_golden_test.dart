@@ -74,7 +74,9 @@ void main() {
       await initGoldenDeps();
       await tester.pumpAndSettle();
       final dump = tester.binding.renderViews.first.toStringDeep();
-      File('test/goldens/home_page_with_events.render.txt').writeAsStringSync(dump);
+      File(
+        'test/goldens/home_page_with_events.render.txt',
+      ).writeAsStringSync(dump);
     },
     builder: () {
       final events = List.generate(
@@ -116,7 +118,9 @@ void main() {
       await initGoldenDeps();
       await tester.pumpAndSettle();
       final dump = tester.binding.renderViews.first.toStringDeep();
-      File('test/goldens/home_page_empty_dark.render.txt').writeAsStringSync(dump);
+      File(
+        'test/goldens/home_page_empty_dark.render.txt',
+      ).writeAsStringSync(dump);
     },
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(400),
@@ -144,7 +148,9 @@ void main() {
       await initGoldenDeps();
       await tester.pumpAndSettle();
       final dump = tester.binding.renderViews.first.toStringDeep();
-      File('test/goldens/home_page_with_events_dark.render.txt').writeAsStringSync(dump);
+      File(
+        'test/goldens/home_page_with_events_dark.render.txt',
+      ).writeAsStringSync(dump);
     },
     builder: () {
       final events = List.generate(

@@ -1,9 +1,8 @@
 @Tags(['golden'])
 library;
 
-import 'dart:io';
-
 import 'dart:async';
+import 'dart:io';
 
 import 'package:alchemist/alchemist.dart';
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
@@ -35,7 +34,9 @@ void main() {
       await initGoldenDeps();
       await tester.pumpAndSettle();
       final dump = tester.binding.renderViews.first.toStringDeep();
-      File('test/goldens/my_page_logged_out.render.txt').writeAsStringSync(dump);
+      File(
+        'test/goldens/my_page_logged_out.render.txt',
+      ).writeAsStringSync(dump);
     },
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(400),
@@ -104,7 +105,9 @@ void main() {
       await initGoldenDeps();
       await tester.pumpAndSettle();
       final dump = tester.binding.renderViews.first.toStringDeep();
-      File('test/goldens/my_page_logged_out_dark.render.txt').writeAsStringSync(dump);
+      File(
+        'test/goldens/my_page_logged_out_dark.render.txt',
+      ).writeAsStringSync(dump);
     },
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(400),
@@ -136,7 +139,9 @@ void main() {
       await initGoldenDeps();
       await tester.pumpAndSettle();
       final dump = tester.binding.renderViews.first.toStringDeep();
-      File('test/goldens/my_page_logged_in_dark.render.txt').writeAsStringSync(dump);
+      File(
+        'test/goldens/my_page_logged_in_dark.render.txt',
+      ).writeAsStringSync(dump);
     },
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(400),
