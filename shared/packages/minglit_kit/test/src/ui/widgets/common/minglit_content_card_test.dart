@@ -118,7 +118,9 @@ void main() {
       final container = tester.widget<Container>(find.byType(Container).first);
       final decoration = container.decoration! as BoxDecoration;
       final borderSide = (decoration.border! as Border).top;
-      final colorScheme = Theme.of(tester.element(find.byType(MinglitContentCard))).colorScheme;
+      final colorScheme = Theme.of(
+        tester.element(find.byType(MinglitContentCard)),
+      ).colorScheme;
       expect(borderSide.color, equals(colorScheme.primary));
     });
   });
