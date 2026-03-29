@@ -800,7 +800,7 @@ class _BadgeTagSection extends StatelessWidget {
           style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: MinglitSpacing.medium),
-        Wrap(
+        const Wrap(
           spacing: MinglitSpacing.small,
           runSpacing: MinglitSpacing.small,
           children: [
@@ -818,7 +818,7 @@ class _BadgeTagSection extends StatelessWidget {
         const SizedBox(height: MinglitSpacing.medium),
         Text('Small', style: theme.textTheme.titleSmall),
         const SizedBox(height: MinglitSpacing.small),
-        Wrap(
+        const Wrap(
           spacing: MinglitSpacing.small,
           runSpacing: MinglitSpacing.small,
           children: [
