@@ -34,14 +34,26 @@ void main() {
           builder: (context, state, child) =>
               PartnerScaffold(navigationShell: mockShell),
           routes: [
-            GoRoute(path: '/', builder: (_, _) => const SizedBox()),
+            GoRoute(
+              path: '/',
+              builder: (_, _) => const SizedBox(),
+            ),
             GoRoute(
               path: '/applications',
               builder: (_, _) => const SizedBox(),
             ),
-            GoRoute(path: '/checkin', builder: (_, _) => const SizedBox()),
-            GoRoute(path: '/settlement', builder: (_, _) => const SizedBox()),
-            GoRoute(path: '/more', builder: (_, _) => const SizedBox()),
+            GoRoute(
+              path: '/checkin',
+              builder: (_, _) => const SizedBox(),
+            ),
+            GoRoute(
+              path: '/settlement',
+              builder: (_, _) => const SizedBox(),
+            ),
+            GoRoute(
+              path: '/more',
+              builder: (_, _) => const SizedBox(),
+            ),
             GoRoute(
               path: '/more/parties',
               builder: (_, _) => const SizedBox(),
@@ -55,11 +67,16 @@ void main() {
   }
 
   group('PartnerScaffold — bottom navigation bar', () {
-    testWidgets('renders 5 NavigationDestination items', (tester) async {
+    testWidgets('renders 5 NavigationDestination items', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      expect(find.byType(NavigationDestination), findsNWidgets(5));
+      expect(
+        find.byType(NavigationDestination),
+        findsNWidgets(5),
+      );
     });
 
     testWidgets('displays correct tab labels', (tester) async {
@@ -84,20 +101,29 @@ void main() {
           .map((d) => d.label)
           .toList();
 
-      expect(labels, ['홈', '신청관리', '체크인', '정산', '더보기']);
+      expect(
+        labels,
+        ['홈', '신청관리', '체크인', '정산', '더보기'],
+      );
     });
 
     testWidgets('selectedIndex matches currentIndex from shell', (
       tester,
     ) async {
-      await tester.pumpWidget(buildSubject(currentIndex: 2));
+      await tester.pumpWidget(
+        buildSubject(currentIndex: 2),
+      );
       await tester.pumpAndSettle();
 
-      final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
+      final navBar = tester.widget<NavigationBar>(
+        find.byType(NavigationBar),
+      );
       expect(navBar.selectedIndex, 2);
     });
 
-    testWidgets('tapping a tab calls goBranch on the shell', (tester) async {
+    testWidgets('tapping a tab calls goBranch on the shell', (
+      tester,
+    ) async {
       when(
         () => mockShell.goBranch(
           any(),
@@ -117,7 +143,9 @@ void main() {
       ).called(1);
     });
 
-    testWidgets('tapping same tab resets to initial location', (tester) async {
+    testWidgets('tapping same tab resets to initial location', (
+      tester,
+    ) async {
       when(
         () => mockShell.goBranch(
           any(),
@@ -133,23 +161,30 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(
-        () => mockShell.goBranch(0, initialLocation: true),
+        () => mockShell.goBranch(
+          0,
+          initialLocation: true,
+        ),
       ).called(1);
     });
   });
 
   group('PartnerScaffold — bottom nav visibility', () {
-    testWidgets('bottom nav is visible on root path /', (tester) async {
+    testWidgets('bottom nav is visible on root path /', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
       expect(find.byType(NavigationBar), findsOneWidget);
     });
 
-    testWidgets('bottom nav is hidden on sub-route /more/parties', (
+    testWidgets('bottom nav is hidden on sub-route', (
       tester,
     ) async {
-      await tester.pumpWidget(buildSubject(location: '/more/parties'));
+      await tester.pumpWidget(
+        buildSubject(location: '/more/parties'),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byType(NavigationBar), findsNothing);
