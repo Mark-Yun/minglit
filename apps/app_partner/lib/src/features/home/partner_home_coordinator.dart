@@ -21,4 +21,9 @@ class PartnerHomeCoordinator {
   void pushApplicationList() {
     unawaited(_router.push(const ApplicationListRoute().location));
   }
+
+  // Fix #635: settlement 탭 전환을 home coordinator를 통해 위임 (feature 격리)
+  void goToSettlement() {
+    _router.go(const SettlementRoute().location);
+  }
 }

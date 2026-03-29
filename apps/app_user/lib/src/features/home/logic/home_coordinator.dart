@@ -14,6 +14,11 @@ class HomeCoordinator {
 
   final GoRouter _router;
 
+  // Fix #634: goToLogin을 home_coordinator로 이동 — auth_coordinator 직접 참조 제거
+  void goToLogin({String? from}) {
+    _router.go(LoginRoute(from: from).location);
+  }
+
   void pushNotificationCenter() {
     unawaited(_router.push(const NotificationCenterRoute().location));
   }
