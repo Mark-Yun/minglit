@@ -12,6 +12,7 @@ void main() {
   setUp(() {
     mockRouter = MockGoRouter();
     when(() => mockRouter.push(any())).thenAnswer((_) async => null);
+    when(() => mockRouter.go(any())).thenReturn(null);
   });
 
   group('PartnerHomeCoordinator', () {
@@ -48,6 +49,19 @@ void main() {
       container.read(partnerHomeCoordinatorProvider).pushApplicationList();
 
       verify(() => mockRouter.push(any())).called(1);
+    });
+
+    test('goToSettlement calls router.go with settlement route', () {
+      final container = createContainer(
+        overrides: [
+          goRouterProvider.overrideWithValue(mockRouter),
+        ],
+      );
+
+      container.read(partnerHomeCoordinatorProvider).goToSettlement();
+
+      verify(() => mockRouter.go(any())).called(1);
+      verifyNever(() => mockRouter.push(any()));
     });
 
     test(

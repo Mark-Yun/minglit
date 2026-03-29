@@ -25,12 +25,13 @@ jobs:
 
       - name: Create parties and events
         run: |
+          # Fix #705: backend-simulator create phase needs more time (cold start + data growth)
           curl -sf -X POST \
             "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/backend-simulator" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
             -H "Content-Type: application/json" \
             -d '{"phase":"create"}' \
-            --max-time 120
+            --max-time 300
 
       - name: Run full simulation (approve → refund → run → settle)
         run: |
