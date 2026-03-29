@@ -48,8 +48,7 @@ void main() {
   group('RecommendationFeedNotifier', () {
     group('loadMore', () {
       // Fix #691: 에러 발생 시 Log.e 호출 + graceful 처리 검증
-      test('logs error via Log.e and restores state on exception',
-          () async {
+      test('logs error via Log.e and restores state on exception', () async {
         var callCount = 0;
 
         stubGetEventsByType((_) async {
@@ -107,13 +106,17 @@ void main() {
         final notifier = container.read(recommendationFeedProvider.notifier);
         await container.read(recommendationFeedProvider.future);
 
-        final eventsBefore =
-            container.read(recommendationFeedProvider).value!.events;
+        final eventsBefore = container
+            .read(recommendationFeedProvider)
+            .value!
+            .events;
 
         await notifier.loadMore();
 
-        final eventsAfter =
-            container.read(recommendationFeedProvider).value!.events;
+        final eventsAfter = container
+            .read(recommendationFeedProvider)
+            .value!
+            .events;
         expect(eventsAfter.length, equals(eventsBefore.length));
       });
     });
