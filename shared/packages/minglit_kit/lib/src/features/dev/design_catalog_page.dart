@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_content_card.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_key_value_row.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_section.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_list_tile.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_section.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_tag.dart';
 
 /// Dev-only design catalog page displaying all design tokens and components.

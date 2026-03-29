@@ -48,8 +48,7 @@ void main() {
       expect(find.text('파트너 매니저'), findsOneWidget);
     });
 
-    testWidgets('renders CircleAvatar when avatar is provided',
-        (tester) async {
+    testWidgets('renders CircleAvatar when avatar is provided', (tester) async {
       await tester.pumpWidget(
         wrap(
           MinglitListTile(
@@ -106,8 +105,7 @@ void main() {
       expect(tapped, isFalse);
     });
 
-    testWidgets('has Semantics widget with button and enabled',
-        (tester) async {
+    testWidgets('has Semantics widget with button and enabled', (tester) async {
       await tester.pumpWidget(
         wrap(
           MinglitListTile(
@@ -148,8 +146,7 @@ void main() {
       expect(listTile.onTap, isNull);
     });
 
-    testWidgets('avatar takes precedence over leading',
-        (tester) async {
+    testWidgets('avatar takes precedence over leading', (tester) async {
       await tester.pumpWidget(
         wrap(
           MinglitListTile(

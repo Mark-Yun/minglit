@@ -78,8 +78,9 @@ class MinglitListTile extends StatelessWidget {
     final subtitleStyle = theme.textTheme.bodyMedium?.copyWith(
       color: enabled
           ? colorScheme.onSurfaceVariant
-          : colorScheme.onSurfaceVariant
-              .withValues(alpha: MinglitOpacity.muted),
+          : colorScheme.onSurfaceVariant.withValues(
+              alpha: MinglitOpacity.muted,
+            ),
     );
 
     return Semantics(
