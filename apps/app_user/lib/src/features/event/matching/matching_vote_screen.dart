@@ -175,11 +175,9 @@ class MatchingVoteContent extends ConsumerWidget {
                   voteCountAsync.isLoading ||
                   maxVoteAsync.isLoading ||
                   votedIdsAsync.isLoading;
-              final votedIds =
-                  hasVoteMeta ? votedIdsAsync.value! : <String>{};
+              final votedIds = hasVoteMeta ? votedIdsAsync.value! : <String>{};
               final allVotesUsed =
-                  hasVoteMeta &&
-                  voteCountAsync.value! >= maxVoteAsync.value!;
+                  hasVoteMeta && voteCountAsync.value! >= maxVoteAsync.value!;
               return GridView.builder(
                 padding: const EdgeInsets.all(MinglitSpacing.medium),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -198,7 +196,10 @@ class MatchingVoteContent extends ConsumerWidget {
                     candidate,
                     isVoted: isVoted,
                     isDisabled:
-                        voteMetaLoading || !hasVoteMeta || isVoted || allVotesUsed,
+                        voteMetaLoading ||
+                        !hasVoteMeta ||
+                        isVoted ||
+                        allVotesUsed,
                   );
                 },
               );
