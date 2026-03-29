@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 import 'package:app_user/src/features/event/matching/matching_vote_controller.dart';
 import 'package:app_user/src/features/event/matching/widgets/matching_vote_content.dart';
-=======
->>>>>>> origin/dev
 import 'package:app_user/src/features/home/widgets/event_now_bar_controller.dart';
 import 'package:app_user/src/features/ticket/data/ticket_wallet_repository.dart';
 import 'package:app_user/src/features/ticket/ui/widgets/ticket_qr_viewer.dart';
@@ -13,14 +10,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 /// Shows the Event Now bottom sheet for a given active event.
 ///
-<<<<<<< HEAD
 /// Displays Phase 1 (check-in ready — QR code), Phase 2 (checked in —
 /// confirmation + participant count), or Phase 3 (matching — vote content)
 /// depending on [EventNowBarState].
-=======
-/// Displays Phase 1 (check-in ready — QR code) or Phase 2 (checked in —
-/// confirmation + participant count) depending on [EventNowBarState].
->>>>>>> origin/dev
 Future<void> showEventNowBottomSheet(
   BuildContext context,
   WidgetRef ref,
@@ -45,11 +37,8 @@ Future<void> showEventNowBottomSheet(
 ///   QR code + event info + location link
 /// - **Phase 2** (`checkedIn`):
 ///   Check-in confirmation + participant count + avatars
-<<<<<<< HEAD
 /// - **Phase 3** (`matching`):
 ///   MatchingVoteContent with vote count header
-=======
->>>>>>> origin/dev
 class EventNowBottomSheet extends ConsumerWidget {
   /// Creates an [EventNowBottomSheet].
   const EventNowBottomSheet({required this.activeEvent, super.key});
@@ -97,17 +86,12 @@ class EventNowBottomSheet extends ConsumerWidget {
       EventNowBarState.checkedIn => _CheckedInContent(
         activeEvent: activeEvent,
       ),
-<<<<<<< HEAD
       // Fix #664: Phase 3 — matching vote content in DraggableScrollableSheet
       EventNowBarState.matching => _MatchingContent(
         activeEvent: activeEvent,
       ),
       // For results/ended, show check-in content as fallback
       // (these phases will be implemented in #665)
-=======
-      // For matching/results/ended, show check-in content as fallback
-      // (these phases will be implemented in #664, #665)
->>>>>>> origin/dev
       _ => _CheckedInContent(activeEvent: activeEvent),
     };
   }
@@ -310,7 +294,6 @@ class _CheckedInContent extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-<<<<<<< HEAD
 // Phase 3: Matching — MatchingVoteContent in DraggableScrollableSheet
 // ---------------------------------------------------------------------------
 
@@ -400,8 +383,6 @@ class _MatchingContent extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
-=======
->>>>>>> origin/dev
 // Shared sub-widgets
 // ---------------------------------------------------------------------------
 
