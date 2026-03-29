@@ -86,8 +86,8 @@ class MyTicketsState {
     required List<EventApplication> upcoming,
     required List<EventApplication> past,
     required this.todayEvent,
-  })  : upcoming = List.unmodifiable(upcoming),
-        past = List.unmodifiable(past);
+  }) : upcoming = List.unmodifiable(upcoming),
+       past = List.unmodifiable(past);
 
   final List<EventApplication> upcoming;
   final List<EventApplication> past;
