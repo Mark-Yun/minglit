@@ -33,7 +33,9 @@ class OnboardingStepGuide extends StatelessWidget {
             child: Text(
               '🎊',
               // Fix #596: hardcoded fontSize:40 → MinglitIconSize.xxlarge
-              style: theme.textTheme.displayLarge?.copyWith(fontSize: MinglitIconSize.xxlarge),
+              style: theme.textTheme.displayLarge?.copyWith(
+                fontSize: MinglitIconSize.xxlarge,
+              ),
             ),
           ),
           const SizedBox(height: MinglitSpacing.sm),
@@ -411,9 +413,12 @@ class _FlowStep extends StatelessWidget {
           // Fix #596: hardcoded fontSize:10 → captionTiny from extension
           Text(
             sub,
-            style: theme.extension<MinglitTextThemeExtension>()!.captionTiny.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            style: theme
+                .extension<MinglitTextThemeExtension>()!
+                .captionTiny
+                .copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
           ),
         ],
       ),
