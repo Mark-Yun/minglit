@@ -4,6 +4,7 @@ import 'package:app_user/src/features/event/admission/event_application_wizard_p
 import 'package:app_user/src/features/event/detail/event_detail_page.dart';
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/features/home/my_page.dart';
+import 'package:app_user/src/features/my_tickets/ui/my_tickets_page.dart';
 import 'package:app_user/src/features/partner/detail/partner_detail_page.dart';
 import 'package:app_user/src/features/partner/detail/partner_events_page.dart';
 import 'package:app_user/src/features/party/party_curation_page.dart';
@@ -124,6 +125,17 @@ class EventApplicationRoute extends GoRouteData with $EventApplicationRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       EventApplicationWizardPage(eventId: eventId, ticketId: ticketId);
+}
+
+/// **My Tickets Route**: User's ticket list page.
+/// Path: `/tickets/my`
+@TypedGoRoute<MyTicketsRoute>(path: '/tickets/my')
+class MyTicketsRoute extends GoRouteData with $MyTicketsRoute {
+  const MyTicketsRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const MyTicketsPage();
 }
 
 /// **Purchase History Route**
