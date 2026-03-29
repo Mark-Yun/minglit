@@ -162,7 +162,7 @@ void main() {
     test('propagates repository errors', () async {
       when(
         () => mockEventRepo.getTodayActiveEventsForUser('user_123'),
-      ).thenThrow(Exception('Network error'));
+      ).thenAnswer((_) async => throw Exception('Network error'));
 
       final container = createContainer(
         overrides: [
