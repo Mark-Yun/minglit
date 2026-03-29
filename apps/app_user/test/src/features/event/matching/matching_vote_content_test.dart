@@ -59,11 +59,24 @@ void main() {
         ],
       );
 
-      await tester.pumpWidget(buildSubject());
+      // Pump without Scaffold — use Material as the ancestor instead
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            matchingRepositoryProvider.overrideWithValue(mockMatchingRepo),
+          ],
+          child: MaterialApp(
+            theme: MinglitTheme.materialTheme,
+            home: const Material(
+              child: MatchingVoteContent(eventId: 'event_1'),
+            ),
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
 
-      // MatchingVoteContent itself should not introduce a Scaffold
-      // The outer Scaffold in buildSubject is the only one
+      // MatchingVoteContent itself does not introduce a Scaffold
+      expect(find.byType(Scaffold), findsNothing);
       expect(find.byType(MatchingVoteContent), findsOneWidget);
       expect(find.text('투표 가능한 상대가 없습니다.'), findsOneWidget);
     });

@@ -107,7 +107,22 @@ class MatchingVoteContent extends ConsumerWidget {
         ),
 
         // Fix #306: 잔여 투표 수 표시
-        if (voteCountAsync.hasValue && maxVoteAsync.hasValue)
+        // Handle loading/error/data for vote meta providers
+        if (voteCountAsync.isLoading ||
+            maxVoteAsync.isLoading ||
+            votedIdsAsync.isLoading)
+          const Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: MinglitSpacing.medium,
+              vertical: MinglitSpacing.small,
+            ),
+            child: SizedBox(
+              height: MinglitIconSize.small,
+              width: MinglitIconSize.small,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          )
+        else if (voteCountAsync.hasValue && maxVoteAsync.hasValue)
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: MinglitSpacing.medium,
@@ -152,12 +167,18 @@ class MatchingVoteContent extends ConsumerWidget {
               if (candidates.isEmpty) {
                 return const Center(child: Text('투표 가능한 상대가 없습니다.'));
               }
-              final votedIds = votedIdsAsync.hasValue
-                  ? votedIdsAsync.value!
-                  : <String>{};
-              final allVotesUsed =
+              final hasVoteMeta =
                   voteCountAsync.hasValue &&
                   maxVoteAsync.hasValue &&
+                  votedIdsAsync.hasValue;
+              final voteMetaLoading =
+                  voteCountAsync.isLoading ||
+                  maxVoteAsync.isLoading ||
+                  votedIdsAsync.isLoading;
+              final votedIds =
+                  hasVoteMeta ? votedIdsAsync.value! : <String>{};
+              final allVotesUsed =
+                  hasVoteMeta &&
                   voteCountAsync.value! >= maxVoteAsync.value!;
               return GridView.builder(
                 padding: const EdgeInsets.all(MinglitSpacing.medium),
@@ -176,7 +197,8 @@ class MatchingVoteContent extends ConsumerWidget {
                     ref,
                     candidate,
                     isVoted: isVoted,
-                    isDisabled: isVoted || allVotesUsed,
+                    isDisabled:
+                        voteMetaLoading || !hasVoteMeta || isVoted || allVotesUsed,
                   );
                 },
               );
