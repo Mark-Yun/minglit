@@ -1,5 +1,6 @@
 import 'package:app_user/src/features/event/matching/matching_vote_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -200,6 +201,44 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('투표 완료!'), findsOneWidget);
+    });
+
+    testWidgets('shows error message when vote meta fails to load', (
+      tester,
+    ) async {
+      when(
+        () => mockMatchingRepo.getMatchingCandidates('event_1'),
+      ).thenAnswer((_) async => <UserProfile>[]);
+      when(
+        () => mockMatchingRepo.getMyMatches('event_1'),
+      ).thenAnswer((_) async => <MatchPair>[]);
+      when(
+        () => mockMatchingRepo.getMyVoteCount('event_1'),
+      ).thenThrow(Exception('network error'));
+      when(
+        () => mockMatchingRepo.getMyVotedCandidateIds('event_1'),
+      ).thenAnswer((_) async => <String>{});
+      when(
+        () => mockMatchingRepo.getMatchRules('event_1'),
+      ).thenAnswer(
+        (_) async => [
+          MatchRule(
+            id: 'rule_1',
+            eventId: 'event_1',
+            sourceGroupId: 'g1',
+            targetGroupId: 'g2',
+            createdAt: DateTime(2026),
+            voteCount: 3,
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      // Fix #690: error state shows error message and disables buttons
+      expect(find.text('투표 정보를 불러올 수 없습니다.'), findsOneWidget);
+      expect(find.byIcon(Icons.error_outline), findsOneWidget);
     });
 
     testWidgets('shows match success section when matches exist', (
