@@ -95,7 +95,7 @@ class _ScannerWrapper extends StatelessWidget {
     return Theme(
       data: ThemeData.dark().copyWith(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6C3CE1),
+          seedColor: MinglitPartnerColors.primary,
           brightness: Brightness.dark,
         ),
       ),
