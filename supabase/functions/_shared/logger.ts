@@ -56,7 +56,8 @@ export async function initSentry(dsn?: string): Promise<void> {
       tracesSampleRate: 0.2,
       defaultIntegrations: false,
       // Fix #763: Sentry 전송 전 PII 필드 마스킹
-      beforeSend(event: Record<string, unknown>) {
+      // deno-lint-ignore no-explicit-any
+      beforeSend(event: any) {
         return maskPii(event) as typeof event;
       },
     });
