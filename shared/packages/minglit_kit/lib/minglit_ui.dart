@@ -19,6 +19,7 @@ export 'src/ui/widgets/common/entry_group_detail.dart';
 export 'src/ui/widgets/common/loading_indicator.dart';
 export 'src/ui/widgets/common/minglit_alert.dart';
 export 'src/ui/widgets/common/minglit_async_value_widget.dart';
+export 'src/ui/widgets/common/minglit_bottom_cta.dart';
 export 'src/ui/widgets/common/minglit_chip.dart';
 export 'src/ui/widgets/common/minglit_content_card.dart';
 export 'src/ui/widgets/common/minglit_dialog.dart';
