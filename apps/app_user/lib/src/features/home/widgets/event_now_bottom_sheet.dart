@@ -1,3 +1,5 @@
+import 'package:app_user/src/features/event/matching/matching_vote_controller.dart';
+import 'package:app_user/src/features/event/matching/widgets/matching_vote_content.dart';
 import 'package:app_user/src/features/home/widgets/event_now_bar_controller.dart';
 import 'package:app_user/src/features/ticket/data/ticket_wallet_repository.dart';
 import 'package:app_user/src/features/ticket/ui/widgets/ticket_qr_viewer.dart';
@@ -8,8 +10,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 /// Shows the Event Now bottom sheet for a given active event.
 ///
-/// Displays Phase 1 (check-in ready — QR code) or Phase 2 (checked in —
-/// confirmation + participant count) depending on [EventNowBarState].
+/// Displays Phase 1 (check-in ready — QR code), Phase 2 (checked in —
+/// confirmation + participant count), or Phase 3 (matching — vote content)
+/// depending on [EventNowBarState].
 Future<void> showEventNowBottomSheet(
   BuildContext context,
   WidgetRef ref,
@@ -34,6 +37,8 @@ Future<void> showEventNowBottomSheet(
 ///   QR code + event info + location link
 /// - **Phase 2** (`checkedIn`):
 ///   Check-in confirmation + participant count + avatars
+/// - **Phase 3** (`matching`):
+///   MatchingVoteContent with vote count header
 class EventNowBottomSheet extends ConsumerWidget {
   /// Creates an [EventNowBottomSheet].
   const EventNowBottomSheet({required this.activeEvent, super.key});
@@ -81,8 +86,12 @@ class EventNowBottomSheet extends ConsumerWidget {
       EventNowBarState.checkedIn => _CheckedInContent(
         activeEvent: activeEvent,
       ),
-      // For matching/results/ended, show check-in content as fallback
-      // (these phases will be implemented in #664, #665)
+      // Fix #664: Phase 3 — matching vote content in DraggableScrollableSheet
+      EventNowBarState.matching => _MatchingContent(
+        activeEvent: activeEvent,
+      ),
+      // For results/ended, show check-in content as fallback
+      // (these phases will be implemented in #665)
       _ => _CheckedInContent(activeEvent: activeEvent),
     };
   }
@@ -279,6 +288,97 @@ class _CheckedInContent extends StatelessWidget {
           ),
           const SizedBox(height: MinglitSpacing.medium),
         ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 3: Matching — MatchingVoteContent in DraggableScrollableSheet
+// ---------------------------------------------------------------------------
+
+// Fix #664: MATCHING 상태에서 MatchingVoteContent 임베드 + 남은 투표 수 표시
+class _MatchingContent extends ConsumerWidget {
+  const _MatchingContent({required this.activeEvent});
+
+  final TodayActiveEvent activeEvent;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final event = activeEvent.event;
+    final theme = Theme.of(context);
+    final voteCountAsync = ref.watch(myVoteCountProvider(event.id));
+    final maxVoteAsync = ref.watch(maxVoteCountProvider(event.id));
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: MinglitSpacing.screenEdge,
+        vertical: MinglitSpacing.large,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Drag handle
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: MinglitColors.textSecondary.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.large),
+
+          // Event title
+          Text(
+            event.title ?? '이벤트',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: MinglitSpacing.small),
+
+          // Fix #664: remaining vote count
+          _buildVoteStatus(theme, voteCountAsync, maxVoteAsync),
+          const SizedBox(height: MinglitSpacing.medium),
+
+          // Fix #664: MatchingVoteContent needs bounded height for internal
+          // Expanded + GridView. Use 60% of screen height as content area.
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.6,
+            child: MatchingVoteContent(eventId: event.id),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVoteStatus(
+    ThemeData theme,
+    AsyncValue<int> voteCountAsync,
+    AsyncValue<int> maxVoteAsync,
+  ) {
+    if (!voteCountAsync.hasValue || !maxVoteAsync.hasValue) {
+      return const SizedBox(
+        height: 20,
+        width: 20,
+        child: MinglitCircularProgressIndicator(),
+      );
+    }
+
+    final voteCount = voteCountAsync.value!;
+    final maxVote = maxVoteAsync.value!;
+    final remaining = maxVote - voteCount;
+    final text = remaining > 0 ? '남은 투표: $remaining / $maxVote' : '투표 완료!';
+
+    return Text(
+      text,
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: remaining > 0
+            ? MinglitColors.secondary
+            : MinglitColors.success,
+        fontWeight: FontWeight.w600,
       ),
     );
   }
