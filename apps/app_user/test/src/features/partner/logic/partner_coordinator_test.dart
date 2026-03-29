@@ -1,6 +1,6 @@
-// Fix #634: PartnerCoordinator unit tests
 import 'package:app_user/src/features/partner/logic/partner_coordinator.dart';
 import 'package:app_user/src/routing/app_router.dart';
+import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
@@ -37,7 +37,9 @@ void main() {
       coordinator.pushEventDetail('event-123');
 
       verify(
-        () => mockRouter.push(any(that: contains('/events/event-123'))),
+        () => mockRouter.push(
+          const EventDetailRoute(eventId: 'event-123').location,
+        ),
       ).called(1);
     });
 
@@ -48,7 +50,12 @@ void main() {
       );
 
       verify(
-        () => mockRouter.push(any(that: contains('partner-456'))),
+        () => mockRouter.push(
+          const PartnerEventsRoute(
+            partnerId: 'partner-456',
+            partnerName: 'Test Partner',
+          ).location,
+        ),
       ).called(1);
     });
   });

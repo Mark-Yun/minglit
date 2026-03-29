@@ -84,17 +84,17 @@ void main() {
       ).called(1);
     });
 
-    // Fix #634: from 쿼리 파라미터 값까지 검증
+    // Fix #634: from query parameter 정확 검증 — contains('/login')만으로는 불충분
     test('pushLogin with from param includes query param', () {
       coordinator.pushLogin(from: '/events/123');
 
-      verify(
-        () => mockRouter.push(
-          any(
-            that: allOf(contains('/login'), contains('from=%2Fevents%2F123')),
-          ),
-        ),
-      ).called(1);
+      final captured = verify(
+        () => mockRouter.push(captureAny()),
+      ).captured.single as String;
+
+      final uri = Uri.parse(captured);
+      expect(uri.path, '/login');
+      expect(uri.queryParameters['from'], '/events/123');
     });
   });
 }

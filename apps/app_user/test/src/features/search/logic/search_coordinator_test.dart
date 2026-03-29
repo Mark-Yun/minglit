@@ -1,6 +1,6 @@
-// Fix #634: SearchCoordinator unit tests
 import 'package:app_user/src/features/search/logic/search_coordinator.dart';
 import 'package:app_user/src/routing/app_router.dart';
+import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
@@ -34,10 +34,12 @@ void main() {
     });
 
     test('pushEventDetail pushes correct route', () {
-      coordinator.pushEventDetail('event-456');
+      coordinator.pushEventDetail('event-123');
 
       verify(
-        () => mockRouter.push(any(that: contains('/events/event-456'))),
+        () => mockRouter.push(
+          const EventDetailRoute(eventId: 'event-123').location,
+        ),
       ).called(1);
     });
   });
