@@ -32,8 +32,9 @@ Deno.test("identity-verify - happy path updates profile", async () => {
           handler: () => jsonResponse(mockUser),
         },
         {
-          matcher: (req) => req.url.includes("/rest/v1/user_profiles") && req.method === "PATCH",
-          handler: () => jsonResponse({}),
+          // Fix #808: RPC 호출 모킹 (PATCH → POST /rpc/update_user_identity)
+          matcher: (req) => req.url.includes("/rest/v1/rpc/update_user_identity") && req.method === "POST",
+          handler: () => jsonResponse(null),
         },
       ]);
 
@@ -144,6 +145,47 @@ Deno.test("identity-verify - unauthorized returns 401", async () => {
 
           assertEquals(response.status, 401);
           assertEquals(payload.error, "Unauthorized");
+        });
+      });
+    },
+  );
+});
+
+// Fix #808: RPC 실패 시 500 반환 테스트
+Deno.test("identity-verify - RPC failure returns 500", async () => {
+  await withEnv(
+    {
+      PORTONE_V2_API_KEY: "test-key",
+      SUPABASE_URL: "https://supabase.test",
+      SUPABASE_SERVICE_ROLE_KEY: "service-key",
+    },
+    async () => {
+      const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+      const { fetchMock } = createFetchMock([
+        {
+          matcher: "https://api.portone.io/identity-verifications/verify_123",
+          handler: () => jsonResponse(mockPortoneVerification),
+        },
+        authRoute,
+        {
+          matcher: (req) => req.url.includes("/rest/v1/rpc/update_user_identity") && req.method === "POST",
+          handler: () => jsonResponse(
+            { message: "pii_encryption_key not found in vault", code: "P0001" },
+            { status: 400 },
+          ),
+        },
+      ]);
+
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const request = authenticatedJsonRequest("http://localhost", {
+            identity_verification_id: "verify_123",
+          });
+          const response = await handler(request);
+          const payload = await readJson(response);
+
+          assertEquals(response.status, 500);
+          assertEquals(payload.error, "Failed to update user identity");
         });
       });
     },
