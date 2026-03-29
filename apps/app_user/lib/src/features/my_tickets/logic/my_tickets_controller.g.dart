@@ -8,12 +8,21 @@ part of 'my_tickets_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Fix #639: MyTicketsController — upcoming/past ticket separation + today event detection.
+///
+/// Fetches active tickets (paid/approved) and splits them by event start time.
 
 @ProviderFor(MyTicketsController)
 const myTicketsControllerProvider = MyTicketsControllerProvider._();
 
+/// Fix #639: MyTicketsController — upcoming/past ticket separation + today event detection.
+///
+/// Fetches active tickets (paid/approved) and splits them by event start time.
 final class MyTicketsControllerProvider
     extends $AsyncNotifierProvider<MyTicketsController, MyTicketsState> {
+  /// Fix #639: MyTicketsController — upcoming/past ticket separation + today event detection.
+  ///
+  /// Fetches active tickets (paid/approved) and splits them by event start time.
   const MyTicketsControllerProvider._()
     : super(
         from: null,
@@ -34,7 +43,11 @@ final class MyTicketsControllerProvider
 }
 
 String _$myTicketsControllerHash() =>
-    r'b4d487d7e52af0b7e5a9e2a875ca243564f39938';
+    r'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0';
+
+/// Fix #639: MyTicketsController — upcoming/past ticket separation + today event detection.
+///
+/// Fetches active tickets (paid/approved) and splits them by event start time.
 
 abstract class _$MyTicketsController extends $AsyncNotifier<MyTicketsState> {
   FutureOr<MyTicketsState> build();
