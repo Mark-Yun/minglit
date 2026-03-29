@@ -62,7 +62,8 @@ class _MinglitSkeletonState extends State<MinglitSkeleton>
           height: widget.height,
           decoration: BoxDecoration(
             color: _colorAnimation.value,
-            borderRadius: widget.borderRadius ??
+            borderRadius:
+                widget.borderRadius ??
                 BorderRadius.circular(MinglitRadius.small),
           ),
         );
