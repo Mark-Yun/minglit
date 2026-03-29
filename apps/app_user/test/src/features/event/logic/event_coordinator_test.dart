@@ -84,11 +84,14 @@ void main() {
       ).called(1);
     });
 
+    // Fix #634: from 쿼리 파라미터 값까지 검증
     test('pushLogin with from param includes query param', () {
       coordinator.pushLogin(from: '/events/123');
 
       verify(
-        () => mockRouter.push(any(that: contains('/login'))),
+        () => mockRouter.push(
+          any(that: allOf(contains('/login'), contains('from=%2Fevents%2F123'))),
+        ),
       ).called(1);
     });
   });
