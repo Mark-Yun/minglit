@@ -1,6 +1,6 @@
 #!/bin/bash
 # audit-qa-run.sh — 단발성. launchd가 주기적 호출.
-set -euo pipefail
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="/Users/mark/workspace/minglit"
