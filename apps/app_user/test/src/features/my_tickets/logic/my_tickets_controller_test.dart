@@ -175,11 +175,11 @@ void main() {
       when(() => mockUser.id).thenReturn(userId);
 
       final now = DateTime.now();
-      // Fix #639: Events must be after now AND today to be todayEvent.
-      // Use now + offset to guarantee future; skip if near midnight.
-      final todaySoon = now.add(const Duration(minutes: 5));
-      final todayLate = now.add(const Duration(minutes: 30));
-      if (todaySoon.day != now.day || todayLate.day != now.day) return;
+      // Fix #639: Use late-night hours (22, 23) to keep events in "today" bucket.
+      // Guard: skip if already past 22:00 — CI runs during business hours.
+      final todaySoon = DateTime(now.year, now.month, now.day, 22);
+      final todayLate = DateTime(now.year, now.month, now.day, 23);
+      if (!todaySoon.isAfter(now)) return;
       final tomorrow = now.add(const Duration(days: 1));
 
       final tickets = [
