@@ -1222,7 +1222,36 @@ class _LayoutSection extends StatelessWidget {
 
         const Divider(height: MinglitSpacing.xxlarge),
 
-        // 4. 조합 예시
+        // 4. MinglitListTile
+        Text('MinglitListTile', style: titleLarge),
+        const SizedBox(height: MinglitSpacing.medium),
+        MinglitListTile(
+          title: '홍길동',
+          subtitle: '서울특별시 강남구',
+          leading: const CircleAvatar(child: Icon(Icons.person)),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {},
+        ),
+        const SizedBox(height: MinglitSpacing.small),
+        const MinglitListTile(
+          title: '아이콘 리딩',
+          subtitle: '아이콘을 leading에 배치',
+          leading: CircleAvatar(
+            radius: 20,
+            child: Icon(Icons.event, size: MinglitIconSize.medium),
+          ),
+        ),
+        const SizedBox(height: MinglitSpacing.small),
+        const MinglitListTile(
+          title: '비활성 타일',
+          subtitle: 'enabled: false',
+          leading: CircleAvatar(child: Icon(Icons.block)),
+          enabled: false,
+        ),
+
+        const Divider(height: MinglitSpacing.xxlarge),
+
+        // 5. 조합 예시
         Text('조합 예시', style: titleLarge),
         const SizedBox(height: MinglitSpacing.medium),
         MinglitSection(
