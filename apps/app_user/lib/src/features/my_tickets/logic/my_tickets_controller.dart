@@ -3,25 +3,16 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'my_tickets_controller.g.dart';
 
-class MyTicketsState {
-  const MyTicketsState({
-    required this.upcoming,
-    required this.past,
-    required this.todayEvent,
-  });
-
-  final List<EventApplication> upcoming;
-  final List<EventApplication> past;
-  final EventApplication? todayEvent;
-}
-
+/// Fix #639: MyTicketsController — upcoming/past ticket separation + today event detection.
+///
+/// Fetches active tickets (paid/approved) and splits them by event start time.
 @riverpod
 class MyTicketsController extends _$MyTicketsController {
   @override
   FutureOr<MyTicketsState> build() async {
     final user = ref.watch(currentUserProvider);
     if (user == null) {
-      return const MyTicketsState(
+      return MyTicketsState(
         upcoming: [],
         past: [],
         todayEvent: null,
@@ -30,62 +21,56 @@ class MyTicketsController extends _$MyTicketsController {
 
     final repository = ref.watch(eventRepositoryProvider);
     final tickets = await repository.getMyTickets(user.id);
-    return _categorize(tickets);
+    return _splitTickets(tickets);
   }
 
-  MyTicketsState _categorize(List<EventApplication> tickets) {
+  MyTicketsState _splitTickets(List<EventApplication> tickets) {
     final now = DateTime.now();
     final todayStart = DateTime(now.year, now.month, now.day);
     final todayEnd = todayStart.add(const Duration(days: 1));
 
     final upcoming = <EventApplication>[];
     final past = <EventApplication>[];
-    EventApplication? todayEvent;
 
     for (final ticket in tickets) {
       final startTime = ticket.event?.startTime;
       if (startTime == null) {
+        // No event relation — treat as past
         past.add(ticket);
         continue;
       }
-
       if (startTime.isAfter(now)) {
         upcoming.add(ticket);
-
-        // 오늘 시작하는 이벤트 중 가장 임박한 것
-        if (!startTime.isBefore(todayStart) && startTime.isBefore(todayEnd)) {
-          if (todayEvent == null ||
-              startTime.isBefore(todayEvent.event!.startTime)) {
-            todayEvent = ticket;
-          }
-        }
       } else {
         past.add(ticket);
-
-        // 오늘 시작했지만 이미 시작 시간이 지난 경우도 todayEvent 후보
-        if (!startTime.isBefore(todayStart) && startTime.isBefore(todayEnd)) {
-          if (todayEvent == null ||
-              startTime.isAfter(todayEvent.event!.startTime)) {
-            todayEvent = ticket;
-          }
-        }
       }
     }
 
-    // upcoming: 가까운 순 (ASC)
-    upcoming.sort(
-      (a, b) => a.event!.startTime.compareTo(b.event!.startTime),
-    );
+    // upcoming: ascending (nearest first)
+    upcoming.sort((a, b) {
+      final aTime = a.event!.startTime;
+      final bTime = b.event!.startTime;
+      return aTime.compareTo(bTime);
+    });
 
-    // past: 최근 종료 순 (DESC)
+    // past: descending (most recent first) — event may be null for orphans
     past.sort((a, b) {
-      final aTime = a.event?.startTime;
-      final bTime = b.event?.startTime;
-      if (aTime == null && bTime == null) return 0;
-      if (aTime == null) return 1;
-      if (bTime == null) return -1;
+      final aTime = a.event?.startTime ?? DateTime(0);
+      final bTime = b.event?.startTime ?? DateTime(0);
       return bTime.compareTo(aTime);
     });
+
+    // todayEvent: events starting today, pick the most imminent one
+    EventApplication? todayEvent;
+    for (final ticket in upcoming) {
+      final startTime = ticket.event?.startTime;
+      if (startTime != null &&
+          !startTime.isBefore(todayStart) &&
+          startTime.isBefore(todayEnd)) {
+        todayEvent = ticket;
+        break; // upcoming is ASC sorted, so first match is most imminent
+      }
+    }
 
     return MyTicketsState(
       upcoming: upcoming,
@@ -93,4 +78,22 @@ class MyTicketsController extends _$MyTicketsController {
       todayEvent: todayEvent,
     );
   }
+}
+
+/// Immutable state holding split ticket lists.
+class MyTicketsState {
+  MyTicketsState({
+    required List<EventApplication> upcoming,
+    required List<EventApplication> past,
+    required this.todayEvent,
+  }) : upcoming = List.unmodifiable(upcoming),
+       past = List.unmodifiable(past);
+
+  final List<EventApplication> upcoming;
+  final List<EventApplication> past;
+
+  /// The most imminent event starting today, or null.
+  final EventApplication? todayEvent;
+
+  bool get isEmpty => upcoming.isEmpty && past.isEmpty;
 }
