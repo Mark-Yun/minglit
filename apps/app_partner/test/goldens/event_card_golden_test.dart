@@ -30,6 +30,7 @@ void main() {
   goldenTest(
     'scheduled',
     fileName: 'event_card_scheduled',
+    pumpBeforeTest: pumpAndDumpTree('event_card_scheduled'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(420),
       children: [
@@ -46,6 +47,7 @@ void main() {
   goldenTest(
     'full capacity',
     fileName: 'event_card_full',
+    pumpBeforeTest: pumpAndDumpTree('event_card_full'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(420),
       children: [
@@ -65,6 +67,7 @@ void main() {
   goldenTest(
     'no title (default)',
     fileName: 'event_card_no_title',
+    pumpBeforeTest: pumpAndDumpTree('event_card_no_title'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(420),
       children: [
@@ -84,6 +87,7 @@ void main() {
   goldenTest(
     'scheduled (dark)',
     fileName: 'event_card_scheduled_dark',
+    pumpBeforeTest: pumpAndDumpTree('event_card_scheduled_dark'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(420),
       children: [
@@ -101,6 +105,7 @@ void main() {
   goldenTest(
     'full capacity (dark)',
     fileName: 'event_card_full_dark',
+    pumpBeforeTest: pumpAndDumpTree('event_card_full_dark'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(420),
       children: [
@@ -121,6 +126,7 @@ void main() {
   goldenTest(
     'no title (default) (dark)',
     fileName: 'event_card_no_title_dark',
+    pumpBeforeTest: pumpAndDumpTree('event_card_no_title_dark'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(420),
       children: [

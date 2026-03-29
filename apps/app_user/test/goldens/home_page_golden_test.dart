@@ -1,6 +1,8 @@
 @Tags(['golden'])
 library;
 
+import 'dart:io';
+
 import 'package:alchemist/alchemist.dart';
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
@@ -44,6 +46,8 @@ void main() {
     pumpBeforeTest: (tester) async {
       await initGoldenDeps();
       await tester.pumpAndSettle();
+      final dump = tester.binding.renderViews.first.toStringDeep();
+      File('test/goldens/home_page_empty.render.txt').writeAsStringSync(dump);
     },
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(400),
@@ -69,6 +73,8 @@ void main() {
     pumpBeforeTest: (tester) async {
       await initGoldenDeps();
       await tester.pumpAndSettle();
+      final dump = tester.binding.renderViews.first.toStringDeep();
+      File('test/goldens/home_page_with_events.render.txt').writeAsStringSync(dump);
     },
     builder: () {
       final events = List.generate(
@@ -109,6 +115,8 @@ void main() {
     pumpBeforeTest: (tester) async {
       await initGoldenDeps();
       await tester.pumpAndSettle();
+      final dump = tester.binding.renderViews.first.toStringDeep();
+      File('test/goldens/home_page_empty_dark.render.txt').writeAsStringSync(dump);
     },
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(400),
@@ -135,6 +143,8 @@ void main() {
     pumpBeforeTest: (tester) async {
       await initGoldenDeps();
       await tester.pumpAndSettle();
+      final dump = tester.binding.renderViews.first.toStringDeep();
+      File('test/goldens/home_page_with_events_dark.render.txt').writeAsStringSync(dump);
     },
     builder: () {
       final events = List.generate(

@@ -33,6 +33,7 @@ void main() {
   goldenTest(
     'empty state',
     fileName: 'upcoming_events_empty',
+    pumpBeforeTest: pumpAndDumpTree('upcoming_events_empty'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(420),
       children: [
@@ -49,6 +50,7 @@ void main() {
   goldenTest(
     'with events',
     fileName: 'upcoming_events_with_data',
+    pumpBeforeTest: pumpAndDumpTree('upcoming_events_with_data'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(420),
       children: [
@@ -72,6 +74,7 @@ void main() {
   goldenTest(
     'empty state (dark)',
     fileName: 'upcoming_events_empty_dark',
+    pumpBeforeTest: pumpAndDumpTree('upcoming_events_empty_dark'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(420),
       children: [
@@ -89,6 +92,7 @@ void main() {
   goldenTest(
     'with events (dark)',
     fileName: 'upcoming_events_with_data_dark',
+    pumpBeforeTest: pumpAndDumpTree('upcoming_events_with_data_dark'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(420),
       children: [

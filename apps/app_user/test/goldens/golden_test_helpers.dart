@@ -1,9 +1,13 @@
-import 'package:alchemist/alchemist.dart' show GoldenTestScenario;
+import 'dart:io';
+
+import 'package:alchemist/alchemist.dart'
+    show GoldenTestScenario, onlyPumpAndSettle;
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -69,4 +73,17 @@ class MockAuthCoordinator extends Mock implements AuthCoordinator {}
 class NoFiltersNotifier extends ActiveFilters {
   @override
   ExploreFilters build() => const ExploreFilters();
+}
+
+/// Creates a [PumpAction] that pumps the widget tree, then dumps the render
+/// tree to a `.render.txt` file alongside the golden image.
+///
+/// The dump contains exact padding, sizes, and constraints for every
+/// [RenderObject] — useful for automated spacing/alignment analysis.
+Future<void> Function(WidgetTester) pumpAndDumpTree(String fileName) {
+  return (WidgetTester tester) async {
+    await onlyPumpAndSettle(tester);
+    final dump = tester.binding.renderViews.first.toStringDeep();
+    File('test/goldens/$fileName.render.txt').writeAsStringSync(dump);
+  };
 }

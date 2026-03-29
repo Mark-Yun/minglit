@@ -34,6 +34,7 @@ void main() {
   goldenTest(
     'single event',
     fileName: 'closing_soon_single',
+    pumpBeforeTest: pumpAndDumpTree('closing_soon_single'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(420),
       children: [
@@ -53,6 +54,7 @@ void main() {
   goldenTest(
     'multiple events',
     fileName: 'closing_soon_multiple',
+    pumpBeforeTest: pumpAndDumpTree('closing_soon_multiple'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(420),
       children: [
@@ -76,6 +78,7 @@ void main() {
   goldenTest(
     'single event (dark)',
     fileName: 'closing_soon_single_dark',
+    pumpBeforeTest: pumpAndDumpTree('closing_soon_single_dark'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(420),
       children: [
@@ -96,6 +99,7 @@ void main() {
   goldenTest(
     'multiple events (dark)',
     fileName: 'closing_soon_multiple_dark',
+    pumpBeforeTest: pumpAndDumpTree('closing_soon_multiple_dark'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(420),
       children: [

@@ -1,6 +1,8 @@
 @Tags(['golden'])
 library;
 
+import 'dart:io';
+
 import 'package:alchemist/alchemist.dart';
 import 'package:app_partner/src/features/party/list/party_list_controller.dart';
 import 'package:app_partner/src/features/party/list/party_list_page.dart';
@@ -18,6 +20,8 @@ void main() {
     fileName: 'party_list_page_empty',
     pumpBeforeTest: (tester) async {
       await tester.pumpAndSettle();
+      final dump = tester.binding.renderViews.first.toStringDeep();
+      File('test/goldens/party_list_page_empty.render.txt').writeAsStringSync(dump);
     },
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(400),
@@ -44,6 +48,8 @@ void main() {
     fileName: 'party_list_page_with_data',
     pumpBeforeTest: (tester) async {
       await tester.pumpAndSettle();
+      final dump = tester.binding.renderViews.first.toStringDeep();
+      File('test/goldens/party_list_page_with_data.render.txt').writeAsStringSync(dump);
     },
     builder: () {
       final parties = [
@@ -96,6 +102,8 @@ void main() {
     fileName: 'party_list_page_empty_dark',
     pumpBeforeTest: (tester) async {
       await tester.pumpAndSettle();
+      final dump = tester.binding.renderViews.first.toStringDeep();
+      File('test/goldens/party_list_page_empty_dark.render.txt').writeAsStringSync(dump);
     },
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(400),
@@ -123,6 +131,8 @@ void main() {
     fileName: 'party_list_page_with_data_dark',
     pumpBeforeTest: (tester) async {
       await tester.pumpAndSettle();
+      final dump = tester.binding.renderViews.first.toStringDeep();
+      File('test/goldens/party_list_page_with_data_dark.render.txt').writeAsStringSync(dump);
     },
     builder: () {
       final parties = [

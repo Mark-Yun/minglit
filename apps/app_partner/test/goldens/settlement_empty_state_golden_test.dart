@@ -12,6 +12,7 @@ void main() {
   goldenTest(
     'default (title only)',
     fileName: 'settlement_empty_state_default',
+    pumpBeforeTest: pumpAndDumpTree('settlement_empty_state_default'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(420),
       children: [
@@ -28,6 +29,7 @@ void main() {
   goldenTest(
     'with subtitle',
     fileName: 'settlement_empty_state_subtitle',
+    pumpBeforeTest: pumpAndDumpTree('settlement_empty_state_subtitle'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(420),
       children: [
@@ -47,6 +49,7 @@ void main() {
   goldenTest(
     'with action button',
     fileName: 'settlement_empty_state_action',
+    pumpBeforeTest: pumpAndDumpTree('settlement_empty_state_action'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(420),
       children: [
@@ -69,6 +72,7 @@ void main() {
   goldenTest(
     'default (title only) (dark)',
     fileName: 'settlement_empty_state_default_dark',
+    pumpBeforeTest: pumpAndDumpTree('settlement_empty_state_default_dark'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(420),
       children: [
@@ -86,6 +90,7 @@ void main() {
   goldenTest(
     'with subtitle (dark)',
     fileName: 'settlement_empty_state_subtitle_dark',
+    pumpBeforeTest: pumpAndDumpTree('settlement_empty_state_subtitle_dark'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(420),
       children: [
@@ -106,6 +111,7 @@ void main() {
   goldenTest(
     'with action button (dark)',
     fileName: 'settlement_empty_state_action_dark',
+    pumpBeforeTest: pumpAndDumpTree('settlement_empty_state_action_dark'),
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(420),
       children: [

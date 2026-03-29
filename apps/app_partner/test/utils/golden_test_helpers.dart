@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:alchemist/alchemist.dart'
-    show GoldenTestGroup, GoldenTestScenario;
+    show GoldenTestGroup, GoldenTestScenario, onlyPumpAndSettle;
 import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 /// Fixed surface size for golden tests (consistency across environments).
@@ -40,4 +43,17 @@ class GoldenComponentWrapper extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Creates a [PumpAction] that pumps the widget tree, then dumps the render
+/// tree to a `.render.txt` file alongside the golden image.
+///
+/// The dump contains exact padding, sizes, and constraints for every
+/// [RenderObject] — useful for automated spacing/alignment analysis.
+Future<void> Function(WidgetTester) pumpAndDumpTree(String fileName) {
+  return (WidgetTester tester) async {
+    await onlyPumpAndSettle(tester);
+    final dump = tester.binding.renderViews.first.toStringDeep();
+    File('test/goldens/$fileName.render.txt').writeAsStringSync(dump);
+  };
 }

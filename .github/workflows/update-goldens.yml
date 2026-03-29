@@ -59,7 +59,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add "test/goldens/goldens/ci/" "test/goldens/goldens/ci/**"
+          git add "test/goldens/goldens/ci/" "test/goldens/goldens/ci/**" "test/goldens/*.render.txt"
           if git diff --cached --quiet; then
             echo "No golden changes for ${{ matrix.package }}"
           else

@@ -1,6 +1,8 @@
 @Tags(['golden'])
 library;
 
+import 'dart:io';
+
 import 'dart:async';
 
 import 'package:alchemist/alchemist.dart';
@@ -32,6 +34,8 @@ void main() {
     pumpBeforeTest: (tester) async {
       await initGoldenDeps();
       await tester.pumpAndSettle();
+      final dump = tester.binding.renderViews.first.toStringDeep();
+      File('test/goldens/my_page_logged_out.render.txt').writeAsStringSync(dump);
     },
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(400),
@@ -61,6 +65,8 @@ void main() {
     pumpBeforeTest: (tester) async {
       await initGoldenDeps();
       await tester.pumpAndSettle();
+      final dump = tester.binding.renderViews.first.toStringDeep();
+      File('test/goldens/my_page_logged_in.render.txt').writeAsStringSync(dump);
     },
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(400),
@@ -97,6 +103,8 @@ void main() {
     pumpBeforeTest: (tester) async {
       await initGoldenDeps();
       await tester.pumpAndSettle();
+      final dump = tester.binding.renderViews.first.toStringDeep();
+      File('test/goldens/my_page_logged_out_dark.render.txt').writeAsStringSync(dump);
     },
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(400),
@@ -127,6 +135,8 @@ void main() {
     pumpBeforeTest: (tester) async {
       await initGoldenDeps();
       await tester.pumpAndSettle();
+      final dump = tester.binding.renderViews.first.toStringDeep();
+      File('test/goldens/my_page_logged_in_dark.render.txt').writeAsStringSync(dump);
     },
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(400),
