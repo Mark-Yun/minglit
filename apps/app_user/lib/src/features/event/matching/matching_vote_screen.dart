@@ -4,8 +4,25 @@ import 'package:app_user/src/features/event/matching/matching_vote_controller.da
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
+/// Full-screen matching vote page with Scaffold + AppBar.
 class MatchingVoteScreen extends ConsumerWidget {
   const MatchingVoteScreen({required this.eventId, super.key});
+
+  final String eventId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      appBar: MinglitTheme.simpleAppBar(title: '매칭 투표'),
+      body: MatchingVoteContent(eventId: eventId),
+    );
+  }
+}
+
+/// Scaffold-free matching vote content widget.
+/// Can be embedded standalone (e.g. in a bottom sheet) without a Scaffold.
+class MatchingVoteContent extends ConsumerWidget {
+  const MatchingVoteContent({required this.eventId, super.key});
 
   final String eventId;
 
@@ -34,141 +51,138 @@ class MatchingVoteScreen extends ConsumerWidget {
       }
     });
 
-    return Scaffold(
-      appBar: MinglitTheme.simpleAppBar(title: '매칭 투표'),
-      body: Column(
-        children: [
-          // 1. Matches (Success)
-          MinglitAsyncValueWidget(
-            value: matchesAsync,
-            data: (matches) {
-              if (matches.isEmpty) return const SizedBox.shrink();
-              return ColoredBox(
-                color: theme.colorScheme.secondaryContainer.withValues(
-                  alpha: 0.2,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(MinglitSpacing.medium),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.favorite,
-                            color: theme.colorScheme.error,
-                            size: MinglitIconSize.small,
-                          ),
-                          const SizedBox(width: MinglitSpacing.small),
-                          Text(
-                            '매칭 성공! (${matches.length}명)',
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.error,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: MinglitSpacing.small),
-                      SizedBox(
-                        height: 80,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: matches.length,
-                          separatorBuilder: (context, index) =>
-                              const SizedBox(width: MinglitSpacing.medium),
-                          itemBuilder: (context, index) {
-                            final match = matches[index];
-                            return _buildMatchCard(context, match);
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-
-          // Fix #306: 잔여 투표 수 표시
-          if (voteCountAsync.hasValue && maxVoteAsync.hasValue)
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: MinglitSpacing.medium,
-                vertical: MinglitSpacing.small,
+    return Column(
+      children: [
+        // 1. Matches (Success)
+        MinglitAsyncValueWidget(
+          value: matchesAsync,
+          data: (matches) {
+            if (matches.isEmpty) return const SizedBox.shrink();
+            return ColoredBox(
+              color: theme.colorScheme.secondaryContainer.withValues(
+                alpha: 0.2,
               ),
-              child: Builder(
-                builder: (context) {
-                  final used = voteCountAsync.value!;
-                  final max = maxVoteAsync.value!;
-                  final remaining = max - used;
-                  final allUsed = remaining <= 0;
-                  return Row(
-                    children: [
-                      Icon(
-                        allUsed ? Icons.check_circle : Icons.how_to_vote,
-                        size: MinglitIconSize.small,
+              child: Padding(
+                padding: const EdgeInsets.all(MinglitSpacing.medium),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.favorite,
+                          color: theme.colorScheme.error,
+                          size: MinglitIconSize.small,
+                        ),
+                        const SizedBox(width: MinglitSpacing.small),
+                        Text(
+                          '매칭 성공! (${matches.length}명)',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.error,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: MinglitSpacing.small),
+                    SizedBox(
+                      height: 80,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: matches.length,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(width: MinglitSpacing.medium),
+                        itemBuilder: (context, index) {
+                          final match = matches[index];
+                          return _buildMatchCard(context, match);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+
+        // Fix #306: 잔여 투표 수 표시
+        if (voteCountAsync.hasValue && maxVoteAsync.hasValue)
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: MinglitSpacing.medium,
+              vertical: MinglitSpacing.small,
+            ),
+            child: Builder(
+              builder: (context) {
+                final used = voteCountAsync.value!;
+                final max = maxVoteAsync.value!;
+                final remaining = max - used;
+                final allUsed = remaining <= 0;
+                return Row(
+                  children: [
+                    Icon(
+                      allUsed ? Icons.check_circle : Icons.how_to_vote,
+                      size: MinglitIconSize.small,
+                      color: allUsed
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: MinglitSpacing.small),
+                    Text(
+                      allUsed ? '투표 완료!' : '남은 투표: $remaining/$max',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
                         color: allUsed
                             ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurfaceVariant,
+                            : theme.colorScheme.onSurface,
                       ),
-                      const SizedBox(width: MinglitSpacing.small),
-                      Text(
-                        allUsed ? '투표 완료!' : '남은 투표: $remaining/$max',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: allUsed
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-
-          // 2. Candidates
-          Expanded(
-            child: MinglitAsyncValueWidget(
-              value: candidatesAsync,
-              data: (candidates) {
-                if (candidates.isEmpty) {
-                  return const Center(child: Text('투표 가능한 상대가 없습니다.'));
-                }
-                final votedIds = votedIdsAsync.hasValue
-                    ? votedIdsAsync.value!
-                    : <String>{};
-                final allVotesUsed =
-                    voteCountAsync.hasValue &&
-                    maxVoteAsync.hasValue &&
-                    voteCountAsync.value! >= maxVoteAsync.value!;
-                return GridView.builder(
-                  padding: const EdgeInsets.all(MinglitSpacing.medium),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.8,
-                    mainAxisSpacing: MinglitSpacing.medium,
-                    crossAxisSpacing: MinglitSpacing.medium,
-                  ),
-                  itemCount: candidates.length,
-                  itemBuilder: (context, index) {
-                    final candidate = candidates[index];
-                    final isVoted = votedIds.contains(candidate.id);
-                    return _buildCandidateCard(
-                      context,
-                      ref,
-                      candidate,
-                      isVoted: isVoted,
-                      isDisabled: isVoted || allVotesUsed,
-                    );
-                  },
+                    ),
+                  ],
                 );
               },
             ),
           ),
-        ],
-      ),
+
+        // 2. Candidates
+        Expanded(
+          child: MinglitAsyncValueWidget(
+            value: candidatesAsync,
+            data: (candidates) {
+              if (candidates.isEmpty) {
+                return const Center(child: Text('투표 가능한 상대가 없습니다.'));
+              }
+              final votedIds = votedIdsAsync.hasValue
+                  ? votedIdsAsync.value!
+                  : <String>{};
+              final allVotesUsed =
+                  voteCountAsync.hasValue &&
+                  maxVoteAsync.hasValue &&
+                  voteCountAsync.value! >= maxVoteAsync.value!;
+              return GridView.builder(
+                padding: const EdgeInsets.all(MinglitSpacing.medium),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.8,
+                  mainAxisSpacing: MinglitSpacing.medium,
+                  crossAxisSpacing: MinglitSpacing.medium,
+                ),
+                itemCount: candidates.length,
+                itemBuilder: (context, index) {
+                  final candidate = candidates[index];
+                  final isVoted = votedIds.contains(candidate.id);
+                  return _buildCandidateCard(
+                    context,
+                    ref,
+                    candidate,
+                    isVoted: isVoted,
+                    isDisabled: isVoted || allVotesUsed,
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
