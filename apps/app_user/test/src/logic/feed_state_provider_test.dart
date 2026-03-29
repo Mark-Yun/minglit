@@ -70,7 +70,6 @@ void main() {
       when(
         () => mockEventRepository.getEventsByType(
           type: EventFeedType.newArrivals,
-          offset: 0,
         ),
       ).thenAnswer((_) async => makeEvents(10));
 
@@ -101,7 +100,6 @@ void main() {
       when(
         () => mockEventRepository.getEventsByType(
           type: EventFeedType.newArrivals,
-          offset: 0,
         ),
       ).thenAnswer((_) async => makeEvents(10));
 
