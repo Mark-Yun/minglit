@@ -1,6 +1,6 @@
 #!/bin/bash
 # tpm-staff-run.sh — 단발성. audit-report 분석 → actionable 이슈 생성.
-set -euo pipefail
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="/Users/mark/workspace/minglit"

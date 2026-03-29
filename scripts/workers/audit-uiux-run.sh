@@ -1,12 +1,13 @@
 #!/bin/bash
 # audit-uiux-run.sh — 단발성. launchd가 주기적 호출.
-set -euo pipefail
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="/Users/mark/workspace/minglit"
 WORKTREE_DIR="/Users/mark/workspace/minglit-workers/audit-uiux"
 PROMPT_FILE="$SCRIPT_DIR/prompts/audit-uiux.txt"
-COMMON_FILE="$SCRIPT_DIR/prompts/worker-common.txt"SESSION_TIMEOUT=3600
+COMMON_FILE="$SCRIPT_DIR/prompts/worker-common.txt"
+SESSION_TIMEOUT=3600
 REPO="Mark-Yun/minglit"
 
 [ ! -f "$PROMPT_FILE" ] && echo "Error: Prompt not found" && exit 1

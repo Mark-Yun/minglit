@@ -31,6 +31,16 @@
       "handler": "audit-legal",
       "color": "c5def5",
       "desc": "법률/개인정보 검토 요청"
+    },
+    "needs-tpm": {
+      "handler": "tpm-staff",
+      "color": "c5def5",
+      "desc": "TPM 분석/이슈 품질 관리 요청"
+    },
+    "needs-dev": {
+      "handler": "issue-worker",
+      "color": "c5def5",
+      "desc": "개발 작업 요청"
     }
   },
 
@@ -46,27 +56,27 @@
       "desc": "사람 판단 필요 (Mark)"
     },
     "bug-report": {
-      "handler": "issue-worker",
+      "handler": "tpm-staff",
       "color": "d73a4a",
       "desc": "유저 버그 리포트"
     },
     "bug": {
-      "handler": "issue-worker",
+      "handler": "tpm-staff",
       "color": "d73a4a",
       "desc": "일반 버그"
     },
     "ci-failure": {
-      "handler": "issue-worker",
+      "handler": "tpm-staff",
       "color": "b60205",
       "desc": "CI 실패 수정"
     },
     "enhancement": {
-      "handler": "issue-worker",
+      "handler": "tpm-staff",
       "color": "a2eeef",
       "desc": "기능 구현"
     },
     "refactor": {
-      "handler": "issue-worker",
+      "handler": "tpm-staff",
       "color": "d4c5f9",
       "desc": "리팩토링"
     }
