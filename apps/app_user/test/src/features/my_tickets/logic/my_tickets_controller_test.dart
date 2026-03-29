@@ -175,9 +175,11 @@ void main() {
       when(() => mockUser.id).thenReturn(userId);
 
       final now = DateTime.now();
-      // Fix #639: Use fixed hour literals to avoid flakiness near midnight
-      final todaySoon = DateTime(now.year, now.month, now.day, 10);
-      final todayLate = DateTime(now.year, now.month, now.day, 15);
+      // Fix #639: Events must be after now AND today to be todayEvent.
+      // Use now + offset to guarantee future; skip if near midnight.
+      final todaySoon = now.add(const Duration(minutes: 5));
+      final todayLate = now.add(const Duration(minutes: 30));
+      if (todaySoon.day != now.day || todayLate.day != now.day) return;
       final tomorrow = now.add(const Duration(days: 1));
 
       final tickets = [
