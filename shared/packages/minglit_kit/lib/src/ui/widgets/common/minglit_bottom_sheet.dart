@@ -77,7 +77,8 @@ class MinglitBottomSheet extends StatelessWidget {
           ],
           Flexible(
             child: Padding(
-              padding: padding ??
+              padding:
+                  padding ??
                   const EdgeInsets.only(
                     left: MinglitSpacing.screenEdge,
                     right: MinglitSpacing.screenEdge,
