@@ -65,3 +65,137 @@ final class TodayActiveEventsProvider
 }
 
 String _$todayActiveEventsHash() => r'712a80f6c5b464779d24767a099715bd53084f10';
+
+/// Computes the [EventNowBarState] for a given event.
+///
+/// Watches participant status, match candidates, and match results
+/// to derive the current state. Guarantees no backward transitions —
+/// once a state has been reached, the provider will never return
+/// a state with a lower ordinal.
+
+@ProviderFor(EventNowBarStateNotifier)
+const eventNowBarStateProvider = EventNowBarStateNotifierFamily._();
+
+/// Computes the [EventNowBarState] for a given event.
+///
+/// Watches participant status, match candidates, and match results
+/// to derive the current state. Guarantees no backward transitions —
+/// once a state has been reached, the provider will never return
+/// a state with a lower ordinal.
+final class EventNowBarStateNotifierProvider
+    extends $AsyncNotifierProvider<EventNowBarStateNotifier, EventNowBarState> {
+  /// Computes the [EventNowBarState] for a given event.
+  ///
+  /// Watches participant status, match candidates, and match results
+  /// to derive the current state. Guarantees no backward transitions —
+  /// once a state has been reached, the provider will never return
+  /// a state with a lower ordinal.
+  const EventNowBarStateNotifierProvider._({
+    required EventNowBarStateNotifierFamily super.from,
+    required TodayActiveEvent super.argument,
+  }) : super(
+         retry: null,
+         name: r'eventNowBarStateProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$eventNowBarStateNotifierHash();
+
+  @override
+  String toString() {
+    return r'eventNowBarStateProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  EventNowBarStateNotifier create() => EventNowBarStateNotifier();
+
+  @override
+  bool operator ==(Object other) {
+    return other is EventNowBarStateNotifierProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$eventNowBarStateNotifierHash() =>
+    r'182e06cee3fcad5002f20d2b59dcab8659ce4c09';
+
+/// Computes the [EventNowBarState] for a given event.
+///
+/// Watches participant status, match candidates, and match results
+/// to derive the current state. Guarantees no backward transitions —
+/// once a state has been reached, the provider will never return
+/// a state with a lower ordinal.
+
+final class EventNowBarStateNotifierFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          EventNowBarStateNotifier,
+          AsyncValue<EventNowBarState>,
+          EventNowBarState,
+          FutureOr<EventNowBarState>,
+          TodayActiveEvent
+        > {
+  const EventNowBarStateNotifierFamily._()
+    : super(
+        retry: null,
+        name: r'eventNowBarStateProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Computes the [EventNowBarState] for a given event.
+  ///
+  /// Watches participant status, match candidates, and match results
+  /// to derive the current state. Guarantees no backward transitions —
+  /// once a state has been reached, the provider will never return
+  /// a state with a lower ordinal.
+
+  EventNowBarStateNotifierProvider call(TodayActiveEvent activeEvent) =>
+      EventNowBarStateNotifierProvider._(argument: activeEvent, from: this);
+
+  @override
+  String toString() => r'eventNowBarStateProvider';
+}
+
+/// Computes the [EventNowBarState] for a given event.
+///
+/// Watches participant status, match candidates, and match results
+/// to derive the current state. Guarantees no backward transitions —
+/// once a state has been reached, the provider will never return
+/// a state with a lower ordinal.
+
+abstract class _$EventNowBarStateNotifier
+    extends $AsyncNotifier<EventNowBarState> {
+  late final _$args = ref.$arg as TodayActiveEvent;
+  TodayActiveEvent get activeEvent => _$args;
+
+  FutureOr<EventNowBarState> build(TodayActiveEvent activeEvent);
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build(_$args);
+    final ref =
+        this.ref as $Ref<AsyncValue<EventNowBarState>, EventNowBarState>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<EventNowBarState>, EventNowBarState>,
+              AsyncValue<EventNowBarState>,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}
