@@ -42,6 +42,7 @@ apps/app_user/lib/src/features/
 ├── auth/           # 로그인/인증 플로우
 ├── event/          # 이벤트 상세, 신청, 입장
 ├── home/           # 홈 피드, 마이페이지
+├── my_tickets/     # 내 티켓 목록 (다가오는/지난 이벤트)
 ├── partner/        # 파트너 상세 페이지
 ├── party/          # 파티 목록/상세
 ├── payment/        # 결제 플로우, 결제 완료
