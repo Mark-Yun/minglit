@@ -145,7 +145,11 @@ void main() {
           wrap(MinglitBottomCTA(label: '확인', onPressed: () {})),
         );
 
-        expect(find.byType(SafeArea), findsWidgets);
+        final ctaFinder = find.byType(MinglitBottomCTA);
+        expect(
+          find.descendant(of: ctaFinder, matching: find.byType(SafeArea)),
+          findsOneWidget,
+        );
       });
     });
 
@@ -168,7 +172,12 @@ void main() {
         );
 
         expect(find.text('확인'), findsNothing);
-        expect(find.byType(SizedBox), findsWidgets);
+        // Fix #629: SizedBox.shrink 반환 확인 — 키보드 표시 시 CTA가 숨겨짐
+        final shrinkFinder = find.byWidgetPredicate(
+          (widget) =>
+              widget is SizedBox && widget.width == 0 && widget.height == 0,
+        );
+        expect(shrinkFinder, findsOneWidget);
       });
     });
   });
