@@ -19,6 +19,8 @@
  */
 
 import { log as axiomLog, flush as axiomFlush, extractFunctionName } from "./axiom_logger.ts";
+// Fix #763: Sentry beforeSend PII 필터링
+import { maskPii } from "./pii_masker.ts";
 export { log, flush, isEnabled, debugStatus } from "./axiom_logger.ts";
 
 let _initialized = false;
@@ -53,6 +55,10 @@ export async function initSentry(dsn?: string): Promise<void> {
       environment: Deno.env.get("ENVIRONMENT") ?? "local",
       tracesSampleRate: 0.2,
       defaultIntegrations: false,
+      // Fix #763: Sentry 전송 전 PII 필드 마스킹
+      beforeSend(event: Record<string, unknown>) {
+        return maskPii(event) as typeof event;
+      },
     });
     _Sentry = Sentry;
     _enabled = true;
