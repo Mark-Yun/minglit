@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_content_card.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_key_value_row.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_section.dart';
 
 /// Dev-only design catalog page displaying all design tokens and components.
 ///
@@ -14,7 +17,7 @@ class DesignCatalogPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 15,
+      length: 16,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Design Catalog'),
@@ -37,6 +40,7 @@ class DesignCatalogPage extends StatelessWidget {
               Tab(text: 'Divider'),
               Tab(text: 'IconSize'),
               Tab(text: 'Animation'),
+              Tab(text: 'Layout'),
             ],
           ),
         ),
@@ -57,6 +61,7 @@ class DesignCatalogPage extends StatelessWidget {
             _DividerSection(),
             _IconSizeSection(),
             _AnimationSection(),
+            _LayoutSection(),
           ],
         ),
       ),
@@ -1099,6 +1104,113 @@ class _AnimationSectionState extends State<_AnimationSection> {
           label: 'slow (500ms)',
           duration: MinglitAnimation.slow,
           targetWidth: targetWidth,
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Layout Section
+// ---------------------------------------------------------------------------
+
+class _LayoutSection extends StatelessWidget {
+  const _LayoutSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final titleLarge = theme.textTheme.titleLarge;
+
+    return ListView(
+      padding: const EdgeInsets.all(MinglitSpacing.medium),
+      children: [
+        // 1. MinglitSection
+        Text('MinglitSection', style: titleLarge),
+        const SizedBox(height: MinglitSpacing.medium),
+        const MinglitSection(
+          title: '참여 현황',
+          child: Text('섹션 콘텐츠가 여기에'),
+        ),
+        const SizedBox(height: MinglitSpacing.medium),
+        MinglitSection(
+          title: '이번 주 성과',
+          trailing: TextButton(
+            onPressed: () {},
+            child: const Text('더보기'),
+          ),
+          child: const Text('trailing 액션 포함'),
+        ),
+
+        const Divider(height: MinglitSpacing.xxlarge),
+
+        // 2. MinglitContentCard
+        Text('MinglitContentCard', style: titleLarge),
+        const SizedBox(height: MinglitSpacing.medium),
+        const MinglitContentCard(
+          child: Column(
+            children: [
+              Text('기본 카드'),
+              Text('내부 패딩과 radius가 통일됩니다'),
+            ],
+          ),
+        ),
+        const SizedBox(height: MinglitSpacing.sm),
+        const MinglitContentCard(
+          highlighted: true,
+          child: Text('highlighted 카드 (primary 보더)'),
+        ),
+
+        const Divider(height: MinglitSpacing.xxlarge),
+
+        // 3. MinglitKeyValueRow
+        Text('MinglitKeyValueRow', style: titleLarge),
+        const SizedBox(height: MinglitSpacing.medium),
+        const MinglitContentCard(
+          child: Column(
+            children: [
+              MinglitKeyValueRow(label: '총 매출', value: '₩420,000'),
+              MinglitKeyValueRow(label: '수수료', value: '-₩42,000'),
+              Divider(),
+              MinglitKeyValueRow(
+                label: '정산금',
+                value: '₩378,000',
+                bold: true,
+              ),
+            ],
+          ),
+        ),
+
+        const Divider(height: MinglitSpacing.xxlarge),
+
+        // 4. 조합 예시
+        Text('조합 예시', style: titleLarge),
+        const SizedBox(height: MinglitSpacing.medium),
+        MinglitSection(
+          title: '정산 요약',
+          trailing: TextButton(
+            onPressed: () {},
+            child: const Text('상세 ›'),
+          ),
+          child: const MinglitContentCard(
+            child: Column(
+              children: [
+                MinglitKeyValueRow(
+                  label: '이번 달',
+                  value: '₩1,280,000',
+                  bold: true,
+                ),
+                MinglitKeyValueRow(
+                  label: '정산 완료',
+                  value: '₩850,000',
+                ),
+                MinglitKeyValueRow(
+                  label: '정산 대기',
+                  value: '₩430,000',
+                ),
+              ],
+            ),
+          ),
         ),
       ],
     );
