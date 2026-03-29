@@ -58,19 +58,17 @@ Deno.serve(withHandler(async (req) => {
 
     const gender = typeof customer.gender === "string" ? customer.gender.toLowerCase() : undefined;
 
-    const { error: updateError } = await supabase
-      .from("user_profiles")
-      .update({
-        name: customer.name,
-        birth_date: customer.birthDate,
-        gender,
-        phone_number: customer.phoneNumber,
-        ci: customer.ci,
-        di: customer.di,
-        is_verified: true,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", userId);
+    // Fix #808: identity-verify → update_user_identity RPC 전환
+    // 평문 CI/DI 대신 암호화 RPC를 호출하여 ci_encrypted, di_encrypted, di_hash에 저장
+    const { error: updateError } = await supabase.rpc('update_user_identity', {
+      p_user_id: userId,
+      p_ci: customer.ci as string,
+      p_di: customer.di as string,
+      p_name: customer.name as string,
+      p_birth_date: customer.birthDate as string,
+      p_gender: gender,
+      p_phone_number: customer.phoneNumber as string,
+    });
 
     if (updateError) {
       log({ function: FN, level: "error", message: "DB Update Error", metadata: { detail: updateError } });
