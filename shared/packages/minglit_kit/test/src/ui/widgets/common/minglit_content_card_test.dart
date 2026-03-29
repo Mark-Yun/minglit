@@ -58,6 +58,9 @@ void main() {
       );
 
       expect(find.text('padded'), findsOneWidget);
+
+      final container = tester.widget<Container>(find.byType(Container).first);
+      expect(container.padding, equals(customPadding));
     });
 
     testWidgets('calls onTap when tapped', (tester) async {
@@ -111,6 +114,12 @@ void main() {
 
       expect(find.text('highlighted'), findsOneWidget);
       expect(find.byType(MinglitContentCard), findsOneWidget);
+
+      final container = tester.widget<Container>(find.byType(Container).first);
+      final decoration = container.decoration! as BoxDecoration;
+      final borderSide = (decoration.border! as Border).top;
+      final colorScheme = Theme.of(tester.element(find.byType(MinglitContentCard))).colorScheme;
+      expect(borderSide.color, equals(colorScheme.primary));
     });
   });
 }
