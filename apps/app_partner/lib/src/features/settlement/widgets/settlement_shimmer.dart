@@ -63,7 +63,10 @@ class _ShimmerItem extends StatelessWidget {
       animation: animation,
       builder: (context, _) {
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: const EdgeInsets.symmetric(
+            horizontal: MinglitSpacing.medium,
+            vertical: MinglitSpacing.sm,
+          ),
           child: Row(
             children: [
               Expanded(

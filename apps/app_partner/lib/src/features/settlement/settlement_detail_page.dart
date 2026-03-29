@@ -205,7 +205,7 @@ class _Row extends StatelessWidget {
           )
         : Theme.of(context).textTheme.bodyMedium;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.xsmall),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -247,7 +247,7 @@ class _TimelineItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final fmt = DateFormat('MM/dd HH:mm');
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.xsmall2),
       child: Row(
         children: [
           Container(
