@@ -55,16 +55,15 @@ export async function initSentry(dsn?: string): Promise<void> {
       environment: Deno.env.get("ENVIRONMENT") ?? "local",
       tracesSampleRate: 0.2,
       defaultIntegrations: false,
-      // Fix #763: Sentry 전송 전 PII 필드 마스킹 + 타입 안전성 보장
+      // Fix #763: Sentry 전송 전 PII가 포함되는 섹션만 선택적으로 마스킹.
+      // 전체 이벤트 마스킹은 "name" 등 일반 필드명이 Sentry 구조적 필드
+      // (exception type, breadcrumb category)와 충돌하여 디버깅 정보 손실 가능.
       // deno-lint-ignore no-explicit-any
       beforeSend(event: any) {
-        const masked = maskPii(event);
-        // Fix #763: maskPii가 비정상 반환 시 원본 이벤트 전송
-        if (typeof masked !== "object" || masked === null) {
-          console.warn("[logger] maskPii returned non-object, sending unmasked event");
-          return event;
-        }
-        return masked as typeof event;
+        if (event.user) event.user = maskPii(event.user);
+        if (event.extra) event.extra = maskPii(event.extra);
+        if (event.contexts) event.contexts = maskPii(event.contexts);
+        return event;
       },
     });
     _Sentry = Sentry;

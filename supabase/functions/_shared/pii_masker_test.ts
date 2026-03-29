@@ -235,6 +235,17 @@ Deno.test("maskJsonString - returns fallback for non-object JSON", () => {
   assertEquals(result, "[masked: unparseable error]");
 });
 
+Deno.test("maskPii - depth limit returns original object instead of string", () => {
+  // Build a deeply nested object exceeding MAX_DEPTH (10)
+  let deep: Record<string, unknown> = { name: "홍길동" };
+  for (let i = 0; i < 12; i++) {
+    deep = { nested: deep };
+  }
+  const result = maskPii(deep);
+  // Should return an object, not "[depth limit]" string
+  assertEquals(typeof result, "object");
+});
+
 // --- maskMetadata ---
 
 Deno.test("maskMetadata - returns undefined for undefined input", () => {
