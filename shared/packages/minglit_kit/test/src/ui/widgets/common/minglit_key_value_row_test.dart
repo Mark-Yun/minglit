@@ -54,7 +54,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        wrap(const MinglitKeyValueRow(label: '수량', value: '3개')),
+        wrap(const MinglitKeyValueRow(label: '수량', value: '3개', bold: false)),
       );
 
       final valueText = tester.widget<Text>(find.text('3개'));
