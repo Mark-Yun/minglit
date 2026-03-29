@@ -5,7 +5,9 @@ import 'package:minglit_kit/src/ui/widgets/common/minglit_text_field.dart';
 void main() {
   Widget wrap(Widget child) {
     return MaterialApp(
-      home: Scaffold(body: Padding(padding: const EdgeInsets.all(16), child: child)),
+      home: Scaffold(
+        body: Padding(padding: const EdgeInsets.all(16), child: child),
+      ),
     );
   }
 
@@ -21,7 +23,9 @@ void main() {
 
     testWidgets('displays hint text', (tester) async {
       await tester.pumpWidget(
-        wrap(const MinglitTextField(label: '이메일', hintText: 'example@minglit.com')),
+        wrap(
+          const MinglitTextField(label: '이메일', hintText: 'example@minglit.com'),
+        ),
       );
 
       expect(find.text('example@minglit.com'), findsOneWidget);
@@ -102,7 +106,7 @@ void main() {
 
       final textField = tester.widget<TextField>(find.byType(TextField));
       final decoration = textField.decoration!;
-      final border = decoration.border as OutlineInputBorder;
+      final border = decoration.border! as OutlineInputBorder;
 
       expect(border.borderRadius, BorderRadius.circular(12));
     });
