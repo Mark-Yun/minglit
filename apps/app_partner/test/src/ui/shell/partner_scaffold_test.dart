@@ -34,17 +34,17 @@ void main() {
           builder: (context, state, child) =>
               PartnerScaffold(navigationShell: mockShell),
           routes: [
-            GoRoute(path: '/', builder: (_, __) => const SizedBox()),
+            GoRoute(path: '/', builder: (_, _) => const SizedBox()),
             GoRoute(
               path: '/applications',
-              builder: (_, __) => const SizedBox(),
+              builder: (_, _) => const SizedBox(),
             ),
-            GoRoute(path: '/checkin', builder: (_, __) => const SizedBox()),
-            GoRoute(path: '/settlement', builder: (_, __) => const SizedBox()),
-            GoRoute(path: '/more', builder: (_, __) => const SizedBox()),
+            GoRoute(path: '/checkin', builder: (_, _) => const SizedBox()),
+            GoRoute(path: '/settlement', builder: (_, _) => const SizedBox()),
+            GoRoute(path: '/more', builder: (_, _) => const SizedBox()),
             GoRoute(
               path: '/more/parties',
-              builder: (_, __) => const SizedBox(),
+              builder: (_, _) => const SizedBox(),
             ),
           ],
         ),
@@ -98,8 +98,12 @@ void main() {
     });
 
     testWidgets('tapping a tab calls goBranch on the shell', (tester) async {
-      when(() => mockShell.goBranch(any(), initialLocation: any(named: 'initialLocation')))
-          .thenReturn(null);
+      when(
+        () => mockShell.goBranch(
+          any(),
+          initialLocation: any(named: 'initialLocation'),
+        ),
+      ).thenReturn(null);
 
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
@@ -109,15 +113,19 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(
-        () => mockShell.goBranch(3, initialLocation: false),
+        () => mockShell.goBranch(3),
       ).called(1);
     });
 
     testWidgets('tapping same tab resets to initial location', (tester) async {
-      when(() => mockShell.goBranch(any(), initialLocation: any(named: 'initialLocation')))
-          .thenReturn(null);
+      when(
+        () => mockShell.goBranch(
+          any(),
+          initialLocation: any(named: 'initialLocation'),
+        ),
+      ).thenReturn(null);
 
-      await tester.pumpWidget(buildSubject(currentIndex: 0));
+      await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
       // Tap the 홈 tab while already on index 0
@@ -132,7 +140,7 @@ void main() {
 
   group('PartnerScaffold — bottom nav visibility', () {
     testWidgets('bottom nav is visible on root path /', (tester) async {
-      await tester.pumpWidget(buildSubject(location: '/'));
+      await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
       expect(find.byType(NavigationBar), findsOneWidget);

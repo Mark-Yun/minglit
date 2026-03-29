@@ -1,5 +1,4 @@
 import 'package:app_partner/src/routing/app_routes.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
@@ -48,12 +47,15 @@ void main() {
           .whereType<GoRoute>()
           .map((r) => r.path)
           .toList();
-      expect(subPaths, containsAll([
-        'parties',
-        'verifications/manage',
-        'verifications/create',
-        'notification-settings',
-      ]));
+      expect(
+        subPaths,
+        containsAll([
+          'parties',
+          'verifications/manage',
+          'verifications/create',
+          'notification-settings',
+        ]),
+      );
     });
 
     test('Settlement branch has bank-account sub-route', () {
@@ -67,29 +69,29 @@ void main() {
   });
 
   group('AppRoutes — top-level routes', () {
-    test('\$appRoutes contains expected top-level route count', () {
+    test(r'$appRoutes contains expected top-level route count', () {
       // 6 top-level + 1 shell = 7
       expect($appRoutes.length, 7);
     });
 
     test('login route path is /login', () {
-      final loginRoute = $appRoutes
-          .whereType<GoRoute>()
-          .firstWhere((r) => r.path == '/login');
+      final loginRoute = $appRoutes.whereType<GoRoute>().firstWhere(
+        (r) => r.path == '/login',
+      );
       expect(loginRoute.path, '/login');
     });
 
     test('apply route path is /apply', () {
-      final route = $appRoutes
-          .whereType<GoRoute>()
-          .firstWhere((r) => r.path == '/apply');
+      final route = $appRoutes.whereType<GoRoute>().firstWhere(
+        (r) => r.path == '/apply',
+      );
       expect(route.path, '/apply');
     });
 
     test('notifications route path is /notifications', () {
-      final route = $appRoutes
-          .whereType<GoRoute>()
-          .firstWhere((r) => r.path == '/notifications');
+      final route = $appRoutes.whereType<GoRoute>().firstWhere(
+        (r) => r.path == '/notifications',
+      );
       expect(route.path, '/notifications');
     });
   });
