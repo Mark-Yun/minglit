@@ -2,6 +2,7 @@ import 'package:alchemist/alchemist.dart' show GoldenTestScenario;
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
+import 'package:app_user/src/features/search/logic/search_coordinator.dart';
 import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -64,6 +65,8 @@ class MockHomeCoordinator extends Mock implements HomeCoordinator {}
 class MockEventCoordinator extends Mock implements EventCoordinator {}
 
 class MockAuthCoordinator extends Mock implements AuthCoordinator {}
+
+class MockSearchCoordinator extends Mock implements SearchCoordinator {}
 
 /// No-op ActiveFilters — disables location/eligibility filters in tests.
 class NoFiltersNotifier extends ActiveFilters {

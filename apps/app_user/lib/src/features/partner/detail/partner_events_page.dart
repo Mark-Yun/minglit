@@ -1,4 +1,4 @@
-import 'package:app_user/src/features/home/logic/home_coordinator.dart';
+import 'package:app_user/src/features/partner/logic/partner_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -39,11 +39,12 @@ class PartnerEventsPage extends ConsumerWidget {
             itemCount: events.length,
             itemBuilder: (context, index) {
               final event = events[index];
-              // Fix #404: Use coordinator instead of direct GoRouter access
+              // Fix #634: home_coordinator 직접 참조 → partner_coordinator 전환
               return MinglitEventCard(
                 event: event,
-                onTap: () =>
-                    ref.read(homeCoordinatorProvider).pushEventDetail(event.id),
+                onTap: () => ref
+                    .read(partnerCoordinatorProvider)
+                    .pushEventDetail(event.id),
               );
             },
           );
