@@ -237,8 +237,9 @@ void main() {
     });
 
     // Fix #642: P2 — banner not shown when no todayEvent
-    testWidgets('does not render today banner when no today event',
-        (tester) async {
+    testWidgets('does not render today banner when no today event', (
+      tester,
+    ) async {
       final upcoming = makeApplication(
         id: '1',
         status: 'paid',
@@ -285,7 +286,7 @@ void main() {
       );
       expect(opacityWidget.opacity, 0.55);
     });
-  });  // end MyTicketsPage group
+  }); // end MyTicketsPage group
 
   group('MyTicketCard', () {
     testWidgets('shows D-Day chip for today event', (tester) async {
