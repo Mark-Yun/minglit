@@ -66,10 +66,10 @@ jobs:
         working-directory: ./${{ inputs.app-directory }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -83,7 +83,7 @@ jobs:
           cache: true
 
       - name: Cache Gradle
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.gradle/caches
@@ -123,21 +123,21 @@ jobs:
 
       - name: Upload Artifact (Dev APK)
         if: github.ref == 'refs/heads/dev'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.artifact-name-apk }}
           path: ${{ inputs.app-directory }}/build/app/outputs/flutter-apk/app-dev-release.apk
 
       - name: Upload Artifact (Prod AAB)
         if: github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.artifact-name-aab }}
           path: ${{ inputs.app-directory }}/build/app/outputs/bundle/prodRelease/app-prod-release.aab
 
       - name: Upload to Firebase App Distribution (Dev)
         if: github.ref == 'refs/heads/dev'
-        uses: w9jds/firebase-action@a1f982626337684fb8947605c63de592b5af0114 # v15.10.0
+        uses: w9jds/firebase-action@36e35e562e782920a8f779475219bb4700139f55 # v15.10.0
         with:
           args: appdistribution:distribute ${{ inputs.app-directory }}/build/app/outputs/flutter-apk/app-dev-release.apk --app ${{ secrets.FIREBASE_APP_ID_ANDROID }} --release-notes Dev-Build-${{ github.run_number }} --groups testers
         env:
