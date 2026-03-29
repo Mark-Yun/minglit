@@ -24,9 +24,9 @@
 | 스타일 | 기반 | 변형 | 라인 |
 | :--- | :--- | :--- | :--- |
 | `selectableCardTitle` | `textTheme.titleSmall` | 선택 시 `colorScheme.secondary` 색상 | :47-54 |
-| `selectableCardSubtitle` | `textTheme.bodySmall` | `onSurfaceVariant` 70% alpha, fontSize 11 | :57-63 |
+| `selectableCardSubtitle` | `textTheme.labelSmall` | `onSurfaceVariant` 70% alpha (Fix #474: bodySmall → labelSmall, 이미 11px) | :57-63 |
 | `selectableCardDescription` | `textTheme.bodySmall` | `onSurfaceVariant` 색상 | :66-71 |
-| `infoText` | `textTheme.bodySmall` | `onSurfaceVariant`, fontSize 12 | :74-80 |
+| `infoText` | `textTheme.bodySmall` | `onSurfaceVariant` (bodySmall = 13px, Fix #568 이후) | :74-80 |
 
 ### Shadow / Border 프리셋
 

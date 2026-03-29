@@ -11,18 +11,20 @@
 
 ## 1. 유저 앱 (app_user) 화면 계층
 
-### 1.1 BottomNav Shell (2탭)
+### 1.1 Top-Level Routes (Shell 없음)
+
+유저 앱은 StatefulShellRoute를 사용하지 않으며, 모든 라우트가 독립 top-level로 구성됨.
 
 ```
-UserShellRoute (StatefulShellRoute)
-├── [홈] HomeBranch
-│   └── HomeRoute                /                 → HomePage
-│       └── EventCurationRoute   /curation          → PartyCurationPage
-└── [마이] MyPageBranch
-    └── MyPageRoute              /my                → MyPage
+HomeRoute                  /                 → HomePage
+  └── EventCurationRoute   /curation          → PartyCurationPage
+SearchRoute                /search            → SearchPage
+MyPageRoute                /my                → MyPage
+PrivacyRoute               /my/privacy        → PrivacyPage
+BlockedPartnersRoute       /my/blocked-partners → BlockedPartnersPage
 ```
 
-### 1.2 Top-Level Routes (Shell 외부)
+### 1.2 Top-Level Routes (기타)
 
 | Route | Path | Page | 비고 |
 |-------|------|------|------|
@@ -32,6 +34,7 @@ UserShellRoute (StatefulShellRoute)
 | `EventDetailRoute` | `/events/:eventId` | `EventDetailPage` | 이벤트 상세 |
 | `EventApplicationRoute` | `/events/:eventId/apply` | `EventApplicationWizardPage` | 신청 위저드 (보호) |
 | `PartnerDetailRoute` | `/partners/:partnerId` | `PartnerDetailPage` | 파트너(업체) 상세 |
+| `PartnerEventsRoute` | `/partners/:partnerId/events` | `PartnerEventsPage` | 파트너 이벤트 목록 |
 | `SearchRoute` | `/search` | `SearchPage` | 검색 |
 | `PurchaseHistoryRoute` | `/purchase-history` | `PurchaseHistoryPage` | 구매 내역 (보호) |
 | `NotificationCenterRoute` | `/notifications` | `NotificationListScreen` | 알림 센터 |
@@ -56,40 +59,56 @@ UserShellRoute (StatefulShellRoute)
    /my         /purchase-history
 ```
 
+```
+파트너 상세 → 파트너 이벤트 목록
+/partners/:id   /partners/:id/events
+```
+
+```
+마이페이지 → 개인정보 설정 / 차단 파트너 관리
+   /my       /my/privacy    /my/blocked-partners
+```
+
 ---
 
 ## 2. 파트너 앱 (app_partner) 화면 계층
 
-### 2.1 BottomNav Shell (4탭)
+### 2.1 BottomNav Shell (5탭)
 
 ```
 PartnerShellRoute (StatefulShellRoute)
 ├── [홈] HomeBranch
 │   └── HomeRoute                    /                          → PartnerHomePage
-│       ├── ApplicationListRoute     /applications              → PartnerApplicationListPage
-│       │   └── ApplicationDetailRoute /applications/:applicationId → PartnerApplicationDetailPage
 │       └── LocationGuideRoute       /guide/location            → LocationGuidePage
 │
-├── [파티관리] PartyBranch
-│   └── PartyListRoute              /parties                   → PartyListPage
-│       ├── PartyCreateRoute        /parties/create            → PartyCreateWizardPage
-│       └── PartyDetailRoute        /parties/:partyId          → PartyDetailPage
-│           ├── PartyEditRoute      /parties/:partyId/edit     → PartyCreateWizardPage (편집)
-│           ├── PartyTicketEditRoute /parties/:partyId/tickets/:ticketId/edit → TicketEditPage
-│           ├── EventCreateRoute    /parties/:partyId/events/create → EventCreatePage
-│           └── EventDetailRoute    /parties/:partyId/events/:eventId → EventDetailPage
-│               ├── TicketCreateRoute /parties/:partyId/events/:eventId/tickets/create → TicketCreatePage
-│               └── TicketEditRoute   /parties/:partyId/events/:eventId/tickets/:ticketId/edit → TicketEditPage
+├── [신청관리] ApplicationBranch
+│   └── ApplicationListRoute         /applications              → EventApplicationManagePage
+│       └── ApplicationDetailRoute   /applications/:applicationId → PartnerApplicationDetailPage
 │
-├── [수익관리] SettlementBranch
-│   └── SettlementRoute             /settlement                → SettlementPage
+├── [체크인] CheckinBranch
+│   └── CheckinRoute                 /checkin                   → CheckinPlaceholderPage
 │
-└── [설정] MoreBranch
-    └── MoreRoute                   /more                      → MorePage
-        ├── VerificationManageRoute /more/verifications/manage  → VerificationManagePage
-        ├── CreateVerificationRoute /more/verifications/create  → CreateVerificationPage
-        └── MemberListRoute         /more/partners/:partnerId/members → PartnerMemberListPage
-            └── MemberPermissionRoute /more/partners/:partnerId/members/:targetUserId/permission → PartnerMemberPermissionPage
+├── [정산] SettlementBranch
+│   └── SettlementRoute              /settlement                → SettlementPage
+│       ├── BankAccountRoute         /settlement/bank-account   → BankAccountPage
+│       └── SettlementDetailRoute    /settlement/:id            → SettlementDetailPage
+│
+└── [더보기] MoreBranch
+    └── MoreRoute                    /more                      → MorePage
+        ├── PartyListRoute           /more/parties              → PartyListPage
+        │   ├── PartyCreateRoute     /more/parties/create       → PartyCreateWizardPage
+        │   └── PartyDetailRoute     /more/parties/:partyId     → PartyDetailPage
+        │       ├── PartyEditRoute   /more/parties/:partyId/edit → PartyCreateWizardPage (편집)
+        │       ├── PartyTicketEditRoute /more/parties/:partyId/tickets/:ticketId/edit → TicketEditPage
+        │       ├── EventCreateRoute /more/parties/:partyId/events/create → EventCreatePage
+        │       └── EventDetailRoute /more/parties/:partyId/events/:eventId → EventDetailPage
+        │           ├── TicketCreateRoute .../tickets/create    → TicketCreatePage
+        │           └── TicketEditRoute   .../tickets/:ticketId/edit → TicketEditPage
+        ├── VerificationManageRoute  /more/verifications/manage → VerificationManagePage
+        ├── CreateVerificationRoute  /more/verifications/create → CreateVerificationPage
+        ├── NotificationSettingsRoute /more/notification-settings → NotificationSettingsScreen
+        └── MemberListRoute          /more/partners/:partnerId/members → PartnerMemberListPage
+            └── MemberPermissionRoute .../members/:targetUserId/permission → PartnerMemberPermissionPage
 ```
 
 ### 2.2 Top-Level Routes (Shell 외부)
@@ -97,6 +116,7 @@ PartnerShellRoute (StatefulShellRoute)
 | Route | Path | Page | 비고 |
 |-------|------|------|------|
 | `LoginRoute` | `/login` | `PartnerLoginPage` | 로그인 |
+| `PartnerWelcomeRoute` | `/welcome` | `PartnerWelcomePage` | 온보딩 웰컴 |
 | `PartnerApplyRoute` | `/apply` | `PartnerApplyPage` | 파트너 신청 위저드 |
 | `PartnerApplyStatusRoute` | `/apply/status` | `PartnerApplyStatusPage` | 심사 상태 확인 |
 | `NotificationCenterRoute` | `/notifications` | `NotificationListScreen` | 알림 센터 |
@@ -106,14 +126,17 @@ PartnerShellRoute (StatefulShellRoute)
 ### 2.3 핵심 파트너 플로우
 
 ```
-파티 목록 → 파티 생성 위저드
-/parties     /parties/create
+더보기 → 파티 목록 → 파티 생성 위저드
+/more   /more/parties   /more/parties/create
 
-파티 목록 → 파티 상세 → 이벤트 생성 → 이벤트 상세 → 티켓 생성
-/parties   /parties/:id  /parties/:id/events/create  /parties/:id/events/:eid  .../tickets/create
+더보기 → 파티 목록 → 파티 상세 → 이벤트 생성 → 이벤트 상세 → 티켓 생성
+/more   /more/parties  /more/parties/:id  .../events/create  .../events/:eid  .../tickets/create
 
-수익관리 (정산)
-/settlement
+정산 → 정산 상세 / 계좌 관리
+/settlement   /settlement/:id   /settlement/bank-account
+
+신청관리 → 신청 상세
+/applications   /applications/:id
 ```
 
 ---
@@ -155,7 +178,7 @@ PartnerShellRoute (StatefulShellRoute)
   └── 로그인 성공
       │
       ├── 파트너 미등록 (needsApplication / draftInProgress)
-      │   └── /apply (파트너 신청 위저드)
+      │   └── /welcome → /apply (파트너 신청 위저드)
       │
       ├── 심사 중 (pendingReview / needsCorrection)
       │   └── /apply/status (심사 상태 페이지)
@@ -205,7 +228,7 @@ GoRouter redirect에서 prefix/suffix 매칭으로 보호:
 
 | 보호 조건 | 경로 | 설명 |
 |-----------|------|------|
-| prefix `/my` | `/my`, `/my/notification-settings` | 마이페이지 전체 |
+| prefix `/my` | `/my`, `/my/privacy`, `/my/blocked-partners`, `/my/notification-settings` | 마이페이지 전체 |
 | prefix `/tickets/my` | `/tickets/my/*` | 내 티켓 목록 (guard 전용 — 라우트 미정의) |
 | prefix `/payment` | `/payment/*` | 결제 관련 (guard 전용 — 라우트 미정의) |
 | prefix `/purchase-history` | `/purchase-history` | 구매 내역 |
@@ -216,4 +239,4 @@ GoRouter redirect에서 prefix/suffix 매칭으로 보호:
 
 파트너 앱은 **전체가 보호됨** (로그인 필수):
 - `/login` 과 `/dev/*` 만 예외
-- 로그인 후에도 onboarding 상태에 따라 `/apply` 또는 `/apply/status`로 리다이렉트
+- 로그인 후에도 onboarding 상태에 따라 `/welcome`, `/apply` 또는 `/apply/status`로 리다이렉트
