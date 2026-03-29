@@ -44,8 +44,8 @@ class EventNowBar extends ConsumerWidget {
         child: Text(
           '(오프라인)',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: MinglitColors.textSecondary,
-              ),
+            color: MinglitColors.textSecondary,
+          ),
         ),
       ),
     );
@@ -214,8 +214,8 @@ class _EventNowBarContentState extends ConsumerState<_EventNowBarContent>
       return Text(
         timeText,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: MinglitColors.textSecondary,
-            ),
+          color: MinglitColors.textSecondary,
+        ),
       );
     }
     return const Icon(

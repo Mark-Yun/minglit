@@ -82,18 +82,20 @@ void main() {
   }
 
   group('EventNowBar', () {
-    testWidgets('renders bar with event name and status when active event exists',
-        (tester) async {
-      stubMatchingNotAvailable('event_1');
+    testWidgets(
+      'renders bar with event name and status when active event exists',
+      (tester) async {
+        stubMatchingNotAvailable('event_1');
 
-      await tester.pumpWidget(
-        createTestWidget(activeEvents: [makeActiveEvent()]),
-      );
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          createTestWidget(activeEvents: [makeActiveEvent()]),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('강남 밍릿파티'), findsOneWidget);
-      expect(find.text('곧 시작'), findsOneWidget);
-    });
+        expect(find.text('강남 밍릿파티'), findsOneWidget);
+        expect(find.text('곧 시작'), findsOneWidget);
+      },
+    );
 
     testWidgets('hidden (SizedBox.shrink) when no active events', (
       tester,
@@ -105,8 +107,9 @@ void main() {
       expect(find.text('체크인하세요'), findsNothing);
     });
 
-    testWidgets('shows CHECK_IN_READY status text when start time has passed',
-        (tester) async {
+    testWidgets('shows CHECK_IN_READY status text when start time has passed', (
+      tester,
+    ) async {
       final event = makeActiveEvent(
         startTime: DateTime.now().subtract(const Duration(minutes: 30)),
       );
@@ -122,8 +125,7 @@ void main() {
     testWidgets('event name is truncated with ellipsis for long names', (
       tester,
     ) async {
-      final longName =
-          '아주 긴 이벤트 이름으로 테스트하는 매우 매우 길고 긴 강남 밍릿파티 이벤트 제목입니다';
+      const longName = '아주 긴 이벤트 이름으로 테스트하는 매우 매우 길고 긴 강남 밍릿파티 이벤트 제목입니다';
       final event = makeActiveEvent(title: longName);
       stubMatchingNotAvailable('event_1');
 
