@@ -1,7 +1,5 @@
-import 'package:app_user/src/features/event/matching/matching_vote_controller.dart';
 import 'package:app_user/src/features/event/matching/matching_vote_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -121,14 +119,14 @@ void main() {
           ),
         ],
         voteCount: 1,
-        maxVotes: 3,
       );
 
       expect(find.text('남은 투표: 2/3'), findsOneWidget);
     });
 
-    testWidgets('shows vote complete state when all votes used',
-        (tester) async {
+    testWidgets('shows vote complete state when all votes used', (
+      tester,
+    ) async {
       await pumpContent(
         tester,
         candidates: const [
@@ -140,7 +138,6 @@ void main() {
           ),
         ],
         voteCount: 3,
-        maxVotes: 3,
       );
 
       expect(find.text('투표 완료!'), findsOneWidget);
