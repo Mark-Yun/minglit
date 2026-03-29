@@ -251,7 +251,7 @@ class _LoginButton extends StatelessWidget {
           foregroundColor: foregroundColor,
           side: BorderSide(color: borderColor ?? backgroundColor),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(MinglitRadius.small),
           ),
         ),
         child: Row(

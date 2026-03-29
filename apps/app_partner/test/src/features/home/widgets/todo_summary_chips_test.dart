@@ -1,6 +1,7 @@
 import 'package:app_partner/src/features/home/widgets/todo_summary_chips.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 void main() {
   group('TodoSummaryChips', () {
@@ -78,6 +79,88 @@ void main() {
       );
       await tester.tap(find.text('승인 대기'));
       expect(called, isTrue);
+    });
+
+    // Fix #652: 하드코딩 색상 → 시맨틱 컬러 교체 회귀 방지
+    testWidgets('active chip uses tinted activeColor background (light mode)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: MinglitColors.primary),
+          ),
+          home: Scaffold(
+            body: TodoSummaryChips(
+              pendingApplications: 3,
+              upcomingEvents: 0,
+              onPendingTap: () {},
+              onUpcomingTap: () {},
+            ),
+          ),
+        ),
+      );
+
+      // 승인 대기 chip (active) should use error color tint
+      final expected = MinglitColors.error.withValues(alpha: 0.08);
+      final chipContainers = tester.widgetList<Container>(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration! as BoxDecoration).borderRadius != null,
+        ),
+      );
+      expect(
+        chipContainers.any(
+          (c) => (c.decoration! as BoxDecoration).color == expected,
+        ),
+        isTrue,
+        reason: 'Active chip should use activeColor.withValues(alpha: 0.08)',
+      );
+    });
+
+    // Fix #652: 다크모드에서 inactive 칩이 colorScheme 시맨틱 컬러 사용 확인
+    testWidgets('inactive chip uses colorScheme color (dark mode)', (
+      tester,
+    ) async {
+      final darkTheme = ThemeData.dark().copyWith(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: MinglitColors.primary,
+          brightness: Brightness.dark,
+        ),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: darkTheme,
+          home: Scaffold(
+            body: TodoSummaryChips(
+              pendingApplications: 0,
+              upcomingEvents: 0,
+              onPendingTap: () {},
+              onUpcomingTap: () {},
+            ),
+          ),
+        ),
+      );
+
+      // All chips inactive → should use surfaceContainerHighest
+      final context = tester.element(find.byType(TodoSummaryChips));
+      final expected = Theme.of(context).colorScheme.surfaceContainerHighest;
+      final chipContainers = tester.widgetList<Container>(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration! as BoxDecoration).borderRadius != null,
+        ),
+      );
+      for (final chip in chipContainers) {
+        final color = (chip.decoration! as BoxDecoration).color;
+        if (color != null) {
+          expect(color, equals(expected));
+        }
+      }
     });
 
     testWidgets('tapping 미답변 리뷰 chip shows a SnackBar', (tester) async {

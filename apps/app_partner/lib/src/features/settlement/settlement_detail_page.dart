@@ -57,7 +57,7 @@ class _SettlementDetailPageState extends ConsumerState<SettlementDetailPage> {
           : _error != null
           ? Center(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(MinglitSpacing.medium),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -100,7 +100,7 @@ class _DetailContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(MinglitSpacing.medium),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -138,7 +138,7 @@ class StatusMessageCard extends StatelessWidget {
     final message = _messages[status] ?? '상태를 확인 중입니다.';
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(MinglitSpacing.medium),
         child: Row(
           children: [
             SettlementStatusBadge(
@@ -168,7 +168,7 @@ class AmountBreakdown extends StatelessWidget {
     final fmt = NumberFormat('#,###');
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(MinglitSpacing.medium),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -205,7 +205,7 @@ class _Row extends StatelessWidget {
           )
         : Theme.of(context).textTheme.bodyMedium;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.xsmall),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -225,7 +225,7 @@ class StatusTimeline extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(MinglitSpacing.medium),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -247,7 +247,7 @@ class _TimelineItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final fmt = DateFormat('MM/dd HH:mm');
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.xsmall2),
       child: Row(
         children: [
           Container(

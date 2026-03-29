@@ -95,8 +95,8 @@ class MinglitSpacing {
 
   // 시맨틱 토큰 (용도별)
 
-  /// 20px screen edge padding (left/right).
-  static const double screenEdge = 20;
+  /// 16px screen edge padding (left/right).
+  static const double screenEdge = 16;
 
   /// 12px gap between cards.
   static const double cardGap = 12;

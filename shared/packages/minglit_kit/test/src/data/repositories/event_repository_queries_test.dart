@@ -209,6 +209,86 @@ void main() {
       });
     });
 
+    group('getMyTickets', () {
+      test('returns only paid/approved tickets', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
+            selectData: [
+              {...applicationJson, 'status': 'paid'},
+              {...applicationJson, 'id': 'app_2', 'status': 'approved'},
+            ],
+          ),
+        );
+
+        final result = await repository.getMyTickets('user_1');
+
+        expect(result, hasLength(2));
+        expect(result.first.id, 'app_1');
+        expect(result.first.status, 'paid');
+        expect(result.last.id, 'app_2');
+        expect(result.last.status, 'approved');
+      });
+
+      test('returns empty list when no active tickets', () async {
+        unawaited(
+          mockTable(mockClient, 'event_applications', selectData: []),
+        );
+
+        final result = await repository.getMyTickets('user_1');
+
+        expect(result, isEmpty);
+      });
+
+      test('includes event and ticket relations', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
+            selectData: [
+              {
+                ...applicationJson,
+                'status': 'paid',
+                'event': eventJson,
+                'ticket': {
+                  'id': 'ticket_1',
+                  'event_id': 'event_1',
+                  'name': '일반 티켓',
+                  'price': 30000,
+                  'created_at': DateTime.now().toIso8601String(),
+                  'updated_at': DateTime.now().toIso8601String(),
+                },
+              },
+            ],
+          ),
+        );
+
+        final result = await repository.getMyTickets('user_1');
+
+        expect(result, hasLength(1));
+        expect(result.first.event, isNotNull);
+        expect(result.first.event!.id, 'event_1');
+        expect(result.first.ticket, isNotNull);
+        expect(result.first.ticket!.id, 'ticket_1');
+      });
+
+      test('throws on error', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
+            shouldThrow: Exception('tickets error'),
+          ),
+        );
+
+        await expectLater(
+          repository.getMyTickets('user_1'),
+          throwsA(anything),
+        );
+      });
+    });
+
     group('getPendingApplicationCount', () {
       test('returns pending count', () async {
         unawaited(
@@ -674,6 +754,164 @@ void main() {
 
         await expectLater(
           repository.getEntryGroupParticipantCounts('event_1'),
+          throwsA(anything),
+        );
+      });
+    });
+
+    group('getTodayActiveEventsForUser', () {
+      Map<String, dynamic> makeEventWithParticipant({
+        required String eventId,
+        required DateTime startTime,
+        required DateTime endTime,
+        String participantStatus = 'ticket_issued',
+        String eventStatus = 'scheduled',
+      }) {
+        return {
+          'id': eventId,
+          'party_id': 'party_1',
+          'title': 'Test Event',
+          'status': eventStatus,
+          'start_time': startTime.toIso8601String(),
+          'end_time': endTime.toIso8601String(),
+          'created_at': now.toIso8601String(),
+          'updated_at': now.toIso8601String(),
+          'participant': [
+            {'id': 'p_1', 'user_id': 'user_1', 'status': participantStatus},
+          ],
+        };
+      }
+
+      test('returns active events with participant status', () async {
+        // Note: .order('start_time') is verified at the Supabase query level;
+        // mock returns data in insertion order, so we supply ascending order here.
+        final eventData = [
+          makeEventWithParticipant(
+            eventId: 'event_1',
+            startTime: now.subtract(const Duration(hours: 1)),
+            endTime: now.add(const Duration(hours: 2)),
+            participantStatus: 'checked_in',
+          ),
+          makeEventWithParticipant(
+            eventId: 'event_2',
+            startTime: now,
+            endTime: now.add(const Duration(hours: 3)),
+          ),
+        ];
+
+        unawaited(
+          mockTable(mockClient, 'events', selectData: eventData),
+        );
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
+            selectData: [
+              {
+                'event_id': 'event_1',
+                'refund_status': null,
+              },
+            ],
+          ),
+        );
+
+        final result = await repository.getTodayActiveEventsForUser('user_1');
+
+        expect(result, hasLength(2));
+        expect(result[0].event.id, 'event_1');
+        expect(result[0].participantStatus, 'checked_in');
+        expect(result[1].event.id, 'event_2');
+        expect(result[1].participantStatus, 'ticket_issued');
+      });
+
+      test('excludes refunded events', () async {
+        final eventData = [
+          makeEventWithParticipant(
+            eventId: 'event_1',
+            startTime: now.subtract(const Duration(hours: 1)),
+            endTime: now.add(const Duration(hours: 2)),
+          ),
+          makeEventWithParticipant(
+            eventId: 'event_2',
+            startTime: now,
+            endTime: now.add(const Duration(hours: 3)),
+          ),
+        ];
+
+        unawaited(
+          mockTable(mockClient, 'events', selectData: eventData),
+        );
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
+            selectData: [
+              {'event_id': 'event_1', 'refund_status': 'refunded'},
+              {'event_id': 'event_2', 'refund_status': null},
+            ],
+          ),
+        );
+
+        final result = await repository.getTodayActiveEventsForUser('user_1');
+
+        expect(result, hasLength(1));
+        expect(result.first.event.id, 'event_2');
+      });
+
+      test('returns empty list when no matching events', () async {
+        unawaited(
+          mockTable(mockClient, 'events', selectData: []),
+        );
+
+        final result = await repository.getTodayActiveEventsForUser('user_1');
+
+        expect(result, isEmpty);
+      });
+
+      test(
+        'defaults participantStatus to ticket_issued when missing',
+        () async {
+          final eventData = [
+            {
+              'id': 'event_1',
+              'party_id': 'party_1',
+              'title': 'Test Event',
+              'status': 'scheduled',
+              'start_time': now
+                  .subtract(const Duration(hours: 1))
+                  .toIso8601String(),
+              'end_time': now.add(const Duration(hours: 2)).toIso8601String(),
+              'created_at': now.toIso8601String(),
+              'updated_at': now.toIso8601String(),
+              'participant': <Map<String, dynamic>>[],
+            },
+          ];
+
+          unawaited(
+            mockTable(mockClient, 'events', selectData: eventData),
+          );
+          unawaited(
+            mockTable(mockClient, 'event_applications', selectData: []),
+          );
+
+          final result = await repository.getTodayActiveEventsForUser('user_1');
+
+          expect(result, hasLength(1));
+          expect(result.first.participantStatus, 'ticket_issued');
+        },
+      );
+
+      test('throws on database error', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'events',
+            shouldThrow: Exception('DB error'),
+          ),
+        );
+
+        await expectLater(
+          repository.getTodayActiveEventsForUser('user_1'),
           throwsA(anything),
         );
       });

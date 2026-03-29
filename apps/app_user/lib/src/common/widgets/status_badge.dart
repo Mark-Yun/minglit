@@ -1,7 +1,10 @@
-part of 'purchase_history_page.dart';
+import 'package:flutter/material.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.status});
+/// Fix #638: _StatusBadge → StatusBadge 공유 위젯 승격
+/// purchase_history, my_tickets 등에서 상태 배지로 재사용
+class StatusBadge extends StatelessWidget {
+  const StatusBadge({required this.status, super.key});
 
   final String status;
 
