@@ -1,6 +1,4 @@
-import 'package:app_user/src/features/event/matching/matching_vote_controller.dart';
 import 'package:app_user/src/features/home/widgets/event_now_bar_controller.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -50,20 +48,24 @@ void main() {
 
     // Override matchCandidates
     if (candidates != null) {
-      when(() => mockMatchingRepo.getMatchingCandidates(eventId))
-          .thenAnswer((_) async => candidates);
+      when(
+        () => mockMatchingRepo.getMatchingCandidates(eventId),
+      ).thenAnswer((_) async => candidates);
     } else {
-      when(() => mockMatchingRepo.getMatchingCandidates(eventId))
-          .thenAnswer((_) async => throw Exception('not available'));
+      when(
+        () => mockMatchingRepo.getMatchingCandidates(eventId),
+      ).thenAnswer((_) async => throw Exception('not available'));
     }
 
     // Override myMatches
     if (matches != null) {
-      when(() => mockMatchingRepo.getMyMatches(eventId))
-          .thenAnswer((_) async => matches);
+      when(
+        () => mockMatchingRepo.getMyMatches(eventId),
+      ).thenAnswer((_) async => matches);
     } else {
-      when(() => mockMatchingRepo.getMyMatches(eventId))
-          .thenAnswer((_) async => throw Exception('not available'));
+      when(
+        () => mockMatchingRepo.getMyMatches(eventId),
+      ).thenAnswer((_) async => throw Exception('not available'));
     }
 
     return createContainer(overrides: overrides);
@@ -85,39 +87,42 @@ void main() {
       expect(result, EventNowBarState.waiting);
     });
 
-    test('CHECK_IN_READY: 시작 시간 도달 + participant.status != checked_in',
-        () async {
-      final activeEvent = makeActiveEvent(
-        startTime: DateTime.now().subtract(const Duration(minutes: 30)),
-        participantStatus: 'ticket_issued',
-      );
+    test(
+      'CHECK_IN_READY: 시작 시간 도달 + participant.status != checked_in',
+      () async {
+        final activeEvent = makeActiveEvent(
+          startTime: DateTime.now().subtract(const Duration(minutes: 30)),
+        );
 
-      final container = makeContainer(eventId: 'event_1');
+        final container = makeContainer(eventId: 'event_1');
 
-      final result = await container.read(
-        eventNowBarStateProvider(activeEvent).future,
-      );
+        final result = await container.read(
+          eventNowBarStateProvider(activeEvent).future,
+        );
 
-      expect(result, EventNowBarState.checkInReady);
-    });
+        expect(result, EventNowBarState.checkInReady);
+      },
+    );
 
-    test('CHECKED_IN: participant.status = checked_in + matchCandidates 비어있음',
-        () async {
-      final activeEvent = makeActiveEvent(
-        participantStatus: 'checked_in',
-      );
+    test(
+      'CHECKED_IN: participant.status = checked_in + matchCandidates 비어있음',
+      () async {
+        final activeEvent = makeActiveEvent(
+          participantStatus: 'checked_in',
+        );
 
-      final container = makeContainer(
-        eventId: 'event_1',
-        candidates: [],
-      );
+        final container = makeContainer(
+          eventId: 'event_1',
+          candidates: [],
+        );
 
-      final result = await container.read(
-        eventNowBarStateProvider(activeEvent).future,
-      );
+        final result = await container.read(
+          eventNowBarStateProvider(activeEvent).future,
+        );
 
-      expect(result, EventNowBarState.checkedIn);
-    });
+        expect(result, EventNowBarState.checkedIn);
+      },
+    );
 
     test('MATCHING: matchCandidatesProvider가 비어있지 않음', () async {
       final activeEvent = makeActiveEvent(
@@ -127,7 +132,7 @@ void main() {
       final container = makeContainer(
         eventId: 'event_1',
         candidates: [
-          UserProfile(
+          const UserProfile(
             id: 'user_2',
             name: 'Test User',
             username: 'testuser',
@@ -151,7 +156,7 @@ void main() {
       final container = makeContainer(
         eventId: 'event_1',
         candidates: [
-          UserProfile(
+          const UserProfile(
             id: 'user_2',
             name: 'Test User',
             username: 'testuser',
@@ -240,10 +245,12 @@ void main() {
       expect(result1, EventNowBarState.ended);
 
       // A different event (event_2) should compute its own state independently.
-      when(() => mockMatchingRepo.getMatchingCandidates('event_2'))
-          .thenAnswer((_) async => throw Exception('not available'));
-      when(() => mockMatchingRepo.getMyMatches('event_2'))
-          .thenAnswer((_) async => throw Exception('not available'));
+      when(
+        () => mockMatchingRepo.getMatchingCandidates('event_2'),
+      ).thenAnswer((_) async => throw Exception('not available'));
+      when(
+        () => mockMatchingRepo.getMyMatches('event_2'),
+      ).thenAnswer((_) async => throw Exception('not available'));
 
       final waitingEvent = makeActiveEvent(
         id: 'event_2',
@@ -268,7 +275,7 @@ void main() {
       final container = makeContainer(
         eventId: 'event_1',
         candidates: [
-          UserProfile(
+          const UserProfile(
             id: 'user_2',
             name: 'Test User',
             username: 'testuser',

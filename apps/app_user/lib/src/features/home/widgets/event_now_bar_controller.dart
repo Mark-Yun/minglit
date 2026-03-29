@@ -120,5 +120,6 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
   void resetHighWaterMarkForTesting() {
     _highWaterMark = EventNowBarState.waiting;
   }
+
   // coverage:ignore-end
 }
