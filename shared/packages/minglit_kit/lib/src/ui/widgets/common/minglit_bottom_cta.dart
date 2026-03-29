@@ -23,11 +23,11 @@ class MinglitBottomCTA extends StatelessWidget {
     this.icon,
     this.enabled = true,
     super.key,
-  })  : secondaryLabel = null,
-        onSecondaryPressed = null,
-        priceText = null,
-        priceSubText = null,
-        _variant = _BottomCTAVariant.single;
+  }) : secondaryLabel = null,
+       onSecondaryPressed = null,
+       priceText = null,
+       priceSubText = null,
+       _variant = _BottomCTAVariant.single;
 
   /// 좌우 두 버튼 CTA.
   ///
@@ -39,10 +39,10 @@ class MinglitBottomCTA extends StatelessWidget {
     required VoidCallback this.onSecondaryPressed,
     this.enabled = true,
     super.key,
-  })  : icon = null,
-        priceText = null,
-        priceSubText = null,
-        _variant = _BottomCTAVariant.dual;
+  }) : icon = null,
+       priceText = null,
+       priceSubText = null,
+       _variant = _BottomCTAVariant.dual;
 
   /// 가격 표시 + 버튼 CTA.
   ///
@@ -56,9 +56,9 @@ class MinglitBottomCTA extends StatelessWidget {
     this.icon,
     this.enabled = true,
     super.key,
-  })  : secondaryLabel = null,
-        onSecondaryPressed = null,
-        _variant = _BottomCTAVariant.price;
+  }) : secondaryLabel = null,
+       onSecondaryPressed = null,
+       _variant = _BottomCTAVariant.price;
 
   /// 주요 버튼 텍스트.
   final String label;
