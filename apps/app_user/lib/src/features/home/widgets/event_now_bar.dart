@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_user/src/features/home/widgets/event_now_bar_controller.dart';
+import 'package:app_user/src/features/home/widgets/event_now_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -139,7 +140,11 @@ class _EventNowBarContentState extends ConsumerState<_EventNowBarContent>
     }
 
     return GestureDetector(
-      onTap: widget.onTap,
+      // Fix #663: default tap opens EventNowBottomSheet when no explicit onTap
+      onTap: widget.onTap ??
+          () => unawaited(
+                showEventNowBottomSheet(context, ref, widget.activeEvent),
+              ),
       child: Container(
         height: 56,
         decoration: _barDecoration(),
