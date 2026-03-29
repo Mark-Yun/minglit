@@ -19,11 +19,7 @@ const myTicketsControllerProvider = MyTicketsControllerProvider._();
 ///
 /// Fetches active tickets (paid/approved) and splits them by event start time.
 final class MyTicketsControllerProvider
-    extends
-        $AsyncNotifierProvider<
-          MyTicketsController,
-          MyTicketsState
-        > {
+    extends $AsyncNotifierProvider<MyTicketsController, MyTicketsState> {
   /// Fix #639: MyTicketsController — upcoming/past ticket separation + today event detection.
   ///
   /// Fetches active tickets (paid/approved) and splits them by event start time.
@@ -53,23 +49,17 @@ String _$myTicketsControllerHash() =>
 ///
 /// Fetches active tickets (paid/approved) and splits them by event start time.
 
-abstract class _$MyTicketsController
-    extends $AsyncNotifier<MyTicketsState> {
+abstract class _$MyTicketsController extends $AsyncNotifier<MyTicketsState> {
   FutureOr<MyTicketsState> build();
   @$mustCallSuper
   @override
   void runBuild() {
     final created = build();
-    final ref =
-        this.ref
-            as $Ref<AsyncValue<MyTicketsState>, MyTicketsState>;
+    final ref = this.ref as $Ref<AsyncValue<MyTicketsState>, MyTicketsState>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<
-                AsyncValue<MyTicketsState>,
-                MyTicketsState
-              >,
+              AnyNotifier<AsyncValue<MyTicketsState>, MyTicketsState>,
               AsyncValue<MyTicketsState>,
               Object?,
               Object?

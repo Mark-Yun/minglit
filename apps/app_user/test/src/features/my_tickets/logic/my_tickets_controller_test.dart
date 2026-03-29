@@ -177,7 +177,7 @@ void main() {
       final now = DateTime.now();
       // Two events today: one sooner, one later
       final todaySoon = DateTime(now.year, now.month, now.day, now.hour + 1);
-      final todayLate = DateTime(now.year, now.month, now.day, 23, 0);
+      final todayLate = DateTime(now.year, now.month, now.day, 23);
       final tomorrow = now.add(const Duration(days: 1));
 
       final tickets = [
