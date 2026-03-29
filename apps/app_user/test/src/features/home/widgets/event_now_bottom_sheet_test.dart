@@ -1,6 +1,9 @@
 import 'dart:async';
 
+<<<<<<< HEAD
 import 'package:app_user/src/features/event/matching/widgets/matching_vote_content.dart';
+=======
+>>>>>>> origin/dev
 import 'package:app_user/src/features/home/widgets/event_now_bar_controller.dart';
 import 'package:app_user/src/features/home/widgets/event_now_bottom_sheet.dart';
 import 'package:app_user/src/features/ticket/data/ticket_wallet_repository.dart';
@@ -216,6 +219,7 @@ void main() {
         );
       },
     );
+<<<<<<< HEAD
 
     // -----------------------------------------------------------------
     // Phase 3: Matching — MatchingVoteContent + vote count
@@ -387,6 +391,8 @@ void main() {
         expect(find.text('투표 완료!'), findsWidgets);
       },
     );
+=======
+>>>>>>> origin/dev
   });
 }
 
