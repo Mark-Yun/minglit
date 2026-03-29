@@ -92,6 +92,9 @@ jobs:
           DB_PASSWORD: ${{ steps.env.outputs.DB_PASSWORD }}
           PROJECT_ID: ${{ steps.env.outputs.PROJECT_ID }}
         run: |
+          # Fix #669: GitHub Actions 러너 IPv6 미지원 — IPv4 우선으로 변경
+          sudo sh -c 'echo "precedence ::ffff:0:0/96 100" >> /etc/gai.conf'
+
           REQUIRED=$(jq -r '.vault.required | keys[]' env-manifest.json)
           VAULT_MISSING=""
           for key in $REQUIRED; do
