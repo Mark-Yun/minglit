@@ -4,8 +4,6 @@ library;
 import 'dart:io';
 
 import 'package:alchemist/alchemist.dart';
-import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
-import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:app_user/src/logic/feed_state_provider.dart';
@@ -23,13 +21,9 @@ void main() {
     bool hasMore = false,
   }) {
     final mockHome = MockHomeCoordinator();
-    final mockEvent = MockEventCoordinator();
-    final mockAuth = MockAuthCoordinator();
 
     return [
       homeCoordinatorProvider.overrideWithValue(mockHome),
-      eventCoordinatorProvider.overrideWithValue(mockEvent),
-      authCoordinatorProvider.overrideWithValue(mockAuth),
       activeFiltersProvider.overrideWith(NoFiltersNotifier.new),
       recommendationFeedProvider.overrideWith(
         () => _FakeRecommendationFeedNotifier(

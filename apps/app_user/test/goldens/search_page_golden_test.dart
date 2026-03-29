@@ -2,7 +2,7 @@
 library;
 
 import 'package:alchemist/alchemist.dart';
-import 'package:app_user/src/features/event/logic/event_coordinator.dart';
+import 'package:app_user/src/features/search/logic/search_coordinator.dart';
 import 'package:app_user/src/features/search/search_page.dart';
 import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:flutter/material.dart';
@@ -33,8 +33,8 @@ void main() {
             child: GoldenPageWrapper(
               page: const SearchPage(),
               overrides: [
-                eventCoordinatorProvider.overrideWithValue(
-                  MockEventCoordinator(),
+                searchCoordinatorProvider.overrideWithValue(
+                  MockSearchCoordinator(),
                 ),
                 searchQueryProvider.overrideWith(_EmptySearchQuery.new),
                 searchResultsProvider.overrideWith((_) async => <Event>[]),
@@ -62,8 +62,8 @@ void main() {
               page: const SearchPage(),
               brightness: Brightness.dark,
               overrides: [
-                eventCoordinatorProvider.overrideWithValue(
-                  MockEventCoordinator(),
+                searchCoordinatorProvider.overrideWithValue(
+                  MockSearchCoordinator(),
                 ),
                 searchQueryProvider.overrideWith(_EmptySearchQuery.new),
                 searchResultsProvider.overrideWith((_) async => <Event>[]),
