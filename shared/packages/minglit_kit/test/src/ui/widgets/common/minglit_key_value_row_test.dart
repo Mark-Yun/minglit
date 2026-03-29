@@ -41,15 +41,18 @@ void main() {
 
     testWidgets('applies bold font weight when bold is true', (tester) async {
       await tester.pumpWidget(
-        wrap(const MinglitKeyValueRow(label: '총액', value: '50,000원', bold: true)),
+        wrap(
+          const MinglitKeyValueRow(label: '총액', value: '50,000원', bold: true),
+        ),
       );
 
       final valueText = tester.widget<Text>(find.text('50,000원'));
       expect(valueText.style?.fontWeight, FontWeight.bold);
     });
 
-    testWidgets('applies normal font weight when bold is false',
-        (tester) async {
+    testWidgets('applies normal font weight when bold is false', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         wrap(const MinglitKeyValueRow(label: '수량', value: '3개')),
       );

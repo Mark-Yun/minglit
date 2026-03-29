@@ -97,8 +97,9 @@ void main() {
       expect(find.byType(InkWell), findsNothing);
     });
 
-    testWidgets('renders highlighted border when highlighted is true',
-        (tester) async {
+    testWidgets('renders highlighted border when highlighted is true', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         wrap(
           const MinglitContentCard(
