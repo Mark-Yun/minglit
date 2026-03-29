@@ -733,8 +733,7 @@ void main() {
           ),
         );
 
-        final result =
-            await repository.getTodayActiveEventsForUser('user_1');
+        final result = await repository.getTodayActiveEventsForUser('user_1');
 
         expect(result, hasLength(2));
         expect(result[0].event.id, 'event_1');
@@ -771,8 +770,7 @@ void main() {
           ),
         );
 
-        final result =
-            await repository.getTodayActiveEventsForUser('user_1');
+        final result = await repository.getTodayActiveEventsForUser('user_1');
 
         expect(result, hasLength(1));
         expect(result.first.event.id, 'event_2');
@@ -783,42 +781,43 @@ void main() {
           mockTable(mockClient, 'events', selectData: []),
         );
 
-        final result =
-            await repository.getTodayActiveEventsForUser('user_1');
+        final result = await repository.getTodayActiveEventsForUser('user_1');
 
         expect(result, isEmpty);
       });
 
-      test('defaults participantStatus to ticket_issued when missing',
-          () async {
-        final eventData = [
-          {
-            'id': 'event_1',
-            'party_id': 'party_1',
-            'title': 'Test Event',
-            'status': 'scheduled',
-            'start_time':
-                now.subtract(const Duration(hours: 1)).toIso8601String(),
-            'end_time': now.add(const Duration(hours: 2)).toIso8601String(),
-            'created_at': now.toIso8601String(),
-            'updated_at': now.toIso8601String(),
-            'participant': <Map<String, dynamic>>[],
-          },
-        ];
+      test(
+        'defaults participantStatus to ticket_issued when missing',
+        () async {
+          final eventData = [
+            {
+              'id': 'event_1',
+              'party_id': 'party_1',
+              'title': 'Test Event',
+              'status': 'scheduled',
+              'start_time': now
+                  .subtract(const Duration(hours: 1))
+                  .toIso8601String(),
+              'end_time': now.add(const Duration(hours: 2)).toIso8601String(),
+              'created_at': now.toIso8601String(),
+              'updated_at': now.toIso8601String(),
+              'participant': <Map<String, dynamic>>[],
+            },
+          ];
 
-        unawaited(
-          mockTable(mockClient, 'events', selectData: eventData),
-        );
-        unawaited(
-          mockTable(mockClient, 'event_applications', selectData: []),
-        );
+          unawaited(
+            mockTable(mockClient, 'events', selectData: eventData),
+          );
+          unawaited(
+            mockTable(mockClient, 'event_applications', selectData: []),
+          );
 
-        final result =
-            await repository.getTodayActiveEventsForUser('user_1');
+          final result = await repository.getTodayActiveEventsForUser('user_1');
 
-        expect(result, hasLength(1));
-        expect(result.first.participantStatus, 'ticket_issued');
-      });
+          expect(result, hasLength(1));
+          expect(result.first.participantStatus, 'ticket_issued');
+        },
+      );
 
       test('throws on database error', () async {
         unawaited(
