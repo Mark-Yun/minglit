@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 void main() {
   group('AppRoutes', () {
-    test('$appRoutes contains 7 top-level routes', () {
+    test('\$appRoutes contains 7 top-level routes', () {
       // 6 top-level + 1 shell route
       expect($appRoutes.length, 7);
     });
