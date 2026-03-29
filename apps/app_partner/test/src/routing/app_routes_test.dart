@@ -25,7 +25,8 @@ void main() {
       expect(
         shellRoute.branches,
         hasLength(5),
-        reason: '5 bottom nav tabs: home, applications, checkin, settlement, more',
+        reason:
+            '5 bottom nav tabs: home, applications, checkin, settlement, more',
       );
     });
 
@@ -48,13 +49,16 @@ void main() {
       final goRoutes = routes.whereType<GoRoute>().toList();
       final paths = goRoutes.map((r) => r.path).toSet();
 
-      expect(paths, containsAll([
-        '/login',
-        '/apply',
-        '/apply/status',
-        '/welcome',
-        '/notifications',
-      ]));
+      expect(
+        paths,
+        containsAll([
+          '/login',
+          '/apply',
+          '/apply/status',
+          '/welcome',
+          '/notifications',
+        ]),
+      );
     });
 
     test('home branch has location guide sub-route', () {
@@ -90,12 +94,15 @@ void main() {
           .whereType<GoRoute>()
           .map((r) => r.path)
           .toSet();
-      expect(subPaths, containsAll([
-        'parties',
-        'verifications/manage',
-        'verifications/create',
-        'notification-settings',
-      ]));
+      expect(
+        subPaths,
+        containsAll([
+          'parties',
+          'verifications/manage',
+          'verifications/create',
+          'notification-settings',
+        ]),
+      );
     });
   });
 }
