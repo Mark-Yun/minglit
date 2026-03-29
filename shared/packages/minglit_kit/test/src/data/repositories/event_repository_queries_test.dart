@@ -703,6 +703,8 @@ void main() {
       }
 
       test('returns active events with participant status', () async {
+        // Note: .order('start_time') is verified at the Supabase query level;
+        // mock returns data in insertion order, so we supply ascending order here.
         final eventData = [
           makeEventWithParticipant(
             eventId: 'event_1',
