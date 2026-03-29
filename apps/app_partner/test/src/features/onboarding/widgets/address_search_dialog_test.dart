@@ -6,9 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 void main() {
-  setUp(() {
-    Log.clear();
-  });
+  setUp(Log.clear);
 
   tearDown(() {
     HttpOverrides.global = null;
