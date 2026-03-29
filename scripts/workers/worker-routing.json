@@ -41,6 +41,11 @@
       "handler": "issue-worker",
       "color": "c5def5",
       "desc": "개발 작업 요청"
+    },
+    "needs-review": {
+      "handler": "pr-reviewer",
+      "color": "c5def5",
+      "desc": "PR 코드 리뷰 요청"
     }
   },
 
