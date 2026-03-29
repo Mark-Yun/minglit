@@ -215,6 +215,148 @@ void main() {
         );
       },
     );
+    // -----------------------------------------------------------------
+    // Phase 4: Results — match result profiles or empty state
+    // -----------------------------------------------------------------
+
+    testWidgets(
+      'Phase 4: shows match results when matches exist',
+      (tester) async {
+        when(() => mockMatchingRepo.getMyMatches('event_1')).thenAnswer(
+          (_) async => [
+            MatchPair(
+              matchId: 'match_1',
+              eventId: 'event_1',
+              partnerId: 'partner_1',
+              matchedAt: now,
+              partnerName: '김민지',
+              partnerContact: '010-1234-5678',
+            ),
+          ],
+        );
+
+        final event = makeActiveEvent(participantStatus: 'checked_in');
+        await tester.pumpWidget(
+          createTestWidget(event, EventNowBarState.results),
+        );
+        for (var i = 0; i < 5; i++) {
+          await tester.pump(const Duration(milliseconds: 100));
+        }
+
+        expect(find.text('매칭 결과'), findsOneWidget);
+        expect(find.text('1명과 매칭되었어요!'), findsOneWidget);
+        expect(find.text('김민지'), findsOneWidget);
+        expect(find.text('010-1234-5678'), findsOneWidget);
+        expect(find.byIcon(Icons.favorite), findsWidgets);
+      },
+    );
+
+    testWidgets(
+      'Phase 4: shows empty state when no matches',
+      (tester) async {
+        when(() => mockMatchingRepo.getMyMatches('event_1')).thenAnswer(
+          (_) async => [],
+        );
+
+        final event = makeActiveEvent(participantStatus: 'checked_in');
+        await tester.pumpWidget(
+          createTestWidget(event, EventNowBarState.results),
+        );
+        for (var i = 0; i < 5; i++) {
+          await tester.pump(const Duration(milliseconds: 100));
+        }
+
+        expect(find.text('매칭 결과'), findsOneWidget);
+        expect(
+          find.text('이번엔 아쉽지만, 다음 기회에!'),
+          findsOneWidget,
+        );
+        expect(
+          find.byIcon(Icons.sentiment_neutral),
+          findsOneWidget,
+        );
+      },
+    );
+
+    // -----------------------------------------------------------------
+    // Phase 5: Ended — review + CTA
+    // -----------------------------------------------------------------
+
+    testWidgets(
+      'Phase 5: shows star rating and review CTA when ended',
+      (tester) async {
+        final event = makeActiveEvent(
+          status: 'completed',
+          participantStatus: 'checked_in',
+        );
+        await tester.pumpWidget(
+          createTestWidget(event, EventNowBarState.ended),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('이벤트가 종료되었어요'), findsOneWidget);
+        expect(find.text('이벤트는 어떠셨나요?'), findsOneWidget);
+        expect(find.text('리뷰 작성하기'), findsOneWidget);
+        expect(find.byIcon(Icons.star_border), findsNWidgets(5));
+        expect(
+          find.byIcon(Icons.rate_review_outlined),
+          findsOneWidget,
+        );
+        expect(
+          find.byIcon(Icons.event_available),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'Phase 5: star tapping updates rating',
+      (tester) async {
+        final event = makeActiveEvent(
+          status: 'completed',
+          participantStatus: 'checked_in',
+        );
+        await tester.pumpWidget(
+          createTestWidget(event, EventNowBarState.ended),
+        );
+        await tester.pumpAndSettle();
+
+        // Initially all empty stars
+        expect(find.byIcon(Icons.star_border), findsNWidgets(5));
+        expect(find.byIcon(Icons.star), findsNothing);
+
+        // Tap 3rd star
+        final starBorderFinder = find.byIcon(Icons.star_border);
+        await tester.tap(starBorderFinder.at(2));
+        await tester.pump();
+
+        // 3 filled, 2 empty
+        expect(find.byIcon(Icons.star), findsNWidgets(3));
+        expect(find.byIcon(Icons.star_border), findsNWidgets(2));
+      },
+    );
+
+    testWidgets(
+      'Phase 5: review CTA button is tappable',
+      (tester) async {
+        final event = makeActiveEvent(
+          status: 'completed',
+          participantStatus: 'checked_in',
+        );
+        await tester.pumpWidget(
+          createTestWidget(event, EventNowBarState.ended),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('리뷰 작성하기'), findsOneWidget);
+
+        await tester.tap(find.text('리뷰 작성하기'));
+        await tester.pumpAndSettle();
+
+        // CTA calls Navigator.pop — verify no exception
+        expect(tester.takeException(), isNull);
+      },
+    );
   });
 }
 
