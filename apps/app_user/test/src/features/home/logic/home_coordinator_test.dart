@@ -93,6 +93,15 @@ void main() {
       ).called(1);
     });
 
+    // Fix #641: pushMyTickets navigates to /tickets/my
+    test('pushMyTickets calls router.push with /tickets/my', () {
+      HomeCoordinator(mockRouter).pushMyTickets();
+
+      verify(
+        () => mockRouter.push(any(that: contains('/tickets/my'))),
+      ).called(1);
+    });
+
     test('pushPartnerEvents calls router.push with partnerId', () {
       HomeCoordinator(mockRouter).pushPartnerEvents(
         partnerId: 'p_1',
