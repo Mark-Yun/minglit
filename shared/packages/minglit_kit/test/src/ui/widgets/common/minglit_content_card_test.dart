@@ -11,7 +11,7 @@ void main() {
     testWidgets('renders child content', (tester) async {
       await tester.pumpWidget(
         wrap(
-          MinglitContentCard(child: Text('카드 내용')),
+          const MinglitContentCard(child: Text('카드 내용')),
         ),
       );
 
@@ -24,7 +24,7 @@ void main() {
         wrap(
           MinglitContentCard(
             onTap: () => tapped = true,
-            child: Text('탭 가능'),
+            child: const Text('탭 가능'),
           ),
         ),
       );
@@ -38,7 +38,7 @@ void main() {
         wrap(
           MinglitContentCard(
             onTap: () {},
-            child: Text('내용'),
+            child: const Text('내용'),
           ),
         ),
       );
@@ -49,18 +49,19 @@ void main() {
     testWidgets('does not wrap in InkWell when onTap is null', (tester) async {
       await tester.pumpWidget(
         wrap(
-          MinglitContentCard(child: Text('내용')),
+          const MinglitContentCard(child: Text('내용')),
         ),
       );
 
       expect(find.byType(InkWell), findsNothing);
     });
 
-    testWidgets('applies highlighted border when highlighted is true',
-        (tester) async {
+    testWidgets('applies highlighted border when highlighted is true', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         wrap(
-          MinglitContentCard(
+          const MinglitContentCard(
             highlighted: true,
             child: Text('강조'),
           ),

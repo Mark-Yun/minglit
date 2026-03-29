@@ -11,7 +11,7 @@ void main() {
     testWidgets('renders title and child', (tester) async {
       await tester.pumpWidget(
         wrap(
-          MinglitSection(
+          const MinglitSection(
             title: '섹션 제목',
             child: Text('섹션 내용'),
           ),
@@ -29,9 +29,9 @@ void main() {
             title: '섹션 제목',
             trailing: TextButton(
               onPressed: () {},
-              child: Text('더보기'),
+              child: const Text('더보기'),
             ),
-            child: Text('내용'),
+            child: const Text('내용'),
           ),
         ),
       );
@@ -42,7 +42,7 @@ void main() {
     testWidgets('does not render trailing when null', (tester) async {
       await tester.pumpWidget(
         wrap(
-          MinglitSection(
+          const MinglitSection(
             title: '섹션 제목',
             child: Text('내용'),
           ),
@@ -55,7 +55,7 @@ void main() {
     testWidgets('applies custom padding', (tester) async {
       await tester.pumpWidget(
         wrap(
-          MinglitSection(
+          const MinglitSection(
             title: '제목',
             padding: EdgeInsets.all(32),
             child: Text('내용'),
@@ -64,10 +64,12 @@ void main() {
       );
 
       final padding = tester.widget<Padding>(
-        find.ancestor(
-          of: find.byType(Column),
-          matching: find.byType(Padding),
-        ).first,
+        find
+            .ancestor(
+              of: find.byType(Column),
+              matching: find.byType(Padding),
+            )
+            .first,
       );
       expect(padding.padding, const EdgeInsets.all(32));
     });

@@ -11,7 +11,7 @@ void main() {
     testWidgets('renders label and value', (tester) async {
       await tester.pumpWidget(
         wrap(
-          MinglitKeyValueRow(label: '이름', value: '홍길동'),
+          const MinglitKeyValueRow(label: '이름', value: '홍길동'),
         ),
       );
 
@@ -22,7 +22,7 @@ void main() {
     testWidgets('applies bold font weight when bold is true', (tester) async {
       await tester.pumpWidget(
         wrap(
-          MinglitKeyValueRow(label: '총 금액', value: '20,000원', bold: true),
+          const MinglitKeyValueRow(label: '총 금액', value: '20,000원', bold: true),
         ),
       );
 
@@ -33,7 +33,7 @@ void main() {
     testWidgets('does not apply bold by default', (tester) async {
       await tester.pumpWidget(
         wrap(
-          MinglitKeyValueRow(label: '항목', value: '값'),
+          const MinglitKeyValueRow(label: '항목', value: '값'),
         ),
       );
 
@@ -44,7 +44,7 @@ void main() {
     testWidgets('applies custom value color', (tester) async {
       await tester.pumpWidget(
         wrap(
-          MinglitKeyValueRow(
+          const MinglitKeyValueRow(
             label: '상태',
             value: '성공',
             valueColor: Colors.green,
@@ -59,7 +59,7 @@ void main() {
     testWidgets('renders empty strings without error', (tester) async {
       await tester.pumpWidget(
         wrap(
-          MinglitKeyValueRow(label: '', value: ''),
+          const MinglitKeyValueRow(label: '', value: ''),
         ),
       );
 
