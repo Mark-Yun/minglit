@@ -5,6 +5,9 @@
  * Gracefully no-ops when AXIOM_API_TOKEN is not set.
  */
 
+// Fix #763: 로그 전송 전 PII 마스킹 적용
+import { maskMetadata } from "./pii_masker.ts";
+
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
 export interface LogEntry {
@@ -32,28 +35,30 @@ const _buffer: AxiomEvent[] = [];
 const MAX_BUFFER_SIZE = 1000;
 
 export function log(entry: LogEntry): void {
+  // Fix #763: metadata에 포함된 PII 필드를 마스킹하여 Axiom/콘솔에 평문 노출 방지
+  const maskedMetadata = maskMetadata(entry.metadata);
   const event: AxiomEvent = {
     _time: new Date().toISOString(),
     function: entry.function,
     level: entry.level,
     environment: _environment,
     message: entry.message,
-    ...(entry.metadata && { metadata: entry.metadata }),
+    ...(maskedMetadata && { metadata: maskedMetadata }),
   };
 
   const prefix = `[${entry.function}]`;
   switch (entry.level) {
     case "error":
-      console.error(prefix, entry.message, entry.metadata ?? "");
+      console.error(prefix, entry.message, maskedMetadata ?? "");
       break;
     case "warn":
-      console.warn(prefix, entry.message, entry.metadata ?? "");
+      console.warn(prefix, entry.message, maskedMetadata ?? "");
       break;
     case "debug":
-      console.debug(prefix, entry.message, entry.metadata ?? "");
+      console.debug(prefix, entry.message, maskedMetadata ?? "");
       break;
     default:
-      console.log(prefix, entry.message, entry.metadata ?? "");
+      console.log(prefix, entry.message, maskedMetadata ?? "");
   }
 
   if (_enabled) {
