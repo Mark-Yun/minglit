@@ -394,7 +394,7 @@ final class RecommendationFeedNotifierProvider
 }
 
 String _$recommendationFeedNotifierHash() =>
-    r'1d4ce67da381689d8e45086b06eee48c05478184';
+    r'1e3980508ac3dc87a49d078d891b9ec3fbd35e99';
 
 /// Manages pagination state for the recommendation event feed.
 ///
@@ -439,6 +439,9 @@ abstract class _$RecommendationFeedNotifier
 /// - recommended → newArrivals
 /// - closingSoon → closingSoon
 /// - nearestDate → nearest
+///
+// TODO(mark): Phase 2 (#614) — migrate to [recommendationEventsFromEf] once
+// the user-event-feed EF is validated in production.
 
 @ProviderFor(recommendationEvents)
 const recommendationEventsProvider = RecommendationEventsProvider._();
@@ -449,6 +452,9 @@ const recommendationEventsProvider = RecommendationEventsProvider._();
 /// - recommended → newArrivals
 /// - closingSoon → closingSoon
 /// - nearestDate → nearest
+///
+// TODO(mark): Phase 2 (#614) — migrate to [recommendationEventsFromEf] once
+// the user-event-feed EF is validated in production.
 
 final class RecommendationEventsProvider
     extends
@@ -464,6 +470,9 @@ final class RecommendationEventsProvider
   /// - recommended → newArrivals
   /// - closingSoon → closingSoon
   /// - nearestDate → nearest
+  ///
+  // TODO(mark): Phase 2 (#614) — migrate to [recommendationEventsFromEf] once
+  // the user-event-feed EF is validated in production.
   const RecommendationEventsProvider._()
     : super(
         from: null,
@@ -492,3 +501,72 @@ final class RecommendationEventsProvider
 
 String _$recommendationEventsHash() =>
     r'6c45f80d337359eb151c3c2195073e6f785ad2ec';
+
+/// Server-side feed via user-event-feed Edge Function (#614).
+///
+/// All sorting, filtering (block, eligibility, nearby, remaining slots),
+/// and cursor pagination are handled by the DB function, so no
+/// client-side post-processing is needed.
+///
+// TODO(mark): Phase 2 (#614) — wire this into the explore UI behind a feature
+// flag, then remove the legacy [recommendationEvents] path.
+
+@ProviderFor(recommendationEventsFromEf)
+const recommendationEventsFromEfProvider =
+    RecommendationEventsFromEfProvider._();
+
+/// Server-side feed via user-event-feed Edge Function (#614).
+///
+/// All sorting, filtering (block, eligibility, nearby, remaining slots),
+/// and cursor pagination are handled by the DB function, so no
+/// client-side post-processing is needed.
+///
+// TODO(mark): Phase 2 (#614) — wire this into the explore UI behind a feature
+// flag, then remove the legacy [recommendationEvents] path.
+
+final class RecommendationEventsFromEfProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Map<String, dynamic>>,
+          Map<String, dynamic>,
+          FutureOr<Map<String, dynamic>>
+        >
+    with
+        $FutureModifier<Map<String, dynamic>>,
+        $FutureProvider<Map<String, dynamic>> {
+  /// Server-side feed via user-event-feed Edge Function (#614).
+  ///
+  /// All sorting, filtering (block, eligibility, nearby, remaining slots),
+  /// and cursor pagination are handled by the DB function, so no
+  /// client-side post-processing is needed.
+  ///
+  // TODO(mark): Phase 2 (#614) — wire this into the explore UI behind a feature
+  // flag, then remove the legacy [recommendationEvents] path.
+  const RecommendationEventsFromEfProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'recommendationEventsFromEfProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$recommendationEventsFromEfHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<Map<String, dynamic>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Map<String, dynamic>> create(Ref ref) {
+    return recommendationEventsFromEf(ref);
+  }
+}
+
+String _$recommendationEventsFromEfHash() =>
+    r'4a6727075b5b43db880babbc5c5d8cad53f5bd2e';

@@ -50,6 +50,30 @@ export async function requireAuth(
  * if (auth instanceof Response) return auth; // 401
  * ```
  */
+/**
+ * Attempt to extract a user ID from the Authorization header without
+ * returning an error on failure. Useful for endpoints that support both
+ * authenticated and anonymous access.
+ *
+ * Returns the user ID string on success, or `null` when the token is
+ * missing, malformed, or invalid.
+ */
+export async function optionalAuth(req: Request): Promise<string | null> {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) return null;
+
+  const token = authHeader.replace("Bearer ", "");
+
+  try {
+    const supabase = createServiceClient();
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data.user) return null;
+    return data.user.id;
+  } catch {
+    return null;
+  }
+}
+
 export function requireServiceRole(req: Request): true | Response {
   const authHeader = req.headers.get("Authorization");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
