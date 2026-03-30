@@ -396,32 +396,28 @@ class DeletionReasonRoute extends GoRouteData with $DeletionReasonRoute {
 class DeletionInfoRoute extends GoRouteData with $DeletionInfoRoute {
   const DeletionInfoRoute({
     this.reasonCode,
-    this.reasonText,
   });
 
   final String? reasonCode;
-  final String? reasonText;
 
   @override
   Widget build(BuildContext context, GoRouterState state) => DeletionInfoPage(
     reasonCode: reasonCode,
-    reasonText: reasonText,
+    reasonText: state.extra as String?,
   );
 }
 
 class DeletionVerifyRoute extends GoRouteData with $DeletionVerifyRoute {
   const DeletionVerifyRoute({
     this.reasonCode,
-    this.reasonText,
   });
 
   final String? reasonCode;
-  final String? reasonText;
 
   @override
   Widget build(BuildContext context, GoRouterState state) => DeletionVerifyPage(
     reasonCode: reasonCode,
-    reasonText: reasonText,
+    reasonText: state.extra as String?,
   );
 }
 

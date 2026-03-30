@@ -332,7 +332,7 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
       return res.count;
     } on Exception catch (e, st) {
       Log.e('❌ [EventRepo] getRequestedRefundCountForPartner Error', e, st);
-      return 0;
+      rethrow;
     }
   }
 

@@ -226,7 +226,7 @@ void main() {
         expect(result, 2);
       });
 
-      test('returns zero when query throws', () async {
+      test('rethrows when query throws', () async {
         unawaited(
           mockTable(
             mockClient,
@@ -235,11 +235,10 @@ void main() {
           ),
         );
 
-        final result = await repository.getRequestedRefundCountForPartner(
-          'partner_1',
+        await expectLater(
+          repository.getRequestedRefundCountForPartner('partner_1'),
+          throwsA(isA<Exception>()),
         );
-
-        expect(result, 0);
       });
     });
 

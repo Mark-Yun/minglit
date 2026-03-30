@@ -27,8 +27,8 @@ class AccountDeletionCoordinator {
           reasonCode: reason == null
               ? null
               : encodeWithdrawalReasonCode(reason.reasonCode),
-          reasonText: reason?.detail,
         ).location,
+        extra: reason?.detail,
       ),
     );
   }
@@ -40,8 +40,8 @@ class AccountDeletionCoordinator {
           reasonCode: reason == null
               ? null
               : encodeWithdrawalReasonCode(reason.reasonCode),
-          reasonText: reason?.detail,
         ).location,
+        extra: reason?.detail,
       ),
     );
   }

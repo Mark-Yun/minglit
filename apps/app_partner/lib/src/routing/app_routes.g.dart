@@ -835,7 +835,6 @@ mixin $DeletionReasonRoute on GoRouteData {
 mixin $DeletionInfoRoute on GoRouteData {
   static DeletionInfoRoute _fromState(GoRouterState state) => DeletionInfoRoute(
     reasonCode: state.uri.queryParameters['reason-code'],
-    reasonText: state.uri.queryParameters['reason-text'],
   );
 
   DeletionInfoRoute get _self => this as DeletionInfoRoute;
@@ -845,7 +844,6 @@ mixin $DeletionInfoRoute on GoRouteData {
     '/more/delete-account/info',
     queryParams: {
       if (_self.reasonCode != null) 'reason-code': _self.reasonCode,
-      if (_self.reasonText != null) 'reason-text': _self.reasonText,
     },
   );
 
@@ -867,7 +865,6 @@ mixin $DeletionVerifyRoute on GoRouteData {
   static DeletionVerifyRoute _fromState(GoRouterState state) =>
       DeletionVerifyRoute(
         reasonCode: state.uri.queryParameters['reason-code'],
-        reasonText: state.uri.queryParameters['reason-text'],
       );
 
   DeletionVerifyRoute get _self => this as DeletionVerifyRoute;
@@ -877,7 +874,6 @@ mixin $DeletionVerifyRoute on GoRouteData {
     '/more/delete-account/verify',
     queryParams: {
       if (_self.reasonCode != null) 'reason-code': _self.reasonCode,
-      if (_self.reasonText != null) 'reason-text': _self.reasonText,
     },
   );
 
