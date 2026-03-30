@@ -1,5 +1,4 @@
 import 'package:app_partner/src/logic/current_partner_provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 final partnerAccountDeletionGuardProvider =

@@ -191,23 +191,23 @@ class _PartnerDeletionGuardCard extends ConsumerWidget {
     final coordinator = ref.read(accountDeletionCoordinatorProvider);
 
     return guardState.when(
-      loading: () => Card(
+      loading: () => const Card(
         child: ListTile(
-          leading: const SizedBox(
+          leading: SizedBox(
             width: 20,
             height: 20,
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
-          title: const Text('탈퇴 가능 여부를 확인하고 있어요'),
-          subtitle: const Text('활성 이벤트, 정산, 환불 상태를 불러오는 중입니다.'),
+          title: Text('탈퇴 가능 여부를 확인하고 있어요'),
+          subtitle: Text('활성 이벤트, 정산, 환불 상태를 불러오는 중입니다.'),
         ),
       ),
       error: (error, stackTrace) => Card(
         color: MinglitColors.error.withValues(alpha: 0.08),
-        child: ListTile(
-          leading: const Icon(Icons.error_outline, color: MinglitColors.error),
-          title: const Text('탈퇴 가능 여부를 확인하지 못했어요'),
-          subtitle: const Text('잠시 후 다시 시도해주세요.'),
+        child: const ListTile(
+          leading: Icon(Icons.error_outline, color: MinglitColors.error),
+          title: Text('탈퇴 가능 여부를 확인하지 못했어요'),
+          subtitle: Text('잠시 후 다시 시도해주세요.'),
         ),
       ),
       data: (guard) {
