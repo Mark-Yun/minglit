@@ -375,6 +375,40 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
     }
   }
 
+  /// Fetches server-side event feed via the user-event-feed Edge Function (#614).
+  ///
+  /// Returns the full response map with `events`, `has_more`, and `next_cursor`.
+  Future<Map<String, dynamic>> getEventFeed({
+    required String sortBy,
+    Map<String, dynamic>? filters,
+    int limit = 20,
+    String? cursor,
+  }) async {
+    Log.d('getEventFeed called | sortBy: $sortBy, limit: $limit');
+    try {
+      final response = await supabaseClient.functions.invoke(
+        'user-event-feed',
+        body: {
+          'sort_by': sortBy,
+          'filters': ?filters,
+          'limit': limit,
+          'cursor': ?cursor,
+        },
+      );
+      if (response.status != 200) {
+        throw Exception('Failed to fetch event feed: ${response.data}');
+      }
+      final data = response.data as Map<String, dynamic>;
+      Log.d(
+        'getEventFeed success | count: ${(data['events'] as List?)?.length ?? 0}',
+      );
+      return data;
+    } catch (e, st) {
+      Log.e('[EventRepo] getEventFeed Error', e, st);
+      rethrow;
+    }
+  }
+
   /// Fetches bulk eligibility data for a user (profile + verified status).
   Future<Map<String, dynamic>> getBulkEligibilityData({
     required String userId,
