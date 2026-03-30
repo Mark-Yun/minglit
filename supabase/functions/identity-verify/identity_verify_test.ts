@@ -32,8 +32,8 @@ Deno.test("identity-verify - happy path updates profile", async () => {
           handler: () => jsonResponse(mockUser),
         },
         {
-          matcher: (req) => req.url.includes("/rest/v1/user_profiles") && req.method === "PATCH",
-          handler: () => jsonResponse({}),
+          matcher: (req) => req.url.includes("/rest/v1/rpc/update_user_identity") && req.method === "POST",
+          handler: () => jsonResponse(null),
         },
       ]);
 
