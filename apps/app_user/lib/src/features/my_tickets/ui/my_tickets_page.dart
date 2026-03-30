@@ -1,9 +1,6 @@
-import 'dart:async';
-
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:app_user/src/features/my_tickets/logic/my_tickets_controller.dart';
 import 'package:app_user/src/features/my_tickets/ui/my_ticket_card.dart';
-import 'package:app_user/src/features/ticket/ui/ticket_qr_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -34,7 +31,10 @@ class MyTicketsPage extends ConsumerWidget {
             children: [
               // Today event banner
               if (state.todayEvent != null)
-                _TodayBanner(application: state.todayEvent!),
+                _TodayBanner(
+                  application: state.todayEvent!,
+                  onQRTap: () => _onQRTap(ref, state.todayEvent!.ticketId),
+                ),
 
               // Upcoming section
               if (state.upcoming.isNotEmpty) ...[
@@ -44,6 +44,7 @@ class MyTicketsPage extends ConsumerWidget {
                     application: app,
                     isPast: false,
                     onTap: () => _onCardTap(ref, app),
+                    onQRTap: () => _onQRTap(ref, app.ticketId),
                   ),
                 ),
               ],
@@ -70,6 +71,12 @@ class MyTicketsPage extends ConsumerWidget {
 
   void _onCardTap(WidgetRef ref, EventApplication application) {
     ref.read(homeCoordinatorProvider).pushEventDetail(application.eventId);
+  }
+
+  // Fix #852: Navigate to ticket QR via coordinator
+  // — removes cross-feature import
+  void _onQRTap(WidgetRef ref, String ticketId) {
+    ref.read(homeCoordinatorProvider).pushTicketQR(ticketId);
   }
 }
 
@@ -138,9 +145,12 @@ class _EmptyState extends StatelessWidget {
 
 /// Today event banner shown at the top when there's an event starting today.
 class _TodayBanner extends StatelessWidget {
-  const _TodayBanner({required this.application});
+  const _TodayBanner({required this.application, required this.onQRTap});
 
   final EventApplication application;
+
+  // Fix #852: QR navigation callback — replaces direct TicketQRScreen import
+  final VoidCallback onQRTap;
 
   @override
   Widget build(BuildContext context) {
@@ -212,17 +222,7 @@ class _TodayBanner extends StatelessWidget {
 
             // QR button
             TextButton(
-              onPressed: () {
-                unawaited(
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => TicketQRScreen(
-                        ticketId: application.ticketId,
-                      ),
-                    ),
-                  ),
-                );
-              },
+              onPressed: onQRTap,
               style: TextButton.styleFrom(
                 foregroundColor: theme.colorScheme.onPrimary,
                 backgroundColor: theme.colorScheme.primary,

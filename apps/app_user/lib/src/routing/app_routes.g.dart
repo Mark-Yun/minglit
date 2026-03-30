@@ -16,6 +16,7 @@ List<RouteBase> get $appRoutes => [
   $certificationRoute,
   $eventApplicationRoute,
   $myTicketsRoute,
+  $ticketQRRoute,
   $purchaseHistoryRoute,
   $notificationCenterRoute,
   $notificationSettingsRoute,
@@ -271,6 +272,36 @@ mixin $MyTicketsRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/tickets/my');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $ticketQRRoute => GoRouteData.$route(
+  path: '/tickets/:ticketId/qr',
+  factory: $TicketQRRoute._fromState,
+);
+
+mixin $TicketQRRoute on GoRouteData {
+  static TicketQRRoute _fromState(GoRouterState state) =>
+      TicketQRRoute(ticketId: state.pathParameters['ticketId']!);
+
+  TicketQRRoute get _self => this as TicketQRRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/tickets/${Uri.encodeComponent(_self.ticketId)}/qr',
+  );
 
   @override
   void go(BuildContext context) => context.go(location);
