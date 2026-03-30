@@ -1,3 +1,7 @@
+import 'package:app_user/src/features/account_deletion/ui/deletion_complete_page.dart';
+import 'package:app_user/src/features/account_deletion/ui/deletion_info_page.dart';
+import 'package:app_user/src/features/account_deletion/ui/deletion_reason_page.dart';
+import 'package:app_user/src/features/account_deletion/ui/deletion_verify_page.dart';
 import 'package:app_user/src/features/auth/login_page.dart';
 import 'package:app_user/src/features/auth/ui/auth_callback_page.dart';
 import 'package:app_user/src/features/event/admission/event_application_wizard_page.dart';
@@ -245,6 +249,66 @@ class PrivacyRoute extends GoRouteData with $PrivacyRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const PrivacyPage();
+}
+
+/// **Deletion Reason Route**: Account deletion reason selection page.
+/// Path: `/my/privacy/delete/reason`
+@TypedGoRoute<DeletionReasonRoute>(path: '/my/privacy/delete/reason')
+class DeletionReasonRoute extends GoRouteData with $DeletionReasonRoute {
+  const DeletionReasonRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const DeletionReasonPage();
+}
+
+/// **Deletion Info Route**: Account deletion 안내 page.
+/// Path: `/my/privacy/delete/info`
+@TypedGoRoute<DeletionInfoRoute>(path: '/my/privacy/delete/info')
+class DeletionInfoRoute extends GoRouteData with $DeletionInfoRoute {
+  const DeletionInfoRoute({
+    this.reasonCode,
+    this.reasonText,
+  });
+
+  final String? reasonCode;
+  final String? reasonText;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) => DeletionInfoPage(
+    reasonCode: reasonCode,
+    reasonText: reasonText,
+  );
+}
+
+/// **Deletion Verify Route**: Account deletion verification page.
+/// Path: `/my/privacy/delete/verify`
+@TypedGoRoute<DeletionVerifyRoute>(path: '/my/privacy/delete/verify')
+class DeletionVerifyRoute extends GoRouteData with $DeletionVerifyRoute {
+  const DeletionVerifyRoute({
+    this.reasonCode,
+    this.reasonText,
+  });
+
+  final String? reasonCode;
+  final String? reasonText;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) => DeletionVerifyPage(
+    reasonCode: reasonCode,
+    reasonText: reasonText,
+  );
+}
+
+/// **Deletion Complete Route**: Account deletion completion page.
+/// Path: `/my/privacy/delete/complete`
+@TypedGoRoute<DeletionCompleteRoute>(path: '/my/privacy/delete/complete')
+class DeletionCompleteRoute extends GoRouteData with $DeletionCompleteRoute {
+  const DeletionCompleteRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const DeletionCompletePage();
 }
 
 /// **Blocked Partners Route**: Blocked partners list page.

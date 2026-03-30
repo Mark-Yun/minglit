@@ -48,7 +48,7 @@ void main() {
       expect(find.byType(NotificationSettingsScreen), findsOneWidget);
     });
 
-    testWidgets('개인정보 tap → PrivacyPage (Navigator.push)', (tester) async {
+    testWidgets('개인정보 tap → PrivacyPage → 회원 탈퇴 시작', (tester) async {
       setKoreanLocale(tester);
       final user = createMockUserForTest();
       await tester.pumpWidget(
@@ -66,7 +66,13 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(PrivacyPage), findsOneWidget);
-      expect(find.text('준비 중입니다'), findsOneWidget);
+      expect(find.text('개인정보 관리'), findsOneWidget);
+
+      await tester.tap(find.text('회원 탈퇴 시작하기'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('탈퇴 사유'), findsOneWidget);
+      expect(find.text('더 이상 쓰지 않아요'), findsOneWidget);
     });
 
     testWidgets('권한 설정 tap → AppPermissionSettingsScreen (Navigator.push)', (
@@ -248,7 +254,9 @@ void main() {
       setKoreanLocale(tester);
       final user = createMockUserForTest();
       final now = DateTime.now();
-      // canCancel: paid + paymentId + paymentAmount + event.startTime + refundStatus == 'none'
+      // canCancel:
+      // paid + paymentId + paymentAmount + event.startTime +
+      // refundStatus == 'none'
       final refundableApp = _createApplication(
         status: 'paid',
         createdAt: now,
