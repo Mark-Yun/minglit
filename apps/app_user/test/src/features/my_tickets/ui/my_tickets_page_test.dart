@@ -11,9 +11,14 @@ import '../../../../utils/mocks.dart';
 
 class MockHomeCoordinator extends Mock implements HomeCoordinator {}
 
+class MockNavigatorObserver extends Mock implements NavigatorObserver {}
+
+class FakeRoute extends Fake implements Route<dynamic> {}
+
 void main() {
   setUpAll(() async {
     await initializeDateFormatting('ko_KR');
+    registerFallbackValue(FakeRoute());
   });
 
   late MockEventRepository mockEventRepository;
@@ -187,7 +192,7 @@ void main() {
       expect(find.text('종료된 이벤트'), findsOneWidget);
       // Past cards should show "종료" chip, not QR button
       expect(find.text('종료'), findsOneWidget);
-      // No QR button in past cards (only banner might have one, but no today event)
+      // No QR button in past cards
       expect(find.text('입장 QR'), findsNothing);
     });
 
@@ -230,7 +235,58 @@ void main() {
         () => mockHomeCoordinator.pushEventDetail('event_1'),
       ).called(1);
     });
-  });
+
+    // Fix #642: P2 — banner not shown when no todayEvent
+    testWidgets('does not render today banner when no today event', (
+      tester,
+    ) async {
+      final upcoming = makeApplication(
+        id: '1',
+        status: 'paid',
+        startTime: DateTime.now().add(const Duration(days: 5)),
+        eventTitle: '5일 뒤 이벤트',
+      );
+
+      when(
+        () => mockEventRepository.getMyTickets('user1'),
+      ).thenAnswer((_) async => [upcoming]);
+
+      await tester.pumpWidget(createTestWidget());
+      await pumpAndSettle(tester);
+
+      // Section header should appear, but no banner
+      expect(find.text('다가오는 이벤트'), findsOneWidget);
+      // Banner has "입장 QR" text — only card QR buttons should show
+      // No "오늘" text in banner format
+      expect(find.text('오늘'), findsNothing);
+    });
+
+    // Fix #642: P2 — past card has reduced opacity
+    testWidgets('past cards have reduced opacity', (tester) async {
+      final past = makeApplication(
+        id: '1',
+        status: 'paid',
+        startTime: DateTime.now().subtract(const Duration(days: 3)),
+        eventTitle: '지난 이벤트',
+      );
+
+      when(
+        () => mockEventRepository.getMyTickets('user1'),
+      ).thenAnswer((_) async => [past]);
+
+      await tester.pumpWidget(createTestWidget());
+      await pumpAndSettle(tester);
+
+      // MyTicketCard wraps content in Opacity(opacity: 0.55) for past
+      final opacityWidget = tester.widget<Opacity>(
+        find.descendant(
+          of: find.byType(MyTicketCard),
+          matching: find.byType(Opacity),
+        ),
+      );
+      expect(opacityWidget.opacity, 0.55);
+    });
+  }); // end MyTicketsPage group
 
   group('MyTicketCard', () {
     testWidgets('shows D-Day chip for today event', (tester) async {
@@ -324,6 +380,40 @@ void main() {
       );
 
       expect(find.text('결제완료'), findsOneWidget);
+    });
+
+    // Fix #642: P1 — QR button tap navigates to TicketQRScreen
+    testWidgets('QR button tap pushes TicketQRScreen', (tester) async {
+      final app = makeApplication(
+        id: '1',
+        status: 'paid',
+        startTime: DateTime.now().add(const Duration(days: 3)),
+        eventTitle: 'QR 테스트 이벤트',
+      );
+
+      final navigatorObserver = MockNavigatorObserver();
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            navigatorObservers: [navigatorObserver],
+            home: Scaffold(
+              body: MyTicketCard(
+                application: app,
+                isPast: false,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Fix #642: 초기 route push 이력 제거 — 탭 이후 push만 검증
+      clearInteractions(navigatorObserver);
+
+      await tester.tap(find.text('입장 QR'));
+      await tester.pump();
+
+      // Verify Navigator.push was called exactly once (route to TicketQRScreen)
+      verify(() => navigatorObserver.didPush(any(), any())).called(1);
     });
 
     testWidgets('shows location name', (tester) async {
