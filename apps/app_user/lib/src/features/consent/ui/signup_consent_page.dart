@@ -402,32 +402,33 @@ final Map<ConsentType, _ConsentDefinition> _consentDefinitions = {
     summary: '만 14세 이상만 회원가입할 수 있어요.',
     required: true,
   ),
-  ConsentType.thirdPartyProvision: const _ConsentDefinition(
-    type: ConsentType.thirdPartyProvision,
-    title: '제3자 제공 동의',
-    summary: '이벤트 운영에 필요한 정보를 파트너에게 전달할 수 있어요.',
+  ConsentType.identityVerification: const _ConsentDefinition(
+    type: ConsentType.identityVerification,
+    title: '본인인증(CI/DI) 수집 동의',
+    summary: '본인 확인을 위해 CI/DI 정보를 수집해요.',
     required: false,
     detail: ConsentDetailContent(
-      title: '제3자 제공 동의',
-      summary: '이벤트 신청과 운영을 위해 필요한 범위에서만 정보를 제공합니다.',
+      title: '본인인증(CI/DI) 수집 동의',
+      summary: '본인 확인 서비스를 통해 연계정보(CI)와 중복가입확인정보(DI)를 수집합니다.',
       sections: [
         ConsentDetailSection(
-          title: '제공 대상',
+          title: '수집 항목',
           items: [
-            '이벤트를 운영하는 주최 파트너',
+            '연계정보(CI): 본인 확인을 위한 고유 식별값',
+            '중복가입확인정보(DI): 동일 서비스 중복 가입 방지',
           ],
         ),
         ConsentDetailSection(
-          title: '제공 정보',
+          title: '이용 목적',
           items: [
-            '이름, 성별, 연령대',
+            '회원 본인 여부 확인',
+            '중복 계정 생성 방지',
           ],
         ),
         ConsentDetailSection(
-          title: '목적과 보관 기간',
+          title: '보관 기간',
           items: [
-            '이벤트 운영과 참석자 확인을 위해 사용합니다.',
-            '이벤트 종료 후 30일 이내 파기합니다.',
+            '회원 탈퇴 시까지 보관하며, 탈퇴 후 즉시 파기합니다.',
           ],
         ),
       ],

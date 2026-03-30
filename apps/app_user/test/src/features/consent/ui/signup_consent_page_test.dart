@@ -57,7 +57,7 @@ void main() {
     expect(find.text('서비스 이용약관'), findsOneWidget);
     expect(find.text('개인정보 수집·이용 동의'), findsOneWidget);
     expect(find.text('만 14세 이상 확인'), findsOneWidget);
-    expect(find.text('제3자 제공 동의'), findsOneWidget);
+    expect(find.text('본인인증(CI/DI) 수집 동의'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('마케팅 정보 수신 동의'), 200);
     expect(find.text('마케팅 정보 수신 동의'), findsOneWidget);
 
