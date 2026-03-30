@@ -118,16 +118,9 @@ void main() {
       );
 
       expect(find.bySemanticsLabel('접근성 테스트'), findsWidgets);
-      semantics.dispose();
-    });
-
-    testWidgets('meets 48dp minimum touch target height', (tester) async {
-      await tester.pumpWidget(
-        wrap(const MinglitTextField(label: '높이 테스트')),
-      );
-
       final size = tester.getSize(find.byType(MinglitTextField));
       expect(size.height, greaterThanOrEqualTo(48));
+      semantics.dispose();
     });
   });
 }
