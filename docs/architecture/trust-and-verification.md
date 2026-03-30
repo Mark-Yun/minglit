@@ -17,7 +17,7 @@ Layer 2 (Qualification): user_verifications → verification_submissions → par
 | 구분 | Layer 1: Identity | Layer 2: Qualification |
 | :--- | :--- | :--- |
 | 정의 | 실존 인물 + 나이/성별 확인 | 파티 참가 자격 (직장, 학력, 자산 등) |
-| 데이터 | user_profiles (birth_date, gender, is_verified, ci, di) | user_verifications → verification_submissions → partner_verified_users |
+| 데이터 | user_profiles (birth_date, gender, is_verified, ci_encrypted, di_encrypted, di_hash) | user_verifications → verification_submissions → partner_verified_users |
 | 검증 주체 | 플랫폼 (PASS/SMS API) | 파트너 (사람) |
 | 특징 | 기본 자격, 즉시 필터링 | 추가 자격, 만료 가능 |
 
@@ -29,13 +29,14 @@ Layer 2 (Qualification): user_verifications → verification_submissions → par
 User App → Portone SDK → identity-verify → user_profiles 업데이트
 
 ### 2.2 Edge Functions
-- `identity-verify`: Portone V2 API를 사용한다. `getIdentityVerification(identity_verification_id)` 호출 후 `status === "VERIFIED"` 임을 확인한다. `verifiedCustomer` 데이터를 추출하여 user_profiles의 name, birth_date, gender, phone_number, ci, di 필드를 업데이트하고 is_verified를 true로 설정한다.
+- `identity-verify`: Portone V2 API를 사용한다. `getIdentityVerification(identity_verification_id)` 호출 후 `status === "VERIFIED"` 임을 확인한다. `verifiedCustomer` 데이터를 추출하여 `update_user_identity` RPC를 호출해 name, birth_date, gender, phone_number와 CI/DI(암호화 저장)를 업데이트하고 is_verified를 true로 설정한다.
 
 > Note: 기존 `verify-identity-v1` (Iamport V1 API)은 삭제되었으며, Portone V2 기반 `identity-verify`로 통합되었다.
 
 ### 2.3 Key Fields
-- **ci (Unique Key)**: 연계정보. 본인확인기관에서 부여하는 개인 식별 정보로, 중복 가입 방지에 사용된다.
-- **di (Unique In Site)**: 중복가입확인정보. 특정 웹사이트 내에서 유저를 식별하기 위한 값이다.
+- **ci (연계정보)**: 본인확인기관에서 부여하는 개인 식별 정보로, 중복 가입 방지에 사용된다. `ci_encrypted` (pgp_sym_encrypt)로 암호화 저장.
+- **di (중복가입확인정보)**: 특정 웹사이트 내에서 유저를 식별하기 위한 값이다. `di_encrypted` (pgp_sym_encrypt)로 암호화 저장, `di_hash` (SHA-256)로 조회용 해시 저장.
+- 평문 ci/di 컬럼은 Phase 3 (#809)에서 제거되었다. 복호화는 `get_user_ci_di` RPC (service_role only)를 통해서만 가능하다.
 
 ---
 
