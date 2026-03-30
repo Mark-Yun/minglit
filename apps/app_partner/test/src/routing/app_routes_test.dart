@@ -101,6 +101,10 @@ void main() {
           'verifications/manage',
           'verifications/create',
           'notification-settings',
+          'delete-account',
+          'delete-account/info',
+          'delete-account/verify',
+          'delete-account/complete',
         ]),
       );
     });

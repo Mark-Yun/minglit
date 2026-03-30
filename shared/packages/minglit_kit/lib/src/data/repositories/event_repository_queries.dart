@@ -317,6 +317,25 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
     }
   }
 
+  /// Counts partner-owned applications waiting for refund completion.
+  Future<int> getRequestedRefundCountForPartner(String partnerId) async {
+    try {
+      final res = await supabaseClient
+          .from('event_applications')
+          .select(
+            'id, event:events!inner(id, party:parties!inner(partner_id))',
+          )
+          .eq('event.party.partner_id', partnerId)
+          .eq('refund_status', 'requested')
+          .count(CountOption.exact);
+
+      return res.count;
+    } on Exception catch (e, st) {
+      Log.e('❌ [EventRepo] getRequestedRefundCountForPartner Error', e, st);
+      return 0;
+    }
+  }
+
   /// Fetches AI-powered personalized event recommendations.
   Future<List<Map<String, dynamic>>> getPersonalizedRecommendations({
     required String userId,

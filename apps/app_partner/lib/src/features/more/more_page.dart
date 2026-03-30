@@ -144,6 +144,21 @@ class MorePage extends ConsumerWidget {
             onTap: () => context.showMinglitInfo('준비 중입니다'),
           ),
           ListTile(
+            leading: const Icon(
+              Icons.person_remove_outlined,
+              color: MinglitColors.error,
+            ),
+            title: Text(
+              '회원 탈퇴',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: MinglitColors.error,
+              ),
+            ),
+            subtitle: const Text('활성 이벤트, 정산, 환불 건이 없을 때만 요청할 수 있어요.'),
+            onTap: () =>
+                ref.read(moreCoordinatorProvider).pushAccountDeletion(),
+          ),
+          ListTile(
             leading: const Icon(Icons.store_outlined),
             title: const Text('파트너 프로필'),
             onTap: () => context.showMinglitInfo('준비 중입니다'),

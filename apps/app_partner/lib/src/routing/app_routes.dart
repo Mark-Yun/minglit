@@ -1,3 +1,7 @@
+import 'package:app_partner/src/features/account_deletion/ui/deletion_complete_page.dart';
+import 'package:app_partner/src/features/account_deletion/ui/deletion_info_page.dart';
+import 'package:app_partner/src/features/account_deletion/ui/deletion_reason_page.dart';
+import 'package:app_partner/src/features/account_deletion/ui/deletion_verify_page.dart';
 import 'package:app_partner/src/features/admin/partner_application_detail_page.dart';
 import 'package:app_partner/src/features/application/event_application_manage_page.dart';
 import 'package:app_partner/src/features/auth/partner_login_page.dart';
@@ -175,6 +179,12 @@ class NotificationCenterRoute extends GoRouteData
             TypedGoRoute<CreateVerificationRoute>(path: 'verifications/create'),
             TypedGoRoute<NotificationSettingsRoute>(
               path: 'notification-settings',
+            ),
+            TypedGoRoute<DeletionReasonRoute>(path: 'delete-account'),
+            TypedGoRoute<DeletionInfoRoute>(path: 'delete-account/info'),
+            TypedGoRoute<DeletionVerifyRoute>(path: 'delete-account/verify'),
+            TypedGoRoute<DeletionCompleteRoute>(
+              path: 'delete-account/complete',
             ),
             TypedGoRoute<MemberListRoute>(
               path: 'partners/:partnerId/members',
@@ -373,6 +383,54 @@ class MoreRoute extends GoRouteData with $MoreRoute {
   const MoreRoute();
   @override
   Widget build(BuildContext context, GoRouterState state) => const MorePage();
+}
+
+class DeletionReasonRoute extends GoRouteData with $DeletionReasonRoute {
+  const DeletionReasonRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const DeletionReasonPage();
+}
+
+class DeletionInfoRoute extends GoRouteData with $DeletionInfoRoute {
+  const DeletionInfoRoute({
+    this.reasonCode,
+    this.reasonText,
+  });
+
+  final String? reasonCode;
+  final String? reasonText;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) => DeletionInfoPage(
+    reasonCode: reasonCode,
+    reasonText: reasonText,
+  );
+}
+
+class DeletionVerifyRoute extends GoRouteData with $DeletionVerifyRoute {
+  const DeletionVerifyRoute({
+    this.reasonCode,
+    this.reasonText,
+  });
+
+  final String? reasonCode;
+  final String? reasonText;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) => DeletionVerifyPage(
+    reasonCode: reasonCode,
+    reasonText: reasonText,
+  );
+}
+
+class DeletionCompleteRoute extends GoRouteData with $DeletionCompleteRoute {
+  const DeletionCompleteRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const DeletionCompletePage();
 }
 
 class VerificationManageRoute extends GoRouteData

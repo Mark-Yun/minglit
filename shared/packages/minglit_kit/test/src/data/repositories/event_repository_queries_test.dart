@@ -209,6 +209,40 @@ void main() {
       });
     });
 
+    group('getRequestedRefundCountForPartner', () {
+      test('returns exact count for requested refunds', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
+            countValue: 2,
+          ),
+        );
+
+        final result = await repository.getRequestedRefundCountForPartner(
+          'partner_1',
+        );
+
+        expect(result, 2);
+      });
+
+      test('returns zero when query throws', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
+            shouldThrow: Exception('query failed'),
+          ),
+        );
+
+        final result = await repository.getRequestedRefundCountForPartner(
+          'partner_1',
+        );
+
+        expect(result, 0);
+      });
+    });
+
     group('getMyTickets', () {
       test('returns only paid/approved tickets', () async {
         unawaited(

@@ -104,6 +104,7 @@ void main() {
       expect(find.text('멤버 관리'), findsOneWidget);
       expect(find.text('알림 설정'), findsOneWidget);
       expect(find.text('계정 관리'), findsOneWidget);
+      expect(find.text('회원 탈퇴'), findsOneWidget);
       expect(find.text('파트너 프로필'), findsOneWidget);
       expect(find.text('개인정보처리방침'), findsOneWidget);
       // Scroll down to reveal items below the fold
@@ -132,6 +133,18 @@ void main() {
 
       final logoutTextWidget = tester.widget<Text>(find.text('로그아웃'));
       expect(logoutTextWidget.style?.color, equals(MinglitColors.error));
+    });
+
+    testWidgets('tapping account deletion forwards to coordinator', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('회원 탈퇴'));
+      await tester.pumpAndSettle();
+
+      verify(() => mockCoordinator.pushAccountDeletion()).called(1);
     });
   });
 }
