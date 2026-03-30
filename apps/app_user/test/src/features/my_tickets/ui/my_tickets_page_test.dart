@@ -406,13 +406,14 @@ void main() {
         ),
       );
 
-      await tester.tap(find.text('입장 QR'));
-      await tester.pump();
+      // Fix #642: 초기 route push 이력 제거 — 탭 이후 push만 검증
+      clearInteractions(navigatorObserver);
 
-      // Verify Navigator.push was called (route to TicketQRScreen)
-      verify(() => navigatorObserver.didPush(any(), any())).called(
-        greaterThanOrEqualTo(1),
-      );
+      await tester.tap(find.text('입장 QR'));
+      await tester.pumpAndSettle();
+
+      // Verify Navigator.push was called exactly once (route to TicketQRScreen)
+      verify(() => navigatorObserver.didPush(any(), any())).called(1);
     });
 
     testWidgets('shows location name', (tester) async {
