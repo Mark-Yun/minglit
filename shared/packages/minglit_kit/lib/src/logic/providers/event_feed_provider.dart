@@ -59,20 +59,15 @@ Future<List<Event>> eventFeed(
     ).future,
   );
 
-  // 2. Watch User Profile (for filtering)
+  // 2. Watch User Profile (triggers re-computation on profile change)
+  // ignore: unused_local_variable — kept as extension point for future filtering
   final currentUser = ref.watch(currentUserProfileProvider).value;
 
   // 3. Apply Filtering Logic
-  if (currentUser != null) {
-    return events.where((event) {
-      final tickets = event.tickets ?? [];
-      // Example logic: if tickets exist, show event.
-      // Adjust this logic as per business requirements.
-      if (tickets.isEmpty) return false;
-      return true;
-    }).toList();
-  }
-
+  // Fix #778: Removed broken ticket filter that hid events without tickets
+  // for logged-in users. Free events and new events may not have ticket
+  // configurations. This provider remains as a business-logic extension point
+  // for future user-specific filtering (e.g., personalization, visibility).
   return events;
 }
 
