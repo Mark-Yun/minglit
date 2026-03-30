@@ -128,11 +128,11 @@ class _EmptyState extends StatelessWidget {
                   borderRadius: BorderRadius.circular(MinglitSpacing.sm),
                 ),
               ),
-              child: const Text(
+              // Fix #862: CTA typography should follow theme.titleMedium instead of a hardcoded font size.
+              child: Text(
                 '이벤트 둘러보기',
-                style: TextStyle(
+                style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
-                  fontSize: 16,
                 ),
               ),
             ),
