@@ -38,7 +38,7 @@ void main() {
         homeCoordinatorProvider.overrideWithValue(mockHomeCoordinator),
         ...extraOverrides,
       ].cast(),
-      child: MaterialApp(theme: theme, home: MyTicketsPage()),
+      child: MaterialApp(theme: theme, home: const MyTicketsPage()),
     );
   }
 
