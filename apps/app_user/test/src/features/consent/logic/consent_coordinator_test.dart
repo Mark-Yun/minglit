@@ -39,9 +39,7 @@ void main() {
 
 void _expectNavigatesTo(String expectedPath, {String? from}) {
   final mockRouter = MockGoRouter();
-  final coordinator = ConsentCoordinator(mockRouter);
-
-  coordinator.completeSignup(from: from);
+  ConsentCoordinator(mockRouter).completeSignup(from: from);
 
   verify(() => mockRouter.go(expectedPath)).called(1);
 }
