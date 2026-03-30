@@ -248,6 +248,7 @@
     display: flex;
     align-items: center;
     gap: var(--sp-sm);
+    min-height: 48px; /* 접근성: 최소 터치 영역 48dp */
     padding: var(--sp-sm) 0;
     border-bottom: 1px solid var(--color-divider);
   }
@@ -379,7 +380,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 0;
+    padding: var(--sp-medium) 0; /* 16px — MinglitSpacing.medium */
     border-bottom: 1px solid var(--color-divider);
   }
   .privacy-item:last-child { border-bottom: none; }
@@ -400,7 +401,7 @@
     font-size: 13px;
     font-weight: 500;
   }
-  .privacy-item .status.agreed { color: var(--color-success); }
+  .privacy-item .status.agreed { color: var(--color-text-secondary); } /* success(#22C55E) 대비율 2.8:1 미달 → textSecondary 사용 */
   .privacy-item .status.link { color: var(--color-primary); }
 
   /* ===== Annotation ===== */
@@ -678,7 +679,7 @@
           <div class="item">다만, 동의를 거부할 경우 서비스 이용이 불가합니다.</div>
         </div>
 
-        <button class="cta-button primary" style="margin-top: 8px;">닫기</button>
+        <button class="cta-button text" style="margin-top: 8px;">닫기</button>
       </div>
     </div>
   </div>
@@ -721,7 +722,7 @@
           <div class="item">단, 이벤트 신청 시 개별 동의를 다시 요청합니다.</div>
         </div>
 
-        <button class="cta-button primary" style="margin-top: 8px;">닫기</button>
+        <button class="cta-button text" style="margin-top: 8px;">닫기</button>
       </div>
     </div>
   </div>
