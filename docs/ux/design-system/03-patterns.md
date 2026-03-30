@@ -200,7 +200,7 @@ RefreshIndicator(
 SafeArea(
   child: Padding(
     padding: EdgeInsets.symmetric(
-      horizontal: MinglitSpacing.screenEdge, // 20px
+      horizontal: MinglitSpacing.screenEdge, // 16px
     ),
     child: content,
   ),
@@ -208,7 +208,7 @@ SafeArea(
 ```
 
 - 항상 최상위 화면을 `SafeArea`로 감쌈
-- 좌우 패딩: `screenEdge` (20px) — 토스 20dp 표준
+- 좌우 패딩: `screenEdge` (16px) — Material 16dp 표준
 - 하단 패딩: 네비게이션 바 높이 고려
 
 ---
@@ -221,7 +221,7 @@ SafeArea(
 | :--- | :--- | :--- | :--- |
 | 카드 간 | `cardGap` | 12px | 카드 리스트에서 카드 사이 간격 |
 | 카드 내부 세로 | `cardContentV` | 16px | 카드 내부 상하 패딩 |
-| 카드 내부 가로 | `screenEdge` | 20px | 카드 내부 좌우 패딩 |
+| 카드 내부 가로 | `screenEdge` | 16px | 카드 내부 좌우 패딩 |
 | 제목-본문 | `titleToBody` | 4px | 제목과 부제/본문 사이 간격 |
 
 ```dart
@@ -321,7 +321,7 @@ MinglitSectionDivider.thin()
 
 | 요소 | 토큰 | 값 |
 | :--- | :--- | :--- |
-| 화면 가장자리 | `screenEdge` | 20px |
+| 화면 가장자리 | `screenEdge` | 16px |
 | 카드 간격 | `cardGap` | 12px |
 | 카드 내부 패딩 | `cardContentV` | 16px |
 | 섹션 간격 | `sectionGap` | 40px |
