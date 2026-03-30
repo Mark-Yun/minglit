@@ -155,7 +155,7 @@ void main() {
         overrides: [
           eventRepositoryProvider.overrideWith((ref) => mockRepo),
           currentUserProfileProvider.overrideWith(
-            (ref) async => UserProfile(
+            (ref) async => const UserProfile(
               id: 'user-1',
               name: 'Test User',
               username: 'testuser',
@@ -173,7 +173,7 @@ void main() {
     });
 
     test('returns events with null tickets when user is logged in', () async {
-      final event = _createEvent(tickets: null);
+      final event = _createEvent();
 
       when(
         () => mockRepo.getEventsByType(
@@ -190,7 +190,7 @@ void main() {
         overrides: [
           eventRepositoryProvider.overrideWith((ref) => mockRepo),
           currentUserProfileProvider.overrideWith(
-            (ref) async => UserProfile(
+            (ref) async => const UserProfile(
               id: 'user-1',
               name: 'Test User',
               username: 'testuser',
@@ -227,7 +227,7 @@ void main() {
         overrides: [
           eventRepositoryProvider.overrideWith((ref) => mockRepo),
           currentUserProfileProvider.overrideWith(
-            (ref) async => UserProfile(
+            (ref) async => const UserProfile(
               id: 'user-1',
               name: 'Test User',
               username: 'testuser',
@@ -244,58 +244,64 @@ void main() {
       expect(result.first.tickets, hasLength(1));
     });
 
-    test('returns mixed events (with and without tickets) for logged-in user',
-        () async {
-      final eventWithTickets = _createEvent(
-        id: 'event-with-tickets',
-        tickets: [_createTicket()],
-      );
-      final eventWithoutTickets = _createEvent(
-        id: 'event-without-tickets',
-        tickets: [],
-      );
-      final eventNullTickets = _createEvent(
-        id: 'event-null-tickets',
-        tickets: null,
-      );
+    test(
+      'returns mixed events (with and without tickets) for logged-in user',
+      () async {
+        final eventWithTickets = _createEvent(
+          id: 'event-with-tickets',
+          tickets: [_createTicket()],
+        );
+        final eventWithoutTickets = _createEvent(
+          id: 'event-without-tickets',
+          tickets: [],
+        );
+        final eventNullTickets = _createEvent(
+          id: 'event-null-tickets',
+        );
 
-      when(
-        () => mockRepo.getEventsByType(
-          type: any(named: 'type'),
-          latitude: any(named: 'latitude'),
-          longitude: any(named: 'longitude'),
-          limit: any(named: 'limit'),
-          blockedPartnerIds: any(named: 'blockedPartnerIds'),
-          offset: any(named: 'offset'),
-        ),
-      ).thenAnswer(
-        (_) async => [
-          eventWithTickets,
-          eventWithoutTickets,
-          eventNullTickets,
-        ],
-      );
-
-      final container = createContainer(
-        overrides: [
-          eventRepositoryProvider.overrideWith((ref) => mockRepo),
-          currentUserProfileProvider.overrideWith(
-            (ref) async => UserProfile(
-              id: 'user-1',
-              name: 'Test User',
-              username: 'testuser',
-            ),
+        when(
+          () => mockRepo.getEventsByType(
+            type: any(named: 'type'),
+            latitude: any(named: 'latitude'),
+            longitude: any(named: 'longitude'),
+            limit: any(named: 'limit'),
+            blockedPartnerIds: any(named: 'blockedPartnerIds'),
+            offset: any(named: 'offset'),
           ),
-        ],
-      );
+        ).thenAnswer(
+          (_) async => [
+            eventWithTickets,
+            eventWithoutTickets,
+            eventNullTickets,
+          ],
+        );
 
-      final result = await container.read(
-        eventFeedProvider(type: EventFeedType.newArrivals).future,
-      );
+        final container = createContainer(
+          overrides: [
+            eventRepositoryProvider.overrideWith((ref) => mockRepo),
+            currentUserProfileProvider.overrideWith(
+              (ref) async => const UserProfile(
+                id: 'user-1',
+                name: 'Test User',
+                username: 'testuser',
+              ),
+            ),
+          ],
+        );
 
-      expect(result, hasLength(3), reason: 'All events should be returned '
-          'regardless of ticket configuration');
-    });
+        final result = await container.read(
+          eventFeedProvider(type: EventFeedType.newArrivals).future,
+        );
+
+        expect(
+          result,
+          hasLength(3),
+          reason:
+              'All events should be returned '
+              'regardless of ticket configuration',
+        );
+      },
+    );
 
     test('returns events when user is not logged in', () async {
       final event = _createEvent(tickets: []);
