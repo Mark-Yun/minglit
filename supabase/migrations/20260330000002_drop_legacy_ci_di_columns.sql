@@ -9,9 +9,10 @@ DO $$
 BEGIN
   IF EXISTS (
     SELECT 1 FROM public.user_profiles
-    WHERE ci IS NOT NULL AND ci_encrypted IS NULL
+    WHERE (ci IS NOT NULL AND ci_encrypted IS NULL)
+       OR (di IS NOT NULL AND di_encrypted IS NULL)
   ) THEN
-    RAISE EXCEPTION 'Unmigrated rows exist (ci present but ci_encrypted NULL) — abort column drop';
+    RAISE EXCEPTION 'Unmigrated rows exist (ci/di plaintext present but encrypted columns are NULL) — abort column drop';
   END IF;
 END $$;
 
