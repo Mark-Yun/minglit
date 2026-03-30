@@ -1,11 +1,12 @@
 import 'package:app_partner/src/features/account_deletion/account_deletion_coordinator.dart';
 import 'package:app_partner/src/routing/app_router.dart';
+import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
-import '../../utils/mocks.dart';
-import '../../utils/test_utils.dart';
+import '../../../utils/mocks.dart';
+import '../../../utils/test_utils.dart';
 
 void main() {
   late MockGoRouter mockRouter;
@@ -13,7 +14,10 @@ void main() {
   setUp(() {
     mockRouter = MockGoRouter();
     when(
-      () => mockRouter.push(any(), extra: any(named: 'extra')),
+      () => mockRouter.push(
+        any<String>(),
+        extra: any<Object?>(named: 'extra'),
+      ),
     ).thenAnswer((_) async => null);
     when(() => mockRouter.go(any())).thenReturn(null);
   });
@@ -30,8 +34,8 @@ void main() {
 
       verify(
         () => mockRouter.push(
-          any(that: contains('delete-account')),
-          extra: any(named: 'extra'),
+          const DeletionReasonRoute().location,
+          extra: any<Object?>(named: 'extra'),
         ),
       ).called(1);
     });
@@ -54,12 +58,7 @@ void main() {
 
       verify(
         () => mockRouter.push(
-          any(
-            that: allOf(
-              contains('delete-account/info'),
-              isNot(contains('reason-text')),
-            ),
-          ),
+          const DeletionInfoRoute(reasonCode: 'other').location,
           extra: '민감한 사유',
         ),
       ).called(1);

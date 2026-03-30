@@ -104,13 +104,5 @@ WithdrawalReason? buildWithdrawalReason({
 }
 
 bool usesPasswordAuth(User user) {
-  final hasPassword = user.appMetadata['has_password'];
-  if (hasPassword is bool) {
-    return hasPassword;
-  }
-
-  if (hasPassword is String) {
-    return hasPassword.toLowerCase() == 'true';
-  }
-  return false;
+  return hasPasswordCredential(user);
 }

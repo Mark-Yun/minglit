@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/models/withdrawal_reason.dart';
 import 'package:minglit_kit/src/data/repositories/account_repository.dart';
@@ -140,10 +142,12 @@ void main() {
 
     group('getDeletionStatus', () {
       test('returns pending status when deleted_at exists', () async {
-        mockTable(
-          mockClient,
-          'user_profiles',
-          maybeSingleData: {'deleted_at': '2026-03-30T00:00:00Z'},
+        unawaited(
+          mockTable(
+            mockClient,
+            'user_profiles',
+            maybeSingleData: {'deleted_at': '2026-03-30T00:00:00Z'},
+          ),
         );
 
         final result = await repository.getDeletionStatus();
@@ -155,10 +159,12 @@ void main() {
       });
 
       test('returns non-pending status when deleted_at is null', () async {
-        mockTable(
-          mockClient,
-          'user_profiles',
-          maybeSingleData: {'deleted_at': null},
+        unawaited(
+          mockTable(
+            mockClient,
+            'user_profiles',
+            maybeSingleData: {'deleted_at': null},
+          ),
         );
 
         final result = await repository.getDeletionStatus();
@@ -193,6 +199,31 @@ void main() {
         verifyNever(() => mockAuth.reauthenticate());
       });
 
+      test(
+        'uses password sign-in when has_password flag is string true',
+        () async {
+          when(
+            () => mockUser.appMetadata,
+          ).thenReturn(const {'has_password': 'TRUE'});
+          when(
+            () => mockAuth.signInWithPassword(
+              email: any(named: 'email'),
+              password: any(named: 'password'),
+            ),
+          ).thenAnswer((_) async => AuthResponse());
+
+          await repository.reauthenticate('pw-1234');
+
+          verify(
+            () => mockAuth.signInWithPassword(
+              email: 'user@example.com',
+              password: 'pw-1234',
+            ),
+          ).called(1);
+          verifyNever(() => mockAuth.reauthenticate());
+        },
+      );
+
       test('throws when password-backed user password is missing', () async {
         when(
           () => mockUser.appMetadata,
@@ -210,6 +241,26 @@ void main() {
           when(
             () => mockUser.appMetadata,
           ).thenReturn(const {'has_password': false});
+          when(() => mockAuth.reauthenticate()).thenAnswer((_) async {});
+
+          await repository.reauthenticate(null);
+
+          verify(() => mockAuth.reauthenticate()).called(1);
+          verifyNever(
+            () => mockAuth.signInWithPassword(
+              email: any(named: 'email'),
+              password: any(named: 'password'),
+            ),
+          );
+        },
+      );
+
+      test(
+        'uses Supabase reauthenticate when has_password flag is string false',
+        () async {
+          when(
+            () => mockUser.appMetadata,
+          ).thenReturn(const {'has_password': 'false'});
           when(() => mockAuth.reauthenticate()).thenAnswer((_) async {});
 
           await repository.reauthenticate(null);

@@ -55,27 +55,32 @@ class _DeletionReasonPageState extends ConsumerState<DeletionReasonPage> {
                     ),
                   ),
                   const SizedBox(height: MinglitSpacing.large),
-                  for (final option in accountDeletionReasonOptions) ...[
-                    Card(
-                      margin: const EdgeInsets.only(
-                        bottom: MinglitSpacing.small,
-                      ),
-                      child: RadioListTile<WithdrawalReasonCode>(
-                        value: option.code,
-                        groupValue: _selectedCode,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedCode = value;
-                            if (_selectedCode != WithdrawalReasonCode.other) {
-                              _detailController.clear();
-                            }
-                          });
-                        },
-                        title: Text(option.title),
-                        subtitle: Text(option.description),
-                      ),
+                  RadioGroup<WithdrawalReasonCode>(
+                    groupValue: _selectedCode,
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCode = value;
+                        if (_selectedCode != WithdrawalReasonCode.other) {
+                          _detailController.clear();
+                        }
+                      });
+                    },
+                    child: Column(
+                      children: [
+                        for (final option in accountDeletionReasonOptions)
+                          Card(
+                            margin: const EdgeInsets.only(
+                              bottom: MinglitSpacing.small,
+                            ),
+                            child: RadioListTile<WithdrawalReasonCode>(
+                              value: option.code,
+                              title: Text(option.title),
+                              subtitle: Text(option.description),
+                            ),
+                          ),
+                      ],
                     ),
-                  ],
+                  ),
                   if (_selectedCode == WithdrawalReasonCode.other) ...[
                     const SizedBox(height: MinglitSpacing.small),
                     MinglitTextField(
