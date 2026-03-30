@@ -10,9 +10,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 /// Shows the Event Now bottom sheet for a given active event.
 ///
-/// Displays Phase 1 (check-in ready — QR code), Phase 2 (checked in —
-/// confirmation + participant count), or Phase 3 (matching — vote content)
-/// depending on [EventNowBarState].
+/// Displays Phase 1 (check-in ready — QR code) or Phase 2 (checked in —
+/// confirmation + participant count) depending on [EventNowBarState].
 Future<void> showEventNowBottomSheet(
   BuildContext context,
   WidgetRef ref,
@@ -37,8 +36,10 @@ Future<void> showEventNowBottomSheet(
 ///   QR code + event info + location link
 /// - **Phase 2** (`checkedIn`):
 ///   Check-in confirmation + participant count + avatars
-/// - **Phase 3** (`matching`):
-///   MatchingVoteContent with vote count header
+/// - **Phase 4** (`results`):
+///   Match result profile cards (or empty state)
+/// - **Phase 5** (`ended`):
+///   Review prompt + next event recommendation
 class EventNowBottomSheet extends ConsumerWidget {
   /// Creates an [EventNowBottomSheet].
   const EventNowBottomSheet({required this.activeEvent, super.key});
@@ -86,13 +87,18 @@ class EventNowBottomSheet extends ConsumerWidget {
       EventNowBarState.checkedIn => _CheckedInContent(
         activeEvent: activeEvent,
       ),
-      // Fix #664: Phase 3 — matching vote content in DraggableScrollableSheet
+      // Fix #664: Phase 3 — matching vote content
       EventNowBarState.matching => _MatchingContent(
         activeEvent: activeEvent,
       ),
-      // For results/ended, show check-in content as fallback
-      // (these phases will be implemented in #665)
-      _ => _CheckedInContent(activeEvent: activeEvent),
+      // Fix #665: Phase 4 — match results
+      EventNowBarState.results => _ResultsContent(
+        activeEvent: activeEvent,
+      ),
+      // Fix #665: Phase 5 — ended, review + next event
+      EventNowBarState.ended => _EndedContent(
+        activeEvent: activeEvent,
+      ),
     };
   }
 }
@@ -294,7 +300,7 @@ class _CheckedInContent extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Phase 3: Matching — MatchingVoteContent in DraggableScrollableSheet
+// Phase 3: Matching — MatchingVoteContent + vote count header
 // ---------------------------------------------------------------------------
 
 // Fix #664: MATCHING 상태에서 MatchingVoteContent 임베드 + 남은 투표 수 표시
@@ -318,18 +324,8 @@ class _MatchingContent extends ConsumerWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Drag handle
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: MinglitColors.textSecondary.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
+          _DragHandle(),
           const SizedBox(height: MinglitSpacing.large),
-
-          // Event title
           Text(
             event.title ?? '이벤트',
             style: theme.textTheme.titleMedium?.copyWith(
@@ -338,11 +334,8 @@ class _MatchingContent extends ConsumerWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: MinglitSpacing.small),
-
-          // Fix #664: remaining vote count
           _buildVoteStatus(theme, voteCountAsync, maxVoteAsync),
           const SizedBox(height: MinglitSpacing.medium),
-
           // Fix #664: MatchingVoteContent needs bounded height for internal
           // Expanded + GridView. Use 60% of screen height as content area.
           SizedBox(
@@ -377,6 +370,319 @@ class _MatchingContent extends ConsumerWidget {
       style: theme.textTheme.bodySmall?.copyWith(
         color: remaining > 0 ? MinglitColors.secondary : MinglitColors.success,
         fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 4: Results — match result profiles or empty state
+// ---------------------------------------------------------------------------
+
+// Fix #665: RESULTS 상태에서 매칭 결과 프로필 카드 또는 빈 상태 표시
+class _ResultsContent extends ConsumerWidget {
+  const _ResultsContent({required this.activeEvent});
+
+  final TodayActiveEvent activeEvent;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final event = activeEvent.event;
+    final theme = Theme.of(context);
+    final matchesAsync = ref.watch(myMatchesProvider(event.id));
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: MinglitSpacing.screenEdge,
+        vertical: MinglitSpacing.large,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _DragHandle(),
+          const SizedBox(height: MinglitSpacing.xlarge),
+          Container(
+            width: 64,
+            height: 64,
+            decoration: const BoxDecoration(
+              color: MinglitColors.primary,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.favorite,
+              color: MinglitColors.background,
+              size: 36,
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.medium),
+          Text(
+            '매칭 결과',
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.small),
+          Text(
+            event.title ?? '이벤트',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: MinglitColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: MinglitSpacing.xlarge),
+          matchesAsync.when(
+            data: (matches) {
+              if (matches.isEmpty) return _buildEmptyResult(theme);
+              return _buildMatchList(theme, matches);
+            },
+            loading: () => const SizedBox(
+              height: 120,
+              child: Center(child: MinglitCircularProgressIndicator()),
+            ),
+            error: (_, _) => _buildEmptyResult(theme),
+          ),
+          const SizedBox(height: MinglitSpacing.medium),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyResult(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.xlarge),
+      child: Column(
+        children: [
+          Icon(
+            Icons.sentiment_neutral,
+            size: 48,
+            color: MinglitColors.textSecondary.withValues(alpha: 0.5),
+          ),
+          const SizedBox(height: MinglitSpacing.medium),
+          Text(
+            '이번엔 아쉽지만, 다음 기회에!',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: MinglitColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMatchList(ThemeData theme, List<MatchPair> matches) {
+    return Column(
+      children: [
+        Text(
+          '${matches.length}명과 매칭되었어요!',
+          style: theme.textTheme.titleSmall?.copyWith(
+            color: MinglitColors.primary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: MinglitSpacing.medium),
+        for (final match in matches) ...[
+          _MatchResultCard(match: match),
+          const SizedBox(height: MinglitSpacing.small),
+        ],
+      ],
+    );
+  }
+}
+
+class _MatchResultCard extends StatelessWidget {
+  const _MatchResultCard({required this.match});
+
+  final MatchPair match;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(MinglitSpacing.medium),
+      decoration: BoxDecoration(
+        color: MinglitColors.surface,
+        borderRadius: BorderRadius.circular(MinglitRadius.card),
+        border: Border.all(
+          color: MinglitColors.primary.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: MinglitColors.primary.withValues(alpha: 0.1),
+            backgroundImage: match.partnerProfileImage != null
+                ? NetworkImage(match.partnerProfileImage!)
+                : null,
+            child: match.partnerProfileImage == null
+                ? Icon(
+                    Icons.person,
+                    color: MinglitColors.primary.withValues(alpha: 0.6),
+                  )
+                : null,
+          ),
+          const SizedBox(width: MinglitSpacing.medium),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  match.partnerName ?? '알 수 없음',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (match.partnerContact != null) ...[
+                  const SizedBox(height: MinglitSpacing.xxsmall),
+                  Text(
+                    match.partnerContact!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: MinglitColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const Icon(
+            Icons.favorite,
+            color: MinglitColors.primary,
+            size: MinglitIconSize.small,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 5: Ended — review + next event suggestion
+// ---------------------------------------------------------------------------
+
+// Fix #665: ENDED 상태에서 별점 리뷰 UI + 리뷰 CTA
+class _EndedContent extends StatelessWidget {
+  const _EndedContent({required this.activeEvent});
+
+  final TodayActiveEvent activeEvent;
+
+  @override
+  Widget build(BuildContext context) {
+    final event = activeEvent.event;
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: MinglitSpacing.screenEdge,
+        vertical: MinglitSpacing.large,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _DragHandle(),
+          const SizedBox(height: MinglitSpacing.xlarge),
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: MinglitColors.textSecondary.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.event_available,
+              color: MinglitColors.textSecondary,
+              size: 36,
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.medium),
+          Text(
+            '이벤트가 종료되었어요',
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.small),
+          Text(
+            event.title ?? '이벤트',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: MinglitColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: MinglitSpacing.xlarge),
+          Text(
+            '이벤트는 어떠셨나요?',
+            style: theme.textTheme.bodyMedium,
+          ),
+          const SizedBox(height: MinglitSpacing.medium),
+          const _StarRatingRow(),
+          const SizedBox(height: MinglitSpacing.xlarge),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                // TODO(mark): Navigate to review screen (#665)
+                Navigator.of(context).pop();
+              },
+              icon: const Icon(Icons.rate_review_outlined),
+              label: const Text('리뷰 작성하기'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  vertical: MinglitSpacing.medium,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.medium),
+        ],
+      ),
+    );
+  }
+}
+
+class _StarRatingRow extends StatefulWidget {
+  const _StarRatingRow();
+
+  @override
+  State<_StarRatingRow> createState() => _StarRatingRowState();
+}
+
+class _StarRatingRowState extends State<_StarRatingRow> {
+  int _rating = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(5, (index) {
+        final starIndex = index + 1;
+        return GestureDetector(
+          onTap: () => setState(() => _rating = starIndex),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Icon(
+              starIndex <= _rating ? Icons.star : Icons.star_border,
+              size: 40,
+              color: starIndex <= _rating
+                  ? MinglitColors.secondary
+                  : MinglitColors.textSecondary.withValues(alpha: 0.4),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+}
+
+class _DragHandle extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 40,
+      height: 4,
+      decoration: BoxDecoration(
+        color: MinglitColors.textSecondary.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(2),
       ),
     );
   }
