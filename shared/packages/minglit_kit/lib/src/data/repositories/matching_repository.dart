@@ -12,6 +12,44 @@ MatchingRepository matchingRepository(Ref ref) {
   return MatchingRepository();
 }
 
+// ── Data providers (thin wrappers around MatchingRepository) ──────────
+// These live here so any feature can import them from minglit_kit
+// without creating cross-feature dependencies.
+
+/// Fetches matching candidates for the current user in an event.
+@riverpod
+Future<List<UserProfile>> matchCandidates(Ref ref, String eventId) {
+  return ref.watch(matchingRepositoryProvider).getMatchingCandidates(eventId);
+}
+
+/// Fetches successful matches for the current user in an event.
+@riverpod
+Future<List<MatchPair>> myMatches(Ref ref, String eventId) {
+  return ref.watch(matchingRepositoryProvider).getMyMatches(eventId);
+}
+
+/// Fetches the voter's current vote count for an event.
+@riverpod
+Future<int> myVoteCount(Ref ref, String eventId) {
+  return ref.watch(matchingRepositoryProvider).getMyVoteCount(eventId);
+}
+
+/// Fetches the voted candidate IDs for the current user in an event.
+@riverpod
+Future<Set<String>> myVotedCandidateIds(Ref ref, String eventId) {
+  return ref.watch(matchingRepositoryProvider).getMyVotedCandidateIds(eventId);
+}
+
+/// Fetches the maximum vote count from matching rules for an event.
+@riverpod
+Future<int> maxVoteCount(Ref ref, String eventId) async {
+  final rules = await ref
+      .watch(matchingRepositoryProvider)
+      .getMatchRules(eventId);
+  if (rules.isEmpty) return 1;
+  return rules.map((r) => r.voteCount).reduce((a, b) => a > b ? a : b);
+}
+
 /// Repository for matching rules and votes.
 class MatchingRepository {
   /// Creates a [MatchingRepository] with a Supabase client.

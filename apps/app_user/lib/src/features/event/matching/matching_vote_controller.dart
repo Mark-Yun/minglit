@@ -36,32 +36,7 @@ class MatchingVoteController extends _$MatchingVoteController {
   }
 }
 
-@riverpod
-Future<List<UserProfile>> matchCandidates(Ref ref, String eventId) {
-  return ref.watch(matchingRepositoryProvider).getMatchingCandidates(eventId);
-}
-
-@riverpod
-Future<List<MatchPair>> myMatches(Ref ref, String eventId) {
-  return ref.watch(matchingRepositoryProvider).getMyMatches(eventId);
-}
-
-// Fix #306: 잔여 투표 수 표시 + 투표 완료 후보 비활성화
-@riverpod
-Future<int> myVoteCount(Ref ref, String eventId) {
-  return ref.watch(matchingRepositoryProvider).getMyVoteCount(eventId);
-}
-
-@riverpod
-Future<Set<String>> myVotedCandidateIds(Ref ref, String eventId) {
-  return ref.watch(matchingRepositoryProvider).getMyVotedCandidateIds(eventId);
-}
-
-@riverpod
-Future<int> maxVoteCount(Ref ref, String eventId) async {
-  final rules = await ref
-      .watch(matchingRepositoryProvider)
-      .getMatchRules(eventId);
-  if (rules.isEmpty) return 1;
-  return rules.map((r) => r.voteCount).reduce((a, b) => a > b ? a : b);
-}
+// Data providers (matchCandidates, myMatches, myVoteCount,
+// myVotedCandidateIds, maxVoteCount) moved to minglit_kit
+// matching_repository.dart to resolve cross-feature imports.
+// Import them from 'package:minglit_kit/minglit_kit.dart'.
