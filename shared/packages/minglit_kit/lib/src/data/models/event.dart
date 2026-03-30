@@ -36,6 +36,11 @@ abstract class Event with _$Event {
     @JsonKey(includeToJson: false) Party? party,
     @JsonKey(includeToJson: false) List<Ticket>? tickets,
     @JsonKey(includeToJson: false) List<EntryGroup>? entryGroups,
+    // Fields from user-event-feed EF (#614)
+    @JsonKey(name: 'remaining_slots', includeToJson: false) int? remainingSlots,
+    @JsonKey(name: 'distance_meters', includeToJson: false)
+    double? distanceMeters,
+    @JsonKey(includeToJson: false) bool? eligible,
   }) = _Event;
   const Event._();
 
