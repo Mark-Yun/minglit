@@ -10,10 +10,19 @@ export const minglitColors = {
   surface: '#F9FAFB',
   background: '#FFFFFF',
   error: '#EF4444',
+  border: '#E5E7EB',
+  borderLight: '#F3F4F6',
   text: {
     primary: '#111827',
     secondary: '#4B5563',
   },
+};
+
+export const partnerColors = {
+  primary: '#6C3CE1',
+  primaryLight: '#8B5CF6',
+  primarySurface: '#F5F0FF',
+  primaryBorder: '#E8E0FF',
 };
 
 export const minglitAnimations = {
