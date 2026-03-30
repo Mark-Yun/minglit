@@ -14,6 +14,16 @@ void main() {
       expect(reason!.reasonCode, WithdrawalReasonCode.other);
       expect(reason.detail, isNull);
     });
+
+    test('builds reason directly from enum code', () {
+      final reason = buildWithdrawalReasonFromCode(
+        reasonCode: WithdrawalReasonCode.noLongerUse,
+      );
+
+      expect(reason, isNotNull);
+      expect(reason!.reasonCode, WithdrawalReasonCode.noLongerUse);
+      expect(reason.detail, isNull);
+    });
   });
 
   group('usesPasswordAuth', () {

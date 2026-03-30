@@ -25,10 +25,8 @@ class _DeletionReasonPageState extends ConsumerState<DeletionReasonPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final coordinator = ref.read(accountDeletionCoordinatorProvider);
-    final selectedReason = buildWithdrawalReason(
-      reasonCode: _selectedCode == null
-          ? null
-          : encodeWithdrawalReasonCode(_selectedCode!),
+    final selectedReason = buildWithdrawalReasonFromCode(
+      reasonCode: _selectedCode,
       reasonText: _selectedCode == WithdrawalReasonCode.other
           ? _detailController.text
           : null,

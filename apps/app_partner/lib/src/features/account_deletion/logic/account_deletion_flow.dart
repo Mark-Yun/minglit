@@ -92,11 +92,21 @@ WithdrawalReason? buildWithdrawalReason({
   String? reasonText,
 }) {
   final parsedCode = parseWithdrawalReasonCode(reasonCode);
-  if (parsedCode == null) return null;
+  return buildWithdrawalReasonFromCode(
+    reasonCode: parsedCode,
+    reasonText: reasonText,
+  );
+}
+
+WithdrawalReason? buildWithdrawalReasonFromCode({
+  WithdrawalReasonCode? reasonCode,
+  String? reasonText,
+}) {
+  if (reasonCode == null) return null;
 
   final trimmedReason = reasonText?.trim();
   return WithdrawalReason(
-    reasonCode: parsedCode,
+    reasonCode: reasonCode,
     detail: trimmedReason == null || trimmedReason.isEmpty
         ? null
         : trimmedReason,

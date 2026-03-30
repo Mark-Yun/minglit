@@ -13,8 +13,10 @@ Deno.test({
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
     await withEnv({ ENVIRONMENT: "production" }, async () => {
       const response = await handler(new Request("http://localhost"));
       assertEquals(response.status, 403);
@@ -29,14 +31,17 @@ Deno.test({
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
     let createUserCallCount = 0;
     let insertCounter = 0;
 
     const { fetchMock } = createFetchMock([
       {
-        matcher: (req) => req.url.includes("/auth/v1/admin/users") && req.method === "POST",
+        matcher: (req) =>
+          req.url.includes("/auth/v1/admin/users") && req.method === "POST",
         handler: async (req) => {
           createUserCallCount++;
           const body = await req.json();
@@ -52,16 +57,18 @@ Deno.test({
       },
       {
         matcher: (req) => req.url.includes("/storage/v1/object/list-v2/"),
-        handler: () => jsonResponse({
-          objects: [
-            { name: "seed-images/party_cafe_warm.jpg" },
-            { name: "seed-images/party_lounge_bright.jpg" },
-            { name: "seed-images/party_premium_lounge.jpg" },
-          ],
-        }),
+        handler: () =>
+          jsonResponse({
+            objects: [
+              { name: "seed-images/party_cafe_warm.jpg" },
+              { name: "seed-images/party_lounge_bright.jpg" },
+              { name: "seed-images/party_premium_lounge.jpg" },
+            ],
+          }),
       },
       {
-        matcher: (req) => req.url.includes("/rest/v1/") && req.method === "POST",
+        matcher: (req) =>
+          req.url.includes("/rest/v1/") && req.method === "POST",
         handler: async (req) => {
           insertCounter++;
           const id = crypto.randomUUID();
@@ -82,7 +89,8 @@ Deno.test({
         },
       },
       {
-        matcher: (req) => req.url.includes("/rest/v1/verifications") && req.method === "GET",
+        matcher: (req) =>
+          req.url.includes("/rest/v1/verifications") && req.method === "GET",
         handler: () => {
           return jsonResponse(null, { status: 200 });
         },
@@ -117,7 +125,9 @@ Deno.test({
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
     let createUserAttempts = 0;
     let deleteUserCalled = false;
@@ -126,7 +136,8 @@ Deno.test({
 
     const { fetchMock } = createFetchMock([
       {
-        matcher: (req) => req.url.includes("/auth/v1/admin/users") && req.method === "POST",
+        matcher: (req) =>
+          req.url.includes("/auth/v1/admin/users") && req.method === "POST",
         handler: async (req) => {
           createUserAttempts++;
           const body = await req.json();
@@ -135,7 +146,7 @@ Deno.test({
           if (body.email === duplicateEmail && createUserAttempts === 1) {
             return jsonResponse(
               { message: "User already registered" },
-              { status: 422 }
+              { status: 422 },
             );
           }
 
@@ -149,7 +160,8 @@ Deno.test({
         },
       },
       {
-        matcher: (req) => req.url.includes("/auth/v1/admin/users") && req.method === "GET",
+        matcher: (req) =>
+          req.url.includes("/auth/v1/admin/users") && req.method === "GET",
         handler: () => {
           return jsonResponse({
             users: [
@@ -162,7 +174,9 @@ Deno.test({
         },
       },
       {
-        matcher: (req) => req.url.includes(`/auth/v1/admin/users/${existingUserId}`) && req.method === "PUT",
+        matcher: (req) =>
+          req.url.includes(`/auth/v1/admin/users/${existingUserId}`) &&
+          req.method === "PUT",
         handler: async (req) => {
           const body = await req.json();
           assertEquals(body.app_metadata, { has_password: true });
@@ -171,16 +185,18 @@ Deno.test({
       },
       {
         matcher: (req) => req.url.includes("/storage/v1/object/list-v2/"),
-        handler: () => jsonResponse({
-          objects: [
-            { name: "seed-images/party_cafe_warm.jpg" },
-            { name: "seed-images/party_lounge_bright.jpg" },
-            { name: "seed-images/party_premium_lounge.jpg" },
-          ],
-        }),
+        handler: () =>
+          jsonResponse({
+            objects: [
+              { name: "seed-images/party_cafe_warm.jpg" },
+              { name: "seed-images/party_lounge_bright.jpg" },
+              { name: "seed-images/party_premium_lounge.jpg" },
+            ],
+          }),
       },
       {
-        matcher: (req) => req.url.includes("/rest/v1/") && req.method === "POST",
+        matcher: (req) =>
+          req.url.includes("/rest/v1/") && req.method === "POST",
         handler: () => {
           return jsonResponse({ id: crypto.randomUUID() }, {
             status: 201,
@@ -189,7 +205,8 @@ Deno.test({
         },
       },
       {
-        matcher: (req) => req.url.includes("/rest/v1/verifications") && req.method === "GET",
+        matcher: (req) =>
+          req.url.includes("/rest/v1/verifications") && req.method === "GET",
         handler: () => {
           return jsonResponse(null, { status: 200 });
         },
@@ -210,6 +227,89 @@ Deno.test({
         // duplicate handling: skip existing user without deleting
         assertEquals(deleteUserCalled, false);
         assertEquals(createUserAttempts >= 21, true);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name:
+    "dev-seed - fails when repairing duplicate user password metadata fails",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const duplicateEmail = "user_20_m_ok@test.com";
+    const existingUserId = crypto.randomUUID();
+
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: (req) =>
+          req.url.includes("/auth/v1/admin/users") && req.method === "POST",
+        handler: async (req) => {
+          const body = await req.json();
+          assertEquals(body.app_metadata, { has_password: true });
+
+          if (body.email === duplicateEmail) {
+            return jsonResponse(
+              { message: "User already registered" },
+              { status: 422 },
+            );
+          }
+
+          return jsonResponse({
+            user: {
+              id: crypto.randomUUID(),
+              email: body.email,
+              user_metadata: body.user_metadata,
+            },
+          });
+        },
+      },
+      {
+        matcher: (req) =>
+          req.url.includes("/auth/v1/admin/users") && req.method === "GET",
+        handler: () =>
+          jsonResponse({
+            users: [
+              {
+                id: existingUserId,
+                email: duplicateEmail,
+              },
+            ],
+          }),
+      },
+      {
+        matcher: (req) =>
+          req.url.includes(`/auth/v1/admin/users/${existingUserId}`) &&
+          req.method === "PUT",
+        handler: async (req) => {
+          const body = await req.json();
+          assertEquals(body.app_metadata, { has_password: true });
+          return jsonResponse(
+            { message: "update failed" },
+            { status: 500 },
+          );
+        },
+      },
+    ]);
+
+    await withEnv({
+      ENVIRONMENT: "local",
+      SUPABASE_URL: "http://localhost:54321",
+      SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+    }, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const response = await handler(new Request("http://localhost"));
+        assertEquals(response.status, 500);
+        const body = await readJson(response);
+        assertEquals(
+          body.error,
+          `Failed to repair existing user ${duplicateEmail} (${existingUserId}): update failed`,
+        );
       });
     });
   },
