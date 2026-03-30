@@ -1,6 +1,7 @@
 import 'package:app_partner/src/features/home/widgets/onboarding_step_guide.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 void main() {
   group('OnboardingStepGuide', () {
@@ -9,6 +10,7 @@ void main() {
       (tester) async {
         await tester.pumpWidget(
           MaterialApp(
+            theme: MinglitTheme.materialTheme,
             home: Scaffold(
               body: SingleChildScrollView(
                 child: OnboardingStepGuide(
@@ -34,6 +36,7 @@ void main() {
       (tester) async {
         await tester.pumpWidget(
           MaterialApp(
+            theme: MinglitTheme.materialTheme,
             home: Scaffold(
               body: SingleChildScrollView(
                 child: OnboardingStepGuide(
@@ -61,6 +64,7 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
+            theme: MinglitTheme.materialTheme,
             home: Scaffold(
               body: SingleChildScrollView(
                 child: OnboardingStepGuide(
@@ -87,6 +91,7 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
+            theme: MinglitTheme.materialTheme,
             home: Scaffold(
               body: SingleChildScrollView(
                 child: OnboardingStepGuide(
