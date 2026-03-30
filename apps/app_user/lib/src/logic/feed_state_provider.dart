@@ -494,7 +494,8 @@ Future<Map<String, dynamic>> recommendationEventsFromEf(Ref ref) async {
 
   final efFilters = <String, dynamic>{
     if (filters.eligibilityEnabled) 'eligible_only': true,
-    if (filters.sortType == ExploreSortType.closingSoon) 'has_remaining_slots': true,
+    if (filters.sortType == ExploreSortType.closingSoon)
+      'has_remaining_slots': true,
     if (filters.nearbyEnabled && userLoc != null)
       'nearby': {
         'lat': userLoc.latitude,

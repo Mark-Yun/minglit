@@ -390,16 +390,18 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
         'user-event-feed',
         body: {
           'sort_by': sortBy,
-          if (filters != null) 'filters': filters,
+          'filters': ?filters,
           'limit': limit,
-          if (cursor != null) 'cursor': cursor,
+          'cursor': ?cursor,
         },
       );
       if (response.status != 200) {
         throw Exception('Failed to fetch event feed: ${response.data}');
       }
       final data = response.data as Map<String, dynamic>;
-      Log.d('getEventFeed success | count: ${(data['events'] as List?)?.length ?? 0}');
+      Log.d(
+        'getEventFeed success | count: ${(data['events'] as List?)?.length ?? 0}',
+      );
       return data;
     } catch (e, st) {
       Log.e('[EventRepo] getEventFeed Error', e, st);
