@@ -27,7 +27,10 @@ void main() {
     when(() => mockUser.id).thenReturn('user1');
   });
 
-  Widget createTestWidget({List<dynamic> extraOverrides = const []}) {
+  Widget createTestWidget({
+    List<dynamic> extraOverrides = const [],
+    ThemeData? theme,
+  }) {
     return ProviderScope(
       overrides: [
         currentUserProvider.overrideWith((ref) => mockUser),
@@ -35,9 +38,7 @@ void main() {
         homeCoordinatorProvider.overrideWithValue(mockHomeCoordinator),
         ...extraOverrides,
       ].cast(),
-      child: const MaterialApp(
-        home: MyTicketsPage(),
-      ),
+      child: MaterialApp(theme: theme, home: const MyTicketsPage()),
     );
   }
 
@@ -113,6 +114,30 @@ void main() {
 
       await tester.tap(find.text('이벤트 둘러보기'));
       verify(() => mockHomeCoordinator.goToHome()).called(1);
+    });
+
+    testWidgets('empty state CTA uses titleMedium font size from theme', (
+      tester,
+    ) async {
+      const titleFontSize = 23.0;
+      when(
+        () => mockEventRepository.getMyTickets('user1'),
+      ).thenAnswer((_) async => []);
+
+      await tester.pumpWidget(
+        createTestWidget(
+          theme: ThemeData(
+            textTheme: const TextTheme(
+              titleMedium: TextStyle(fontSize: titleFontSize),
+            ),
+          ),
+        ),
+      );
+      await pumpAndSettle(tester);
+
+      final ctaText = tester.widget<Text>(find.text('이벤트 둘러보기'));
+      expect(ctaText.style?.fontSize, titleFontSize);
+      expect(ctaText.style?.fontWeight, FontWeight.w700);
     });
 
     testWidgets('renders upcoming and past sections', (tester) async {
@@ -226,9 +251,7 @@ void main() {
       await pumpAndSettle(tester);
 
       await tester.tap(find.text('탭 테스트 이벤트'));
-      verify(
-        () => mockHomeCoordinator.pushEventDetail('event_1'),
-      ).called(1);
+      verify(() => mockHomeCoordinator.pushEventDetail('event_1')).called(1);
     });
 
     testWidgets('tapping QR button calls pushTicketQR', (tester) async {
@@ -386,12 +409,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: MyTicketCard(
-              application: app,
-              isPast: false,
-            ),
-          ),
+          home: Scaffold(body: MyTicketCard(application: app, isPast: false)),
         ),
       );
 
@@ -437,12 +455,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: MyTicketCard(
-              application: app,
-              isPast: false,
-            ),
-          ),
+          home: Scaffold(body: MyTicketCard(application: app, isPast: false)),
         ),
       );
 
