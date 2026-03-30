@@ -247,7 +247,7 @@ export default function PartnerPrivacyPage() {
         <ul className="list-disc pl-5 space-y-2 text-sm text-gray-600">
           <li><strong>암호화:</strong> 비밀번호는 단방향 해시로 저장되며, 민감 정보는 전송 구간 TLS 1.2+ 암호화를 적용합니다.</li>
           <li><strong>접근 제한:</strong> 개인정보 처리 시스템에 대한 접근 권한을 최소 권한 원칙에 따라 관리합니다.</li>
-          <li><strong>로그 관리:</strong> 개인정보 처리 시스템의 접속 기록을 최소 6개월 이상 보관 및 감사합니다.</li>
+          <li><strong>로그 관리:</strong> 개인정보 처리 시스템의 접속 기록은 관계 법령에 따른 기간 동안 보관 및 관리합니다.</li>
           <li><strong>물리적 보안:</strong> 서버실 출입 통제 및 문서 보관 시 잠금장치를 설치합니다.</li>
         </ul>
       </section>

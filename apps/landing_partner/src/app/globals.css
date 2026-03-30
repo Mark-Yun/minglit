@@ -4,6 +4,8 @@
 @theme {
   --font-pretendard: "Pretendard", system-ui, sans-serif;
 
+  --color-background: #ffffff;
+  --color-foreground: #111827;
   --color-partner: #6C3CE1;
   --color-partner-light: #8B5CF6;
   --color-partner-surface: #F5F0FF;
