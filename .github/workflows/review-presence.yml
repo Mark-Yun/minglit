@@ -1,0 +1,103 @@
+name: review-presence
+
+on:
+  pull_request:
+    branches: ["main", "dev"]
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - converted_to_draft
+  pull_request_review:
+    types:
+      - submitted
+      - edited
+      - dismissed
+  issue_comment:
+    types:
+      - created
+      - edited
+      - deleted
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+
+jobs:
+  review-presence:
+    if: >
+      github.event_name != 'issue_comment' ||
+      github.event.issue.pull_request != null
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check review presence
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const prNumber =
+              context.payload.pull_request?.number ??
+              context.payload.review?.pull_request_url?.split('/').pop() ??
+              context.payload.issue?.number;
+
+            if (!prNumber) {
+              core.setFailed('Unable to determine PR number for review-presence check.');
+              return;
+            }
+
+            const reviewResponse = await github.rest.pulls.listReviews({
+              owner,
+              repo,
+              pull_number: Number(prNumber),
+              per_page: 100,
+            });
+
+            const formalReviews = reviewResponse.data.filter((review) => {
+              return review.state && review.state !== 'PENDING';
+            });
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number: Number(prNumber),
+              per_page: 100,
+            });
+
+            const schedulerReviewComment = comments.find((comment) => {
+              const body = comment.body || '';
+              return (
+                /🤖\s+\*\*needs-review-[a-z0-9-]+\*\*\s+리뷰 완료\./.test(body) ||
+                /🤖\s+\*\*code-reviewer\*\*\s+리뷰 완료\./.test(body)
+              );
+            });
+
+            const hasReviewPresence = formalReviews.length > 0 || Boolean(schedulerReviewComment);
+
+            core.summary
+              .addHeading('Review Presence')
+              .addTable([
+                [
+                  {data: 'PR', header: true},
+                  {data: 'Formal reviews', header: true},
+                  {data: 'Reviewer completion comment', header: true},
+                ],
+                [
+                  String(prNumber),
+                  String(formalReviews.length),
+                  schedulerReviewComment ? 'yes' : 'no',
+                ],
+              ])
+              .write();
+
+            if (!hasReviewPresence) {
+              core.setFailed(
+                'No review presence found. Add at least one PR review or a reviewer worker completion comment before merge.'
+              );
+              return;
+            }
+
+            core.info(`Review presence confirmed for PR #${prNumber}.`);
