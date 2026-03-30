@@ -1,0 +1,41 @@
+name: Android Build & Deploy (User)
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "apps/app_user/**"
+      - "shared/packages/minglit_kit/**"
+      - "pubspec.yaml"
+  schedule:
+    - cron: '0 10 * * *'  # Daily dev build (KST 19:00) — runs on default branch (dev)
+  workflow_dispatch:
+
+concurrency:
+  group: android-user-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/android-deploy-reusable.yml
+    with:
+      app-name: user
+      app-directory: apps/app_user
+      package-name: com.minglit.app_user
+      gradle-cache-prefix: gradle-
+      artifact-name-apk: app-dev-release.apk
+      artifact-name-aab: app-prod-release.aab
+      notify-workflow-name: Android Deploy User
+    secrets:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+      SUPABASE_DEV_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+      SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
+      SUPABASE_MAIN_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
+      SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
+      FIREBASE_APP_ID_ANDROID: ${{ secrets.FIREBASE_APP_ID_ANDROID_DEV }}
+      FIREBASE_SERVICE_ACCOUNT_JSON_DEV: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_DEV }}
+      GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}

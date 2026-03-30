@@ -1,0 +1,73 @@
+name: 'Deploy Next.js App'
+description: 'Deploys a Next.js app to Vercel'
+inputs:
+  working-directory:
+    description: 'Path to the app'
+    required: true
+  vercel-token:
+    required: true
+  vercel-org-id:
+    required: true
+  vercel-project-id:
+    required: true
+  dev-domain-alias:
+    description: 'Domain alias for dev/preview deployments'
+    required: false
+  deploy-branch:
+    description: 'Branch name to determine prod vs preview deployment'
+    required: true
+
+outputs:
+  accessible-url:
+    description: 'URL that passed a connectivity check (alias URL if alias succeeded, direct deploy URL otherwise)'
+    value: ${{ steps.deploy.outputs.accessible-url }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Copy env-manifest.json into app directory
+      shell: bash
+      run: cp -- env-manifest.json "${{ inputs.working-directory }}/env-manifest.json"
+
+    - name: Deploy to Vercel
+      id: deploy
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        VERCEL_ORG_ID: ${{ inputs.vercel-org-id }}
+        VERCEL_PROJECT_ID: ${{ inputs.vercel-project-id }}
+        VERCEL_TOKEN: ${{ inputs.vercel-token }}
+      run: |
+        if [[ "${{ inputs.deploy-branch }}" == "main" ]]; then
+          npx --yes vercel@latest deploy --prod --token=$VERCEL_TOKEN --yes
+          # Fix #389: output the production alias URL for smoke test
+          echo "accessible-url=https://${{ inputs.dev-domain-alias }}" >> "$GITHUB_OUTPUT"
+        else
+          # Fix #372: capture preview URL and assign domain alias so dev.*.minglit.com stays reachable
+          DEPLOY_URL=$(npx --yes vercel@latest deploy --token=$VERCEL_TOKEN --yes)
+          echo "✅ Deployed to: $DEPLOY_URL"
+          ALIAS_OK=false
+          if [[ -n "${{ inputs.dev-domain-alias }}" ]]; then
+            echo "🔗 Assigning alias: ${{ inputs.dev-domain-alias }}"
+            # Fix #383: retry alias with backoff — certificate provisioning can fail transiently
+            for attempt in 1 2 3; do
+              if npx --yes vercel@latest alias set "$DEPLOY_URL" "${{ inputs.dev-domain-alias }}" --token=$VERCEL_TOKEN --scope=$VERCEL_ORG_ID; then
+                echo "✅ Alias assigned successfully"
+                ALIAS_OK=true
+                break
+              fi
+              if [[ $attempt -lt 3 ]]; then
+                echo "⚠️ Alias attempt $attempt failed, retrying in $((attempt * 10))s..."
+                sleep $((attempt * 10))
+              else
+                echo "::warning::Alias assignment failed after 3 attempts. Deployment succeeded at: $DEPLOY_URL"
+              fi
+            done
+          fi
+          # Fix #389: output the accessible URL for smoke test fallback
+          if [[ "$ALIAS_OK" == "true" ]]; then
+            echo "accessible-url=https://${{ inputs.dev-domain-alias }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "accessible-url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+          fi
+        fi

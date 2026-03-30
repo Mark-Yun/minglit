@@ -1,0 +1,96 @@
+{
+  "$comment": "워커 라우팅 테이블 — 라벨 기반 워커 간 상호작용 정의",
+
+  "routing": {
+    "needs-pm": {
+      "handler": "pm-staff",
+      "color": "c5def5",
+      "desc": "피처 기획 요청"
+    },
+    "needs-arch": {
+      "handler": "audit-arch",
+      "color": "c5def5",
+      "desc": "아키텍처 문서/분석 요청"
+    },
+    "needs-uiux": {
+      "handler": "audit-uiux",
+      "color": "c5def5",
+      "desc": "UI/UX 문서/디자인 요청"
+    },
+    "needs-qa": {
+      "handler": "audit-qa",
+      "color": "c5def5",
+      "desc": "테스트 보강 요청"
+    },
+    "needs-security": {
+      "handler": "audit-security",
+      "color": "c5def5",
+      "desc": "보안 검토 요청"
+    },
+    "needs-legal": {
+      "handler": "audit-legal",
+      "color": "c5def5",
+      "desc": "법률/개인정보 검토 요청"
+    },
+    "needs-tpm": {
+      "handler": "tpm-staff",
+      "color": "c5def5",
+      "desc": "TPM 분석/이슈 품질 관리 요청"
+    },
+    "needs-dev": {
+      "handler": "issue-worker",
+      "color": "c5def5",
+      "desc": "개발 작업 요청"
+    },
+    "needs-review": {
+      "handler": "pr-reviewer",
+      "color": "c5def5",
+      "desc": "PR 코드 리뷰 요청"
+    }
+  },
+
+  "workflow": {
+    "audit-report": {
+      "handler": "tpm-staff",
+      "color": "d4c5f9",
+      "desc": "감사 리포트 → TPM 분석"
+    },
+    "report-exec": {
+      "handler": "human",
+      "color": "5319e7",
+      "desc": "사람 판단 필요 (Mark)"
+    },
+    "bug-report": {
+      "handler": "tpm-staff",
+      "color": "d73a4a",
+      "desc": "유저 버그 리포트"
+    },
+    "bug": {
+      "handler": "tpm-staff",
+      "color": "d73a4a",
+      "desc": "일반 버그"
+    },
+    "ci-failure": {
+      "handler": "tpm-staff",
+      "color": "b60205",
+      "desc": "CI 실패 수정"
+    },
+    "enhancement": {
+      "handler": "tpm-staff",
+      "color": "a2eeef",
+      "desc": "기능 구현"
+    },
+    "refactor": {
+      "handler": "tpm-staff",
+      "color": "d4c5f9",
+      "desc": "리팩토링"
+    }
+  },
+
+  "priority": {
+    "P0-critical": { "color": "b60205", "desc": "즉시 수정 (서비스 장애)" },
+    "P1-high": { "color": "d93f0b", "desc": "이번 주 내 처리" },
+    "P2-medium": { "color": "fbca04", "desc": "다음 스프린트" },
+    "P3-low": { "color": "0e8a16", "desc": "여유 시 처리" }
+  }
+}

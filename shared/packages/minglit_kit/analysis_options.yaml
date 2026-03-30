@@ -1,0 +1,18 @@
+include: package:very_good_analysis/analysis_options.yaml
+
+analyzer:
+  plugins:
+    - custom_lint
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "lib/src/theme/minglit_theme.dart"           # Theme definition - intentionally uses raw values
+    - "lib/src/theme/minglit_component_theme.dart" # Component theme - intentionally uses raw values
+    - "lib/src/theme/minglit_design_tokens.dart"   # Token definitions - intentionally uses raw Color values
+    - "lib/src/utils/splash_screen.dart"           # Animation brand colors - not tokenizable
+  errors:
+    invalid_annotation_target: ignore
+
+linter:
+  rules:
+    public_member_api_docs: true

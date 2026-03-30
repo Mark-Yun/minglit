@@ -1,0 +1,79 @@
+codecov:
+  require_ci_to_pass: false
+
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 5%
+        flags:
+          - minglit-kit
+      app-logic:
+        target: 50%
+        threshold: 5%
+        flags:
+          - app-user-logic
+          - app-partner-logic
+      apps:
+        informational: true
+        flags:
+          - app-user
+          - app-partner
+    patch:
+      default:
+        target: 80%
+        threshold: 5%
+        flags:
+          - minglit-kit
+      app-logic:
+        target: 50%
+        threshold: 5%
+        flags:
+          - app-user-logic
+          - app-partner-logic
+      apps:
+        informational: true
+        flags:
+          - app-user
+          - app-partner
+
+comment:
+  layout: "condensed_header, diff, flags, condensed_files, condensed_footer"
+  behavior: default
+  require_changes: true
+
+flags:
+  app-user:
+    paths:
+      - apps/app_user/lib/
+    carryforward: true
+  app-user-logic:
+    paths:
+      - apps/app_user/lib/src/features/**/logic/
+      - apps/app_user/lib/src/features/**/data/
+      - apps/app_user/lib/src/features/**/providers/
+    carryforward: true
+  app-partner:
+    paths:
+      - apps/app_partner/lib/
+    carryforward: true
+  app-partner-logic:
+    paths:
+      - apps/app_partner/lib/src/features/
+    ignore:
+      - apps/app_partner/lib/src/features/**/ui/
+      - apps/app_partner/lib/src/features/**/widgets/
+      - apps/app_partner/lib/src/features/**/steps/
+      - apps/app_partner/lib/src/features/**/tabs/
+      - apps/app_partner/lib/src/features/**/*_page.dart
+      - apps/app_partner/lib/src/features/**/*_screen.dart
+    carryforward: true
+  minglit-kit:
+    paths:
+      - shared/packages/minglit_kit/lib/
+    carryforward: true
+  backend-integration:
+    paths:
+      - tests/backend_integration/lib/
+    carryforward: true

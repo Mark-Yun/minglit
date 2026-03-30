@@ -1,0 +1,22 @@
+{
+  "@@locale": "ko",
+  "common_button_confirm": "확인",
+  "common_button_cancel": "취소",
+  "common_error_system": "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+  "reportReasonSexualContent": "선정적인 콘텐츠",
+  "reportReasonFalseInformation": "허위 또는 과장된 정보",
+  "reportReasonNoShow": "노쇼 / 이벤트 미진행",
+  "reportReasonFraud": "사기 또는 부당 청구",
+  "reportReasonOther": "기타",
+  "blockPartnerTitle": "차단하기",
+  "blockPartnerConfirm": "이 파트너를 차단하시겠습니까?\n이 파트너의 이벤트가 더 이상 표시되지 않습니다.",
+  "blockPartnerSuccess": "파트너가 차단되었습니다",
+  "reportPartnerTitle": "신고하기",
+  "reportPartnerDescription": "신고 이유를 선택해주세요",
+  "reportSuccess": "신고가 접수되었습니다",
+  "blockedPartnersTitle": "차단 목록",
+  "unblockPartner": "차단 해제",
+  "unblockPartnerConfirm": "이 파트너의 차단을 해제하시겠습니까?",
+  "blockedPartnersEmpty": "차단된 파트너가 없습니다",
+  "reportReasonOtherHint": "상세 사유를 입력해주세요"
+}

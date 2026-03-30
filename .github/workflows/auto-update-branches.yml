@@ -1,0 +1,35 @@
+name: Auto-update PR branches
+
+on:
+  push:
+    branches: [dev]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  update-branches:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update auto-merge PRs that are behind
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPO="${{ github.repository }}"
+          echo "Checking open PRs with auto-merge enabled..."
+
+          gh pr list --repo "$REPO" --base dev --state open --json number,autoMergeRequest \
+            --jq '.[] | select(.autoMergeRequest != null) | .number' | while read -r PR_NUM; do
+            MERGE_STATE=$(gh pr view "$PR_NUM" --repo "$REPO" --json mergeStateStatus --jq '.mergeStateStatus')
+            if [ "$MERGE_STATE" = "BEHIND" ]; then
+              echo "PR #$PR_NUM is BEHIND — updating branch..."
+              gh api "repos/$REPO/pulls/$PR_NUM/update-branch" --method PUT || true
+            else
+              echo "PR #$PR_NUM is $MERGE_STATE — skipping"
+            fi
+          done

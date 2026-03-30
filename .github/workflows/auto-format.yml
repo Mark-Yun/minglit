@@ -1,0 +1,79 @@
+name: Auto Format PR
+
+on:
+  pull_request:
+    branches: ["main", "dev"]
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: auto-format-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  auto-format:
+    if: ${{ github.event.pull_request.head.repo.fork == false }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Minglit Kit - Fix & Format
+        run: |
+          dart fix --apply
+          dart format .
+        working-directory: shared/packages/minglit_kit
+
+      - name: App User - Fix & Format
+        run: |
+          dart fix --apply
+          dart format .
+        working-directory: apps/app_user
+
+      - name: App Partner - Fix & Format
+        run: |
+          dart fix --apply
+          dart format .
+        working-directory: apps/app_partner
+
+      - name: Commit changes if needed
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -- '**/*.dart'
+            git commit -m "chore: auto-fix and format"
+            git push
+          else
+            echo "No formatting changes needed"
+          fi
+
+  notify-failure:
+    needs: [auto-format]
+    # Fix #563: Only notify on actual failure, not on cancelled (from cancel-in-progress)
+    if: ${{ always() && needs.auto-format.result == 'failure' }}
+    permissions:
+      issues: write
+    uses: ./.github/workflows/notify-failure.yml
+    with:
+      success: false
+      workflow_name: 'Auto Format'

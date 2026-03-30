@@ -1,0 +1,78 @@
+import 'package:app_partner/src/features/party/list/party_list_controller.dart';
+import 'package:app_partner/src/features/party/list/party_list_coordinator.dart';
+import 'package:app_partner/src/features/party/list/widgets/party_list_item.dart';
+import 'package:app_partner/src/routing/app_routes.dart';
+import 'package:flutter/material.dart';
+import 'package:minglit_kit/minglit_kit.dart';
+
+class PartyListPage extends ConsumerWidget {
+  const PartyListPage({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final partiesAsync = ref.watch(partyListProvider);
+    final coordinator = PartyListCoordinator(context);
+
+    return Scaffold(
+      appBar: MinglitTheme.simpleAppBar(
+        title: '파티 기획 관리',
+        actions: [
+          // Fix #540: route-based navigation to checkin — removes qr→checkin cross-feature import
+          IconButton(
+            icon: const Icon(Icons.qr_code_scanner),
+            tooltip: 'QR 스캔',
+            onPressed: () => const CheckinRoute().push<void>(context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: coordinator.goToCreate,
+          ),
+        ],
+      ),
+      body: MinglitAsyncValueWidget(
+        value: partiesAsync,
+        data: (parties) {
+          if (parties.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.party_mode_outlined,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
+                  const SizedBox(height: MinglitSpacing.medium),
+                  Text(
+                    '등록된 파티가 없습니다.\n새로운 파티를 기획해보세요!',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return ListView.separated(
+            padding: const EdgeInsets.only(bottom: MinglitSpacing.large),
+            itemCount: parties.length,
+            separatorBuilder: (context, index) => Divider(
+              height: 1,
+              thickness: 1,
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
+            itemBuilder: (context, index) {
+              final party = parties[index];
+              return PartyListItem(
+                party: party,
+                onTap: () => coordinator.goToDetail(party.id),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}

@@ -1,0 +1,128 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-action.json
+name: 'Deploy Flutter App'
+description: 'Builds and deploys a Flutter app to Vercel (Optimized for Monorepo)'
+inputs:
+  working-directory:
+    description: 'Path to the flutter app'
+    required: true
+  vercel-token:
+    description: 'Vercel Token'
+    required: true
+  vercel-org-id:
+    description: 'Vercel Org ID'
+    required: true
+  vercel-project-id:
+    description: 'Vercel Project ID'
+    required: true
+  dev-domain-alias:
+    description: 'Domain alias for dev environment'
+    required: true
+  deploy-branch:
+    description: 'Branch name to determine prod vs preview deployment'
+    required: true
+
+outputs:
+  accessible-url:
+    description: 'URL that passed a connectivity check (alias URL if alias succeeded, direct deploy URL otherwise)'
+    value: ${{ steps.vercel-deploy.outputs.accessible-url }}
+
+runs:
+  using: "composite"
+  steps:
+    - uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        cache: true
+    
+    - name: Install & Build
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        echo "📦 Installing workspace dependencies..."
+        (cd ../../ && flutter pub get)
+
+        if [[ "${{ inputs.deploy-branch }}" == "main" ]]; then
+          TARGET="lib/main.dart"
+          SB_URL="$SUPABASE_MAIN_URL"
+          SB_KEY="$SUPABASE_MAIN_KEY"
+          G_ID="$GOOGLE_MAIN_ID"
+          APP_ENV="production"
+          echo "🏗️ Building for Production (Main)..."
+        else
+          TARGET="lib/main.dart"
+          SB_URL="$SUPABASE_DEV_URL"
+          SB_KEY="$SUPABASE_DEV_KEY"
+          G_ID="$GOOGLE_DEV_ID"
+          APP_ENV="development"
+          echo "🏗️ Building for Preview (Dev)..."
+        fi
+
+        flutter build web --release -t $TARGET \
+          --dart-define=SUPABASE_URL=$SB_URL \
+          --dart-define=SUPABASE_PUBLISHABLE_KEY=$SB_KEY \
+          --dart-define=GOOGLE_WEB_CLIENT_ID=$G_ID \
+          --dart-define=SENTRY_DSN=$SENTRY_DSN_FLUTTER \
+          --dart-define=ENVIRONMENT=$APP_ENV \
+          --dart-define=STATSIG_CLIENT_KEY=$STATSIG_CLIENT_KEY
+
+    - name: Copy vercel.json and .well-known
+      shell: bash
+      run: |
+        cp ${{ inputs.working-directory }}/vercel.json ${{ inputs.working-directory }}/build/web/vercel.json
+        if [[ -d "${{ inputs.working-directory }}/web/.well-known" ]]; then
+          cp -r ${{ inputs.working-directory }}/web/.well-known ${{ inputs.working-directory }}/build/web/.well-known
+        fi
+        if [[ -d "${{ inputs.working-directory }}/api" ]]; then
+          mkdir -p ${{ inputs.working-directory }}/build/web/api
+          cp -r ${{ inputs.working-directory }}/api/. ${{ inputs.working-directory }}/build/web/api/
+        fi
+
+    - name: Deploy to Vercel
+      id: vercel-deploy
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        VERCEL_ORG_ID: ${{ inputs.vercel-org-id }}
+        VERCEL_PROJECT_ID: ${{ inputs.vercel-project-id }}
+        VERCEL_TOKEN: ${{ inputs.vercel-token }}
+      run: |
+        # Use npx to avoid global installation and ensure team scope
+        # The project ID is automatically picked up from VERCEL_PROJECT_ID env var
+        COMMON_ARGS="--token=$VERCEL_TOKEN --scope=$VERCEL_ORG_ID --yes"
+
+        cd build/web
+
+        if [[ "${{ inputs.deploy-branch }}" == "main" ]]; then
+          echo "🚀 Deploying to Production (Main)..."
+          npx vercel deploy --prod $COMMON_ARGS
+          # Fix #389: output the production alias URL for smoke test
+          echo "accessible-url=https://${{ inputs.dev-domain-alias }}" >> "$GITHUB_OUTPUT"
+        else
+          echo "👀 Deploying to Preview (Dev) with Alias: ${{ inputs.dev-domain-alias }}..."
+          # Deploy and capture the deployment URL (standard output of vercel deploy)
+          DEPLOY_URL=$(npx vercel deploy $COMMON_ARGS)
+          echo "✅ Deployed to: $DEPLOY_URL"
+
+          # Fix #383: retry alias with backoff — certificate provisioning can fail transiently
+          ALIAS_OK=false
+          echo "🔗 Assigning alias: ${{ inputs.dev-domain-alias }}"
+          for attempt in 1 2 3; do
+            if npx vercel alias set "$DEPLOY_URL" "${{ inputs.dev-domain-alias }}" --token=$VERCEL_TOKEN --scope=$VERCEL_ORG_ID; then
+              echo "✅ Alias assigned successfully"
+              ALIAS_OK=true
+              break
+            fi
+            if [[ $attempt -lt 3 ]]; then
+              echo "⚠️ Alias attempt $attempt failed, retrying in $((attempt * 10))s..."
+              sleep $((attempt * 10))
+            else
+              echo "::warning::Alias assignment failed after 3 attempts. Deployment succeeded at: $DEPLOY_URL"
+            fi
+          done
+          # Fix #389: output the accessible URL for smoke test fallback
+          if [[ "$ALIAS_OK" == "true" ]]; then
+            echo "accessible-url=https://${{ inputs.dev-domain-alias }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "accessible-url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+          fi
+        fi

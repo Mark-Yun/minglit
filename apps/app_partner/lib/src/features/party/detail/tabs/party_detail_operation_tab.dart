@@ -1,0 +1,134 @@
+import 'dart:async';
+
+import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
+import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
+import 'package:app_partner/src/features/party/ticket/ticket_template_create_page.dart';
+import 'package:app_partner/src/features/party/ticket/widgets/party_tickets_summary.dart';
+import 'package:app_partner/src/features/party/widgets/party_event_list_summary.dart';
+import 'package:app_partner/src/routing/app_routes.dart';
+import 'package:app_partner/src/utils/l10n_ext.dart';
+import 'package:flutter/material.dart';
+import 'package:minglit_kit/minglit_kit.dart';
+
+class PartyDetailOperationTab extends ConsumerWidget {
+  const PartyDetailOperationTab({required this.party, super.key});
+
+  final Party party;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ticketsAsync = ref.watch(partyTicketsProvider(party.id));
+    final eventsAsync = ref.watch(partyEventsProvider(party.id));
+    final coordinator = ref.read(partyDetailCoordinatorProvider);
+    final theme = Theme.of(context);
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 1. Events Section
+          Padding(
+            padding: const EdgeInsets.all(MinglitSpacing.medium),
+            child: Text(
+              context.l10n.partyDetail_section_events,
+              style: theme.textTheme.titleMedium,
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.small),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: MinglitSpacing.medium,
+            ),
+            child: MinglitAsyncValueWidget(
+              value: eventsAsync,
+              data: (events) => PartyEventListSummary(
+                events: events,
+                onEventTap: (event) =>
+                    coordinator.goToEventDetail(party.id, event.id),
+                onCreatePressed: () => coordinator.goToCreateEvent(party.id),
+              ),
+              error: (e, s) =>
+                  Text(context.l10n.partyDetail_error_eventLoad(e.toString())),
+            ),
+          ),
+
+          const SizedBox(height: MinglitSpacing.xlarge),
+
+          // 2. Tickets Section
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: MinglitSpacing.medium,
+            ),
+            child: Text(
+              context.l10n.partyDetail_section_tickets,
+              style: theme.textTheme.titleMedium,
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.small),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: MinglitSpacing.medium,
+            ),
+            child: MinglitAsyncValueWidget(
+              value: ticketsAsync,
+              data: (templates) => PartyTicketsSummary(
+                tickets: templates
+                    .map((t) => Ticket.createFromTemplate(t, id: t.id))
+                    .toList(),
+                entryGroups: party.entryGroups ?? [],
+                maxCapacity: party.maxParticipants,
+                showStats: false,
+                onCreatePressed: () => _handleCreateTicket(context, ref),
+                onTicketTap: (ticket) {
+                  unawaited(
+                    PartyTicketEditRoute(
+                      partyId: party.id,
+                      ticketId: ticket.id,
+                    ).push<void>(context),
+                  );
+                },
+              ),
+              error: (e, s) =>
+                  Text(context.l10n.partyDetail_error_ticketLoad(e.toString())),
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.xlarge),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleCreateTicket(BuildContext context, WidgetRef ref) async {
+    final newTemplate = await Navigator.of(context).push<TicketTemplate>(
+      MaterialPageRoute(
+        builder: (_) => TicketTemplateCreatePage(
+          entryGroups: party.entryGroups ?? [],
+        ),
+      ),
+    );
+
+    if (newTemplate != null && context.mounted) {
+      final loading = ref.read(globalLoadingControllerProvider.notifier)
+        ..show();
+      try {
+        final repo = ref.read(ticketRepositoryProvider);
+        await repo.createTicketTemplate(
+          newTemplate.copyWith(partyId: party.id),
+        );
+        ref.invalidate(partyTicketsProvider(party.id));
+
+        if (context.mounted) {
+          context.showMinglitSuccess(
+            context.l10n.partyDetail_message_ticketAdded,
+          );
+        }
+      } on Exception catch (e, st) {
+        if (context.mounted) {
+          handleMinglitError(context, e, st);
+        }
+      } finally {
+        loading.hide();
+      }
+    }
+  }
+}

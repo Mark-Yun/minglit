@@ -1,0 +1,132 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:minglit_kit/minglit_kit.dart';
+
+/// Shows events closing within 3 days with D-N badges.
+class ClosingSoonEventsCard extends StatelessWidget {
+  const ClosingSoonEventsCard({
+    required this.events,
+    required this.onEventTap,
+    super.key,
+  });
+
+  final List<Event> events;
+  final void Function(Event event) onEventTap;
+
+  @override
+  Widget build(BuildContext context) {
+    if (events.isEmpty) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final dateFormat = DateFormat('M/d (E)', 'ko_KR');
+
+    return Card(
+      elevation: 0,
+      color: colorScheme.errorContainer.withValues(alpha: 0.3),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(MinglitRadius.card),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(MinglitSpacing.large),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.warning_amber_rounded,
+                  size: 18,
+                  color: colorScheme.error,
+                ),
+                const SizedBox(width: MinglitSpacing.small),
+                Text(
+                  '마감임박',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.error,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: MinglitSpacing.medium),
+            ...events.map(
+              (event) => InkWell(
+                onTap: () => onEventTap(event),
+                borderRadius: BorderRadius.circular(MinglitRadius.small),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: MinglitSpacing.small,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              event.title ?? '이벤트',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onErrorContainer,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: MinglitSpacing.xxsmall),
+                            Text(
+                              dateFormat.format(event.startTime),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onErrorContainer,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      _DayBadge(
+                        // Fix: calendar day 기준으로 D-day 계산 —
+                        // Duration.inDays는 24h 절사라 타임존에 따라 off-by-one
+                        daysUntil: DateUtils.dateOnly(
+                          event.startTime,
+                        ).difference(DateUtils.dateOnly(DateTime.now())).inDays,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DayBadge extends StatelessWidget {
+  const _DayBadge({required this.daysUntil});
+
+  final int daysUntil;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: MinglitSpacing.small,
+        vertical: MinglitSpacing.xsmall,
+      ),
+      decoration: BoxDecoration(
+        color: colorScheme.error,
+        borderRadius: BorderRadius.circular(MinglitRadius.button),
+      ),
+      child: Text(
+        'D-$daysUntil',
+        style: Theme.of(context).textTheme.bodySmall!.copyWith(
+          color: colorScheme.onError,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+}

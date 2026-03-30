@@ -1,0 +1,203 @@
+name: Deploy to Vercel
+
+# NOTE: Consider adding status badges to README.
+
+on:
+  schedule:
+    - cron: '0 */2 * * *'   # Every 2 hours (UTC), targets dev branch
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy (dev or main)'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - main
+
+concurrency:
+  group: vercel-${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-app_user:
+    runs-on: ubuntu-latest
+    environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
+    outputs:
+      accessible-url: ${{ steps.deploy.outputs.accessible-url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+      - name: Deploy User App
+        id: deploy
+        uses: ./.github/actions/deploy-flutter-app
+        with:
+          working-directory: ./apps/app_user
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_USER }}
+          dev-domain-alias: dev.app.minglit.com
+          deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+        env:
+          SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_DEV_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+          GOOGLE_DEV_ID: ${{ secrets.GOOGLE_DEV_WEB_CLIENT_ID }}
+          SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
+          SUPABASE_MAIN_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
+          GOOGLE_MAIN_ID: ${{ secrets.GOOGLE_MAIN_WEB_CLIENT_ID }}
+          SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
+          STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
+
+  deploy-landing_user:
+    runs-on: ubuntu-latest
+    environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
+    outputs:
+      accessible-url: ${{ steps.deploy.outputs.accessible-url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+      - name: Deploy User Landing
+        id: deploy
+        uses: ./.github/actions/deploy-nextjs-app
+        with:
+          working-directory: ./apps/landing_user
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_LANDING_USER }}
+          dev-domain-alias: dev.minglit.com
+          deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+
+  deploy-landing_partner:
+    runs-on: ubuntu-latest
+    environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
+    outputs:
+      accessible-url: ${{ steps.deploy.outputs.accessible-url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+      - name: Deploy Partner Landing
+        id: deploy
+        uses: ./.github/actions/deploy-nextjs-app
+        with:
+          working-directory: ./apps/landing_partner
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_LANDING_PARTNER }}
+          dev-domain-alias: dev.partner.minglit.com
+          deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+
+  deploy-app_partner:
+    runs-on: ubuntu-latest
+    environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
+    outputs:
+      accessible-url: ${{ steps.deploy.outputs.accessible-url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+      - name: Deploy Partner App
+        id: deploy
+        uses: ./.github/actions/deploy-flutter-app
+        with:
+          working-directory: ./apps/app_partner
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_PARTNER }}
+          dev-domain-alias: dev.app.partner.minglit.com
+          deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+        env:
+          SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_DEV_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+          GOOGLE_DEV_ID: ${{ secrets.GOOGLE_DEV_WEB_CLIENT_ID }}
+          SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
+          SUPABASE_MAIN_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
+          GOOGLE_MAIN_ID: ${{ secrets.GOOGLE_MAIN_WEB_CLIENT_ID }}
+          SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
+          STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
+
+  smoke-test:
+    needs: [deploy-app_user, deploy-landing_user, deploy-landing_partner, deploy-app_partner]
+    if: success()
+    runs-on: ubuntu-latest
+    env:
+      IS_PROD: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' }}
+    steps:
+      - name: Set URLs and bypass tokens
+        id: urls
+        run: |
+          if [ "$IS_PROD" = "true" ]; then
+            echo "app_user=https://app.minglit.com" >> "$GITHUB_OUTPUT"
+            echo "app_partner=https://app.partner.minglit.com" >> "$GITHUB_OUTPUT"
+            echo "landing_user=https://minglit.com" >> "$GITHUB_OUTPUT"
+            echo "landing_partner=https://partner.minglit.com" >> "$GITHUB_OUTPUT"
+            echo "supabase=https://cnuahgrfzcqkmdyhunuk.supabase.co" >> "$GITHUB_OUTPUT"
+          else
+            # Fix #389: use accessible URLs from deploy jobs (falls back to direct deploy URL if alias failed)
+            echo "app_user=${{ needs.deploy-app_user.outputs.accessible-url }}" >> "$GITHUB_OUTPUT"
+            echo "app_partner=${{ needs.deploy-app_partner.outputs.accessible-url }}" >> "$GITHUB_OUTPUT"
+            echo "landing_user=${{ needs.deploy-landing_user.outputs.accessible-url }}" >> "$GITHUB_OUTPUT"
+            echo "landing_partner=${{ needs.deploy-landing_partner.outputs.accessible-url }}" >> "$GITHUB_OUTPUT"
+            echo "supabase=${{ secrets.SUPABASE_DEV_URL }}" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Smoke test — Vercel apps
+        env:
+          BYPASS_APP_USER: ${{ secrets.VERCEL_BYPASS_APP_USER }}
+          BYPASS_APP_PARTNER: ${{ secrets.VERCEL_BYPASS_APP_PARTNER }}
+          BYPASS_LANDING_USER: ${{ secrets.VERCEL_BYPASS_LANDING_USER }}
+          BYPASS_LANDING_PARTNER: ${{ secrets.VERCEL_BYPASS_LANDING_PARTNER }}
+        run: |
+          failed=0
+          # Fix #389: bypass tokens only apply to alias URLs, not direct Vercel deploy URLs
+          declare -A BYPASS_MAP=(
+            ["${{ steps.urls.outputs.app_user }}"]="$BYPASS_APP_USER"
+            ["${{ steps.urls.outputs.app_partner }}"]="$BYPASS_APP_PARTNER"
+            ["${{ steps.urls.outputs.landing_user }}"]="$BYPASS_LANDING_USER"
+            ["${{ steps.urls.outputs.landing_partner }}"]="$BYPASS_LANDING_PARTNER"
+          )
+          for url in \
+            "${{ steps.urls.outputs.app_user }}" \
+            "${{ steps.urls.outputs.app_partner }}" \
+            "${{ steps.urls.outputs.landing_user }}" \
+            "${{ steps.urls.outputs.landing_partner }}"; do
+            printf "Checking %s ... " "$url"
+            BYPASS="${BYPASS_MAP[$url]}"
+            STATUS=$(curl -sL -o /dev/null -w "%{http_code}" \
+              -H "x-vercel-protection-bypass: $BYPASS" \
+              --max-time 15 "$url") || STATUS="000"
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ ($STATUS)"
+            else
+              echo "❌ ($STATUS)"
+              failed=1
+            fi
+          done
+          if [ "$failed" -eq 1 ]; then
+            echo "::error::One or more Vercel apps failed smoke test"
+            exit 1
+          fi
+      - name: Smoke test — Edge Function health
+        run: |
+          HEALTH_URL="${{ steps.urls.outputs.supabase }}/functions/v1/health"
+          printf "Checking %s ... " "$HEALTH_URL"
+          STATUS=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 15 "$HEALTH_URL" || echo "000")
+          if [ "$STATUS" = "200" ]; then
+            echo "✅"
+          else
+            echo "❌ (HTTP $STATUS)"
+            echo "::error::Edge Function health check failed (HTTP $STATUS)"
+            exit 1
+          fi
+
+  notify-failure:
+    needs: [deploy-app_user, deploy-landing_user, deploy-landing_partner, deploy-app_partner, smoke-test]
+    if: always()
+    permissions:
+      issues: write
+    uses: ./.github/workflows/notify-failure.yml
+    with:
+      success: ${{ !contains(needs.*.result, 'failure') }}
+      workflow_name: 'Vercel Deploy'

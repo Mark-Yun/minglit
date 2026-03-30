@@ -1,0 +1,50 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:iamport_flutter/Iamport_certification.dart';
+import 'package:iamport_flutter/model/certification_data.dart';
+import 'package:minglit_iamport_v1/src/service/certification_service.dart';
+
+class CertificationServiceImpl implements CertificationService {
+  @override
+  Future<String?> verify({
+    required BuildContext context,
+    required String userCode,
+    required String merchantUid,
+    String? name,
+    String? phone,
+    String? mRedirectUrl,
+  }) async {
+    final completer = Completer<String?>();
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => IamportCertification(
+          appBar: AppBar(title: const Text('본인인증')),
+          userCode: userCode,
+          data: CertificationData(
+            merchantUid: merchantUid,
+            name: name,
+            phone: phone,
+            mRedirectUrl: mRedirectUrl,
+          ),
+          callback: (Map<String, String> result) {
+            if (result['success'] == 'true') {
+              completer.complete(result['imp_uid']);
+            } else {
+              completer.complete(null);
+            }
+            Navigator.pop(context);
+          },
+        ),
+      ),
+    );
+
+    // If the user pressed back and the callback never fired,
+    // complete with null so the caller doesn't hang.
+    if (!completer.isCompleted) {
+      completer.complete(null);
+    }
+
+    return completer.future;
+  }
+}

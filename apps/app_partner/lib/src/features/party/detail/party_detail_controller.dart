@@ -1,0 +1,36 @@
+import 'package:minglit_kit/minglit_kit.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'party_detail_controller.g.dart';
+
+@riverpod
+Future<Party> partyDetail(Ref ref, String partyId) async {
+  final repo = ref.watch(partyRepositoryProvider);
+  final party = await repo.getPartyById(partyId);
+  if (party == null) {
+    throw Exception('Party not found: $partyId');
+  }
+  return party;
+}
+
+@riverpod
+Future<List<TicketTemplate>> partyTickets(Ref ref, String partyId) async {
+  final repo = ref.watch(ticketRepositoryProvider);
+  return repo.getTicketTemplatesByPartyId(partyId);
+}
+
+@riverpod
+Future<Location?> locationDetail(Ref ref, String? locationId) async {
+  if (locationId == null || locationId.isEmpty) return null;
+  final repo = ref.watch(locationRepositoryProvider);
+  return repo.getLocationById(locationId);
+}
+
+@riverpod
+Future<List<Verification>> partyVerifications(Ref ref, String partyId) async {
+  final party = await ref.watch(partyDetailProvider(partyId).future);
+  if (party.requiredVerificationIds.isEmpty) return [];
+
+  final repo = ref.watch(verificationRepositoryProvider);
+  return repo.getVerificationsByIds(party.requiredVerificationIds);
+}

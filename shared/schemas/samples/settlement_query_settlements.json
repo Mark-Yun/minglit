@@ -1,0 +1,14 @@
+{
+  "success": true,
+  "settlements": [
+    {
+      "id": "stl_001",
+      "partnerId": "partner-abc",
+      "transferId": "xfer-001",
+      "amount": 100000,
+      "currency": "KRW",
+      "settlementDate": "2026-03-20"
+    }
+  ],
+  "page": { "number": 1, "size": 10 }
+}

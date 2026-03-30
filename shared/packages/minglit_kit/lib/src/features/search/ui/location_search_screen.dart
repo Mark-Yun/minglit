@@ -1,0 +1,88 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:minglit_kit/src/features/search/logic/location_search_controller.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
+
+/// Screen for searching and selecting a location.
+class LocationSearchScreen extends ConsumerStatefulWidget {
+  /// Creates a location search screen.
+  const LocationSearchScreen({super.key});
+
+  /// Creates the state for the location search screen.
+  @override
+  ConsumerState<LocationSearchScreen> createState() =>
+      _LocationSearchScreenState();
+}
+
+class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final searchAsync = ref.watch(locationSearchControllerProvider);
+    final controller = ref.read(locationSearchControllerProvider.notifier);
+
+    return Scaffold(
+      appBar: MinglitTheme.simpleAppBar(
+        title: '장소 검색',
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(MinglitSpacing.medium),
+            child: TextField(
+              controller: _searchController,
+              decoration: const InputDecoration(
+                hintText: '장소명이나 주소를 입력하세요 (예: 강남역)',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+              ),
+              onChanged: controller.onSearchChanged,
+              autofocus: true,
+            ),
+          ),
+          if (searchAsync.isLoading) const MinglitLinearProgressIndicator(),
+          Expanded(
+            child: MinglitAsyncValueWidget(
+              value: searchAsync,
+              data: (results) {
+                if (results.isEmpty && _searchController.text.isNotEmpty) {
+                  return const Center(child: Text('검색 결과가 없습니다.'));
+                }
+                return ListView.separated(
+                  itemCount: results.length,
+                  separatorBuilder: (_, _) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final location = results[index];
+                    return ListTile(
+                      title: Text(location.name),
+                      subtitle: Text(location.address),
+                      onTap: () => Navigator.of(context).pop(location),
+                    );
+                  },
+                );
+              },
+              error: (e, st) => Center(child: Text('에러 발생: $e')),
+              loading: () =>
+                  const SizedBox.shrink(), // handled by LinearProgressIndicator
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

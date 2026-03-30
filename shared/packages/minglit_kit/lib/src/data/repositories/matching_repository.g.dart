@@ -1,0 +1,62 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'matching_repository.dart';
+
+// **************************************************************************
+// RiverpodGenerator
+// **************************************************************************
+
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+/// Provides the [MatchingRepository].
+
+@ProviderFor(matchingRepository)
+const matchingRepositoryProvider = MatchingRepositoryProvider._();
+
+/// Provides the [MatchingRepository].
+
+final class MatchingRepositoryProvider
+    extends
+        $FunctionalProvider<
+          MatchingRepository,
+          MatchingRepository,
+          MatchingRepository
+        >
+    with $Provider<MatchingRepository> {
+  /// Provides the [MatchingRepository].
+  const MatchingRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'matchingRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$matchingRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<MatchingRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  MatchingRepository create(Ref ref) {
+    return matchingRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(MatchingRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<MatchingRepository>(value),
+    );
+  }
+}
+
+String _$matchingRepositoryHash() =>
+    r'61950d7065db2a84d17f20777143e2418848fed6';

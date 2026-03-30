@@ -1,0 +1,357 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+  merge_group:
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Migration version 중복 검사 (항상 실행 — path filter 없음)
+  check-migration-versions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check duplicate migration versions
+        run: |
+          VERSIONS=$(ls supabase/migrations/*.sql 2>/dev/null | xargs -n1 basename | cut -c1-14 | sort)
+          DUPES=$(echo "$VERSIONS" | uniq -d)
+          if [ -n "$DUPES" ]; then
+            echo "❌ Duplicate migration versions found:"
+            echo "$DUPES"
+            exit 1
+          fi
+          echo "✅ All migration versions unique ($(echo "$VERSIONS" | wc -l | tr -d ' ') files checked)"
+
+  # 변경 사항 감지 Job
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      app_user: ${{ steps.filter.outputs.app_user }}
+      app_partner: ${{ steps.filter.outputs.app_partner }}
+      landing_user: ${{ steps.filter.outputs.landing_user }}
+      landing_partner: ${{ steps.filter.outputs.landing_partner }}
+      supabase: ${{ steps.filter.outputs.supabase }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          app_user:
+            - 'apps/app_user/**'
+            - 'shared/packages/minglit_kit/**'
+          app_partner:
+            - 'apps/app_partner/**'
+            - 'shared/packages/minglit_kit/**'
+          landing_user:
+            - 'apps/landing_user/**'
+            - 'shared/web/**'
+          landing_partner:
+            - 'apps/landing_partner/**'
+            - 'shared/web/**'
+          supabase:
+            - 'supabase/**'
+
+  # App CI (User + Partner)
+  test-flutter-apps:
+    needs: changes
+    if: ${{ needs.changes.outputs.app_user == 'true' || needs.changes.outputs.app_partner == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      checks: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: app_user
+            change_key: app_user
+            directory: apps/app_user
+            report_name: 'User App Tests'
+            artifact_name: app-user-coverage
+            coverage_flag: app-user
+            coverage_flag_logic: app-user-logic
+          - app: app_partner
+            change_key: app_partner
+            directory: apps/app_partner
+            report_name: 'Partner App Tests'
+            artifact_name: app-partner-coverage
+            coverage_flag: app-partner
+            coverage_flag_logic: app-partner-logic
+          - app: minglit_kit
+            change_key: app_user
+            directory: shared/packages/minglit_kit
+            report_name: 'Minglit Kit Tests'
+            artifact_name: minglit-kit-coverage
+            coverage_flag: minglit-kit
+            coverage_flag_logic: ''
+    steps:
+      - uses: actions/checkout@v4
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+          fetch-depth: 0
+      - uses: subosito/flutter-action@v2
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        with:
+          channel: 'stable'
+          cache: true
+      - name: Cache pub packages
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+      - name: Install dependencies
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        run: flutter pub get
+      - name: Analyze (minglit_kit)
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        run: flutter analyze --no-fatal-infos
+        working-directory: shared/packages/minglit_kit
+      - name: Analyze
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        run: flutter analyze --no-fatal-infos
+        working-directory: ${{ matrix.directory }}
+      - name: Test
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        run: dart run test_reporter -- flutter test --coverage --exclude-tags golden --file-reporter=json:test-results.json
+        working-directory: ${{ matrix.directory }}
+      - name: Integration Test
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' && matrix.app == 'app_user' }}
+        run: flutter test test/integration/
+        working-directory: ${{ matrix.directory }}
+      - name: Golden Test (comparison)
+        id: golden_compare
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        continue-on-error: true
+        run: |
+          # Alchemist CI mode: compare against committed CI goldens (Ahem font).
+          # Exit 79 = no tests matched the tag.
+          set +e
+          flutter test --dart-define=CI=true --tags golden
+          rc=$?
+          set -e
+          if [ "$rc" -eq 79 ]; then exit 0; fi
+          exit "$rc"
+        working-directory: ${{ matrix.directory }}
+      - name: Upload golden failures
+        if: ${{ steps.golden_compare.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: golden-failures-${{ matrix.app }}
+          path: ${{ matrix.directory }}/test/**/failures/
+          retention-days: 14
+      - name: Regenerate goldens
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        run: |
+          set +e
+          flutter test --dart-define=CI=true --tags golden --update-goldens
+          rc=$?
+          set -e
+          if [ "$rc" -eq 79 ]; then exit 0; fi
+          exit "$rc"
+        working-directory: ${{ matrix.directory }}
+      - name: Auto-commit updated goldens
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' && github.event_name == 'pull_request' }}
+        env:
+          PR_BRANCH: ${{ github.head_ref }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add '**/goldens/ci/**' '**/goldens/*.render.txt'
+          if git diff --cached --quiet; then
+            echo "No golden changes to commit"
+          else
+            git commit -m "chore(golden): update CI goldens on Linux runner [skip ci]"
+            for i in 1 2 3; do
+              git pull --rebase origin "${PR_BRANCH}" 2>/dev/null || true
+              git push origin "HEAD:${PR_BRANCH}" && break
+              echo "Push attempt $i failed, retrying in 5s..."
+              sleep 5
+            done
+          fi
+      - name: Fail if golden comparison detected mismatch
+        if: ${{ steps.golden_compare.outcome == 'failure' }}
+        run: |
+          echo "Golden comparison step detected mismatches."
+          echo "Updated goldens have been auto-committed for review."
+          exit 1
+      - name: Test Report
+        uses: dorny/test-reporter@v1
+        if: ${{ (success() || failure()) && needs.changes.outputs[matrix.change_key] == 'true' }}
+        with:
+          name: ${{ matrix.report_name }}
+          path: ${{ matrix.directory }}/test-results.json
+          reporter: dart-json
+          fail-on-error: false
+      - uses: actions/upload-artifact@v4
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.directory }}/coverage
+      - name: Upload Allure Results
+        uses: actions/upload-artifact@v4
+        if: ${{ (success() || failure()) && needs.changes.outputs[matrix.change_key] == 'true' }}
+        continue-on-error: true
+        with:
+          name: allure-results-${{ matrix.app }}
+          path: ${{ matrix.directory }}/allure-results
+          retention-days: 30
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        with:
+          file: ${{ matrix.directory }}/coverage/lcov.info
+          flags: ${{ matrix.coverage_flag }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+      - name: Upload logic layer coverage
+        uses: codecov/codecov-action@v4
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' && matrix.coverage_flag_logic != '' }}
+        with:
+          file: ${{ matrix.directory }}/coverage/lcov.info
+          flags: ${{ matrix.coverage_flag_logic }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
+  # Landing User CI
+  lint-landing-user:
+    needs: changes
+    if: ${{ needs.changes.outputs.landing_user == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./apps/landing_user
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./apps/landing_user/package-lock.json
+      - run: npm ci
+      - run: npm audit --audit-level=high
+        continue-on-error: true
+      - run: npm run lint
+      - run: npm run build
+
+  # Landing Partner CI
+  lint-landing-partner:
+    needs: changes
+    if: ${{ needs.changes.outputs.landing_partner == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./apps/landing_partner
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./apps/landing_partner/package-lock.json
+      - run: npm ci
+      - run: npm audit --audit-level=high
+        continue-on-error: true
+      - run: npm run lint
+      - run: npm run build
+
+  # Supabase 통합 테스트 (pgTAP + backend-integration + e2e-scenarios)
+  test-supabase:
+    needs: changes
+    if: ${{ needs.changes.outputs.supabase == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      - name: Start Supabase
+        run: supabase start
+      - name: Validate migrations (dry-run)
+        run: |
+          echo "🔄 Resetting DB and re-applying all migrations from scratch..."
+          supabase db reset
+          echo "✅ All migrations applied successfully"
+      - name: Test (pgTAP)
+        run: supabase test db
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop
+
+  # Deno Edge Function 테스트 (supabase 불필요)
+  test-edge-functions:
+    needs: changes
+    if: ${{ needs.changes.outputs.supabase == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Test (edge functions)
+        run: deno test --allow-all functions/
+        working-directory: supabase
+
+  ci-result:
+    needs: [check-migration-versions, test-flutter-apps, lint-landing-user, lint-landing-partner, test-supabase, test-edge-functions]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check CI results
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # 1. Check CI job results
+          results='${{ toJSON(needs.*.result) }}'
+          echo "Job results: $results"
+          if echo "$results" | grep -q '"failure"'; then
+            echo ""
+            echo '${{ toJSON(needs) }}' | jq -r 'to_entries[] | select(.value.result == "failure") | "❌ \(.key)"'
+            exit 1
+          fi
+          echo "✅ CI jobs passed"
+
+          # 2. Wait for CodeRabbit review (PR only)
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            SHA="${{ github.event.pull_request.head.sha }}"
+            echo ""
+            echo "Waiting for CodeRabbit review on $SHA ..."
+            for i in $(seq 1 60); do
+              STATE=$(gh api repos/${{ github.repository }}/commits/$SHA/status --jq '[.statuses[] | select(.context=="CodeRabbit") | .state][0] // ""' 2>/dev/null || echo "")
+              if [ "$STATE" = "success" ]; then
+                echo "✅ CodeRabbit review completed"
+                break
+              elif [ "$STATE" = "failure" ] || [ "$STATE" = "error" ]; then
+                echo "❌ CodeRabbit review failed: $STATE"
+                exit 1
+              fi
+              echo "  ⏳ Attempt $i/60 — state: ${STATE:-pending} — waiting 30s..."
+              sleep 30
+            done
+            if [ "$STATE" != "success" ]; then
+              echo "❌ CodeRabbit review did not complete within 30 minutes"
+              exit 1
+            fi
+          fi
+
+          echo ""
+          echo "✅ All checks passed"

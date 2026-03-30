@@ -1,0 +1,45 @@
+title = "Minglit Gitleaks Configuration"
+
+[allowlist]
+  description = "Allow local development keys and test fixtures"
+  paths = [
+    '''\.env$''',
+    '''\.env\.local$''',
+    '''\.env\.example$''',
+    '''iamport_\w+\.g\.dart$''',
+    '''_test\.ts$''',
+    '''_test\.dart$''',
+    '''_test_utils/''',
+    '''test/''',
+  ]
+  regexTarget = "match"
+  regexes = [
+    '''sb_publishable_[A-Za-z0-9_-]+''',
+    '''458880127314-[a-z0-9]+\.apps\.googleusercontent\.com''',
+  ]
+
+[[rules]]
+  id = "supabase-service-role-key"
+  description = "Supabase Service Role Key"
+  regex = '''sb_secret_[A-Za-z0-9_-]+'''
+  tags = ["key", "supabase"]
+
+[[rules]]
+  id = "portone-imp-key"
+  description = "PortOne/Iamport API Key (real keys are 10+ chars after imp_)"
+  regex = '''imp_[a-z0-9]{10,}'''
+  tags = ["key", "payment"]
+
+[[rules]]
+  id = "portone-imp-secret"
+  description = "PortOne/Iamport API Secret"
+  regex = '''[A-Za-z0-9+/]{40,}'''
+  path = '''portone|iamport|verify-payment|verify-identity'''
+  tags = ["key", "payment"]
+
+[[rules]]
+  id = "kakao-api-key"
+  description = "Kakao REST API Key"
+  regex = '''[a-f0-9]{32}'''
+  path = '''kakao|KAKAO'''
+  tags = ["key", "kakao"]
