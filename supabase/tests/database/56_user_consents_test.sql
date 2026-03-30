@@ -17,7 +17,19 @@ SELECT col_type_is('public', 'user_consents', 'created_at', 'timestamp with time
 SELECT col_not_null('public', 'user_consents', 'user_id', 'user_id is NOT NULL');
 SELECT col_not_null('public', 'user_consents', 'consent_key', 'consent_key is NOT NULL');
 SELECT col_not_null('public', 'user_consents', 'consented', 'consented is NOT NULL');
-SELECT col_has_check('user_consents', 'withdrawn_at');
+SELECT results_eq(
+  $$
+    SELECT count(*)::int
+    FROM pg_constraint c
+    JOIN pg_class t ON t.oid = c.conrelid
+    JOIN pg_namespace n ON n.oid = t.relnamespace
+    WHERE n.nspname = 'public'
+      AND t.relname = 'user_consents'
+      AND c.conname = 'user_consents_consented_state_check'
+  $$,
+  $$VALUES (1)$$,
+  'user_consents_consented_state_check exists'
+);
 SELECT has_index('public', 'user_consents', 'idx_user_consents_user_id', 'idx_user_consents_user_id exists');
 SELECT has_index('public', 'user_consents', 'idx_user_consents_type_active', 'idx_user_consents_type_active exists');
 SELECT has_index('public', 'user_consents', 'user_consents_user_key_unique', 'UNIQUE(user_id, consent_key) constraint exists');
@@ -120,14 +132,14 @@ ROLLBACK TO SAVEPOINT before_cross_save;
 -- 9. RLS — authenticated user cannot UPDATE directly
 -- ============================================================
 SAVEPOINT before_direct_update;
-SELECT throws_ok(
+SELECT is_empty(
   format(
-    $$UPDATE public.user_consents SET consented = false, withdrawn_at = now()
-      WHERE user_id = '%s' AND consent_key = 'terms_of_service'$$,
+    $$UPDATE public.user_consents
+      SET consented = false, withdrawn_at = now()
+      WHERE user_id = '%s' AND consent_key = 'terms_of_service'
+      RETURNING id$$,
     tests.get_supabase_uid('consent_user_a')
   ),
-  NULL,
-  NULL,
   'authenticated user cannot UPDATE consents directly'
 );
 ROLLBACK TO SAVEPOINT before_direct_update;
@@ -136,14 +148,13 @@ ROLLBACK TO SAVEPOINT before_direct_update;
 -- 10. RLS — authenticated user cannot DELETE directly
 -- ============================================================
 SAVEPOINT before_direct_delete;
-SELECT throws_ok(
+SELECT is_empty(
   format(
     $$DELETE FROM public.user_consents
-      WHERE user_id = '%s' AND consent_key = 'terms_of_service'$$,
+      WHERE user_id = '%s' AND consent_key = 'terms_of_service'
+      RETURNING id$$,
     tests.get_supabase_uid('consent_user_a')
   ),
-  NULL,
-  NULL,
   'authenticated user cannot DELETE consents directly'
 );
 ROLLBACK TO SAVEPOINT before_direct_delete;
