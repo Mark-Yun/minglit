@@ -41,11 +41,11 @@ class MinglitTextField extends StatelessWidget {
     this.focusNode,
     this.autofocus = false,
     super.key,
-  })  : assert(maxLines > 0, 'maxLines must be greater than 0'),
-        assert(
-          !obscureText || maxLines == 1,
-          'obscureText=true requires maxLines=1',
-        );
+  }) : assert(maxLines > 0, 'maxLines must be greater than 0'),
+       assert(
+         !obscureText || maxLines == 1,
+         'obscureText=true requires maxLines=1',
+       );
 
   /// Label text displayed above the input.
   final String label;
@@ -148,8 +148,9 @@ class MinglitTextField extends StatelessWidget {
             disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(MinglitRadius.input),
               borderSide: BorderSide(
-                color:
-                    colorScheme.outline.withValues(alpha: MinglitOpacity.muted),
+                color: colorScheme.outline.withValues(
+                  alpha: MinglitOpacity.muted,
+                ),
               ),
             ),
             contentPadding: const EdgeInsets.symmetric(
