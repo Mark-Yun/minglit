@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(63);
+SELECT plan(64);
 
 -- user_profiles
 SELECT has_table('user_profiles');
@@ -10,8 +10,9 @@ SELECT has_column('user_profiles', 'phone_number');
 SELECT has_column('user_profiles', 'birth_date');
 SELECT has_column('user_profiles', 'gender');
 SELECT has_column('user_profiles', 'is_verified');
-SELECT has_column('user_profiles', 'ci');
-SELECT has_column('user_profiles', 'di');
+SELECT has_column('user_profiles', 'ci_encrypted');
+SELECT has_column('user_profiles', 'di_encrypted');
+SELECT has_column('user_profiles', 'di_hash');
 SELECT has_column('user_profiles', 'created_at');
 SELECT has_column('user_profiles', 'updated_at');
 SELECT col_type_is('user_profiles', 'id', 'uuid');
