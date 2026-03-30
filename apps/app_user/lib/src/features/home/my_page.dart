@@ -110,7 +110,8 @@ class MyPage extends ConsumerWidget {
             leading: const Icon(Icons.confirmation_number_outlined),
             title: const Text('내 티켓'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: homeCoordinator.pushPurchaseHistory,
+            // Fix #641: "내 티켓" → MyTicketsPage로 이동
+            onTap: homeCoordinator.pushMyTickets,
           ),
           // Fix #187: 그룹별 구분선 추가 — 거래 / 앱 설정
           const Divider(),
