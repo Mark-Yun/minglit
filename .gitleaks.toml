@@ -6,7 +6,7 @@ title = "Minglit Gitleaks Configuration"
     '''\.env$''',
     '''\.env\.local$''',
     '''\.env\.example$''',
-    '''iamport_config\.g\.dart$''',
+    '''iamport_\w+\.g\.dart$''',
     '''_test\.ts$''',
     '''_test\.dart$''',
     '''_test_utils/''',
