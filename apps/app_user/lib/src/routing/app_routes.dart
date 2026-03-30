@@ -1,5 +1,6 @@
 import 'package:app_user/src/features/auth/login_page.dart';
 import 'package:app_user/src/features/auth/ui/auth_callback_page.dart';
+import 'package:app_user/src/features/consent/ui/signup_consent_page.dart';
 import 'package:app_user/src/features/event/admission/event_application_wizard_page.dart';
 import 'package:app_user/src/features/event/detail/event_detail_page.dart';
 import 'package:app_user/src/features/home/home_page.dart';
@@ -111,6 +112,17 @@ class CertificationRoute extends GoRouteData with $CertificationRoute {
   Widget build(BuildContext context, GoRouterState state) {
     return const IdentityVerificationScreen();
   }
+}
+
+/// **Signup Consent Route**: Consent collection screen for new users.
+/// Path: `/signup/consent`
+@TypedGoRoute<SignupConsentRoute>(path: '/signup/consent')
+class SignupConsentRoute extends GoRouteData with $SignupConsentRoute {
+  const SignupConsentRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const SignupConsentPage();
 }
 
 /// **Event Application Route**: Wizard for event application.

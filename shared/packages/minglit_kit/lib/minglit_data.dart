@@ -30,6 +30,7 @@ export 'src/data/models/verification_submission.dart';
 export 'src/data/repositories/auth_repository.dart';
 export 'src/data/repositories/bug_report_repository.dart';
 export 'src/data/repositories/checkin_repository.dart';
+export 'src/data/repositories/consent_repository.dart';
 export 'src/data/repositories/event_repository.dart';
 export 'src/data/repositories/kakao_location_repository.dart';
 export 'src/data/repositories/location_repository.dart';

@@ -17,6 +17,11 @@ Widget createTestApp({
   String initialLocation = '/',
   List<Event>? events,
   List<Event>? feedEvents,
+  /// When `isLoggedIn` is true, controls consent redirect behavior:
+  /// - `null` (default): skip consent check entirely
+  /// - `false`: user has NOT completed required consents → redirect to /signup/consent
+  /// - `true`: user HAS completed required consents → no redirect
+  bool? hasRequiredConsents,
 }) {
   final testRouter = GoRouter(
     initialLocation: initialLocation,
@@ -61,6 +66,16 @@ Widget createTestApp({
           path: '/login',
           queryParameters: {'from': path},
         ).toString();
+      }
+
+      // Fix #883: Consent redirect — mirrors app_router.dart production logic
+      if (isLoggedIn && hasRequiredConsents != null) {
+        if (path != '/signup/consent' && !hasRequiredConsents) {
+          return '/signup/consent';
+        }
+        if (path == '/signup/consent' && hasRequiredConsents) {
+          return '/';
+        }
       }
 
       return null;

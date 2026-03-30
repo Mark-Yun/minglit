@@ -14,6 +14,7 @@ List<RouteBase> get $appRoutes => [
   $partnerDetailRoute,
   $partnerEventsRoute,
   $certificationRoute,
+  $signupConsentRoute,
   $eventApplicationRoute,
   $myTicketsRoute,
   $purchaseHistoryRoute,
@@ -211,6 +212,32 @@ mixin $CertificationRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/certification');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $signupConsentRoute => GoRouteData.$route(
+  path: '/signup/consent',
+  factory: $SignupConsentRoute._fromState,
+);
+
+mixin $SignupConsentRoute on GoRouteData {
+  static SignupConsentRoute _fromState(GoRouterState state) =>
+      const SignupConsentRoute();
+
+  @override
+  String get location => GoRouteData.$location('/signup/consent');
 
   @override
   void go(BuildContext context) => context.go(location);

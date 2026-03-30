@@ -265,7 +265,7 @@ final class EventRealtimeProvider
   }
 }
 
-String _$eventRealtimeHash() => r'f3f208f3d4c41e56fc1a2745040e5c63f6794d76';
+String _$eventRealtimeHash() => r'071f128393c0f22c32ba5b47c1df32d438346598';
 
 /// Subscribes to Supabase Realtime changes on `event_participants` for a
 /// given [eventId]. When a change is received, [todayActiveEventsProvider]

@@ -1,3 +1,4 @@
+import 'package:app_user/src/features/consent/providers/consent_providers.dart';
 import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -18,6 +19,9 @@ GoRouter goRouter(Ref ref) {
       authState.value = state;
     });
   });
+
+  // Pre-fetch consent state so the redirect can read it synchronously.
+  ref.watch(hasRequiredConsentsProvider);
 
   return GoRouter(
     navigatorKey: rootNavigatorKey,
@@ -66,6 +70,26 @@ GoRouter goRouter(Ref ref) {
       if (!isLoggedIn && isProtected) {
         // 로그인 후 원래 가려던 곳으로 돌아오기 위해 쿼리 파라미터 추가
         return Uri(path: '/login', queryParameters: {'from': path}).toString();
+      }
+
+      // Fix #883: 필수 동의 미완료 유저를 /signup/consent로 리다이렉트
+      if (isLoggedIn && path != '/signup/consent') {
+        final consentAsync = ref.read(hasRequiredConsentsProvider);
+        // AsyncLoading → skip (prevent infinite redirect while loading)
+        if (!consentAsync.isLoading) {
+          final hasConsents = consentAsync.value;
+          if (hasConsents == false) {
+            return '/signup/consent';
+          }
+        }
+      }
+
+      // Fix #883: 동의 완료 후 /signup/consent에 머무르고 있으면 홈으로
+      if (isLoggedIn && path == '/signup/consent') {
+        final consentAsync = ref.read(hasRequiredConsentsProvider);
+        if (consentAsync.value == true) {
+          return '/';
+        }
       }
 
       return null;
