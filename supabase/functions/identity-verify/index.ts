@@ -53,20 +53,24 @@ Deno.serve(withHandler(async (req) => {
       return errorResponse("Verified customer data missing", 500);
     }
 
-    // 3. Supabase DB 업데이트 — Fix #808: update_user_identity RPC로 암호화 저장
+    // 3. Supabase DB 업데이트
     const supabase = createServiceClient();
 
     const gender = typeof customer.gender === "string" ? customer.gender.toLowerCase() : undefined;
 
-    const { error: updateError } = await supabase.rpc("update_user_identity", {
-      p_user_id: userId,
-      p_ci: customer.ci as string,
-      p_di: customer.di as string,
-      p_name: (customer.name as string) ?? null,
-      p_birth_date: (customer.birthDate as string) ?? null,
-      p_gender: gender ?? null,
-      p_phone_number: (customer.phoneNumber as string) ?? null,
-    });
+    const { error: updateError } = await supabase
+      .from("user_profiles")
+      .update({
+        name: customer.name,
+        birth_date: customer.birthDate,
+        gender,
+        phone_number: customer.phoneNumber,
+        ci: customer.ci,
+        di: customer.di,
+        is_verified: true,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId);
 
     if (updateError) {
       log({ function: FN, level: "error", message: "DB Update Error", metadata: { detail: updateError } });
