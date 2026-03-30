@@ -41,7 +41,11 @@ class MinglitTextField extends StatelessWidget {
     this.focusNode,
     this.autofocus = false,
     super.key,
-  });
+  })  : assert(maxLines > 0, 'maxLines must be greater than 0'),
+        assert(
+          !obscureText || maxLines == 1,
+          'obscureText=true requires maxLines=1',
+        );
 
   /// Label text displayed above the input.
   final String label;
@@ -98,53 +102,61 @@ class MinglitTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return TextField(
-      controller: controller,
-      obscureText: obscureText,
-      enabled: enabled,
-      maxLines: maxLines,
-      keyboardType: keyboardType,
-      onChanged: onChanged,
-      onSubmitted: onSubmitted,
-      inputFormatters: inputFormatters,
-      textInputAction: textInputAction,
-      focusNode: focusNode,
-      autofocus: autofocus,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hintText,
-        errorText: errorText,
-        helperText: helperText,
-        prefixIcon: prefixIcon,
-        suffixIcon: suffixIcon,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(MinglitRadius.input),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(MinglitRadius.input),
-          borderSide: BorderSide(color: colorScheme.outline),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(MinglitRadius.input),
-          borderSide: BorderSide(color: colorScheme.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(MinglitRadius.input),
-          borderSide: BorderSide(color: colorScheme.error),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(MinglitRadius.input),
-          borderSide: BorderSide(color: colorScheme.error, width: 2),
-        ),
-        disabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(MinglitRadius.input),
-          borderSide: BorderSide(
-            color: colorScheme.outline.withValues(alpha: MinglitOpacity.muted),
+    return Semantics(
+      textField: true,
+      label: label,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: kMinInteractiveDimension),
+        child: TextField(
+          controller: controller,
+          obscureText: obscureText,
+          enabled: enabled,
+          maxLines: maxLines,
+          keyboardType: keyboardType,
+          onChanged: onChanged,
+          onSubmitted: onSubmitted,
+          inputFormatters: inputFormatters,
+          textInputAction: textInputAction,
+          focusNode: focusNode,
+          autofocus: autofocus,
+          decoration: InputDecoration(
+            labelText: label,
+            hintText: hintText,
+            errorText: errorText,
+            helperText: helperText,
+            prefixIcon: prefixIcon,
+            suffixIcon: suffixIcon,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(MinglitRadius.input),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(MinglitRadius.input),
+              borderSide: BorderSide(color: colorScheme.outline),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(MinglitRadius.input),
+              borderSide: BorderSide(color: colorScheme.primary, width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(MinglitRadius.input),
+              borderSide: BorderSide(color: colorScheme.error),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(MinglitRadius.input),
+              borderSide: BorderSide(color: colorScheme.error, width: 2),
+            ),
+            disabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(MinglitRadius.input),
+              borderSide: BorderSide(
+                color:
+                    colorScheme.outline.withValues(alpha: MinglitOpacity.muted),
+              ),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: MinglitSpacing.medium,
+              vertical: MinglitSpacing.sm,
+            ),
           ),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: MinglitSpacing.medium,
-          vertical: MinglitSpacing.sm,
         ),
       ),
     );

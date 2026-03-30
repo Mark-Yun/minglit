@@ -112,11 +112,15 @@ void main() {
     });
 
     testWidgets('label is accessible via semantics', (tester) async {
+      final semantics = tester.ensureSemantics();
       await tester.pumpWidget(
         wrap(const MinglitTextField(label: '접근성 테스트')),
       );
 
-      expect(find.text('접근성 테스트'), findsOneWidget);
+      expect(find.bySemanticsLabel('접근성 테스트'), findsWidgets);
+      final size = tester.getSize(find.byType(MinglitTextField));
+      expect(size.height, greaterThanOrEqualTo(48));
+      semantics.dispose();
     });
   });
 }
