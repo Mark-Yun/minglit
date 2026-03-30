@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:app_user/src/features/event/matching/matching_vote_controller.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'event_now_bar_controller.g.dart';
 
@@ -122,4 +125,58 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
   }
 
   // coverage:ignore-end
+}
+
+/// Subscribes to Supabase Realtime changes on `event_participants` for a
+/// given [eventId]. When a change is received, [todayActiveEventsProvider]
+/// is invalidated so the UI refreshes.
+///
+/// Falls back to 30-second polling if the Realtime connection closes.
+@riverpod
+class EventRealtime extends _$EventRealtime {
+  RealtimeChannel? _channel;
+  Timer? _pollingTimer;
+
+  @override
+  void build(String eventId) {
+    final supabase = ref.watch(supabaseClientProvider);
+
+    _channel = supabase.channel('event-now-$eventId');
+    _channel!
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'event_participants',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'event_id',
+            value: eventId,
+          ),
+          callback: (payload) {
+            // Invalidate today active events to trigger
+            // state recalculation.
+            ref.invalidate(todayActiveEventsProvider);
+          },
+        )
+        .subscribe((status, [error]) {
+          if (status == RealtimeSubscribeStatus.closed) {
+            _startPollingFallback();
+          }
+        });
+
+    ref.onDispose(() {
+      _pollingTimer?.cancel();
+      _pollingTimer = null;
+      unawaited(_channel?.unsubscribe());
+      _channel = null;
+    });
+  }
+
+  void _startPollingFallback() {
+    _pollingTimer?.cancel();
+    _pollingTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => ref.invalidate(todayActiveEventsProvider),
+    );
+  }
 }

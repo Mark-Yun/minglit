@@ -39,3 +39,5 @@ class MockUser extends Mock implements User {}
 class MockUserProfile extends Mock implements UserProfile {}
 
 class MockEvent extends Mock implements Event {}
+
+class MockRealtimeChannel extends Mock implements RealtimeChannel {}
