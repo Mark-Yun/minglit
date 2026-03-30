@@ -53,24 +53,21 @@ Deno.serve(withHandler(async (req) => {
       return errorResponse("Verified customer data missing", 500);
     }
 
-    // 3. Supabase DB 업데이트
+    // 3. Supabase DB 업데이트 — update_user_identity RPC로 암호화 저장
+    // Fix #809: ci/di 평문 컬럼 제거 후 ci_encrypted/di_encrypted/di_hash로 전환
     const supabase = createServiceClient();
 
     const gender = typeof customer.gender === "string" ? customer.gender.toLowerCase() : undefined;
 
-    const { error: updateError } = await supabase
-      .from("user_profiles")
-      .update({
-        name: customer.name,
-        birth_date: customer.birthDate,
-        gender,
-        phone_number: customer.phoneNumber,
-        ci: customer.ci,
-        di: customer.di,
-        is_verified: true,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", userId);
+    const { error: updateError } = await supabase.rpc("update_user_identity", {
+      p_user_id: userId,
+      p_ci: customer.ci as string,
+      p_di: customer.di as string,
+      p_name: (customer.name as string) ?? null,
+      p_birth_date: (customer.birthDate as string) ?? null,
+      p_gender: gender ?? null,
+      p_phone_number: (customer.phoneNumber as string) ?? null,
+    });
 
     if (updateError) {
       log({ function: FN, level: "error", message: "DB Update Error", metadata: { detail: updateError } });
