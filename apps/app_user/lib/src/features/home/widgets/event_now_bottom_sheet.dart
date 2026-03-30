@@ -10,8 +10,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 /// Shows the Event Now bottom sheet for a given active event.
 ///
-/// Displays Phase 1 (check-in ready — QR code) or Phase 2 (checked in —
-/// confirmation + participant count) depending on [EventNowBarState].
+/// Displays Phase 1 (check-in ready — QR code), Phase 2 (checked in —
+/// confirmation + participant count), or Phase 3 (matching — vote content)
+/// depending on [EventNowBarState].
 Future<void> showEventNowBottomSheet(
   BuildContext context,
   WidgetRef ref,
@@ -36,6 +37,8 @@ Future<void> showEventNowBottomSheet(
 ///   QR code + event info + location link
 /// - **Phase 2** (`checkedIn`):
 ///   Check-in confirmation + participant count + avatars
+/// - **Phase 3** (`matching`):
+///   MatchingVoteContent with vote count header
 /// - **Phase 4** (`results`):
 ///   Match result profile cards (or empty state)
 /// - **Phase 5** (`ended`):

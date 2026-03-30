@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_user/src/features/event/matching/widgets/matching_vote_content.dart';
 import 'package:app_user/src/features/home/widgets/event_now_bar_controller.dart';
 import 'package:app_user/src/features/home/widgets/event_now_bottom_sheet.dart';
 import 'package:app_user/src/features/ticket/data/ticket_wallet_repository.dart';
@@ -215,6 +216,178 @@ void main() {
         );
       },
     );
+
+    // -----------------------------------------------------------------
+    // Phase 3: Matching — MatchingVoteContent + vote count
+    // -----------------------------------------------------------------
+
+    testWidgets(
+      'Phase 3: renders MatchingVoteContent when state is matching',
+      (tester) async {
+        when(
+          () => mockMatchingRepo.getMatchingCandidates('event_1'),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockMatchingRepo.getMyMatches('event_1'),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockMatchingRepo.getMyVoteCount('event_1'),
+        ).thenAnswer((_) async => 1);
+        when(
+          () => mockMatchingRepo.getMyVotedCandidateIds('event_1'),
+        ).thenAnswer((_) async => {'candidate_1'});
+        when(() => mockMatchingRepo.getMatchRules('event_1')).thenAnswer(
+          (_) async => [
+            MatchRule(
+              id: 'rule_1',
+              eventId: 'event_1',
+              sourceGroupId: 'g1',
+              targetGroupId: 'g2',
+              createdAt: now,
+              voteCount: 3,
+            ),
+          ],
+        );
+
+        final event = makeActiveEvent(participantStatus: 'checked_in');
+        await tester.pumpWidget(
+          createTestWidget(event, EventNowBarState.matching),
+        );
+        for (var i = 0; i < 10; i++) {
+          await tester.pump(const Duration(milliseconds: 100));
+        }
+
+        expect(find.byType(MatchingVoteContent), findsOneWidget);
+        expect(find.text('강남 밍릿파티'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Phase 3: shows remaining vote count',
+      (tester) async {
+        when(
+          () => mockMatchingRepo.getMatchingCandidates('event_1'),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockMatchingRepo.getMyMatches('event_1'),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockMatchingRepo.getMyVoteCount('event_1'),
+        ).thenAnswer((_) async => 1);
+        when(
+          () => mockMatchingRepo.getMyVotedCandidateIds('event_1'),
+        ).thenAnswer((_) async => {'candidate_1'});
+        when(() => mockMatchingRepo.getMatchRules('event_1')).thenAnswer(
+          (_) async => [
+            MatchRule(
+              id: 'rule_1',
+              eventId: 'event_1',
+              sourceGroupId: 'g1',
+              targetGroupId: 'g2',
+              createdAt: now,
+              voteCount: 3,
+            ),
+          ],
+        );
+
+        final event = makeActiveEvent(participantStatus: 'checked_in');
+        await tester.pumpWidget(
+          createTestWidget(event, EventNowBarState.matching),
+        );
+        for (var i = 0; i < 10; i++) {
+          await tester.pump(const Duration(milliseconds: 100));
+        }
+
+        // 3 max - 1 used = 2 remaining
+        expect(find.text('남은 투표: 2 / 3'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Phase 3: shows skeleton cards while candidates load',
+      (tester) async {
+        // Use a Completer to keep candidates loading
+        final completer = Completer<List<UserProfile>>();
+        when(
+          () => mockMatchingRepo.getMatchingCandidates('event_1'),
+        ).thenAnswer((_) => completer.future);
+        when(
+          () => mockMatchingRepo.getMyMatches('event_1'),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockMatchingRepo.getMyVoteCount('event_1'),
+        ).thenAnswer((_) async => 0);
+        when(
+          () => mockMatchingRepo.getMyVotedCandidateIds('event_1'),
+        ).thenAnswer((_) async => {});
+        when(() => mockMatchingRepo.getMatchRules('event_1')).thenAnswer(
+          (_) async => [
+            MatchRule(
+              id: 'rule_1',
+              eventId: 'event_1',
+              sourceGroupId: 'g1',
+              targetGroupId: 'g2',
+              createdAt: now,
+              voteCount: 3,
+            ),
+          ],
+        );
+
+        final event = makeActiveEvent(participantStatus: 'checked_in');
+        await tester.pumpWidget(
+          createTestWidget(event, EventNowBarState.matching),
+        );
+        for (var i = 0; i < 10; i++) {
+          await tester.pump(const Duration(milliseconds: 100));
+        }
+
+        // MatchingVoteContent should render with loading indicator
+        expect(find.byType(MatchingVoteContent), findsOneWidget);
+        expect(find.byType(CircularProgressIndicator), findsWidgets);
+      },
+    );
+
+    testWidgets(
+      'Phase 3: shows vote complete when all votes used',
+      (tester) async {
+        when(
+          () => mockMatchingRepo.getMatchingCandidates('event_1'),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockMatchingRepo.getMyMatches('event_1'),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockMatchingRepo.getMyVoteCount('event_1'),
+        ).thenAnswer((_) async => 3);
+        when(
+          () => mockMatchingRepo.getMyVotedCandidateIds('event_1'),
+        ).thenAnswer((_) async => {'c1', 'c2', 'c3'});
+        when(() => mockMatchingRepo.getMatchRules('event_1')).thenAnswer(
+          (_) async => [
+            MatchRule(
+              id: 'rule_1',
+              eventId: 'event_1',
+              sourceGroupId: 'g1',
+              targetGroupId: 'g2',
+              createdAt: now,
+              voteCount: 3,
+            ),
+          ],
+        );
+
+        final event = makeActiveEvent(participantStatus: 'checked_in');
+        await tester.pumpWidget(
+          createTestWidget(event, EventNowBarState.matching),
+        );
+        for (var i = 0; i < 10; i++) {
+          await tester.pump(const Duration(milliseconds: 100));
+        }
+
+        // Both _MatchingContent header and MatchingVoteContent show "투표 완료!"
+        expect(find.text('투표 완료!'), findsWidgets);
+      },
+    );
+
     // -----------------------------------------------------------------
     // Phase 4: Results — match result profiles or empty state
     // -----------------------------------------------------------------

@@ -89,6 +89,13 @@ class MinglitTheme {
           height: 1.33,
           color: MinglitColors.textPrimary,
         ),
+        headlineMedium: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          height: 1.29,
+          color: MinglitColors.textPrimary,
+        ),
         titleLarge: TextStyle(
           // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 20,
@@ -327,6 +334,13 @@ class MinglitTheme {
           fontSize: 24,
           fontWeight: FontWeight.bold,
           height: 1.33,
+          color: MinglitColorsDark.textPrimary,
+        ),
+        headlineMedium: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          height: 1.29,
           color: MinglitColorsDark.textPrimary,
         ),
         titleLarge: TextStyle(
