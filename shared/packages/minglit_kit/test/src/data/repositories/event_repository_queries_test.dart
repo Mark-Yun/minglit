@@ -231,7 +231,6 @@ void main() {
           mockTable(
             mockClient,
             'event_applications',
-            countValue: 0,
           ),
         );
 
