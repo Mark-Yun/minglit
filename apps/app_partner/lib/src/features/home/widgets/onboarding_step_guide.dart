@@ -32,7 +32,10 @@ class OnboardingStepGuide extends StatelessWidget {
           Center(
             child: Text(
               '🎊',
-              style: theme.textTheme.displayLarge?.copyWith(fontSize: 40),
+              // Fix #596: hardcoded fontSize:40 → MinglitIconSize.xxlarge
+              style: theme.textTheme.displayLarge?.copyWith(
+                fontSize: MinglitIconSize.xxlarge,
+              ),
             ),
           ),
           const SizedBox(height: MinglitSpacing.sm),
@@ -398,7 +401,8 @@ class _FlowStep extends StatelessWidget {
     return Expanded(
       child: Column(
         children: [
-          Text(icon, style: const TextStyle(fontSize: 24)),
+          // Fix #596: hardcoded fontSize:24 → MinglitIconSize.medium
+          Text(icon, style: const TextStyle(fontSize: MinglitIconSize.medium)),
           const SizedBox(height: MinglitSpacing.xxsmall),
           Text(
             label,
@@ -406,12 +410,15 @@ class _FlowStep extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
+          // Fix #596: hardcoded fontSize:10 → captionTiny from extension
           Text(
             sub,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontSize: 10,
-            ),
+            style: theme
+                .extension<MinglitTextThemeExtension>()!
+                .captionTiny
+                .copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
           ),
         ],
       ),

@@ -38,6 +38,12 @@ class MinglitColors {
 
   /// Semi-transparent black scrim for overlays.
   static const scrim = Color(0x80000000);
+
+  /// Glitch effect cyan — splash screen text shadow.
+  static const glitchCyan = Color(0xFF21FFFE);
+
+  /// Darker primary variant — splash gradient mid-tone.
+  static const primaryDark = Color(0xFF7B2FBE);
 }
 
 class MinglitColorsDark {
@@ -145,6 +151,9 @@ class MinglitIconSize {
 
   /// 32px extra-large icon size.
   static const double xlarge = 32;
+
+  /// 40px extra-extra-large icon size.
+  static const double xxlarge = 40;
 }
 
 /// Partner app brand colors — same purple family, toned down for business feel.
