@@ -106,7 +106,10 @@ class MinglitTextField extends StatelessWidget {
       textField: true,
       label: label,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: kMinInteractiveDimension),
+        constraints: const BoxConstraints(
+          minHeight: kMinInteractiveDimension,
+          minWidth: kMinInteractiveDimension,
+        ),
         child: TextField(
           controller: controller,
           obscureText: obscureText,
