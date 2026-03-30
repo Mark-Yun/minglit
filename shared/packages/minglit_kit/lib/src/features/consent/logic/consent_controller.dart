@@ -48,11 +48,15 @@ class ConsentController extends _$ConsentController {
 
       await repository.saveConsents(user.id, consents);
 
+      // Invalidate guard cache immediately after successful save,
+      // before reload — so even if getConsents() fails below,
+      // the route guard re-fetches fresh data.
+      // Fix #895: stale hasRequiredConsentsProvider when reload fails
+      ref.invalidate(hasRequiredConsentsProvider);
+
       // Reload from server to get the full records
       final updated = await repository.getConsents(user.id);
       state = AsyncData(updated);
-
-      ref.invalidate(hasRequiredConsentsProvider);
     } on Object catch (e, st) {
       state = AsyncError(e, st);
     }
@@ -73,11 +77,13 @@ class ConsentController extends _$ConsentController {
       final input = ConsentInput(consentKey: type, consented: consented);
       await repository.saveConsents(user.id, [input]);
 
+      // Invalidate guard cache immediately after successful save.
+      // Fix #895: stale hasRequiredConsentsProvider when reload fails
+      ref.invalidate(hasRequiredConsentsProvider);
+
       // Reload from server
       final updated = await repository.getConsents(user.id);
       state = AsyncData(updated);
-
-      ref.invalidate(hasRequiredConsentsProvider);
     } on Object catch (e, st) {
       state = AsyncError(e, st);
     }

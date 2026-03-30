@@ -147,6 +147,57 @@ void main() {
       },
     );
 
+    test(
+      'saveSignupConsents invalidates guard cache even when reload fails',
+      () async {
+        // First build succeeds
+        when(
+          () => mockRepo.getConsents('user_1'),
+        ).thenAnswer((_) async => testConsents);
+
+        var hasRequiredConsents = false;
+        when(
+          () => mockRepo.hasRequiredConsents(),
+        ).thenAnswer((_) async => hasRequiredConsents);
+
+        final container = createTestContainer(user: mockUser);
+        await container.read(consentControllerProvider.future);
+
+        // Pre-cache hasRequiredConsents as false
+        final before = await container.read(
+          hasRequiredConsentsProvider.future,
+        );
+        expect(before, false);
+
+        // saveConsents succeeds, but getConsents (reload) fails
+        when(
+          () => mockRepo.saveConsents('user_1', any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockRepo.getConsents('user_1'),
+        ).thenThrow(Exception('network error'));
+
+        hasRequiredConsents = true;
+
+        await container
+            .read(consentControllerProvider.notifier)
+            .saveSignupConsents(ConsentType.requiredTypes, policyVersion: 1);
+
+        // Controller state should be error (reload failed)
+        expect(
+          container.read(consentControllerProvider),
+          isA<AsyncError<List<UserConsent>>>(),
+        );
+
+        // But hasRequiredConsentsProvider was invalidated before the
+        // reload, so it should re-fetch and return true.
+        final after = await container.read(
+          hasRequiredConsentsProvider.future,
+        );
+        expect(after, true);
+      },
+    );
+
     test('toggleConsent calls repository and reloads', () async {
       when(
         () => mockRepo.getConsents('user_1'),
