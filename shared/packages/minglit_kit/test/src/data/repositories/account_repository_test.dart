@@ -53,12 +53,14 @@ void main() {
           ),
         );
 
-        final captured = verify(
-          () => mockFunctions.invoke(
-            'user-delete-account',
-            body: captureAny(named: 'body'),
-          ),
-        ).captured.single as Map<String, dynamic>;
+        final captured =
+            verify(
+                  () => mockFunctions.invoke(
+                    'user-delete-account',
+                    body: captureAny(named: 'body'),
+                  ),
+                ).captured.single
+                as Map<String, dynamic>;
 
         expect(captured['reason_code'], 'privacy_concern');
         expect(captured['reason_text'], 'privacy');
@@ -75,18 +77,23 @@ void main() {
         ).thenAnswer(
           (_) async => FunctionResponse(
             status: 200,
-            data: {'success': true, 'grace_period_ends': '2026-04-06T00:00:00Z'},
+            data: {
+              'success': true,
+              'grace_period_ends': '2026-04-06T00:00:00Z',
+            },
           ),
         );
 
         await repository.deleteAccount(null);
 
-        final captured = verify(
-          () => mockFunctions.invoke(
-            'user-delete-account',
-            body: captureAny(named: 'body'),
-          ),
-        ).captured.single as Map<String, dynamic>;
+        final captured =
+            verify(
+                  () => mockFunctions.invoke(
+                    'user-delete-account',
+                    body: captureAny(named: 'body'),
+                  ),
+                ).captured.single
+                as Map<String, dynamic>;
 
         expect(captured, isEmpty);
       });
@@ -121,7 +128,9 @@ void main() {
       test('calls the cancel edge function', () async {
         when(
           () => mockFunctions.invoke('user-cancel-deletion'),
-        ).thenAnswer((_) async => FunctionResponse(status: 200, data: {'success': true}));
+        ).thenAnswer(
+          (_) async => FunctionResponse(status: 200, data: {'success': true}),
+        );
 
         await repository.cancelDeletion();
 
@@ -163,7 +172,9 @@ void main() {
 
     group('reauthenticate', () {
       test('uses password sign-in for email users', () async {
-        when(() => mockUser.appMetadata).thenReturn(const {'provider': 'email'});
+        when(
+          () => mockUser.appMetadata,
+        ).thenReturn(const {'provider': 'email'});
         when(
           () => mockAuth.signInWithPassword(
             email: any(named: 'email'),
@@ -183,7 +194,9 @@ void main() {
       });
 
       test('throws when email user password is missing', () async {
-        when(() => mockUser.appMetadata).thenReturn(const {'provider': 'email'});
+        when(
+          () => mockUser.appMetadata,
+        ).thenReturn(const {'provider': 'email'});
 
         await expectLater(
           () => repository.reauthenticate(null),
@@ -192,7 +205,9 @@ void main() {
       });
 
       test('uses Supabase reauthenticate for social users', () async {
-        when(() => mockUser.appMetadata).thenReturn(const {'provider': 'google'});
+        when(
+          () => mockUser.appMetadata,
+        ).thenReturn(const {'provider': 'google'});
         when(() => mockAuth.reauthenticate()).thenAnswer((_) async {});
 
         await repository.reauthenticate(null);
