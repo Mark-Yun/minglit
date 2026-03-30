@@ -67,9 +67,7 @@ void main() {
     test('returns empty list when user is not logged in', () async {
       final container = createTestContainer();
 
-      final result = await container.read(
-        consentControllerProvider.future,
-      );
+      final result = await container.read(consentControllerProvider.future);
 
       expect(result, isEmpty);
     });
@@ -81,9 +79,7 @@ void main() {
 
       final container = createTestContainer(user: mockUser);
 
-      final result = await container.read(
-        consentControllerProvider.future,
-      );
+      final result = await container.read(consentControllerProvider.future);
 
       expect(result, hasLength(3));
       expect(result.first.consentKey, ConsentType.termsOfService);
@@ -105,18 +101,51 @@ void main() {
       // Save signup consents
       await container
           .read(consentControllerProvider.notifier)
-          .saveSignupConsents(
-            ConsentType.requiredTypes,
-            policyVersion: 1,
-          );
+          .saveSignupConsents(ConsentType.requiredTypes, policyVersion: 1);
 
-      verify(
-        () => mockRepo.saveConsents('user_1', any()),
-      ).called(1);
+      verify(() => mockRepo.saveConsents('user_1', any())).called(1);
 
       // Verify reload was called (getConsents called during build + reload)
       verify(() => mockRepo.getConsents('user_1')).called(2);
     });
+
+    test(
+      'saveSignupConsents invalidates hasRequiredConsents cache after success',
+      () async {
+        when(
+          () => mockRepo.getConsents('user_1'),
+        ).thenAnswer((_) async => testConsents);
+        when(
+          () => mockRepo.saveConsents('user_1', any()),
+        ).thenAnswer((_) async {});
+
+        var hasRequiredConsents = false;
+        when(
+          () => mockRepo.hasRequiredConsents(),
+        ).thenAnswer((_) async => hasRequiredConsents);
+
+        final container = createTestContainer(user: mockUser);
+
+        final beforeSave = await container.read(
+          hasRequiredConsentsProvider.future,
+        );
+
+        expect(beforeSave, false);
+
+        hasRequiredConsents = true;
+
+        await container
+            .read(consentControllerProvider.notifier)
+            .saveSignupConsents(ConsentType.requiredTypes, policyVersion: 1);
+
+        final afterSave = await container.read(
+          hasRequiredConsentsProvider.future,
+        );
+
+        expect(afterSave, true);
+        verify(() => mockRepo.hasRequiredConsents()).called(2);
+      },
+    );
 
     test('toggleConsent calls repository and reloads', () async {
       when(
@@ -132,10 +161,7 @@ void main() {
 
       await container
           .read(consentControllerProvider.notifier)
-          .toggleConsent(
-            ConsentType.marketingConsent,
-            consented: true,
-          );
+          .toggleConsent(ConsentType.marketingConsent, consented: true);
 
       final captured = verify(
         () => mockRepo.saveConsents('user_1', captureAny()),
@@ -182,29 +208,21 @@ void main() {
 
   group('hasRequiredConsents', () {
     test('returns true when all required consents exist', () async {
-      when(
-        () => mockRepo.hasRequiredConsents(),
-      ).thenAnswer((_) async => true);
+      when(() => mockRepo.hasRequiredConsents()).thenAnswer((_) async => true);
 
       final container = createTestContainer(user: mockUser);
 
-      final result = await container.read(
-        hasRequiredConsentsProvider.future,
-      );
+      final result = await container.read(hasRequiredConsentsProvider.future);
 
       expect(result, true);
     });
 
     test('returns false when missing consents', () async {
-      when(
-        () => mockRepo.hasRequiredConsents(),
-      ).thenAnswer((_) async => false);
+      when(() => mockRepo.hasRequiredConsents()).thenAnswer((_) async => false);
 
       final container = createTestContainer(user: mockUser);
 
-      final result = await container.read(
-        hasRequiredConsentsProvider.future,
-      );
+      final result = await container.read(hasRequiredConsentsProvider.future);
 
       expect(result, false);
     });
@@ -212,9 +230,7 @@ void main() {
     test('returns false when user is not logged in', () async {
       final container = createTestContainer();
 
-      final result = await container.read(
-        hasRequiredConsentsProvider.future,
-      );
+      final result = await container.read(hasRequiredConsentsProvider.future);
 
       expect(result, false);
     });

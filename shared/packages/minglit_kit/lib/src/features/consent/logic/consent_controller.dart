@@ -51,6 +51,8 @@ class ConsentController extends _$ConsentController {
       // Reload from server to get the full records
       final updated = await repository.getConsents(user.id);
       state = AsyncData(updated);
+
+      ref.invalidate(hasRequiredConsentsProvider);
     } on Object catch (e, st) {
       state = AsyncError(e, st);
     }
@@ -66,8 +68,6 @@ class ConsentController extends _$ConsentController {
     final user = ref.read(currentUserProvider);
     if (user == null) return;
 
-    final previousState = state;
-
     try {
       final repository = ref.read(consentRepositoryProvider);
       final input = ConsentInput(consentKey: type, consented: consented);
@@ -76,10 +76,9 @@ class ConsentController extends _$ConsentController {
       // Reload from server
       final updated = await repository.getConsents(user.id);
       state = AsyncData(updated);
+
+      ref.invalidate(hasRequiredConsentsProvider);
     } on Object catch (e, st) {
-      // Restore the last loaded data before surfacing the error so the next
-      // rebuild can recover from a stable baseline instead of a partial write.
-      state = previousState;
       state = AsyncError(e, st);
     }
   }

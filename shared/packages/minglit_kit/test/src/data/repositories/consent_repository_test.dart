@@ -31,11 +31,7 @@ void main() {
           'created_at': now.toIso8601String(),
         };
 
-        mockTable(
-          mockClient,
-          'user_consents',
-          selectData: [consentJson],
-        );
+        mockTable(mockClient, 'user_consents', selectData: [consentJson]);
 
         final result = await repository.getConsents('user_1');
 
@@ -45,16 +41,17 @@ void main() {
         expect(result.first.userId, 'user_1');
       });
 
-      test('returns empty list on error', () async {
+      test('throws on error', () async {
         mockTable(
           mockClient,
           'user_consents',
           shouldThrow: Exception('DB error'),
         );
 
-        final result = await repository.getConsents('user_1');
-
-        expect(result, isEmpty);
+        expect(
+          () => repository.getConsents('user_1'),
+          throwsA(isA<Exception>()),
+        );
       });
 
       test('returns empty list when no consents', () async {
@@ -75,21 +72,18 @@ void main() {
           ),
         ).thenAnswer((_) => FakeRpcBuilder(null));
 
-        await repository.saveConsents(
-          'user_1',
-          [
-            const ConsentInput(
-              consentKey: ConsentType.termsOfService,
-              consented: true,
-              policyVersion: 1,
-            ),
-            const ConsentInput(
-              consentKey: ConsentType.privacyCollection,
-              consented: true,
-              policyVersion: 1,
-            ),
-          ],
-        );
+        await repository.saveConsents('user_1', [
+          const ConsentInput(
+            consentKey: ConsentType.termsOfService,
+            consented: true,
+            policyVersion: 1,
+          ),
+          const ConsentInput(
+            consentKey: ConsentType.privacyCollection,
+            consented: true,
+            policyVersion: 1,
+          ),
+        ]);
 
         final captured = verify(
           () => mockClient.rpc<void>(
@@ -113,15 +107,12 @@ void main() {
         ).thenThrow(Exception('RPC error'));
 
         expect(
-          () => repository.saveConsents(
-            'user_1',
-            [
-              const ConsentInput(
-                consentKey: ConsentType.termsOfService,
-                consented: true,
-              ),
-            ],
-          ),
+          () => repository.saveConsents('user_1', [
+            const ConsentInput(
+              consentKey: ConsentType.termsOfService,
+              consented: true,
+            ),
+          ]),
           throwsA(isA<Exception>()),
         );
       });
@@ -148,14 +139,15 @@ void main() {
         expect(result, false);
       });
 
-      test('returns false on error', () async {
+      test('throws on error', () async {
         when(
           () => mockClient.rpc<bool>('has_required_consents'),
         ).thenThrow(Exception('RPC error'));
 
-        final result = await repository.hasRequiredConsents();
-
-        expect(result, false);
+        expect(
+          () => repository.hasRequiredConsents(),
+          throwsA(isA<Exception>()),
+        );
       });
     });
   });

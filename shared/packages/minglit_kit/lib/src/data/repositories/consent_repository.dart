@@ -24,37 +24,25 @@ class ConsentRepository {
   ///
   /// Returns only rows where `consented = true` (active consents).
   Future<List<UserConsent>> getConsents(String userId) async {
-    try {
-      final data = await _supabase
-          .from('user_consents')
-          .select()
-          .eq('user_id', userId)
-          .eq('consented', true);
-      return (data as List)
-          .map(
-            (dynamic e) => UserConsent.fromJson(e as Map<String, dynamic>),
-          )
-          .toList();
-    } on Object {
-      return [];
-    }
+    final data = await _supabase
+        .from('user_consents')
+        .select()
+        .eq('user_id', userId)
+        .eq('consented', true);
+    return (data as List)
+        .map((dynamic e) => UserConsent.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   /// Saves consents via the `save_user_consents` RPC.
   ///
   /// Each [ConsentInput] is upserted: existing rows are updated,
   /// new rows are inserted. Uses ON CONFLICT (user_id, consent_key).
-  Future<void> saveConsents(
-    String userId,
-    List<ConsentInput> consents,
-  ) async {
+  Future<void> saveConsents(String userId, List<ConsentInput> consents) async {
     final payload = consents.map((c) => c.toJson()).toList();
     await _supabase.rpc<void>(
       'save_user_consents',
-      params: {
-        'p_user_id': userId,
-        'p_consents': payload,
-      },
+      params: {'p_user_id': userId, 'p_consents': payload},
     );
   }
 
@@ -63,11 +51,7 @@ class ConsentRepository {
   /// Calls the `has_required_consents()` RPC which checks for
   /// terms_of_service, privacy_collection, and age_confirmation.
   Future<bool> hasRequiredConsents() async {
-    try {
-      final result = await _supabase.rpc<bool>('has_required_consents');
-      return result;
-    } on Object {
-      return false;
-    }
+    final result = await _supabase.rpc<bool>('has_required_consents');
+    return result;
   }
 }
