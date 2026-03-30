@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:app_user/src/features/home/widgets/event_now_bar_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -9,8 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../utils/mocks.dart';
 import '../../../../utils/test_utils.dart';
 
-class FakePostgresChangeFilter extends Fake
-    implements PostgresChangeFilter {}
+class FakePostgresChangeFilter extends Fake implements PostgresChangeFilter {}
 
 void main() {
   setUpAll(() {
@@ -100,8 +97,9 @@ void main() {
           callback: any(named: 'callback'),
         ),
       ).thenAnswer((invocation) {
-        capturedCallback = invocation.namedArguments[#callback]
-            as void Function(PostgresChangePayload);
+        capturedCallback =
+            invocation.namedArguments[#callback]
+                as void Function(PostgresChangePayload);
         return mockChannel;
       });
 
@@ -152,8 +150,9 @@ void main() {
       void Function(RealtimeSubscribeStatus, [Object?])? capturedStatusCb;
 
       when(() => mockChannel.subscribe(any(), any())).thenAnswer((invocation) {
-        capturedStatusCb = invocation.positionalArguments[0]
-            as void Function(RealtimeSubscribeStatus, [Object?]);
+        capturedStatusCb =
+            invocation.positionalArguments[0]
+                as void Function(RealtimeSubscribeStatus, [Object?]);
         return mockChannel;
       });
 
@@ -186,8 +185,9 @@ void main() {
       void Function(RealtimeSubscribeStatus, [Object?])? capturedStatusCb;
 
       when(() => mockChannel.subscribe(any(), any())).thenAnswer((invocation) {
-        capturedStatusCb = invocation.positionalArguments[0]
-            as void Function(RealtimeSubscribeStatus, [Object?]);
+        capturedStatusCb =
+            invocation.positionalArguments[0]
+                as void Function(RealtimeSubscribeStatus, [Object?]);
         return mockChannel;
       });
 
