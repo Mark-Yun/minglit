@@ -77,6 +77,8 @@ class ConsentController extends _$ConsentController {
       final updated = await repository.getConsents(user.id);
       state = AsyncData(updated);
     } on Object catch (e, st) {
+      // Restore the last loaded data before surfacing the error so the next
+      // rebuild can recover from a stable baseline instead of a partial write.
       state = previousState;
       state = AsyncError(e, st);
     }
