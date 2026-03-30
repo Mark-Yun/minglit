@@ -1,5 +1,5 @@
 import 'package:app_partner/src/features/account_deletion/account_deletion_coordinator.dart';
-import 'package:app_partner/src/features/account_deletion/account_deletion_flow.dart';
+import 'package:app_partner/src/features/account_deletion/logic/account_deletion_flow.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 

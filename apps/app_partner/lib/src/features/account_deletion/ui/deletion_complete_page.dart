@@ -40,7 +40,7 @@ class DeletionCompletePage extends ConsumerWidget {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: () => _finish(context, ref),
+                  onPressed: () => _finish(ref),
                   child: const Text('확인'),
                 ),
               ),
@@ -51,12 +51,10 @@ class DeletionCompletePage extends ConsumerWidget {
     );
   }
 
-  Future<void> _finish(BuildContext context, WidgetRef ref) async {
+  Future<void> _finish(WidgetRef ref) async {
     final authController = ref.read(authControllerProvider.notifier);
     ref.read(accountDeletionCoordinatorProvider).goToHome();
     await Future<void>.delayed(Duration.zero);
     await authController.signOut();
-    if (!context.mounted) return;
-    context.showMinglitSuccess('탈퇴 요청이 접수되었어요.');
   }
 }
