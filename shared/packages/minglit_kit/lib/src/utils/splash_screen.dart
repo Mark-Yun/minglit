@@ -38,7 +38,8 @@ class MinglitTextLogo extends StatelessWidget {
             ? const [
                 Shadow(
                   offset: Offset(2, 2),
-                  color: Color(0xFF21FFFE),
+                  // Fix #596: hardcoded color → design token
+                  color: MinglitColors.glitchCyan,
                 ),
                 Shadow(
                   offset: Offset(3, 3),
@@ -163,7 +164,8 @@ class _MinglitSplashScreenState extends State<MinglitSplashScreen>
                         end: Alignment.bottomRight,
                         colors: [
                           MinglitColors.primary,
-                          Color(0xFF7B2FBE),
+                          // Fix #596: hardcoded color → design token
+                          MinglitColors.primaryDark,
                           MinglitColors.secondary,
                         ],
                         stops: [0.0, 0.55, 1.0],
