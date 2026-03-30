@@ -47,7 +47,7 @@ final class IamportControllerProvider
   }
 }
 
-String _$iamportControllerHash() => r'a997f3cd619978a981f96d94304d181ebe3d694d';
+String _$iamportControllerHash() => r'f45d925fe45305d65720f6bf65bd8bd46bda2120';
 
 /// Controls Iamport payment and certification state.
 
