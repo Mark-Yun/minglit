@@ -410,7 +410,7 @@ void main() {
       clearInteractions(navigatorObserver);
 
       await tester.tap(find.text('입장 QR'));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       // Verify Navigator.push was called exactly once (route to TicketQRScreen)
       verify(() => navigatorObserver.didPush(any(), any())).called(1);
