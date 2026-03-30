@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_bottom_sheet.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_content_card.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_key_value_row.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_section.dart';
@@ -688,50 +689,91 @@ class _BottomSheetSection extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(MinglitSpacing.medium),
       children: [
-        Text('BottomSheet', style: theme.textTheme.titleMedium),
+        Text('MinglitBottomSheet', style: theme.textTheme.titleLarge),
+        const SizedBox(height: MinglitSpacing.medium),
+        Text('With Title', style: theme.textTheme.titleMedium),
         const SizedBox(height: MinglitSpacing.small),
         Text(
-          'Tap the button below to preview a modal BottomSheet.',
+          'showMinglitBottomSheet으로 통일된 바텀시트를 표시합니다.',
           style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: MinglitSpacing.medium),
         ElevatedButton(
           onPressed: () {
             unawaited(
-              showModalBottomSheet<void>(
+              showMinglitBottomSheet<void>(
                 context: context,
-                builder: (ctx) => Padding(
-                  padding: const EdgeInsets.all(MinglitSpacing.large),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Example BottomSheet',
-                        style: theme.textTheme.titleLarge,
+                title: '옵션 선택',
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '바텀시트 내용입니다. 핸들과 제목이 자동으로 포함됩니다.',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: MinglitSpacing.large),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('닫기'),
                       ),
-                      const SizedBox(height: MinglitSpacing.medium),
-                      Text(
-                        'This is an example modal bottom sheet '
-                        'using the current theme.',
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: MinglitSpacing.large),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          child: const Text('Close'),
-                        ),
-                      ),
-                      const SizedBox(height: MinglitSpacing.medium),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             );
           },
-          child: const Text('Show BottomSheet'),
+          child: const Text('Show with Title'),
+        ),
+        const SizedBox(height: MinglitSpacing.large),
+        Text('Without Title', style: theme.textTheme.titleMedium),
+        const SizedBox(height: MinglitSpacing.small),
+        ElevatedButton(
+          onPressed: () {
+            unawaited(
+              showMinglitBottomSheet<void>(
+                context: context,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '제목 없이 핸들과 콘텐츠만 표시됩니다.',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: MinglitSpacing.medium),
+                  ],
+                ),
+              ),
+            );
+          },
+          child: const Text('Show without Title'),
+        ),
+        const SizedBox(height: MinglitSpacing.large),
+        Text('No Handle', style: theme.textTheme.titleMedium),
+        const SizedBox(height: MinglitSpacing.small),
+        ElevatedButton(
+          onPressed: () {
+            unawaited(
+              showMinglitBottomSheet<void>(
+                context: context,
+                title: '핸들 없음',
+                showHandle: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '드래그 핸들 없이 제목과 콘텐츠만 표시됩니다.',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: MinglitSpacing.medium),
+                  ],
+                ),
+              ),
+            );
+          },
+          child: const Text('Show without Handle'),
         ),
       ],
     );
