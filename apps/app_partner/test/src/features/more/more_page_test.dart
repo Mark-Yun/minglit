@@ -93,7 +93,10 @@ void main() {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      expect(find.byType(Divider).evaluate().length, greaterThanOrEqualTo(4));
+      expect(
+        find.byType(Divider, skipOffstage: false).evaluate().length,
+        greaterThanOrEqualTo(4),
+      );
     });
 
     testWidgets('shows all required menu items', (tester) async {
@@ -104,9 +107,10 @@ void main() {
       expect(find.text('멤버 관리'), findsOneWidget);
       expect(find.text('알림 설정'), findsOneWidget);
       expect(find.text('계정 관리'), findsOneWidget);
+      expect(find.text('회원 탈퇴'), findsOneWidget);
       expect(find.text('파트너 프로필'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('개인정보처리방침'), 100);
       expect(find.text('개인정보처리방침'), findsOneWidget);
-      // Scroll down to reveal items below the fold
       await tester.scrollUntilVisible(find.text('이용약관'), 100);
       expect(find.text('이용약관'), findsOneWidget);
       await tester.scrollUntilVisible(find.text('로그아웃'), 100);
@@ -132,6 +136,18 @@ void main() {
 
       final logoutTextWidget = tester.widget<Text>(find.text('로그아웃'));
       expect(logoutTextWidget.style?.color, equals(MinglitColors.error));
+    });
+
+    testWidgets('tapping account deletion forwards to coordinator', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('회원 탈퇴'));
+      await tester.pumpAndSettle();
+
+      verify(() => mockCoordinator.pushAccountDeletion()).called(1);
     });
   });
 }

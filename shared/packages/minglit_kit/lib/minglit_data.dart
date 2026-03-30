@@ -50,4 +50,5 @@ export 'src/data/repositories/ticket_repository.dart';
 export 'src/data/repositories/user_repository.dart';
 export 'src/data/repositories/verification_repository.dart';
 // Utils
+export 'src/utils/auth_provider_utils.dart';
 export 'src/utils/ticket_crypto.dart';

@@ -1,5 +1,6 @@
 import 'package:minglit_kit/src/data/models/deletion_status.dart';
 import 'package:minglit_kit/src/data/models/withdrawal_reason.dart';
+import 'package:minglit_kit/src/utils/auth_provider_utils.dart';
 import 'package:minglit_kit/src/utils/exceptions.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -93,7 +94,7 @@ class AccountRepository {
     }
 
     try {
-      if (_usesPasswordAuth(user)) {
+      if (hasPasswordCredential(user)) {
         final email = user.email;
         if (email == null || email.isEmpty) {
           throw const MinglitAuthException('이메일 계정을 확인할 수 없습니다.');
@@ -113,25 +114,6 @@ class AccountRepository {
     } on Object catch (error, stackTrace) {
       throw MinglitException.from(error, stackTrace);
     }
-  }
-
-  bool _usesPasswordAuth(User user) {
-    final identities = user.identities ?? const [];
-    if (identities.any((identity) => identity.provider == 'email')) {
-      return true;
-    }
-
-    final provider = user.appMetadata['provider'];
-    if (provider == 'email') {
-      return true;
-    }
-
-    final providers = user.appMetadata['providers'];
-    if (providers is List) {
-      return providers.contains('email');
-    }
-
-    return false;
   }
 
   MinglitUserException _efError(FunctionResponse response, String fallback) {
