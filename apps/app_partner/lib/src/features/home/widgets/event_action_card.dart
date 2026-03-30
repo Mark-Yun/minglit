@@ -209,13 +209,13 @@ class EventActionCard extends StatelessWidget {
             children: [
               Text(
                 timeFmt.format(event.startTime),
-                style: theme.textTheme.displayLarge?.copyWith(
+                // Fix #596: displayLarge+fontSize:28 → headlineMedium (28px)
+                style: theme.textTheme.headlineMedium?.copyWith(
                   color: phase == EventPhase.ended
                       ? colorScheme.onSurfaceVariant
                       : colorScheme.primary,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -1,
-                  fontSize: 28,
                 ),
               ),
               const SizedBox(width: MinglitSpacing.small),
