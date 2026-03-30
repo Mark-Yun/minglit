@@ -161,12 +161,12 @@ class TicketListItem extends StatelessWidget {
                       maxLines: 1,
                     ),
                     const SizedBox(height: MinglitSpacing.xxsmall),
+                    // Fix #596: bodySmall+fontSize:11 → labelSmall (11px)
                     Text(
                       '${currencyFormat.format(ticket.price)} · '
                       '${ticket.quantity}매 발행',
-                      style: theme.textTheme.bodySmall?.copyWith(
+                      style: theme.textTheme.labelSmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
-                        fontSize: 11,
                       ),
                     ),
                   ],
