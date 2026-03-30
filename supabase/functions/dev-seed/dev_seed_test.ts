@@ -40,6 +40,7 @@ Deno.test({
         handler: async (req) => {
           createUserCallCount++;
           const body = await req.json();
+          assertEquals(body.app_metadata, { has_password: true });
           return jsonResponse({
             user: {
               id: `user-${createUserCallCount}`,
@@ -129,6 +130,7 @@ Deno.test({
         handler: async (req) => {
           createUserAttempts++;
           const body = await req.json();
+          assertEquals(body.app_metadata, { has_password: true });
 
           if (body.email === duplicateEmail && createUserAttempts === 1) {
             return jsonResponse(
@@ -160,9 +162,10 @@ Deno.test({
         },
       },
       {
-        matcher: (req) => req.url.includes(`/auth/v1/admin/users/${existingUserId}`) && req.method === "DELETE",
-        handler: () => {
-          deleteUserCalled = true;
+        matcher: (req) => req.url.includes(`/auth/v1/admin/users/${existingUserId}`) && req.method === "PUT",
+        handler: async (req) => {
+          const body = await req.json();
+          assertEquals(body.app_metadata, { has_password: true });
           return jsonResponse({ user: { id: existingUserId } });
         },
       },

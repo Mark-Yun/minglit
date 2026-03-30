@@ -307,6 +307,7 @@ async function createAdminUser(
     email: persona.email,
     password: persona.password,
     email_confirm: true,
+    app_metadata: { has_password: true },
     user_metadata: persona.metadata,
   })
 
@@ -318,6 +319,7 @@ async function createAdminUser(
       if (existing) {
         await supabase.auth.admin.updateUserById(existing.id, {
           password: persona.password,
+          app_metadata: { has_password: true },
           user_metadata: persona.metadata,
         })
         return existing.id
