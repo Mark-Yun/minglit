@@ -199,3 +199,128 @@ abstract class _$EventNowBarStateNotifier
     element.handleValue(ref, created);
   }
 }
+
+/// Subscribes to Supabase Realtime changes on `event_participants` for a
+/// given [eventId]. When a change is received, [todayActiveEventsProvider]
+/// is invalidated so the UI refreshes.
+///
+/// Falls back to 30-second polling if the Realtime connection closes.
+
+@ProviderFor(EventRealtime)
+const eventRealtimeProvider = EventRealtimeFamily._();
+
+/// Subscribes to Supabase Realtime changes on `event_participants` for a
+/// given [eventId]. When a change is received, [todayActiveEventsProvider]
+/// is invalidated so the UI refreshes.
+///
+/// Falls back to 30-second polling if the Realtime connection closes.
+final class EventRealtimeProvider
+    extends $NotifierProvider<EventRealtime, void> {
+  /// Subscribes to Supabase Realtime changes on `event_participants` for a
+  /// given [eventId]. When a change is received, [todayActiveEventsProvider]
+  /// is invalidated so the UI refreshes.
+  ///
+  /// Falls back to 30-second polling if the Realtime connection closes.
+  const EventRealtimeProvider._({
+    required EventRealtimeFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'eventRealtimeProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$eventRealtimeHash();
+
+  @override
+  String toString() {
+    return r'eventRealtimeProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  EventRealtime create() => EventRealtime();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(void value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<void>(value),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is EventRealtimeProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$eventRealtimeHash() => r'f3f208f3d4c41e56fc1a2745040e5c63f6794d76';
+
+/// Subscribes to Supabase Realtime changes on `event_participants` for a
+/// given [eventId]. When a change is received, [todayActiveEventsProvider]
+/// is invalidated so the UI refreshes.
+///
+/// Falls back to 30-second polling if the Realtime connection closes.
+
+final class EventRealtimeFamily extends $Family
+    with $ClassFamilyOverride<EventRealtime, void, void, void, String> {
+  const EventRealtimeFamily._()
+    : super(
+        retry: null,
+        name: r'eventRealtimeProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Subscribes to Supabase Realtime changes on `event_participants` for a
+  /// given [eventId]. When a change is received, [todayActiveEventsProvider]
+  /// is invalidated so the UI refreshes.
+  ///
+  /// Falls back to 30-second polling if the Realtime connection closes.
+
+  EventRealtimeProvider call(String eventId) =>
+      EventRealtimeProvider._(argument: eventId, from: this);
+
+  @override
+  String toString() => r'eventRealtimeProvider';
+}
+
+/// Subscribes to Supabase Realtime changes on `event_participants` for a
+/// given [eventId]. When a change is received, [todayActiveEventsProvider]
+/// is invalidated so the UI refreshes.
+///
+/// Falls back to 30-second polling if the Realtime connection closes.
+
+abstract class _$EventRealtime extends $Notifier<void> {
+  late final _$args = ref.$arg as String;
+  String get eventId => _$args;
+
+  void build(String eventId);
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    build(_$args);
+    final ref = this.ref as $Ref<void, void>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<void, void>,
+              void,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, null);
+  }
+}
