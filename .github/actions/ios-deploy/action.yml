@@ -195,12 +195,13 @@ runs:
         fi
 
         # Create xcconfig with correct settings
-        cat > ios/CI.xcconfig << EOF
-CODE_SIGN_STYLE = Manual
-CODE_SIGN_IDENTITY = Apple Distribution
-DEVELOPMENT_TEAM = ${{ inputs.development-team }}
-PROVISIONING_PROFILE_SPECIFIER = $PROFILE_SPECIFIER
-EOF
+        # Fix #901: heredoc content was parsed as YAML keys due to ':'
+        {
+          echo "CODE_SIGN_STYLE = Manual"
+          echo "CODE_SIGN_IDENTITY = Apple Distribution"
+          echo "DEVELOPMENT_TEAM = ${{ inputs.development-team }}"
+          echo "PROVISIONING_PROFILE_SPECIFIER = $PROFILE_SPECIFIER"
+        } > ios/CI.xcconfig
 
         # Include in Release.xcconfig
         echo '#include "../CI.xcconfig"' >> ios/Flutter/Release.xcconfig
