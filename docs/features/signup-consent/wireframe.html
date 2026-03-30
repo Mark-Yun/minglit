@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>밍릿 — 회원가입 동의 와이어프레임</title>
+<style>
+  /* ===== Minglit Design Tokens ===== */
+  :root {
+    /* Colors (01-foundation.md) */
+    --color-background: #FFFFFF;
+    --color-primary: #9900FF;
+    --color-secondary: #FF9900;
+    --color-surface: #F9FAFB;
+    --color-error: #EF4444;
+    --color-text-primary: #111827;
+    --color-text-secondary: #4B5563;
+    --color-success: #22C55E;
+    --color-divider: #E5E7EB;
+    --color-scrim: rgba(0,0,0,0.5);
+
+    /* Spacing (01-foundation.md) */
+    --sp-xxsmall: 2px;
+    --sp-xsmall: 4px;
+    --sp-xsmall2: 6px;
+    --sp-small: 8px;
+    --sp-sm: 12px;
+    --sp-medium: 16px;
+    --sp-large: 24px;
+    --sp-xlarge: 32px;
+    --sp-screen-edge: 16px;
+
+    /* Radius (01-foundation.md) */
+    --radius-small: 8px;
+    --radius-button: 12px;
+    --radius-card: 16px;
+
+    /* Typography - NotoSansKR */
+    --font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-family);
+    background: #E5E7EB;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 32px;
+    padding: 32px;
+  }
+
+  /* ===== Screen Frame ===== */
+  .screen-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .screen-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    text-align: center;
+  }
+  .screen-sublabel {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    text-align: center;
+    margin-top: -8px;
+  }
+  .phone-frame {
+    width: 375px;
+    height: 812px;
+    background: var(--color-surface);
+    border-radius: 40px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ===== Status Bar ===== */
+  .status-bar {
+    height: 54px;
+    background: var(--color-background);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    flex-shrink: 0;
+  }
+
+  /* ===== AppBar ===== */
+  .app-bar {
+    height: 56px;
+    background: var(--color-background);
+    display: flex;
+    align-items: center;
+    padding: 0 var(--sp-medium);
+    flex-shrink: 0;
+  }
+  .app-bar .back-btn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-primary);
+    font-size: 20px;
+  }
+  .app-bar .title {
+    flex: 1;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+  .app-bar .spacer { width: 24px; }
+
+  /* ===== Content ===== */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--sp-large) var(--sp-screen-edge);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-large);
+  }
+
+  /* ===== Typography ===== */
+  .title-large {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--color-text-primary);
+  }
+  .title-medium {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.5;
+    color: var(--color-text-primary);
+  }
+  .body-medium {
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--color-text-secondary);
+  }
+  .body-small {
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--color-text-secondary);
+  }
+  .label-medium {
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--color-text-primary);
+  }
+
+  /* ===== Card / Container ===== */
+  .card {
+    background: var(--color-background);
+    border-radius: var(--radius-card);
+    padding: var(--sp-medium);
+  }
+
+  /* ===== Toggle All ===== */
+  .toggle-all {
+    background: var(--color-background);
+    border-radius: var(--radius-card);
+    padding: var(--sp-medium);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1.5px solid var(--color-divider);
+  }
+  .toggle-all.checked {
+    border-color: var(--color-primary);
+    background: rgba(153, 0, 255, 0.05);
+  }
+  .toggle-all .label {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+
+  /* ===== Switch ===== */
+  .switch {
+    width: 48px;
+    height: 28px;
+    border-radius: 14px;
+    background: #D1D5DB;
+    position: relative;
+    transition: background 0.2s;
+  }
+  .switch.on { background: var(--color-primary); }
+  .switch::after {
+    content: '';
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-radius: 11px;
+    background: white;
+    top: 3px;
+    left: 3px;
+    transition: transform 0.2s;
+  }
+  .switch.on::after { transform: translateX(20px); }
+
+  /* ===== Checkbox ===== */
+  .checkbox {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    border: 1.5px solid #9CA3AF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .checkbox.checked {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+  }
+  .checkbox.checked::after {
+    content: '✓';
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  /* ===== Consent Item ===== */
+  .consent-list {
+    display: flex;
+    flex-direction: column;
+  }
+  .consent-item {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    padding: var(--sp-sm) 0;
+    border-bottom: 1px solid var(--color-divider);
+  }
+  .consent-item:last-child { border-bottom: none; }
+  .consent-item .info { flex: 1; }
+  .consent-item .tag {
+    font-size: 12px;
+    font-weight: 700;
+    margin-right: 4px;
+  }
+  .consent-item .tag.required { color: var(--color-primary); }
+  .consent-item .tag.optional { color: var(--color-text-secondary); }
+  .consent-item .name {
+    font-size: 14px;
+    color: var(--color-text-primary);
+  }
+  .consent-item .chevron {
+    color: #9CA3AF;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  /* ===== CTA Button ===== */
+  .cta-button {
+    width: 100%;
+    height: 56px;
+    border-radius: var(--radius-button);
+    border: none;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: var(--font-family);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cta-button.primary {
+    background: var(--color-primary);
+    color: white;
+  }
+  .cta-button.disabled {
+    background: #D1D5DB;
+    color: white;
+    cursor: not-allowed;
+  }
+  .cta-button.text {
+    background: transparent;
+    color: var(--color-text-secondary);
+    height: 44px;
+  }
+
+  /* ===== Bottom Safe Area ===== */
+  .bottom-area {
+    padding: var(--sp-medium) var(--sp-screen-edge);
+    padding-bottom: 34px;
+    background: var(--color-background);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-small);
+  }
+
+  /* ===== Bottom Sheet Overlay ===== */
+  .bottom-sheet-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: 0;
+    background: var(--color-scrim);
+    display: flex;
+    align-items: flex-end;
+    z-index: 10;
+  }
+  .bottom-sheet {
+    background: var(--color-background);
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+    width: 100%;
+    max-height: 80%;
+    padding: var(--sp-large);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-medium);
+  }
+  .bottom-sheet .drag-handle {
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: #D1D5DB;
+    align-self: center;
+    margin-bottom: var(--sp-small);
+  }
+
+  /* ===== Info Box ===== */
+  .info-box {
+    background: var(--color-surface);
+    border-radius: var(--radius-small);
+    padding: var(--sp-medium);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-small);
+  }
+  .info-box .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-top: var(--sp-small);
+  }
+  .info-box .section-title:first-child { margin-top: 0; }
+  .info-box .item {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    padding-left: 12px;
+    position: relative;
+  }
+  .info-box .item::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+  }
+
+  /* ===== Privacy Page Specific ===== */
+  .privacy-section {
+    display: flex;
+    flex-direction: column;
+  }
+  .privacy-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--color-divider);
+  }
+  .privacy-item:last-child { border-bottom: none; }
+  .privacy-item .left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .privacy-item .item-name {
+    font-size: 14px;
+    color: var(--color-text-primary);
+  }
+  .privacy-item .item-date {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+  .privacy-item .status {
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .privacy-item .status.agreed { color: var(--color-success); }
+  .privacy-item .status.link { color: var(--color-primary); }
+
+  /* ===== Annotation ===== */
+  .annotation {
+    position: absolute;
+    background: #FEF3C7;
+    border: 1px solid #F59E0B;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+    color: #92400E;
+    white-space: nowrap;
+    z-index: 20;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================ -->
+<!-- Screen 1: 회원가입 약관 동의 (초기 상태)        -->
+<!-- ============================================ -->
+<div class="screen-wrapper">
+  <div class="screen-label">화면 1-A: 회원가입 약관 동의</div>
+  <div class="screen-sublabel">초기 상태 — 모든 항목 미체크</div>
+  <div class="phone-frame">
+    <div class="status-bar">9:41</div>
+
+    <div class="content">
+      <!-- Welcome Header -->
+      <div>
+        <div class="title-large">환영합니다! 👋</div>
+        <div class="body-medium" style="margin-top: 8px;">
+          서비스 이용을 위해<br>약관에 동의해주세요
+        </div>
+      </div>
+
+      <!-- Toggle All -->
+      <div class="toggle-all">
+        <span class="label">모두 동의합니다</span>
+        <div class="switch"></div>
+      </div>
+
+      <!-- Consent Items -->
+      <div class="card">
+        <div class="consent-list">
+          <div class="consent-item">
+            <div class="checkbox"></div>
+            <div class="info">
+              <span class="tag required">(필수)</span>
+              <span class="name">서비스 이용약관</span>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="consent-item">
+            <div class="checkbox"></div>
+            <div class="info">
+              <span class="tag required">(필수)</span>
+              <span class="name">개인정보 수집·이용 동의</span>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="consent-item">
+            <div class="checkbox"></div>
+            <div class="info">
+              <span class="tag required">(필수)</span>
+              <span class="name">만 14세 이상입니다</span>
+            </div>
+          </div>
+          <div class="consent-item">
+            <div class="checkbox"></div>
+            <div class="info">
+              <span class="tag optional">(선택)</span>
+              <span class="name">제3자 제공 동의</span>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="consent-item">
+            <div class="checkbox"></div>
+            <div class="info">
+              <span class="tag optional">(선택)</span>
+              <span class="name">마케팅 정보 수신</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="body-small">※ 선택 항목에 동의하지 않아도 서비스 이용에 영향이 없습니다</div>
+    </div>
+
+    <div class="bottom-area">
+      <button class="cta-button disabled">동의하고 시작하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- Screen 1-B: 전체 동의 ON                       -->
+<!-- ============================================ -->
+<div class="screen-wrapper">
+  <div class="screen-label">화면 1-B: 전체 동의 활성화</div>
+  <div class="screen-sublabel">모두 동의 → CTA 활성화</div>
+  <div class="phone-frame">
+    <div class="status-bar">9:41</div>
+
+    <div class="content">
+      <div>
+        <div class="title-large">환영합니다! 👋</div>
+        <div class="body-medium" style="margin-top: 8px;">
+          서비스 이용을 위해<br>약관에 동의해주세요
+        </div>
+      </div>
+
+      <div class="toggle-all checked">
+        <span class="label">모두 동의합니다</span>
+        <div class="switch on"></div>
+      </div>
+
+      <div class="card">
+        <div class="consent-list">
+          <div class="consent-item">
+            <div class="checkbox checked"></div>
+            <div class="info">
+              <span class="tag required">(필수)</span>
+              <span class="name">서비스 이용약관</span>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="consent-item">
+            <div class="checkbox checked"></div>
+            <div class="info">
+              <span class="tag required">(필수)</span>
+              <span class="name">개인정보 수집·이용 동의</span>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="consent-item">
+            <div class="checkbox checked"></div>
+            <div class="info">
+              <span class="tag required">(필수)</span>
+              <span class="name">만 14세 이상입니다</span>
+            </div>
+          </div>
+          <div class="consent-item">
+            <div class="checkbox checked"></div>
+            <div class="info">
+              <span class="tag optional">(선택)</span>
+              <span class="name">제3자 제공 동의</span>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="consent-item">
+            <div class="checkbox checked"></div>
+            <div class="info">
+              <span class="tag optional">(선택)</span>
+              <span class="name">마케팅 정보 수신</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="body-small">※ 선택 항목에 동의하지 않아도 서비스 이용에 영향이 없습니다</div>
+    </div>
+
+    <div class="bottom-area">
+      <button class="cta-button primary">동의하고 시작하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- Screen 1-C: 필수만 동의                        -->
+<!-- ============================================ -->
+<div class="screen-wrapper">
+  <div class="screen-label">화면 1-C: 필수만 동의</div>
+  <div class="screen-sublabel">선택 미체크 — CTA 여전히 활성</div>
+  <div class="phone-frame">
+    <div class="status-bar">9:41</div>
+
+    <div class="content">
+      <div>
+        <div class="title-large">환영합니다! 👋</div>
+        <div class="body-medium" style="margin-top: 8px;">
+          서비스 이용을 위해<br>약관에 동의해주세요
+        </div>
+      </div>
+
+      <div class="toggle-all">
+        <span class="label">모두 동의합니다</span>
+        <div class="switch"></div>
+      </div>
+
+      <div class="card">
+        <div class="consent-list">
+          <div class="consent-item">
+            <div class="checkbox checked"></div>
+            <div class="info">
+              <span class="tag required">(필수)</span>
+              <span class="name">서비스 이용약관</span>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="consent-item">
+            <div class="checkbox checked"></div>
+            <div class="info">
+              <span class="tag required">(필수)</span>
+              <span class="name">개인정보 수집·이용 동의</span>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="consent-item">
+            <div class="checkbox checked"></div>
+            <div class="info">
+              <span class="tag required">(필수)</span>
+              <span class="name">만 14세 이상입니다</span>
+            </div>
+          </div>
+          <div class="consent-item">
+            <div class="checkbox"></div>
+            <div class="info">
+              <span class="tag optional">(선택)</span>
+              <span class="name">제3자 제공 동의</span>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="consent-item">
+            <div class="checkbox"></div>
+            <div class="info">
+              <span class="tag optional">(선택)</span>
+              <span class="name">마케팅 정보 수신</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="body-small">※ 선택 항목에 동의하지 않아도 서비스 이용에 영향이 없습니다</div>
+    </div>
+
+    <div class="bottom-area">
+      <button class="cta-button primary">동의하고 시작하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- Screen 1-D: 약관 바텀시트 (개인정보 수집·이용)   -->
+<!-- ============================================ -->
+<div class="screen-wrapper">
+  <div class="screen-label">화면 1-D: 약관 바텀시트</div>
+  <div class="screen-sublabel">개인정보 수집·이용 전문 보기</div>
+  <div class="phone-frame">
+    <div class="status-bar">9:41</div>
+
+    <div class="content" style="filter: blur(2px); opacity: 0.5;">
+      <div class="title-large">환영합니다! 👋</div>
+    </div>
+
+    <div class="bottom-sheet-overlay">
+      <div class="bottom-sheet">
+        <div class="drag-handle"></div>
+        <div class="title-medium">개인정보 수집·이용 동의</div>
+
+        <div class="info-box" style="overflow-y: auto; max-height: 380px;">
+          <div class="section-title">수집 항목</div>
+          <div class="item">이름, 이메일, 프로필 사진, 관심 태그</div>
+
+          <div class="section-title">수집 목적</div>
+          <div class="item">서비스 제공 (계정 관리, 이벤트 매칭, 프로필 표시)</div>
+
+          <div class="section-title">보유 기간</div>
+          <div class="item">회원 탈퇴 시까지</div>
+          <div class="item">관련 법령에 따른 보존 의무가 있는 경우 해당 기간까지 보관</div>
+
+          <div class="section-title">동의 거부 권리</div>
+          <div class="item">위 개인정보 수집·이용에 대한 동의를 거부할 수 있습니다.</div>
+          <div class="item">다만, 동의를 거부할 경우 서비스 이용이 불가합니다.</div>
+        </div>
+
+        <button class="cta-button primary" style="margin-top: 8px;">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- Screen 1-E: 제3자 제공 바텀시트                 -->
+<!-- ============================================ -->
+<div class="screen-wrapper">
+  <div class="screen-label">화면 1-E: 제3자 제공 바텀시트</div>
+  <div class="screen-sublabel">개인정보보호법 제17조 고지</div>
+  <div class="phone-frame">
+    <div class="status-bar">9:41</div>
+
+    <div class="content" style="filter: blur(2px); opacity: 0.5;">
+      <div class="title-large">환영합니다! 👋</div>
+    </div>
+
+    <div class="bottom-sheet-overlay">
+      <div class="bottom-sheet">
+        <div class="drag-handle"></div>
+        <div class="title-medium">개인정보 제3자 제공 동의</div>
+
+        <div class="info-box" style="overflow-y: auto; max-height: 380px;">
+          <div class="section-title">제공받는 자</div>
+          <div class="item">이벤트 주최 파트너 (이벤트 신청 시 해당 파트너에 한정)</div>
+
+          <div class="section-title">제공 항목</div>
+          <div class="item">이름, 성별, 연령대</div>
+
+          <div class="section-title">제공 목적</div>
+          <div class="item">이벤트 운영 (참가자 확인, 매칭 진행, 체크인)</div>
+
+          <div class="section-title">보유 기간</div>
+          <div class="item">이벤트 종료 후 30일</div>
+
+          <div class="section-title">동의 거부 권리</div>
+          <div class="item">위 제3자 제공에 대한 동의를 거부할 수 있습니다.</div>
+          <div class="item">거부해도 서비스 이용에 제한이 없습니다.</div>
+          <div class="item">단, 이벤트 신청 시 개별 동의를 다시 요청합니다.</div>
+        </div>
+
+        <button class="cta-button primary" style="margin-top: 8px;">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- Screen 2: 본인인증 CI/DI 수집 동의 바텀시트     -->
+<!-- ============================================ -->
+<div class="screen-wrapper">
+  <div class="screen-label">화면 2: 본인인증 동의 바텀시트</div>
+  <div class="screen-sublabel">/certification 에서 인증 시작 전</div>
+  <div class="phone-frame">
+    <div class="status-bar">9:41</div>
+
+    <div class="app-bar">
+      <div class="back-btn">‹</div>
+      <div class="title">본인인증</div>
+      <div class="spacer"></div>
+    </div>
+
+    <div class="content" style="filter: blur(2px); opacity: 0.5;">
+      <div class="body-medium">본인인증을 진행합니다...</div>
+    </div>
+
+    <div class="bottom-sheet-overlay">
+      <div class="bottom-sheet">
+        <div class="drag-handle"></div>
+        <div class="title-medium">본인인증 정보 수집·이용 동의</div>
+        <div class="body-medium" style="font-size: 14px;">본인확인을 위해 아래 정보를 수집합니다.</div>
+
+        <div class="info-box">
+          <div class="section-title">수집 항목</div>
+          <div class="item">이름, 생년월일, 성별</div>
+          <div class="item">휴대폰 번호</div>
+          <div class="item">CI (연계정보)</div>
+          <div class="item">DI (중복확인정보)</div>
+
+          <div class="section-title">이용 목적</div>
+          <div class="item">본인확인 및 실명 인증</div>
+          <div class="item">중복 가입 방지</div>
+
+          <div class="section-title">보유 기간</div>
+          <div class="item">회원 탈퇴 시까지</div>
+          <div class="item">관련 법령에 따라 보존 의무가 있는 경우 해당 기간까지</div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; padding: 4px 0;">
+          <div class="checkbox"></div>
+          <span style="font-size: 14px; color: var(--color-text-primary);">(필수) 위 내용에 동의합니다</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button class="cta-button disabled">본인인증 시작하기</button>
+          <button class="cta-button text">취소</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- Screen 2-B: 본인인증 동의 완료 상태             -->
+<!-- ============================================ -->
+<div class="screen-wrapper">
+  <div class="screen-label">화면 2-B: 동의 체크 완료</div>
+  <div class="screen-sublabel">체크 시 CTA 활성화</div>
+  <div class="phone-frame">
+    <div class="status-bar">9:41</div>
+
+    <div class="app-bar">
+      <div class="back-btn">‹</div>
+      <div class="title">본인인증</div>
+      <div class="spacer"></div>
+    </div>
+
+    <div class="content" style="filter: blur(2px); opacity: 0.5;">
+      <div class="body-medium">본인인증을 진행합니다...</div>
+    </div>
+
+    <div class="bottom-sheet-overlay">
+      <div class="bottom-sheet">
+        <div class="drag-handle"></div>
+        <div class="title-medium">본인인증 정보 수집·이용 동의</div>
+        <div class="body-medium" style="font-size: 14px;">본인확인을 위해 아래 정보를 수집합니다.</div>
+
+        <div class="info-box">
+          <div class="section-title">수집 항목</div>
+          <div class="item">이름, 생년월일, 성별</div>
+          <div class="item">휴대폰 번호</div>
+          <div class="item">CI (연계정보)</div>
+          <div class="item">DI (중복확인정보)</div>
+
+          <div class="section-title">이용 목적</div>
+          <div class="item">본인확인 및 실명 인증</div>
+          <div class="item">중복 가입 방지</div>
+
+          <div class="section-title">보유 기간</div>
+          <div class="item">회원 탈퇴 시까지</div>
+          <div class="item">관련 법령에 따라 보존 의무가 있는 경우 해당 기간까지</div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; padding: 4px 0;">
+          <div class="checkbox checked"></div>
+          <span style="font-size: 14px; color: var(--color-text-primary);">(필수) 위 내용에 동의합니다</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button class="cta-button primary">본인인증 시작하기</button>
+          <button class="cta-button text">취소</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- Screen 3: 동의 관리 (PrivacyPage)              -->
+<!-- ============================================ -->
+<div class="screen-wrapper">
+  <div class="screen-label">화면 3: 동의 관리</div>
+  <div class="screen-sublabel">/my/privacy — 기존 placeholder 교체</div>
+  <div class="phone-frame">
+    <div class="status-bar">9:41</div>
+
+    <div class="app-bar">
+      <div class="back-btn">‹</div>
+      <div class="title">개인정보 설정</div>
+      <div class="spacer"></div>
+    </div>
+
+    <div class="content">
+      <!-- Section: 약관 동의 현황 -->
+      <div>
+        <div class="title-medium" style="margin-bottom: 12px;">약관 동의 현황</div>
+        <div class="card">
+          <div class="privacy-section">
+            <div class="privacy-item">
+              <div class="left">
+                <span class="item-name">서비스 이용약관</span>
+                <span class="item-date">2026.03.30 동의</span>
+              </div>
+              <span class="status link">보기 ›</span>
+            </div>
+            <div class="privacy-item">
+              <div class="left">
+                <span class="item-name">개인정보 수집·이용</span>
+                <span class="item-date">2026.03.30 동의</span>
+              </div>
+              <span class="status link">보기 ›</span>
+            </div>
+            <div class="privacy-item">
+              <div class="left">
+                <span class="item-name">본인인증 정보 수집</span>
+                <span class="item-date">2026.03.30 동의</span>
+              </div>
+              <span class="status agreed">동의됨</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: 선택 동의 관리 -->
+      <div>
+        <div class="title-medium" style="margin-bottom: 12px;">선택 동의 관리</div>
+        <div class="card">
+          <div class="privacy-section">
+            <div class="privacy-item">
+              <div class="left">
+                <span class="item-name">제3자 제공 동의</span>
+                <span class="item-date" style="font-size: 11px; line-height: 1.4;">파트너에게 참가자 정보 제공</span>
+              </div>
+              <div class="switch on"></div>
+            </div>
+            <div class="privacy-item">
+              <div class="left">
+                <span class="item-name">마케팅 정보 수신</span>
+                <span class="item-date" style="font-size: 11px; line-height: 1.4;">이벤트/혜택 안내 (Push, 이메일)</span>
+              </div>
+              <div class="switch"></div>
+            </div>
+          </div>
+        </div>
+        <div class="body-small" style="margin-top: 8px;">선택 동의는 언제든 변경할 수 있습니다.</div>
+      </div>
+
+      <!-- Section: 기타 -->
+      <div>
+        <div class="title-medium" style="margin-bottom: 12px;">기타</div>
+        <div class="card">
+          <div class="privacy-section">
+            <div class="privacy-item">
+              <div class="left">
+                <span class="item-name">개인정보처리방침</span>
+              </div>
+              <span class="status link">보기 ›</span>
+            </div>
+            <div class="privacy-item">
+              <div class="left">
+                <span class="item-name" style="color: var(--color-error);">회원탈퇴</span>
+              </div>
+              <span class="chevron" style="color: #9CA3AF; font-size: 18px;">›</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- Screen 3-B: 동의 관리 — 마케팅 ON 상태          -->
+<!-- ============================================ -->
+<div class="screen-wrapper">
+  <div class="screen-label">화면 3-B: 마케팅 동의 ON</div>
+  <div class="screen-sublabel">토글 변경 시 즉시 저장</div>
+  <div class="phone-frame">
+    <div class="status-bar">9:41</div>
+
+    <div class="app-bar">
+      <div class="back-btn">‹</div>
+      <div class="title">개인정보 설정</div>
+      <div class="spacer"></div>
+    </div>
+
+    <div class="content">
+      <div>
+        <div class="title-medium" style="margin-bottom: 12px;">약관 동의 현황</div>
+        <div class="card">
+          <div class="privacy-section">
+            <div class="privacy-item">
+              <div class="left">
+                <span class="item-name">서비스 이용약관</span>
+                <span class="item-date">2026.03.30 동의</span>
+              </div>
+              <span class="status link">보기 ›</span>
+            </div>
+            <div class="privacy-item">
+              <div class="left">
+                <span class="item-name">개인정보 수집·이용</span>
+                <span class="item-date">2026.03.30 동의</span>
+              </div>
+              <span class="status link">보기 ›</span>
+            </div>
+            <div class="privacy-item">
+              <div class="left">
+                <span class="item-name">본인인증 정보 수집</span>
+                <span class="item-date">2026.03.30 동의</span>
+              </div>
+              <span class="status agreed">동의됨</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="title-medium" style="margin-bottom: 12px;">선택 동의 관리</div>
+        <div class="card">
+          <div class="privacy-section">
+            <div class="privacy-item">
+              <div class="left">
+                <span class="item-name">제3자 제공 동의</span>
+                <span class="item-date" style="font-size: 11px; line-height: 1.4;">파트너에게 참가자 정보 제공</span>
+              </div>
+              <div class="switch on"></div>
+            </div>
+            <div class="privacy-item">
+              <div class="left">
+                <span class="item-name">마케팅 정보 수신</span>
+                <span class="item-date" style="font-size: 11px; line-height: 1.4;">이벤트/혜택 안내 (Push, 이메일)</span>
+              </div>
+              <div class="switch on"></div>
+            </div>
+          </div>
+        </div>
+        <div class="body-small" style="margin-top: 8px;">선택 동의는 언제든 변경할 수 있습니다.</div>
+      </div>
+
+      <div>
+        <div class="title-medium" style="margin-bottom: 12px;">기타</div>
+        <div class="card">
+          <div class="privacy-section">
+            <div class="privacy-item">
+              <div class="left">
+                <span class="item-name">개인정보처리방침</span>
+              </div>
+              <span class="status link">보기 ›</span>
+            </div>
+            <div class="privacy-item">
+              <div class="left">
+                <span class="item-name" style="color: var(--color-error);">회원탈퇴</span>
+              </div>
+              <span class="chevron" style="color: #9CA3AF; font-size: 18px;">›</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Snackbar -->
+    <div style="position: absolute; bottom: 90px; left: 16px; right: 16px; background: var(--color-text-primary); color: white; padding: 14px 16px; border-radius: var(--radius-small); font-size: 14px; display: flex; align-items: center; gap: 8px; z-index: 10;">
+      <span style="color: var(--color-success);">✓</span>
+      마케팅 정보 수신 동의가 변경되었습니다
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
