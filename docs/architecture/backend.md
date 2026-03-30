@@ -47,7 +47,7 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 
 | Table | Purpose | Key Columns |
 |-------|---------|-------------|
-| `user_profiles` | 유저 프로필 | id (FK auth.users), username, birth_date, gender, is_verified, ci, di |
+| `user_profiles` | 유저 프로필 | id (FK auth.users), username, birth_date, gender, is_verified, ci_encrypted, di_encrypted, di_hash |
 | `user_embeddings` | 유저 임베딩 | user_id (PK), embedding vector(1536) |
 | `app_roles` | 앱 역할 | user_id (PK), role ('super_admin' \| 'moderator') |
 | `user_actions` | 유저 행동 로그 | user_id, party_id, action_type (view/like/dislike/purchase) |
