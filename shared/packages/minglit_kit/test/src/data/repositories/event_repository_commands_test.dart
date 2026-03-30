@@ -579,25 +579,28 @@ void main() {
     });
 
     group('approveApplication', () {
-      test('calls partner-approve-application EF with approve action', () async {
-        when(
-          () => mockFunctions.invoke(
-            'partner-approve-application',
-            body: any(named: 'body'),
-          ),
-        ).thenAnswer(
-          (_) async => FunctionResponse(status: 200, data: {'success': true}),
-        );
+      test(
+        'calls partner-approve-application EF with approve action',
+        () async {
+          when(
+            () => mockFunctions.invoke(
+              'partner-approve-application',
+              body: any(named: 'body'),
+            ),
+          ).thenAnswer(
+            (_) async => FunctionResponse(status: 200, data: {'success': true}),
+          );
 
-        await repository.approveApplication(applicationId: 'app_1');
+          await repository.approveApplication(applicationId: 'app_1');
 
-        verify(
-          () => mockFunctions.invoke(
-            'partner-approve-application',
-            body: {'action': 'approve', 'application_id': 'app_1'},
-          ),
-        ).called(1);
-      });
+          verify(
+            () => mockFunctions.invoke(
+              'partner-approve-application',
+              body: {'action': 'approve', 'application_id': 'app_1'},
+            ),
+          ).called(1);
+        },
+      );
 
       test('throws on EF error', () async {
         when(
@@ -657,25 +660,28 @@ void main() {
     });
 
     group('bulkApproveApplications', () {
-      test('calls partner-approve-application EF with bulk_approve action', () async {
-        when(
-          () => mockFunctions.invoke(
-            'partner-approve-application',
-            body: any(named: 'body'),
-          ),
-        ).thenAnswer(
-          (_) async => FunctionResponse(status: 200, data: {'success': true}),
-        );
+      test(
+        'calls partner-approve-application EF with bulk_approve action',
+        () async {
+          when(
+            () => mockFunctions.invoke(
+              'partner-approve-application',
+              body: any(named: 'body'),
+            ),
+          ).thenAnswer(
+            (_) async => FunctionResponse(status: 200, data: {'success': true}),
+          );
 
-        await repository.bulkApproveApplications(eventId: 'event_1');
+          await repository.bulkApproveApplications(eventId: 'event_1');
 
-        verify(
-          () => mockFunctions.invoke(
-            'partner-approve-application',
-            body: {'action': 'bulk_approve', 'event_id': 'event_1'},
-          ),
-        ).called(1);
-      });
+          verify(
+            () => mockFunctions.invoke(
+              'partner-approve-application',
+              body: {'action': 'bulk_approve', 'event_id': 'event_1'},
+            ),
+          ).called(1);
+        },
+      );
 
       test('throws on EF error', () async {
         when(
