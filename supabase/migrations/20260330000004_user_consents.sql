@@ -16,7 +16,11 @@ CREATE TABLE public.user_consents (
   consented_at timestamptz NOT NULL DEFAULT now(),
   withdrawn_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT user_consents_user_key_unique UNIQUE(user_id, consent_key)
+  CONSTRAINT user_consents_user_key_unique UNIQUE(user_id, consent_key),
+  CONSTRAINT user_consents_consented_state_check CHECK (
+    (consented = true AND withdrawn_at IS NULL)
+    OR (consented = false AND withdrawn_at IS NOT NULL)
+  )
 );
 
 COMMENT ON TABLE public.user_consents IS 'Per-user consent records for legal compliance (개인정보보호법 §15/§22)';
@@ -28,6 +32,9 @@ COMMENT ON COLUMN public.user_consents.withdrawn_at IS 'Non-null when consent ha
 -- 2. Indexes
 -- ============================================================
 CREATE INDEX idx_user_consents_user_id ON public.user_consents(user_id);
+CREATE INDEX idx_user_consents_type_active
+  ON public.user_consents(consent_key)
+  WHERE withdrawn_at IS NULL;
 
 -- ============================================================
 -- 3. RLS
@@ -35,28 +42,92 @@ CREATE INDEX idx_user_consents_user_id ON public.user_consents(user_id);
 ALTER TABLE public.user_consents ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "user_read_own_consents" ON public.user_consents
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "user_insert_own_consents" ON public.user_consents
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "user_update_own_consents" ON public.user_consents
-  FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "service_role_all_consents" ON public.user_consents
-  FOR ALL USING (auth.role() = 'service_role');
+  FOR SELECT
+  TO authenticated
+  USING (auth.uid() = user_id);
 
 -- ============================================================
 -- 4. GRANT
 -- ============================================================
-GRANT SELECT, INSERT, UPDATE ON public.user_consents TO authenticated;
+GRANT SELECT ON public.user_consents TO authenticated;
 GRANT ALL ON public.user_consents TO service_role;
 
 -- ============================================================
--- 5. has_required_consents() RPC — route guard helper
+-- 5. save_user_consents() RPC — authenticated write entrypoint
+-- Uses auth.uid() as the source of truth and upserts current consent state.
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.save_user_consents(
+  p_user_id uuid,
+  p_consents jsonb
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_auth_user_id uuid := auth.uid();
+BEGIN
+  IF v_auth_user_id IS NULL THEN
+    RAISE EXCEPTION 'Authentication required';
+  END IF;
+
+  IF v_auth_user_id IS DISTINCT FROM p_user_id THEN
+    RAISE EXCEPTION 'Cannot write consents for another user';
+  END IF;
+
+  IF COALESCE(jsonb_typeof(p_consents), 'null') <> 'array' THEN
+    RAISE EXCEPTION 'p_consents must be a JSON array';
+  END IF;
+
+  INSERT INTO public.user_consents (
+    user_id,
+    consent_key,
+    consented,
+    policy_version,
+    consented_at,
+    withdrawn_at
+  )
+  SELECT
+    p_user_id,
+    entry.consent_key,
+    entry.consented,
+    entry.policy_version,
+    COALESCE(entry.consented_at, now()),
+    CASE
+      WHEN entry.consented THEN NULL
+      ELSE COALESCE(entry.withdrawn_at, now())
+    END
+  FROM jsonb_to_recordset(p_consents) AS entry(
+    consent_key text,
+    consented boolean,
+    policy_version integer,
+    consented_at timestamptz,
+    withdrawn_at timestamptz
+  )
+  ON CONFLICT (user_id, consent_key) DO UPDATE
+  SET
+    consented = EXCLUDED.consented,
+    policy_version = COALESCE(EXCLUDED.policy_version, public.user_consents.policy_version),
+    consented_at = CASE
+      WHEN EXCLUDED.consented THEN EXCLUDED.consented_at
+      ELSE public.user_consents.consented_at
+    END,
+    withdrawn_at = CASE
+      WHEN EXCLUDED.consented THEN NULL
+      ELSE COALESCE(EXCLUDED.withdrawn_at, now())
+    END;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.save_user_consents(uuid, jsonb) FROM public;
+GRANT EXECUTE ON FUNCTION public.save_user_consents(uuid, jsonb) TO authenticated, service_role;
+
+-- ============================================================
+-- 6. has_required_consents() RPC — route guard helper
 -- Returns true only when all three required consents
 -- (terms_of_service, privacy_collection, age_confirmation)
--- exist with consented = true for the calling user.
+-- exist with active consent rows for the calling user.
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.has_required_consents()
 RETURNS boolean
@@ -70,18 +141,21 @@ AS $$
     WHERE user_id = auth.uid()
       AND consent_key = 'terms_of_service'
       AND consented = true
+      AND withdrawn_at IS NULL
   )
   AND EXISTS (
     SELECT 1 FROM public.user_consents
     WHERE user_id = auth.uid()
       AND consent_key = 'privacy_collection'
       AND consented = true
+      AND withdrawn_at IS NULL
   )
   AND EXISTS (
     SELECT 1 FROM public.user_consents
     WHERE user_id = auth.uid()
       AND consent_key = 'age_confirmation'
       AND consented = true
+      AND withdrawn_at IS NULL
   );
 $$;
 
@@ -89,7 +163,7 @@ REVOKE EXECUTE ON FUNCTION public.has_required_consents() FROM public;
 GRANT EXECUTE ON FUNCTION public.has_required_consents() TO authenticated, service_role;
 
 -- ============================================================
--- 6. policies seed — consent policy documents v1
+-- 7. policies seed — consent policy documents v1
 -- ============================================================
 INSERT INTO public.policies (key, value, version, effective_date, description) VALUES
 (
