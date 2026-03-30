@@ -6,6 +6,7 @@ export 'package:supabase_flutter/supabase_flutter.dart'
 export 'src/config/iamport_config.dart';
 // Models
 export 'src/data/models/event.dart';
+export 'src/data/models/user_consent.dart';
 export 'src/data/models/event_application.dart';
 export 'src/data/models/event_feed_type.dart';
 export 'src/data/models/event_participant.dart';
@@ -30,6 +31,7 @@ export 'src/data/models/verification_submission.dart';
 export 'src/data/repositories/auth_repository.dart';
 export 'src/data/repositories/bug_report_repository.dart';
 export 'src/data/repositories/checkin_repository.dart';
+export 'src/data/repositories/consent_repository.dart';
 export 'src/data/repositories/event_repository.dart';
 export 'src/data/repositories/kakao_location_repository.dart';
 export 'src/data/repositories/location_repository.dart';

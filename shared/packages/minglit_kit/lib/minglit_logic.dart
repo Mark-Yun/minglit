@@ -4,6 +4,7 @@ export 'package:flutter_riverpod/flutter_riverpod.dart';
 // Providers
 
 export 'src/features/auth/logic/auth_controller.dart';
+export 'src/features/consent/logic/consent_controller.dart';
 export 'src/features/notification/logic/notification_settings_controller.dart';
 export 'src/features/notification/notification_initializer.dart';
 export 'src/features/notification/notification_list_controller.dart';
