@@ -27,10 +27,11 @@ enum ConsentType {
 
   /// 본인인증(CI/DI) 수집 동의
   @JsonValue('identity_verification')
-  identityVerification;
+  identityVerification
+  ;
 
   /// The required consent types for signup.
-  static const requiredTypes = [
+  static const List<ConsentType> requiredTypes = [
     ConsentType.termsOfService,
     ConsentType.privacyCollection,
     ConsentType.ageConfirmation,
@@ -46,10 +47,10 @@ abstract class UserConsent with _$UserConsent {
     @JsonKey(name: 'user_id') required String userId,
     @JsonKey(name: 'consent_key') required ConsentType consentKey,
     required bool consented,
-    @JsonKey(name: 'policy_version') int? policyVersion,
     @JsonKey(name: 'consented_at') required DateTime consentedAt,
-    @JsonKey(name: 'withdrawn_at') DateTime? withdrawnAt,
     @JsonKey(name: 'created_at') required DateTime createdAt,
+    @JsonKey(name: 'policy_version') int? policyVersion,
+    @JsonKey(name: 'withdrawn_at') DateTime? withdrawnAt,
   }) = _UserConsent;
 
   /// Creates a [UserConsent] from a JSON map.

@@ -13,10 +13,9 @@ _UserConsent _$UserConsentFromJson(Map<String, dynamic> json) => _UserConsent(
   consented: json['consented'] as bool,
   policyVersion: (json['policy_version'] as num?)?.toInt(),
   consentedAt: DateTime.parse(json['consented_at'] as String),
-  withdrawnAt:
-      json['withdrawn_at'] == null
-          ? null
-          : DateTime.parse(json['withdrawn_at'] as String),
+  withdrawnAt: json['withdrawn_at'] == null
+      ? null
+      : DateTime.parse(json['withdrawn_at'] as String),
   createdAt: DateTime.parse(json['created_at'] as String),
 );
 

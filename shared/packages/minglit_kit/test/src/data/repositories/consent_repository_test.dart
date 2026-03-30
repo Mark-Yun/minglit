@@ -101,7 +101,7 @@ void main() {
         final params = captured.first as Map<String, dynamic>;
         expect(params['p_user_id'], 'user_1');
         expect(params['p_consents'], isList);
-        expect((params['p_consents'] as List), hasLength(2));
+        expect(params['p_consents'] as List, hasLength(2));
       });
 
       test('throws on RPC error', () async {

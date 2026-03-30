@@ -103,10 +103,12 @@ void main() {
       await container.read(consentControllerProvider.future);
 
       // Save signup consents
-      await container.read(consentControllerProvider.notifier).saveSignupConsents(
-        ConsentType.requiredTypes,
-        policyVersion: 1,
-      );
+      await container
+          .read(consentControllerProvider.notifier)
+          .saveSignupConsents(
+            ConsentType.requiredTypes,
+            policyVersion: 1,
+          );
 
       verify(
         () => mockRepo.saveConsents('user_1', any()),
@@ -128,10 +130,12 @@ void main() {
 
       await container.read(consentControllerProvider.future);
 
-      await container.read(consentControllerProvider.notifier).toggleConsent(
-        ConsentType.marketingConsent,
-        consented: true,
-      );
+      await container
+          .read(consentControllerProvider.notifier)
+          .toggleConsent(
+            ConsentType.marketingConsent,
+            consented: true,
+          );
 
       final captured = verify(
         () => mockRepo.saveConsents('user_1', captureAny()),

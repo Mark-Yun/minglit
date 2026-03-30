@@ -21,8 +21,7 @@ const consentControllerProvider = ConsentControllerProvider._();
 /// Loads active consents on build, provides methods to save
 /// signup consents and toggle individual consents.
 final class ConsentControllerProvider
-    extends
-        $AsyncNotifierProvider<ConsentController, List<UserConsent>> {
+    extends $AsyncNotifierProvider<ConsentController, List<UserConsent>> {
   /// Manages user consent state for the current user.
   ///
   /// Loads active consents on build, provides methods to save
@@ -46,22 +45,21 @@ final class ConsentControllerProvider
   ConsentController create() => ConsentController();
 }
 
-String _$consentControllerHash() =>
-    r'b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0';
+String _$consentControllerHash() => r'b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0';
 
 /// Manages user consent state for the current user.
 ///
 /// Loads active consents on build, provides methods to save
 /// signup consents and toggle individual consents.
 
-abstract class _$ConsentController
-    extends $AsyncNotifier<List<UserConsent>> {
+abstract class _$ConsentController extends $AsyncNotifier<List<UserConsent>> {
   FutureOr<List<UserConsent>> build();
   @$mustCallSuper
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<AsyncValue<List<UserConsent>>, List<UserConsent>>;
+    final ref =
+        this.ref as $Ref<AsyncValue<List<UserConsent>>, List<UserConsent>>;
     final element =
         ref.element
             as $ClassProviderElement<
@@ -88,8 +86,7 @@ const hasRequiredConsentsProvider = HasRequiredConsentsProvider._();
 /// consent screen.
 
 final class HasRequiredConsentsProvider
-    extends
-        $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
+    extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
     with $FutureModifier<bool>, $FutureProvider<bool> {
   /// Provider that checks if the current user has all required consents.
   ///

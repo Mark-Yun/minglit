@@ -6,7 +6,6 @@ export 'package:supabase_flutter/supabase_flutter.dart'
 export 'src/config/iamport_config.dart';
 // Models
 export 'src/data/models/event.dart';
-export 'src/data/models/user_consent.dart';
 export 'src/data/models/event_application.dart';
 export 'src/data/models/event_feed_type.dart';
 export 'src/data/models/event_participant.dart';
@@ -23,6 +22,7 @@ export 'src/data/models/ticket.dart';
 export 'src/data/models/ticket_template.dart';
 export 'src/data/models/ticket_token.dart';
 export 'src/data/models/today_active_event.dart';
+export 'src/data/models/user_consent.dart';
 export 'src/data/models/user_profile.dart';
 export 'src/data/models/user_settings.dart';
 export 'src/data/models/verification.dart';

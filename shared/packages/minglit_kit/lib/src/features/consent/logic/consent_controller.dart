@@ -59,7 +59,10 @@ class ConsentController extends _$ConsentController {
   /// Toggles a single consent on or off.
   ///
   /// Used from the settings/privacy page to manage individual consents.
-  Future<void> toggleConsent(ConsentType type, {required bool consented}) async {
+  Future<void> toggleConsent(
+    ConsentType type, {
+    required bool consented,
+  }) async {
     final user = ref.read(currentUserProvider);
     if (user == null) return;
 

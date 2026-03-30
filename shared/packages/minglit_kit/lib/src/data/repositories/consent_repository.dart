@@ -32,8 +32,7 @@ class ConsentRepository {
           .eq('consented', true);
       return (data as List)
           .map(
-            (dynamic e) =>
-                UserConsent.fromJson(e as Map<String, dynamic>),
+            (dynamic e) => UserConsent.fromJson(e as Map<String, dynamic>),
           )
           .toList();
     } on Object {
