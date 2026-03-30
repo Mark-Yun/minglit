@@ -15,6 +15,7 @@ class MinglitTextThemeExtension
   const MinglitTextThemeExtension({
     required this.chipLabel,
     required this.appBarTitle,
+    required this.captionTiny,
   });
 
   /// 13px w500 — 이벤트 카드 오버레이, 소셜 버튼, 칩 미디엄
@@ -23,14 +24,19 @@ class MinglitTextThemeExtension
   /// 18px w600 — AppBar 타이틀
   final TextStyle appBarTitle;
 
+  /// 10px w500 — 온보딩 플로우 스텝 부제
+  final TextStyle captionTiny;
+
   @override
   MinglitTextThemeExtension copyWith({
     TextStyle? chipLabel,
     TextStyle? appBarTitle,
+    TextStyle? captionTiny,
   }) {
     return MinglitTextThemeExtension(
       chipLabel: chipLabel ?? this.chipLabel,
       appBarTitle: appBarTitle ?? this.appBarTitle,
+      captionTiny: captionTiny ?? this.captionTiny,
     );
   }
 
@@ -43,6 +49,7 @@ class MinglitTextThemeExtension
     return MinglitTextThemeExtension(
       chipLabel: TextStyle.lerp(chipLabel, other.chipLabel, t)!,
       appBarTitle: TextStyle.lerp(appBarTitle, other.appBarTitle, t)!,
+      captionTiny: TextStyle.lerp(captionTiny, other.captionTiny, t)!,
     );
   }
 
@@ -60,6 +67,11 @@ class MinglitTextThemeExtension
       color: MinglitColors.textPrimary,
       fontFamily: 'NotoSansKR',
     ),
+    captionTiny: TextStyle(
+      fontSize: 10,
+      fontWeight: FontWeight.w500,
+      color: MinglitColors.textPrimary,
+    ),
   );
 
   /// Dark theme text styles.
@@ -75,6 +87,11 @@ class MinglitTextThemeExtension
       fontWeight: FontWeight.w600,
       color: MinglitColorsDark.textPrimary,
       fontFamily: 'NotoSansKR',
+    ),
+    captionTiny: TextStyle(
+      fontSize: 10,
+      fontWeight: FontWeight.w500,
+      color: MinglitColorsDark.textPrimary,
     ),
   );
 }
