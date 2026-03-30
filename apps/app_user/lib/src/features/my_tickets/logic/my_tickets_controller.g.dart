@@ -43,7 +43,7 @@ final class MyTicketsControllerProvider
 }
 
 String _$myTicketsControllerHash() =>
-    r'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0';
+    r'bf87f11fc616c7f03a4a0675ef45d018d1e7add5';
 
 /// Fix #639: MyTicketsController — upcoming/past ticket separation + today event detection.
 ///

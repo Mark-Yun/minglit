@@ -440,6 +440,9 @@ class RecommendationFeedNotifier extends _$RecommendationFeedNotifier {
 /// - recommended → newArrivals
 /// - closingSoon → closingSoon
 /// - nearestDate → nearest
+///
+// TODO(mark): Phase 2 (#614) — migrate to [recommendationEventsFromEf] once
+// the user-event-feed EF is validated in production.
 @riverpod
 Future<List<Event>> recommendationEvents(Ref ref) async {
   final filters = ref.watch(activeFiltersProvider);
@@ -464,6 +467,48 @@ Future<List<Event>> recommendationEvents(Ref ref) async {
 
   // Apply eligibility filter + nearby sort
   return ref.watch(filteredEventsProvider(events: unique));
+}
+
+/// Server-side feed via user-event-feed Edge Function (#614).
+///
+/// All sorting, filtering (block, eligibility, nearby, remaining slots),
+/// and cursor pagination are handled by the DB function, so no
+/// client-side post-processing is needed.
+///
+// TODO(mark): Phase 2 (#614) — wire this into the explore UI behind a feature
+// flag, then remove the legacy [recommendationEvents] path.
+@riverpod
+Future<Map<String, dynamic>> recommendationEventsFromEf(Ref ref) async {
+  final filters = ref.watch(activeFiltersProvider);
+  final userLoc = ref.watch(userLocationProvider).value;
+
+  final link = ref.keepAlive();
+  final timer = Timer(const Duration(minutes: 5), link.close);
+  ref.onDispose(timer.cancel);
+
+  final sortBy = switch (filters.sortType) {
+    ExploreSortType.recommended => 'recommended',
+    ExploreSortType.closingSoon => 'closing_soon',
+    ExploreSortType.nearestDate => 'nearest_date',
+  };
+
+  final efFilters = <String, dynamic>{
+    if (filters.eligibilityEnabled) 'eligible_only': true,
+    if (filters.sortType == ExploreSortType.closingSoon)
+      'has_remaining_slots': true,
+    if (filters.nearbyEnabled && userLoc != null)
+      'nearby': {
+        'lat': userLoc.latitude,
+        'lng': userLoc.longitude,
+        'radius_km': 10,
+      },
+  };
+
+  final repository = ref.watch(eventRepositoryProvider);
+  return repository.getEventFeed(
+    sortBy: sortBy,
+    filters: efFilters.isNotEmpty ? efFilters : null,
+  );
 }
 
 /// Haversine formula for distance between two GPS coordinates.

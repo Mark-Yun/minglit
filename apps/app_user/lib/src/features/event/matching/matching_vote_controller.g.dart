@@ -34,7 +34,7 @@ final class MatchingVoteControllerProvider
 }
 
 String _$matchingVoteControllerHash() =>
-    r'5902f89f8b54d6d8a0610ef1b8c2c1cfb5a35c3d';
+    r'd8e9a320d2c6aab18b45a273e2d40edb324508bb';
 
 abstract class _$MatchingVoteController extends $AsyncNotifier<void> {
   FutureOr<void> build();

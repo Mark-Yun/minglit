@@ -52,7 +52,7 @@ final class EventAdmissionControllerProvider
 }
 
 String _$eventAdmissionControllerHash() =>
-    r'3f5a5b3b3044726c83ec07233c2525987a55f483';
+    r'1a8cafe5c6cdd06d859b1fdf3391d872f7c5c384';
 
 final class EventAdmissionControllerFamily extends $Family
     with
