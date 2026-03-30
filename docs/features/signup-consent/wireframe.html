@@ -3,1027 +3,761 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>밍릿 — 회원가입 동의 와이어프레임</title>
+<title>회원가입 동의 (Signup Consent) — 와이어프레임</title>
 <style>
-  /* ===== Minglit Design Tokens ===== */
   :root {
-    /* Colors (01-foundation.md) */
-    --color-background: #FFFFFF;
-    --color-primary: #9900FF;
-    --color-secondary: #FF9900;
-    --color-surface: #F9FAFB;
-    --color-error: #EF4444;
-    --color-text-primary: #111827;
-    --color-text-secondary: #4B5563;
-    --color-success: #22C55E;
-    --color-divider: #E5E7EB;
-    --color-scrim: rgba(0,0,0,0.5);
-
-    /* Spacing (01-foundation.md) */
-    --sp-xxsmall: 2px;
-    --sp-xsmall: 4px;
-    --sp-xsmall2: 6px;
-    --sp-small: 8px;
-    --sp-sm: 12px;
-    --sp-medium: 16px;
-    --sp-large: 24px;
-    --sp-xlarge: 32px;
-    --sp-screen-edge: 16px;
-
-    /* Radius (01-foundation.md) */
+    --primary: #9900FF;
+    --on-primary: #FFFFFF;
+    --surface: #F9FAFB;
+    --surface-variant: #F3F4F6;
+    --background: #FFFFFF;
+    --on-surface: #111827;
+    --on-surface-variant: #4B5563;
+    --outline: #6B7280;
+    --outline-variant: #E5E7EB;
+    --error: #EF4444;
+    --warning: #F59E0B;
+    --success: #22C55E;
+    --scrim: rgba(0,0,0,0.5);
+    --radius-card: 24px;
+    --radius-button: 16px;
+    --radius-input: 12px;
     --radius-small: 8px;
-    --radius-button: 12px;
-    --radius-card: 16px;
-
-    /* Typography - NotoSansKR */
-    --font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+    --spacing-xsmall: 4px;
+    --spacing-small: 8px;
+    --spacing-sm: 12px;
+    --spacing-medium: 16px;
+    --spacing-large: 24px;
+    --spacing-xlarge: 32px;
   }
-
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
-    font-family: var(--font-family);
-    background: #E5E7EB;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 32px;
-    padding: 32px;
+    font-family: 'Noto Sans KR', -apple-system, sans-serif;
+    background: #EDE9F0;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 40px 20px; gap: 60px; color: var(--on-surface);
   }
 
-  /* ===== Screen Frame ===== */
-  .screen-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-  }
+  h1 { font-size: 24px; font-weight: 700; }
+  h2 { font-size: 18px; font-weight: 600; color: var(--on-surface-variant); margin-bottom: 12px; }
+
   .screen-label {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--color-text-primary);
-    text-align: center;
+    font-size: 14px; font-weight: 600; color: var(--primary);
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;
   }
-  .screen-sublabel {
-    font-size: 12px;
-    color: var(--color-text-secondary);
-    text-align: center;
-    margin-top: -8px;
-  }
-  .phone-frame {
-    width: 375px;
-    height: 812px;
-    background: var(--color-surface);
-    border-radius: 40px;
-    overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-    position: relative;
-    display: flex;
-    flex-direction: column;
+  .screen-desc {
+    font-size: 13px; color: var(--on-surface-variant);
+    margin-bottom: 16px; text-align: center; max-width: 360px;
   }
 
-  /* ===== Status Bar ===== */
+  .phone {
+    width: 375px; height: 812px; background: var(--surface);
+    border-radius: 40px; overflow: hidden; position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px var(--outline-variant);
+    display: flex; flex-direction: column;
+  }
+
+  .phone-content {
+    flex: 1; overflow-y: auto; padding: 0 var(--spacing-medium);
+    display: flex; flex-direction: column;
+  }
+
+  /* Status bar */
   .status-bar {
-    height: 54px;
-    background: var(--color-background);
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    padding-bottom: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--color-text-primary);
-    flex-shrink: 0;
+    height: 44px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; font-size: 14px; font-weight: 600;
   }
 
-  /* ===== AppBar ===== */
-  .app-bar {
-    height: 56px;
-    background: var(--color-background);
-    display: flex;
-    align-items: center;
-    padding: 0 var(--sp-medium);
-    flex-shrink: 0;
+  /* Logo area */
+  .logo-area {
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px 0 8px;
   }
-  .app-bar .back-btn {
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--color-text-primary);
-    font-size: 20px;
-  }
-  .app-bar .title {
-    flex: 1;
-    text-align: center;
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--color-text-primary);
-  }
-  .app-bar .spacer { width: 24px; }
-
-  /* ===== Content ===== */
-  .content {
-    flex: 1;
-    overflow-y: auto;
-    padding: var(--sp-large) var(--sp-screen-edge);
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-large);
+  .logo-text {
+    font-size: 28px; font-weight: 700;
+    background: linear-gradient(135deg, #9900FF, #FF9900);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   }
 
-  /* ===== Typography ===== */
-  .title-large {
-    font-size: 20px;
-    font-weight: 700;
-    line-height: 1.4;
-    color: var(--color-text-primary);
+  /* Title section */
+  .title-section { padding: 16px 0; }
+  .title-section h3 {
+    font-size: 22px; font-weight: 700; color: var(--on-surface);
+    line-height: 1.3;
   }
-  .title-medium {
-    font-size: 16px;
-    font-weight: 700;
-    line-height: 1.5;
-    color: var(--color-text-primary);
-  }
-  .body-medium {
-    font-size: 16px;
-    font-weight: 400;
-    line-height: 1.5;
-    color: var(--color-text-secondary);
-  }
-  .body-small {
-    font-size: 13px;
-    font-weight: 400;
-    line-height: 1.5;
-    color: var(--color-text-secondary);
-  }
-  .label-medium {
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 1.5;
-    color: var(--color-text-primary);
+  .title-section p {
+    font-size: 14px; color: var(--on-surface-variant);
+    margin-top: 8px; line-height: 1.5;
   }
 
-  /* ===== Card / Container ===== */
-  .card {
-    background: var(--color-background);
-    border-radius: var(--radius-card);
-    padding: var(--sp-medium);
+  /* All agree toggle */
+  .all-agree {
+    background: var(--background);
+    border: 2px solid var(--outline-variant);
+    border-radius: var(--radius-button);
+    padding: var(--spacing-medium);
+    display: flex; align-items: center; gap: var(--spacing-sm);
+    margin: 8px 0 16px; cursor: pointer;
   }
+  .all-agree.checked {
+    border-color: var(--primary); background: rgba(153, 0, 255, 0.04);
+  }
+  .all-agree-text { font-size: 16px; font-weight: 600; color: var(--on-surface); }
 
-  /* ===== Toggle All ===== */
-  .toggle-all {
-    background: var(--color-background);
-    border-radius: var(--radius-card);
-    padding: var(--sp-medium);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border: 1.5px solid var(--color-divider);
-  }
-  .toggle-all.checked {
-    border-color: var(--color-primary);
-    background: rgba(153, 0, 255, 0.05);
-  }
-  .toggle-all .label {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--color-text-primary);
-  }
-
-  /* ===== Switch ===== */
-  .switch {
-    width: 48px;
-    height: 28px;
-    border-radius: 14px;
-    background: #D1D5DB;
-    position: relative;
-    transition: background 0.2s;
-  }
-  .switch.on { background: var(--color-primary); }
-  .switch::after {
-    content: '';
-    position: absolute;
-    width: 22px;
-    height: 22px;
-    border-radius: 11px;
-    background: white;
-    top: 3px;
-    left: 3px;
-    transition: transform 0.2s;
-  }
-  .switch.on::after { transform: translateX(20px); }
-
-  /* ===== Checkbox ===== */
+  /* Checkbox */
   .checkbox {
-    width: 22px;
-    height: 22px;
-    border-radius: 4px;
-    border: 1.5px solid #9CA3AF;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+    width: 24px; height: 24px; border-radius: 6px;
+    border: 2px solid var(--outline-variant); display: flex;
+    align-items: center; justify-content: center; flex-shrink: 0;
+    transition: all 0.2s;
   }
   .checkbox.checked {
-    background: var(--color-primary);
-    border-color: var(--color-primary);
+    background: var(--primary); border-color: var(--primary);
   }
   .checkbox.checked::after {
-    content: '✓';
-    color: white;
-    font-size: 14px;
-    font-weight: 700;
+    content: ''; width: 8px; height: 5px;
+    border-left: 2px solid white; border-bottom: 2px solid white;
+    transform: rotate(-45deg) translateY(-1px);
   }
 
-  /* ===== Consent Item ===== */
-  .consent-list {
-    display: flex;
-    flex-direction: column;
-  }
+  /* Consent items */
+  .consent-list { display: flex; flex-direction: column; gap: 0; }
   .consent-item {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-sm);
-    padding: var(--sp-sm) 0;
-    border-bottom: 1px solid var(--color-divider);
+    display: flex; align-items: center; gap: var(--spacing-sm);
+    padding: var(--spacing-medium) 0;
+    border-bottom: 1px solid var(--outline-variant);
   }
   .consent-item:last-child { border-bottom: none; }
-  .consent-item .info { flex: 1; }
-  .consent-item .tag {
-    font-size: 12px;
-    font-weight: 700;
-    margin-right: 4px;
+  .consent-item-content { flex: 1; }
+  .consent-item-row {
+    display: flex; align-items: center; gap: 8px;
   }
-  .consent-item .tag.required { color: var(--color-primary); }
-  .consent-item .tag.optional { color: var(--color-text-secondary); }
-  .consent-item .name {
-    font-size: 14px;
-    color: var(--color-text-primary);
+  .badge-required {
+    font-size: 11px; font-weight: 700; color: var(--primary);
+    background: rgba(153,0,255,0.1); padding: 2px 6px;
+    border-radius: 4px;
   }
-  .consent-item .chevron {
-    color: #9CA3AF;
-    font-size: 18px;
-    flex-shrink: 0;
+  .badge-optional {
+    font-size: 11px; font-weight: 700; color: var(--outline);
+    background: var(--surface-variant); padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .consent-item-title {
+    font-size: 15px; font-weight: 600; color: var(--on-surface);
+  }
+  .consent-item-desc {
+    font-size: 13px; color: var(--on-surface-variant);
+    margin-top: 2px;
+  }
+  .consent-view-btn {
+    font-size: 13px; color: var(--primary); font-weight: 500;
+    cursor: pointer; flex-shrink: 0; display: flex; align-items: center; gap: 2px;
+  }
+  .consent-view-btn::after { content: '›'; font-size: 16px; }
+
+  /* Footer note */
+  .footer-note {
+    font-size: 12px; color: var(--on-surface-variant);
+    padding: 12px 0 0; line-height: 1.5;
+    text-align: center;
   }
 
-  /* ===== CTA Button ===== */
+  /* Bottom CTA */
+  .bottom-cta {
+    padding: var(--spacing-medium) var(--spacing-medium) 32px;
+    background: var(--surface);
+  }
   .cta-button {
-    width: 100%;
-    height: 56px;
-    border-radius: var(--radius-button);
-    border: none;
-    font-size: 16px;
-    font-weight: 700;
-    font-family: var(--font-family);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 100%; height: 56px; border-radius: var(--radius-button);
+    background: var(--outline-variant); color: var(--on-surface-variant);
+    font-size: 16px; font-weight: 700; border: none; cursor: pointer;
+    transition: all 0.2s;
   }
-  .cta-button.primary {
-    background: var(--color-primary);
-    color: white;
+  .cta-button.active {
+    background: var(--primary); color: var(--on-primary);
   }
-  .cta-button.disabled {
-    background: #D1D5DB;
-    color: white;
-    cursor: not-allowed;
-  }
-  .cta-button.text {
-    background: transparent;
-    color: var(--color-text-secondary);
-    height: 44px;
-  }
+  .cta-button:active { transform: scale(0.98); }
 
-  /* ===== Bottom Safe Area ===== */
-  .bottom-area {
-    padding: var(--sp-medium) var(--sp-screen-edge);
-    padding-bottom: 34px;
-    background: var(--color-background);
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-small);
+  /* Bottom sheet overlay */
+  .sheet-overlay {
+    position: absolute; inset: 0; background: var(--scrim);
+    display: flex; align-items: flex-end; z-index: 10;
   }
-
-  /* ===== Bottom Sheet Overlay ===== */
-  .bottom-sheet-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    top: 0;
-    background: var(--color-scrim);
-    display: flex;
-    align-items: flex-end;
-    z-index: 10;
-  }
-  .bottom-sheet {
-    background: var(--color-background);
+  .sheet {
+    width: 100%; background: var(--background);
     border-radius: var(--radius-card) var(--radius-card) 0 0;
-    width: 100%;
-    max-height: 80%;
-    padding: var(--sp-large);
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-medium);
+    max-height: 70%; display: flex; flex-direction: column;
   }
-  .bottom-sheet .drag-handle {
-    width: 36px;
-    height: 4px;
-    border-radius: 2px;
-    background: #D1D5DB;
-    align-self: center;
-    margin-bottom: var(--sp-small);
+  .sheet-handle {
+    width: 36px; height: 4px; background: var(--outline-variant);
+    border-radius: 2px; margin: 12px auto;
+  }
+  .sheet-header {
+    padding: 0 var(--spacing-medium) var(--spacing-medium);
+    border-bottom: 1px solid var(--outline-variant);
+  }
+  .sheet-header h4 {
+    font-size: 18px; font-weight: 700; color: var(--on-surface);
+  }
+  .sheet-body {
+    flex: 1; overflow-y: auto; padding: var(--spacing-medium);
+    font-size: 14px; color: var(--on-surface-variant); line-height: 1.7;
+  }
+  .sheet-body h5 {
+    font-size: 15px; font-weight: 600; color: var(--on-surface);
+    margin: 16px 0 8px;
+  }
+  .sheet-body h5:first-child { margin-top: 0; }
+  .sheet-body ul {
+    padding-left: 20px; margin: 8px 0;
+  }
+  .sheet-body li { margin: 4px 0; }
+
+  /* Dialog */
+  .dialog-overlay {
+    position: absolute; inset: 0; background: var(--scrim);
+    display: flex; align-items: center; justify-content: center;
+    padding: var(--spacing-large); z-index: 10;
+  }
+  .dialog {
+    width: 100%; max-width: 340px; background: var(--background);
+    border-radius: var(--radius-card); padding: var(--spacing-large);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  }
+  .dialog h4 {
+    font-size: 18px; font-weight: 700; color: var(--on-surface);
+    margin-bottom: 12px;
+  }
+  .dialog p {
+    font-size: 14px; color: var(--on-surface-variant); line-height: 1.6;
+    margin-bottom: 8px;
+  }
+  .dialog-items {
+    background: var(--surface); border-radius: var(--radius-input);
+    padding: var(--spacing-sm); margin: 12px 0;
+  }
+  .dialog-item {
+    font-size: 14px; color: var(--on-surface); padding: 6px 0;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dialog-item::before {
+    content: ''; width: 4px; height: 4px; border-radius: 50%;
+    background: var(--primary); flex-shrink: 0;
+  }
+  .dialog-note {
+    font-size: 12px; color: var(--primary); margin: 8px 0;
+    display: flex; align-items: flex-start; gap: 6px;
+  }
+  .dialog-note::before { content: '※'; flex-shrink: 0; }
+  .dialog-buttons {
+    display: flex; gap: var(--spacing-sm); margin-top: var(--spacing-large);
+  }
+  .dialog-btn {
+    flex: 1; height: 48px; border-radius: var(--radius-button);
+    font-size: 15px; font-weight: 600; border: none; cursor: pointer;
+  }
+  .dialog-btn-cancel {
+    background: var(--surface-variant); color: var(--on-surface-variant);
+  }
+  .dialog-btn-confirm {
+    background: var(--primary); color: var(--on-primary);
   }
 
-  /* ===== Info Box ===== */
-  .info-box {
-    background: var(--color-surface);
-    border-radius: var(--radius-small);
-    padding: var(--sp-medium);
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-small);
+  /* Wizard step */
+  .wizard-step {
+    padding: var(--spacing-large) 0;
   }
-  .info-box .section-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--color-text-primary);
-    margin-top: var(--sp-small);
+  .wizard-step-header {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
   }
-  .info-box .section-title:first-child { margin-top: 0; }
-  .info-box .item {
-    font-size: 13px;
-    color: var(--color-text-secondary);
-    line-height: 1.5;
-    padding-left: 12px;
-    position: relative;
+  .wizard-step-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--primary); color: var(--on-primary);
+    font-size: 14px; font-weight: 700; display: flex;
+    align-items: center; justify-content: center;
   }
-  .info-box .item::before {
-    content: '•';
-    position: absolute;
-    left: 0;
+  .wizard-step h4 {
+    font-size: 20px; font-weight: 700; color: var(--on-surface);
   }
+  .partner-card {
+    background: var(--surface); border-radius: var(--radius-input);
+    padding: var(--spacing-medium); margin-bottom: 16px;
+    display: flex; align-items: center; gap: var(--spacing-sm);
+  }
+  .partner-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--primary); display: flex;
+    align-items: center; justify-content: center;
+    color: white; font-size: 18px; font-weight: 700;
+  }
+  .partner-name { font-size: 15px; font-weight: 600; }
 
-  /* ===== Privacy Page Specific ===== */
-  .privacy-section {
-    display: flex;
-    flex-direction: column;
-  }
-  .privacy-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 0;
-    border-bottom: 1px solid var(--color-divider);
-  }
-  .privacy-item:last-child { border-bottom: none; }
-  .privacy-item .left {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .privacy-item .item-name {
-    font-size: 14px;
-    color: var(--color-text-primary);
-  }
-  .privacy-item .item-date {
-    font-size: 12px;
-    color: var(--color-text-secondary);
-  }
-  .privacy-item .status {
-    font-size: 13px;
-    font-weight: 500;
-  }
-  .privacy-item .status.agreed { color: var(--color-success); }
-  .privacy-item .status.link { color: var(--color-primary); }
+  /* Scroll spacer */
+  .spacer { flex: 1; }
 
-  /* ===== Annotation ===== */
-  .annotation {
-    position: absolute;
-    background: #FEF3C7;
-    border: 1px solid #F59E0B;
-    border-radius: 6px;
-    padding: 4px 8px;
-    font-size: 11px;
-    color: #92400E;
-    white-space: nowrap;
-    z-index: 20;
+  /* Screen container */
+  .screen-group {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
   }
 </style>
 </head>
 <body>
 
-<!-- ============================================ -->
-<!-- Screen 1: 회원가입 약관 동의 (초기 상태)        -->
-<!-- ============================================ -->
-<div class="screen-wrapper">
-  <div class="screen-label">화면 1-A: 회원가입 약관 동의</div>
-  <div class="screen-sublabel">초기 상태 — 모든 항목 미체크</div>
-  <div class="phone-frame">
-    <div class="status-bar">9:41</div>
+<h1>회원가입 동의 (Signup Consent) — 와이어프레임</h1>
 
-    <div class="content">
-      <!-- Welcome Header -->
-      <div>
-        <div class="title-large">환영합니다! 👋</div>
-        <div class="body-medium" style="margin-top: 8px;">
-          서비스 이용을 위해<br>약관에 동의해주세요
-        </div>
+<!-- ============================================================ -->
+<!-- Screen 1: Main Consent Screen (초기 상태) -->
+<!-- ============================================================ -->
+<div class="screen-group">
+  <div class="screen-label">Screen 1</div>
+  <h2>메인 동의 화면 — 초기 상태</h2>
+  <div class="screen-desc">첫 로그인 후 표시. 필수 항목 미체크 → CTA 비활성화</div>
+  <div class="phone">
+    <div class="status-bar">
+      <span>9:41</span>
+      <span>●●●●</span>
+    </div>
+    <div class="phone-content">
+      <div class="logo-area">
+        <span class="logo-text">밍릿</span>
+      </div>
+      <div class="title-section">
+        <h3>환영합니다!</h3>
+        <p>밍릿 이용을 위해 약관에 동의해 주세요.</p>
       </div>
 
-      <!-- Toggle All -->
-      <div class="toggle-all">
-        <span class="label">모두 동의합니다</span>
-        <div class="switch"></div>
+      <div class="all-agree">
+        <div class="checkbox"></div>
+        <span class="all-agree-text">전체 동의</span>
       </div>
 
-      <!-- Consent Items -->
-      <div class="card">
-        <div class="consent-list">
-          <div class="consent-item">
-            <div class="checkbox"></div>
-            <div class="info">
-              <span class="tag required">(필수)</span>
-              <span class="name">서비스 이용약관</span>
-            </div>
-            <span class="chevron">›</span>
-          </div>
-          <div class="consent-item">
-            <div class="checkbox"></div>
-            <div class="info">
-              <span class="tag required">(필수)</span>
-              <span class="name">개인정보 수집·이용 동의</span>
-            </div>
-            <span class="chevron">›</span>
-          </div>
-          <div class="consent-item">
-            <div class="checkbox"></div>
-            <div class="info">
-              <span class="tag required">(필수)</span>
-              <span class="name">만 14세 이상입니다</span>
-            </div>
-          </div>
-          <div class="consent-item">
-            <div class="checkbox"></div>
-            <div class="info">
-              <span class="tag optional">(선택)</span>
-              <span class="name">제3자 제공 동의</span>
-            </div>
-            <span class="chevron">›</span>
-          </div>
-          <div class="consent-item">
-            <div class="checkbox"></div>
-            <div class="info">
-              <span class="tag optional">(선택)</span>
-              <span class="name">마케팅 정보 수신</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="body-small">※ 선택 항목에 동의하지 않아도 서비스 이용에 영향이 없습니다</div>
-    </div>
-
-    <div class="bottom-area">
-      <button class="cta-button disabled">동의하고 시작하기</button>
-    </div>
-  </div>
-</div>
-
-<!-- ============================================ -->
-<!-- Screen 1-B: 전체 동의 ON                       -->
-<!-- ============================================ -->
-<div class="screen-wrapper">
-  <div class="screen-label">화면 1-B: 전체 동의 활성화</div>
-  <div class="screen-sublabel">모두 동의 → CTA 활성화</div>
-  <div class="phone-frame">
-    <div class="status-bar">9:41</div>
-
-    <div class="content">
-      <div>
-        <div class="title-large">환영합니다! 👋</div>
-        <div class="body-medium" style="margin-top: 8px;">
-          서비스 이용을 위해<br>약관에 동의해주세요
-        </div>
-      </div>
-
-      <div class="toggle-all checked">
-        <span class="label">모두 동의합니다</span>
-        <div class="switch on"></div>
-      </div>
-
-      <div class="card">
-        <div class="consent-list">
-          <div class="consent-item">
-            <div class="checkbox checked"></div>
-            <div class="info">
-              <span class="tag required">(필수)</span>
-              <span class="name">서비스 이용약관</span>
-            </div>
-            <span class="chevron">›</span>
-          </div>
-          <div class="consent-item">
-            <div class="checkbox checked"></div>
-            <div class="info">
-              <span class="tag required">(필수)</span>
-              <span class="name">개인정보 수집·이용 동의</span>
-            </div>
-            <span class="chevron">›</span>
-          </div>
-          <div class="consent-item">
-            <div class="checkbox checked"></div>
-            <div class="info">
-              <span class="tag required">(필수)</span>
-              <span class="name">만 14세 이상입니다</span>
-            </div>
-          </div>
-          <div class="consent-item">
-            <div class="checkbox checked"></div>
-            <div class="info">
-              <span class="tag optional">(선택)</span>
-              <span class="name">제3자 제공 동의</span>
-            </div>
-            <span class="chevron">›</span>
-          </div>
-          <div class="consent-item">
-            <div class="checkbox checked"></div>
-            <div class="info">
-              <span class="tag optional">(선택)</span>
-              <span class="name">마케팅 정보 수신</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="body-small">※ 선택 항목에 동의하지 않아도 서비스 이용에 영향이 없습니다</div>
-    </div>
-
-    <div class="bottom-area">
-      <button class="cta-button primary">동의하고 시작하기</button>
-    </div>
-  </div>
-</div>
-
-<!-- ============================================ -->
-<!-- Screen 1-C: 필수만 동의                        -->
-<!-- ============================================ -->
-<div class="screen-wrapper">
-  <div class="screen-label">화면 1-C: 필수만 동의</div>
-  <div class="screen-sublabel">선택 미체크 — CTA 여전히 활성</div>
-  <div class="phone-frame">
-    <div class="status-bar">9:41</div>
-
-    <div class="content">
-      <div>
-        <div class="title-large">환영합니다! 👋</div>
-        <div class="body-medium" style="margin-top: 8px;">
-          서비스 이용을 위해<br>약관에 동의해주세요
-        </div>
-      </div>
-
-      <div class="toggle-all">
-        <span class="label">모두 동의합니다</span>
-        <div class="switch"></div>
-      </div>
-
-      <div class="card">
-        <div class="consent-list">
-          <div class="consent-item">
-            <div class="checkbox checked"></div>
-            <div class="info">
-              <span class="tag required">(필수)</span>
-              <span class="name">서비스 이용약관</span>
-            </div>
-            <span class="chevron">›</span>
-          </div>
-          <div class="consent-item">
-            <div class="checkbox checked"></div>
-            <div class="info">
-              <span class="tag required">(필수)</span>
-              <span class="name">개인정보 수집·이용 동의</span>
-            </div>
-            <span class="chevron">›</span>
-          </div>
-          <div class="consent-item">
-            <div class="checkbox checked"></div>
-            <div class="info">
-              <span class="tag required">(필수)</span>
-              <span class="name">만 14세 이상입니다</span>
-            </div>
-          </div>
-          <div class="consent-item">
-            <div class="checkbox"></div>
-            <div class="info">
-              <span class="tag optional">(선택)</span>
-              <span class="name">제3자 제공 동의</span>
-            </div>
-            <span class="chevron">›</span>
-          </div>
-          <div class="consent-item">
-            <div class="checkbox"></div>
-            <div class="info">
-              <span class="tag optional">(선택)</span>
-              <span class="name">마케팅 정보 수신</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="body-small">※ 선택 항목에 동의하지 않아도 서비스 이용에 영향이 없습니다</div>
-    </div>
-
-    <div class="bottom-area">
-      <button class="cta-button primary">동의하고 시작하기</button>
-    </div>
-  </div>
-</div>
-
-<!-- ============================================ -->
-<!-- Screen 1-D: 약관 바텀시트 (개인정보 수집·이용)   -->
-<!-- ============================================ -->
-<div class="screen-wrapper">
-  <div class="screen-label">화면 1-D: 약관 바텀시트</div>
-  <div class="screen-sublabel">개인정보 수집·이용 전문 보기</div>
-  <div class="phone-frame">
-    <div class="status-bar">9:41</div>
-
-    <div class="content" style="filter: blur(2px); opacity: 0.5;">
-      <div class="title-large">환영합니다! 👋</div>
-    </div>
-
-    <div class="bottom-sheet-overlay">
-      <div class="bottom-sheet">
-        <div class="drag-handle"></div>
-        <div class="title-medium">개인정보 수집·이용 동의</div>
-
-        <div class="info-box" style="overflow-y: auto; max-height: 380px;">
-          <div class="section-title">수집 항목</div>
-          <div class="item">이름, 이메일, 프로필 사진, 관심 태그</div>
-
-          <div class="section-title">수집 목적</div>
-          <div class="item">서비스 제공 (계정 관리, 이벤트 매칭, 프로필 표시)</div>
-
-          <div class="section-title">보유 기간</div>
-          <div class="item">회원 탈퇴 시까지</div>
-          <div class="item">관련 법령에 따른 보존 의무가 있는 경우 해당 기간까지 보관</div>
-
-          <div class="section-title">동의 거부 권리</div>
-          <div class="item">위 개인정보 수집·이용에 대한 동의를 거부할 수 있습니다.</div>
-          <div class="item">다만, 동의를 거부할 경우 서비스 이용이 불가합니다.</div>
-        </div>
-
-        <button class="cta-button primary" style="margin-top: 8px;">닫기</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ============================================ -->
-<!-- Screen 1-E: 제3자 제공 바텀시트                 -->
-<!-- ============================================ -->
-<div class="screen-wrapper">
-  <div class="screen-label">화면 1-E: 제3자 제공 바텀시트</div>
-  <div class="screen-sublabel">개인정보보호법 제17조 고지</div>
-  <div class="phone-frame">
-    <div class="status-bar">9:41</div>
-
-    <div class="content" style="filter: blur(2px); opacity: 0.5;">
-      <div class="title-large">환영합니다! 👋</div>
-    </div>
-
-    <div class="bottom-sheet-overlay">
-      <div class="bottom-sheet">
-        <div class="drag-handle"></div>
-        <div class="title-medium">개인정보 제3자 제공 동의</div>
-
-        <div class="info-box" style="overflow-y: auto; max-height: 380px;">
-          <div class="section-title">제공받는 자</div>
-          <div class="item">이벤트 주최 파트너 (이벤트 신청 시 해당 파트너에 한정)</div>
-
-          <div class="section-title">제공 항목</div>
-          <div class="item">이름, 성별, 연령대</div>
-
-          <div class="section-title">제공 목적</div>
-          <div class="item">이벤트 운영 (참가자 확인, 매칭 진행, 체크인)</div>
-
-          <div class="section-title">보유 기간</div>
-          <div class="item">이벤트 종료 후 30일</div>
-
-          <div class="section-title">동의 거부 권리</div>
-          <div class="item">위 제3자 제공에 대한 동의를 거부할 수 있습니다.</div>
-          <div class="item">거부해도 서비스 이용에 제한이 없습니다.</div>
-          <div class="item">단, 이벤트 신청 시 개별 동의를 다시 요청합니다.</div>
-        </div>
-
-        <button class="cta-button primary" style="margin-top: 8px;">닫기</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ============================================ -->
-<!-- Screen 2: 본인인증 CI/DI 수집 동의 바텀시트     -->
-<!-- ============================================ -->
-<div class="screen-wrapper">
-  <div class="screen-label">화면 2: 본인인증 동의 바텀시트</div>
-  <div class="screen-sublabel">/certification 에서 인증 시작 전</div>
-  <div class="phone-frame">
-    <div class="status-bar">9:41</div>
-
-    <div class="app-bar">
-      <div class="back-btn">‹</div>
-      <div class="title">본인인증</div>
-      <div class="spacer"></div>
-    </div>
-
-    <div class="content" style="filter: blur(2px); opacity: 0.5;">
-      <div class="body-medium">본인인증을 진행합니다...</div>
-    </div>
-
-    <div class="bottom-sheet-overlay">
-      <div class="bottom-sheet">
-        <div class="drag-handle"></div>
-        <div class="title-medium">본인인증 정보 수집·이용 동의</div>
-        <div class="body-medium" style="font-size: 14px;">본인확인을 위해 아래 정보를 수집합니다.</div>
-
-        <div class="info-box">
-          <div class="section-title">수집 항목</div>
-          <div class="item">이름, 생년월일, 성별</div>
-          <div class="item">휴대폰 번호</div>
-          <div class="item">CI (연계정보)</div>
-          <div class="item">DI (중복확인정보)</div>
-
-          <div class="section-title">이용 목적</div>
-          <div class="item">본인확인 및 실명 인증</div>
-          <div class="item">중복 가입 방지</div>
-
-          <div class="section-title">보유 기간</div>
-          <div class="item">회원 탈퇴 시까지</div>
-          <div class="item">관련 법령에 따라 보존 의무가 있는 경우 해당 기간까지</div>
-        </div>
-
-        <div style="display: flex; align-items: center; gap: 12px; padding: 4px 0;">
+      <div class="consent-list">
+        <div class="consent-item">
           <div class="checkbox"></div>
-          <span style="font-size: 14px; color: var(--color-text-primary);">(필수) 위 내용에 동의합니다</span>
+          <div class="consent-item-content">
+            <div class="consent-item-row">
+              <span class="badge-required">필수</span>
+              <span class="consent-item-title">서비스 이용약관</span>
+            </div>
+            <div class="consent-item-desc">밍릿 서비스 이용을 위한 기본 약관</div>
+          </div>
+          <span class="consent-view-btn">보기</span>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          <button class="cta-button disabled">본인인증 시작하기</button>
-          <button class="cta-button text">취소</button>
+        <div class="consent-item">
+          <div class="checkbox"></div>
+          <div class="consent-item-content">
+            <div class="consent-item-row">
+              <span class="badge-required">필수</span>
+              <span class="consent-item-title">개인정보 수집·이용</span>
+            </div>
+            <div class="consent-item-desc">이름, 이메일, 휴대폰번호 수집·이용</div>
+          </div>
+          <span class="consent-view-btn">보기</span>
+        </div>
+
+        <div class="consent-item">
+          <div class="checkbox"></div>
+          <div class="consent-item-content">
+            <div class="consent-item-row">
+              <span class="badge-required">필수</span>
+              <span class="consent-item-title">만 14세 이상</span>
+            </div>
+            <div class="consent-item-desc">만 14세 이상 확인</div>
+          </div>
+        </div>
+
+        <div class="consent-item">
+          <div class="checkbox"></div>
+          <div class="consent-item-content">
+            <div class="consent-item-row">
+              <span class="badge-optional">선택</span>
+              <span class="consent-item-title">마케팅 정보 수신</span>
+            </div>
+            <div class="consent-item-desc">이벤트, 할인 혜택 등 안내 수신</div>
+          </div>
+          <span class="consent-view-btn">보기</span>
         </div>
       </div>
+
+      <div class="footer-note">
+        ※ 선택 항목 미동의 시에도 서비스 이용이 가능합니다.
+      </div>
+    </div>
+    <div class="bottom-cta">
+      <button class="cta-button">필수 항목에 동의해 주세요</button>
     </div>
   </div>
 </div>
 
-<!-- ============================================ -->
-<!-- Screen 2-B: 본인인증 동의 완료 상태             -->
-<!-- ============================================ -->
-<div class="screen-wrapper">
-  <div class="screen-label">화면 2-B: 동의 체크 완료</div>
-  <div class="screen-sublabel">체크 시 CTA 활성화</div>
-  <div class="phone-frame">
-    <div class="status-bar">9:41</div>
-
-    <div class="app-bar">
-      <div class="back-btn">‹</div>
-      <div class="title">본인인증</div>
-      <div class="spacer"></div>
+<!-- ============================================================ -->
+<!-- Screen 2: All Checked State -->
+<!-- ============================================================ -->
+<div class="screen-group">
+  <div class="screen-label">Screen 2</div>
+  <h2>메인 동의 화면 — 전체 동의 완료</h2>
+  <div class="screen-desc">필수 항목 모두 체크 → CTA 활성화</div>
+  <div class="phone">
+    <div class="status-bar">
+      <span>9:41</span>
+      <span>●●●●</span>
     </div>
+    <div class="phone-content">
+      <div class="logo-area">
+        <span class="logo-text">밍릿</span>
+      </div>
+      <div class="title-section">
+        <h3>환영합니다!</h3>
+        <p>밍릿 이용을 위해 약관에 동의해 주세요.</p>
+      </div>
 
-    <div class="content" style="filter: blur(2px); opacity: 0.5;">
-      <div class="body-medium">본인인증을 진행합니다...</div>
-    </div>
+      <div class="all-agree checked">
+        <div class="checkbox checked"></div>
+        <span class="all-agree-text">전체 동의</span>
+      </div>
 
-    <div class="bottom-sheet-overlay">
-      <div class="bottom-sheet">
-        <div class="drag-handle"></div>
-        <div class="title-medium">본인인증 정보 수집·이용 동의</div>
-        <div class="body-medium" style="font-size: 14px;">본인확인을 위해 아래 정보를 수집합니다.</div>
-
-        <div class="info-box">
-          <div class="section-title">수집 항목</div>
-          <div class="item">이름, 생년월일, 성별</div>
-          <div class="item">휴대폰 번호</div>
-          <div class="item">CI (연계정보)</div>
-          <div class="item">DI (중복확인정보)</div>
-
-          <div class="section-title">이용 목적</div>
-          <div class="item">본인확인 및 실명 인증</div>
-          <div class="item">중복 가입 방지</div>
-
-          <div class="section-title">보유 기간</div>
-          <div class="item">회원 탈퇴 시까지</div>
-          <div class="item">관련 법령에 따라 보존 의무가 있는 경우 해당 기간까지</div>
-        </div>
-
-        <div style="display: flex; align-items: center; gap: 12px; padding: 4px 0;">
+      <div class="consent-list">
+        <div class="consent-item">
           <div class="checkbox checked"></div>
-          <span style="font-size: 14px; color: var(--color-text-primary);">(필수) 위 내용에 동의합니다</span>
+          <div class="consent-item-content">
+            <div class="consent-item-row">
+              <span class="badge-required">필수</span>
+              <span class="consent-item-title">서비스 이용약관</span>
+            </div>
+            <div class="consent-item-desc">밍릿 서비스 이용을 위한 기본 약관</div>
+          </div>
+          <span class="consent-view-btn">보기</span>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          <button class="cta-button primary">본인인증 시작하기</button>
-          <button class="cta-button text">취소</button>
+        <div class="consent-item">
+          <div class="checkbox checked"></div>
+          <div class="consent-item-content">
+            <div class="consent-item-row">
+              <span class="badge-required">필수</span>
+              <span class="consent-item-title">개인정보 수집·이용</span>
+            </div>
+            <div class="consent-item-desc">이름, 이메일, 휴대폰번호 수집·이용</div>
+          </div>
+          <span class="consent-view-btn">보기</span>
+        </div>
+
+        <div class="consent-item">
+          <div class="checkbox checked"></div>
+          <div class="consent-item-content">
+            <div class="consent-item-row">
+              <span class="badge-required">필수</span>
+              <span class="consent-item-title">만 14세 이상</span>
+            </div>
+            <div class="consent-item-desc">만 14세 이상 확인</div>
+          </div>
+        </div>
+
+        <div class="consent-item">
+          <div class="checkbox checked"></div>
+          <div class="consent-item-content">
+            <div class="consent-item-row">
+              <span class="badge-optional">선택</span>
+              <span class="consent-item-title">마케팅 정보 수신</span>
+            </div>
+            <div class="consent-item-desc">이벤트, 할인 혜택 등 안내 수신</div>
+          </div>
+          <span class="consent-view-btn">보기</span>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        ※ 선택 항목 미동의 시에도 서비스 이용이 가능합니다.
+      </div>
+    </div>
+    <div class="bottom-cta">
+      <button class="cta-button active">밍릿 시작하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- Screen 3: Terms Detail Bottom Sheet -->
+<!-- ============================================================ -->
+<div class="screen-group">
+  <div class="screen-label">Screen 3</div>
+  <h2>약관 상세 보기 — 바텀시트</h2>
+  <div class="screen-desc">"보기" 탭 시 약관 전문 표시</div>
+  <div class="phone">
+    <div class="status-bar">
+      <span>9:41</span>
+      <span>●●●●</span>
+    </div>
+    <div class="phone-content" style="opacity: 0.6;">
+      <div class="logo-area">
+        <span class="logo-text">밍릿</span>
+      </div>
+      <div class="title-section">
+        <h3>환영합니다!</h3>
+        <p>밍릿 이용을 위해 약관에 동의해 주세요.</p>
+      </div>
+      <div class="all-agree">
+        <div class="checkbox"></div>
+        <span class="all-agree-text">전체 동의</span>
+      </div>
+      <div class="consent-list">
+        <div class="consent-item">
+          <div class="checkbox"></div>
+          <div class="consent-item-content">
+            <div class="consent-item-row">
+              <span class="badge-required">필수</span>
+              <span class="consent-item-title">개인정보 수집·이용</span>
+            </div>
+            <div class="consent-item-desc">이름, 이메일, 휴대폰번호 수집·이용</div>
+          </div>
+          <span class="consent-view-btn">보기</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Sheet -->
+    <div class="sheet-overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-header">
+          <h4>개인정보 수집·이용 동의</h4>
+        </div>
+        <div class="sheet-body">
+          <h5>1. 수집 항목</h5>
+          <ul>
+            <li><strong>필수:</strong> 이메일, 이름(닉네임)</li>
+            <li><strong>본인인증 시:</strong> CI/DI, 이름, 생년월일, 성별, 휴대폰번호</li>
+          </ul>
+
+          <h5>2. 수집 목적</h5>
+          <ul>
+            <li>회원 식별 및 관리</li>
+            <li>서비스 제공 및 이벤트 참여 관리</li>
+            <li>본인인증 및 중복가입 방지</li>
+          </ul>
+
+          <h5>3. 보유 기간</h5>
+          <ul>
+            <li>회원 탈퇴 시까지</li>
+            <li>단, 관련 법령에 따라 보존 필요 시 해당 기간 동안 보관</li>
+          </ul>
+
+          <h5>4. 동의 거부 권리</h5>
+          <p>필수 항목 동의 거부 시 서비스 이용이 제한됩니다. 선택 항목은 동의하지 않아도 서비스 이용이 가능합니다.</p>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ============================================ -->
-<!-- Screen 3: 동의 관리 (PrivacyPage)              -->
-<!-- ============================================ -->
-<div class="screen-wrapper">
-  <div class="screen-label">화면 3: 동의 관리</div>
-  <div class="screen-sublabel">/my/privacy — 기존 placeholder 교체</div>
-  <div class="phone-frame">
-    <div class="status-bar">9:41</div>
-
-    <div class="app-bar">
-      <div class="back-btn">‹</div>
-      <div class="title">개인정보 설정</div>
-      <div class="spacer"></div>
+<!-- ============================================================ -->
+<!-- Screen 4: CI/DI Consent Dialog -->
+<!-- ============================================================ -->
+<div class="screen-group">
+  <div class="screen-label">Screen 4</div>
+  <h2>본인확인정보 수집 동의 — 다이얼로그</h2>
+  <div class="screen-desc">본인인증(IdentityVerificationScreen) 진입 전 표시</div>
+  <div class="phone">
+    <div class="status-bar">
+      <span>9:41</span>
+      <span>●●●●</span>
+    </div>
+    <div class="phone-content" style="opacity: 0.4;">
+      <div style="padding: var(--spacing-large); text-align: center; margin-top: 80px;">
+        <div style="width: 64px; height: 64px; background: var(--surface-variant); border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+          <span style="font-size: 28px;">🔒</span>
+        </div>
+        <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">본인인증</h3>
+        <p style="font-size: 14px; color: var(--on-surface-variant);">
+          안전한 서비스 이용을 위해<br>본인인증이 필요합니다.
+        </p>
+      </div>
     </div>
 
-    <div class="content">
-      <!-- Section: 약관 동의 현황 -->
-      <div>
-        <div class="title-medium" style="margin-bottom: 12px;">약관 동의 현황</div>
-        <div class="card">
-          <div class="privacy-section">
-            <div class="privacy-item">
-              <div class="left">
-                <span class="item-name">서비스 이용약관</span>
-                <span class="item-date">2026.03.30 동의</span>
-              </div>
-              <span class="status link">보기 ›</span>
-            </div>
-            <div class="privacy-item">
-              <div class="left">
-                <span class="item-name">개인정보 수집·이용</span>
-                <span class="item-date">2026.03.30 동의</span>
-              </div>
-              <span class="status link">보기 ›</span>
-            </div>
-            <div class="privacy-item">
-              <div class="left">
-                <span class="item-name">본인인증 정보 수집</span>
-                <span class="item-date">2026.03.30 동의</span>
-              </div>
-              <span class="status agreed">동의됨</span>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="dialog-overlay">
+      <div class="dialog">
+        <h4>본인확인정보 수집·이용 동의</h4>
+        <p>본인인증을 위해 아래 정보를 수집·이용합니다.</p>
 
-      <!-- Section: 선택 동의 관리 -->
-      <div>
-        <div class="title-medium" style="margin-bottom: 12px;">선택 동의 관리</div>
-        <div class="card">
-          <div class="privacy-section">
-            <div class="privacy-item">
-              <div class="left">
-                <span class="item-name">제3자 제공 동의</span>
-                <span class="item-date" style="font-size: 11px; line-height: 1.4;">파트너에게 참가자 정보 제공</span>
-              </div>
-              <div class="switch on"></div>
-            </div>
-            <div class="privacy-item">
-              <div class="left">
-                <span class="item-name">마케팅 정보 수신</span>
-                <span class="item-date" style="font-size: 11px; line-height: 1.4;">이벤트/혜택 안내 (Push, 이메일)</span>
-              </div>
-              <div class="switch"></div>
-            </div>
-          </div>
+        <div class="dialog-items">
+          <div class="dialog-item">CI (연계정보)</div>
+          <div class="dialog-item">DI (중복확인정보)</div>
+          <div class="dialog-item">이름, 생년월일, 성별</div>
+          <div class="dialog-item">휴대폰번호</div>
         </div>
-        <div class="body-small" style="margin-top: 8px;">선택 동의는 언제든 변경할 수 있습니다.</div>
-      </div>
 
-      <!-- Section: 기타 -->
-      <div>
-        <div class="title-medium" style="margin-bottom: 12px;">기타</div>
-        <div class="card">
-          <div class="privacy-section">
-            <div class="privacy-item">
-              <div class="left">
-                <span class="item-name">개인정보처리방침</span>
-              </div>
-              <span class="status link">보기 ›</span>
-            </div>
-            <div class="privacy-item">
-              <div class="left">
-                <span class="item-name" style="color: var(--color-error);">회원탈퇴</span>
-              </div>
-              <span class="chevron" style="color: #9CA3AF; font-size: 18px;">›</span>
-            </div>
-          </div>
+        <p><strong>수집목적:</strong> 본인확인 및 중복가입 방지</p>
+        <p><strong>보유기간:</strong> 회원 탈퇴 시까지</p>
+
+        <div class="dialog-note">
+          CI/DI는 암호화되어 안전하게 저장됩니다.
+        </div>
+
+        <div class="dialog-buttons">
+          <button class="dialog-btn dialog-btn-cancel">취소</button>
+          <button class="dialog-btn dialog-btn-confirm">동의하고 인증</button>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ============================================ -->
-<!-- Screen 3-B: 동의 관리 — 마케팅 ON 상태          -->
-<!-- ============================================ -->
-<div class="screen-wrapper">
-  <div class="screen-label">화면 3-B: 마케팅 동의 ON</div>
-  <div class="screen-sublabel">토글 변경 시 즉시 저장</div>
-  <div class="phone-frame">
-    <div class="status-bar">9:41</div>
-
-    <div class="app-bar">
-      <div class="back-btn">‹</div>
-      <div class="title">개인정보 설정</div>
-      <div class="spacer"></div>
+<!-- ============================================================ -->
+<!-- Screen 5: Third-Party Sharing Consent (Event Apply Step) -->
+<!-- ============================================================ -->
+<div class="screen-group">
+  <div class="screen-label">Screen 5</div>
+  <h2>제3자 제공 동의 — 이벤트 신청 스텝</h2>
+  <div class="screen-desc">이벤트 신청 위저드 내 하나의 스텝으로 표시</div>
+  <div class="phone">
+    <div class="status-bar">
+      <span>9:41</span>
+      <span>●●●●</span>
     </div>
 
-    <div class="content">
-      <div>
-        <div class="title-medium" style="margin-bottom: 12px;">약관 동의 현황</div>
-        <div class="card">
-          <div class="privacy-section">
-            <div class="privacy-item">
-              <div class="left">
-                <span class="item-name">서비스 이용약관</span>
-                <span class="item-date">2026.03.30 동의</span>
-              </div>
-              <span class="status link">보기 ›</span>
+    <!-- Wizard progress bar -->
+    <div style="padding: 8px 16px; background: var(--background);">
+      <div style="display: flex; gap: 4px;">
+        <div style="flex: 2; height: 3px; background: var(--primary); border-radius: 2px;"></div>
+        <div style="flex: 1; height: 3px; background: var(--primary); border-radius: 2px; opacity: 0.3;"></div>
+        <div style="flex: 1; height: 3px; background: var(--outline-variant); border-radius: 2px;"></div>
+      </div>
+    </div>
+
+    <div class="phone-content">
+      <div class="wizard-step">
+        <div class="wizard-step-header">
+          <div class="wizard-step-num">3</div>
+          <h4>정보 제공 동의</h4>
+        </div>
+
+        <div class="partner-card">
+          <div class="partner-avatar">밍</div>
+          <div>
+            <div class="partner-name">밍글파티</div>
+            <div style="font-size: 12px; color: var(--on-surface-variant);">이벤트 주최 파트너</div>
+          </div>
+        </div>
+
+        <div style="background: var(--surface); border-radius: var(--radius-input); padding: var(--spacing-medium); margin-bottom: 20px;">
+          <div style="font-size: 14px; font-weight: 600; color: var(--on-surface); margin-bottom: 12px;">
+            개인정보 제3자 제공 안내
+          </div>
+          <div style="font-size: 13px; color: var(--on-surface-variant); line-height: 1.7;">
+            <div style="margin-bottom: 8px;">
+              <span style="font-weight: 600; color: var(--on-surface);">제공받는 자:</span> 밍글파티
             </div>
-            <div class="privacy-item">
-              <div class="left">
-                <span class="item-name">개인정보 수집·이용</span>
-                <span class="item-date">2026.03.30 동의</span>
-              </div>
-              <span class="status link">보기 ›</span>
+            <div style="margin-bottom: 8px;">
+              <span style="font-weight: 600; color: var(--on-surface);">제공 항목:</span> 이름, 휴대폰번호
             </div>
-            <div class="privacy-item">
-              <div class="left">
-                <span class="item-name">본인인증 정보 수집</span>
-                <span class="item-date">2026.03.30 동의</span>
-              </div>
-              <span class="status agreed">동의됨</span>
+            <div style="margin-bottom: 8px;">
+              <span style="font-weight: 600; color: var(--on-surface);">제공 목적:</span> 이벤트 참여 확인 및 연락
+            </div>
+            <div>
+              <span style="font-weight: 600; color: var(--on-surface);">보유기간:</span> 이벤트 종료 후 6개월
             </div>
           </div>
         </div>
-      </div>
 
-      <div>
-        <div class="title-medium" style="margin-bottom: 12px;">선택 동의 관리</div>
-        <div class="card">
-          <div class="privacy-section">
-            <div class="privacy-item">
-              <div class="left">
-                <span class="item-name">제3자 제공 동의</span>
-                <span class="item-date" style="font-size: 11px; line-height: 1.4;">파트너에게 참가자 정보 제공</span>
-              </div>
-              <div class="switch on"></div>
-            </div>
-            <div class="privacy-item">
-              <div class="left">
-                <span class="item-name">마케팅 정보 수신</span>
-                <span class="item-date" style="font-size: 11px; line-height: 1.4;">이벤트/혜택 안내 (Push, 이메일)</span>
-              </div>
-              <div class="switch on"></div>
-            </div>
-          </div>
-        </div>
-        <div class="body-small" style="margin-top: 8px;">선택 동의는 언제든 변경할 수 있습니다.</div>
-      </div>
-
-      <div>
-        <div class="title-medium" style="margin-bottom: 12px;">기타</div>
-        <div class="card">
-          <div class="privacy-section">
-            <div class="privacy-item">
-              <div class="left">
-                <span class="item-name">개인정보처리방침</span>
-              </div>
-              <span class="status link">보기 ›</span>
-            </div>
-            <div class="privacy-item">
-              <div class="left">
-                <span class="item-name" style="color: var(--color-error);">회원탈퇴</span>
-              </div>
-              <span class="chevron" style="color: #9CA3AF; font-size: 18px;">›</span>
+        <div style="display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; cursor: pointer;">
+          <div class="checkbox checked"></div>
+          <div>
+            <div style="font-size: 14px; font-weight: 500; color: var(--on-surface); line-height: 1.5;">
+              위 내용을 확인했으며 동의합니다.
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Snackbar -->
-    <div style="position: absolute; bottom: 90px; left: 16px; right: 16px; background: var(--color-text-primary); color: white; padding: 14px 16px; border-radius: var(--radius-small); font-size: 14px; display: flex; align-items: center; gap: 8px; z-index: 10;">
-      <span style="color: var(--color-success);">✓</span>
-      마케팅 정보 수신 동의가 변경되었습니다
+    <div class="bottom-cta">
+      <button class="cta-button active">다음</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- Screen 6: Required Only (Marketing Unchecked) -->
+<!-- ============================================================ -->
+<div class="screen-group">
+  <div class="screen-label">Screen 6</div>
+  <h2>필수만 동의 — 마케팅 미선택</h2>
+  <div class="screen-desc">필수만 체크해도 CTA 활성화 (선택 항목은 거부 가능)</div>
+  <div class="phone">
+    <div class="status-bar">
+      <span>9:41</span>
+      <span>●●●●</span>
+    </div>
+    <div class="phone-content">
+      <div class="logo-area">
+        <span class="logo-text">밍릿</span>
+      </div>
+      <div class="title-section">
+        <h3>환영합니다!</h3>
+        <p>밍릿 이용을 위해 약관에 동의해 주세요.</p>
+      </div>
+
+      <div class="all-agree">
+        <div class="checkbox"></div>
+        <span class="all-agree-text">전체 동의</span>
+      </div>
+
+      <div class="consent-list">
+        <div class="consent-item">
+          <div class="checkbox checked"></div>
+          <div class="consent-item-content">
+            <div class="consent-item-row">
+              <span class="badge-required">필수</span>
+              <span class="consent-item-title">서비스 이용약관</span>
+            </div>
+            <div class="consent-item-desc">밍릿 서비스 이용을 위한 기본 약관</div>
+          </div>
+          <span class="consent-view-btn">보기</span>
+        </div>
+
+        <div class="consent-item">
+          <div class="checkbox checked"></div>
+          <div class="consent-item-content">
+            <div class="consent-item-row">
+              <span class="badge-required">필수</span>
+              <span class="consent-item-title">개인정보 수집·이용</span>
+            </div>
+            <div class="consent-item-desc">이름, 이메일, 휴대폰번호 수집·이용</div>
+          </div>
+          <span class="consent-view-btn">보기</span>
+        </div>
+
+        <div class="consent-item">
+          <div class="checkbox checked"></div>
+          <div class="consent-item-content">
+            <div class="consent-item-row">
+              <span class="badge-required">필수</span>
+              <span class="consent-item-title">만 14세 이상</span>
+            </div>
+            <div class="consent-item-desc">만 14세 이상 확인</div>
+          </div>
+        </div>
+
+        <div class="consent-item" style="opacity: 0.6;">
+          <div class="checkbox"></div>
+          <div class="consent-item-content">
+            <div class="consent-item-row">
+              <span class="badge-optional">선택</span>
+              <span class="consent-item-title">마케팅 정보 수신</span>
+            </div>
+            <div class="consent-item-desc">이벤트, 할인 혜택 등 안내 수신</div>
+          </div>
+          <span class="consent-view-btn">보기</span>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        ※ 선택 항목 미동의 시에도 서비스 이용이 가능합니다.
+      </div>
+    </div>
+    <div class="bottom-cta">
+      <button class="cta-button active">밍릿 시작하기</button>
     </div>
   </div>
 </div>

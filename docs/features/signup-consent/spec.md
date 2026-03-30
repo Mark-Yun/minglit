@@ -1,162 +1,170 @@
-# 회원가입 개인정보 수집·이용 동의 스펙
+# 회원가입 동의 (Signup Consent) 스펙
 
 ## 개요
 
-### 배경
-법률/개인정보보호 감사(#747)에서 "회원가입 시 명시적 동의 수집 UI 없음"이 [High] 이슈로 지적되었다. 현재 OAuth 로그인 후 바로 앱 접근이 가능하며, CI/DI 수집(본인인증) 시에도 별도 동의 절차가 없다. 개인정보보호법 제15조/제22조 위반에 해당한다.
+회원가입 시 개인정보보호법 제15조/제22조에 따른 **명시적 동의 수집 UI**를 구현한다.
+현재 OAuth 로그인 후 바로 앱에 진입하므로, 첫 로그인 시 동의 화면을 삽입해야 한다.
 
 ### 핵심 원칙
-1. **필수/선택 분리**: 필수 동의만으로 서비스 이용 가능. 선택 동의 거부 시 불이익 없음
-2. **명시적 동의**: 사전 체크(pre-checked) 금지, 사용자가 직접 탭/체크
-3. **동의 이력 추적**: 언제, 어떤 버전의 약관에 동의했는지 DB에 기록
-4. **점진적 동의(Progressive Consent)**: 모든 동의를 한 화면에 몰아넣지 않고, 필요 시점에 요청
 
-### 참고 앱
-- **토스(Toss)**: 카드형 단계적 동의 + 간결한 요약문
-- **카카오(Kakao)**: 필수/선택 명확 구분 + 바텀시트 전문 보기
-- **당근마켓(Karrot)**: 전체동의 토글 + 개별 체크박스 + 선택 항목 안내문
+| 원칙 | 설명 |
+|------|------|
+| **법적 준수** | 개인정보보호법 제15조(수집·이용), 제22조(동의 방법) 완전 준수 |
+| **최소 마찰** | 기존 OAuth 로그인 경험을 해치지 않는 선에서 필수 동의만 최초 1회 수집 |
+| **투명성** | 무엇을 왜 수집하는지 한 줄 요약 + 전문 열람 제공 |
+| **통제권** | 설정에서 언제든 동의 내용 확인/변경 가능 |
+
+### 참고한 앱/트렌드
+
+| 앱 | 참고 포인트 |
+|----|-----------|
+| **토스** | 전체동의 + 개별 토글, 하단 고정 CTA, 미니멀한 UI |
+| **카카오** | 소셜 로그인 후 최소 추가 동의, 접기/펼치기 약관 |
+| **네이버** | [필수]/[선택] 태그 구분, 단계별 프로그레스 |
+| **일반 트렌드** | 알기 쉬운 요약문 + 전문 접기, 마케팅 동의 명확한 선택 표시 |
+
+### 법적 근거
+
+| 조문 | 요구사항 | 본 스펙 반영 |
+|------|---------|-------------|
+| 개인정보보호법 §15 | 수집·이용 목적, 항목, 보유기간 고지 | 각 동의 항목에 명시 |
+| 개인정보보호법 §22 | 필수 vs 선택 동의 분리, 선택 거부 시 서비스 이용 가능 보장 | [필수]/[선택] 태그 + 선택 항목 미동의 시에도 가입 가능 |
+| 개인정보보호법 §29 | 안전조치 의무 (CI/DI 암호화) | 본인인증 동의에 암호화 저장 안내 포함 |
+| 정보통신망법 §22 | 위치정보 수집 시 별도 동의 | 현재 수집 항목에 위치 미포함 (별도 대응 불필요) |
 
 ---
 
 ## 구성 요소
 
-### 화면 1: 회원가입 약관 동의 (SignupConsentScreen)
+### 1. 동의 화면 (ConsentScreen)
 
-**표시 시점**: 최초 OAuth 로그인 후 (신규 유저만). 기존 유저는 바로 앱 진입.
+**진입 조건**: 첫 로그인 시 (user_consents 테이블에 기록이 없는 경우)
 
-**레이아웃** (위→아래):
-
-```
-┌──────────────────────────────────┐
-│  [백 버튼]                       │ ← AppBar (없음, 시스템 back만)
-│                                  │
-│  환영합니다! 👋                  │ ← titleLarge (20px bold)
-│  서비스 이용을 위해              │ ← bodyMedium (16px)
-│  약관에 동의해주세요             │
-│                                  │
-│  ┌────────────────────────────┐  │
-│  │ ☑ 모두 동의합니다          │  │ ← 전체동의 토글 (필수+선택 모두)
-│  └────────────────────────────┘  │
-│                                  │
-│  ┌────────────────────────────┐  │
-│  │ (필수) 서비스 이용약관     │ → │ ← 탭 → 바텀시트로 전문
-│  │ (필수) 개인정보 수집·이용  │ → │ ← 탭 → 바텀시트로 전문
-│  │ (필수) 만 14세 이상입니다  │ ○  │ ← 체크박스 (링크 없음)
-│  │ (선택) 제3자 제공 동의     │ → │ ← 탭 → 바텀시트로 전문
-│  │ (선택) 마케팅 정보 수신    │ ○  │ ← 체크박스 + "거부해도 서비스 이용 가능"
-│  └────────────────────────────┘  │
-│                                  │
-│  ※ 선택 항목에 동의하지 않아도  │ ← bodySmall (13px), textSecondary
-│    서비스 이용에 영향이 없습니다 │
-│                                  │
-│  ┌────────────────────────────┐  │
-│  │      동의하고 시작하기      │  │ ← CTA 버튼 (필수 3개 체크 시 활성)
-│  └────────────────────────────┘  │
-│                                  │
-└──────────────────────────────────┘
-```
-
-#### 구성 요소 상세
-
-| 요소 | 위젯 | 동작 |
-|------|------|------|
-| 전체동의 토글 | `SwitchListTile` | ON: 모든 항목 체크. OFF: 모든 항목 해제. 중간 상태 없음 |
-| 약관 항목 | `ListTile` + trailing `Icon(Icons.chevron_right)` | 탭 → 바텀시트로 전문 표시 |
-| 만 14세 이상 | `CheckboxListTile` | 체크/해제만. 링크 없음 |
-| 제3자 제공 | `ListTile` + trailing `Icon(Icons.chevron_right)` | 탭 → 바텀시트로 제공받는 자/항목/목적/기간 전문 |
-| 마케팅 수신 | `CheckboxListTile` | 체크/해제 + 부가 텍스트 |
-| CTA 버튼 | `ElevatedButton` | 필수 3개 모두 체크 시 `primary` 색상 활성. 아니면 비활성 |
-| 바텀시트 | `showModalBottomSheet` + `DraggableScrollableSheet` | 약관 전문 스크롤 + "닫기" 버튼 |
-
-#### 동의 항목 정의
-
-| # | 항목 | 필수/선택 | key (policies 테이블) | 내용 요약 |
-|---|------|----------|----------------------|----------|
-| 1 | 서비스 이용약관 | 필수 | `terms_of_service` | 서비스 이용 조건, 금지 행위, 계정 관리 |
-| 2 | 개인정보 수집·이용 | 필수 | `privacy_collection` | 수집 항목(이름, 이메일, 프로필), 목적, 보유기간 |
-| 3 | 만 14세 이상 확인 | 필수 | `age_confirmation` | (약관 아님, 확인란) |
-| 4 | 제3자 제공 동의 | 선택 | `third_party_provision` | 파트너(주최자)에게 참가자 정보 제공 — 이벤트 운영 목적 |
-| 5 | 마케팅 정보 수신 | 선택 | `marketing_consent` | 이벤트/혜택 안내 (Push, SMS, 이메일) |
-
-#### 법적 필수 고지 (개인정보보호법 제15조/제17조)
-
-각 동의 항목의 바텀시트 전문에는 아래 고지를 **반드시** 포함한다:
-
-**개인정보 수집·이용 (`privacy_collection`) 바텀시트:**
-
-| 고지 항목 | 내용 |
-|----------|------|
-| 수집 항목 | 이름, 이메일, 프로필 사진, 관심 태그 |
-| 수집 목적 | 서비스 제공 (계정 관리, 이벤트 매칭, 프로필 표시) |
-| 보유 기간 | 회원 탈퇴 시까지 (관련 법령에 따른 보존 기간 별도 안내) |
-| 거부 권리 | 동의를 거부할 수 있으나, 거부 시 서비스 이용이 불가합니다 |
-
-**제3자 제공 (`third_party_provision`) 바텀시트:**
-
-| 고지 항목 | 내용 |
-|----------|------|
-| 제공받는 자 | 이벤트 주최 파트너 (이벤트 신청 시 해당 파트너에 한정) |
-| 제공 항목 | 이름, 성별, 연령대 (상세 생년월일 미제공) |
-| 제공 목적 | 이벤트 운영 (참가자 확인, 매칭 진행, 체크인) |
-| 보유 기간 | 이벤트 종료 후 30일 |
-| 거부 권리 | 동의를 거부할 수 있으며, 거부해도 서비스 이용에 제한이 없습니다. 단, 이벤트 신청 시 개별 동의를 다시 요청합니다 |
-
-> **위탁 vs 제3자 제공 구분**: Portone(결제), Iamport(본인인증) 등은 **위탁**이므로 별도 동의 불필요 (개인정보처리방침에 공개). 파트너에게 참가자 정보를 제공하는 것은 **제3자 제공**에 해당하여 별도 동의 필요.
-
-### 화면 2: 본인인증 CI/DI 수집 동의 (IdentityVerificationConsentSheet)
-
-**표시 시점**: `/certification` (본인인증) 화면에서 "본인인증 시작" 버튼 탭 전
-
-**레이아웃** (바텀시트):
+**화면 구조** (위→아래):
 
 ```
-┌──────────────────────────────────┐
-│  본인인증 정보 수집·이용 동의    │ ← titleMedium (16px bold)
-│                                  │
-│  본인확인을 위해 아래 정보를     │ ← bodyMedium (16px)
-│  수집합니다.                     │
-│                                  │
-│  ┌────────────────────────────┐  │
-│  │ 수집 항목                  │  │
-│  │ • 이름, 생년월일, 성별     │  │
-│  │ • 휴대폰 번호              │  │
-│  │ • CI (연계정보)            │  │
-│  │ • DI (중복확인정보)        │  │
-│  │                            │  │
-│  │ 이용 목적                  │  │
-│  │ • 본인확인 및 실명 인증    │  │
-│  │ • 중복 가입 방지           │  │
-│  │                            │  │
-│  │ 보유 기간                  │  │
-│  │ • 회원 탈퇴 시까지         │  │
-│  │  (관련 법령에 따라 보존)   │  │
-│  └────────────────────────────┘  │
-│                                  │
-│  ☑ (필수) 위 내용에 동의합니다  │ ← 체크해야 진행 가능
-│                                  │
-│  ┌────────────────────────────┐  │
-│  │     본인인증 시작하기       │  │ ← CTA (동의 체크 시 활성)
-│  └────────────────────────────┘  │
-│  ┌────────────────────────────┐  │
-│  │          취소               │  │ ← TextButton
-│  └────────────────────────────┘  │
-└──────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│  ←  (뒤로가기 없음 — 필수 플로우)         │
+├─────────────────────────────────────────┤
+│                                         │
+│  환영합니다!                              │  ← 타이틀
+│  밍릿 이용을 위해 약관에 동의해 주세요.     │  ← 설명
+│                                         │
+│  ┌─────────────────────────────────┐    │
+│  │ ☑ 전체 동의                      │    │  ← 전체동의 토글
+│  └─────────────────────────────────┘    │
+│                                         │
+│  ┌─ [필수] 서비스 이용약관 ─── 보기 ▸ ─┐ │
+│  │ 밍릿 서비스 이용을 위한 기본 약관     │ │  ← 한 줄 요약
+│  └─────────────────────────────────────┘ │
+│                                         │
+│  ┌─ [필수] 개인정보 수집·이용 ─ 보기 ▸ ─┐ │
+│  │ 이름, 이메일, 휴대폰번호 수집·이용    │ │
+│  └─────────────────────────────────────┘ │
+│                                         │
+│  ┌─ [필수] 만 14세 이상 ────────────────┐ │
+│  │ 만 14세 이상 확인                    │ │
+│  └─────────────────────────────────────┘ │
+│                                         │
+│  ┌─ [선택] 마케팅 정보 수신 ─── 보기 ▸ ─┐ │
+│  │ 이벤트, 할인 혜택 등 안내 수신        │ │
+│  └─────────────────────────────────────┘ │
+│                                         │
+│  ┌─────────────────────────────────────┐ │
+│  │ 다 같이 시작하기                     │ │  ← 하단 고정 버튼
+│  │ (필수 항목 동의 시 활성화)            │ │
+│  └─────────────────────────────────────┘ │
+│                                         │
+│  ※ 선택 항목 미동의 시에도 서비스 이용이    │  ← 안내 문구
+│     가능합니다.                           │
+└─────────────────────────────────────────┘
 ```
 
-### 화면 3: 동의 관리 (MyPage → 개인정보 설정)
+### 2. 약관 상세 보기 (TermsDetailSheet)
 
-**표시 시점**: `/my/privacy` (기존 PrivacyPage 교체)
+각 "보기 ▸" 탭 시 MinglitBottomSheet로 표시:
 
-**추가 항목**:
+| 항목 | 내용 출처 | 표시 방식 |
+|------|----------|----------|
+| 서비스 이용약관 | `landing_user/src/app/terms/page.tsx` 서비스약관 섹션 | 스크롤 가능한 바텀시트 |
+| 개인정보 수집·이용 | 별도 동의서 (아래 템플릿 참고) | 스크롤 가능한 바텀시트 |
+| 마케팅 정보 수신 | 간결한 설명 (Push/SMS/Email) | 바텀시트 |
+| 만 14세 이상 | 확인 문구만 (상세 없음) | — |
 
-| 항목 | 초기값 | 변경 가능 |
-|------|--------|----------|
-| 서비스 이용약관 | 동의 | 불가 (탈퇴로만 철회) |
-| 개인정보 수집·이용 | 동의 | 불가 (탈퇴로만 철회) |
-| 제3자 제공 | 가입 시 선택 | **가능** — 토글 (철회 시 이벤트 신청마다 개별 동의 요청) |
-| 마케팅 정보 수신 | 가입 시 선택 | **가능** — 토글 |
-| 본인인증 정보 | 동의 | 불가 (탈퇴로만 철회) |
-| 약관 보기 | — | 링크 → 바텀시트 |
+**개인정보 수집·이용 동의서 내용**:
+```
+[개인정보 수집·이용 동의]
+
+1. 수집 항목
+   - 필수: 이메일, 이름(닉네임)
+   - 본인인증 시: CI/DI, 이름, 생년월일, 성별, 휴대폰번호
+
+2. 수집 목적
+   - 회원 식별 및 관리
+   - 서비스 제공 및 이벤트 참여 관리
+   - 본인인증 및 중복가입 방지
+
+3. 보유 기간
+   - 회원 탈퇴 시까지
+   - 단, 관련 법령에 따라 보존 필요 시 해당 기간 동안 보관
+
+4. 동의 거부 권리
+   - 필수 항목 동의 거부 시 서비스 이용이 제한됩니다.
+   - 선택 항목은 동의하지 않아도 서비스 이용이 가능합니다.
+```
+
+### 3. 본인인증 전 CI/DI 동의 (Identity Consent Dialog)
+
+**진입 조건**: 본인인증(IdentityVerificationScreen) 진입 직전
+
+**화면 구조**:
+```
+┌─────────────────────────────────────┐
+│                                     │
+│  본인확인정보 수집·이용 동의          │
+│                                     │
+│  본인인증을 위해 아래 정보를          │
+│  수집·이용합니다.                     │
+│                                     │
+│  • CI (연계정보)                     │
+│  • DI (중복확인정보)                  │
+│  • 이름, 생년월일, 성별              │
+│  • 휴대폰번호                        │
+│                                     │
+│  수집목적: 본인확인 및 중복가입 방지   │
+│  보유기간: 회원 탈퇴 시까지           │
+│                                     │
+│  ※ CI/DI는 암호화되어 안전하게        │
+│     저장됩니다.                      │
+│                                     │
+│  ┌──────────┐  ┌──────────────────┐ │
+│  │   취소    │  │   동의하고 인증   │ │
+│  └──────────┘  └──────────────────┘ │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+### 4. 제3자 제공 동의 (이벤트 신청 시)
+
+**진입 조건**: 이벤트 신청 위저드 진행 중, 파트너에게 정보 제공 필요 시
+
+**화면 구조**: 신청 위저드 내 하나의 스텝으로 포함
+```
+┌─────────────────────────────────────┐
+│  [필수] 개인정보 제3자 제공 동의       │
+│                                     │
+│  이벤트 주최 파트너에게 아래 정보가    │
+│  제공됩니다.                         │
+│                                     │
+│  제공받는 자: {파트너 브랜드명}        │
+│  제공 항목: 이름, 휴대폰번호           │
+│  제공 목적: 이벤트 참여 확인 및 연락   │
+│  보유기간: 이벤트 종료 후 6개월        │
+│                                     │
+│  ☑ 위 내용을 확인했으며 동의합니다.    │
+│                                     │
+└─────────────────────────────────────┘
+```
 
 ---
 
@@ -165,139 +173,194 @@
 ### 신규 테이블: `user_consents`
 
 ```sql
-CREATE TABLE public.user_consents (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  consent_key text NOT NULL,        -- 'terms_of_service', 'privacy_collection', 'age_confirmation', 'third_party_provision', 'marketing_consent', 'identity_verification'
-  consented boolean NOT NULL,
-  policy_version integer,           -- policies 테이블 version 참조
-  consented_at timestamptz NOT NULL DEFAULT now(),
+create table public.user_consents (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  consent_type consent_type_enum not null,
+  consent_version text not null default '1.0',
+  consented_at timestamptz not null default now(),
   withdrawn_at timestamptz,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT user_consents_user_key_unique UNIQUE(user_id, consent_key)
+  source text not null default 'signup',
+  constraint user_consents_pkey primary key (id)
 );
 
-ALTER TABLE public.user_consents ENABLE ROW LEVEL SECURITY;
+create type consent_type_enum as enum (
+  'terms_of_service',
+  'privacy_collection',
+  'age_verification',
+  'marketing',
+  'ci_di_collection',
+  'third_party_sharing'
+);
 
--- 유저는 자기 동의만 조회/수정
-CREATE POLICY "user_read_own_consents" ON public.user_consents
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "user_insert_own_consents" ON public.user_consents
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "user_update_own_consents" ON public.user_consents
-  FOR UPDATE USING (auth.uid() = user_id);
-
--- service_role 전체 권한
-CREATE POLICY "service_role_all_consents" ON public.user_consents
-  FOR ALL USING (auth.role() = 'service_role');
+create index idx_user_consents_user_id on public.user_consents(user_id);
+create index idx_user_consents_type_active on public.user_consents(user_id, consent_type)
+  where withdrawn_at is null;
 ```
 
-### 신규 policies seed
+### RLS 정책
 
 ```sql
-INSERT INTO public.policies (key, value, version, effective_date, description) VALUES
-('terms_of_service', '{"content_url": "/terms"}'::jsonb, 1, '2026-03-30', '서비스 이용약관 v1'),
-('privacy_collection', '{"items": ["이름","이메일","프로필 사진","관심 태그"], "purpose": "서비스 제공 (계정 관리, 이벤트 매칭, 프로필 표시)", "retention": "회원 탈퇴 시까지", "refusal_consequence": "서비스 이용 불가"}'::jsonb, 1, '2026-03-30', '개인정보 수집·이용 동의서 v1'),
-('third_party_provision', '{"recipient": "이벤트 주최 파트너", "items": ["이름","성별","연령대"], "purpose": "이벤트 운영 (참가자 확인, 매칭, 체크인)", "retention": "이벤트 종료 후 30일", "refusal_consequence": "이벤트 신청 시 개별 동의 필요"}'::jsonb, 1, '2026-03-30', '제3자 제공 동의서 v1'),
-('marketing_consent', '{"channels": ["push","email"], "purpose": "이벤트/혜택 안내", "refusal_consequence": "없음"}'::jsonb, 1, '2026-03-30', '마케팅 정보 수신 동의서 v1');
+-- 유저는 자신의 동의 기록만 조회 가능
+create policy "Users can view own consents"
+  on public.user_consents for select
+  using (auth.uid() = user_id);
+
+-- 서비스 역할은 전체 접근 가능 (EF에서 사용)
+create policy "Service role full access"
+  on public.user_consents for all
+  using (auth.role() = 'service_role');
 ```
 
-### Repository 메서드
+### Edge Function
 
-| 메서드 | 설명 |
-|--------|------|
-| `getConsentStatuses(userId)` | 유저의 모든 동의 상태 조회 |
-| `saveConsents(userId, List<Consent>)` | 동의 일괄 저장 (upsert) |
-| `updateMarketingConsent(userId, bool)` | 마케팅 동의 토글 |
-| `hasRequiredConsents(userId)` | 필수 동의 완료 여부 (가드용) |
+```sql
+-- 동의 기록 저장 RPC
+create or replace function public.save_user_consents(
+  p_user_id uuid,
+  p_consents jsonb -- [{type: 'terms_of_service', version: '1.0'}, ...]
+)
+returns void as $$
+  insert into public.user_consents (user_id, consent_type, consent_version, source)
+  select
+    p_user_id,
+    (consent->>'type')::consent_type_enum,
+    consent->>'version',
+    coalesce(consent->>'source', 'signup')
+  from jsonb_array_elements(p_consents) as consent;
+$$ language sql security definer;
+```
 
-### Provider
+### 데이터 흐름
 
-| Provider | 설명 |
-|----------|------|
-| `consentRepositoryProvider` | Supabase 연동 Repository |
-| `consentStatusProvider` | 현재 유저 동의 상태 (AsyncNotifier) |
+```
+OAuth 로그인 완료
+  │
+  ├─ user_consents에 기록 있음 → 바로 앱 진입
+  │
+  └─ user_consents에 기록 없음 → ConsentScreen 표시
+       │
+       ├─ 필수 동의 완료
+       │    ├─ save_user_consents RPC 호출
+       │    ├─ marketing_consent → user_settings 업데이트
+       │    └─ 앱 진입 (원래 가려던 경로로)
+       │
+       └─ 뒤로가기 → 로그아웃 처리
+```
+
+### 필요 Provider/Repository 메서드
+
+| 메서드 | 위치 | 설명 |
+|--------|------|------|
+| `hasRequiredConsents()` | `minglit_kit/.../auth_repository.dart` | user_consents 조회하여 필수 동의 여부 반환 |
+| `saveConsents(List<ConsentType>)` | `minglit_kit/.../auth_repository.dart` | 동의 기록 저장 RPC 호출 |
+| `updateMarketingConsent(bool)` | `minglit_kit/.../settings_repository.dart` | user_settings.marketing_consent 업데이트 |
 
 ---
 
 ## 라우트 변경
 
-| 변경 | 라우트 | 설명 |
-|------|--------|------|
-| **신규** | `/signup/consent` | 회원가입 약관 동의 화면 |
-| **수정** | `/certification` | 본인인증 전 동의 바텀시트 추가 |
-| **수정** | `/my/privacy` | 동의 관리 항목 추가 (기존 placeholder 교체) |
+### 신규 라우트
 
-### 라우트 가드 변경
+| 라우트 | 경로 | 화면 | 비고 |
+|--------|------|------|------|
+| `ConsentRoute` | `/consent` | `ConsentScreen` | 보호됨 (로그인 필수), 바로가기 불가 |
 
-**유저 앱 redirect 로직 수정**:
+### 라우트 추가 위치
+
+`apps/app_user/lib/src/routing/app_routes.dart`에 `ConsentRoute` 추가.
+
+### Redirect 로직 변경
+
+`apps/app_user/lib/src/routing/app_router.dart`에 추가:
 ```
-1. 비로그인 + 보호 경로 → /login?from=<path>
-2. 로그인 + 필수 동의 미완료 → /signup/consent
-3. 로그인 + 필수 동의 완료 → 정상 진입
+기존:
+  로그인됨 + 보호된 경로 → 정상 진입
+
+변경:
+  로그인됨 + 필수 동의 미완료 + /consent가 아님 → /consent
+  로그인됨 + 필수 동의 완료 + /consent → from 경로 또는 /
+  로그인됨 + 필수 동의 완료 + 보호된 경로 → 정상 진입
 ```
 
-조건 2는 `user_consents` 테이블에서 `terms_of_service`, `privacy_collection`, `age_confirmation` 3개가 모두 `consented = true`인지 확인.
+**주의**: `/consent`는 보호된 경로에서 제외 (로그인은 되어 있어야 하지만, 보호 경로 redirect보다 먼저 체크).
+
+---
+
+## 동의 항목 정의
+
+### 가입 시 동의 (ConsentScreen)
+
+| # | 타입 | 필수/선택 | consent_type_enum | 요약 | 전문 출처 |
+|---|------|----------|-------------------|------|----------|
+| 1 | 서비스 이용약관 | 필수 | `terms_of_service` | 밍릿 서비스 이용을 위한 기본 약관 | landing_user/terms |
+| 2 | 개인정보 수집·이용 | 필수 | `privacy_collection` | 이름, 이메일 수집·이용 | 별도 동의서 |
+| 3 | 만 14세 이상 | 필수 | `age_verification` | 만 14세 이상 확인 | 체크박스만 |
+| 4 | 마케팅 정보 수신 | 선택 | `marketing` | 이벤트, 할인 혜택 안내 | 간결 설명 |
+
+### 본인인증 시 동의
+
+| # | 타입 | 필수/선택 | consent_type_enum | 요약 |
+|---|------|----------|-------------------|------|
+| 5 | CI/DI 수집·이용 | 필수 | `ci_di_collection` | 본인확인정보 수집·이용 |
+
+### 이벤트 신청 시 동의
+
+| # | 타입 | 필수/선택 | consent_type_enum | 요약 |
+|---|------|----------|-------------------|------|
+| 6 | 제3자 제공 | 필수 | `third_party_sharing` | 파트너에게 참가자 정보 제공 |
 
 ---
 
 ## 에러/로딩 상태
 
-### 회원가입 동의 화면
-| 상태 | 처리 |
-|------|------|
-| 동의 저장 중 | CTA 버튼 로딩 인디케이터 |
-| 동의 저장 실패 | 스낵바 "동의 저장에 실패했습니다. 다시 시도해주세요." |
-| 네트워크 오류 | 스낵바 + 재시도 버튼 |
-| 약관 로딩 중 | 바텀시트 내 shimmer loading |
+### ConsentScreen
 
-### 본인인증 동의 바텀시트
 | 상태 | 처리 |
 |------|------|
-| 동의 저장 + Portone 호출 중 | CTA 버튼 로딩 |
-| Portone 오류 | 기존 에러 핸들링 유지 |
+| 동의 저장 중 | MinglitButton 로딩 상태 (스피너) |
+| 동의 저장 실패 | SnackBar 에러 메시지 + 재시도 |
+| 네트워크 오류 | "네트워크 연결을 확인해 주세요" SnackBar |
+| 전체동의 토글 | 체크 → 모든 항목 선택 / 해제 → 모든 항목 해제 (필수/선택 구분 유지 안함 — 전체동의는 편의 기능) |
 
-### 동의 관리 페이지
+### CI/DI 동의 다이얼로그
+
 | 상태 | 처리 |
 |------|------|
-| 동의 상태 로딩 중 | CircularProgressIndicator |
-| 마케팅 토글 저장 실패 | 토글 원상복구 + 스낵바 |
+| 취소 | 다이얼로그 닫기, 본인인증 진행 안 함 |
+| 동의 | 본인인증(PortOne) 실행 → 기존 IdentityVerificationScreen 진입 |
+
+---
+
+## 엣지 케이스
+
+| 케이스 | 대응 |
+|--------|------|
+| 앱 재설치 후 첫 실행 | user_consents에 기록 있으면 건너뜀 |
+| 동의 버전 업데이트 | consent_version 비교하여 신규 동의 요청 (현재는 v1.0만 존재) |
+| 마케팅 동의만 나중에 변경 | 설정에서 변경 가능 (user_settings.marketing_consent) |
+| OAuth 로그인 실패 후 재시도 | 동의 화면 도달 전이므로 영향 없음 |
+| 백그라운드에서 앱 복귀 | 동의 화면 유지 (상태 보존) |
 
 ---
 
 ## 구현 이슈 분할 (예상)
 
-| # | 제목 | 의존성 | 설명 |
-|---|------|--------|------|
-| 1 | DB: user_consents 테이블 + policies seed | 없음 | 마이그레이션 파일 |
-| 2 | Flutter: ConsentRepository + Provider | #1 | Supabase 연동 |
-| 3 | Flutter: SignupConsentScreen | #2 | 약관 동의 화면 |
-| 4 | Flutter: 라우트 가드 (동의 여부 확인) | #2 | redirect 로직 수정 |
-| 5 | Flutter: IdentityVerificationConsentSheet | #2 | 본인인증 전 동의 |
-| 6 | Flutter: PrivacyPage 동의 관리 탭 | #2 | 기존 placeholder 교체 |
-| 7 | EF: consent-save Edge Function | #1 | 동의 저장 API (선택, 클라이언트 direct도 가능) |
+| 순서 | 제목 | 의존성 | 설명 |
+|------|------|--------|------|
+| 1 | `user_consents` 테이블 마이그레이션 | 없음 | DB 스키마 + RLS + RPC |
+| 2 | ConsentScreen UI | 1 | 동의 화면 위젯 + 상태관리 |
+| 3 | 라우트 + Redirect 로직 | 2 | ConsentRoute 추가 + auth guard 수정 |
+| 4 | CI/DI 동의 다이얼로그 | 1 | 본인인증 전 동의 UI |
+| 5 | 제3자 제공 동의 스텝 | 1 | 이벤트 신청 위저드에 스텝 추가 |
+| 6 | 설정 > 동의 관리 | 1~3 | 동의 현황 확인/변경 UI |
 
 ---
 
-## 법적 근거
+## 참고 문서
 
-| 근거 | 내용 |
-|------|------|
-| 개인정보보호법 제15조 | 개인정보 수집·이용 시 동의 받아야 함 |
-| 개인정보보호법 제22조 | 동의 방법 — 필수/선택 구분, 개별 동의 |
-| 개인정보보호법 제17조 | 제3자 제공 시 별도 동의 (제공받는 자, 항목, 목적, 기간, 거부 권리 고지) |
-| 개인정보보호법 제22조 | 필수/선택 동의 분리, 선택 거부 시 서비스 거부 금지 |
-| 개인정보보호법 제24조 | 민감정보(CI/DI) 별도 명시적 동의 |
-| 정보통신망법 제27조의2 | 개인정보처리방침 공개 |
-| Apple/Google 앱스토어 정책 | 데이터 수집 투명성 요구 |
-
-### 동의 이력 보관
-
-| 항목 | 요건 |
-|------|------|
-| 최소 보관 기간 | 동의 기록 2년 (개인정보보호법 시행령) |
-| 권장 보관 기간 | 5년 (업계 관행, Hinge 등 글로벌 데이팅 앱 기준) |
-| 보관 내용 | 동의 일시, 동의 항목(consent_key), 약관 버전(policy_version), 동의/철회 여부 |
-| 탈퇴 시 | user_consents 레코드는 `ON DELETE CASCADE`가 아닌 별도 보관 테이블로 이동 (추후 구현) |
+- 법적 감사 리포트: `#747`
+- 기존 이용약관: `apps/landing_user/src/app/terms/page.tsx`
+- 기존 개인정보처리방침: `apps/landing_user/src/app/privacy/page.tsx`
+- 디자인 시스템: `docs/ux/design-system/`
+- 아키텍처: `docs/architecture/client.md`, `docs/architecture/backend.md`
