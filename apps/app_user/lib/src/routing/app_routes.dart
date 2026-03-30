@@ -12,6 +12,7 @@ import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
 import 'package:app_user/src/features/search/search_page.dart';
 import 'package:app_user/src/features/settings/blocked_partners_page.dart';
 import 'package:app_user/src/features/settings/privacy_page.dart';
+import 'package:app_user/src/features/ticket/ui/ticket_qr_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_dev.dart';
@@ -136,6 +137,19 @@ class MyTicketsRoute extends GoRouteData with $MyTicketsRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const MyTicketsPage();
+}
+
+/// **Ticket QR Route**: QR code screen for a specific ticket.
+/// Path: `/tickets/:ticketId/qr`
+@TypedGoRoute<TicketQRRoute>(path: '/tickets/:ticketId/qr')
+class TicketQRRoute extends GoRouteData with $TicketQRRoute {
+  const TicketQRRoute({required this.ticketId});
+
+  final String ticketId;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      TicketQRScreen(ticketId: ticketId);
 }
 
 /// **Purchase History Route**

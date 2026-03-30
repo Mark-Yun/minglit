@@ -53,6 +53,12 @@ class HomeCoordinator {
     unawaited(_router.push(const BlockedPartnersRoute().location));
   }
 
+  // Fix #852: Navigate to ticket QR via coordinator
+  // — removes cross-feature import
+  void pushTicketQR(String ticketId) {
+    unawaited(_router.push(TicketQRRoute(ticketId: ticketId).location));
+  }
+
   void pushEventDetail(String eventId) {
     unawaited(_router.push(EventDetailRoute(eventId: eventId).location));
   }

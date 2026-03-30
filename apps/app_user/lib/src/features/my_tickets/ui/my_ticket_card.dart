@@ -1,7 +1,4 @@
-import 'dart:async';
-
 import 'package:app_user/src/common/widgets/status_badge.dart';
-import 'package:app_user/src/features/ticket/ui/ticket_qr_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -13,6 +10,8 @@ class MyTicketCard extends StatelessWidget {
     required this.application,
     required this.isPast,
     this.onTap,
+    // Fix #852: onQRTap callback — replaces direct TicketQRScreen import
+    this.onQRTap,
     @visibleForTesting this.currentTime,
     super.key,
   });
@@ -20,6 +19,9 @@ class MyTicketCard extends StatelessWidget {
   final EventApplication application;
   final bool isPast;
   final VoidCallback? onTap;
+
+  /// Callback for the QR button tap.
+  final VoidCallback? onQRTap;
 
   /// Override current time for D-day calculation (testing only).
   final DateTime? currentTime;
@@ -197,17 +199,7 @@ class MyTicketCard extends StatelessWidget {
         // QR button (only for upcoming events)
         if (!isPast)
           TextButton.icon(
-            onPressed: () {
-              unawaited(
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => TicketQRScreen(
-                      ticketId: application.ticketId,
-                    ),
-                  ),
-                ),
-              );
-            },
+            onPressed: onQRTap,
             icon: const Icon(Icons.qr_code_2, size: 18),
             label: const Text('입장 QR'),
             style: TextButton.styleFrom(
