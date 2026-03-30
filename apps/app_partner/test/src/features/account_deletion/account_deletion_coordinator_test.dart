@@ -35,7 +35,6 @@ void main() {
       verify(
         () => mockRouter.push(
           const DeletionReasonRoute().location,
-          extra: null,
         ),
       ).called(1);
     });
