@@ -25,14 +25,14 @@ class _DeletionReasonPageState extends ConsumerState<DeletionReasonPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final coordinator = ref.read(accountDeletionCoordinatorProvider);
-    final selectedReason = _selectedCode == null
-        ? null
-        : WithdrawalReason(
-            reasonCode: _selectedCode!,
-            detail: _selectedCode == WithdrawalReasonCode.other
-                ? _detailController.text
-                : null,
-          );
+    final selectedReason = buildWithdrawalReason(
+      reasonCode: _selectedCode == null
+          ? null
+          : encodeWithdrawalReasonCode(_selectedCode!),
+      reasonText: _selectedCode == WithdrawalReasonCode.other
+          ? _detailController.text
+          : null,
+    );
 
     return Scaffold(
       appBar: AppBar(title: const Text('탈퇴 사유')),
@@ -108,7 +108,7 @@ class _DeletionReasonPageState extends ConsumerState<DeletionReasonPage> {
                   ),
                   const SizedBox(height: MinglitSpacing.small),
                   FilledButton(
-                    onPressed: _selectedCode == null
+                    onPressed: selectedReason == null
                         ? null
                         : () => coordinator.pushInfo(reason: selectedReason),
                     child: const Text('다음'),

@@ -52,9 +52,10 @@ class DeletionCompletePage extends ConsumerWidget {
   }
 
   Future<void> _finish(BuildContext context, WidgetRef ref) async {
+    final authController = ref.read(authControllerProvider.notifier);
     ref.read(accountDeletionCoordinatorProvider).goToHome();
     await Future<void>.delayed(Duration.zero);
-    await ref.read(authControllerProvider.notifier).signOut();
+    await authController.signOut();
     if (!context.mounted) return;
     context.showMinglitSuccess('탈퇴 요청이 접수되었어요.');
   }

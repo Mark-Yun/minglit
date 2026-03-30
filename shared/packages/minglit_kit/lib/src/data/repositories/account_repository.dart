@@ -116,21 +116,14 @@ class AccountRepository {
   }
 
   bool _usesPasswordAuth(User user) {
-    final identities = user.identities ?? const [];
-    if (identities.any((identity) => identity.provider == 'email')) {
-      return true;
+    final hasPassword = user.appMetadata['has_password'];
+    if (hasPassword is bool) {
+      return hasPassword;
     }
 
-    final provider = user.appMetadata['provider'];
-    if (provider == 'email') {
-      return true;
+    if (hasPassword is String) {
+      return hasPassword.toLowerCase() == 'true';
     }
-
-    final providers = user.appMetadata['providers'];
-    if (providers is List) {
-      return providers.contains('email');
-    }
-
     return false;
   }
 

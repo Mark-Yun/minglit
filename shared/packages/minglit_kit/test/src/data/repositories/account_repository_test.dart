@@ -171,10 +171,10 @@ void main() {
     });
 
     group('reauthenticate', () {
-      test('uses password sign-in for email users', () async {
+      test('uses password sign-in when has_password flag is true', () async {
         when(
           () => mockUser.appMetadata,
-        ).thenReturn(const {'provider': 'email'});
+        ).thenReturn(const {'has_password': true});
         when(
           () => mockAuth.signInWithPassword(
             email: any(named: 'email'),
@@ -193,10 +193,10 @@ void main() {
         verifyNever(() => mockAuth.reauthenticate());
       });
 
-      test('throws when email user password is missing', () async {
+      test('throws when password-backed user password is missing', () async {
         when(
           () => mockUser.appMetadata,
-        ).thenReturn(const {'provider': 'email'});
+        ).thenReturn(const {'has_password': true});
 
         await expectLater(
           () => repository.reauthenticate(null),
@@ -204,22 +204,42 @@ void main() {
         );
       });
 
-      test('uses Supabase reauthenticate for social users', () async {
-        when(
-          () => mockUser.appMetadata,
-        ).thenReturn(const {'provider': 'google'});
-        when(() => mockAuth.reauthenticate()).thenAnswer((_) async {});
+      test(
+        'uses Supabase reauthenticate when has_password flag is false',
+        () async {
+          when(
+            () => mockUser.appMetadata,
+          ).thenReturn(const {'has_password': false});
+          when(() => mockAuth.reauthenticate()).thenAnswer((_) async {});
 
-        await repository.reauthenticate(null);
+          await repository.reauthenticate(null);
 
-        verify(() => mockAuth.reauthenticate()).called(1);
-        verifyNever(
-          () => mockAuth.signInWithPassword(
-            email: any(named: 'email'),
-            password: any(named: 'password'),
-          ),
-        );
-      });
+          verify(() => mockAuth.reauthenticate()).called(1);
+          verifyNever(
+            () => mockAuth.signInWithPassword(
+              email: any(named: 'email'),
+              password: any(named: 'password'),
+            ),
+          );
+        },
+      );
+
+      test(
+        'defaults to Supabase reauthenticate when password flag is absent',
+        () async {
+          when(() => mockAuth.reauthenticate()).thenAnswer((_) async {});
+
+          await repository.reauthenticate(null);
+
+          verify(() => mockAuth.reauthenticate()).called(1);
+          verifyNever(
+            () => mockAuth.signInWithPassword(
+              email: any(named: 'email'),
+              password: any(named: 'password'),
+            ),
+          );
+        },
+      );
     });
   });
 }
