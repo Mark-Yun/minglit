@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(63);
+SELECT plan(66);
 
 -- user_profiles
 SELECT has_table('user_profiles');
@@ -10,8 +10,13 @@ SELECT has_column('user_profiles', 'phone_number');
 SELECT has_column('user_profiles', 'birth_date');
 SELECT has_column('user_profiles', 'gender');
 SELECT has_column('user_profiles', 'is_verified');
-SELECT has_column('user_profiles', 'ci');
-SELECT has_column('user_profiles', 'di');
+-- Fix #809: legacy plaintext ci, di columns removed in Phase 3
+SELECT hasnt_column('user_profiles', 'ci');
+SELECT hasnt_column('user_profiles', 'di');
+-- Encrypted columns added in Phase 1
+SELECT has_column('user_profiles', 'ci_encrypted');
+SELECT has_column('user_profiles', 'di_encrypted');
+SELECT has_column('user_profiles', 'di_hash');
 SELECT has_column('user_profiles', 'created_at');
 SELECT has_column('user_profiles', 'updated_at');
 SELECT col_type_is('user_profiles', 'id', 'uuid');
