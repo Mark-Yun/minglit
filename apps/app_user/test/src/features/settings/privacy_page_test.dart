@@ -152,8 +152,7 @@ void main() {
     expect(thirdPartyWidget.value, isFalse);
   });
 
-  testWidgets('마케팅 토글 시 ConsentController.toggleConsent를 호출한다',
-      (tester) async {
+  testWidgets('마케팅 토글 시 ConsentController.toggleConsent를 호출한다', (tester) async {
     await pumpPage(tester);
 
     // Toggle marketing OFF (currently ON)

@@ -40,8 +40,7 @@ class _PrivacyPageState extends ConsumerState<PrivacyPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('개인정보')),
       body: consentState.when(
-        loading: () =>
-            const Center(child: MinglitCircularProgressIndicator()),
+        loading: () => const Center(child: MinglitCircularProgressIndicator()),
         error: (e, st) => Center(
           child: Padding(
             padding: const EdgeInsets.all(MinglitSpacing.large),
@@ -88,14 +87,13 @@ class _PrivacyPageState extends ConsumerState<PrivacyPage> {
                 title: '본인인증 정보',
                 statusText:
                     (consentMap[ConsentType.identityVerification] ?? false)
-                        ? '동의됨'
-                        : '미동의',
-                onTap:
-                    (consentMap[ConsentType.identityVerification] ?? false)
-                        ? () => showConsentDetailSheet(
-                          context,
-                          content: _identityVerificationContent,
-                        )
+                    ? '동의됨'
+                    : '미동의',
+                onTap: (consentMap[ConsentType.identityVerification] ?? false)
+                    ? () => showConsentDetailSheet(
+                        context,
+                        content: _identityVerificationContent,
+                      )
                     : null,
               ),
 
@@ -189,8 +187,8 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         title,
         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }
