@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_user/src/features/account_deletion/logic/account_deletion_coordinator.dart';
 import 'package:app_user/src/features/settings/privacy_page.dart';
 import 'package:flutter/material.dart';
@@ -99,6 +101,37 @@ void main() {
 
     await tester.pumpAndSettle();
   }
+
+  testWidgets('로딩 중일 때 인디케이터가 표시된다', (tester) async {
+    final completer = Completer<List<UserConsent>>();
+    when(
+      () => mockRepository.getConsents('user_1'),
+    ).thenAnswer((_) => completer.future);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          consentRepositoryProvider.overrideWithValue(mockRepository),
+          currentUserProvider.overrideWithValue(mockUser),
+          accountRepositoryProvider.overrideWithValue(mockAccountRepo),
+          accountDeletionCoordinatorProvider.overrideWithValue(
+            MockAccountDeletionCoordinator(),
+          ),
+        ],
+        child: MaterialApp(
+          theme: MinglitTheme.materialTheme,
+          home: const PrivacyPage(),
+        ),
+      ),
+    );
+
+    await tester.pump(); // One frame to show loading
+    expect(find.byType(MinglitCircularProgressIndicator), findsOneWidget);
+
+    // Complete the future so the test tears down cleanly.
+    completer.complete(testConsents);
+    await tester.pumpAndSettle();
+  });
 
   testWidgets('로딩 인디케이터가 표시된 후 동의 현황이 보인다', (tester) async {
     await pumpPage(tester);
