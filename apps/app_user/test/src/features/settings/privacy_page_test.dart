@@ -2,7 +2,6 @@ import 'package:app_user/src/features/account_deletion/logic/account_deletion_co
 import 'package:app_user/src/features/settings/privacy_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -179,9 +178,7 @@ void main() {
 
     // Scroll to 약관 보기 section
     await tester.scrollUntilVisible(find.text('개인정보처리방침'), 200);
-    // Tap 서비스 이용약관 in the 약관 보기 section (second occurrence)
-    final tosTiles = find.text('서비스 이용약관');
-    // There are multiple — tap the one in 약관 보기 (with chevron)
+    // Tap 서비스 이용약관 in the 약관 보기 section (with chevron)
     await tester.tap(find.widgetWithText(ListTile, '서비스 이용약관').last);
     await tester.pumpAndSettle();
 
