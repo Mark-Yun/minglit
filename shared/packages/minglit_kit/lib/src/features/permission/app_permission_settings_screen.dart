@@ -206,7 +206,7 @@ class _AppPermissionSettingsScreenState
                 const SizedBox(height: MinglitSpacing.small),
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
+                    horizontal: MinglitSpacing.medium,
                   ),
                   child: Text(
                     _settingsGuideText,
@@ -313,7 +313,10 @@ class _PermissionTile extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(
+              horizontal: MinglitSpacing.small,
+              vertical: MinglitSpacing.xsmall,
+            ),
             decoration: BoxDecoration(
               color: statusColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(MinglitRadius.input),

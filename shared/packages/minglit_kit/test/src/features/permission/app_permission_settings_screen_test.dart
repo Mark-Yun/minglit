@@ -129,5 +129,18 @@ void main() {
         expect(openedSettings, [AppSettingsType.settings]);
       },
     );
+
+    testWidgets(
+      'tapping notification tile opens notification settings',
+      (tester) async {
+        await tester.pumpWidget(buildSubject());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('알림'));
+        await tester.pumpAndSettle();
+
+        expect(openedSettings, [AppSettingsType.notification]);
+      },
+    );
   });
 }
