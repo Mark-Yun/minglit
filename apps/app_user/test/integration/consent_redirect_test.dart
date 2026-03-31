@@ -131,6 +131,11 @@ void main() {
         consentRepository: mockConsentRepository,
       );
 
+      // Fix #883: AsyncError propagation through redirect chain needs an extra
+      // pump frame — loading → error state → listener → router refresh →
+      // redirect to consent page → render.
+      await tester.pump();
+
       expect(find.byType(SignupConsentPage), findsOneWidget);
       expect(find.byType(MyPage), findsNothing);
     });
