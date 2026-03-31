@@ -75,12 +75,9 @@ GoRouter goRouter(Ref ref) {
         ).toString();
       }
 
-      // 4. 동의 상태 로딩 중에는 redirect를 건너뛰어 루프를 방지
-      if (consentState.isLoading) {
-        return null;
-      }
-
-      // Consent lookup failure must fail closed on protected routes.
+      // 4. Consent lookup failure must fail closed on protected routes.
+      // Fix #883: When retrying after error, isLoading && hasError are both
+      // true — check hasError first so retrying doesn't bypass fail-closed.
       if (consentState.hasError) {
         if (isProtected && !isConsentPage) {
           return Uri(
@@ -89,6 +86,11 @@ GoRouter goRouter(Ref ref) {
           ).toString();
         }
 
+        return null;
+      }
+
+      // 5. 동의 상태 로딩 중(초기 로드, 이전 상태 없음)에는 redirect를 건너뛰어 루프를 방지
+      if (consentState.isLoading) {
         return null;
       }
 
