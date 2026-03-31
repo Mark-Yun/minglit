@@ -6,8 +6,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_list_tile.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_list_tile.dart';
 
 /// Fix #186: App permission settings screen showing current
 /// permission statuses.
