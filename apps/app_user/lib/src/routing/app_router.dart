@@ -18,10 +18,10 @@ GoRouter goRouter(Ref ref) {
     routerRefresh.value++;
   }
 
-  ref.listen<AsyncValue<AuthState>>(authStateChangesProvider, (_, __) {
+  ref.listen<AsyncValue<AuthState>>(authStateChangesProvider, (_, _) {
     refreshRouter();
   });
-  ref.listen<AsyncValue<bool>>(hasRequiredConsentsProvider, (_, __) {
+  ref.listen<AsyncValue<bool>>(hasRequiredConsentsProvider, (_, _) {
     refreshRouter();
   });
 

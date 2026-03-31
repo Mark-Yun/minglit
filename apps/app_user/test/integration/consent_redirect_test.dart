@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:app_user/src/logic/feed_state_provider.dart';
-import 'package:app_user/src/routing/app_router.dart';
 import 'package:app_user/src/features/auth/login_page.dart';
 import 'package:app_user/src/features/consent/ui/signup_consent_page.dart';
 import 'package:app_user/src/features/home/my_page.dart';
+import 'package:app_user/src/logic/feed_state_provider.dart';
+import 'package:app_user/src/routing/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
