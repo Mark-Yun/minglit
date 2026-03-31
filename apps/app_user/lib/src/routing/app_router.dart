@@ -18,10 +18,10 @@ GoRouter goRouter(Ref ref) {
     routerRefresh.value++;
   }
 
-  ref.listen<AsyncValue<AuthState>>(authStateChangesProvider, (_, _) {
+  ref.listen(authStateChangesProvider, (_, __) {
     refreshRouter();
   });
-  ref.listen<AsyncValue<bool>>(hasRequiredConsentsProvider, (_, _) {
+  ref.listen(hasRequiredConsentsProvider, (_, __) {
     refreshRouter();
   });
 
@@ -78,7 +78,7 @@ GoRouter goRouter(Ref ref) {
         return null;
       }
 
-      final hasRequiredConsents = consentState.valueOrNull ?? false;
+      final hasRequiredConsents = consentState.asData?.value ?? false;
 
       // 5. 로그인 상태에서 보호된 경로 접근 시 필수 동의가 없으면 동의 페이지로
       if (!hasRequiredConsents && isProtected && !isConsentPage) {

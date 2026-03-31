@@ -11,6 +11,7 @@ import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'utils/test_mocks.dart';
+import 'utils/test_app.dart';
 
 class MockConsentRepository extends Mock implements ConsentRepository {}
 
