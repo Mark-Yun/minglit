@@ -1,5 +1,7 @@
+-- Fix #891: soft-deleted user visibility를 participant/match read 경로에서 제외
 set search_path to public, extensions;
 
+-- Fix #891: soft-deleted user profile의 공개 가시성 판별 헬퍼 추가
 create or replace function public.is_visible_user_profile(p_user_id uuid)
 returns boolean
 language sql
@@ -14,7 +16,11 @@ as $$
   );
 $$;
 
+revoke all on function public.is_visible_user_profile(uuid) from public;
+grant execute on function public.is_visible_user_profile(uuid) to authenticated, service_role;
+
 drop policy if exists "Authenticated users can read all participants" on public.event_participants;
+-- Fix #891: soft-deleted participant는 본인만 조회 가능하고 타 유저에게는 숨김
 create policy "Authenticated users can read visible participants" on public.event_participants
   for select
   using (
@@ -25,6 +31,7 @@ create policy "Authenticated users can read visible participants" on public.even
     )
   );
 
+-- Fix #891: 매칭 뷰에서 soft-deleted 상대 유저를 제외
 create or replace view public.my_matches_view as
 select
   mp.id as match_id,
@@ -40,6 +47,7 @@ join public.user_profiles matched_user
 where (mp.user_lower_id = auth.uid() or mp.user_higher_id = auth.uid())
   and matched_user.deleted_at is null;
 
+-- Fix #891: 연락처 RPC가 soft-deleted 매칭 유저 정보를 반환하지 않도록 제한
 create or replace function public.get_matched_user_contact(target_user_id uuid, target_event_id uuid)
 returns text
 as $$
@@ -66,6 +74,10 @@ begin
 end;
 $$ language plpgsql security definer;
 
+revoke all on function public.get_matched_user_contact(uuid, uuid) from public;
+grant execute on function public.get_matched_user_contact(uuid, uuid) to authenticated, service_role;
+
+-- Fix #891: 프로필 RPC가 soft-deleted 매칭 유저 정보를 반환하지 않도록 제한
 create or replace function public.get_matched_user_info(
   p_target_user_id uuid,
   p_target_event_id uuid
@@ -92,3 +104,6 @@ begin
   end if;
 end;
 $$;
+
+revoke all on function public.get_matched_user_info(uuid, uuid) from public;
+grant execute on function public.get_matched_user_info(uuid, uuid) to authenticated, service_role;
