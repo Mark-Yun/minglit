@@ -9,6 +9,7 @@ part of 'app_routes.dart';
 List<RouteBase> get $appRoutes => [
   $devUserSwitchRoute,
   $loginRoute,
+  $signupConsentRoute,
   $authCallbackRoute,
   $eventDetailRoute,
   $partnerDetailRoute,
@@ -69,6 +70,37 @@ mixin $LoginRoute on GoRouteData {
   @override
   String get location => GoRouteData.$location(
     '/login',
+    queryParams: {if (_self.from != null) 'from': _self.from},
+  );
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $signupConsentRoute => GoRouteData.$route(
+  path: '/signup/consent',
+  factory: $SignupConsentRoute._fromState,
+);
+
+mixin $SignupConsentRoute on GoRouteData {
+  static SignupConsentRoute _fromState(GoRouterState state) =>
+      SignupConsentRoute(from: state.uri.queryParameters['from']);
+
+  SignupConsentRoute get _self => this as SignupConsentRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/signup/consent',
     queryParams: {if (_self.from != null) 'from': _self.from},
   );
 
