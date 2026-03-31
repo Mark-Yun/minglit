@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:app_settings/app_settings.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_list_tile.dart';
 
 /// Fix #186: App permission settings screen showing current
 /// permission statuses.
@@ -13,7 +15,12 @@ import 'package:minglit_kit/src/theme/minglit_theme.dart';
 /// can reuse it.
 class AppPermissionSettingsScreen extends StatefulWidget {
   /// Creates an [AppPermissionSettingsScreen].
-  const AppPermissionSettingsScreen({super.key});
+  const AppPermissionSettingsScreen({
+    this.settingsOpener = _defaultSettingsOpener,
+    super.key,
+  });
+
+  final PermissionSettingsOpener settingsOpener;
 
   @override
   State<AppPermissionSettingsScreen> createState() =>
@@ -58,6 +65,7 @@ class _AppPermissionSettingsScreenState
         title: '위치',
         description: '내 주변 이벤트 검색에 사용됩니다',
         status: locationStatus,
+        settingsType: AppSettingsType.location,
       ),
     );
 
@@ -70,6 +78,7 @@ class _AppPermissionSettingsScreenState
           title: '알림',
           description: '예약, 매칭 등 서비스 알림을 받습니다',
           status: notifStatus,
+          settingsType: AppSettingsType.notification,
         ),
       );
     }
@@ -82,6 +91,7 @@ class _AppPermissionSettingsScreenState
           title: '카메라',
           description: '프로필 사진 촬영에 사용됩니다',
           status: _PermissionStatus.onDemand,
+          settingsType: AppSettingsType.settings,
         ),
       );
     }
@@ -94,6 +104,7 @@ class _AppPermissionSettingsScreenState
           title: '사진',
           description: '프로필 사진 및 파일 업로드에 사용됩니다',
           status: _PermissionStatus.onDemand,
+          settingsType: AppSettingsType.settings,
         ),
       );
     }
@@ -143,6 +154,12 @@ class _AppPermissionSettingsScreenState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final grantedPermissions = _permissions
+        .where((item) => item.status == _PermissionStatus.granted)
+        .toList();
+    final pendingPermissions = _permissions
+        .where((item) => item.status != _PermissionStatus.granted)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(title: const Text('권한 설정')),
@@ -162,37 +179,40 @@ class _AppPermissionSettingsScreenState
                     ),
                   ),
                 ),
-                ..._permissions.map(
-                  (item) => _PermissionTile(
-                    item: item,
-                    onTap: item.status == _PermissionStatus.onDemand
-                        ? null
-                        : _openAppSettings,
+                if (grantedPermissions.isNotEmpty) ...[
+                  _PermissionSectionHeader(
+                    title: '허용된 권한',
+                    count: grantedPermissions.length,
                   ),
-                ),
-                const SizedBox(height: MinglitSpacing.medium),
+                  ...grantedPermissions.map(
+                    (item) => _PermissionTile(
+                      item: item,
+                      onTap: () => _openPermissionSettings(item.settingsType),
+                    ),
+                  ),
+                ],
+                if (pendingPermissions.isNotEmpty) ...[
+                  _PermissionSectionHeader(
+                    title: '허용되지 않은 권한',
+                    count: pendingPermissions.length,
+                  ),
+                  ...pendingPermissions.map(
+                    (item) => _PermissionTile(
+                      item: item,
+                      onTap: () => _openPermissionSettings(item.settingsType),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: MinglitSpacing.small),
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
+                    horizontal: MinglitSpacing.medium,
                   ),
                   child: Text(
                     _settingsGuideText,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
-                  ),
-                ),
-                const SizedBox(height: MinglitSpacing.small),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                  ),
-                  child: OutlinedButton.icon(
-                    onPressed: _openAppSettings,
-                    icon: const Icon(
-                      Icons.settings_outlined,
-                    ),
-                    label: const Text('시스템 설정 열기'),
                   ),
                 ),
                 const SizedBox(height: MinglitSpacing.xlarge),
@@ -211,9 +231,16 @@ class _AppPermissionSettingsScreenState
     return '설정 > 앱 > 밍글릿에서 각 권한을 변경할 수 있습니다.';
   }
 
-  Future<void> _openAppSettings() async {
-    await Geolocator.openAppSettings();
+  Future<void> _openPermissionSettings(AppSettingsType type) async {
+    // Fix #577: 권한별 프리퍼런스 탭에서 가능한 한 해당 시스템 설정으로 보낸다.
+    await widget.settingsOpener(type);
   }
+}
+
+typedef PermissionSettingsOpener = Future<void> Function(AppSettingsType type);
+
+Future<void> _defaultSettingsOpener(AppSettingsType type) async {
+  await AppSettings.openAppSettings(type: type);
 }
 
 enum _PermissionStatus {
@@ -230,12 +257,41 @@ class _PermissionItem {
     required this.title,
     required this.description,
     required this.status,
+    required this.settingsType,
   });
 
   final IconData icon;
   final String title;
   final String description;
   final _PermissionStatus status;
+  final AppSettingsType settingsType;
+}
+
+class _PermissionSectionHeader extends StatelessWidget {
+  const _PermissionSectionHeader({required this.title, required this.count});
+
+  final String title;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        MinglitSpacing.medium,
+        MinglitSpacing.small,
+        MinglitSpacing.medium,
+        MinglitSpacing.xsmall,
+      ),
+      child: Text(
+        '$title · $count개',
+        style: theme.textTheme.titleSmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
 }
 
 class _PermissionTile extends StatelessWidget {
@@ -249,20 +305,17 @@ class _PermissionTile extends StatelessWidget {
     final theme = Theme.of(context);
     final (statusText, statusColor) = _statusDisplay(theme);
 
-    return ListTile(
-      leading: Icon(
-        item.icon,
-        color: theme.colorScheme.onSurfaceVariant,
-      ),
-      title: Text(item.title),
-      subtitle: Text(item.description),
+    return MinglitListTile(
+      leading: Icon(item.icon, color: theme.colorScheme.onSurfaceVariant),
+      title: item.title,
+      subtitle: item.description,
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
             padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 4,
+              horizontal: MinglitSpacing.small,
+              vertical: MinglitSpacing.xsmall,
             ),
             decoration: BoxDecoration(
               color: statusColor.withValues(alpha: 0.12),
@@ -273,13 +326,8 @@ class _PermissionTile extends StatelessWidget {
               style: theme.textTheme.labelSmall?.copyWith(color: statusColor),
             ),
           ),
-          if (onTap != null) ...[
-            const SizedBox(width: MinglitSpacing.xsmall),
-            Icon(
-              Icons.chevron_right,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ],
+          const SizedBox(width: MinglitSpacing.xsmall),
+          Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
         ],
       ),
       onTap: onTap,

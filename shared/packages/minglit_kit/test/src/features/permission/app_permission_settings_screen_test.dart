@@ -1,3 +1,4 @@
+import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
@@ -12,10 +13,12 @@ class MockGeolocatorPlatform extends Mock
 
 void main() {
   late MockGeolocatorPlatform mockGeolocator;
+  late List<AppSettingsType> openedSettings;
 
   setUp(() {
     mockGeolocator = MockGeolocatorPlatform();
     GeolocatorPlatform.instance = mockGeolocator;
+    openedSettings = [];
 
     when(
       () => mockGeolocator.isLocationServiceEnabled(),
@@ -26,8 +29,12 @@ void main() {
   });
 
   Widget buildSubject() {
-    return const MaterialApp(
-      home: AppPermissionSettingsScreen(),
+    return MaterialApp(
+      home: AppPermissionSettingsScreen(
+        settingsOpener: (type) async {
+          openedSettings.add(type);
+        },
+      ),
     );
   }
 
@@ -87,32 +94,52 @@ void main() {
     );
 
     testWidgets(
-      'shows system settings button',
+      'shows granted and pending permission sections',
       (tester) async {
         await tester.pumpWidget(buildSubject());
         await tester.pumpAndSettle();
 
-        expect(
-          find.text('시스템 설정 열기'),
-          findsOneWidget,
-        );
+        expect(find.text('허용된 권한 · 1개'), findsOneWidget);
+        expect(find.text('허용되지 않은 권한 · 3개'), findsOneWidget);
       },
     );
 
     testWidgets(
-      'tapping system settings button calls openAppSettings',
+      'tapping location tile opens location settings',
       (tester) async {
-        when(
-          () => mockGeolocator.openAppSettings(),
-        ).thenAnswer((_) async => true);
-
         await tester.pumpWidget(buildSubject());
         await tester.pumpAndSettle();
 
-        await tester.tap(find.text('시스템 설정 열기'));
+        await tester.tap(find.text('위치'));
         await tester.pumpAndSettle();
 
-        verify(() => mockGeolocator.openAppSettings()).called(1);
+        expect(openedSettings, [AppSettingsType.location]);
+      },
+    );
+
+    testWidgets(
+      'tapping camera tile opens app settings fallback',
+      (tester) async {
+        await tester.pumpWidget(buildSubject());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('카메라'));
+        await tester.pumpAndSettle();
+
+        expect(openedSettings, [AppSettingsType.settings]);
+      },
+    );
+
+    testWidgets(
+      'tapping notification tile opens notification settings',
+      (tester) async {
+        await tester.pumpWidget(buildSubject());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('알림'));
+        await tester.pumpAndSettle();
+
+        expect(openedSettings, [AppSettingsType.notification]);
       },
     );
   });
