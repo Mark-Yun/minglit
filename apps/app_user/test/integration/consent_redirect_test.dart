@@ -79,6 +79,23 @@ void main() {
       expect(find.byType(SignupConsentPage), findsOneWidget);
     });
 
+    testWidgets('로그인 상태: 로그인 복귀 경로가 consent 페이지면 consent 페이지로 돌아간다', (tester) async {
+      setKoreanLocale(tester);
+      when(
+        () => mockConsentRepository.hasRequiredConsents(),
+      ).thenAnswer((_) async => false);
+
+      await pumpRouterApp(
+        tester,
+        currentUser: user,
+        initialLocation: '/login?from=%2Fsignup%2Fconsent%3Ffrom%3D%252Fmy',
+        consentRepository: mockConsentRepository,
+      );
+
+      expect(find.byType(SignupConsentPage), findsOneWidget);
+      expect(find.byType(LoginPage), findsNothing);
+    });
+
     testWidgets('로그인 상태: 동의 여부 로딩 중이면 보호 경로 리다이렉트를 건너뛴다', (tester) async {
       setKoreanLocale(tester);
       final completer = Completer<bool>();
@@ -95,6 +112,23 @@ void main() {
 
       expect(find.byType(MyPage), findsOneWidget);
       expect(find.byType(SignupConsentPage), findsNothing);
+    });
+
+    testWidgets('로그인 상태: 동의 조회 에러면 보호 경로를 fail-closed로 동의 페이지에 보낸다', (tester) async {
+      setKoreanLocale(tester);
+      when(
+        () => mockConsentRepository.hasRequiredConsents(),
+      ).thenThrow(Exception('consent lookup failed'));
+
+      await pumpRouterApp(
+        tester,
+        currentUser: user,
+        initialLocation: '/my',
+        consentRepository: mockConsentRepository,
+      );
+
+      expect(find.byType(SignupConsentPage), findsOneWidget);
+      expect(find.byType(MyPage), findsNothing);
     });
 
     testWidgets('로그인 상태: 동의 완료 후 /signup/consent 접근 시 원래 경로로 복귀', (

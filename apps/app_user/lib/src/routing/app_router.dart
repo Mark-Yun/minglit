@@ -45,7 +45,10 @@ GoRouter goRouter(Ref ref) {
 
       // 1. 이미 로그인 상태인데 로그인 페이지로 가려면 원래 목적지 또는 홈으로
       if (isLoggedIn && isLoggingIn) {
-        return _sanitizeReturnLocation(state.uri.queryParameters['from']) ??
+        return _sanitizeReturnLocation(
+              state.uri.queryParameters['from'],
+              allowConsentPage: true,
+            ) ??
             '/';
       }
 
@@ -73,8 +76,20 @@ GoRouter goRouter(Ref ref) {
         ).toString();
       }
 
-      // 4. 동의 상태 로딩/에러 중에는 redirect를 건너뛰어 루프를 방지
-      if (consentState.isLoading || consentState.hasError) {
+      // 4. 동의 상태 로딩 중에는 redirect를 건너뛰어 루프를 방지
+      if (consentState.isLoading) {
+        return null;
+      }
+
+      // Consent lookup failure must fail closed on protected routes.
+      if (consentState.hasError) {
+        if (isProtected && !isConsentPage) {
+          return Uri(
+            path: '/signup/consent',
+            queryParameters: {'from': location},
+          ).toString();
+        }
+
         return null;
       }
 
@@ -101,13 +116,17 @@ GoRouter goRouter(Ref ref) {
   );
 }
 
-String? _sanitizeReturnLocation(String? location) {
+String? _sanitizeReturnLocation(
+  String? location, {
+  bool allowConsentPage = false,
+}) {
   if (location == null || location.isEmpty) return null;
   if (!location.startsWith('/') || location.startsWith('//')) return null;
 
   final uri = Uri.tryParse(location);
   final path = uri?.path ?? location;
-  if (path == '/login' || path == '/signup/consent') return null;
+  if (path == '/login') return null;
+  if (!allowConsentPage && path == '/signup/consent') return null;
 
   return location;
 }
