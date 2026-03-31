@@ -18,10 +18,10 @@ GoRouter goRouter(Ref ref) {
     routerRefresh.value++;
   }
 
-  ref.listen(authStateChangesProvider, (_, __) {
+  ref.listen(authStateChangesProvider, (_, _) {
     refreshRouter();
   });
-  ref.listen(hasRequiredConsentsProvider, (_, __) {
+  ref.listen(hasRequiredConsentsProvider, (_, _) {
     refreshRouter();
   });
 
