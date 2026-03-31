@@ -79,7 +79,9 @@ void main() {
       expect(find.byType(SignupConsentPage), findsOneWidget);
     });
 
-    testWidgets('로그인 상태: 로그인 복귀 경로가 consent 페이지면 consent 페이지로 돌아간다', (tester) async {
+    testWidgets('로그인 상태: 로그인 복귀 경로가 consent 페이지면 consent 페이지로 돌아간다', (
+      tester,
+    ) async {
       setKoreanLocale(tester);
       when(
         () => mockConsentRepository.hasRequiredConsents(),
@@ -114,7 +116,9 @@ void main() {
       expect(find.byType(SignupConsentPage), findsNothing);
     });
 
-    testWidgets('로그인 상태: 동의 조회 에러면 보호 경로를 fail-closed로 동의 페이지에 보낸다', (tester) async {
+    testWidgets('로그인 상태: 동의 조회 에러면 보호 경로를 fail-closed로 동의 페이지에 보낸다', (
+      tester,
+    ) async {
       setKoreanLocale(tester);
       when(
         () => mockConsentRepository.hasRequiredConsents(),
