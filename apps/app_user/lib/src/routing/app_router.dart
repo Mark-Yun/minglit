@@ -104,9 +104,6 @@ GoRouter goRouter(Ref ref) {
 String? _sanitizeReturnLocation(String? location) {
   if (location == null || location.isEmpty) return null;
   if (!location.startsWith('/') || location.startsWith('//')) return null;
-  if (location.startsWith('/login') || location.startsWith('/signup/consent')) {
-    return null;
-  }
 
   final uri = Uri.tryParse(location);
   final path = uri?.path ?? location;
