@@ -439,46 +439,45 @@ class _MockNotificationSettingsNull extends NotificationSettingsController {
 class _MockConsentController extends ConsentController {
   @override
   FutureOr<List<UserConsent>> build() async => [
-        UserConsent(
-          id: 'c1',
-          userId: 'test-user-id',
-          consentKey: ConsentType.termsOfService,
-          consented: true,
-          consentedAt: DateTime.now(),
-          createdAt: DateTime.now(),
-        ),
-        UserConsent(
-          id: 'c2',
-          userId: 'test-user-id',
-          consentKey: ConsentType.privacyCollection,
-          consented: true,
-          consentedAt: DateTime.now(),
-          createdAt: DateTime.now(),
-        ),
-        UserConsent(
-          id: 'c3',
-          userId: 'test-user-id',
-          consentKey: ConsentType.thirdPartyProvision,
-          consented: false,
-          consentedAt: DateTime.now(),
-          createdAt: DateTime.now(),
-        ),
-        UserConsent(
-          id: 'c4',
-          userId: 'test-user-id',
-          consentKey: ConsentType.marketingConsent,
-          consented: false,
-          consentedAt: DateTime.now(),
-          createdAt: DateTime.now(),
-        ),
-      ];
+    UserConsent(
+      id: 'c1',
+      userId: 'test-user-id',
+      consentKey: ConsentType.termsOfService,
+      consented: true,
+      consentedAt: DateTime.now(),
+      createdAt: DateTime.now(),
+    ),
+    UserConsent(
+      id: 'c2',
+      userId: 'test-user-id',
+      consentKey: ConsentType.privacyCollection,
+      consented: true,
+      consentedAt: DateTime.now(),
+      createdAt: DateTime.now(),
+    ),
+    UserConsent(
+      id: 'c3',
+      userId: 'test-user-id',
+      consentKey: ConsentType.thirdPartyProvision,
+      consented: false,
+      consentedAt: DateTime.now(),
+      createdAt: DateTime.now(),
+    ),
+    UserConsent(
+      id: 'c4',
+      userId: 'test-user-id',
+      consentKey: ConsentType.marketingConsent,
+      consented: false,
+      consentedAt: DateTime.now(),
+      createdAt: DateTime.now(),
+    ),
+  ];
 }
 
 /// AccountDeletionController — returns non-pending status
 class _MockAccountDeletionController extends AccountDeletionController {
   @override
-  FutureOr<DeletionStatus?> build() async =>
-      const DeletionStatus(isPending: false);
+  FutureOr<DeletionStatus?> build() async => const DeletionStatus();
 }
 
 /// Fake SocialRepository for BlockedPartnersPage (returns empty list)
