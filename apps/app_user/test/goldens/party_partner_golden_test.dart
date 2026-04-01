@@ -114,6 +114,18 @@ void main() {
     ),
   ];
 
+  List<Event> curationByType(EventFeedType type) {
+    return type == EventFeedType.newArrivals ? curationEvents : <Event>[];
+  }
+
+  Partner partnerById(String partnerId) {
+    return partnerId == 'partner-with-events' ? featuredPartner : quietPartner;
+  }
+
+  List<Event> eventsByPartnerId(String partnerId) {
+    return partnerId == 'partner-with-events' ? partnerEvents : <Event>[];
+  }
+
   setUpAll(() async {
     await initGoldenDeps();
   });
@@ -140,9 +152,7 @@ void main() {
                   MockPartyCoordinator(),
                 ),
                 eventFeedProvider.overrideWith((ref, args) async {
-                  return args.type == EventFeedType.newArrivals
-                      ? curationEvents
-                      : <Event>[];
+                  return curationByType(args.type);
                 }),
               ],
             ),
@@ -160,9 +170,7 @@ void main() {
                   MockPartyCoordinator(),
                 ),
                 eventFeedProvider.overrideWith((ref, args) async {
-                  return args.type == EventFeedType.newArrivals
-                      ? curationEvents
-                      : <Event>[];
+                  return curationByType(args.type);
                 }),
               ],
             ),
@@ -180,14 +188,10 @@ void main() {
                   MockPartnerCoordinator(),
                 ),
                 partnerDetailProvider.overrideWith((ref, partnerId) async {
-                  return partnerId == 'partner-with-events'
-                      ? featuredPartner
-                      : quietPartner;
+                  return partnerById(partnerId);
                 }),
                 partnerEventsProvider.overrideWith((ref, partnerId) async {
-                  return partnerId == 'partner-with-events'
-                      ? partnerEvents
-                      : <Event>[];
+                  return eventsByPartnerId(partnerId);
                 }),
               ],
             ),
@@ -205,14 +209,10 @@ void main() {
                   MockPartnerCoordinator(),
                 ),
                 partnerDetailProvider.overrideWith((ref, partnerId) async {
-                  return partnerId == 'partner-with-events'
-                      ? featuredPartner
-                      : quietPartner;
+                  return partnerById(partnerId);
                 }),
                 partnerEventsProvider.overrideWith((ref, partnerId) async {
-                  return partnerId == 'partner-with-events'
-                      ? partnerEvents
-                      : <Event>[];
+                  return eventsByPartnerId(partnerId);
                 }),
               ],
             ),
