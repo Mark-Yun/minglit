@@ -7,6 +7,10 @@ final _refundPolicyProvider = FutureProvider.autoDispose<Map<String, dynamic>?>(
   },
 );
 
+final eventDetailNowProvider = Provider.autoDispose<DateTime Function()>(
+  (_) => DateTime.now,
+);
+
 class _RefundPolicySection extends ConsumerWidget {
   const _RefundPolicySection({required this.event});
 
@@ -48,9 +52,9 @@ class _RefundPolicySection extends ConsumerWidget {
           ),
           const SizedBox(height: MinglitSpacing.medium),
           policyAsync.when(
-            data: (policy) => _buildSummary(context, policy),
+            data: (policy) => _buildSummary(context, ref, policy),
             loading: () => _buildLoadingContent(context),
-            error: (e, st) => _buildSummary(context, null),
+            error: (e, st) => _buildSummary(context, ref, null),
           ),
         ],
       ),
@@ -59,6 +63,7 @@ class _RefundPolicySection extends ConsumerWidget {
 
   Widget _buildSummary(
     BuildContext context,
+    WidgetRef ref,
     Map<String, dynamic>? policy,
   ) {
     final theme = Theme.of(context);
@@ -66,7 +71,7 @@ class _RefundPolicySection extends ConsumerWidget {
         (policy?['grace_period_hours'] as num?)?.toInt() ?? 2;
     final cutoffDays = (policy?['cutoff_days'] as num?)?.toInt() ?? 7;
     final cutoffDate = event.startTime.subtract(Duration(days: cutoffDays));
-    final now = DateTime.now();
+    final now = ref.watch(eventDetailNowProvider)();
     // Fix #138: "~까지 환불 가능" 문구와 일치하도록 경계값 포함 비교
     final isCutoffRefundable = !now.isAfter(cutoffDate);
     // Fix #190: 요일 추가, D-day 표시로 날짜 인지성 개선

@@ -39,6 +39,7 @@ void main() {
 
   const eventId = 'event-golden';
   final baseTime = DateTime(2026, 4, 12, 18);
+  final fixedNow = DateTime(2026, 4, 1, 10);
   final location = Location(
     id: 'location-1',
     partnerId: 'partner-1',
@@ -139,6 +140,10 @@ void main() {
             ),
             verificationsByIdsProvider('').overrideWith((_) async => []),
             policyRepositoryProvider.overrideWith((_) => mockPolicyRepository),
+            eventDetailNowProvider.overrideWith(
+              (_) =>
+                  () => fixedNow,
+            ),
           ],
         ),
       ),

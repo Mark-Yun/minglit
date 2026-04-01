@@ -17,6 +17,7 @@ void main() {
   /// Creates provider overrides for EventDetailPage with refund policy control.
   List<dynamic> refundPolicyOverrides({
     required Event event,
+    required DateTime now,
     int gracePeriodHours = 2,
     int cutoffDays = 7,
     bool nullPolicy = false,
@@ -34,6 +35,10 @@ void main() {
           cutoffDays: cutoffDays,
           returnNull: nullPolicy,
         ),
+      ),
+      eventDetailNowProvider.overrideWith(
+        (_) =>
+            () => now,
       ),
     ];
   }
@@ -68,10 +73,12 @@ void main() {
     // cutoff 이전 → primary 배너 + "~까지 환불 가능" + D-day 텍스트
     // ──────────────────────────────────────────────────────────────────
     testWidgets('cutoff 이전 → 환불 가능 배너 + D-day 표시', (tester) async {
+      final now = DateTime(2026, 4, 1, 10);
       final event = _createTestEvent(
-        startTime: DateTime.now().add(const Duration(days: 14)),
+        startTime: now.add(const Duration(days: 14)),
+        referenceTime: now,
       );
-      final overrides = refundPolicyOverrides(event: event);
+      final overrides = refundPolicyOverrides(event: event, now: now);
 
       await pumpAndScrollToRefundPolicy(tester, event, overrides: overrides);
 
@@ -92,11 +99,13 @@ void main() {
     // cutoff 경과 → secondary 배너 + grace period 안내
     // ──────────────────────────────────────────────────────────────────
     testWidgets('cutoff 경과 → grace period 환불 안내 배너', (tester) async {
+      final now = DateTime(2026, 4, 1, 10);
       // startTime 3일 후 → cutoff = 3 - 7 = 4일 전 (이미 경과)
       final event = _createTestEvent(
-        startTime: DateTime.now().add(const Duration(days: 3)),
+        startTime: now.add(const Duration(days: 3)),
+        referenceTime: now,
       );
-      final overrides = refundPolicyOverrides(event: event);
+      final overrides = refundPolicyOverrides(event: event, now: now);
 
       await pumpAndScrollToRefundPolicy(tester, event, overrides: overrides);
 
@@ -123,7 +132,7 @@ void main() {
       // Set cutoffDate to end of today (23:59) so:
       //   isCutoffRefundable = !now.isAfter(cutoffDate) = true
       //   daysLeft = 0 (same calendar day) → shows "(오늘)"
-      final now = DateTime.now();
+      final now = DateTime(2026, 4, 1, 10);
       final endOfToday = DateTime(
         now.year,
         now.month,
@@ -131,8 +140,9 @@ void main() {
       ).subtract(const Duration(microseconds: 1));
       final event = _createTestEvent(
         startTime: endOfToday.add(const Duration(days: 7)),
+        referenceTime: now,
       );
-      final overrides = refundPolicyOverrides(event: event);
+      final overrides = refundPolicyOverrides(event: event, now: now);
 
       await pumpAndScrollToRefundPolicy(tester, event, overrides: overrides);
 
@@ -148,11 +158,14 @@ void main() {
     testWidgets('policy null → 기본값(grace=2h, cutoff=7d) 적용', (
       tester,
     ) async {
+      final now = DateTime(2026, 4, 1, 10);
       final event = _createTestEvent(
-        startTime: DateTime.now().add(const Duration(days: 14)),
+        startTime: now.add(const Duration(days: 14)),
+        referenceTime: now,
       );
       final overrides = refundPolicyOverrides(
         event: event,
+        now: now,
         nullPolicy: true,
       );
 
@@ -169,10 +182,12 @@ void main() {
     testWidgets('인포 버튼 탭 → 환불 정책 상세 바텀시트 + 3행 표시', (
       tester,
     ) async {
+      final now = DateTime(2026, 4, 1, 10);
       final event = _createTestEvent(
-        startTime: DateTime.now().add(const Duration(days: 14)),
+        startTime: now.add(const Duration(days: 14)),
+        referenceTime: now,
       );
-      final overrides = refundPolicyOverrides(event: event);
+      final overrides = refundPolicyOverrides(event: event, now: now);
 
       await pumpAndScrollToRefundPolicy(tester, event, overrides: overrides);
 
@@ -205,21 +220,24 @@ void main() {
 
 // ── Test Helpers ──────────────────────────────────────────────────────
 
-Event _createTestEvent({required DateTime startTime}) {
+Event _createTestEvent({
+  required DateTime startTime,
+  required DateTime referenceTime,
+}) {
   return Event(
     id: 'refund-test-event',
     partyId: 'test-party-id',
     title: 'Refund Policy Test Event',
     startTime: startTime,
     endTime: startTime.add(const Duration(hours: 3)),
-    createdAt: DateTime.now(),
-    updatedAt: DateTime.now(),
+    createdAt: referenceTime,
+    updatedAt: referenceTime,
     party: Party(
       id: 'test-party-id',
       partnerId: 'test-partner-id',
       title: 'Test Party',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
+      createdAt: referenceTime,
+      updatedAt: referenceTime,
       partner: const Partner(
         id: 'test-partner-id',
         name: 'Test Partner',
@@ -230,8 +248,8 @@ Event _createTestEvent({required DateTime startTime}) {
         id: 'test-ticket-1',
         name: 'General',
         price: 15000,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
+        createdAt: referenceTime,
+        updatedAt: referenceTime,
       ),
     ],
   );
