@@ -248,7 +248,7 @@ void main() {
           overrides: [
             eventNowBarStateProvider(
               event,
-            ).overrideWith(() => _ThrowingStateNotifier()),
+            ).overrideWith(_ThrowingStateNotifier.new),
           ],
         ),
       );
