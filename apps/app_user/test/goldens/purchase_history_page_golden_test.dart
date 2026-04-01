@@ -12,10 +12,11 @@ import '../utils/mocks.dart';
 import 'golden_test_helpers.dart';
 
 void main() {
-  final mockUser = MockUser();
+  late MockUser mockUser;
 
   setUpAll(() async {
     await initGoldenDeps();
+    mockUser = MockUser();
     when(() => mockUser.id).thenReturn('user1');
   });
 
