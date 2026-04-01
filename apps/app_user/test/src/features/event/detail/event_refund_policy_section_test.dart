@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_user/src/features/event/admission/event_admission_controller.dart';
+import 'package:app_user/src/features/event/detail/event_detail_now_provider.dart';
 import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -23,12 +24,12 @@ void main() {
     bool nullPolicy = false,
   }) {
     return [
-      eventDetailControllerProvider(event.id).overrideWith(
-        () => _DataEventDetailController(event),
-      ),
-      eventAdmissionControllerProvider(event).overrideWith(
-        _GuestAdmissionController.new,
-      ),
+      eventDetailControllerProvider(
+        event.id,
+      ).overrideWith(() => _DataEventDetailController(event)),
+      eventAdmissionControllerProvider(
+        event,
+      ).overrideWith(_GuestAdmissionController.new),
       policyRepositoryProvider.overrideWith(
         (ref) => _FakePolicyRepository(
           gracePeriodHours: gracePeriodHours,
@@ -89,10 +90,7 @@ void main() {
       // check_circle_outline 아이콘 (primary 배너)
       expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
       // 보조 텍스트: grace period 안내
-      expect(
-        find.text('결제 후 2시간 이내에도 전액 환불 가능'),
-        findsOneWidget,
-      );
+      expect(find.text('결제 후 2시간 이내에도 전액 환불 가능'), findsOneWidget);
     });
 
     // ──────────────────────────────────────────────────────────────────
@@ -110,10 +108,7 @@ void main() {
       await pumpAndScrollToRefundPolicy(tester, event, overrides: overrides);
 
       // grace period 배너
-      expect(
-        find.text('결제 후 2시간 이내 전액 환불 가능'),
-        findsOneWidget,
-      );
+      expect(find.text('결제 후 2시간 이내 전액 환불 가능'), findsOneWidget);
       // schedule 아이콘 (secondary 배너)
       expect(find.byIcon(Icons.schedule), findsOneWidget);
       // 보조 텍스트: cutoff 마감 안내
@@ -155,9 +150,7 @@ void main() {
     // ──────────────────────────────────────────────────────────────────
     // policy null → 기본값 적용 (grace_period_hours=2, cutoff_days=7)
     // ──────────────────────────────────────────────────────────────────
-    testWidgets('policy null → 기본값(grace=2h, cutoff=7d) 적용', (
-      tester,
-    ) async {
+    testWidgets('policy null → 기본값(grace=2h, cutoff=7d) 적용', (tester) async {
       final now = DateTime(2026, 4, 1, 10);
       final event = _createTestEvent(
         startTime: now.add(const Duration(days: 14)),
@@ -179,9 +172,7 @@ void main() {
     // ──────────────────────────────────────────────────────────────────
     // 인포 버튼 탭 → 바텀시트 표시 + 3단계 환불 정책 행 표시
     // ──────────────────────────────────────────────────────────────────
-    testWidgets('인포 버튼 탭 → 환불 정책 상세 바텀시트 + 3행 표시', (
-      tester,
-    ) async {
+    testWidgets('인포 버튼 탭 → 환불 정책 상세 바텀시트 + 3행 표시', (tester) async {
       final now = DateTime(2026, 4, 1, 10);
       final event = _createTestEvent(
         startTime: now.add(const Duration(days: 14)),
@@ -210,10 +201,7 @@ void main() {
       expect(find.text('전액 환불'), findsNWidgets(2));
       expect(find.text('환불 불가'), findsOneWidget);
       // 고객센터 안내
-      expect(
-        find.text('자세한 내용은 고객센터로 문의해주세요.'),
-        findsOneWidget,
-      );
+      expect(find.text('자세한 내용은 고객센터로 문의해주세요.'), findsOneWidget);
     });
   });
 }
@@ -238,10 +226,7 @@ Event _createTestEvent({
       title: 'Test Party',
       createdAt: referenceTime,
       updatedAt: referenceTime,
-      partner: const Partner(
-        id: 'test-partner-id',
-        name: 'Test Partner',
-      ),
+      partner: const Partner(id: 'test-partner-id', name: 'Test Partner'),
     ),
     tickets: [
       Ticket(
@@ -284,9 +269,6 @@ class _FakePolicyRepository implements PolicyRepository {
   @override
   Future<Map<String, dynamic>?> getRefundPolicy() async {
     if (returnNull) return null;
-    return {
-      'grace_period_hours': gracePeriodHours,
-      'cutoff_days': cutoffDays,
-    };
+    return {'grace_period_hours': gracePeriodHours, 'cutoff_days': cutoffDays};
   }
 }

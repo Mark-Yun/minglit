@@ -7,11 +7,6 @@ final _refundPolicyProvider = FutureProvider.autoDispose<Map<String, dynamic>?>(
   },
 );
 
-final Provider<DateTime Function()> eventDetailNowProvider =
-    Provider.autoDispose<DateTime Function()>(
-      (_) => DateTime.now,
-    );
-
 class _RefundPolicySection extends ConsumerWidget {
   const _RefundPolicySection({required this.event});
 
@@ -228,18 +223,9 @@ class _RefundPolicySection extends ConsumerWidget {
                   '전액 환불',
                 ),
                 const SizedBox(height: MinglitSpacing.small),
-                _buildPolicyRow(
-                  context,
-                  '이벤트 시작 $cutoffDays일 전까지',
-                  '전액 환불',
-                ),
+                _buildPolicyRow(context, '이벤트 시작 $cutoffDays일 전까지', '전액 환불'),
                 const SizedBox(height: MinglitSpacing.small),
-                _buildPolicyRow(
-                  context,
-                  '그 외',
-                  '환불 불가',
-                  isRefundable: false,
-                ),
+                _buildPolicyRow(context, '그 외', '환불 불가', isRefundable: false),
                 const SizedBox(height: MinglitSpacing.medium),
                 Text(
                   '자세한 내용은 고객센터로 문의해주세요.',
@@ -260,9 +246,7 @@ class _RefundPolicySection extends ConsumerWidget {
       children: List.generate(
         2,
         (_) => Padding(
-          padding: const EdgeInsets.only(
-            bottom: MinglitSpacing.small,
-          ),
+          padding: const EdgeInsets.only(bottom: MinglitSpacing.small),
           child: Container(
             height: 20,
             width: double.infinity,
@@ -286,12 +270,7 @@ class _RefundPolicySection extends ConsumerWidget {
     final theme = Theme.of(context);
     return Row(
       children: [
-        Expanded(
-          child: Text(
-            condition,
-            style: theme.textTheme.bodyMedium,
-          ),
-        ),
+        Expanded(child: Text(condition, style: theme.textTheme.bodyMedium)),
         Text(
           policy,
           style: theme.textTheme.bodyMedium?.copyWith(
