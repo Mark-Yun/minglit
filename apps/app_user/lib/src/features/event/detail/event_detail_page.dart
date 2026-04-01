@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_user/src/features/event/admission/event_admission_controller.dart';
+import 'package:app_user/src/features/event/detail/event_detail_now_provider.dart';
 import 'package:app_user/src/features/event/detail/open_in_app_dialog.dart';
 import 'package:app_user/src/features/event/detail/report_bottom_sheet.dart';
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
@@ -12,6 +13,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+
+export 'package:app_user/src/features/event/detail/event_detail_now_provider.dart';
 
 part 'event_bottom_ticket_bar.dart';
 part 'event_detail_content.dart';
