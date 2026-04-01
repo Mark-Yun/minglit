@@ -264,8 +264,10 @@ void main() {
       final barRect = tester.getRect(find.byType(EventNowBar));
       // Expected: 844 screen height - 34 safe area - 56 bar height = 754.
       const expectedTop = 844 - 34 - EventNowBar.height;
+      // Expected: 844 screen height - 34 safe area = 810.
+      const expectedBottom = 844 - 34;
       expect(barRect.top, closeTo(expectedTop, 0.1));
-      expect(barRect.bottom, closeTo(844, 0.1));
+      expect(barRect.bottom, closeTo(expectedBottom, 0.1));
     });
 
     testWidgets('omits EventNowBar when there are no active events', (
