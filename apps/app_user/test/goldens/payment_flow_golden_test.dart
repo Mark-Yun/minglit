@@ -15,15 +15,15 @@ import 'golden_test_helpers.dart';
 void main() {
   final baseTime = DateTime(2026, 4, 2, 19);
   late MockUser mockUser;
-  late MockEventRepository mockEventRepository;
 
   setUp(() {
     mockUser = MockUser();
-    mockEventRepository = MockEventRepository();
     when(() => mockUser.id).thenReturn('user-1');
   });
 
   List<dynamic> buildPurchaseHistoryOverrides(List<EventApplication> history) {
+    // Fix #574: 골든 시나리오 간 repository stub이 섞이지 않도록 매번 새 mock을 사용한다.
+    final mockEventRepository = MockEventRepository();
     when(
       () => mockEventRepository.getMyPurchaseHistory('user-1'),
     ).thenAnswer((_) async => history);
@@ -158,8 +158,9 @@ void main() {
         party: fallbackParty,
         tickets: [generalTicket],
       );
-      final missingTicketEvent = event.copyWith(
-        tickets: const [],
+      // Fix #574: fallback 원인을 분리해 각 골든 상태가 단일 회귀 신호를 갖도록 한다.
+      final missingTicketEvent = event.copyWith(tickets: const []);
+      final missingTitleLocationEvent = event.copyWith(
         title: null,
         location: null,
       );
@@ -191,6 +192,21 @@ void main() {
                 page: PaymentSuccessScreen(
                   event: missingTicketEvent,
                   ticketId: 'missing-ticket',
+                  onViewTickets: () {},
+                  onBackToEvent: () {},
+                ),
+              ),
+            ),
+          ),
+          GoldenTestScenario(
+            name: 'missing title/location fallback',
+            child: SizedBox(
+              width: 390,
+              height: 844,
+              child: GoldenPageWrapper(
+                page: PaymentSuccessScreen(
+                  event: missingTitleLocationEvent,
+                  ticketId: generalTicket.id,
                   onViewTickets: () {},
                   onBackToEvent: () {},
                 ),
