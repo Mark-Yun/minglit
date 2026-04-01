@@ -164,6 +164,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      expect(find.text('파트너 정보를 불러올 수 없습니다'), findsOneWidget);
+      expect(find.byType(OverflowBar), findsNothing);
       expect(tester.takeException(), isNull);
     });
   });
