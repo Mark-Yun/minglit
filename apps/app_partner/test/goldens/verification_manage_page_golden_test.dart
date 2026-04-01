@@ -45,12 +45,12 @@ void main() {
                           description: '회사 재직 여부를 확인합니다.',
                           iconKey: 'briefcase',
                           formSchema: [
-                            VerificationFormField(
+                            const VerificationFormField(
                               key: 'company_name',
                               type: 'text',
                               label: '회사명',
                             ),
-                            VerificationFormField(
+                            const VerificationFormField(
                               key: 'certificate',
                               type: 'file',
                               label: '재직증명서',
@@ -67,7 +67,7 @@ void main() {
                           description: '졸업/재학 증빙을 제출합니다.',
                           iconKey: 'school',
                           formSchema: [
-                            VerificationFormField(
+                            const VerificationFormField(
                               key: 'school_name',
                               type: 'text',
                               label: '학교명',
@@ -86,7 +86,7 @@ void main() {
                           description: '소득 증빙 서류를 제출합니다.',
                           iconKey: 'payments',
                           formSchema: [
-                            VerificationFormField(
+                            const VerificationFormField(
                               key: 'income_file',
                               type: 'file',
                               label: '소득 증빙',
