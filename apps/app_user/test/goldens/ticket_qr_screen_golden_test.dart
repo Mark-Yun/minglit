@@ -37,6 +37,8 @@ void main() {
     'TicketQRScreen with valid ticket token',
     fileName: 'ticket_qr_screen_valid',
     pumpBeforeTest: (tester) async {
+      // Fix #574: Ticket QR viewer has a repeating scan-line animation, so
+      // `pumpAndSettle()` would not converge for golden captures.
       await tester.pump(const Duration(milliseconds: 300));
     },
     builder: () {
@@ -71,6 +73,8 @@ void main() {
     'TicketQRScreen missing ticket token',
     fileName: 'ticket_qr_screen_missing',
     pumpBeforeTest: (tester) async {
+      // Fix #574: Ticket QR viewer has a repeating scan-line animation, so
+      // `pumpAndSettle()` would not converge for golden captures.
       await tester.pump(const Duration(milliseconds: 300));
     },
     builder: () {
