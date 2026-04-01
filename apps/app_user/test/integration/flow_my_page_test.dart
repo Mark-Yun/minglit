@@ -76,6 +76,10 @@ void main() {
       expect(find.byType(PrivacyPage), findsOneWidget);
       expect(find.text('개인정보'), findsOneWidget);
 
+      // Fix #886: PrivacyPage has consent management sections above the
+      // account deletion button. The button is below the viewport in the
+      // ListView, so we must scroll to it before tapping.
+      await tester.scrollUntilVisible(find.text('회원 탈퇴 시작하기'), 100);
       await tester.tap(find.text('회원 탈퇴 시작하기'));
       await tester.pumpAndSettle();
 
