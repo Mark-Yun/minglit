@@ -7,9 +7,10 @@ final _refundPolicyProvider = FutureProvider.autoDispose<Map<String, dynamic>?>(
   },
 );
 
-final eventDetailNowProvider = Provider.autoDispose<DateTime Function()>(
-  (_) => DateTime.now,
-);
+final Provider<DateTime Function()> eventDetailNowProvider =
+    Provider.autoDispose<DateTime Function()>(
+      (_) => DateTime.now,
+    );
 
 class _RefundPolicySection extends ConsumerWidget {
   const _RefundPolicySection({required this.event});
