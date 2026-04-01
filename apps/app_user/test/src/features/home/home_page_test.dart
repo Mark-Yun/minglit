@@ -264,7 +264,7 @@ void main() {
       final barRect = tester.getRect(find.byType(EventNowBar));
       // Expected: 844 screen height - 34 safe area - 56 bar height = 754.
       const expectedTop = 844 - 34 - EventNowBar.height;
-      expect(barRect.top, closeTo(expectedTop.toDouble(), 0.1));
+      expect(barRect.top, closeTo(expectedTop, 0.1));
       expect(barRect.bottom, closeTo(844, 0.1));
     });
 
