@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../utils/mocks.dart';
 
@@ -39,6 +40,7 @@ void main() {
       buildNumber: '1',
       buildSignature: '',
     );
+    SharedPreferences.setMockInitialValues({});
 
     // GoRouter stub — go() is called on logout
     when(() => mockRouter.go(any())).thenReturn(null);
@@ -148,6 +150,21 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(() => mockCoordinator.pushAccountDeletion()).called(1);
+    });
+
+    testWidgets('placeholder header does not overflow on mobile width', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 844);
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        buildSubject(partnerValue: const AsyncValue.data(null)),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
     });
   });
 }

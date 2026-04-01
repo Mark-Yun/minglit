@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/partner_golden_test_helpers.dart';
 
@@ -20,6 +21,7 @@ void main() {
       buildNumber: '26040934',
       buildSignature: '',
     );
+    SharedPreferences.setMockInitialValues({});
   });
 
   goldenTest(
