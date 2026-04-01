@@ -1,6 +1,8 @@
 @Tags(['golden'])
 library;
 
+import 'dart:async';
+
 import 'package:alchemist/alchemist.dart';
 import 'package:app_partner/src/features/verification/create/create_verification_controller.dart';
 import 'package:app_partner/src/features/verification/create/create_verification_page.dart';
@@ -28,8 +30,10 @@ void main() {
             child: PartnerGoldenPageWrapper(
               page: const CreateVerificationPage(partnerId: 'partner_1'),
               overrides: [
-                createVerificationControllerProvider.overrideWithValue(
-                  const CreateVerificationState(),
+                createVerificationControllerProvider.overrideWith(
+                  () => _CreateVerificationGoldenController(
+                    const CreateVerificationState(),
+                  ),
                 ),
               ],
             ),
@@ -56,24 +60,26 @@ void main() {
             child: PartnerGoldenPageWrapper(
               page: const CreateVerificationPage(partnerId: 'partner_1'),
               overrides: [
-                createVerificationControllerProvider.overrideWithValue(
-                  const CreateVerificationState(
-                    displayName: '골프 핸디캡 인증',
-                    internalName: 'golf_handicap_2026',
-                    description: '최근 라운딩 기준 핸디캡 증빙을 제출받습니다.',
-                    fields: [
-                      VerificationFormField(
-                        key: 'handicap_text',
-                        type: 'text',
-                        label: '핸디캡',
-                      ),
-                      VerificationFormField(
-                        key: 'scorecard_file',
-                        type: 'file',
-                        label: '스코어카드 첨부',
-                        required: false,
-                      ),
-                    ],
+                createVerificationControllerProvider.overrideWith(
+                  () => _CreateVerificationGoldenController(
+                    const CreateVerificationState(
+                      displayName: '골프 핸디캡 인증',
+                      internalName: 'golf_handicap_2026',
+                      description: '최근 라운딩 기준 핸디캡 증빙을 제출받습니다.',
+                      fields: [
+                        VerificationFormField(
+                          key: 'handicap_text',
+                          type: 'text',
+                          label: '핸디캡',
+                        ),
+                        VerificationFormField(
+                          key: 'scorecard_file',
+                          type: 'file',
+                          label: '스코어카드 첨부',
+                          required: false,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -83,4 +89,13 @@ void main() {
       ],
     ),
   );
+}
+
+class _CreateVerificationGoldenController extends CreateVerificationController {
+  _CreateVerificationGoldenController(this._state);
+
+  final CreateVerificationState _state;
+
+  @override
+  FutureOr<CreateVerificationState> build() => _state;
 }
