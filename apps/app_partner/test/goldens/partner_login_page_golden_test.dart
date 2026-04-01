@@ -1,13 +1,12 @@
 @Tags(['golden'])
 library;
 
-import 'dart:async';
-
 import 'package:alchemist/alchemist.dart';
 import 'package:app_partner/src/features/auth/partner_login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/features/auth/testing/fake_auth_controller.dart';
 
 import '../utils/partner_golden_test_helpers.dart';
 
@@ -32,7 +31,7 @@ void main() {
             child: PartnerGoldenPageWrapper(
               page: const PartnerLoginPage(),
               overrides: [
-                authControllerProvider.overrideWith(_FakeAuthController.new),
+                authControllerProvider.overrideWith(FakeAuthController.new),
               ],
             ),
           ),
@@ -40,9 +39,4 @@ void main() {
       ],
     ),
   );
-}
-
-class _FakeAuthController extends AuthController {
-  @override
-  FutureOr<void> build() async {}
 }
