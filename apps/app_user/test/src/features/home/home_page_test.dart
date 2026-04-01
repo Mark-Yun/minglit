@@ -1,4 +1,6 @@
 import 'package:app_user/src/features/home/home_page.dart';
+import 'package:app_user/src/features/home/widgets/event_now_bar.dart';
+import 'package:app_user/src/features/home/widgets/event_now_bar_controller.dart';
 import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -276,7 +278,11 @@ void main() {
             size: Size(390, 844),
             padding: EdgeInsets.only(bottom: 34),
           ),
-          overrides: [todayActiveEventsProvider.overrideWith((_) => const [])],
+          overrides: [
+            todayActiveEventsProvider.overrideWith(
+              (_) => const <TodayActiveEvent>[],
+            ),
+          ],
         ),
       );
       await tester.pumpAndSettle();
