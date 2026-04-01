@@ -22,10 +22,10 @@ class MockVerificationManageController extends Mock
 
   @override
   FutureOr<VerificationManageState> build() => _state;
-  
+
   @override
   set state(AsyncValue<VerificationManageState> value) {}
-  
+
   @override
   AsyncValue<VerificationManageState> get state => AsyncData(_state);
 }
@@ -35,17 +35,16 @@ void main() {
     await initializeDateFormatting('ko_KR');
   });
 
-  final activeVerification = Verification(
+  const activeVerification = Verification(
     id: 'v1',
     category: VerificationCategory.career,
     internalName: 'custom_career',
     displayName: '직장 인증 (재직증명서)',
     description: '회사명과 부서가 포함된 재직증명서를 업로드해주세요.',
     iconKey: 'briefcase',
-    isActive: true,
   );
 
-  final archivedVerification = Verification(
+  const archivedVerification = Verification(
     id: 'v2',
     category: VerificationCategory.academic,
     internalName: 'custom_academic',
@@ -69,7 +68,7 @@ void main() {
                 overrides: [
                   verificationManageControllerProvider.overrideWith(
                     () => MockVerificationManageController(
-                      VerificationManageState(
+                      const VerificationManageState(
                         active: [activeVerification],
                         archived: [archivedVerification],
                       ),
@@ -97,7 +96,7 @@ void main() {
                 overrides: [
                   verificationManageControllerProvider.overrideWith(
                     () => MockVerificationManageController(
-                      const VerificationManageState(active: [], archived: []),
+                      const VerificationManageState(),
                     ),
                   ),
                 ],
@@ -123,7 +122,7 @@ void main() {
                 overrides: [
                   verificationManageControllerProvider.overrideWith(
                     () => MockVerificationManageController(
-                      VerificationManageState(
+                      const VerificationManageState(
                         active: [activeVerification],
                         archived: [archivedVerification],
                       ),
