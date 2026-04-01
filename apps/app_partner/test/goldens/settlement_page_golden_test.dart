@@ -14,7 +14,7 @@ import '../utils/partner_golden_test_helpers.dart';
 
 void main() {
   late MockSettlementRepository mockSettlementRepository;
-  final partner = const Partner(id: 'partner-1', name: '테스트 파트너');
+  const partner = Partner(id: 'partner-1', name: '테스트 파트너');
   final now = DateTime(2026, 4, 1, 14);
 
   SettlementItemDetail makeItem(

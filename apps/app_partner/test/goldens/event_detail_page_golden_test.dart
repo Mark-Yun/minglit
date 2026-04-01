@@ -26,7 +26,6 @@ void main() {
     endTime: now.add(const Duration(days: 2, hours: 4)),
     createdAt: now,
     updatedAt: now,
-    status: 'scheduled',
     visibility: 'public',
     currentParticipants: 18,
     maxParticipants: 40,
