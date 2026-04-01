@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/data/models/deletion_status.dart';
 import 'package:minglit_kit/src/data/repositories/auth_repository.dart';
 import 'package:minglit_kit/src/features/account_deletion/logic/account_deletion_controller.dart';
 import 'package:minglit_kit/src/features/auth/logic/auth_controller.dart';
 import 'package:minglit_kit/src/utils/error_ui_handler.dart';
 import 'package:minglit_kit/src/utils/feedback_ext.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Prompts signed-in users to recover a pending account deletion.
