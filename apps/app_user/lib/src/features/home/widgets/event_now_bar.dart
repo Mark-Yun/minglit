@@ -14,6 +14,9 @@ class EventNowBar extends ConsumerWidget {
   /// Creates an [EventNowBar].
   const EventNowBar({super.key, this.onTap});
 
+  /// Visible content height excluding bottom safe area padding.
+  static const double height = 56;
+
   /// Callback when the bar is tapped.
   final VoidCallback? onTap;
 
@@ -24,10 +27,7 @@ class EventNowBar extends ConsumerWidget {
     return eventsAsync.when(
       data: (events) {
         if (events.isEmpty) return const SizedBox.shrink();
-        return _EventNowBarContent(
-          activeEvent: events.first,
-          onTap: onTap,
-        );
+        return _EventNowBarContent(activeEvent: events.first, onTap: onTap);
       },
       loading: () => const _EventNowBarLoading(),
       error: (_, _) => _buildOfflineBar(context),
@@ -36,7 +36,7 @@ class EventNowBar extends ConsumerWidget {
 
   Widget _buildOfflineBar(BuildContext context) {
     return Container(
-      height: 56,
+      height: height,
       decoration: _barDecoration(),
       padding: const EdgeInsets.symmetric(
         horizontal: MinglitSpacing.screenEdge,
@@ -44,9 +44,9 @@ class EventNowBar extends ConsumerWidget {
       child: Center(
         child: Text(
           '(오프라인)',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: MinglitColors.textSecondary,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: MinglitColors.textSecondary),
         ),
       ),
     );
@@ -62,9 +62,7 @@ BoxDecoration _barDecoration() {
       topRight: Radius.circular(MinglitRadius.card),
     ),
     border: Border(
-      top: BorderSide(
-        color: MinglitColors.primary.withValues(alpha: 0.1),
-      ),
+      top: BorderSide(color: MinglitColors.primary.withValues(alpha: 0.1)),
     ),
   );
 }
@@ -74,10 +72,7 @@ BoxDecoration _barDecoration() {
 /// Separated into [ConsumerStatefulWidget] to manage the pulse
 /// [AnimationController] lifecycle for the RESULTS state.
 class _EventNowBarContent extends ConsumerStatefulWidget {
-  const _EventNowBarContent({
-    required this.activeEvent,
-    this.onTap,
-  });
+  const _EventNowBarContent({required this.activeEvent, this.onTap});
 
   final TodayActiveEvent activeEvent;
   final VoidCallback? onTap;
@@ -113,9 +108,7 @@ class _EventNowBarContentState extends ConsumerState<_EventNowBarContent>
 
   @override
   Widget build(BuildContext context) {
-    final stateAsync = ref.watch(
-      eventNowBarStateProvider(widget.activeEvent),
-    );
+    final stateAsync = ref.watch(eventNowBarStateProvider(widget.activeEvent));
 
     return stateAsync.when(
       data: (state) => _buildBar(context, state),
@@ -147,7 +140,7 @@ class _EventNowBarContentState extends ConsumerState<_EventNowBarContent>
             showEventNowBottomSheet(context, ref, widget.activeEvent),
           ),
       child: Container(
-        height: 56,
+        height: EventNowBar.height,
         decoration: _barDecoration(),
         padding: const EdgeInsets.symmetric(
           horizontal: MinglitSpacing.screenEdge,
@@ -219,9 +212,9 @@ class _EventNowBarContentState extends ConsumerState<_EventNowBarContent>
           : '$minutes분 후';
       return Text(
         timeText,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: MinglitColors.textSecondary,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: MinglitColors.textSecondary),
       );
     }
     return const Icon(

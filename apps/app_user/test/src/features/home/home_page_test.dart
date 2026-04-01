@@ -14,9 +14,14 @@ void main() {
   });
 
   late MockEventRepository mockEventRepository;
+  late MockUser mockUser;
 
   setUp(() {
     mockEventRepository = MockEventRepository();
+    mockUser = MockUser();
+    when(() => mockUser.id).thenReturn('user1');
+    when(() => mockUser.email).thenReturn('test@example.com');
+    when(() => mockUser.userMetadata).thenReturn({'full_name': 'Test User'});
 
     // Return empty lists for all feed types by default
     for (final type in EventFeedType.values) {
@@ -35,22 +40,22 @@ void main() {
   Widget createTestWidget({
     User? currentUser,
     List<dynamic> overrides = const [],
+    MediaQueryData? mediaQueryData,
   }) {
+    final page = mediaQueryData == null
+        ? const HomePage()
+        : MediaQuery(data: mediaQueryData, child: const HomePage());
+
     return ProviderScope(
       overrides: [
         eventRepositoryProvider.overrideWithValue(mockEventRepository),
         // Disable active filters to avoid triggering location services
-        activeFiltersProvider.overrideWith(
-          _NoFiltersNotifier.new,
-        ),
+        activeFiltersProvider.overrideWith(_NoFiltersNotifier.new),
         // Default: unauthenticated. Pass currentUser to test logged-in state.
         currentUserProvider.overrideWith((_) => currentUser),
         ...overrides.cast(),
       ],
-      child: MaterialApp(
-        theme: MinglitTheme.materialTheme,
-        home: const HomePage(),
-      ),
+      child: MaterialApp(theme: MinglitTheme.materialTheme, home: page),
     );
   }
 
@@ -58,11 +63,6 @@ void main() {
     testWidgets('renders notification bell icon when logged in', (
       tester,
     ) async {
-      final mockUser = MockUser();
-      when(() => mockUser.id).thenReturn('user1');
-      when(() => mockUser.email).thenReturn('test@example.com');
-      when(() => mockUser.userMetadata).thenReturn({'full_name': 'Test User'});
-
       await tester.pumpWidget(createTestWidget(currentUser: mockUser));
       await tester.pump();
 
@@ -169,9 +169,7 @@ void main() {
       await tester.pumpWidget(
         createTestWidget(
           overrides: [
-            recommendationFeedProvider.overrideWith(
-              _MockErrorNotifier.new,
-            ),
+            recommendationFeedProvider.overrideWith(_MockErrorNotifier.new),
           ],
         ),
       );
@@ -187,9 +185,7 @@ void main() {
       await tester.pumpWidget(
         createTestWidget(
           overrides: [
-            recommendationFeedProvider.overrideWith(
-              _MockNoMoreNotifier.new,
-            ),
+            recommendationFeedProvider.overrideWith(_MockNoMoreNotifier.new),
           ],
         ),
       );
@@ -199,7 +195,161 @@ void main() {
 
       expect(find.byType(MinglitCircularProgressIndicator), findsNothing);
     });
+
+    testWidgets('pins EventNowBar while the feed scrolls', (tester) async {
+      final activeEvent = _makeActiveEvent();
+      final feedEvents = List.generate(12, _makeFeedEvent);
+
+      when(
+        () => mockEventRepository.getEventsByType(
+          type: EventFeedType.newArrivals,
+          latitude: any(named: 'latitude'),
+          longitude: any(named: 'longitude'),
+          limit: any(named: 'limit'),
+          offset: any(named: 'offset'),
+        ),
+      ).thenAnswer((_) async => feedEvents);
+
+      await tester.pumpWidget(
+        createTestWidget(
+          currentUser: mockUser,
+          overrides: [
+            todayActiveEventsProvider.overrideWith((_) => [activeEvent]),
+            eventNowBarStateProvider(activeEvent).overrideWith(
+              () => _FixedNowBarStateNotifier(EventNowBarState.matching),
+            ),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final barFinder = find.byType(EventNowBar);
+      final before = tester.getTopLeft(barFinder).dy;
+
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -600));
+      await tester.pumpAndSettle();
+
+      final after = tester.getTopLeft(barFinder).dy;
+      expect(before, after);
+      expect(find.text('오늘 이벤트'), findsOneWidget);
+    });
+
+    testWidgets('positions EventNowBar above the bottom safe area', (
+      tester,
+    ) async {
+      final activeEvent = _makeActiveEvent();
+
+      await tester.binding.setSurfaceSize(const Size(390, 844));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        createTestWidget(
+          currentUser: mockUser,
+          mediaQueryData: const MediaQueryData(
+            size: Size(390, 844),
+            padding: EdgeInsets.only(bottom: 34),
+          ),
+          overrides: [
+            todayActiveEventsProvider.overrideWith((_) => [activeEvent]),
+            eventNowBarStateProvider(activeEvent).overrideWith(
+              () => _FixedNowBarStateNotifier(EventNowBarState.waiting),
+            ),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final barBottom = tester.getBottomLeft(find.byType(EventNowBar)).dy;
+      expect(barBottom, closeTo(810, 0.1));
+    });
+
+    testWidgets('keeps the last event card above the fixed EventNowBar', (
+      tester,
+    ) async {
+      final activeEvent = _makeActiveEvent();
+      final feedEvents = List.generate(16, _makeFeedEvent);
+      final lastTitle = feedEvents.last.title!;
+
+      when(
+        () => mockEventRepository.getEventsByType(
+          type: EventFeedType.newArrivals,
+          latitude: any(named: 'latitude'),
+          longitude: any(named: 'longitude'),
+          limit: any(named: 'limit'),
+          offset: any(named: 'offset'),
+        ),
+      ).thenAnswer((_) async => feedEvents);
+
+      await tester.binding.setSurfaceSize(const Size(390, 844));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        createTestWidget(
+          currentUser: mockUser,
+          mediaQueryData: const MediaQueryData(
+            size: Size(390, 844),
+            padding: EdgeInsets.only(bottom: 34),
+          ),
+          overrides: [
+            todayActiveEventsProvider.overrideWith((_) => [activeEvent]),
+            eventNowBarStateProvider(activeEvent).overrideWith(
+              () => _FixedNowBarStateNotifier(EventNowBarState.matching),
+            ),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text(lastTitle),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+
+      final lastCardBottom = tester.getBottomLeft(find.text(lastTitle)).dy;
+      final nowBarTop = tester.getTopLeft(find.byType(EventNowBar)).dy;
+      expect(lastCardBottom, lessThanOrEqualTo(nowBarTop));
+    });
   });
+}
+
+TodayActiveEvent _makeActiveEvent() {
+  final now = DateTime.now();
+  return TodayActiveEvent(
+    event: Event(
+      id: 'active_event',
+      partyId: 'party_active',
+      title: '오늘 이벤트',
+      startTime: now.add(const Duration(minutes: 40)),
+      endTime: now.add(const Duration(hours: 3)),
+      createdAt: now,
+      updatedAt: now,
+    ),
+    participantStatus: 'ticket_issued',
+  );
+}
+
+Event _makeFeedEvent(int index) {
+  final now = DateTime.now();
+  return Event(
+    id: 'event_$index',
+    partyId: 'party_$index',
+    startTime: now.add(Duration(days: index + 1)),
+    endTime: now.add(Duration(days: index + 1, hours: 2)),
+    createdAt: now,
+    updatedAt: now,
+    title: '추천 이벤트 $index',
+    tickets: [
+      Ticket(
+        id: 'ticket_$index',
+        name: 'General',
+        price: 15000,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    ],
+  );
 }
 
 /// A notifier that starts with no active filters (all disabled),
@@ -240,5 +390,16 @@ class _MockNoMoreNotifier extends RecommendationFeedNotifier {
       serverOffset: 0,
       hasMore: false,
     );
+  }
+}
+
+class _FixedNowBarStateNotifier extends EventNowBarStateNotifier {
+  _FixedNowBarStateNotifier(this.stateValue);
+
+  final EventNowBarState stateValue;
+
+  @override
+  Future<EventNowBarState> build(TodayActiveEvent activeEvent) async {
+    return stateValue;
   }
 }
