@@ -115,4 +115,18 @@ void main() {
     expect(_cancelDeletionCalls, 0);
     expect(_signOutCalls, 1);
   });
+
+  testWidgets('non-pending sign-in does not show recovery dialog', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildSubject());
+
+    authStateController.add(AuthState(AuthChangeEvent.signedIn, session));
+    await tester.pumpAndSettle();
+
+    expect(find.text('탈퇴 대기 중인 계정입니다'), findsNothing);
+    expect(_checkStatusCalls, 1);
+    expect(_cancelDeletionCalls, 0);
+    expect(_signOutCalls, 0);
+  });
 }

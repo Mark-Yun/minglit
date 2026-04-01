@@ -129,4 +129,26 @@ void main() {
     expect(_cancelDeletionCalls, 0);
     expect(_signOutCalls, 0);
   });
+
+  testWidgets('pending deletion sign-in can keep deletion and sign out', (
+    tester,
+  ) async {
+    _currentDeletionStatus = DeletionStatus(
+      deletedAt: DateTime.now().subtract(const Duration(days: 4)),
+      gracePeriodEnds: DateTime.now().add(const Duration(days: 3)),
+      isPending: true,
+    );
+
+    await tester.pumpWidget(buildSubject());
+
+    authStateController.add(AuthState(AuthChangeEvent.signedIn, session));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('탈퇴 유지'));
+    await tester.pumpAndSettle();
+
+    expect(_checkStatusCalls, 1);
+    expect(_cancelDeletionCalls, 0);
+    expect(_signOutCalls, 1);
+  });
 }
