@@ -15,15 +15,15 @@ void main() {
     partnerId: 'partner1',
     name: '밍릿 라운지',
     address: '서울 강남구 테헤란로 123',
-    createdAt: DateTime(2026, 4, 1),
-    updatedAt: DateTime(2026, 4, 1),
+    createdAt: DateTime(2026, 4),
+    updatedAt: DateTime(2026, 4),
   );
   final ticket = Ticket(
     id: 'ticket1',
     name: '프리미엄 티켓',
     price: 59000,
-    createdAt: DateTime(2026, 4, 1),
-    updatedAt: DateTime(2026, 4, 1),
+    createdAt: DateTime(2026, 4),
+    updatedAt: DateTime(2026, 4),
   );
   final event = Event(
     id: 'event1',
@@ -33,8 +33,8 @@ void main() {
     tickets: [ticket],
     startTime: DateTime(2026, 4, 25, 18, 30),
     endTime: DateTime(2026, 4, 25, 21, 30),
-    createdAt: DateTime(2026, 4, 1),
-    updatedAt: DateTime(2026, 4, 1),
+    createdAt: DateTime(2026, 4),
+    updatedAt: DateTime(2026, 4),
   );
 
   setUpAll(() async {

@@ -24,23 +24,23 @@ void main() {
     partnerId: 'partner1',
     name: '밍릿 라운지',
     address: '서울 강남구 테헤란로 123',
-    createdAt: DateTime(2026, 4, 1),
-    updatedAt: DateTime(2026, 4, 1),
+    createdAt: DateTime(2026, 4),
+    updatedAt: DateTime(2026, 4),
   );
   final ticket = Ticket(
     id: 'ticket1',
     name: '얼리버드 티켓',
     price: 39000,
-    createdAt: DateTime(2026, 4, 1),
-    updatedAt: DateTime(2026, 4, 1),
+    createdAt: DateTime(2026, 4),
+    updatedAt: DateTime(2026, 4),
   );
   final party = Party(
     id: 'party1',
     partnerId: 'partner1',
     title: '금요 프라이빗 밍글',
     location: location,
-    createdAt: DateTime(2026, 4, 1),
-    updatedAt: DateTime(2026, 4, 1),
+    createdAt: DateTime(2026, 4),
+    updatedAt: DateTime(2026, 4),
   );
   final event = Event(
     id: 'event1',
@@ -52,8 +52,8 @@ void main() {
     contactOptions: const {'phone': '010-1234-5678'},
     startTime: DateTime(2026, 4, 18, 19),
     endTime: DateTime(2026, 4, 18, 22),
-    createdAt: DateTime(2026, 4, 1),
-    updatedAt: DateTime(2026, 4, 1),
+    createdAt: DateTime(2026, 4),
+    updatedAt: DateTime(2026, 4),
   );
   final history = [
     EventApplication(
@@ -64,7 +64,6 @@ void main() {
       status: 'paid',
       paymentId: 'pay_123456',
       paymentAmount: 39000,
-      refundStatus: 'none',
       paidAt: DateTime(2026, 4, 2, 14),
       createdAt: DateTime(2026, 4, 2, 14),
       updatedAt: DateTime(2026, 4, 2, 14),
