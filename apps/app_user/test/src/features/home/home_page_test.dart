@@ -271,7 +271,7 @@ void main() {
       const expectedBottom = 844 - 34;
       final barTop = tester.getTopLeft(barContentFinder).dy;
       final barBottom = tester.getBottomLeft(barContentFinder).dy;
-      expect(barTop, closeTo(expectedTop.toDouble(), 0.1));
+      expect(barTop, closeTo(expectedTop, 0.1));
       expect(barBottom, closeTo(expectedBottom.toDouble(), 0.1));
     });
 
