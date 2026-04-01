@@ -261,19 +261,18 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final barContentRect = tester.getRect(
-        find.descendant(
-          of: find.byType(EventNowBar),
-          matching: find.byType(GestureDetector),
-        ),
+      final barContentFinder = find.ancestor(
+        of: find.text('오늘 이벤트'),
+        matching: find.byType(GestureDetector),
       );
-      // SafeArea wraps EventNowBar, so assert the tappable 56px bar content.
       // Expected: 844 screen height - 34 safe area - 56 bar height = 754.
       const expectedTop = 844 - 34 - EventNowBar.height;
-      // Expected: 844 screen height - 34 safe area = 810.
+      // Expected: 844 screen height - 34 bottom safe area = 810.
       const expectedBottom = 844 - 34;
-      expect(barContentRect.top, closeTo(expectedTop, 0.1));
-      expect(barContentRect.bottom, closeTo(expectedBottom, 0.1));
+      final barTop = tester.getTopLeft(barContentFinder).dy;
+      final barBottom = tester.getBottomLeft(barContentFinder).dy;
+      expect(barTop, closeTo(expectedTop.toDouble(), 0.1));
+      expect(barBottom, closeTo(expectedBottom.toDouble(), 0.1));
     });
 
     testWidgets('omits EventNowBar when there are no active events', (

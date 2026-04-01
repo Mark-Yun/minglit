@@ -69,9 +69,13 @@ class _HomePageState extends ConsumerState<HomePage> {
     });
 
     return Scaffold(
-      // Fix #667: keep the persistent now bar above the system inset.
+      // Fix #667: Scaffold.bottomSheet does not preserve the parent bottom
+      // inset here, so pad the bar manually above the home indicator.
       bottomSheet: reservesNowBarSpace
-          ? const SafeArea(top: false, child: EventNowBar())
+          ? Padding(
+              padding: EdgeInsets.only(bottom: bottomSafeArea),
+              child: const EventNowBar(),
+            )
           : null,
       // Fix #192: Pull-to-refresh to reload the explore feed from scratch.
       body: RefreshIndicator(
