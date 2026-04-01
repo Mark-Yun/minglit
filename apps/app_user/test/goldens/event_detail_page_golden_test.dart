@@ -108,10 +108,12 @@ void main() {
     mockPolicyRepository = _MockPolicyRepository();
     when(
       () => mockPolicyRepository.getRefundPolicy(),
-    ).thenAnswer((_) async => {
-      'grace_period_hours': 2,
-      'cutoff_days': 7,
-    });
+    ).thenAnswer(
+      (_) async => {
+        'grace_period_hours': 2,
+        'cutoff_days': 7,
+      },
+    );
   });
 
   GoldenTestScenario scenario({
