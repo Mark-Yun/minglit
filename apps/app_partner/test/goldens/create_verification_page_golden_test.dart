@@ -1,8 +1,6 @@
 @Tags(['golden'])
 library;
 
-import 'dart:async';
-
 import 'package:alchemist/alchemist.dart';
 import 'package:app_partner/src/features/verification/create/create_verification_controller.dart';
 import 'package:app_partner/src/features/verification/create/create_verification_page.dart';
@@ -13,6 +11,9 @@ import 'package:minglit_kit/minglit_kit.dart';
 import '../utils/partner_golden_test_helpers.dart';
 
 void main() {
+  // The goldenTest helper registers tests synchronously and is intentionally
+  // not awaited inside main().
+  // ignore: discarded_futures
   goldenTest(
     'CreateVerificationPage empty builder',
     fileName: 'create_verification_page_empty',
@@ -43,6 +44,9 @@ void main() {
     ),
   );
 
+  // The goldenTest helper registers tests synchronously and is intentionally
+  // not awaited inside main().
+  // ignore: discarded_futures
   goldenTest(
     'CreateVerificationPage with configured fields',
     fileName: 'create_verification_page_with_fields',
@@ -97,5 +101,5 @@ class _CreateVerificationGoldenController extends CreateVerificationController {
   final CreateVerificationState _state;
 
   @override
-  FutureOr<CreateVerificationState> build() => _state;
+  CreateVerificationState build() => _state;
 }

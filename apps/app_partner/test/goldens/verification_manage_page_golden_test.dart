@@ -15,6 +15,9 @@ import '../utils/partner_golden_test_helpers.dart';
 void main() {
   final baseTime = DateTime(2026, 4, 2, 15);
 
+  // The goldenTest helper registers tests synchronously and is intentionally
+  // not awaited inside main().
+  // ignore: discarded_futures
   goldenTest(
     'VerificationManagePage with active and archived items',
     fileName: 'verification_manage_page_with_items',
@@ -107,6 +110,9 @@ void main() {
     ),
   );
 
+  // The goldenTest helper registers tests synchronously and is intentionally
+  // not awaited inside main().
+  // ignore: discarded_futures
   goldenTest(
     'VerificationManagePage empty state',
     fileName: 'verification_manage_page_empty',
