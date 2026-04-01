@@ -23,22 +23,9 @@ void main() {
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(400),
       children: [
-        GoldenTestScenario(
+        _buildCreateVerificationScenario(
           name: 'empty builder',
-          child: SizedBox(
-            width: 390,
-            height: 844,
-            child: PartnerGoldenPageWrapper(
-              page: const CreateVerificationPage(partnerId: 'partner_1'),
-              overrides: [
-                createVerificationControllerProvider.overrideWith(
-                  () => _CreateVerificationGoldenController(
-                    const CreateVerificationState(),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          state: const CreateVerificationState(),
         ),
       ],
     ),
@@ -56,41 +43,49 @@ void main() {
     builder: () => GoldenTestGroup(
       columnWidthBuilder: (_) => const FixedColumnWidth(400),
       children: [
-        GoldenTestScenario(
+        _buildCreateVerificationScenario(
           name: 'configured fields',
-          child: SizedBox(
-            width: 390,
-            height: 844,
-            child: PartnerGoldenPageWrapper(
-              page: const CreateVerificationPage(partnerId: 'partner_1'),
-              overrides: [
-                createVerificationControllerProvider.overrideWith(
-                  () => _CreateVerificationGoldenController(
-                    const CreateVerificationState(
-                      displayName: '골프 핸디캡 인증',
-                      internalName: 'golf_handicap_2026',
-                      description: '최근 라운딩 기준 핸디캡 증빙을 제출받습니다.',
-                      fields: [
-                        VerificationFormField(
-                          key: 'handicap_text',
-                          type: 'text',
-                          label: '핸디캡',
-                        ),
-                        VerificationFormField(
-                          key: 'scorecard_file',
-                          type: 'file',
-                          label: '스코어카드 첨부',
-                          required: false,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          state: const CreateVerificationState(
+            displayName: '골프 핸디캡 인증',
+            internalName: 'golf_handicap_2026',
+            description: '최근 라운딩 기준 핸디캡 증빙을 제출받습니다.',
+            fields: [
+              VerificationFormField(
+                key: 'handicap_text',
+                type: 'text',
+                label: '핸디캡',
+              ),
+              VerificationFormField(
+                key: 'scorecard_file',
+                type: 'file',
+                label: '스코어카드 첨부',
+                required: false,
+              ),
+            ],
           ),
         ),
       ],
+    ),
+  );
+}
+
+GoldenTestScenario _buildCreateVerificationScenario({
+  required String name,
+  required CreateVerificationState state,
+}) {
+  return GoldenTestScenario(
+    name: name,
+    child: SizedBox(
+      width: 390,
+      height: 844,
+      child: PartnerGoldenPageWrapper(
+        page: const CreateVerificationPage(partnerId: 'partner_1'),
+        overrides: [
+          createVerificationControllerProvider.overrideWith(
+            () => _CreateVerificationGoldenController(state),
+          ),
+        ],
+      ),
     ),
   );
 }
