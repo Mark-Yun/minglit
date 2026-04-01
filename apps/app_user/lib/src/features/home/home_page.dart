@@ -69,7 +69,9 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     return Scaffold(
       // Fix #667: keep the persistent now bar above the system inset.
-      bottomSheet: const SafeArea(top: false, child: EventNowBar()),
+      bottomSheet: reservesNowBarSpace
+          ? const SafeArea(top: false, child: EventNowBar())
+          : null,
       // Fix #192: Pull-to-refresh to reload the explore feed from scratch.
       body: RefreshIndicator(
         onRefresh: () =>

@@ -263,6 +263,28 @@ void main() {
       expect(barBottom, closeTo(810, 0.1));
     });
 
+    testWidgets('omits EventNowBar when there are no active events', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(390, 844));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        createTestWidget(
+          currentUser: mockUser,
+          mediaQueryData: const MediaQueryData(
+            size: Size(390, 844),
+            padding: EdgeInsets.only(bottom: 34),
+          ),
+          overrides: [todayActiveEventsProvider.overrideWith((_) => const [])],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(EventNowBar), findsNothing);
+      expect(find.text('추천 이벤트가 없습니다'), findsOneWidget);
+    });
+
     testWidgets('keeps the last event card above the fixed EventNowBar', (
       tester,
     ) async {
