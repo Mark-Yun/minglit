@@ -70,7 +70,7 @@ void main() {
     ),
   ];
 
-  final featuredPartner = Partner(
+  const featuredPartner = Partner(
     id: 'partner-with-events',
     name: '밍글릿 소셜 클럽',
     introduction: '프리미엄 네트워킹 이벤트와 소셜 파티를 운영합니다.',
