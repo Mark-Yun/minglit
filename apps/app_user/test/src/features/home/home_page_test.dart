@@ -261,14 +261,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final barContentFinder = find.ancestor(
-        of: find.text('오늘 이벤트'),
-        matching: find.byType(GestureDetector),
-      );
-      // Expected: 844 screen height - 34 bottom safe area = 810.
-      const expectedBottom = 844 - 34;
-      final barBottom = tester.getBottomLeft(barContentFinder).dy;
-      expect(barBottom, closeTo(expectedBottom.toDouble(), 0.1));
+      final barRect = tester.getRect(find.byType(EventNowBar));
+      // Expected: 844 screen height - 34 safe area - 56 bar height = 754.
+      const expectedTop = 844 - 34 - EventNowBar.height;
+      expect(barRect.top, closeTo(expectedTop.toDouble(), 0.1));
+      expect(barRect.bottom, closeTo(844, 0.1));
     });
 
     testWidgets('omits EventNowBar when there are no active events', (

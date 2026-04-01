@@ -254,7 +254,7 @@ class _EventNowBarLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MinglitSkeleton(
-      height: 56,
+      height: EventNowBar.height,
       borderRadius: BorderRadius.only(
         topLeft: Radius.circular(MinglitRadius.card),
         topRight: Radius.circular(MinglitRadius.card),
