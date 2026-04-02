@@ -4,8 +4,10 @@ import 'package:app_partner/src/features/more/more_coordinator.dart';
 import 'package:app_partner/src/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
 
 // ---------------------------------------------------------------------------
 // Alchemist page-wrapper for app_partner golden tests.
@@ -27,6 +29,8 @@ class PartnerGoldenPageWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    _ensureGoldenPluginShims();
+
     return ProviderScope(
       overrides: [
         currentUserProvider.overrideWith((_) => null),
@@ -43,6 +47,7 @@ class PartnerGoldenPageWrapper extends StatelessWidget {
         locale: const Locale('ko'),
         localizationsDelegates: const [
           AppLocalizations.delegate,
+          FlutterQuillLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
@@ -52,6 +57,10 @@ class PartnerGoldenPageWrapper extends StatelessWidget {
       ),
     );
   }
+}
+
+void _ensureGoldenPluginShims() {
+  WebViewPlatform.instance = _FakeWebViewPlatform();
 }
 
 // ---------------------------------------------------------------------------
@@ -67,4 +76,111 @@ class MockMoreCoordinator extends Mock implements MoreCoordinator {}
 class _EmptyNotificationList extends NotificationList {
   @override
   Future<List<Map<String, dynamic>>> build() async => [];
+}
+
+class _FakeWebViewPlatform extends WebViewPlatform {
+  @override
+  PlatformWebViewController createPlatformWebViewController(
+    PlatformWebViewControllerCreationParams params,
+  ) {
+    return _FakeWebViewController(params);
+  }
+
+  @override
+  PlatformWebViewWidget createPlatformWebViewWidget(
+    PlatformWebViewWidgetCreationParams params,
+  ) {
+    return _FakeWebViewWidget(params);
+  }
+
+  @override
+  PlatformWebViewCookieManager createPlatformCookieManager(
+    PlatformWebViewCookieManagerCreationParams params,
+  ) {
+    return _FakeCookieManager(params);
+  }
+
+  @override
+  PlatformNavigationDelegate createPlatformNavigationDelegate(
+    PlatformNavigationDelegateCreationParams params,
+  ) {
+    return _FakeNavigationDelegate(params);
+  }
+}
+
+class _FakeWebViewController extends PlatformWebViewController {
+  _FakeWebViewController(super.params) : super.implementation();
+
+  @override
+  Future<void> setJavaScriptMode(JavaScriptMode javaScriptMode) async {}
+
+  @override
+  Future<void> setBackgroundColor(Color color) async {}
+
+  @override
+  Future<void> setPlatformNavigationDelegate(
+    PlatformNavigationDelegate handler,
+  ) async {}
+
+  @override
+  Future<void> addJavaScriptChannel(
+    JavaScriptChannelParams javaScriptChannelParams,
+  ) async {}
+
+  @override
+  Future<void> loadRequest(LoadRequestParams params) async {}
+
+  @override
+  Future<void> loadHtmlString(String html, {String? baseUrl}) async {}
+
+  @override
+  Future<void> runJavaScript(String javaScript) async {}
+
+  @override
+  Future<Object> runJavaScriptReturningResult(String javaScript) async {
+    return '';
+  }
+}
+
+class _FakeCookieManager extends PlatformWebViewCookieManager {
+  _FakeCookieManager(super.params) : super.implementation();
+}
+
+class _FakeWebViewWidget extends PlatformWebViewWidget {
+  _FakeWebViewWidget(super.params) : super.implementation();
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.expand();
+}
+
+class _FakeNavigationDelegate extends PlatformNavigationDelegate {
+  _FakeNavigationDelegate(super.params) : super.implementation();
+
+  @override
+  Future<void> setOnNavigationRequest(
+    NavigationRequestCallback onNavigationRequest,
+  ) async {}
+
+  @override
+  Future<void> setOnPageFinished(PageEventCallback onPageFinished) async {}
+
+  @override
+  Future<void> setOnPageStarted(PageEventCallback onPageStarted) async {}
+
+  @override
+  Future<void> setOnProgress(ProgressCallback onProgress) async {}
+
+  @override
+  Future<void> setOnWebResourceError(
+    WebResourceErrorCallback onWebResourceError,
+  ) async {}
+
+  @override
+  Future<void> setOnUrlChange(UrlChangeCallback onUrlChange) async {}
+
+  @override
+  Future<void> setOnHttpAuthRequest(HttpAuthRequestCallback handler) async {}
+
+  @override
+  Future<void> setOnHttpError(HttpResponseErrorCallback onHttpError) async {}
 }

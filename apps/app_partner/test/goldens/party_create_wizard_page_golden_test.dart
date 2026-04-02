@@ -151,6 +151,7 @@ class _PartyCreateStepHarnessState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       ref
           .read(partyCreateWizardControllerProvider.notifier)
           .setStep(widget.step);
