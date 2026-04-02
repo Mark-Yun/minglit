@@ -48,7 +48,9 @@ void main() {
             child: PartnerGoldenPageWrapper(
               page: const MorePage(),
               overrides: [
-                currentPartnerInfoProvider.overrideWith((_) async => _testPartner),
+                currentPartnerInfoProvider.overrideWith(
+                  (_) async => _testPartner,
+                ),
               ],
             ),
           ),
@@ -101,7 +103,9 @@ void main() {
               page: const MorePage(),
               brightness: Brightness.dark,
               overrides: [
-                currentPartnerInfoProvider.overrideWith((_) async => _testPartner),
+                currentPartnerInfoProvider.overrideWith(
+                  (_) async => _testPartner,
+                ),
               ],
             ),
           ),
