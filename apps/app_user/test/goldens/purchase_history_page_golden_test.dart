@@ -78,10 +78,7 @@ void main() {
     when(
       () => repository.getMyPurchaseHistory('user1'),
     ).thenAnswer((_) async => items);
-    return [
-      currentUserProvider.overrideWith((_) => mockUser),
-      eventRepositoryProvider.overrideWithValue(repository),
-    ];
+    return [eventRepositoryProvider.overrideWithValue(repository)];
   }
 
   goldenTest(
@@ -101,6 +98,7 @@ void main() {
             child: GoldenPageWrapper(
               page: const PurchaseHistoryPage(),
               overrides: buildOverrides(history),
+              currentUser: mockUser,
             ),
           ),
         ),
@@ -112,6 +110,7 @@ void main() {
             child: GoldenPageWrapper(
               page: const PurchaseHistoryPage(),
               overrides: buildOverrides(const []),
+              currentUser: mockUser,
             ),
           ),
         ),
