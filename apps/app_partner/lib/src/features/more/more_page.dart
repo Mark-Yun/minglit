@@ -34,10 +34,13 @@ class MorePage extends ConsumerWidget {
                     child: Icon(Icons.store, size: 32),
                   ),
                   const SizedBox(width: MinglitSpacing.medium),
-                  Text(
-                    '파트너 정보를 불러올 수 없습니다',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                  Expanded(
+                    // Fix #574: keep the placeholder header within the golden viewport.
+                    child: Text(
+                      '파트너 정보를 불러올 수 없습니다',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ],
@@ -54,10 +57,13 @@ class MorePage extends ConsumerWidget {
                         child: Icon(Icons.store, size: 32),
                       ),
                       const SizedBox(width: MinglitSpacing.medium),
-                      Text(
-                        '파트너 정보를 불러올 수 없습니다',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                      Expanded(
+                        // Fix #574: keep the placeholder header within the golden viewport.
+                        child: Text(
+                          '파트너 정보를 불러올 수 없습니다',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
                     ],

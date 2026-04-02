@@ -18,8 +18,8 @@ void main() {
     PackageInfo.setMockInitialValues(
       appName: 'Minglit Partner',
       packageName: 'com.minglit.partner',
-      version: '26.04.1-dev',
-      buildNumber: '26040001',
+      version: '26.04.934-dev',
+      buildNumber: '26040934',
       buildSignature: '',
     );
     SharedPreferences.setMockInitialValues(const {});
@@ -45,8 +45,8 @@ void main() {
                 currentPartnerInfoProvider.overrideWith(
                   (_) async => const Partner(
                     id: 'partner_1',
-                    name: '밍릿 파트너',
-                    contactEmail: 'partner@minglit.com',
+                    name: '밍릿 라운지',
+                    contactEmail: 'hello@minglit.com',
                   ),
                 ),
               ],
@@ -58,8 +58,8 @@ void main() {
   );
 
   goldenTest(
-    'MorePage with missing partner profile',
-    fileName: 'more_page_missing_partner',
+    'MorePage without partner profile',
+    fileName: 'more_page_without_partner',
     pumpBeforeTest: (tester) async {
       await tester.pumpAndSettle();
     },
@@ -67,7 +67,7 @@ void main() {
       columnWidthBuilder: (_) => const FixedColumnWidth(400),
       children: [
         GoldenTestScenario(
-          name: 'missing partner profile',
+          name: 'without partner profile',
           child: SizedBox(
             width: 390,
             height: 844,
@@ -104,8 +104,8 @@ void main() {
                 currentPartnerInfoProvider.overrideWith(
                   (_) async => const Partner(
                     id: 'partner_1',
-                    name: '밍릿 파트너',
-                    contactEmail: 'partner@minglit.com',
+                    name: '밍릿 라운지',
+                    contactEmail: 'hello@minglit.com',
                   ),
                 ),
               ],
@@ -117,8 +117,8 @@ void main() {
   );
 
   goldenTest(
-    'MorePage with missing partner profile (dark)',
-    fileName: 'more_page_missing_partner_dark',
+    'MorePage without partner profile (dark)',
+    fileName: 'more_page_without_partner_dark',
     pumpBeforeTest: (tester) async {
       await tester.pumpAndSettle();
     },
@@ -126,7 +126,7 @@ void main() {
       columnWidthBuilder: (_) => const FixedColumnWidth(400),
       children: [
         GoldenTestScenario(
-          name: 'missing partner profile (dark)',
+          name: 'without partner profile (dark)',
           child: SizedBox(
             width: 390,
             height: 844,
