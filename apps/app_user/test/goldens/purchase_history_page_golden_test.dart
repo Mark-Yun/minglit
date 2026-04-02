@@ -83,7 +83,7 @@ void main() {
 
   goldenTest(
     'PurchaseHistoryPage states',
-    fileName: 'purchase_history_page_states',
+    fileName: 'purchase_history_page_followup_states',
     pumpBeforeTest: (tester) async {
       await tester.pumpAndSettle();
     },

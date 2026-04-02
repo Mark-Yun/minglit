@@ -43,7 +43,7 @@ void main() {
 
   goldenTest(
     'PaymentSuccessScreen states',
-    fileName: 'payment_success_screen_states',
+    fileName: 'payment_success_screen_followup_states',
     pumpBeforeTest: (tester) async {
       await tester.pumpAndSettle();
     },
