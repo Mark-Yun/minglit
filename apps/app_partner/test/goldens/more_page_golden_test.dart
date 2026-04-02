@@ -12,6 +12,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/partner_golden_test_helpers.dart';
 
+const _testPartner = Partner(
+  id: 'partner_1',
+  name: '밍릿 라운지',
+  contactEmail: 'hello@minglit.com',
+);
+
 void main() {
   setUpAll(() {
     TestWidgetsFlutterBinding.ensureInitialized();
@@ -42,13 +48,7 @@ void main() {
             child: PartnerGoldenPageWrapper(
               page: const MorePage(),
               overrides: [
-                currentPartnerInfoProvider.overrideWith(
-                  (_) async => const Partner(
-                    id: 'partner_1',
-                    name: '밍릿 라운지',
-                    contactEmail: 'hello@minglit.com',
-                  ),
-                ),
+                currentPartnerInfoProvider.overrideWith((_) async => _testPartner),
               ],
             ),
           ),
@@ -101,13 +101,7 @@ void main() {
               page: const MorePage(),
               brightness: Brightness.dark,
               overrides: [
-                currentPartnerInfoProvider.overrideWith(
-                  (_) async => const Partner(
-                    id: 'partner_1',
-                    name: '밍릿 라운지',
-                    contactEmail: 'hello@minglit.com',
-                  ),
-                ),
+                currentPartnerInfoProvider.overrideWith((_) async => _testPartner),
               ],
             ),
           ),
