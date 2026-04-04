@@ -59,10 +59,12 @@ class _SignupConsentPageState extends ConsumerState<SignupConsentPage> {
       );
     }
 
-    final requiredDefs =
-        _consentDefinitions.values.where((d) => d.required).toList();
-    final optionalDefs =
-        _consentDefinitions.values.where((d) => !d.required).toList();
+    final requiredDefs = _consentDefinitions.values
+        .where((d) => d.required)
+        .toList();
+    final optionalDefs = _consentDefinitions.values
+        .where((d) => !d.required)
+        .toList();
 
     return PopScope(
       canPop: false,
@@ -131,16 +133,14 @@ class _SignupConsentPageState extends ConsumerState<SignupConsentPage> {
                       _SectionDivider(
                         label: '선택 동의',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color:
-                              Theme.of(context).colorScheme.onSurfaceVariant,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: MinglitSpacing.xsmall),
                       for (final definition in optionalDefs) ...[
                         _ConsentItemTile(
                           definition: definition,
-                          selected:
-                              _selectedConsents.contains(definition.type),
+                          selected: _selectedConsents.contains(definition.type),
                           onChanged: (selected) =>
                               _toggleSingle(definition.type, selected),
                           onShowDetail: definition.detail == null
