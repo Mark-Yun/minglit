@@ -1,3 +1,4 @@
+export 'src/features/dev/catalog_tabs/patterns/async_wrapper_demo.dart';
 export 'src/features/dev/catalog_tabs/patterns/data_states_demo.dart';
 export 'src/features/dev/catalog_tabs/patterns/transaction_flow_demo.dart';
 export 'src/features/dev/design_catalog_page.dart';
