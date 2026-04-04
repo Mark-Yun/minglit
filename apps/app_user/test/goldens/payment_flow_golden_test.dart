@@ -2,7 +2,7 @@
 library;
 
 import 'package:alchemist/alchemist.dart';
-import 'package:app_user/src/features/payment/ui/payment_success_screen.dart';
+import 'package:app_user/src/features/event/admission/payment_success_screen.dart';
 import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
