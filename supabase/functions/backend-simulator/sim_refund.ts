@@ -150,13 +150,7 @@ export async function simRefundRequests(
           }
         } catch (authErr) {
           if (strict) {
-            log({
-              level: "error",
-              phase: "refund",
-              step: "ef_auth_fallback",
-              message: `Strict mode: auth failed for ${username}, skipping app ${appId}: ${String(authErr)}`,
-            });
-            return null;
+            throw new Error(`Strict mode: auth failed for ${username}, cannot refund app ${appId}: ${String(authErr)}`);
           }
           log({
             level: "warn",
