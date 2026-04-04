@@ -15,7 +15,15 @@ class ConsentCoordinator {
   final GoRouter _router;
 
   void completeSignup({String? from}) {
-    _router.go(_sanitizeReturnLocation(from) ?? '/');
+    final returnTo = _sanitizeReturnLocation(from);
+    if (returnTo == null || returnTo == '/') {
+      _router.go('/');
+    } else {
+      // Fix #970: go('/') first to restore home in the back stack, then push
+      // the return target so back navigation returns to home instead of exiting.
+      _router.go('/');
+      _router.push(returnTo);
+    }
   }
 
   String? _sanitizeReturnLocation(String? from) {
