@@ -8,7 +8,6 @@ import 'package:app_partner/src/features/account_deletion/ui/deletion_info_page.
 import 'package:app_partner/src/routing/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../utils/mocks.dart';
