@@ -102,8 +102,8 @@ class _SignupConsentPageState extends ConsumerState<SignupConsentPage> {
                     Card(
                       child: Column(
                         children: [
-                          for (final definition
-                              in _consentDefinitions.values) ...[
+                          for (final (index, definition)
+                              in _consentDefinitions.values.indexed) ...[
                             _ConsentItemTile(
                               definition: definition,
                               selected: _selectedConsents.contains(
@@ -118,9 +118,14 @@ class _SignupConsentPageState extends ConsumerState<SignupConsentPage> {
                                       content: definition.detail!,
                                     ),
                             ),
-                            // Fix #966: 필수/선택 구분선 (필수 마지막 항목 다음)
-                            if (definition.type ==
-                                ConsentType.requiredTypes.last)
+                            // Fix #966: 필수/선택 구분선 — 현재 항목이 필수이고
+                            // 다음 항목이 선택이거나 마지막일 때 표시.
+                            // requiredTypes.last에 의존하지 않으므로 항목 추가 시에도 안전.
+                            if (definition.required &&
+                                (index == _consentDefinitions.length - 1 ||
+                                    !_consentDefinitions.values
+                                        .elementAt(index + 1)
+                                        .required))
                               const Divider(
                                 height: 1,
                                 indent: MinglitSpacing.medium,
