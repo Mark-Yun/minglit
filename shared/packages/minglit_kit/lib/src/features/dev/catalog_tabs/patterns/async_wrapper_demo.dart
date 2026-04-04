@@ -52,9 +52,9 @@ class _AsyncWrapperDemoPageState extends State<AsyncWrapperDemoPage> {
     return switch (_selectedState) {
       AsyncDemoState.loading => const AsyncValue.loading(),
       AsyncDemoState.error => AsyncValue.error(
-          Exception('데이터를 불러오지 못했습니다.'),
-          StackTrace.empty,
-        ),
+        Exception('데이터를 불러오지 못했습니다.'),
+        StackTrace.empty,
+      ),
       AsyncDemoState.data => const AsyncValue.data(_mockItems),
     };
   }
@@ -299,8 +299,7 @@ class _DataList extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: theme.colorScheme.primaryContainer,
-                borderRadius:
-                    BorderRadius.circular(MinglitRadius.small),
+                borderRadius: BorderRadius.circular(MinglitRadius.small),
               ),
               child: Icon(
                 Icons.article_outlined,
@@ -362,9 +361,9 @@ class _SectionHeader extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
         ),
       ],
     );
@@ -423,7 +422,8 @@ class _DoSection extends StatelessWidget {
         ),
         const SizedBox(height: MinglitSpacing.small),
         const _CodeSnippet(
-          code: 'MinglitAsyncValueWidget<List<Item>>(\n'
+          code:
+              'MinglitAsyncValueWidget<List<Item>>(\n'
               '  value: ref.watch(itemsProvider),\n'
               '  data: (items) => ItemList(items: items),\n'
               '  // loading/error는 기본 UI가 자동 처리됩니다.\n'
@@ -458,7 +458,8 @@ class _DontSection extends StatelessWidget {
         ),
         const SizedBox(height: MinglitSpacing.small),
         const _CodeSnippet(
-          code: '// ❌ 피하세요\n'
+          code:
+              '// ❌ 피하세요\n'
               'bool _isLoading = false;\n'
               'String? _error;\n'
               'List<Item>? _items;\n\n'
