@@ -42,15 +42,12 @@ SELECT set_config('tests.rr_loc_a_id', id::text, true) FROM loc;
 -- Party for Partner A
 WITH party AS (
   INSERT INTO public.parties (
-    partner_id, location_id, title, description,
-    max_participants, ticket_close_at
+    partner_id, location_id, title, description
   ) VALUES (
     current_setting('tests.rr_partner_a_id')::uuid,
     current_setting('tests.rr_loc_a_id')::uuid,
     'Party A',
-    'Test',
-    10,
-    now() + interval '7 days'
+    '"Test"'::jsonb
   )
   RETURNING id
 )
@@ -86,15 +83,12 @@ SELECT set_config('tests.rr_loc_b_id', id::text, true) FROM loc;
 -- Party for Partner B
 WITH party AS (
   INSERT INTO public.parties (
-    partner_id, location_id, title, description,
-    max_participants, ticket_close_at
+    partner_id, location_id, title, description
   ) VALUES (
     current_setting('tests.rr_partner_b_id')::uuid,
     current_setting('tests.rr_loc_b_id')::uuid,
     'Party B',
-    'Test',
-    10,
-    now() + interval '7 days'
+    '"Test"'::jsonb
   )
   RETURNING id
 )

@@ -176,16 +176,13 @@ loc AS (
 ),
 party AS (
   INSERT INTO public.parties (
-    partner_id, location_id, title, description,
-    max_participants, ticket_close_at
+    partner_id, location_id, title, description
   )
   SELECT
     loc.partner_id,
     loc.id,
     'Recurrence Test Party',
-    'Test',
-    10,
-    now() + interval '7 days'
+    '"Test"'::jsonb
   FROM loc
   RETURNING id
 )
