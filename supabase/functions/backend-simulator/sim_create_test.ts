@@ -271,6 +271,8 @@ Deno.test({
 
   const config: SimConfig = { ...DEFAULT_CONFIG, party_count: 1, events_per_party: 1 };
 
+  Deno.env.set("SIM_USER_PASSWORD", "test-password");
+  try {
   await withMockFetch((url, init) => {
     const body = JSON.parse((init.body as string) ?? "{}");
     efCalls.push({ url, body });
@@ -304,6 +306,9 @@ Deno.test({
     assertEquals(efCalls.some((c) => c.url.includes("partner-manage-party")), true);
     assertEquals(efCalls.some((c) => c.url.includes("partner-manage-event")), true);
   });
+  } finally {
+    Deno.env.delete("SIM_USER_PASSWORD");
+  }
   },
 });
 
@@ -382,6 +387,8 @@ Deno.test("simCreateParties - throws when EF fails and strict=true", async () =>
 
   const config: SimConfig = { ...DEFAULT_CONFIG, party_count: 1, events_per_party: 1 };
 
+  Deno.env.set("SIM_USER_PASSWORD", "test-password");
+  try {
   await withMockFetch((url) => {
     if (url.includes("auth/v1/token")) {
       return new Response(JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }), { status: 200 });
@@ -401,6 +408,9 @@ Deno.test("simCreateParties - throws when EF fails and strict=true", async () =>
       "EF partner-manage-party returned status=500",
     );
   });
+  } finally {
+    Deno.env.delete("SIM_USER_PASSWORD");
+  }
 });
 
 Deno.test("simCreateParties - direct DB path when supabaseUrl/anonKey not provided", async () => {
