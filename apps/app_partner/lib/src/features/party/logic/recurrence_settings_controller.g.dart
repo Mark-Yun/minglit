@@ -15,7 +15,10 @@ const recurrenceSettingsControllerProvider =
 
 final class RecurrenceSettingsControllerProvider
     extends
-        $NotifierProvider<RecurrenceSettingsController, RecurrenceSettingsState> {
+        $NotifierProvider<
+          RecurrenceSettingsController,
+          RecurrenceSettingsState
+        > {
   const RecurrenceSettingsControllerProvider._()
     : super(
         from: null,
@@ -53,7 +56,8 @@ abstract class _$RecurrenceSettingsController
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<RecurrenceSettingsState, RecurrenceSettingsState>;
+    final ref =
+        this.ref as $Ref<RecurrenceSettingsState, RecurrenceSettingsState>;
     final element =
         ref.element
             as $ClassProviderElement<

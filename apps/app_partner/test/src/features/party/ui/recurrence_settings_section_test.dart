@@ -79,13 +79,15 @@ void main() {
     });
 
     testWidgets('preview message shown when no day selected', (tester) async {
-      await tester.pumpWidget(_wrap(
-        overrides: [
-          recurrenceSettingsControllerProvider.overrideWith(
-            () => RecurrenceSettingsController(),
-          ),
-        ],
-      ));
+      await tester.pumpWidget(
+        _wrap(
+          overrides: [
+            recurrenceSettingsControllerProvider.overrideWith(
+              RecurrenceSettingsController.new,
+            ),
+          ],
+        ),
+      );
       await tester.pump();
 
       await tester.tap(find.byType(SwitchListTile));

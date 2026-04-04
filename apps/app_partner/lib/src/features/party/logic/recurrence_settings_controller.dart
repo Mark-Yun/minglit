@@ -1,3 +1,5 @@
+import 'package:app_partner/src/features/party/event/create/event_create_controller.dart'
+    show EventCreateController;
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -46,8 +48,7 @@ class RecurrenceSettingsController extends _$RecurrenceSettingsController {
       // Clear monthly-specific field when switching away from monthly.
       monthDay: pattern == RecurrencePattern.monthly ? state.monthDay : null,
       // Keep at least one day selected for weekly/biweekly.
-      daysOfWeek:
-          pattern == RecurrencePattern.monthly ? [] : state.daysOfWeek,
+      daysOfWeek: pattern == RecurrencePattern.monthly ? [] : state.daysOfWeek,
     );
   }
 

@@ -22,35 +22,40 @@ void main() {
     group('toggle', () {
       test('toggles isEnabled from false to true', () {
         final container = createContainer();
-        final notifier =
-            container.read(recurrenceSettingsControllerProvider.notifier);
+        final notifier = container.read(
+          recurrenceSettingsControllerProvider.notifier,
+        );
 
         notifier.toggle();
 
         expect(
-            container.read(recurrenceSettingsControllerProvider).isEnabled,
-            isTrue);
+          container.read(recurrenceSettingsControllerProvider).isEnabled,
+          isTrue,
+        );
       });
 
       test('toggles isEnabled from true to false', () {
         final container = createContainer();
-        final notifier =
-            container.read(recurrenceSettingsControllerProvider.notifier);
+        final notifier = container.read(
+          recurrenceSettingsControllerProvider.notifier,
+        );
 
         notifier.toggle();
         notifier.toggle();
 
         expect(
-            container.read(recurrenceSettingsControllerProvider).isEnabled,
-            isFalse);
+          container.read(recurrenceSettingsControllerProvider).isEnabled,
+          isFalse,
+        );
       });
     });
 
     group('setPattern', () {
       test('switches to biweekly, keeps daysOfWeek', () {
         final container = createContainer();
-        final notifier =
-            container.read(recurrenceSettingsControllerProvider.notifier);
+        final notifier = container.read(
+          recurrenceSettingsControllerProvider.notifier,
+        );
 
         notifier.setPattern(RecurrencePattern.biweekly);
 
@@ -62,8 +67,9 @@ void main() {
 
       test('switches to monthly, clears daysOfWeek', () {
         final container = createContainer();
-        final notifier =
-            container.read(recurrenceSettingsControllerProvider.notifier);
+        final notifier = container.read(
+          recurrenceSettingsControllerProvider.notifier,
+        );
 
         notifier.setPattern(RecurrencePattern.monthly);
 
@@ -73,118 +79,138 @@ void main() {
         expect(state.monthDay, isNull);
       });
 
-      test('switches from monthly back to weekly, resets daysOfWeek to empty', () {
-        final container = createContainer();
-        final notifier =
-            container.read(recurrenceSettingsControllerProvider.notifier);
+      test(
+        'switches from monthly back to weekly, resets daysOfWeek to empty',
+        () {
+          final container = createContainer();
+          final notifier = container.read(
+            recurrenceSettingsControllerProvider.notifier,
+          );
 
-        notifier.setPattern(RecurrencePattern.monthly);
-        notifier.setMonthDay(15);
-        notifier.setPattern(RecurrencePattern.weekly);
+          notifier.setPattern(RecurrencePattern.monthly);
+          notifier.setMonthDay(15);
+          notifier.setPattern(RecurrencePattern.weekly);
 
-        final state = container.read(recurrenceSettingsControllerProvider);
-        expect(state.pattern, RecurrencePattern.weekly);
-        expect(state.monthDay, isNull); // cleared
-      });
+          final state = container.read(recurrenceSettingsControllerProvider);
+          expect(state.pattern, RecurrencePattern.weekly);
+          expect(state.monthDay, isNull); // cleared
+        },
+      );
     });
 
     group('toggleDay', () {
       test('adds a new day', () {
         final container = createContainer();
-        final notifier =
-            container.read(recurrenceSettingsControllerProvider.notifier);
+        final notifier = container.read(
+          recurrenceSettingsControllerProvider.notifier,
+        );
 
         notifier.toggleDay(3); // Wednesday
 
         expect(
-            container.read(recurrenceSettingsControllerProvider).daysOfWeek,
-            containsAll([1, 3]));
+          container.read(recurrenceSettingsControllerProvider).daysOfWeek,
+          containsAll([1, 3]),
+        );
       });
 
       test('removes an existing day', () {
         final container = createContainer();
-        final notifier =
-            container.read(recurrenceSettingsControllerProvider.notifier);
+        final notifier = container.read(
+          recurrenceSettingsControllerProvider.notifier,
+        );
 
         notifier.toggleDay(1); // remove Monday (initially selected)
 
         expect(
-            container.read(recurrenceSettingsControllerProvider).daysOfWeek,
-            isEmpty);
+          container.read(recurrenceSettingsControllerProvider).daysOfWeek,
+          isEmpty,
+        );
       });
 
       test('keeps days sorted after adding', () {
         final container = createContainer();
-        final notifier =
-            container.read(recurrenceSettingsControllerProvider.notifier);
+        final notifier = container.read(
+          recurrenceSettingsControllerProvider.notifier,
+        );
 
         notifier.toggleDay(5); // Friday
         notifier.toggleDay(2); // Tuesday
 
         expect(
-            container.read(recurrenceSettingsControllerProvider).daysOfWeek,
-            [1, 2, 5]);
+          container.read(recurrenceSettingsControllerProvider).daysOfWeek,
+          [1, 2, 5],
+        );
       });
 
       test('ignored when pattern is monthly', () {
         final container = createContainer();
-        final notifier =
-            container.read(recurrenceSettingsControllerProvider.notifier);
+        final notifier = container.read(
+          recurrenceSettingsControllerProvider.notifier,
+        );
 
         notifier.setPattern(RecurrencePattern.monthly);
         notifier.toggleDay(3);
 
         expect(
-            container.read(recurrenceSettingsControllerProvider).daysOfWeek,
-            isEmpty);
+          container.read(recurrenceSettingsControllerProvider).daysOfWeek,
+          isEmpty,
+        );
       });
     });
 
     group('setMonthDay', () {
       test('sets monthDay', () {
         final container = createContainer();
-        final notifier =
-            container.read(recurrenceSettingsControllerProvider.notifier);
+        final notifier = container.read(
+          recurrenceSettingsControllerProvider.notifier,
+        );
 
         notifier.setMonthDay(15);
 
         expect(
-            container.read(recurrenceSettingsControllerProvider).monthDay, 15);
+          container.read(recurrenceSettingsControllerProvider).monthDay,
+          15,
+        );
       });
     });
 
     group('setEndDate', () {
       test('sets endDate string', () {
         final container = createContainer();
-        final notifier =
-            container.read(recurrenceSettingsControllerProvider.notifier);
+        final notifier = container.read(
+          recurrenceSettingsControllerProvider.notifier,
+        );
 
         notifier.setEndDate('2026-12-31');
 
         expect(
-            container.read(recurrenceSettingsControllerProvider).endDate,
-            '2026-12-31');
+          container.read(recurrenceSettingsControllerProvider).endDate,
+          '2026-12-31',
+        );
       });
 
       test('clears endDate with null', () {
         final container = createContainer();
-        final notifier =
-            container.read(recurrenceSettingsControllerProvider.notifier);
+        final notifier = container.read(
+          recurrenceSettingsControllerProvider.notifier,
+        );
 
         notifier.setEndDate('2026-12-31');
         notifier.setEndDate(null);
 
         expect(
-            container.read(recurrenceSettingsControllerProvider).endDate,
-            isNull);
+          container.read(recurrenceSettingsControllerProvider).endDate,
+          isNull,
+        );
       });
     });
 
     group('previewDates', () {
       test('returns empty list when disabled', () {
         final container = createContainer();
-        final notifier =
-            container.read(recurrenceSettingsControllerProvider.notifier);
+        final notifier = container.read(
+          recurrenceSettingsControllerProvider.notifier,
+        );
 
         final dates = notifier.previewDates();
 
@@ -193,8 +219,9 @@ void main() {
 
       test('returns empty list when enabled but no days selected', () {
         final container = createContainer();
-        final notifier =
-            container.read(recurrenceSettingsControllerProvider.notifier);
+        final notifier = container.read(
+          recurrenceSettingsControllerProvider.notifier,
+        );
 
         notifier.toggle();
         notifier.toggleDay(1); // remove Monday (default), leaving empty
@@ -206,13 +233,14 @@ void main() {
 
       test('returns 5 dates for weekly pattern with Monday selected', () {
         final container = createContainer();
-        final notifier =
-            container.read(recurrenceSettingsControllerProvider.notifier);
+        final notifier = container.read(
+          recurrenceSettingsControllerProvider.notifier,
+        );
 
         notifier.toggle(); // enable
         // default: weekly, Monday (day 1)
 
-        final dates = notifier.previewDates(count: 5);
+        final dates = notifier.previewDates();
 
         expect(dates, hasLength(5));
         // All dates must be Mondays (weekday == 1)
@@ -223,32 +251,34 @@ void main() {
 
       test('returns 5 dates for biweekly — every other week', () {
         final container = createContainer();
-        final notifier =
-            container.read(recurrenceSettingsControllerProvider.notifier);
+        final notifier = container.read(
+          recurrenceSettingsControllerProvider.notifier,
+        );
 
         notifier.toggle();
         notifier.setPattern(RecurrencePattern.biweekly);
         // default daysOfWeek: [1] Monday
 
-        final dates = notifier.previewDates(count: 5);
+        final dates = notifier.previewDates();
 
         expect(dates, hasLength(5));
         // Consecutive Mondays should be 14 days apart (not 7)
-        for (int i = 1; i < dates.length; i++) {
+        for (var i = 1; i < dates.length; i++) {
           expect(dates[i].difference(dates[i - 1]).inDays, 14);
         }
       });
 
       test('returns 5 dates for monthly pattern on the 15th', () {
         final container = createContainer();
-        final notifier =
-            container.read(recurrenceSettingsControllerProvider.notifier);
+        final notifier = container.read(
+          recurrenceSettingsControllerProvider.notifier,
+        );
 
         notifier.toggle();
         notifier.setPattern(RecurrencePattern.monthly);
         notifier.setMonthDay(15);
 
-        final dates = notifier.previewDates(count: 5);
+        final dates = notifier.previewDates();
 
         expect(dates, hasLength(5));
         for (final d in dates) {
@@ -258,8 +288,9 @@ void main() {
 
       test('returns empty list for monthly with no monthDay', () {
         final container = createContainer();
-        final notifier =
-            container.read(recurrenceSettingsControllerProvider.notifier);
+        final notifier = container.read(
+          recurrenceSettingsControllerProvider.notifier,
+        );
 
         notifier.toggle();
         notifier.setPattern(RecurrencePattern.monthly);
@@ -272,15 +303,16 @@ void main() {
 
       test('previewDates are sorted ascending', () {
         final container = createContainer();
-        final notifier =
-            container.read(recurrenceSettingsControllerProvider.notifier);
+        final notifier = container.read(
+          recurrenceSettingsControllerProvider.notifier,
+        );
 
         notifier.toggle();
         notifier.toggleDay(5); // add Friday (JS: 5)
 
         final dates = notifier.previewDates(count: 10);
 
-        for (int i = 1; i < dates.length; i++) {
+        for (var i = 1; i < dates.length; i++) {
           expect(dates[i].isAfter(dates[i - 1]), isTrue);
         }
       });

@@ -174,7 +174,7 @@ class EventCreateController extends _$EventCreateController {
       final recurrenceState = ref.read(recurrenceSettingsControllerProvider);
       if (recurrenceState.isEnabled) {
         final recurrenceRepo = ref.read(recurrenceRuleRepositoryProvider);
-        final pad2 = (int n) => n.toString().padLeft(2, '0');
+        String pad2(int n) => n.toString().padLeft(2, '0');
         final startTimeStr =
             '${pad2(state.startTime.hour)}:${pad2(state.startTime.minute)}';
         final endTimeStr =

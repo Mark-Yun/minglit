@@ -14,8 +14,11 @@ const recurrenceRuleRepositoryProvider = RecurrenceRuleRepositoryProvider._();
 
 final class RecurrenceRuleRepositoryProvider
     extends
-        $FunctionalProvider<RecurrenceRuleRepository, RecurrenceRuleRepository,
-            RecurrenceRuleRepository>
+        $FunctionalProvider<
+          RecurrenceRuleRepository,
+          RecurrenceRuleRepository,
+          RecurrenceRuleRepository
+        >
     with $Provider<RecurrenceRuleRepository> {
   const RecurrenceRuleRepositoryProvider._()
     : super(
@@ -34,8 +37,8 @@ final class RecurrenceRuleRepositoryProvider
   @$internal
   @override
   $ProviderElement<RecurrenceRuleRepository> $createElement(
-          $ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
   RecurrenceRuleRepository create(Ref ref) {
@@ -46,8 +49,7 @@ final class RecurrenceRuleRepositoryProvider
   Override overrideWithValue(RecurrenceRuleRepository value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride:
-          $SyncValueProvider<RecurrenceRuleRepository>(value),
+      providerOverride: $SyncValueProvider<RecurrenceRuleRepository>(value),
     );
   }
 }

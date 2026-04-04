@@ -1,6 +1,5 @@
 import 'package:app_partner/src/features/party/logic/recurrence_settings_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -149,7 +148,7 @@ class _MonthDayInput extends StatelessWidget {
           Text('매월 반복일', style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: MinglitSpacing.xsmall),
           DropdownButtonFormField<int>(
-            value: state.monthDay,
+            initialValue: state.monthDay,
             hint: const Text('날짜 선택'),
             decoration: const InputDecoration(isDense: true),
             items: List.generate(
