@@ -99,7 +99,9 @@ class _PartnerApplicationListPageState
             },
           ),
           const SizedBox(height: MinglitSpacing.small),
+          // Fix #477: Container already has horizontal padding — zero out ChipGroup default padding
           MinglitChipGroup(
+            padding: EdgeInsets.zero,
             children: [
               _buildFilterChip('전체', 'all'),
               _buildFilterChip('대기', 'pending'),
