@@ -26,8 +26,8 @@ jobs:
           gh pr list --repo "$REPO" --base dev --state open --json number,autoMergeRequest \
             --jq '.[] | select(.autoMergeRequest != null) | .number' | while read -r PR_NUM; do
             MERGE_STATE=$(gh pr view "$PR_NUM" --repo "$REPO" --json mergeStateStatus --jq '.mergeStateStatus')
-            if [ "$MERGE_STATE" = "BEHIND" ]; then
-              echo "PR #$PR_NUM is BEHIND — updating branch..."
+            if [ "$MERGE_STATE" = "BEHIND" ] || [ "$MERGE_STATE" = "UNKNOWN" ]; then
+              echo "PR #$PR_NUM is $MERGE_STATE — updating branch..."
               gh api "repos/$REPO/pulls/$PR_NUM/update-branch" --method PUT || true
             else
               echo "PR #$PR_NUM is $MERGE_STATE — skipping"
