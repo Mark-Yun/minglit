@@ -72,17 +72,25 @@ class AuthRepository {
     String? defaultRedirectUrl,
     String? mobileRedirectScheme,
   }) : _supabase = supabase ?? Supabase.instance.client,
+       _webClientId = webClientId,
        _defaultRedirectUrl = defaultRedirectUrl,
-       _mobileRedirectScheme = mobileRedirectScheme,
-       _googleSignIn = GoogleSignIn(
-         clientId: kIsWeb ? webClientId : null,
-         serverClientId: kIsWeb ? null : webClientId,
-       );
+       _mobileRedirectScheme = mobileRedirectScheme;
 
   final SupabaseClient _supabase;
-  final GoogleSignIn _googleSignIn;
+  final String? _webClientId;
   final String? _defaultRedirectUrl;
   final String? _mobileRedirectScheme;
+  bool _googleSignInInitialized = false;
+
+  Future<void> _ensureGoogleSignInInitialized() async {
+    if (_googleSignInInitialized) return;
+    // Fix #959: google_sign_in 7.x uses singleton + explicit initialize()
+    await GoogleSignIn.instance.initialize(
+      clientId: kIsWeb ? _webClientId : null,
+      serverClientId: kIsWeb ? null : _webClientId,
+    );
+    _googleSignInInitialized = true;
+  }
 
   /// Returns the current logged-in user.
   User? get currentUser => _supabase.auth.currentUser;
@@ -107,23 +115,21 @@ class AuthRepository {
       }
 
       // Mobile Native Sign-In
-      final googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        throw const AuthException('Google sign-in was cancelled.');
-      }
-
+      // Fix #959: google_sign_in 7.x replaced signIn() with authenticate()
+      await _ensureGoogleSignInInitialized();
+      final googleUser = await GoogleSignIn.instance.authenticate();
       final googleAuth = await googleUser.authentication;
-      final accessToken = googleAuth.accessToken;
       final idToken = googleAuth.idToken;
 
       if (idToken == null) {
         throw const AuthException('No ID Token found from Google.');
       }
 
+      // Fix #959: google_sign_in 7.x removed accessToken from authentication;
+      // Supabase signInWithIdToken works with idToken alone for Google OIDC.
       await _supabase.auth.signInWithIdToken(
         provider: OAuthProvider.google,
         idToken: idToken,
-        accessToken: accessToken,
       );
       Log.i('🎉 [AuthRepo] Supabase Sign-In successful!');
     } on Exception catch (e, stackTrace) {
@@ -240,7 +246,8 @@ class AuthRepository {
     try {
       await Future.wait([
         _supabase.auth.signOut(),
-        _googleSignIn.signOut(),
+        // Fix #959: google_sign_in 7.x uses singleton instance
+        GoogleSignIn.instance.signOut(),
       ]);
       Log.i('👋 [AuthRepo] Sign-Out successful');
     } on Exception catch (e, stackTrace) {
