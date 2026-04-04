@@ -7,9 +7,7 @@ class MockGoRouter extends Mock implements GoRouter {}
 
 void main() {
   group('completeSignup', () {
-    test('from이 null이면 홈(/)으로 이동한다', () {
-      _expectNavigatesToHome(from: null);
-    });
+    test('from이 null이면 홈(/)으로 이동한다', _expectNavigatesToHome);
 
     test('from이 유효한 경로면 홈 경유 후 해당 경로로 이동한다', () {
       _expectNavigatesViaHome('/tickets/my', from: '/tickets/my');
