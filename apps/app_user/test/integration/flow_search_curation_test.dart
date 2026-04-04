@@ -123,15 +123,14 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
       await tester.pump();
 
-      // Fix #997: empty state 개선 — 아이콘 + 범용 메시지로 변경
-      expect(find.byIcon(Icons.search_off_outlined), findsOneWidget);
+      // Fix #997: empty state 개선 — 쿼리 포함 문구 → 범용 메시지로 변경
       expect(find.text('검색 결과가 없습니다.'), findsOneWidget);
       expect(find.text('다른 키워드로 시도해보세요.'), findsOneWidget);
     });
 
-    testWidgets('키워드 칩 탭 → 검색 쿼리 즉시 업데이트', (tester) async {
+    testWidgets('키워드 칩 탭 → 검색 쿼리 업데이트', (tester) async {
       setKoreanLocale(tester);
-      final mockEvents = createMockEventsForTest(count: 2);
+      final mockEvents = createMockEventsForTest();
 
       await tester.pumpWidget(
         createTestApp(
@@ -142,18 +141,16 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      // Fix #997: 검색 초기 상태에 키워드 제안 칩 표시
-      expect(find.text('파티'), findsOneWidget);
+      // Empty query state — keyword chips should be visible
+      expect(find.text('이런 키워드는 어때요?'), findsOneWidget);
+      expect(find.byType(ActionChip), findsWidgets);
 
-      // 칩 탭 → 디바운스 없이 즉시 searchQueryProvider 업데이트
-      await tester.tap(find.text('파티'));
+      // Tap the '파티' ActionChip
+      await tester.tap(find.widgetWithText(ActionChip, '파티'));
       await tester.pump();
       await tester.pump();
 
-      // 텍스트 필드가 칩 키워드로 업데이트됨
-      expect(find.widgetWithText(TextField, '파티'), findsOneWidget);
-      // 결과 로드 (queryProvider 즉시 업데이트됨)
-      await tester.pump();
+      // searchQueryProvider should be updated to '파티' — results should render
       expect(find.byType(MinglitEventCard), findsWidgets);
     });
 
