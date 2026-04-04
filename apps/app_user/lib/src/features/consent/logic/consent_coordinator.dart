@@ -15,7 +15,17 @@ class ConsentCoordinator {
   final GoRouter _router;
 
   void completeSignup({String? from}) {
-    _router.go(_sanitizeReturnLocation(from) ?? '/');
+    final destination = _sanitizeReturnLocation(from);
+    if (destination == null || destination == '/') {
+      _router.go('/');
+    } else {
+      // Fix #970: go(destination) replaces the entire navigation stack because
+      // destination routes (e.g. /my) are top-level and have no implicit parent.
+      // Navigate to home first to anchor the back stack, then push the
+      // destination on top so the user can press back to return home.
+      _router.go('/');
+      _router.push(destination);
+    }
   }
 
   String? _sanitizeReturnLocation(String? from) {
