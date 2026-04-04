@@ -24,7 +24,7 @@ void main() {
     },
     builder: () {
       final mockRepo = MockSocialRepository();
-      when(() => mockRepo.getBlockedPartners()).thenAnswer(
+      when(mockRepo.getBlockedPartners).thenAnswer(
         (_) async => const [],
       );
 
@@ -76,7 +76,7 @@ void main() {
     },
     builder: () {
       final mockRepo = MockSocialRepository();
-      when(() => mockRepo.getBlockedPartners()).thenAnswer(
+      when(mockRepo.getBlockedPartners).thenAnswer(
         (_) async => [
           {
             'id': 'p1',
