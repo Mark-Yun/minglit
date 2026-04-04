@@ -17,6 +17,7 @@ export type MockSupabaseHandlers = {
   tables?: Record<string, MockTableHandlers>;
   rpcs?: Record<string, (args: Record<string, unknown>) => MockResult<unknown> | Promise<MockResult<unknown>>>;
   authUser?: { id: string } | null;
+  authAdminGetUserById?: (userId: string) => MockResult<{ user: { email: string } | null }> | Promise<MockResult<{ user: { email: string } | null }>>;
 };
 
 class MockQueryBuilder {
@@ -62,6 +63,16 @@ class MockQueryBuilder {
 
   in(column: string, values: unknown[]) {
     this.filters[column] = values;
+    return this;
+  }
+
+  limit(_count: number) {
+    return this;
+  }
+
+  not(column: string, _operator: string, _value: unknown) {
+    // no-op filter for mock — select handler receives all data regardless
+    void column;
     return this;
   }
 
@@ -111,6 +122,16 @@ export function createMockSupabaseClient(handlers: MockSupabaseHandlers = {}) {
     auth: {
       getUser: (_token?: string) =>
         Promise.resolve({ data: { user: handlers.authUser ?? null }, error: null }),
+      admin: {
+        getUserById: (userId: string) => {
+          const handler = handlers.authAdminGetUserById;
+          return Promise.resolve(
+            handler
+              ? handler(userId)
+              : { data: { user: null }, error: null },
+          );
+        },
+      },
     },
   };
 }
