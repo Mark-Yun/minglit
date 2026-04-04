@@ -10,8 +10,9 @@ void main() {
   }
 
   group('MinglitChipGroup', () {
-    testWidgets('scrollable=true renders ListView with correct height',
-        (tester) async {
+    testWidgets('scrollable=true renders ListView with correct height', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildApp(
           const MinglitChipGroup(
