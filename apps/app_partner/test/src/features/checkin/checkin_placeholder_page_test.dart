@@ -100,13 +100,15 @@ void main() {
       expect(find.byIcon(Icons.qr_code_scanner), findsOneWidget);
     });
 
-    // Skip: 1-event case renders QRScannerScreen which uses native camera
-    // plugin (mobile_scanner). Its State.dispose has a known bug (missing
-    // super.dispose call) that causes test framework teardown failure.
-    // The routing logic (1 event → direct scanner) is verified by the 0-event
-    // and 2+-event tests covering the other branches.
+    // Skip #1009: 1-event case renders QRScannerScreen which uses native camera
+    // plugin (mobile_scanner). QRScannerScreen.dispose() is async
+    // (`Future<void> dispose() async { await _scannerController.dispose(); }`)
+    // which Flutter's test framework does not await, causing teardown flakiness.
+    // The routing logic (1 event → direct scanner) is covered by the 0-event
+    // and 2+-event tests.
     //
-    // TODO: Re-enable after QRScannerScreen dispose bug is fixed.
+    // Re-enable when mobile_scanner provides synchronous disposal or when a
+    // platform shim is available for camera plugin in tests.
 
     testWidgets('shows event selection when 2+ events today', (
       tester,

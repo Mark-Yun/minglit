@@ -42,32 +42,23 @@ void main() {
       expect(result, testEvent);
     });
 
-    // FIXME: This test fails with 'provider disposed' error.
-    // Needs investigation.
-    // test('throws exception when repository fails', () async {
-    //   final exception = Exception('Network Error');
-    //   when(() => mockEventRepo.getEventById('event_1'))
-    //       .thenAnswer((_) async => throw exception);
+    // Fix #1009: was failing with 'provider disposed' error due to subscription
+    // pattern. Simplified to direct future assertion without subscription.
+    test('throws exception when repository fails', () async {
+      final exception = Exception('Network Error');
+      when(() => mockEventRepo.getEventById('event_1'))
+          .thenAnswer((_) async => throw exception);
 
-    //   final container = createContainer(
-    //     overrides: [
-    //       eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-    //     ],
-    //   );
+      final container = createContainer(
+        overrides: [
+          eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+        ],
+      );
 
-    //   // Listen to prevent premature disposal
-    //   final subscription = container.listen(
-    //     eventDetailControllerProvider('event_1'),
-    //     (previous, next) {},
-    //     fireImmediately: true,
-    //   );
-
-    //   await expectLater(
-    //     container.read(eventDetailControllerProvider('event_1').future),
-    //     throwsA(isA<Exception>()),
-    //   );
-
-    //   subscription.close();
-    // });
+      await expectLater(
+        container.read(eventDetailControllerProvider('event_1').future),
+        throwsA(isA<Exception>()),
+      );
+    });
   });
 }
