@@ -90,15 +90,16 @@ class SettlementStatusBadge extends StatelessWidget {
       child: Text(
         status.label,
         // Fix #956: replace hardcoded fontSize with TextTheme
-        style: (compact
-                ? theme.textTheme.labelSmall
-                : theme.textTheme.bodySmall)
-            ?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: textCol,
-              decoration: isStrikethrough ? TextDecoration.lineThrough : null,
-              decorationColor: isStrikethrough ? textCol : null,
-            ),
+        style:
+            (compact ? theme.textTheme.labelSmall : theme.textTheme.bodySmall)
+                ?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: textCol,
+                  decoration: isStrikethrough
+                      ? TextDecoration.lineThrough
+                      : null,
+                  decorationColor: isStrikethrough ? textCol : null,
+                ),
       ),
     );
   }
