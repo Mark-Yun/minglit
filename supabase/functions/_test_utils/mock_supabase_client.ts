@@ -60,6 +60,11 @@ class MockQueryBuilder {
     return this;
   }
 
+  in(column: string, values: unknown[]) {
+    this.filters[column] = values;
+    return this;
+  }
+
   single() {
     return this.execute();
   }
