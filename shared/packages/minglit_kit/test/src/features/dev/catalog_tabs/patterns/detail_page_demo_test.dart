@@ -59,9 +59,9 @@ void main() {
       await tester.tap(find.text('다시 시도'));
       await tester.pump();
 
-      // Should show event title again (data state)
-      // SegmentedButton should still be present
-      expect(find.text('Data'), findsOneWidget);
+      // Should show event content again (data state)
+      expect(find.text('재즈 이브닝 in 성수'), findsOneWidget);
+      expect(find.byType(SegmentedButton<DemoState>), findsOneWidget);
     });
   });
 }

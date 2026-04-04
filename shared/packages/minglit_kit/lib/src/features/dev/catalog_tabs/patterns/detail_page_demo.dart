@@ -154,7 +154,7 @@ class _DetailPageData extends StatelessWidget {
                 title: Text(
                   event.title,
                   style: theme.textTheme.titleMedium?.copyWith(
-                    color: Colors.white,
+                    color: theme.colorScheme.onPrimary,
                   ),
                 ),
                 background: ColoredBox(
@@ -163,7 +163,7 @@ class _DetailPageData extends StatelessWidget {
                     child: Icon(
                       Icons.event,
                       size: 64,
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: theme.colorScheme.onPrimary.withOpacity(0.5),
                     ),
                   ),
                 ),
@@ -264,7 +264,12 @@ class _ParticipantsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return ListView.separated(
-      padding: const EdgeInsets.all(MinglitSpacing.medium),
+      padding: const EdgeInsets.fromLTRB(
+        MinglitSpacing.medium,
+        MinglitSpacing.medium,
+        MinglitSpacing.medium,
+        MinglitSpacing.xlarge * 2,
+      ),
       itemCount: count,
       separatorBuilder: (_, _) => const Divider(),
       itemBuilder: (context, i) => ListTile(
@@ -283,7 +288,12 @@ class _ScheduleTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return ListView.builder(
-      padding: const EdgeInsets.all(MinglitSpacing.medium),
+      padding: const EdgeInsets.fromLTRB(
+        MinglitSpacing.medium,
+        MinglitSpacing.medium,
+        MinglitSpacing.medium,
+        MinglitSpacing.xlarge * 2,
+      ),
       itemCount: mockSectionItems.length,
       itemBuilder: (context, i) => MinglitSection(
         title: mockSectionItems[i],
@@ -315,7 +325,7 @@ class _CtaBar extends StatelessWidget {
         color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
