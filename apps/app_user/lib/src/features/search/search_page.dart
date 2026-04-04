@@ -145,29 +145,30 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                         Icon(
                           Icons.search_off_outlined,
                           size: 64,
-                          color:
-                              Theme.of(context).colorScheme.outlineVariant,
+                          color: Theme.of(context).colorScheme.outlineVariant,
                         ),
                         const SizedBox(height: MinglitSpacing.medium),
                         Text(
                           '검색 결과가 없어요',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.titleMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
+                          style:
+                              Theme.of(
+                                context,
+                              ).textTheme.titleMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: MinglitSpacing.small),
                         Text(
                           '다른 키워드로 시도해보세요.',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                          ),
+                          style:
+                              Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
                           textAlign: TextAlign.center,
                         ),
                       ],
