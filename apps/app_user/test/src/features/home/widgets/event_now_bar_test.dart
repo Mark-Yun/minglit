@@ -61,6 +61,7 @@ void main() {
     required List<TodayActiveEvent> activeEvents,
     VoidCallback? onTap,
     bool throwError = false,
+    List<dynamic> overrides = const [],
   }) {
     return ProviderScope(
       overrides: [
@@ -70,6 +71,7 @@ void main() {
           if (throwError) throw Exception('Network error');
           return activeEvents;
         }),
+        ...overrides.cast(),
       ],
       child: MaterialApp(
         theme: MinglitTheme.materialTheme,
@@ -173,10 +175,7 @@ void main() {
       stubMatchingNotAvailable('event_1');
 
       await tester.pumpWidget(
-        createTestWidget(
-          activeEvents: [event],
-          onTap: () => tapped = true,
-        ),
+        createTestWidget(activeEvents: [event], onTap: () => tapped = true),
       );
       await tester.pumpAndSettle();
 
@@ -184,9 +183,7 @@ void main() {
       expect(tapped, isTrue);
     });
 
-    testWidgets('shows skeleton loading while fetching events', (
-      tester,
-    ) async {
+    testWidgets('shows skeleton loading while fetching events', (tester) async {
       // Use a Completer to keep the provider in loading state.
       final completer = Completer<List<TodayActiveEvent>>();
       addTearDown(() {
@@ -196,9 +193,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            todayActiveEventsProvider.overrideWith(
-              (ref) => completer.future,
-            ),
+            todayActiveEventsProvider.overrideWith((ref) => completer.future),
           ],
           child: MaterialApp(
             theme: MinglitTheme.materialTheme,
@@ -241,5 +236,34 @@ void main() {
 
       expect(find.text('종료됨'), findsOneWidget);
     });
+
+    testWidgets('keeps cached event visible when state resolution fails', (
+      tester,
+    ) async {
+      final event = makeActiveEvent();
+
+      await tester.pumpWidget(
+        createTestWidget(
+          activeEvents: [event],
+          overrides: [
+            eventNowBarStateProvider(
+              event,
+            ).overrideWith(_ThrowingStateNotifier.new),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('강남 밍릿파티'), findsOneWidget);
+      expect(find.text('곧 시작'), findsOneWidget);
+      expect(find.textContaining('후'), findsOneWidget);
+    });
   });
+}
+
+class _ThrowingStateNotifier extends EventNowBarStateNotifier {
+  @override
+  FutureOr<EventNowBarState> build(TodayActiveEvent activeEvent) {
+    throw Exception('state failure');
+  }
 }

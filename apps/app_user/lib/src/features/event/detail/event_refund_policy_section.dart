@@ -48,9 +48,9 @@ class _RefundPolicySection extends ConsumerWidget {
           ),
           const SizedBox(height: MinglitSpacing.medium),
           policyAsync.when(
-            data: (policy) => _buildSummary(context, policy),
+            data: (policy) => _buildSummary(context, ref, policy),
             loading: () => _buildLoadingContent(context),
-            error: (e, st) => _buildSummary(context, null),
+            error: (e, st) => _buildSummary(context, ref, null),
           ),
         ],
       ),
@@ -59,6 +59,7 @@ class _RefundPolicySection extends ConsumerWidget {
 
   Widget _buildSummary(
     BuildContext context,
+    WidgetRef ref,
     Map<String, dynamic>? policy,
   ) {
     final theme = Theme.of(context);
@@ -66,7 +67,7 @@ class _RefundPolicySection extends ConsumerWidget {
         (policy?['grace_period_hours'] as num?)?.toInt() ?? 2;
     final cutoffDays = (policy?['cutoff_days'] as num?)?.toInt() ?? 7;
     final cutoffDate = event.startTime.subtract(Duration(days: cutoffDays));
-    final now = DateTime.now();
+    final now = ref.watch(eventDetailNowProvider)();
     // Fix #138: "~까지 환불 가능" 문구와 일치하도록 경계값 포함 비교
     final isCutoffRefundable = !now.isAfter(cutoffDate);
     // Fix #190: 요일 추가, D-day 표시로 날짜 인지성 개선
@@ -222,18 +223,9 @@ class _RefundPolicySection extends ConsumerWidget {
                   '전액 환불',
                 ),
                 const SizedBox(height: MinglitSpacing.small),
-                _buildPolicyRow(
-                  context,
-                  '이벤트 시작 $cutoffDays일 전까지',
-                  '전액 환불',
-                ),
+                _buildPolicyRow(context, '이벤트 시작 $cutoffDays일 전까지', '전액 환불'),
                 const SizedBox(height: MinglitSpacing.small),
-                _buildPolicyRow(
-                  context,
-                  '그 외',
-                  '환불 불가',
-                  isRefundable: false,
-                ),
+                _buildPolicyRow(context, '그 외', '환불 불가', isRefundable: false),
                 const SizedBox(height: MinglitSpacing.medium),
                 Text(
                   '자세한 내용은 고객센터로 문의해주세요.',
@@ -254,9 +246,7 @@ class _RefundPolicySection extends ConsumerWidget {
       children: List.generate(
         2,
         (_) => Padding(
-          padding: const EdgeInsets.only(
-            bottom: MinglitSpacing.small,
-          ),
+          padding: const EdgeInsets.only(bottom: MinglitSpacing.small),
           child: Container(
             height: 20,
             width: double.infinity,
@@ -280,12 +270,7 @@ class _RefundPolicySection extends ConsumerWidget {
     final theme = Theme.of(context);
     return Row(
       children: [
-        Expanded(
-          child: Text(
-            condition,
-            style: theme.textTheme.bodyMedium,
-          ),
-        ),
+        Expanded(child: Text(condition, style: theme.textTheme.bodyMedium)),
         Text(
           policy,
           style: theme.textTheme.bodyMedium?.copyWith(

@@ -63,5 +63,19 @@ void main() {
 
       verify(() => mockRouter.push(any())).called(1);
     });
+
+    test('pushAccountDeletion calls router.push', () {
+      final container = createContainer(
+        overrides: [
+          goRouterProvider.overrideWithValue(mockRouter),
+        ],
+      );
+
+      container.read(moreCoordinatorProvider).pushAccountDeletion();
+
+      verify(
+        () => mockRouter.push(any(that: contains('delete-account'))),
+      ).called(1);
+    });
   });
 }

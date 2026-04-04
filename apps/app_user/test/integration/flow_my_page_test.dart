@@ -48,7 +48,7 @@ void main() {
       expect(find.byType(NotificationSettingsScreen), findsOneWidget);
     });
 
-    testWidgets('개인정보 tap → PrivacyPage (Navigator.push)', (tester) async {
+    testWidgets('개인정보 tap → PrivacyPage → 회원 탈퇴 시작', (tester) async {
       setKoreanLocale(tester);
       final user = createMockUserForTest();
       await tester.pumpWidget(
@@ -56,6 +56,14 @@ void main() {
           isLoggedIn: true,
           currentUser: user,
           initialLocation: '/my',
+          additionalOverrides: [
+            consentControllerProvider.overrideWith(
+              _MockConsentController.new,
+            ),
+            accountDeletionControllerProvider.overrideWith(
+              _MockAccountDeletionController.new,
+            ),
+          ],
         ),
       );
       await tester.pump();
@@ -66,7 +74,17 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(PrivacyPage), findsOneWidget);
-      expect(find.text('준비 중입니다'), findsOneWidget);
+      expect(find.text('개인정보'), findsOneWidget);
+
+      // Fix #886: PrivacyPage has consent management sections above the
+      // account deletion button. The button is below the viewport in the
+      // ListView, so we must scroll to it before tapping.
+      await tester.scrollUntilVisible(find.text('회원 탈퇴 시작하기'), 100);
+      await tester.tap(find.text('회원 탈퇴 시작하기'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('탈퇴 사유'), findsOneWidget);
+      expect(find.text('더 이상 쓰지 않아요'), findsOneWidget);
     });
 
     testWidgets('권한 설정 tap → AppPermissionSettingsScreen (Navigator.push)', (
@@ -248,7 +266,9 @@ void main() {
       setKoreanLocale(tester);
       final user = createMockUserForTest();
       final now = DateTime.now();
-      // canCancel: paid + paymentId + paymentAmount + event.startTime + refundStatus == 'none'
+      // canCancel:
+      // paid + paymentId + paymentAmount + event.startTime +
+      // refundStatus == 'none'
       final refundableApp = _createApplication(
         status: 'paid',
         createdAt: now,
@@ -417,6 +437,51 @@ class _MockNotificationSettingsWithData extends NotificationSettingsController {
 class _MockNotificationSettingsNull extends NotificationSettingsController {
   @override
   FutureOr<UserSettings?> build() async => null;
+}
+
+/// ConsentController — returns mock consent data for PrivacyPage
+class _MockConsentController extends ConsentController {
+  @override
+  FutureOr<List<UserConsent>> build() async => [
+    UserConsent(
+      id: 'c1',
+      userId: 'test-user-id',
+      consentKey: ConsentType.termsOfService,
+      consented: true,
+      consentedAt: DateTime.now(),
+      createdAt: DateTime.now(),
+    ),
+    UserConsent(
+      id: 'c2',
+      userId: 'test-user-id',
+      consentKey: ConsentType.privacyCollection,
+      consented: true,
+      consentedAt: DateTime.now(),
+      createdAt: DateTime.now(),
+    ),
+    UserConsent(
+      id: 'c3',
+      userId: 'test-user-id',
+      consentKey: ConsentType.thirdPartyProvision,
+      consented: false,
+      consentedAt: DateTime.now(),
+      createdAt: DateTime.now(),
+    ),
+    UserConsent(
+      id: 'c4',
+      userId: 'test-user-id',
+      consentKey: ConsentType.marketingConsent,
+      consented: false,
+      consentedAt: DateTime.now(),
+      createdAt: DateTime.now(),
+    ),
+  ];
+}
+
+/// AccountDeletionController — returns non-pending status
+class _MockAccountDeletionController extends AccountDeletionController {
+  @override
+  FutureOr<DeletionStatus?> build() async => const DeletionStatus();
 }
 
 /// Fake SocialRepository for BlockedPartnersPage (returns empty list)

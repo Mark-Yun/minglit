@@ -34,10 +34,13 @@ class MorePage extends ConsumerWidget {
                     child: Icon(Icons.store, size: 32),
                   ),
                   const SizedBox(width: MinglitSpacing.medium),
-                  Text(
-                    '파트너 정보를 불러올 수 없습니다',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                  Expanded(
+                    // Fix #574: keep the placeholder header within the golden viewport.
+                    child: Text(
+                      '파트너 정보를 불러올 수 없습니다',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ],
@@ -54,10 +57,13 @@ class MorePage extends ConsumerWidget {
                         child: Icon(Icons.store, size: 32),
                       ),
                       const SizedBox(width: MinglitSpacing.medium),
-                      Text(
-                        '파트너 정보를 불러올 수 없습니다',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                      Expanded(
+                        // Fix #574: keep the placeholder header within the golden viewport.
+                        child: Text(
+                          '파트너 정보를 불러올 수 없습니다',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
                     ],
@@ -142,6 +148,21 @@ class MorePage extends ConsumerWidget {
             leading: const Icon(Icons.person_outline),
             title: const Text('계정 관리'),
             onTap: () => context.showMinglitInfo('준비 중입니다'),
+          ),
+          ListTile(
+            leading: const Icon(
+              Icons.person_remove_outlined,
+              color: MinglitColors.error,
+            ),
+            title: Text(
+              '회원 탈퇴',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: MinglitColors.error,
+              ),
+            ),
+            subtitle: const Text('활성 이벤트, 정산, 환불 건이 없을 때만 요청할 수 있어요.'),
+            onTap: () =>
+                ref.read(moreCoordinatorProvider).pushAccountDeletion(),
           ),
           ListTile(
             leading: const Icon(Icons.store_outlined),

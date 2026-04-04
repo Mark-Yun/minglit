@@ -115,9 +115,7 @@ class PartnerDetailView extends ConsumerWidget {
 
   Widget _buildEventSection(WidgetRef ref, BuildContext context) {
     final theme = Theme.of(context);
-    final eventsAsync = ref.watch(
-      partnerEventsProvider(partnerId: partner.id),
-    );
+    final eventsAsync = ref.watch(partnerEventsProvider(partnerId: partner.id));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -170,16 +168,15 @@ class PartnerDetailView extends ConsumerWidget {
     );
   }
 
-  Widget _buildHorizontalEventList(
-    BuildContext context,
-    List<Event> events,
-  ) {
+  Widget _buildHorizontalEventList(BuildContext context, List<Event> events) {
     // Card width = ~2/3 of available width so ~1.5 cards show
     final screenWidth = MediaQuery.sizeOf(context).width;
     final cardWidth = (screenWidth - MinglitSpacing.large * 2) * 0.65;
+    const eventCardContentHeight = 64.0;
 
     return SizedBox(
-      height: cardWidth * (9 / 16) + 56, // image height + content area
+      // Keep enough room for the event card metadata row across CI font metrics.
+      height: cardWidth * (9 / 16) + eventCardContentHeight,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: events.length,

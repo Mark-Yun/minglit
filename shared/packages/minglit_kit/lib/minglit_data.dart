@@ -5,6 +5,7 @@ export 'package:supabase_flutter/supabase_flutter.dart'
 // Config
 export 'src/config/iamport_config.dart';
 // Models
+export 'src/data/models/deletion_status.dart';
 export 'src/data/models/event.dart';
 export 'src/data/models/event_application.dart';
 export 'src/data/models/event_feed_type.dart';
@@ -27,7 +28,9 @@ export 'src/data/models/user_profile.dart';
 export 'src/data/models/user_settings.dart';
 export 'src/data/models/verification.dart';
 export 'src/data/models/verification_submission.dart';
+export 'src/data/models/withdrawal_reason.dart';
 // Repositories
+export 'src/data/repositories/account_repository.dart';
 export 'src/data/repositories/auth_repository.dart';
 export 'src/data/repositories/bug_report_repository.dart';
 export 'src/data/repositories/checkin_repository.dart';
@@ -47,4 +50,5 @@ export 'src/data/repositories/ticket_repository.dart';
 export 'src/data/repositories/user_repository.dart';
 export 'src/data/repositories/verification_repository.dart';
 // Utils
+export 'src/utils/auth_provider_utils.dart';
 export 'src/utils/ticket_crypto.dart';

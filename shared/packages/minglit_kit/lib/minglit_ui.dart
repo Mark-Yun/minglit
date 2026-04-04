@@ -1,3 +1,4 @@
+export 'src/features/account_deletion/ui/pending_deletion_recovery_listener.dart';
 export 'src/features/auth/ui/minglit_login_screen.dart';
 export 'src/features/auth/ui/staff_gate_screen.dart';
 export 'src/features/auth/ui/staff_guard_wrapper.dart';
@@ -10,6 +11,7 @@ export 'src/features/permission/app_permission_settings_screen.dart';
 export 'src/features/search/ui/location_search_screen.dart';
 export 'src/features/social/ui/minglit_social_action_chip.dart';
 export 'src/features/social/ui/minglit_social_button.dart';
+export 'src/features/verification/ui/identity_verification_consent_sheet.dart';
 export 'src/features/verification/ui/identity_verification_screen.dart';
 export 'src/theme/minglit_text_theme_extension.dart';
 export 'src/theme/minglit_theme.dart';

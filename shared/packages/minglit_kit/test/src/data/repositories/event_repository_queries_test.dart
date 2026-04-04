@@ -209,6 +209,54 @@ void main() {
       });
     });
 
+    group('getRequestedRefundCountForPartner', () {
+      test('returns exact count for requested refunds', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
+            countValue: 2,
+          ),
+        );
+
+        final result = await repository.getRequestedRefundCountForPartner(
+          'partner_1',
+        );
+
+        expect(result, 2);
+      });
+
+      test('returns zero when there are no requested refunds', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
+          ),
+        );
+
+        final result = await repository.getRequestedRefundCountForPartner(
+          'partner_1',
+        );
+
+        expect(result, 0);
+      });
+
+      test('rethrows when query throws', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
+            shouldThrow: Exception('query failed'),
+          ),
+        );
+
+        await expectLater(
+          repository.getRequestedRefundCountForPartner('partner_1'),
+          throwsA(isA<Exception>()),
+        );
+      });
+    });
+
     group('getMyTickets', () {
       test('returns only paid/approved tickets', () async {
         unawaited(
@@ -783,8 +831,8 @@ void main() {
       }
 
       test('returns active events with participant status', () async {
-        // Note: .order('start_time') is verified at the Supabase query level;
-        // mock returns data in insertion order, so we supply ascending order here.
+        // Note: .order('start_time') is verified at the Supabase query level.
+        // The mock returns insertion order, so data stays ascending here.
         final eventData = [
           makeEventWithParticipant(
             eventId: 'event_1',

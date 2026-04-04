@@ -26,6 +26,10 @@ class MoreCoordinator {
     unawaited(_router.push(const VerificationManageRoute().location));
   }
 
+  void pushAccountDeletion() {
+    unawaited(_router.push(const DeletionReasonRoute().location));
+  }
+
   // Fix #404: Coordinator-based navigation for home route (logout)
   void goToHome() {
     _router.go('/');

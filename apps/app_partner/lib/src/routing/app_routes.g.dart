@@ -282,6 +282,22 @@ RouteBase get $partnerShellRoute => StatefulShellRouteData.$route(
               factory: $NotificationSettingsRoute._fromState,
             ),
             GoRouteData.$route(
+              path: 'delete-account',
+              factory: $DeletionReasonRoute._fromState,
+            ),
+            GoRouteData.$route(
+              path: 'delete-account/info',
+              factory: $DeletionInfoRoute._fromState,
+            ),
+            GoRouteData.$route(
+              path: 'delete-account/verify',
+              factory: $DeletionVerifyRoute._fromState,
+            ),
+            GoRouteData.$route(
+              path: 'delete-account/complete',
+              factory: $DeletionCompleteRoute._fromState,
+            ),
+            GoRouteData.$route(
               path: 'partners/:partnerId/members',
               factory: $MemberListRoute._fromState,
               routes: [
@@ -780,6 +796,107 @@ mixin $NotificationSettingsRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/more/notification-settings');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $DeletionReasonRoute on GoRouteData {
+  static DeletionReasonRoute _fromState(GoRouterState state) =>
+      const DeletionReasonRoute();
+
+  @override
+  String get location => GoRouteData.$location('/more/delete-account');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $DeletionInfoRoute on GoRouteData {
+  static DeletionInfoRoute _fromState(GoRouterState state) => DeletionInfoRoute(
+    reasonCode: state.uri.queryParameters['reason-code'],
+  );
+
+  DeletionInfoRoute get _self => this as DeletionInfoRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/more/delete-account/info',
+    queryParams: {
+      if (_self.reasonCode != null) 'reason-code': _self.reasonCode,
+    },
+  );
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $DeletionVerifyRoute on GoRouteData {
+  static DeletionVerifyRoute _fromState(GoRouterState state) =>
+      DeletionVerifyRoute(
+        reasonCode: state.uri.queryParameters['reason-code'],
+      );
+
+  DeletionVerifyRoute get _self => this as DeletionVerifyRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/more/delete-account/verify',
+    queryParams: {
+      if (_self.reasonCode != null) 'reason-code': _self.reasonCode,
+    },
+  );
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $DeletionCompleteRoute on GoRouteData {
+  static DeletionCompleteRoute _fromState(GoRouterState state) =>
+      const DeletionCompleteRoute();
+
+  @override
+  String get location => GoRouteData.$location('/more/delete-account/complete');
 
   @override
   void go(BuildContext context) => context.go(location);
