@@ -1,6 +1,6 @@
 name: minglit_kit
 description: "A new Flutter package project."
-version: 26.04.1016-dev
+version: 26.04.1023-dev
 resolution: workspace
 publish_to: 'none'
 environment:
