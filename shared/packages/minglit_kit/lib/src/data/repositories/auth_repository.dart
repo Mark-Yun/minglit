@@ -76,10 +76,9 @@ class AuthRepository {
        // Fix #959: normalize blank webClientId to null to prevent
        // GoogleSignIn.instance.initialize() from receiving an empty string,
        // which causes a runtime failure on mobile.
-       _webClientId =
-           webClientId != null && webClientId.trim().isNotEmpty
-               ? webClientId.trim()
-               : null,
+       _webClientId = webClientId != null && webClientId.trim().isNotEmpty
+           ? webClientId.trim()
+           : null,
        _defaultRedirectUrl = defaultRedirectUrl,
        _mobileRedirectScheme = mobileRedirectScheme;
 
