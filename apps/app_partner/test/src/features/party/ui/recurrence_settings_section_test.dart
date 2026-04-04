@@ -3,6 +3,7 @@ import 'package:app_partner/src/features/party/ui/recurrence_settings_section.da
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // for ProviderScope, ConsumerWidget
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 Widget _wrap({List<dynamic> overrides = const []}) {
   return ProviderScope(
@@ -16,6 +17,10 @@ Widget _wrap({List<dynamic> overrides = const []}) {
 }
 
 void main() {
+  setUpAll(() async {
+    await initializeDateFormatting('ko_KR');
+  });
+
   group('RecurrenceSettingsSection', () {
     testWidgets('renders toggle with label in collapsed state', (tester) async {
       await tester.pumpWidget(_wrap());
