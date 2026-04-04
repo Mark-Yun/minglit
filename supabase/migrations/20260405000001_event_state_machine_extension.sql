@@ -82,7 +82,7 @@ SELECT cron.schedule(
 -- (check-in window opens). Runs every minute.
 -- ============================================================
 
-SELECT cron.unschedule('activate-upcoming-events');
+SELECT cron.unschedule(jobid) FROM cron.job WHERE jobname = 'activate-upcoming-events';
 
 SELECT cron.schedule(
   'activate-upcoming-events',
@@ -101,7 +101,7 @@ SELECT cron.schedule(
 -- (event actually starts). Runs every minute.
 -- ============================================================
 
-SELECT cron.unschedule('start-active-events');
+SELECT cron.unschedule(jobid) FROM cron.job WHERE jobname = 'start-active-events';
 
 SELECT cron.schedule(
   'start-active-events',
