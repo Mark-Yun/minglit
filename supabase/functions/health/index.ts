@@ -1,6 +1,7 @@
 import { successResponse, errorResponse } from "../_shared/response_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
 import { checkAllFunctions } from "../_shared/env_keystore.ts";
+import { nowISO } from "../_shared/temporal_utils.ts";
 
 initSentry();
 
@@ -133,7 +134,7 @@ Deno.serve(withHandler(async (req) => {
 
   const body: Record<string, unknown> = {
     status: allUp ? "healthy" : "unhealthy",
-    timestamp: new Date().toISOString(),
+    timestamp: nowISO(),
     checks: {
       database: { status: database.status, latency_ms: database.latency_ms, ...(database.error && { error: database.error }) },
       auth: { status: auth.status, latency_ms: auth.latency_ms, ...(auth.error && { error: auth.error }) },

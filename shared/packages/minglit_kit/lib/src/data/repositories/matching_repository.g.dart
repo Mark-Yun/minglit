@@ -61,8 +61,6 @@ final class MatchingRepositoryProvider
 String _$matchingRepositoryHash() =>
     r'61950d7065db2a84d17f20777143e2418848fed6';
 
-// ── Data providers ──────────────────────────────────────────────────
-
 /// Fetches matching candidates for the current user in an event.
 
 @ProviderFor(matchCandidates)
@@ -80,6 +78,7 @@ final class MatchCandidatesProvider
     with
         $FutureModifier<List<UserProfile>>,
         $FutureProvider<List<UserProfile>> {
+  /// Fetches matching candidates for the current user in an event.
   const MatchCandidatesProvider._({
     required MatchCandidatesFamily super.from,
     required String super.argument,
@@ -126,6 +125,8 @@ final class MatchCandidatesProvider
 
 String _$matchCandidatesHash() => r'c7ada3a4f5892dad45787e78a963feff15a39542';
 
+/// Fetches matching candidates for the current user in an event.
+
 final class MatchCandidatesFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<UserProfile>>, String> {
   const MatchCandidatesFamily._()
@@ -136,6 +137,8 @@ final class MatchCandidatesFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
+
+  /// Fetches matching candidates for the current user in an event.
 
   MatchCandidatesProvider call(String eventId) =>
       MatchCandidatesProvider._(argument: eventId, from: this);
@@ -159,6 +162,7 @@ final class MyMatchesProvider
           FutureOr<List<MatchPair>>
         >
     with $FutureModifier<List<MatchPair>>, $FutureProvider<List<MatchPair>> {
+  /// Fetches successful matches for the current user in an event.
   const MyMatchesProvider._({
     required MyMatchesFamily super.from,
     required String super.argument,
@@ -205,6 +209,8 @@ final class MyMatchesProvider
 
 String _$myMatchesHash() => r'4a5e9634d05797acaedf3e500e863a62aa74c2f3';
 
+/// Fetches successful matches for the current user in an event.
+
 final class MyMatchesFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<MatchPair>>, String> {
   const MyMatchesFamily._()
@@ -215,6 +221,8 @@ final class MyMatchesFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
+
+  /// Fetches successful matches for the current user in an event.
 
   MyMatchesProvider call(String eventId) =>
       MyMatchesProvider._(argument: eventId, from: this);
@@ -233,6 +241,7 @@ const myVoteCountProvider = MyVoteCountFamily._();
 final class MyVoteCountProvider
     extends $FunctionalProvider<AsyncValue<int>, int, FutureOr<int>>
     with $FutureModifier<int>, $FutureProvider<int> {
+  /// Fetches the voter's current vote count for an event.
   const MyVoteCountProvider._({
     required MyVoteCountFamily super.from,
     required String super.argument,
@@ -278,6 +287,8 @@ final class MyVoteCountProvider
 
 String _$myVoteCountHash() => r'c59ff09841424d7727c2428b7b95d69d8d6f8f38';
 
+/// Fetches the voter's current vote count for an event.
+
 final class MyVoteCountFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<int>, String> {
   const MyVoteCountFamily._()
@@ -288,6 +299,8 @@ final class MyVoteCountFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
+
+  /// Fetches the voter's current vote count for an event.
 
   MyVoteCountProvider call(String eventId) =>
       MyVoteCountProvider._(argument: eventId, from: this);
@@ -311,6 +324,7 @@ final class MyVotedCandidateIdsProvider
           FutureOr<Set<String>>
         >
     with $FutureModifier<Set<String>>, $FutureProvider<Set<String>> {
+  /// Fetches the voted candidate IDs for the current user in an event.
   const MyVotedCandidateIdsProvider._({
     required MyVotedCandidateIdsFamily super.from,
     required String super.argument,
@@ -358,6 +372,8 @@ final class MyVotedCandidateIdsProvider
 String _$myVotedCandidateIdsHash() =>
     r'c26471f0b1523dc1f4c56c9d9d6086bcd85a6acb';
 
+/// Fetches the voted candidate IDs for the current user in an event.
+
 final class MyVotedCandidateIdsFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Set<String>>, String> {
   const MyVotedCandidateIdsFamily._()
@@ -368,6 +384,8 @@ final class MyVotedCandidateIdsFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
+
+  /// Fetches the voted candidate IDs for the current user in an event.
 
   MyVotedCandidateIdsProvider call(String eventId) =>
       MyVotedCandidateIdsProvider._(argument: eventId, from: this);
@@ -386,6 +404,7 @@ const maxVoteCountProvider = MaxVoteCountFamily._();
 final class MaxVoteCountProvider
     extends $FunctionalProvider<AsyncValue<int>, int, FutureOr<int>>
     with $FutureModifier<int>, $FutureProvider<int> {
+  /// Fetches the maximum vote count from matching rules for an event.
   const MaxVoteCountProvider._({
     required MaxVoteCountFamily super.from,
     required String super.argument,
@@ -431,6 +450,8 @@ final class MaxVoteCountProvider
 
 String _$maxVoteCountHash() => r'3e5c192dc6847792a09e6db41136ad42f12ceca3';
 
+/// Fetches the maximum vote count from matching rules for an event.
+
 final class MaxVoteCountFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<int>, String> {
   const MaxVoteCountFamily._()
@@ -441,6 +462,8 @@ final class MaxVoteCountFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
+
+  /// Fetches the maximum vote count from matching rules for an event.
 
   MaxVoteCountProvider call(String eventId) =>
       MaxVoteCountProvider._(argument: eventId, from: this);
