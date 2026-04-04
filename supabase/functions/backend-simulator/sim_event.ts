@@ -47,6 +47,7 @@ export async function simCheckin(
   checkinRate: number = 0.7,
   supabaseUrl?: string,
   anonKey?: string,
+  strict?: boolean,
 ): Promise<{ checkedInParticipantIds: string[]; noShowParticipantIds: string[]; assertions: SimAssertionResult[] }> {
   const checkedInParticipantIds: string[] = [];
   const noShowParticipantIds: string[] = [];
@@ -125,9 +126,15 @@ export async function simCheckin(
               log({ level: "info", phase: "checkin", step: "ef_checkin", message: `Checked in participant ${participant.id} via EF` });
               continue;
             } else {
+              if (strict) {
+                throw new Error(`Strict mode: event-checkin EF returned ${efResult.status} for participant ${participant.id}`);
+              }
               log({ level: "warn", phase: "checkin", step: "ef_checkin_failed", message: `event-checkin EF returned ${efResult.status} for participant ${participant.id}, falling back to direct update` });
             }
           } catch (authErr) {
+            if (strict) {
+              throw new Error(`Strict mode: auth failed for ${username}, cannot check in participant ${participant.id}: ${String(authErr)}`);
+            }
             log({ level: "warn", phase: "checkin", step: "ef_auth_fallback", message: `Auth failed for ${username}, using direct update: ${String(authErr)}` });
           }
         }
@@ -199,6 +206,7 @@ export async function simMatch(
   log: (entry: Omit<SimLogEntry, "timestamp">) => void,
   supabaseUrl?: string,
   serviceRoleKey?: string,
+  strict?: boolean,
 ): Promise<{ matchPairs: Array<{ userId1: string; userId2: string; eventId: string }>; assertions: SimAssertionResult[] }> {
   const matchPairs: Array<{ userId1: string; userId2: string; eventId: string }> = [];
   const assertions: SimAssertionResult[] = [];
@@ -226,9 +234,15 @@ export async function simMatch(
           log({ level: "info", phase: "match", step: "ef_match", message: `event-matching EF created ${pairs.length} pairs for event ${eventId}`, data: { eventId, idempotent: efData.idempotent } });
           return;
         } else {
+          if (strict) {
+            throw new Error(`Strict mode: event-matching EF returned ${efResult.status} for event ${eventId}`);
+          }
           log({ level: "warn", phase: "match", step: "ef_match_failed", message: `event-matching EF returned ${efResult.status} for event ${eventId}, falling back to direct vote insert` });
         }
       } catch (efErr) {
+        if (strict) {
+          throw new Error(`Strict mode: event-matching EF error for event ${eventId}: ${String(efErr)}`);
+        }
         log({ level: "warn", phase: "match", step: "ef_match_error", message: `event-matching EF error for event ${eventId}: ${String(efErr)}, falling back to direct vote insert` });
       }
     }

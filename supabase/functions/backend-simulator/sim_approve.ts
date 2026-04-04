@@ -7,6 +7,7 @@ import {
   simAssertApplicationApproved,
   simAssertApplicationRejected,
 } from "./sim_assertions.ts";
+import { getSimPartnerToken, getPartnerEmail, callEdgeFunction } from "./sim_auth.ts";
 
 export interface SimApproveResult {
   approvedApplicationIds: string[];
@@ -30,6 +31,9 @@ export async function simApproveVerifications(
   pendingReviewApplicationIds: string[],
   log: (entry: Omit<SimLogEntry, "timestamp">) => void,
   approveRate: number = 0.8,
+  supabaseUrl?: string,
+  anonKey?: string,
+  strict?: boolean,
 ): Promise<SimApproveResult> {
   const approvedApplicationIds: string[] = [];
   const rejectedApplicationIds: string[] = [];
@@ -87,13 +91,51 @@ export async function simApproveVerifications(
           continue;
         }
 
-        const { error: updErr } = await supabase
-          .from("verification_submissions")
-          .update({ status: "approved" })
-          .eq("id", submissionId);
-        if (updErr) {
-          log({ level: "error", phase: "approve", step: "update_submission", message: `Failed to approve submission ${submissionId}: ${updErr.message}` });
-          continue;
+        // Attempt to approve via partner-review-submission EF; fall back to direct DB update
+        if (supabaseUrl && anonKey && partnerId) {
+          const simUserPassword = Deno.env.get("SIM_USER_PASSWORD") ?? "password1234!";
+          try {
+            const partnerEmail = await getPartnerEmail(supabase, partnerId);
+            if (partnerEmail) {
+              const partnerToken = await getSimPartnerToken(supabaseUrl, anonKey, partnerEmail, simUserPassword);
+              const efResult = await callEdgeFunction(supabaseUrl, "partner-review-submission", {
+                action: "review",
+                submission_id: submissionId,
+                result: "approved",
+              }, partnerToken);
+              if (efResult.status === 200) {
+                log({ level: "info", phase: "approve", step: "ef_approve", message: `Approved submission ${submissionId} via EF` });
+                // EF handled the status update — skip direct DB update, continue to assertions below
+              } else {
+                throw new Error(`EF returned ${efResult.status}`);
+              }
+            } else {
+              throw new Error("Partner email not found");
+            }
+          } catch (efErr) {
+            if (strict) {
+              throw new Error(`Strict mode: EF failed for submission ${submissionId} (app ${appId}): ${String(efErr)}`);
+            }
+            log({ level: "warn", phase: "approve", step: "ef_approve_fallback", message: `EF failed, falling back to direct update: ${String(efErr)}` });
+            const { error: updErr } = await supabase
+              .from("verification_submissions")
+              .update({ status: "approved" })
+              .eq("id", submissionId);
+            if (updErr) {
+              log({ level: "error", phase: "approve", step: "update_submission", message: `Failed to approve submission ${submissionId}: ${updErr.message}` });
+              continue;
+            }
+          }
+        } else {
+          // No EF credentials — use direct DB update
+          const { error: updErr } = await supabase
+            .from("verification_submissions")
+            .update({ status: "approved" })
+            .eq("id", submissionId);
+          if (updErr) {
+            log({ level: "error", phase: "approve", step: "update_submission", message: `Failed to approve submission ${submissionId}: ${updErr.message}` });
+            continue;
+          }
         }
 
         // Assert verification approved (trigger should have created partner_verified_users)
@@ -132,6 +174,7 @@ export async function simApproveVerifications(
         }
       }
     } catch (e) {
+      if (strict) throw e;
       log({ level: "error", phase: "approve", step: "approve_loop", message: `Unexpected error for app ${appId}: ${String(e)}` });
     }
   }
@@ -172,13 +215,51 @@ export async function simApproveVerifications(
           continue;
         }
 
-        const { error: updErr } = await supabase
-          .from("verification_submissions")
-          .update({ status: "rejected" })
-          .eq("id", submissionId);
-        if (updErr) {
-          log({ level: "error", phase: "approve", step: "update_submission", message: `Failed to reject submission ${submissionId}: ${updErr.message}` });
-          continue;
+        // Attempt to reject via partner-review-submission EF; fall back to direct DB update
+        if (supabaseUrl && anonKey && partnerId) {
+          const simUserPassword = Deno.env.get("SIM_USER_PASSWORD") ?? "password1234!";
+          try {
+            const partnerEmail = await getPartnerEmail(supabase, partnerId);
+            if (partnerEmail) {
+              const partnerToken = await getSimPartnerToken(supabaseUrl, anonKey, partnerEmail, simUserPassword);
+              const efResult = await callEdgeFunction(supabaseUrl, "partner-review-submission", {
+                action: "review",
+                submission_id: submissionId,
+                result: "rejected",
+              }, partnerToken);
+              if (efResult.status === 200) {
+                log({ level: "info", phase: "approve", step: "ef_reject", message: `Rejected submission ${submissionId} via EF` });
+                // EF handled the status update — skip direct DB update, continue to assertions below
+              } else {
+                throw new Error(`EF returned ${efResult.status}`);
+              }
+            } else {
+              throw new Error("Partner email not found");
+            }
+          } catch (efErr) {
+            if (strict) {
+              throw new Error(`Strict mode: EF failed for submission ${submissionId} (app ${appId}): ${String(efErr)}`);
+            }
+            log({ level: "warn", phase: "approve", step: "ef_reject_fallback", message: `EF failed, falling back to direct update: ${String(efErr)}` });
+            const { error: updErr } = await supabase
+              .from("verification_submissions")
+              .update({ status: "rejected" })
+              .eq("id", submissionId);
+            if (updErr) {
+              log({ level: "error", phase: "approve", step: "update_submission", message: `Failed to reject submission ${submissionId}: ${updErr.message}` });
+              continue;
+            }
+          }
+        } else {
+          // No EF credentials — use direct DB update
+          const { error: updErr } = await supabase
+            .from("verification_submissions")
+            .update({ status: "rejected" })
+            .eq("id", submissionId);
+          if (updErr) {
+            log({ level: "error", phase: "approve", step: "update_submission", message: `Failed to reject submission ${submissionId}: ${updErr.message}` });
+            continue;
+          }
         }
 
         // Assert application rejected (trigger should have updated status)
@@ -213,6 +294,7 @@ export async function simApproveVerifications(
         }
       }
     } catch (e) {
+      if (strict) throw e;
       log({ level: "error", phase: "approve", step: "reject_loop", message: `Unexpected error for app ${appId}: ${String(e)}` });
     }
   }
