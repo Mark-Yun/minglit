@@ -13,6 +13,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:mocktail/mocktail.dart';
+
+import '../utils/mocks.dart';
 
 // ---------------------------------------------------------------------------
 // Test app helper
@@ -97,6 +100,9 @@ Widget _createPartnerTestApp({
         if (onboardingState.hasValue) return onboardingState.value!;
         throw StateError('loading');
       }),
+      // Fix #1026: prevent PartnerApplyPage.loadDraft() from accessing
+      // Supabase.instance via partnerRepository provider.
+      partnerRepositoryProvider.overrideWithValue(_mockPartnerRepository()),
     ],
     child: MaterialApp.router(
       theme: MinglitTheme.materialTheme,
@@ -110,6 +116,14 @@ Widget _createPartnerTestApp({
       supportedLocales: AppLocalizations.supportedLocales,
     ),
   );
+}
+
+/// Creates a [MockPartnerRepository] with default stubs so that
+/// [PartnerApplyPage.initState] → loadDraft() never touches Supabase.
+MockPartnerRepository _mockPartnerRepository() {
+  final mock = MockPartnerRepository();
+  when(() => mock.getMyApplication()).thenAnswer((_) async => null);
+  return mock;
 }
 
 /// Fake AuthController — returns immediately without calling Supabase.
