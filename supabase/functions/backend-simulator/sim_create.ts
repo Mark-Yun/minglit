@@ -685,7 +685,10 @@ export async function simDiscoverAndApply(
   const paidApplicationIds: string[] = [];
   const pendingReviewApplicationIds: string[] = [];
 
-  const simUserPassword = Deno.env.get("SIM_USER_PASSWORD") ?? "password1234!";
+  const simUserPassword = Deno.env.get("SIM_USER_PASSWORD");
+  if (supabaseUrl && anonKey && !simUserPassword) {
+    log({ level: "warn", phase: "apply", step: "sim_user_password", message: "SIM_USER_PASSWORD not set; EF apply path disabled, using direct DB only" });
+  }
 
   const { data: existingEventsRaw } = await supabase
     .from("events")
@@ -716,7 +719,7 @@ export async function simDiscoverAndApply(
   }
 
   // Fix #705: Pre-warm auth token cache to eliminate sequential auth latency in the apply loop
-  if (supabaseUrl && anonKey) {
+  if (supabaseUrl && anonKey && simUserPassword) {
     await prewarmAuthTokens(users as { username: string }[], supabaseUrl, anonKey, simUserPassword, log);
   }
 
