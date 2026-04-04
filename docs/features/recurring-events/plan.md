@@ -54,11 +54,14 @@
 | **신규** `apps/app_partner/lib/src/features/party/logic/recurrence_management_controller.dart` | 반복 관리 상태 (pause/resume/cancel) |
 | **신규** `apps/app_partner/lib/src/features/party/ui/recurrence_management_screen.dart` | 반복 규칙 관리 화면 |
 | `apps/app_partner/lib/src/features/party/ui/event_create_operation_tab.dart` | 반복 설정 섹션 추가 (일정 설정 → 반복 설정 → 티켓 사이) |
+| `apps/app_partner/lib/src/features/party/ui/party_detail_screen.dart` | 이벤트 목록에 반복 아이콘(🔄) 표시 + 반복 관리 버튼 그룹(일시정지/규칙 수정/반복 해제) → RecurrenceManagementScreen 네비게이션 |
 | `apps/app_partner/lib/src/routing/app_routes.dart` | `/more/parties/:partyId/recurrence` 라우트 추가 |
 | **신규** `apps/app_partner/test/src/features/party/logic/recurrence_settings_controller_test.dart` | Controller 테스트 |
 | **신규** `apps/app_partner/test/src/features/party/logic/recurrence_management_controller_test.dart` | Controller 테스트 |
 | **신규** `apps/app_partner/test/src/features/party/ui/recurrence_settings_section_test.dart` | Widget 테스트 |
 | **신규** `apps/app_partner/test/src/features/party/ui/recurrence_management_screen_test.dart` | Widget 테스트 |
+| **신규** `apps/app_partner/test/goldens/recurrence_settings_section_golden_test.dart` | Golden 테스트: 반복 설정 섹션 (토글 OFF/ON, 미리보기) |
+| **신규** `apps/app_partner/test/goldens/recurrence_management_screen_golden_test.dart` | Golden 테스트: 반복 관리 화면 (active/paused/cancelled 상태) |
 
 ## 설계 결정
 
@@ -168,7 +171,20 @@ CREATE UNIQUE INDEX uq_events_recurrence_date
 
 **근거**: 크론잡은 매일 1회(UTC 00:00)만 실행되므로, 규칙 생성 직후 다음 크론까지 최대 24시간 공백이 생긴다. 즉시 생성으로 UX 일관성을 보장하고, 파트너가 미리보기에서 본 이벤트가 바로 노출된다.
 
-### 9. resume 시 부족분 즉시 생성
+### 9. update 시 `last_generated_date` 동작
+
+**결정**: `update` 시 `last_generated_date`를 오늘 날짜로 리셋한다.
+
+**로직**:
+1. 규칙의 pattern/days_of_week/month_day/start_time/end_time/end_date 변경
+2. `last_generated_date` → 오늘 날짜로 리셋
+3. 이미 생성된 이벤트는 변경 없음 (spec: "이미 생성된 이벤트는 변경 없음")
+4. 다음 크론 실행 시 오늘부터 1개월 범위에서 새 규칙 기반으로 미생성분 생성
+5. 기존 이벤트와 새 규칙 기반 이벤트가 날짜 겹치면 unique index(`uq_events_recurrence_date`)로 중복 방지 → `ON CONFLICT DO NOTHING`
+
+**근거**: 리셋하지 않으면 새 규칙이 반영되는 시점이 `last_generated_date` 이후로 밀려, 규칙 변경 직후 1개월 윈도우 내에서 이전 규칙으로 생성된 이벤트만 남고 새 규칙 이벤트가 없는 공백이 발생한다. 리셋 + ON CONFLICT DO NOTHING으로 기존 이벤트를 보존하면서 새 규칙 이벤트를 채운다.
+
+### 10. resume 시 부족분 즉시 생성
 
 **결정**: `POST /recurrence-rules/:id/resume` 호출 시, paused 기간에 미생성된 이벤트를 즉시 배치 생성한다.
 
