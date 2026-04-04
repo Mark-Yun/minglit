@@ -137,9 +137,9 @@ void main() {
       );
     });
 
-    testWidgets(
-        'normal state has no 마감 overlay and no saturation filter',
-        (tester) async {
+    testWidgets('normal state has no 마감 overlay and no saturation filter', (
+      tester,
+    ) async {
       // difference > 0, currentParticipants < maxParticipants → normal
       final normalEvent = Event(
         id: 'e-normal',
