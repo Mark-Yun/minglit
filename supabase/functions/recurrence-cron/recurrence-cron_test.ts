@@ -303,9 +303,12 @@ Deno.test(
         new URL("./index.ts", import.meta.url),
       );
 
-      // end_date 10 days from today: 2026-04-15
+      // end_date = today + 10 days (computed dynamically so the test is date-independent)
+      const todayUtc = new Date().toISOString().split("T")[0];
+      const endDateMs = new Date(`${todayUtc}T00:00:00Z`).getTime() + 10 * 24 * 60 * 60 * 1000;
+      const endDateStr = new Date(endDateMs).toISOString().split("T")[0];
       const rule = makeRule({
-        end_date: "2026-04-15",
+        end_date: endDateStr,
         days_of_week: [0, 1, 2, 3, 4, 5, 6], // every day
       });
 
@@ -332,10 +335,8 @@ Deno.test(
 
           assertEquals(res.status, 200);
           assertEquals(payload.processed, 1);
-          // From today (2026-04-05) to 2026-04-15 inclusive = 11 days
-          // All days of week, so exactly 11 events (or 10 if today is excluded)
-          const totalEvents = payload.total_events as number;
-          assertEquals(totalEvents >= 10 && totalEvents <= 11, true);
+          // From today to today+10 inclusive = 11 days, all days of week → exactly 11 events
+          assertEquals(payload.total_events, 11);
         });
       });
     });
