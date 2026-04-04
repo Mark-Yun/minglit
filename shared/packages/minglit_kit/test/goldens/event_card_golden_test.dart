@@ -172,6 +172,29 @@ void main() {
     ),
   );
 
+  // Fix #995: dark-mode skeleton uses theme-aware colors (WCAG AA contrast).
+  goldenTest(
+    'loading skeleton dark',
+    fileName: 'event_card_loading_dark',
+    pumpBeforeTest: pumpNTimes(4),
+    builder: () => GoldenTestGroup(
+      columnWidthBuilder: (_) => const FixedColumnWidth(400),
+      children: [
+        GoldenTestScenario(
+          name: 'loading skeleton dark',
+          child: SizedBox(
+            width: 390,
+            height: 300,
+            child: _wrap(
+              const MinglitEventCard.loading(),
+              brightness: Brightness.dark,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
   goldenTest(
     'dark theme',
     fileName: 'event_card_dark',
