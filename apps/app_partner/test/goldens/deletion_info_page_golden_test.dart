@@ -88,6 +88,38 @@ void main() {
   );
 
   goldenTest(
+    'DeletionInfoPage — reason 있음 (dark)',
+    fileName: 'deletion_info_page_with_reason_dark',
+    pumpBeforeTest: (tester) async {
+      await tester.pumpAndSettle();
+    },
+    builder: () => GoldenTestGroup(
+      columnWidthBuilder: (_) => const FixedColumnWidth(400),
+      children: [
+        GoldenTestScenario(
+          name: 'with reason (dark)',
+          child: SizedBox(
+            width: 390,
+            height: 844,
+            child: PartnerGoldenPageWrapper(
+              brightness: Brightness.dark,
+              overrides: [
+                goRouterProvider.overrideWithValue(mockRouter),
+                accountDeletionCoordinatorProvider.overrideWith(
+                  (ref) => AccountDeletionCoordinator(mockRouter),
+                ),
+              ],
+              page: const DeletionInfoPage(
+                reasonCode: 'service_dissatisfaction',
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  goldenTest(
     'DeletionInfoPage — reason 없음 (dark)',
     fileName: 'deletion_info_page_no_reason_dark',
     pumpBeforeTest: (tester) async {

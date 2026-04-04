@@ -80,11 +80,12 @@ class DeletionInfoPage extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: MinglitSpacing.medium),
+                  // Fix #951: 유예 기간 경고 카드 반경 하드코딩 값을 디자인 토큰으로 교체
                   Container(
                     padding: const EdgeInsets.all(MinglitSpacing.medium),
                     decoration: BoxDecoration(
                       color: MinglitColors.error.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(MinglitRadius.card),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
