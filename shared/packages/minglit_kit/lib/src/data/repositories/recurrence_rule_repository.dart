@@ -50,10 +50,24 @@ class RecurrenceRuleRepository {
     _ensureSuccess(response);
 
     final data = _decodeResponse(response);
-    final ruleId = data['rule_id'] as String;
+    final rawId = data['rule_id'];
+    if (rawId is! String || rawId.isEmpty) {
+      throw FunctionException(
+        status: 500,
+        details: jsonEncode(data),
+        reasonPhrase: 'Missing rule_id in create response',
+      );
+    }
 
-    final rule = await getById(ruleId);
-    return rule!;
+    final rule = await getById(rawId);
+    if (rule == null) {
+      throw FunctionException(
+        status: 500,
+        details: 'Created rule $rawId but failed to load from recurrence_rules',
+        reasonPhrase: 'Post-create read failed',
+      );
+    }
+    return rule;
   }
 
   /// Updates mutable fields of an existing active or paused rule.

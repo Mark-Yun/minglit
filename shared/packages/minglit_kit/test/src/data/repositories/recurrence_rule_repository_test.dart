@@ -146,6 +146,37 @@ void main() {
           throwsA(isA<FunctionException>()),
         );
       });
+
+      test('throws FunctionException when post-create getById returns null', () async {
+        // EF succeeds but DB read returns null (e.g. replication lag or race condition)
+        when(
+          () => mockFunctions.invoke(_efName, body: any(named: 'body')),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: jsonEncode({'success': true, 'rule_id': 'rule_missing', 'events_created': 0}),
+          ),
+        );
+
+        mockTable(mockClient, 'recurrence_rules');
+
+        expect(
+          () => repository.create(
+            partyId: 'party_1',
+            pattern: RecurrencePattern.weekly,
+            daysOfWeek: [1],
+            startTime: '19:00',
+            endTime: '22:00',
+          ),
+          throwsA(
+            isA<FunctionException>().having(
+              (e) => e.reasonPhrase,
+              'reasonPhrase',
+              'Post-create read failed',
+            ),
+          ),
+        );
+      });
     });
 
     group('update', () {
