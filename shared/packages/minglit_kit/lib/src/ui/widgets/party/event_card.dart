@@ -7,6 +7,23 @@ import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_image.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_skeleton.dart';
 
+/// Internal enum representing the visual state of the event card.
+///
+/// Priority (highest first): ended > soldOut > today > normal
+enum _EventCardState {
+  /// Default — event is in the future and has available capacity.
+  normal,
+
+  /// Event starts today (difference == 0).
+  today,
+
+  /// Event is at or over max capacity (currentParticipants >= maxParticipants).
+  soldOut,
+
+  /// Event start time is in the past (difference < 0).
+  ended,
+}
+
 /// **Minglit Event Card**
 ///
 /// A reusable card widget to display event information.
@@ -58,6 +75,16 @@ class MinglitEventCard extends StatelessWidget {
         ? 'D-$difference'
         : '종료';
 
+    // Fix #478: Determine card visual state
+    // Priority: ended > soldOut > today > normal
+    final cardState = difference < 0
+        ? _EventCardState.ended
+        : event!.currentParticipants >= event!.maxParticipants
+        ? _EventCardState.soldOut
+        : difference == 0
+        ? _EventCardState.today
+        : _EventCardState.normal;
+
     // Format Date
     final dateLabel = DateFormat(
       'M월 d일 (E) HH:mm',
@@ -77,62 +104,113 @@ class MinglitEventCard extends StatelessWidget {
 
     final partner = party?.partner;
 
+    // Fix #478: amber border for today state
     return GestureDetector(
       onTap: onTap,
-      child: ColoredBox(
-        color: theme.colorScheme.surface,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Image with overlays
-            Stack(
-              children: [
-                // Image
-                AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: MinglitImage(
-                    path: party?.imageUrl ?? '',
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                // Gradient fade at bottom
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          MinglitColors.transparent,
-                          MinglitColors.textPrimary.withValues(
-                            alpha: MinglitOpacity.gradient,
-                          ),
-                        ],
-                        stops: const [0.45, 1.0],
+      child: Container(
+        decoration: BoxDecoration(
+          border: cardState == _EventCardState.today
+              ? Border.all(color: MinglitColors.secondary, width: 2)
+              : null,
+        ),
+        child: ColoredBox(
+          color: theme.colorScheme.surface,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Image with overlays
+              Stack(
+                children: [
+                  // Fix #478: grayscale ColorFiltered for ended state
+                  AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: ColorFiltered(
+                      colorFilter: cardState == _EventCardState.ended
+                          ? const ColorFilter.mode(
+                              Colors.grey,
+                              BlendMode.saturation,
+                            )
+                          : const ColorFilter.mode(
+                              Colors.transparent,
+                              BlendMode.dst,
+                            ),
+                      child: MinglitImage(
+                        path: party?.imageUrl ?? '',
+                        fit: BoxFit.cover,
                       ),
                     ),
                   ),
-                ),
-                // Partner overlay (top-left) - only if partner exists
-                if (partner != null)
+                  // Gradient fade at bottom
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            MinglitColors.transparent,
+                            MinglitColors.textPrimary.withValues(
+                              alpha: MinglitOpacity.gradient,
+                            ),
+                          ],
+                          stops: const [0.45, 1.0],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Fix #478: soldOut scrim + "마감" badge overlay
+                  if (cardState == _EventCardState.soldOut)
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.5),
+                        ),
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: MinglitSpacing.medium,
+                              vertical: MinglitSpacing.small,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.6),
+                              borderRadius: BorderRadius.circular(
+                                MinglitRadius.small,
+                              ),
+                            ),
+                            child: Text(
+                              '마감',
+                              style: Theme.of(
+                                context,
+                              ).textTheme.titleMedium?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  // Partner overlay (top-left) - only if partner exists
+                  if (partner != null)
+                    Positioned(
+                      top: MinglitSpacing.small,
+                      left: MinglitSpacing.small,
+                      child: _PartnerOverlay(partner: partner),
+                    ),
+                  // D-Day + Participant overlay (top-right)
                   Positioned(
                     top: MinglitSpacing.small,
-                    left: MinglitSpacing.small,
-                    child: _PartnerOverlay(partner: partner),
+                    right: MinglitSpacing.small,
+                    child: _ParticipantDDayOverlay(
+                      current: event!.currentParticipants,
+                      max: event!.maxParticipants,
+                      dDayLabel: dDayLabel,
+                      cardState: cardState,
+                    ),
                   ),
-                // D-Day + Participant overlay (top-right)
-                Positioned(
-                  top: MinglitSpacing.small,
-                  right: MinglitSpacing.small,
-                  child: _ParticipantDDayOverlay(
-                    current: event!.currentParticipants,
-                    max: event!.maxParticipants,
-                    dDayLabel: dDayLabel,
-                  ),
-                ),
-              ],
-            ),
+                ],
+              ),
 
             // Content area
             Padding(
@@ -188,6 +266,7 @@ class MinglitEventCard extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }
@@ -205,11 +284,15 @@ class _ParticipantDDayOverlay extends StatelessWidget {
     required this.current,
     required this.max,
     required this.dDayLabel,
+    required this.cardState,
   });
 
   final int current;
   final int max;
   final String dDayLabel;
+
+  // Fix #478: cardState used to color D-Day label and overlay background
+  final _EventCardState cardState;
 
   @override
   Widget build(BuildContext context) {
@@ -235,6 +318,19 @@ class _ParticipantDDayOverlay extends StatelessWidget {
       fontWeight: FontWeight.w400,
     );
 
+    // Fix #478: ended state uses muted grey overlay background
+    final overlayBgColor = cardState == _EventCardState.ended
+        ? Colors.grey.withValues(alpha: 0.7)
+        : MinglitColors.textPrimary.withValues(alpha: MinglitOpacity.overlay);
+
+    // Fix #478: D-Day label color — amber for today
+    final dDayStyle = cardState == _EventCardState.today
+        ? overlayStyle.copyWith(
+            color: MinglitColors.secondary,
+            fontWeight: FontWeight.w600,
+          )
+        : overlayStyle;
+
     // Fix #996: Semantics 래퍼로 스크린 리더 접근성 지원
     return Semantics(
       label: ratio >= 1.0 ? '이벤트 만석, 참여 불가' : '참가자 $current/$max명, $dDayLabel',
@@ -245,9 +341,7 @@ class _ParticipantDDayOverlay extends StatelessWidget {
           vertical: MinglitSpacing.xsmall,
         ),
         decoration: BoxDecoration(
-          color: MinglitColors.textPrimary.withValues(
-            alpha: MinglitOpacity.overlay,
-          ),
+          color: overlayBgColor,
           borderRadius: BorderRadius.circular(MinglitRadius.small),
         ),
         child: Row(
@@ -304,7 +398,7 @@ class _ParticipantDDayOverlay extends StatelessWidget {
               color: MinglitColors.background,
             ),
             const SizedBox(width: 3),
-            Text(dDayLabel, style: overlayStyle),
+            Text(dDayLabel, style: dDayStyle),
           ],
         ),
       ),
