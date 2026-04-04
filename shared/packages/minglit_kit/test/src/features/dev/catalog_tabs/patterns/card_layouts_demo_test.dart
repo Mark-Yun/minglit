@@ -13,7 +13,18 @@ void main() {
       expect(find.text('Image Card'), findsOneWidget);
       expect(find.text('Transaction Card'), findsOneWidget);
       expect(find.text('Info Card'), findsOneWidget);
+      // Stats Card and Selectable Card may be below initial viewport — scroll to them
+      await tester.scrollUntilVisible(
+        find.text('Stats Card'),
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
       expect(find.text('Stats Card'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Selectable Card'),
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
       expect(find.text('Selectable Card'), findsOneWidget);
     });
 
@@ -61,7 +72,12 @@ void main() {
       await tester.pumpWidget(buildSubject());
       await tester.pump();
 
-      // Verify Selectable Card label is present
+      // Scroll to Selectable Card (may be below initial viewport)
+      await tester.scrollUntilVisible(
+        find.text('Selectable Card'),
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
       expect(find.text('Selectable Card'), findsOneWidget);
 
       // Find and tap the selectable card content (the card body text)

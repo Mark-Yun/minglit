@@ -98,14 +98,14 @@ class _PatternTile extends StatelessWidget {
           leading: Icon(
             icon,
             color: disabled
-                ? theme.colorScheme.onSurface.withValues(alpha: 0.38)
+                ? theme.colorScheme.onSurface.withOpacity(0.38)
                 : MinglitColors.primary,
           ),
           title: Text(
             title,
             style: theme.textTheme.titleSmall?.copyWith(
               color: disabled
-                  ? theme.colorScheme.onSurface.withValues(alpha: 0.38)
+                  ? theme.colorScheme.onSurface.withOpacity(0.38)
                   : null,
             ),
           ),

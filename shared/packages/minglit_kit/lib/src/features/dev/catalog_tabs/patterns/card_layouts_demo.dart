@@ -159,11 +159,11 @@ class _ImageCard extends StatelessWidget {
             child: Container(
               width: double.infinity,
               height: 120,
-              color: MinglitColors.primary.withValues(alpha: 0.15),
+              color: MinglitColors.primary.withOpacity(0.15),
               child: Icon(
                 Icons.image_outlined,
                 size: MinglitIconSize.xlarge,
-                color: MinglitColors.primary.withValues(alpha: 0.5),
+                color: MinglitColors.primary.withOpacity(0.5),
               ),
             ),
           ),
@@ -206,7 +206,7 @@ class _TransactionCard extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: MinglitColors.primary.withValues(alpha: 0.1),
+              color: MinglitColors.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(MinglitRadius.small),
             ),
             child: const Icon(
