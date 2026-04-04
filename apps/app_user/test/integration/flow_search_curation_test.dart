@@ -107,7 +107,7 @@ void main() {
       expect(find.text('Test Event 0'), findsOneWidget);
     });
 
-    testWidgets('검색 결과 없음 → "쿼리" 검색 결과가 없습니다', (tester) async {
+    testWidgets('검색 결과 없음 → 결과 없음 메시지 표시', (tester) async {
       setKoreanLocale(tester);
 
       await tester.pumpWidget(
@@ -123,7 +123,9 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
       await tester.pump();
 
-      expect(find.text('"없는쿼리" 검색 결과가 없습니다'), findsOneWidget);
+      // Fix #997: empty state 개선 — 쿼리 포함 문구 → 범용 메시지로 변경
+      expect(find.text('검색 결과가 없어요'), findsOneWidget);
+      expect(find.text('다른 키워드로 시도해보세요.'), findsOneWidget);
     });
 
     testWidgets('결과 카드 tap → EventDetailPage 이동', (tester) async {
