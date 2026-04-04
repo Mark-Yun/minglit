@@ -79,6 +79,7 @@ void main() {
       const protectedPrefixes = [
         '/my',
         '/tickets/my',
+        '/payment',
         '/purchase-history',
         '/certification',
         '/signup/consent',
