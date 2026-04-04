@@ -9,6 +9,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../helpers/mocks.dart';
 import '../../../helpers/supabase_mock_helpers.dart';
 
+const _efName = 'recurrence-rules';
+
 void main() {
   late MockSupabaseClient mockClient;
   late MockFunctionsClient mockFunctions;
@@ -381,5 +383,3 @@ void main() {
     });
   });
 }
-
-const _efName = 'recurrence-rules';
