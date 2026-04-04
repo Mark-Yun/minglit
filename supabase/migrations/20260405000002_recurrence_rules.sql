@@ -40,8 +40,15 @@ CREATE TABLE public.recurrence_rules (
   --   weekly/biweekly: month_day NULL
   --   monthly: month_day NOT NULL, days_of_week 비워야 함 (월 반복은 요일 무관)
   CONSTRAINT chk_pattern_fields CHECK (
-    (pattern IN ('weekly', 'biweekly') AND month_day IS NULL) OR
-    (pattern = 'monthly' AND month_day IS NOT NULL AND days_of_week = '{}')
+    (
+      pattern IN ('weekly', 'biweekly')
+      AND month_day IS NULL
+      AND cardinality(days_of_week) > 0
+    ) OR (
+      pattern = 'monthly'
+      AND month_day IS NOT NULL
+      AND cardinality(days_of_week) = 0
+    )
   )
 );
 
@@ -71,6 +78,16 @@ ALTER TABLE public.events
   -- recurrence_date: EF가 반복 규칙으로 이벤트 생성 시 명시적으로 설정하는 날짜 컬럼
   -- start_time::date 식 인덱스는 timestamptz에서 IMMUTABLE 제약 위반이므로 별도 컬럼 사용
   ADD COLUMN recurrence_date         date;
+
+-- recurrence_rule_id와 recurrence_date는 함께 NULL이거나 함께 NOT NULL이어야 한다
+ALTER TABLE public.events
+  ADD CONSTRAINT chk_events_recurrence_fields
+  CHECK (
+    (recurrence_rule_id IS NULL AND recurrence_date IS NULL)
+    OR (recurrence_rule_id IS NOT NULL AND recurrence_date IS NOT NULL)
+  );
+
+COMMENT ON CONSTRAINT chk_events_recurrence_fields ON public.events IS 'recurrence_rule_id와 recurrence_date는 함께 NULL이거나 함께 NOT NULL이어야 한다.';
 
 COMMENT ON COLUMN public.events.recurrence_rule_id IS '반복 규칙으로 생성된 이벤트의 원본 규칙 ID. 수동 생성 이벤트는 NULL.';
 COMMENT ON COLUMN public.events.is_recurrence_exception IS '반복 규칙의 예외 이벤트 여부 (수동 수정된 회차)';

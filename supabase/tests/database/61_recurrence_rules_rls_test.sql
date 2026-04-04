@@ -97,10 +97,11 @@ SELECT set_config('tests.rr_party_b_id', id::text, true) FROM party;
 -- Recurrence rule for Party A (service_role로 직접 삽입)
 WITH rule AS (
   INSERT INTO public.recurrence_rules (
-    party_id, pattern, start_time, end_time
+    party_id, pattern, days_of_week, start_time, end_time
   ) VALUES (
     current_setting('tests.rr_party_a_id')::uuid,
     'weekly',
+    '{1}',
     '10:00',
     '11:00'
   )
@@ -160,8 +161,8 @@ SELECT lives_ok(
   format(
     $$
       INSERT INTO public.recurrence_rules (
-        party_id, pattern, start_time, end_time
-      ) VALUES ('%s', 'biweekly', '14:00', '15:00')
+        party_id, pattern, days_of_week, start_time, end_time
+      ) VALUES ('%s', 'biweekly', '{5}', '14:00', '15:00')
     $$,
     current_setting('tests.rr_party_a_id')
   ),
