@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>환불 정책 이원화 — Wireframe v2 (UX Review)</title>
+<style>
+  :root {
+    /* === Design Tokens from minglit_design_tokens.dart === */
+    --primary: #9900FF;
+    --secondary: #FF9900;
+    --tertiary: #48C9B0;
+    --surface: #F9FAFB;
+    --background: #FFFFFF;
+    --error: #EF4444;
+    --success: #22C55E;
+    --warning: #F59E0B;
+    --text-primary: #111827;
+    --text-secondary: #4B5563;
+    --scrim: rgba(0,0,0,0.5);
+
+    /* MinglitRadius (from code) */
+    --radius-small: 8px;
+    --radius-button: 12px;
+    --radius-card: 16px;
+    --radius-input: 12px;
+
+    /* MinglitSpacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --screen-edge: 16px;
+
+    /* Partner (MinglitPartnerColors) */
+    --partner-primary: #6C3CE1;
+    --partner-primary-light: #8B5CF6;
+    --partner-surface: #F5F0FF;
+    --partner-border: #E8E0FF;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans KR', -apple-system, sans-serif;
+    background: #E5E7EB;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    padding: 32px;
+    justify-content: center;
+  }
+  h1.page-title {
+    width: 100%;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    width: 100%;
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+  }
+  .section-label {
+    width: 100%;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--text-primary);
+    margin: 16px 0 8px;
+    flex-basis: 100%;
+  }
+  .section-note {
+    width: 100%;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    flex-basis: 100%;
+  }
+  .screen-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    justify-content: center;
+    width: 100%;
+  }
+  .screen-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .screen-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-align: center;
+    max-width: 375px;
+  }
+  /* v2 change indicator */
+  .screen-label .changed {
+    display: inline-block;
+    background: var(--primary);
+    color: #fff;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 100px;
+    margin-left: 4px;
+    font-weight: 600;
+  }
+  .screen-label .new-screen {
+    display: inline-block;
+    background: var(--success);
+    color: #fff;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 100px;
+    margin-left: 4px;
+    font-weight: 600;
+  }
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: var(--surface);
+    border-radius: 40px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .phone.short { height: 640px; }
+  .status-bar {
+    height: 44px;
+    background: var(--background);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex-shrink: 0;
+  }
+  .app-bar {
+    height: 56px;
+    background: var(--background);
+    display: flex;
+    align-items: center;
+    padding: 0 var(--screen-edge);
+    gap: 12px;
+    border-bottom: 1px solid #E5E7EB;
+    flex-shrink: 0;
+  }
+  .app-bar.partner { background: var(--partner-surface); }
+  .app-bar .back { font-size: 20px; cursor: pointer; }
+  .app-bar .title { font-size: 18px; font-weight: 600; color: var(--text-primary); }
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--screen-edge);
+  }
+  .card {
+    background: var(--background);
+    border-radius: var(--radius-card);
+    padding: var(--spacing-md);
+    margin-bottom: 12px;
+  }
+  .card-shadow { box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+  /* Buttons — v2: height 56px to match MinglitComponentTheme */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 56px;
+    border-radius: var(--radius-button);
+    font-size: 16px;
+    font-weight: bold;
+    padding: 0 24px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-error { background: var(--error); color: #fff; }
+  .btn-outline { background: transparent; border: 1px solid #D1D5DB; color: var(--text-primary); }
+  .btn-text { background: transparent; color: var(--primary); height: 36px; font-size: 14px; font-weight: bold; width: auto; padding: 0 12px; }
+  .btn-partner { background: var(--partner-primary); color: #fff; }
+  .btn-sm { height: 36px; font-size: 13px; }
+  .btn-half { width: calc(50% - 6px); }
+
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    margin-top: var(--spacing-md);
+  }
+
+  /* Badge */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .badge-success { background: #DCFCE7; color: #166534; }
+  .badge-error { background: #FEE2E2; color: #991B1B; }
+  .badge-warning { background: #FEF3C7; color: #92400E; }
+  .badge-info { background: #EDE9FE; color: #5B21B6; }
+  .badge-pending { background: #FEF3C7; color: #92400E; }
+  .badge-partner { background: var(--partner-surface); color: var(--partner-primary); }
+  .badge-rejected { background: #FEE2E2; color: #991B1B; }
+
+  /* Typography */
+  .text-title { font-size: 16px; font-weight: bold; color: var(--text-primary); }
+  .text-body { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
+  .text-label { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+  .text-caption { font-size: 11px; color: #9CA3AF; }
+  .text-error { color: var(--error); }
+  .text-success { color: var(--success); }
+  .text-primary-color { color: var(--primary); }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: #E5E7EB;
+    margin: var(--spacing-md) 0;
+  }
+
+  /* Dialog overlay */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--scrim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-lg);
+    z-index: 10;
+  }
+  .dialog {
+    background: var(--background);
+    border-radius: var(--radius-card);
+    padding: var(--spacing-lg);
+    width: 100%;
+    max-width: 320px;
+  }
+  .dialog .text-title { text-align: center; margin-bottom: 12px; }
+  .dialog .text-body { text-align: center; margin-bottom: 4px; }
+
+  /* Bottom sheet */
+  .bottom-sheet-overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--scrim);
+    display: flex;
+    align-items: flex-end;
+    z-index: 10;
+  }
+  .bottom-sheet {
+    background: var(--background);
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+    padding: var(--spacing-lg);
+    width: 100%;
+  }
+  .bottom-sheet .handle {
+    width: 40px;
+    height: 4px;
+    background: #D1D5DB;
+    border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+
+  /* Radio */
+  .radio-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #F3F4F6;
+    font-size: 14px;
+    color: var(--text-primary);
+  }
+  .radio-item:last-of-type { border-bottom: none; }
+  .radio-circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #D1D5DB;
+    flex-shrink: 0;
+  }
+  .radio-circle.selected {
+    border-color: var(--primary);
+    background: var(--primary);
+    box-shadow: inset 0 0 0 4px #fff;
+  }
+
+  /* Info row */
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 14px;
+  }
+  .info-row .label { color: var(--text-secondary); }
+  .info-row .value { color: var(--text-primary); font-weight: 500; }
+
+  /* Refund policy detail */
+  .policy-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    font-size: 14px;
+  }
+  .policy-row .condition { color: var(--text-primary); }
+  .policy-row .result { font-weight: 600; }
+
+  /* Purchase card */
+  .purchase-card {
+    background: var(--background);
+    border-radius: var(--radius-card);
+    padding: var(--spacing-md);
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .purchase-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .purchase-event {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+  .purchase-meta {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+  }
+
+  /* Notification card */
+  .notif-card {
+    background: var(--background);
+    border-radius: var(--radius-card);
+    padding: 14px var(--spacing-md);
+    margin-bottom: 8px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .notif-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--error);
+    margin-top: 4px;
+    flex-shrink: 0;
+  }
+  .notif-content { flex: 1; }
+  .notif-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+  .notif-body { font-size: 13px; color: var(--text-secondary); margin-bottom: 2px; }
+  .notif-time { font-size: 11px; color: #9CA3AF; }
+
+  /* Refund detail (partner) */
+  .detail-section {
+    margin-bottom: var(--spacing-md);
+  }
+  .detail-section .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Banner */
+  .banner {
+    border-radius: var(--radius-card);
+    padding: 14px var(--spacing-md);
+    margin-bottom: 12px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .banner-success { background: #DCFCE7; color: #166534; }
+  .banner-warning { background: #FEF3C7; color: #92400E; }
+  .banner-info { background: #EDE9FE; color: #5B21B6; }
+  .banner-error { background: #FEE2E2; color: #991B1B; }
+
+  /* Policy section in event detail */
+  .policy-banner {
+    background: #F0FDF4;
+    border-radius: var(--radius-card);
+    padding: 12px var(--spacing-md);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .policy-banner.expired {
+    background: #FEF3C7;
+  }
+  .policy-banner .left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .policy-banner .icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+  }
+
+  /* Input */
+  .input {
+    width: 100%;
+    height: 44px;
+    border: 1px solid #D1D5DB;
+    border-radius: var(--radius-input);
+    padding: 0 12px;
+    font-size: 14px;
+    color: var(--text-primary);
+    background: var(--surface);
+    margin-top: 8px;
+  }
+  .input::placeholder { color: #9CA3AF; }
+  .textarea {
+    width: 100%;
+    height: 80px;
+    border: 1px solid #D1D5DB;
+    border-radius: var(--radius-input);
+    padding: 12px;
+    font-size: 14px;
+    color: var(--text-primary);
+    background: var(--surface);
+    margin-top: 8px;
+    resize: none;
+  }
+
+  /* Icon circle for dialogs — v2: replace emoji with CSS icons */
+  .icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 20px;
+  }
+  .icon-circle-error { background: #FEE2E2; color: var(--error); }
+  .icon-circle-warning { background: #FEF3C7; color: var(--warning); }
+  .icon-circle-success { background: #DCFCE7; color: var(--success); }
+  .icon-circle-info { background: #EDE9FE; color: var(--primary); }
+
+  /* Loading spinner */
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #E5E7EB;
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Toast — v2: use success token properly */
+  .toast {
+    border-radius: var(--radius-button);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    text-align: center;
+  }
+  .toast-success { background: var(--success); color: #fff; }
+  .toast-info { background: var(--primary); color: #fff; }
+
+  /* Redline annotation */
+  .annotation {
+    position: absolute;
+    font-size: 10px;
+    color: var(--error);
+    font-weight: 500;
+    background: rgba(255,255,255,0.9);
+    padding: 1px 4px;
+    border-radius: 2px;
+    border: 1px solid var(--error);
+    pointer-events: none;
+    z-index: 20;
+  }
+</style>
+</head>
+<body>
+
+<h1 class="page-title">환불 정책 이원화 — Wireframe v2 (UX Review)</h1>
+<p class="subtitle">
+  needs-uiux-claude-1 UX 리뷰 반영본 &mdash;
+  <span style="display:inline-block;background:#9900FF;color:#fff;font-size:10px;padding:1px 6px;border-radius:100px">변경</span>
+  <span style="display:inline-block;background:#22C55E;color:#fff;font-size:10px;padding:1px 6px;border-radius:100px">신규</span>
+  태그로 변경/추가 화면 표시
+</p>
+
+<!-- ============================================ -->
+<!-- SECTION: User App - Event Detail Policy      -->
+<!-- ============================================ -->
+<div class="section-label">유저 앱 — 이벤트 상세 환불 정책 표시</div>
+
+<div class="screen-group">
+
+<!-- Screen: Event detail - before cutoff -->
+<div class="screen-wrapper">
+  <div class="screen-label">이벤트 상세 — cutoff 전 (D-12)</div>
+  <div class="phone short">
+    <div class="status-bar">9:41</div>
+    <div class="app-bar">
+      <span class="back">&larr;</span>
+      <span class="title">이벤트 상세</span>
+    </div>
+    <div class="content">
+      <div class="card card-shadow">
+        <div class="text-title" style="margin-bottom:4px">금요일 와인 모임</div>
+        <div class="text-body" style="margin-bottom:2px">4월 16일 (수) 19:00</div>
+        <div class="text-body">강남 라운지바</div>
+        <div class="divider"></div>
+        <div class="text-label" style="margin-bottom:8px">참가비</div>
+        <div style="font-size:20px;font-weight:bold;color:var(--text-primary)">30,000원</div>
+      </div>
+
+      <div class="policy-banner">
+        <div class="left">
+          <div class="icon" style="background:#DCFCE7;color:#166534">&#10003;</div>
+          <div>
+            <div style="font-size:14px;font-weight:600;color:#166534">4월 9일까지 환불 가능</div>
+            <div style="font-size:12px;color:#4B5563">D-12</div>
+          </div>
+        </div>
+        <div style="font-size:16px;color:#9CA3AF;cursor:pointer">&#9432;</div>
+      </div>
+
+      <button class="btn btn-primary" style="margin-top:16px">신청하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- Screen: Event detail - after cutoff, within grace -->
+<div class="screen-wrapper">
+  <div class="screen-label">이벤트 상세 — cutoff 후 (결제 직후)</div>
+  <div class="phone short">
+    <div class="status-bar">9:41</div>
+    <div class="app-bar">
+      <span class="back">&larr;</span>
+      <span class="title">이벤트 상세</span>
+    </div>
+    <div class="content">
+      <div class="card card-shadow">
+        <div class="text-title" style="margin-bottom:4px">금요일 와인 모임</div>
+        <div class="text-body" style="margin-bottom:2px">4월 8일 (화) 19:00</div>
+        <div class="text-body">강남 라운지바</div>
+        <div class="divider"></div>
+        <div class="text-label" style="margin-bottom:8px">참가비</div>
+        <div style="font-size:20px;font-weight:bold;color:var(--text-primary)">30,000원</div>
+      </div>
+
+      <div class="policy-banner expired">
+        <div class="left">
+          <div class="icon" style="background:#FEF3C7;color:#92400E">&#9201;</div>
+          <div>
+            <div style="font-size:14px;font-weight:600;color:#92400E">결제 후 3시간 이내 전액 환불</div>
+          </div>
+        </div>
+        <div style="font-size:16px;color:#9CA3AF;cursor:pointer">&#9432;</div>
+      </div>
+
+      <div class="banner banner-info" style="font-size:12px">
+        자동 환불 기간이 지나도 파트너에게 환불을 요청할 수 있어요.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen: Policy detail sheet -->
+<div class="screen-wrapper">
+  <div class="screen-label">환불 안내 상세 시트 <span class="changed">변경</span></div>
+  <div class="phone short">
+    <div class="status-bar">9:41</div>
+    <div class="app-bar">
+      <span class="back">&larr;</span>
+      <span class="title">이벤트 상세</span>
+    </div>
+    <div class="content" style="opacity:0.3">
+      <div class="card card-shadow">
+        <div class="text-body">...</div>
+      </div>
+    </div>
+    <div class="bottom-sheet-overlay">
+      <div class="bottom-sheet">
+        <div class="handle"></div>
+        <div class="text-title" style="text-align:center;margin-bottom:16px">환불 안내</div>
+
+        <div class="policy-row">
+          <span class="condition">&#10003; 결제 후 3시간 이내</span>
+          <span class="result text-success">전액 환불</span>
+        </div>
+        <div class="policy-row">
+          <span class="condition">&#10003; 이벤트 시작 7일 전까지</span>
+          <span class="result text-success">전액 환불</span>
+        </div>
+        <div class="policy-row">
+          <span class="condition">&#10003; 파트너 귀책 (이벤트 취소 등)</span>
+          <span class="result text-success">전액 환불</span>
+        </div>
+        <div class="policy-row">
+          <span class="condition" style="color:var(--text-secondary)">&middot; 그 외</span>
+          <span class="result text-primary-color">파트너에게 요청</span>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="text-body" style="font-size:13px;color:#9CA3AF">
+          환불은 영업일 기준 3일 내에 원래 결제 수단으로 입금돼요.
+        </div>
+
+        <button class="btn btn-outline" style="margin-top:16px">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- ============================================ -->
+<!-- SECTION: User App - Track 1 Auto Refund      -->
+<!-- ============================================ -->
+<div class="section-label">유저 앱 — Track 1: 플랫폼 자동 환불</div>
+
+<div class="screen-group">
+
+<!-- Screen: Purchase history -->
+<div class="screen-wrapper">
+  <div class="screen-label">구매 내역 목록</div>
+  <div class="phone">
+    <div class="status-bar">9:41</div>
+    <div class="app-bar">
+      <span class="back">&larr;</span>
+      <span class="title">구매 내역</span>
+    </div>
+    <div class="content">
+      <!-- Card 1: refundable -->
+      <div class="purchase-card">
+        <div class="purchase-header">
+          <span class="badge badge-success">결제완료</span>
+          <span class="text-caption">3월 28일</span>
+        </div>
+        <div class="purchase-event">금요일 와인 모임</div>
+        <div class="purchase-meta">4월 16일 (수) 19:00 · 강남 라운지바</div>
+        <div class="purchase-meta" style="font-weight:600;color:var(--text-primary)">30,000원</div>
+        <div class="divider"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="text-caption">환불 가능 (D-12)</span>
+          <button class="btn-text" style="border:none;cursor:pointer">취소하기</button>
+        </div>
+      </div>
+
+      <!-- Card 2: grace period -->
+      <div class="purchase-card">
+        <div class="purchase-header">
+          <span class="badge badge-success">결제완료</span>
+          <span class="text-caption">오늘 14:30</span>
+        </div>
+        <div class="purchase-event">토요일 보드게임 나이트</div>
+        <div class="purchase-meta">4월 5일 (토) 18:00 · 홍대 카페</div>
+        <div class="purchase-meta" style="font-weight:600;color:var(--text-primary)">20,000원</div>
+        <div class="divider"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="text-caption" style="color:var(--success)">결제 후 3시간 이내 환불 가능</span>
+          <button class="btn-text" style="border:none;cursor:pointer">취소하기</button>
+        </div>
+      </div>
+
+      <!-- Card 3: not auto-refundable -->
+      <div class="purchase-card">
+        <div class="purchase-header">
+          <span class="badge badge-info">승인됨</span>
+          <span class="text-caption">3월 15일</span>
+        </div>
+        <div class="purchase-event">일요일 북클럽</div>
+        <div class="purchase-meta">4월 6일 (일) 14:00 · 성수동</div>
+        <div class="purchase-meta" style="font-weight:600;color:var(--text-primary)">15,000원</div>
+        <div class="divider"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="text-caption" style="color:var(--text-secondary)">파트너에게 환불 요청 가능</span>
+          <button class="btn-text" style="border:none;cursor:pointer">취소하기</button>
+        </div>
+      </div>
+
+      <!-- Card 4: refund completed -->
+      <div class="purchase-card" style="opacity:0.6">
+        <div class="purchase-header">
+          <span class="badge badge-error">환불 완료</span>
+          <span class="text-caption">3월 10일</span>
+        </div>
+        <div class="purchase-event">수요일 요가 모임</div>
+        <div class="purchase-meta">3월 20일 (목) 10:00 · 강남</div>
+        <div class="purchase-meta" style="font-weight:600;color:var(--text-primary)">25,000원 → 환불됨</div>
+      </div>
+
+      <!-- Card 5: partner refund requested -->
+      <div class="purchase-card">
+        <div class="purchase-header">
+          <span class="badge badge-pending">환불 요청됨</span>
+          <span class="text-caption">4월 1일</span>
+        </div>
+        <div class="purchase-event">금요일 와인 테이스팅</div>
+        <div class="purchase-meta">4월 8일 (화) 20:00 · 이태원</div>
+        <div class="purchase-meta" style="font-weight:600;color:var(--text-primary)">35,000원</div>
+        <div class="divider"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="text-caption" style="color:var(--warning)">파트너 응답 대기 중</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen: Auto refund confirmation dialog -->
+<div class="screen-wrapper">
+  <div class="screen-label">자동 환불 확인 다이얼로그 <span class="changed">변경</span></div>
+  <div class="phone short">
+    <div class="status-bar">9:41</div>
+    <div class="app-bar">
+      <span class="back">&larr;</span>
+      <span class="title">구매 내역</span>
+    </div>
+    <div class="content" style="opacity:0.3">
+      <div class="purchase-card"><div class="text-body">...</div></div>
+    </div>
+    <div class="overlay">
+      <div class="dialog">
+        <div class="text-title">정말 취소할까요?</div>
+        <div class="text-body">전액 환불돼요.</div>
+        <div class="text-body" style="margin-bottom:16px">영업일 기준 3일 내에 입금돼요.</div>
+
+        <div style="background:var(--surface);border-radius:var(--radius-small);padding:12px 16px;margin-bottom:16px">
+          <div class="info-row" style="padding:0">
+            <span class="label">환불 금액</span>
+            <span class="value" style="font-size:16px">30,000원</span>
+          </div>
+        </div>
+
+        <div class="btn-row" style="margin-top:0">
+          <button class="btn btn-outline btn-half">돌아가기</button>
+          <button class="btn btn-error btn-half">취소하기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen: Refund processing loading — NEW -->
+<div class="screen-wrapper">
+  <div class="screen-label">환불 처리 중 로딩 <span class="new-screen">신규</span></div>
+  <div class="phone short">
+    <div class="status-bar">9:41</div>
+    <div class="app-bar">
+      <span class="back">&larr;</span>
+      <span class="title">구매 내역</span>
+    </div>
+    <div class="content" style="opacity:0.3">
+      <div class="purchase-card"><div class="text-body">...</div></div>
+    </div>
+    <div class="overlay">
+      <div class="dialog" style="text-align:center">
+        <div class="spinner"></div>
+        <div class="text-title" style="margin-bottom:8px">환불을 처리하고 있어요</div>
+        <div class="text-body">잠깐만 기다려주세요.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen: Refund success -->
+<div class="screen-wrapper">
+  <div class="screen-label">자동 환불 완료 <span class="changed">변경</span></div>
+  <div class="phone short">
+    <div class="status-bar">9:41</div>
+    <div class="app-bar">
+      <span class="back">&larr;</span>
+      <span class="title">구매 내역</span>
+    </div>
+    <div class="content">
+      <div class="toast toast-success">
+        환불이 완료됐어요. 영업일 기준 3일 내에 입금돼요.
+      </div>
+      <div class="purchase-card" style="opacity:0.6">
+        <div class="purchase-header">
+          <span class="badge badge-error">환불 완료</span>
+          <span class="text-caption">오늘</span>
+        </div>
+        <div class="purchase-event">금요일 와인 모임</div>
+        <div class="purchase-meta">4월 16일 (수) 19:00 · 강남 라운지바</div>
+        <div class="purchase-meta" style="font-weight:600;color:var(--text-primary)">30,000원 → 환불됨</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- ============================================ -->
+<!-- SECTION: User App - Track 2 Partner Refund   -->
+<!-- ============================================ -->
+<div class="section-label">유저 앱 — Track 2: 파트너 환불 요청</div>
+<div class="section-note">v2: 부정 프레이밍 완화, 기타 사유 입력 추가, 감정 인식 반영</div>
+
+<div class="screen-group">
+
+<!-- Screen: Partner refund request bottom sheet -->
+<div class="screen-wrapper">
+  <div class="screen-label">파트너 요청 바텀시트 <span class="changed">변경</span></div>
+  <div class="phone">
+    <div class="status-bar">9:41</div>
+    <div class="app-bar">
+      <span class="back">&larr;</span>
+      <span class="title">구매 내역</span>
+    </div>
+    <div class="content" style="opacity:0.2">
+      <div class="purchase-card"><div class="text-body">...</div></div>
+    </div>
+    <div class="bottom-sheet-overlay">
+      <div class="bottom-sheet">
+        <div class="handle"></div>
+        <div class="text-title" style="margin-bottom:8px">파트너에게 환불을 요청할 수 있어요</div>
+        <div class="text-body" style="margin-bottom:16px">
+          자동 환불 기간이 지났지만, 파트너에게 직접 환불을 요청할 수 있어요.
+        </div>
+
+        <div class="divider"></div>
+        <div class="text-label" style="margin-bottom:8px">환불 사유를 선택해주세요</div>
+
+        <div class="radio-item">
+          <div class="radio-circle selected"></div>
+          <span>개인 일정 변경</span>
+        </div>
+        <div class="radio-item">
+          <div class="radio-circle"></div>
+          <span>건강 문제</span>
+        </div>
+        <div class="radio-item">
+          <div class="radio-circle"></div>
+          <span>기타</span>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-outline btn-half">돌아가기</button>
+          <button class="btn btn-primary btn-half">파트너에게 요청하기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen: Partner refund request bottom sheet — 기타 선택 시 -->
+<div class="screen-wrapper">
+  <div class="screen-label">바텀시트 — 기타 사유 입력 <span class="new-screen">신규</span></div>
+  <div class="phone">
+    <div class="status-bar">9:41</div>
+    <div class="app-bar">
+      <span class="back">&larr;</span>
+      <span class="title">구매 내역</span>
+    </div>
+    <div class="content" style="opacity:0.2">
+      <div class="purchase-card"><div class="text-body">...</div></div>
+    </div>
+    <div class="bottom-sheet-overlay">
+      <div class="bottom-sheet">
+        <div class="handle"></div>
+        <div class="text-title" style="margin-bottom:8px">파트너에게 환불을 요청할 수 있어요</div>
+        <div class="text-body" style="margin-bottom:16px">
+          자동 환불 기간이 지났지만, 파트너에게 직접 환불을 요청할 수 있어요.
+        </div>
+
+        <div class="divider"></div>
+        <div class="text-label" style="margin-bottom:8px">환불 사유를 선택해주세요</div>
+
+        <div class="radio-item">
+          <div class="radio-circle"></div>
+          <span>개인 일정 변경</span>
+        </div>
+        <div class="radio-item">
+          <div class="radio-circle"></div>
+          <span>건강 문제</span>
+        </div>
+        <div class="radio-item" style="border-bottom:none">
+          <div class="radio-circle selected"></div>
+          <span>기타</span>
+        </div>
+        <div style="margin-bottom:8px">
+          <textarea class="textarea" placeholder="환불 사유를 작성해주세요" style="height:64px">갑작스러운 출장이 잡혀서 참석이 어렵게 됐어요.</textarea>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-outline btn-half">돌아가기</button>
+          <button class="btn btn-primary btn-half">파트너에게 요청하기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen: Partner refund request sent -->
+<div class="screen-wrapper">
+  <div class="screen-label">파트너 요청 전송 완료</div>
+  <div class="phone short">
+    <div class="status-bar">9:41</div>
+    <div class="app-bar">
+      <span class="back">&larr;</span>
+      <span class="title">구매 내역</span>
+    </div>
+    <div class="content">
+      <div class="toast toast-info">
+        파트너에게 환불을 요청했어요. 결과가 나오면 알려드릴게요.
+      </div>
+      <div class="purchase-card">
+        <div class="purchase-header">
+          <span class="badge badge-pending">환불 요청됨</span>
+          <span class="text-caption">방금</span>
+        </div>
+        <div class="purchase-event">일요일 북클럽</div>
+        <div class="purchase-meta">4월 6일 (일) 14:00 · 성수동</div>
+        <div class="purchase-meta" style="font-weight:600;color:var(--text-primary)">15,000원</div>
+        <div class="divider"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="text-caption" style="color:var(--warning)">파트너 응답 대기 중</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen: Partner approved push result -->
+<div class="screen-wrapper">
+  <div class="screen-label">파트너 승인 → 환불 완료 <span class="changed">변경</span></div>
+  <div class="phone short">
+    <div class="status-bar">9:41</div>
+    <div class="app-bar">
+      <span class="back">&larr;</span>
+      <span class="title">구매 내역</span>
+    </div>
+    <div class="content">
+      <div class="toast toast-success">
+        환불이 완료됐어요. 다음에 더 좋은 이벤트에서 만나요.
+      </div>
+      <div class="purchase-card" style="opacity:0.6">
+        <div class="purchase-header">
+          <span class="badge badge-error">환불 완료</span>
+          <span class="text-caption">방금</span>
+        </div>
+        <div class="purchase-event">일요일 북클럽</div>
+        <div class="purchase-meta">4월 6일 (일) 14:00 · 성수동</div>
+        <div class="purchase-meta" style="font-weight:600;color:var(--text-primary)">15,000원 → 환불됨</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen: Partner rejected -->
+<div class="screen-wrapper">
+  <div class="screen-label">파트너 거절 <span class="changed">변경</span></div>
+  <div class="phone short">
+    <div class="status-bar">9:41</div>
+    <div class="app-bar">
+      <span class="back">&larr;</span>
+      <span class="title">구매 내역</span>
+    </div>
+    <div class="content">
+      <div class="banner banner-warning">
+        파트너가 환불 요청을 확인했어요.<br>
+        추가 문의는 고객센터를 이용해주세요.
+      </div>
+      <div class="purchase-card">
+        <div class="purchase-header">
+          <span class="badge badge-rejected">환불 거절</span>
+          <span class="text-caption">3월 15일</span>
+        </div>
+        <div class="purchase-event">일요일 북클럽</div>
+        <div class="purchase-meta">4월 6일 (일) 14:00 · 성수동</div>
+        <div class="purchase-meta" style="font-weight:600;color:var(--text-primary)">15,000원</div>
+        <div class="divider"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="text-caption text-error">환불 요청 거절됨</span>
+          <button class="btn-text" style="border:none;cursor:pointer;color:var(--text-secondary)">고객센터 문의</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- ============================================ -->
+<!-- SECTION: Partner App                         -->
+<!-- ============================================ -->
+<div class="section-label">파트너 앱 — 환불 요청 관리</div>
+
+<div class="screen-group">
+
+<!-- Screen: Partner notification -->
+<div class="screen-wrapper">
+  <div class="screen-label">파트너 알림 — 환불 요청 도착</div>
+  <div class="phone short">
+    <div class="status-bar">9:41</div>
+    <div class="app-bar partner">
+      <span class="title">알림</span>
+    </div>
+    <div class="content">
+      <div class="notif-card" style="background:#FFF7ED;border-left:3px solid var(--secondary)">
+        <div class="notif-dot" style="background:var(--secondary)"></div>
+        <div class="notif-content">
+          <div class="notif-title">환불 요청이 도착했어요</div>
+          <div class="notif-body">김민수 · 금요일 와인 모임</div>
+          <div class="notif-body" style="font-size:12px">사유: 개인 일정 변경</div>
+          <div class="notif-time">3시간 전</div>
+        </div>
+      </div>
+      <div class="notif-card">
+        <div class="notif-dot" style="background:var(--partner-primary)"></div>
+        <div class="notif-content">
+          <div class="notif-title">새로운 신청이 2건 도착했어요</div>
+          <div class="notif-body">토요일 보드게임 나이트</div>
+          <div class="notif-time">5시간 전</div>
+        </div>
+      </div>
+      <div class="notif-card" style="opacity:0.6">
+        <div style="width:8px"></div>
+        <div class="notif-content">
+          <div class="notif-title">이벤트가 승인됐어요</div>
+          <div class="notif-body">금요일 와인 모임</div>
+          <div class="notif-time">어제</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen: Partner refund request list -->
+<div class="screen-wrapper">
+  <div class="screen-label">파트너 — 환불 요청 목록</div>
+  <div class="phone short">
+    <div class="status-bar">9:41</div>
+    <div class="app-bar partner">
+      <span class="back">&larr;</span>
+      <span class="title">환불 요청</span>
+    </div>
+    <div class="content">
+      <div class="purchase-card" style="border-left:3px solid var(--warning)">
+        <div class="purchase-header">
+          <span class="badge badge-pending">대기 중</span>
+          <span class="text-caption">3시간 전</span>
+        </div>
+        <div class="purchase-event">김민수</div>
+        <div class="purchase-meta">금요일 와인 모임 · 30,000원</div>
+        <div class="purchase-meta">사유: 개인 일정 변경</div>
+      </div>
+      <div class="purchase-card" style="border-left:3px solid var(--success);opacity:0.7">
+        <div class="purchase-header">
+          <span class="badge badge-success">승인됨</span>
+          <span class="text-caption">어제</span>
+        </div>
+        <div class="purchase-event">박지영</div>
+        <div class="purchase-meta">토요일 보드게임 · 20,000원</div>
+        <div class="purchase-meta">사유: 건강 문제</div>
+      </div>
+      <div class="purchase-card" style="border-left:3px solid var(--error);opacity:0.7">
+        <div class="purchase-header">
+          <span class="badge badge-error">거절됨</span>
+          <span class="text-caption">3일 전</span>
+        </div>
+        <div class="purchase-event">이준호</div>
+        <div class="purchase-meta">일요일 북클럽 · 15,000원</div>
+        <div class="purchase-meta">사유: 기타</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen: Partner refund detail -->
+<div class="screen-wrapper">
+  <div class="screen-label">파트너 — 환불 요청 상세 <span class="changed">변경</span></div>
+  <div class="phone">
+    <div class="status-bar">9:41</div>
+    <div class="app-bar partner">
+      <span class="back">&larr;</span>
+      <span class="title">환불 요청 상세</span>
+    </div>
+    <div class="content">
+      <div class="card card-shadow">
+        <div class="detail-section">
+          <div class="info-row">
+            <span class="label">신청자</span>
+            <span class="value">김민수</span>
+          </div>
+          <div class="info-row">
+            <span class="label">이벤트</span>
+            <span class="value">금요일 와인 모임 #42</span>
+          </div>
+          <div class="info-row">
+            <span class="label">결제 금액</span>
+            <span class="value" style="font-size:16px;color:var(--text-primary)">30,000원</span>
+          </div>
+          <div class="info-row">
+            <span class="label">결제일</span>
+            <span class="value">3월 20일</span>
+          </div>
+          <div class="info-row">
+            <span class="label">요청일</span>
+            <span class="value">4월 4일 (3시간 전)</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="detail-section">
+          <div class="text-label" style="margin-bottom:4px">환불 사유</div>
+          <div style="background:var(--surface);border-radius:var(--radius-small);padding:12px;margin-top:4px">
+            <div style="font-size:14px;color:var(--text-primary)">개인 일정 변경</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner banner-warning" style="margin-top:8px">
+        환불을 승인하면 결제 금액 전액이 유저에게 환불되고, 해당 금액은 정산에서 차감돼요.
+      </div>
+
+      <div style="margin-top:4px;font-size:12px;color:#9CA3AF;text-align:center">
+        72시간 내 응답하지 않으면 고객센터로 에스컬레이션돼요.
+      </div>
+
+      <div class="btn-row" style="margin-top:16px">
+        <button class="btn btn-outline btn-half">거절하기</button>
+        <button class="btn btn-partner btn-half">환불 승인하기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen: Partner approve confirmation -->
+<div class="screen-wrapper">
+  <div class="screen-label">파트너 — 환불 승인 확인</div>
+  <div class="phone short">
+    <div class="status-bar">9:41</div>
+    <div class="app-bar partner">
+      <span class="back">&larr;</span>
+      <span class="title">환불 요청 상세</span>
+    </div>
+    <div class="content" style="opacity:0.3">
+      <div class="card"><div class="text-body">...</div></div>
+    </div>
+    <div class="overlay">
+      <div class="dialog">
+        <div class="text-title">환불을 승인할까요?</div>
+        <div class="text-body">30,000원이 김민수님에게 환불돼요.</div>
+        <div class="text-body" style="margin-bottom:4px">해당 금액은 정산에서 차감돼요.</div>
+        <div class="btn-row">
+          <button class="btn btn-outline btn-half">돌아가기</button>
+          <button class="btn btn-partner btn-half">승인하기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen: Partner reject reason input — NEW -->
+<div class="screen-wrapper">
+  <div class="screen-label">파트너 — 거절 사유 입력 <span class="new-screen">신규</span></div>
+  <div class="phone short">
+    <div class="status-bar">9:41</div>
+    <div class="app-bar partner">
+      <span class="back">&larr;</span>
+      <span class="title">환불 요청 상세</span>
+    </div>
+    <div class="content" style="opacity:0.3">
+      <div class="card"><div class="text-body">...</div></div>
+    </div>
+    <div class="bottom-sheet-overlay">
+      <div class="bottom-sheet">
+        <div class="handle"></div>
+        <div class="text-title" style="margin-bottom:8px">거절 사유를 작성해주세요</div>
+        <div class="text-body" style="margin-bottom:12px">
+          유저에게 거절 사유가 전달되지는 않지만, 분쟁 발생 시 참고 자료로 활용돼요.
+        </div>
+        <textarea class="textarea" placeholder="거절 사유를 작성해주세요" style="height:80px">이벤트 준비가 이미 완료되어 환불이 어렵습니다.</textarea>
+
+        <div class="btn-row">
+          <button class="btn btn-outline btn-half">돌아가기</button>
+          <button class="btn btn-error btn-half">거절하기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- ============================================ -->
+<!-- SECTION: Error / Edge States                 -->
+<!-- ============================================ -->
+<div class="section-label">에러/엣지 케이스</div>
+<div class="section-note">v2: emoji 아이콘 → CSS 아이콘 서클로 교체, 에러 문구 개선</div>
+
+<div class="screen-group">
+
+<!-- Screen: Event already started -->
+<div class="screen-wrapper">
+  <div class="screen-label">이벤트 시작 후 취소 시도 <span class="changed">변경</span></div>
+  <div class="phone short">
+    <div class="status-bar">9:41</div>
+    <div class="app-bar">
+      <span class="back">&larr;</span>
+      <span class="title">구매 내역</span>
+    </div>
+    <div class="content" style="opacity:0.3">
+      <div class="purchase-card"><div class="text-body">...</div></div>
+    </div>
+    <div class="overlay">
+      <div class="dialog">
+        <div class="icon-circle icon-circle-error">&#10005;</div>
+        <div class="text-title">취소할 수 없어요</div>
+        <div class="text-body" style="margin-bottom:16px">이벤트가 이미 시작돼서 취소할 수 없어요.</div>
+        <button class="btn btn-outline">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen: 72h timeout escalation -->
+<div class="screen-wrapper">
+  <div class="screen-label">72시간 미응답 에스컬레이션</div>
+  <div class="phone short">
+    <div class="status-bar">9:41</div>
+    <div class="app-bar">
+      <span class="back">&larr;</span>
+      <span class="title">구매 내역</span>
+    </div>
+    <div class="content">
+      <div class="banner banner-warning">
+        파트너가 아직 응답하지 않았어요.<br>
+        고객센터에서 도와드릴게요.
+      </div>
+      <div class="purchase-card">
+        <div class="purchase-header">
+          <span class="badge badge-warning">고객센터 처리 중</span>
+          <span class="text-caption">4월 1일</span>
+        </div>
+        <div class="purchase-event">금요일 와인 테이스팅</div>
+        <div class="purchase-meta">4월 8일 (화) 20:00 · 이태원</div>
+        <div class="purchase-meta" style="font-weight:600;color:var(--text-primary)">35,000원</div>
+        <div class="divider"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="text-caption" style="color:var(--warning)">고객센터 처리 중</span>
+          <button class="btn-text" style="border:none;cursor:pointer;color:var(--text-secondary)">고객센터 문의</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen: Refund API error — network -->
+<div class="screen-wrapper">
+  <div class="screen-label">환불 에러 — 네트워크 <span class="changed">변경</span></div>
+  <div class="phone short">
+    <div class="status-bar">9:41</div>
+    <div class="app-bar">
+      <span class="back">&larr;</span>
+      <span class="title">구매 내역</span>
+    </div>
+    <div class="content" style="opacity:0.3">
+      <div class="purchase-card"><div class="text-body">...</div></div>
+    </div>
+    <div class="overlay">
+      <div class="dialog">
+        <div class="icon-circle icon-circle-warning">!</div>
+        <div class="text-title">잠시 문제가 생겼어요</div>
+        <div class="text-body" style="margin-bottom:16px">일시적인 문제가 발생했어요. 잠시 후 다시 시도해주세요.</div>
+        <button class="btn btn-primary">다시 시도하기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen: Refund API error — PG error — NEW -->
+<div class="screen-wrapper">
+  <div class="screen-label">환불 에러 — PG 오류 <span class="new-screen">신규</span></div>
+  <div class="phone short">
+    <div class="status-bar">9:41</div>
+    <div class="app-bar">
+      <span class="back">&larr;</span>
+      <span class="title">구매 내역</span>
+    </div>
+    <div class="content" style="opacity:0.3">
+      <div class="purchase-card"><div class="text-body">...</div></div>
+    </div>
+    <div class="overlay">
+      <div class="dialog">
+        <div class="icon-circle icon-circle-info">&#8635;</div>
+        <div class="text-title">환불이 지연되고 있어요</div>
+        <div class="text-body" style="margin-bottom:16px">결제사 오류로 환불이 지연되고 있어요. 자동으로 재시도되니 조금만 기다려주세요.</div>
+        <button class="btn btn-outline">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen: Partner app empty state — NEW -->
+<div class="screen-wrapper">
+  <div class="screen-label">파트너 — 환불 요청 없음 <span class="new-screen">신규</span></div>
+  <div class="phone short">
+    <div class="status-bar">9:41</div>
+    <div class="app-bar partner">
+      <span class="back">&larr;</span>
+      <span class="title">환불 요청</span>
+    </div>
+    <div class="content" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
+      <div style="width:48px;height:48px;border-radius:50%;background:var(--partner-surface);display:flex;align-items:center;justify-content:center;margin-bottom:16px;font-size:20px;color:var(--partner-primary)">&#128203;</div>
+      <div class="text-title" style="margin-bottom:4px">환불 요청이 없어요</div>
+      <div class="text-body">환불 요청이 들어오면 여기에 나타나요.</div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+</body>
+</html>
