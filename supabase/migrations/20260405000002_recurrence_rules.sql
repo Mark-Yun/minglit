@@ -23,7 +23,8 @@ CREATE TABLE public.recurrence_rules (
   id                   uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   party_id             uuid        NOT NULL REFERENCES public.parties(id) ON DELETE CASCADE,
   pattern              text        NOT NULL CHECK (pattern IN ('weekly', 'biweekly', 'monthly')),
-  days_of_week         int[]       NOT NULL DEFAULT '{}',
+  days_of_week         int[]       NOT NULL DEFAULT '{}'
+                                   CHECK (days_of_week <@ ARRAY[0,1,2,3,4,5,6]),
   month_day            int         CHECK (month_day >= 1 AND month_day <= 31),
   start_time           time        NOT NULL,
   end_time             time        NOT NULL,
@@ -32,7 +33,23 @@ CREATE TABLE public.recurrence_rules (
                                    CHECK (status IN ('active', 'paused', 'cancelled')),
   last_generated_date  date,
   created_at           timestamptz NOT NULL DEFAULT now(),
-  updated_at           timestamptz NOT NULL DEFAULT now()
+  updated_at           timestamptz NOT NULL DEFAULT now(),
+  -- end_time은 start_time 이후여야 한다
+  CONSTRAINT chk_end_time_after_start CHECK (end_time > start_time),
+  -- 패턴-필드 일관성:
+  --   weekly/biweekly: month_day NULL
+  --   monthly: month_day NOT NULL, days_of_week 비워야 함 (월 반복은 요일 무관)
+  CONSTRAINT chk_pattern_fields CHECK (
+    (
+      pattern IN ('weekly', 'biweekly')
+      AND month_day IS NULL
+      AND cardinality(days_of_week) > 0
+    ) OR (
+      pattern = 'monthly'
+      AND month_day IS NOT NULL
+      AND cardinality(days_of_week) = 0
+    )
+  )
 );
 
 COMMENT ON TABLE  public.recurrence_rules IS '파트너가 설정한 이벤트 반복 규칙. 크론잡이 매일 1개월치 이벤트를 자동 생성.';
@@ -57,19 +74,34 @@ CREATE UNIQUE INDEX uq_recurrence_rules_party_active
 
 ALTER TABLE public.events
   ADD COLUMN recurrence_rule_id      uuid    REFERENCES public.recurrence_rules(id) ON DELETE SET NULL,
-  ADD COLUMN is_recurrence_exception boolean NOT NULL DEFAULT false;
+  ADD COLUMN is_recurrence_exception boolean NOT NULL DEFAULT false,
+  -- recurrence_date: EF가 반복 규칙으로 이벤트 생성 시 명시적으로 설정하는 날짜 컬럼
+  -- start_time::date 식 인덱스는 timestamptz에서 IMMUTABLE 제약 위반이므로 별도 컬럼 사용
+  ADD COLUMN recurrence_date         date;
+
+-- recurrence_rule_id와 recurrence_date는 함께 NULL이거나 함께 NOT NULL이어야 한다
+ALTER TABLE public.events
+  ADD CONSTRAINT chk_events_recurrence_fields
+  CHECK (
+    (recurrence_rule_id IS NULL AND recurrence_date IS NULL)
+    OR (recurrence_rule_id IS NOT NULL AND recurrence_date IS NOT NULL)
+  );
+
+COMMENT ON CONSTRAINT chk_events_recurrence_fields ON public.events IS 'recurrence_rule_id와 recurrence_date는 함께 NULL이거나 함께 NOT NULL이어야 한다.';
 
 COMMENT ON COLUMN public.events.recurrence_rule_id IS '반복 규칙으로 생성된 이벤트의 원본 규칙 ID. 수동 생성 이벤트는 NULL.';
 COMMENT ON COLUMN public.events.is_recurrence_exception IS '반복 규칙의 예외 이벤트 여부 (수동 수정된 회차)';
+COMMENT ON COLUMN public.events.recurrence_date IS '반복 규칙으로 생성된 이벤트의 날짜 (중복 방지용). NULL이면 단일 이벤트.';
 
 -- ============================================================
 -- Section 4: Partial Unique Index — 중복 생성 방지
--- (recurrence_rule_id, start_time 날짜) 조합 유일 보장
+-- (recurrence_rule_id, recurrence_date) 조합 유일 보장
+-- EF가 recurrence_date를 명시적으로 설정하므로 IMMUTABLE 이슈 없음
 -- ============================================================
 
 CREATE UNIQUE INDEX uq_events_recurrence_date
-  ON public.events (recurrence_rule_id, (start_time::date))
-  WHERE recurrence_rule_id IS NOT NULL;
+  ON public.events (recurrence_rule_id, recurrence_date)
+  WHERE recurrence_rule_id IS NOT NULL AND recurrence_date IS NOT NULL;
 
 -- ============================================================
 -- Section 5: recurrence_rules 인덱스
@@ -145,7 +177,8 @@ CREATE POLICY "partner_delete_recurrence_rules"
 -- Section 7: GRANT
 -- ============================================================
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.recurrence_rules TO authenticated;
+-- authenticated 역할은 SELECT만 허용; 쓰기는 service_role을 사용하는 EF를 통해서만
+GRANT SELECT ON public.recurrence_rules TO authenticated;
 
 -- ============================================================
 -- Section 8: moddatetime 트리거 — updated_at 자동 갱신
@@ -177,7 +210,7 @@ SELECT cron.schedule(
           'Content-Type', 'application/json',
           'Authorization', 'Bearer ' || (
             SELECT decrypted_secret FROM vault.decrypted_secrets
-            WHERE name = 'publishable_key' LIMIT 1
+            WHERE name = 'service_role_key' LIMIT 1
           )
         )
       ),
