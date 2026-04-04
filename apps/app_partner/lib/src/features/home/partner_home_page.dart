@@ -146,10 +146,7 @@ class PartnerHomePage extends ConsumerWidget {
                     TodoSummaryChips(
                       pendingApplications: state.pendingReviewCount,
                       upcomingEvents: state.upcomingEvents.length,
-                      onPendingTap: () {
-                        // Fix #845: coordinator를 통해 탭 전환 위임
-                        coordinator.goToApplicationList();
-                      },
+                      onPendingTap: coordinator.goToApplicationList,
                       onUpcomingTap: () {
                         unawaited(
                           const PartyListRoute().push<void>(context),
