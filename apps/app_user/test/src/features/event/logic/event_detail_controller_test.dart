@@ -42,8 +42,8 @@ void main() {
       expect(result, testEvent);
     });
 
-    // Fix #1009: was failing with 'provider disposed' error due to subscription
-    // pattern. Simplified to direct future assertion without subscription.
+    // Fix #1009: keep provider alive with a listener before reading the future
+    // so it is not disposed mid-flight when the repository throws.
     test('throws exception when repository fails', () async {
       final exception = Exception('Network Error');
       when(
@@ -55,6 +55,14 @@ void main() {
           eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
         ],
       );
+
+      // Subscribe first to keep the provider alive while the future is in-flight.
+      final subscription = container.listen(
+        eventDetailControllerProvider('event_1'),
+        (_, __) {},
+        fireImmediately: false,
+      );
+      addTearDown(subscription.close);
 
       await expectLater(
         container.read(eventDetailControllerProvider('event_1').future),
