@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>밍릿 — 다이얼로그 UI 개선안</title>
+<style>
+  /* ===== Minglit Design Tokens ===== */
+  :root {
+    --color-background: #FFFFFF;
+    --color-primary: #9900FF;
+    --color-primary-light: rgba(153, 0, 255, 0.08);
+    --color-primary-container: rgba(153, 0, 255, 0.12);
+    --color-secondary: #FF9900;
+    --color-surface: #F9FAFB;
+    --color-error: #EF4444;
+    --color-text-primary: #111827;
+    --color-text-secondary: #4B5563;
+    --color-text-tertiary: #9CA3AF;
+    --color-success: #22C55E;
+    --color-divider: #E5E7EB;
+    --color-scrim: rgba(0,0,0,0.5);
+
+    /* Dark mode tokens */
+    --dark-background: #0F0F0F;
+    --dark-surface: #212121;
+    --dark-text-primary: #FFFFFF;
+    --dark-text-secondary: #AAAAAA;
+    --dark-primary: #AA33FF;
+    --dark-divider: #3D3D3D;
+
+    /* Spacing */
+    --sp-xxsmall: 2px;
+    --sp-xsmall: 4px;
+    --sp-xsmall2: 6px;
+    --sp-small: 8px;
+    --sp-sm: 12px;
+    --sp-medium: 16px;
+    --sp-large: 24px;
+    --sp-xlarge: 32px;
+
+    /* Radius */
+    --radius-small: 8px;
+    --radius-button: 12px;
+    --radius-card: 16px;
+    --radius-chip: 100px;
+    --radius-dialog: 28px;
+
+    /* Typography */
+    --font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-family);
+    background: #E5E7EB;
+    padding: 32px;
+  }
+
+  /* ===== Page Header ===== */
+  .page-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .page-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 8px;
+  }
+  .page-header .version-tag {
+    display: inline-block;
+    background: var(--color-primary);
+    color: #FFFFFF;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: var(--radius-chip);
+    vertical-align: middle;
+    margin-left: 8px;
+  }
+  .page-header .subtitle {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-top: 4px;
+  }
+
+  /* ===== Section Header ===== */
+  .section-header {
+    text-align: center;
+    margin: 48px 0 24px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+  .section-header:first-of-type {
+    margin-top: 0;
+  }
+
+  /* ===== Screen Grid ===== */
+  .screen-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 32px;
+    margin-bottom: 48px;
+  }
+
+  /* ===== Screen Frame ===== */
+  .screen-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .screen-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    text-align: center;
+  }
+  .screen-sublabel {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    text-align: center;
+    margin-top: -8px;
+  }
+  .phone-frame {
+    width: 375px;
+    height: 812px;
+    background: var(--color-surface);
+    border-radius: 40px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ===== Status Bar ===== */
+  .status-bar {
+    height: 54px;
+    background: var(--color-background);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    flex-shrink: 0;
+  }
+
+  /* ===== AppBar ===== */
+  .app-bar {
+    height: 56px;
+    background: var(--color-background);
+    display: flex;
+    align-items: center;
+    padding: 0 var(--sp-medium);
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--color-divider);
+  }
+  .app-bar .back-btn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-primary);
+    font-size: 20px;
+  }
+  .app-bar .title {
+    flex: 1;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+  .app-bar .spacer { width: 24px; }
+
+  /* ===== Content ===== */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--sp-large) var(--sp-medium);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-medium);
+  }
+
+  /* ===== Settings List ===== */
+  .settings-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--color-divider);
+  }
+  .settings-item-label {
+    font-size: 16px;
+    color: var(--color-text-primary);
+  }
+  .settings-item-value {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .settings-item-value::after {
+    content: '>';
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+  }
+
+  /* ===== Scrim Overlay ===== */
+  .scrim {
+    position: absolute;
+    inset: 0;
+    background: var(--color-scrim);
+    z-index: 10;
+  }
+
+  /* ===== Old SimpleDialog ===== */
+  .simple-dialog {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+    background: var(--color-background);
+    border-radius: var(--radius-card);
+    width: 280px;
+    padding: 24px 0 8px;
+    box-shadow: 0 11px 15px -7px rgba(0,0,0,0.2), 0 24px 38px 3px rgba(0,0,0,0.14);
+  }
+  .simple-dialog-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    padding: 0 24px 16px;
+  }
+  .radio-list-tile {
+    display: flex;
+    align-items: center;
+    padding: 8px 24px;
+    gap: 12px;
+    cursor: default;
+  }
+  .radio-circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--color-text-tertiary);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .radio-circle.active {
+    border-color: var(--color-primary);
+  }
+  .radio-circle.active::after {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--color-primary);
+  }
+  .radio-label {
+    font-size: 14px;
+    color: var(--color-text-primary);
+  }
+
+  /* ===== Improved Bottom Sheet ===== */
+  .bottom-sheet {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    background: var(--color-background);
+    border-radius: var(--radius-dialog) var(--radius-dialog) 0 0;
+    padding-bottom: 34px; /* safe area */
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
+  }
+  .drag-handle {
+    width: 36px;
+    height: 4px;
+    background: var(--color-divider);
+    border-radius: 2px;
+    margin: 12px auto 0;
+  }
+  .bottom-sheet-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    padding: 16px 24px 12px;
+  }
+  .selection-row {
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    margin: 0 4px;
+    gap: 16px;
+    height: 56px;
+    border-radius: var(--radius-button);
+    cursor: default;
+    transition: background 0.15s;
+  }
+  .selection-row.active {
+    background: var(--color-primary-light);
+  }
+  .selection-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-small);
+    background: var(--color-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .selection-row.active .selection-icon {
+    background: var(--color-primary-container);
+  }
+  .selection-text {
+    flex: 1;
+    font-size: 15px;
+    color: var(--color-text-primary);
+    font-weight: 500;
+  }
+  .selection-row.active .selection-text {
+    color: var(--color-primary);
+    font-weight: 700;
+  }
+  .selection-radio {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--color-text-tertiary);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .selection-row.active .selection-radio {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+  }
+  .selection-row.active .selection-radio::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #FFFFFF;
+  }
+
+  /* ===== Improved Alert Dialog ===== */
+  .alert-dialog {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+    background: var(--color-background);
+    border-radius: var(--radius-dialog);
+    width: 312px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    overflow: hidden;
+  }
+  .alert-dialog-body {
+    padding: 24px 24px 8px;
+  }
+  .alert-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .alert-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+  .alert-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .alert-content {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--color-text-secondary);
+    margin-bottom: 4px;
+  }
+  .alert-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 20px 20px;
+  }
+  .alert-btn {
+    font-size: 14px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: var(--radius-button);
+    border: none;
+    background: none;
+    cursor: default;
+    font-family: var(--font-family);
+  }
+  .alert-btn.cancel {
+    color: var(--color-text-secondary);
+  }
+  .alert-btn.confirm {
+    color: var(--color-primary);
+  }
+  .alert-btn.destructive {
+    color: var(--color-error);
+  }
+
+  /* ===== Custom Content Dialog ===== */
+  .custom-dialog {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+    background: var(--color-background);
+    border-radius: var(--radius-dialog);
+    width: 328px;
+    max-height: 520px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .custom-dialog-header {
+    padding: 24px 24px 8px;
+    flex-shrink: 0;
+  }
+  .custom-dialog-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 20px;
+  }
+  .custom-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 20px 20px;
+    flex-shrink: 0;
+  }
+  .ticket-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 4px;
+    gap: 14px;
+    border-bottom: 1px solid var(--color-divider);
+  }
+  .ticket-item:last-child {
+    border-bottom: none;
+  }
+  .ticket-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 2px solid var(--color-divider);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ticket-check.checked {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .ticket-info {
+    flex: 1;
+  }
+  .ticket-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: 2px;
+  }
+  .ticket-detail {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+  .ticket-price {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    flex-shrink: 0;
+  }
+
+  /* ===== Dark Mode Frame ===== */
+  .phone-frame.dark {
+    background: var(--dark-background);
+  }
+  .phone-frame.dark .status-bar {
+    background: var(--dark-background);
+    color: var(--dark-text-primary);
+  }
+  .phone-frame.dark .app-bar {
+    background: var(--dark-background);
+    border-bottom-color: var(--dark-divider);
+  }
+  .phone-frame.dark .app-bar .title,
+  .phone-frame.dark .app-bar .back-btn {
+    color: var(--dark-text-primary);
+  }
+  .phone-frame.dark .settings-item {
+    border-bottom-color: var(--dark-divider);
+  }
+  .phone-frame.dark .settings-item-label {
+    color: var(--dark-text-primary);
+  }
+  .phone-frame.dark .settings-item-value {
+    color: var(--dark-text-secondary);
+  }
+  .phone-frame.dark .scrim {
+    background: rgba(0,0,0,0.65);
+  }
+  .dark-alert-dialog {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+    background: var(--dark-surface);
+    border-radius: var(--radius-dialog);
+    width: 312px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    overflow: hidden;
+  }
+  .dark-alert-dialog .alert-dialog-body {
+    padding: 24px 24px 8px;
+  }
+  .dark-alert-dialog .alert-title {
+    color: var(--dark-text-primary);
+  }
+  .dark-alert-dialog .alert-content {
+    color: var(--dark-text-secondary);
+  }
+  .dark-alert-dialog .alert-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 20px 20px;
+  }
+  .dark-alert-dialog .alert-btn.cancel {
+    color: var(--dark-text-secondary);
+  }
+  .dark-alert-dialog .alert-btn.confirm {
+    color: var(--dark-primary);
+  }
+
+  /* ===== Spec Table ===== */
+  .spec-section {
+    max-width: 1100px;
+    margin: 48px auto;
+    background: var(--color-background);
+    border-radius: var(--radius-card);
+    padding: 32px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .spec-section h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 20px;
+  }
+  .spec-section h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 28px 0 12px;
+  }
+  .spec-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .spec-table th {
+    text-align: left;
+    padding: 10px 12px;
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    font-weight: 700;
+    border-bottom: 2px solid var(--color-divider);
+  }
+  .spec-table td {
+    padding: 10px 12px;
+    color: var(--color-text-secondary);
+    border-bottom: 1px solid var(--color-divider);
+    vertical-align: top;
+  }
+  .spec-table tr:last-child td {
+    border-bottom: none;
+  }
+  .spec-table .changed {
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+  .spec-table code {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    background: var(--color-surface);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  /* ===== Implementation Notes ===== */
+  .impl-section {
+    max-width: 1100px;
+    margin: 0 auto 48px;
+    background: var(--color-background);
+    border-radius: var(--radius-card);
+    padding: 32px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .impl-section h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 20px;
+  }
+  .impl-item {
+    margin-bottom: 24px;
+  }
+  .impl-item:last-child {
+    margin-bottom: 0;
+  }
+  .impl-item h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .impl-item h3 .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: #FFFFFF;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .impl-item p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--color-text-secondary);
+    margin-bottom: 12px;
+  }
+  .code-block {
+    background: #1E1E2E;
+    color: #CDD6F4;
+    border-radius: var(--radius-small);
+    padding: 16px 20px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .code-block .keyword { color: #CBA6F7; }
+  .code-block .type { color: #89B4FA; }
+  .code-block .string { color: #A6E3A1; }
+  .code-block .comment { color: #6C7086; }
+  .code-block .number { color: #FAB387; }
+  .code-block .property { color: #F5C2E7; }
+
+  /* ===== Before/After Arrow ===== */
+  .arrow-separator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: var(--color-primary);
+    padding: 0 8px;
+    align-self: center;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== Page Header ===== -->
+<div class="page-header">
+  <h1>밍릿 다이얼로그 UI 개선안 <span class="version-tag">v1</span></h1>
+  <div class="subtitle">Issue #578 -- 다이얼로그 디자인 품질 향상 (Toss Design System 참조)</div>
+</div>
+
+<!-- ===== Screen 1 & 2: Theme Dialog Before/After ===== -->
+<div class="section-header">테마 설정 다이얼로그</div>
+<div class="screen-row">
+
+  <!-- Screen 1: Current (Before) -->
+  <div class="screen-wrapper">
+    <div class="screen-label">현재 -- 테마 설정 다이얼로그</div>
+    <div class="screen-sublabel">SimpleDialog + RadioListTile (기본 Material)</div>
+    <div class="phone-frame">
+      <div class="status-bar">9:41</div>
+      <div class="app-bar">
+        <div class="back-btn">&larr;</div>
+        <div class="title">설정</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="content">
+        <div class="settings-item">
+          <span class="settings-item-label">알림 설정</span>
+          <span class="settings-item-value">켜짐</span>
+        </div>
+        <div class="settings-item">
+          <span class="settings-item-label">언어</span>
+          <span class="settings-item-value">한국어</span>
+        </div>
+        <div class="settings-item" style="background: rgba(153,0,255,0.04); margin: 0 -16px; padding: 14px 16px; border-radius: 8px;">
+          <span class="settings-item-label" style="font-weight:600;">테마</span>
+          <span class="settings-item-value">시스템 설정</span>
+        </div>
+        <div class="settings-item">
+          <span class="settings-item-label">버전</span>
+          <span class="settings-item-value" style="color:var(--color-text-tertiary);">26.04.975</span>
+        </div>
+      </div>
+
+      <!-- Scrim + SimpleDialog -->
+      <div class="scrim"></div>
+      <div class="simple-dialog">
+        <div class="simple-dialog-title">테마</div>
+        <div class="radio-list-tile">
+          <div class="radio-circle"></div>
+          <span class="radio-label">라이트 모드</span>
+        </div>
+        <div class="radio-list-tile">
+          <div class="radio-circle"></div>
+          <span class="radio-label">다크 모드</span>
+        </div>
+        <div class="radio-list-tile">
+          <div class="radio-circle active"></div>
+          <span class="radio-label">시스템 설정</span>
+        </div>
+        <div style="height: 8px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-separator">&rarr;</div>
+
+  <!-- Screen 2: Improved Bottom Sheet -->
+  <div class="screen-wrapper">
+    <div class="screen-label">개선 -- 바텀시트 선택기</div>
+    <div class="screen-sublabel">BottomSheet + 커스텀 선택 행 (Toss 스타일)</div>
+    <div class="phone-frame">
+      <div class="status-bar">9:41</div>
+      <div class="app-bar">
+        <div class="back-btn">&larr;</div>
+        <div class="title">설정</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="content">
+        <div class="settings-item">
+          <span class="settings-item-label">알림 설정</span>
+          <span class="settings-item-value">켜짐</span>
+        </div>
+        <div class="settings-item">
+          <span class="settings-item-label">언어</span>
+          <span class="settings-item-value">한국어</span>
+        </div>
+        <div class="settings-item" style="background: rgba(153,0,255,0.04); margin: 0 -16px; padding: 14px 16px; border-radius: 8px;">
+          <span class="settings-item-label" style="font-weight:600;">테마</span>
+          <span class="settings-item-value">시스템 설정</span>
+        </div>
+        <div class="settings-item">
+          <span class="settings-item-label">버전</span>
+          <span class="settings-item-value" style="color:var(--color-text-tertiary);">26.04.975</span>
+        </div>
+      </div>
+
+      <!-- Scrim + Bottom Sheet -->
+      <div class="scrim"></div>
+      <div class="bottom-sheet">
+        <div class="drag-handle"></div>
+        <div class="bottom-sheet-title">테마 설정</div>
+
+        <div class="selection-row">
+          <div class="selection-icon">&#9728;&#65039;</div>
+          <span class="selection-text">라이트 모드</span>
+          <div class="selection-radio"></div>
+        </div>
+
+        <div class="selection-row">
+          <div class="selection-icon">&#127769;</div>
+          <span class="selection-text">다크 모드</span>
+          <div class="selection-radio"></div>
+        </div>
+
+        <div class="selection-row active">
+          <div class="selection-icon">&#9881;&#65039;</div>
+          <span class="selection-text">시스템 설정</span>
+          <div class="selection-radio"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== Screen 3 & 4: Alert Dialogs ===== -->
+<div class="section-header">알림 다이얼로그 (MinglitAlert)</div>
+<div class="screen-row">
+
+  <!-- Screen 3: Info Alert -->
+  <div class="screen-wrapper">
+    <div class="screen-label">개선 -- 정보 알림</div>
+    <div class="screen-sublabel">radius 28px, 정제된 패딩, 우측 정렬 액션</div>
+    <div class="phone-frame">
+      <div class="status-bar">9:41</div>
+      <div class="app-bar">
+        <div class="back-btn">&larr;</div>
+        <div class="title">파티 상세</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="content" style="opacity: 0.4;">
+        <div style="height: 48px; background: var(--color-divider); border-radius: 12px; width: 70%;"></div>
+        <div style="height: 16px; background: var(--color-divider); border-radius: 4px; width: 90%;"></div>
+        <div style="height: 16px; background: var(--color-divider); border-radius: 4px; width: 80%;"></div>
+        <div style="height: 200px; background: var(--color-divider); border-radius: 16px;"></div>
+        <div style="height: 16px; background: var(--color-divider); border-radius: 4px; width: 60%;"></div>
+      </div>
+
+      <div class="scrim"></div>
+      <div class="alert-dialog">
+        <div class="alert-dialog-body">
+          <div class="alert-title-row">
+            <span class="alert-title">참가 신청 완료</span>
+          </div>
+          <p class="alert-content">파티 참가 신청이 완료되었습니다.<br>호스트의 승인 후 참가가 확정됩니다.</p>
+        </div>
+        <div class="alert-actions">
+          <button class="alert-btn confirm">확인</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 4: Destructive Alert -->
+  <div class="screen-wrapper">
+    <div class="screen-label">개선 -- 위험 알림</div>
+    <div class="screen-sublabel">경고 아이콘 + error 컬러 확인 버튼</div>
+    <div class="phone-frame">
+      <div class="status-bar">9:41</div>
+      <div class="app-bar">
+        <div class="back-btn">&larr;</div>
+        <div class="title">파티 관리</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="content" style="opacity: 0.4;">
+        <div style="height: 48px; background: var(--color-divider); border-radius: 12px; width: 70%;"></div>
+        <div style="height: 16px; background: var(--color-divider); border-radius: 4px; width: 90%;"></div>
+        <div style="height: 16px; background: var(--color-divider); border-radius: 4px; width: 80%;"></div>
+        <div style="height: 200px; background: var(--color-divider); border-radius: 16px;"></div>
+        <div style="height: 16px; background: var(--color-divider); border-radius: 4px; width: 60%;"></div>
+      </div>
+
+      <div class="scrim"></div>
+      <div class="alert-dialog">
+        <div class="alert-dialog-body">
+          <div class="alert-title-row">
+            <span class="alert-icon" style="color: var(--color-error);">&#9888;&#65039;</span>
+            <span class="alert-title" style="color: var(--color-error);">파티를 삭제하시겠습니까?</span>
+          </div>
+          <p class="alert-content">삭제된 파티는 복구할 수 없습니다. 참가자에게 취소 알림이 발송됩니다.</p>
+        </div>
+        <div class="alert-actions">
+          <button class="alert-btn cancel">취소</button>
+          <button class="alert-btn destructive">삭제</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== Screen 5 & 6: Custom Content + Dark Mode ===== -->
+<div class="section-header">커스텀 컨텐츠 / 다크모드</div>
+<div class="screen-row">
+
+  <!-- Screen 5: Custom Content Dialog -->
+  <div class="screen-wrapper">
+    <div class="screen-label">개선 -- 커스텀 컨텐츠</div>
+    <div class="screen-sublabel">스크롤 가능 컨텐츠 영역 (티켓 선택 예시)</div>
+    <div class="phone-frame">
+      <div class="status-bar">9:41</div>
+      <div class="app-bar">
+        <div class="back-btn">&larr;</div>
+        <div class="title">파티 상세</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="content" style="opacity: 0.4;">
+        <div style="height: 48px; background: var(--color-divider); border-radius: 12px; width: 70%;"></div>
+        <div style="height: 200px; background: var(--color-divider); border-radius: 16px;"></div>
+        <div style="height: 16px; background: var(--color-divider); border-radius: 4px; width: 60%;"></div>
+      </div>
+
+      <div class="scrim"></div>
+      <div class="custom-dialog">
+        <div class="custom-dialog-header">
+          <div class="alert-title-row">
+            <span class="alert-title">티켓 선택</span>
+          </div>
+          <p class="alert-content" style="margin-bottom:0;">참가할 티켓을 선택해주세요.</p>
+        </div>
+        <div class="custom-dialog-content">
+          <div class="ticket-item">
+            <div class="ticket-check checked">&#10003;</div>
+            <div class="ticket-info">
+              <div class="ticket-name">일반 티켓</div>
+              <div class="ticket-detail">1인 참가 / 음식 포함</div>
+            </div>
+            <div class="ticket-price">15,000원</div>
+          </div>
+          <div class="ticket-item">
+            <div class="ticket-check"></div>
+            <div class="ticket-info">
+              <div class="ticket-name">커플 티켓</div>
+              <div class="ticket-detail">2인 참가 / 음식 포함</div>
+            </div>
+            <div class="ticket-price">25,000원</div>
+          </div>
+          <div class="ticket-item">
+            <div class="ticket-check"></div>
+            <div class="ticket-info">
+              <div class="ticket-name">VIP 티켓</div>
+              <div class="ticket-detail">1인 참가 / 프리미엄석</div>
+            </div>
+            <div class="ticket-price">30,000원</div>
+          </div>
+          <div class="ticket-item">
+            <div class="ticket-check"></div>
+            <div class="ticket-info">
+              <div class="ticket-name">얼리버드</div>
+              <div class="ticket-detail">1인 참가 / 한정 수량</div>
+            </div>
+            <div class="ticket-price">10,000원</div>
+          </div>
+          <div class="ticket-item">
+            <div class="ticket-check"></div>
+            <div class="ticket-info">
+              <div class="ticket-name">스탠딩</div>
+              <div class="ticket-detail">1인 참가 / 좌석 없음</div>
+            </div>
+            <div class="ticket-price">8,000원</div>
+          </div>
+        </div>
+        <div class="custom-dialog-actions">
+          <button class="alert-btn cancel">취소</button>
+          <button class="alert-btn confirm">선택 완료</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 6: Dark Mode Alert -->
+  <div class="screen-wrapper">
+    <div class="screen-label">개선 -- 다크모드 알림</div>
+    <div class="screen-sublabel">다크 서피스 #212121 + 밝은 텍스트</div>
+    <div class="phone-frame dark">
+      <div class="status-bar">9:41</div>
+      <div class="app-bar">
+        <div class="back-btn">&larr;</div>
+        <div class="title">파티 상세</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="content" style="opacity: 0.3;">
+        <div style="height: 48px; background: var(--dark-divider); border-radius: 12px; width: 70%;"></div>
+        <div style="height: 16px; background: var(--dark-divider); border-radius: 4px; width: 90%;"></div>
+        <div style="height: 16px; background: var(--dark-divider); border-radius: 4px; width: 80%;"></div>
+        <div style="height: 200px; background: var(--dark-divider); border-radius: 16px;"></div>
+        <div style="height: 16px; background: var(--dark-divider); border-radius: 4px; width: 60%;"></div>
+      </div>
+
+      <div class="scrim"></div>
+      <div class="dark-alert-dialog">
+        <div class="alert-dialog-body">
+          <div class="alert-title-row">
+            <span class="alert-title">참가 신청 완료</span>
+          </div>
+          <p class="alert-content">파티 참가 신청이 완료되었습니다.<br>호스트의 승인 후 참가가 확정됩니다.</p>
+        </div>
+        <div class="alert-actions">
+          <button class="alert-btn cancel">닫기</button>
+          <button class="alert-btn confirm" style="color: var(--dark-primary);">확인</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== Design Spec Table ===== -->
+<div class="spec-section">
+  <h2>디자인 스펙 비교표</h2>
+  <table class="spec-table">
+    <thead>
+      <tr>
+        <th style="width:22%;">Property</th>
+        <th style="width:24%;">Current</th>
+        <th style="width:28%;">Improved</th>
+        <th style="width:26%;">Token</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Dialog border radius</td>
+        <td><code>16px</code> (card)</td>
+        <td class="changed"><code>28px</code> (dialog)</td>
+        <td><code>NEW: MinglitRadius.dialog</code></td>
+      </tr>
+      <tr>
+        <td>Dialog background (light)</td>
+        <td><code>surface #F9FAFB</code></td>
+        <td class="changed"><code>background #FFFFFF</code></td>
+        <td><code>colorScheme.surface</code></td>
+      </tr>
+      <tr>
+        <td>Dialog background (dark)</td>
+        <td><code>#212121</code></td>
+        <td><code>#212121</code></td>
+        <td><code>MinglitColorsDark.surface</code></td>
+      </tr>
+      <tr>
+        <td>Dialog elevation</td>
+        <td>Material default</td>
+        <td class="changed"><code>0 4px 24px rgba(0,0,0,0.12)</code></td>
+        <td>Custom shadow</td>
+      </tr>
+      <tr>
+        <td>Title padding</td>
+        <td><code>24/24/24/16</code></td>
+        <td class="changed"><code>24/24/24/8</code></td>
+        <td>Tighter title-content gap</td>
+      </tr>
+      <tr>
+        <td>Content padding</td>
+        <td><code>24/24/0/24</code></td>
+        <td class="changed"><code>20/24/0/24</code></td>
+        <td>Slightly reduced horizontal</td>
+      </tr>
+      <tr>
+        <td>Actions padding</td>
+        <td><code>16/16/0/16</code></td>
+        <td class="changed"><code>12/20/0/20</code></td>
+        <td>Aligned with content</td>
+      </tr>
+      <tr>
+        <td>Selection dialog</td>
+        <td>SimpleDialog (center)</td>
+        <td class="changed">BottomSheet</td>
+        <td>Pattern change</td>
+      </tr>
+      <tr>
+        <td>Radio style</td>
+        <td>RadioListTile (default)</td>
+        <td class="changed">Custom row + accent</td>
+        <td>Custom component</td>
+      </tr>
+      <tr>
+        <td>Scrim color</td>
+        <td>Material default</td>
+        <td class="changed"><code>rgba(0,0,0,0.5)</code></td>
+        <td><code>MinglitColors.scrim</code></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===== Implementation Notes ===== -->
+<div class="impl-section">
+  <h2>구현 가이드</h2>
+
+  <div class="impl-item">
+    <h3><span class="num">1</span> DialogTheme -- MaterialTheme에 추가</h3>
+    <p>앱 전역 다이얼로그 스타일을 통일합니다. <code>surfaceTintColor: transparent</code>로 Material 3 기본 틴트를 제거합니다.</p>
+    <div class="code-block"><span class="property">dialogTheme</span>: <span class="type">DialogThemeData</span>(
+  <span class="property">backgroundColor</span>: <span class="type">MinglitColors</span>.<span class="property">background</span>,
+  <span class="property">surfaceTintColor</span>: <span class="type">Colors</span>.<span class="property">transparent</span>,
+  <span class="property">shape</span>: <span class="type">RoundedRectangleBorder</span>(
+    <span class="property">borderRadius</span>: <span class="type">BorderRadius</span>.circular(<span class="type">MinglitRadius</span>.<span class="property">dialog</span>), <span class="comment">// 28</span>
+  ),
+  <span class="property">elevation</span>: <span class="number">0</span>,
+  <span class="property">shadowColor</span>: <span class="type">Colors</span>.<span class="property">transparent</span>,
+  <span class="property">titleTextStyle</span>: textTheme.<span class="property">titleMedium</span>?.copyWith(
+    <span class="property">fontWeight</span>: <span class="type">FontWeight</span>.<span class="property">bold</span>,
+  ),
+),</div>
+  </div>
+
+  <div class="impl-item">
+    <h3><span class="num">2</span> 신규 토큰 -- MinglitRadius.dialog</h3>
+    <p>기존 <code>MinglitRadius</code> 클래스에 <code>dialog = 28</code>을 추가합니다. 기존 <code>card = 16</code>과 구분합니다.</p>
+    <div class="code-block"><span class="keyword">class</span> <span class="type">MinglitRadius</span> {
+  <span class="keyword">static const</span> <span class="type">double</span> <span class="property">small</span> = <span class="number">8</span>;
+  <span class="keyword">static const</span> <span class="type">double</span> <span class="property">button</span> = <span class="number">12</span>;
+  <span class="keyword">static const</span> <span class="type">double</span> <span class="property">card</span> = <span class="number">16</span>;
+  <span class="keyword">static const</span> <span class="type">double</span> <span class="property">dialog</span> = <span class="number">28</span>;  <span class="comment">// NEW</span>
+  <span class="keyword">static const</span> <span class="type">double</span> <span class="property">chip</span> = <span class="number">100</span>;
+}</div>
+  </div>
+
+  <div class="impl-item">
+    <h3><span class="num">3</span> Selection Dialogs -- SimpleDialog를 BottomSheet로 전환</h3>
+    <p><code>showDialog</code> + <code>SimpleDialog</code> 사용처를 <code>showModalBottomSheet</code> + <code>MinglitBottomSheetPicker</code>로 교체합니다. 터치 타겟은 56px 이상을 보장합니다.</p>
+    <div class="code-block"><span class="keyword">await</span> showModalBottomSheet(
+  <span class="property">context</span>: context,
+  <span class="property">backgroundColor</span>: <span class="type">MinglitColors</span>.<span class="property">background</span>,
+  <span class="property">shape</span>: <span class="keyword">const</span> <span class="type">RoundedRectangleBorder</span>(
+    <span class="property">borderRadius</span>: <span class="type">BorderRadius</span>.vertical(
+      <span class="property">top</span>: <span class="type">Radius</span>.circular(<span class="type">MinglitRadius</span>.<span class="property">dialog</span>),
+    ),
+  ),
+  <span class="property">builder</span>: (_) => <span class="type">MinglitBottomSheetPicker</span>(
+    <span class="property">title</span>: <span class="string">'테마 설정'</span>,
+    <span class="property">items</span>: themeOptions,
+    <span class="property">selected</span>: currentTheme,
+    <span class="property">onChanged</span>: (value) { ... },
+  ),
+);</div>
+  </div>
+
+  <div class="impl-item">
+    <h3><span class="num">4</span> Background Color 전략</h3>
+    <p>다이얼로그 배경은 <code>MinglitColors.background</code> (<code>#FFFFFF</code>)를 사용하여 <code>scaffoldBackgroundColor</code> (<code>#F9FAFB</code>) 대비 미묘한 elevation 효과를 만듭니다. 이는 스크림 위에 떠 있는 느낌을 강화합니다.</p>
+    <p>다크 모드에서는 <code>MinglitColorsDark.surface</code> (<code>#212121</code>)를 사용하여 <code>#0F0F0F</code> 배경 대비 동일한 계층 분리를 유지합니다.</p>
+  </div>
+</div>
+
+</body>
+</html>

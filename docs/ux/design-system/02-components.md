@@ -166,7 +166,31 @@ Dark Mode 소스: `minglit_theme.dart:457-461`
 
 ---
 
-## 11. BottomSheet
+## 11. Dialog / Alert
+
+**소스**: `minglit_kit/lib/src/ui/widgets/common/minglit_alert.dart`, `minglit_dialog.dart`
+
+**현재 상태**: `DialogTheme` 미정의 — 개별 위젯에서 하드코딩. 개선 계획은 [wireframe](../../features/dialog-improvement/wireframe.html) 참조.
+
+**위젯**:
+- `MinglitAlert` — 텍스트 기반 알림 (info / destructive)
+- `MinglitDialog` — 커스텀 컨텐츠 다이얼로그
+
+| 속성 | 현재 값 | 개선 목표 | 비고 |
+| :--- | :--- | :--- | :--- |
+| borderRadius | 16 (`MinglitRadius.card`) | **28** (`MinglitRadius.dialog`) | 신규 토큰 |
+| backgroundColor (light) | `colorScheme.surface` | `MinglitColors.background` (#FFFFFF) | scaffold 대비 구분 |
+| backgroundColor (dark) | `colorScheme.surface` | `MinglitColorsDark.surface` (#212121) | 유지 |
+| surfaceTintColor | transparent | transparent | M3 틴트 제거 |
+| titlePadding | 24/24/24/16 | 24/24/24/8 | title-content 간격 축소 |
+| contentPadding | 24/24/0/24 | 20/24/0/24 | 수평 여백 미세 조정 |
+| actionsPadding | 16/16/0/16 | 12/20/0/20 | content 정렬 |
+
+**Selection Dialog**: `SimpleDialog` → `showModalBottomSheet` 전환 예정 (터치 타겟 56px 보장)
+
+---
+
+## 12. BottomSheet
 
 **기본 스타일**: `BottomSheetThemeData` 별도 설정 없음 — Flutter 기본 `showModalBottomSheet` 스타일 적용.
 
@@ -180,7 +204,7 @@ Dark Mode 소스: `minglit_theme.dart:457-461`
 
 ---
 
-## 12. Badge / Tag
+## 13. Badge / Tag
 
 <!-- TODO: 커스텀 Badge/Tag 컴포넌트 테마 정의 필요. 현재는 Chip 기반으로 사용 중. -->
 
@@ -188,7 +212,7 @@ Dark Mode 소스: `minglit_theme.dart:457-461`
 
 ---
 
-## 13. Toast / Snackbar
+## 14. Toast / Snackbar
 
 <!-- TODO: SnackBarTheme 정의가 minglit_component_theme.dart에 없음. 별도 SnackBar 테마 추가 필요. -->
 
