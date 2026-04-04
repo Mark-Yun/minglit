@@ -231,7 +231,25 @@ SELECT throws_ok(
 ROLLBACK TO SAVEPOINT before_weekly_with_month_day;
 
 -- ============================================================
--- 16. Partial Unique Index — 동일 party_id의 active 규칙 2개 불가
+-- 16. CHECK 제약 — monthly 패턴에 days_of_week 있으면 거부
+-- ============================================================
+SAVEPOINT before_monthly_with_days_of_week;
+SELECT throws_ok(
+  $$
+    INSERT INTO public.recurrence_rules (
+      party_id, pattern, start_time, end_time, month_day, days_of_week
+    ) VALUES (
+      gen_random_uuid(), 'monthly', '10:00', '11:00', 15, '{1}'
+    )
+  $$,
+  '23514',
+  NULL,
+  'monthly pattern with non-empty days_of_week rejected by CHECK constraint'
+);
+ROLLBACK TO SAVEPOINT before_monthly_with_days_of_week;
+
+-- ============================================================
+-- 17. Partial Unique Index — 동일 party_id의 active 규칙 2개 불가
 -- ============================================================
 
 -- 테스트 데이터 세팅
@@ -288,7 +306,7 @@ SELECT throws_ok(
 ROLLBACK TO SAVEPOINT before_dup_active;
 
 -- ============================================================
--- 17. Partial Unique Index — cancelled 규칙은 중복 허용
+-- 18. Partial Unique Index — cancelled 규칙은 중복 허용
 -- ============================================================
 UPDATE public.recurrence_rules
 SET status = 'cancelled'
@@ -309,7 +327,7 @@ SELECT lives_ok(
 );
 
 -- ============================================================
--- 18. uq_events_recurrence_date — 같은 날짜 중복 이벤트 거부
+-- 19. uq_events_recurrence_date — 같은 날짜 중복 이벤트 거부
 -- recurrence_date 컬럼으로 중복 방지 (start_time::date 대신)
 -- ============================================================
 WITH rule AS (
@@ -362,7 +380,9 @@ SELECT throws_ok(
 ROLLBACK TO SAVEPOINT before_dup_event;
 
 -- ============================================================
--- 19. moddatetime 트리거 — updated_at 갱신 확인
+-- 20. moddatetime 트리거 — updated_at 갱신 확인
+-- NOTE: pgTAP 단일 트랜잭션 내에서 now()는 고정이므로 타이밍 검증은 false positive.
+--       트리거가 UPDATE를 깨뜨리지 않음을 확인하는 목적.
 -- ============================================================
 SELECT lives_ok(
   format(

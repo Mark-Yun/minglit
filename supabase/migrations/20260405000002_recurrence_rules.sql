@@ -36,10 +36,12 @@ CREATE TABLE public.recurrence_rules (
   updated_at           timestamptz NOT NULL DEFAULT now(),
   -- end_time은 start_time 이후여야 한다
   CONSTRAINT chk_end_time_after_start CHECK (end_time > start_time),
-  -- 패턴-필드 일관성: weekly/biweekly는 month_day NULL, monthly는 month_day NOT NULL
+  -- 패턴-필드 일관성:
+  --   weekly/biweekly: month_day NULL
+  --   monthly: month_day NOT NULL, days_of_week 비워야 함 (월 반복은 요일 무관)
   CONSTRAINT chk_pattern_fields CHECK (
     (pattern IN ('weekly', 'biweekly') AND month_day IS NULL) OR
-    (pattern = 'monthly' AND month_day IS NOT NULL)
+    (pattern = 'monthly' AND month_day IS NOT NULL AND days_of_week = '{}')
   )
 );
 
@@ -158,7 +160,8 @@ CREATE POLICY "partner_delete_recurrence_rules"
 -- Section 7: GRANT
 -- ============================================================
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.recurrence_rules TO authenticated;
+-- authenticated 역할은 SELECT만 허용; 쓰기는 service_role을 사용하는 EF를 통해서만
+GRANT SELECT ON public.recurrence_rules TO authenticated;
 
 -- ============================================================
 -- Section 8: moddatetime 트리거 — updated_at 자동 갱신
@@ -190,7 +193,7 @@ SELECT cron.schedule(
           'Content-Type', 'application/json',
           'Authorization', 'Bearer ' || (
             SELECT decrypted_secret FROM vault.decrypted_secrets
-            WHERE name = 'publishable_key' LIMIT 1
+            WHERE name = 'service_role_key' LIMIT 1
           )
         )
       ),
