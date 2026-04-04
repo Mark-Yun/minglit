@@ -254,7 +254,8 @@ class _TimelineItem extends StatelessWidget {
             width: 8,
             height: 8,
             decoration: const BoxDecoration(
-              color: Colors.blue,
+              // Fix #951: replace hardcoded Colors.blue with design token
+              color: MinglitColors.primary,
               shape: BoxShape.circle,
             ),
           ),
