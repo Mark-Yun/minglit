@@ -74,6 +74,17 @@ jobs:
           git commit -m "chore: bump version to v${NEW_VERSION} [skip ci]"
           git push origin HEAD:${BRANCH}
 
+      - name: Create GitHub release (main only)
+        if: github.base_ref == 'main'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT_VERSION_BUMP }}
+        run: |
+          VERSION="${{ steps.version.outputs.base }}"
+          gh release create "v${VERSION}" \
+            --generate-notes \
+            --target main \
+            --title "v${VERSION}"
+
   notify-failure:
     needs: [bump]
     if: always()
