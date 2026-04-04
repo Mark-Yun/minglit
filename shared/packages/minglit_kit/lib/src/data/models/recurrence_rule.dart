@@ -15,7 +15,7 @@ enum RecurrencePattern {
 
   /// Once a month on the specified day-of-month.
   @JsonValue('monthly')
-  monthly;
+  monthly,
 }
 
 /// Status of a recurrence rule lifecycle.
@@ -30,7 +30,7 @@ enum RecurrenceStatus {
 
   /// Rule has been permanently cancelled.
   @JsonValue('cancelled')
-  cancelled;
+  cancelled,
 }
 
 /// A recurrence rule that drives automatic event generation for a party.
@@ -43,15 +43,15 @@ abstract class RecurrenceRule with _$RecurrenceRule {
     required String id,
     @JsonKey(name: 'party_id') required String partyId,
     required RecurrencePattern pattern,
-    @JsonKey(name: 'days_of_week') @Default([]) List<int> daysOfWeek,
-    @JsonKey(name: 'month_day') int? monthDay,
     @JsonKey(name: 'start_time') required String startTime,
     @JsonKey(name: 'end_time') required String endTime,
+    @JsonKey(name: 'created_at') required DateTime createdAt,
+    @JsonKey(name: 'updated_at') required DateTime updatedAt,
+    @JsonKey(name: 'days_of_week') @Default([]) List<int> daysOfWeek,
+    @JsonKey(name: 'month_day') int? monthDay,
     @JsonKey(name: 'end_date') String? endDate,
     @Default(RecurrenceStatus.active) RecurrenceStatus status,
     @JsonKey(name: 'last_generated_date') String? lastGeneratedDate,
-    @JsonKey(name: 'created_at') required DateTime createdAt,
-    @JsonKey(name: 'updated_at') required DateTime updatedAt,
   }) = _RecurrenceRule;
 
   /// Creates a [RecurrenceRule] from a JSON map.

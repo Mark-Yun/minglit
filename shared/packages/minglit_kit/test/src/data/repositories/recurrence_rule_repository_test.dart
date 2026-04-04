@@ -14,7 +14,7 @@ void main() {
   late MockFunctionsClient mockFunctions;
   late RecurrenceRuleRepository repository;
 
-  final now = DateTime.utc(2026, 4, 5, 0, 0, 0);
+  final now = DateTime.utc(2026, 4, 5);
 
   final weeklyRuleJson = <String, dynamic>{
     'id': 'rule_1',
@@ -45,11 +45,19 @@ void main() {
         ).thenAnswer(
           (_) async => FunctionResponse(
             status: 200,
-            data: jsonEncode({'success': true, 'rule_id': 'rule_1', 'events_created': 4}),
+            data: jsonEncode({
+              'success': true,
+              'rule_id': 'rule_1',
+              'events_created': 4,
+            }),
           ),
         );
 
-        mockTable(mockClient, 'recurrence_rules', maybeSingleData: weeklyRuleJson);
+        mockTable(
+          mockClient,
+          'recurrence_rules',
+          maybeSingleData: weeklyRuleJson,
+        );
 
         final result = await repository.create(
           partyId: 'party_1',
@@ -80,7 +88,11 @@ void main() {
         ).thenAnswer(
           (_) async => FunctionResponse(
             status: 200,
-            data: jsonEncode({'success': true, 'rule_id': 'rule_2', 'events_created': 1}),
+            data: jsonEncode({
+              'success': true,
+              'rule_id': 'rule_2',
+              'events_created': 1,
+            }),
           ),
         );
 
@@ -117,7 +129,9 @@ void main() {
         ).thenAnswer(
           (_) async => FunctionResponse(
             status: 400,
-            data: jsonEncode({'error': 'days_of_week is required for weekly pattern'}),
+            data: jsonEncode({
+              'error': 'days_of_week is required for weekly pattern',
+            }),
           ),
         );
 

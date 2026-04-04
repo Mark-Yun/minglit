@@ -30,9 +30,9 @@ class RecurrenceRuleRepository {
     required String partyId,
     required RecurrencePattern pattern,
     required List<int> daysOfWeek,
-    int? monthDay,
     required String startTime,
     required String endTime,
+    int? monthDay,
     String? endDate,
   }) async {
     final body = <String, dynamic>{
