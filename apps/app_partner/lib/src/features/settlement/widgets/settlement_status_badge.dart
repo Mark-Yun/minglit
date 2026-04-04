@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 enum SettlementStatus {
   pending,
@@ -70,28 +71,34 @@ class SettlementStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final isStrikethrough = status == SettlementStatus.canceled;
     final bgColor = status.backgroundColor(colorScheme);
     final textCol = status.textColor(colorScheme);
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: compact ? 8 : 12,
-        vertical: compact ? 2 : 4,
+        // Fix #956: replace hardcoded values with design tokens
+        horizontal: compact ? MinglitSpacing.small : MinglitSpacing.sm,
+        vertical: compact ? MinglitSpacing.xxsmall : MinglitSpacing.xsmall,
       ),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(4),
+        // Fix #956: replace hardcoded 4 with MinglitRadius.badge
+        borderRadius: BorderRadius.circular(MinglitRadius.badge),
       ),
       child: Text(
         status.label,
-        style: TextStyle(
-          fontSize: compact ? 11 : 13,
-          fontWeight: FontWeight.w600,
-          color: textCol,
-          decoration: isStrikethrough ? TextDecoration.lineThrough : null,
-          decorationColor: isStrikethrough ? textCol : null,
-        ),
+        // Fix #956: replace hardcoded fontSize with TextTheme
+        style: (compact
+                ? theme.textTheme.labelSmall
+                : theme.textTheme.bodySmall)
+            ?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: textCol,
+              decoration: isStrikethrough ? TextDecoration.lineThrough : null,
+              decorationColor: isStrikethrough ? textCol : null,
+            ),
       ),
     );
   }

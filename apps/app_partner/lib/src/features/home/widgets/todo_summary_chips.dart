@@ -89,8 +89,9 @@ class _TodoChip extends StatelessWidget {
           vertical: MinglitSpacing.medium,
         ),
         decoration: BoxDecoration(
+          // Fix #957: replace hardcoded alpha with design token
           color: isActive
-              ? activeColor.withValues(alpha: 0.08)
+              ? activeColor.withValues(alpha: MinglitOpacity.tintFill)
               : theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(MinglitRadius.input),
         ),

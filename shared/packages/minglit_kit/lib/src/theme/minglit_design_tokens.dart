@@ -131,6 +131,9 @@ class MinglitRadius {
   /// 12px input border radius.
   static const double input = 12;
 
+  /// 4px badge border radius.
+  static const double badge = 4;
+
   /// 100px chip border radius (fully rounded).
   static const double chip = 100;
 }
