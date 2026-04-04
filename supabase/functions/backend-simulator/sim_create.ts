@@ -71,9 +71,12 @@ export async function simCreateParties(
         if (partnerEmail) {
           partnerToken = await getSimPartnerToken(supabaseUrl, anonKey, partnerEmail, simUserPassword);
         } else {
-          log({ level: "warn", phase: "create", step: "get_partner_email", message: `No email for partner ${partner.id}, EF path skipped` });
+          const errMsg = `No email for partner ${partner.id}, EF path skipped`;
+          if (strict) throw new Error(errMsg);
+          log({ level: "warn", phase: "create", step: "get_partner_email", message: errMsg });
         }
       } catch (authErr) {
+        if (strict) throw authErr;
         log({ level: "warn", phase: "create", step: "get_partner_token", message: `Failed to get partner token: ${String(authErr)}` });
       }
     }
