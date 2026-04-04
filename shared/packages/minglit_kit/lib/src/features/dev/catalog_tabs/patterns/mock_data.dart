@@ -1,6 +1,5 @@
 // Mock data for design pattern catalog demos.
 // Uses plain Dart types; no real Repository or model imports.
-library;
 
 /// A mock event card data structure for demos.
 class MockEventData {
