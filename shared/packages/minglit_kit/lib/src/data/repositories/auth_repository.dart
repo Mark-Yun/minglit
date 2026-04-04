@@ -244,11 +244,12 @@ class AuthRepository {
   /// Signs out from both Supabase and Google.
   Future<void> signOut() async {
     try {
-      await Future.wait([
-        _supabase.auth.signOut(),
-        // Fix #959: google_sign_in 7.x uses singleton instance
-        GoogleSignIn.instance.signOut(),
-      ]);
+      // Fix #959: only call GoogleSignIn.instance.signOut() if initialized;
+      // user may have signed in via Apple/Kakao without ever triggering Google flow.
+      await _supabase.auth.signOut();
+      if (_googleSignInInitialized) {
+        await GoogleSignIn.instance.signOut();
+      }
       Log.i('👋 [AuthRepo] Sign-Out successful');
     } on Exception catch (e, stackTrace) {
       Log.e('❌ [AuthRepo] Sign-Out Error', e, stackTrace);
