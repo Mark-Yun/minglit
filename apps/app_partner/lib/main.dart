@@ -177,15 +177,15 @@ class _AppView extends ConsumerWidget {
           data: (_) => BugReporterWrapper(
             navigatorKey: rootNavigatorKey,
             // Fix #382: child 강제 언래핑 제거 — nullable child에 fallback 추가
-            child: MinglitGlobalLoadingOverlay(
-              child: child ?? const SizedBox.shrink(),
+            child: PendingDeletionRecoveryListener(
+              child: MinglitGlobalLoadingOverlay(
+                child: child ?? const SizedBox.shrink(),
+              ),
             ),
           ),
           // Hidden behind native splash — show nothing.
           loading: () => const SizedBox.shrink(),
-          error: (e, st) => Scaffold(
-            body: Center(child: Text('Error: $e')),
-          ),
+          error: (e, st) => Scaffold(body: Center(child: Text('Error: $e'))),
         );
       },
     );
