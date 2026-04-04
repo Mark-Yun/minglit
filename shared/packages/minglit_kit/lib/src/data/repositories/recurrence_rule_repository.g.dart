@@ -8,9 +8,12 @@ part of 'recurrence_rule_repository.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provides the [RecurrenceRuleRepository].
 
 @ProviderFor(recurrenceRuleRepository)
 const recurrenceRuleRepositoryProvider = RecurrenceRuleRepositoryProvider._();
+
+/// Provides the [RecurrenceRuleRepository].
 
 final class RecurrenceRuleRepositoryProvider
     extends
@@ -20,6 +23,7 @@ final class RecurrenceRuleRepositoryProvider
           RecurrenceRuleRepository
         >
     with $Provider<RecurrenceRuleRepository> {
+  /// Provides the [RecurrenceRuleRepository].
   const RecurrenceRuleRepositoryProvider._()
     : super(
         from: null,
@@ -55,4 +59,4 @@ final class RecurrenceRuleRepositoryProvider
 }
 
 String _$recurrenceRuleRepositoryHash() =>
-    r'b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1';
+    r'a47758496bd86e57766a0cec77df23e82093f9ca';

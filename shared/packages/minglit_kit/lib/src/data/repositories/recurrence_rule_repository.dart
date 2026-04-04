@@ -6,7 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'recurrence_rule_repository.g.dart';
 
-/// Provider for [RecurrenceRuleRepository].
+/// Provides the [RecurrenceRuleRepository].
 @Riverpod(keepAlive: true)
 RecurrenceRuleRepository recurrenceRuleRepository(Ref ref) {
   return RecurrenceRuleRepository(Supabase.instance.client);
