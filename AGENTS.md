@@ -280,7 +280,7 @@ git push
 
 ## Test Conventions
 
-새 피쳐 구현 또는 버그 수정 시 반드시 [Automation Test Guide](docs/AUTOMATION_TEST_GUIDE.md)를 따른다.
+새 피쳐 구현 또는 버그 수정 시 반드시 [Automation Test Guide](docs/qa/automation-test-guide.md)를 따른다.
 
 ### 필수 테스트 규칙
 - **Repository 변경** → `minglit_kit/test/src/data/repositories/` 에 테스트 추가
