@@ -93,6 +93,59 @@ void main() {
       });
     });
 
+    group('signInWithGoogle (mobile path)', () {
+      test('throws AuthException when webClientId is empty string', () async {
+        // Fix #959: empty string should be treated as unconfigured
+        final repo = AuthRepository(
+          supabase: mockClient,
+          webClientId: '',
+        );
+        await expectLater(
+          repo.signInWithGoogle(),
+          throwsA(
+            isA<AuthException>().having(
+              (e) => e.message,
+              'message',
+              'GOOGLE_WEB_CLIENT_ID is not configured.',
+            ),
+          ),
+        );
+      });
+
+      test('throws AuthException when webClientId is whitespace-only', () async {
+        // Fix #959: whitespace-only string is normalized to null at construction
+        final repo = AuthRepository(
+          supabase: mockClient,
+          webClientId: '   ',
+        );
+        await expectLater(
+          repo.signInWithGoogle(),
+          throwsA(
+            isA<AuthException>().having(
+              (e) => e.message,
+              'message',
+              'GOOGLE_WEB_CLIENT_ID is not configured.',
+            ),
+          ),
+        );
+      });
+
+      test('throws AuthException when webClientId is null', () async {
+        // Fix #959: null webClientId should fail fast with a clear message
+        final repo = AuthRepository(supabase: mockClient);
+        await expectLater(
+          repo.signInWithGoogle(),
+          throwsA(
+            isA<AuthException>().having(
+              (e) => e.message,
+              'message',
+              'GOOGLE_WEB_CLIENT_ID is not configured.',
+            ),
+          ),
+        );
+      });
+    });
+
     group('signOut', () {
       test('completes successfully', () async {
         when(() => mockAuth.signOut()).thenAnswer((_) async {});

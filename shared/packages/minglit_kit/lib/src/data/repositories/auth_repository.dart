@@ -73,7 +73,13 @@ class AuthRepository {
     String? defaultRedirectUrl,
     String? mobileRedirectScheme,
   }) : _supabase = supabase ?? Supabase.instance.client,
-       _webClientId = webClientId,
+       // Fix #959: normalize blank webClientId to null to prevent
+       // GoogleSignIn.instance.initialize() from receiving an empty string,
+       // which causes a runtime failure on mobile.
+       _webClientId =
+           webClientId != null && webClientId.trim().isNotEmpty
+               ? webClientId.trim()
+               : null,
        _defaultRedirectUrl = defaultRedirectUrl,
        _mobileRedirectScheme = mobileRedirectScheme;
 
@@ -90,14 +96,21 @@ class AuthRepository {
     if (_googleSignInInitCompleter != null) {
       return _googleSignInInitCompleter!.future;
     }
-    _googleSignInInitCompleter = Completer<void>();
+    // Use a local variable so the catch block can always complete this specific
+    // completer — avoids race where _googleSignInInitCompleter is set to null
+    // before waiting callers receive the error.
+    final completer = Completer<void>();
+    _googleSignInInitCompleter = completer;
     try {
       await GoogleSignIn.instance.initialize(
         clientId: kIsWeb ? _webClientId : null,
         serverClientId: kIsWeb ? null : _webClientId,
       );
-      _googleSignInInitCompleter!.complete();
-    } catch (e) {
+      completer.complete();
+    } catch (e, stackTrace) {
+      // Fix #959: complete with error so concurrent callers that are already
+      // waiting on completer.future receive the error instead of hanging.
+      completer.completeError(e, stackTrace);
       _googleSignInInitCompleter = null;
       rethrow;
     }
@@ -126,6 +139,11 @@ class AuthRepository {
       }
 
       // Mobile Native Sign-In
+      // Fix #959: guard missing webClientId early to surface misconfiguration
+      // before calling initialize(), which would fail with a cryptic error.
+      if ((_webClientId ?? '').isEmpty) {
+        throw const AuthException('GOOGLE_WEB_CLIENT_ID is not configured.');
+      }
       await _ensureGoogleSignInInitialized();
       final googleUser = await GoogleSignIn.instance.authenticate();
 
