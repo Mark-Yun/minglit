@@ -27,6 +27,7 @@ class TicketStatusHeader extends StatelessWidget {
         vertical: MinglitSpacing.small,
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
             Icons.info_outline,
@@ -34,20 +35,29 @@ class TicketStatusHeader extends StatelessWidget {
             color: colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: MinglitSpacing.xsmall),
-          Text(
-            context.l10n.ticketList_header_title,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
+          Expanded(
+            child: Text(
+              context.l10n.ticketList_header_title,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          const Spacer(),
-          Text(
-            context.l10n.ticketList_header_summary(
-              totalIssued,
-              maxParticipants ?? 0,
-            ),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
+          const SizedBox(width: MinglitSpacing.small),
+          Flexible(
+            child: Text(
+              context.l10n.ticketList_header_summary(
+                totalIssued,
+                maxParticipants ?? 0,
+              ),
+              textAlign: TextAlign.right,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -175,30 +185,39 @@ class TicketListItem extends StatelessWidget {
 
               // Trailing / Stats
               if (trailing != null)
-                trailing!
+                Flexible(child: trailing!)
               else if (showStats) ...[
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      context.l10n.ticketList_label_sold(ticket.soldCount),
-                      style: theme.textTheme.bodySmall!.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.primary,
+                const SizedBox(width: MinglitSpacing.small),
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        context.l10n.ticketList_label_sold(ticket.soldCount),
+                        textAlign: TextAlign.right,
+                        style: theme.textTheme.bodySmall!.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.primary,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    const SizedBox(height: MinglitSpacing.xxsmall),
-                    Text(
-                      ticket.status == 'on_sale'
-                          ? context.l10n.ticketList_status_onSale
-                          : context.l10n.ticketList_status_soldOut,
-                      style: theme.textTheme.bodySmall!.copyWith(
-                        color: ticket.status == 'on_sale'
-                            ? colorScheme.outline
-                            : colorScheme.error,
+                      const SizedBox(height: MinglitSpacing.xxsmall),
+                      Text(
+                        ticket.status == 'on_sale'
+                            ? context.l10n.ticketList_status_onSale
+                            : context.l10n.ticketList_status_soldOut,
+                        textAlign: TextAlign.right,
+                        style: theme.textTheme.bodySmall!.copyWith(
+                          color: ticket.status == 'on_sale'
+                              ? colorScheme.outline
+                              : colorScheme.error,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ],

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:app_user/src/features/home/widgets/event_now_bar.dart';
+import 'package:app_user/src/features/home/widgets/event_now_bar_controller.dart';
 import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:app_user/src/routing/app_routes.dart';
 import 'package:app_user/src/widgets/explore_filter_chip_bar.dart';
@@ -46,21 +47,36 @@ class _HomePageState extends ConsumerState<HomePage> {
     final user = ref.watch(currentUserProvider);
     final homeCoordinator = ref.read(homeCoordinatorProvider);
     final recommendationState = ref.watch(recommendationFeedProvider);
+    final todayActiveEventsAsync = ref.watch(todayActiveEventsProvider);
+    final bottomSafeArea = MediaQuery.paddingOf(context).bottom;
+    final reservesNowBarSpace = todayActiveEventsAsync.when(
+      data: (events) => events.isNotEmpty,
+      loading: () => true,
+      error: (_, _) => true,
+    );
+    final bottomContentPadding = reservesNowBarSpace
+        ? EventNowBar.height + bottomSafeArea + MinglitSpacing.medium
+        : MinglitSpacing.xlarge;
 
     // Auto-fetch next page when first page is completely filtered out
     // by client-side eligibility/nearby filter (events empty but hasMore=true).
     ref.listen(recommendationFeedProvider, (_, next) {
       next.whenData((s) {
         if (s.events.isEmpty && s.hasMore && !s.isLoadingMore) {
-          unawaited(
-            ref.read(recommendationFeedProvider.notifier).loadMore(),
-          );
+          unawaited(ref.read(recommendationFeedProvider.notifier).loadMore());
         }
       });
     });
 
     return Scaffold(
-      bottomSheet: const EventNowBar(),
+      // Fix #667: Scaffold.bottomSheet does not preserve the parent bottom
+      // inset here, so pad the bar manually above the home indicator.
+      bottomSheet: reservesNowBarSpace
+          ? Padding(
+              padding: EdgeInsets.only(bottom: bottomSafeArea),
+              child: const EventNowBar(),
+            )
+          : null,
       // Fix #192: Pull-to-refresh to reload the explore feed from scratch.
       body: RefreshIndicator(
         onRefresh: () =>
@@ -207,8 +223,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                   child: Center(child: MinglitCircularProgressIndicator()),
                 ),
               ),
-            const SliverPadding(
-              padding: EdgeInsets.only(bottom: MinglitSpacing.xlarge),
+            SliverPadding(
+              // Fix #667: reserve scroll space so the last card is not hidden
+              // behind the fixed EventNowBar.
+              padding: EdgeInsets.only(bottom: bottomContentPadding),
             ),
           ],
         ),
