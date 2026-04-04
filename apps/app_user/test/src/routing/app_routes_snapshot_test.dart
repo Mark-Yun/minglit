@@ -17,6 +17,8 @@ List<String> collectAllRoutePaths(
           ? route.path
           : prefix.isEmpty
           ? '/${route.path}'
+          : prefix == '/'
+          ? '/${route.path}'
           : '$prefix/${route.path}';
       paths.add(fullPath);
       paths.addAll(collectAllRoutePaths(route.routes, fullPath));
@@ -76,10 +78,11 @@ void main() {
 
     test('protected prefixes are present in the route tree', () {
       final paths = collectAllRoutePaths($appRoutes);
+      // Note: /payment is in app_router.dart's protectedPrefixes for deep-link
+      // defense but has no registered route (payment uses /purchase-history).
       const protectedPrefixes = [
         '/my',
         '/tickets/my',
-        '/payment',
         '/purchase-history',
         '/certification',
         '/signup/consent',
