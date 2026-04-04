@@ -96,5 +96,29 @@ void main() {
       // Should redirect to home, NOT to //evil.com
       expect(find.byType(HomePage), findsOneWidget);
     });
+
+    // Fix #1000: /tickets/my was missing from protected-prefix coverage.
+    testWidgets('비로그인: /tickets/my 접근 시 LoginPage로 리다이렉트', (tester) async {
+      setKoreanLocale(tester);
+      await tester.pumpWidget(
+        createTestApp(initialLocation: '/tickets/my'),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byType(LoginPage), findsOneWidget);
+    });
+
+    // Fix #1000: /certification was missing from protected-prefix coverage.
+    testWidgets('비로그인: /certification 접근 시 LoginPage로 리다이렉트', (tester) async {
+      setKoreanLocale(tester);
+      await tester.pumpWidget(
+        createTestApp(initialLocation: '/certification'),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byType(LoginPage), findsOneWidget);
+    });
   });
 }
