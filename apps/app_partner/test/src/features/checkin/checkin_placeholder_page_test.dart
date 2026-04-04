@@ -100,15 +100,17 @@ void main() {
       expect(find.byIcon(Icons.qr_code_scanner), findsOneWidget);
     });
 
-    // Skip #1009: 1-event case renders QRScannerScreen which uses native camera
-    // plugin (mobile_scanner). QRScannerScreen.dispose() is async
+    // TODO #1009: 1-event auto-entry test remains disabled.
+    // Blocker: QRScannerScreen uses mobile_scanner which has async dispose behavior.
+    // QRScannerScreen.dispose() is async
     // (`Future<void> dispose() async { await _scannerController.dispose(); }`)
     // which Flutter's test framework does not await, causing teardown flakiness.
-    // The routing logic (1 event → direct scanner) is covered by the 0-event
-    // and 2+-event tests.
+    // Note: 0-event and 2+-event tests validate UI states only, not 1-event routing.
+    // When re-enabling, verify auto-routing behavior (events.length == 1 → direct
+    // QRScannerScreen entry).
     //
     // Re-enable when mobile_scanner provides synchronous disposal or when a
-    // platform shim is available for camera plugin in tests.
+    // test shim for camera plugins becomes available.
 
     testWidgets('shows event selection when 2+ events today', (
       tester,
