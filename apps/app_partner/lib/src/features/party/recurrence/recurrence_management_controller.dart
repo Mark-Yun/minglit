@@ -5,8 +5,7 @@ part 'recurrence_management_controller.g.dart';
 
 /// State for recurrence management operations.
 @riverpod
-class RecurrenceManagementController
-    extends _$RecurrenceManagementController {
+class RecurrenceManagementController extends _$RecurrenceManagementController {
   @override
   FutureOr<void> build() {
     // Initial state
@@ -50,7 +49,5 @@ class RecurrenceManagementController
 /// Returns null if no rule exists.
 @riverpod
 Future<RecurrenceRule?> partyRecurrenceRule(Ref ref, String partyId) {
-  return ref
-      .watch(recurrenceRuleRepositoryProvider)
-      .getByPartyId(partyId);
+  return ref.watch(recurrenceRuleRepositoryProvider).getByPartyId(partyId);
 }

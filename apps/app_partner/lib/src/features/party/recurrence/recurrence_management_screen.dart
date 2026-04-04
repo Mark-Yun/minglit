@@ -104,8 +104,9 @@ class _RecurrenceRuleContent extends ConsumerWidget {
           children: [
             Text(
               '규칙 정보',
-              style: theme.textTheme.titleSmall
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: MinglitSpacing.small),
             _buildInfoRow(context, '반복 패턴', patternLabel),

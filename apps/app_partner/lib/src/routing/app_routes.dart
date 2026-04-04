@@ -1,5 +1,4 @@
 import 'package:app_partner/src/features/account_deletion/ui/deletion_complete_page.dart';
-import 'package:app_partner/src/features/party/recurrence/recurrence_management_screen.dart';
 import 'package:app_partner/src/features/account_deletion/ui/deletion_info_page.dart';
 import 'package:app_partner/src/features/account_deletion/ui/deletion_reason_page.dart';
 import 'package:app_partner/src/features/account_deletion/ui/deletion_verify_page.dart';
@@ -20,6 +19,7 @@ import 'package:app_partner/src/features/party/detail/party_detail_page.dart';
 import 'package:app_partner/src/features/party/event/create/event_create_page.dart';
 import 'package:app_partner/src/features/party/event/detail/event_detail_page.dart';
 import 'package:app_partner/src/features/party/list/party_list_page.dart';
+import 'package:app_partner/src/features/party/recurrence/recurrence_management_screen.dart';
 import 'package:app_partner/src/features/settlement/bank_account_page.dart';
 import 'package:app_partner/src/features/settlement/settlement_detail_page.dart';
 import 'package:app_partner/src/features/settlement/settlement_page.dart';

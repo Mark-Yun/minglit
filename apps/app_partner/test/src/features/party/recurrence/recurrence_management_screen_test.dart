@@ -46,16 +46,18 @@ void main() {
       expect(find.text('설정된 반복 규칙이 없습니다.'), findsOneWidget);
     });
 
-    testWidgets('shows active rule with pause and cancel buttons',
-        (tester) async {
+    testWidgets('shows active rule with pause and cancel buttons', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildTestWidget(rule: _makeRule()));
       await tester.pumpAndSettle();
       expect(find.text('일시 정지'), findsOneWidget);
       expect(find.text('규칙 취소'), findsOneWidget);
     });
 
-    testWidgets('shows paused rule with cancel and resume buttons',
-        (tester) async {
+    testWidgets('shows paused rule with cancel and resume buttons', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _buildTestWidget(rule: _makeRule(status: RecurrenceStatus.paused)),
       );

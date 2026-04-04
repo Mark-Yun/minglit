@@ -24,8 +24,9 @@ void main() {
     test('pause — success transitions state to AsyncData', () async {
       when(() => mockRepo.pause(any())).thenAnswer((_) async {});
 
-      final notifier =
-          container.read(recurrenceManagementControllerProvider.notifier);
+      final notifier = container.read(
+        recurrenceManagementControllerProvider.notifier,
+      );
       await notifier.pause('rule-1');
 
       final state = container.read(recurrenceManagementControllerProvider);
@@ -35,8 +36,9 @@ void main() {
     test('pause — error transitions state to AsyncError', () async {
       when(() => mockRepo.pause(any())).thenThrow(Exception('network error'));
 
-      final notifier =
-          container.read(recurrenceManagementControllerProvider.notifier);
+      final notifier = container.read(
+        recurrenceManagementControllerProvider.notifier,
+      );
       await notifier.pause('rule-1');
 
       final state = container.read(recurrenceManagementControllerProvider);
@@ -46,8 +48,9 @@ void main() {
     test('resume — success transitions state to AsyncData', () async {
       when(() => mockRepo.resume(any())).thenAnswer((_) async {});
 
-      final notifier =
-          container.read(recurrenceManagementControllerProvider.notifier);
+      final notifier = container.read(
+        recurrenceManagementControllerProvider.notifier,
+      );
       await notifier.resume('rule-1');
 
       final state = container.read(recurrenceManagementControllerProvider);
@@ -57,8 +60,9 @@ void main() {
     test('cancel — success transitions state to AsyncData', () async {
       when(() => mockRepo.cancel(any())).thenAnswer((_) async {});
 
-      final notifier =
-          container.read(recurrenceManagementControllerProvider.notifier);
+      final notifier = container.read(
+        recurrenceManagementControllerProvider.notifier,
+      );
       await notifier.cancel('rule-1');
 
       final state = container.read(recurrenceManagementControllerProvider);
