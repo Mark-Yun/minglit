@@ -82,7 +82,7 @@ class _RecurrenceRuleContent extends ConsumerWidget {
 
     return Chip(
       label: Text(label),
-      backgroundColor: color.withValues(alpha: 0.12),
+      backgroundColor: color.withOpacity(0.12),
       labelStyle: TextStyle(color: color, fontWeight: FontWeight.w600),
       side: BorderSide.none,
     );
