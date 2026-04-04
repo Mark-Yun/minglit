@@ -86,8 +86,11 @@ class EventDetailRoute extends GoRouteData with $EventDetailRoute {
   final String eventId;
 
   @override
-  Widget build(BuildContext context, GoRouterState state) =>
-      EventDetailPage(eventId: eventId);
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MinglitPageTransitions.sharedAxisScaled(
+        key: state.pageKey,
+        child: EventDetailPage(eventId: eventId),
+      );
 }
 
 /// **Partner Detail Route**: Detailed information about a specific partner.
@@ -99,8 +102,11 @@ class PartnerDetailRoute extends GoRouteData with $PartnerDetailRoute {
   final String partnerId;
 
   @override
-  Widget build(BuildContext context, GoRouterState state) =>
-      PartnerDetailPage(partnerId: partnerId);
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MinglitPageTransitions.sharedAxisScaled(
+        key: state.pageKey,
+        child: PartnerDetailPage(partnerId: partnerId),
+      );
 }
 
 /// **Partner Events Route**: Full list of events for a partner.
