@@ -106,6 +106,15 @@ SELECT col_not_null('public', 'events', 'is_recurrence_exception', 'is_recurrenc
 SELECT col_type_is('public', 'events', 'recurrence_date', 'date', 'events.recurrence_date is date');
 
 -- ============================================================
+-- 7a. FK — events.recurrence_rule_id → recurrence_rules(id)
+-- ============================================================
+SELECT fk_ok(
+  'public', 'events', 'recurrence_rule_id',
+  'public', 'recurrence_rules', 'id',
+  'events.recurrence_rule_id → recurrence_rules.id FK exists'
+);
+
+-- ============================================================
 -- 8. Partial Unique Index — uq_events_recurrence_date
 -- ============================================================
 SELECT has_index(
