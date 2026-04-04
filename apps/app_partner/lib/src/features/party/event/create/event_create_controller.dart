@@ -1,4 +1,5 @@
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
+import 'package:app_partner/src/features/party/logic/recurrence_settings_controller.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -168,6 +169,26 @@ class EventCreateController extends _$EventCreateController {
 
       await repo.createEvent(event);
       ref.invalidate(partyEventsProvider(state.partyId));
+
+      // Fix #1037: 반복 설정이 활성화된 경우 recurrence rule 생성
+      final recurrenceState = ref.read(recurrenceSettingsControllerProvider);
+      if (recurrenceState.isEnabled) {
+        final recurrenceRepo = ref.read(recurrenceRuleRepositoryProvider);
+        final pad2 = (int n) => n.toString().padLeft(2, '0');
+        final startTimeStr =
+            '${pad2(state.startTime.hour)}:${pad2(state.startTime.minute)}';
+        final endTimeStr =
+            '${pad2(state.endTime.hour)}:${pad2(state.endTime.minute)}';
+        await recurrenceRepo.create(
+          partyId: state.partyId,
+          pattern: recurrenceState.pattern,
+          daysOfWeek: recurrenceState.daysOfWeek,
+          monthDay: recurrenceState.monthDay,
+          startTime: startTimeStr,
+          endTime: endTimeStr,
+          endDate: recurrenceState.endDate,
+        );
+      }
     });
 
     state = state.copyWith(status: result);
