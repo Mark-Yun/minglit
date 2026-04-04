@@ -103,6 +103,7 @@ SELECT fk_ok(
 SELECT col_type_is('public', 'events', 'recurrence_rule_id', 'uuid', 'events.recurrence_rule_id is uuid');
 SELECT col_type_is('public', 'events', 'is_recurrence_exception', 'boolean', 'events.is_recurrence_exception is boolean');
 SELECT col_not_null('public', 'events', 'is_recurrence_exception', 'is_recurrence_exception is NOT NULL');
+SELECT col_type_is('public', 'events', 'recurrence_date', 'date', 'events.recurrence_date is date');
 
 -- ============================================================
 -- 8. Partial Unique Index — uq_events_recurrence_date
@@ -240,6 +241,7 @@ SELECT lives_ok(
 
 -- ============================================================
 -- 14. uq_events_recurrence_date — 같은 날짜 중복 이벤트 거부
+-- recurrence_date 컬럼으로 중복 방지 (start_time::date 대신)
 -- ============================================================
 WITH rule AS (
   SELECT id FROM public.recurrence_rules
@@ -251,7 +253,7 @@ evt AS (
   INSERT INTO public.events (
     party_id, recurrence_rule_id,
     title, description, status,
-    start_time, end_time, max_participants
+    start_time, end_time, max_participants, recurrence_date
   )
   SELECT
     current_setting('tests.rr_party_id')::uuid,
@@ -261,7 +263,8 @@ evt AS (
     'scheduled',
     '2026-05-01 10:00:00+09',
     '2026-05-01 11:00:00+09',
-    10
+    10,
+    '2026-05-01'::date
   FROM rule
   RETURNING recurrence_rule_id
 )
@@ -274,11 +277,12 @@ SELECT throws_ok(
       INSERT INTO public.events (
         party_id, recurrence_rule_id,
         title, description, status,
-        start_time, end_time, max_participants
+        start_time, end_time, max_participants, recurrence_date
       ) VALUES (
         '%s', '%s',
         'Duplicate Event', 'Test', 'scheduled',
-        '2026-05-01 14:00:00+09', '2026-05-01 15:00:00+09', 10
+        '2026-05-01 14:00:00+09', '2026-05-01 15:00:00+09', 10,
+        '2026-05-01'::date
       )
     $$,
     current_setting('tests.rr_party_id'),
@@ -286,7 +290,7 @@ SELECT throws_ok(
   ),
   '23505',
   NULL,
-  'duplicate event on same recurrence_rule_id + date rejected'
+  'duplicate event on same recurrence_rule_id + recurrence_date rejected'
 );
 ROLLBACK TO SAVEPOINT before_dup_event;
 

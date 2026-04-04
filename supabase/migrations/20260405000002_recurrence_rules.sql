@@ -57,19 +57,24 @@ CREATE UNIQUE INDEX uq_recurrence_rules_party_active
 
 ALTER TABLE public.events
   ADD COLUMN recurrence_rule_id      uuid    REFERENCES public.recurrence_rules(id) ON DELETE SET NULL,
-  ADD COLUMN is_recurrence_exception boolean NOT NULL DEFAULT false;
+  ADD COLUMN is_recurrence_exception boolean NOT NULL DEFAULT false,
+  -- recurrence_date: EF가 반복 규칙으로 이벤트 생성 시 명시적으로 설정하는 날짜 컬럼
+  -- start_time::date 식 인덱스는 timestamptz에서 IMMUTABLE 제약 위반이므로 별도 컬럼 사용
+  ADD COLUMN recurrence_date         date;
 
 COMMENT ON COLUMN public.events.recurrence_rule_id IS '반복 규칙으로 생성된 이벤트의 원본 규칙 ID. 수동 생성 이벤트는 NULL.';
 COMMENT ON COLUMN public.events.is_recurrence_exception IS '반복 규칙의 예외 이벤트 여부 (수동 수정된 회차)';
+COMMENT ON COLUMN public.events.recurrence_date IS '반복 규칙으로 생성된 이벤트의 날짜 (중복 방지용). NULL이면 단일 이벤트.';
 
 -- ============================================================
 -- Section 4: Partial Unique Index — 중복 생성 방지
--- (recurrence_rule_id, start_time 날짜) 조합 유일 보장
+-- (recurrence_rule_id, recurrence_date) 조합 유일 보장
+-- EF가 recurrence_date를 명시적으로 설정하므로 IMMUTABLE 이슈 없음
 -- ============================================================
 
 CREATE UNIQUE INDEX uq_events_recurrence_date
-  ON public.events (recurrence_rule_id, (start_time::date))
-  WHERE recurrence_rule_id IS NOT NULL;
+  ON public.events (recurrence_rule_id, recurrence_date)
+  WHERE recurrence_rule_id IS NOT NULL AND recurrence_date IS NOT NULL;
 
 -- ============================================================
 -- Section 5: recurrence_rules 인덱스
