@@ -59,8 +59,7 @@ void main() {
       // Subscribe first to keep the provider alive while the future is in-flight.
       final subscription = container.listen(
         eventDetailControllerProvider('event_1'),
-        (_, __) {},
-        fireImmediately: false,
+        (_, _) {},
       );
       addTearDown(subscription.close);
 
