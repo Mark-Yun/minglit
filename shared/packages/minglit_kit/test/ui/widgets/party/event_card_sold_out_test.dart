@@ -86,8 +86,9 @@ void main() {
     // Fix #996: 만석 텍스트가 렌더링되어 있는지 확인
     expect(find.text('만석'), findsOneWidget);
 
-    // Semantics 래퍼가 존재하는지 확인 (excludeSemantics: true 로 감싸진 노드)
-    final semantics = tester.getSemantics(find.text('만석').first);
-    expect(semantics, isNotNull);
+    // Fix #996: 스크린 리더 라벨 값 자체를 검증
+    final semanticsHandle = tester.ensureSemantics();
+    addTearDown(semanticsHandle.dispose);
+    expect(find.bySemanticsLabel('이벤트 만석, 참여 불가'), findsOneWidget);
   });
 }
