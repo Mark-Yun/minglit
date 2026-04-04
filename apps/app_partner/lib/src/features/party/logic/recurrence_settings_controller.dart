@@ -1,5 +1,3 @@
-import 'package:app_partner/src/features/party/event/create/event_create_controller.dart'
-    show EventCreateController;
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -32,7 +30,7 @@ abstract class RecurrenceSettingsState with _$RecurrenceSettingsState {
 ///
 /// The controller is scoped to the event-create screen via [ProviderScope.overrides]
 /// or via its auto-dispose lifetime. It computes preview dates without any
-/// repository calls — submission is handled by [EventCreateController.submit].
+/// repository calls — submission is handled by EventCreateController.submit.
 @riverpod
 class RecurrenceSettingsController extends _$RecurrenceSettingsController {
   @override
