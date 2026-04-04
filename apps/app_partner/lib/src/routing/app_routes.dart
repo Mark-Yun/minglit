@@ -260,8 +260,11 @@ class ApplicationDetailRoute extends GoRouteData with $ApplicationDetailRoute {
   const ApplicationDetailRoute({required this.applicationId});
   final String applicationId;
   @override
-  Widget build(BuildContext context, GoRouterState state) =>
-      PartnerApplicationDetailPage(applicationId: applicationId);
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MinglitPageTransitions.sharedAxisScaled(
+        key: state.pageKey,
+        child: PartnerApplicationDetailPage(applicationId: applicationId),
+      );
 }
 
 class LocationGuideRoute extends GoRouteData with $LocationGuideRoute {
@@ -298,8 +301,11 @@ class PartyDetailRoute extends GoRouteData with $PartyDetailRoute {
   const PartyDetailRoute({required this.partyId});
   final String partyId;
   @override
-  Widget build(BuildContext context, GoRouterState state) =>
-      PartyDetailPage(partyId: partyId);
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MinglitPageTransitions.sharedAxisScaled(
+        key: state.pageKey,
+        child: PartyDetailPage(partyId: partyId),
+      );
 }
 
 class PartyEditRoute extends GoRouteData with $PartyEditRoute {
@@ -332,8 +338,11 @@ class EventDetailRoute extends GoRouteData with $EventDetailRoute {
   final String partyId;
   final String eventId;
   @override
-  Widget build(BuildContext context, GoRouterState state) =>
-      EventDetailPage(eventId: eventId);
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MinglitPageTransitions.sharedAxisScaled(
+        key: state.pageKey,
+        child: EventDetailPage(eventId: eventId),
+      );
 }
 
 class TicketCreateRoute extends GoRouteData with $TicketCreateRoute {
@@ -466,10 +475,13 @@ class MemberPermissionRoute extends GoRouteData with $MemberPermissionRoute {
   final String partnerId;
   final String targetUserId;
   @override
-  Widget build(BuildContext context, GoRouterState state) =>
-      PartnerMemberPermissionPage(
-        partnerId: partnerId,
-        targetUserId: targetUserId,
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MinglitPageTransitions.sharedAxisScaled(
+        key: state.pageKey,
+        child: PartnerMemberPermissionPage(
+          partnerId: partnerId,
+          targetUserId: targetUserId,
+        ),
       );
 }
 
