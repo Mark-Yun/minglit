@@ -35,4 +35,8 @@ class PartnerHomeCoordinator {
   void goToCheckin() {
     _router.go(const CheckinRoute().location);
   }
+
+  void pushEventCreate(String partyId) {
+    unawaited(_router.push(EventCreateRoute(partyId: partyId).location));
+  }
 }

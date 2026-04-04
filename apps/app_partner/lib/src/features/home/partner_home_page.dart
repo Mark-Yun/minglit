@@ -256,11 +256,7 @@ class PartnerHomePage extends ConsumerWidget {
             coordinator.goToCheckin();
           case EventPhase.ended:
             // "다음 회차 만들기" → 이벤트 생성 (pre-fill은 #520에서 구현)
-            unawaited(
-              EventCreateRoute(
-                partyId: primaryEvent.partyId,
-              ).push<void>(context),
-            );
+            coordinator.pushEventCreate(primaryEvent.partyId);
         }
       },
       onSecondaryAction1: () {

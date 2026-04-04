@@ -63,7 +63,7 @@ class PartnerApplyStatusPage extends ConsumerWidget {
           _buildStatusMessage(context, onboardingState, application, l10n),
           const SizedBox(height: MinglitSpacing.xlarge),
           if (onboardingState == OnboardingState.needsCorrection) ...[
-            _buildEditButton(context, ref, l10n),
+            _buildEditButton(ref, l10n),
             const SizedBox(height: MinglitSpacing.medium),
           ],
           _buildLogoutButton(context, ref, l10n),
@@ -138,11 +138,7 @@ class PartnerApplyStatusPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildEditButton(
-    BuildContext context,
-    WidgetRef ref,
-    AppLocalizations l10n,
-  ) {
+  Widget _buildEditButton(WidgetRef ref, AppLocalizations l10n) {
     return FilledButton(
       // Fix #845: coordinator를 통해 네비게이션 위임
       onPressed: () => ref.read(onboardingCoordinatorProvider).goToApply(),
