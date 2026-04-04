@@ -1,4 +1,5 @@
 import 'package:alchemist/alchemist.dart' show GoldenTestScenario;
+import 'package:app_user/src/features/account_deletion/logic/account_deletion_coordinator.dart';
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
@@ -73,6 +74,11 @@ class MockSearchCoordinator extends Mock implements SearchCoordinator {}
 class MockPartnerCoordinator extends Mock implements PartnerCoordinator {}
 
 class MockPartyCoordinator extends Mock implements PartyCoordinator {}
+
+class MockAccountDeletionCoordinator extends Mock
+    implements AccountDeletionCoordinator {}
+
+class MockSocialRepository extends Mock implements SocialRepository {}
 
 /// No-op ActiveFilters — disables location/eligibility filters in tests.
 class NoFiltersNotifier extends ActiveFilters {
