@@ -104,9 +104,10 @@
 | 토큰명 | 값 (px) | 용도 |
 | :--- | :--- | :--- |
 | `small` | 8 | 작은 요소 (상태 뱃지, 체크박스 등) |
+| `button` | 12 | 버튼 (ElevatedButton, OutlinedButton) |
+| `card` | 16 | 카드·바텀 시트·이미지 클리핑 |
 | `input` | 12 | 입력 필드 (TextField) |
-| `button` | 16 | 버튼 (ElevatedButton, OutlinedButton) |
-| `card` | 24 | 카드·바텀 시트·이미지 클리핑 |
+| `chip` | 100 | 칩 (fully rounded) |
 
 ---
 
@@ -164,10 +165,10 @@ Material 3 기반 컴포넌트들을 밍릿 스타일로 커스터마이징한 �
 | 컴포넌트 | 주요 설정값 |
 | :--- | :--- |
 | **AppBar** | `elevation: 0`, `centerTitle: true`, `bg: #FFFFFF`, `titleTextStyle: 18px/w600/NotoSansKR` |
-| **ElevatedButton** | `minSize: ∞×56`, `radius: 16`, `bg: primary(#9900FF)`, `fg: white`, `text: 16px/bold`, `elevation: 0` |
-| **OutlinedButton** | `minSize: ∞×56`, `radius: 16`, `border: primary`, `fg: primary`, `text: 16px/bold` |
+| **ElevatedButton** | `minSize: ∞×56`, `radius: 12`, `bg: primary(#9900FF)`, `fg: white`, `text: 16px/bold`, `elevation: 0` |
+| **OutlinedButton** | `minSize: ∞×56`, `radius: 12`, `border: primary`, `fg: primary`, `text: 16px/bold` |
 | **TextButton** | `fg: primary`, `text: 14px/bold` |
-| **Card** | `elevation: 0`, `radius: 24`, `color: surface(#F9FAFB)`, `margin: zero` |
+| **Card** | `elevation: 0`, `radius: 16`, `color: surface(#F9FAFB)`, `margin: zero` |
 | **InputDecoration** | `filled: true`, `fillColor: surface`, `radius: 12`, `border: none`, `focusedBorder: primary 2px`, `contentPadding: 16` |
 | **Chip** | `radius: 100(pill)`, `side: none`, `bg: surface`, `selectedColor: primary`, `labelStyle: 13px` |
 | **Checkbox** | `selectedFill: primary`, `shape: radius 4`, `side: grey 1.5px` |
