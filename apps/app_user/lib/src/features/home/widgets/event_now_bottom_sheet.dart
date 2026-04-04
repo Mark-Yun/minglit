@@ -623,7 +623,6 @@ class _EndedContent extends StatelessWidget {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () {
-                // TODO(mark): Navigate to review screen (#665)
                 Navigator.of(context).pop();
               },
               icon: const Icon(Icons.rate_review_outlined),
