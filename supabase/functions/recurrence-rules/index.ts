@@ -431,7 +431,7 @@ async function generateEvents(
 
   const { data: ticketTemplates, error: ttError } = await supabase
     .from("ticket_templates")
-    .select("id, name, description, price, target_entry_group_ids, required_verification_ids")
+    .select("id, name, description, price, quantity, target_entry_group_ids, required_verification_ids")
     .eq("party_id", rule.party_id);
 
   if (ttError) throw new Error(`Failed to fetch ticket templates: ${ttError.message}`);
@@ -441,8 +441,8 @@ async function generateEvents(
   for (const date of dates) {
     const dateStr = date.toISOString().slice(0, 10); // YYYY-MM-DD
 
-    const eventStartTime = `${dateStr}T${rule.start_time}:00Z`;
-    const eventEndTime = `${dateStr}T${rule.end_time}:00Z`;
+    const eventStartTime = `${dateStr}T${rule.start_time}Z`;
+    const eventEndTime = `${dateStr}T${rule.end_time}Z`;
 
     // Insert event with ON CONFLICT DO NOTHING handled by DB unique index
     const { data: newEvent, error: eventError } = await supabase
@@ -452,6 +452,7 @@ async function generateEvents(
         recurrence_rule_id: rule.id,
         start_time: eventStartTime,
         end_time: eventEndTime,
+        recurrence_date: dateStr,
         status: "scheduled",
       })
       .select("id")
@@ -514,7 +515,7 @@ async function generateEvents(
           name: tpl.name,
           description: tpl.description ?? null,
           price: tpl.price ?? 0,
-          quantity: 0,
+          quantity: (tpl.quantity as number) ?? 0,
           target_entry_group_ids: remappedTargetIds,
           required_verification_ids: tpl.required_verification_ids ?? [],
         };
@@ -598,7 +599,7 @@ async function checkPartnerPermission(
 ): Promise<void | Response> {
   const { data: perm, error: permError } = await supabase
     .from("partner_member_permissions")
-    .select("permissions")
+    .select("role, permissions")
     .eq("partner_id", partnerId)
     .eq("user_id", userId)
     .maybeSingle();
@@ -606,6 +607,9 @@ async function checkPartnerPermission(
   if (permError) {
     return errorResponse("Failed to verify partner permissions", 500);
   }
+
+  // Owner always has full access (codebase convention)
+  if ((perm?.role as string | null) === "owner") return;
 
   const permissions = (perm?.permissions as string[] | null) ?? [];
   const hasPermission = permissions.includes("PARTY_MANAGE");
