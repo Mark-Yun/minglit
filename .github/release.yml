@@ -1,0 +1,16 @@
+changelog:
+  categories:
+    - title: "🚀 Features"
+      labels: ["enhancement"]
+    - title: "🐛 Bug Fixes"
+      labels: ["bug", "bug-report"]
+    - title: "🏗️ Refactor"
+      labels: ["refactor"]
+    - title: "📝 Documentation"
+      labels: ["documentation"]
+    - title: "🔧 CI/CD"
+      labels: ["ci-failure"]
+    - title: "📦 Dependencies"
+      labels: ["dependencies"]
+    - title: "Other Changes"
+      labels: ["*"]
