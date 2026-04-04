@@ -133,8 +133,10 @@ void main() {
         consentRepository: mockConsentRepository,
       );
 
-      // Fix #883: AsyncError with retry causes isLoading && hasError both
-      // true — need extra pump for error state to propagate through redirect.
+      // Fix #883/#1022: thenThrow requires multiple pump cycles:
+      // pump 1: provider→AsyncError, pump 2: router refresh triggers redirect,
+      // pump 3+: navigation to /signup/consent + widget rebuild
+      await tester.pump();
       await tester.pump();
 
       expect(find.byType(SignupConsentPage), findsOneWidget);

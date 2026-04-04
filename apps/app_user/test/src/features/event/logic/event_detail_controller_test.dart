@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -42,32 +44,41 @@ void main() {
       expect(result, testEvent);
     });
 
-    // FIXME: This test fails with 'provider disposed' error.
-    // Needs investigation.
-    // test('throws exception when repository fails', () async {
-    //   final exception = Exception('Network Error');
-    //   when(() => mockEventRepo.getEventById('event_1'))
-    //       .thenAnswer((_) async => throw exception);
+    // Fix #1009: In Riverpod 3, a provider that errors during build() enters
+    // an AsyncLoading(error, retrying) loop instead of settling into
+    // AsyncError. Verify the error via AsyncValue.hasError / .error.
+    test('throws exception when repository fails', () async {
+      final exception = Exception('Network Error');
+      when(
+        () => mockEventRepo.getEventById('event_1'),
+      ).thenAnswer((_) async => throw exception);
 
-    //   final container = createContainer(
-    //     overrides: [
-    //       eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-    //     ],
-    //   );
+      final container = createContainer(
+        overrides: [
+          eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+        ],
+      );
 
-    //   // Listen to prevent premature disposal
-    //   final subscription = container.listen(
-    //     eventDetailControllerProvider('event_1'),
-    //     (previous, next) {},
-    //     fireImmediately: true,
-    //   );
+      // Wait for the provider to report the error (it will be in
+      // AsyncLoading+error+retrying state in Riverpod 3).
+      final completer = Completer<void>();
+      final subscription = container.listen(
+        eventDetailControllerProvider('event_1'),
+        (prev, next) {
+          if (next.hasError && !completer.isCompleted) {
+            completer.complete();
+          }
+        },
+      );
+      addTearDown(subscription.close);
 
-    //   await expectLater(
-    //     container.read(eventDetailControllerProvider('event_1').future),
-    //     throwsA(isA<Exception>()),
-    //   );
+      await completer.future;
 
-    //   subscription.close();
-    // });
+      final state = container.read(
+        eventDetailControllerProvider('event_1'),
+      );
+      expect(state.hasError, isTrue);
+      expect(state.error, exception);
+    });
   });
 }
