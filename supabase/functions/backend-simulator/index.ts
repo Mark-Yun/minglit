@@ -12,7 +12,7 @@ import {
   simCreateGitHubIssue,
   simUploadLog,
 } from "./sim_reporter.ts";
-import { simCreateParties, simDiscoverAndApply } from "./sim_create.ts";
+import { simCreateParties, simCreateDisplayEvents, simDiscoverAndApply } from "./sim_create.ts";
 import { simApproveVerifications } from "./sim_approve.ts";
 import { simRefundRequests } from "./sim_refund.ts";
 import { simCheckin, simCompleteEvents, simMatch } from "./sim_event.ts";
@@ -108,6 +108,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // Phase: "create" → Phase 1-2 only
   if (phase === "create") {
     const createResult = await simCreateParties(supabase, config, logFn);
+    const displayResult = await simCreateDisplayEvents(supabase, logFn);
     const applyResult = await simDiscoverAndApply(
       supabase,
       config,
@@ -121,6 +122,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       run_id: runId,
       party_ids: createResult.partyIds,
       event_ids: createResult.eventIds,
+      display_party_ids: displayResult.displayPartyIds,
+      display_event_ids: displayResult.displayEventIds,
       application_ids: applyResult.applicationIds,
       paid_application_ids: applyResult.paidApplicationIds,
       pending_review_application_ids: applyResult.pendingReviewApplicationIds,
@@ -192,8 +195,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (phase === "run") {
     const { data: scheduledEvents, error: fetchErr } = await supabase
       .from("events")
-      .select("id")
+      .select("id, parties!inner(title)")
       .eq("status", "scheduled")
+      .filter("parties.title", "like", "[E2E]%")
       .limit(50);
 
     if (fetchErr) {
@@ -235,8 +239,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (phase === "settle") {
     const { data: completedEvents, error: fetchErr } = await supabase
       .from("events")
-      .select("id")
+      .select("id, parties!inner(title)")
       .eq("status", "completed")
+      .filter("parties.title", "like", "[E2E]%")
       .limit(50);
 
     if (fetchErr) {
@@ -276,8 +281,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // Collect assertions from settlement state only (non-destructive)
     const { data: completedEvents } = await supabase
       .from("events")
-      .select("id")
+      .select("id, parties!inner(title)")
       .eq("status", "completed")
+      .filter("parties.title", "like", "[E2E]%")
       .limit(50);
 
     const completedEventIds = (
@@ -323,8 +329,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // Full 6-phase run (no phase param)
   // ─────────────────────────────────────────────────────────
 
-  // Phase 1-2: Create parties + discover & apply
+  // Phase 1-2: Create parties + display events + discover & apply
   const createResult = await simCreateParties(supabase, config, logFn);
+  await simCreateDisplayEvents(supabase, logFn);
   const applyResult = await simDiscoverAndApply(
     supabase,
     config,

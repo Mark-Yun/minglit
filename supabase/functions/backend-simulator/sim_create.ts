@@ -158,6 +158,147 @@ export async function simCreateParties(
   return { partyIds, eventIds };
 }
 
+const DISPLAY_SCENARIOS = [
+  { title: "강남 직장인 애프터워크 밍글", description: "강남에서 만나는 직장인들의 애프터워크 소셜 파티입니다.", offsetDays: 3 },
+  { title: "홍대 대학생 주말 밍글", description: "홍대 앞에서 펼쳐지는 대학생 주말 소셜 밍글입니다.", offsetDays: 7 },
+  { title: "성수 네트워킹 파티", description: "성수동 힙스터들의 소셜 네트워킹 파티입니다.", offsetDays: 14 },
+  { title: "이태원 소셜 밍글", description: "이태원에서 새로운 사람들과 만나는 소셜 밍글입니다.", offsetDays: 21 },
+  { title: "압구정 프라이데이 밍글", description: "압구정에서 즐기는 금요일 저녁 소셜 파티입니다.", offsetDays: 30 },
+];
+
+export async function simCreateDisplayEvents(
+  supabase: SupabaseClient,
+  log: (entry: Omit<SimLogEntry, "timestamp">) => void,
+): Promise<{ displayPartyIds: string[]; displayEventIds: string[] }> {
+  const displayPartyIds: string[] = [];
+  const displayEventIds: string[] = [];
+
+  const { data: partners, error: pErr } = await supabase
+    .from("partners")
+    .select("id");
+  if (pErr || !partners || partners.length === 0) {
+    log({ level: "error", phase: "create", step: "display_get_partners", message: `No partners found: ${pErr?.message ?? "empty"}` });
+    return { displayPartyIds, displayEventIds };
+  }
+
+  for (let i = 0; i < DISPLAY_SCENARIOS.length; i++) {
+    const partner = partners[i % partners.length] as { id: string };
+    const scenario = DISPLAY_SCENARIOS[i];
+
+    const { data: location } = await supabase
+      .from("locations")
+      .select("id")
+      .eq("partner_id", partner.id)
+      .maybeSingle();
+
+    let locationId: string;
+    if (location?.id) {
+      locationId = location.id;
+    } else {
+      const newLocId = crypto.randomUUID();
+      const { error: locErr } = await supabase.from("locations").insert({
+        id: newLocId,
+        partner_id: partner.id,
+        name: "전시용 테스트 장소",
+        address: "서울특별시 강남구 역삼동",
+        region_1: "서울",
+        region_2: "강남구",
+      });
+      if (locErr) {
+        log({ level: "error", phase: "create", step: "display_create_location", message: `Failed: ${locErr.message}` });
+        continue;
+      }
+      locationId = newLocId;
+    }
+
+    const partyId = crypto.randomUUID();
+    const { error: partyErr } = await supabase.from("parties").insert({
+      id: partyId,
+      partner_id: partner.id,
+      location_id: locationId,
+      title: scenario.title,
+      description: { ops: [{ insert: `${scenario.description}\n` }] },
+      image_urls: [],
+      required_verification_ids: [],
+      min_confirmed_count: 4,
+      max_participants: 20,
+      status: "active",
+      metadata: { show_participant_list: true, visibility: "public" },
+    });
+    if (partyErr) {
+      log({ level: "error", phase: "create", step: "display_create_party", message: `Failed: ${partyErr.message}` });
+      continue;
+    }
+    displayPartyIds.push(partyId);
+
+    // 파티당 이벤트 2개 (같은 시나리오, 시작 시간만 +3시간 차이)
+    for (let ei = 0; ei < 2; ei++) {
+      const now = new Date();
+      const startTime = new Date(now.getTime() + scenario.offsetDays * 24 * 60 * 60 * 1000 + ei * 3 * 60 * 60 * 1000);
+      const endTime = new Date(startTime.getTime() + 3 * 60 * 60 * 1000);
+
+      const eventId = crypto.randomUUID();
+      const { error: evErr } = await supabase.from("events").insert({
+        id: eventId,
+        party_id: partyId,
+        location_id: locationId,
+        start_time: startTime.toISOString(),
+        end_time: endTime.toISOString(),
+        min_confirmed_count: 4,
+        max_participants: 20,
+        status: "scheduled",
+        metadata: { show_participant_list: true, visibility: "public" },
+      });
+      if (evErr) {
+        log({ level: "error", phase: "create", step: "display_create_event", message: `Failed: ${evErr.message}` });
+        continue;
+      }
+      displayEventIds.push(eventId);
+
+      const maleGroupId = crypto.randomUUID();
+      const femaleGroupId = crypto.randomUUID();
+
+      const { error: maleGroupErr } = await supabase.from("entry_groups").insert({
+        id: maleGroupId,
+        event_id: eventId, label: "남성", gender: "male",
+        birth_year_min: 1990, birth_year_max: 2005,
+        required_verification_ids: [],
+      });
+      if (maleGroupErr) {
+        log({ level: "warn", phase: "create", step: "display_create_entry_group", message: `Failed to create male entry_group: ${maleGroupErr.message}` });
+      }
+
+      const { error: femaleGroupErr } = await supabase.from("entry_groups").insert({
+        id: femaleGroupId,
+        event_id: eventId, label: "여성", gender: "female",
+        birth_year_min: 1990, birth_year_max: 2005,
+        required_verification_ids: [],
+      });
+      if (femaleGroupErr) {
+        log({ level: "warn", phase: "create", step: "display_create_entry_group", message: `Failed to create female entry_group: ${femaleGroupErr.message}` });
+      }
+
+      const { error: ticketErr } = await supabase.from("tickets").insert({
+        id: crypto.randomUUID(),
+        event_id: eventId,
+        name: "일반 티켓",
+        price: 20000,
+        quantity: 10,
+        target_entry_group_ids: [maleGroupId, femaleGroupId],
+        status: "on_sale",
+      });
+      if (ticketErr) {
+        log({ level: "warn", phase: "create", step: "display_create_ticket", message: `Failed to create ticket: ${ticketErr.message}` });
+      }
+    }
+
+    log({ level: "info", phase: "create", step: "display_party_created", message: `Created display party: ${scenario.title}`, data: { partyId } });
+  }
+
+  log({ level: "info", phase: "create", step: "display_done", message: `Created ${displayPartyIds.length} display parties, ${displayEventIds.length} display events` });
+  return { displayPartyIds, displayEventIds };
+}
+
 // Fix #705: Pre-warm auth tokens in parallel to avoid sequential latency per-application
 async function prewarmAuthTokens(
   users: { username: string }[],
