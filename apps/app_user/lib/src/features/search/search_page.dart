@@ -116,7 +116,11 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                             (keyword) => ActionChip(
                               label: Text(keyword),
                               onPressed: () {
+                                _debounce?.cancel();
                                 _controller.text = keyword;
+                                _controller.selection = TextSelection.collapsed(
+                                  offset: keyword.length,
+                                );
                                 ref
                                     .read(searchQueryProvider.notifier)
                                     .update(keyword);
@@ -149,7 +153,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                         ),
                         const SizedBox(height: MinglitSpacing.medium),
                         Text(
-                          '검색 결과가 없어요',
+                          '검색 결과가 없습니다.',
                           style:
                               Theme.of(
                                 context,

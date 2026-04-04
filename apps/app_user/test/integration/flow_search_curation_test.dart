@@ -124,7 +124,7 @@ void main() {
       await tester.pump();
 
       // Fix #997: empty state 개선 — 쿼리 포함 문구 → 범용 메시지로 변경
-      expect(find.text('검색 결과가 없어요'), findsOneWidget);
+      expect(find.text('검색 결과가 없습니다.'), findsOneWidget);
       expect(find.text('다른 키워드로 시도해보세요.'), findsOneWidget);
     });
 
