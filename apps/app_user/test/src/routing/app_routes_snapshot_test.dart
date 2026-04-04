@@ -35,39 +35,44 @@ void main() {
   group('app_user route path snapshot', () {
     // Fix #1000: snapshot guards against accidental route additions/removals.
     // Update this list when routes are intentionally changed.
-    test('all route paths match snapshot — update when adding/removing routes',
-        () {
-      final paths = collectAllRoutePaths($appRoutes);
+    test(
+      'all route paths match snapshot — update when adding/removing routes',
+      () {
+        final paths = collectAllRoutePaths($appRoutes);
 
-      expect(paths, unorderedEquals(<String>[
-        // Top-level routes (outside shell)
-        '/dev/switch',
-        '/login',
-        '/signup/consent',
-        '/auth/callback',
-        '/events/:eventId',
-        '/partners/:partnerId',
-        '/partners/:partnerId/events',
-        '/certification',
-        '/events/:eventId/apply',
-        '/tickets/my',
-        '/tickets/:ticketId/qr',
-        '/purchase-history',
-        '/notifications',
-        '/my/notification-settings',
-        // Shell routes
-        '/',
-        '/curation',
-        '/search',
-        '/my',
-        '/my/privacy',
-        '/my/privacy/delete/reason',
-        '/my/privacy/delete/info',
-        '/my/privacy/delete/verify',
-        '/my/privacy/delete/complete',
-        '/my/blocked-partners',
-      ]));
-    });
+        expect(
+          paths,
+          unorderedEquals(<String>[
+            // Top-level routes (outside shell)
+            '/dev/switch',
+            '/login',
+            '/signup/consent',
+            '/auth/callback',
+            '/events/:eventId',
+            '/partners/:partnerId',
+            '/partners/:partnerId/events',
+            '/certification',
+            '/events/:eventId/apply',
+            '/tickets/my',
+            '/tickets/:ticketId/qr',
+            '/purchase-history',
+            '/notifications',
+            '/my/notification-settings',
+            // Shell routes
+            '/',
+            '/curation',
+            '/search',
+            '/my',
+            '/my/privacy',
+            '/my/privacy/delete/reason',
+            '/my/privacy/delete/info',
+            '/my/privacy/delete/verify',
+            '/my/privacy/delete/complete',
+            '/my/blocked-partners',
+          ]),
+        );
+      },
+    );
 
     test('protected prefixes are present in the route tree', () {
       final paths = collectAllRoutePaths($appRoutes);

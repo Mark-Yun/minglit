@@ -118,7 +118,7 @@ void main() {
     // Test 1: Not logged in → any non-/login route → PartnerLoginPage
     testWidgets('비로그인: / 접근 시 PartnerLoginPage로 리다이렉트', (tester) async {
       await tester.pumpWidget(
-        _createPartnerTestApp(initialLocation: '/'),
+        _createPartnerTestApp(),
       );
       await tester.pump();
       await tester.pump();
@@ -155,7 +155,6 @@ void main() {
         _createPartnerTestApp(
           isLoggedIn: true,
           currentUser: user,
-          onboardingState: const AsyncData(OnboardingState.hasPartner),
           initialLocation: '/login',
         ),
       );
@@ -182,7 +181,6 @@ void main() {
           isLoggedIn: true,
           currentUser: user,
           onboardingState: const AsyncData(OnboardingState.needsApplication),
-          initialLocation: '/',
         ),
       );
       await tester.pump();
@@ -208,7 +206,6 @@ void main() {
           isLoggedIn: true,
           currentUser: user,
           onboardingState: const AsyncData(OnboardingState.draftInProgress),
-          initialLocation: '/',
         ),
       );
       await tester.pump();
@@ -234,7 +231,6 @@ void main() {
           isLoggedIn: true,
           currentUser: user,
           onboardingState: const AsyncData(OnboardingState.pendingReview),
-          initialLocation: '/',
         ),
       );
       await tester.pump();
@@ -260,7 +256,6 @@ void main() {
           isLoggedIn: true,
           currentUser: user,
           onboardingState: const AsyncData(OnboardingState.needsCorrection),
-          initialLocation: '/',
         ),
       );
       await tester.pump();
@@ -285,7 +280,6 @@ void main() {
         _createPartnerTestApp(
           isLoggedIn: true,
           currentUser: user,
-          onboardingState: const AsyncData(OnboardingState.hasPartner),
           initialLocation: '/apply',
         ),
       );
@@ -323,8 +317,6 @@ void main() {
         _createPartnerTestApp(
           isLoggedIn: true,
           currentUser: user,
-          onboardingState: const AsyncData(OnboardingState.hasPartner),
-          initialLocation: '/',
         ),
       );
       await tester.pump();
