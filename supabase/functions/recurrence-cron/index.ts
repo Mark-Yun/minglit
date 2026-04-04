@@ -129,6 +129,20 @@ async function processRule(
       .eq("party_id", rule.party_id),
   ]);
 
+  if (entryGroupTemplatesResult.error || ticketTemplatesResult.error) {
+    const detail = [
+      entryGroupTemplatesResult.error?.message,
+      ticketTemplatesResult.error?.message,
+    ].filter(Boolean).join("; ");
+    log({
+      function: FN,
+      level: "error",
+      message: "Failed to load templates",
+      metadata: { rule_id: rule.id, party_id: rule.party_id, detail },
+    });
+    return { rule_id: rule.id, events_created: 0, skipped_duplicates: 0, errors: 1 };
+  }
+
   const entryGroupTemplates: EntryGroupTemplate[] =
     (entryGroupTemplatesResult.data ?? []) as EntryGroupTemplate[];
   const ticketTemplates: TicketTemplate[] =
@@ -216,20 +230,20 @@ async function processRule(
           message: "Failed to insert entry_groups",
           metadata: { event_id: eventId, rule_id: rule.id, detail: groupError.message },
         });
+        // Delete the orphaned event so the next cron run can retry cleanly
+        await supabase.from("events").delete().eq("id", eventId);
         errors += 1;
-        continue;
+        break;
       }
 
-      // Build mapping from template id → new entry_group id by matching label
-      const insertedGroupsByLabel = new Map(
-        (insertedGroups ?? []).map((g: { id: string; label: string }) => [g.label, g.id]),
-      );
-      for (const tpl of entryGroupTemplates) {
-        const newId = insertedGroupsByLabel.get(tpl.label);
-        if (newId) {
-          entryGroupIdMap.set(tpl.id, newId);
+      // Build position-based mapping: entryGroupTemplates[i].id → insertedGroups[i].id
+      // Relies on Supabase returning inserted rows in insertion order.
+      (insertedGroups ?? []).forEach((g: { id: string }, i: number) => {
+        const tpl = entryGroupTemplates[i];
+        if (tpl && g.id) {
+          entryGroupIdMap.set(tpl.id, g.id);
         }
-      }
+      });
     }
 
     // Copy ticket_templates → tickets (remap target_entry_group_ids)
@@ -255,8 +269,10 @@ async function processRule(
           message: "Failed to insert tickets",
           metadata: { event_id: eventId, rule_id: rule.id, detail: ticketError.message },
         });
+        // Delete the orphaned event (cascades to entry_groups) so next run can retry
+        await supabase.from("events").delete().eq("id", eventId);
         errors += 1;
-        continue;
+        break;
       }
     }
 

@@ -1,4 +1,5 @@
 import { assertEquals } from "@std/assert";
+import { FakeTime } from "@std/testing/time";
 import {
   captureServeHandler,
   createFetchMock,
@@ -349,47 +350,52 @@ Deno.test(
   "recurrence-cron - monthly rule generates events only on month_day",
   TEST_OPTS,
   async () => {
-    await withEnv(ENV, async () => {
-      const handler = await captureServeHandler(
-        new URL("./index.ts", import.meta.url),
-      );
+    // Freeze clock at 2026-04-05: window = [2026-04-05, 2026-05-05]
+    // month_day=15 → only 2026-04-15 qualifies → exactly 1 event
+    const fakeTime = new FakeTime("2026-04-05T00:00:00Z");
+    try {
+      await withEnv(ENV, async () => {
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
 
-      // month_day = 15: within the next 30 days from 2026-04-05, only 2026-04-15 and 2026-05-05 (if applicable)
-      // 2026-04-15 is in range; 2026-05-05 is also in range (+30 days = 2026-05-05)
-      const rule = makeRule({
-        pattern: "monthly",
-        days_of_week: [],
-        month_day: 15,
-      });
+        const rule = makeRule({
+          pattern: "monthly",
+          days_of_week: [],
+          month_day: 15,
+        });
 
-      let eventInsertCount = 0;
-      const { fetchMock } = createFetchMock([
-        rulesRoute([rule]),
-        entryGroupTemplatesEmpty,
-        ticketTemplatesEmpty,
-        {
-          matcher: (req: Request) =>
-            req.url.includes("/rest/v1/events") && req.method === "POST",
-          handler: () => {
-            eventInsertCount += 1;
-            return jsonResponse({ id: `event-${eventInsertCount}` });
+        let eventInsertCount = 0;
+        const { fetchMock } = createFetchMock([
+          rulesRoute([rule]),
+          entryGroupTemplatesEmpty,
+          ticketTemplatesEmpty,
+          {
+            matcher: (req: Request) =>
+              req.url.includes("/rest/v1/events") && req.method === "POST",
+            handler: () => {
+              eventInsertCount += 1;
+              return jsonResponse({ id: `event-${eventInsertCount}` });
+            },
           },
-        },
-        rulesUpdateRoute,
-      ]);
+          rulesUpdateRoute,
+        ]);
 
-      await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
-          const res = await handler(serviceRoleRequest());
-          const payload = await readJson(res);
+        await withMockedFetch(fetchMock, async () => {
+          await withNoIntervals(async () => {
+            const res = await handler(serviceRoleRequest());
+            const payload = await readJson(res);
 
-          assertEquals(res.status, 200);
-          assertEquals(payload.processed, 1);
-          // From 2026-04-05 to 2026-05-05, month_day=15 → only 2026-04-15 qualifies
-          assertEquals(payload.total_events, 1);
+            assertEquals(res.status, 200);
+            assertEquals(payload.processed, 1);
+            // Frozen at 2026-04-05 → window [Apr 5, May 5] → month_day=15 → Apr 15 → 1 event
+            assertEquals(payload.total_events, 1);
+          });
         });
       });
-    });
+    } finally {
+      fakeTime.restore();
+    }
   },
 );
 
@@ -399,39 +405,44 @@ Deno.test(
   "recurrence-cron - duplicate events (23505) are counted as skipped, not errors",
   TEST_OPTS,
   async () => {
-    await withEnv(ENV, async () => {
-      const handler = await captureServeHandler(
-        new URL("./index.ts", import.meta.url),
-      );
+    // Freeze clock: window [2026-04-05, 2026-05-05], month_day=15 → exactly 1 candidate date
+    const fakeTime = new FakeTime("2026-04-05T00:00:00Z");
+    try {
+      await withEnv(ENV, async () => {
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
 
-      // Use a rule that generates exactly 1 event: month_day=15, today=2026-04-05
-      const rule = makeRule({
-        pattern: "monthly",
-        days_of_week: [],
-        month_day: 15,
-      });
+        const rule = makeRule({
+          pattern: "monthly",
+          days_of_week: [],
+          month_day: 15,
+        });
 
-      const { fetchMock } = createFetchMock([
-        rulesRoute([rule]),
-        entryGroupTemplatesEmpty,
-        ticketTemplatesEmpty,
-        eventsInsert23505Route(), // simulate already-existing duplicate
-        rulesUpdateRoute,
-      ]);
+        const { fetchMock } = createFetchMock([
+          rulesRoute([rule]),
+          entryGroupTemplatesEmpty,
+          ticketTemplatesEmpty,
+          eventsInsert23505Route(), // simulate already-existing duplicate
+          rulesUpdateRoute,
+        ]);
 
-      await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
-          const res = await handler(serviceRoleRequest());
-          const payload = await readJson(res);
+        await withMockedFetch(fetchMock, async () => {
+          await withNoIntervals(async () => {
+            const res = await handler(serviceRoleRequest());
+            const payload = await readJson(res);
 
-          assertEquals(res.status, 200);
-          assertEquals(payload.processed, 1);
-          assertEquals(payload.total_events, 0);
-          assertEquals(payload.total_skipped, 1);
-          assertEquals(payload.total_errors, 0);
+            assertEquals(res.status, 200);
+            assertEquals(payload.processed, 1);
+            assertEquals(payload.total_events, 0);
+            assertEquals(payload.total_skipped, 1);
+            assertEquals(payload.total_errors, 0);
+          });
         });
       });
-    });
+    } finally {
+      fakeTime.restore();
+    }
   },
 );
 
@@ -441,6 +452,9 @@ Deno.test(
   "recurrence-cron - entry_group_templates and ticket_templates are copied for each event",
   TEST_OPTS,
   async () => {
+    // Freeze clock: window [2026-04-05, 2026-05-05], month_day=15 → exactly 1 event
+    const fakeTime = new FakeTime("2026-04-05T00:00:00Z");
+    try {
     await withEnv(ENV, async () => {
       const handler = await captureServeHandler(
         new URL("./index.ts", import.meta.url),
@@ -523,6 +537,9 @@ Deno.test(
         });
       });
     });
+    } finally {
+      fakeTime.restore();
+    }
   },
 );
 
