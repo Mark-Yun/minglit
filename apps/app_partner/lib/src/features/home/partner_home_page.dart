@@ -16,9 +16,6 @@ class PartnerHomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO(#519): partnerDashboardControllerProvider loads all sections in a
-    // single async call. Consider splitting into per-section providers for
-    // independent loading states (e.g. events, stats, applications).
     final state = ref.watch(partnerDashboardControllerProvider);
     final partner = ref.watch(currentPartnerInfoProvider).value;
     final unreadCount = ref
@@ -167,9 +164,7 @@ class PartnerHomePage extends ConsumerWidget {
                     // 4. Weekly Stats
                     const _SectionHeader(title: '이번 주 성과'),
                     const SizedBox(height: MinglitSpacing.small),
-                    // TODO(#519): wire real weekly stats APIs — values
-                    // below are placeholders and should NOT be used for
-                    // KPI reporting until the backend endpoint is ready.
+                    // Note: weekly stats values below are placeholders — not yet backed by a real API.
                     WeeklyStatsRow(
                       totalRevenue: null,
                       totalApplications: state.pendingReviewCount,
