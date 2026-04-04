@@ -271,6 +271,7 @@ class _DDayChip extends StatelessWidget {
       textColor = theme.colorScheme.primary;
     }
 
+    // Fix #951: D-Day 칩 반경 하드코딩 값(100)을 MinglitRadius.chip 토큰으로 교체
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: MinglitSpacing.small + 2,

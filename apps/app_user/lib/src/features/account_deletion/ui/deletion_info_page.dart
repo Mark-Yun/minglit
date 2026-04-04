@@ -32,6 +32,7 @@ class DeletionInfoPage extends ConsumerWidget {
                 padding: const EdgeInsets.all(MinglitSpacing.large),
                 children: [
                   if (reason != null) ...[
+                    // Fix #951: 탈퇴 사유 카드 반경 하드코딩 값을 디자인 토큰으로 교체
                     Container(
                       padding: const EdgeInsets.all(MinglitSpacing.medium),
                       decoration: BoxDecoration(

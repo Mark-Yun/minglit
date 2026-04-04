@@ -179,6 +179,7 @@ class _RevenueSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Fix #951: Colors.white 하드코딩 → colorScheme.onPrimary 디자인 토큰으로 교체
           Text(
             '이번 달 총 매출',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
