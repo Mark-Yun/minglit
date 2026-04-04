@@ -1,12 +1,12 @@
 import 'package:app_partner/src/features/party/logic/recurrence_settings_controller.dart';
 import 'package:app_partner/src/features/party/ui/recurrence_settings_section.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // for ProviderScope, ConsumerWidget
 import 'package:flutter_test/flutter_test.dart';
 
-Widget _wrap({List<Override> overrides = const []}) {
+Widget _wrap({List<dynamic> overrides = const []}) {
   return ProviderScope(
-    overrides: overrides,
+    overrides: overrides.cast(),
     child: const MaterialApp(
       home: Scaffold(
         body: RecurrenceSettingsSection(),

@@ -74,6 +74,7 @@ class RecurrenceSettingsController extends _$RecurrenceSettingsController {
 
   /// Returns the next [count] dates (from today) that match the current settings.
   ///
+  /// Respects [RecurrenceSettingsState.endDate] — no dates after it are returned.
   /// Returns an empty list when recurrence is disabled or settings are invalid.
   List<DateTime> previewDates({int count = 5}) {
     if (!state.isEnabled) return [];
@@ -85,13 +86,21 @@ class RecurrenceSettingsController extends _$RecurrenceSettingsController {
       return [];
     }
 
-    final dates = <DateTime>[];
     final today = DateTime.now();
     final refDay = DateTime(today.year, today.month, today.day);
+
+    // Parse optional end date so the preview matches what will actually be saved.
+    final endDateDay = state.endDate != null
+        ? DateTime.tryParse(state.endDate!)
+        : null;
+    if (endDateDay != null && endDateDay.isBefore(refDay)) return [];
+
+    final dates = <DateTime>[];
     var current = refDay;
 
     while (dates.length < count) {
       if (current.difference(refDay).inDays > 365) break;
+      if (endDateDay != null && current.isAfter(endDateDay)) break;
       if (_matches(current, refDay)) dates.add(current);
       current = current.add(const Duration(days: 1));
     }

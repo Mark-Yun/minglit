@@ -41,7 +41,7 @@ class RecurrenceSettingsSection extends ConsumerWidget {
             _DayOfWeekChips(state: state, notifier: notifier),
           ],
           const SizedBox(height: MinglitSpacing.small),
-          _EndDateRow(state: state, notifier: notifier, context: context),
+          _EndDateRow(state: state, notifier: notifier),
           const SizedBox(height: MinglitSpacing.medium),
           _PreviewDates(notifier: notifier),
         ],
@@ -172,12 +172,10 @@ class _EndDateRow extends StatelessWidget {
   const _EndDateRow({
     required this.state,
     required this.notifier,
-    required this.context,
   });
 
   final RecurrenceSettingsState state;
   final RecurrenceSettingsController notifier;
-  final BuildContext context;
 
   @override
   Widget build(BuildContext context) {
@@ -224,13 +222,14 @@ class _PreviewDates extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dates = notifier.previewDates();
+    final mutedColor = Theme.of(context).colorScheme.onSurfaceVariant;
 
     if (dates.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(horizontal: MinglitSpacing.medium),
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.medium),
         child: Text(
           '요일 또는 날짜를 선택하면 미리보기가 표시됩니다',
-          style: TextStyle(color: Colors.grey),
+          style: TextStyle(color: mutedColor),
         ),
       );
     }
@@ -249,7 +248,7 @@ class _PreviewDates extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 2),
               child: Row(
                 children: [
-                  const Icon(Icons.event, size: 16, color: Colors.grey),
+                  Icon(Icons.event, size: 16, color: mutedColor),
                   const SizedBox(width: MinglitSpacing.xsmall),
                   Text(fmt.format(d)),
                 ],
