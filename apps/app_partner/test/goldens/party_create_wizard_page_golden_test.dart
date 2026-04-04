@@ -6,11 +6,16 @@ import 'package:app_partner/src/features/party/create/party_create_wizard_contro
 import 'package:app_partner/src/features/party/create/party_create_wizard_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kakao_map_plugin/kakao_map_plugin.dart' as kakao;
 import 'package:minglit_kit/minglit_kit.dart';
 
 import '../utils/partner_golden_test_helpers.dart';
 
 void main() {
+  setUpAll(() {
+    kakao.AuthRepository.initialize(appKey: 'test-key');
+  });
+
   final baseTime = DateTime(2026, 4, 2, 18);
   final baseState = PartyCreateWizardState(
     title: '금요 밍글 살롱',
