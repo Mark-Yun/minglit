@@ -173,6 +173,18 @@ export async function simCreateDisplayEvents(
   const displayPartyIds: string[] = [];
   const displayEventIds: string[] = [];
 
+  // Fix #993: Dedup — skip creation if display parties already exist to prevent infinite accumulation
+  const { data: existing } = await supabase
+    .from("parties")
+    .select("id")
+    .in("title", DISPLAY_SCENARIOS.map((s) => s.title))
+    .eq("status", "active");
+
+  if (existing && existing.length >= DISPLAY_SCENARIOS.length) {
+    log({ level: "info", phase: "create", step: "display_skip", message: "Display parties already exist, skipping" });
+    return { displayPartyIds, displayEventIds };
+  }
+
   const { data: partners, error: pErr } = await supabase
     .from("partners")
     .select("id");
