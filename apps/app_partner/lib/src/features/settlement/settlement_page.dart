@@ -182,14 +182,14 @@ class _RevenueSummaryCard extends StatelessWidget {
           Text(
             '이번 달 총 매출',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.white.withValues(alpha: 0.8),
+              color: colorScheme.onPrimary.withValues(alpha: 0.8),
             ),
           ),
           const SizedBox(height: MinglitSpacing.xsmall),
           Text(
             '₩${fmt.format(totalGross)}',
             style: Theme.of(context).textTheme.displayLarge?.copyWith(
-              color: Colors.white,
+              color: colorScheme.onPrimary,
               fontWeight: FontWeight.w900,
               letterSpacing: -1,
             ),
@@ -201,13 +201,13 @@ class _RevenueSummaryCard extends StatelessWidget {
               Text(
                 '정산 완료',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: colorScheme.onPrimary.withValues(alpha: 0.7),
                 ),
               ),
               Text(
                 '₩${fmt.format(totalNet)}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.white,
+                  color: colorScheme.onPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -220,13 +220,13 @@ class _RevenueSummaryCard extends StatelessWidget {
               Text(
                 '정산 대기',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: colorScheme.onPrimary.withValues(alpha: 0.7),
                 ),
               ),
               Text(
                 '₩${fmt.format(pendingTotal)}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.white,
+                  color: colorScheme.onPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
