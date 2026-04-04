@@ -123,9 +123,38 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
       await tester.pump();
 
-      // Fix #997: empty state 개선 — 쿼리 포함 문구 → 범용 메시지로 변경
+      // Fix #997: empty state 개선 — 아이콘 + 범용 메시지로 변경
+      expect(find.byIcon(Icons.search_off_outlined), findsOneWidget);
       expect(find.text('검색 결과가 없습니다.'), findsOneWidget);
       expect(find.text('다른 키워드로 시도해보세요.'), findsOneWidget);
+    });
+
+    testWidgets('키워드 칩 탭 → 검색 쿼리 즉시 업데이트', (tester) async {
+      setKoreanLocale(tester);
+      final mockEvents = createMockEventsForTest(count: 2);
+
+      await tester.pumpWidget(
+        createTestApp(
+          initialLocation: '/search',
+          additionalOverrides: searchOverrides(results: mockEvents),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      // Fix #997: 검색 초기 상태에 키워드 제안 칩 표시
+      expect(find.text('파티'), findsOneWidget);
+
+      // 칩 탭 → 디바운스 없이 즉시 searchQueryProvider 업데이트
+      await tester.tap(find.text('파티'));
+      await tester.pump();
+      await tester.pump();
+
+      // 텍스트 필드가 칩 키워드로 업데이트됨
+      expect(find.widgetWithText(TextField, '파티'), findsOneWidget);
+      // 결과 로드 (queryProvider 즉시 업데이트됨)
+      await tester.pump();
+      expect(find.byType(MinglitEventCard), findsWidgets);
     });
 
     testWidgets('결과 카드 tap → EventDetailPage 이동', (tester) async {
