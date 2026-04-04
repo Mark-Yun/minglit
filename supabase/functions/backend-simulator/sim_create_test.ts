@@ -312,7 +312,14 @@ Deno.test({
   },
 });
 
-Deno.test("simCreateParties - falls back to direct DB when EF fails and strict=false", async () => {
+// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
+// token auto-refresh even when persistSession=false. The interval leaks within the test but is
+// harmless — suppressing the leak check is correct here rather than patching the library.
+Deno.test({
+  name: "simCreateParties - falls back to direct DB when EF fails and strict=false",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
   const directPartyInserts: unknown[] = [];
   const directEventInserts: unknown[] = [];
 
@@ -346,28 +353,36 @@ Deno.test("simCreateParties - falls back to direct DB when EF fails and strict=f
     if (entry.level === "warn") warnings.push(entry.message);
   };
 
-  await withMockFetch((url) => {
-    if (url.includes("auth/v1/token")) {
-      return new Response(JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }), { status: 200 });
-    }
-    // EF returns 500 to simulate failure
-    return new Response(JSON.stringify({ error: "internal" }), { status: 500 });
-  }, async () => {
-    const result = await simCreateParties(
-      mock as unknown as SupabaseClient,
-      config,
-      warnLog as Parameters<typeof simCreateParties>[2],
-      "https://mock.supabase.co",
-      "anon-key",
-      false, // strict=false
-    );
+  Deno.env.set("SIM_USER_PASSWORD", "test-password");
+  try {
+    await withMockFetch((url) => {
+      if (url.includes("auth/v1/token")) {
+        return new Response(JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }), { status: 200 });
+      }
+      // EF returns 500 to simulate failure
+      return new Response(JSON.stringify({ error: "internal" }), { status: 500 });
+    }, async () => {
+      const result = await simCreateParties(
+        mock as unknown as SupabaseClient,
+        config,
+        warnLog as Parameters<typeof simCreateParties>[2],
+        "https://mock.supabase.co",
+        "anon-key",
+        false, // strict=false
+      );
 
-    // Should have fallen back to direct DB
-    assertEquals(directPartyInserts.length, 1);
-    assertEquals(result.partyIds.length, 1);
-    // Warning was emitted for EF failure
-    assertEquals(warnings.some((w) => w.includes("falling back to direct DB")), true);
-  });
+      // Should have fallen back to direct DB for both party and event
+      assertEquals(directPartyInserts.length, 1);
+      assertEquals(directEventInserts.length, 1);
+      assertEquals(result.partyIds.length, 1);
+      assertEquals(result.eventIds.length, 1);
+      // Warning was emitted for EF failure
+      assertEquals(warnings.some((w) => w.includes("falling back to direct DB")), true);
+    });
+  } finally {
+    Deno.env.delete("SIM_USER_PASSWORD");
+  }
+  },
 });
 
 Deno.test("simCreateParties - throws when EF fails and strict=true", async () => {
