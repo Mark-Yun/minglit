@@ -1,7 +1,16 @@
 import 'dart:convert';
 
 import 'package:minglit_kit/src/data/models/recurrence_rule.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+part 'recurrence_rule_repository.g.dart';
+
+/// Provides the [RecurrenceRuleRepository].
+@Riverpod(keepAlive: true)
+RecurrenceRuleRepository recurrenceRuleRepository(Ref ref) {
+  return RecurrenceRuleRepository(Supabase.instance.client);
+}
 
 /// Repository for recurrence rule data and lifecycle management.
 ///

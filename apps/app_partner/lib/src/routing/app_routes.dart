@@ -1,4 +1,5 @@
 import 'package:app_partner/src/features/account_deletion/ui/deletion_complete_page.dart';
+import 'package:app_partner/src/features/party/recurrence/recurrence_management_screen.dart';
 import 'package:app_partner/src/features/account_deletion/ui/deletion_info_page.dart';
 import 'package:app_partner/src/features/account_deletion/ui/deletion_reason_page.dart';
 import 'package:app_partner/src/features/account_deletion/ui/deletion_verify_page.dart';
@@ -159,6 +160,9 @@ class NotificationCenterRoute extends GoRouteData
                       path: 'tickets/:ticketId/edit',
                     ),
                     TypedGoRoute<EventCreateRoute>(path: 'events/create'),
+                    TypedGoRoute<RecurrenceManagementRoute>(
+                      path: 'recurrence',
+                    ),
                     TypedGoRoute<EventDetailRoute>(
                       path: 'events/:eventId',
                       routes: [
@@ -475,4 +479,13 @@ class NotificationSettingsRoute extends GoRouteData
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const NotificationSettingsScreen();
+}
+
+class RecurrenceManagementRoute extends GoRouteData
+    with $RecurrenceManagementRoute {
+  const RecurrenceManagementRoute({required this.partyId});
+  final String partyId;
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      RecurrenceManagementScreen(partyId: partyId);
 }

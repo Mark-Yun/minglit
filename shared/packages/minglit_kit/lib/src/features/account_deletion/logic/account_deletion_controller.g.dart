@@ -37,7 +37,7 @@ final class AccountDeletionControllerProvider
 }
 
 String _$accountDeletionControllerHash() =>
-    r'fdf6a9f4c856711d3c833f34cca0e7b205980d8d';
+    r'5c4b4358ca6c6931e5384c74f29ba9708479d558';
 
 /// Manages shared account deletion state for the signed-in user.
 
