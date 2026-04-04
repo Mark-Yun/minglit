@@ -1,6 +1,6 @@
+import 'package:app_partner/src/features/onboarding/onboarding_coordinator.dart';
 import 'package:app_partner/src/l10n/generated/app_localizations.dart';
 import 'package:app_partner/src/logic/onboarding_state_provider.dart';
-import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 
@@ -63,7 +63,7 @@ class PartnerApplyStatusPage extends ConsumerWidget {
           _buildStatusMessage(context, onboardingState, application, l10n),
           const SizedBox(height: MinglitSpacing.xlarge),
           if (onboardingState == OnboardingState.needsCorrection) ...[
-            _buildEditButton(context, l10n),
+            _buildEditButton(context, ref, l10n),
             const SizedBox(height: MinglitSpacing.medium),
           ],
           _buildLogoutButton(context, ref, l10n),
@@ -138,9 +138,14 @@ class PartnerApplyStatusPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildEditButton(BuildContext context, AppLocalizations l10n) {
+  Widget _buildEditButton(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+  ) {
     return FilledButton(
-      onPressed: () => const PartnerApplyRoute().go(context),
+      // Fix #845: coordinator를 통해 네비게이션 위임
+      onPressed: () => ref.read(onboardingCoordinatorProvider).goToApply(),
       child: Text(l10n.partnerApplication_button_editApplication),
     );
   }
