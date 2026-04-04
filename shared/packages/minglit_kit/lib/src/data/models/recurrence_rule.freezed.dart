@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$RecurrenceRule {
 
- String get id;@JsonKey(name: 'party_id') String get partyId; RecurrencePattern get pattern;@JsonKey(name: 'days_of_week') List<int> get daysOfWeek;@JsonKey(name: 'month_day') int? get monthDay;@JsonKey(name: 'start_time') String get startTime;@JsonKey(name: 'end_time') String get endTime;@JsonKey(name: 'end_date') String? get endDate; RecurrenceStatus get status;@JsonKey(name: 'last_generated_date') String? get lastGeneratedDate;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'updated_at') DateTime get updatedAt;
+ String get id;@JsonKey(name: 'party_id') String get partyId; RecurrencePattern get pattern;@JsonKey(name: 'start_time') String get startTime;@JsonKey(name: 'end_time') String get endTime;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'updated_at') DateTime get updatedAt;@JsonKey(name: 'days_of_week') List<int> get daysOfWeek;@JsonKey(name: 'month_day') int? get monthDay;@JsonKey(name: 'end_date') String? get endDate; RecurrenceStatus get status;@JsonKey(name: 'last_generated_date') String? get lastGeneratedDate;
 /// Create a copy of RecurrenceRule
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $RecurrenceRuleCopyWith<RecurrenceRule> get copyWith => _$RecurrenceRuleCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RecurrenceRule&&(identical(other.id, id) || other.id == id)&&(identical(other.partyId, partyId) || other.partyId == partyId)&&(identical(other.pattern, pattern) || other.pattern == pattern)&&const DeepCollectionEquality().equals(other.daysOfWeek, daysOfWeek)&&(identical(other.monthDay, monthDay) || other.monthDay == monthDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.endDate, endDate) || other.endDate == endDate)&&(identical(other.status, status) || other.status == status)&&(identical(other.lastGeneratedDate, lastGeneratedDate) || other.lastGeneratedDate == lastGeneratedDate)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RecurrenceRule&&(identical(other.id, id) || other.id == id)&&(identical(other.partyId, partyId) || other.partyId == partyId)&&(identical(other.pattern, pattern) || other.pattern == pattern)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&const DeepCollectionEquality().equals(other.daysOfWeek, daysOfWeek)&&(identical(other.monthDay, monthDay) || other.monthDay == monthDay)&&(identical(other.endDate, endDate) || other.endDate == endDate)&&(identical(other.status, status) || other.status == status)&&(identical(other.lastGeneratedDate, lastGeneratedDate) || other.lastGeneratedDate == lastGeneratedDate));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,partyId,pattern,const DeepCollectionEquality().hash(daysOfWeek),monthDay,startTime,endTime,endDate,status,lastGeneratedDate,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,partyId,pattern,startTime,endTime,createdAt,updatedAt,const DeepCollectionEquality().hash(daysOfWeek),monthDay,endDate,status,lastGeneratedDate);
 
 @override
 String toString() {
-  return 'RecurrenceRule(id: $id, partyId: $partyId, pattern: $pattern, daysOfWeek: $daysOfWeek, monthDay: $monthDay, startTime: $startTime, endTime: $endTime, endDate: $endDate, status: $status, lastGeneratedDate: $lastGeneratedDate, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'RecurrenceRule(id: $id, partyId: $partyId, pattern: $pattern, startTime: $startTime, endTime: $endTime, createdAt: $createdAt, updatedAt: $updatedAt, daysOfWeek: $daysOfWeek, monthDay: $monthDay, endDate: $endDate, status: $status, lastGeneratedDate: $lastGeneratedDate)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $RecurrenceRuleCopyWith<$Res>  {
   factory $RecurrenceRuleCopyWith(RecurrenceRule value, $Res Function(RecurrenceRule) _then) = _$RecurrenceRuleCopyWithImpl;
 @useResult
 $Res call({
- String id,@JsonKey(name: 'party_id') String partyId, RecurrencePattern pattern,@JsonKey(name: 'days_of_week') List<int> daysOfWeek,@JsonKey(name: 'month_day') int? monthDay,@JsonKey(name: 'start_time') String startTime,@JsonKey(name: 'end_time') String endTime,@JsonKey(name: 'end_date') String? endDate, RecurrenceStatus status,@JsonKey(name: 'last_generated_date') String? lastGeneratedDate,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt
+ String id,@JsonKey(name: 'party_id') String partyId, RecurrencePattern pattern,@JsonKey(name: 'start_time') String startTime,@JsonKey(name: 'end_time') String endTime,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'days_of_week') List<int> daysOfWeek,@JsonKey(name: 'month_day') int? monthDay,@JsonKey(name: 'end_date') String? endDate, RecurrenceStatus status,@JsonKey(name: 'last_generated_date') String? lastGeneratedDate
 });
 
 
@@ -65,21 +65,21 @@ class _$RecurrenceRuleCopyWithImpl<$Res>
 
 /// Create a copy of RecurrenceRule
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? partyId = null,Object? pattern = null,Object? daysOfWeek = null,Object? monthDay = freezed,Object? startTime = null,Object? endTime = null,Object? endDate = freezed,Object? status = null,Object? lastGeneratedDate = freezed,Object? createdAt = null,Object? updatedAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? partyId = null,Object? pattern = null,Object? startTime = null,Object? endTime = null,Object? createdAt = null,Object? updatedAt = null,Object? daysOfWeek = null,Object? monthDay = freezed,Object? endDate = freezed,Object? status = null,Object? lastGeneratedDate = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,partyId: null == partyId ? _self.partyId : partyId // ignore: cast_nullable_to_non_nullable
 as String,pattern: null == pattern ? _self.pattern : pattern // ignore: cast_nullable_to_non_nullable
-as RecurrencePattern,daysOfWeek: null == daysOfWeek ? _self.daysOfWeek : daysOfWeek // ignore: cast_nullable_to_non_nullable
-as List<int>,monthDay: freezed == monthDay ? _self.monthDay : monthDay // ignore: cast_nullable_to_non_nullable
-as int?,startTime: null == startTime ? _self.startTime : startTime // ignore: cast_nullable_to_non_nullable
+as RecurrencePattern,startTime: null == startTime ? _self.startTime : startTime // ignore: cast_nullable_to_non_nullable
 as String,endTime: null == endTime ? _self.endTime : endTime // ignore: cast_nullable_to_non_nullable
-as String,endDate: freezed == endDate ? _self.endDate : endDate // ignore: cast_nullable_to_non_nullable
+as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,daysOfWeek: null == daysOfWeek ? _self.daysOfWeek : daysOfWeek // ignore: cast_nullable_to_non_nullable
+as List<int>,monthDay: freezed == monthDay ? _self.monthDay : monthDay // ignore: cast_nullable_to_non_nullable
+as int?,endDate: freezed == endDate ? _self.endDate : endDate // ignore: cast_nullable_to_non_nullable
 as String?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as RecurrenceStatus,lastGeneratedDate: freezed == lastGeneratedDate ? _self.lastGeneratedDate : lastGeneratedDate // ignore: cast_nullable_to_non_nullable
-as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as String?,
   ));
 }
 
@@ -164,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'party_id')  String partyId,  RecurrencePattern pattern, @JsonKey(name: 'days_of_week')  List<int> daysOfWeek, @JsonKey(name: 'month_day')  int? monthDay, @JsonKey(name: 'start_time')  String startTime, @JsonKey(name: 'end_time')  String endTime, @JsonKey(name: 'end_date')  String? endDate,  RecurrenceStatus status, @JsonKey(name: 'last_generated_date')  String? lastGeneratedDate, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'party_id')  String partyId,  RecurrencePattern pattern, @JsonKey(name: 'start_time')  String startTime, @JsonKey(name: 'end_time')  String endTime, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'days_of_week')  List<int> daysOfWeek, @JsonKey(name: 'month_day')  int? monthDay, @JsonKey(name: 'end_date')  String? endDate,  RecurrenceStatus status, @JsonKey(name: 'last_generated_date')  String? lastGeneratedDate)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RecurrenceRule() when $default != null:
-return $default(_that.id,_that.partyId,_that.pattern,_that.daysOfWeek,_that.monthDay,_that.startTime,_that.endTime,_that.endDate,_that.status,_that.lastGeneratedDate,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.partyId,_that.pattern,_that.startTime,_that.endTime,_that.createdAt,_that.updatedAt,_that.daysOfWeek,_that.monthDay,_that.endDate,_that.status,_that.lastGeneratedDate);case _:
   return orElse();
 
 }
@@ -185,10 +185,10 @@ return $default(_that.id,_that.partyId,_that.pattern,_that.daysOfWeek,_that.mont
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'party_id')  String partyId,  RecurrencePattern pattern, @JsonKey(name: 'days_of_week')  List<int> daysOfWeek, @JsonKey(name: 'month_day')  int? monthDay, @JsonKey(name: 'start_time')  String startTime, @JsonKey(name: 'end_time')  String endTime, @JsonKey(name: 'end_date')  String? endDate,  RecurrenceStatus status, @JsonKey(name: 'last_generated_date')  String? lastGeneratedDate, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'party_id')  String partyId,  RecurrencePattern pattern, @JsonKey(name: 'start_time')  String startTime, @JsonKey(name: 'end_time')  String endTime, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'days_of_week')  List<int> daysOfWeek, @JsonKey(name: 'month_day')  int? monthDay, @JsonKey(name: 'end_date')  String? endDate,  RecurrenceStatus status, @JsonKey(name: 'last_generated_date')  String? lastGeneratedDate)  $default,) {final _that = this;
 switch (_that) {
 case _RecurrenceRule():
-return $default(_that.id,_that.partyId,_that.pattern,_that.daysOfWeek,_that.monthDay,_that.startTime,_that.endTime,_that.endDate,_that.status,_that.lastGeneratedDate,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.partyId,_that.pattern,_that.startTime,_that.endTime,_that.createdAt,_that.updatedAt,_that.daysOfWeek,_that.monthDay,_that.endDate,_that.status,_that.lastGeneratedDate);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -205,10 +205,10 @@ return $default(_that.id,_that.partyId,_that.pattern,_that.daysOfWeek,_that.mont
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'party_id')  String partyId,  RecurrencePattern pattern, @JsonKey(name: 'days_of_week')  List<int> daysOfWeek, @JsonKey(name: 'month_day')  int? monthDay, @JsonKey(name: 'start_time')  String startTime, @JsonKey(name: 'end_time')  String endTime, @JsonKey(name: 'end_date')  String? endDate,  RecurrenceStatus status, @JsonKey(name: 'last_generated_date')  String? lastGeneratedDate, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'party_id')  String partyId,  RecurrencePattern pattern, @JsonKey(name: 'start_time')  String startTime, @JsonKey(name: 'end_time')  String endTime, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'days_of_week')  List<int> daysOfWeek, @JsonKey(name: 'month_day')  int? monthDay, @JsonKey(name: 'end_date')  String? endDate,  RecurrenceStatus status, @JsonKey(name: 'last_generated_date')  String? lastGeneratedDate)?  $default,) {final _that = this;
 switch (_that) {
 case _RecurrenceRule() when $default != null:
-return $default(_that.id,_that.partyId,_that.pattern,_that.daysOfWeek,_that.monthDay,_that.startTime,_that.endTime,_that.endDate,_that.status,_that.lastGeneratedDate,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.partyId,_that.pattern,_that.startTime,_that.endTime,_that.createdAt,_that.updatedAt,_that.daysOfWeek,_that.monthDay,_that.endDate,_that.status,_that.lastGeneratedDate);case _:
   return null;
 
 }
@@ -220,12 +220,16 @@ return $default(_that.id,_that.partyId,_that.pattern,_that.daysOfWeek,_that.mont
 @JsonSerializable()
 
 class _RecurrenceRule implements RecurrenceRule {
-  const _RecurrenceRule({required this.id, @JsonKey(name: 'party_id') required this.partyId, required this.pattern, @JsonKey(name: 'days_of_week') final  List<int> daysOfWeek = const [], @JsonKey(name: 'month_day') this.monthDay, @JsonKey(name: 'start_time') required this.startTime, @JsonKey(name: 'end_time') required this.endTime, @JsonKey(name: 'end_date') this.endDate, this.status = RecurrenceStatus.active, @JsonKey(name: 'last_generated_date') this.lastGeneratedDate, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'updated_at') required this.updatedAt}): _daysOfWeek = daysOfWeek;
+  const _RecurrenceRule({required this.id, @JsonKey(name: 'party_id') required this.partyId, required this.pattern, @JsonKey(name: 'start_time') required this.startTime, @JsonKey(name: 'end_time') required this.endTime, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'updated_at') required this.updatedAt, @JsonKey(name: 'days_of_week') final  List<int> daysOfWeek = const [], @JsonKey(name: 'month_day') this.monthDay, @JsonKey(name: 'end_date') this.endDate, this.status = RecurrenceStatus.active, @JsonKey(name: 'last_generated_date') this.lastGeneratedDate}): _daysOfWeek = daysOfWeek;
   factory _RecurrenceRule.fromJson(Map<String, dynamic> json) => _$RecurrenceRuleFromJson(json);
 
 @override final  String id;
 @override@JsonKey(name: 'party_id') final  String partyId;
 @override final  RecurrencePattern pattern;
+@override@JsonKey(name: 'start_time') final  String startTime;
+@override@JsonKey(name: 'end_time') final  String endTime;
+@override@JsonKey(name: 'created_at') final  DateTime createdAt;
+@override@JsonKey(name: 'updated_at') final  DateTime updatedAt;
  final  List<int> _daysOfWeek;
 @override@JsonKey(name: 'days_of_week') List<int> get daysOfWeek {
   if (_daysOfWeek is EqualUnmodifiableListView) return _daysOfWeek;
@@ -234,13 +238,9 @@ class _RecurrenceRule implements RecurrenceRule {
 }
 
 @override@JsonKey(name: 'month_day') final  int? monthDay;
-@override@JsonKey(name: 'start_time') final  String startTime;
-@override@JsonKey(name: 'end_time') final  String endTime;
 @override@JsonKey(name: 'end_date') final  String? endDate;
 @override@JsonKey() final  RecurrenceStatus status;
 @override@JsonKey(name: 'last_generated_date') final  String? lastGeneratedDate;
-@override@JsonKey(name: 'created_at') final  DateTime createdAt;
-@override@JsonKey(name: 'updated_at') final  DateTime updatedAt;
 
 /// Create a copy of RecurrenceRule
 /// with the given fields replaced by the non-null parameter values.
@@ -255,16 +255,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RecurrenceRule&&(identical(other.id, id) || other.id == id)&&(identical(other.partyId, partyId) || other.partyId == partyId)&&(identical(other.pattern, pattern) || other.pattern == pattern)&&const DeepCollectionEquality().equals(other._daysOfWeek, _daysOfWeek)&&(identical(other.monthDay, monthDay) || other.monthDay == monthDay)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.endDate, endDate) || other.endDate == endDate)&&(identical(other.status, status) || other.status == status)&&(identical(other.lastGeneratedDate, lastGeneratedDate) || other.lastGeneratedDate == lastGeneratedDate)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RecurrenceRule&&(identical(other.id, id) || other.id == id)&&(identical(other.partyId, partyId) || other.partyId == partyId)&&(identical(other.pattern, pattern) || other.pattern == pattern)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&const DeepCollectionEquality().equals(other._daysOfWeek, _daysOfWeek)&&(identical(other.monthDay, monthDay) || other.monthDay == monthDay)&&(identical(other.endDate, endDate) || other.endDate == endDate)&&(identical(other.status, status) || other.status == status)&&(identical(other.lastGeneratedDate, lastGeneratedDate) || other.lastGeneratedDate == lastGeneratedDate));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,partyId,pattern,const DeepCollectionEquality().hash(_daysOfWeek),monthDay,startTime,endTime,endDate,status,lastGeneratedDate,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,partyId,pattern,startTime,endTime,createdAt,updatedAt,const DeepCollectionEquality().hash(_daysOfWeek),monthDay,endDate,status,lastGeneratedDate);
 
 @override
 String toString() {
-  return 'RecurrenceRule(id: $id, partyId: $partyId, pattern: $pattern, daysOfWeek: $daysOfWeek, monthDay: $monthDay, startTime: $startTime, endTime: $endTime, endDate: $endDate, status: $status, lastGeneratedDate: $lastGeneratedDate, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'RecurrenceRule(id: $id, partyId: $partyId, pattern: $pattern, startTime: $startTime, endTime: $endTime, createdAt: $createdAt, updatedAt: $updatedAt, daysOfWeek: $daysOfWeek, monthDay: $monthDay, endDate: $endDate, status: $status, lastGeneratedDate: $lastGeneratedDate)';
 }
 
 
@@ -275,7 +275,7 @@ abstract mixin class _$RecurrenceRuleCopyWith<$Res> implements $RecurrenceRuleCo
   factory _$RecurrenceRuleCopyWith(_RecurrenceRule value, $Res Function(_RecurrenceRule) _then) = __$RecurrenceRuleCopyWithImpl;
 @override @useResult
 $Res call({
- String id,@JsonKey(name: 'party_id') String partyId, RecurrencePattern pattern,@JsonKey(name: 'days_of_week') List<int> daysOfWeek,@JsonKey(name: 'month_day') int? monthDay,@JsonKey(name: 'start_time') String startTime,@JsonKey(name: 'end_time') String endTime,@JsonKey(name: 'end_date') String? endDate, RecurrenceStatus status,@JsonKey(name: 'last_generated_date') String? lastGeneratedDate,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt
+ String id,@JsonKey(name: 'party_id') String partyId, RecurrencePattern pattern,@JsonKey(name: 'start_time') String startTime,@JsonKey(name: 'end_time') String endTime,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'days_of_week') List<int> daysOfWeek,@JsonKey(name: 'month_day') int? monthDay,@JsonKey(name: 'end_date') String? endDate, RecurrenceStatus status,@JsonKey(name: 'last_generated_date') String? lastGeneratedDate
 });
 
 
@@ -292,21 +292,21 @@ class __$RecurrenceRuleCopyWithImpl<$Res>
 
 /// Create a copy of RecurrenceRule
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? partyId = null,Object? pattern = null,Object? daysOfWeek = null,Object? monthDay = freezed,Object? startTime = null,Object? endTime = null,Object? endDate = freezed,Object? status = null,Object? lastGeneratedDate = freezed,Object? createdAt = null,Object? updatedAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? partyId = null,Object? pattern = null,Object? startTime = null,Object? endTime = null,Object? createdAt = null,Object? updatedAt = null,Object? daysOfWeek = null,Object? monthDay = freezed,Object? endDate = freezed,Object? status = null,Object? lastGeneratedDate = freezed,}) {
   return _then(_RecurrenceRule(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,partyId: null == partyId ? _self.partyId : partyId // ignore: cast_nullable_to_non_nullable
 as String,pattern: null == pattern ? _self.pattern : pattern // ignore: cast_nullable_to_non_nullable
-as RecurrencePattern,daysOfWeek: null == daysOfWeek ? _self._daysOfWeek : daysOfWeek // ignore: cast_nullable_to_non_nullable
-as List<int>,monthDay: freezed == monthDay ? _self.monthDay : monthDay // ignore: cast_nullable_to_non_nullable
-as int?,startTime: null == startTime ? _self.startTime : startTime // ignore: cast_nullable_to_non_nullable
+as RecurrencePattern,startTime: null == startTime ? _self.startTime : startTime // ignore: cast_nullable_to_non_nullable
 as String,endTime: null == endTime ? _self.endTime : endTime // ignore: cast_nullable_to_non_nullable
-as String,endDate: freezed == endDate ? _self.endDate : endDate // ignore: cast_nullable_to_non_nullable
+as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,daysOfWeek: null == daysOfWeek ? _self._daysOfWeek : daysOfWeek // ignore: cast_nullable_to_non_nullable
+as List<int>,monthDay: freezed == monthDay ? _self.monthDay : monthDay // ignore: cast_nullable_to_non_nullable
+as int?,endDate: freezed == endDate ? _self.endDate : endDate // ignore: cast_nullable_to_non_nullable
 as String?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as RecurrenceStatus,lastGeneratedDate: freezed == lastGeneratedDate ? _self.lastGeneratedDate : lastGeneratedDate // ignore: cast_nullable_to_non_nullable
-as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as String?,
   ));
 }
 
