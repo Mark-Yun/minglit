@@ -118,7 +118,7 @@ class AuthRepository {
       // Fix #959: google_sign_in 7.x replaced signIn() with authenticate()
       await _ensureGoogleSignInInitialized();
       final googleUser = await GoogleSignIn.instance.authenticate();
-      final googleAuth = await googleUser.authentication;
+      final googleAuth = googleUser.authentication;
       final idToken = googleAuth.idToken;
 
       if (idToken == null) {
