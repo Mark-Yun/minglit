@@ -162,16 +162,16 @@ class MinglitTheme {
       // Fix #474: ThemeExtension 등록
       extensions: const [MinglitTextThemeExtension.light],
       // Layer 2: 컴포넌트 테마 (see minglit_component_theme.dart)
-      appBarTheme: _MinglitComponentThemes.appBar,
-      elevatedButtonTheme: _MinglitComponentThemes.elevatedButton,
-      outlinedButtonTheme: _MinglitComponentThemes.outlinedButton,
-      textButtonTheme: _MinglitComponentThemes.textButton,
-      cardTheme: _MinglitComponentThemes.card,
-      inputDecorationTheme: _MinglitComponentThemes.inputDecoration,
-      chipTheme: _MinglitComponentThemes.chip,
-      checkboxTheme: _MinglitComponentThemes.checkbox,
-      tabBarTheme: _MinglitComponentThemes.tabBar,
-      dividerTheme: _MinglitComponentThemes.divider,
+      appBarTheme: _MinglitComponentThemes.appBar(MinglitColorSet.light),
+      elevatedButtonTheme: _MinglitComponentThemes.elevatedButton(MinglitColorSet.light),
+      outlinedButtonTheme: _MinglitComponentThemes.outlinedButton(MinglitColorSet.light),
+      textButtonTheme: _MinglitComponentThemes.textButton(MinglitColorSet.light),
+      cardTheme: _MinglitComponentThemes.card(MinglitColorSet.light),
+      inputDecorationTheme: _MinglitComponentThemes.inputDecoration(MinglitColorSet.light),
+      chipTheme: _MinglitComponentThemes.chip(MinglitColorSet.light),
+      checkboxTheme: _MinglitComponentThemes.checkbox(MinglitColorSet.light),
+      tabBarTheme: _MinglitComponentThemes.tabBar(MinglitColorSet.light),
+      dividerTheme: _MinglitComponentThemes.divider(MinglitColorSet.light),
     );
   }
 
@@ -406,73 +406,16 @@ class MinglitTheme {
           color: MinglitColorsDark.textPrimary,
         ),
       ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: MinglitColorsDark.background,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: IconThemeData(color: MinglitColorsDark.textPrimary),
-        titleTextStyle: TextStyle(
-          // ignore: minglit_no_hardcoded_text_style -- theme definition
-          color: MinglitColorsDark.textPrimary,
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          fontFamily: 'NotoSansKR',
-        ),
-      ),
-      elevatedButtonTheme: _MinglitComponentThemes.elevatedButton,
-      outlinedButtonTheme: _MinglitComponentThemes.outlinedButton,
-      textButtonTheme: _MinglitComponentThemes.textButton,
-      cardTheme: CardThemeData(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(MinglitRadius.card),
-        ),
-        elevation: 0,
-        color: MinglitColorsDark.surface,
-        margin: EdgeInsets.zero,
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: MinglitColorsDark.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(MinglitRadius.input),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(MinglitRadius.input),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(MinglitRadius.input),
-          borderSide: const BorderSide(
-            color: MinglitColorsDark.primary,
-            width: 2,
-          ),
-        ),
-        contentPadding: const EdgeInsets.all(MinglitSpacing.medium),
-        hintStyle: const TextStyle(
-          // ignore: minglit_no_hardcoded_text_style -- theme definition
-          color: MinglitColorsDark.textSecondary,
-          fontSize: 14,
-        ),
-      ),
-      chipTheme: ChipThemeData(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(MinglitRadius.chip),
-        ),
-        side: BorderSide.none,
-        backgroundColor: MinglitColorsDark.surface,
-        secondarySelectedColor: MinglitColorsDark.primary,
-        labelStyle: const TextStyle(
-          fontSize: 13,
-        ), // ignore: minglit_no_hardcoded_text_style -- theme definition
-      ),
-      checkboxTheme: _MinglitComponentThemes.checkbox,
-      tabBarTheme: _MinglitComponentThemes.tabBar,
-      dividerTheme: const DividerThemeData(
-        color: MinglitColorsDark.divider,
-        thickness: 1,
-        space: MinglitSpacing.medium,
-      ),
+      appBarTheme: _MinglitComponentThemes.appBar(MinglitColorSet.dark),
+      elevatedButtonTheme: _MinglitComponentThemes.elevatedButton(MinglitColorSet.dark),
+      outlinedButtonTheme: _MinglitComponentThemes.outlinedButton(MinglitColorSet.dark),
+      textButtonTheme: _MinglitComponentThemes.textButton(MinglitColorSet.dark),
+      cardTheme: _MinglitComponentThemes.card(MinglitColorSet.dark),
+      inputDecorationTheme: _MinglitComponentThemes.inputDecoration(MinglitColorSet.dark),
+      chipTheme: _MinglitComponentThemes.chip(MinglitColorSet.dark),
+      checkboxTheme: _MinglitComponentThemes.checkbox(MinglitColorSet.dark),
+      tabBarTheme: _MinglitComponentThemes.tabBar(MinglitColorSet.dark),
+      dividerTheme: _MinglitComponentThemes.divider(MinglitColorSet.dark),
     );
   }
 }
