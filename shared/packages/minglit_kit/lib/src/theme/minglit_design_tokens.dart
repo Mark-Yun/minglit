@@ -92,7 +92,9 @@ class MinglitColorSet {
     secondary: MinglitColors.secondary,
     textPrimary: MinglitColors.textPrimary,
     textSecondary: MinglitColors.textSecondary,
-    divider: Color(0xFFE5E7EB), // ignore: minglit_no_hardcoded_colors -- light divider token
+    divider: Color(
+      0xFFE5E7EB,
+    ), // ignore: minglit_no_hardcoded_colors -- light divider token
   );
 
   static const dark = MinglitColorSet(

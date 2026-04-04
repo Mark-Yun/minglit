@@ -163,11 +163,19 @@ class MinglitTheme {
       extensions: const [MinglitTextThemeExtension.light],
       // Layer 2: 컴포넌트 테마 (see minglit_component_theme.dart)
       appBarTheme: _MinglitComponentThemes.appBar(MinglitColorSet.light),
-      elevatedButtonTheme: _MinglitComponentThemes.elevatedButton(MinglitColorSet.light),
-      outlinedButtonTheme: _MinglitComponentThemes.outlinedButton(MinglitColorSet.light),
-      textButtonTheme: _MinglitComponentThemes.textButton(MinglitColorSet.light),
+      elevatedButtonTheme: _MinglitComponentThemes.elevatedButton(
+        MinglitColorSet.light,
+      ),
+      outlinedButtonTheme: _MinglitComponentThemes.outlinedButton(
+        MinglitColorSet.light,
+      ),
+      textButtonTheme: _MinglitComponentThemes.textButton(
+        MinglitColorSet.light,
+      ),
       cardTheme: _MinglitComponentThemes.card(MinglitColorSet.light),
-      inputDecorationTheme: _MinglitComponentThemes.inputDecoration(MinglitColorSet.light),
+      inputDecorationTheme: _MinglitComponentThemes.inputDecoration(
+        MinglitColorSet.light,
+      ),
       chipTheme: _MinglitComponentThemes.chip(MinglitColorSet.light),
       checkboxTheme: _MinglitComponentThemes.checkbox(MinglitColorSet.light),
       tabBarTheme: _MinglitComponentThemes.tabBar(MinglitColorSet.light),
@@ -407,11 +415,17 @@ class MinglitTheme {
         ),
       ),
       appBarTheme: _MinglitComponentThemes.appBar(MinglitColorSet.dark),
-      elevatedButtonTheme: _MinglitComponentThemes.elevatedButton(MinglitColorSet.dark),
-      outlinedButtonTheme: _MinglitComponentThemes.outlinedButton(MinglitColorSet.dark),
+      elevatedButtonTheme: _MinglitComponentThemes.elevatedButton(
+        MinglitColorSet.dark,
+      ),
+      outlinedButtonTheme: _MinglitComponentThemes.outlinedButton(
+        MinglitColorSet.dark,
+      ),
       textButtonTheme: _MinglitComponentThemes.textButton(MinglitColorSet.dark),
       cardTheme: _MinglitComponentThemes.card(MinglitColorSet.dark),
-      inputDecorationTheme: _MinglitComponentThemes.inputDecoration(MinglitColorSet.dark),
+      inputDecorationTheme: _MinglitComponentThemes.inputDecoration(
+        MinglitColorSet.dark,
+      ),
       chipTheme: _MinglitComponentThemes.chip(MinglitColorSet.dark),
       checkboxTheme: _MinglitComponentThemes.checkbox(MinglitColorSet.dark),
       tabBarTheme: _MinglitComponentThemes.tabBar(MinglitColorSet.dark),
