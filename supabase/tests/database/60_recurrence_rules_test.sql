@@ -487,5 +487,59 @@ SELECT throws_ok(
 );
 ROLLBACK TO SAVEPOINT before_events_check;
 
+-- ============================================================
+-- 22. recurrence_rule 삭제 시 events.recurrence_date도 NULL 처리
+-- (ON DELETE SET NULL + trg_clear_recurrence_date_on_rule_delete 연동 검증)
+-- ============================================================
+DO $$
+DECLARE
+  v_new_rule_id uuid;
+  v_event_id    uuid;
+BEGIN
+  -- 추가 rule 생성 (party_id는 이미 존재하는 monthly rule과 충돌 없이 weekly로 생성)
+  INSERT INTO public.recurrence_rules (
+    party_id, pattern, days_of_week, start_time, end_time, status
+  ) VALUES (
+    current_setting('tests.rr_party_id')::uuid,
+    'weekly', ARRAY[1], '08:00', '09:00', 'cancelled'
+  ) RETURNING id INTO v_new_rule_id;
+
+  -- 해당 rule에 연결된 event 생성
+  INSERT INTO public.events (
+    party_id, recurrence_rule_id, recurrence_date,
+    title, status, start_time, end_time
+  ) VALUES (
+    current_setting('tests.rr_party_id')::uuid,
+    v_new_rule_id, '2026-07-01'::date,
+    'Rule Delete Test Event', 'scheduled',
+    '2026-07-01 10:00:00+09', '2026-07-01 11:00:00+09'
+  ) RETURNING id INTO v_event_id;
+
+  PERFORM set_config('tests.delete_rule_id',   v_new_rule_id::text, true);
+  PERFORM set_config('tests.delete_event_id',  v_event_id::text,    true);
+END;
+$$;
+
+SELECT lives_ok(
+  format(
+    $$DELETE FROM public.recurrence_rules WHERE id = '%s'$$,
+    current_setting('tests.delete_rule_id')
+  ),
+  'recurrence_rule 삭제 시 chk_events_recurrence_fields 위반 없이 성공'
+);
+
+SELECT results_eq(
+  format(
+    $$
+      SELECT recurrence_rule_id IS NULL AND recurrence_date IS NULL
+      FROM public.events
+      WHERE id = '%s'
+    $$,
+    current_setting('tests.delete_event_id')
+  ),
+  $$VALUES (true)$$,
+  'rule 삭제 후 연결 event의 recurrence_rule_id와 recurrence_date 모두 NULL'
+);
+
 SELECT * FROM finish();
 ROLLBACK;

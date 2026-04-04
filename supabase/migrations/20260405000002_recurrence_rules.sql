@@ -189,6 +189,32 @@ CREATE TRIGGER handle_updated_at
   FOR EACH ROW EXECUTE PROCEDURE moddatetime(updated_at);
 
 -- ============================================================
+-- Section 8-b: recurrence_rule 삭제 시 events 정리 트리거
+--
+-- ON DELETE SET NULL은 recurrence_rule_id만 NULL로 설정하지만,
+-- chk_events_recurrence_fields 제약은 두 컬럼이 함께 NULL이거나
+-- 함께 NOT NULL일 것을 요구한다.
+-- BEFORE DELETE 트리거로 recurrence_date를 먼저 NULL 처리해서
+-- ON DELETE SET NULL 이후에도 CHECK 제약이 충족되도록 한다.
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.fn_clear_recurrence_date_on_rule_delete()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+  -- Fix #1033: ON DELETE SET NULL과 chk_events_recurrence_fields 불일치 해소
+  -- recurrence_rule_id가 SET NULL 되기 전에 recurrence_date도 NULL 처리한다
+  UPDATE public.events
+  SET recurrence_date = NULL
+  WHERE recurrence_rule_id = OLD.id;
+  RETURN OLD;
+END;
+$$;
+
+CREATE TRIGGER trg_clear_recurrence_date_on_rule_delete
+  BEFORE DELETE ON public.recurrence_rules
+  FOR EACH ROW EXECUTE PROCEDURE public.fn_clear_recurrence_date_on_rule_delete();
+
+-- ============================================================
 -- Section 9: pg_cron 등록 — 매일 UTC 00:00 recurrence-cron EF 호출
 -- ============================================================
 
