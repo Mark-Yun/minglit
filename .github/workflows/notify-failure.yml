@@ -16,6 +16,11 @@ on:
         required: false
         default: ''
         description: 'JSON string of job results, e.g. {"build":"success","test":"failure"}'
+      create_issue:
+        type: boolean
+        required: false
+        default: true
+        description: 'Whether to create/comment a GitHub issue on failure. Set false for PR-triggered workflows to avoid noise.'
 
 jobs:
   notify:
@@ -59,6 +64,11 @@ jobs:
 
           if [ "${{ inputs.success }}" = "true" ]; then
             echo "✅ Workflow succeeded, no issue needed."
+            exit 0
+          fi
+
+          if [ "${{ inputs.create_issue }}" = "false" ]; then
+            echo "ℹ️ create_issue=false — skipping issue creation for PR-triggered workflow."
             exit 0
           fi
 
