@@ -75,6 +75,10 @@ export async function simCreateParties(
 
     // ── Step 2: Create party ──────────────────────────────────────────────────
     let partyId: string | null = null;
+    let partyCreatedViaEf = false;
+    // Tracked from the direct DB fallback path; used in the event direct DB fallback
+    // to avoid a redundant per-event parties query.
+    let directDbLocationId: string | null = null;
 
     if (supabaseUrl && anonKey && partnerToken) {
       try {
@@ -113,6 +117,7 @@ export async function simCreateParties(
         const efData = efResult.data as { success?: boolean; party_id?: string } | null;
         if (efResult.status === 200 && efData?.success && efData?.party_id) {
           partyId = efData.party_id;
+          partyCreatedViaEf = true;
           log({ level: "info", phase: "create", step: "ef_create_party", message: `EF created party: ${scenario.title}`, data: { partyId } });
         } else {
           const errMsg = `EF partner-manage-party returned status=${efResult.status}`;
@@ -167,6 +172,7 @@ export async function simCreateParties(
         continue;
       }
       partyId = directPartyId;
+      directDbLocationId = locationId;
 
       // For direct DB path: create entry groups and ticket templates on the party level
       // (events will also get entry_groups + tickets created inline below)
@@ -177,9 +183,10 @@ export async function simCreateParties(
 
     // ── Step 3: Create events ─────────────────────────────────────────────────
 
-    // Fetch ticket_templates created by the EF (needed for event EF payload)
+    // Fetch ticket_templates created by the EF (needed for event EF payload).
+    // Only relevant when the party was created via EF — direct DB parties have no ticket_templates.
     let ticketTemplates: { id: string; name: string }[] = [];
-    if (supabaseUrl && anonKey && partnerToken) {
+    if (partyCreatedViaEf && supabaseUrl && anonKey && partnerToken) {
       const { data: templates } = await supabase
         .from("ticket_templates")
         .select("id, name")
@@ -194,7 +201,10 @@ export async function simCreateParties(
 
       let eventId: string | null = null;
 
-      if (supabaseUrl && anonKey && partnerToken) {
+      // Only attempt the event EF when the party was created via EF (which guarantees
+      // ticket_templates exist). A direct-DB party has no ticket_templates, so the
+      // event EF would produce a ticket-less event — skip it and use direct DB instead.
+      if (partyCreatedViaEf && supabaseUrl && anonKey && partnerToken) {
         try {
           const efResult = await callEdgeFunction(supabaseUrl, "partner-manage-event", {
             action: "create",
@@ -226,15 +236,10 @@ export async function simCreateParties(
         }
       }
 
-      // Fallback: direct DB insert for event + entry_groups + tickets
+      // Fallback: direct DB insert for event + entry_groups + tickets.
+      // locationId is known from the party creation step — no per-event DB query needed.
       if (!eventId) {
-        // Resolve locationId for direct event insert (use existing or the one set in party fallback)
-        const { data: partyRow } = await supabase
-          .from("parties")
-          .select("location_id")
-          .eq("id", partyId)
-          .maybeSingle();
-        const directLocationId = (partyRow as { location_id?: string } | null)?.location_id ?? locationId_existing ?? "";
+        const directLocationId = directDbLocationId ?? locationId_existing ?? "";
 
         const directEventId = crypto.randomUUID();
         const { error: evErr } = await supabase.from("events").insert({

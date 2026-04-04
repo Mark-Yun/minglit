@@ -127,15 +127,13 @@ export async function simCheckin(
               continue;
             } else {
               if (strict) {
-                log({ level: "error", phase: "checkin", step: "ef_checkin_failed", message: `Strict mode: event-checkin EF returned ${efResult.status} for participant ${participant.id}, skipping` });
-                continue;
+                throw new Error(`Strict mode: event-checkin EF returned ${efResult.status} for participant ${participant.id}`);
               }
               log({ level: "warn", phase: "checkin", step: "ef_checkin_failed", message: `event-checkin EF returned ${efResult.status} for participant ${participant.id}, falling back to direct update` });
             }
           } catch (authErr) {
             if (strict) {
-              log({ level: "error", phase: "checkin", step: "ef_auth_fallback", message: `Strict mode: auth failed for ${username}, skipping participant ${participant.id}: ${String(authErr)}` });
-              continue;
+              throw new Error(`Strict mode: auth failed for ${username}, cannot check in participant ${participant.id}: ${String(authErr)}`);
             }
             log({ level: "warn", phase: "checkin", step: "ef_auth_fallback", message: `Auth failed for ${username}, using direct update: ${String(authErr)}` });
           }
@@ -237,15 +235,13 @@ export async function simMatch(
           return;
         } else {
           if (strict) {
-            log({ level: "error", phase: "match", step: "ef_match_failed", message: `Strict mode: event-matching EF returned ${efResult.status} for event ${eventId}, skipping` });
-            return;
+            throw new Error(`Strict mode: event-matching EF returned ${efResult.status} for event ${eventId}`);
           }
           log({ level: "warn", phase: "match", step: "ef_match_failed", message: `event-matching EF returned ${efResult.status} for event ${eventId}, falling back to direct vote insert` });
         }
       } catch (efErr) {
         if (strict) {
-          log({ level: "error", phase: "match", step: "ef_match_error", message: `Strict mode: event-matching EF error for event ${eventId}: ${String(efErr)}, skipping` });
-          return;
+          throw new Error(`Strict mode: event-matching EF error for event ${eventId}: ${String(efErr)}`);
         }
         log({ level: "warn", phase: "match", step: "ef_match_error", message: `event-matching EF error for event ${eventId}: ${String(efErr)}, falling back to direct vote insert` });
       }

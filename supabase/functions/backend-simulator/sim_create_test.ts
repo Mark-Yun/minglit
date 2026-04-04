@@ -233,7 +233,14 @@ function withMockFetch(
   });
 }
 
-Deno.test("simCreateParties - uses EF path when supabaseUrl/anonKey provided and EF succeeds", async () => {
+// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
+// token auto-refresh even when persistSession=false. The interval leaks within the test but is
+// harmless — suppressing the leak check is correct here rather than patching the library.
+Deno.test({
+  name: "simCreateParties - uses EF path when supabaseUrl/anonKey provided and EF succeeds",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
   const efCalls: { url: string; body: unknown }[] = [];
   const directInserts: string[] = [];
 
@@ -241,7 +248,7 @@ Deno.test("simCreateParties - uses EF path when supabaseUrl/anonKey provided and
     tables: {
       partners: { select: () => ({ data: [{ id: "partner-1" }], error: null }) },
       locations: { select: () => ({ data: { id: "loc-1" }, error: null }) },
-      partner_members: { select: () => ({ data: { email: "partner1@test.com" }, error: null }) },
+      partner_members: { select: () => ({ data: [{ user_id: "partner-user-1" }], error: null }) },
       ticket_templates: { select: () => ({ data: [{ id: "tmpl-1", name: "일반" }], error: null }) },
       // direct DB inserts should NOT be called on EF success path
       parties: {
@@ -259,6 +266,7 @@ Deno.test("simCreateParties - uses EF path when supabaseUrl/anonKey provided and
       entry_groups: { insert: () => ({ data: { id: "grp-1" }, error: null }) },
       tickets: { insert: () => ({ data: null, error: null }) },
     },
+    authAdminGetUserById: (_userId: string) => ({ data: { user: { email: "partner1@test.com" } }, error: null }),
   });
 
   const config: SimConfig = { ...DEFAULT_CONFIG, party_count: 1, events_per_party: 1 };
@@ -296,6 +304,7 @@ Deno.test("simCreateParties - uses EF path when supabaseUrl/anonKey provided and
     assertEquals(efCalls.some((c) => c.url.includes("partner-manage-party")), true);
     assertEquals(efCalls.some((c) => c.url.includes("partner-manage-event")), true);
   });
+  },
 });
 
 Deno.test("simCreateParties - falls back to direct DB when EF fails and strict=false", async () => {
@@ -306,7 +315,7 @@ Deno.test("simCreateParties - falls back to direct DB when EF fails and strict=f
     tables: {
       partners: { select: () => ({ data: [{ id: "partner-1" }], error: null }) },
       locations: { select: () => ({ data: { id: "loc-1" }, error: null }) },
-      partner_members: { select: () => ({ data: { email: "partner1@test.com" }, error: null }) },
+      partner_members: { select: () => ({ data: [{ user_id: "partner-user-1" }], error: null }) },
       ticket_templates: { select: () => ({ data: [], error: null }) },
       parties: {
         insert: ({ values }: { values: unknown }) => {
@@ -323,6 +332,7 @@ Deno.test("simCreateParties - falls back to direct DB when EF fails and strict=f
       entry_groups: { insert: () => ({ data: { id: "grp-1" }, error: null }) },
       tickets: { insert: () => ({ data: null, error: null }) },
     },
+    authAdminGetUserById: (_userId: string) => ({ data: { user: { email: "partner1@test.com" } }, error: null }),
   });
 
   const config: SimConfig = { ...DEFAULT_CONFIG, party_count: 1, events_per_party: 1 };
@@ -360,13 +370,14 @@ Deno.test("simCreateParties - throws when EF fails and strict=true", async () =>
     tables: {
       partners: { select: () => ({ data: [{ id: "partner-1" }], error: null }) },
       locations: { select: () => ({ data: { id: "loc-1" }, error: null }) },
-      partner_members: { select: () => ({ data: { email: "partner1@test.com" }, error: null }) },
+      partner_members: { select: () => ({ data: [{ user_id: "partner-user-1" }], error: null }) },
       ticket_templates: { select: () => ({ data: [], error: null }) },
       parties: { insert: () => ({ data: { id: "db-party-1" }, error: null }) },
       events: { insert: () => ({ data: { id: "db-event-1" }, error: null }) },
       entry_groups: { insert: () => ({ data: { id: "grp-1" }, error: null }) },
       tickets: { insert: () => ({ data: null, error: null }) },
     },
+    authAdminGetUserById: (_userId: string) => ({ data: { user: { email: "partner1@test.com" } }, error: null }),
   });
 
   const config: SimConfig = { ...DEFAULT_CONFIG, party_count: 1, events_per_party: 1 };

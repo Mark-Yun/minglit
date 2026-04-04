@@ -114,8 +114,7 @@ export async function simApproveVerifications(
             }
           } catch (efErr) {
             if (strict) {
-              log({ level: "error", phase: "approve", step: "ef_approve_failed", message: `Strict mode: EF failed for submission ${submissionId}: ${String(efErr)}` });
-              continue;
+              throw new Error(`Strict mode: EF failed for submission ${submissionId} (app ${appId}): ${String(efErr)}`);
             }
             log({ level: "warn", phase: "approve", step: "ef_approve_fallback", message: `EF failed, falling back to direct update: ${String(efErr)}` });
             const { error: updErr } = await supabase
@@ -175,6 +174,7 @@ export async function simApproveVerifications(
         }
       }
     } catch (e) {
+      if (strict) throw e;
       log({ level: "error", phase: "approve", step: "approve_loop", message: `Unexpected error for app ${appId}: ${String(e)}` });
     }
   }
@@ -238,8 +238,7 @@ export async function simApproveVerifications(
             }
           } catch (efErr) {
             if (strict) {
-              log({ level: "error", phase: "approve", step: "ef_reject_failed", message: `Strict mode: EF failed for submission ${submissionId}: ${String(efErr)}` });
-              continue;
+              throw new Error(`Strict mode: EF failed for submission ${submissionId} (app ${appId}): ${String(efErr)}`);
             }
             log({ level: "warn", phase: "approve", step: "ef_reject_fallback", message: `EF failed, falling back to direct update: ${String(efErr)}` });
             const { error: updErr } = await supabase
@@ -295,6 +294,7 @@ export async function simApproveVerifications(
         }
       }
     } catch (e) {
+      if (strict) throw e;
       log({ level: "error", phase: "approve", step: "reject_loop", message: `Unexpected error for app ${appId}: ${String(e)}` });
     }
   }

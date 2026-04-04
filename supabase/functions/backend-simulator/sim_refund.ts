@@ -169,16 +169,9 @@ export async function simRefundRequests(
     }
 
     if (!efSuccess) {
-      if (strict && supabaseUrl && anonKey) {
-        // Strict mode: EF was attempted but failed — skip direct DB fallback
-        log({
-          level: "error",
-          phase: "refund",
-          step: "ef_cancel_strict_skip",
-          message: `Strict mode: EF failed for app ${appId}, skipping direct DB fallback`,
-          data: { appId },
-        });
-        return null;
+      if (strict) {
+        // Strict mode: EF was attempted but failed — do not fall back to direct DB update
+        throw new Error(`Strict mode: EF failed for app ${appId}, direct DB fallback not permitted`);
       }
       // Fallback: direct DB update (used when EF call unavailable or failed)
       const refundStatus = refundCalc.refund_percentage > 0 ? "completed" : "failed";
