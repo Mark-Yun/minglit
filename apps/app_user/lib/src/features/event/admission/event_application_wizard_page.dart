@@ -4,7 +4,8 @@ import 'package:app_user/src/features/event/admission/event_application_controll
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
-import 'package:app_user/src/features/payment/ui/payment_success_screen.dart';
+// Fix #509: payment feature 직접 import 제거 — PaymentSuccessScreen을 admission feature로 이동
+import 'package:app_user/src/features/event/admission/payment_success_screen.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
