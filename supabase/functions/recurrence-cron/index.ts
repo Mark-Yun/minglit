@@ -159,6 +159,7 @@ async function processRule(
         recurrence_rule_id: rule.id,
         start_time: startTimestamp,
         end_time: endTimestamp,
+        recurrence_date: dateStr,
         status: "scheduled",
       })
       .select("id")
