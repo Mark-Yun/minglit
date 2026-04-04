@@ -441,8 +441,8 @@ class RecommendationFeedNotifier extends _$RecommendationFeedNotifier {
 /// - closingSoon → closingSoon
 /// - nearestDate → nearest
 ///
-// TODO(mark): Phase 2 (#614) — migrate to [recommendationEventsFromEf] once
-// the user-event-feed EF is validated in production.
+// TODO: migrate to [recommendationEventsFromEf] once the user-event-feed EF
+// is validated in production.
 @riverpod
 Future<List<Event>> recommendationEvents(Ref ref) async {
   final filters = ref.watch(activeFiltersProvider);
@@ -475,8 +475,8 @@ Future<List<Event>> recommendationEvents(Ref ref) async {
 /// and cursor pagination are handled by the DB function, so no
 /// client-side post-processing is needed.
 ///
-// TODO(mark): Phase 2 (#614) — wire this into the explore UI behind a feature
-// flag, then remove the legacy [recommendationEvents] path.
+// TODO: wire this into the explore UI behind a feature flag, then remove the
+// legacy [recommendationEvents] path.
 @riverpod
 Future<Map<String, dynamic>> recommendationEventsFromEf(Ref ref) async {
   final filters = ref.watch(activeFiltersProvider);
