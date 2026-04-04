@@ -1,147 +1,225 @@
-# 🏗️ Minglit Architecture Guide
+# Minglit Architecture Guide
 
-> **"Simplicity is the ultimate sophistication."**  
-> Minglit 프로젝트는 **간결함**, **타입 안전성**, **확장성**을 최우선으로 설계되었습니다.
-
----
-
-## 1. 🛠️ Core Tech Stack
-
-| Category | Technology | Reason |
-| --- | --- | --- |
-| **Framework** | Flutter (3.x) | Cross-platform development |
-| **Language** | Dart | Type-safe, Null-safe |
-| **State Management** | **Riverpod** | Compile-safe Dependency Injection & State Management |
-| **Routing** | **GoRouter** (Type-safe) | Deep linking, Web support, Typed Routes |
-| **Backend** | **Supabase** | Auth, DB(Postgres), Storage, Real-time |
-| **Architecture** | Feature-first + Coordinator | Decoupled UI & Navigation |
+> 시스템 전체를 조망하는 조감도 문서다. 각 영역의 상세 설계는 링크된 전용 문서를 참고한다.
 
 ---
 
-## 2. 🧩 Key Architectural Patterns
+## 1. 시스템 조감도
 
-### 2.1 Feature-first Structure
-모든 코드는 **"기능(Feature)"** 단위로 응집되어 있습니다. `screens`나 `widgets` 같은 기술적 폴더 대신, `auth`, `member`, `verification` 같은 도메인 폴더를 사용합니다.
+### 1.1 Tech Stack
+
+| Layer | Technology | 역할 |
+|-------|-----------|------|
+| **Client (User)** | Flutter 3.x + Riverpod + GoRouter | 유저 앱 (iOS/Android) |
+| **Client (Partner)** | Flutter 3.x + Riverpod + GoRouter | 파트너 앱 (iOS/Android) |
+| **Shared Library** | `minglit_kit` (Dart package) | 앱 공유 레이어 (Repository, UI Kit, Provider) |
+| **Mutation Gateway** | Supabase Edge Functions (Deno) | 모든 데이터 변경의 단일 진입점 |
+| **Database** | PostgreSQL (Supabase) | 핵심 데이터 저장소 |
+| **Auth** | Supabase Auth | OAuth (Apple, Kakao), JWT 발급 |
+| **Storage** | Supabase Storage | 이미지, 인증 서류 파일 |
+| **Queue** | PGMQ (PostgreSQL 기반) | 알림, 임베딩, 이벤트 비동기 처리 |
+| **Search** | PGroonga + pgvector | 한글 전문 검색 + AI 추천 |
+
+### 1.2 시스템 흐름도
 
 ```text
-lib/src/features/
-├── auth/           # 로그인, 회원가입
-├── member/         # 멤버 관리 (리스트, 권한 수정)
-└── verification/   # 인증 심사 (리스트, 상세)
+Flutter App (User / Partner)
+    │
+    ├── Read  ──────> Supabase DB (직접 조회, RLS 적용)
+    │
+    └── Write ──────> Edge Functions (Deno)
+                            │
+                            ▼
+                      PostgreSQL
+                            │
+                            ├── Triggers (비즈니스 로직, 상태 전환)
+                            ├── PGMQ (비동기 큐: 알림, 벡터화)
+                            └── pg_cron (이벤트 상태 전환)
 ```
 
-### 2.2 Coordinator Pattern (Navigation)
-**UI는 "어디로 갈지" 모릅니다.** 단순히 Coordinator에게 "이 버튼이 눌렸다"고 알릴 뿐입니다.
-
-*   **UI Widget**: `ref.read(memberCoordinatorProvider).goToDetail(id);`
-*   **Coordinator**: `MemberPermissionRoute(id: id).push(context);`
-*   **Benefits**: UI와 라우팅 로직의 완벽한 분리, 재사용성 증가.
-
-### 2.3 Type-safe Routing
-URL 문자열(`'/login'`)을 직접 입력하지 않습니다. `go_router_builder`를 사용하여 컴파일 타임에 경로와 파라미터를 검증합니다.
-
-*   **Route Class**: `LoginRoute`, `HomeRoute`
-*   **Usage**: `LoginRoute().go(context);`
-
-### 2.4 Repository Pattern (Data Access)
-Supabase SDK를 직접 UI에서 호출하지 않습니다. `Repository` 클래스가 데이터 접근을 추상화합니다.
-
-*   **Repository**: `PartnerRepository`, `AuthRepository`
-*   **Usage**: `ref.read(partnerRepositoryProvider).getMembers(id);`
+상세: [client.md](./client.md), [backend.md](./backend.md)
 
 ---
 
-## 3. 🌊 Data Flow
+## 2. 아키텍처 원칙
 
-1.  **Repository**: Supabase에서 데이터를 가져옵니다. (`Future<List<Member>>`)
-2.  **Provider**: Repository 데이터를 관리하고 캐싱합니다. (`@riverpod Future<List> memberList(...)`)
-3.  **UI**: Provider를 구독(`ref.watch`)하여 화면을 그립니다. 로딩/에러 상태는 `AsyncValue`가 처리합니다.
-4.  **Coordinator**: 사용자의 액션(버튼 클릭)을 받아 라우팅이나 상태 변경을 수행합니다.
+### 2.1 Feature-first 구조
 
----
+코드는 기술적 레이어(`screens/`, `widgets/`)가 아닌 도메인 단위(`auth/`, `event/`, `verification/`)로 응집한다.
 
-## 5. 🛡️ Trust & Verification Architecture
+상세: [client.md §2.1](./client.md#21-feature-first-structure)
 
-Minglit은 **"신뢰(Trust)"**를 가장 중요한 자산으로 취급하며, 이를 **2단계 레이어**로 관리합니다.
+### 2.2 EF-only 원칙 (Mutation Gateway)
 
-### 5.1 Layer 1: Identity (신원)
-*   **정의**: "이 사람은 실존하며, 주장하는 나이/성별이 맞는가?"
-*   **데이터**: `user_profiles` 테이블 (`birth_date`, `gender`, `is_verified`).
-*   **검증 주체**: 플랫폼 (PASS/SMS API).
-*   **특징**: 모든 유저가 갖춰야 할 **기본 자격(Base Layer)**. 파트너 승인이 불필요하며, 즉시 필터링(나이 제한 등)에 사용됩니다.
+**모든 데이터 변경(mutation)은 Edge Function을 경유해야 한다.**
 
-### 5.2 Layer 2: Qualification (자격)
-*   **정의**: "이 사람은 우리 파티에 어울리는가?" (직장, 학력, 자산, 외모 등)
-*   **데이터**: `user_verifications` (제출) -> `verification_submissions` (심사) -> `partner_verified_users` (승인).
-*   **검증 주체**: 파트너 (사람).
-*   **특징**: 특정 파티나 티켓이 요구하는 **추가 자격(Add-on Layer)**.
-
----
-
-## 6. 📦 Provider Organization Guidelines
-
-### 6.1 Where Providers Live
-
-| Provider Type | Location | Example |
-|---|---|---|
-| **Shared Repository** | `minglit_kit/src/data/repositories/` | `partnerRepositoryProvider`, `eventRepositoryProvider` |
-| **Shared Logic** | `minglit_kit/src/logic/providers/` | `authStateChangesProvider`, `eventFeedProvider` |
-| **Feature-local Controller** | `apps/{app}/src/features/{feature}/logic/` | `purchaseHistoryControllerProvider` |
-| **Feature-local Provider** | `apps/{app}/src/features/{feature}/` | `currentPartnerInfoProvider` (in `party_providers.dart`) |
-| **Coordinator** | `apps/{app}/src/features/{feature}/logic/` or feature root | `eventCoordinatorProvider`, `adminCoordinatorProvider` |
-
-### 6.2 Decision Criteria
-
-**Put in `minglit_kit` (shared) when:**
-- Both `app_user` and `app_partner` need it
-- It wraps a Supabase table or RPC call
-- It's a data model or repository
-
-**Put in the app's feature folder when:**
-- Only one app needs it
-- It contains UI state (controllers, form state)
-- It's a coordinator (always app-specific, depends on app routes)
-
-### 6.3 Repository Split Pattern
-
-Large repositories (>300 lines) should be split using Dart's `part`/`mixin` pattern:
-
-```dart
-// main file: foo_repository.dart
-part 'foo_query_repository.dart';
-part 'foo_command_repository.dart';
-
-class FooRepository extends _SupabaseFooContextBase
-    with _FooQueryRepository, _FooCommandRepository { ... }
-
-// part file: foo_query_repository.dart
-part of 'foo_repository.dart';
-mixin _FooQueryRepository on _SupabaseFooContext { ... }
+```text
+Client App  ──→  Edge Function  ──→  PostgreSQL
+Simulator   ──→  Edge Function  ──→  PostgreSQL
 ```
 
-**References:**
-- `event_repository.dart` + `event_repository_queries.dart` + `event_repository_commands.dart`
-- `verification_repository.dart` + `verification_query_repository.dart` + `verification_command_repository.dart`
-- `partner_repository.dart` + `partner_member_repository.dart` + `partner_application_repository.dart`
-- `party_repository.dart` + `party_event_repository.dart` + `party_matching_repository.dart`
+- 클라이언트는 DB에 직접 INSERT/UPDATE/DELETE를 실행하지 않는다.
+- Simulator/테스트 코드도 동일한 규칙을 적용한다 (#999에서 EF 통일 진행 중).
+- **예외**: pg_cron에 의한 이벤트 상태 전환(scheduled→active 등)은 DB 내부에서 직접 SQL UPDATE를 수행한다.
 
-### 6.4 Anti-patterns
+이 원칙의 이점:
+- 인증(auth) 검증을 EF 레이어에서 일관되게 처리
+- 비즈니스 로직이 EF에 집중되어 클라이언트가 단순해짐
+- 감사(audit) 로그와 사이드이펙트 처리 지점 단일화
 
-- **Don't** import from another feature's controller (cross-feature coupling)
-  - Bad: `settlement_page.dart` importing `home/partner_dashboard_controller.dart`
-  - Fix: Extract shared data models to a common location, create feature-local controllers
-- **Don't** place app-specific UI state in `minglit_kit`
-- **Don't** create providers without `@riverpod` annotation (prefer code-gen over manual)
+### 2.3 Repository 패턴
+
+Supabase SDK를 UI에서 직접 호출하지 않는다. Repository 클래스가 데이터 접근을 추상화하며, Provider가 캐싱을 담당한다.
+
+상세: [client.md §2.4](./client.md#24-repository-pattern-data-access)
 
 ---
 
-## 7. 🚨 Technical Standards
+## 3. 이벤트 라이프사이클
 
-### 7.1 Error Handling
-*   **Centralization**: 모든 에러 처리는 `minglit_kit`의 `handleMinglitError`를 통해 수행합니다.
-*   **Classification**:
-    *   `MinglitUserException`: 사용자에게 보여줄 친절한 메시지 (SnackBar: Secondary Color).
-    *   `MinglitSystemException` / `Unknown`: 사용자에게는 안전한 메시지, 시스템에는 StackTrace 로깅 (SnackBar: Error Color).
-*   **Riverpod Integration**: `AsyncValue.showMinglitError(context)` 확장을 사용하여 선언적으로 처리합니다.
+### 3.1 이벤트 상태 머신
 
+이벤트(`events` 테이블)는 5개 상태를 가진다. **상태 전환은 pg_cron 크론잡이 자동 구동한다.**
+
+```text
+scheduled
+    │
+    ├── (시작 30분 전, 크론: activate-upcoming-events)
+    ▼
+ active
+    │
+    ├── (시작 시각, 크론: start-active-events)
+    ▼
+ongoing
+    │
+    ├── (종료 후 15분 주기, 크론: auto-complete-past-events)
+    ▼
+completed
+
+scheduled / active
+    │
+    └── (파트너 수동, EF: partner-manage-event) ──→ cancelled
+```
+
+| 상태 | 설명 | 전환 트리거 |
+|------|------|------------|
+| `scheduled` | 이벤트 생성 직후, 아직 활성화 전 | 파티 생성 또는 이벤트 등록 시 초기값 |
+| `active` | 모집 중 (앱 피드에 노출) | 크론: 시작 30분 전 |
+| `ongoing` | 이벤트 진행 중 | 크론: 시작 시각 도달 |
+| `completed` | 이벤트 종료 (정산 자동 생성) | 크론: 종료 후 (15분 주기) |
+| `cancelled` | 파트너가 취소 | 파트너 수동 (EF 경유) |
+
+**코드 작성 규칙**:
+- 상태 전환 로직은 EF(`partner-manage-event`) 또는 pg_cron에서만 수행한다.
+- 클라이언트가 `events.status`를 직접 UPDATE하지 않는다.
+- `completed` 전환 시 `on_event_completed` 트리거가 정산(`settlements`)을 자동 생성한다.
+
+### 3.2 Party → Event 템플릿 패턴
+
+`parties` 테이블은 이벤트의 **템플릿**이다. 파티 하나에서 여러 회차의 이벤트를 생성할 수 있다.
+
+```text
+Party (템플릿)
+  ├── entry_group_templates  →  Events (회차)
+  │                               ├── entry_groups (복사본)
+  └── ticket_templates       →   └── tickets (복사본)
+```
+
+- 파티 설정(`balance_config`, 인증 요구사항 등)은 이벤트 생성 시 복사된다.
+- 이벤트별로 `start_time`, `end_time`이 독립적으로 관리된다.
+
+상세: [backend.md §2.1](./backend.md#21-table-inventory)
+
+---
+
+## 4. 신뢰 및 검증 (Trust & Verification)
+
+Minglit은 **"신뢰(Trust)"**를 핵심 자산으로 취급하며, 2단계 레이어로 관리한다.
+
+### 4.1 Layer 1: Identity (신원)
+
+- **정의**: "이 사람은 실존하며, 주장하는 나이/성별이 맞는가?"
+- **데이터**: `user_profiles` 테이블 (`birth_date`, `gender`, `is_verified`)
+- **검증 주체**: 플랫폼 (PASS/SMS API)
+- **특징**: 모든 유저의 기본 자격. 나이 제한 필터링 등에 즉시 사용.
+
+### 4.2 Layer 2: Qualification (자격)
+
+- **정의**: "이 사람은 우리 파티에 어울리는가?" (직장, 학력, 자산, 외모 등)
+- **데이터**: `user_verifications` → `verification_submissions` → `partner_verified_users`
+- **검증 주체**: 파트너 (사람이 심사)
+- **특징**: 특정 파티/티켓이 요구하는 추가 자격 레이어.
+
+상세: [trust-and-verification.md](./trust-and-verification.md)
+
+---
+
+## 5. 결제 및 환불 아키텍처
+
+### 5.1 결제 파이프라인
+
+```text
+User App ──> Portone(Iamport V1) ──> payment-webhook
+         ──> payment-verify ──> event_applications
+                                      │ (approved → 트리거)
+                                      ▼
+                               event_participants (티켓 발권)
+                                      │ (event completed → 트리거)
+                                      ▼
+                               settlements (정산 자동 생성)
+```
+
+상세: [payment-pipeline.md](./payment-pipeline.md)
+
+### 5.2 환불 정책 아키텍처
+
+환불은 **이원화 구조**로 운영된다.
+
+| 구분 | 주체 | 방식 | 타이밍 |
+|------|------|------|--------|
+| **플랫폼 자동 환불** | 시스템 | `on_application_rejected` 트리거 → `payment-cancel` EF | 파트너가 신청을 거절할 때 즉시 |
+| **파트너 환불** | 파트너 | 파트너 앱에서 수동 환불 요청 → `payment-cancel` EF | 파트너 재량 |
+
+**코드 작성 규칙**:
+- 환불 처리는 반드시 `payment-cancel` Edge Function을 통해 수행한다. DB 직접 UPDATE 금지.
+- 수수료 정책(PG 3.5%, 플랫폼 5%)은 현재 `create_settlement_on_event_completion` 함수에 하드코딩되어 있다. 향후 `policies` 테이블의 tier 정책을 코드가 읽도록 개선 예정 (#765).
+- 환불 상태: `none` → `requested` → `completed` / `failed`
+
+상세: [payment-pipeline.md §5](./payment-pipeline.md#5-refund-flow)
+
+---
+
+## 6. 횡단 관심사 (Cross-cutting Concerns)
+
+### 6.1 에러 처리
+
+클라이언트에서 모든 에러 처리는 `minglit_kit`의 `handleMinglitError`를 통해 수행한다.
+
+- `MinglitUserException`: 유저에게 보여줄 친절한 메시지 (SnackBar Secondary Color)
+- `MinglitAuthException`: 인증 관련 오류
+- `MinglitSystemException` / Unknown: 유저에게는 안전한 메시지, 시스템에는 StackTrace 로깅 (SnackBar Error Color)
+
+Edge Function 에러는 `sentry_utils.ts`의 `withSentry` / `withSentryHandler`로 Sentry에 트래킹한다.
+
+### 6.2 Provider 조직화
+
+Provider와 Repository의 위치 결정 기준:
+
+- **`minglit_kit` (공유)**: `app_user`와 `app_partner` 모두 필요하거나 Supabase 테이블을 래핑하는 경우
+- **앱 feature 폴더**: 단일 앱에서만 쓰이거나 UI 상태(controller, form state), Coordinator인 경우
+
+상세: [client.md §6](./client.md#6-provider-organization-guidelines)
+
+---
+
+## Related Documents
+
+| 문서 | 내용 |
+|------|------|
+| [client.md](./client.md) | Flutter 앱 상세 아키텍처 (Feature-first, Coordinator, Repository, Design System) |
+| [backend.md](./backend.md) | Supabase 백엔드 (테이블, Edge Functions, RLS, Triggers) |
+| [trust-and-verification.md](./trust-and-verification.md) | 2-layer 신뢰 모델 상세 |
+| [payment-pipeline.md](./payment-pipeline.md) | 결제/정산 파이프라인 상세 |
+| [search-and-recommendation.md](./search-and-recommendation.md) | PGroonga 검색 + pgvector 추천 |
+| [global-event-pipeline.md](./global-event-pipeline.md) | PGMQ 2-tier 이벤트 파이프라인 |
 
