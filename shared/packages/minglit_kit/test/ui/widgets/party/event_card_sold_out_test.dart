@@ -71,7 +71,6 @@ void main() {
   testWidgets('만석 상태에서 Semantics 라벨이 올바르다', (tester) async {
     // Fix #996: ensureSemantics()는 pumpWidget 전에 호출해야 semantics 트리가 활성화 상태로 빌드됨
     final semanticsHandle = tester.ensureSemantics();
-    addTearDown(semanticsHandle.dispose);
 
     final soldOutEvent = Event(
       id: 'e-3',
@@ -92,5 +91,7 @@ void main() {
 
     // Fix #996: 스크린 리더 라벨 값 자체를 검증
     expect(find.bySemanticsLabel('이벤트 만석, 참여 불가'), findsOneWidget);
+
+    semanticsHandle.dispose();
   });
 }
