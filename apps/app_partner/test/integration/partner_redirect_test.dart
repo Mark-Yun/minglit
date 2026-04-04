@@ -122,7 +122,7 @@ Widget _createPartnerTestApp({
 /// [PartnerApplyPage.initState] → loadDraft() never touches Supabase.
 MockPartnerRepository _mockPartnerRepository() {
   final mock = MockPartnerRepository();
-  when(() => mock.getMyApplication()).thenAnswer((_) async => null);
+  when(mock.getMyApplication).thenAnswer((_) async => null);
   return mock;
 }
 
