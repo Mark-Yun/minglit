@@ -5,5 +5,6 @@
     "@std/testing/mock": "jsr:@std/testing@1/mock",
     "@std/testing/time": "jsr:@std/testing@1/time",
     "https://deno.land/std@0.168.0/http/server.ts": "./functions/_test_utils/std_server_stub.ts"
-  }
+  },
+  "unstable": ["temporal"]
 }

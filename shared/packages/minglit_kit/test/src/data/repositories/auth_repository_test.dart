@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/repositories/auth_repository.dart';
 import 'package:mocktail/mocktail.dart';
@@ -12,10 +11,6 @@ import '../../../helpers/supabase_mock_helpers.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const googleSignInChannel = MethodChannel(
-    'plugins.flutter.io/google_sign_in',
-  );
-
   late MockSupabaseClient mockClient;
   late MockGoTrueClient mockAuth;
   late AuthRepository repository;
@@ -26,15 +21,6 @@ void main() {
     mockClient = createMockSupabase(currentUser: mockUser);
     mockAuth = mockClient.auth as MockGoTrueClient;
     repository = AuthRepository(supabase: mockClient);
-
-    // Stub GoogleSignIn platform channel to avoid MissingPluginException
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(googleSignInChannel, (call) async => null);
-  });
-
-  tearDown(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(googleSignInChannel, null);
   });
 
   group('AuthRepository', () {
@@ -103,6 +89,59 @@ void main() {
             password: 'wrong',
           ),
           throwsA(isA<AuthException>()),
+        );
+      });
+    });
+
+    group('signInWithGoogle (mobile path)', () {
+      test('throws AuthException when webClientId is empty string', () async {
+        // Fix #959: empty string should be treated as unconfigured
+        final repo = AuthRepository(
+          supabase: mockClient,
+          webClientId: '',
+        );
+        await expectLater(
+          repo.signInWithGoogle(),
+          throwsA(
+            isA<AuthException>().having(
+              (e) => e.message,
+              'message',
+              'GOOGLE_WEB_CLIENT_ID is not configured.',
+            ),
+          ),
+        );
+      });
+
+      test('throws AuthException when webClientId is whitespace-only', () async {
+        // Fix #959: whitespace-only string is normalized to null at construction
+        final repo = AuthRepository(
+          supabase: mockClient,
+          webClientId: '   ',
+        );
+        await expectLater(
+          repo.signInWithGoogle(),
+          throwsA(
+            isA<AuthException>().having(
+              (e) => e.message,
+              'message',
+              'GOOGLE_WEB_CLIENT_ID is not configured.',
+            ),
+          ),
+        );
+      });
+
+      test('throws AuthException when webClientId is null', () async {
+        // Fix #959: null webClientId should fail fast with a clear message
+        final repo = AuthRepository(supabase: mockClient);
+        await expectLater(
+          repo.signInWithGoogle(),
+          throwsA(
+            isA<AuthException>().having(
+              (e) => e.message,
+              'message',
+              'GOOGLE_WEB_CLIENT_ID is not configured.',
+            ),
+          ),
         );
       });
     });
