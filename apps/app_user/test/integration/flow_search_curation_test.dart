@@ -131,7 +131,7 @@ void main() {
 
     testWidgets('키워드 칩 탭 → 검색 쿼리 즉시 업데이트', (tester) async {
       setKoreanLocale(tester);
-      final mockEvents = createMockEventsForTest(count: 2);
+      final mockEvents = createMockEventsForTest();
 
       await tester.pumpWidget(
         createTestApp(
