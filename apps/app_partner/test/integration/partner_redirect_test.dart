@@ -5,9 +5,11 @@ import 'package:app_partner/src/features/home/partner_home_page.dart';
 import 'package:app_partner/src/features/onboarding/partner_apply_page.dart';
 import 'package:app_partner/src/features/onboarding/partner_apply_status_page.dart';
 import 'package:app_partner/src/features/onboarding/partner_welcome_page.dart';
+import 'package:app_partner/src/l10n/generated/app_localizations.dart';
 import 'package:app_partner/src/logic/onboarding_state_provider.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -99,6 +101,13 @@ Widget _createPartnerTestApp({
     child: MaterialApp.router(
       theme: MinglitTheme.materialTheme,
       routerConfig: testRouter,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: AppLocalizations.supportedLocales,
     ),
   );
 }
