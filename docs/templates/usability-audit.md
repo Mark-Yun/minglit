@@ -47,4 +47,4 @@
 ## 6. 참고 문헌 및 방법론 근거
 1. **Jakob Nielsen (NN/g):** "10 Usability Heuristics for User Interface Design".
 2. **W3C:** "Web Content Accessibility Guidelines (WCAG) 2.1".
-3. **Minglit UX Docs:** `docs/ux/design-system/` 및 `docs/architecture/ARCHITECTURE.md` (Coordinator Pattern).
+3. **Minglit UX Docs:** `docs/ux/design-system/` 및 `docs/architecture/overview.md` (Coordinator Pattern).
