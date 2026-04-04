@@ -36,7 +36,12 @@ export async function simCreateParties(
   const partyIds: string[] = [];
   const eventIds: string[] = [];
 
-  const simUserPassword = Deno.env.get("SIM_USER_PASSWORD") ?? "password1234!";
+  const simUserPassword = Deno.env.get("SIM_USER_PASSWORD");
+  if (supabaseUrl && anonKey && !simUserPassword) {
+    const errMsg = "SIM_USER_PASSWORD is required for EF path";
+    if (strict) throw new Error(errMsg);
+    log({ level: "warn", phase: "create", step: "sim_user_password", message: `${errMsg}, falling back to direct DB` });
+  }
 
   const { data: partners, error: pErr } = await supabase
     .from("partners")
@@ -60,7 +65,7 @@ export async function simCreateParties(
 
     // ── Step 1: Acquire partner JWT (needed for EF path) ──────────────────────
     let partnerToken: string | null = null;
-    if (supabaseUrl && anonKey) {
+    if (supabaseUrl && anonKey && simUserPassword) {
       try {
         const partnerEmail = await getPartnerEmail(supabase, partner.id);
         if (partnerEmail) {
@@ -239,13 +244,35 @@ export async function simCreateParties(
       // Fallback: direct DB insert for event + entry_groups + tickets.
       // locationId is known from the party creation step — no per-event DB query needed.
       if (!eventId) {
-        const directLocationId = directDbLocationId ?? locationId_existing ?? "";
+        let resolvedLocationId: string | null = directDbLocationId ?? locationId_existing ?? null;
+        if (partyCreatedViaEf && !resolvedLocationId) {
+          const { data: partyRow, error: partyLookupErr } = await supabase
+            .from("parties")
+            .select("location_id")
+            .eq("id", partyId!)
+            .maybeSingle();
+
+          if (partyLookupErr || !partyRow?.location_id) {
+            log({
+              level: "error",
+              phase: "create",
+              step: "resolve_location_id",
+              message: `Failed to resolve location_id for party ${partyId}: ${partyLookupErr?.message ?? "empty"}`,
+            });
+            continue;
+          }
+          resolvedLocationId = partyRow.location_id as string;
+        }
+        if (!resolvedLocationId) {
+          log({ level: "error", phase: "create", step: "resolve_location_id", message: `No location_id for party ${partyId}` });
+          continue;
+        }
 
         const directEventId = crypto.randomUUID();
         const { error: evErr } = await supabase.from("events").insert({
           id: directEventId,
           party_id: partyId,
-          location_id: directLocationId,
+          location_id: resolvedLocationId,
           start_time: startTime.toISOString(),
           end_time: endTime.toISOString(),
           min_confirmed_count: 4,
