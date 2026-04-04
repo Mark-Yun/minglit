@@ -462,6 +462,12 @@ Deno.test({
           assertEquals(body.success, true);
           assertExists(body.run_id);
 
+          // The run phase must have patched the E2E event
+          assertEquals(
+            patchedEventIds.includes("e2e-event-1"),
+            true,
+            "E2E event must be processed by run phase",
+          );
           // The run phase must NOT have patched the non-E2E event
           assertEquals(
             patchedEventIds.includes("non-e2e-event-1"),
@@ -574,119 +580,5 @@ Deno.test({
   },
 });
 
-Deno.test({
-  name: "backend-simulator - auto-complete cron: events with end_time < now are transitioned to completed",
-  sanitizeResources: false,
-  sanitizeOps: false,
-  fn: async () => {
-    // This test simulates the auto-complete cron by running the same UPDATE logic
-    // directly against a mock. The cron executes:
-    //   UPDATE events SET status='completed' WHERE status='scheduled' AND end_time < now()
-    // We verify that the UPDATE is applied only to expired events.
-
-    const updatedIds: string[] = [];
-    const pastEndTime = new Date(Date.now() - 60 * 60 * 1000).toISOString(); // 1 hour ago
-    const futureEndTime = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour from now
-
-    const scheduledEvents = [
-      { id: "expired-event-1", status: "scheduled", end_time: pastEndTime },
-      { id: "future-event-1", status: "scheduled", end_time: futureEndTime },
-    ];
-
-    const { fetchMock } = createFetchMock([
-      {
-        // GET scheduled events with end_time < now filter
-        matcher: (req) =>
-          req.url.includes("/rest/v1/events") && req.method === "GET",
-        handler: (req) => {
-          const url = new URL(req.url);
-          const endTimeFilter = url.searchParams.get("end_time");
-          // lt.{now} means end_time < now() — return only expired events
-          const isLtFilter = endTimeFilter?.startsWith("lt.");
-          if (isLtFilter) {
-            return jsonResponse(
-              wrapSingle(req, scheduledEvents.filter((e) => e.end_time < new Date().toISOString())),
-            );
-          }
-          return jsonResponse(wrapSingle(req, scheduledEvents));
-        },
-      },
-      {
-        // PATCH events — record which IDs were transitioned
-        matcher: (req) =>
-          req.url.includes("/rest/v1/events") && req.method === "PATCH",
-        handler: async (req) => {
-          const url = new URL(req.url);
-          const body = await req.json() as Record<string, unknown>;
-          if (body.status === "completed") {
-            const idFilter = url.searchParams.get("id")?.replace("eq.", "");
-            if (idFilter) updatedIds.push(idFilter);
-          }
-          return jsonResponse([{ id: crypto.randomUUID() }], { status: 200 });
-        },
-      },
-      {
-        matcher: (req) => req.url.includes("/rest/v1/"),
-        handler: (req) => jsonResponse(wrapSingle(req, []), { status: 200 }),
-      },
-      {
-        matcher: (req) => req.url.includes("/storage/v1/"),
-        handler: () => jsonResponse({ Key: "e2e-test-logs/run.log" }),
-      },
-      {
-        matcher: (req) => req.url.includes("api.github.com"),
-        handler: () =>
-          jsonResponse({ html_url: "https://github.com/Mark-Yun/minglit/issues/999", number: 999 }, { status: 201 }),
-      },
-    ]);
-
-    await withEnv(
-      {
-        ENVIRONMENT: "development",
-        SUPABASE_URL: "http://localhost:54321",
-        SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
-      },
-      async () => {
-        await withMockedFetch(fetchMock, async () => {
-          // Simulate the cron by fetching expired scheduled events and completing them.
-          // This mirrors what the auto-complete cron does:
-          //   SELECT id FROM events WHERE status='scheduled' AND end_time < now()
-          //   → UPDATE events SET status='completed' WHERE id IN (...)
-          const expiredRes = await fetch(
-            "http://localhost:54321/rest/v1/events?status=eq.scheduled&end_time=lt.now()",
-            {
-              headers: {
-                apikey: "test-service-role-key",
-                Authorization: "Bearer test-service-role-key",
-              },
-            },
-          );
-          const expiredEvents = await expiredRes.json() as Array<{ id: string }>;
-
-          for (const event of expiredEvents) {
-            await fetch(
-              `http://localhost:54321/rest/v1/events?id=eq.${event.id}`,
-              {
-                method: "PATCH",
-                headers: {
-                  "Content-Type": "application/json",
-                  apikey: "test-service-role-key",
-                  Authorization: "Bearer test-service-role-key",
-                },
-                body: JSON.stringify({ status: "completed" }),
-              },
-            );
-          }
-
-          // Only expired events must have been completed
-          assertEquals(updatedIds.includes("expired-event-1"), true, "expired event must be completed");
-          assertEquals(
-            updatedIds.includes("future-event-1"),
-            false,
-            "future event must not be completed",
-          );
-        });
-      },
-    );
-  },
-});
+// Note: auto-complete cron job registration and SQL condition (end_time < now())
+// are tested at the database level in supabase/tests/database/59_auto_complete_cron_test.sql.

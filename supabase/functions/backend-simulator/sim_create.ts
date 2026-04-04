@@ -158,6 +158,7 @@ export async function simCreateParties(
   return { partyIds, eventIds };
 }
 
+// Fix #964: 피드 전시용 이벤트 — E2E 테스트와 분리된 일반 유저 피드용 이벤트 데이터 제공
 const DISPLAY_SCENARIOS = [
   { title: "강남 직장인 애프터워크 밍글", description: "강남에서 만나는 직장인들의 애프터워크 소셜 파티입니다.", offsetDays: 3 },
   { title: "홍대 대학생 주말 밍글", description: "홍대 앞에서 펼쳐지는 대학생 주말 소셜 밍글입니다.", offsetDays: 7 },
@@ -173,7 +174,7 @@ export async function simCreateDisplayEvents(
   const displayPartyIds: string[] = [];
   const displayEventIds: string[] = [];
 
-  // Fix #993: Dedup — skip creation if display parties already exist to prevent infinite accumulation
+  // Fix #964: Dedup — skip creation if display parties already exist to prevent infinite accumulation
   const { data: existing } = await supabase
     .from("parties")
     .select("id")
@@ -197,10 +198,12 @@ export async function simCreateDisplayEvents(
     const partner = partners[i % partners.length] as { id: string };
     const scenario = DISPLAY_SCENARIOS[i];
 
+    // Fix #964: [E2E] location 재사용 방지 — display 이벤트가 E2E 테스트용 location에 붙지 않도록 필터링
     const { data: location } = await supabase
       .from("locations")
       .select("id")
       .eq("partner_id", partner.id)
+      .not("name", "ilike", "[E2E]%")
       .maybeSingle();
 
     let locationId: string;
