@@ -101,13 +101,12 @@ void main() {
     });
 
     // TODO #1009: 1-event auto-entry test remains disabled.
-    // Blocker: QRScannerScreen uses mobile_scanner which has async dispose behavior.
-    // QRScannerScreen.dispose() is async
-    // (`Future<void> dispose() async { await _scannerController.dispose(); }`)
-    // which Flutter's test framework does not await, causing teardown flakiness.
-    // Note: 0-event and 2+-event tests validate UI states only, not 1-event routing.
-    // When re-enabling, verify auto-routing behavior (events.length == 1 → direct
-    // QRScannerScreen entry).
+    // Blocker: QRScannerScreen uses mobile_scanner (currently unpinned as "any"
+    // in pubspec.yaml), which has async dispose behavior. Flutter's test framework
+    // does not await plugin disposal during teardown, causing flaky test failures.
+    // Note: 0-event and 2+-event tests validate UI states, not 1-event routing.
+    // When re-enabling this test, ensure it verifies auto-routing behavior
+    // (events.length == 1 → direct QRScannerScreen entry).
     //
     // Re-enable when mobile_scanner provides synchronous disposal or when a
     // test shim for camera plugins becomes available.
