@@ -47,10 +47,10 @@ class PartnerScaffold extends StatelessWidget {
       body: PageTransitionSwitcher(
         transitionBuilder: (child, animation, secondaryAnimation) =>
             FadeThroughTransition(
-          animation: animation,
-          secondaryAnimation: secondaryAnimation,
-          child: child,
-        ),
+              animation: animation,
+              secondaryAnimation: secondaryAnimation,
+              child: child,
+            ),
         child: KeyedSubtree(
           key: ValueKey<int>(navigationShell.currentIndex),
           child: navigationShell,

@@ -11,32 +11,30 @@ class MinglitPageTransitions {
   static CustomTransitionPage<T> sharedAxisScaled<T>({
     required LocalKey key,
     required Widget child,
-  }) =>
-      CustomTransitionPage<T>(
-        key: key,
-        child: child,
-        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-            SharedAxisTransition(
+  }) => CustomTransitionPage<T>(
+    key: key,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        SharedAxisTransition(
           animation: animation,
           secondaryAnimation: secondaryAnimation,
           transitionType: SharedAxisTransitionType.scaled,
           child: child,
         ),
-      );
+  );
 
   /// FadeThrough — 동일 계층 전환용
   static CustomTransitionPage<T> fadeThrough<T>({
     required LocalKey key,
     required Widget child,
-  }) =>
-      CustomTransitionPage<T>(
-        key: key,
-        child: child,
-        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-            FadeThroughTransition(
+  }) => CustomTransitionPage<T>(
+    key: key,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        FadeThroughTransition(
           animation: animation,
           secondaryAnimation: secondaryAnimation,
           child: child,
         ),
-      );
+  );
 }
