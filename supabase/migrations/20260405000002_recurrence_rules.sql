@@ -23,7 +23,8 @@ CREATE TABLE public.recurrence_rules (
   id                   uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   party_id             uuid        NOT NULL REFERENCES public.parties(id) ON DELETE CASCADE,
   pattern              text        NOT NULL CHECK (pattern IN ('weekly', 'biweekly', 'monthly')),
-  days_of_week         int[]       NOT NULL DEFAULT '{}',
+  days_of_week         int[]       NOT NULL DEFAULT '{}'
+                                   CHECK (days_of_week <@ ARRAY[0,1,2,3,4,5,6]),
   month_day            int         CHECK (month_day >= 1 AND month_day <= 31),
   start_time           time        NOT NULL,
   end_time             time        NOT NULL,
@@ -32,7 +33,14 @@ CREATE TABLE public.recurrence_rules (
                                    CHECK (status IN ('active', 'paused', 'cancelled')),
   last_generated_date  date,
   created_at           timestamptz NOT NULL DEFAULT now(),
-  updated_at           timestamptz NOT NULL DEFAULT now()
+  updated_at           timestamptz NOT NULL DEFAULT now(),
+  -- end_time은 start_time 이후여야 한다
+  CONSTRAINT chk_end_time_after_start CHECK (end_time > start_time),
+  -- 패턴-필드 일관성: weekly/biweekly는 month_day NULL, monthly는 month_day NOT NULL
+  CONSTRAINT chk_pattern_fields CHECK (
+    (pattern IN ('weekly', 'biweekly') AND month_day IS NULL) OR
+    (pattern = 'monthly' AND month_day IS NOT NULL)
+  )
 );
 
 COMMENT ON TABLE  public.recurrence_rules IS '파트너가 설정한 이벤트 반복 규칙. 크론잡이 매일 1개월치 이벤트를 자동 생성.';
