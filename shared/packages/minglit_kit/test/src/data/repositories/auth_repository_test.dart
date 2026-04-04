@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/repositories/auth_repository.dart';
 import 'package:mocktail/mocktail.dart';
@@ -12,10 +11,6 @@ import '../../../helpers/supabase_mock_helpers.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const googleSignInChannel = MethodChannel(
-    'plugins.flutter.io/google_sign_in',
-  );
-
   late MockSupabaseClient mockClient;
   late MockGoTrueClient mockAuth;
   late AuthRepository repository;
@@ -26,15 +21,6 @@ void main() {
     mockClient = createMockSupabase(currentUser: mockUser);
     mockAuth = mockClient.auth as MockGoTrueClient;
     repository = AuthRepository(supabase: mockClient);
-
-    // Stub GoogleSignIn platform channel to avoid MissingPluginException
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(googleSignInChannel, (call) async => null);
-  });
-
-  tearDown(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(googleSignInChannel, null);
   });
 
   group('AuthRepository', () {

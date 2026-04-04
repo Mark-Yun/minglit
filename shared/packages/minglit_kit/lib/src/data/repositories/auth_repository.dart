@@ -72,17 +72,25 @@ class AuthRepository {
     String? defaultRedirectUrl,
     String? mobileRedirectScheme,
   }) : _supabase = supabase ?? Supabase.instance.client,
+       _webClientId = webClientId,
        _defaultRedirectUrl = defaultRedirectUrl,
-       _mobileRedirectScheme = mobileRedirectScheme,
-       _googleSignIn = GoogleSignIn(
-         clientId: kIsWeb ? webClientId : null,
-         serverClientId: kIsWeb ? null : webClientId,
-       );
+       _mobileRedirectScheme = mobileRedirectScheme;
 
   final SupabaseClient _supabase;
-  final GoogleSignIn _googleSignIn;
+  final String? _webClientId;
   final String? _defaultRedirectUrl;
   final String? _mobileRedirectScheme;
+
+  bool _googleSignInInitialized = false;
+
+  Future<void> _ensureGoogleSignInInitialized() async {
+    if (_googleSignInInitialized) return;
+    await GoogleSignIn.instance.initialize(
+      clientId: kIsWeb ? _webClientId : null,
+      serverClientId: kIsWeb ? null : _webClientId,
+    );
+    _googleSignInInitialized = true;
+  }
 
   /// Returns the current logged-in user.
   User? get currentUser => _supabase.auth.currentUser;
@@ -107,13 +115,10 @@ class AuthRepository {
       }
 
       // Mobile Native Sign-In
-      final googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        throw const AuthException('Google sign-in was cancelled.');
-      }
+      await _ensureGoogleSignInInitialized();
+      final googleUser = await GoogleSignIn.instance.authenticate();
 
-      final googleAuth = await googleUser.authentication;
-      final accessToken = googleAuth.accessToken;
+      final googleAuth = googleUser.authentication;
       final idToken = googleAuth.idToken;
 
       if (idToken == null) {
@@ -123,7 +128,6 @@ class AuthRepository {
       await _supabase.auth.signInWithIdToken(
         provider: OAuthProvider.google,
         idToken: idToken,
-        accessToken: accessToken,
       );
       Log.i('🎉 [AuthRepo] Supabase Sign-In successful!');
     } on Exception catch (e, stackTrace) {
@@ -238,10 +242,11 @@ class AuthRepository {
   /// Signs out from both Supabase and Google.
   Future<void> signOut() async {
     try {
-      await Future.wait([
-        _supabase.auth.signOut(),
-        _googleSignIn.signOut(),
-      ]);
+      final futures = <Future<void>>[_supabase.auth.signOut()];
+      if (_googleSignInInitialized) {
+        futures.add(GoogleSignIn.instance.signOut());
+      }
+      await Future.wait(futures);
       Log.i('👋 [AuthRepo] Sign-Out successful');
     } on Exception catch (e, stackTrace) {
       Log.e('❌ [AuthRepo] Sign-Out Error', e, stackTrace);
