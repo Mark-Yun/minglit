@@ -45,6 +45,7 @@ const DEFAULT_CONFIG: SimConfig = {
   apps_per_event: 6,
   checkin_rate: 0.7,
   no_show_rate: 0.3,
+  strict: false,
 };
 
 // ─────────────────────────────────────────────────────────
@@ -107,7 +108,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   // Phase: "create" → Phase 1-2 only
   if (phase === "create") {
-    const createResult = await simCreateParties(supabase, config, logFn);
+    const createResult = await simCreateParties(supabase, config, logFn, supabaseUrl, anonKey, config.strict);
     // Fix #964: 피드 전시용 이벤트 생성 — 일반 유저 피드에 표시할 display 이벤트를 E2E와 분리해 생성
     const displayResult = await simCreateDisplayEvents(supabase, logFn);
     const applyResult = await simDiscoverAndApply(
@@ -151,6 +152,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
       supabase,
       pendingIds,
       logFn,
+      undefined,
+      supabaseUrl,
+      anonKey,
+      config.strict,
     );
     return successResponse({
       success: true,
@@ -183,6 +188,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       config.refund_rate,
       supabaseUrl,
       anonKey,
+      config.strict,
     );
     return successResponse({
       success: true,
@@ -216,8 +222,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
       config.checkin_rate,
       supabaseUrl,
       anonKey,
+      config.strict,
     );
-    const matchResult = await simMatch(supabase, eventIds, logFn, supabaseUrl, serviceRoleKey);
+    const matchResult = await simMatch(supabase, eventIds, logFn, supabaseUrl, serviceRoleKey, config.strict);
     const completeResult = await simCompleteEvents(supabase, eventIds, logFn);
 
     const allAssertions: SimAssertionResult[] = [
@@ -338,7 +345,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // ─────────────────────────────────────────────────────────
 
   // Phase 1-2: Create parties + display events + discover & apply
-  const createResult = await simCreateParties(supabase, config, logFn);
+  const createResult = await simCreateParties(supabase, config, logFn, supabaseUrl, anonKey, config.strict);
   // Fix #964: 피드 전시용 이벤트 생성 — 일반 유저 피드에 표시할 display 이벤트를 E2E와 분리해 생성
   await simCreateDisplayEvents(supabase, logFn);
   const applyResult = await simDiscoverAndApply(
@@ -355,6 +362,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
     supabase,
     applyResult.pendingReviewApplicationIds,
     logFn,
+    undefined,
+    supabaseUrl,
+    anonKey,
+    config.strict,
   );
 
   // Phase 4: Refund requests (refund_rate % of paid)
@@ -365,6 +376,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     config.refund_rate,
     supabaseUrl,
     anonKey,
+    config.strict,
   );
 
   // Phase 5: Check-in + Match + Complete
@@ -375,8 +387,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     config.checkin_rate,
     supabaseUrl,
     anonKey,
+    config.strict,
   );
-  const matchResult = await simMatch(supabase, createResult.eventIds, logFn, supabaseUrl, serviceRoleKey);
+  const matchResult = await simMatch(supabase, createResult.eventIds, logFn, supabaseUrl, serviceRoleKey, config.strict);
   const completeResult = await simCompleteEvents(
     supabase,
     createResult.eventIds,

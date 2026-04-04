@@ -1,4 +1,4 @@
-import { assertEquals, assertStringIncludes } from "@std/assert";
+import { assertEquals, assertRejects, assertStringIncludes } from "@std/assert";
 import { createMockSupabaseClient } from "../_test_utils/mock_supabase_client.ts";
 import { simCreateParties, simDiscoverAndApply } from "./sim_create.ts";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -12,6 +12,7 @@ const DEFAULT_CONFIG: SimConfig = {
   apps_per_event: 3,
   checkin_rate: 0.7,
   no_show_rate: 0.3,
+  strict: false,
 };
 
 const noop = () => {};
@@ -213,6 +214,217 @@ Deno.test("simDiscoverAndApply - prevents duplicate applications", async () => {
   await simDiscoverAndApply(mock as unknown as SupabaseClient, DEFAULT_CONFIG, noop, ["event-1"]);
 
   assertEquals(insertCount, 0);
+});
+
+// ── EF path tests ────────────────────────────────────────────────────────────
+
+// Intercept module-level EF calls via mock fetch. We replace globalThis.fetch
+// for the duration of the test to simulate EF responses without a real server.
+
+function withMockFetch(
+  handler: (url: string, init: RequestInit) => Response,
+  fn: () => Promise<void>,
+): Promise<void> {
+  const original = globalThis.fetch;
+  globalThis.fetch = (url: string | URL | Request, init?: RequestInit) =>
+    Promise.resolve(handler(url.toString(), init ?? {}));
+  return fn().finally(() => {
+    globalThis.fetch = original;
+  });
+}
+
+Deno.test("simCreateParties - uses EF path when supabaseUrl/anonKey provided and EF succeeds", async () => {
+  const efCalls: { url: string; body: unknown }[] = [];
+  const directInserts: string[] = [];
+
+  const mock = createMockSupabaseClient({
+    tables: {
+      partners: { select: () => ({ data: [{ id: "partner-1" }], error: null }) },
+      locations: { select: () => ({ data: { id: "loc-1" }, error: null }) },
+      partner_members: { select: () => ({ data: { email: "partner1@test.com" }, error: null }) },
+      ticket_templates: { select: () => ({ data: [{ id: "tmpl-1", name: "일반" }], error: null }) },
+      // direct DB inserts should NOT be called on EF success path
+      parties: {
+        insert: ({ values }: { values: unknown }) => {
+          directInserts.push("party");
+          return { data: { id: "direct-party" }, error: null };
+        },
+      },
+      events: {
+        insert: ({ values }: { values: unknown }) => {
+          directInserts.push("event");
+          return { data: { id: "direct-event" }, error: null };
+        },
+      },
+      entry_groups: { insert: () => ({ data: { id: "grp-1" }, error: null }) },
+      tickets: { insert: () => ({ data: null, error: null }) },
+    },
+  });
+
+  const config: SimConfig = { ...DEFAULT_CONFIG, party_count: 1, events_per_party: 1 };
+
+  await withMockFetch((url, init) => {
+    const body = JSON.parse((init.body as string) ?? "{}");
+    efCalls.push({ url, body });
+
+    if (url.includes("auth/v1/token")) {
+      // Simulate successful partner sign-in
+      return new Response(JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }), { status: 200 });
+    }
+    if (url.includes("partner-manage-party")) {
+      return new Response(JSON.stringify({ success: true, party_id: "ef-party-1" }), { status: 200 });
+    }
+    if (url.includes("partner-manage-event")) {
+      return new Response(JSON.stringify({ success: true, event_id: "ef-event-1" }), { status: 200 });
+    }
+    return new Response(JSON.stringify({}), { status: 404 });
+  }, async () => {
+    const result = await simCreateParties(
+      mock as unknown as SupabaseClient,
+      config,
+      noop,
+      "https://mock.supabase.co",
+      "anon-key",
+    );
+
+    assertEquals(result.partyIds, ["ef-party-1"]);
+    assertEquals(result.eventIds, ["ef-event-1"]);
+    // Direct DB inserts should not have been called for party/event
+    assertEquals(directInserts.filter((d) => d === "party").length, 0);
+    assertEquals(directInserts.filter((d) => d === "event").length, 0);
+    // EF calls were made for party and event
+    assertEquals(efCalls.some((c) => c.url.includes("partner-manage-party")), true);
+    assertEquals(efCalls.some((c) => c.url.includes("partner-manage-event")), true);
+  });
+});
+
+Deno.test("simCreateParties - falls back to direct DB when EF fails and strict=false", async () => {
+  const directPartyInserts: unknown[] = [];
+  const directEventInserts: unknown[] = [];
+
+  const mock = createMockSupabaseClient({
+    tables: {
+      partners: { select: () => ({ data: [{ id: "partner-1" }], error: null }) },
+      locations: { select: () => ({ data: { id: "loc-1" }, error: null }) },
+      partner_members: { select: () => ({ data: { email: "partner1@test.com" }, error: null }) },
+      ticket_templates: { select: () => ({ data: [], error: null }) },
+      parties: {
+        insert: ({ values }: { values: unknown }) => {
+          directPartyInserts.push(values);
+          return { data: { id: "db-party-1" }, error: null };
+        },
+      },
+      events: {
+        insert: ({ values }: { values: unknown }) => {
+          directEventInserts.push(values);
+          return { data: { id: "db-event-1" }, error: null };
+        },
+      },
+      entry_groups: { insert: () => ({ data: { id: "grp-1" }, error: null }) },
+      tickets: { insert: () => ({ data: null, error: null }) },
+    },
+  });
+
+  const config: SimConfig = { ...DEFAULT_CONFIG, party_count: 1, events_per_party: 1 };
+  const warnings: string[] = [];
+  const warnLog = (entry: { level: string; message: string }) => {
+    if (entry.level === "warn") warnings.push(entry.message);
+  };
+
+  await withMockFetch((url) => {
+    if (url.includes("auth/v1/token")) {
+      return new Response(JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }), { status: 200 });
+    }
+    // EF returns 500 to simulate failure
+    return new Response(JSON.stringify({ error: "internal" }), { status: 500 });
+  }, async () => {
+    const result = await simCreateParties(
+      mock as unknown as SupabaseClient,
+      config,
+      warnLog as Parameters<typeof simCreateParties>[2],
+      "https://mock.supabase.co",
+      "anon-key",
+      false, // strict=false
+    );
+
+    // Should have fallen back to direct DB
+    assertEquals(directPartyInserts.length, 1);
+    assertEquals(result.partyIds.length, 1);
+    // Warning was emitted for EF failure
+    assertEquals(warnings.some((w) => w.includes("falling back to direct DB")), true);
+  });
+});
+
+Deno.test("simCreateParties - throws when EF fails and strict=true", async () => {
+  const mock = createMockSupabaseClient({
+    tables: {
+      partners: { select: () => ({ data: [{ id: "partner-1" }], error: null }) },
+      locations: { select: () => ({ data: { id: "loc-1" }, error: null }) },
+      partner_members: { select: () => ({ data: { email: "partner1@test.com" }, error: null }) },
+      ticket_templates: { select: () => ({ data: [], error: null }) },
+      parties: { insert: () => ({ data: { id: "db-party-1" }, error: null }) },
+      events: { insert: () => ({ data: { id: "db-event-1" }, error: null }) },
+      entry_groups: { insert: () => ({ data: { id: "grp-1" }, error: null }) },
+      tickets: { insert: () => ({ data: null, error: null }) },
+    },
+  });
+
+  const config: SimConfig = { ...DEFAULT_CONFIG, party_count: 1, events_per_party: 1 };
+
+  await withMockFetch((url) => {
+    if (url.includes("auth/v1/token")) {
+      return new Response(JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }), { status: 200 });
+    }
+    return new Response(JSON.stringify({ error: "internal" }), { status: 500 });
+  }, async () => {
+    await assertRejects(
+      () => simCreateParties(
+        mock as unknown as SupabaseClient,
+        config,
+        noop,
+        "https://mock.supabase.co",
+        "anon-key",
+        true, // strict=true → should throw
+      ),
+      Error,
+      "EF partner-manage-party returned status=500",
+    );
+  });
+});
+
+Deno.test("simCreateParties - direct DB path when supabaseUrl/anonKey not provided", async () => {
+  const createdParties: unknown[] = [];
+  const createdEvents: unknown[] = [];
+
+  const mock = createMockSupabaseClient({
+    tables: {
+      partners: { select: () => ({ data: [{ id: "partner-1" }], error: null }) },
+      locations: { select: () => ({ data: { id: "loc-1" }, error: null }) },
+      parties: {
+        insert: ({ values }: { values: unknown }) => {
+          createdParties.push(values);
+          return { data: { id: "db-party-1" }, error: null };
+        },
+      },
+      events: {
+        insert: ({ values }: { values: unknown }) => {
+          createdEvents.push(values);
+          return { data: { id: "db-event-1" }, error: null };
+        },
+      },
+      entry_groups: { insert: () => ({ data: { id: "grp-1" }, error: null }) },
+      tickets: { insert: () => ({ data: null, error: null }) },
+    },
+  });
+
+  const config: SimConfig = { ...DEFAULT_CONFIG, party_count: 1, events_per_party: 2 };
+  // No supabaseUrl/anonKey → always direct DB
+  const result = await simCreateParties(mock as unknown as SupabaseClient, config, noop);
+
+  assertEquals(result.partyIds.length, 1);
+  assertEquals(result.eventIds.length, 2);
+  assertEquals(createdParties.length, 1);
+  assertEquals(createdEvents.length, 2);
 });
 
 Deno.test("simDiscoverAndApply - processes multiple events concurrently", async () => {

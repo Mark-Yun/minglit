@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { SimConfig, SimLogEntry } from "./sim_types.ts";
-import { getSimUserToken } from "./sim_auth.ts";
+import { callEdgeFunction, getPartnerEmail, getSimPartnerToken, getSimUserToken } from "./sim_auth.ts";
 
 export interface SimCreatedData {
   partyIds: string[];
@@ -29,9 +29,14 @@ export async function simCreateParties(
   supabase: SupabaseClient,
   config: SimConfig,
   log: (entry: Omit<SimLogEntry, "timestamp">) => void,
+  supabaseUrl?: string,
+  anonKey?: string,
+  strict?: boolean,
 ): Promise<{ partyIds: string[]; eventIds: string[] }> {
   const partyIds: string[] = [];
   const eventIds: string[] = [];
+
+  const simUserPassword = Deno.env.get("SIM_USER_PASSWORD") ?? "password1234!";
 
   const { data: partners, error: pErr } = await supabase
     .from("partners")
@@ -51,104 +56,243 @@ export async function simCreateParties(
       .eq("partner_id", partner.id)
       .maybeSingle();
 
-    let locationId: string;
-    if (location?.id) {
-      locationId = location.id;
-    } else {
-      const newLocId = crypto.randomUUID();
-      const { error: locErr } = await supabase.from("locations").insert({
-        id: newLocId,
-        partner_id: partner.id,
-        name: "[E2E] 테스트 장소",
-        address: "서울특별시 강남구 역삼동",
-        region_1: "서울",
-        region_2: "강남구",
-      });
-      if (locErr) {
-        log({ level: "error", phase: "create", step: "create_location", message: `Failed: ${locErr.message}` });
-        continue;
+    const locationId_existing = location?.id as string | undefined;
+
+    // ── Step 1: Acquire partner JWT (needed for EF path) ──────────────────────
+    let partnerToken: string | null = null;
+    if (supabaseUrl && anonKey) {
+      try {
+        const partnerEmail = await getPartnerEmail(supabase, partner.id);
+        if (partnerEmail) {
+          partnerToken = await getSimPartnerToken(supabaseUrl, anonKey, partnerEmail, simUserPassword);
+        } else {
+          log({ level: "warn", phase: "create", step: "get_partner_email", message: `No email for partner ${partner.id}, EF path skipped` });
+        }
+      } catch (authErr) {
+        log({ level: "warn", phase: "create", step: "get_partner_token", message: `Failed to get partner token: ${String(authErr)}` });
       }
-      locationId = newLocId;
     }
 
-    const partyId = crypto.randomUUID();
-    const { error: partyErr } = await supabase.from("parties").insert({
-      id: partyId,
-      partner_id: partner.id,
-      location_id: locationId,
-      title: scenario.title,
-      description: { ops: [{ insert: "[E2E] 시뮬레이션 테스트 파티입니다.\n" }] },
-      image_urls: [],
-      required_verification_ids: [],
-      min_confirmed_count: 4,
-      max_participants: 20,
-      status: "active",
-      metadata: { show_participant_list: true, visibility: "public" },
-    });
-    if (partyErr) {
-      log({ level: "error", phase: "create", step: "create_party", message: `Failed: ${partyErr.message}` });
-      continue;
+    // ── Step 2: Create party ──────────────────────────────────────────────────
+    let partyId: string | null = null;
+
+    if (supabaseUrl && anonKey && partnerToken) {
+      try {
+        const efResult = await callEdgeFunction(supabaseUrl, "partner-manage-party", {
+          action: "create",
+          partner_id: partner.id,
+          party: {
+            title: scenario.title,
+            description: { ops: [{ insert: "[E2E] 시뮬레이션 테스트 파티입니다.\n" }] },
+            image_urls: [],
+            required_verification_ids: [],
+            min_confirmed_count: 4,
+            max_participants: 20,
+            status: "active",
+            metadata: { show_participant_list: true, visibility: "public" },
+          },
+          ...(locationId_existing
+            ? { location_id: locationId_existing }
+            : {
+                location: {
+                  name: "[E2E] 테스트 장소",
+                  address: "서울특별시 강남구 역삼동",
+                  region_1: "서울",
+                  region_2: "강남구",
+                },
+              }),
+          entry_group_templates: [
+            { label: "남성", gender: "male", birth_year_min: scenario.birthYearMin, birth_year_max: scenario.birthYearMax },
+            { label: "여성", gender: "female", birth_year_min: scenario.birthYearMin, birth_year_max: scenario.birthYearMax },
+          ],
+          ticket_templates: [
+            { name: "일반", price: 20000, quantity: 10 },
+          ],
+        }, partnerToken);
+
+        const efData = efResult.data as { success?: boolean; party_id?: string } | null;
+        if (efResult.status === 200 && efData?.success && efData?.party_id) {
+          partyId = efData.party_id;
+          log({ level: "info", phase: "create", step: "ef_create_party", message: `EF created party: ${scenario.title}`, data: { partyId } });
+        } else {
+          const errMsg = `EF partner-manage-party returned status=${efResult.status}`;
+          if (strict) throw new Error(errMsg);
+          log({ level: "warn", phase: "create", step: "ef_create_party", message: `${errMsg}, falling back to direct DB` });
+        }
+      } catch (efErr) {
+        if (strict) throw efErr;
+        log({ level: "warn", phase: "create", step: "ef_create_party", message: `EF partner-manage-party threw: ${String(efErr)}, falling back to direct DB` });
+      }
     }
-    partyIds.push(partyId);
+
+    // Fallback: direct DB insert (when EF not available or EF failed in non-strict mode)
+    if (!partyId) {
+      // Ensure location exists for direct DB path
+      let locationId: string;
+      if (locationId_existing) {
+        locationId = locationId_existing;
+      } else {
+        const newLocId = crypto.randomUUID();
+        const { error: locErr } = await supabase.from("locations").insert({
+          id: newLocId,
+          partner_id: partner.id,
+          name: "[E2E] 테스트 장소",
+          address: "서울특별시 강남구 역삼동",
+          region_1: "서울",
+          region_2: "강남구",
+        });
+        if (locErr) {
+          log({ level: "error", phase: "create", step: "create_location", message: `Failed: ${locErr.message}` });
+          continue;
+        }
+        locationId = newLocId;
+      }
+
+      const directPartyId = crypto.randomUUID();
+      const { error: partyErr } = await supabase.from("parties").insert({
+        id: directPartyId,
+        partner_id: partner.id,
+        location_id: locationId,
+        title: scenario.title,
+        description: { ops: [{ insert: "[E2E] 시뮬레이션 테스트 파티입니다.\n" }] },
+        image_urls: [],
+        required_verification_ids: [],
+        min_confirmed_count: 4,
+        max_participants: 20,
+        status: "active",
+        metadata: { show_participant_list: true, visibility: "public" },
+      });
+      if (partyErr) {
+        log({ level: "error", phase: "create", step: "create_party", message: `Failed: ${partyErr.message}` });
+        continue;
+      }
+      partyId = directPartyId;
+
+      // For direct DB path: create entry groups and ticket templates on the party level
+      // (events will also get entry_groups + tickets created inline below)
+    }
+
+    // At this point partyId is always set: EF success sets it, fallback continues on error
+    partyIds.push(partyId!);
+
+    // ── Step 3: Create events ─────────────────────────────────────────────────
+
+    // Fetch ticket_templates created by the EF (needed for event EF payload)
+    let ticketTemplates: { id: string; name: string }[] = [];
+    if (supabaseUrl && anonKey && partnerToken) {
+      const { data: templates } = await supabase
+        .from("ticket_templates")
+        .select("id, name")
+        .eq("party_id", partyId!);
+      ticketTemplates = (templates ?? []) as { id: string; name: string }[];
+    }
 
     for (let ei = 0; ei < config.events_per_party; ei++) {
       const now = new Date();
       const startTime = new Date(now.getTime() + START_TIME_OFFSETS_MS[ei % 4]);
       const endTime = new Date(startTime.getTime() + 3 * 60 * 60 * 1000);
 
-      const eventId = crypto.randomUUID();
-      const { error: evErr } = await supabase.from("events").insert({
-        id: eventId,
-        party_id: partyId,
-        location_id: locationId,
-        start_time: startTime.toISOString(),
-        end_time: endTime.toISOString(),
-        min_confirmed_count: 4,
-        max_participants: 20,
-        status: "scheduled",
-        metadata: { show_participant_list: true, visibility: "public" },
-      });
-      if (evErr) {
-        log({ level: "error", phase: "create", step: "create_event", message: `Failed: ${evErr.message}` });
-        continue;
-      }
-      eventIds.push(eventId);
+      let eventId: string | null = null;
 
-      const maleGroupId = crypto.randomUUID();
-      const femaleGroupId = crypto.randomUUID();
+      if (supabaseUrl && anonKey && partnerToken) {
+        try {
+          const efResult = await callEdgeFunction(supabaseUrl, "partner-manage-event", {
+            action: "create",
+            party_id: partyId,
+            event: {
+              start_time: startTime.toISOString(),
+              end_time: endTime.toISOString(),
+              max_participants: 20,
+              title: `${scenario.title} #${ei + 1}`,
+            },
+            tickets: ticketTemplates.map((t) => ({
+              template_id: t.id,
+              quantity: 10,
+            })),
+          }, partnerToken);
 
-      const { error: maleGroupErr } = await supabase.from("entry_groups").insert({
-        id: maleGroupId,
-        event_id: eventId, label: "남성", gender: "male",
-        birth_year_min: scenario.birthYearMin, birth_year_max: scenario.birthYearMax,
-        required_verification_ids: [],
-      });
-      if (maleGroupErr) {
-        log({ level: "warn", phase: "create", step: "create_entry_group", message: `Failed to create male entry_group: ${maleGroupErr.message}` });
-      }
-
-      const { error: femaleGroupErr } = await supabase.from("entry_groups").insert({
-        id: femaleGroupId,
-        event_id: eventId, label: "여성", gender: "female",
-        birth_year_min: scenario.birthYearMin, birth_year_max: scenario.birthYearMax,
-        required_verification_ids: [],
-      });
-      if (femaleGroupErr) {
-        log({ level: "warn", phase: "create", step: "create_entry_group", message: `Failed to create female entry_group: ${femaleGroupErr.message}` });
+          const efData = efResult.data as { success?: boolean; event_id?: string } | null;
+          if (efResult.status === 200 && efData?.success && efData?.event_id) {
+            eventId = efData.event_id;
+            log({ level: "info", phase: "create", step: "ef_create_event", message: `EF created event ${ei + 1} for party ${partyId}`, data: { eventId } });
+          } else {
+            const errMsg = `EF partner-manage-event returned status=${efResult.status}`;
+            if (strict) throw new Error(errMsg);
+            log({ level: "warn", phase: "create", step: "ef_create_event", message: `${errMsg}, falling back to direct DB` });
+          }
+        } catch (efErr) {
+          if (strict) throw efErr;
+          log({ level: "warn", phase: "create", step: "ef_create_event", message: `EF partner-manage-event threw: ${String(efErr)}, falling back to direct DB` });
+        }
       }
 
-      const { error: ticketErr } = await supabase.from("tickets").insert({
-        id: crypto.randomUUID(),
-        event_id: eventId,
-        name: "[E2E] 일반 티켓",
-        price: 20000,
-        quantity: 10,
-        target_entry_group_ids: [maleGroupId, femaleGroupId],
-        status: "on_sale",
-      });
-      if (ticketErr) {
-        log({ level: "warn", phase: "create", step: "create_ticket", message: `Failed to create ticket: ${ticketErr.message}` });
+      // Fallback: direct DB insert for event + entry_groups + tickets
+      if (!eventId) {
+        // Resolve locationId for direct event insert (use existing or the one set in party fallback)
+        const { data: partyRow } = await supabase
+          .from("parties")
+          .select("location_id")
+          .eq("id", partyId)
+          .maybeSingle();
+        const directLocationId = (partyRow as { location_id?: string } | null)?.location_id ?? locationId_existing ?? "";
+
+        const directEventId = crypto.randomUUID();
+        const { error: evErr } = await supabase.from("events").insert({
+          id: directEventId,
+          party_id: partyId,
+          location_id: directLocationId,
+          start_time: startTime.toISOString(),
+          end_time: endTime.toISOString(),
+          min_confirmed_count: 4,
+          max_participants: 20,
+          status: "scheduled",
+          metadata: { show_participant_list: true, visibility: "public" },
+        });
+        if (evErr) {
+          log({ level: "error", phase: "create", step: "create_event", message: `Failed: ${evErr.message}` });
+          continue;
+        }
+        eventId = directEventId;
+
+        const maleGroupId = crypto.randomUUID();
+        const femaleGroupId = crypto.randomUUID();
+
+        const { error: maleGroupErr } = await supabase.from("entry_groups").insert({
+          id: maleGroupId,
+          event_id: eventId, label: "남성", gender: "male",
+          birth_year_min: scenario.birthYearMin, birth_year_max: scenario.birthYearMax,
+          required_verification_ids: [],
+        });
+        if (maleGroupErr) {
+          log({ level: "warn", phase: "create", step: "create_entry_group", message: `Failed to create male entry_group: ${maleGroupErr.message}` });
+        }
+
+        const { error: femaleGroupErr } = await supabase.from("entry_groups").insert({
+          id: femaleGroupId,
+          event_id: eventId, label: "여성", gender: "female",
+          birth_year_min: scenario.birthYearMin, birth_year_max: scenario.birthYearMax,
+          required_verification_ids: [],
+        });
+        if (femaleGroupErr) {
+          log({ level: "warn", phase: "create", step: "create_entry_group", message: `Failed to create female entry_group: ${femaleGroupErr.message}` });
+        }
+
+        const { error: ticketErr } = await supabase.from("tickets").insert({
+          id: crypto.randomUUID(),
+          event_id: eventId,
+          name: "[E2E] 일반 티켓",
+          price: 20000,
+          quantity: 10,
+          target_entry_group_ids: [maleGroupId, femaleGroupId],
+          status: "on_sale",
+        });
+        if (ticketErr) {
+          log({ level: "warn", phase: "create", step: "create_ticket", message: `Failed to create ticket: ${ticketErr.message}` });
+        }
       }
+
+      // At this point eventId is always set: EF success sets it, fallback continues on error
+      eventIds.push(eventId!);
     }
 
     log({ level: "info", phase: "create", step: "party_created", message: `Created: ${scenario.title}`, data: { partyId } });
