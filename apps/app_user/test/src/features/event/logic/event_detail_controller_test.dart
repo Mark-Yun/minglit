@@ -46,8 +46,9 @@ void main() {
     // pattern. Simplified to direct future assertion without subscription.
     test('throws exception when repository fails', () async {
       final exception = Exception('Network Error');
-      when(() => mockEventRepo.getEventById('event_1'))
-          .thenAnswer((_) async => throw exception);
+      when(
+        () => mockEventRepo.getEventById('event_1'),
+      ).thenAnswer((_) async => throw exception);
 
       final container = createContainer(
         overrides: [
