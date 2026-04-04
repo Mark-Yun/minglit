@@ -3,9 +3,10 @@ import 'package:minglit_kit/src/features/dev/catalog_tabs/catalog_tabs.dart';
 
 /// Dev-only design catalog page displaying all design tokens and components.
 ///
-/// Organized into two sections:
+/// Organized into three sections:
 /// - **Tokens** (6 tabs): design foundation values
 /// - **Widgets** (8 tabs): reusable Minglit components
+/// - **Patterns** (1 tab): composited design patterns
 ///
 /// Shared between user and partner apps. Only accessible when
 /// `ENVIRONMENT` is `development` or `local`.
@@ -16,8 +17,8 @@ class DesignCatalogPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      // Fix #621: 16탭 → 14탭 (토큰 6 + 위젯 8) 재구성
-      length: 14,
+      // Fix #621: 16탭 → 14탭 (토큰 6 + 위젯 8) 재구성; #713: +1 패턴 탭
+      length: 15,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Design Catalog'),
@@ -41,6 +42,8 @@ class DesignCatalogPage extends StatelessWidget {
               Tab(text: 'Overlay'),
               Tab(text: 'Data'),
               Tab(text: 'Loading'),
+              // Patterns (1)
+              Tab(text: 'Patterns'),
             ],
           ),
         ),
@@ -62,6 +65,8 @@ class DesignCatalogPage extends StatelessWidget {
             OverlaySection(),
             DataSection(),
             LoadingSection(),
+            // Patterns (1)
+            PatternListSection(),
           ],
         ),
       ),
