@@ -62,7 +62,7 @@ void main() {
     expect(find.text('마케팅 정보 수신 동의'), findsOneWidget);
 
     final cta = tester.widget<ElevatedButton>(
-      find.widgetWithText(ElevatedButton, '다 같이 시작하기'),
+      find.widgetWithText(ElevatedButton, '동의하고 시작하기'),
     );
     expect(cta.onPressed, isNull);
   });
@@ -77,7 +77,7 @@ void main() {
     expect(checkboxes.every((checkbox) => checkbox.value ?? false), isTrue);
 
     final cta = tester.widget<ElevatedButton>(
-      find.widgetWithText(ElevatedButton, '다 같이 시작하기'),
+      find.widgetWithText(ElevatedButton, '동의하고 시작하기'),
     );
     expect(cta.onPressed, isNotNull);
   });
@@ -93,7 +93,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final cta = tester.widget<ElevatedButton>(
-      find.widgetWithText(ElevatedButton, '다 같이 시작하기'),
+      find.widgetWithText(ElevatedButton, '동의하고 시작하기'),
     );
     expect(cta.onPressed, isNotNull);
   });
@@ -101,7 +101,8 @@ void main() {
   testWidgets('보기 버튼을 누르면 약관 상세 바텀시트가 열린다', (tester) async {
     await pumpPage(tester);
 
-    await tester.tap(find.widgetWithText(TextButton, '보기').first);
+    // Fix #966: TextButton('보기') → GestureDetector(Text('보기'))로 변경됨
+    await tester.tap(find.text('보기').first);
     await tester.pumpAndSettle();
 
     expect(find.text('이용자 보호'), findsOneWidget);
@@ -117,7 +118,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('만 14세 이상 확인'));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(ElevatedButton, '다 같이 시작하기'));
+    await tester.tap(find.widgetWithText(ElevatedButton, '동의하고 시작하기'));
     await tester.pumpAndSettle();
 
     final captured =

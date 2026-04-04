@@ -50,8 +50,9 @@ Deno.serve(withHandler(async (req) => {
       return errorResponse("이벤트를 찾을 수 없습니다.", 404);
     }
 
-    if (event.status !== "scheduled") {
-      return errorResponse("이벤트가 마감되었습니다.", 400, { code: "EVENT_NOT_SCHEDULED" });
+    // Fix #998: active 상태 이벤트도 신청 허용 (apply_event RPC가 scheduled/active 모두 허용)
+    if (event.status !== "scheduled" && event.status !== "active") {
+      return errorResponse("이벤트가 마감되었습니다.", 400, { code: "EVENT_CLOSED" });
     }
 
     if (new Date(event.start_time) <= new Date()) {

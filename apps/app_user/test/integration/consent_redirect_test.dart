@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:app_user/src/features/auth/login_page.dart';
+import 'package:app_user/src/features/consent/logic/consent_coordinator.dart';
 import 'package:app_user/src/features/consent/ui/signup_consent_page.dart';
+import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/features/home/my_page.dart';
 import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:app_user/src/routing/app_router.dart';
@@ -156,6 +158,49 @@ void main() {
 
       expect(find.byType(MyPage), findsOneWidget);
       expect(find.byType(SignupConsentPage), findsNothing);
+    });
+
+    // Fix #970: consent 완료 후 /my에서 back 버튼으로 앱이 종료되던 버그 재발 방지.
+    // completeSignup()이 go(/)→push(destination) 패턴을 써야 back stack이 보존된다.
+    testWidgets('동의 완료 후 /my에서 back 버튼을 누르면 앱 종료 대신 홈(/)으로 이동한다', (
+      tester,
+    ) async {
+      setKoreanLocale(tester);
+      when(
+        () => mockConsentRepository.hasRequiredConsents(),
+      ).thenAnswer((_) async => true);
+
+      await pumpRouterApp(
+        tester,
+        currentUser: user,
+        initialLocation: '/',
+        consentRepository: mockConsentRepository,
+      );
+
+      expect(find.byType(HomePage), findsOneWidget);
+
+      // ConsentCoordinator가 completeSignup(from: '/my')를 호출하는 상황을 재현:
+      // go('/')로 홈을 스택 바닥에 anchor한 뒤 push('/my')로 목적지로 이동한다.
+      final context = tester.element(find.byType(_RouterTestApp));
+      final router = ProviderScope.containerOf(context).read(goRouterProvider);
+      ConsentCoordinator(router).completeSignup(from: '/my');
+
+      await tester.pumpAndSettle();
+
+      // /my에 도착했는지 확인
+      expect(find.byType(MyPage), findsOneWidget);
+      expect(find.byType(HomePage), findsNothing);
+
+      // Fix #970: back stack에 /가 있으므로 canPop()이 true여야 한다.
+      // (이전 버그: go('/my')가 전체 스택을 교체해서 canPop() == false → 앱 종료)
+      expect(router.canPop(), isTrue);
+
+      // 실제로 pop해서 홈으로 돌아오는지 확인
+      router.pop();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(HomePage), findsOneWidget);
+      expect(find.byType(MyPage), findsNothing);
     });
   });
 }

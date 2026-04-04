@@ -235,62 +235,78 @@ class _ParticipantDDayOverlay extends StatelessWidget {
       fontWeight: FontWeight.w400,
     );
 
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: MinglitSpacing.small,
-        vertical: MinglitSpacing.xsmall,
-      ),
-      decoration: BoxDecoration(
-        color: MinglitColors.textPrimary.withValues(
-          alpha: MinglitOpacity.overlay,
+    // Fix #996: Semantics 래퍼로 스크린 리더 접근성 지원
+    return Semantics(
+      label: ratio >= 1.0 ? '이벤트 만석, 참여 불가' : '참가자 $current/$max명, $dDayLabel',
+      excludeSemantics: true,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.small,
+          vertical: MinglitSpacing.xsmall,
         ),
-        borderRadius: BorderRadius.circular(MinglitRadius.small),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(
-            Icons.person,
-            size: 13,
-            color: MinglitColors.background,
+        decoration: BoxDecoration(
+          color: MinglitColors.textPrimary.withValues(
+            alpha: MinglitOpacity.overlay,
           ),
-          const SizedBox(width: 3),
-          // 3-segment battery gauge
-          for (var i = 0; i < 3; i++) ...[
-            if (i > 0) const SizedBox(width: MinglitSpacing.xxsmall),
-            Container(
-              width: 10,
-              height: 8,
-              decoration: BoxDecoration(
-                color: i < filledCount
-                    ? segmentColor
-                    : MinglitColors.background.withValues(
-                        alpha: MinglitOpacity.subtle,
-                      ),
-                borderRadius: BorderRadius.circular(2),
+          borderRadius: BorderRadius.circular(MinglitRadius.small),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.person,
+              size: 13,
+              color: MinglitColors.background,
+            ),
+            const SizedBox(width: 3),
+            // 3-segment battery gauge
+            for (var i = 0; i < 3; i++) ...[
+              if (i > 0) const SizedBox(width: MinglitSpacing.xxsmall),
+              Container(
+                width: 10,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: i < filledCount
+                      ? segmentColor
+                      : MinglitColors.background.withValues(
+                          alpha: MinglitOpacity.subtle,
+                        ),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ],
+            const SizedBox(width: MinglitSpacing.xsmall2),
+            Text('$current/$max', style: overlayStyle),
+            // Fix #996: ratio >= 1.0일 때 만석 텍스트 표시
+            if (ratio >= 1.0) ...[
+              const SizedBox(width: MinglitSpacing.xsmall),
+              Text(
+                '만석',
+                style: overlayStyle.copyWith(
+                  color: MinglitColors.secondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+            const SizedBox(width: MinglitSpacing.xsmall),
+            Text(
+              '·',
+              style: overlayStyle.copyWith(
+                color: MinglitColors.background.withValues(
+                  alpha: MinglitOpacity.separator,
+                ),
               ),
             ),
+            const SizedBox(width: MinglitSpacing.xsmall),
+            const Icon(
+              Icons.calendar_today,
+              size: 13,
+              color: MinglitColors.background,
+            ),
+            const SizedBox(width: 3),
+            Text(dDayLabel, style: overlayStyle),
           ],
-          const SizedBox(width: MinglitSpacing.xsmall2),
-          Text('$current/$max', style: overlayStyle),
-          const SizedBox(width: MinglitSpacing.xsmall),
-          Text(
-            '·',
-            style: overlayStyle.copyWith(
-              color: MinglitColors.background.withValues(
-                alpha: MinglitOpacity.separator,
-              ),
-            ),
-          ),
-          const SizedBox(width: MinglitSpacing.xsmall),
-          const Icon(
-            Icons.calendar_today,
-            size: 13,
-            color: MinglitColors.background,
-          ),
-          const SizedBox(width: 3),
-          Text(dDayLabel, style: overlayStyle),
-        ],
+        ),
       ),
     );
   }
