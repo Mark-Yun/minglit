@@ -131,6 +131,9 @@ class MinglitRadius {
   /// 12px input border radius.
   static const double input = 12;
 
+  /// 4px badge border radius.
+  static const double badge = 4;
+
   /// 100px chip border radius (fully rounded).
   static const double chip = 100;
 }
@@ -201,6 +204,12 @@ class MinglitAnimation {
 class MinglitOpacity {
   /// 5% opacity — tint fill, selected card background.
   static const double tintFill = 0.05;
+
+  /// 8% opacity — active chip/tag background.
+  static const double activeChip = 0.08;
+
+  /// 10% opacity — event phase status indicator background (recruiting/preparing/live).
+  static const double highlight = 0.1;
 
   /// 15% opacity — avatar placeholder background.
   static const double placeholder = 0.15;
