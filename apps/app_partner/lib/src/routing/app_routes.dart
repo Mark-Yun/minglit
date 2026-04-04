@@ -380,8 +380,11 @@ class SettlementDetailRoute extends GoRouteData with $SettlementDetailRoute {
   const SettlementDetailRoute({required this.id});
   final String id;
   @override
-  Widget build(BuildContext context, GoRouterState state) =>
-      SettlementDetailPage(itemId: id);
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MinglitPageTransitions.sharedAxisScaled(
+        key: state.pageKey,
+        child: SettlementDetailPage(itemId: id),
+      );
 }
 
 class BankAccountRoute extends GoRouteData with $BankAccountRoute {
