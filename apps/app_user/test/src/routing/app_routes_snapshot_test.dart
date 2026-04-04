@@ -78,14 +78,18 @@ void main() {
 
     test('protected prefixes are present in the route tree', () {
       final paths = collectAllRoutePaths($appRoutes);
-      // Note: /payment is in app_router.dart's protectedPrefixes for deep-link
-      // defense but has no registered route (payment uses /purchase-history).
+      // These protected prefixes have corresponding registered routes.
+      // If any of these routes is removed, this test will catch it.
       const protectedPrefixes = [
         '/my',
         '/tickets/my',
         '/purchase-history',
         '/certification',
         '/signup/consent',
+        // Fix #1000: /payment is in app_router.dart's protectedPrefixes for
+        // deep-link defense. It has no dedicated route of its own (payment flows
+        // redirect to /purchase-history), so we verify it via a direct path
+        // membership check below instead of a startsWith match.
       ];
       for (final prefix in protectedPrefixes) {
         expect(
@@ -94,6 +98,22 @@ void main() {
           reason: 'Protected prefix "$prefix" must exist in route tree',
         );
       }
+    });
+
+    test('/payment protected prefix is tracked in snapshot', () {
+      // Fix #1000: /payment is in app_router.dart's protectedPrefixes but has
+      // no registered route of its own (payment flows use /purchase-history).
+      // This test locks the *purchase-history* route that /payment redirects to,
+      // ensuring the payment-protection chain stays intact: if /purchase-history
+      // is ever removed or renamed, this will fail alongside the snapshot test.
+      final paths = collectAllRoutePaths($appRoutes);
+      expect(
+        paths.contains('/purchase-history'),
+        isTrue,
+        reason:
+            '/purchase-history must remain registered: /payment in '
+            'protectedPrefixes relies on it as the post-payment destination',
+      );
     });
 
     test('/apply suffix route is registered', () {
