@@ -172,7 +172,7 @@ P3 (선택):  WeeklyStatsRow 3건 + 온보딩 골든 2건 + 신청 골든 2건 =
 
 ## 참고
 
-- 테스트 패턴: `docs/qa/AUTOMATION_TEST_GUIDE.md`
+- 테스트 패턴: `docs/qa/automation-test-guide.md`
 - Mock 유틸: `minglit_kit/test/helpers/supabase_mock_helpers.dart`
 - Golden 헬퍼: `app_partner/test/utils/partner_golden_test_helpers.dart`
 - EF 테스트 유틸: `supabase/functions/_test_utils/mock_http.ts`
