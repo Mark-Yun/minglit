@@ -252,6 +252,10 @@ RouteBase get $partnerShellRoute => StatefulShellRouteData.$route(
                       factory: $EventCreateRoute._fromState,
                     ),
                     GoRouteData.$route(
+                      path: 'recurrence',
+                      factory: $RecurrenceManagementRoute._fromState,
+                    ),
+                    GoRouteData.$route(
                       path: 'events/:eventId',
                       factory: $EventDetailRoute._fromState,
                       routes: [
@@ -659,6 +663,31 @@ mixin $EventCreateRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
+mixin $RecurrenceManagementRoute on GoRouteData {
+  static RecurrenceManagementRoute _fromState(GoRouterState state) =>
+      RecurrenceManagementRoute(partyId: state.pathParameters['partyId']!);
+
+  RecurrenceManagementRoute get _self => this as RecurrenceManagementRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/more/parties/${Uri.encodeComponent(_self.partyId)}/recurrence',
+  );
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
 mixin $EventDetailRoute on GoRouteData {
   static EventDetailRoute _fromState(GoRouterState state) => EventDetailRoute(
     partyId: state.pathParameters['partyId']!,
@@ -833,9 +862,8 @@ mixin $DeletionReasonRoute on GoRouteData {
 }
 
 mixin $DeletionInfoRoute on GoRouteData {
-  static DeletionInfoRoute _fromState(GoRouterState state) => DeletionInfoRoute(
-    reasonCode: state.uri.queryParameters['reason-code'],
-  );
+  static DeletionInfoRoute _fromState(GoRouterState state) =>
+      DeletionInfoRoute(reasonCode: state.uri.queryParameters['reason-code']);
 
   DeletionInfoRoute get _self => this as DeletionInfoRoute;
 
@@ -863,9 +891,7 @@ mixin $DeletionInfoRoute on GoRouteData {
 
 mixin $DeletionVerifyRoute on GoRouteData {
   static DeletionVerifyRoute _fromState(GoRouterState state) =>
-      DeletionVerifyRoute(
-        reasonCode: state.uri.queryParameters['reason-code'],
-      );
+      DeletionVerifyRoute(reasonCode: state.uri.queryParameters['reason-code']);
 
   DeletionVerifyRoute get _self => this as DeletionVerifyRoute;
 
