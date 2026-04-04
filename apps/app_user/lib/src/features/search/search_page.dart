@@ -79,23 +79,58 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       body: Builder(
         builder: (context) {
           if (query.isEmpty) {
+            // Fix #997: 검색 초기 상태에 키워드 제안 추가
+            const suggestedKeywords = ['파티', '클래스', '스포츠', '아트'];
             return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.search,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                  ),
-                  const SizedBox(height: MinglitSpacing.medium),
-                  Text(
-                    '검색어를 입력하세요',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+              child: Padding(
+                padding: const EdgeInsets.all(MinglitSpacing.xlarge),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.search,
+                      size: 64,
+                      color: Theme.of(context).colorScheme.outlineVariant,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: MinglitSpacing.medium),
+                    Text(
+                      '검색어를 입력하세요',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: MinglitSpacing.large),
+                    Text(
+                      '이런 키워드는 어때요?',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: MinglitSpacing.small),
+                    Wrap(
+                      spacing: MinglitSpacing.small,
+                      runSpacing: MinglitSpacing.xsmall,
+                      alignment: WrapAlignment.center,
+                      children: suggestedKeywords
+                          .map(
+                            (keyword) => ActionChip(
+                              label: Text(keyword),
+                              onPressed: () {
+                                _debounce?.cancel();
+                                _controller.text = keyword;
+                                _controller.selection = TextSelection.collapsed(
+                                  offset: keyword.length,
+                                );
+                                ref
+                                    .read(searchQueryProvider.notifier)
+                                    .update(keyword);
+                              },
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ],
+                ),
               ),
             );
           }
@@ -104,11 +139,43 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             value: searchAsync,
             data: (events) {
               if (events.isEmpty) {
+                // Fix #997: 검색 결과 없음 상태 메시지 개선 — 아이콘 + 안내 문구 추가
                 return Center(
-                  child: Text(
-                    '"$query" 검색 결과가 없습니다',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  child: Padding(
+                    padding: const EdgeInsets.all(MinglitSpacing.xlarge),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.search_off_outlined,
+                          size: 64,
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                        ),
+                        const SizedBox(height: MinglitSpacing.medium),
+                        Text(
+                          '검색 결과가 없습니다.',
+                          style:
+                              Theme.of(
+                                context,
+                              ).textTheme.titleMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: MinglitSpacing.small),
+                        Text(
+                          '다른 키워드로 시도해보세요.',
+                          style:
+                              Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
                   ),
                 );
