@@ -59,8 +59,13 @@ class PartnerGoldenPageWrapper extends StatelessWidget {
   }
 }
 
+bool _webViewShimInitialized = false;
+
 void _ensureGoldenPluginShims() {
-  WebViewPlatform.instance = _FakeWebViewPlatform();
+  if (!_webViewShimInitialized) {
+    WebViewPlatform.instance = _FakeWebViewPlatform();
+    _webViewShimInitialized = true;
+  }
 }
 
 // ---------------------------------------------------------------------------
