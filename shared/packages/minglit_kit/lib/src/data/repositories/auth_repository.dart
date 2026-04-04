@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
@@ -81,15 +82,25 @@ class AuthRepository {
   final String? _defaultRedirectUrl;
   final String? _mobileRedirectScheme;
 
-  bool _googleSignInInitialized = false;
+  // Fix #959: Use Completer pattern to prevent async race condition where
+  // concurrent callers could invoke GoogleSignIn.instance.initialize() twice.
+  Completer<void>? _googleSignInInitCompleter;
 
   Future<void> _ensureGoogleSignInInitialized() async {
-    if (_googleSignInInitialized) return;
-    await GoogleSignIn.instance.initialize(
-      clientId: kIsWeb ? _webClientId : null,
-      serverClientId: kIsWeb ? null : _webClientId,
-    );
-    _googleSignInInitialized = true;
+    if (_googleSignInInitCompleter != null) {
+      return _googleSignInInitCompleter!.future;
+    }
+    _googleSignInInitCompleter = Completer<void>();
+    try {
+      await GoogleSignIn.instance.initialize(
+        clientId: kIsWeb ? _webClientId : null,
+        serverClientId: kIsWeb ? null : _webClientId,
+      );
+      _googleSignInInitCompleter!.complete();
+    } catch (e) {
+      _googleSignInInitCompleter = null;
+      rethrow;
+    }
   }
 
   /// Returns the current logged-in user.
@@ -243,7 +254,7 @@ class AuthRepository {
   Future<void> signOut() async {
     try {
       final futures = <Future<void>>[_supabase.auth.signOut()];
-      if (_googleSignInInitialized) {
+      if (_googleSignInInitCompleter != null) {
         futures.add(GoogleSignIn.instance.signOut());
       }
       await Future.wait(futures);
