@@ -248,7 +248,7 @@ class _CountBadge extends StatelessWidget {
       child: Text(
         '$count',
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.onPrimary,
           fontWeight: FontWeight.bold,
         ),
       ),
