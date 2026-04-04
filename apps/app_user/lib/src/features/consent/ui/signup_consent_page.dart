@@ -106,8 +106,9 @@ class _SignupConsentPageState extends ConsumerState<SignupConsentPage> {
                               in _consentDefinitions.values) ...[
                             _ConsentItemTile(
                               definition: definition,
-                              selected: _selectedConsents
-                                  .contains(definition.type),
+                              selected: _selectedConsents.contains(
+                                definition.type,
+                              ),
                               onChanged: (selected) =>
                                   _toggleSingle(definition.type, selected),
                               onShowDetail: definition.detail == null
