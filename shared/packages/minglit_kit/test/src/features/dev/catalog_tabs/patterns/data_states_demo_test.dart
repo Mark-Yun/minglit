@@ -14,12 +14,15 @@ void main() {
     });
 
     test('contains data, loading, error, empty', () {
-      expect(DemoState.values, containsAll([
-        DemoState.data,
-        DemoState.loading,
-        DemoState.error,
-        DemoState.empty,
-      ]));
+      expect(
+        DemoState.values,
+        containsAll([
+          DemoState.data,
+          DemoState.loading,
+          DemoState.error,
+          DemoState.empty,
+        ]),
+      );
     });
   });
 
@@ -53,8 +56,9 @@ void main() {
       expect(find.byType(MinglitSkeleton), findsWidgets);
     });
 
-    testWidgets('empty state renders icon, title, description and CTA button',
-        (tester) async {
+    testWidgets('empty state renders icon, title, description and CTA button', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const DataStatesDemoPage()));
       await tester.pump();
 
@@ -67,8 +71,9 @@ void main() {
       expect(find.text('항목 추가'), findsOneWidget);
     });
 
-    testWidgets('empty state icon is 32px (MinglitIconSize.xlarge)',
-        (tester) async {
+    testWidgets('empty state icon is 32px (MinglitIconSize.xlarge)', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const DataStatesDemoPage()));
       await tester.pump();
 
@@ -82,22 +87,25 @@ void main() {
       expect(iconWidget.size, 32.0);
     });
 
-    testWidgets('error state renders icon, title, description and retry button',
-        (tester) async {
-      await tester.pumpWidget(_wrap(const DataStatesDemoPage()));
-      await tester.pump();
+    testWidgets(
+      'error state renders icon, title, description and retry button',
+      (tester) async {
+        await tester.pumpWidget(_wrap(const DataStatesDemoPage()));
+        await tester.pump();
 
-      await tester.tap(find.text('오류'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('오류'));
+        await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.error_outline), findsOneWidget);
-      expect(find.text('오류가 발생했습니다'), findsOneWidget);
-      expect(find.text('데이터를 불러오지 못했습니다.'), findsOneWidget);
-      expect(find.text('다시 시도'), findsOneWidget);
-    });
+        expect(find.byIcon(Icons.error_outline), findsOneWidget);
+        expect(find.text('오류가 발생했습니다'), findsOneWidget);
+        expect(find.text('데이터를 불러오지 못했습니다.'), findsOneWidget);
+        expect(find.text('다시 시도'), findsOneWidget);
+      },
+    );
 
-    testWidgets('error state icon is 32px (MinglitIconSize.xlarge)',
-        (tester) async {
+    testWidgets('error state icon is 32px (MinglitIconSize.xlarge)', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const DataStatesDemoPage()));
       await tester.pump();
 
@@ -113,8 +121,9 @@ void main() {
   });
 
   group('DataStatesDemoPage — state transitions', () {
-    testWidgets('tapping CTA in empty state returns to data state',
-        (tester) async {
+    testWidgets('tapping CTA in empty state returns to data state', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const DataStatesDemoPage()));
       await tester.pump();
 
@@ -131,8 +140,9 @@ void main() {
       expect(find.text('서울 한강공원 피크닉'), findsOneWidget);
     });
 
-    testWidgets('tapping retry in error state returns to data state',
-        (tester) async {
+    testWidgets('tapping retry in error state returns to data state', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const DataStatesDemoPage()));
       await tester.pump();
 

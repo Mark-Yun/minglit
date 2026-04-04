@@ -84,11 +84,11 @@ class _DataStatesDemoPageState extends State<DataStatesDemoPage> {
       DemoState.data => const _DataContent(items: _mockItems),
       DemoState.loading => const _LoadingContent(),
       DemoState.error => _ErrorContent(
-          onRetry: () => setState(() => _state = DemoState.data),
-        ),
+        onRetry: () => setState(() => _state = DemoState.data),
+      ),
       DemoState.empty => _EmptyContent(
-          onAdd: () => setState(() => _state = DemoState.data),
-        ),
+        onAdd: () => setState(() => _state = DemoState.data),
+      ),
     };
   }
 }
@@ -144,8 +144,7 @@ class _DataContent extends StatelessWidget {
           margin: EdgeInsets.zero,
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor:
-                  MinglitColors.primary.withValues(alpha: 0.12),
+              backgroundColor: MinglitColors.primary.withValues(alpha: 0.12),
               child: Text(
                 '${index + 1}',
                 style: theme.textTheme.labelMedium?.copyWith(
