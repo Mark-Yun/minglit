@@ -39,10 +39,20 @@ class _MinglitSkeletonState extends State<MinglitSkeleton>
       duration: MinglitAnimation.slow * 2,
     );
     unawaited(_controller.repeat(reverse: true));
+    // _colorAnimation is initialized in didChangeDependencies() to access
+    // Theme.of(context) for brightness-aware colors (Fix #995).
+    _colorAnimation = _controller.drive(ColorTween());
+  }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Fix #995: use dark-mode tokens when in dark theme to meet WCAG AA contrast
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     _colorAnimation = ColorTween(
-      begin: MinglitColors.surface,
-      end: MinglitColors.textPrimary.withValues(alpha: 0.1),
+      begin: isDark ? MinglitColorsDark.surface : MinglitColors.surface,
+      end: (isDark ? MinglitColorsDark.textPrimary : MinglitColors.textPrimary)
+          .withValues(alpha: isDark ? 0.3 : 0.1),
     ).animate(_controller);
   }
 
