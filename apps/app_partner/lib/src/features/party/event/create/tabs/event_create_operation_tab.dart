@@ -2,6 +2,7 @@ import 'package:app_partner/src/features/party/event/create/event_create_control
 import 'package:app_partner/src/features/party/event/create/event_create_coordinator.dart';
 import 'package:app_partner/src/features/party/event/widgets/event_date_time_input.dart';
 import 'package:app_partner/src/features/party/ticket/widgets/party_tickets_summary.dart';
+import 'package:app_partner/src/features/party/ui/recurrence_settings_section.dart';
 import 'package:app_partner/src/ui/widgets/common/minglit_editable_section.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
@@ -40,6 +41,13 @@ class EventCreateOperationTab extends StatelessWidget {
               onEndTimeChanged: notifier.updateEndTime,
             ),
           ),
+          const SizedBox(height: MinglitSpacing.large),
+          // Fix #1037: 반복 설정 섹션 (일정 설정 → 반복 설정 → 티켓 순서)
+          Padding(
+            padding: const EdgeInsets.all(MinglitSpacing.medium),
+            child: _buildSectionHeader(context, '반복 설정'),
+          ),
+          const RecurrenceSettingsSection(),
           const SizedBox(height: MinglitSpacing.large),
           MinglitEditableSection(
             title: context.l10n.wizard_review_tickets,
