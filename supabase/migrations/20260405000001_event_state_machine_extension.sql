@@ -91,7 +91,8 @@ SELECT cron.schedule(
     UPDATE public.events
     SET status = 'active', updated_at = now()
     WHERE status = 'scheduled'
-      AND start_time - interval '30 minutes' <= now();
+      AND start_time - interval '30 minutes' <= now()
+      AND start_time > now();
   $$
 );
 

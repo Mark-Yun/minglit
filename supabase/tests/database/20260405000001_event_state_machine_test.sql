@@ -135,11 +135,14 @@ BEGIN
   VALUES (v_party_id, now() + interval '2 hours', now() + interval '4 hours', 0, 10, 'scheduled')
   RETURNING id INTO v_no_premature;
 
-  -- Run cron SQL: scheduled → active (start_time - 30 min reached)
+  -- Run cron SQL: scheduled → active (start_time - 30 min reached, not yet started)
+  -- Fix #998: added AND start_time > now() upper bound to prevent already-started events
+  -- from being set to active (they should go to ongoing instead)
   UPDATE public.events
   SET status = 'active'
   WHERE status = 'scheduled'
     AND start_time - interval '30 minutes' <= now()
+    AND start_time > now()
     AND id = v_sched_to_active;
 
   -- Run cron SQL: active → ongoing (start_time reached)
@@ -157,10 +160,12 @@ BEGIN
     AND id = v_ongoing_to_comp;
 
   -- Run activate cron SQL on the far-future event (should not transition)
+  -- Fix #998: added AND start_time > now() upper bound (matches production cron)
   UPDATE public.events
   SET status = 'active'
   WHERE status = 'scheduled'
     AND start_time - interval '30 minutes' <= now()
+    AND start_time > now()
     AND id = v_no_premature;
 
   INSERT INTO cron_transition_results (label, status)

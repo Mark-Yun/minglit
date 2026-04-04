@@ -271,7 +271,7 @@ Deno.test({ name: "user-create-order - nonexistent event returns 404", ...TEST_O
   });
 }});
 
-Deno.test({ name: "user-create-order - cancelled event returns EVENT_NOT_SCHEDULED", ...TEST_OPTS, fn: async () => {
+Deno.test({ name: "user-create-order - cancelled event returns EVENT_CLOSED", ...TEST_OPTS, fn: async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -289,7 +289,9 @@ Deno.test({ name: "user-create-order - cancelled event returns EVENT_NOT_SCHEDUL
         const payload = await readJson(response);
 
         assertEquals(response.status, 400);
-        assertEquals(payload.details.code, "EVENT_NOT_SCHEDULED");
+        // Fix #998: error code renamed from EVENT_NOT_SCHEDULED to EVENT_CLOSED
+        // (active events are now allowed; only non-schedulable statuses are closed)
+        assertEquals(payload.details.code, "EVENT_CLOSED");
       });
     });
   });
