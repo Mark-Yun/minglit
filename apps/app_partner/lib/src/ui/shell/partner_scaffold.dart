@@ -1,3 +1,4 @@
+import 'package:animations/animations.dart';
 import 'package:app_partner/src/ui/shell/partner_shell_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -43,7 +44,18 @@ class PartnerScaffold extends StatelessWidget {
     final showBottomNav = _shouldShowBottomNav(context);
 
     return Scaffold(
-      body: navigationShell,
+      body: PageTransitionSwitcher(
+        transitionBuilder: (child, animation, secondaryAnimation) =>
+            FadeThroughTransition(
+              animation: animation,
+              secondaryAnimation: secondaryAnimation,
+              child: child,
+            ),
+        child: KeyedSubtree(
+          key: ValueKey<int>(navigationShell.currentIndex),
+          child: navigationShell,
+        ),
+      ),
       bottomNavigationBar: showBottomNav
           ? NavigationBar(
               selectedIndex: _calculateSelectedIndex(),

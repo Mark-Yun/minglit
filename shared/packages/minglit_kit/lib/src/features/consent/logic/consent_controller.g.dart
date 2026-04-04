@@ -45,7 +45,7 @@ final class ConsentControllerProvider
   ConsentController create() => ConsentController();
 }
 
-String _$consentControllerHash() => r'b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0';
+String _$consentControllerHash() => r'70615141191d3e8dbd0e4d3f42ac539363bc79fe';
 
 /// Manages user consent state for the current user.
 ///
@@ -108,9 +108,8 @@ final class HasRequiredConsentsProvider
 
   @$internal
   @override
-  $FutureProviderElement<bool> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  $FutureProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<bool> create(Ref ref) {
@@ -119,4 +118,4 @@ final class HasRequiredConsentsProvider
 }
 
 String _$hasRequiredConsentsHash() =>
-    r'c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1';
+    r'b593e79e318c115f67f1d8aed79a70df7d0b29dc';

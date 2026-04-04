@@ -1,4 +1,5 @@
 import { SupabaseClient } from 'jsr:@supabase/supabase-js@2'
+import { nowUnix } from './temporal_utils.ts'
 
 export class WorkerUtils {
   constructor(private supabase: SupabaseClient, private queueName: string) {}
@@ -48,7 +49,8 @@ export class WorkerUtils {
    * Logs the time lag between event occurrence and processing.
    */
   logTimeLag(occurredAtUnix: number, traceId: string) {
-    const now = Math.floor(Date.now() / 1000);
+    // Fix #446: Date → Temporal API migration
+    const now = nowUnix();
     const lag = now - occurredAtUnix;
     console.log(`[${traceId}] Processed with Lag: ${lag}s`);
     if (lag > 10) {
