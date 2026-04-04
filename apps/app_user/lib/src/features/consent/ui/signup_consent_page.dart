@@ -62,8 +62,9 @@ class _SignupConsentPageState extends ConsumerState<SignupConsentPage> {
     return PopScope(
       canPop: false,
       child: Scaffold(
+        // Fix #966: CTA 레이블 "동의하고 시작하기"로 수정 (UX 리뷰 반영)
         bottomNavigationBar: MinglitBottomCTA(
-          label: '다 같이 시작하기',
+          label: '동의하고 시작하기',
           enabled: requiredSelected && !_isSubmitting,
           onPressed: requiredSelected && !_isSubmitting ? _submit : null,
         ),
@@ -91,36 +92,43 @@ class _SignupConsentPageState extends ConsumerState<SignupConsentPage> {
                       ),
                     ),
                     const SizedBox(height: MinglitSpacing.xlarge),
-                    Card(
-                      child: SwitchListTile(
-                        value: allSelected,
-                        onChanged: _toggleAll,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: MinglitSpacing.medium,
-                          vertical: MinglitSpacing.xsmall,
-                        ),
-                        title: const Text('전체 동의'),
-                        subtitle: const Text(
-                          '필수와 선택 약관을 한 번에 설정할 수 있어요.',
-                        ),
-                      ),
+                    // Fix #966: SwitchListTile → 원형 체크박스 + primary tint 배경
+                    _AllConsentTile(
+                      allSelected: allSelected,
+                      onToggle: _toggleAll,
                     ),
                     const SizedBox(height: MinglitSpacing.medium),
-                    for (final definition in _consentDefinitions.values) ...[
-                      _ConsentItemTile(
-                        definition: definition,
-                        selected: _selectedConsents.contains(definition.type),
-                        onChanged: (selected) =>
-                            _toggleSingle(definition.type, selected),
-                        onShowDetail: definition.detail == null
-                            ? null
-                            : () => showConsentDetailSheet(
-                                context,
-                                content: definition.detail!,
+                    // Fix #966: 개별 Card 제거 → 단일 Card 내 flat list
+                    Card(
+                      child: Column(
+                        children: [
+                          for (final definition
+                              in _consentDefinitions.values) ...[
+                            _ConsentItemTile(
+                              definition: definition,
+                              selected: _selectedConsents
+                                  .contains(definition.type),
+                              onChanged: (selected) =>
+                                  _toggleSingle(definition.type, selected),
+                              onShowDetail: definition.detail == null
+                                  ? null
+                                  : () => showConsentDetailSheet(
+                                      context,
+                                      content: definition.detail!,
+                                    ),
+                            ),
+                            // Fix #966: 필수/선택 구분선 (필수 마지막 항목 다음)
+                            if (definition.type ==
+                                ConsentType.requiredTypes.last)
+                              const Divider(
+                                height: 1,
+                                indent: MinglitSpacing.medium,
+                                endIndent: MinglitSpacing.medium,
                               ),
+                          ],
+                        ],
                       ),
-                      const SizedBox(height: MinglitSpacing.small),
-                    ],
+                    ),
                     const SizedBox(height: MinglitSpacing.small),
                     Text(
                       '선택 항목 미동의 시에도 서비스 이용이 가능합니다.',
@@ -204,6 +212,70 @@ class _SignupConsentPageState extends ConsumerState<SignupConsentPage> {
   }
 }
 
+/// Fix #966: "전체 동의" 섹션 — 원형 체크박스 + primary tint 배경.
+/// SwitchListTile의 switch 위젯이 디자인 언어와 맞지 않아 circular checkbox로 교체.
+class _AllConsentTile extends StatelessWidget {
+  const _AllConsentTile({
+    required this.allSelected,
+    required this.onToggle,
+  });
+
+  final bool allSelected;
+  final ValueChanged<bool> onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primaryTint = theme.colorScheme.primary.withValues(alpha: 0.06);
+
+    return Material(
+      color: primaryTint,
+      borderRadius: BorderRadius.circular(MinglitRadius.card),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(MinglitRadius.card),
+        onTap: () => onToggle(!allSelected),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: MinglitSpacing.medium,
+            vertical: MinglitSpacing.small,
+          ),
+          child: Row(
+            children: [
+              Checkbox(
+                value: allSelected,
+                shape: const CircleBorder(),
+                onChanged: (value) => onToggle(value ?? false),
+                activeColor: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: MinglitSpacing.xsmall),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '전체 동의',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      '필수와 선택 약관을 한 번에 설정할 수 있어요.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ConsentItemTile extends StatelessWidget {
   const _ConsentItemTile({
     required this.definition,
@@ -221,60 +293,60 @@ class _ConsentItemTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(MinglitRadius.card),
-        onTap: () => onChanged(!selected),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 72),
-          child: Padding(
-            padding: const EdgeInsets.all(MinglitSpacing.medium),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: MinglitSpacing.xsmall),
-                  child: Checkbox(
-                    value: selected,
-                    onChanged: (value) => onChanged(value ?? false),
-                  ),
-                ),
-                const SizedBox(width: MinglitSpacing.small),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          _ConsentTag(required: definition.required),
-                          const SizedBox(width: MinglitSpacing.xsmall),
-                          Expanded(
-                            child: Text(
-                              definition.title,
-                              style: theme.textTheme.titleSmall,
-                            ),
+    return InkWell(
+      onTap: () => onChanged(!selected),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: MinglitSpacing.medium,
+            vertical: MinglitSpacing.small,
+          ),
+          child: Row(
+            children: [
+              Checkbox(
+                value: selected,
+                onChanged: (value) => onChanged(value ?? false),
+                visualDensity: VisualDensity.compact,
+              ),
+              const SizedBox(width: MinglitSpacing.small),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        _ConsentTag(required: definition.required),
+                        const SizedBox(width: MinglitSpacing.xsmall),
+                        Expanded(
+                          child: Text(
+                            definition.title,
+                            style: theme.textTheme.bodyMedium,
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: MinglitSpacing.xsmall),
-                      Text(
-                        definition.summary,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
                         ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // Fix #966: TextButton('보기') → 인라인 '보기 ›' 텍스트
+              if (onShowDetail != null) ...[
+                const SizedBox(width: MinglitSpacing.xsmall),
+                GestureDetector(
+                  onTap: onShowDetail,
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.all(MinglitSpacing.xsmall),
+                    child: Text(
+                      '보기 ›',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
-                    ],
+                    ),
                   ),
                 ),
-                if (onShowDetail != null) ...[
-                  const SizedBox(width: MinglitSpacing.small),
-                  TextButton(
-                    onPressed: onShowDetail,
-                    child: const Text('보기'),
-                  ),
-                ],
               ],
-            ),
+            ],
           ),
         ),
       ),
