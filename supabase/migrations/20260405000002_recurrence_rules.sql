@@ -73,7 +73,7 @@ CREATE UNIQUE INDEX uq_recurrence_rules_party_active
 -- ============================================================
 
 ALTER TABLE public.events
-  ADD COLUMN recurrence_rule_id      uuid    REFERENCES public.recurrence_rules(id) ON DELETE SET NULL,
+  ADD COLUMN recurrence_rule_id      uuid    REFERENCES public.recurrence_rules(id) ON DELETE RESTRICT,
   ADD COLUMN is_recurrence_exception boolean NOT NULL DEFAULT false,
   -- recurrence_date: EF가 반복 규칙으로 이벤트 생성 시 명시적으로 설정하는 날짜 컬럼
   -- start_time::date 식 인덱스는 timestamptz에서 IMMUTABLE 제약 위반이므로 별도 컬럼 사용
@@ -89,7 +89,7 @@ ALTER TABLE public.events
 
 COMMENT ON CONSTRAINT chk_events_recurrence_fields ON public.events IS 'recurrence_rule_id와 recurrence_date는 함께 NULL이거나 함께 NOT NULL이어야 한다.';
 
-COMMENT ON COLUMN public.events.recurrence_rule_id IS '반복 규칙으로 생성된 이벤트의 원본 규칙 ID. 수동 생성 이벤트는 NULL.';
+COMMENT ON COLUMN public.events.recurrence_rule_id IS '반복 규칙으로 생성된 이벤트의 원본 규칙 ID. 수동 생성 이벤트는 NULL. 규칙 삭제 시 BEFORE DELETE 트리거가 recurrence_date와 함께 NULL 처리.';
 COMMENT ON COLUMN public.events.is_recurrence_exception IS '반복 규칙의 예외 이벤트 여부 (수동 수정된 회차)';
 COMMENT ON COLUMN public.events.recurrence_date IS '반복 규칙으로 생성된 이벤트의 날짜 (중복 방지용). NULL이면 단일 이벤트.';
 
@@ -187,6 +187,34 @@ GRANT SELECT ON public.recurrence_rules TO authenticated;
 CREATE TRIGGER handle_updated_at
   BEFORE UPDATE ON public.recurrence_rules
   FOR EACH ROW EXECUTE PROCEDURE moddatetime(updated_at);
+
+-- ============================================================
+-- Section 8-b: recurrence_rule 삭제 시 events 정리 트리거
+--
+-- FK는 ON DELETE RESTRICT로 선언해 직접 삭제를 차단한다.
+-- BEFORE DELETE 트리거가 recurrence_rule_id + recurrence_date를
+-- 함께 NULL로 처리한 뒤에야 FK 제약이 해소되어 삭제가 진행된다.
+-- 이를 통해 chk_events_recurrence_fields CHECK 제약도 항상 충족된다.
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.fn_clear_recurrence_date_on_rule_delete()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+  -- Fix #1033: ON DELETE SET NULL은 recurrence_rule_id만 NULL 처리하지만
+  -- chk_events_recurrence_fields는 두 컬럼이 함께 NULL일 것을 요구한다.
+  -- BEFORE DELETE 트리거에서 두 컬럼을 모두 NULL로 처리하고,
+  -- FK는 ON DELETE RESTRICT로 선언해 트리거 후 참조가 없는 상태로 만든다.
+  UPDATE public.events
+  SET recurrence_rule_id = NULL,
+      recurrence_date    = NULL
+  WHERE recurrence_rule_id = OLD.id;
+  RETURN OLD;
+END;
+$$;
+
+CREATE TRIGGER trg_clear_recurrence_date_on_rule_delete
+  BEFORE DELETE ON public.recurrence_rules
+  FOR EACH ROW EXECUTE PROCEDURE public.fn_clear_recurrence_date_on_rule_delete();
 
 -- ============================================================
 -- Section 9: pg_cron 등록 — 매일 UTC 00:00 recurrence-cron EF 호출
