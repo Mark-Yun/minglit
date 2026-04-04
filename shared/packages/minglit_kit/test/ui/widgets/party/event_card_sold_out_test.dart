@@ -40,7 +40,6 @@ void main() {
       createdAt: baseTime,
       updatedAt: baseTime,
       currentParticipants: 20,
-      maxParticipants: 20,
       party: party,
     );
 
@@ -60,7 +59,6 @@ void main() {
       createdAt: baseTime,
       updatedAt: baseTime,
       currentParticipants: 15,
-      maxParticipants: 20,
       party: party,
     );
 
@@ -79,7 +77,6 @@ void main() {
       createdAt: baseTime,
       updatedAt: baseTime,
       currentParticipants: 20,
-      maxParticipants: 20,
       party: party,
     );
 

@@ -237,9 +237,7 @@ class _ParticipantDDayOverlay extends StatelessWidget {
 
     // Fix #996: Semantics 래퍼로 스크린 리더 접근성 지원
     return Semantics(
-      label: ratio >= 1.0
-          ? '이벤트 만석, 참여 불가'
-          : '참가자 $current/${max}명, $dDayLabel',
+      label: ratio >= 1.0 ? '이벤트 만석, 참여 불가' : '참가자 $current/$max명, $dDayLabel',
       excludeSemantics: true,
       child: Container(
         padding: const EdgeInsets.symmetric(
