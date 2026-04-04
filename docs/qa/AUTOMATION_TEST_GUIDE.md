@@ -6,46 +6,47 @@ Claude가 새 피쳐를 구현할 때 반드시 따라야 하는 자동화 테�
 
 ## 1. 현재 테스트 커버리지 현황
 
-### 요약 통계
+### 요약 통계 (2026-04-04 기준)
 
 | 계층 | 테스트 파일 수 | 커버리지 상태 |
 |------|-------------|-------------|
-| minglit_kit (공유 로직) | 43 | 핵심 — 60% patch 목표 |
-| app_user (사용자 앱) | 30 | 부분적 |
-| app_partner (파트너 앱) | 18 | 심각하게 부족 |
+| minglit_kit (공유 로직) | 80 | 양호 — 핵심 repository 대부분 커버 |
+| app_user (사용자 앱) | 82 | 양호 |
+| app_partner (파트너 앱) | 66 | 개선 중 |
 | Supabase DB (pgTAP) | 54 | 양호 |
-| Edge Functions (Deno) | 33 | 양호 |
+| Edge Functions (Deno) | 61 | 양호 |
 | Client CUJ (E2E) | 6 | 핵심 경로만 |
 
-### 심각한 커버리지 갭
-
-#### 🔴 CRITICAL — 테스트 거의 없음
-| 영역 | 소스 파일 | 테스트 파일 | 커버리지 |
-|------|----------|-----------|---------|
-| app_partner/party | 70 | 1 | 1.4% |
-| minglit_kit/iamport | 11 | 0 | 0% |
-| app_user/settings | 3 | 0 | 0% |
-| app_user/search | 1 | 0 | 0% |
-| app_partner/checkin | 2 | 0 | 0% |
-| app_partner/ticket | 4 | 0 | 0% |
+### 커버리지 갭
 
 #### 🟡 SEVERE — 40% 미만
-| 영역 | 소스 파일 | 테스트 파일 | 커버리지 |
+| 영역 | 소스 파일 | 테스트 파일 | 상태 |
 |------|----------|-----------|---------|
-| app_partner/settlement | 14 | 3 | 21% |
-| app_partner/verification | 6 | 1 | 17% |
-| app_user/event | 25 | 6 | 24% |
-| app_user/payment | 7 | 3 | 43% |
+| app_partner/party | 70 | 12 | 개선됨 (1.4% → 17%) |
+| app_partner/ticket | 12 | 1 | 심각 — 미결 |
+| app_partner/settlement | 14 | 6 | 개선됨 (21% → 43%) |
+| app_partner/verification | 6 | 4 | 개선됨 (17% → 67%) |
+| app_user/event | 31 | 19 | 개선됨 (24% → 61%) |
+
+#### 해소된 갭 (2026-04 기준)
+- `app_user/settings`: 2 테스트 추가 ✅
+- `app_user/search`: 2 테스트 추가 ✅
+- `app_user/payment`: 6 테스트 (완전 커버) ✅
+- `app_partner/checkin`: 2 테스트 추가 ✅
+- `minglit_kit/iamport`: 3 테스트 추가 ✅
 
 #### 미테스트 Repository (minglit_kit)
-- `auth_repository.dart`
-- `event_repository_commands.dart` / `event_repository_queries.dart`
-- `kakao_location_repository.dart`
-- `party_event_repository.dart` / `party_matching_repository.dart`
-- `policy_repository.dart`
-- `staff_repository.dart`
-- `user_repository.dart`
-- `verification_repository.dart`
+- `party_event_repository.dart`
+- `party_matching_repository.dart`
+
+#### 해소된 Repository 갭
+- `auth_repository.dart` ✅
+- `event_repository_commands.dart` / `event_repository_queries.dart` ✅
+- `kakao_location_repository.dart` ✅
+- `policy_repository.dart` ✅
+- `staff_repository.dart` ✅
+- `user_repository.dart` ✅
+- `verification_repository.dart` ✅
 
 ---
 
