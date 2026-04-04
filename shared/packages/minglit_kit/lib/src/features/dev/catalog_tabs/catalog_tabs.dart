@@ -1,3 +1,7 @@
+export 'pattern_list_section.dart';
+export 'patterns/card_layouts_demo.dart';
+export 'patterns/detail_page_demo.dart';
+export 'patterns/mock_data.dart';
 export 'tokens/animation_section.dart';
 export 'tokens/colors_section.dart';
 export 'tokens/icon_size_section.dart';
@@ -12,7 +16,3 @@ export 'widgets/inputs_section.dart';
 export 'widgets/layout_section.dart';
 export 'widgets/loading_section.dart';
 export 'widgets/overlay_section.dart';
-export 'pattern_list_section.dart';
-export 'patterns/card_layouts_demo.dart';
-export 'patterns/detail_page_demo.dart';
-export 'patterns/mock_data.dart';

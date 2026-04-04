@@ -209,7 +209,7 @@ class _TransactionCard extends StatelessWidget {
               color: MinglitColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(MinglitRadius.small),
             ),
-            child: Icon(
+            child: const Icon(
               Icons.receipt_outlined,
               color: MinglitColors.primary,
               size: MinglitIconSize.small,
@@ -273,10 +273,10 @@ class _StatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MinglitContentCard(
+    return const MinglitContentCard(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: const [
+        children: [
           _StatItem(label: '참여자', value: '12'),
           _StatItem(label: '이벤트', value: '5'),
           _StatItem(label: '후기', value: '38'),

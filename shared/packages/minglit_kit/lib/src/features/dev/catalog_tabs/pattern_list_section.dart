@@ -32,14 +32,14 @@ class PatternListSection extends StatelessWidget {
         const SizedBox(height: MinglitSpacing.large),
         Text('상태 패턴', style: theme.textTheme.titleMedium),
         const SizedBox(height: MinglitSpacing.small),
-        _PatternTile(
+        const _PatternTile(
           title: 'P6 — 빈/에러/로딩 상태',
           subtitle: '3단계 로딩 + 빈/에러 표준 구조',
           icon: Icons.hourglass_empty_outlined,
           onTap: null, // feat/715 — 준비 중
           disabled: true,
         ),
-        _PatternTile(
+        const _PatternTile(
           title: 'P7 — Async 래퍼',
           subtitle: 'MinglitAsyncValueWidget 사용법',
           icon: Icons.sync_outlined,
@@ -61,7 +61,7 @@ class PatternListSection extends StatelessWidget {
         const SizedBox(height: MinglitSpacing.large),
         Text('트랜잭션 패턴', style: theme.textTheme.titleMedium),
         const SizedBox(height: MinglitSpacing.small),
-        _PatternTile(
+        const _PatternTile(
           title: 'P5 — 결제 플로우',
           subtitle: '결제/환불 상태 시뮬레이션',
           icon: Icons.payment_outlined,

@@ -17,8 +17,9 @@ void main() {
       expect(find.text('Selectable Card'), findsOneWidget);
     });
 
-    testWidgets('switches to loading state — no card variant titles shown',
-        (tester) async {
+    testWidgets('switches to loading state — no card variant titles shown', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildSubject());
       await tester.pump();
 
@@ -32,8 +33,9 @@ void main() {
       expect(find.text('Selectable Card'), findsNothing);
     });
 
-    testWidgets('switches to error state — MinglitErrorState shown',
-        (tester) async {
+    testWidgets('switches to error state — MinglitErrorState shown', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildSubject());
       await tester.pump();
 
@@ -43,8 +45,9 @@ void main() {
       expect(find.text('카드 데이터를 불러올 수 없습니다'), findsOneWidget);
     });
 
-    testWidgets('switches to empty state — MinglitEmptyState shown',
-        (tester) async {
+    testWidgets('switches to empty state — MinglitEmptyState shown', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildSubject());
       await tester.pump();
 

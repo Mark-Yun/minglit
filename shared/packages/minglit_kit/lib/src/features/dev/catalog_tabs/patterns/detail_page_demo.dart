@@ -88,7 +88,7 @@ class _DetailPageDemoState extends State<DetailPageDemo>
       DemoState.error => _DetailPageError(
         onRetry: () => setState(() => _state = DemoState.data),
       ),
-      DemoState.empty => _DetailPageEmpty(),
+      DemoState.empty => const _DetailPageEmpty(),
       DemoState.data => _DetailPageData(
         event: mockEvents.first,
         tabController: _tabController,
@@ -157,7 +157,7 @@ class _DetailPageData extends StatelessWidget {
                     color: Colors.white,
                   ),
                 ),
-                background: Container(
+                background: ColoredBox(
                   color: MinglitColors.primary,
                   child: Center(
                     child: Icon(
@@ -179,7 +179,7 @@ class _DetailPageData extends StatelessWidget {
             children: [
               _OverviewTab(event: event),
               _ParticipantsTab(count: event.currentParticipants),
-              _ScheduleTab(),
+              const _ScheduleTab(),
             ],
           ),
         ),
@@ -189,7 +189,8 @@ class _DetailPageData extends StatelessWidget {
           left: 0,
           right: 0,
           child: _CtaBar(
-            label: '참여 신청 (${event.currentParticipants}/${event.maxParticipants})',
+            label:
+                '참여 신청 (${event.currentParticipants}/${event.maxParticipants})',
             onTap: onAction,
           ),
         ),
@@ -246,7 +247,9 @@ class _InfoRow extends StatelessWidget {
       children: [
         Icon(icon, size: MinglitIconSize.small),
         const SizedBox(width: MinglitSpacing.small),
-        Expanded(child: Text(text, style: Theme.of(context).textTheme.bodyMedium)),
+        Expanded(
+          child: Text(text, style: Theme.of(context).textTheme.bodyMedium),
+        ),
       ],
     );
   }
@@ -263,7 +266,7 @@ class _ParticipantsTab extends StatelessWidget {
     return ListView.separated(
       padding: const EdgeInsets.all(MinglitSpacing.medium),
       itemCount: count,
-      separatorBuilder: (_, __) => const Divider(),
+      separatorBuilder: (_, _) => const Divider(),
       itemBuilder: (context, i) => ListTile(
         leading: CircleAvatar(child: Text('${i + 1}')),
         title: Text('참여자 ${i + 1}', style: theme.textTheme.bodyMedium),
@@ -345,7 +348,7 @@ class _DetailPageLoading extends StatelessWidget {
         SliverAppBar(
           expandedHeight: 200,
           pinned: true,
-          flexibleSpace: FlexibleSpaceBar(
+          flexibleSpace: const FlexibleSpaceBar(
             background: MinglitSkeleton(
               width: double.infinity,
               height: double.infinity,
@@ -354,7 +357,11 @@ class _DetailPageLoading extends StatelessWidget {
           ),
           bottom: TabBar(
             controller: tabController,
-            tabs: const [Tab(text: '개요'), Tab(text: '참여자'), Tab(text: '일정')],
+            tabs: const [
+              Tab(text: '개요'),
+              Tab(text: '참여자'),
+              Tab(text: '일정'),
+            ],
           ),
         ),
       ],
