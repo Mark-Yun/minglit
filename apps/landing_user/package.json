@@ -1,6 +1,6 @@
 {
   "name": "landing_user",
-  "version": "26.04.940-dev",
+  "version": "26.04.926-dev",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3002",
