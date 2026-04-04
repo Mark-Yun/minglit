@@ -205,6 +205,12 @@ class MinglitOpacity {
   /// 5% opacity — tint fill, selected card background.
   static const double tintFill = 0.05;
 
+  /// 8% opacity — active chip/tag background.
+  static const double activeChip = 0.08;
+
+  /// 10% opacity — event phase status indicator background (recruiting/preparing/live).
+  static const double highlight = 0.1;
+
   /// 15% opacity — avatar placeholder background.
   static const double placeholder = 0.15;
 

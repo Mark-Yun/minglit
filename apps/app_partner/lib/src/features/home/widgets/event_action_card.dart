@@ -105,7 +105,8 @@ class EventActionCard extends StatelessWidget {
       EventPhase.recruiting => (
         _recruitingLabel(event),
         MinglitColors.success,
-        MinglitColors.success.withValues(alpha: MinglitOpacity.tintFill),
+        // Fix #957: highlight (0.1) preserves original event phase background intensity
+        MinglitColors.success.withValues(alpha: MinglitOpacity.highlight),
         colorScheme.outlineVariant,
         colorScheme.surfaceContainerLowest,
         '신청 현황 보기',
@@ -118,7 +119,7 @@ class EventActionCard extends StatelessWidget {
       EventPhase.preparing => (
         _preparingLabel(event),
         colorScheme.error,
-        colorScheme.error.withValues(alpha: MinglitOpacity.tintFill),
+        colorScheme.error.withValues(alpha: MinglitOpacity.highlight),
         colorScheme.outlineVariant,
         colorScheme.surfaceContainerLowest,
         '체크인 준비',
@@ -131,7 +132,7 @@ class EventActionCard extends StatelessWidget {
       EventPhase.live => (
         _liveLabel(event),
         colorScheme.primary,
-        colorScheme.primary.withValues(alpha: MinglitOpacity.tintFill),
+        colorScheme.primary.withValues(alpha: MinglitOpacity.highlight),
         colorScheme.primary,
         colorScheme.surfaceContainerLowest,
         '체크인 계속하기',
