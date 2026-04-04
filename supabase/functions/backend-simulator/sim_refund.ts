@@ -28,6 +28,7 @@ export async function simRefundRequests(
   refundRate: number = 0.2,
   supabaseUrl?: string,
   anonKey?: string,
+  strict?: boolean,
 ): Promise<SimRefundResult> {
   const refundedApplicationIds: string[] = [];
   const assertions: SimAssertionResult[] = [];
@@ -148,6 +149,15 @@ export async function simRefundRequests(
             });
           }
         } catch (authErr) {
+          if (strict) {
+            log({
+              level: "error",
+              phase: "refund",
+              step: "ef_auth_fallback",
+              message: `Strict mode: auth failed for ${username}, skipping app ${appId}: ${String(authErr)}`,
+            });
+            return null;
+          }
           log({
             level: "warn",
             phase: "refund",
@@ -159,6 +169,17 @@ export async function simRefundRequests(
     }
 
     if (!efSuccess) {
+      if (strict && supabaseUrl && anonKey) {
+        // Strict mode: EF was attempted but failed — skip direct DB fallback
+        log({
+          level: "error",
+          phase: "refund",
+          step: "ef_cancel_strict_skip",
+          message: `Strict mode: EF failed for app ${appId}, skipping direct DB fallback`,
+          data: { appId },
+        });
+        return null;
+      }
       // Fallback: direct DB update (used when EF call unavailable or failed)
       const refundStatus = refundCalc.refund_percentage > 0 ? "completed" : "failed";
       const { error: updateErr } = await supabase
