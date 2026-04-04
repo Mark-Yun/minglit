@@ -90,7 +90,13 @@ void main() {
     expect(find.text('만석'), findsOneWidget);
 
     // Fix #996: 스크린 리더 라벨 값 자체를 검증
-    expect(find.bySemanticsLabel('이벤트 만석, 참여 불가'), findsOneWidget);
+    // excludeSemantics: true 구조에서 bySemanticsLabel 대신 getSemantics로 ancestor Semantics 노드를 직접 검증
+    final semanticsData = tester.getSemantics(
+      find
+          .ancestor(of: find.text('만석'), matching: find.byType(Semantics))
+          .first,
+    );
+    expect(semanticsData.label, '이벤트 만석, 참여 불가');
 
     semanticsHandle.dispose();
   });
