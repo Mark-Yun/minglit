@@ -24,8 +24,9 @@ void main() {
       expect(find.text('환불 플로우'), findsOneWidget);
     });
 
-    testWidgets('shows payment SegmentedButton with four segments',
-        (tester) async {
+    testWidgets('shows payment SegmentedButton with four segments', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const TransactionFlowDemoPage()));
 
       expect(find.text('확인'), findsOneWidget);
@@ -34,8 +35,9 @@ void main() {
       expect(find.text('실패'), findsOneWidget);
     });
 
-    testWidgets('shows refund SegmentedButton with four segments',
-        (tester) async {
+    testWidgets('shows refund SegmentedButton with four segments', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const TransactionFlowDemoPage()));
 
       expect(find.text('요청'), findsOneWidget);
@@ -45,8 +47,9 @@ void main() {
   });
 
   group('PaymentFlowState panels', () {
-    testWidgets('confirm state renders order summary and 결제하기 button',
-        (tester) async {
+    testWidgets('confirm state renders order summary and 결제하기 button', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const TransactionFlowDemoPage()));
       // Default state is confirm.
       expect(find.text('주문 요약'), findsOneWidget);
@@ -54,21 +57,24 @@ void main() {
       expect(find.text('밍글릿 봄 파티'), findsAtLeastNWidgets(1));
     });
 
-    testWidgets('processing state renders CircularProgressIndicator and label',
-        (tester) async {
-      await tester.pumpWidget(_wrap(const TransactionFlowDemoPage()));
+    testWidgets(
+      'processing state renders CircularProgressIndicator and label',
+      (tester) async {
+        await tester.pumpWidget(_wrap(const TransactionFlowDemoPage()));
 
-      // Tap "처리 중" segment in payment section (first SegmentedButton).
-      final processingSegments = find.text('처리 중');
-      await tester.tap(processingSegments.first);
-      await tester.pump();
+        // Tap "처리 중" segment in payment section (first SegmentedButton).
+        final processingSegments = find.text('처리 중');
+        await tester.tap(processingSegments.first);
+        await tester.pump();
 
-      expect(find.byType(CircularProgressIndicator), findsAtLeastNWidgets(1));
-      expect(find.text('결제 처리 중...'), findsOneWidget);
-    });
+        expect(find.byType(CircularProgressIndicator), findsAtLeastNWidgets(1));
+        expect(find.text('결제 처리 중...'), findsOneWidget);
+      },
+    );
 
-    testWidgets('success state renders check_circle icon and 결제 완료 text',
-        (tester) async {
+    testWidgets('success state renders check_circle icon and 결제 완료 text', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const TransactionFlowDemoPage()));
 
       await tester.tap(find.text('성공'));
@@ -78,8 +84,9 @@ void main() {
       expect(find.text('결제 완료'), findsOneWidget);
     });
 
-    testWidgets('failure state renders cancel icon and 다시 시도 button',
-        (tester) async {
+    testWidgets('failure state renders cancel icon and 다시 시도 button', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const TransactionFlowDemoPage()));
 
       await tester.tap(find.text('실패'));
@@ -121,8 +128,9 @@ void main() {
       expect(find.text('환불 처리 중'), findsOneWidget);
     });
 
-    testWidgets('complete state renders check icon and 환불 완료 text',
-        (tester) async {
+    testWidgets('complete state renders check icon and 환불 완료 text', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const TransactionFlowDemoPage()));
 
       // "완료" appears only in the refund SegmentedButton.
@@ -136,8 +144,9 @@ void main() {
   });
 
   group('State transitions', () {
-    testWidgets(
-        'payment flow cycles through all states without error', (tester) async {
+    testWidgets('payment flow cycles through all states without error', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const TransactionFlowDemoPage()));
 
       // confirm → processing
@@ -161,8 +170,9 @@ void main() {
       expect(find.text('주문 요약'), findsOneWidget);
     });
 
-    testWidgets(
-        'refund flow cycles through all states without error', (tester) async {
+    testWidgets('refund flow cycles through all states without error', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const TransactionFlowDemoPage()));
 
       // request → calculating

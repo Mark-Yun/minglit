@@ -233,8 +233,8 @@ class _PaymentSuccessPanel extends StatelessWidget {
           Text(
             '결제 완료',
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: MinglitColors.success,
-                ),
+              color: MinglitColors.success,
+            ),
           ),
           const SizedBox(height: MinglitSpacing.medium),
           const _OrderSummaryRow(label: '이벤트', value: '밍글릿 봄 파티'),
@@ -267,8 +267,8 @@ class _PaymentFailurePanel extends StatelessWidget {
           Text(
             '결제 실패',
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: MinglitColors.error,
-                ),
+              color: MinglitColors.error,
+            ),
           ),
           const SizedBox(height: MinglitSpacing.small),
           Text(
@@ -444,8 +444,8 @@ class _RefundCompletePanel extends StatelessWidget {
           Text(
             '환불 완료',
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: MinglitColors.success,
-                ),
+              color: MinglitColors.success,
+            ),
           ),
           const SizedBox(height: MinglitSpacing.medium),
           const _OrderSummaryRow(label: '환불 금액', value: '₩30,000'),
@@ -498,9 +498,9 @@ class _OrderSummaryRow extends StatelessWidget {
         Text(
           value,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: MinglitColors.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
+            color: MinglitColors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ],
     );
