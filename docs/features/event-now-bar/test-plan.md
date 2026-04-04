@@ -6,7 +6,7 @@ Event Now Bar는 홈 하단에 당일 이벤트 상태를 실시간 안내하는
 6-state 상태 머신, Supabase Realtime (프로젝트 최초), 멀티 이벤트 스택이 핵심이다.
 백엔드 변경 없음 (기존 테이블/EF/RPC 활용) → DB/EF 테스트 불필요.
 
-**참고**: `docs/qa/AUTOMATION_TEST_GUIDE.md`
+**참고**: `docs/qa/automation-test-guide.md`
 
 ### 피처 파이프라인
 

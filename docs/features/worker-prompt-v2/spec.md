@@ -445,7 +445,7 @@ audit 워커 → audit-report → tpm → needs-dev → issue-worker
 | 정기 감사 (코드 스캔) | 코드 품질 이슈 발견 (null crash, 에러 삼킴, 타입 안전성) |
 | 정기 감사 (PR/CI 분석) | 테스트 보강 제안 리포트 (audit-report) |
 | 정기 감사 (골든 테스트 커버리지) | 골든 테스트 누락 화면 식별 + 보강 제안 |
-| `docs/qa/AUTOMATION_TEST_GUIDE.md` | 테스트 가이드 최신화 PR |
+| `docs/qa/automation-test-guide.md` | 테스트 가이드 최신화 PR |
 
 **감사 영역**:
 - 코드 품질 (flutter analyze, null crash, 에러 삼킴, 타입 안전성)
