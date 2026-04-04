@@ -11,12 +11,12 @@ _UserConsent _$UserConsentFromJson(Map<String, dynamic> json) => _UserConsent(
   userId: json['user_id'] as String,
   consentKey: $enumDecode(_$ConsentTypeEnumMap, json['consent_key']),
   consented: json['consented'] as bool,
-  policyVersion: (json['policy_version'] as num?)?.toInt(),
   consentedAt: DateTime.parse(json['consented_at'] as String),
+  createdAt: DateTime.parse(json['created_at'] as String),
+  policyVersion: (json['policy_version'] as num?)?.toInt(),
   withdrawnAt: json['withdrawn_at'] == null
       ? null
       : DateTime.parse(json['withdrawn_at'] as String),
-  createdAt: DateTime.parse(json['created_at'] as String),
 );
 
 Map<String, dynamic> _$UserConsentToJson(_UserConsent instance) =>
@@ -25,10 +25,10 @@ Map<String, dynamic> _$UserConsentToJson(_UserConsent instance) =>
       'user_id': instance.userId,
       'consent_key': _$ConsentTypeEnumMap[instance.consentKey]!,
       'consented': instance.consented,
-      'policy_version': instance.policyVersion,
       'consented_at': instance.consentedAt.toIso8601String(),
-      'withdrawn_at': instance.withdrawnAt?.toIso8601String(),
       'created_at': instance.createdAt.toIso8601String(),
+      'policy_version': instance.policyVersion,
+      'withdrawn_at': instance.withdrawnAt?.toIso8601String(),
     };
 
 const _$ConsentTypeEnumMap = {

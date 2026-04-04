@@ -42,7 +42,7 @@ final class SettlementListControllerProvider
 }
 
 String _$settlementListControllerHash() =>
-    r'c22b8bd1ef474c1faa59aa6e7362abfc4be6e096';
+    r'64f75af0866f2d373fe2bb0b7aa46d04c64d701a';
 
 abstract class _$SettlementListController
     extends $Notifier<SettlementListState> {
