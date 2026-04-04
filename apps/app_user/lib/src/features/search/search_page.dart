@@ -118,10 +118,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                               onPressed: () {
                                 _debounce?.cancel();
                                 _controller.text = keyword;
-                                _controller.selection =
-                                    TextSelection.collapsed(
-                                      offset: keyword.length,
-                                    );
+                                _controller.selection = TextSelection.collapsed(
+                                  offset: keyword.length,
+                                );
                                 ref
                                     .read(searchQueryProvider.notifier)
                                     .update(keyword);
