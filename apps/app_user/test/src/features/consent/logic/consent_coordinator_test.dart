@@ -16,7 +16,7 @@ void main() {
 
   group('completeSignup — 홈으로 이동 (push 없음)', () {
     test('from이 null이면 홈(/)으로 go한다', () {
-      ConsentCoordinator(mockRouter).completeSignup(from: null);
+      ConsentCoordinator(mockRouter).completeSignup();
 
       verify(() => mockRouter.go('/')).called(1);
       verifyNever(() => mockRouter.push(any()));
