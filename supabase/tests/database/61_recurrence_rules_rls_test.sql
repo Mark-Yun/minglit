@@ -222,13 +222,13 @@ SELECT is_empty(
   'user_c (different partner) cannot see partner_a rules'
 );
 
--- user_c는 자기 파티에 규칙 INSERT 가능
+-- user_c는 자기 파티에 규칙 INSERT 가능 (monthly 패턴은 month_day 필수)
 SELECT lives_ok(
   format(
     $$
       INSERT INTO public.recurrence_rules (
-        party_id, pattern, start_time, end_time
-      ) VALUES ('%s', 'monthly', '09:00', '10:00')
+        party_id, pattern, start_time, end_time, month_day
+      ) VALUES ('%s', 'monthly', '09:00', '10:00', 15)
     $$,
     current_setting('tests.rr_party_b_id')
   ),
