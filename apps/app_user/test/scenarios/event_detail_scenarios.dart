@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:app_user/src/features/event/admission/event_admission_controller.dart';
 import 'package:app_user/src/features/event/detail/event_detail_page.dart';
 import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
-import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -82,7 +81,7 @@ final _event = Event(
 
 List<dynamic> _buildOverrides(AdmissionState admissionState) {
   final mockPolicyRepo = _MockPolicyRepository();
-  when(() => mockPolicyRepo.getRefundPolicy()).thenAnswer(
+  when(mockPolicyRepo.getRefundPolicy).thenAnswer(
     (_) async => {
       'grace_period_hours': 2,
       'cutoff_days': 7,
@@ -100,7 +99,10 @@ List<dynamic> _buildOverrides(AdmissionState admissionState) {
     ),
     verificationsByIdsProvider('').overrideWith((_) async => []),
     policyRepositoryProvider.overrideWith((_) => mockPolicyRepo),
-    eventDetailNowProvider.overrideWith((_) => () => _fixedNow),
+    eventDetailNowProvider.overrideWith(
+      (_) =>
+          () => _fixedNow,
+    ),
   ];
 }
 

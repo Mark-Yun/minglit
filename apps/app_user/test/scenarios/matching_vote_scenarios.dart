@@ -40,7 +40,9 @@ class MatchingVoteScenarios {
       name: 'matching_vote_screen_remaining_votes',
       page: const MatchingVoteScreen(eventId: 'event-1'),
       overrides: [
-        matchCandidatesProvider('event-1').overrideWith((_) async => _candidates),
+        matchCandidatesProvider(
+          'event-1',
+        ).overrideWith((_) async => _candidates),
         myMatchesProvider('event-1').overrideWith((_) async => []),
         myVoteCountProvider('event-1').overrideWith((_) async => 0),
         maxVoteCountProvider('event-1').overrideWith((_) async => 2),
@@ -54,7 +56,9 @@ class MatchingVoteScenarios {
       page: const MatchingVoteScreen(eventId: 'event-1'),
       brightness: Brightness.dark,
       overrides: [
-        matchCandidatesProvider('event-1').overrideWith((_) async => _candidates),
+        matchCandidatesProvider(
+          'event-1',
+        ).overrideWith((_) async => _candidates),
         myMatchesProvider('event-1').overrideWith((_) async => _matched),
         myVoteCountProvider('event-1').overrideWith((_) async => 2),
         maxVoteCountProvider('event-1').overrideWith((_) async => 2),

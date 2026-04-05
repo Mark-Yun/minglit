@@ -1,7 +1,6 @@
 import 'package:app_partner/src/features/onboarding/partner_apply_status_page.dart';
 import 'package:app_partner/src/logic/onboarding_state_provider.dart';
 import 'package:flutter/foundation.dart' show SynchronousFuture;
-import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -11,7 +10,7 @@ import 'partner_screenshot_scenario.dart';
 class PartnerApplyStatusScenarios {
   static List<dynamic> _pendingOverrides() {
     final mockRepo = MockPartnerRepository();
-    when(() => mockRepo.getMyApplication()).thenAnswer(
+    when(mockRepo.getMyApplication).thenAnswer(
       (_) => SynchronousFuture<PartnerApplication?>(
         const PartnerApplication(
           id: 'application_pending',
@@ -30,7 +29,7 @@ class PartnerApplyStatusScenarios {
 
   static List<dynamic> _needsCorrectionOverrides() {
     final mockRepo = MockPartnerRepository();
-    when(() => mockRepo.getMyApplication()).thenAnswer(
+    when(mockRepo.getMyApplication).thenAnswer(
       (_) => SynchronousFuture<PartnerApplication?>(
         const PartnerApplication(
           id: 'application_correction',

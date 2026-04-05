@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:app_user/src/features/event/admission/event_application_controller.dart';
 import 'package:app_user/src/features/event/admission/event_application_wizard_page.dart';
 import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
-import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 import '../integration/utils/test_mocks.dart';

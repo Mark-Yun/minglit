@@ -99,7 +99,10 @@ class PartyCreateWizardScenarios {
   }
 
   static List<PartnerScreenshotScenario> get all => [
-    _stepScenario('party_create_wizard_step_1_basic_info', PartyCreateStep.basicInfo),
+    _stepScenario(
+      'party_create_wizard_step_1_basic_info',
+      PartyCreateStep.basicInfo,
+    ),
     _stepScenario('party_create_wizard_step_6_review', PartyCreateStep.review),
   ];
 }

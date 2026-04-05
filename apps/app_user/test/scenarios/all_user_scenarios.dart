@@ -1,4 +1,3 @@
-import 'screenshot_scenario.dart';
 import 'account_deletion_scenarios.dart';
 import 'blocked_partners_scenarios.dart';
 import 'event_application_scenarios.dart';
@@ -9,6 +8,7 @@ import 'matching_vote_scenarios.dart';
 import 'my_page_scenarios.dart';
 import 'party_partner_scenarios.dart';
 import 'payment_scenarios.dart';
+import 'screenshot_scenario.dart';
 import 'search_scenarios.dart';
 import 'ticket_qr_scenarios.dart';
 

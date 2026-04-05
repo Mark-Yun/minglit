@@ -2,7 +2,6 @@ import 'package:app_user/src/features/partner/detail/partner_detail_page.dart';
 import 'package:app_user/src/features/partner/logic/partner_coordinator.dart';
 import 'package:app_user/src/features/party/logic/party_coordinator.dart';
 import 'package:app_user/src/features/party/party_curation_page.dart';
-import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 import '../goldens/golden_test_helpers.dart'

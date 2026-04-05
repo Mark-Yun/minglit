@@ -14,7 +14,6 @@ void main() {
   });
 
   for (final scenario in TicketQRScenarios.all) {
-    // ignore: discarded_futures
     // Fix #574: Ticket QR viewer has a repeating scan-line animation, so
     // `pumpAndSettle()` would not converge for golden captures.
     goldenTest(

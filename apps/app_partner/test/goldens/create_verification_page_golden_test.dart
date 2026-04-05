@@ -10,7 +10,6 @@ import '../utils/golden_test_helpers.dart';
 
 void main() {
   for (final scenario in CreateVerificationScenarios.all) {
-    // ignore: discarded_futures
     // The goldenTest helper registers tests synchronously and is intentionally
     // not awaited inside main().
     goldenTest(

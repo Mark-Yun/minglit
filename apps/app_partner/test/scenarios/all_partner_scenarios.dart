@@ -1,4 +1,3 @@
-import 'partner_screenshot_scenario.dart';
 import 'closing_soon_scenarios.dart';
 import 'create_verification_scenarios.dart';
 import 'event_card_scenarios.dart';
@@ -8,6 +7,7 @@ import 'partner_apply_status_scenarios.dart';
 import 'partner_event_detail_scenarios.dart';
 import 'partner_home_scenarios.dart';
 import 'partner_login_scenarios.dart';
+import 'partner_screenshot_scenario.dart';
 import 'party_create_wizard_scenarios.dart';
 import 'party_list_scenarios.dart';
 import 'settlement_empty_state_scenarios.dart';
