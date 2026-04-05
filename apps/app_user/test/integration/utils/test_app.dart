@@ -94,10 +94,31 @@ Widget createTestApp({
   );
 }
 
-/// Fake AuthController — returns immediately without calling Supabase
+/// Fake AuthController — no-op stub that never calls authRepositoryProvider.
+/// Fix #1073: overriding only build() was insufficient because action methods
+/// (signOut, signIn*) call ref.read(authRepositoryProvider) which transitively
+/// reads authConfigProvider (throws UnimplementedError if not overridden).
 class _FakeAuthController extends AuthController {
   @override
   FutureOr<void> build() async {}
+
+  @override
+  Future<void> signOut() async {}
+
+  @override
+  Future<void> signInWithGoogle({String? redirectTo}) async {}
+
+  @override
+  Future<void> signInWithEmail({
+    required String email,
+    required String password,
+  }) async {}
+
+  @override
+  Future<void> signInWithApple({String? redirectTo}) async {}
+
+  @override
+  Future<void> signInWithKakao({String? redirectTo}) async {}
 }
 
 /// No-op ActiveFilters — disables location/eligibility filters in tests
