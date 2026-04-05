@@ -22,17 +22,17 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
   }
 
-  // Tab indices: Tokens(0-5), Widgets(6-13)
+  // Tab indices: Tokens(0-5), Widgets(6-13), Patterns(14)
   // 0:Colors, 1:Typography, 2:Spacing, 3:Radius, 4:IconSize, 5:Animation
   // 6:Layout, 7:Buttons, 8:Inputs, 9:Cards, 10:Feedback, 11:Overlay,
-  // 12:Data, 13:Loading
+  // 12:Data, 13:Loading, 14:Patterns
 
   group('DesignCatalogPage tab structure', () {
-    testWidgets('has 14 tabs total', (tester) async {
+    testWidgets('has 15 tabs total', (tester) async {
       await tester.pumpWidget(buildApp());
 
       final tabBar = tester.widget<TabBar>(find.byType(TabBar));
-      expect(tabBar.tabs.length, 14);
+      expect(tabBar.tabs.length, 15);
     });
 
     testWidgets('tab labels match spec order', (tester) async {
@@ -47,6 +47,8 @@ void main() {
         // Widgets (8)
         'Layout', 'Buttons', 'Inputs', 'Cards',
         'Feedback', 'Overlay', 'Data', 'Loading',
+        // Patterns (1)
+        'Patterns',
       ]);
     });
 
