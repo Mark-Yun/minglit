@@ -26,7 +26,6 @@ void main() {
     testWidgets('비로그인 사용자는 티켓 목록에 접근할 수 없다', (tester) async {
       await tester.pumpWidget(
         createTestApp(
-          isLoggedIn: false,
           initialLocation: '/tickets/my',
         ),
       );
@@ -57,7 +56,6 @@ void main() {
       // /tickets/my로 시작하는 경로는 보호됨
       await tester.pumpWidget(
         createTestApp(
-          isLoggedIn: false,
           initialLocation: '/tickets/my',
         ),
       );
@@ -88,7 +86,6 @@ void main() {
         createTestApp(
           isLoggedIn: true,
           currentUser: testUser,
-          initialLocation: '/',
           events: createMockEventsForTest(),
         ),
       );
@@ -105,7 +102,6 @@ void main() {
         createTestApp(
           isLoggedIn: true,
           currentUser: testUser,
-          initialLocation: '/',
         ),
       );
       await tester.pumpAndSettle();
@@ -137,7 +133,6 @@ void main() {
     testWidgets('구매 내역 페이지 — 비로그인 시 접근 차단', (tester) async {
       await tester.pumpWidget(
         createTestApp(
-          isLoggedIn: false,
           initialLocation: '/purchase-history',
         ),
       );

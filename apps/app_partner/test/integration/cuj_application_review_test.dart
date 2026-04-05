@@ -38,7 +38,6 @@ void main() {
     testWidgets('비로그인 사용자는 신청 관리에 접근할 수 없다', (tester) async {
       await tester.pumpWidget(
         createPartnerTestApp(
-          isLoggedIn: false,
           initialLocation: '/applications',
         ),
       );
@@ -54,7 +53,6 @@ void main() {
         createPartnerTestApp(
           isLoggedIn: true,
           currentUser: testUser,
-          onboardingState: OnboardingState.hasPartner,
           initialLocation: '/applications',
           additionalOverrides: [
             currentPartnerInfoProvider.overrideWith(
@@ -107,7 +105,6 @@ void main() {
         createPartnerTestApp(
           isLoggedIn: true,
           currentUser: testUser,
-          onboardingState: OnboardingState.hasPartner,
           initialLocation: '/applications',
           additionalOverrides: [
             currentPartnerInfoProvider.overrideWith(
@@ -134,7 +131,6 @@ void main() {
         createPartnerTestApp(
           isLoggedIn: true,
           currentUser: testUser,
-          onboardingState: OnboardingState.hasPartner,
           initialLocation: '/applications',
           additionalOverrides: [
             currentPartnerInfoProvider.overrideWith(
@@ -166,7 +162,6 @@ void main() {
         createPartnerTestApp(
           isLoggedIn: true,
           currentUser: testUser,
-          onboardingState: OnboardingState.hasPartner,
           initialLocation: '/applications',
           additionalOverrides: [
             currentPartnerInfoProvider.overrideWith(
@@ -219,7 +214,6 @@ void main() {
         createPartnerTestApp(
           isLoggedIn: true,
           currentUser: testUser,
-          onboardingState: OnboardingState.hasPartner,
           initialLocation: '/applications',
           additionalOverrides: [
             currentPartnerInfoProvider.overrideWith(

@@ -11,7 +11,6 @@
 // - P01-V2: 무료 이벤트 생성
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../utils/mocks.dart';
@@ -29,10 +28,7 @@ void main() {
   group('IT-P01: 파트너 가입 → 파티 → 이벤트', () {
     testWidgets('비로그인 사용자는 홈에 접근할 수 없다', (tester) async {
       await tester.pumpWidget(
-        createPartnerTestApp(
-          isLoggedIn: false,
-          initialLocation: '/',
-        ),
+        createPartnerTestApp(),
       );
       await tester.pump();
       await tester.pump();
@@ -49,7 +45,6 @@ void main() {
           isLoggedIn: true,
           currentUser: testUser,
           onboardingState: OnboardingState.needsApplication,
-          initialLocation: '/',
         ),
       );
       await tester.pump();
@@ -67,7 +62,6 @@ void main() {
           isLoggedIn: true,
           currentUser: testUser,
           onboardingState: OnboardingState.draftInProgress,
-          initialLocation: '/',
         ),
       );
       await tester.pump();
@@ -85,7 +79,6 @@ void main() {
           isLoggedIn: true,
           currentUser: testUser,
           onboardingState: OnboardingState.pendingReview,
-          initialLocation: '/',
         ),
       );
       await tester.pump();
@@ -103,7 +96,6 @@ void main() {
           isLoggedIn: true,
           currentUser: testUser,
           onboardingState: OnboardingState.needsCorrection,
-          initialLocation: '/',
         ),
       );
       await tester.pump();
@@ -118,8 +110,6 @@ void main() {
         createPartnerTestApp(
           isLoggedIn: true,
           currentUser: testUser,
-          onboardingState: OnboardingState.hasPartner,
-          initialLocation: '/',
         ),
       );
       await tester.pump();
@@ -134,7 +124,6 @@ void main() {
         createPartnerTestApp(
           isLoggedIn: true,
           currentUser: testUser,
-          onboardingState: OnboardingState.hasPartner,
           initialLocation: '/more/parties',
         ),
       );
@@ -152,7 +141,6 @@ void main() {
         createPartnerTestApp(
           isLoggedIn: true,
           currentUser: testUser,
-          onboardingState: OnboardingState.hasPartner,
           initialLocation: '/apply',
         ),
       );

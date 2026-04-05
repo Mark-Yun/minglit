@@ -39,9 +39,9 @@ void main() {
     EventApplicationState? appState,
     String? ticketId,
   }) {
-    final resolvedEventState =
-        eventState ?? AsyncData<Event>(testEvent);
-    final resolvedAppState = appState ??
+    final resolvedEventState = eventState ?? AsyncData<Event>(testEvent);
+    final resolvedAppState =
+        appState ??
         const EventApplicationState(
           step: EventApplicationStep.verification,
           status: EventApplicationStatus.initial,

@@ -63,7 +63,6 @@ void main() {
     testWidgets('비로그인 사용자는 구매 내역에 접근할 수 없다', (tester) async {
       await tester.pumpWidget(
         createTestApp(
-          isLoggedIn: false,
           initialLocation: '/purchase-history',
         ),
       );

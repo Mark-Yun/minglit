@@ -47,7 +47,6 @@ void main() {
     testWidgets('비로그인 사용자는 정산 페이지에 접근할 수 없다', (tester) async {
       await tester.pumpWidget(
         createPartnerTestApp(
-          isLoggedIn: false,
           initialLocation: '/settlement',
         ),
       );
@@ -63,7 +62,6 @@ void main() {
         createPartnerTestApp(
           isLoggedIn: true,
           currentUser: testUser,
-          onboardingState: OnboardingState.hasPartner,
           initialLocation: '/settlement',
           additionalOverrides: settlementOverrides(),
         ),
@@ -80,7 +78,6 @@ void main() {
         createPartnerTestApp(
           isLoggedIn: true,
           currentUser: testUser,
-          onboardingState: OnboardingState.hasPartner,
           initialLocation: '/settlement',
           additionalOverrides: settlementOverrides(),
         ),
@@ -97,7 +94,6 @@ void main() {
         createPartnerTestApp(
           isLoggedIn: true,
           currentUser: testUser,
-          onboardingState: OnboardingState.hasPartner,
           initialLocation: '/settlement',
           additionalOverrides: settlementOverrides(),
         ),
@@ -117,7 +113,6 @@ void main() {
         createPartnerTestApp(
           isLoggedIn: true,
           currentUser: testUser,
-          onboardingState: OnboardingState.hasPartner,
           initialLocation: '/settlement/bank-account',
           additionalOverrides: settlementOverrides(),
         ),

@@ -64,7 +64,6 @@ void main() {
         buildWidget(
           dashState: SettlementDashboardState(
             selectedMonth: DateTime(now.year, now.month),
-            status: const AsyncValue.loading(),
           ),
         ),
       );

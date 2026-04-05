@@ -45,7 +45,6 @@ void main() {
     testWidgets('비로그인 사용자는 체크인 페이지에 접근할 수 없다', (tester) async {
       await tester.pumpWidget(
         createPartnerTestApp(
-          isLoggedIn: false,
           initialLocation: '/checkin',
         ),
       );
@@ -107,8 +106,7 @@ void main() {
               (ref) async => testPartner,
             ),
             todayEventsProvider.overrideWith(
-              (ref, partnerId) =>
-                  Future<List<Event>>.error('네트워크 오류'),
+              (ref, partnerId) => Future<List<Event>>.error('네트워크 오류'),
             ),
           ],
           child: const MaterialApp(home: CheckinPlaceholderPage()),

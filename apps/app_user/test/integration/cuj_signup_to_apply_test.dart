@@ -37,7 +37,6 @@ void main() {
   final freeTicket = Ticket(
     id: 'ticket-free',
     name: '무료 티켓',
-    price: 0,
     createdAt: now,
     updatedAt: now,
   );
@@ -74,7 +73,6 @@ void main() {
     ) async {
       await tester.pumpWidget(
         createTestApp(
-          isLoggedIn: false,
           initialLocation: '/events/event-paid/apply',
         ),
       );
@@ -88,7 +86,6 @@ void main() {
     testWidgets('from 파라미터가 login URL에 포함된다', (tester) async {
       await tester.pumpWidget(
         createTestApp(
-          isLoggedIn: false,
           initialLocation: '/events/event-paid/apply',
         ),
       );
@@ -278,9 +275,9 @@ class _FakeEventDetailController extends EventDetailController {
 
   @override
   Future<Event> build(String id) async {
-    if (_state is AsyncData<Event>) return (_state as AsyncData<Event>).value;
+    if (_state is AsyncData<Event>) return _state.value;
     if (_state is AsyncError<Event>) {
-      throw (_state as AsyncError<Event>).error;
+      throw _state.error;
     }
     await Future<void>.delayed(const Duration(days: 365));
     throw StateError('unreachable');

@@ -21,13 +21,13 @@ void main() {
             () => _FakePartyCreateWizardController(initialState),
           ),
       ],
-      child: MaterialApp(
+      child: const MaterialApp(
         localizationsDelegates: [
           ...AppLocalizations.localizationsDelegates,
           FlutterQuillLocalizations.delegate,
         ],
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const PartyCreateWizardPage(),
+        home: PartyCreateWizardPage(),
       ),
     );
   }
@@ -46,7 +46,7 @@ void main() {
     testWidgets('basicInfo step에서 진행 바가 표시된다', (tester) async {
       await pumpWizard(
         tester,
-        const PartyCreateWizardState(currentStep: PartyCreateStep.basicInfo),
+        const PartyCreateWizardState(),
       );
 
       expect(find.byType(MinglitLinearProgressIndicator), findsOneWidget);
@@ -55,7 +55,7 @@ void main() {
     testWidgets('basicInfo step에서 "다음" 버튼이 표시된다', (tester) async {
       await pumpWizard(
         tester,
-        const PartyCreateWizardState(currentStep: PartyCreateStep.basicInfo),
+        const PartyCreateWizardState(),
       );
 
       expect(find.text('다음'), findsOneWidget);
@@ -64,7 +64,7 @@ void main() {
     testWidgets('basicInfo step에서 "이전" 버튼은 숨겨진다', (tester) async {
       await pumpWizard(
         tester,
-        const PartyCreateWizardState(currentStep: PartyCreateStep.basicInfo),
+        const PartyCreateWizardState(),
       );
 
       expect(find.text('이전'), findsNothing);
@@ -105,7 +105,6 @@ void main() {
       await pumpWizard(
         tester,
         const PartyCreateWizardState(
-          currentStep: PartyCreateStep.basicInfo,
           editingPartyId: 'existing-party-1',
         ),
       );
