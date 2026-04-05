@@ -61,7 +61,7 @@ class EventNowBottomSheet extends ConsumerWidget {
           bottom: MediaQuery.of(context).viewPadding.bottom,
         ),
         child: stateAsync.when(
-          data: (state) => _buildContent(state),
+          data: _buildContent,
           loading: () => const SizedBox(
             height: 200,
             child: Center(child: MinglitCircularProgressIndicator()),
