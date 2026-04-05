@@ -3,6 +3,9 @@ import 'package:alchemist/alchemist.dart'
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
+import '../scenarios/partner_screenshot_scenario.dart';
+import 'partner_golden_test_helpers.dart' show PartnerGoldenPageWrapper;
+
 /// Fixed surface size for golden tests (consistency across environments).
 const goldenSurfaceSize = Size(400, 800);
 
@@ -37,6 +40,40 @@ class GoldenComponentWrapper extends StatelessWidget {
             ? MinglitTheme.materialThemeDark
             : MinglitTheme.materialTheme,
         home: Scaffold(body: Center(child: child)),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Scenario → GoldenTestScenario conversion
+// ---------------------------------------------------------------------------
+
+extension PartnerScreenshotScenarioX on PartnerScreenshotScenario {
+  /// Converts a [PartnerScreenshotScenario] into an Alchemist
+  /// [GoldenTestScenario]. Component scenarios (isComponent == true) are
+  /// rendered with [GoldenComponentWrapper]; page scenarios are rendered with
+  /// [PartnerGoldenPageWrapper] sized at 390×844.
+  GoldenTestScenario toGoldenTestScenario() {
+    if (isComponent) {
+      return GoldenTestScenario(
+        name: name,
+        child: GoldenComponentWrapper(
+          brightness: brightness,
+          child: page,
+        ),
+      );
+    }
+    return GoldenTestScenario(
+      name: name,
+      child: SizedBox(
+        width: 390,
+        height: 844,
+        child: PartnerGoldenPageWrapper(
+          page: page,
+          overrides: overrides,
+          brightness: brightness,
+        ),
       ),
     );
   }

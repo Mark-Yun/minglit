@@ -13,6 +13,8 @@ import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../scenarios/screenshot_scenario.dart';
+
 // ---------------------------------------------------------------------------
 // Alchemist page-wrapper for app_user golden tests.
 // ---------------------------------------------------------------------------
@@ -84,4 +86,28 @@ class MockSocialRepository extends Mock implements SocialRepository {}
 class NoFiltersNotifier extends ActiveFilters {
   @override
   ExploreFilters build() => const ExploreFilters();
+}
+
+// ---------------------------------------------------------------------------
+// Scenario → GoldenTestScenario conversion
+// ---------------------------------------------------------------------------
+
+extension ScreenshotScenarioX on ScreenshotScenario {
+  /// Converts a [ScreenshotScenario] into an Alchemist [GoldenTestScenario]
+  /// wrapped inside a [GoldenPageWrapper] sized at 390×844 (iPhone 14).
+  GoldenTestScenario toGoldenTestScenario() {
+    return GoldenTestScenario(
+      name: name,
+      child: SizedBox(
+        width: 390,
+        height: 844,
+        child: GoldenPageWrapper(
+          page: page,
+          overrides: overrides,
+          brightness: brightness,
+          currentUser: currentUser,
+        ),
+      ),
+    );
+  }
 }
