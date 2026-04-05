@@ -32,7 +32,9 @@ minglit_kit/lib/src/features/
 ├── social/         # 소셜 기능 (좋아요, 구독, 차단)
 ├── permission/     # 앱 권한 설정 (카메라, 위치 등 시스템 권한 관리 화면)
 ├── theme/          # 테마 모드 컨트롤러 (라이트/다크/시스템)
-└── verification/   # 본인인증 (Identity Verification) — Iamport V2 기반 실명 인증 화면
+├── verification/   # 본인인증 (Identity Verification) — Iamport V2 기반 실명 인증 화면
+├── account_deletion/ # 회원 탈퇴 (탈퇴 사유, DI 블록, 아카이브)
+└── consent/        # 이용약관 동의 관리
 ```
 
 #### app_user Features
@@ -48,7 +50,9 @@ apps/app_user/lib/src/features/
 ├── payment/        # 결제 플로우, 결제 완료
 ├── search/         # 이벤트/파티 검색
 ├── settings/       # 앱 설정
-└── ticket/         # 티켓 선택/관리
+├── ticket/         # 티켓 선택/관리
+├── account_deletion/ # 회원 탈퇴 플로우
+└── consent/        # 이용약관 동의 화면
 ```
 
 #### app_partner Features

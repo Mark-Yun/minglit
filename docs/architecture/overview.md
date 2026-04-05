@@ -67,7 +67,7 @@ Minglit은 **"신뢰(Trust)"**를 가장 중요한 자산으로 취급하며, �
 ### 5.1 Layer 1: Identity (신원)
 *   **정의**: "이 사람은 실존하며, 주장하는 나이/성별이 맞는가?"
 *   **데이터**: `user_profiles` 테이블 (`birth_date`, `gender`, `is_verified`).
-*   **검증 주체**: 플랫폼 (PASS/SMS API).
+*   **검증 주체**: 플랫폼 (Iamport 본인인증 API).
 *   **특징**: 모든 유저가 갖춰야 할 **기본 자격(Base Layer)**. 파트너 승인이 불필요하며, 즉시 필터링(나이 제한 등)에 사용됩니다.
 
 ### 5.2 Layer 2: Qualification (자격)
