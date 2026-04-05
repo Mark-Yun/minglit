@@ -7,8 +7,8 @@ import 'package:minglit_kit/src/utils/log.dart';
 ///
 /// Each key must be declared as a separate `const String.fromEnvironment()`
 /// because the argument must be a compile-time constant literal.
-// TODO(needs-swe-sonnet-subagents-1): Implement CI audit to detect drift
-// between this file and env-manifest.json.
+/// CI job `check-env-keystore-drift` enforces that this file and
+/// `env-manifest.json` (flutter section) stay in sync.
 class EnvKeyStore {
   EnvKeyStore._();
 
