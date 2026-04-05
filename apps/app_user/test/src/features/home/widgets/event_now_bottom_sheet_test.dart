@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:app_user/src/features/event/matching/widgets/matching_vote_content.dart';
+import 'package:app_user/src/common/widgets/matching_vote_content.dart';
+import 'package:app_user/src/common/widgets/ticket_qr_viewer.dart';
 import 'package:app_user/src/features/home/widgets/event_now_bar_controller.dart';
 import 'package:app_user/src/features/home/widgets/event_now_bottom_sheet.dart';
 import 'package:app_user/src/features/ticket/data/ticket_wallet_repository.dart';
-import 'package:app_user/src/features/ticket/ui/widgets/ticket_qr_viewer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
