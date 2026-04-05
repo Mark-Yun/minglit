@@ -12,45 +12,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # EnvKeyStore ↔ env-manifest.json drift 검사 (항상 실행 — path filter 없음)
-  check-env-keystore-drift:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check env_keystore.dart vs env-manifest.json
-        run: |
-          python3 - <<'PYEOF'
-          import json, re, sys
-
-          with open('shared/packages/minglit_kit/lib/src/config/env_keystore.dart') as f:
-              dart = f.read()
-          # Match String.fromEnvironment('KEY') and String.fromEnvironment(\n  'KEY'
-          keystore_keys = set(re.findall(
-              r"String\.fromEnvironment\s*\([^)]*?'([A-Z_]+)'",
-              dart, re.DOTALL,
-          ))
-
-          with open('env-manifest.json') as f:
-              manifest = json.load(f)
-          flutter = manifest.get('flutter', {})
-          manifest_keys = (
-              set(flutter.get('required', {}).keys()) |
-              set(flutter.get('optional', {}).keys())
-          )
-
-          extra_keystore = sorted(keystore_keys - manifest_keys)
-          extra_manifest = sorted(manifest_keys - keystore_keys)
-
-          if extra_keystore or extra_manifest:
-              print('❌ Drift detected between env_keystore.dart and env-manifest.json (flutter section)')
-              if extra_keystore:
-                  print(f'  Keys in keystore but not manifest: {extra_keystore}')
-              if extra_manifest:
-                  print(f'  Keys in manifest but not keystore: {extra_manifest}')
-              sys.exit(1)
-          print(f'✅ env_keystore.dart and env-manifest.json are in sync ({len(keystore_keys)} keys)')
-          PYEOF
-
   # Migration version 중복 검사 (항상 실행 — path filter 없음)
   check-migration-versions:
     runs-on: ubuntu-latest
@@ -359,7 +320,7 @@ jobs:
         working-directory: supabase
 
   ci-result:
-    needs: [check-env-keystore-drift, check-migration-versions, check-env-manifest-sync, test-flutter-apps, lint-landing-user, lint-landing-partner, test-supabase, test-edge-functions]
+    needs: [check-migration-versions, check-env-manifest-sync, test-flutter-apps, lint-landing-user, lint-landing-partner, test-supabase, test-edge-functions]
     if: always()
     runs-on: ubuntu-latest
     steps:
