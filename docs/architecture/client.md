@@ -50,7 +50,9 @@ apps/app_user/lib/src/features/
 ├── payment/        # 결제 플로우, 결제 완료
 ├── search/         # 이벤트/파티 검색
 ├── settings/       # 앱 설정
-└── ticket/         # 티켓 선택/관리
+├── ticket/         # 티켓 선택/관리
+├── account_deletion/ # 회원 탈퇴 플로우
+└── consent/        # 이용약관 동의 화면
 ```
 
 #### app_partner Features
