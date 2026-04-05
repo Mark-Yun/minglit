@@ -2,6 +2,7 @@
 // is not created by migrations. Keep for reference, but clean up when the
 // queue is removed or renamed.
 import { createServiceClient } from '../_shared/supabase_client.ts'
+import { nowISO } from '../_shared/temporal_utils.ts'
 import { HybridCalculator } from './calculator.ts'
 import { initSentry, withHandler, log } from '../_shared/logger.ts'
 
@@ -65,7 +66,7 @@ log({ function: FN, level: "info", message: `Processing action: ${action_type} (
       .upsert({
         user_id,
         embedding: newVector,
-        updated_at: new Date().toISOString()
+        updated_at: nowISO()
       });
 
     if (upError) throw upError;

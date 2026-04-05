@@ -1,5 +1,6 @@
 // Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
 import { createServiceClient } from "../_shared/supabase_client.ts";
+import { nowISO } from "../_shared/temporal_utils.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { initSentry, withHandler, log } from "../_shared/logger.ts";
@@ -122,7 +123,7 @@ Deno.serve(withHandler(async (req) => {
     const refundAmount = amount ?? (cancelResponse.amount as number | undefined);
     const updatePayload: Record<string, unknown> = {
       refund_status: "completed",
-      updated_at: new Date().toISOString(),
+      updated_at: nowISO(),
     };
     if (refundAmount !== undefined) {
       updatePayload.refund_amount = refundAmount;

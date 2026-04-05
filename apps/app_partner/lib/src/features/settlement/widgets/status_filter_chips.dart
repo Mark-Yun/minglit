@@ -24,24 +24,15 @@ class StatusFilterChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 40,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.medium),
-        itemCount: _statuses.length,
-        separatorBuilder: (context, index) =>
-            const SizedBox(width: MinglitSpacing.small),
-        itemBuilder: (context, i) {
-          final (status, label) = _statuses[i];
-          final isSelected = selectedStatus == status;
-          return ChoiceChip(
+    return MinglitChipGroup(
+      children: [
+        for (final (status, label) in _statuses)
+          ChoiceChip(
             label: Text(label),
-            selected: isSelected,
+            selected: selectedStatus == status,
             onSelected: (_) => onStatusChanged(status),
-          );
-        },
-      ),
+          ),
+      ],
     );
   }
 }
