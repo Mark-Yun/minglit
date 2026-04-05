@@ -9,13 +9,16 @@ import 'package:minglit_kit/src/config/env_keystore.dart';
 void main() {
   group('EnvKeyStore', () {
     group('missingRequired', () {
-      test('returns SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY when none are defined', () {
-        final missing = EnvKeyStore.missingRequired();
+      test(
+        'returns SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY when none are defined',
+        () {
+          final missing = EnvKeyStore.missingRequired();
 
-        expect(missing, contains('SUPABASE_URL'));
-        expect(missing, contains('SUPABASE_PUBLISHABLE_KEY'));
-        expect(missing, hasLength(2));
-      });
+          expect(missing, contains('SUPABASE_URL'));
+          expect(missing, contains('SUPABASE_PUBLISHABLE_KEY'));
+          expect(missing, hasLength(2));
+        },
+      );
 
       // Regression test for #1070: ENVIRONMENT must never appear in
       // missingRequired() because it defaults to 'dev'.
@@ -78,18 +81,21 @@ void main() {
 
       // Regression test for #1070: validate() must not mention ENVIRONMENT
       // in the error message when it defaults to 'dev'.
-      test('error message does not include ENVIRONMENT when it has a default', () {
-        expect(
-          EnvKeyStore.validate,
-          throwsA(
-            isA<StateError>().having(
-              (e) => e.message,
-              'message',
-              isNot(contains('ENVIRONMENT')),
+      test(
+        'error message does not include ENVIRONMENT when it has a default',
+        () {
+          expect(
+            EnvKeyStore.validate,
+            throwsA(
+              isA<StateError>().having(
+                (e) => e.message,
+                'message',
+                isNot(contains('ENVIRONMENT')),
+              ),
             ),
-          ),
-        );
-      });
+          );
+        },
+      );
     });
   });
 }

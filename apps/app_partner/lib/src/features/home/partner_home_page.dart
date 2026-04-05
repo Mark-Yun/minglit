@@ -146,9 +146,7 @@ class PartnerHomePage extends ConsumerWidget {
                     TodoSummaryChips(
                       pendingApplications: state.pendingReviewCount,
                       upcomingEvents: state.upcomingEvents.length,
-                      onPendingTap: () {
-                        const ApplicationListRoute().go(context);
-                      },
+                      onPendingTap: coordinator.goToApplicationList,
                       onUpcomingTap: () {
                         unawaited(
                           const PartyListRoute().push<void>(context),
@@ -248,19 +246,17 @@ class PartnerHomePage extends ConsumerWidget {
     return EventActionCard(
       event: primaryEvent,
       onMainAction: () {
+        // Fix #845: coordinator를 통해 탭 전환 위임
+        final coordinator = ref.read(partnerHomeCoordinatorProvider);
         switch (phase) {
           case EventPhase.recruiting:
-            const ApplicationListRoute().go(context);
+            coordinator.goToApplicationList();
           case EventPhase.preparing:
           case EventPhase.live:
-            const CheckinRoute().go(context);
+            coordinator.goToCheckin();
           case EventPhase.ended:
             // "다음 회차 만들기" → 이벤트 생성 (pre-fill은 #520에서 구현)
-            unawaited(
-              EventCreateRoute(
-                partyId: primaryEvent.partyId,
-              ).push<void>(context),
-            );
+            coordinator.pushEventCreate(primaryEvent.partyId);
         }
       },
       onSecondaryAction1: () {

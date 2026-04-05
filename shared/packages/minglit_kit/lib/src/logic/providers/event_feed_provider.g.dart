@@ -236,7 +236,7 @@ final class EventFeedProvider
   }
 }
 
-String _$eventFeedHash() => r'1b9fbcad96d823160132f80635edecde94436961';
+String _$eventFeedHash() => r'2ff0434f46fd44a5ff544267050fec8de68a36da';
 
 /// **View Model Provider**
 /// Filters the raw event feed based on the current user's status.
