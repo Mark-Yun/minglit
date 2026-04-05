@@ -116,13 +116,13 @@ void main() {
       expect(find.textContaining('박지수'), findsOneWidget);
     });
 
-    testWidgets('신청자 없을 때 파트너 정보가 null이어도 에러 없이 처리', (tester) async {
+    // 신청자 없는 상태에서 파트너 정보만 있을 때 — 빈 탭 렌더링
+    testWidgets('신청자 없을 때 — 빈 탭 에러 없이 처리', (tester) async {
       await tester.pumpWidget(
-        createTestWidget(partner: createTestPartner(id: 'p-null-test')),
+        createTestWidget(partner: createTestPartner(id: 'p-no-apps')),
       );
       await tester.pumpAndSettle();
 
-      // 파트너가 없어도 UI가 렌더링되어야 함
       expect(find.byType(TabBar), findsOneWidget);
     });
 

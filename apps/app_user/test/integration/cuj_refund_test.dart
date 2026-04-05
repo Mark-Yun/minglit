@@ -184,10 +184,14 @@ void main() {
 
     // IT-U03-V2: 이벤트 당일 (cutoff 초과 여부)
     testWidgets('변형: 이벤트 임박 — 환불 정책 표시 확인', (tester) async {
+      // 자정 전 2시간 이내 실행 시 날짜가 넘어가므로 스킵
+      final now = DateTime.now();
+      if (now.hour >= 22) return;
+
       setKoreanLocale(tester);
       final user = createMockUserForTest();
       final todayApp = _makeRefundableApp(
-        eventStartTime: DateTime.now().add(const Duration(hours: 2)),
+        eventStartTime: DateTime(now.year, now.month, now.day, 23),
       );
 
       await tester.pumpWidget(
