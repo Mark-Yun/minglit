@@ -53,7 +53,9 @@ Widget createTestApp({
         '/certification',
       ];
       final isProtected =
-          protectedPrefixes.any(path.startsWith) || path.endsWith('/apply');
+          protectedPrefixes.any(path.startsWith) ||
+          path.endsWith('/apply') ||
+          path.endsWith('/qr');
 
       // Not logged in + protected route → /login?from={path}
       if (!isLoggedIn && isProtected) {

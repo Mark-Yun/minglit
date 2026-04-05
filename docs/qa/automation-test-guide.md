@@ -6,13 +6,13 @@ Claude가 새 피쳐를 구현할 때 반드시 따라야 하는 자동화 테�
 
 ## 1. 현재 테스트 커버리지 현황
 
-### 요약 통계 (2026-04-04 기준)
+### 요약 통계 (2026-04-05 기준)
 
 | 계층 | 테스트 파일 수 | 커버리지 상태 |
 |------|-------------|-------------|
 | minglit_kit (공유 로직) | 80 | 양호 — 핵심 repository 대부분 커버 |
-| app_user (사용자 앱) | 82 | 양호 |
-| app_partner (파트너 앱) | 66 | 개선 중 |
+| app_user (사용자 앱) | 85 | 양호 (P0 Integration +3건, Smoke +2건) |
+| app_partner (파트너 앱) | 73 | 개선됨 (Integration +4건, Smoke +5건) |
 | Supabase DB (pgTAP) | 54 | 양호 |
 | Edge Functions (Deno) | 61 | 양호 |
 | Client CUJ (E2E) | 6 | 핵심 경로만 |
@@ -157,6 +157,59 @@ void main() {
 - `createContainer()` — Riverpod 테스트용 컨테이너 (`test_utils.dart`)
 - Repository를 Mock으로 override
 - `when()`으로 Mock 행동 정의 → 테스트 → `verify()`로 호출 검증
+
+### Layer 2.5: Integration 테스트 (CUJ 기반)
+
+**위치:**
+- `apps/app_user/test/integration/cuj_*.dart` — app_user CUJ
+- `apps/app_partner/test/integration/cuj_*.dart` — app_partner CUJ
+
+**공통 헬퍼:**
+- `apps/app_user/test/integration/utils/test_app.dart` — `createTestApp()`
+- `apps/app_partner/test/integration/utils/test_app.dart` — `createPartnerTestApp()`
+
+```dart
+// app_user CUJ 테스트 패턴
+void main() {
+  testWidgets('비로그인 사용자 → 보호 경로 리다이렉트', (tester) async {
+    await tester.pumpWidget(
+      createTestApp(
+        isLoggedIn: false,
+        initialLocation: '/events/event-1/apply',
+        additionalOverrides: [
+          eventDetailControllerProvider('event-1').overrideWith(
+            () => _FakeEventDetailController(AsyncData(testEvent)),
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(Scaffold), findsOneWidget);
+  });
+}
+
+// app_partner CUJ 테스트 패턴
+void main() {
+  testWidgets('needsApplication → /welcome 리다이렉트', (tester) async {
+    await tester.pumpWidget(
+      createPartnerTestApp(
+        isLoggedIn: true,
+        currentUser: testUser,
+        onboardingState: OnboardingState.needsApplication,
+        initialLocation: '/',
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(Scaffold), findsOneWidget);
+  });
+}
+```
+
+**핵심 패턴:**
+- `createTestApp()` / `createPartnerTestApp()` — 라우터 + Provider 설정 (Supabase 불필요)
+- `overrideWith()` — AsyncNotifier/Notifier를 Fake 구현으로 교체
+- `overrideWithValue()` — NotifierProvider를 특정 상태 값으로 교체
+- `AsyncData/AsyncLoading/AsyncError` — 비동기 상태 시뮬레이션
 
 ### Layer 3: Widget/UI 테스트
 
@@ -369,10 +422,13 @@ Claude가 새 피쳐를 구현할 때 아래 체크리스트를 따른다:
 - [ ] **에러 핸들링** — 네트워크 오류, 인증 만료 등 에러 시나리오
 - [ ] **엣지 케이스** — 빈 목록, null 값, 경계값 등
 
-### 선택 (MAY)
+### 필수 (MUST) — 추가 항목
 
-- [ ] **Integration 테스트** — 여러 Provider가 연동되는 복잡한 흐름
-- [ ] **Smoke 테스트** — 새 화면이 크래시 없이 렌더링되는지
+- [ ] **Smoke 테스트** — 새 화면 추가 시 `test/src/features/{feature}/ui/{page}_smoke_test.dart` 작성
+  - P0 화면: `event_application_wizard`, `purchase_history`, `settlement`, `checkin`, `partner_apply`, `party_create_wizard`, `application_manage`
+  - 최소 1개: 정상 렌더링 + 로딩 상태
+- [ ] **Integration 테스트** — 여러 화면을 걸치는 CUJ 플로우
+  - 신규 CUJ 추가 시 `test/integration/cuj_*.dart` 작성 필수
 
 ---
 
@@ -447,8 +503,14 @@ cd shared/packages/minglit_kit && flutter test
 # Flutter 특정 파일만
 flutter test test/src/features/event/logic/event_detail_controller_test.dart
 
-# Flutter 통합 테스트 (Mock 기반)
+# Flutter 통합 테스트 (Mock 기반) — app_user
 cd apps/app_user && flutter test test/integration/
+
+# Flutter 통합 테스트 (Mock 기반) — app_partner
+cd apps/app_partner && flutter test test/integration/
+
+# 태그로 분리 실행
+cd apps/app_user && flutter test --tags integration
 
 # pgTAP DB 테스트
 supabase test db
@@ -493,8 +555,8 @@ deno test --allow-all functions/ # Edge Functions
 
 | 변경 영역 | 실행되는 테스트 |
 |----------|-------------|
-| `apps/app_user/**` | Flutter analyze + test (app_user) |
-| `apps/app_partner/**` | Flutter analyze + test (app_partner) |
+| `apps/app_user/**` | Flutter analyze + test + **integration test** (app_user) |
+| `apps/app_partner/**` | Flutter analyze + test + **integration test** (app_partner) |
 | `shared/packages/minglit_kit/**` | Flutter analyze + test (모든 앱) |
 | `supabase/**` | pgTAP + Edge Function 테스트 |
 | `apps/landing_*/**` | npm lint + build |
