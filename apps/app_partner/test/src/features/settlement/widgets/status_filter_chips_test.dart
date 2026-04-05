@@ -6,8 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   Widget buildWidget({
-    String? selectedStatus,
     required ValueChanged<String?> onStatusChanged,
+    String? selectedStatus,
   }) {
     // Use a very wide view so all chips are on-screen and tappable.
     return MaterialApp(
@@ -26,14 +26,14 @@ void main() {
   group('StatusFilterChips widget', () {
     testWidgets('renders 8 ChoiceChip widgets', (tester) async {
       await tester.pumpWidget(
-        buildWidget(selectedStatus: null, onStatusChanged: (_) {}),
+        buildWidget(onStatusChanged: (_) {}),
       );
       expect(find.byType(ChoiceChip), findsNWidgets(8));
     });
 
     testWidgets('renders all expected labels', (tester) async {
       await tester.pumpWidget(
-        buildWidget(selectedStatus: null, onStatusChanged: (_) {}),
+        buildWidget(onStatusChanged: (_) {}),
       );
       for (final label in [
         '전체',
@@ -53,7 +53,7 @@ void main() {
       '전체 chip is selected when selectedStatus is null',
       (tester) async {
         await tester.pumpWidget(
-          buildWidget(selectedStatus: null, onStatusChanged: (_) {}),
+          buildWidget(onStatusChanged: (_) {}),
         );
         // The ChoiceChip that contains '전체' should be selected
         final chips = tester.widgetList<ChoiceChip>(
@@ -100,8 +100,9 @@ void main() {
       },
     );
 
-    testWidgets('tapping 전체 chip calls onStatusChanged with null',
-        (tester) async {
+    testWidgets('tapping 전체 chip calls onStatusChanged with null', (
+      tester,
+    ) async {
       String? received = 'INITIAL';
       await tester.pumpWidget(
         buildWidget(
@@ -113,12 +114,12 @@ void main() {
       expect(received, isNull);
     });
 
-    testWidgets('tapping PENDING chip calls onStatusChanged with PENDING',
-        (tester) async {
+    testWidgets('tapping PENDING chip calls onStatusChanged with PENDING', (
+      tester,
+    ) async {
       String? received;
       await tester.pumpWidget(
         buildWidget(
-          selectedStatus: null,
           onStatusChanged: (s) => received = s,
         ),
       );
@@ -126,12 +127,12 @@ void main() {
       expect(received, 'PENDING');
     });
 
-    testWidgets('tapping COMPLETED chip calls onStatusChanged with COMPLETED',
-        (tester) async {
+    testWidgets('tapping COMPLETED chip calls onStatusChanged with COMPLETED', (
+      tester,
+    ) async {
       String? received;
       await tester.pumpWidget(
         buildWidget(
-          selectedStatus: null,
           onStatusChanged: (s) => received = s,
         ),
       );
@@ -139,12 +140,12 @@ void main() {
       expect(received, 'COMPLETED');
     });
 
-    testWidgets('tapping FAILED chip calls onStatusChanged with FAILED',
-        (tester) async {
+    testWidgets('tapping FAILED chip calls onStatusChanged with FAILED', (
+      tester,
+    ) async {
       String? received;
       await tester.pumpWidget(
         buildWidget(
-          selectedStatus: null,
           onStatusChanged: (s) => received = s,
         ),
       );
@@ -152,12 +153,12 @@ void main() {
       expect(received, 'FAILED');
     });
 
-    testWidgets('tapping HOLD chip calls onStatusChanged with HOLD',
-        (tester) async {
+    testWidgets('tapping HOLD chip calls onStatusChanged with HOLD', (
+      tester,
+    ) async {
       String? received;
       await tester.pumpWidget(
         buildWidget(
-          selectedStatus: null,
           onStatusChanged: (s) => received = s,
         ),
       );

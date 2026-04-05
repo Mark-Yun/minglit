@@ -8,7 +8,6 @@
 import 'package:app_partner/src/features/settlement/settlement_coordinator.dart';
 import 'package:app_partner/src/routing/app_router.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -56,8 +55,9 @@ void main() {
   });
 
   group('SettlementCoordinator.retryPayout', () {
-    testWidgets('calls settlementRepository.retryPayout with correct args',
-        (tester) async {
+    testWidgets('calls settlementRepository.retryPayout with correct args', (
+      tester,
+    ) async {
       when(
         () => mockSettlementRepo.retryPayout(
           payoutId: any(named: 'payoutId'),

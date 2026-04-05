@@ -156,12 +156,6 @@ void main() {
       final detail = _makeDetail(
         id: 'item-abc',
         partnerId: 'partner-xyz',
-        status: 'COMPLETED',
-        grossAmount: 100000,
-        pgFeeAmount: 1500,
-        platformFeeAmount: 5000,
-        vatAmount: 500,
-        netAmount: 93000,
       );
       final csv = buildCsv(detail);
       final dataRow = csv.split('\n')[3];
@@ -177,10 +171,7 @@ void main() {
     });
 
     test('settlement period fields are empty when null', () {
-      final detail = _makeDetail(
-        settlementPeriodStart: null,
-        settlementPeriodEnd: null,
-      );
+      final detail = _makeDetail();
       final csv = buildCsv(detail);
       final dataRow = csv.split('\n')[3];
       // The two empty period columns produce consecutive commas
@@ -189,7 +180,7 @@ void main() {
 
     test('settlement period fields are included when non-null', () {
       final detail = _makeDetail(
-        settlementPeriodStart: DateTime(2026, 1, 1),
+        settlementPeriodStart: DateTime(2026),
         settlementPeriodEnd: DateTime(2026, 1, 31),
       );
       final csv = buildCsv(detail);
@@ -208,12 +199,14 @@ void main() {
       expect(bytes[2], 0xBF);
     });
 
-    test('file name format follows settlement_{id}_{timestamp}.csv pattern',
-        () {
-      const id = 'item-1';
-      final ts = DateTime.now().millisecondsSinceEpoch;
-      final fileName = 'settlement_${id}_$ts.csv';
-      expect(fileName, matches(RegExp(r'^settlement_item-1_\d+\.csv$')));
-    });
+    test(
+      'file name format follows settlement_{id}_{timestamp}.csv pattern',
+      () {
+        const id = 'item-1';
+        final ts = DateTime.now().millisecondsSinceEpoch;
+        final fileName = 'settlement_${id}_$ts.csv';
+        expect(fileName, matches(RegExp(r'^settlement_item-1_\d+\.csv$')));
+      },
+    );
   });
 }

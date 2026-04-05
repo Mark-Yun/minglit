@@ -108,8 +108,9 @@ void main() {
       expect(called, isTrue);
     });
 
-    testWidgets('handles missing fields gracefully with defaults',
-        (tester) async {
+    testWidgets('handles missing fields gracefully with defaults', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildCard({}));
       // Should render without throwing:
       // status defaults to 'PENDING' -> '정산 대기'
@@ -120,7 +121,9 @@ void main() {
       expect(find.text('-'), findsOneWidget);
     });
 
-    testWidgets('renders negative net_amount with minus prefix', (tester) async {
+    testWidgets('renders negative net_amount with minus prefix', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildCard({
           'status': 'CANCELED',

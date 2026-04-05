@@ -74,7 +74,9 @@ void main() {
         () => mockSettlementRepo.getSettlementItemDetail(any()),
       ).thenAnswer((_) => completer.future);
 
-      await tester.pumpWidget(_buildApp(mockSettlementRepo: mockSettlementRepo));
+      await tester.pumpWidget(
+        _buildApp(mockSettlementRepo: mockSettlementRepo),
+      );
       // pump(Duration.zero) lets initState run but does not complete the future.
       await tester.pump(Duration.zero);
 
@@ -90,7 +92,9 @@ void main() {
         () => mockSettlementRepo.getSettlementItemDetail(any()),
       ).thenThrow(Exception('network error'));
 
-      await tester.pumpWidget(_buildApp(mockSettlementRepo: mockSettlementRepo));
+      await tester.pumpWidget(
+        _buildApp(mockSettlementRepo: mockSettlementRepo),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('오류가 발생했습니다'), findsOneWidget);
@@ -102,7 +106,9 @@ void main() {
         () => mockSettlementRepo.getSettlementItemDetail(any()),
       ).thenAnswer((_) async => null);
 
-      await tester.pumpWidget(_buildApp(mockSettlementRepo: mockSettlementRepo));
+      await tester.pumpWidget(
+        _buildApp(mockSettlementRepo: mockSettlementRepo),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('정산 항목을 찾을 수 없습니다.'), findsOneWidget);
@@ -111,9 +117,11 @@ void main() {
     testWidgets('renders detail content for COMPLETED status', (tester) async {
       when(
         () => mockSettlementRepo.getSettlementItemDetail(any()),
-      ).thenAnswer((_) async => _makeDetail(status: 'COMPLETED'));
+      ).thenAnswer((_) async => _makeDetail());
 
-      await tester.pumpWidget(_buildApp(mockSettlementRepo: mockSettlementRepo));
+      await tester.pumpWidget(
+        _buildApp(mockSettlementRepo: mockSettlementRepo),
+      );
       await tester.pumpAndSettle();
 
       // AppBar title
@@ -129,7 +137,9 @@ void main() {
         () => mockSettlementRepo.getSettlementItemDetail(any()),
       ).thenAnswer((_) async => _makeDetail(status: 'FAILED'));
 
-      await tester.pumpWidget(_buildApp(mockSettlementRepo: mockSettlementRepo));
+      await tester.pumpWidget(
+        _buildApp(mockSettlementRepo: mockSettlementRepo),
+      );
       await tester.pumpAndSettle();
 
       expect(
@@ -143,7 +153,9 @@ void main() {
         () => mockSettlementRepo.getSettlementItemDetail(any()),
       ).thenAnswer((_) async => _makeDetail(status: 'HOLD'));
 
-      await tester.pumpWidget(_buildApp(mockSettlementRepo: mockSettlementRepo));
+      await tester.pumpWidget(
+        _buildApp(mockSettlementRepo: mockSettlementRepo),
+      );
       await tester.pumpAndSettle();
 
       expect(
@@ -152,8 +164,9 @@ void main() {
       );
     });
 
-    testWidgets('shows history timeline when histories are non-empty',
-        (tester) async {
+    testWidgets('shows history timeline when histories are non-empty', (
+      tester,
+    ) async {
       final histories = [
         SettlementHistoryEntry(
           eventType: 'STATUS_CHANGED',
@@ -166,20 +179,25 @@ void main() {
         () => mockSettlementRepo.getSettlementItemDetail(any()),
       ).thenAnswer((_) async => _makeDetail(histories: histories));
 
-      await tester.pumpWidget(_buildApp(mockSettlementRepo: mockSettlementRepo));
+      await tester.pumpWidget(
+        _buildApp(mockSettlementRepo: mockSettlementRepo),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('처리 이력'), findsOneWidget);
       expect(find.textContaining('PENDING → READY'), findsOneWidget);
     });
 
-    testWidgets('does not show history section when histories are empty',
-        (tester) async {
+    testWidgets('does not show history section when histories are empty', (
+      tester,
+    ) async {
       when(
         () => mockSettlementRepo.getSettlementItemDetail(any()),
       ).thenAnswer((_) async => _makeDetail(histories: []));
 
-      await tester.pumpWidget(_buildApp(mockSettlementRepo: mockSettlementRepo));
+      await tester.pumpWidget(
+        _buildApp(mockSettlementRepo: mockSettlementRepo),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('처리 이력'), findsNothing);
@@ -213,8 +231,7 @@ void main() {
         when(
           () => mockSettlementRepo.getSettlementItemDetail(any()),
         ).thenAnswer(
-          (_) async =>
-              _makeDetail(status: 'FAILED', retryable: false, payoutId: 'p-1'),
+          (_) async => _makeDetail(status: 'FAILED', payoutId: 'p-1'),
         );
 
         await tester.pumpWidget(
@@ -231,7 +248,9 @@ void main() {
         () => mockSettlementRepo.getSettlementItemDetail(any()),
       ).thenAnswer((_) async => _makeDetail());
 
-      await tester.pumpWidget(_buildApp(mockSettlementRepo: mockSettlementRepo));
+      await tester.pumpWidget(
+        _buildApp(mockSettlementRepo: mockSettlementRepo),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('CSV 다운로드'), findsOneWidget);
@@ -246,7 +265,9 @@ void main() {
         throw Exception('fail');
       });
 
-      await tester.pumpWidget(_buildApp(mockSettlementRepo: mockSettlementRepo));
+      await tester.pumpWidget(
+        _buildApp(mockSettlementRepo: mockSettlementRepo),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('다시 시도'), findsOneWidget);
