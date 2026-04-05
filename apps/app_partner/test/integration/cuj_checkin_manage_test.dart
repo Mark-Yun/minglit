@@ -4,7 +4,6 @@
 import 'package:app_partner/src/features/checkin/checkin_placeholder_page.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -46,7 +45,7 @@ void main() {
     });
 
     testWidgets('오늘 이벤트 2개 이상 — 이벤트 선택 목록 표시', (tester) async {
-      final events = fakeTodayEvents(count: 2);
+      final events = fakeTodayEvents();
       await tester.pumpWidget(createTestWidget(todayEvents: events));
       await tester.pumpAndSettle();
 

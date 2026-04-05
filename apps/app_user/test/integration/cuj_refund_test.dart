@@ -84,7 +84,6 @@ EventApplication _makeRefundableApp({
     paymentId: paymentId,
     paymentAmount: isFree ? 0 : paymentAmount,
     paidAt: now.subtract(const Duration(hours: 1)),
-    refundStatus: 'none',
     event: Event(
       id: 'event-refund-test',
       partyId: 'party-test-1',

@@ -4,9 +4,9 @@ import 'test_mocks.dart';
 
 /// Pre-built collections of fake data for integration tests.
 
-final testPartner = createTestPartner();
-final testUser = createTestUser();
-final testEvent = createTestEvent();
+final Partner testPartner = createTestPartner();
+final User testUser = createTestUser();
+final Event testEvent = createTestEvent();
 
 /// A list of pending applications for the test event.
 Map<Event, List<EventApplication>> fakePendingApplications() {

@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:app_partner/src/features/onboarding/partner_apply_page.dart'
+    show PartnerApplyPage;
 import 'package:app_partner/src/l10n/generated/app_localizations.dart';
 import 'package:app_partner/src/logic/onboarding_state_provider.dart';
 import 'package:app_partner/src/routing/app_routes.dart';

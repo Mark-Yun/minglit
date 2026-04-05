@@ -1,5 +1,4 @@
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Creates a test [Partner] with sensible defaults.
 Partner createTestPartner({
@@ -69,6 +68,5 @@ Event createTestEvent({
     endTime: now.add(const Duration(hours: 3)),
     createdAt: now.subtract(const Duration(days: 7)),
     updatedAt: now.subtract(const Duration(days: 7)),
-    currentParticipants: 0,
   );
 }

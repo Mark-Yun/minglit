@@ -4,7 +4,6 @@
 import 'package:app_partner/src/features/settlement/settlement_page.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -21,7 +20,7 @@ void main() {
     registerFallbackValue<int>(0);
   });
 
-  MockSettlementRepository _buildMockRepo({
+  MockSettlementRepository buildMockRepo({
     Map<String, dynamic>? dashboardData,
     List<SettlementItemDetail>? items,
   }) {
@@ -57,7 +56,7 @@ void main() {
           (ref) async => createTestPartner(),
         ),
         settlementRepositoryProvider.overrideWithValue(
-          settlementRepo ?? _buildMockRepo(),
+          settlementRepo ?? buildMockRepo(),
         ),
       ].cast(),
       child: const MaterialApp(home: SettlementPage()),
@@ -97,7 +96,7 @@ void main() {
     });
 
     testWidgets('대시보드 대이터 있을 때 — 금액 정보 렌더링', (tester) async {
-      final mockRepo = _buildMockRepo(
+      final mockRepo = buildMockRepo(
         dashboardData: {
           'gross_total': 100000,
           'net_completed': 91200,
