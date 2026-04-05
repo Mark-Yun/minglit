@@ -6,6 +6,7 @@
 // 3. 비로그인 시 티켓 목록 접근 차단
 // 변형:
 // - U02-V2: 체크인 없이 매칭 접근 차단 — 티켓 QR 페이지 접근 시 인증 필요
+import 'package:app_user/src/features/auth/login_page.dart';
 import 'package:app_user/src/features/payment/logic/purchase_history_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -33,7 +34,7 @@ void main() {
       await tester.pump();
 
       // /tickets/my는 보호된 경로 → /login으로 리다이렉트됨
-      expect(find.byType(Scaffold), findsWidgets);
+      expect(find.byType(LoginPage), findsOneWidget);
     });
 
     testWidgets('로그인 사용자는 티켓 목록 페이지에 접근할 수 있다', (tester) async {
@@ -53,16 +54,17 @@ void main() {
     testWidgets('U02-V2: 비로그인 사용자는 QR 페이지에도 접근할 수 없다', (
       tester,
     ) async {
-      // /tickets/my로 시작하는 경로는 보호됨
+      // /tickets/ticket-qr-test/qr 경로는 보호됨
       await tester.pumpWidget(
         createTestApp(
-          initialLocation: '/tickets/my',
+          initialLocation: '/tickets/ticket-qr-test/qr',
         ),
       );
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump();
 
       // login으로 리다이렉트 확인
-      expect(find.byType(Scaffold), findsOneWidget);
+      expect(find.byType(LoginPage), findsOneWidget);
     });
 
     testWidgets('로그인 사용자는 QR 티켓 페이지에 접근할 수 있다', (tester) async {
@@ -81,7 +83,7 @@ void main() {
       expect(find.byType(Scaffold), findsWidgets);
     });
 
-    testWidgets('홈에서 tiket 목록 탭이 노출된다', (tester) async {
+    testWidgets('홈에서 ticket 목록 탭이 노출된다', (tester) async {
       await tester.pumpWidget(
         createTestApp(
           isLoggedIn: true,

@@ -9,6 +9,7 @@
 // - P02-V1: 정원 초과 → 승인 시 경고
 // - P02-V2: 일괄 승인 버튼 노출
 import 'package:app_partner/src/features/application/event_application_manage_page.dart';
+import 'package:app_partner/src/features/auth/partner_login_page.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -45,7 +46,7 @@ void main() {
       await tester.pump();
 
       // /login으로 리다이렉트
-      expect(find.byType(Scaffold), findsWidgets);
+      expect(find.byType(PartnerLoginPage), findsOneWidget);
     });
 
     testWidgets('신청 관리 페이지 — 3개 탭이 표시된다', (tester) async {

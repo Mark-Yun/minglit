@@ -8,8 +8,8 @@
 // - U03-V1: 부분 환불 (일부만 환불 가능한 티켓)
 // - U03-V2: 당일 환불 정책 적용
 // - U03-V3: 무료 이벤트 무료 취소
+import 'package:app_user/src/features/auth/login_page.dart';
 import 'package:app_user/src/features/payment/logic/purchase_history_controller.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -70,7 +70,7 @@ void main() {
       await tester.pump();
 
       // /purchase-history는 보호된 경로
-      expect(find.byType(Scaffold), findsWidgets);
+      expect(find.byType(LoginPage), findsOneWidget);
     });
 
     testWidgets('결제완료 상태 항목이 구매 내역에 표시된다', (tester) async {
@@ -94,7 +94,7 @@ void main() {
       expect(find.text('소셜 다이닝'), findsOneWidget);
     });
 
-    testWidgets('환불요청 상태 항목이 표시된다', (tester) async {
+    testWidgets('환불요청 상태에서도 구매 내역 페이지가 크래시 없이 렌더링된다', (tester) async {
       await tester.pumpWidget(
         createTestApp(
           isLoggedIn: true,

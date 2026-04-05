@@ -8,6 +8,7 @@
 // 변형:
 // - P03-V1: 카메라 권한 거부 → 에러 표시
 // - P03-V2: 오프라인 환경 → 에러 처리
+import 'package:app_partner/src/features/auth/partner_login_page.dart';
 import 'package:app_partner/src/features/checkin/checkin_placeholder_page.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
@@ -52,7 +53,7 @@ void main() {
       await tester.pump();
 
       // /login으로 리다이렉트
-      expect(find.byType(Scaffold), findsWidgets);
+      expect(find.byType(PartnerLoginPage), findsOneWidget);
     });
 
     testWidgets('오늘 이벤트 없을 때 빈 상태 메시지 표시', (tester) async {

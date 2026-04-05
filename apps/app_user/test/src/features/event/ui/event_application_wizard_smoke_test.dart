@@ -82,7 +82,7 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('이벤트 로드 에러 시 에러 UI가 표시된다', (tester) async {
+    testWidgets('이벤트 로드 에러 시 크래시 없이 렌더링된다', (tester) async {
       await tester.pumpWidget(
         buildWidget(
           eventState: AsyncError<Event>(

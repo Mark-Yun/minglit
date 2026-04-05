@@ -6,6 +6,7 @@
 // 3. 정산 내역 탭 전환
 // 4. /settlement/bank-account 계좌 관리 페이지 접근
 // 5. 비로그인 시 접근 차단
+import 'package:app_partner/src/features/auth/partner_login_page.dart';
 import 'package:app_partner/src/features/settlement/settlement_dashboard_controller.dart';
 import 'package:app_partner/src/features/settlement/settlement_list_controller.dart';
 import 'package:flutter/material.dart';
@@ -54,7 +55,7 @@ void main() {
       await tester.pump();
 
       // /login으로 리다이렉트
-      expect(find.byType(Scaffold), findsWidgets);
+      expect(find.byType(PartnerLoginPage), findsOneWidget);
     });
 
     testWidgets('hasPartner 상태에서 정산 페이지에 접근할 수 있다', (tester) async {
