@@ -3,12 +3,11 @@ import 'package:minglit_kit/src/utils/log.dart';
 /// Validates that required environment variables are present at runtime.
 ///
 /// Flutter cannot import JSON at build time, so this list is manually
-/// synchronised with `env-manifest.json`.
+/// synchronised with `env-manifest.json`. CI enforces sync via
+/// `scripts/check-env-manifest-sync.sh` (check-env-manifest-sync job).
 ///
 /// Each key must be declared as a separate `const String.fromEnvironment()`
 /// because the argument must be a compile-time constant literal.
-// TODO(needs-swe-sonnet-subagents-1): Implement CI audit to detect drift
-// between this file and env-manifest.json.
 class EnvKeyStore {
   EnvKeyStore._();
 
