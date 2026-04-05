@@ -78,8 +78,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // 이벤트 제목 표시 확인
-      expect(find.text('테스트 이벤트'), findsWidgets);
+      // 이벤트 제목 표시 확인 — '테스트 이벤트 · 날짜 시간' 형식으로 렌더링됨
+      expect(find.textContaining('테스트 이벤트'), findsWidgets);
       // 신청자 이름 확인
       expect(find.textContaining('홍길동'), findsOneWidget);
       expect(find.textContaining('김영희'), findsOneWidget);
@@ -141,7 +141,7 @@ void main() {
         expect(bulkApproveBtn, findsOneWidget);
       } else {
         // 대기 목록이 있을 때 UI가 정상 렌더링됨을 확인
-        expect(find.text('테스트 이벤트'), findsWidgets);
+        expect(find.textContaining('테스트 이벤트'), findsWidgets);
       }
     });
   });
