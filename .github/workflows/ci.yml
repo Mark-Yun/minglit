@@ -129,7 +129,7 @@ jobs:
         run: dart run test_reporter -- flutter test --coverage --exclude-tags golden --file-reporter=json:test-results.json
         working-directory: ${{ matrix.directory }}
       - name: Integration Test
-        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' && matrix.app == 'app_user' }}
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         run: flutter test test/integration/
         working-directory: ${{ matrix.directory }}
       - name: Golden Test (comparison)
