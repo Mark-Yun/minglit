@@ -11,7 +11,9 @@ import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class SettlementPage extends ConsumerStatefulWidget {
-  const SettlementPage({super.key});
+  const SettlementPage({super.key, this.initialIndex = 0});
+
+  final int initialIndex;
 
   @override
   ConsumerState<SettlementPage> createState() => _SettlementPageState();
@@ -24,7 +26,11 @@ class _SettlementPageState extends ConsumerState<SettlementPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialIndex,
+    );
   }
 
   @override
