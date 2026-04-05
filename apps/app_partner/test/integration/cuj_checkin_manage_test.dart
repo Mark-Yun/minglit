@@ -94,7 +94,8 @@ void main() {
 
       // MobileScannerController는 테스트 환경에서 plugin 예외를 발생시킬 수 있으므로
       // 예외를 소거(clear)하고 테스트 러너 자체의 크래시 없음만 확인한다.
-      tester.takeException(); // clear any MissingPluginException from camera plugin
+      tester
+          .takeException(); // clear any MissingPluginException from camera plugin
     });
   });
 }
