@@ -25,11 +25,14 @@ void main() {
       // Regression test for #1070: ENVIRONMENT uses sentinel + defaults to
       // 'dev' in non-release builds, so it must never appear in
       // missingRequired().
-      test('does not include ENVIRONMENT — sentinel defaults to dev in debug', () {
-        final missing = EnvKeyStore.missingRequired();
+      test(
+        'does not include ENVIRONMENT — sentinel defaults to dev in debug',
+        () {
+          final missing = EnvKeyStore.missingRequired();
 
-        expect(missing, isNot(contains('ENVIRONMENT')));
-      });
+          expect(missing, isNot(contains('ENVIRONMENT')));
+        },
+      );
     });
 
     group('missingOptional', () {
