@@ -284,8 +284,9 @@ class _TicketEditSheetState extends ConsumerState<_TicketEditSheet> {
           const SizedBox(height: MinglitSpacing.large),
           const Text('판매 상태'),
           const SizedBox(height: MinglitSpacing.small),
-          Wrap(
-            spacing: MinglitSpacing.small,
+          MinglitChipGroup(
+            scrollable: false,
+            padding: EdgeInsets.zero,
             children: [
               _buildStatusChoice('on_sale', '판매중'),
               _buildStatusChoice('sold_out', '매진'),

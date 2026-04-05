@@ -1,4 +1,5 @@
 import { createServiceClient } from '../_shared/supabase_client.ts'
+import { nowISO } from '../_shared/temporal_utils.ts'
 import { OpenAIService } from './openai_service.ts'
 import { serializeParty } from './party_serializer.ts'
 import { HybridCalculator } from './calculator.ts'
@@ -35,7 +36,7 @@ Deno.serve(withHandler(async (req) => {
     // DEBUG LOG
     await supabase.from('debug_logs').insert({
       message: 'Vector Worker Invoked',
-      payload: { batchSize, timestamp: new Date().toISOString() }
+      payload: { batchSize, timestamp: nowISO() }
     });
 
     // 1. Read Batch from PGMQ
@@ -133,7 +134,7 @@ Deno.serve(withHandler(async (req) => {
             const item = {
               party_id: t.record.id,
               embedding: embeddings[i],
-              updated_at: new Date().toISOString()
+              updated_at: nowISO()
             };
 
             const { error: upsertError } = await supabase.from('party_embeddings').upsert(item);
@@ -169,7 +170,7 @@ Deno.serve(withHandler(async (req) => {
           const { error } = await supabase.from('user_embeddings').upsert({
             user_id,
             embedding: newVector,
-            updated_at: new Date().toISOString()
+            updated_at: nowISO()
           });
           if (error) throw error;
 

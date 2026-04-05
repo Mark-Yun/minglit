@@ -124,7 +124,7 @@ void main() {
       setKoreanLocale(tester);
       when(
         () => mockConsentRepository.hasRequiredConsents(),
-      ).thenThrow(Exception('consent lookup failed'));
+      ).thenAnswer((_) async => throw Exception('consent lookup failed'));
 
       await pumpRouterApp(
         tester,

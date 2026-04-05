@@ -62,9 +62,12 @@ GoRouter goRouter(Ref ref) {
         '/signup/consent', // 필수 동의
       ];
 
-      // suffix-match: 경로 끝이 /apply 인 경우 (이벤트 신청)
+      // suffix-match: /apply (이벤트 신청), /qr (개인 티켓 QR — 인증 필수)
+      // Fix #1072: /qr 보호 추가 — 개인 티켓 QR은 로그인 없이 접근 불가
       final isProtected =
-          protectedPrefixes.any(path.startsWith) || path.endsWith('/apply');
+          protectedPrefixes.any(path.startsWith) ||
+          path.endsWith('/apply') ||
+          path.endsWith('/qr');
 
       // 3. 비로그인 상태에서 보호된 경로 진입 시 -> 로그인 페이지로
       if (!isLoggedIn && isProtected) {
