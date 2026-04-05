@@ -5,7 +5,9 @@ import 'package:minglit_kit/src/config/env_keystore.dart';
 ///
 /// In the test environment no `--dart-define` flags are passed, so every
 /// `String.fromEnvironment` without a `defaultValue` resolves to `''`.
-/// ENVIRONMENT has `defaultValue: 'dev'` (Fix #1070), so it is never empty.
+/// ENVIRONMENT uses a sentinel ('__UNSET__') and defaults to 'dev' in
+/// non-release builds (Fix #1070). Release-build guard is not exercised
+/// here because dart.vm.product is false in test runs.
 void main() {
   group('EnvKeyStore', () {
     group('missingRequired', () {
@@ -20,9 +22,10 @@ void main() {
         },
       );
 
-      // Regression test for #1070: ENVIRONMENT must never appear in
-      // missingRequired() because it defaults to 'dev'.
-      test('does not include ENVIRONMENT — defaults to dev when unset', () {
+      // Regression test for #1070: ENVIRONMENT uses sentinel + defaults to
+      // 'dev' in non-release builds, so it must never appear in
+      // missingRequired().
+      test('does not include ENVIRONMENT — sentinel defaults to dev in debug', () {
         final missing = EnvKeyStore.missingRequired();
 
         expect(missing, isNot(contains('ENVIRONMENT')));
@@ -79,10 +82,11 @@ void main() {
         );
       });
 
-      // Regression test for #1070: validate() must not mention ENVIRONMENT
-      // in the error message when it defaults to 'dev'.
+      // Regression test for #1070: in debug/test builds, validate() must not
+      // throw about ENVIRONMENT (sentinel resolves to 'dev').
+      // The release-build guard (dart.vm.product) is not active here.
       test(
-        'error message does not include ENVIRONMENT when it has a default',
+        'error message does not include ENVIRONMENT in debug builds',
         () {
           expect(
             EnvKeyStore.validate,

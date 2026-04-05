@@ -17,10 +17,15 @@ class EnvKeyStore {
   static const _supabasePublishableKey = String.fromEnvironment(
     'SUPABASE_PUBLISHABLE_KEY',
   );
-  // Fix #1070: ENVIRONMENT is intentionally omitted from _requiredEntries.
-  // It has a compile-time defaultValue of 'dev', so local runs without
-  // --dart-define-from-file succeed instead of crashing. Production/CI
-  // always injects an explicit value via flutter.env.
+  // Fix #1070: sentinel distinguishes "injected empty" from "not injected".
+  // Debug/local: defaults to 'dev' so runs without --dart-define-from-file
+  // don't crash. Release builds: validate() enforces explicit injection.
+  static const _environmentRaw = String.fromEnvironment(
+    'ENVIRONMENT',
+    defaultValue: '__UNSET__',
+  );
+  static const _environment =
+      _environmentRaw == '__UNSET__' ? 'dev' : _environmentRaw;
 
   // ── manifest.flutter.optional ──
   static const _sentryDsn = String.fromEnvironment('SENTRY_DSN');
@@ -77,6 +82,18 @@ class EnvKeyStore {
   /// Throws [StateError] when required env vars are missing so the app
   /// fails fast in both debug and release builds.
   static void validate() {
+    // Release builds must have ENVIRONMENT injected explicitly. If the sentinel
+    // is still set it means the env file was not passed at build time.
+    if (const bool.fromEnvironment('dart.vm.product') &&
+        _environmentRaw == '__UNSET__') {
+      const message =
+          'EnvKeyStore: ENVIRONMENT must be injected in release builds.\n'
+          'Build with: flutter build '
+          '--dart-define-from-file=../../minglit_env/dev/flutter.env';
+      Log.e(message);
+      throw StateError(message);
+    }
+
     final missing = missingRequired();
     if (missing.isEmpty) {
       final optionalMissing = missingOptional();
