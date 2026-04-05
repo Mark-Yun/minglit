@@ -97,9 +97,9 @@ void main() {
       expect(find.byType(Scaffold), findsOneWidget);
     });
 
-    testWidgets('매칭 투표 UI — 투표 시간 초과 상태 처리 (U02-V1)', (tester) async {
-      // 매칭 투표 시간 초과는 matching_vote_controller에서 처리됨
-      // 통합 테스트에서는 votingState 상태 표시 검증
+    testWidgets('U02-V1: 홈 화면이 크래시 없이 렌더링된다', (tester) async {
+      // smoke: 매칭 투표 진입 전 홈 화면 렌더링 검증
+      // 투표 시간 초과 로직은 matching_vote_controller unit test에서 별도 검증
       await tester.pumpWidget(
         createTestApp(
           isLoggedIn: true,
@@ -108,7 +108,6 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // 시간 초과 상태도 크래시 없이 처리됨
       expect(find.byType(Scaffold), findsOneWidget);
     });
 
