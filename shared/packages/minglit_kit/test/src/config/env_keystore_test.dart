@@ -4,19 +4,35 @@ import 'package:minglit_kit/src/config/env_keystore.dart';
 /// Tests for [EnvKeyStore].
 ///
 /// In the test environment no `--dart-define` flags are passed, so every
-/// `String.fromEnvironment` resolves to `''`.  This lets us exercise the
-/// "missing" paths without any special setup.
+/// `String.fromEnvironment` without a `defaultValue` resolves to `''`.
+/// ENVIRONMENT uses a sentinel ('__UNSET__') and defaults to 'dev' in
+/// non-release builds (Fix #1070). Release-build guard is not exercised
+/// here because dart.vm.product is false in test runs.
 void main() {
   group('EnvKeyStore', () {
     group('missingRequired', () {
-      test('returns all required keys when none are defined', () {
-        final missing = EnvKeyStore.missingRequired();
+      test(
+        'returns SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY when none are defined',
+        () {
+          final missing = EnvKeyStore.missingRequired();
 
-        expect(missing, contains('SUPABASE_URL'));
-        expect(missing, contains('SUPABASE_PUBLISHABLE_KEY'));
-        expect(missing, contains('ENVIRONMENT'));
-        expect(missing, hasLength(3));
-      });
+          expect(missing, contains('SUPABASE_URL'));
+          expect(missing, contains('SUPABASE_PUBLISHABLE_KEY'));
+          expect(missing, hasLength(2));
+        },
+      );
+
+      // Regression test for #1070: ENVIRONMENT uses sentinel + defaults to
+      // 'dev' in non-release builds, so it must never appear in
+      // missingRequired().
+      test(
+        'does not include ENVIRONMENT — sentinel defaults to dev in debug',
+        () {
+          final missing = EnvKeyStore.missingRequired();
+
+          expect(missing, isNot(contains('ENVIRONMENT')));
+        },
+      );
     });
 
     group('missingOptional', () {
@@ -63,12 +79,30 @@ void main() {
               allOf(
                 contains('SUPABASE_URL'),
                 contains('SUPABASE_PUBLISHABLE_KEY'),
-                contains('ENVIRONMENT'),
               ),
             ),
           ),
         );
       });
+
+      // Regression test for #1070: in debug/test builds, validate() must not
+      // throw about ENVIRONMENT (sentinel resolves to 'dev').
+      // The release-build guard (dart.vm.product) is not active here.
+      test(
+        'error message does not include ENVIRONMENT in debug builds',
+        () {
+          expect(
+            EnvKeyStore.validate,
+            throwsA(
+              isA<StateError>().having(
+                (e) => e.message,
+                'message',
+                isNot(contains('ENVIRONMENT')),
+              ),
+            ),
+          );
+        },
+      );
     });
   });
 }
