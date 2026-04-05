@@ -14,8 +14,11 @@ void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() async {
-    SharedPreferences.setMockInitialValues({});
     await initializeDateFormatting('ko_KR');
+  });
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
   });
 
   for (final scenario in PartnerScenarios.all) {

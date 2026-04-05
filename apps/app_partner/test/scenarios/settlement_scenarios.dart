@@ -124,7 +124,7 @@ class SettlementScenarios {
     ),
     PartnerScreenshotScenario(
       name: 'settlement_page_list',
-      page: const SettlementPage(),
+      page: const SettlementPage(initialIndex: 1),
       brightness: Brightness.dark,
       overrides: _listOverrides(),
     ),
