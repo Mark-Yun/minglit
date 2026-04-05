@@ -16,14 +16,10 @@ class EnvKeyStore {
   static const _supabasePublishableKey = String.fromEnvironment(
     'SUPABASE_PUBLISHABLE_KEY',
   );
-  // Fix #1070: ENVIRONMENT defaults to 'dev' so that local runs without
-  // --dart-define-from-file don't crash immediately. Production/CI always
-  // injects an explicit value via flutter.env, so the default is never used
-  // in real deployments.
-  static const _environment = String.fromEnvironment(
-    'ENVIRONMENT',
-    defaultValue: 'dev',
-  );
+  // Fix #1070: ENVIRONMENT is intentionally omitted from _requiredEntries.
+  // It has a compile-time defaultValue of 'dev', so local runs without
+  // --dart-define-from-file succeed instead of crashing. Production/CI
+  // always injects an explicit value via flutter.env.
 
   // ── manifest.flutter.optional ──
   static const _sentryDsn = String.fromEnvironment('SENTRY_DSN');
