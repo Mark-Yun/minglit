@@ -113,7 +113,7 @@ final class EventApplicationReviewControllerProvider
 }
 
 String _$eventApplicationReviewControllerHash() =>
-    r'5b762c59541102d4e12e904f980ef60fa43cdc34';
+    r'3ef21b17ead7a0a5ebcc0dcd9204445bab45c3e7';
 
 abstract class _$EventApplicationReviewController extends $AsyncNotifier<void> {
   FutureOr<void> build();

@@ -196,16 +196,16 @@
 
 ## 10. TextStyles — `MinglitTextStyles`
 
-**소스**: `minglit_design_utils.dart:45-82`
+**소스**: `minglit_design_utils.dart:46-84`
 
 | 메서드 | 기반 스타일 | 커스텀 | 용도 | 라인 |
 | :--- | :--- | :--- | :--- | :--- |
-| `selectableCardTitle()` | `titleSmall` | 선택 시 secondary 색상 | 카드 제목 | :47-55 |
-| `selectableCardSubtitle()` | `labelSmall` | onSurfaceVariant 70% alpha | 카드 부제 | :59-64 |
-| `selectableCardDescription()` | `bodySmall` | onSurfaceVariant 색상 | 카드 설명 | :67-72 |
-| `infoText()` | `bodySmall` | onSurfaceVariant 색상 | 정보 텍스트 | :76-81 |
+| `selectableCardTitle()` | `titleSmall` | 선택 시 secondary 색상 | 카드 제목 | :49-57 |
+| `selectableCardSubtitle()` | `labelSmall` | onSurfaceVariant 70% alpha | 카드 부제 | :61-66 |
+| `selectableCardDescription()` | `bodySmall` | onSurfaceVariant 색상 | 카드 설명 | :69-74 |
+| `infoText()` | `bodySmall` | onSurfaceVariant 색상 | 정보 텍스트 | :78-83 |
 
-> `selectableCardSubtitle`과 `infoText`의 하드코딩 fontSize는 #474 (Typography 시스템 정비)에서 TextTheme/ThemeExtension으로 전환 예정.
+> `selectableCardSubtitle`과 `infoText`는 Fix #474 (Typography 시스템 정비)에서 `labelSmall`/`bodySmall` 기반 TextTheme으로 전환 완료.
 
 ---
 

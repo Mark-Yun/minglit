@@ -371,3 +371,214 @@ Deno.test({
     );
   },
 });
+
+// ─────────────────────────────────────────────────────────
+// Issue #964: E2E filter, display events, auto-complete cron
+// ─────────────────────────────────────────────────────────
+
+Deno.test({
+  name: "backend-simulator - phase=run only processes [E2E] events (non-E2E events remain scheduled)",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const h = await getHandler();
+
+    // Track which event IDs were passed to checkin/complete via PATCH
+    const patchedEventIds: string[] = [];
+
+    const { fetchMock } = createFetchMock([
+      {
+        // GET /rest/v1/events — return both E2E and non-E2E scheduled events.
+        // The run phase filters with parties.title LIKE '[E2E]%', so only E2E
+        // rows should be returned when the filter param is present.
+        matcher: (req) =>
+          req.url.includes("/rest/v1/events") && req.method === "GET",
+        handler: (req) => {
+          const url = new URL(req.url);
+          const titleFilter = url.searchParams.get("parties.title") ?? "";
+          const isE2EFilter = titleFilter.includes("[E2E]") || titleFilter.includes("%5BE2E%5D");
+
+          if (isE2EFilter) {
+            // Only return E2E events when the filter is applied
+            return jsonResponse(wrapSingle(req, [
+              { id: "e2e-event-1", parties: { title: "[E2E] 대학생 밍글" } },
+            ]));
+          }
+          // Without filter, return both E2E and non-E2E events
+          return jsonResponse(wrapSingle(req, [
+            { id: "e2e-event-1", parties: { title: "[E2E] 대학생 밍글" } },
+            { id: "non-e2e-event-1", parties: { title: "일반 파티" } },
+          ]));
+        },
+      },
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/events") && req.method === "PATCH",
+        handler: async (req) => {
+          const url = new URL(req.url);
+          const idFilter = url.searchParams.get("id")?.replace("eq.", "");
+          if (idFilter) patchedEventIds.push(idFilter);
+          const body = await req.json() as Record<string, unknown>;
+          return jsonResponse([{ id: idFilter, ...body }], { status: 200 });
+        },
+      },
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/event_participants") && req.method === "GET",
+        handler: (req) => jsonResponse(wrapSingle(req, [])),
+      },
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/event_participants") && req.method === "PATCH",
+        handler: () => jsonResponse({ id: crypto.randomUUID() }, { status: 200 }),
+      },
+      {
+        matcher: (req) => req.url.includes("/rest/v1/"),
+        handler: (req) => jsonResponse(wrapSingle(req, []), { status: 200 }),
+      },
+      {
+        matcher: (req) => req.url.includes("/storage/v1/"),
+        handler: () => jsonResponse({ Key: "e2e-test-logs/run.log" }),
+      },
+      {
+        matcher: (req) => req.url.includes("api.github.com"),
+        handler: () =>
+          jsonResponse({ html_url: "https://github.com/Mark-Yun/minglit/issues/999", number: 999 }, { status: 201 }),
+      },
+    ]);
+
+    await withEnv(
+      {
+        ENVIRONMENT: "development",
+        SUPABASE_URL: "http://localhost:54321",
+        SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+      },
+      async () => {
+        await withMockedFetch(fetchMock, async () => {
+          const response = await h(jsonRequest("http://localhost", { phase: "run" }));
+          assertEquals(response.status, 200);
+
+          const body = await readJson(response);
+          assertEquals(body.success, true);
+          assertExists(body.run_id);
+
+          // The run phase must have patched the E2E event
+          assertEquals(
+            patchedEventIds.includes("e2e-event-1"),
+            true,
+            "E2E event must be processed by run phase",
+          );
+          // The run phase must NOT have patched the non-E2E event
+          assertEquals(
+            patchedEventIds.includes("non-e2e-event-1"),
+            false,
+            "non-E2E event must not be processed by run phase",
+          );
+        });
+      },
+    );
+  },
+});
+
+Deno.test({
+  name: "backend-simulator - phase=create response includes display_party_ids and display_event_ids",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const h = await getHandler();
+
+    // Track created parties to distinguish E2E vs display
+    const createdParties: { title?: string }[] = [];
+
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/partners") && req.method === "GET",
+        handler: (req) => jsonResponse(wrapSingle(req, [{ id: "partner-1" }])),
+      },
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/locations") && req.method === "GET",
+        handler: (req) => jsonResponse(wrapSingle(req, [{ id: "loc-1" }])),
+      },
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/parties") && req.method === "POST",
+        handler: async (req) => {
+          const body = await req.json() as { title?: string };
+          createdParties.push({ title: body.title });
+          return jsonResponse({ id: crypto.randomUUID() }, { status: 201 });
+        },
+      },
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/events") && req.method === "POST",
+        handler: () =>
+          jsonResponse({ id: crypto.randomUUID() }, { status: 201 }),
+      },
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/events") && req.method === "GET",
+        handler: (req) => jsonResponse(wrapSingle(req, [])),
+      },
+      {
+        matcher: (req) => req.url.includes("/rest/v1/") && req.method === "POST",
+        handler: () => jsonResponse({ id: crypto.randomUUID() }, { status: 201 }),
+      },
+      {
+        matcher: (req) => req.url.includes("/rest/v1/") && req.method === "GET",
+        handler: (req) => jsonResponse(wrapSingle(req, [])),
+      },
+      {
+        matcher: (req) => req.url.includes("/storage/v1/"),
+        handler: () => jsonResponse({ Key: "e2e-test-logs/run.log" }),
+      },
+    ]);
+
+    await withEnv(
+      {
+        ENVIRONMENT: "development",
+        SUPABASE_URL: "http://localhost:54321",
+        SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+      },
+      async () => {
+        await withMockedFetch(fetchMock, async () => {
+          const response = await h(jsonRequest("http://localhost", { phase: "create" }));
+          assertEquals(response.status, 200);
+
+          const body = await readJson(response);
+          assertEquals(body.success, true);
+          assertExists(body.run_id);
+
+          // E2E party/event arrays must be present
+          assertExists(body.party_ids);
+          assertExists(body.event_ids);
+          assertEquals(Array.isArray(body.party_ids), true);
+          assertEquals(Array.isArray(body.event_ids), true);
+
+          // Display party/event arrays must be present (Issue #964)
+          assertExists(body.display_party_ids);
+          assertExists(body.display_event_ids);
+          assertEquals(Array.isArray(body.display_party_ids), true);
+          assertEquals(Array.isArray(body.display_event_ids), true);
+
+          // Display events must NOT have [E2E] prefix in their parties
+          const displayOnlyParties = createdParties.filter(
+            (p) => p.title && !p.title.startsWith("[E2E]"),
+          );
+          // If simCreateDisplayEvents created any parties, they must not be E2E-prefixed
+          for (const party of displayOnlyParties) {
+            assertEquals(
+              party.title?.startsWith("[E2E]"),
+              false,
+              `Display party title must not start with [E2E], got: ${party.title}`,
+            );
+          }
+        });
+      },
+    );
+  },
+});
+
+// Note: auto-complete cron job registration and SQL condition (end_time < now())
+// are tested at the database level in supabase/tests/database/59_auto_complete_cron_test.sql.

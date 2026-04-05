@@ -66,7 +66,7 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 |-------|---------|-------------|
 | `parties` | 파티 (이벤트 템플릿) | partner_id, title, image_urls[], balance_config, status (draft/active/closed), visibility (public/private) |
 | `party_embeddings` | 파티 임베딩 | party_id (PK), embedding vector(1536) |
-| `events` | 실제 이벤트 회차 | party_id, start_time, end_time, vote_start_at, vote_end_at, status (scheduled/cancelled/completed), visibility (public/private) |
+| `events` | 실제 이벤트 회차 | party_id, start_time, end_time, vote_start_at, vote_end_at, status (scheduled/active/ongoing/cancelled/completed), visibility (public/private) |
 | `entry_group_templates` | 입장 그룹 템플릿 (파티) | party_id, gender, birth_year_min/max |
 | `entry_groups` | 입장 그룹 (이벤트) | event_id, gender, birth_year_min/max |
 | `ticket_templates` | 티켓 템플릿 (파티) | party_id, name, price, quantity |

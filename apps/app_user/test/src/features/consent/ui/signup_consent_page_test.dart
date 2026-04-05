@@ -101,8 +101,8 @@ void main() {
   testWidgets('보기 버튼을 누르면 약관 상세 바텀시트가 열린다', (tester) async {
     await pumpPage(tester);
 
-    // Fix #966: TextButton('보기') → GestureDetector(Text('보기'))로 변경됨
-    await tester.tap(find.text('보기').first);
+    // Fix #966: '보기' TextButton → '보기 ›' GestureDetector
+    await tester.tap(find.text('보기 ›').first);
     await tester.pumpAndSettle();
 
     expect(find.text('이용자 보호'), findsOneWidget);

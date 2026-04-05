@@ -23,7 +23,9 @@ Minglit의 Flutter 클라이언트 아키텍처를 기술한다.
 
 ```text
 minglit_kit/lib/src/features/
+├── account_deletion/ # 계정 삭제 (유저/파트너 탈퇴 플로우, 소프트 삭제 + 30일 유예기간)
 ├── auth/           # 로그인, 회원가입, OAuth
+├── consent/        # 이용약관/개인정보 동의 관리 (동의 화면, 동의 이력 추적)
 ├── dev/            # 개발 유틸리티 (세션 스위처, 미리보기)
 ├── iamport/        # 결제 연동 (Iamport SDK 래퍼)
 ├── loading/        # 글로벌 로딩 오버레이
@@ -32,9 +34,7 @@ minglit_kit/lib/src/features/
 ├── social/         # 소셜 기능 (좋아요, 구독, 차단)
 ├── permission/     # 앱 권한 설정 (카메라, 위치 등 시스템 권한 관리 화면)
 ├── theme/          # 테마 모드 컨트롤러 (라이트/다크/시스템)
-├── verification/   # 본인인증 (Identity Verification) — Iamport V2 기반 실명 인증 화면
-├── account_deletion/ # 회원 탈퇴 (탈퇴 사유, DI 블록, 아카이브)
-└── consent/        # 이용약관 동의 관리
+└── verification/   # 본인인증 (Identity Verification) — Iamport V2 기반 실명 인증 화면
 ```
 
 #### app_user Features
