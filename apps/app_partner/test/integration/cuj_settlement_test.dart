@@ -16,8 +16,6 @@ void main() {
   setUpAll(() async {
     await initializeDateFormatting('ko_KR');
     registerFallbackValue(DateTime.now());
-    registerFallbackValue<String?>(null);
-    registerFallbackValue<int>(0);
   });
 
   MockSettlementRepository buildMockRepo({
@@ -43,7 +41,7 @@ void main() {
     ).thenAnswer((_) async => items ?? []);
 
     when(
-      () => mock.getBankAccount(partnerId: any(named: 'partnerId')),
+      () => mock.getBankAccount(any()),
     ).thenAnswer((_) async => null);
 
     return mock;
@@ -76,7 +74,6 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      // 빈 데이터에서 로딩 완료 후 에러 없이 렌더링
       expect(find.byType(Scaffold), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
@@ -95,7 +92,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('대시보드 대이터 있을 때 — 금액 정보 렌더링', (tester) async {
+    testWidgets('대시보드 데이터 있을 때 — 예외 없이 렌더링', (tester) async {
       final mockRepo = buildMockRepo(
         dashboardData: {
           'gross_total': 100000,
@@ -107,7 +104,6 @@ void main() {
       await tester.pumpWidget(createTestWidget(settlementRepo: mockRepo));
       await tester.pumpAndSettle();
 
-      // 대시보드가 렌더링되고 예외 없음 확인
       expect(find.byType(TabBarView), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
@@ -117,7 +113,6 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      // 계좌 없이도 크래시 없음
       expect(find.byType(Scaffold), findsOneWidget);
     });
   });

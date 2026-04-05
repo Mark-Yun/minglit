@@ -27,7 +27,7 @@ Widget createPartnerTestApp({
     OnboardingState.hasPartner,
   ),
   String initialLocation = '/',
-  List<Override> additionalOverrides = const [],
+  List<dynamic> additionalOverrides = const [],
 }) {
   final testRouter = GoRouter(
     initialLocation: initialLocation,
@@ -85,7 +85,7 @@ Widget createPartnerTestApp({
       partnerRepositoryProvider.overrideWithValue(
         _createDefaultPartnerRepository(),
       ),
-      ...additionalOverrides,
+      ...additionalOverrides.cast(),
     ],
     child: MaterialApp.router(
       theme: MinglitTheme.materialTheme,

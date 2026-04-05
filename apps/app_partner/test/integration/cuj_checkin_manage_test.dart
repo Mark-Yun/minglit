@@ -16,15 +16,11 @@ void main() {
     await initializeDateFormatting('ko_KR');
   });
 
-  Widget createTestWidget({
-    required List<Event> todayEvents,
-    Partner? partner,
-  }) {
-    final testPartnerId = (partner ?? testPartner).id;
+  Widget createTestWidget({required List<Event> todayEvents}) {
     return ProviderScope(
       overrides: [
         currentPartnerInfoProvider.overrideWith(
-          (ref) async => partner ?? testPartner,
+          (ref) async => testPartner,
         ),
         todayEventsProvider.overrideWith(
           (ref, partnerId) async => todayEvents,
@@ -39,7 +35,6 @@ void main() {
       await tester.pumpWidget(createTestWidget(todayEvents: []));
       await tester.pumpAndSettle();
 
-      // 이벤트가 없을 때 빈 상태 UI 렌더링 확인
       expect(find.byType(Scaffold), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
@@ -49,7 +44,6 @@ void main() {
       await tester.pumpWidget(createTestWidget(todayEvents: events));
       await tester.pumpAndSettle();
 
-      // 이벤트 선택 시트 또는 목록에 이벤트 제목이 표시되어야 함
       expect(find.textContaining('오늘의 이벤트 1'), findsWidgets);
       expect(find.textContaining('오늘의 이벤트 2'), findsWidgets);
     });
@@ -69,7 +63,6 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            // 파트너 정보 로딩 시뮬레이션
             currentPartnerInfoProvider.overrideWith(
               (ref) async {
                 await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -77,7 +70,7 @@ void main() {
               },
             ),
             todayEventsProvider.overrideWith(
-              (ref, partnerId) async => fakeTodayEvents(count: 1),
+              (ref, partnerId) async => fakeTodayEvents(),
             ),
           ].cast(),
           child: const MaterialApp(home: CheckinPlaceholderPage()),
@@ -89,14 +82,14 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    // IT-P03-V1: 단일 이벤트 — QR 스캐너 자동 이동 (카메라 권한 없어서 직접 검증 불가)
-    testWidgets('변형: 단일 이벤트 — QR 스캐너 페이지로 자동 이동 시도', (tester) async {
-      final singleEvent = fakeTodayEvents(count: 1);
-      await tester.pumpWidget(createTestWidget(todayEvents: singleEvent));
+    // IT-P03-V1: 단일 이벤트 — QR 스캐너 자동 이동 시도 (카메라 권한 없어 직접 검증 불가)
+    testWidgets('변형: 단일 이벤트 — QR 스캐너로 자동 이동 시도 크래시 없음', (tester) async {
+      await tester.pumpWidget(
+        createTestWidget(todayEvents: fakeTodayEvents(count: 1)),
+      );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
-      // 단일 이벤트이면 자동으로 QR 스캐너로 이동하려 시도 — 크래시만 없으면 통과
       expect(tester.takeException(), isNull);
     });
   });
