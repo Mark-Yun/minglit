@@ -1,4 +1,4 @@
-import 'package:app_user/src/features/payment/ui/payment_success_screen.dart';
+import 'package:app_user/src/features/event/admission/payment_success_screen.dart';
 import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';

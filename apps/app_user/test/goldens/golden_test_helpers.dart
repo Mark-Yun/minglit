@@ -105,7 +105,7 @@ extension ScreenshotScenarioX on ScreenshotScenario {
           page: page,
           overrides: overrides,
           brightness: brightness,
-          currentUser: currentUser,
+          currentUser: this.currentUser,
         ),
       ),
     );
