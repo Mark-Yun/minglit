@@ -66,21 +66,20 @@ class _FakeMobileScannerPlatform extends MobileScannerPlatform {
   Future<BarcodeCapture?> analyzeImage(
     String path, {
     List<BarcodeFormat> formats = const <BarcodeFormat>[],
-  }) async =>
-      null;
+  }) async => null;
 }
 
 void main() {
   group('CheckinPlaceholderPage', () {
-    late MobileScannerPlatform _originalPlatform;
+    late MobileScannerPlatform originalPlatform;
 
     setUp(() {
-      _originalPlatform = MobileScannerPlatform.instance;
+      originalPlatform = MobileScannerPlatform.instance;
       MobileScannerPlatform.instance = _FakeMobileScannerPlatform();
     });
 
     tearDown(() {
-      MobileScannerPlatform.instance = _originalPlatform;
+      MobileScannerPlatform.instance = originalPlatform;
     });
 
     const testPartner = Partner(
