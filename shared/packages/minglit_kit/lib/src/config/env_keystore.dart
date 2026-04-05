@@ -17,15 +17,14 @@ class EnvKeyStore {
   static const _supabasePublishableKey = String.fromEnvironment(
     'SUPABASE_PUBLISHABLE_KEY',
   );
-  // Fix #1070: sentinel distinguishes "injected empty" from "not injected".
-  // Debug/local: defaults to 'dev' so runs without --dart-define-from-file
-  // don't crash. Release builds: validate() enforces explicit injection.
+  // Fix #1070: sentinel distinguishes "injected" from "not injected".
+  // Debug/local: validate() permits missing ENVIRONMENT (defaults silently).
+  // Release builds: validate() throws if still '__UNSET__', preventing
+  // accidental prod deployments without an explicit env file.
   static const _environmentRaw = String.fromEnvironment(
     'ENVIRONMENT',
     defaultValue: '__UNSET__',
   );
-  static const _environment =
-      _environmentRaw == '__UNSET__' ? 'dev' : _environmentRaw;
 
   // ── manifest.flutter.optional ──
   static const _sentryDsn = String.fromEnvironment('SENTRY_DSN');
