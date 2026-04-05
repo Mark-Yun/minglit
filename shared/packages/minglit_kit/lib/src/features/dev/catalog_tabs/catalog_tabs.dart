@@ -1,4 +1,5 @@
 export 'pattern_list_section.dart';
+export 'patterns/card_layouts_demo.dart';
 export 'patterns/detail_page_demo.dart';
 export 'patterns/mock_data.dart';
 export 'tokens/animation_section.dart';

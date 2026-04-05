@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:minglit_kit/src/features/dev/catalog_tabs/patterns/card_layouts_demo.dart';
 import 'package:minglit_kit/src/features/dev/catalog_tabs/patterns/detail_page_demo.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_content_card.dart';
@@ -48,12 +49,14 @@ class PatternListSection extends StatelessWidget {
         const SizedBox(height: MinglitSpacing.large),
         Text('데이터 표시 패턴', style: theme.textTheme.titleMedium),
         const SizedBox(height: MinglitSpacing.small),
-        const _PatternTile(
+        _PatternTile(
           title: 'P4 — 카드 레이아웃',
           subtitle: '5가지 카드 변형 프리뷰',
           icon: Icons.grid_view_outlined,
-          onTap: null, // feat/714 — 준비 중
-          disabled: true,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(builder: (_) => const CardLayoutsDemo()),
+          ),
         ),
         const SizedBox(height: MinglitSpacing.large),
         Text('트랜잭션 패턴', style: theme.textTheme.titleMedium),
