@@ -239,6 +239,24 @@ jobs:
           deno-version: v2.x
       - name: Start Supabase
         run: supabase start
+      - name: Validate deno.json presence
+        run: |
+          missing=()
+          for dir in functions/*/; do
+            name=$(basename "$dir")
+            if [[ "$name" != _* ]] && [ ! -f "${dir}deno.json" ]; then
+              missing+=("$name")
+            fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "❌ deno.json missing in the following Edge Functions:"
+            for ef in "${missing[@]}"; do
+              echo "  - $ef"
+            done
+            exit 1
+          fi
+          echo "✅ All Edge Functions have deno.json"
+        working-directory: supabase
       - name: Test (edge functions)
         run: deno test --allow-all functions/
         working-directory: supabase
