@@ -455,7 +455,7 @@ void main() {
             () => mockEventRepo.createOrderViaEF(
               eventId: any(named: 'eventId'),
               ticketId: any(named: 'ticketId'),
-              verificationData: isNull,
+              verificationData: null,
             ),
           ).called(1);
         },
@@ -502,7 +502,7 @@ void main() {
             () => mockEventRepo.createOrderViaEF(
               eventId: any(named: 'eventId'),
               ticketId: any(named: 'ticketId'),
-              verificationData: isNull,
+              verificationData: null,
             ),
           ).called(1);
         },
