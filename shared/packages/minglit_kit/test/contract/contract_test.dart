@@ -150,6 +150,5 @@ void main() {
       expect(json['success'], true);
       expect(json['user'], isA<String>());
     });
-
   });
 }
