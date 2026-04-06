@@ -6,13 +6,9 @@ void main() {
     // contains non-map elements. Extracts the parsing logic from
     // _buildRequestCard for direct unit testing.
     Map<String, dynamic> parseLastSnapshotEntry(Object? snapshotData) {
-      final snapshotList =
-          snapshotData is List ? snapshotData : <Object>[];
-      final lastRaw =
-          snapshotList.isNotEmpty ? snapshotList.last : null;
-      return lastRaw is Map<String, dynamic>
-          ? lastRaw
-          : <String, dynamic>{};
+      final snapshotList = snapshotData is List ? snapshotData : <Object>[];
+      final lastRaw = snapshotList.isNotEmpty ? snapshotList.last : null;
+      return lastRaw is Map<String, dynamic> ? lastRaw : <String, dynamic>{};
     }
 
     test('returns empty map when snapshot_data is null', () {
