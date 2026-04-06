@@ -5,10 +5,21 @@ void main() {
     // Fix #1115 regression: type guard prevents TypeError when snapshot_data
     // contains non-map elements. Extracts the parsing logic from
     // _buildRequestCard for direct unit testing.
+<<<<<<< HEAD
     Map<String, dynamic> parseLastSnapshotEntry(dynamic snapshotData) {
       final snapshotList = snapshotData is List ? snapshotData : <dynamic>[];
       final lastRaw = snapshotList.isNotEmpty ? snapshotList.last : null;
       return lastRaw is Map<String, dynamic> ? lastRaw : <String, dynamic>{};
+=======
+    Map<String, dynamic> parseLastSnapshotEntry(Object? snapshotData) {
+      final snapshotList =
+          snapshotData is List ? snapshotData : <Object>[];
+      final lastRaw =
+          snapshotList.isNotEmpty ? snapshotList.last : null;
+      return lastRaw is Map<String, dynamic>
+          ? lastRaw
+          : <String, dynamic>{};
+>>>>>>> a8c73c92 (fix: strict_raw_type warning in review_verification_screen_test.dart)
     }
 
     test('returns empty map when snapshot_data is null', () {
