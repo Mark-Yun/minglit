@@ -79,6 +79,7 @@ jobs:
       # ── Copy previous history for trend tracking ──
       - name: Copy previous history for trend tracking
         run: |
+          mkdir -p allure-results
           if [ -d "gh-pages-content/history" ]; then
             cp -r gh-pages-content/history allure-results/history
             echo "History copied for trend tracking"
