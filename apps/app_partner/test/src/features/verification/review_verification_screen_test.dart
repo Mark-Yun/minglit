@@ -7,11 +7,8 @@ void main() {
     // _buildRequestCard for direct unit testing.
     Map<String, dynamic> parseLastSnapshotEntry(dynamic snapshotData) {
       final snapshotList = snapshotData is List ? snapshotData : <dynamic>[];
-      final lastRaw =
-          snapshotList.isNotEmpty ? snapshotList.last : null;
-      return lastRaw is Map<String, dynamic>
-          ? lastRaw
-          : <String, dynamic>{};
+      final lastRaw = snapshotList.isNotEmpty ? snapshotList.last : null;
+      return lastRaw is Map<String, dynamic> ? lastRaw : <String, dynamic>{};
     }
 
     test('returns empty map when snapshot_data is null', () {
@@ -46,7 +43,9 @@ void main() {
 
     test('returns map when last element is a Map<String, dynamic>', () {
       final result = parseLastSnapshotEntry(<dynamic>[
-        {'data': {'photo': 'url1'}},
+        {
+          'data': {'photo': 'url1'},
+        },
       ]);
       expect(result, isA<Map<String, dynamic>>());
       expect(result['data'], isA<Map>());
@@ -63,7 +62,9 @@ void main() {
     test('returns map for valid last element in mixed list', () {
       final result = parseLastSnapshotEntry(<dynamic>[
         'first',
-        {'data': {'photo': 'url2'}},
+        {
+          'data': {'photo': 'url2'},
+        },
       ]);
       expect(result, isA<Map<String, dynamic>>());
       expect(result['data'], isA<Map>());

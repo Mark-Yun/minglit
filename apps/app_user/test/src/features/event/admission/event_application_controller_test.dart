@@ -405,102 +405,108 @@ void main() {
     // Fix #1115 regression: _buildVerificationPayload returns null when
     // reqIds is empty (no matching entry groups) or verificationData is empty.
     group('_buildVerificationPayload regression', () {
-      test('returns null verificationData when entry groups have no matching IDs', () async {
-        // Ticket targets 'group_nonexistent' which doesn't match 'group_1'
-        final ticketWithBadGroup = Ticket(
-          id: 'ticket_bad',
-          eventId: 'event_1',
-          name: 'Bad Group Ticket',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-          targetEntryGroupIds: ['group_nonexistent'],
-          requiredVerificationIds: [],
-          price: 5000,
-        );
+      test(
+        'returns null verificationData when entry groups have no matching IDs',
+        () async {
+          // Ticket targets 'group_nonexistent' which doesn't match 'group_1'
+          final ticketWithBadGroup = Ticket(
+            id: 'ticket_bad',
+            eventId: 'event_1',
+            name: 'Bad Group Ticket',
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+            targetEntryGroupIds: ['group_nonexistent'],
+            requiredVerificationIds: [],
+            price: 5000,
+          );
 
-        when(
-          () => mockEventRepo.createOrderViaEF(
-            eventId: any(named: 'eventId'),
-            ticketId: any(named: 'ticketId'),
-            verificationData: any(named: 'verificationData'),
-          ),
-        ).thenAnswer(
-          (_) async => const CreateOrderResult(
-            applicationId: 'app_456',
-            amount: 5000,
-            requiresPayment: true,
-            ticketName: 'Bad Group Ticket',
-          ),
-        );
+          when(
+            () => mockEventRepo.createOrderViaEF(
+              eventId: any(named: 'eventId'),
+              ticketId: any(named: 'ticketId'),
+              verificationData: any(named: 'verificationData'),
+            ),
+          ).thenAnswer(
+            (_) async => const CreateOrderResult(
+              applicationId: 'app_456',
+              amount: 5000,
+              requiresPayment: true,
+              ticketName: 'Bad Group Ticket',
+            ),
+          );
 
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          ],
-        );
+          final container = createContainer(
+            overrides: [
+              currentUserProvider.overrideWith((ref) => mockUser),
+              eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            ],
+          );
 
-        final notifier = container.read(
-          eventApplicationControllerProvider(testEvent).notifier,
-        );
-        notifier.selectTicket(ticketWithBadGroup);
-        notifier.updateVerificationData('company', 'TestCo');
+          final notifier = container.read(
+            eventApplicationControllerProvider(testEvent).notifier,
+          );
+          notifier.selectTicket(ticketWithBadGroup);
+          notifier.updateVerificationData('company', 'TestCo');
 
-        await notifier.submitApplication();
+          await notifier.submitApplication();
 
-        // verificationData should be null because reqIds is empty
-        verify(
-          () => mockEventRepo.createOrderViaEF(
-            eventId: any(named: 'eventId'),
-            ticketId: any(named: 'ticketId'),
-            verificationData: isNull,
-          ),
-        ).called(1);
-      });
+          // verificationData should be null because reqIds is empty
+          verify(
+            () => mockEventRepo.createOrderViaEF(
+              eventId: any(named: 'eventId'),
+              ticketId: any(named: 'ticketId'),
+              verificationData: isNull,
+            ),
+          ).called(1);
+        },
+      );
 
-      test('returns null verificationData when verificationData is empty', () async {
-        // Ticket targets 'group_1' which has matching entry group,
-        // but entry group's requiredVerificationIds is empty (default).
-        // So reqIds will be empty → null.
-        when(
-          () => mockEventRepo.createOrderViaEF(
-            eventId: any(named: 'eventId'),
-            ticketId: any(named: 'ticketId'),
-            verificationData: any(named: 'verificationData'),
-          ),
-        ).thenAnswer(
-          (_) async => const CreateOrderResult(
-            applicationId: 'app_789',
-            amount: 10000,
-            requiresPayment: true,
-            ticketName: '일반 티켓',
-          ),
-        );
+      test(
+        'returns null verificationData when verificationData is empty',
+        () async {
+          // Ticket targets 'group_1' which has matching entry group,
+          // but entry group's requiredVerificationIds is empty (default).
+          // So reqIds will be empty → null.
+          when(
+            () => mockEventRepo.createOrderViaEF(
+              eventId: any(named: 'eventId'),
+              ticketId: any(named: 'ticketId'),
+              verificationData: any(named: 'verificationData'),
+            ),
+          ).thenAnswer(
+            (_) async => const CreateOrderResult(
+              applicationId: 'app_789',
+              amount: 10000,
+              requiresPayment: true,
+              ticketName: '일반 티켓',
+            ),
+          );
 
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          ],
-        );
+          final container = createContainer(
+            overrides: [
+              currentUserProvider.overrideWith((ref) => mockUser),
+              eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            ],
+          );
 
-        final notifier = container.read(
-          eventApplicationControllerProvider(testEvent).notifier,
-        );
-        notifier.selectTicket(testEvent.tickets!.first);
-        // Don't call updateVerificationData — stays empty
+          final notifier = container.read(
+            eventApplicationControllerProvider(testEvent).notifier,
+          );
+          notifier.selectTicket(testEvent.tickets!.first);
+          // Don't call updateVerificationData — stays empty
 
-        await notifier.submitApplication();
+          await notifier.submitApplication();
 
-        // verificationData should be null because verificationData is empty
-        verify(
-          () => mockEventRepo.createOrderViaEF(
-            eventId: any(named: 'eventId'),
-            ticketId: any(named: 'ticketId'),
-            verificationData: isNull,
-          ),
-        ).called(1);
-      });
+          // verificationData should be null because verificationData is empty
+          verify(
+            () => mockEventRepo.createOrderViaEF(
+              eventId: any(named: 'eventId'),
+              ticketId: any(named: 'ticketId'),
+              verificationData: isNull,
+            ),
+          ).called(1);
+        },
+      );
     });
 
     group('processPayment', () {

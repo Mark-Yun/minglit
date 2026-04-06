@@ -49,7 +49,7 @@ void main() {
 
     // Fix #1115 regression: firstOrNull prevents StateError on empty list
     test('firstOrNull on empty ConnectivityResult list returns null', () {
-      const List<ConnectivityResult> emptyResults = [];
+      const emptyResults = <ConnectivityResult>[];
       expect(emptyResults.firstOrNull?.name, isNull);
     });
 
