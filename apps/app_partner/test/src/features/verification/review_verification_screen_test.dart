@@ -48,7 +48,7 @@ void main() {
         },
       ]);
       expect(result, isA<Map<String, dynamic>>());
-      expect(result['data'], isA<Map>());
+      expect(result['data'], isA<Map<String, dynamic>>());
     });
 
     test('returns empty map for last element non-map in mixed list', () {
@@ -67,7 +67,7 @@ void main() {
         },
       ]);
       expect(result, isA<Map<String, dynamic>>());
-      expect(result['data'], isA<Map>());
+      expect(result['data'], isA<Map<String, dynamic>>());
     });
   });
 }
