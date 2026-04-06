@@ -43,21 +43,21 @@ dependencies:
   freezed_annotation: ^3.1.0
   go_router: ^17.0.0
   google_fonts: ^6.3.2
-  google_sign_in: 6.2.1
-  image_picker: ^1.2.1
+  google_sign_in: 6.2.1  # iOS: uses ASAuthorizationAppleIDProvider, check before major bump
+  image_picker: ^1.2.1  # iOS: requires NSPhotoLibraryUsageDescription, check before major bump (#1083)
   intl: ^0.20.2
   kakao_map_plugin: ^0.3.7
   minglit_kit:
     path: ../../shared/packages/minglit_kit
-  mobile_scanner: any
-  package_info_plus: ^8.0.0
+  mobile_scanner: any  # iOS: uses AVFoundation camera, check before major bump
+  package_info_plus: ^8.0.0  # iOS: native plugin, check before major bump (#1083)
   path: any
   riverpod: ^3.0.3
   riverpod_annotation: ^3.0.3
-  sentry_flutter: ^9.0.0
+  sentry_flutter: ^9.0.0  # iOS: native SDK, check before major bump
   shared_preferences: ^2.5.4
   supabase_flutter: ^2.12.0
-  url_launcher: ^6.3.2
+  url_launcher: ^6.3.2  # iOS: uses SFSafariViewController, check before major bump
   uuid: ^4.5.2
   web: ^1.1.1
 
