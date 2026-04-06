@@ -3,8 +3,7 @@ import { requireEnv } from '../_shared/env_keystore.ts'
 import { runWorkerLoop } from './loop_worker.ts'
 import { WorkerUtils } from '../_shared/worker_utils.ts'
 import { isoToUnix } from '../_shared/temporal_utils.ts'
-// Fix #1116: deno.json import map으로 통일 (Fix #179 누락분)
-import * as jose from 'jose'
+import * as jose from 'https://deno.land/x/jose@v4.14.4/index.ts'
 import { initSentry, withHandler, log } from '../_shared/logger.ts'
 
 const FN = "notification-worker";
