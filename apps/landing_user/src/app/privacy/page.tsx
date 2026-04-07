@@ -22,7 +22,8 @@ export default function PrivacyPage() {
           <div>
             <h3 className="font-bold mb-3 text-gray-900 text-base">1) 수집 항목</h3>
             <ul className="list-disc pl-5 space-y-2 text-sm text-gray-600">
-              <li><strong>회원가입:</strong> 이메일 주소, 비밀번호</li>
+              {/* Fix #1141: 회원가입 수집 항목을 실제 수집 항목과 일치하도록 수정 */}
+              <li><strong>회원가입:</strong> 이름, 이메일, 프로필 사진, 관심 태그, 기기 정보, 이용 기록</li>
               <li><strong>본인확인:</strong> 이름, 생년월일, 성별, 내/외국인 정보, 휴대폰 번호, CI/DI (연계정보)</li>
               <li><strong>자격 인증(선택):</strong> 직업, 소속, 직무, 증빙 서류(명함, 재직증명서, 자격증 사본 등)</li>
               <li><strong>결제 및 서비스 이용:</strong> 결제 기록(카드사, 승인번호 등), 접속 로그, 쿠키, 서비스 이용 기록</li>
@@ -118,8 +119,9 @@ export default function PrivacyPage() {
               <tr>
                 <td className="p-3 border border-gray-200 font-bold text-gray-900">모임 주최자(파트너)</td>
                 <td className="p-3 border border-gray-200">참여 승인 심사, 본인 확인, 출석 체크</td>
-                <td className="p-3 border border-gray-200">이메일, 자격 인증 정보(직업, 소속 등)</td>
-                <td className="p-3 border border-gray-200 font-bold">모임 종료 후 7일 또는 자격 인증 유효기간 내</td>
+                {/* Fix #1141: 제공 항목에서 이메일 제거, 이름(닉네임)/연령대/자격 인증 정보로 수정 — 보유기간 30일로 통일 */}
+                <td className="p-3 border border-gray-200">이름(닉네임), 연령대, 자격 인증 정보(직업/소속 — 본인인증 완료 유저만)</td>
+                <td className="p-3 border border-gray-200 font-bold">이벤트 종료 후 30일</td>
               </tr>
             </tbody>
           </table>
