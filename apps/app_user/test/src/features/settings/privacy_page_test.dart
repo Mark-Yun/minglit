@@ -250,9 +250,11 @@ void main() {
     await tester.tap(find.widgetWithText(ListTile, '개인정보 수집·이용'));
     await tester.pumpAndSettle();
 
-    // 관심 태그 파기 정책 문구가 존재하는지 확인
+    // 관심 태그 파기 정책 문구가 존재하는지 확인 (bullet prefix '• ' 포함)
     expect(
-      find.text('관심 태그, 이용 기록, 기기 정보: 회원 탈퇴 시 즉시 파기합니다.'),
+      find.text(
+        '• 관심 태그, 이용 기록, 기기 정보: 회원 탈퇴 시 즉시 파기합니다.',
+      ),
       findsOneWidget,
     );
   });
