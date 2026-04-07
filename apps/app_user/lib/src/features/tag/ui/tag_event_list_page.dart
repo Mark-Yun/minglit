@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -97,9 +98,10 @@ class _TagEventListPageState extends ConsumerState<TagEventListPage> {
               final event = state.events[index];
               return MinglitEventCard(
                 event: event,
-                onTap: () => context.push(
-                  EventDetailRoute(eventId: event.id).location,
-                ),
+                // Fix #1136: Coordinator 패턴 — 위젯에서 직접 GoRouter 호출 금지
+                onTap: () => ref
+                    .read(eventCoordinatorProvider)
+                    .goToEventDetail(event.id),
               );
             },
           );

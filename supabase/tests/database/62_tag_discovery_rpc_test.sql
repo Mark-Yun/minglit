@@ -99,11 +99,14 @@ VALUES (
 );
 
 -- tag_usage_daily 직접 삽입 (트렌딩 테스트용)
+-- ON CONFLICT 사용: party_tags INSERT 트리거가 이미 (rpc_featured_tag_id, CURRENT_DATE) 레코드를 생성하므로
+-- 원하는 테스트 값으로 upsert한다.
 INSERT INTO public.tag_usage_daily (tag_id, date, daily_count)
 VALUES
   (current_setting('tests.rpc_featured_tag_id')::uuid, CURRENT_DATE, 50),
   (current_setting('tests.rpc_featured_tag_id')::uuid, CURRENT_DATE - 1, 30),
-  (current_setting('tests.rpc_nonfeatured_tag_id')::uuid, CURRENT_DATE, 100);
+  (current_setting('tests.rpc_nonfeatured_tag_id')::uuid, CURRENT_DATE, 100)
+ON CONFLICT (tag_id, date) DO UPDATE SET daily_count = EXCLUDED.daily_count;
 
 -- rpc_user_a의 관심 태그 설정
 INSERT INTO public.user_interest_tags (user_id, tag_id)
