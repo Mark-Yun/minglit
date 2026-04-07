@@ -199,6 +199,13 @@ void main() {
         ],
       );
 
+      // Keep the provider alive while awaiting the future.
+      // Without listen(), container.read() disposes the provider mid-build.
+      final sub = container.listen(
+        tagEventListControllerProvider('tag_1'),
+        (_, __) {},
+      );
+
       // Awaiting the future forces the provider build to complete (and throw).
       await expectLater(
         container.read(tagEventListControllerProvider('tag_1').future),
@@ -208,6 +215,8 @@ void main() {
       // Now the provider has settled into AsyncError.
       final state = container.read(tagEventListControllerProvider('tag_1'));
       expect(state, isA<AsyncError<TagEventListState>>());
+
+      sub.close();
     });
 
     // Fix regression: loadMore error restores previous state without spinner
