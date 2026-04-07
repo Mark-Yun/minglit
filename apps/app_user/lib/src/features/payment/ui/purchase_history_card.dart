@@ -271,7 +271,9 @@ class PurchaseHistoryCard extends ConsumerWidget {
         if (!context.mounted) return;
         await context.showMinglitAlert(
           title: '환불 불가',
-          message: '결제 후 2시간 이내 또는 이벤트 시작 7일 전까지만 환불 가능합니다.',
+          // Fix #1140: 환불 불가 메시지에 고객센터 대안 경로 추가 — 전자상거래법 준수
+          message:
+              '자동 환불 기간이 지났습니다. 환불이 필요하시면 고객센터(support@minglit.com)로 문의해주세요.',
         );
       },
       confirmRefund: (calculation) async {
