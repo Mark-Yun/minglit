@@ -369,7 +369,9 @@ SELECT results_eq(
 );
 
 -- 6개 태그는 에러
-SAVEPOINT before_6_tags;
+-- throws_ok는 내부적으로 예외를 처리하므로 SAVEPOINT 불필요.
+-- SAVEPOINT/ROLLBACK TO SAVEPOINT를 쓰면 pgTAP 카운터가 롤백되어
+-- "Bad plan. You planned N but ran N+1" 오류가 발생한다.
 SELECT throws_ok(
   format(
     $$
@@ -387,7 +389,6 @@ SELECT throws_ok(
   'A user can have at most 5 interest tags',
   'upsert_user_interest_tags rejects more than 5 tags'
 );
-ROLLBACK TO SAVEPOINT before_6_tags;
 
 SELECT * FROM finish();
 ROLLBACK;
