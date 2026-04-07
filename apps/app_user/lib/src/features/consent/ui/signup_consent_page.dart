@@ -503,6 +503,46 @@ final Map<ConsentType, _ConsentDefinition> _consentDefinitions = {
     summary: '만 14세 이상만 회원가입할 수 있어요.',
     required: true,
   ),
+  // Fix #1141: 제3자 제공 동의 항목 추가 — 성별 제외, 자격 인증 정보 포함, 보유기간 30일
+  ConsentType.thirdPartyProvision: const _ConsentDefinition(
+    type: ConsentType.thirdPartyProvision,
+    title: '제3자 제공 동의',
+    summary: '이벤트 주최 파트너에게 참가자 확인에 필요한 정보를 제공해요.',
+    required: false,
+    detail: ConsentDetailContent(
+      title: '제3자 제공 동의',
+      summary: '이벤트 운영을 위해 파트너에게 아래 정보를 제공합니다.',
+      sections: [
+        ConsentDetailSection(
+          title: '제공받는 자',
+          items: ['이벤트 주최 파트너 (신청한 이벤트의 해당 파트너에 한정)'],
+        ),
+        ConsentDetailSection(
+          title: '제공 항목',
+          items: [
+            '이름(닉네임)',
+            '연령대',
+            '자격 인증 정보(직업/소속 — 본인인증 완료 유저만)',
+          ],
+        ),
+        ConsentDetailSection(
+          title: '제공 목적',
+          items: ['이벤트 운영 (참가자 확인, 매칭 진행, 체크인)'],
+        ),
+        ConsentDetailSection(
+          title: '보유 기간',
+          items: ['이벤트 종료 후 30일'],
+        ),
+        ConsentDetailSection(
+          title: '거부 권리',
+          items: [
+            '동의를 거부할 수 있으며, 기본 서비스 이용은 가능합니다.',
+            '다만 파트너 승인/확인이 필요한 이벤트는 신청 또는 참여가 제한될 수 있습니다.',
+          ],
+        ),
+      ],
+    ),
+  ),
   ConsentType.identityVerification: const _ConsentDefinition(
     type: ConsentType.identityVerification,
     title: '본인인증(CI/DI) 수집 동의',
