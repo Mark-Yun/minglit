@@ -3,11 +3,13 @@ import 'package:minglit_kit/src/utils/log.dart';
 /// Validates that required environment variables are present at runtime.
 ///
 /// Flutter cannot import JSON at build time, so this list is manually
-/// synchronised with `env-manifest.json`.
-/// TODO: Implement CI audit to detect drift between this file and env-manifest.json.
+/// synchronised with `env-manifest.json`. CI enforces sync via
+/// `scripts/check-env-manifest-sync.sh` (check-env-manifest-sync job).
 ///
 /// Each key must be declared as a separate `const String.fromEnvironment()`
 /// because the argument must be a compile-time constant literal.
+/// CI job `check-env-keystore-drift` enforces that this file and
+/// `env-manifest.json` (flutter section) stay in sync.
 class EnvKeyStore {
   EnvKeyStore._();
 
@@ -16,7 +18,14 @@ class EnvKeyStore {
   static const _supabasePublishableKey = String.fromEnvironment(
     'SUPABASE_PUBLISHABLE_KEY',
   );
-  static const _environment = String.fromEnvironment('ENVIRONMENT');
+  // Fix #1070: sentinel distinguishes "injected" from "not injected".
+  // Debug/local: validate() permits missing ENVIRONMENT (defaults silently).
+  // Release builds: validate() throws if still '__UNSET__', preventing
+  // accidental prod deployments without an explicit env file.
+  static const _environmentRaw = String.fromEnvironment(
+    'ENVIRONMENT',
+    defaultValue: '__UNSET__',
+  );
 
   // ── manifest.flutter.optional ──
   static const _sentryDsn = String.fromEnvironment('SENTRY_DSN');
@@ -39,7 +48,6 @@ class EnvKeyStore {
   static const _requiredEntries = <String, String>{
     'SUPABASE_URL': _supabaseUrl,
     'SUPABASE_PUBLISHABLE_KEY': _supabasePublishableKey,
-    'ENVIRONMENT': _environment,
   };
 
   static const _optionalEntries = <String, String>{
@@ -74,6 +82,18 @@ class EnvKeyStore {
   /// Throws [StateError] when required env vars are missing so the app
   /// fails fast in both debug and release builds.
   static void validate() {
+    // Release builds must have ENVIRONMENT injected explicitly. If the sentinel
+    // is still set it means the env file was not passed at build time.
+    if (const bool.fromEnvironment('dart.vm.product') &&
+        _environmentRaw == '__UNSET__') {
+      const message =
+          'EnvKeyStore: ENVIRONMENT must be injected in release builds.\n'
+          'Build with: flutter build '
+          '--dart-define-from-file=../../minglit_env/dev/flutter.env';
+      Log.e(message);
+      throw StateError(message);
+    }
+
     final missing = missingRequired();
     if (missing.isEmpty) {
       final optionalMissing = missingOptional();
