@@ -26,6 +26,8 @@ export default function PrivacyPage() {
               <li><strong>본인확인:</strong> 이름, 생년월일, 성별, 내/외국인 정보, 휴대폰 번호, CI/DI (연계정보)</li>
               <li><strong>자격 인증(선택):</strong> 직업, 소속, 직무, 증빙 서류(명함, 재직증명서, 자격증 사본 등)</li>
               <li><strong>결제 및 서비스 이용:</strong> 결제 기록(카드사, 승인번호 등), 접속 로그, 쿠키, 서비스 이용 기록</li>
+              {/* Fix #1157: 관심 태그 수집 항목 추가 */}
+              <li><strong>서비스 이용(선택):</strong> 관심 태그 (이벤트 추천 목적, 회원 탈퇴 시 즉시 파기)</li>
               {/* Fix #762: marketing_consent 수집 항목 추가 */}
               <li><strong>마케팅 수신 동의(선택):</strong> 마케팅 수신 동의 여부</li>
             </ul>
@@ -57,6 +59,8 @@ export default function PrivacyPage() {
         <ul className="list-disc pl-5 mb-6 space-y-2 text-sm text-gray-600">
           <li><strong>자격 인증 정보(증빙 서류):</strong> <span className="font-bold text-gray-900">1년</span> (최신성 유지 및 재인증 편의 제공)</li>
           <li><strong>부정 이용 기록:</strong> 1년 (재가입 방지 및 분쟁 해결)</li>
+          {/* Fix #1157: 관심 태그 보유기간 명시 — 탈퇴 시 즉시 파기 */}
+          <li><strong>관심 태그, 이용 기록, 기기 정보:</strong> 회원 탈퇴 시 즉시 파기</li>
         </ul>
 
         <h3 className="font-bold mb-3 text-gray-900 text-base">2) 관련 법령에 의한 정보 보유</h3>
