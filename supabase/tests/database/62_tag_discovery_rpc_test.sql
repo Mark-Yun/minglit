@@ -121,6 +121,10 @@ VALUES
   ('소통', false), ('소모임', false), ('소연', false),
   ('소확행', false), ('소주', false), ('소비자', false);
 
+-- PGroonga WAL flush: 인덱스가 트랜잭션 내 INSERT를 즉시 반영하지 않으므로
+-- search_tags(&^~ 연산자) 테스트 전에 강제 flush한다.
+SELECT pgroonga_command('io_flush', ARRAY['only_opened', 'yes']);
+
 -- ============================================================
 -- 1. get_featured_tags() — is_featured = true 태그만 반환
 -- ============================================================
