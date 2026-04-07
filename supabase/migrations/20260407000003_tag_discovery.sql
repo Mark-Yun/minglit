@@ -118,14 +118,17 @@ ALTER TABLE party_tags ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_interest_tags ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tag_usage_daily ENABLE ROW LEVEL SECURITY;
 
--- tags: 전체 읽기, super_admin만 쓰기
-CREATE POLICY tags_read ON tags FOR SELECT USING (true);
+-- Fix #1149: direct table SELECT restricted to authenticated only.
+-- Anonymous users access tag data through SECURITY DEFINER RPC functions
+-- (get_featured_tags, search_tags, etc.) which bypass RLS.
+-- tags: authenticated 읽기, super_admin만 쓰기
+CREATE POLICY tags_read ON tags FOR SELECT TO authenticated USING (true);
 CREATE POLICY tags_admin_insert ON tags FOR INSERT WITH CHECK (public.is_super_admin());
 CREATE POLICY tags_admin_update ON tags FOR UPDATE USING (public.is_super_admin());
 CREATE POLICY tags_admin_delete ON tags FOR DELETE USING (public.is_super_admin());
 
--- party_tags: 전체 읽기, EF가 service_role로 처리
-CREATE POLICY party_tags_read ON party_tags FOR SELECT USING (true);
+-- party_tags: authenticated 읽기, EF가 service_role로 처리
+CREATE POLICY party_tags_read ON party_tags FOR SELECT TO authenticated USING (true);
 CREATE POLICY party_tags_service ON party_tags FOR ALL USING (
   (SELECT current_setting('role', true)) = 'service_role'
 );
@@ -133,8 +136,8 @@ CREATE POLICY party_tags_service ON party_tags FOR ALL USING (
 -- user_interest_tags: 본인만 읽기 가능, 쓰기는 upsert_user_interest_tags() RPC(SECURITY DEFINER)로만 허용
 CREATE POLICY user_interest_tags_read_own ON user_interest_tags FOR SELECT USING (auth.uid() = user_id);
 
--- tag_usage_daily: 전체 읽기, service_role/트리거만 쓰기
-CREATE POLICY tag_usage_daily_read ON tag_usage_daily FOR SELECT USING (true);
+-- tag_usage_daily: authenticated 읽기, service_role/트리거만 쓰기
+CREATE POLICY tag_usage_daily_read ON tag_usage_daily FOR SELECT TO authenticated USING (true);
 CREATE POLICY tag_usage_daily_service ON tag_usage_daily FOR ALL USING (
   (SELECT current_setting('role', true)) = 'service_role'
 );

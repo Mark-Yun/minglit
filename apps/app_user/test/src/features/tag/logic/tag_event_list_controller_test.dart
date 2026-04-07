@@ -233,16 +233,16 @@ void main() {
 
       await container.read(tagEventListControllerProvider('tag_1').future);
 
-      final future = container
+      // loadMore() no longer re-throws — it catches internally so that
+      // unawaited(loadMore()) in _onScroll doesn't produce unhandled errors.
+      await container
           .read(tagEventListControllerProvider('tag_1').notifier)
           .loadMore();
-      await expectLater(future, throwsA(isA<Exception>()));
 
       final state = container
           .read(tagEventListControllerProvider('tag_1'))
-          .value;
-      expect(state, isNotNull);
-      expect(state!.isLoadingMore, isFalse);
+          .value!;
+      expect(state.isLoadingMore, isFalse);
       // Original events should still be present
       expect(state.events, hasLength(10));
     });

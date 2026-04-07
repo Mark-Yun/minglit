@@ -28,6 +28,8 @@ class _TagSelectionSectionState extends ConsumerState<TagSelectionSection> {
 
   // wizard state에서 마지막으로 동기화한 tagIds — 중복 sync 방지용
   List<String> _lastSyncedTagIds = const [];
+  // 동시 sync 요청 중 stale 결과 적용 방지용 단조 증가 카운터
+  int _syncSeq = 0;
 
   @override
   void initState() {
@@ -48,16 +50,24 @@ class _TagSelectionSectionState extends ConsumerState<TagSelectionSection> {
   Future<void> _syncFromWizardTagIds(List<String> tagIds) async {
     if (!mounted) return;
     // TagSelectionController가 이미 같은 목록을 보유하면 skip
-    if (tagIds.isEmpty) return;
     if (_lastSyncedTagIds.length == tagIds.length &&
         _lastSyncedTagIds.every(tagIds.contains)) {
       return;
     }
     _lastSyncedTagIds = List.unmodifiable(tagIds);
+    // Fix #1149: increment seq BEFORE await so a newer call can invalidate this one
+    final seq = ++_syncSeq;
+
+    if (tagIds.isEmpty) {
+      // 빈 목록도 처리 — wizard에서 태그 전체 제거 시 controller를 비운다
+      if (mounted) ref.read(tagSelectionControllerProvider.notifier).setTags([]);
+      return;
+    }
 
     final tagRepo = ref.read(tagRepositoryProvider);
     final tags = await tagRepo.getTagsByIds(tagIds);
-    if (!mounted) return;
+    // Post-await guard: 더 최신 sync 요청이 이미 시작됐으면 덮어쓰지 않는다
+    if (!mounted || _syncSeq != seq) return;
     ref.read(tagSelectionControllerProvider.notifier).setTags(tags);
   }
 

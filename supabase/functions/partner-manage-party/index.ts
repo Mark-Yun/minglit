@@ -445,10 +445,21 @@ async function handleRequest(req: Request): Promise<Response> {
     }
 
     // Update party_tags if tag_ids present in body (undefined = no change, [] = clear all)
-    // Fix #1136: INSERT 먼저 → 성공하면 DELETE — INSERT 실패 시 기존 태그 보존
+    // Fix #1149: DELETE old-only rows FIRST, then INSERT new ones.
+    // INSERT-first caused the check_party_tags_limit trigger (≥5 guard) to
+    // reject valid 5→5 swaps: the trigger would fire before old rows were removed.
+    // Deleting stale rows first keeps the running count ≤5 at every step.
     if (updateTagIds !== undefined) {
       if (updateTagIds.length > 0) {
-        // INSERT new tags first; if this fails, existing tags are preserved
+        // Delete tags that are no longer needed before inserting new ones
+        const { error: ptDeleteError } = await supabase
+          .from("party_tags")
+          .delete()
+          .eq("party_id", partyId)
+          .not("tag_id", "in", `(${(updateTagIds as string[]).join(",")})`);
+        if (ptDeleteError) {
+          return errorResponse(`Failed to clear old party tags: ${ptDeleteError.message}`, 500);
+        }
         const partyTagRecords = (updateTagIds as string[]).map((tid) => ({
           party_id: partyId,
           tag_id: tid,
@@ -458,15 +469,6 @@ async function handleRequest(req: Request): Promise<Response> {
           .upsert(partyTagRecords, { onConflict: "party_id,tag_id", ignoreDuplicates: true });
         if (ptInsertError) {
           return errorResponse(`Failed to update party tags: ${ptInsertError.message}`, 500);
-        }
-        // INSERT succeeded — now delete old tags that are not in the new set
-        const { error: ptDeleteError } = await supabase
-          .from("party_tags")
-          .delete()
-          .eq("party_id", partyId)
-          .not("tag_id", "in", `(${(updateTagIds as string[]).join(",")})`);
-        if (ptDeleteError) {
-          return errorResponse(`Failed to clear old party tags: ${ptDeleteError.message}`, 500);
         }
       } else {
         // Empty array — clear all tags

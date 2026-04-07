@@ -66,13 +66,15 @@ VALUES (
 );
 
 -- ============================================================
--- 1. tags — anon: 읽기 가능, 쓰기 불가
+-- 1. tags — anon: 직접 읽기 불가 (RPC 함수로만 접근), 쓰기 불가
+-- Fix #1149: tags_read policy changed to TO authenticated
 -- ============================================================
 SELECT tests.clear_authentication();
 
-SELECT isnt_empty(
-  $$SELECT * FROM public.tags$$,
-  'anon can SELECT tags'
+SELECT results_eq(
+  $$SELECT count(*)::int FROM public.tags$$,
+  $$VALUES (0)$$,
+  'anon cannot SELECT tags directly (use SECURITY DEFINER RPC)'
 );
 
 SAVEPOINT before_anon_tag_insert;
@@ -144,13 +146,14 @@ SELECT lives_ok(
 );
 
 -- ============================================================
--- 4. party_tags — anon: 읽기 가능
+-- 4. party_tags — anon: 직접 읽기 불가 (Fix #1149)
 -- ============================================================
 SELECT tests.clear_authentication();
 
-SELECT isnt_empty(
-  $$SELECT * FROM public.party_tags$$,
-  'anon can SELECT party_tags'
+SELECT results_eq(
+  $$SELECT count(*)::int FROM public.party_tags$$,
+  $$VALUES (0)$$,
+  'anon cannot SELECT party_tags directly'
 );
 
 -- ============================================================
@@ -277,13 +280,14 @@ SELECT throws_ok(
 ROLLBACK TO SAVEPOINT before_b_direct_insert;
 
 -- ============================================================
--- 8. tag_usage_daily — anon: 읽기 가능, 직접 쓰기 불가
+-- 8. tag_usage_daily — anon: 직접 읽기 불가 (Fix #1149), 쓰기 불가
 -- ============================================================
 SELECT tests.clear_authentication();
 
-SELECT isnt_empty(
-  $$SELECT * FROM public.tag_usage_daily$$,
-  'anon can SELECT tag_usage_daily (populated by trigger)'
+SELECT results_eq(
+  $$SELECT count(*)::int FROM public.tag_usage_daily$$,
+  $$VALUES (0)$$,
+  'anon cannot SELECT tag_usage_daily directly (Fix #1149)'
 );
 
 SAVEPOINT before_anon_tud_insert;

@@ -58,10 +58,11 @@ class TagEventListController extends _$TagEventListController {
           isLoadingMore: false,
         ),
       );
-    } catch (e, st) {
-      // Restore previous state without loading indicator on error
+    } catch (_) {
+      // Fix #1149: Do NOT re-throw. _onScroll calls loadMore() via
+      // unawaited(), so any re-thrown exception would be unhandled and
+      // surface as a global async error instead of a recoverable UI state.
       state = AsyncData(current.copyWith(isLoadingMore: false));
-      Error.throwWithStackTrace(e, st);
     }
   }
 
