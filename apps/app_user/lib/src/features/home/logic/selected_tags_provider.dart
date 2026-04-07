@@ -27,5 +27,5 @@ class SelectedTagsNotifier extends Notifier<Set<String>> {
 /// Provider that holds the set of currently selected tag IDs.
 final selectedTagsProvider =
     NotifierProvider<SelectedTagsNotifier, Set<String>>(
-  SelectedTagsNotifier.new,
-);
+      SelectedTagsNotifier.new,
+    );

@@ -18,7 +18,7 @@ Tag _makeTag(String name, {bool isFeatured = true}) {
   return Tag(id: 'tag-$name', name: name, isFeatured: isFeatured);
 }
 
-final _featuredTags = [
+final List<Tag> _featuredTags = [
   _makeTag('소개팅'),
   _makeTag('미팅'),
   _makeTag('네트워킹'),
@@ -32,7 +32,7 @@ Widget _buildWidget({
   _MockTagRepository? mockRepo,
 }) {
   final repo = mockRepo ?? _MockTagRepository();
-  when(() => repo.getFeaturedTags()).thenAnswer(
+  when(repo.getFeaturedTags).thenAnswer(
     (_) async => featuredTags ?? _featuredTags,
   );
   when(() => repo.getTagsByIds(any())).thenAnswer(
@@ -164,14 +164,16 @@ void main() {
       final container = ProviderScope.containerOf(
         tester.element(find.byType(TagSelectionSection)),
       );
-      final controller = container.read(tagSelectionControllerProvider.notifier);
+      final controller = container.read(
+        tagSelectionControllerProvider.notifier,
+      );
       expect(controller.isMaxReached, isTrue);
       expect(container.read(tagSelectionControllerProvider).length, 5);
     });
 
     testWidgets('태그 없이도 크래시 없이 렌더링된다', (tester) async {
       final repo = _MockTagRepository();
-      when(() => repo.getFeaturedTags()).thenAnswer((_) async => []);
+      when(repo.getFeaturedTags).thenAnswer((_) async => []);
       when(() => repo.getTagsByIds(any())).thenAnswer((_) async => []);
       when(() => repo.getTagsByPartyId(any())).thenAnswer((_) async => []);
       when(() => repo.searchTags(any())).thenAnswer((_) async => []);
@@ -316,6 +318,5 @@ class _FakeWizardController extends PartyCreateWizardController {
   final List<String> tagIds;
 
   @override
-  PartyCreateWizardState build() =>
-      PartyCreateWizardState(tagIds: tagIds);
+  PartyCreateWizardState build() => PartyCreateWizardState(tagIds: tagIds);
 }

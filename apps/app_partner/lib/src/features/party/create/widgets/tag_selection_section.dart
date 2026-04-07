@@ -38,8 +38,7 @@ class _TagSelectionSectionState extends ConsumerState<TagSelectionSection> {
 
   Future<void> _syncFromWizardState() async {
     if (!mounted) return;
-    final wizardTagIds =
-        ref.read(partyCreateWizardControllerProvider).tagIds;
+    final wizardTagIds = ref.read(partyCreateWizardControllerProvider).tagIds;
     if (wizardTagIds.isEmpty) return;
 
     final tagRepo = ref.read(tagRepositoryProvider);
@@ -196,7 +195,7 @@ class _TagSearchResults extends ConsumerWidget {
           ),
         ),
       ),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (tags) {
         if (tags.isEmpty) {
           return Text(
@@ -249,7 +248,7 @@ class _FeaturedTagsQuickSelect extends ConsumerWidget {
           ),
         ),
       ),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (tags) {
         final topTen = tags.take(10).toList();
         return Column(

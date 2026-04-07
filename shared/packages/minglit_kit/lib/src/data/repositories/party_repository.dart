@@ -225,7 +225,7 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
         'action': 'update',
         'party_id': party.id,
         'party': partyJson,
-        if (tagIds != null) 'tag_ids': tagIds,
+        'tag_ids': ?tagIds,
       };
 
       final response = await supabaseClient.functions.invoke(

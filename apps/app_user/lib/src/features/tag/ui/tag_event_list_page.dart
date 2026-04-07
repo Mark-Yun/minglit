@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:app_user/src/features/tag/logic/tag_event_list_controller.dart';
 import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -35,7 +34,9 @@ class _TagEventListPageState extends ConsumerState<TagEventListPage> {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       unawaited(
-        ref.read(tagEventListControllerProvider(widget.tagId).notifier).loadMore(),
+        ref
+            .read(tagEventListControllerProvider(widget.tagId).notifier)
+            .loadMore(),
       );
     }
   }

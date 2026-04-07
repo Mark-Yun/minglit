@@ -15,8 +15,8 @@ export 'src/features/theme/theme_controller.dart';
 export 'src/features/theme/theme_settings_tile.dart';
 export 'src/logic/providers/event_feed_provider.dart';
 export 'src/logic/providers/statsig_provider.dart';
-export 'src/logic/providers/tag_providers.dart';
 export 'src/logic/providers/supabase_provider.dart';
+export 'src/logic/providers/tag_providers.dart';
 export 'src/logic/providers/user_profile_provider.dart';
 
 // Note: Other repositories are exported via minglit_data.dart,

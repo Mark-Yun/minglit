@@ -265,12 +265,11 @@ class MinglitEventCard extends StatelessWidget {
                     // Tag chips — prefer party-level tags, fall back to
                     // event-level tags (Tag Discovery #1094-1096).
                     // Displays at most 3 tags + "+N" overflow badge.
-                    if ((party?.tags ?? event!.tags) case final tags?
-                        when tags.isNotEmpty)
-                      ...[
-                        const SizedBox(height: MinglitSpacing.xsmall),
-                        _TagChipRow(tags: tags),
-                      ],
+                    if (party?.tags ?? event!.tags case final tags?
+                        when tags.isNotEmpty) ...[
+                      const SizedBox(height: MinglitSpacing.xsmall),
+                      _TagChipRow(tags: tags),
+                    ],
                   ],
                 ),
               ),
@@ -498,8 +497,7 @@ class _TagChipRow extends StatelessWidget {
       spacing: MinglitSpacing.xsmall,
       runSpacing: MinglitSpacing.xxsmall,
       children: [
-        for (final tag in visible)
-          _TagBadge(label: tag.name, theme: theme),
+        for (final tag in visible) _TagBadge(label: tag.name, theme: theme),
         if (overflowCount > 0)
           _TagBadge(label: '+$overflowCount', theme: theme),
       ],

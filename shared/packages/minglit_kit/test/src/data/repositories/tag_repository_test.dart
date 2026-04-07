@@ -109,8 +109,6 @@ void main() {
 
         final result = await repository.getPartiesByTag(
           'tag_1',
-          limit: 10,
-          offset: 0,
         );
 
         expect(result, isEmpty);
@@ -152,7 +150,7 @@ void main() {
     });
 
     test('toJson excludes no required fields', () {
-      final tag = Tag(id: 'tag_1', name: '재즈', isFeatured: true, usageCount: 5);
+      const tag = Tag(id: 'tag_1', name: '재즈', isFeatured: true, usageCount: 5);
       final json = tag.toJson();
 
       expect(json['id'], 'tag_1');

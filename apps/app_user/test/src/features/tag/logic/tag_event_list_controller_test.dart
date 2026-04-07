@@ -36,56 +36,56 @@ void main() {
   });
 
   group('TagEventListController', () {
-    test('initial build fetches first page and sets hasMore=true when full page',
-        () async {
-      final events = List.generate(10, (i) => makeEvent('e$i'));
-      when(
-        () => mockTagRepo.getPartiesByTag(
-          'tag_1',
-          limit: 10,
-          offset: 0,
-        ),
-      ).thenAnswer((_) async => events);
+    test(
+      'initial build fetches first page and sets hasMore=true when full page',
+      () async {
+        final events = List.generate(10, (i) => makeEvent('e$i'));
+        when(
+          () => mockTagRepo.getPartiesByTag(
+            'tag_1',
+          ),
+        ).thenAnswer((_) async => events);
 
-      final container = createContainer(
-        overrides: [
-          tagRepositoryProvider.overrideWith((ref) => mockTagRepo),
-        ],
-      );
+        final container = createContainer(
+          overrides: [
+            tagRepositoryProvider.overrideWith((ref) => mockTagRepo),
+          ],
+        );
 
-      final result = await container.read(
-        tagEventListControllerProvider('tag_1').future,
-      );
+        final result = await container.read(
+          tagEventListControllerProvider('tag_1').future,
+        );
 
-      expect(result.events, hasLength(10));
-      expect(result.hasMore, isTrue);
-      expect(result.isLoadingMore, isFalse);
-    });
+        expect(result.events, hasLength(10));
+        expect(result.hasMore, isTrue);
+        expect(result.isLoadingMore, isFalse);
+      },
+    );
 
-    test('initial build sets hasMore=false when fewer than page-size returned',
-        () async {
-      final events = List.generate(3, (i) => makeEvent('e$i'));
-      when(
-        () => mockTagRepo.getPartiesByTag(
-          'tag_1',
-          limit: 10,
-          offset: 0,
-        ),
-      ).thenAnswer((_) async => events);
+    test(
+      'initial build sets hasMore=false when fewer than page-size returned',
+      () async {
+        final events = List.generate(3, (i) => makeEvent('e$i'));
+        when(
+          () => mockTagRepo.getPartiesByTag(
+            'tag_1',
+          ),
+        ).thenAnswer((_) async => events);
 
-      final container = createContainer(
-        overrides: [
-          tagRepositoryProvider.overrideWith((ref) => mockTagRepo),
-        ],
-      );
+        final container = createContainer(
+          overrides: [
+            tagRepositoryProvider.overrideWith((ref) => mockTagRepo),
+          ],
+        );
 
-      final result = await container.read(
-        tagEventListControllerProvider('tag_1').future,
-      );
+        final result = await container.read(
+          tagEventListControllerProvider('tag_1').future,
+        );
 
-      expect(result.events, hasLength(3));
-      expect(result.hasMore, isFalse);
-    });
+        expect(result.events, hasLength(3));
+        expect(result.hasMore, isFalse);
+      },
+    );
 
     test('loadMore appends next page to existing events', () async {
       final firstPage = List.generate(10, (i) => makeEvent('first_$i'));
@@ -94,14 +94,11 @@ void main() {
       when(
         () => mockTagRepo.getPartiesByTag(
           'tag_1',
-          limit: 10,
-          offset: 0,
         ),
       ).thenAnswer((_) async => firstPage);
       when(
         () => mockTagRepo.getPartiesByTag(
           'tag_1',
-          limit: 10,
           offset: 10,
         ),
       ).thenAnswer((_) async => secondPage);
@@ -122,7 +119,7 @@ void main() {
 
       final state = container
           .read(tagEventListControllerProvider('tag_1'))
-          .value!;
+          .value;
       expect(state.events, hasLength(15));
       expect(state.hasMore, isFalse);
       expect(state.isLoadingMore, isFalse);
@@ -133,8 +130,6 @@ void main() {
       when(
         () => mockTagRepo.getPartiesByTag(
           'tag_1',
-          limit: 10,
-          offset: 0,
         ),
       ).thenAnswer((_) async => events);
 
@@ -153,8 +148,6 @@ void main() {
       verify(
         () => mockTagRepo.getPartiesByTag(
           'tag_1',
-          limit: 10,
-          offset: 0,
         ),
       ).called(1);
     });
@@ -165,14 +158,11 @@ void main() {
       when(
         () => mockTagRepo.getPartiesByTag(
           'tag_1',
-          limit: 10,
-          offset: 0,
         ),
       ).thenAnswer((_) async => firstPage);
       when(
         () => mockTagRepo.getPartiesByTag(
           'tag_1',
-          limit: 10,
           offset: 10,
         ),
       ).thenThrow(Exception('Network error'));

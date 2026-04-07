@@ -16,8 +16,7 @@ const tagRepositoryProvider = TagRepositoryProvider._();
 /// Provider for TagRepository.
 
 final class TagRepositoryProvider
-    extends
-        $FunctionalProvider<TagRepository, TagRepository, TagRepository>
+    extends $FunctionalProvider<TagRepository, TagRepository, TagRepository>
     with $Provider<TagRepository> {
   /// Provider for TagRepository.
   const TagRepositoryProvider._()
