@@ -877,9 +877,15 @@ Deno.test({
   sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const tagIds = [
+      "00000000-0000-0000-0000-000000000001",
+      "00000000-0000-0000-0000-000000000002",
+      "00000000-0000-0000-0000-000000000003",
+    ];
     const { fetchMock } = createFetchMock([
       authRoute(),
       permRoute(),
+      selectTagsRoute(tagIds),
       insertPartyRoute(),
       insertPartyTagsRoute(),
     ]);
@@ -890,11 +896,7 @@ Deno.test({
           action: "create",
           partner_id: TEST_PARTNER_ID,
           party: { title: "태그 있는 파티" },
-          tag_ids: [
-            "00000000-0000-0000-0000-000000000001",
-            "00000000-0000-0000-0000-000000000002",
-            "00000000-0000-0000-0000-000000000003",
-          ],
+          tag_ids: tagIds,
         });
         const res = await handler(req);
         assertEquals(res.status, 200);
@@ -966,6 +968,46 @@ Deno.test({
         assertEquals(res.status, 400);
         const body = await readJson(res);
         assertEquals(body.error, "tag_ids must contain at most 5 tags");
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "create: tag_ids with nonexistent IDs returns 400 — no party INSERT attempted",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    // Fix #1136: DB existence check on create path — orphaned party prevented
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const requestedIds = [
+      "00000000-0000-0000-0000-000000000001",
+      "00000000-0000-0000-0000-000000000099", // nonexistent
+    ];
+    // selectTagsRoute returns only 1 of the 2 IDs — simulates missing tag
+    const { fetchMock, calls } = createFetchMock([
+      authRoute(),
+      permRoute(),
+      selectTagsRoute(["00000000-0000-0000-0000-000000000001"]),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create",
+          partner_id: TEST_PARTNER_ID,
+          party: { title: "잘못된 태그 파티" },
+          tag_ids: requestedIds,
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "One or more tag_ids do not exist");
+        // Verify no party INSERT was attempted — orphan prevention confirmed
+        const partyInserts = calls.filter(
+          (c) => c.url.includes("/rest/v1/parties") && c.method === "POST",
+        );
+        assertEquals(partyInserts.length, 0);
       });
     });
   },

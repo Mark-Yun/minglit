@@ -137,6 +137,17 @@ async function handleRequest(req: Request): Promise<Response> {
           return errorResponse(`tag_ids[${i}] must be a valid UUID string`, 400);
         }
       }
+      // Fix #1136: validate tag IDs exist before party creation
+      // Prevents orphaned party rows when FK constraint would fail during party_tags INSERT
+      if (tagIds.length > 0) {
+        const { data: existingTags, error: tagCheckError } = await supabase
+          .from("tags")
+          .select("id")
+          .in("id", tagIds as string[]);
+        if (tagCheckError) return errorResponse("Failed to validate tag IDs", 500);
+        if (!existingTags || existingTags.length !== (tagIds as string[]).length)
+          return errorResponse("One or more tag_ids do not exist", 400);
+      }
     }
 
     // Validate entry_group_templates
