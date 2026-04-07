@@ -227,7 +227,7 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
         'party_id': party.id,
         'party': partyJson,
         // Fix #1136: tag_ids는 null일 때 키 자체를 제외 — undefined와 null 구분을 위해
-        if (tagIds != null) 'tag_ids': tagIds,
+        'tag_ids': ?tagIds,
       };
 
       final response = await supabaseClient.functions.invoke(

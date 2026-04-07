@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 /// Displays the paginated list of events for a specific tag.
