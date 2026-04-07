@@ -208,13 +208,15 @@ void main() {
 
       // Drain microtask queue so the async error propagates through
       // mock → _fetchPage → build → Riverpod state transition.
-      // Each Future(() {}) yields to the event loop after all pending
-      // microtasks, ensuring the provider settles into AsyncError.
       await Future<void>(() {});
       await Future<void>(() {});
 
+      // Riverpod keeps the provider in AsyncLoading with the error attached
+      // (not AsyncError) when the first build fails on an auto-dispose provider.
+      // Verify via hasError + the error type.
       final state = container.read(tagEventListControllerProvider('tag_1'));
-      expect(state, isA<AsyncError<TagEventListState>>());
+      expect(state.hasError, isTrue);
+      expect(state.error, isA<Exception>());
     });
 
     // Fix regression: loadMore error restores previous state without spinner
