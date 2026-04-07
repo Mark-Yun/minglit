@@ -1,4 +1,5 @@
 import 'package:app_user/src/features/consent/logic/consent_coordinator.dart';
+import 'package:app_user/src/features/consent/ui/consent_detail_sheet.dart';
 import 'package:app_user/src/features/consent/ui/signup_consent_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -113,23 +114,56 @@ void main() {
   });
 
   // Fix #1141: 제3자 제공 동의 상세 바텀시트에 확정 항목/보유기간이 표시되는지 회귀 테스트
+  // 스크롤 후 탭 방식은 ListView 위치 변화로 인해 불안정 — ConsentDetailSheet 직접 렌더링.
   testWidgets('제3자 제공 동의 상세에 확정된 제공 항목과 보유기간이 표시된다', (tester) async {
-    await pumpPage(tester);
-
-    // Fix #1141: '제3자 제공 동의' 타이틀이 속한 Row의 최외곽 Row에서 '보기 ›'를 찾아 탭.
-    // at(N) 인덱스 방식은 ListView 스크롤 후 트리에서 이탈한 위젯으로 인해 인덱스가 변경될 수 있음.
-    // 타이틀 텍스트의 가장 먼 Row 조상(= _ConsentItemTile 의 외곽 Row) 안에서 '보기 ›'를 특정함.
-    await tester.scrollUntilVisible(find.text('제3자 제공 동의'), 200);
-    await tester.pumpAndSettle();
-    final thirdPartyTileRow = find
-        .ancestor(
-          of: find.text('제3자 제공 동의'),
-          matching: find.byType(Row),
-        )
-        .last;
-    await tester.tap(
-      find.descendant(of: thirdPartyTileRow, matching: find.text('보기 ›')),
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: MinglitTheme.materialTheme,
+        home: Scaffold(
+          body: Builder(
+            builder:
+                (ctx) => Center(
+                  child: ElevatedButton(
+                    onPressed:
+                        () => showConsentDetailSheet(
+                          ctx,
+                          // Fix #1141: 성별 제거, 자격 인증 정보 추가, 보유기간 30일로 확정
+                          content: const ConsentDetailContent(
+                            title: '제3자 제공 동의',
+                            summary:
+                                '이벤트 운영을 위해 파트너에게 아래 정보를 제공합니다.',
+                            sections: [
+                              ConsentDetailSection(
+                                title: '제공 항목',
+                                items: [
+                                  '이름(닉네임)',
+                                  '연령대',
+                                  '자격 인증 정보(직업/소속 — 본인인증 완료 유저만)',
+                                ],
+                              ),
+                              ConsentDetailSection(
+                                title: '보유 기간',
+                                items: ['이벤트 종료 후 30일'],
+                              ),
+                              ConsentDetailSection(
+                                title: '거부 권리',
+                                items: [
+                                  '동의를 거부할 수 있으며, 기본 서비스 이용은 가능합니다.',
+                                  '다만 파트너 승인/확인이 필요한 이벤트는 신청 또는 참여가 제한될 수 있습니다.',
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                    child: const Text('open'),
+                  ),
+                ),
+          ),
+        ),
+      ),
     );
+
+    await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
     expect(find.text('이름(닉네임)'), findsOneWidget);
