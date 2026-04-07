@@ -241,6 +241,24 @@ void main() {
     expect(find.text('회원 탈퇴 시작하기'), findsOneWidget);
   });
 
+  // Fix #1157: 관심 태그 보유기간·파기 정책이 보관 기간 섹션에 표시되는지 검증
+  testWidgets('개인정보 수집·이용 상세에서 관심 태그 파기 정책이 표시된다', (tester) async {
+    await pumpPage(tester);
+
+    // 약관 보기 섹션까지 스크롤
+    await tester.scrollUntilVisible(find.text('개인정보처리방침'), 200);
+
+    // 개인정보 수집·이용 바텀시트 열기 (동의 현황의 ListTile)
+    await tester.tap(find.widgetWithText(ListTile, '개인정보 수집·이용'));
+    await tester.pumpAndSettle();
+
+    // 관심 태그 파기 정책 문구가 존재하는지 확인
+    expect(
+      find.text('관심 태그, 이용 기록, 기기 정보: 회원 탈퇴 시 즉시 파기합니다.'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('동의 정보 로드 실패 시 에러 메시지가 표시된다', (tester) async {
     when(
       () => mockRepository.getConsents('user_1'),
