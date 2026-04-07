@@ -26,4 +26,17 @@ class PartnerHomeCoordinator {
   void goToSettlement() {
     _router.go(const SettlementRoute().location);
   }
+
+  // Fix #845: ApplicationList/Checkin 탭 전환을 coordinator를 통해 위임
+  void goToApplicationList() {
+    _router.go(const ApplicationListRoute().location);
+  }
+
+  void goToCheckin() {
+    _router.go(const CheckinRoute().location);
+  }
+
+  void pushEventCreate(String partyId) {
+    unawaited(_router.push(EventCreateRoute(partyId: partyId).location));
+  }
 }

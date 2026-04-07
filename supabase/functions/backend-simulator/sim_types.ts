@@ -8,6 +8,9 @@ export interface SimConfig {
   apps_per_event: number;     // applications per event
   checkin_rate: number;       // 0-1, 70% = 0.7
   no_show_rate: number;       // 0-1, 30% = 0.3
+  // Controls EF failure behaviour: true = throw on EF failure (no fallback),
+  // false (default) = log warning and fall back to direct DB operations.
+  strict: boolean;
 }
 
 export interface SimPhaseResult {

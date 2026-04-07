@@ -5,6 +5,8 @@ import 'package:mocktail/mocktail.dart';
 // --- Core Mocks ---
 class MockGoRouter extends Mock implements GoRouter {}
 
+class MockUser extends Mock implements User {}
+
 // --- Repository Mocks ---
 class MockEventRepository extends Mock implements EventRepository {}
 

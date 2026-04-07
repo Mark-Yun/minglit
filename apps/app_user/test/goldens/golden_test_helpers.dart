@@ -1,4 +1,5 @@
 import 'package:alchemist/alchemist.dart' show GoldenTestScenario;
+import 'package:app_user/src/features/account_deletion/logic/account_deletion_coordinator.dart';
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
@@ -11,6 +12,8 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../scenarios/screenshot_scenario.dart';
 
 // ---------------------------------------------------------------------------
 // Alchemist page-wrapper for app_user golden tests.
@@ -74,8 +77,37 @@ class MockPartnerCoordinator extends Mock implements PartnerCoordinator {}
 
 class MockPartyCoordinator extends Mock implements PartyCoordinator {}
 
+class MockAccountDeletionCoordinator extends Mock
+    implements AccountDeletionCoordinator {}
+
+class MockSocialRepository extends Mock implements SocialRepository {}
+
 /// No-op ActiveFilters — disables location/eligibility filters in tests.
 class NoFiltersNotifier extends ActiveFilters {
   @override
   ExploreFilters build() => const ExploreFilters();
+}
+
+// ---------------------------------------------------------------------------
+// Scenario → GoldenTestScenario conversion
+// ---------------------------------------------------------------------------
+
+extension ScreenshotScenarioX on ScreenshotScenario {
+  /// Converts a [ScreenshotScenario] into an Alchemist [GoldenTestScenario]
+  /// wrapped inside a [GoldenPageWrapper] sized at 390×844 (iPhone 14).
+  GoldenTestScenario toGoldenTestScenario() {
+    return GoldenTestScenario(
+      name: name,
+      child: SizedBox(
+        width: 390,
+        height: 844,
+        child: GoldenPageWrapper(
+          page: page,
+          overrides: overrides,
+          brightness: brightness,
+          currentUser: this.currentUser,
+        ),
+      ),
+    );
+  }
 }

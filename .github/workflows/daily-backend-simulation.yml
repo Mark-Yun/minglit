@@ -75,9 +75,7 @@ jobs:
             for f in integration_test/*_test.dart; do
               [ -f "$f" ] || { echo "⏭ No integration tests found, skipping."; break; }
               echo "▶ Running: $f"
-              flutter test "$f" \
-                --flavor dev \
-                --dart-define-from-file=../../minglit_env/dev/flutter.env
+              flutter test "$f" --flavor dev --dart-define-from-file=../../minglit_env/dev/flutter.env
             done
 
   partner-cuj-test:
@@ -111,9 +109,7 @@ jobs:
               [ -f "$f" ] || break
               found=1
               echo "▶ Running: $f"
-              flutter test "$f" \
-                --flavor dev \
-                --dart-define-from-file=../../minglit_env/dev/flutter.env
+              flutter test "$f" --flavor dev --dart-define-from-file=../../minglit_env/dev/flutter.env
             done
             [ "$found" -eq 0 ] && echo "⏭ No integration tests found, skipping."
 

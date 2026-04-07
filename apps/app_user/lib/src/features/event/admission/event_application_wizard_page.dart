@@ -1,18 +1,18 @@
 import 'dart:async';
 
 import 'package:app_user/src/features/event/admission/event_application_controller.dart';
+// Fix #509: payment feature 직접 import 제거 — PaymentSuccessScreen을 admission feature로 이동
+import 'package:app_user/src/features/event/admission/payment_success_screen.dart';
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
-import 'package:app_user/src/features/home/logic/home_coordinator.dart';
-import 'package:app_user/src/features/payment/ui/payment_success_screen.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-part 'wizard_widgets.dart';
-part 'wizard_verification_step.dart';
 part 'wizard_payment_step.dart';
+part 'wizard_verification_step.dart';
+part 'wizard_widgets.dart';
 
 class EventApplicationWizardPage extends ConsumerWidget {
   const EventApplicationWizardPage({
@@ -98,7 +98,7 @@ class _WizardBodyState extends ConsumerState<_WizardBody> {
                   event: widget.event,
                   ticketId: ticket.id,
                   onViewTickets: () =>
-                      ref.read(homeCoordinatorProvider).goToPurchaseHistory(),
+                      ref.read(eventCoordinatorProvider).goToPurchaseHistory(),
                   onBackToEvent: () => ref
                       .read(eventCoordinatorProvider)
                       .goToEventDetail(widget.event.id),
