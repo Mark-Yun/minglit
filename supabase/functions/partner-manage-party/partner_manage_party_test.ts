@@ -151,6 +151,23 @@ function updatePartyErrorRoute(): FetchRoute {
   };
 }
 
+// party_tags routes
+function insertPartyTagsRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/party_tags") && req.method === "POST",
+    handler: () => jsonResponse([]),
+  };
+}
+
+function deletePartyTagsRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/party_tags") && req.method === "DELETE",
+    handler: () => new Response(null, { status: 200 }),
+  };
+}
+
 // Template routes
 function insertEntryGroupTemplatesRoute(): FetchRoute {
   return {
@@ -839,6 +856,238 @@ Deno.test({
         });
         const res = await handler(req);
         assertEquals(res.status, 403);
+      });
+    });
+  },
+});
+
+// ─── create: tag_ids ───
+
+Deno.test({
+  name: "create: with tag_ids 3 tags — party_tags inserted",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      permRoute(),
+      insertPartyRoute(),
+      insertPartyTagsRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create",
+          partner_id: TEST_PARTNER_ID,
+          party: { title: "태그 있는 파티" },
+          tag_ids: [
+            "00000000-0000-0000-0000-000000000001",
+            "00000000-0000-0000-0000-000000000002",
+            "00000000-0000-0000-0000-000000000003",
+          ],
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.success, true);
+        assertEquals(body.party_id, TEST_PARTY_ID);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "create: without tag_ids — party created without tags",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    // party_tags INSERT route 없이도 성공해야 함
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      permRoute(),
+      insertPartyRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create",
+          partner_id: TEST_PARTNER_ID,
+          party: { title: "태그 없는 파티" },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.success, true);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "create: tag_ids with 6 items returns 400",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      permRoute(),
+      insertPartyRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create",
+          partner_id: TEST_PARTNER_ID,
+          party: { title: "태그 초과 파티" },
+          tag_ids: [
+            "00000000-0000-0000-0000-000000000001",
+            "00000000-0000-0000-0000-000000000002",
+            "00000000-0000-0000-0000-000000000003",
+            "00000000-0000-0000-0000-000000000004",
+            "00000000-0000-0000-0000-000000000005",
+            "00000000-0000-0000-0000-000000000006",
+          ],
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "tag_ids must contain at most 5 tags");
+      });
+    });
+  },
+});
+
+// ─── update: tag_ids ───
+
+Deno.test({
+  name: "update: tag_ids provided — existing tags replaced",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectPartyRoute(),
+      permRoute(),
+      deletePartyTagsRoute(),
+      insertPartyTagsRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          party_id: TEST_PARTY_ID,
+          tag_ids: [
+            "00000000-0000-0000-0000-000000000010",
+            "00000000-0000-0000-0000-000000000011",
+          ],
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.success, true);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update: tag_ids empty array — all tags removed",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    // 빈 배열이면 DELETE만 실행, INSERT 없음
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectPartyRoute(),
+      permRoute(),
+      deletePartyTagsRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          party_id: TEST_PARTY_ID,
+          tag_ids: [],
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.success, true);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update: tag_ids undefined — tags not changed",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    // tag_ids 없으면 party_tags route 불필요
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectPartyRoute(),
+      permRoute(),
+      updatePartyRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          party_id: TEST_PARTY_ID,
+          party: { title: "태그 변경 없이 제목만 수정" },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.success, true);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update: tag_ids with 6 items returns 400",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectPartyRoute(),
+      permRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          party_id: TEST_PARTY_ID,
+          tag_ids: [
+            "00000000-0000-0000-0000-000000000001",
+            "00000000-0000-0000-0000-000000000002",
+            "00000000-0000-0000-0000-000000000003",
+            "00000000-0000-0000-0000-000000000004",
+            "00000000-0000-0000-0000-000000000005",
+            "00000000-0000-0000-0000-000000000006",
+          ],
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "tag_ids must contain at most 5 tags");
       });
     });
   },

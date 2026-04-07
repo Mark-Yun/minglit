@@ -210,7 +210,10 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
 
   // Fix #316: updateParty via EF (partner-manage-party)
   /// Updates an existing party via Edge Function.
-  Future<Party> updateParty(Party party) async {
+  ///
+  /// [tagIds] — 태그 ID 목록. 제공 시 EF에서 party_tags를 전체 교체한다.
+  /// 빈 리스트를 전달하면 기존 태그를 모두 제거한다.
+  Future<Party> updateParty(Party party, {List<String>? tagIds}) async {
     Log.d('updateParty called | id: ${party.id}');
     try {
       final partyJson = party.toDbJson();
@@ -218,13 +221,16 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
       partyJson.remove('location');
       partyJson.remove('location_id');
 
+      final body = <String, dynamic>{
+        'action': 'update',
+        'party_id': party.id,
+        'party': partyJson,
+        if (tagIds != null) 'tag_ids': tagIds,
+      };
+
       final response = await supabaseClient.functions.invoke(
         'partner-manage-party',
-        body: {
-          'action': 'update',
-          'party_id': party.id,
-          'party': partyJson,
-        },
+        body: body,
       );
 
       if (response.status != 200) {

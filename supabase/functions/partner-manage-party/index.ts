@@ -199,6 +199,28 @@ async function handleRequest(req: Request): Promise<Response> {
 
     const partyId = newParty.id as string;
 
+    // Insert party_tags if tag_ids provided (max 5, already validated above)
+    // Fix #1136: tag_ids 지원 — party 생성 후 party_tags INSERT
+    const tagIds = body.tag_ids;
+    if (Array.isArray(tagIds) && tagIds.length > 0) {
+      if (tagIds.length > 5) {
+        return errorResponse("tag_ids must contain at most 5 tags", 400);
+      }
+      for (let i = 0; i < tagIds.length; i++) {
+        if (typeof tagIds[i] !== "string" || !tagIds[i]) {
+          return errorResponse(`tag_ids[${i}] must be a valid UUID string`, 400);
+        }
+      }
+      const partyTagRecords = tagIds.map((tid: string) => ({
+        party_id: partyId,
+        tag_id: tid,
+      }));
+      const { error: ptError } = await supabase.from("party_tags").insert(partyTagRecords);
+      if (ptError) {
+        return errorResponse(`Failed to create party tags: ${ptError.message}`, 500);
+      }
+    }
+
     // Insert entry_group_templates if provided (already validated above)
     if (Array.isArray(entryGroupTemplates) && entryGroupTemplates.length > 0) {
       const egt = entryGroupTemplates.map((t: Record<string, unknown>) => ({
@@ -359,7 +381,48 @@ async function handleRequest(req: Request): Promise<Response> {
       }
     }
 
-    if (Object.keys(partyUpdates).length === 0 && !locationData && body.location_id === undefined) {
+    // Update party_tags if tag_ids present in body (undefined = no change, [] = clear all)
+    // Fix #1136: tag_ids 지원 — 기존 party_tags 전체 교체
+    const updateTagIds = body.tag_ids;
+    if (updateTagIds !== undefined) {
+      if (!Array.isArray(updateTagIds)) {
+        return errorResponse("tag_ids must be an array", 400);
+      }
+      if (updateTagIds.length > 5) {
+        return errorResponse("tag_ids must contain at most 5 tags", 400);
+      }
+      for (let i = 0; i < updateTagIds.length; i++) {
+        if (typeof updateTagIds[i] !== "string" || !updateTagIds[i]) {
+          return errorResponse(`tag_ids[${i}] must be a valid UUID string`, 400);
+        }
+      }
+      // 기존 태그 전체 제거
+      const { error: ptDeleteError } = await supabase
+        .from("party_tags")
+        .delete()
+        .eq("party_id", partyId);
+      if (ptDeleteError) {
+        return errorResponse(`Failed to clear party tags: ${ptDeleteError.message}`, 500);
+      }
+      // 새 태그 INSERT (빈 배열이면 전체 제거로 끝)
+      if (updateTagIds.length > 0) {
+        const partyTagRecords = (updateTagIds as string[]).map((tid) => ({
+          party_id: partyId,
+          tag_id: tid,
+        }));
+        const { error: ptInsertError } = await supabase.from("party_tags").insert(partyTagRecords);
+        if (ptInsertError) {
+          return errorResponse(`Failed to update party tags: ${ptInsertError.message}`, 500);
+        }
+      }
+    }
+
+    if (
+      Object.keys(partyUpdates).length === 0 &&
+      !locationData &&
+      body.location_id === undefined &&
+      updateTagIds === undefined
+    ) {
       return errorResponse("No fields to update", 400);
     }
 
