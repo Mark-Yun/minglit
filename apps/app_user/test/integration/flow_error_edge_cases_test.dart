@@ -389,7 +389,8 @@ void main() {
       // Bottom sheet should show policy details
       expect(find.text('환불 정책 상세'), findsOneWidget);
       expect(find.text('전액 환불'), findsNWidgets(2));
-      expect(find.text('환불 불가'), findsOneWidget);
+      // Fix #1140: "환불 불가" → "고객센터 문의"로 변경됨
+      expect(find.text('고객센터 문의'), findsOneWidget);
     });
   });
 }
