@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trust Badge Wireframe - Minglit</title>
+    <style>
+        :root {
+            --primary: #9900FF;
+            --secondary: #FF9900;
+            --tertiary: #48C9B0;
+            --background: #FFFFFF;
+            --surface: #F9FAFB;
+            --text-primary: #111827;
+            --text-secondary: #4B5563;
+            --border: #E5E7EB;
+            --radius-card: 16px;
+            --radius-button: 12px;
+            --spacing-m: 16px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .phone {
+            width: 375px;
+            height: 812px;
+            background: var(--background);
+            border: 8px solid #333;
+            border-radius: 40px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+
+        .status-bar { height: 44px; background: #fff; }
+        .nav-bar { height: 44px; display: flex; align-items: center; padding: 0 16px; border-bottom: 1px solid var(--border); font-weight: bold; }
+
+        /* MyPage Section */
+        .profile-section { padding: 24px; display: flex; align-items: center; gap: 16px; }
+        .avatar { width: 64px; height: 64px; border-radius: 32px; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+        .profile-info h2 { margin: 0; font-size: 20px; display: flex; align-items: center; gap: 6px; }
+        .profile-info p { margin: 4px 0 0; color: var(--text-secondary); font-size: 14px; }
+
+        /* Badge Styles */
+        .badge { display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+        .badge-shield { color: var(--primary); }
+        .badge-sparkles { color: var(--secondary); }
+        .badge-diamond { color: var(--tertiary); }
+
+        /* List Items */
+        .list-item { padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; color: var(--text-primary); }
+        .list-item-left { display: flex; align-items: center; gap: 12px; }
+
+        /* Bottom Sheet Overlay */
+        .overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10; }
+        .bottom-sheet {
+            position: absolute; left: 0; right: 0; bottom: 0;
+            background: #fff; border-top-left-radius: 28px; border-top-right-radius: 28px;
+            padding: 24px; z-index: 20; transform: translateY(0); transition: transform 0.3s ease;
+        }
+        .handle { width: 32px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 16px; }
+        
+        /* Trust Sheet Content */
+        .sheet-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+        .sheet-title { font-size: 20px; font-weight: bold; }
+        .trust-level-label { font-size: 13px; color: var(--secondary); font-weight: 600; margin-top: 4px; }
+
+        .trust-stepper { display: flex; gap: 8px; margin-bottom: 24px; }
+        .step { flex: 1; padding: 12px; border-radius: 12px; background: var(--surface); text-align: center; font-size: 12px; color: #999; border: 1px solid transparent; }
+        .step.active { background: #fff; border-color: var(--secondary); color: var(--secondary); font-weight: bold; box-shadow: 0 4px 10px rgba(255,153,0,0.1); }
+        .step.done { color: var(--primary); opacity: 0.6; }
+
+        .verification-item {
+            display: flex; gap: 12px; padding: 16px; border-radius: 16px;
+            background: var(--surface); border: 1px solid var(--border); margin-bottom: 12px;
+        }
+        .v-icon { width: 36px; height: 36px; border-radius: 18px; background: #fff; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); }
+        .v-text h4 { margin: 0; font-size: 15px; }
+        .v-text p { margin: 2px 0 0; font-size: 12px; color: var(--text-secondary); }
+
+        .stats-box { background: #F0F9FF; border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+        .stats-icon { font-size: 20px; }
+        .stats-text { font-size: 14px; color: #0369A1; font-weight: 500; }
+
+        .btn-close {
+            width: 100%; padding: 16px; background: var(--text-primary); color: #fff;
+            border: none; border-radius: 12px; font-weight: bold; margin-top: 24px; cursor: pointer;
+        }
+
+        .label { font-size: 14px; font-weight: bold; margin-bottom: 12px; display: block; color: var(--text-secondary); }
+    </style>
+</head>
+<body>
+
+    <!-- Phone 1: My Page with Badge -->
+    <div class="phone">
+        <div class="status-bar"></div>
+        <div class="nav-bar">마이페이지</div>
+        <div class="profile-section">
+            <div class="avatar">👤</div>
+            <div class="profile-info">
+                <h2>김밍글 <span class="badge badge-sparkles">✨</span></h2>
+                <p>minglit@example.com</p>
+            </div>
+        </div>
+        <div style="height: 8px; background: #f9f9f9;"></div>
+        <div class="list-item">
+            <div class="list-item-left"><span>📋</span> 구매 내역</div>
+            <span>❯</span>
+        </div>
+        <div class="list-item">
+            <div class="list-item-left"><span>🎫</span> 내 티켓</div>
+            <span>❯</span>
+        </div>
+        <div class="list-item">
+            <div class="list-item-left"><span>🔔</span> 알림 설정</div>
+            <span>❯</span>
+        </div>
+        <div class="list-item">
+            <div class="list-item-left"><span>🛡️</span> 신뢰도 관리</div>
+            <span style="font-size: 12px; color: var(--secondary);">✨ 등급 ❯</span>
+        </div>
+    </div>
+
+    <!-- Phone 2: Trust Sheet Open -->
+    <div class="phone">
+        <div class="status-bar"></div>
+        <div class="nav-bar">마이페이지</div>
+        <div class="profile-section">
+            <div class="avatar">👤</div>
+            <div class="profile-info">
+                <h2>김밍글 ✨</h2>
+                <p>minglit@example.com</p>
+            </div>
+        </div>
+        <div class="overlay"></div>
+        <div class="bottom-sheet">
+            <div class="handle"></div>
+            <div class="sheet-header">
+                <div class="avatar" style="width: 48px; height: 48px; font-size: 24px;">👤</div>
+                <div>
+                    <div class="sheet-title">김밍글</div>
+                    <div class="trust-level-label">현재 ✨ Qualification 등급입니다</div>
+                </div>
+            </div>
+
+            <div class="trust-stepper">
+                <div class="step done">🛡️ Identity</div>
+                <div class="step active">✨ Qualified</div>
+                <div class="step">💎 Reliable</div>
+            </div>
+
+            <span class="label">인증 내역</span>
+            <div class="verification-item">
+                <div class="v-icon">💼</div>
+                <div class="v-text">
+                    <h4>삼성전자</h4>
+                    <p>직장인 인증 완료 · 2026.03.15</p>
+                </div>
+            </div>
+            <div class="verification-item">
+                <div class="v-icon">🎓</div>
+                <div class="v-text">
+                    <h4>서울대학교</h4>
+                    <p>학력 인증 완료 · 2026.02.10</p>
+                </div>
+            </div>
+
+            <span class="label" style="margin-top: 16px;">활동 지표</span>
+            <div class="stats-box">
+                <div class="stats-icon">✅</div>
+                <div class="stats-text">최근 10회 참여 중 10회 출석 (100%)</div>
+            </div>
+
+            <button class="btn-close">닫기</button>
+        </div>
+    </div>
+
+</body>
+</html>
