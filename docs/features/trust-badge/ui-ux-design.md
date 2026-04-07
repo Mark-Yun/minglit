@@ -8,9 +8,9 @@
 
 | 레벨 | 아이콘 (Material) | 기본 색상 | 포인트/그라디언트 |
 |---|---|---|---|
-| **Identity (🛡️)** | `Icons.verified_user` | `MinglitColors.primary` (Purple) | - |
-| **Qualification (✨)** | `Icons.auto_awesome` | `MinglitColors.secondary` (Amber) | Amber -> Orange Gradient |
-| **Reliability (💎)** | `Icons.diamond` | `MinglitColors.tertiary` (Mint) | Mint -> Cyan Gradient |
+| **Verified (🛡️)** | `Icons.verified_user` | `MinglitColors.primary` (Purple) | - |
+| **Certified (✨)** | `Icons.auto_awesome` | `MinglitColors.secondary` (Amber) | Amber -> Orange Gradient |
+| **Elite (💎)** | `Icons.diamond` | `MinglitColors.tertiary` (Mint) | Mint -> Cyan Gradient |
 
 ### 1.2 배지 스타일 (TrustBadge Widget)
 
