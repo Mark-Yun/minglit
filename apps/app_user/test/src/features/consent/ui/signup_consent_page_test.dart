@@ -116,20 +116,11 @@ void main() {
   testWidgets('제3자 제공 동의 상세에 확정된 제공 항목과 보유기간이 표시된다', (tester) async {
     await pumpPage(tester);
 
-    await tester.scrollUntilVisible(find.text('제3자 제공 동의'), 200);
+    // '보기 ›' 인덱스: termsOfService=0, privacyCollection=1, ageConfirmation=없음, thirdPartyProvision=2
+    // GestureDetector(opaque) + InkWell 제스처 아레나 충돌로 ancestor 방식 미작동 — 직접 인덱스로 탭
+    await tester.scrollUntilVisible(find.text('보기 ›').at(2), 200);
     await tester.pumpAndSettle();
-
-    // '제3자 제공 동의' 타일 내의 '보기 ›' 버튼을 탭한다.
-    // 타일의 루트 InkWell은 제목 텍스트와 '보기 ›' 버튼을 모두 포함한다.
-    final tileInkWell = find
-        .ancestor(
-          of: find.text('제3자 제공 동의'),
-          matching: find.byType(InkWell),
-        )
-        .first;
-    await tester.tap(
-      find.descendant(of: tileInkWell, matching: find.text('보기 ›')),
-    );
+    await tester.tap(find.text('보기 ›').at(2));
     await tester.pumpAndSettle();
 
     expect(find.text('이름(닉네임)'), findsOneWidget);
