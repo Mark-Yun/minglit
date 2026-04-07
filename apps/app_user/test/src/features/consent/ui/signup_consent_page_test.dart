@@ -166,17 +166,18 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
-    expect(find.text('이름(닉네임)'), findsOneWidget);
-    expect(find.text('연령대'), findsOneWidget);
-    expect(find.text('자격 인증 정보(직업/소속 — 본인인증 완료 유저만)'), findsOneWidget);
-    expect(find.text('이벤트 종료 후 30일'), findsOneWidget);
+    // consent_detail_sheet.dart renders items as '• $item'
+    expect(find.text('• 이름(닉네임)'), findsOneWidget);
+    expect(find.text('• 연령대'), findsOneWidget);
+    expect(find.text('• 자격 인증 정보(직업/소속 — 본인인증 완료 유저만)'), findsOneWidget);
+    expect(find.text('• 이벤트 종료 후 30일'), findsOneWidget);
     // Fix #1141: 거부 권리 문구 — 0929d567 커밋에서 확정된 문구와 일치
     expect(
-      find.text('동의를 거부할 수 있으며, 기본 서비스 이용은 가능합니다.'),
+      find.text('• 동의를 거부할 수 있으며, 기본 서비스 이용은 가능합니다.'),
       findsOneWidget,
     );
     expect(
-      find.text('다만 파트너 승인/확인이 필요한 이벤트는 신청 또는 참여가 제한될 수 있습니다.'),
+      find.text('• 다만 파트너 승인/확인이 필요한 이벤트는 신청 또는 참여가 제한될 수 있습니다.'),
       findsOneWidget,
     );
   });
