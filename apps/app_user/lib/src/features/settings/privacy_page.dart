@@ -283,7 +283,9 @@ const _privacyCollectionContent = ConsentDetailContent(
     ConsentDetailSection(
       title: '보관 기간',
       items: [
-        '회원 탈퇴 시까지 보관합니다.',
+        '이름, 이메일, 프로필 사진: 회원 탈퇴 시까지 보관합니다.',
+        // Fix #1157: 관심 태그 보유기간 명시 — 탈퇴 시 즉시 파기 (ON DELETE CASCADE 적용)
+        '관심 태그, 이용 기록, 기기 정보: 회원 탈퇴 시 즉시 파기합니다.',
         '법령상 보관 의무가 있는 정보는 관련 기간 동안 별도 보관합니다.',
       ],
     ),
@@ -340,7 +342,9 @@ const _privacyPolicyContent = ConsentDetailContent(
     ConsentDetailSection(
       title: '개인정보 보관 기간',
       items: [
-        '회원 탈퇴 시까지 보관합니다.',
+        '이름, 이메일, 프로필 사진: 회원 탈퇴 시까지 보관합니다.',
+        // Fix #1157: 관심 태그 보유기간 명시 — 탈퇴 시 즉시 파기 (ON DELETE CASCADE 적용)
+        '관심 태그, 이용 기록, 기기 정보: 회원 탈퇴 시 즉시 파기합니다.',
         '관련 법령에 따라 일정 기간 보관이 필요한 경우 해당 기간 동안 보관합니다.',
       ],
     ),
