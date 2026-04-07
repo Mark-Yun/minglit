@@ -191,7 +191,7 @@ void main() {
         () => mockTagRepo.getPartiesByTag(
           'tag_1',
         ),
-      ).thenThrow(Exception('Network error'));
+      ).thenAnswer((_) async => throw Exception('Network error'));
 
       final container = createContainer(
         overrides: [
