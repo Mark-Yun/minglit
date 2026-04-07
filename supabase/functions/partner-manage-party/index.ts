@@ -330,6 +330,20 @@ async function handleRequest(req: Request): Promise<Response> {
           return errorResponse(`tag_ids[${i}] must be a valid UUID string`, 400);
         }
       }
+      // Validate tag IDs exist in the database — prevents partial writes
+      // if FK constraint would fail during the INSERT phase
+      if (updateTagIds.length > 0) {
+        const { data: existingTags, error: tagCheckError } = await supabase
+          .from("tags")
+          .select("id")
+          .in("id", updateTagIds as string[]);
+        if (tagCheckError) {
+          return errorResponse("Failed to validate tag IDs", 500);
+        }
+        if (!existingTags || existingTags.length !== (updateTagIds as string[]).length) {
+          return errorResponse("One or more tag_ids do not exist", 400);
+        }
+      }
     }
 
     if (

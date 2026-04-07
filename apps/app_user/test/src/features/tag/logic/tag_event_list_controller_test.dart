@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:app_user/src/features/tag/logic/tag_event_list_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -234,17 +232,10 @@ void main() {
 
       await container.read(tagEventListControllerProvider('tag_1').future);
 
-      unawaited(
-        expectLater(
-          () => container
-              .read(tagEventListControllerProvider('tag_1').notifier)
-              .loadMore(),
-          throwsA(isA<Exception>()),
-        ),
-      );
-
-      // Wait for loadMore to settle
-      await Future<void>.delayed(const Duration(milliseconds: 100));
+      final future = container
+          .read(tagEventListControllerProvider('tag_1').notifier)
+          .loadMore();
+      await expectLater(future, throwsA(isA<Exception>()));
 
       final state = container
           .read(tagEventListControllerProvider('tag_1'))
