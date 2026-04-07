@@ -525,8 +525,8 @@ final Map<ConsentType, _ConsentDefinition> _consentDefinitions = {
         ConsentDetailSection(
           title: '거부 권리',
           items: [
-            '동의를 거부할 수 있으며, 거부해도 서비스 이용에 제한이 없습니다.',
-            '단, 이벤트 신청 시 개별 동의를 다시 요청합니다.',
+            '동의를 거부할 수 있으며, 기본 서비스 이용은 가능합니다.',
+            '다만 파트너 승인/확인이 필요한 이벤트는 신청 또는 참여가 제한될 수 있습니다.',
           ],
         ),
       ],

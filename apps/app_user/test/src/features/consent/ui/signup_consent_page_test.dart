@@ -50,13 +50,16 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('초기 상태에서 5개 항목이 보이고 CTA는 비활성화된다', (tester) async {
+  testWidgets('초기 상태에서 6개 항목이 보이고 CTA는 비활성화된다', (tester) async {
     await pumpPage(tester);
 
     expect(find.text('환영합니다!'), findsOneWidget);
     expect(find.text('서비스 이용약관'), findsOneWidget);
     expect(find.text('개인정보 수집·이용 동의'), findsOneWidget);
     expect(find.text('만 14세 이상 확인'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('제3자 제공 동의'), 200);
+    expect(find.text('제3자 제공 동의'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('본인인증(CI/DI) 수집 동의'), 200);
     expect(find.text('본인인증(CI/DI) 수집 동의'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('마케팅 정보 수신 동의'), 200);
     expect(find.text('마케팅 정보 수신 동의'), findsOneWidget);
@@ -107,6 +110,28 @@ void main() {
 
     expect(find.text('이용자 보호'), findsOneWidget);
     expect(find.text('서비스 이용을 위해 필요한 기본 권리와 의무를 안내합니다.'), findsOneWidget);
+  });
+
+  // Fix #1141: 제3자 제공 동의 상세 바텀시트에 확정 항목/보유기간이 표시되는지 회귀 테스트
+  testWidgets('제3자 제공 동의 상세에 확정된 제공 항목과 보유기간이 표시된다', (tester) async {
+    await pumpPage(tester);
+
+    await tester.scrollUntilVisible(
+      find.bySemanticsLabel('제3자 제공 동의 상세 보기'),
+      200,
+    );
+    await tester.tap(find.bySemanticsLabel('제3자 제공 동의 상세 보기'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('이름(닉네임)'), findsOneWidget);
+    expect(find.text('연령대'), findsOneWidget);
+    expect(find.text('자격 인증 정보(직업/소속 — 본인인증 완료 유저만)'), findsOneWidget);
+    expect(find.text('이벤트 종료 후 30일'), findsOneWidget);
+    expect(find.text('동의를 거부할 수 있으며, 기본 서비스 이용은 가능합니다.'), findsOneWidget);
+    expect(
+      find.text('다만 파트너 승인/확인이 필요한 이벤트는 신청 또는 참여가 제한될 수 있습니다.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('저장 성공 시 선택한 동의를 저장하고 원래 경로로 이동한다', (tester) async {
