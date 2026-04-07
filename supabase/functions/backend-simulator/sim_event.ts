@@ -47,6 +47,7 @@ export async function simCheckin(
   checkinRate: number = 0.7,
   supabaseUrl?: string,
   anonKey?: string,
+  strict?: boolean,
 ): Promise<{ checkedInParticipantIds: string[]; noShowParticipantIds: string[]; assertions: SimAssertionResult[] }> {
   const checkedInParticipantIds: string[] = [];
   const noShowParticipantIds: string[] = [];
@@ -57,6 +58,21 @@ export async function simCheckin(
   if (eventIds.length === 0) {
     log({ level: "info", phase: "checkin", step: "skip", message: "No events to process" });
     return { checkedInParticipantIds, noShowParticipantIds, assertions };
+  }
+
+  // Fix #998: event-checkin EF requires status='active' or 'ongoing', but simCheckin is called
+  // before simCompleteEvents (which drives scheduled→active→ongoing→completed). Pre-activate
+  // all scheduled events here so the EF status gate passes — mirrors real-world cron activation.
+  const { error: preActivateErr } = await supabase
+    .from("events")
+    .update({ status: "active" })
+    .eq("status", "scheduled")
+    .in("id", eventIds);
+
+  if (preActivateErr) {
+    log({ level: "warn", phase: "checkin", step: "pre_activate", message: `Failed to pre-activate scheduled events: ${preActivateErr.message}` });
+  } else {
+    log({ level: "info", phase: "checkin", step: "pre_activate", message: `Pre-activated scheduled events to active for EF check-in (${eventIds.length} event IDs processed)` });
   }
 
   // Fix #531: Process events in batches to prevent curl 120s timeout.
@@ -110,9 +126,15 @@ export async function simCheckin(
               log({ level: "info", phase: "checkin", step: "ef_checkin", message: `Checked in participant ${participant.id} via EF` });
               continue;
             } else {
+              if (strict) {
+                throw new Error(`Strict mode: event-checkin EF returned ${efResult.status} for participant ${participant.id}`);
+              }
               log({ level: "warn", phase: "checkin", step: "ef_checkin_failed", message: `event-checkin EF returned ${efResult.status} for participant ${participant.id}, falling back to direct update` });
             }
           } catch (authErr) {
+            if (strict) {
+              throw new Error(`Strict mode: auth failed for ${username}, cannot check in participant ${participant.id}: ${String(authErr)}`);
+            }
             log({ level: "warn", phase: "checkin", step: "ef_auth_fallback", message: `Auth failed for ${username}, using direct update: ${String(authErr)}` });
           }
         }
@@ -184,6 +206,7 @@ export async function simMatch(
   log: (entry: Omit<SimLogEntry, "timestamp">) => void,
   supabaseUrl?: string,
   serviceRoleKey?: string,
+  strict?: boolean,
 ): Promise<{ matchPairs: Array<{ userId1: string; userId2: string; eventId: string }>; assertions: SimAssertionResult[] }> {
   const matchPairs: Array<{ userId1: string; userId2: string; eventId: string }> = [];
   const assertions: SimAssertionResult[] = [];
@@ -211,9 +234,15 @@ export async function simMatch(
           log({ level: "info", phase: "match", step: "ef_match", message: `event-matching EF created ${pairs.length} pairs for event ${eventId}`, data: { eventId, idempotent: efData.idempotent } });
           return;
         } else {
+          if (strict) {
+            throw new Error(`Strict mode: event-matching EF returned ${efResult.status} for event ${eventId}`);
+          }
           log({ level: "warn", phase: "match", step: "ef_match_failed", message: `event-matching EF returned ${efResult.status} for event ${eventId}, falling back to direct vote insert` });
         }
       } catch (efErr) {
+        if (strict) {
+          throw new Error(`Strict mode: event-matching EF error for event ${eventId}: ${String(efErr)}`);
+        }
         log({ level: "warn", phase: "match", step: "ef_match_error", message: `event-matching EF error for event ${eventId}: ${String(efErr)}, falling back to direct vote insert` });
       }
     }
@@ -373,7 +402,9 @@ export async function simMatch(
 // ─────────────────────────────────────────────────────────
 
 /**
- * Marks events as completed.
+ * Marks events as completed by transitioning through the full state machine.
+ * // Fix #998: 이벤트 상태 머신 확장 — 순차 전환 (scheduled → active → ongoing → completed)
+ * Each step only updates events that are in the expected prior state.
  * UPDATE events SET status='completed' → triggers create_settlement_on_event_completion()
  */
 export async function simCompleteEvents(
@@ -391,18 +422,45 @@ export async function simCompleteEvents(
 
   // Fix #531: Process events in batches to prevent curl 120s timeout.
   const completeResults = await allSettledInBatches(eventIds, 10, async (eventId) => {
-    const { error: updErr } = await supabase
+    // Fix #998: 이벤트 상태 머신 확장 — 순차 전환 (scheduled → active → ongoing → completed)
+    // Step 1: scheduled → active
+    const { error: toActiveErr } = await supabase
+      .from("events")
+      .update({ status: "active" })
+      .eq("id", eventId)
+      .eq("status", "scheduled");
+
+    if (toActiveErr) {
+      log({ level: "error", phase: "complete_events", step: "transition_to_active", message: `Failed to transition event ${eventId} to active: ${toActiveErr.message}` });
+      return;
+    }
+
+    // Step 2: active → ongoing
+    const { error: toOngoingErr } = await supabase
+      .from("events")
+      .update({ status: "ongoing" })
+      .eq("id", eventId)
+      .eq("status", "active");
+
+    if (toOngoingErr) {
+      log({ level: "error", phase: "complete_events", step: "transition_to_ongoing", message: `Failed to transition event ${eventId} to ongoing: ${toOngoingErr.message}` });
+      return;
+    }
+
+    // Step 3: ongoing → completed
+    const { error: toCompletedErr } = await supabase
       .from("events")
       .update({ status: "completed" })
-      .eq("id", eventId);
+      .eq("id", eventId)
+      .eq("status", "ongoing");
 
-    if (updErr) {
-      log({ level: "error", phase: "complete_events", step: "update_event", message: `Failed to complete event ${eventId}: ${updErr.message}` });
+    if (toCompletedErr) {
+      log({ level: "error", phase: "complete_events", step: "transition_to_completed", message: `Failed to transition event ${eventId} to completed: ${toCompletedErr.message}` });
       return;
     }
 
     completedEventIds.push(eventId);
-    log({ level: "info", phase: "complete_events", step: "completed", message: `Event ${eventId} marked as completed` });
+    log({ level: "info", phase: "complete_events", step: "completed", message: `Event ${eventId} transitioned scheduled → active → ongoing → completed` });
   });
 
   for (const r of completeResults) {

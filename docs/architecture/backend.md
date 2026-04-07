@@ -43,6 +43,8 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 
 총 **53개 테이블(analytics 스키마 5개 포함)** + **4개 뷰** + **4개 PGMQ 인프라 테이블**.
 
+> **Note**: 아래 테이블 목록이 실제 migration과 일치하는지 정기적으로 검증합니다.
+
 #### Core (사용자/파트너)
 
 | Table | Purpose | Key Columns |
@@ -64,7 +66,7 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 |-------|---------|-------------|
 | `parties` | 파티 (이벤트 템플릿) | partner_id, title, image_urls[], balance_config, status (draft/active/closed), visibility (public/private) |
 | `party_embeddings` | 파티 임베딩 | party_id (PK), embedding vector(1536) |
-| `events` | 실제 이벤트 회차 | party_id, start_time, end_time, vote_start_at, vote_end_at, status (scheduled/cancelled/completed), visibility (public/private) |
+| `events` | 실제 이벤트 회차 | party_id, start_time, end_time, vote_start_at, vote_end_at, status (scheduled/active/ongoing/cancelled/completed), visibility (public/private) |
 | `entry_group_templates` | 입장 그룹 템플릿 (파티) | party_id, gender, birth_year_min/max |
 | `entry_groups` | 입장 그룹 (이벤트) | event_id, gender, birth_year_min/max |
 | `ticket_templates` | 티켓 템플릿 (파티) | party_id, name, price, quantity |
@@ -97,6 +99,15 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 | `report_details` | 신고 상세 정보 | social_interaction_id, target_type, reason, description |
 | `system_settings` | 시스템 설정 키-값 | key (PK), value jsonb, description, updated_at, updated_by |
 | `policies` | 약관/정책 버전 관리 | id (PK uuid), key, value jsonb, version, effective_date, description, created_at |
+| `user_consents` | 유저 약관 동의 기록 | user_id, policy_id, consented_at, revoked_at |
+
+#### Account Management (계정 관리)
+
+| Table | Purpose | Key Columns |
+|-------|---------|-------------|
+| `withdrawal_reasons` | 탈퇴 사유 기록 | user_id, reason_category, reason_text |
+| `blocked_dis` | DI 블록 (재가입 방지) | di_hash, blocked_at, reason |
+| `archived_records` | 탈퇴 유저 아카이브 | original_table, original_id, archived_data jsonb |
 
 #### Settlement v2 (정산 파이프라인 v2)
 

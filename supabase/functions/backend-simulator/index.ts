@@ -12,7 +12,7 @@ import {
   simCreateGitHubIssue,
   simUploadLog,
 } from "./sim_reporter.ts";
-import { simCreateParties, simDiscoverAndApply } from "./sim_create.ts";
+import { simCreateParties, simCreateDisplayEvents, simDiscoverAndApply } from "./sim_create.ts";
 import { simApproveVerifications } from "./sim_approve.ts";
 import { simRefundRequests } from "./sim_refund.ts";
 import { simCheckin, simCompleteEvents, simMatch } from "./sim_event.ts";
@@ -45,6 +45,7 @@ const DEFAULT_CONFIG: SimConfig = {
   apps_per_event: 6,
   checkin_rate: 0.7,
   no_show_rate: 0.3,
+  strict: false,
 };
 
 // ─────────────────────────────────────────────────────────
@@ -107,7 +108,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   // Phase: "create" → Phase 1-2 only
   if (phase === "create") {
-    const createResult = await simCreateParties(supabase, config, logFn);
+    const createResult = await simCreateParties(supabase, config, logFn, supabaseUrl, anonKey, config.strict);
+    // Fix #964: 피드 전시용 이벤트 생성 — 일반 유저 피드에 표시할 display 이벤트를 E2E와 분리해 생성
+    const displayResult = await simCreateDisplayEvents(supabase, logFn);
     const applyResult = await simDiscoverAndApply(
       supabase,
       config,
@@ -121,6 +124,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       run_id: runId,
       party_ids: createResult.partyIds,
       event_ids: createResult.eventIds,
+      display_party_ids: displayResult.displayPartyIds,
+      display_event_ids: displayResult.displayEventIds,
       application_ids: applyResult.applicationIds,
       paid_application_ids: applyResult.paidApplicationIds,
       pending_review_application_ids: applyResult.pendingReviewApplicationIds,
@@ -147,6 +152,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
       supabase,
       pendingIds,
       logFn,
+      undefined,
+      supabaseUrl,
+      anonKey,
+      config.strict,
     );
     return successResponse({
       success: true,
@@ -179,6 +188,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       config.refund_rate,
       supabaseUrl,
       anonKey,
+      config.strict,
     );
     return successResponse({
       success: true,
@@ -190,10 +200,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   // Phase: "run" → Phase 5 only (checkin + match + complete)
   if (phase === "run") {
+    // Fix #964: E2E 전용 필터 — run phase는 [E2E] 파티 이벤트만 처리해 비E2E 데이터 오염 방지
     const { data: scheduledEvents, error: fetchErr } = await supabase
       .from("events")
-      .select("id")
+      .select("id, parties!inner(title)")
       .eq("status", "scheduled")
+      .filter("parties.title", "like", "[E2E]%")
       .limit(50);
 
     if (fetchErr) {
@@ -210,8 +222,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
       config.checkin_rate,
       supabaseUrl,
       anonKey,
+      config.strict,
     );
-    const matchResult = await simMatch(supabase, eventIds, logFn, supabaseUrl, serviceRoleKey);
+    const matchResult = await simMatch(supabase, eventIds, logFn, supabaseUrl, serviceRoleKey, config.strict);
     const completeResult = await simCompleteEvents(supabase, eventIds, logFn);
 
     const allAssertions: SimAssertionResult[] = [
@@ -233,10 +246,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   // Phase: "settle" → Phase 6 only
   if (phase === "settle") {
+    // Fix #964: E2E 전용 필터 — settle phase는 [E2E] 파티 이벤트만 처리해 비E2E 데이터 오염 방지
     const { data: completedEvents, error: fetchErr } = await supabase
       .from("events")
-      .select("id")
+      .select("id, parties!inner(title)")
       .eq("status", "completed")
+      .filter("parties.title", "like", "[E2E]%")
       .limit(50);
 
     if (fetchErr) {
@@ -273,12 +288,18 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   // Phase: "verify" → read-only assertion check against current DB state
   if (phase === "verify") {
+    // Fix #964: E2E 전용 필터 — verify phase는 [E2E] 파티 이벤트만 검증해 비E2E 데이터 오염 방지
     // Collect assertions from settlement state only (non-destructive)
-    const { data: completedEvents } = await supabase
+    const { data: completedEvents, error: fetchErr } = await supabase
       .from("events")
-      .select("id")
+      .select("id, parties!inner(title)")
       .eq("status", "completed")
+      .filter("parties.title", "like", "[E2E]%")
       .limit(50);
+
+    if (fetchErr) {
+      return errorResponse(`Failed to fetch completed events: ${fetchErr.message}`, 500);
+    }
 
     const completedEventIds = (
       (completedEvents ?? []) as Array<{ id: string }>
@@ -323,8 +344,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // Full 6-phase run (no phase param)
   // ─────────────────────────────────────────────────────────
 
-  // Phase 1-2: Create parties + discover & apply
-  const createResult = await simCreateParties(supabase, config, logFn);
+  // Phase 1-2: Create parties + display events + discover & apply
+  const createResult = await simCreateParties(supabase, config, logFn, supabaseUrl, anonKey, config.strict);
+  // Fix #964: 피드 전시용 이벤트 생성 — 일반 유저 피드에 표시할 display 이벤트를 E2E와 분리해 생성
+  await simCreateDisplayEvents(supabase, logFn);
   const applyResult = await simDiscoverAndApply(
     supabase,
     config,
@@ -339,6 +362,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
     supabase,
     applyResult.pendingReviewApplicationIds,
     logFn,
+    undefined,
+    supabaseUrl,
+    anonKey,
+    config.strict,
   );
 
   // Phase 4: Refund requests (refund_rate % of paid)
@@ -349,6 +376,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     config.refund_rate,
     supabaseUrl,
     anonKey,
+    config.strict,
   );
 
   // Phase 5: Check-in + Match + Complete
@@ -359,8 +387,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     config.checkin_rate,
     supabaseUrl,
     anonKey,
+    config.strict,
   );
-  const matchResult = await simMatch(supabase, createResult.eventIds, logFn, supabaseUrl, serviceRoleKey);
+  const matchResult = await simMatch(supabase, createResult.eventIds, logFn, supabaseUrl, serviceRoleKey, config.strict);
   const completeResult = await simCompleteEvents(
     supabase,
     createResult.eventIds,

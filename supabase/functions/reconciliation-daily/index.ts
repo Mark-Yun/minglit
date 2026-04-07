@@ -2,6 +2,7 @@
 import { createServiceClient } from "../_shared/supabase_client.ts";
 import { PortoneV2Client, PortoneSettlement } from "../_shared/portone_client.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
+import { requireServiceRole } from "../_shared/auth_utils.ts";
 
 await initSentry();
 
@@ -90,14 +91,9 @@ Deno.serve(withHandler(async (req) => {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
 
-  const authHeader = req.headers.get("Authorization");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-  if (!authHeader || authHeader !== `Bearer ${serviceRoleKey}`) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-    });
-  }
+  // Fix #1116: 공통 유틸 사용 — env 미설정 시 빈 문자열 비교로 통과되던 취약점 제거
+  const authResult = requireServiceRole(req);
+  if (authResult instanceof Response) return authResult;
 
   const supabase = createServiceClient();
 

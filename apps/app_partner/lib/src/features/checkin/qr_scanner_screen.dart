@@ -22,8 +22,10 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
   final MobileScannerController _scannerController = MobileScannerController();
 
   @override
-  Future<void> dispose() async {
-    await _scannerController.dispose();
+  void dispose() {
+    // Fix #1072: async dispose()는 super.dispose()가 비동기로 호출되어 프레임워크 오류 발생.
+    // MobileScannerController.dispose()의 Future는 unawaited로 처리한다.
+    unawaited(_scannerController.dispose());
     super.dispose();
   }
 

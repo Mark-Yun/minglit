@@ -101,8 +101,10 @@ void main() {
         ),
       );
 
-      // 승인 대기 chip (active) should use error color tint
-      final expected = MinglitColors.error.withValues(alpha: 0.08);
+      // 승인 대기 chip (active) should use error color tint (activeChip = 0.08 preserves original)
+      final expected = MinglitColors.error.withValues(
+        alpha: MinglitOpacity.activeChip,
+      );
       final chipContainers = tester.widgetList<Container>(
         find.byWidgetPredicate(
           (w) =>
@@ -116,7 +118,8 @@ void main() {
           (c) => (c.decoration! as BoxDecoration).color == expected,
         ),
         isTrue,
-        reason: 'Active chip should use activeColor.withValues(alpha: 0.08)',
+        reason:
+            'Active chip should use activeColor.withValues(alpha: MinglitOpacity.activeChip)',
       );
     });
 

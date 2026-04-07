@@ -1,0 +1,554 @@
+BEGIN;
+SELECT no_plan();
+
+-- ============================================================
+-- 1. Schema — recurrence_rules 테이블 존재 + 컬럼 + 제약조건
+-- ============================================================
+SELECT has_table('public', 'recurrence_rules', 'recurrence_rules table exists');
+
+SELECT col_is_pk('public', 'recurrence_rules', 'id', 'recurrence_rules.id is primary key');
+SELECT col_type_is('public', 'recurrence_rules', 'id', 'uuid', 'id is uuid');
+SELECT col_type_is('public', 'recurrence_rules', 'party_id', 'uuid', 'party_id is uuid');
+SELECT col_type_is('public', 'recurrence_rules', 'pattern', 'text', 'pattern is text');
+SELECT col_type_is('public', 'recurrence_rules', 'days_of_week', 'integer[]', 'days_of_week is int[]');
+SELECT col_type_is('public', 'recurrence_rules', 'month_day', 'integer', 'month_day is integer');
+SELECT col_type_is('public', 'recurrence_rules', 'start_time', 'time without time zone', 'start_time is time');
+SELECT col_type_is('public', 'recurrence_rules', 'end_time', 'time without time zone', 'end_time is time');
+SELECT col_type_is('public', 'recurrence_rules', 'end_date', 'date', 'end_date is date');
+SELECT col_type_is('public', 'recurrence_rules', 'status', 'text', 'status is text');
+SELECT col_type_is('public', 'recurrence_rules', 'last_generated_date', 'date', 'last_generated_date is date');
+SELECT col_type_is('public', 'recurrence_rules', 'created_at', 'timestamp with time zone', 'created_at is timestamptz');
+SELECT col_type_is('public', 'recurrence_rules', 'updated_at', 'timestamp with time zone', 'updated_at is timestamptz');
+
+SELECT col_not_null('public', 'recurrence_rules', 'party_id', 'party_id is NOT NULL');
+SELECT col_not_null('public', 'recurrence_rules', 'pattern', 'pattern is NOT NULL');
+SELECT col_not_null('public', 'recurrence_rules', 'days_of_week', 'days_of_week is NOT NULL');
+SELECT col_not_null('public', 'recurrence_rules', 'start_time', 'start_time is NOT NULL');
+SELECT col_not_null('public', 'recurrence_rules', 'end_time', 'end_time is NOT NULL');
+SELECT col_not_null('public', 'recurrence_rules', 'status', 'status is NOT NULL');
+
+-- ============================================================
+-- 2. CHECK 제약조건 — pattern IN ('weekly', 'biweekly', 'monthly')
+-- ============================================================
+SELECT results_eq(
+  $$
+    SELECT count(*)::int
+    FROM pg_constraint c
+    JOIN pg_class t ON t.oid = c.conrelid
+    JOIN pg_namespace n ON n.oid = t.relnamespace
+    WHERE n.nspname = 'public'
+      AND t.relname = 'recurrence_rules'
+      AND c.conname = 'recurrence_rules_pattern_check'
+  $$,
+  $$VALUES (1)$$,
+  'recurrence_rules_pattern_check constraint exists'
+);
+
+-- ============================================================
+-- 3. CHECK 제약조건 — status IN ('active', 'paused', 'cancelled')
+-- ============================================================
+SELECT results_eq(
+  $$
+    SELECT count(*)::int
+    FROM pg_constraint c
+    JOIN pg_class t ON t.oid = c.conrelid
+    JOIN pg_namespace n ON n.oid = t.relnamespace
+    WHERE n.nspname = 'public'
+      AND t.relname = 'recurrence_rules'
+      AND c.conname = 'recurrence_rules_status_check'
+  $$,
+  $$VALUES (1)$$,
+  'recurrence_rules_status_check constraint exists'
+);
+
+-- ============================================================
+-- 4. CHECK 제약조건 — month_day BETWEEN 1 AND 31
+-- ============================================================
+SELECT results_eq(
+  $$
+    SELECT count(*)::int
+    FROM pg_constraint c
+    JOIN pg_class t ON t.oid = c.conrelid
+    JOIN pg_namespace n ON n.oid = t.relnamespace
+    WHERE n.nspname = 'public'
+      AND t.relname = 'recurrence_rules'
+      AND c.conname = 'recurrence_rules_month_day_check'
+  $$,
+  $$VALUES (1)$$,
+  'recurrence_rules_month_day_check constraint exists'
+);
+
+-- ============================================================
+-- 5. Partial Unique Index — uq_recurrence_rules_party_active
+-- ============================================================
+SELECT has_index(
+  'public',
+  'recurrence_rules',
+  'uq_recurrence_rules_party_active',
+  'uq_recurrence_rules_party_active partial unique index exists'
+);
+
+-- ============================================================
+-- 6. FK — party_id → parties(id)
+-- ============================================================
+SELECT fk_ok(
+  'public', 'recurrence_rules', 'party_id',
+  'public', 'parties', 'id',
+  'recurrence_rules.party_id → parties.id FK exists'
+);
+
+-- ============================================================
+-- 7. events 테이블 컬럼 추가 확인
+-- ============================================================
+SELECT col_type_is('public', 'events', 'recurrence_rule_id', 'uuid', 'events.recurrence_rule_id is uuid');
+SELECT col_type_is('public', 'events', 'is_recurrence_exception', 'boolean', 'events.is_recurrence_exception is boolean');
+SELECT col_not_null('public', 'events', 'is_recurrence_exception', 'is_recurrence_exception is NOT NULL');
+SELECT col_type_is('public', 'events', 'recurrence_date', 'date', 'events.recurrence_date is date');
+
+-- ============================================================
+-- 7a. FK — events.recurrence_rule_id → recurrence_rules(id)
+-- ============================================================
+SELECT fk_ok(
+  'public', 'events', 'recurrence_rule_id',
+  'public', 'recurrence_rules', 'id',
+  'events.recurrence_rule_id → recurrence_rules.id FK exists'
+);
+
+-- ============================================================
+-- 8. Partial Unique Index — uq_events_recurrence_date
+-- ============================================================
+SELECT has_index(
+  'public',
+  'events',
+  'uq_events_recurrence_date',
+  'uq_events_recurrence_date partial unique index exists'
+);
+
+-- ============================================================
+-- 8a. CHECK 제약조건 — chk_events_recurrence_fields (events 테이블)
+-- ============================================================
+SELECT results_eq(
+  $$
+    SELECT count(*)::int
+    FROM pg_constraint c
+    JOIN pg_class t ON t.oid = c.conrelid
+    JOIN pg_namespace n ON n.oid = t.relnamespace
+    WHERE n.nspname = 'public'
+      AND t.relname = 'events'
+      AND c.conname = 'chk_events_recurrence_fields'
+  $$,
+  $$VALUES (1)$$,
+  'chk_events_recurrence_fields constraint exists on events'
+);
+
+-- ============================================================
+-- 9. RLS enabled
+-- ============================================================
+SELECT tests.rls_enabled('public', 'recurrence_rules');
+
+-- ============================================================
+-- 10. CHECK 제약 — 잘못된 pattern 거부
+-- ============================================================
+SELECT tests.authenticate_as_service_role();
+
+SAVEPOINT before_bad_pattern;
+SELECT throws_ok(
+  $$
+    INSERT INTO public.recurrence_rules (
+      party_id, pattern, days_of_week, start_time, end_time
+    ) VALUES (
+      gen_random_uuid(), 'daily', '{1}', '10:00', '11:00'
+    )
+  $$,
+  '23514',
+  NULL,
+  'invalid pattern value rejected by CHECK constraint'
+);
+ROLLBACK TO SAVEPOINT before_bad_pattern;
+
+-- ============================================================
+-- 11. CHECK 제약 — 잘못된 status 거부
+-- ============================================================
+SAVEPOINT before_bad_status;
+SELECT throws_ok(
+  $$
+    INSERT INTO public.recurrence_rules (
+      party_id, pattern, days_of_week, start_time, end_time, status
+    ) VALUES (
+      gen_random_uuid(), 'weekly', '{1}', '10:00', '11:00', 'deleted'
+    )
+  $$,
+  '23514',
+  NULL,
+  'invalid status value rejected by CHECK constraint'
+);
+ROLLBACK TO SAVEPOINT before_bad_status;
+
+-- ============================================================
+-- 12. CHECK 제약 — days_of_week 범위 초과 값 거부 (0~6 외)
+-- ============================================================
+SAVEPOINT before_bad_days_of_week;
+SELECT throws_ok(
+  $$
+    INSERT INTO public.recurrence_rules (
+      party_id, pattern, start_time, end_time, days_of_week
+    ) VALUES (
+      gen_random_uuid(), 'weekly', '10:00', '11:00', '{7}'
+    )
+  $$,
+  '23514',
+  NULL,
+  'days_of_week value 7 (out of 0~6 range) rejected by CHECK constraint'
+);
+ROLLBACK TO SAVEPOINT before_bad_days_of_week;
+
+-- ============================================================
+-- 12a. CHECK 제약 — weekly 패턴에 빈 days_of_week 거부
+-- ============================================================
+SAVEPOINT before_weekly_empty_days;
+SELECT throws_ok(
+  $$
+    INSERT INTO public.recurrence_rules (
+      party_id, pattern, start_time, end_time, days_of_week
+    ) VALUES (
+      gen_random_uuid(), 'weekly', '10:00', '11:00', '{}'
+    )
+  $$,
+  '23514',
+  NULL,
+  'weekly pattern with empty days_of_week rejected by CHECK constraint'
+);
+ROLLBACK TO SAVEPOINT before_weekly_empty_days;
+
+-- ============================================================
+-- 13. CHECK 제약 — end_time <= start_time 거부
+-- ============================================================
+SAVEPOINT before_bad_end_time;
+SELECT throws_ok(
+  $$
+    INSERT INTO public.recurrence_rules (
+      party_id, pattern, days_of_week, start_time, end_time
+    ) VALUES (
+      gen_random_uuid(), 'weekly', '{1}', '11:00', '10:00'
+    )
+  $$,
+  '23514',
+  NULL,
+  'end_time <= start_time rejected by CHECK constraint'
+);
+ROLLBACK TO SAVEPOINT before_bad_end_time;
+
+-- ============================================================
+-- 14. CHECK 제약 — monthly 패턴에 month_day 없으면 거부
+-- ============================================================
+SAVEPOINT before_monthly_no_month_day;
+SELECT throws_ok(
+  $$
+    INSERT INTO public.recurrence_rules (
+      party_id, pattern, start_time, end_time
+    ) VALUES (
+      gen_random_uuid(), 'monthly', '10:00', '11:00'
+    )
+  $$,
+  '23514',
+  NULL,
+  'monthly pattern without month_day rejected by CHECK constraint'
+);
+ROLLBACK TO SAVEPOINT before_monthly_no_month_day;
+
+-- ============================================================
+-- 15. CHECK 제약 — weekly 패턴에 month_day 있으면 거부
+-- ============================================================
+SAVEPOINT before_weekly_with_month_day;
+SELECT throws_ok(
+  $$
+    INSERT INTO public.recurrence_rules (
+      party_id, pattern, start_time, end_time, month_day
+    ) VALUES (
+      gen_random_uuid(), 'weekly', '10:00', '11:00', 15
+    )
+  $$,
+  '23514',
+  NULL,
+  'weekly pattern with month_day rejected by CHECK constraint'
+);
+ROLLBACK TO SAVEPOINT before_weekly_with_month_day;
+
+-- ============================================================
+-- 16. CHECK 제약 — monthly 패턴에 days_of_week 있으면 거부
+-- ============================================================
+SAVEPOINT before_monthly_with_days_of_week;
+SELECT throws_ok(
+  $$
+    INSERT INTO public.recurrence_rules (
+      party_id, pattern, start_time, end_time, month_day, days_of_week
+    ) VALUES (
+      gen_random_uuid(), 'monthly', '10:00', '11:00', 15, '{1}'
+    )
+  $$,
+  '23514',
+  NULL,
+  'monthly pattern with non-empty days_of_week rejected by CHECK constraint'
+);
+ROLLBACK TO SAVEPOINT before_monthly_with_days_of_week;
+
+-- ============================================================
+-- 17. Partial Unique Index — 동일 party_id의 active 규칙 2개 불가
+-- ============================================================
+
+-- 테스트 데이터 세팅
+WITH p AS (
+  INSERT INTO public.partners (name, introduction)
+  VALUES ('Test Partner RR', 'for recurrence test')
+  RETURNING id
+),
+loc AS (
+  INSERT INTO public.locations (partner_id, name, address)
+  SELECT p.id, 'Test Venue', 'Seoul'
+  FROM p
+  RETURNING id, partner_id
+),
+party AS (
+  INSERT INTO public.parties (
+    partner_id, location_id, title, description
+  )
+  SELECT
+    loc.partner_id,
+    loc.id,
+    'Recurrence Test Party',
+    '"Test"'::jsonb
+  FROM loc
+  RETURNING id
+)
+SELECT set_config('tests.rr_party_id', id::text, true) FROM party;
+
+INSERT INTO public.recurrence_rules (
+  party_id, pattern, days_of_week, start_time, end_time
+) VALUES (
+  current_setting('tests.rr_party_id')::uuid,
+  'weekly',
+  '{1}',
+  '10:00',
+  '11:00'
+);
+
+SAVEPOINT before_dup_active;
+SELECT throws_ok(
+  format(
+    $$
+      INSERT INTO public.recurrence_rules (
+        party_id, pattern, days_of_week, start_time, end_time
+      ) VALUES (
+        '%s', 'biweekly', '{1}', '14:00', '15:00'
+      )
+    $$,
+    current_setting('tests.rr_party_id')
+  ),
+  '23505',
+  NULL,
+  'second active rule for same party rejected by partial unique index'
+);
+ROLLBACK TO SAVEPOINT before_dup_active;
+
+-- ============================================================
+-- 18. Partial Unique Index — cancelled 규칙은 중복 허용
+-- ============================================================
+UPDATE public.recurrence_rules
+SET status = 'cancelled'
+WHERE party_id = current_setting('tests.rr_party_id')::uuid;
+
+SELECT lives_ok(
+  format(
+    $$
+      INSERT INTO public.recurrence_rules (
+        party_id, pattern, start_time, end_time, month_day
+      ) VALUES (
+        '%s', 'monthly', '14:00', '15:00', 15
+      )
+    $$,
+    current_setting('tests.rr_party_id')
+  ),
+  'second rule allowed after first is cancelled'
+);
+
+-- ============================================================
+-- 19. uq_events_recurrence_date — 같은 날짜 중복 이벤트 거부
+-- recurrence_date 컬럼으로 중복 방지 (start_time::date 대신)
+-- ============================================================
+WITH rule AS (
+  SELECT id FROM public.recurrence_rules
+  WHERE party_id = current_setting('tests.rr_party_id')::uuid
+    AND status = 'active'
+  LIMIT 1
+),
+evt AS (
+  INSERT INTO public.events (
+    party_id, recurrence_rule_id,
+    title, status,
+    start_time, end_time, recurrence_date
+  )
+  SELECT
+    current_setting('tests.rr_party_id')::uuid,
+    rule.id,
+    'Recurring Event',
+    'scheduled',
+    '2026-05-01 10:00:00+09',
+    '2026-05-01 11:00:00+09',
+    '2026-05-01'::date
+  FROM rule
+  RETURNING recurrence_rule_id
+)
+SELECT set_config('tests.rr_rule_id', recurrence_rule_id::text, true) FROM evt;
+
+SAVEPOINT before_dup_event;
+SELECT throws_ok(
+  format(
+    $$
+      INSERT INTO public.events (
+        party_id, recurrence_rule_id,
+        title, status,
+        start_time, end_time, recurrence_date
+      ) VALUES (
+        '%s', '%s',
+        'Duplicate Event', 'scheduled',
+        '2026-05-01 14:00:00+09', '2026-05-01 15:00:00+09',
+        '2026-05-01'::date
+      )
+    $$,
+    current_setting('tests.rr_party_id'),
+    current_setting('tests.rr_rule_id')
+  ),
+  '23505',
+  NULL,
+  'duplicate event on same recurrence_rule_id + recurrence_date rejected'
+);
+ROLLBACK TO SAVEPOINT before_dup_event;
+
+-- ============================================================
+-- 20. moddatetime 트리거 — updated_at 갱신 확인
+-- 의도적으로 updated_at을 과거 값으로 설정한 뒤, UPDATE 후
+-- moddatetime이 now()로 갱신했는지 비교한다.
+-- (pgTAP 단일 트랜잭션 내에서 now()는 고정이므로
+--  과거 값과 비교해야 트리거 실행 여부를 검증할 수 있다.)
+-- ============================================================
+SELECT lives_ok(
+  format(
+    $$
+      UPDATE public.recurrence_rules
+      SET updated_at = '2020-01-01 00:00:00+00'
+      WHERE party_id = '%s' AND status = 'active'
+    $$,
+    current_setting('tests.rr_party_id')
+  ),
+  'backdating updated_at to a known past value succeeds'
+);
+
+SELECT lives_ok(
+  format(
+    $$
+      UPDATE public.recurrence_rules
+      SET end_date = '2026-12-31'
+      WHERE party_id = '%s' AND status = 'active'
+    $$,
+    current_setting('tests.rr_party_id')
+  ),
+  'update recurrence_rule succeeds'
+);
+
+SELECT results_eq(
+  format(
+    $$
+      SELECT count(*)::int
+      FROM public.recurrence_rules
+      WHERE party_id = '%s'
+        AND status = 'active'
+        AND updated_at > '2020-01-01 00:00:00+00'
+    $$,
+    current_setting('tests.rr_party_id')
+  ),
+  $$VALUES (1)$$,
+  'updated_at refreshed by moddatetime trigger (greater than forced past value)'
+);
+
+-- ============================================================
+-- 21. CHECK 제약 — recurrence_rule_id 있고 recurrence_date NULL 거부
+-- ============================================================
+SAVEPOINT before_events_check;
+SELECT throws_ok(
+  format(
+    $$
+      INSERT INTO public.events (
+        party_id, recurrence_rule_id,
+        title, status,
+        start_time, end_time
+      ) VALUES (
+        '%s', '%s',
+        'Missing recurrence_date', 'scheduled',
+        '2026-06-01 10:00:00+09', '2026-06-01 11:00:00+09'
+      )
+    $$,
+    current_setting('tests.rr_party_id'),
+    current_setting('tests.rr_rule_id')
+  ),
+  '23514',
+  NULL,
+  'events with recurrence_rule_id but NULL recurrence_date rejected by CHECK constraint'
+);
+ROLLBACK TO SAVEPOINT before_events_check;
+
+-- ============================================================
+-- 22. recurrence_rule 삭제 시 events.recurrence_date도 NULL 처리
+-- (ON DELETE SET NULL + trg_clear_recurrence_date_on_rule_delete 연동 검증)
+-- ============================================================
+DO $$
+DECLARE
+  v_new_rule_id uuid;
+  v_event_id    uuid;
+BEGIN
+  -- 추가 rule 생성 (party_id는 이미 존재하는 monthly rule과 충돌 없이 weekly로 생성)
+  INSERT INTO public.recurrence_rules (
+    party_id, pattern, days_of_week, start_time, end_time, status
+  ) VALUES (
+    current_setting('tests.rr_party_id')::uuid,
+    'weekly', ARRAY[1], '08:00', '09:00', 'cancelled'
+  ) RETURNING id INTO v_new_rule_id;
+
+  -- 해당 rule에 연결된 event 생성
+  INSERT INTO public.events (
+    party_id, recurrence_rule_id, recurrence_date,
+    title, status, start_time, end_time
+  ) VALUES (
+    current_setting('tests.rr_party_id')::uuid,
+    v_new_rule_id, '2026-07-01'::date,
+    'Rule Delete Test Event', 'scheduled',
+    '2026-07-01 10:00:00+09', '2026-07-01 11:00:00+09'
+  ) RETURNING id INTO v_event_id;
+
+  PERFORM set_config('tests.delete_rule_id',   v_new_rule_id::text, true);
+  PERFORM set_config('tests.delete_event_id',  v_event_id::text,    true);
+END;
+$$;
+
+SELECT lives_ok(
+  format(
+    $$DELETE FROM public.recurrence_rules WHERE id = '%s'$$,
+    current_setting('tests.delete_rule_id')
+  ),
+  'recurrence_rule 삭제 시 chk_events_recurrence_fields 위반 없이 성공'
+);
+
+SELECT results_eq(
+  format(
+    $$
+      SELECT recurrence_rule_id IS NULL AND recurrence_date IS NULL
+      FROM public.events
+      WHERE id = '%s'
+    $$,
+    current_setting('tests.delete_event_id')
+  ),
+  $$VALUES (true)$$,
+  'rule 삭제 후 연결 event의 recurrence_rule_id와 recurrence_date 모두 NULL'
+);
+
+SELECT * FROM finish();
+ROLLBACK;

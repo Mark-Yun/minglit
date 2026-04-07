@@ -92,8 +92,14 @@ jobs:
           DB_PASSWORD: ${{ steps.env.outputs.DB_PASSWORD }}
           PROJECT_ID: ${{ steps.env.outputs.PROJECT_ID }}
         run: |
-          # Fix #669: GitHub Actions 러너 IPv6 미지원 — IPv4 우선으로 변경
-          sudo sh -c 'echo "precedence ::ffff:0:0/96 100" >> /etc/gai.conf'
+          # Fix #1130: gai.conf IPv4 precedence not effective for psql — /etc/hosts override
+          IPV4=$(dig +short A "db.${PROJECT_ID}.supabase.co" | head -1)
+          if [ -z "$IPV4" ]; then
+            echo "::error::Failed to resolve IPv4 for db.${PROJECT_ID}.supabase.co"
+            exit 1
+          fi
+          echo "${IPV4} db.${PROJECT_ID}.supabase.co" | sudo tee -a /etc/hosts > /dev/null
+          echo "Resolved db.${PROJECT_ID}.supabase.co → ${IPV4}"
 
           REQUIRED=$(jq -r '.vault.required | keys[]' env-manifest.json)
           VAULT_MISSING=""
