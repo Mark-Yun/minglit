@@ -37,7 +37,7 @@ Widget _buildWidget({
   );
   when(() => repo.getTagsByIds(any())).thenAnswer((invocation) async {
     final ids = invocation.positionalArguments.first as List<String>;
-    final allTags = [
+    final allTags = <Tag>[
       ...(featuredTags ?? _featuredTags),
       ...(initialTags ?? []),
     ];

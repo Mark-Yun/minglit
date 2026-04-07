@@ -44,7 +44,7 @@ class TagEventListController extends _$TagEventListController {
 
   /// Loads the next page of events.
   Future<void> loadMore() async {
-    final current = state.valueOrNull;
+    final current = state.asData?.value;
     if (current == null || !current.hasMore || current.isLoadingMore) return;
 
     state = AsyncData(current.copyWith(isLoadingMore: true));

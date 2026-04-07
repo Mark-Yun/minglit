@@ -130,9 +130,7 @@ SELECT tests.clear_authentication();
 
 SELECT results_eq(
   $$SELECT count(*)::int FROM get_featured_tags()$$,
-  -- 시드 데이터 25개 + 테스트에서 추가한 featured 2개 (rpc_featured_tag, 소개팅rpc)
-  -- 단, 시드 데이터의 '소개팅'과 다른 태그. 총 27개
-  (SELECT (count(*)::int)::text || '::int' FROM tags WHERE is_featured = true)::text,
+  $$SELECT count(*)::int FROM tags WHERE is_featured = true$$,
   'get_featured_tags returns all featured tags'
 );
 
