@@ -5,7 +5,6 @@ import 'package:app_user/src/features/event/admission/event_application_controll
 import 'package:app_user/src/features/event/admission/payment_success_screen.dart';
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
-import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -99,7 +98,7 @@ class _WizardBodyState extends ConsumerState<_WizardBody> {
                   event: widget.event,
                   ticketId: ticket.id,
                   onViewTickets: () =>
-                      ref.read(homeCoordinatorProvider).goToPurchaseHistory(),
+                      ref.read(eventCoordinatorProvider).goToPurchaseHistory(),
                   onBackToEvent: () => ref
                       .read(eventCoordinatorProvider)
                       .goToEventDetail(widget.event.id),

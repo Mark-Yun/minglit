@@ -71,6 +71,8 @@ void main() {
             '/my/privacy/delete/verify',
             '/my/privacy/delete/complete',
             '/my/blocked-partners',
+            // Tag discovery routes (#1136)
+            '/tags/:tagId',
           ]),
         );
       },
