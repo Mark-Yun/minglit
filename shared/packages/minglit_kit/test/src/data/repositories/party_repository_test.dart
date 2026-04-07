@@ -253,12 +253,14 @@ void main() {
         final party = Party.fromJson(partyJson);
         await repository.updateParty(party, tagIds: ['tag_1', 'tag_2']);
 
-        final captured = verify(
-          () => mockFunctions.invoke(
-            'partner-manage-party',
-            body: captureAny(named: 'body'),
-          ),
-        ).captured.single as Map<String, dynamic>;
+        final captured =
+            verify(
+                  () => mockFunctions.invoke(
+                    'partner-manage-party',
+                    body: captureAny(named: 'body'),
+                  ),
+                ).captured.single
+                as Map<String, dynamic>;
 
         expect(captured['tag_ids'], ['tag_1', 'tag_2']);
       });
@@ -287,12 +289,14 @@ void main() {
         final party = Party.fromJson(partyJson);
         await repository.updateParty(party, tagIds: []);
 
-        final captured = verify(
-          () => mockFunctions.invoke(
-            'partner-manage-party',
-            body: captureAny(named: 'body'),
-          ),
-        ).captured.single as Map<String, dynamic>;
+        final captured =
+            verify(
+                  () => mockFunctions.invoke(
+                    'partner-manage-party',
+                    body: captureAny(named: 'body'),
+                  ),
+                ).captured.single
+                as Map<String, dynamic>;
 
         expect(captured['tag_ids'], <String>[]);
       });
@@ -321,12 +325,14 @@ void main() {
         final party = Party.fromJson(partyJson);
         await repository.updateParty(party);
 
-        final captured = verify(
-          () => mockFunctions.invoke(
-            'partner-manage-party',
-            body: captureAny(named: 'body'),
-          ),
-        ).captured.single as Map<String, dynamic>;
+        final captured =
+            verify(
+                  () => mockFunctions.invoke(
+                    'partner-manage-party',
+                    body: captureAny(named: 'body'),
+                  ),
+                ).captured.single
+                as Map<String, dynamic>;
 
         expect(captured.containsKey('tag_ids'), isFalse);
       });

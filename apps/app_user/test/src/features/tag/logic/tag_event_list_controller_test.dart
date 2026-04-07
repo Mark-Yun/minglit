@@ -176,8 +176,9 @@ void main() {
 
       await container.read(tagEventListControllerProvider('tag_1').future);
 
-      final notifier =
-          container.read(tagEventListControllerProvider('tag_1').notifier);
+      final notifier = container.read(
+        tagEventListControllerProvider('tag_1').notifier,
+      );
 
       // Fire two concurrent loadMore calls; guard should prevent double-fetch
       await Future.wait([notifier.loadMore(), notifier.loadMore()]);
