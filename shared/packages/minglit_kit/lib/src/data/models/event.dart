@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:minglit_kit/src/data/models/party.dart';
 import 'package:minglit_kit/src/data/models/party_entry_group.dart';
+import 'package:minglit_kit/src/data/models/tag.dart';
 import 'package:minglit_kit/src/data/models/ticket.dart';
 
 part 'event.freezed.dart';
@@ -41,6 +42,8 @@ abstract class Event with _$Event {
     @JsonKey(name: 'distance_meters', includeToJson: false)
     double? distanceMeters,
     @JsonKey(includeToJson: false) bool? eligible,
+    // Tag Discovery (#1094-1096)
+    @JsonKey(includeToJson: false) List<Tag>? tags,
   }) = _Event;
   const Event._();
 

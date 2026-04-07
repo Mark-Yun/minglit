@@ -30,6 +30,8 @@ mixin _PartyCreateWizardSteps on _$PartyCreateWizardController {
 
   void setVisibility(String value) => state = state.copyWith(visibility: value);
 
+  void updateTagIds(List<String> ids) => state = state.copyWith(tagIds: ids);
+
   // --- Step 2: Location ---
   void updateLocation(Location? loc) =>
       state = state.copyWith(selectedLocation: loc);

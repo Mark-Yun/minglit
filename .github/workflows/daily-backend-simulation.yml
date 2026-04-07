@@ -70,13 +70,7 @@ jobs:
           api-level: 33
           arch: x86_64
           profile: pixel_6
-          script: |
-            cd apps/app_user
-            for f in integration_test/*_test.dart; do
-              [ -f "$f" ] || { echo "⏭ No integration tests found, skipping."; break; }
-              echo "▶ Running: $f"
-              flutter test "$f" --flavor dev --dart-define-from-file=../../minglit_env/dev/flutter.env
-            done
+          script: bash .github/scripts/run-client-cuj.sh
 
   partner-cuj-test:
     needs: seed-and-simulate
@@ -102,16 +96,7 @@ jobs:
           api-level: 33
           arch: x86_64
           profile: pixel_6
-          script: |
-            cd apps/app_partner
-            found=0
-            for f in integration_test/*_test.dart; do
-              [ -f "$f" ] || break
-              found=1
-              echo "▶ Running: $f"
-              flutter test "$f" --flavor dev --dart-define-from-file=../../minglit_env/dev/flutter.env
-            done
-            [ "$found" -eq 0 ] && echo "⏭ No integration tests found, skipping."
+          script: bash .github/scripts/run-partner-cuj.sh
 
   notify-failure:
     needs: [seed-and-simulate, client-cuj-test, partner-cuj-test]

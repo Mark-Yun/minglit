@@ -108,6 +108,41 @@ const authDeleteRoute = {
   handler: () => jsonResponse({ user: { id: USER_ID } }),
 };
 
+const userConsentsRoute = {
+  matcher: (req: Request) =>
+    req.url.includes("/rest/v1/user_consents") && req.method === "GET",
+  handler: () =>
+    jsonResponse([
+      {
+        id: "consent-1",
+        consent_key: "terms_of_service",
+        consented: true,
+        policy_version: 1,
+        consented_at: "2026-01-15T00:00:00Z",
+        withdrawn_at: null,
+        created_at: "2026-01-15T00:00:00Z",
+      },
+      {
+        id: "consent-2",
+        consent_key: "privacy_collection",
+        consented: true,
+        policy_version: 1,
+        consented_at: "2026-01-15T00:00:00Z",
+        withdrawn_at: null,
+        created_at: "2026-01-15T00:00:00Z",
+      },
+      {
+        id: "consent-3",
+        consent_key: "marketing_consent",
+        consented: false,
+        policy_version: 1,
+        consented_at: "2026-01-15T00:00:00Z",
+        withdrawn_at: "2026-02-01T00:00:00Z",
+        created_at: "2026-01-15T00:00:00Z",
+      },
+    ]),
+};
+
 Deno.test("unauthorized request returns 401", TEST_OPTS, async () => {
   const handler = await captureServeHandler(
     new URL("./index.ts", import.meta.url),
@@ -141,6 +176,7 @@ Deno.test(
       }]),
       eventApplicationsRoute,
       reportDetailsRoute,
+      userConsentsRoute,
       authAdminGetUserRoute,
       blockedDisCheckRoute,
       archiveInsertRoute,
@@ -160,7 +196,7 @@ Deno.test(
           assertEquals(payload.deleted_count, 1);
           assertEquals(payload.blocked_count, 1);
           assertEquals(payload.failed_count, 0);
-          assertEquals(payload.archived_record_count, 4);
+          assertEquals(payload.archived_record_count, 7);
 
           const archiveCall = calls.find((call) =>
             call.url.includes("/rest/v1/archived_records") &&
@@ -168,10 +204,27 @@ Deno.test(
           );
           assertExists(archiveCall);
           const archivedBody = JSON.parse(archiveCall!.body ?? "[]");
-          assertEquals(archivedBody.length, 4);
+          assertEquals(archivedBody.length, 7);
           assertEquals(
             archivedBody.some((row: { record_type: string }) =>
               row.record_type === "login"
+            ),
+            true,
+          );
+          assertEquals(
+            archivedBody.some((row: { record_type: string }) =>
+              row.record_type === "consent"
+            ),
+            true,
+          );
+
+          const consentRecords = archivedBody.filter(
+            (row: { record_type: string }) => row.record_type === "consent",
+          );
+          assertEquals(consentRecords.length, 3);
+          assertEquals(
+            consentRecords.some((r: { record_data: { consent_key: string } }) =>
+              r.record_data.consent_key === "terms_of_service"
             ),
             true,
           );
