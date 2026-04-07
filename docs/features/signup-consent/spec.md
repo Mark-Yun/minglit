@@ -96,7 +96,7 @@
 | 고지 항목 | 내용 |
 |----------|------|
 | 제공받는 자 | 이벤트 주최 파트너 (이벤트 신청 시 해당 파트너에 한정) |
-| 제공 항목 | 이름, 성별, 연령대 (상세 생년월일 미제공) |
+| 제공 항목 | 이름(닉네임), 연령대, 자격 인증 정보(직업/소속 — 본인인증 완료 유저만) |
 | 제공 목적 | 이벤트 운영 (참가자 확인, 매칭 진행, 체크인) |
 | 보유 기간 | 이벤트 종료 후 30일 |
 | 거부 권리 | 동의를 거부할 수 있으며, 거부해도 서비스 이용에 제한이 없습니다. 단, 이벤트 신청 시 개별 동의를 다시 요청합니다 |
@@ -200,7 +200,8 @@ CREATE POLICY "service_role_all_consents" ON public.user_consents
 INSERT INTO public.policies (key, value, version, effective_date, description) VALUES
 ('terms_of_service', '{"content_url": "/terms"}'::jsonb, 1, '2026-03-30', '서비스 이용약관 v1'),
 ('privacy_collection', '{"items": ["이름","이메일","프로필 사진","관심 태그"], "purpose": "서비스 제공 (계정 관리, 이벤트 매칭, 프로필 표시)", "retention": "회원 탈퇴 시까지", "refusal_consequence": "서비스 이용 불가"}'::jsonb, 1, '2026-03-30', '개인정보 수집·이용 동의서 v1'),
-('third_party_provision', '{"recipient": "이벤트 주최 파트너", "items": ["이름","성별","연령대"], "purpose": "이벤트 운영 (참가자 확인, 매칭, 체크인)", "retention": "이벤트 종료 후 30일", "refusal_consequence": "이벤트 신청 시 개별 동의 필요"}'::jsonb, 1, '2026-03-30', '제3자 제공 동의서 v1'),
+-- Fix #1141: 성별 제거, 자격 인증 정보 추가
+('third_party_provision', '{"recipient": "이벤트 주최 파트너", "items": ["이름(닉네임)","연령대","자격 인증 정보(직업/소속)"], "purpose": "이벤트 운영 (참가자 확인, 매칭, 체크인)", "retention": "이벤트 종료 후 30일", "refusal_consequence": "이벤트 신청 시 개별 동의 필요"}'::jsonb, 1, '2026-03-30', '제3자 제공 동의서 v1'),
 ('marketing_consent', '{"channels": ["push","email"], "purpose": "이벤트/혜택 안내", "refusal_consequence": "없음"}'::jsonb, 1, '2026-03-30', '마케팅 정보 수신 동의서 v1');
 ```
 
