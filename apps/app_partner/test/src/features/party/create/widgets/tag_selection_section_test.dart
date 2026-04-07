@@ -35,9 +35,11 @@ Widget _buildWidget({
   when(repo.getFeaturedTags).thenAnswer(
     (_) async => featuredTags ?? _featuredTags,
   );
-  when(() => repo.getTagsByIds(any())).thenAnswer(
-    (_) async => initialTags ?? [],
-  );
+  when(() => repo.getTagsByIds(any())).thenAnswer((invocation) async {
+    final ids = invocation.positionalArguments.first as List<String>;
+    final allTags = [...(featuredTags ?? _featuredTags), ...(initialTags ?? [])];
+    return allTags.where((t) => ids.contains(t.id)).toList();
+  });
   when(() => repo.getTagsByPartyId(any())).thenAnswer(
     (_) async => initialTags ?? [],
   );

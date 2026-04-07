@@ -231,7 +231,9 @@ SELECT results_eq(
 -- ============================================================
 SELECT tests.create_supabase_user('tag_test_user', 'tag_test@test.com');
 
-SELECT tests.authenticate_as('tag_test_user');
+-- service_role로 직접 INSERT (user_interest_tags RLS가 SELECT-only이므로)
+-- 트리거 동작 자체를 테스트하는 것이므로 service_role 사용이 적절
+SELECT tests.authenticate_as_service_role();
 
 SELECT lives_ok(
   format(

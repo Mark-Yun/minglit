@@ -208,69 +208,17 @@ $$;
 
 -- 8-3. get_parties_by_tag(p_tag_id, p_limit, p_offset): 태그별 활성 이벤트 목록
 -- 활성 이벤트: events.status = 'scheduled' AND start_time > now()
--- tags 컬럼: Event.fromJson의 List<Tag>? tags 필드에 매핑 (Tag.fromJson: id, name, is_featured, usage_count)
+-- RETURNS SETOF events: Dart Event.fromJson과 컬럼 일치
 CREATE OR REPLACE FUNCTION get_parties_by_tag(
   p_tag_id uuid,
   p_limit int DEFAULT 10,
   p_offset int DEFAULT 0
 )
-RETURNS TABLE (
-  id uuid,
-  party_id uuid,
-  start_time timestamptz,
-  end_time timestamptz,
-  created_at timestamptz,
-  updated_at timestamptz,
-  location_id uuid,
-  title text,
-  description jsonb,
-  image_urls text[],
-  contact_options jsonb,
-  metadata jsonb,
-  min_confirmed_count integer,
-  max_participants integer,
-  current_participants integer,
-  status text,
-  visibility text,
-  tags jsonb
-)
+RETURNS SETOF events
 LANGUAGE sql STABLE SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT
-    e.id,
-    e.party_id,
-    e.start_time,
-    e.end_time,
-    e.created_at,
-    e.updated_at,
-    e.location_id,
-    e.title,
-    e.description,
-    e.image_urls,
-    e.contact_options,
-    e.metadata,
-    e.min_confirmed_count,
-    e.max_participants,
-    e.current_participants,
-    e.status,
-    e.visibility,
-    COALESCE(
-      (
-        SELECT jsonb_agg(
-          jsonb_build_object(
-            'id', t.id,
-            'name', t.name,
-            'is_featured', t.is_featured,
-            'usage_count', t.usage_count
-          )
-        )
-        FROM party_tags pt2
-        JOIN tags t ON t.id = pt2.tag_id
-        WHERE pt2.party_id = e.party_id
-      ),
-      '[]'::jsonb
-    ) AS tags
+  SELECT e.*
   FROM events e
   JOIN party_tags pt ON pt.party_id = e.party_id
   WHERE pt.tag_id = p_tag_id
@@ -283,78 +231,22 @@ $$;
 
 -- 8-4. get_tag_recommendations(p_limit): 유저 관심 태그 기반 이벤트 추천
 -- auth.uid() 기반, 매칭 태그 수 DESC 정렬
--- tags 컬럼: Event.fromJson의 List<Tag>? tags 필드에 매핑 (Tag.fromJson: id, name, is_featured, usage_count)
+-- RETURNS SETOF events: Dart Event.fromJson과 컬럼 일치
 CREATE OR REPLACE FUNCTION get_tag_recommendations(
   p_limit int DEFAULT 10
 )
-RETURNS TABLE (
-  id uuid,
-  party_id uuid,
-  start_time timestamptz,
-  end_time timestamptz,
-  created_at timestamptz,
-  updated_at timestamptz,
-  location_id uuid,
-  title text,
-  description jsonb,
-  image_urls text[],
-  contact_options jsonb,
-  metadata jsonb,
-  min_confirmed_count integer,
-  max_participants integer,
-  current_participants integer,
-  status text,
-  visibility text,
-  tags jsonb
-)
+RETURNS SETOF events
 LANGUAGE sql STABLE SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT
-    e.id,
-    e.party_id,
-    e.start_time,
-    e.end_time,
-    e.created_at,
-    e.updated_at,
-    e.location_id,
-    e.title,
-    e.description,
-    e.image_urls,
-    e.contact_options,
-    e.metadata,
-    e.min_confirmed_count,
-    e.max_participants,
-    e.current_participants,
-    e.status,
-    e.visibility,
-    COALESCE(
-      (
-        SELECT jsonb_agg(
-          jsonb_build_object(
-            'id', t.id,
-            'name', t.name,
-            'is_featured', t.is_featured,
-            'usage_count', t.usage_count
-          )
-        )
-        FROM party_tags pt2
-        JOIN tags t ON t.id = pt2.tag_id
-        WHERE pt2.party_id = e.party_id
-      ),
-      '[]'::jsonb
-    ) AS tags
+  SELECT e.*
   FROM events e
   JOIN party_tags pt ON pt.party_id = e.party_id
   JOIN user_interest_tags uit ON uit.tag_id = pt.tag_id
   WHERE uit.user_id = auth.uid()
     AND e.status = 'scheduled'
     AND e.start_time > now()
-  GROUP BY
-    e.id, e.party_id, e.start_time, e.end_time, e.created_at, e.updated_at,
-    e.location_id, e.title, e.description, e.image_urls, e.contact_options,
-    e.metadata, e.min_confirmed_count, e.max_participants, e.current_participants,
-    e.status, e.visibility
+  GROUP BY e.id
   ORDER BY COUNT(DISTINCT uit.tag_id) DESC, e.start_time ASC
   LIMIT p_limit;
 $$;

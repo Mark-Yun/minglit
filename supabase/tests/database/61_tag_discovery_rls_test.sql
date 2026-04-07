@@ -103,29 +103,27 @@ SELECT throws_ok(
 );
 ROLLBACK TO SAVEPOINT before_user_tag_insert;
 
-SAVEPOINT before_user_tag_update;
-SELECT throws_ok(
+-- RLS silently excludes rows for UPDATE/DELETE (0 rows affected, no exception)
+-- Verify the data is unchanged after attempted UPDATE
+UPDATE public.tags SET is_featured = false WHERE id = current_setting('tests.td_tag_id')::uuid;
+
+SELECT results_eq(
   format(
-    $$UPDATE public.tags SET is_featured = false WHERE id = '%s'$$,
+    $$SELECT is_featured FROM public.tags WHERE id = '%s'$$,
     current_setting('tests.td_tag_id')
   ),
-  NULL,
-  NULL,
+  $$VALUES (true)$$,
   'non-admin user cannot UPDATE tags'
 );
-ROLLBACK TO SAVEPOINT before_user_tag_update;
 
-SAVEPOINT before_user_tag_delete;
-SELECT throws_ok(
-  format(
-    $$DELETE FROM public.tags WHERE id = '%s'$$,
-    current_setting('tests.td_tag_id')
-  ),
-  NULL,
-  NULL,
+-- Verify DELETE has no effect
+DELETE FROM public.tags WHERE id = current_setting('tests.td_tag_id')::uuid;
+
+SELECT results_eq(
+  $$SELECT count(*)::int FROM public.tags WHERE name = 'td_tag_test'$$,
+  $$VALUES (1)$$,
   'non-admin user cannot DELETE tags'
 );
-ROLLBACK TO SAVEPOINT before_user_tag_delete;
 
 -- ============================================================
 -- 3. tags — super_admin: 읽기 + 쓰기 가능
