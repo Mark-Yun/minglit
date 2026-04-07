@@ -69,9 +69,9 @@ export default function TermsPage() {
           <div>
             <h3 className="font-bold mb-3 text-gray-900 text-base">제1조 (참여자의 취소 및 환불)</h3>
             <ul className="list-disc pl-5 space-y-2 text-sm text-gray-600">
-              <li>모임 시작 3일 전까지: 전액 환불</li>
-              <li>모임 시작 2일 전 ~ 1일 전: 결제 대금의 50% 환불</li>
-              <li>당일 취소 및 노쇼: <span className="font-bold text-red-600">환불 불가</span></li>
+              <li>결제 후 2시간 이내: 전액 환불</li>
+              <li>이벤트 시작 7일 전까지: 전액 환불</li>
+              <li>그 외: 고객센터(support@minglit.com)로 문의</li>
             </ul>
           </div>
 
