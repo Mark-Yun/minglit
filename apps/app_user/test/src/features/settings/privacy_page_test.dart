@@ -245,10 +245,8 @@ void main() {
   testWidgets('개인정보 수집·이용 상세에서 관심 태그 파기 정책이 표시된다', (tester) async {
     await pumpPage(tester);
 
-    // 약관 보기 섹션까지 스크롤
-    await tester.scrollUntilVisible(find.text('개인정보처리방침'), 200);
-
-    // 개인정보 수집·이용 바텀시트 열기 (동의 현황의 ListTile)
+    // '개인정보 수집·이용'은 동의 현황 섹션(최상단)에 위치하므로 별도 스크롤 불필요.
+    // 스크롤 후 off-screen 위젯은 hit-test 불가 → 직접 tap.
     await tester.tap(find.widgetWithText(ListTile, '개인정보 수집·이용'));
     await tester.pumpAndSettle();
 
