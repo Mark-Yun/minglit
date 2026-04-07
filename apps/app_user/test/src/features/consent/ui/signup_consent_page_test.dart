@@ -51,6 +51,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  // Fix #1141: 제3자 제공 동의 항목 추가(thirdPartyProvision) — 6개로 늘어난 항목 수 검증
   testWidgets('초기 상태에서 6개 항목이 보이고 CTA는 비활성화된다', (tester) async {
     await pumpPage(tester);
 
