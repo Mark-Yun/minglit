@@ -199,13 +199,15 @@ void main() {
         ],
       );
 
-      final stateAsync = await Future<AsyncValue<TagEventListState>>(() async {
-        // Wait until provider settles
-        await Future<void>.delayed(const Duration(milliseconds: 50));
-        return container.read(tagEventListControllerProvider('tag_1'));
-      });
+      // Awaiting the future forces the provider build to complete (and throw).
+      await expectLater(
+        container.read(tagEventListControllerProvider('tag_1').future),
+        throwsA(isA<Exception>()),
+      );
 
-      expect(stateAsync, isA<AsyncError<TagEventListState>>());
+      // Now the provider has settled into AsyncError.
+      final state = container.read(tagEventListControllerProvider('tag_1'));
+      expect(state, isA<AsyncError<TagEventListState>>());
     });
 
     // Fix regression: loadMore error restores previous state without spinner
