@@ -172,8 +172,7 @@ class _ConsentDetailSection extends StatelessWidget {
               Text(
                 '• $item',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight:
-                      section.emphasized ? FontWeight.w600 : null,
+                  fontWeight: section.emphasized ? FontWeight.w600 : null,
                 ),
               ),
               const SizedBox(height: MinglitSpacing.xsmall),
