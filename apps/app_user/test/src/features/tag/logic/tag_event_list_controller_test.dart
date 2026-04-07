@@ -202,7 +202,7 @@ void main() {
       // Keep the provider alive so auto-dispose doesn't trigger during build.
       final sub = container.listen(
         tagEventListControllerProvider('tag_1'),
-        (_, __) {},
+        (_, _) {},
       );
       addTearDown(sub.close);
 
