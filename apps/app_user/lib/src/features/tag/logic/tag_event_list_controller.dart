@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -70,7 +69,6 @@ class TagEventListController extends _$TagEventListController {
     final repository = ref.read(tagRepositoryProvider);
     return repository.getPartiesByTag(
       tagId,
-      limit: _pageSize,
       offset: offset,
     );
   }

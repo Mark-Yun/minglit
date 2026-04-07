@@ -748,11 +748,10 @@ RouteBase get $tagEventListRoute => GoRouteData.$route(
 );
 
 mixin $TagEventListRoute on GoRouteData {
-  static TagEventListRoute _fromState(GoRouterState state) =>
-      TagEventListRoute(
-        tagId: state.pathParameters['tagId']!,
-        tagName: state.uri.queryParameters['tagName'] ?? '',
-      );
+  static TagEventListRoute _fromState(GoRouterState state) => TagEventListRoute(
+    tagId: state.pathParameters['tagId']!,
+    tagName: state.uri.queryParameters['tagName'] ?? '',
+  );
 
   TagEventListRoute get _self => this as TagEventListRoute;
 

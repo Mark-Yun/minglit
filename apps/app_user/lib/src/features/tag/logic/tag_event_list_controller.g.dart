@@ -13,8 +13,7 @@ part of 'tag_event_list_controller.dart';
 const tagEventListControllerProvider = TagEventListControllerFamily._();
 
 final class TagEventListControllerProvider
-    extends
-        $AsyncNotifierProvider<TagEventListController, TagEventListState> {
+    extends $AsyncNotifierProvider<TagEventListController, TagEventListState> {
   const TagEventListControllerProvider._({
     required TagEventListControllerFamily super.from,
     required String super.argument,
@@ -91,15 +90,11 @@ abstract class _$TagEventListController
   void runBuild() {
     final created = build(_$args);
     final ref =
-        this.ref
-            as $Ref<AsyncValue<TagEventListState>, TagEventListState>;
+        this.ref as $Ref<AsyncValue<TagEventListState>, TagEventListState>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<
-                AsyncValue<TagEventListState>,
-                TagEventListState
-              >,
+              AnyNotifier<AsyncValue<TagEventListState>, TagEventListState>,
               AsyncValue<TagEventListState>,
               Object?,
               Object?
