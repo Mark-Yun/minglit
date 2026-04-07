@@ -389,7 +389,8 @@ function generateDescription(
 // Phone prefix: 20-24 → 1000+age (preserves original), 25-34 → 2000+age (preserves original).
 // Email pattern: user_{age}_{m|f}_{ok|no}@test.com — preserved for E2E test compat.
 function generateAllPersonas(): UserPersona[] {
-  const currentYear = new Date().getFullYear();
+  // Fix #446: Date → Temporal API migration
+  const currentYear = Temporal.Now.plainDateISO().year;
   const personas: UserPersona[] = [];
   const password = "password1234!";
 
@@ -639,22 +640,26 @@ async function createPartyWithEvents(
     }
   }
 
-  const now = new Date();
+  // Fix #446: Date → Temporal API migration (Pattern D — date arithmetic)
   const eventIds: string[] = [];
 
   for (let i = 0; i < 2; i++) {
-    const startTime = new Date(now);
-    startTime.setDate(now.getDate() + (i === 0 ? 3 : 10));
-    startTime.setHours(19, 0, 0, 0);
-
-    const endTime = new Date(startTime);
-    endTime.setHours(22, 0, 0, 0);
+    const today = Temporal.Now.plainDateISO();
+    const eventDate = today.add({ days: i === 0 ? 3 : 10 });
+    const startInstant = eventDate
+      .toZonedDateTime(Temporal.Now.timeZoneId())
+      .with({ hour: 19, minute: 0, second: 0, millisecond: 0 })
+      .toInstant();
+    const endInstant = eventDate
+      .toZonedDateTime(Temporal.Now.timeZoneId())
+      .with({ hour: 22, minute: 0, second: 0, millisecond: 0 })
+      .toInstant();
 
     const { data: event, error: eventErr } = await sb.from("events").insert({
       party_id: partyId,
       location_id: locationId,
-      start_time: startTime.toISOString(),
-      end_time: endTime.toISOString(),
+      start_time: startInstant.toString(),
+      end_time: endInstant.toString(),
       min_confirmed_count: scenario.minConfirmed,
       max_participants: scenario.maxParticipants,
       status: "scheduled",

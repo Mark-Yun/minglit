@@ -255,7 +255,9 @@ class EventApplicationController extends _$EventApplicationController {
         .toSet()
         .toList();
 
-    if (reqIds.isEmpty || state.verificationData.isEmpty) return null;
+    // Fix #1115: split OR guard — reqIds.isEmpty must gate .first independently
+    if (reqIds.isEmpty) return null;
+    if (state.verificationData.isEmpty) return null;
     return {
       'partner_id': event.party?.partnerId,
       'verification_id': reqIds.first,

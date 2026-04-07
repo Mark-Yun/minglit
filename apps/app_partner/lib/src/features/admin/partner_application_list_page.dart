@@ -99,21 +99,16 @@ class _PartnerApplicationListPageState
             },
           ),
           const SizedBox(height: MinglitSpacing.small),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildFilterChip('전체', 'all'),
-                const SizedBox(width: MinglitSpacing.small),
-                _buildFilterChip('대기', 'pending'),
-                const SizedBox(width: MinglitSpacing.small),
-                _buildFilterChip('승인', 'approved'),
-                const SizedBox(width: MinglitSpacing.small),
-                _buildFilterChip('반려', 'rejected'),
-                const SizedBox(width: MinglitSpacing.small),
-                _buildFilterChip('보완', 'needs_correction'),
-              ],
-            ),
+          // Fix #477: Container already has horizontal padding — zero out ChipGroup default padding
+          MinglitChipGroup(
+            padding: EdgeInsets.zero,
+            children: [
+              _buildFilterChip('전체', 'all'),
+              _buildFilterChip('대기', 'pending'),
+              _buildFilterChip('승인', 'approved'),
+              _buildFilterChip('반려', 'rejected'),
+              _buildFilterChip('보완', 'needs_correction'),
+            ],
           ),
         ],
       ),

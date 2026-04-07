@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(10);
+SELECT plan(11);
 
 -- extensions 존재 확인
 SELECT ok(EXISTS(SELECT 1 FROM pg_extension WHERE extname = 'pgroonga'), 'pgroonga installed');
@@ -9,7 +9,7 @@ SELECT ok(EXISTS(SELECT 1 FROM pg_extension WHERE extname = 'pg_net'), 'pg_net i
 SELECT ok(EXISTS(SELECT 1 FROM pg_extension WHERE extname = 'pgmq'), 'pgmq installed');
 SELECT ok(EXISTS(SELECT 1 FROM pg_extension WHERE extname = 'supabase_vault'), 'supabase_vault installed');
 
--- cron jobs 3개
+-- cron jobs 4개
 SET ROLE postgres;
 SELECT is(
   (SELECT count(*)::int FROM cron.job WHERE jobname = 'settlement-status-transition'),
@@ -25,6 +25,11 @@ SELECT is(
   (SELECT count(*)::int FROM cron.job WHERE jobname = 'send-event-reminders'),
   1,
   'reminder cron registered'
+);
+SELECT is(
+  (SELECT count(*)::int FROM cron.job WHERE jobname = 'auto-complete-past-events'),
+  1,
+  'auto-complete-past-events cron registered'
 );
 
 -- process-global-events는 없어야 함 (비활성화 제거)

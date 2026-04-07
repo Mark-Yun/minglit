@@ -1,13 +1,88 @@
 import 'dart:async';
 
 import 'package:app_partner/src/features/checkin/checkin_placeholder_page.dart';
+import 'package:app_partner/src/features/checkin/qr_scanner_screen.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
+
+/// Fake platform implementation for MobileScanner.
+///
+/// Prevents real camera platform channel calls during widget tests. Required
+/// because MobileScannerController initialises asynchronously and its dispose
+/// fires platform calls that outlive the test frame — see Fix #1072.
+// Fix #1097: widget test에서 MobileScannerPlatform을 스텁해 카메라 채널 호출을 막는다.
+class _FakeMobileScannerPlatform extends MobileScannerPlatform {
+  @override
+  Stream<BarcodeCapture?> get barcodesStream => const Stream.empty();
+
+  @override
+  Stream<TorchState> get torchStateStream => const Stream.empty();
+
+  @override
+  Stream<double> get zoomScaleStateStream => const Stream.empty();
+
+  @override
+  Widget buildCameraView() => const SizedBox.shrink();
+
+  @override
+  Future<MobileScannerViewAttributes> start(StartOptions startOptions) async {
+    return const MobileScannerViewAttributes(
+      cameraDirection: CameraFacing.back,
+      currentTorchMode: TorchState.unavailable,
+      size: Size.zero,
+    );
+  }
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  Future<void> pause() async {}
+
+  @override
+  Future<void> dispose() async {}
+
+  @override
+  Future<void> toggleTorch() async {}
+
+  @override
+  Future<Set<CameraLensType>> getSupportedLenses() async => {};
+
+  @override
+  Future<void> updateScanWindow(Rect? window) async {}
+
+  @override
+  Future<void> resetZoomScale() async {}
+
+  @override
+  Future<void> setZoomScale(double zoomScale) async {}
+
+  @override
+  Future<void> setFocusPoint(Offset position) async {}
+
+  @override
+  Future<BarcodeCapture?> analyzeImage(
+    String path, {
+    List<BarcodeFormat> formats = const <BarcodeFormat>[],
+  }) async => null;
+}
 
 void main() {
   group('CheckinPlaceholderPage', () {
+    late MobileScannerPlatform originalPlatform;
+
+    setUp(() {
+      originalPlatform = MobileScannerPlatform.instance;
+      MobileScannerPlatform.instance = _FakeMobileScannerPlatform();
+    });
+
+    tearDown(() {
+      MobileScannerPlatform.instance = originalPlatform;
+    });
+
     const testPartner = Partner(
       id: 'partner-1',
       name: 'Test Partner',
@@ -100,13 +175,29 @@ void main() {
       expect(find.byIcon(Icons.qr_code_scanner), findsOneWidget);
     });
 
-    // Skip: 1-event case renders QRScannerScreen which uses native camera
-    // plugin (mobile_scanner). Its State.dispose has a known bug (missing
-    // super.dispose call) that causes test framework teardown failure.
-    // The routing logic (1 event → direct scanner) is verified by the 0-event
-    // and 2+-event tests covering the other branches.
-    //
-    // TODO: Re-enable after QRScannerScreen dispose bug is fixed.
+    testWidgets('auto-routes to QRScannerScreen when exactly 1 event today', (
+      tester,
+    ) async {
+      // Fix #1097: Previously disabled due to mobile_scanner async dispose
+      // (tracked in #1009). Fix #1072 applied unawaited() to _scannerController
+      // .dispose(); _FakeMobileScannerPlatform stubs out platform calls so the
+      // test runs without a camera and teardown is deterministic.
+      await tester.pumpWidget(
+        buildWidget(
+          overrides: [
+            currentPartnerInfoProvider.overrideWith(
+              (ref) async => testPartner,
+            ),
+            todayEventsProvider.overrideWith(
+              (ref, partnerId) async => [testEvent],
+            ),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(QRScannerScreen), findsOneWidget);
+    });
 
     testWidgets('shows event selection when 2+ events today', (
       tester,

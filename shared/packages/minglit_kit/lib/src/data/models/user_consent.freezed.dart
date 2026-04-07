@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UserConsent {
 
-String get id;@JsonKey(name: 'user_id') String get userId;@JsonKey(name: 'consent_key') ConsentType get consentKey;bool get consented;@JsonKey(name: 'policy_version') int? get policyVersion;@JsonKey(name: 'consented_at') DateTime get consentedAt;@JsonKey(name: 'withdrawn_at') DateTime? get withdrawnAt;@JsonKey(name: 'created_at') DateTime get createdAt;
+ String get id;@JsonKey(name: 'user_id') String get userId;@JsonKey(name: 'consent_key') ConsentType get consentKey; bool get consented;@JsonKey(name: 'consented_at') DateTime get consentedAt;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'policy_version') int? get policyVersion;@JsonKey(name: 'withdrawn_at') DateTime? get withdrawnAt;
 /// Create a copy of UserConsent
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $UserConsentCopyWith<UserConsent> get copyWith => _$UserConsentCopyWithImpl<User
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserConsent&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.consentKey, consentKey) || other.consentKey == consentKey)&&(identical(other.consented, consented) || other.consented == consented)&&(identical(other.policyVersion, policyVersion) || other.policyVersion == policyVersion)&&(identical(other.consentedAt, consentedAt) || other.consentedAt == consentedAt)&&(identical(other.withdrawnAt, withdrawnAt) || other.withdrawnAt == withdrawnAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserConsent&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.consentKey, consentKey) || other.consentKey == consentKey)&&(identical(other.consented, consented) || other.consented == consented)&&(identical(other.consentedAt, consentedAt) || other.consentedAt == consentedAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.policyVersion, policyVersion) || other.policyVersion == policyVersion)&&(identical(other.withdrawnAt, withdrawnAt) || other.withdrawnAt == withdrawnAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,userId,consentKey,consented,policyVersion,consentedAt,withdrawnAt,createdAt);
+int get hashCode => Object.hash(runtimeType,id,userId,consentKey,consented,consentedAt,createdAt,policyVersion,withdrawnAt);
 
 @override
 String toString() {
-  return 'UserConsent(id: $id, userId: $userId, consentKey: $consentKey, consented: $consented, policyVersion: $policyVersion, consentedAt: $consentedAt, withdrawnAt: $withdrawnAt, createdAt: $createdAt)';
+  return 'UserConsent(id: $id, userId: $userId, consentKey: $consentKey, consented: $consented, consentedAt: $consentedAt, createdAt: $createdAt, policyVersion: $policyVersion, withdrawnAt: $withdrawnAt)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $UserConsentCopyWith<$Res>  {
   factory $UserConsentCopyWith(UserConsent value, $Res Function(UserConsent) _then) = _$UserConsentCopyWithImpl;
 @useResult
 $Res call({
-String id,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'consent_key') ConsentType consentKey,bool consented,@JsonKey(name: 'policy_version') int? policyVersion,@JsonKey(name: 'consented_at') DateTime consentedAt,@JsonKey(name: 'withdrawn_at') DateTime? withdrawnAt,@JsonKey(name: 'created_at') DateTime createdAt
+ String id,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'consent_key') ConsentType consentKey, bool consented,@JsonKey(name: 'consented_at') DateTime consentedAt,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'policy_version') int? policyVersion,@JsonKey(name: 'withdrawn_at') DateTime? withdrawnAt
 });
 
 
@@ -65,17 +65,17 @@ class _$UserConsentCopyWithImpl<$Res>
 
 /// Create a copy of UserConsent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userId = null,Object? consentKey = null,Object? consented = null,Object? policyVersion = freezed,Object? consentedAt = null,Object? withdrawnAt = freezed,Object? createdAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userId = null,Object? consentKey = null,Object? consented = null,Object? consentedAt = null,Object? createdAt = null,Object? policyVersion = freezed,Object? withdrawnAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String,consentKey: null == consentKey ? _self.consentKey : consentKey // ignore: cast_nullable_to_non_nullable
 as ConsentType,consented: null == consented ? _self.consented : consented // ignore: cast_nullable_to_non_nullable
-as bool,policyVersion: freezed == policyVersion ? _self.policyVersion : policyVersion // ignore: cast_nullable_to_non_nullable
-as int?,consentedAt: null == consentedAt ? _self.consentedAt : consentedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,withdrawnAt: freezed == withdrawnAt ? _self.withdrawnAt : withdrawnAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as bool,consentedAt: null == consentedAt ? _self.consentedAt : consentedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,policyVersion: freezed == policyVersion ? _self.policyVersion : policyVersion // ignore: cast_nullable_to_non_nullable
+as int?,withdrawnAt: freezed == withdrawnAt ? _self.withdrawnAt : withdrawnAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 
@@ -160,10 +160,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'consent_key')  ConsentType consentKey,  bool consented, @JsonKey(name: 'policy_version')  int? policyVersion, @JsonKey(name: 'consented_at')  DateTime consentedAt, @JsonKey(name: 'withdrawn_at')  DateTime? withdrawnAt, @JsonKey(name: 'created_at')  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'consent_key')  ConsentType consentKey,  bool consented, @JsonKey(name: 'consented_at')  DateTime consentedAt, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'policy_version')  int? policyVersion, @JsonKey(name: 'withdrawn_at')  DateTime? withdrawnAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserConsent() when $default != null:
-return $default(_that.id,_that.userId,_that.consentKey,_that.consented,_that.policyVersion,_that.consentedAt,_that.withdrawnAt,_that.createdAt);case _:
+return $default(_that.id,_that.userId,_that.consentKey,_that.consented,_that.consentedAt,_that.createdAt,_that.policyVersion,_that.withdrawnAt);case _:
   return orElse();
 
 }
@@ -181,10 +181,10 @@ return $default(_that.id,_that.userId,_that.consentKey,_that.consented,_that.pol
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'consent_key')  ConsentType consentKey,  bool consented, @JsonKey(name: 'policy_version')  int? policyVersion, @JsonKey(name: 'consented_at')  DateTime consentedAt, @JsonKey(name: 'withdrawn_at')  DateTime? withdrawnAt, @JsonKey(name: 'created_at')  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'consent_key')  ConsentType consentKey,  bool consented, @JsonKey(name: 'consented_at')  DateTime consentedAt, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'policy_version')  int? policyVersion, @JsonKey(name: 'withdrawn_at')  DateTime? withdrawnAt)  $default,) {final _that = this;
 switch (_that) {
 case _UserConsent():
-return $default(_that.id,_that.userId,_that.consentKey,_that.consented,_that.policyVersion,_that.consentedAt,_that.withdrawnAt,_that.createdAt);case _:
+return $default(_that.id,_that.userId,_that.consentKey,_that.consented,_that.consentedAt,_that.createdAt,_that.policyVersion,_that.withdrawnAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -201,10 +201,10 @@ return $default(_that.id,_that.userId,_that.consentKey,_that.consented,_that.pol
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'consent_key')  ConsentType consentKey,  bool consented, @JsonKey(name: 'policy_version')  int? policyVersion, @JsonKey(name: 'consented_at')  DateTime consentedAt, @JsonKey(name: 'withdrawn_at')  DateTime? withdrawnAt, @JsonKey(name: 'created_at')  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'consent_key')  ConsentType consentKey,  bool consented, @JsonKey(name: 'consented_at')  DateTime consentedAt, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'policy_version')  int? policyVersion, @JsonKey(name: 'withdrawn_at')  DateTime? withdrawnAt)?  $default,) {final _that = this;
 switch (_that) {
 case _UserConsent() when $default != null:
-return $default(_that.id,_that.userId,_that.consentKey,_that.consented,_that.policyVersion,_that.consentedAt,_that.withdrawnAt,_that.createdAt);case _:
+return $default(_that.id,_that.userId,_that.consentKey,_that.consented,_that.consentedAt,_that.createdAt,_that.policyVersion,_that.withdrawnAt);case _:
   return null;
 
 }
@@ -216,17 +216,17 @@ return $default(_that.id,_that.userId,_that.consentKey,_that.consented,_that.pol
 @JsonSerializable()
 
 class _UserConsent implements UserConsent {
-  const _UserConsent({required this.id, @JsonKey(name: 'user_id') required this.userId, @JsonKey(name: 'consent_key') required this.consentKey, required this.consented, @JsonKey(name: 'policy_version') this.policyVersion, @JsonKey(name: 'consented_at') required this.consentedAt, @JsonKey(name: 'withdrawn_at') this.withdrawnAt, @JsonKey(name: 'created_at') required this.createdAt});
+  const _UserConsent({required this.id, @JsonKey(name: 'user_id') required this.userId, @JsonKey(name: 'consent_key') required this.consentKey, required this.consented, @JsonKey(name: 'consented_at') required this.consentedAt, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'policy_version') this.policyVersion, @JsonKey(name: 'withdrawn_at') this.withdrawnAt});
   factory _UserConsent.fromJson(Map<String, dynamic> json) => _$UserConsentFromJson(json);
 
 @override final  String id;
 @override@JsonKey(name: 'user_id') final  String userId;
 @override@JsonKey(name: 'consent_key') final  ConsentType consentKey;
 @override final  bool consented;
-@override@JsonKey(name: 'policy_version') final  int? policyVersion;
 @override@JsonKey(name: 'consented_at') final  DateTime consentedAt;
-@override@JsonKey(name: 'withdrawn_at') final  DateTime? withdrawnAt;
 @override@JsonKey(name: 'created_at') final  DateTime createdAt;
+@override@JsonKey(name: 'policy_version') final  int? policyVersion;
+@override@JsonKey(name: 'withdrawn_at') final  DateTime? withdrawnAt;
 
 /// Create a copy of UserConsent
 /// with the given fields replaced by the non-null parameter values.
@@ -241,16 +241,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserConsent&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.consentKey, consentKey) || other.consentKey == consentKey)&&(identical(other.consented, consented) || other.consented == consented)&&(identical(other.policyVersion, policyVersion) || other.policyVersion == policyVersion)&&(identical(other.consentedAt, consentedAt) || other.consentedAt == consentedAt)&&(identical(other.withdrawnAt, withdrawnAt) || other.withdrawnAt == withdrawnAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserConsent&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.consentKey, consentKey) || other.consentKey == consentKey)&&(identical(other.consented, consented) || other.consented == consented)&&(identical(other.consentedAt, consentedAt) || other.consentedAt == consentedAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.policyVersion, policyVersion) || other.policyVersion == policyVersion)&&(identical(other.withdrawnAt, withdrawnAt) || other.withdrawnAt == withdrawnAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,userId,consentKey,consented,policyVersion,consentedAt,withdrawnAt,createdAt);
+int get hashCode => Object.hash(runtimeType,id,userId,consentKey,consented,consentedAt,createdAt,policyVersion,withdrawnAt);
 
 @override
 String toString() {
-  return 'UserConsent(id: $id, userId: $userId, consentKey: $consentKey, consented: $consented, policyVersion: $policyVersion, consentedAt: $consentedAt, withdrawnAt: $withdrawnAt, createdAt: $createdAt)';
+  return 'UserConsent(id: $id, userId: $userId, consentKey: $consentKey, consented: $consented, consentedAt: $consentedAt, createdAt: $createdAt, policyVersion: $policyVersion, withdrawnAt: $withdrawnAt)';
 }
 
 
@@ -261,7 +261,7 @@ abstract mixin class _$UserConsentCopyWith<$Res> implements $UserConsentCopyWith
   factory _$UserConsentCopyWith(_UserConsent value, $Res Function(_UserConsent) _then) = __$UserConsentCopyWithImpl;
 @override @useResult
 $Res call({
-String id,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'consent_key') ConsentType consentKey,bool consented,@JsonKey(name: 'policy_version') int? policyVersion,@JsonKey(name: 'consented_at') DateTime consentedAt,@JsonKey(name: 'withdrawn_at') DateTime? withdrawnAt,@JsonKey(name: 'created_at') DateTime createdAt
+ String id,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'consent_key') ConsentType consentKey, bool consented,@JsonKey(name: 'consented_at') DateTime consentedAt,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'policy_version') int? policyVersion,@JsonKey(name: 'withdrawn_at') DateTime? withdrawnAt
 });
 
 
@@ -278,17 +278,17 @@ class __$UserConsentCopyWithImpl<$Res>
 
 /// Create a copy of UserConsent
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userId = null,Object? consentKey = null,Object? consented = null,Object? policyVersion = freezed,Object? consentedAt = null,Object? withdrawnAt = freezed,Object? createdAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userId = null,Object? consentKey = null,Object? consented = null,Object? consentedAt = null,Object? createdAt = null,Object? policyVersion = freezed,Object? withdrawnAt = freezed,}) {
   return _then(_UserConsent(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String,consentKey: null == consentKey ? _self.consentKey : consentKey // ignore: cast_nullable_to_non_nullable
 as ConsentType,consented: null == consented ? _self.consented : consented // ignore: cast_nullable_to_non_nullable
-as bool,policyVersion: freezed == policyVersion ? _self.policyVersion : policyVersion // ignore: cast_nullable_to_non_nullable
-as int?,consentedAt: null == consentedAt ? _self.consentedAt : consentedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,withdrawnAt: freezed == withdrawnAt ? _self.withdrawnAt : withdrawnAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as bool,consentedAt: null == consentedAt ? _self.consentedAt : consentedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,policyVersion: freezed == policyVersion ? _self.policyVersion : policyVersion // ignore: cast_nullable_to_non_nullable
+as int?,withdrawnAt: freezed == withdrawnAt ? _self.withdrawnAt : withdrawnAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 
@@ -299,7 +299,7 @@ as DateTime,
 /// @nodoc
 mixin _$ConsentInput {
 
-@JsonKey(name: 'consent_key') ConsentType get consentKey;bool get consented;@JsonKey(name: 'policy_version') int? get policyVersion;
+@JsonKey(name: 'consent_key') ConsentType get consentKey; bool get consented;@JsonKey(name: 'policy_version') int? get policyVersion;
 /// Create a copy of ConsentInput
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -332,7 +332,7 @@ abstract mixin class $ConsentInputCopyWith<$Res>  {
   factory $ConsentInputCopyWith(ConsentInput value, $Res Function(ConsentInput) _then) = _$ConsentInputCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'consent_key') ConsentType consentKey,bool consented,@JsonKey(name: 'policy_version') int? policyVersion
+@JsonKey(name: 'consent_key') ConsentType consentKey, bool consented,@JsonKey(name: 'policy_version') int? policyVersion
 });
 
 
@@ -535,7 +535,7 @@ abstract mixin class _$ConsentInputCopyWith<$Res> implements $ConsentInputCopyWi
   factory _$ConsentInputCopyWith(_ConsentInput value, $Res Function(_ConsentInput) _then) = __$ConsentInputCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'consent_key') ConsentType consentKey,bool consented,@JsonKey(name: 'policy_version') int? policyVersion
+@JsonKey(name: 'consent_key') ConsentType consentKey, bool consented,@JsonKey(name: 'policy_version') int? policyVersion
 });
 
 

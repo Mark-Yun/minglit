@@ -16,9 +16,6 @@ class PartnerHomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO(#519): partnerDashboardControllerProvider loads all sections in a
-    // single async call. Consider splitting into per-section providers for
-    // independent loading states (e.g. events, stats, applications).
     final state = ref.watch(partnerDashboardControllerProvider);
     final partner = ref.watch(currentPartnerInfoProvider).value;
     final unreadCount = ref
@@ -149,9 +146,7 @@ class PartnerHomePage extends ConsumerWidget {
                     TodoSummaryChips(
                       pendingApplications: state.pendingReviewCount,
                       upcomingEvents: state.upcomingEvents.length,
-                      onPendingTap: () {
-                        const ApplicationListRoute().go(context);
-                      },
+                      onPendingTap: coordinator.goToApplicationList,
                       onUpcomingTap: () {
                         unawaited(
                           const PartyListRoute().push<void>(context),
@@ -167,9 +162,7 @@ class PartnerHomePage extends ConsumerWidget {
                     // 4. Weekly Stats
                     const _SectionHeader(title: '이번 주 성과'),
                     const SizedBox(height: MinglitSpacing.small),
-                    // TODO(#519): wire real weekly stats APIs — values
-                    // below are placeholders and should NOT be used for
-                    // KPI reporting until the backend endpoint is ready.
+                    // Note: weekly stats values below are placeholders — not yet backed by a real API.
                     WeeklyStatsRow(
                       totalRevenue: null,
                       totalApplications: state.pendingReviewCount,
@@ -253,19 +246,17 @@ class PartnerHomePage extends ConsumerWidget {
     return EventActionCard(
       event: primaryEvent,
       onMainAction: () {
+        // Fix #845: coordinator를 통해 탭 전환 위임
+        final coordinator = ref.read(partnerHomeCoordinatorProvider);
         switch (phase) {
           case EventPhase.recruiting:
-            const ApplicationListRoute().go(context);
+            coordinator.goToApplicationList();
           case EventPhase.preparing:
           case EventPhase.live:
-            const CheckinRoute().go(context);
+            coordinator.goToCheckin();
           case EventPhase.ended:
             // "다음 회차 만들기" → 이벤트 생성 (pre-fill은 #520에서 구현)
-            unawaited(
-              EventCreateRoute(
-                partyId: primaryEvent.partyId,
-              ).push<void>(context),
-            );
+            coordinator.pushEventCreate(primaryEvent.partyId);
         }
       },
       onSecondaryAction1: () {

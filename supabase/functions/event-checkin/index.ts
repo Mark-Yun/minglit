@@ -55,6 +55,27 @@ Deno.serve(withHandler(async (req) => {
     return errorResponse("Forbidden: caller is not the participant's user", 403);
   }
 
+  // Fix #998: 이벤트 상태 머신 확장 — active/ongoing 상태에서만 체크인 허용
+  const { data: event, error: eventFetchErr } = await supabase
+    .from("events")
+    .select("id, status")
+    .eq("id", event_id)
+    .maybeSingle();
+
+  if (eventFetchErr) {
+    log({ function: FN, level: "error", message: "Failed to fetch event", metadata: { detail: eventFetchErr.message } });
+    return errorResponse("Failed to fetch event", 500);
+  }
+
+  if (!event) {
+    return errorResponse("Event not found", 404);
+  }
+
+  const eventStatus = (event as { status: string }).status;
+  if (eventStatus !== "active" && eventStatus !== "ongoing") {
+    return errorResponse("체크인은 active 또는 ongoing 상태의 이벤트에서만 가능합니다", 400);
+  }
+
   const currentStatus = (participant as { status: string }).status;
 
   if (currentStatus === "checked_in") {
@@ -66,15 +87,19 @@ Deno.serve(withHandler(async (req) => {
   }
 
   // Transition status: ticket_issued → checked_in
-  const { error: updateErr } = await supabase
+  const { error: updateErr, count } = await supabase
     .from("event_participants")
-    .update({ status: "checked_in" })
+    .update({ status: "checked_in" }, { count: "exact" })
     .eq("id", participant_id)
     .eq("status", "ticket_issued");
 
   if (updateErr) {
     log({ function: FN, level: "error", message: "Failed to update participant status", metadata: { detail: updateErr.message } });
     return errorResponse("Failed to check in participant", 500);
+  }
+
+  if ((count ?? 0) === 0) {
+    return errorResponse("Participant status changed concurrently, please retry", 409);
   }
 
   log({ function: FN, level: "info", message: "Participant checked in", metadata: { participant_id, event_id } });

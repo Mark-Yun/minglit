@@ -1,4 +1,5 @@
 import { createServiceClient } from '../_shared/supabase_client.ts'
+import { nowISO } from '../_shared/temporal_utils.ts'
 import { OpenAIService } from './openai_service.ts'
 import { serializeParty } from './party_serializer.ts'
 import { HybridCalculator } from './calculator.ts'
@@ -31,12 +32,6 @@ Deno.serve(withHandler(async (req) => {
     const supabase = createServiceClient();
     const openAi = new OpenAIService(openAiKey);
     const utils = new WorkerUtils(supabase, 'q_vectors');
-
-    // DEBUG LOG
-    await supabase.from('debug_logs').insert({
-      message: 'Vector Worker Invoked',
-      payload: { batchSize, timestamp: new Date().toISOString() }
-    });
 
     // 1. Read Batch from PGMQ
     const { data: messages, error: readError } = await supabase.rpc('pgmq_read', {
@@ -119,21 +114,12 @@ Deno.serve(withHandler(async (req) => {
           const embeddings = await openAi.generateEmbeddings(texts);
           log({ function: FN, level: "info", message: `Received ${embeddings.length} embeddings.` });
 
-          await supabase.from('debug_logs').insert({
-            message: 'OpenAI Result Check',
-            payload: {
-              textCount: texts.length,
-              embeddingCount: embeddings.length,
-              sample: embeddings.length > 0 ? Array.from(embeddings[0]).slice(0, 5) : null
-            }
-          });
-
           for (let i = 0; i < publicPartyTasks.length; i++) {
             const t = publicPartyTasks[i];
             const item = {
               party_id: t.record.id,
               embedding: embeddings[i],
-              updated_at: new Date().toISOString()
+              updated_at: nowISO()
             };
 
             const { error: upsertError } = await supabase.from('party_embeddings').upsert(item);
@@ -169,7 +155,7 @@ Deno.serve(withHandler(async (req) => {
           const { error } = await supabase.from('user_embeddings').upsert({
             user_id,
             embedding: newVector,
-            updated_at: new Date().toISOString()
+            updated_at: nowISO()
           });
           if (error) throw error;
 

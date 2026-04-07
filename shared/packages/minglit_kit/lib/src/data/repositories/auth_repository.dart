@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
@@ -72,17 +73,47 @@ class AuthRepository {
     String? defaultRedirectUrl,
     String? mobileRedirectScheme,
   }) : _supabase = supabase ?? Supabase.instance.client,
+       // Fix #959: normalize blank webClientId to null to prevent
+       // GoogleSignIn.instance.initialize() from receiving an empty string,
+       // which causes a runtime failure on mobile.
+       _webClientId = webClientId != null && webClientId.trim().isNotEmpty
+           ? webClientId.trim()
+           : null,
        _defaultRedirectUrl = defaultRedirectUrl,
-       _mobileRedirectScheme = mobileRedirectScheme,
-       _googleSignIn = GoogleSignIn(
-         clientId: kIsWeb ? webClientId : null,
-         serverClientId: kIsWeb ? null : webClientId,
-       );
+       _mobileRedirectScheme = mobileRedirectScheme;
 
   final SupabaseClient _supabase;
-  final GoogleSignIn _googleSignIn;
+  final String? _webClientId;
   final String? _defaultRedirectUrl;
   final String? _mobileRedirectScheme;
+
+  // Fix #959: Use Completer pattern to prevent async race condition where
+  // concurrent callers could invoke GoogleSignIn.instance.initialize() twice.
+  Completer<void>? _googleSignInInitCompleter;
+
+  Future<void> _ensureGoogleSignInInitialized() async {
+    if (_googleSignInInitCompleter != null) {
+      return _googleSignInInitCompleter!.future;
+    }
+    // Use a local variable so the catch block can always complete this specific
+    // completer — avoids race where _googleSignInInitCompleter is set to null
+    // before waiting callers receive the error.
+    final completer = Completer<void>();
+    _googleSignInInitCompleter = completer;
+    try {
+      await GoogleSignIn.instance.initialize(
+        clientId: kIsWeb ? _webClientId : null,
+        serverClientId: kIsWeb ? null : _webClientId,
+      );
+      completer.complete();
+    } catch (e, stackTrace) {
+      // Fix #959: complete with error so concurrent callers that are already
+      // waiting on completer.future receive the error instead of hanging.
+      completer.completeError(e, stackTrace);
+      _googleSignInInitCompleter = null;
+      rethrow;
+    }
+  }
 
   /// Returns the current logged-in user.
   User? get currentUser => _supabase.auth.currentUser;
@@ -107,13 +138,15 @@ class AuthRepository {
       }
 
       // Mobile Native Sign-In
-      final googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        throw const AuthException('Google sign-in was cancelled.');
+      // Fix #959: guard missing webClientId early to surface misconfiguration
+      // before calling initialize(), which would fail with a cryptic error.
+      if ((_webClientId ?? '').isEmpty) {
+        throw const AuthException('GOOGLE_WEB_CLIENT_ID is not configured.');
       }
+      await _ensureGoogleSignInInitialized();
+      final googleUser = await GoogleSignIn.instance.authenticate();
 
-      final googleAuth = await googleUser.authentication;
-      final accessToken = googleAuth.accessToken;
+      final googleAuth = googleUser.authentication;
       final idToken = googleAuth.idToken;
 
       if (idToken == null) {
@@ -123,7 +156,6 @@ class AuthRepository {
       await _supabase.auth.signInWithIdToken(
         provider: OAuthProvider.google,
         idToken: idToken,
-        accessToken: accessToken,
       );
       Log.i('🎉 [AuthRepo] Supabase Sign-In successful!');
     } on Exception catch (e, stackTrace) {
@@ -238,10 +270,11 @@ class AuthRepository {
   /// Signs out from both Supabase and Google.
   Future<void> signOut() async {
     try {
-      await Future.wait([
-        _supabase.auth.signOut(),
-        _googleSignIn.signOut(),
-      ]);
+      final futures = <Future<void>>[_supabase.auth.signOut()];
+      if (_googleSignInInitCompleter != null) {
+        futures.add(GoogleSignIn.instance.signOut());
+      }
+      await Future.wait(futures);
       Log.i('👋 [AuthRepo] Sign-Out successful');
     } on Exception catch (e, stackTrace) {
       Log.e('❌ [AuthRepo] Sign-Out Error', e, stackTrace);
