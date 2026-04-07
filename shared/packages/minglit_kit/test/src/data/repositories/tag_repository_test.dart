@@ -47,7 +47,7 @@ void main() {
       test('returns empty list when no featured tags', () async {
         when(
           () => mockClient.rpc<dynamic>('get_featured_tags'),
-        ).thenAnswer((_) => FakeRpcBuilder<dynamic>([]));
+        ).thenAnswer((_) => FakeRpcBuilder<dynamic>(<dynamic>[]));
 
         final result = await repository.getFeaturedTags();
 
@@ -105,7 +105,7 @@ void main() {
             'get_parties_by_tag',
             params: any(named: 'params'),
           ),
-        ).thenAnswer((_) => FakeRpcBuilder<dynamic>([]));
+        ).thenAnswer((_) => FakeRpcBuilder<dynamic>(<dynamic>[]));
 
         final result = await repository.getPartiesByTag(
           'tag_1',

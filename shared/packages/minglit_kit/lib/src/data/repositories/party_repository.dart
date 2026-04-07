@@ -109,12 +109,13 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
   }) async {
     Log.d('createParty called | partnerId: ${party.partnerId}');
     try {
-      final partyJson = party.toDbJson()..addAll(extraFields ?? {});
-      // Remove partner_id — server injects it from JWT membership
-      partyJson.remove('partner_id');
-      // Remove location — handled separately
-      partyJson.remove('location');
-      partyJson.remove('location_id');
+      final partyJson = party.toDbJson()
+        ..addAll(extraFields ?? {})
+        // Remove partner_id — server injects it from JWT membership
+        ..remove('partner_id')
+        // Remove location — handled separately
+        ..remove('location')
+        ..remove('location_id');
 
       final body = <String, dynamic>{
         'action': 'create',
