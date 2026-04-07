@@ -116,11 +116,20 @@ void main() {
   testWidgets('제3자 제공 동의 상세에 확정된 제공 항목과 보유기간이 표시된다', (tester) async {
     await pumpPage(tester);
 
-    // '보기 ›' 인덱스: termsOfService=0, privacyCollection=1, ageConfirmation=없음, thirdPartyProvision=2
-    // GestureDetector(opaque) + InkWell 제스처 아레나 충돌로 ancestor 방식 미작동 — 직접 인덱스로 탭
-    await tester.scrollUntilVisible(find.text('보기 ›').at(2), 200);
+    // Fix #1141: '제3자 제공 동의' 타이틀이 속한 Row의 최외곽 Row에서 '보기 ›'를 찾아 탭.
+    // at(N) 인덱스 방식은 ListView 스크롤 후 트리에서 이탈한 위젯으로 인해 인덱스가 변경될 수 있음.
+    // 타이틀 텍스트의 가장 먼 Row 조상(= _ConsentItemTile 의 외곽 Row) 안에서 '보기 ›'를 특정함.
+    await tester.scrollUntilVisible(find.text('제3자 제공 동의'), 200);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('보기 ›').at(2));
+    final thirdPartyTileRow = find
+        .ancestor(
+          of: find.text('제3자 제공 동의'),
+          matching: find.byType(Row),
+        )
+        .last;
+    await tester.tap(
+      find.descendant(of: thirdPartyTileRow, matching: find.text('보기 ›')),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('이름(닉네임)'), findsOneWidget);
