@@ -203,7 +203,7 @@ void main() {
       // Without listen(), container.read() disposes the provider mid-build.
       final sub = container.listen(
         tagEventListControllerProvider('tag_1'),
-        (_, __) {},
+        (_, _) {},
       );
 
       // Awaiting the future forces the provider build to complete (and throw).
