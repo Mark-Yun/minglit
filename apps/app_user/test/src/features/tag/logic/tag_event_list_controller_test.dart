@@ -117,7 +117,7 @@ void main() {
 
       final state = container
           .read(tagEventListControllerProvider('tag_1'))
-          .value;
+          .value!;
       expect(state.events, hasLength(15));
       expect(state.hasMore, isFalse);
       expect(state.isLoadingMore, isFalse);
