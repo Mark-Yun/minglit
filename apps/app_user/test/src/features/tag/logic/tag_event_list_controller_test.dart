@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_user/src/features/tag/logic/tag_event_list_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -199,24 +201,25 @@ void main() {
         ],
       );
 
-      // Keep the provider alive while awaiting the future.
-      // Without listen(), container.read() disposes the provider mid-build.
+      // Listen with a Completer to wait for the provider to settle.
+      // Avoid container.read(.future) — for auto-dispose providers that
+      // error, .future races with addTearDown(container.dispose) and throws
+      // StateError("disposed during loading state") instead of the real error.
+      final settled = Completer<void>();
       final sub = container.listen(
         tagEventListControllerProvider('tag_1'),
-        (_, _) {},
+        (_, next) {
+          if (!next.isLoading && !settled.isCompleted) {
+            settled.complete();
+          }
+        },
       );
+      addTearDown(sub.close);
 
-      // Awaiting the future forces the provider build to complete (and throw).
-      await expectLater(
-        container.read(tagEventListControllerProvider('tag_1').future),
-        throwsA(isA<Exception>()),
-      );
+      await settled.future;
 
-      // Now the provider has settled into AsyncError.
       final state = container.read(tagEventListControllerProvider('tag_1'));
       expect(state, isA<AsyncError<TagEventListState>>());
-
-      sub.close();
     });
 
     // Fix regression: loadMore error restores previous state without spinner
