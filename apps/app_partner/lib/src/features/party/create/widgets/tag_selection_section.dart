@@ -60,8 +60,9 @@ class _TagSelectionSectionState extends ConsumerState<TagSelectionSection> {
 
     if (tagIds.isEmpty) {
       // 빈 목록도 처리 — wizard에서 태그 전체 제거 시 controller를 비운다
-      if (mounted)
+      if (mounted) {
         ref.read(tagSelectionControllerProvider.notifier).setTags([]);
+      }
       return;
     }
 
