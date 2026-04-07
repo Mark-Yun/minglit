@@ -136,9 +136,13 @@ void main() {
     expect(find.text('연령대'), findsOneWidget);
     expect(find.text('자격 인증 정보(직업/소속 — 본인인증 완료 유저만)'), findsOneWidget);
     expect(find.text('이벤트 종료 후 30일'), findsOneWidget);
-    expect(find.text('동의를 거부할 수 있으며, 기본 서비스 이용은 가능합니다.'), findsOneWidget);
+    // Fix #1141: 구현체 텍스트와 일치하도록 기대값 수정 — spec.md 기준
     expect(
-      find.text('다만 파트너 승인/확인이 필요한 이벤트는 신청 또는 참여가 제한될 수 있습니다.'),
+      find.text('동의를 거부할 수 있으며, 거부해도 서비스 이용에 제한이 없습니다.'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('단, 이벤트 신청 시 개별 동의를 다시 요청합니다.'),
       findsOneWidget,
     );
   });
