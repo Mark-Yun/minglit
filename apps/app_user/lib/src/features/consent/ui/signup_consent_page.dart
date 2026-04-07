@@ -460,9 +460,11 @@ final Map<ConsentType, _ConsentDefinition> _consentDefinitions = {
     detail: ConsentDetailContent(
       title: '개인정보 수집·이용 동의',
       summary: '수집 항목과 이용 목적, 보관 기간을 안내합니다.',
+      // Fix #1143: PIPA 제22조 제4항 — 수집 항목·이용 목적·보관 기간 강조 의무
       sections: [
         ConsentDetailSection(
           title: '수집 항목',
+          emphasized: true,
           items: [
             '이름, 이메일, 프로필 사진',
             '관심 태그, 이용 기록, 기기 정보',
@@ -470,6 +472,7 @@ final Map<ConsentType, _ConsentDefinition> _consentDefinitions = {
         ),
         ConsentDetailSection(
           title: '이용 목적',
+          emphasized: true,
           items: [
             '회원 식별과 계정 관리',
             '이벤트 추천과 서비스 품질 개선',
@@ -478,9 +481,17 @@ final Map<ConsentType, _ConsentDefinition> _consentDefinitions = {
         ),
         ConsentDetailSection(
           title: '보관 기간',
+          emphasized: true,
           items: [
             '회원 탈퇴 시까지 보관합니다.',
             '법령상 보관 의무가 있는 정보는 관련 기간 동안 별도 보관합니다.',
+          ],
+        ),
+        ConsentDetailSection(
+          title: '동의 거부 시 안내',
+          emphasized: true,
+          items: [
+            '개인정보 수집·이용 동의를 거부하면 회원가입이 제한돼요.',
           ],
         ),
       ],
@@ -500,9 +511,11 @@ final Map<ConsentType, _ConsentDefinition> _consentDefinitions = {
     detail: ConsentDetailContent(
       title: '본인인증(CI/DI) 수집 동의',
       summary: '본인 확인 서비스를 통해 연계정보(CI)와 중복가입확인정보(DI)를 수집합니다.',
+      // Fix #1143: PIPA 제22조 제4항 — CI/DI 수집 항목·보관 기간 강조 의무
       sections: [
         ConsentDetailSection(
           title: '수집 항목',
+          emphasized: true,
           items: [
             '연계정보(CI): 본인 확인을 위한 고유 식별값',
             '중복가입확인정보(DI): 동일 서비스 중복 가입 방지',
@@ -517,8 +530,16 @@ final Map<ConsentType, _ConsentDefinition> _consentDefinitions = {
         ),
         ConsentDetailSection(
           title: '보관 기간',
+          emphasized: true,
           items: [
             '회원 탈퇴 시까지 보관하며, 탈퇴 후 즉시 파기합니다.',
+          ],
+        ),
+        ConsentDetailSection(
+          title: '동의 거부 시 안내',
+          emphasized: true,
+          items: [
+            '본인인증 동의를 거부해도 서비스 이용이 가능해요. 단, 본인인증이 필요한 일부 기능이 제한될 수 있어요.',
           ],
         ),
       ],
