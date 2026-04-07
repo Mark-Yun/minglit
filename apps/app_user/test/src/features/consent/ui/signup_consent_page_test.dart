@@ -121,43 +121,40 @@ void main() {
         theme: MinglitTheme.materialTheme,
         home: Scaffold(
           body: Builder(
-            builder:
-                (ctx) => Center(
-                  child: ElevatedButton(
-                    onPressed:
-                        () => showConsentDetailSheet(
-                          ctx,
-                          // Fix #1141: 성별 제거, 자격 인증 정보 추가, 보유기간 30일로 확정
-                          content: const ConsentDetailContent(
-                            title: '제3자 제공 동의',
-                            summary:
-                                '이벤트 운영을 위해 파트너에게 아래 정보를 제공합니다.',
-                            sections: [
-                              ConsentDetailSection(
-                                title: '제공 항목',
-                                items: [
-                                  '이름(닉네임)',
-                                  '연령대',
-                                  '자격 인증 정보(직업/소속 — 본인인증 완료 유저만)',
-                                ],
-                              ),
-                              ConsentDetailSection(
-                                title: '보유 기간',
-                                items: ['이벤트 종료 후 30일'],
-                              ),
-                              ConsentDetailSection(
-                                title: '거부 권리',
-                                items: [
-                                  '동의를 거부할 수 있으며, 기본 서비스 이용은 가능합니다.',
-                                  '다만 파트너 승인/확인이 필요한 이벤트는 신청 또는 참여가 제한될 수 있습니다.',
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                    child: const Text('open'),
+            builder: (ctx) => Center(
+              child: ElevatedButton(
+                onPressed: () => showConsentDetailSheet(
+                  ctx,
+                  // Fix #1141: 성별 제거, 자격 인증 정보 추가, 보유기간 30일로 확정
+                  content: const ConsentDetailContent(
+                    title: '제3자 제공 동의',
+                    summary: '이벤트 운영을 위해 파트너에게 아래 정보를 제공합니다.',
+                    sections: [
+                      ConsentDetailSection(
+                        title: '제공 항목',
+                        items: [
+                          '이름(닉네임)',
+                          '연령대',
+                          '자격 인증 정보(직업/소속 — 본인인증 완료 유저만)',
+                        ],
+                      ),
+                      ConsentDetailSection(
+                        title: '보유 기간',
+                        items: ['이벤트 종료 후 30일'],
+                      ),
+                      ConsentDetailSection(
+                        title: '거부 권리',
+                        items: [
+                          '동의를 거부할 수 있으며, 기본 서비스 이용은 가능합니다.',
+                          '다만 파트너 승인/확인이 필요한 이벤트는 신청 또는 참여가 제한될 수 있습니다.',
+                        ],
+                      ),
+                    ],
                   ),
                 ),
+                child: const Text('open'),
+              ),
+            ),
           ),
         ),
       ),
