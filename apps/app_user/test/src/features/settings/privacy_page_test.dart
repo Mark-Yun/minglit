@@ -250,6 +250,11 @@ void main() {
     await tester.tap(find.widgetWithText(ListTile, '개인정보 수집·이용'));
     await tester.pumpAndSettle();
 
+    // DraggableScrollableSheet 내부의 ListView를 아래로 스크롤하여 보관 기간 섹션 확보.
+    // 시트 초기 높이(82%)에서 보관 기간 섹션이 뷰포트 밖에 있을 수 있으므로 스크롤 필요.
+    await tester.drag(find.byType(ListView).last, const Offset(0, -300));
+    await tester.pumpAndSettle();
+
     // 관심 태그 파기 정책 문구가 존재하는지 확인 (bullet prefix '• ' 포함)
     expect(
       find.text(
