@@ -272,7 +272,8 @@ class PurchaseHistoryCard extends ConsumerWidget {
         await context.showMinglitAlert(
           title: '환불 불가',
           // Fix #1140: 환불 불가 메시지에 고객센터 대안 경로 추가 — 전자상거래법 준수
-          message: '자동 환불 기간이 지났습니다. 환불이 필요하시면 고객센터(support@minglit.com)로 문의해주세요.',
+          message:
+              '자동 환불 기간이 지났습니다. 환불이 필요하시면 고객센터(support@minglit.com)로 문의해주세요.',
         );
       },
       confirmRefund: (calculation) async {
