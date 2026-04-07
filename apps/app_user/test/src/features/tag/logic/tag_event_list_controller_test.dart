@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:app_user/src/features/tag/logic/tag_event_list_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -201,22 +199,19 @@ void main() {
         ],
       );
 
-      // Listen with a Completer to wait for the provider to settle.
-      // Avoid container.read(.future) — for auto-dispose providers that
-      // error, .future races with addTearDown(container.dispose) and throws
-      // StateError("disposed during loading state") instead of the real error.
-      final settled = Completer<void>();
+      // Keep the provider alive so auto-dispose doesn't trigger during build.
       final sub = container.listen(
         tagEventListControllerProvider('tag_1'),
-        (_, next) {
-          if (!next.isLoading && !settled.isCompleted) {
-            settled.complete();
-          }
-        },
+        (_, __) {},
       );
       addTearDown(sub.close);
 
-      await settled.future;
+      // Drain microtask queue so the async error propagates through
+      // mock → _fetchPage → build → Riverpod state transition.
+      // Each Future(() {}) yields to the event loop after all pending
+      // microtasks, ensuring the provider settles into AsyncError.
+      await Future<void>(() {});
+      await Future<void>(() {});
 
       final state = container.read(tagEventListControllerProvider('tag_1'));
       expect(state, isA<AsyncError<TagEventListState>>());
