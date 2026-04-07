@@ -168,6 +168,14 @@ function deletePartyTagsRoute(): FetchRoute {
   };
 }
 
+function selectTagsRoute(tagIds: string[]): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/tags") && req.method === "GET",
+    handler: () => jsonResponse(tagIds.map((id) => ({ id }))),
+  };
+}
+
 // Template routes
 function insertEntryGroupTemplatesRoute(): FetchRoute {
   return {
@@ -972,10 +980,15 @@ Deno.test({
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     // INSERT new tags first, then DELETE old ones not in new set (safe order)
+    const tagIds = [
+      "00000000-0000-0000-0000-000000000010",
+      "00000000-0000-0000-0000-000000000011",
+    ];
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectPartyRoute(),
       permRoute(),
+      selectTagsRoute(tagIds),
       insertPartyTagsRoute(),
       deletePartyTagsRoute(),
     ]);
@@ -985,10 +998,7 @@ Deno.test({
         const req = authenticatedJsonRequest("http://localhost", {
           action: "update",
           party_id: TEST_PARTY_ID,
-          tag_ids: [
-            "00000000-0000-0000-0000-000000000010",
-            "00000000-0000-0000-0000-000000000011",
-          ],
+          tag_ids: tagIds,
         });
         const res = await handler(req);
         assertEquals(res.status, 200);
