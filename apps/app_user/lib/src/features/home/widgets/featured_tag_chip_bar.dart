@@ -1,4 +1,4 @@
-import 'package:app_user/src/routing/app_routes.dart';
+import 'package:app_user/src/features/tag/logic/tag_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -29,10 +29,9 @@ class FeaturedTagChipBar extends ConsumerWidget {
               final tag = tags[index];
               return _TagChip(
                 label: tag.name,
-                onTap: () => TagEventListRoute(
-                  tagId: tag.id,
-                  tagName: tag.name,
-                ).push<void>(context),
+                onTap: () => ref
+                    .read(tagCoordinatorProvider)
+                    .goToTagEventList(tag.id, tag.name),
               );
             },
           ),

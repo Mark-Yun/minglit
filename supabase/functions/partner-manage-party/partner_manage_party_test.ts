@@ -933,10 +933,10 @@ Deno.test({
   sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    // tag_ids validation now runs before party INSERT — no insertPartyRoute needed
     const { fetchMock } = createFetchMock([
       authRoute(),
       permRoute(),
-      insertPartyRoute(),
     ]);
 
     await withEnv(ENV, async () => {
@@ -971,12 +971,13 @@ Deno.test({
   sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    // INSERT new tags first, then DELETE old ones not in new set (safe order)
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectPartyRoute(),
       permRoute(),
-      deletePartyTagsRoute(),
       insertPartyTagsRoute(),
+      deletePartyTagsRoute(),
     ]);
 
     await withEnv(ENV, async () => {
@@ -1088,6 +1089,73 @@ Deno.test({
         assertEquals(res.status, 400);
         const body = await readJson(res);
         assertEquals(body.error, "tag_ids must contain at most 5 tags");
+      });
+    });
+  },
+});
+
+// Fix #1136: tag_ids validation must run before any DB write (regression tests)
+
+Deno.test({
+  name: "create: tag_ids not array returns 400 — no party INSERT attempted",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    // No insertPartyRoute — if party INSERT were attempted it would throw "Unhandled fetch"
+    const { fetchMock, calls } = createFetchMock([
+      authRoute(),
+      permRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create",
+          partner_id: TEST_PARTNER_ID,
+          party: { title: "태그 타입 오류" },
+          tag_ids: "not-an-array",
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "tag_ids must be an array");
+        // Verify no party INSERT was attempted
+        const partyInserts = calls.filter((c) => c.url.includes("/rest/v1/parties") && c.method === "POST");
+        assertEquals(partyInserts.length, 0);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update: tag_ids not array returns 400 — no party PATCH attempted",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    // No updatePartyRoute — if party PATCH were attempted it would throw "Unhandled fetch"
+    const { fetchMock, calls } = createFetchMock([
+      authRoute(),
+      selectPartyRoute(),
+      permRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          party_id: TEST_PARTY_ID,
+          party: { title: "동시 수정" },
+          tag_ids: "not-an-array",
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "tag_ids must be an array");
+        // Verify no party PATCH was attempted
+        const partyPatches = calls.filter((c) => c.url.includes("/rest/v1/parties") && c.method === "PATCH");
+        assertEquals(partyPatches.length, 0);
       });
     });
   },

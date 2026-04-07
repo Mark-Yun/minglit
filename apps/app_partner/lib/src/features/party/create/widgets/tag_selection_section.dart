@@ -26,23 +26,37 @@ class _TagSelectionSectionState extends ConsumerState<TagSelectionSection> {
   Timer? _debounceTimer;
   String _searchQuery = '';
 
+  // wizard state에서 마지막으로 동기화한 tagIds — 중복 sync 방지용
+  List<String> _lastSyncedTagIds = const [];
+
   @override
   void initState() {
     super.initState();
     // 편집 모드: wizard state에 미리 로드된 tagIds가 있으면
-    // TagSelectionController를 초기화한다 (Tag 객체는 TagRepository로 조회)
+    // TagSelectionController를 초기화한다 (Tag 객체는 TagRepository로 조회).
+    // addPostFrameCallback으로 첫 프레임 이후에 읽어 ref가 준비된 상태에서 실행.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _syncFromWizardState();
+      _syncFromWizardTagIds(
+        ref.read(partyCreateWizardControllerProvider).tagIds,
+      );
     });
   }
 
-  Future<void> _syncFromWizardState() async {
+  /// wizard state의 tagIds가 외부(예: edit load)로 인해 변경될 때 동기화한다.
+  ///
+  /// build()에서 ref.listen으로 호출된다.
+  Future<void> _syncFromWizardTagIds(List<String> tagIds) async {
     if (!mounted) return;
-    final wizardTagIds = ref.read(partyCreateWizardControllerProvider).tagIds;
-    if (wizardTagIds.isEmpty) return;
+    // TagSelectionController가 이미 같은 목록을 보유하면 skip
+    if (tagIds.isEmpty) return;
+    if (_lastSyncedTagIds.length == tagIds.length &&
+        _lastSyncedTagIds.every(tagIds.contains)) {
+      return;
+    }
+    _lastSyncedTagIds = List.unmodifiable(tagIds);
 
     final tagRepo = ref.read(tagRepositoryProvider);
-    final tags = await tagRepo.getTagsByIds(wizardTagIds);
+    final tags = await tagRepo.getTagsByIds(tagIds);
     if (!mounted) return;
     ref.read(tagSelectionControllerProvider.notifier).setTags(tags);
   }
@@ -80,6 +94,16 @@ class _TagSelectionSectionState extends ConsumerState<TagSelectionSection> {
           .read(partyCreateWizardControllerProvider.notifier)
           .updateTagIds(next.map((t) => t.id).toList());
     });
+
+    // 편집 모드에서 wizard tagIds가 비동기로 로드되면 TagSelectionController를 갱신한다
+    ref.listen<PartyCreateWizardState>(
+      partyCreateWizardControllerProvider,
+      (previous, next) {
+        if (previous?.tagIds != next.tagIds) {
+          _syncFromWizardTagIds(next.tagIds);
+        }
+      },
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

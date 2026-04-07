@@ -72,8 +72,10 @@ class _TagEventListPageState extends ConsumerState<TagEventListPage> {
                     ),
                   ),
                   const SizedBox(height: MinglitSpacing.medium),
+                  // Fix #1136: context.pop()은 이전 스택이 없으면 홈으로 이동하지 않으므로
+                  // HomeRoute로 명시적 이동
                   TextButton(
-                    onPressed: () => context.pop(),
+                    onPressed: () => const HomeRoute().go(context),
                     child: const Text('홈으로 돌아가기'),
                   ),
                 ],

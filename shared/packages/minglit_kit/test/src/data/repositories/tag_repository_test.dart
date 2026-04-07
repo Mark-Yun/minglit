@@ -130,6 +130,21 @@ void main() {
         );
       });
     });
+
+    // Fix #1136: getUserInterestTags은 비로그인 상태에서 빈 목록을 반환해야 한다
+    group('getUserInterestTags', () {
+      test('returns empty list when user is not authenticated', () async {
+        // createMockSupabase with no currentUser → auth.currentUser == null
+        final unauthClient = createMockSupabase();
+        final unauthRepo = TagRepository(supabase: unauthClient);
+
+        final result = await unauthRepo.getUserInterestTags();
+
+        expect(result, isEmpty);
+        // from('user_interest_tags') should never be called
+        verifyNever(() => unauthClient.from('user_interest_tags'));
+      });
+    });
   });
 
   group('Tag model', () {

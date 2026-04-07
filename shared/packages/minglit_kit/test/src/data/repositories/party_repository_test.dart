@@ -228,6 +228,108 @@ void main() {
           throwsA(anything),
         );
       });
+
+      // Fix #1136: updateParty with tagIds passes tag_ids in EF body
+      test('passes tagIds in body when provided', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-party',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true},
+          ),
+        );
+        unawaited(
+          mockTable(
+            mockClient,
+            'parties',
+            maybeSingleData: partyJson,
+          ),
+        );
+
+        final party = Party.fromJson(partyJson);
+        await repository.updateParty(party, tagIds: ['tag_1', 'tag_2']);
+
+        final captured = verify(
+          () => mockFunctions.invoke(
+            'partner-manage-party',
+            body: captureAny(named: 'body'),
+          ),
+        ).captured.single as Map<String, dynamic>;
+
+        expect(captured['tag_ids'], ['tag_1', 'tag_2']);
+      });
+
+      // Fix #1136: updateParty with empty tagIds clears party tags via EF
+      test('passes empty tagIds to clear all tags', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-party',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true},
+          ),
+        );
+        unawaited(
+          mockTable(
+            mockClient,
+            'parties',
+            maybeSingleData: partyJson,
+          ),
+        );
+
+        final party = Party.fromJson(partyJson);
+        await repository.updateParty(party, tagIds: []);
+
+        final captured = verify(
+          () => mockFunctions.invoke(
+            'partner-manage-party',
+            body: captureAny(named: 'body'),
+          ),
+        ).captured.single as Map<String, dynamic>;
+
+        expect(captured['tag_ids'], <String>[]);
+      });
+
+      // Fix #1136: updateParty without tagIds omits tag_ids key from body
+      test('omits tag_ids key when tagIds not provided', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-party',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true},
+          ),
+        );
+        unawaited(
+          mockTable(
+            mockClient,
+            'parties',
+            maybeSingleData: partyJson,
+          ),
+        );
+
+        final party = Party.fromJson(partyJson);
+        await repository.updateParty(party);
+
+        final captured = verify(
+          () => mockFunctions.invoke(
+            'partner-manage-party',
+            body: captureAny(named: 'body'),
+          ),
+        ).captured.single as Map<String, dynamic>;
+
+        expect(captured.containsKey('tag_ids'), isFalse);
+      });
     });
 
     // Fix #316: updatePartyStatus now uses EF invoke

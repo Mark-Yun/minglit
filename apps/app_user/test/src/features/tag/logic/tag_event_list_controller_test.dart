@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_user/src/features/tag/logic/tag_event_list_controller.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -150,6 +151,63 @@ void main() {
           'tag_1',
         ),
       ).called(1);
+    });
+
+    test('concurrent loadMore calls do not double-fetch', () async {
+      final firstPage = List.generate(10, (i) => makeEvent('e$i'));
+      final secondPage = List.generate(5, (i) => makeEvent('second_$i'));
+      when(
+        () => mockTagRepo.getPartiesByTag(
+          'tag_1',
+        ),
+      ).thenAnswer((_) async => firstPage);
+      when(
+        () => mockTagRepo.getPartiesByTag(
+          'tag_1',
+          offset: 10,
+        ),
+      ).thenAnswer((_) async => secondPage);
+
+      final container = createContainer(
+        overrides: [
+          tagRepositoryProvider.overrideWith((ref) => mockTagRepo),
+        ],
+      );
+
+      await container.read(tagEventListControllerProvider('tag_1').future);
+
+      final notifier =
+          container.read(tagEventListControllerProvider('tag_1').notifier);
+
+      // Fire two concurrent loadMore calls; guard should prevent double-fetch
+      await Future.wait([notifier.loadMore(), notifier.loadMore()]);
+
+      // offset=10 should be called exactly once due to isLoadingMore guard
+      verify(
+        () => mockTagRepo.getPartiesByTag('tag_1', offset: 10),
+      ).called(1);
+    });
+
+    test('initial build emits AsyncError on network failure', () async {
+      when(
+        () => mockTagRepo.getPartiesByTag(
+          'tag_1',
+        ),
+      ).thenThrow(Exception('Network error'));
+
+      final container = createContainer(
+        overrides: [
+          tagRepositoryProvider.overrideWith((ref) => mockTagRepo),
+        ],
+      );
+
+      final stateAsync = await Future<AsyncValue<TagEventListState>>(() async {
+        // Wait until provider settles
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        return container.read(tagEventListControllerProvider('tag_1'));
+      });
+
+      expect(stateAsync, isA<AsyncError<TagEventListState>>());
     });
 
     // Fix regression: loadMore error restores previous state without spinner

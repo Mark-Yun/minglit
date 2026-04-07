@@ -122,6 +122,23 @@ async function handleRequest(req: Request): Promise<Response> {
       }
     }
 
+    // Validate tag_ids if provided (must validate before any DB write)
+    // Fix #1136: tag_ids 검증을 party INSERT 전으로 이동 — 잘못된 입력 시 고아 row 방지
+    const tagIds = body.tag_ids;
+    if (tagIds !== undefined) {
+      if (!Array.isArray(tagIds)) {
+        return errorResponse("tag_ids must be an array", 400);
+      }
+      if (tagIds.length > 5) {
+        return errorResponse("tag_ids must contain at most 5 tags", 400);
+      }
+      for (let i = 0; i < tagIds.length; i++) {
+        if (typeof tagIds[i] !== "string" || !tagIds[i]) {
+          return errorResponse(`tag_ids[${i}] must be a valid UUID string`, 400);
+        }
+      }
+    }
+
     // Validate entry_group_templates
     const entryGroupTemplates = body.entry_group_templates;
     if (Array.isArray(entryGroupTemplates) && entryGroupTemplates.length > 0) {
@@ -199,19 +216,10 @@ async function handleRequest(req: Request): Promise<Response> {
 
     const partyId = newParty.id as string;
 
-    // Insert party_tags if tag_ids provided (max 5, already validated above)
+    // Insert party_tags if tag_ids provided (validated before party INSERT above)
     // Fix #1136: tag_ids 지원 — party 생성 후 party_tags INSERT
-    const tagIds = body.tag_ids;
     if (Array.isArray(tagIds) && tagIds.length > 0) {
-      if (tagIds.length > 5) {
-        return errorResponse("tag_ids must contain at most 5 tags", 400);
-      }
-      for (let i = 0; i < tagIds.length; i++) {
-        if (typeof tagIds[i] !== "string" || !tagIds[i]) {
-          return errorResponse(`tag_ids[${i}] must be a valid UUID string`, 400);
-        }
-      }
-      const partyTagRecords = tagIds.map((tid: string) => ({
+      const partyTagRecords = (tagIds as string[]).map((tid) => ({
         party_id: partyId,
         tag_id: tid,
       }));
@@ -286,6 +294,8 @@ async function handleRequest(req: Request): Promise<Response> {
     const permCheck = await checkPartnerPermission(supabase, existingParty.partner_id, userId);
     if (permCheck instanceof Response) return permCheck;
 
+    // ── Pre-validate all payloads before any DB writes ──
+
     // Build party updates
     const partyData = body.party;
     const partyUpdates: Record<string, unknown> = {};
@@ -304,6 +314,34 @@ async function handleRequest(req: Request): Promise<Response> {
         }
       }
     }
+
+    // Validate tag_ids before any DB writes
+    // Fix #1136: tag_ids 검증을 모든 write 전으로 이동 — 부분 업데이트 방지
+    const updateTagIds = body.tag_ids;
+    if (updateTagIds !== undefined) {
+      if (!Array.isArray(updateTagIds)) {
+        return errorResponse("tag_ids must be an array", 400);
+      }
+      if (updateTagIds.length > 5) {
+        return errorResponse("tag_ids must contain at most 5 tags", 400);
+      }
+      for (let i = 0; i < updateTagIds.length; i++) {
+        if (typeof updateTagIds[i] !== "string" || !updateTagIds[i]) {
+          return errorResponse(`tag_ids[${i}] must be a valid UUID string`, 400);
+        }
+      }
+    }
+
+    if (
+      Object.keys(partyUpdates).length === 0 &&
+      !body.location &&
+      body.location_id === undefined &&
+      updateTagIds === undefined
+    ) {
+      return errorResponse("No fields to update", 400);
+    }
+
+    // ── All validations passed — now perform DB writes ──
 
     // Update party fields if any
     if (Object.keys(partyUpdates).length > 0) {
@@ -382,48 +420,39 @@ async function handleRequest(req: Request): Promise<Response> {
     }
 
     // Update party_tags if tag_ids present in body (undefined = no change, [] = clear all)
-    // Fix #1136: tag_ids 지원 — 기존 party_tags 전체 교체
-    const updateTagIds = body.tag_ids;
+    // Fix #1136: INSERT 먼저 → 성공하면 DELETE — INSERT 실패 시 기존 태그 보존
     if (updateTagIds !== undefined) {
-      if (!Array.isArray(updateTagIds)) {
-        return errorResponse("tag_ids must be an array", 400);
-      }
-      if (updateTagIds.length > 5) {
-        return errorResponse("tag_ids must contain at most 5 tags", 400);
-      }
-      for (let i = 0; i < updateTagIds.length; i++) {
-        if (typeof updateTagIds[i] !== "string" || !updateTagIds[i]) {
-          return errorResponse(`tag_ids[${i}] must be a valid UUID string`, 400);
-        }
-      }
-      // 기존 태그 전체 제거
-      const { error: ptDeleteError } = await supabase
-        .from("party_tags")
-        .delete()
-        .eq("party_id", partyId);
-      if (ptDeleteError) {
-        return errorResponse(`Failed to clear party tags: ${ptDeleteError.message}`, 500);
-      }
-      // 새 태그 INSERT (빈 배열이면 전체 제거로 끝)
       if (updateTagIds.length > 0) {
+        // INSERT new tags first; if this fails, existing tags are preserved
         const partyTagRecords = (updateTagIds as string[]).map((tid) => ({
           party_id: partyId,
           tag_id: tid,
         }));
-        const { error: ptInsertError } = await supabase.from("party_tags").insert(partyTagRecords);
+        const { error: ptInsertError } = await supabase
+          .from("party_tags")
+          .upsert(partyTagRecords, { onConflict: "party_id,tag_id", ignoreDuplicates: true });
         if (ptInsertError) {
           return errorResponse(`Failed to update party tags: ${ptInsertError.message}`, 500);
         }
+        // INSERT succeeded — now delete old tags that are not in the new set
+        const { error: ptDeleteError } = await supabase
+          .from("party_tags")
+          .delete()
+          .eq("party_id", partyId)
+          .not("tag_id", "in", `(${(updateTagIds as string[]).join(",")})`);
+        if (ptDeleteError) {
+          return errorResponse(`Failed to clear old party tags: ${ptDeleteError.message}`, 500);
+        }
+      } else {
+        // Empty array — clear all tags
+        const { error: ptDeleteError } = await supabase
+          .from("party_tags")
+          .delete()
+          .eq("party_id", partyId);
+        if (ptDeleteError) {
+          return errorResponse(`Failed to clear party tags: ${ptDeleteError.message}`, 500);
+        }
       }
-    }
-
-    if (
-      Object.keys(partyUpdates).length === 0 &&
-      !locationData &&
-      body.location_id === undefined &&
-      updateTagIds === undefined
-    ) {
-      return errorResponse("No fields to update", 400);
     }
 
     return successResponse({ success: true });

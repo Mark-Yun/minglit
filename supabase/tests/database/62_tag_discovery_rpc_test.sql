@@ -109,6 +109,15 @@ VALUES
 INSERT INTO public.user_interest_tags (user_id, tag_id)
 VALUES (tests.get_supabase_uid('rpc_user_a'), current_setting('tests.rpc_featured_tag_id')::uuid);
 
+-- search_tags LIMIT 10 검증용: '소' prefix 태그 9개 추가
+-- 기존: '소개팅'(시드), '소규모'(시드), '소개팅rpc'(위) = 3개
+-- 추가 9개 → 총 12개로 LIMIT 10 회귀 감지 가능
+INSERT INTO public.tags (name, is_featured)
+VALUES
+  ('소셜', true), ('소풍', false), ('소그룹', false),
+  ('소통', false), ('소모임', false), ('소연', false),
+  ('소확행', false), ('소주', false), ('소비자', false);
+
 -- ============================================================
 -- 1. get_featured_tags() — is_featured = true 태그만 반환
 -- ============================================================
@@ -134,16 +143,20 @@ SELECT results_eq(
   'get_featured_tags excludes non-featured tags'
 );
 
--- usage_count 내림차순 정렬 확인 (소개팅rpc=20 > rpc_featured_tag=10)
+-- usage_count 내림차순 정렬 확인: 소개팅rpc(20)이 rpc_featured_tag(10)보다 먼저 나와야 함
+-- 외부 ORDER BY 없이 함수 출력 순서 자체를 직접 검증하여 내부 정렬 회귀를 잡음
 SELECT results_eq(
   $$
-    SELECT name FROM get_featured_tags()
-    WHERE name IN ('rpc_featured_tag', '소개팅rpc')
-    ORDER BY usage_count DESC
-    LIMIT 1
+    SELECT name
+    FROM (
+      SELECT name, row_number() OVER () AS rn
+      FROM get_featured_tags()
+      WHERE name IN ('rpc_featured_tag', '소개팅rpc')
+    ) sub
+    ORDER BY rn
   $$,
-  $$VALUES ('소개팅rpc')$$,
-  'get_featured_tags ordered by usage_count DESC'
+  $$VALUES ('소개팅rpc'), ('rpc_featured_tag')$$,
+  'get_featured_tags ordered by usage_count DESC: 소개팅rpc(20) before rpc_featured_tag(10)'
 );
 
 -- ============================================================
@@ -273,13 +286,11 @@ SELECT results_eq(
   'search_tags returns 0 for non-matching prefix'
 );
 
--- LIMIT 10 적용 확인 (시드 데이터 포함 전체 '소' 접두 태그가 2개 이하이므로 실제 수 확인)
+-- LIMIT 10 적용 확인: '소' prefix 태그가 12개(시드 2 + 소개팅rpc 1 + 위 9개 추가) → 정확히 10개 반환
 SELECT results_eq(
-  $$
-    SELECT count(*)::int <= 10 FROM search_tags('소')
-  $$,
-  $$VALUES (true)$$,
-  'search_tags respects LIMIT 10'
+  $$SELECT count(*)::int FROM search_tags('소')$$,
+  $$VALUES (10)$$,
+  'search_tags respects LIMIT 10: returns exactly 10 when 12 matching tags exist'
 );
 
 -- ============================================================

@@ -33,8 +33,12 @@ class TagSelectionController extends _$TagSelectionController {
   }
 
   /// 태그 목록을 일괄 설정한다 (편집 모드에서 기존 태그 로드 시 사용).
+  ///
+  /// tag.id 기준으로 중복 제거 후 maxTags 적용.
   void setTags(List<Tag> tags) {
-    state = tags.take(maxTags).toList();
+    final seen = <String>{};
+    final deduped = tags.where((t) => seen.add(t.id)).toList();
+    state = deduped.take(maxTags).toList();
   }
 
   /// 현재 선택된 태그 ID 목록을 반환한다.

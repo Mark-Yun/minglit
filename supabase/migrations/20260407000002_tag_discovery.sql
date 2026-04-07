@@ -25,10 +25,15 @@ CREATE TABLE party_tags (
   PRIMARY KEY (party_id, tag_id)
 );
 
+-- tag_id 인덱스: get_parties_by_tag() 등 tag_id 기반 필터링 성능 보장
+CREATE INDEX idx_party_tags_tag_id ON party_tags (tag_id);
+
 -- party_tags 최대 5개 제한
+-- advisory lock으로 동일 party_id에 대한 동시 INSERT를 직렬화하여 race condition 방지
 CREATE OR REPLACE FUNCTION check_party_tags_limit()
 RETURNS TRIGGER AS $$
 BEGIN
+  PERFORM pg_advisory_xact_lock(hashtext(NEW.party_id::text));
   IF (SELECT count(*) FROM party_tags WHERE party_id = NEW.party_id) >= 5 THEN
     RAISE EXCEPTION 'A party can have at most 5 tags';
   END IF;
@@ -49,10 +54,15 @@ CREATE TABLE user_interest_tags (
   PRIMARY KEY (user_id, tag_id)
 );
 
+-- tag_id 인덱스: get_tag_recommendations() 등 tag_id 기반 필터링 성능 보장
+CREATE INDEX idx_user_interest_tags_tag_id ON user_interest_tags (tag_id);
+
 -- user_interest_tags 최대 5개 제한
+-- advisory lock으로 동일 user_id에 대한 동시 INSERT를 직렬화하여 race condition 방지
 CREATE OR REPLACE FUNCTION check_user_interest_tags_limit()
 RETURNS TRIGGER AS $$
 BEGIN
+  PERFORM pg_advisory_xact_lock(hashtext(NEW.user_id::text));
   IF (SELECT count(*) FROM user_interest_tags WHERE user_id = NEW.user_id) >= 5 THEN
     RAISE EXCEPTION 'A user can have at most 5 interest tags';
   END IF;
@@ -120,8 +130,8 @@ CREATE POLICY party_tags_service ON party_tags FOR ALL USING (
   (SELECT current_setting('role', true)) = 'service_role'
 );
 
--- user_interest_tags: 본인만 (upsert_user_interest_tags RPC는 security definer로 우회)
-CREATE POLICY user_interest_tags_own ON user_interest_tags FOR ALL USING (auth.uid() = user_id);
+-- user_interest_tags: 본인만 읽기 가능, 쓰기는 upsert_user_interest_tags() RPC(SECURITY DEFINER)로만 허용
+CREATE POLICY user_interest_tags_read_own ON user_interest_tags FOR SELECT USING (auth.uid() = user_id);
 
 -- tag_usage_daily: 전체 읽기, service_role/트리거만 쓰기
 CREATE POLICY tag_usage_daily_read ON tag_usage_daily FOR SELECT USING (true);
@@ -198,17 +208,69 @@ $$;
 
 -- 8-3. get_parties_by_tag(p_tag_id, p_limit, p_offset): 태그별 활성 이벤트 목록
 -- 활성 이벤트: events.status = 'scheduled' AND start_time > now()
--- RETURNS SETOF events: Dart Event.fromJson과 컬럼 일치
+-- tags 컬럼: Event.fromJson의 List<Tag>? tags 필드에 매핑 (Tag.fromJson: id, name, is_featured, usage_count)
 CREATE OR REPLACE FUNCTION get_parties_by_tag(
   p_tag_id uuid,
   p_limit int DEFAULT 10,
   p_offset int DEFAULT 0
 )
-RETURNS SETOF events
+RETURNS TABLE (
+  id uuid,
+  party_id uuid,
+  start_time timestamptz,
+  end_time timestamptz,
+  created_at timestamptz,
+  updated_at timestamptz,
+  location_id uuid,
+  title text,
+  description jsonb,
+  image_urls text[],
+  contact_options jsonb,
+  metadata jsonb,
+  min_confirmed_count integer,
+  max_participants integer,
+  current_participants integer,
+  status text,
+  visibility text,
+  tags jsonb
+)
 LANGUAGE sql STABLE SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT e.*
+  SELECT
+    e.id,
+    e.party_id,
+    e.start_time,
+    e.end_time,
+    e.created_at,
+    e.updated_at,
+    e.location_id,
+    e.title,
+    e.description,
+    e.image_urls,
+    e.contact_options,
+    e.metadata,
+    e.min_confirmed_count,
+    e.max_participants,
+    e.current_participants,
+    e.status,
+    e.visibility,
+    COALESCE(
+      (
+        SELECT jsonb_agg(
+          jsonb_build_object(
+            'id', t.id,
+            'name', t.name,
+            'is_featured', t.is_featured,
+            'usage_count', t.usage_count
+          )
+        )
+        FROM party_tags pt2
+        JOIN tags t ON t.id = pt2.tag_id
+        WHERE pt2.party_id = e.party_id
+      ),
+      '[]'::jsonb
+    ) AS tags
   FROM events e
   JOIN party_tags pt ON pt.party_id = e.party_id
   WHERE pt.tag_id = p_tag_id
@@ -221,22 +283,78 @@ $$;
 
 -- 8-4. get_tag_recommendations(p_limit): 유저 관심 태그 기반 이벤트 추천
 -- auth.uid() 기반, 매칭 태그 수 DESC 정렬
--- RETURNS SETOF events: Dart Event.fromJson과 컬럼 일치
+-- tags 컬럼: Event.fromJson의 List<Tag>? tags 필드에 매핑 (Tag.fromJson: id, name, is_featured, usage_count)
 CREATE OR REPLACE FUNCTION get_tag_recommendations(
   p_limit int DEFAULT 10
 )
-RETURNS SETOF events
+RETURNS TABLE (
+  id uuid,
+  party_id uuid,
+  start_time timestamptz,
+  end_time timestamptz,
+  created_at timestamptz,
+  updated_at timestamptz,
+  location_id uuid,
+  title text,
+  description jsonb,
+  image_urls text[],
+  contact_options jsonb,
+  metadata jsonb,
+  min_confirmed_count integer,
+  max_participants integer,
+  current_participants integer,
+  status text,
+  visibility text,
+  tags jsonb
+)
 LANGUAGE sql STABLE SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT e.*
+  SELECT
+    e.id,
+    e.party_id,
+    e.start_time,
+    e.end_time,
+    e.created_at,
+    e.updated_at,
+    e.location_id,
+    e.title,
+    e.description,
+    e.image_urls,
+    e.contact_options,
+    e.metadata,
+    e.min_confirmed_count,
+    e.max_participants,
+    e.current_participants,
+    e.status,
+    e.visibility,
+    COALESCE(
+      (
+        SELECT jsonb_agg(
+          jsonb_build_object(
+            'id', t.id,
+            'name', t.name,
+            'is_featured', t.is_featured,
+            'usage_count', t.usage_count
+          )
+        )
+        FROM party_tags pt2
+        JOIN tags t ON t.id = pt2.tag_id
+        WHERE pt2.party_id = e.party_id
+      ),
+      '[]'::jsonb
+    ) AS tags
   FROM events e
   JOIN party_tags pt ON pt.party_id = e.party_id
   JOIN user_interest_tags uit ON uit.tag_id = pt.tag_id
   WHERE uit.user_id = auth.uid()
     AND e.status = 'scheduled'
     AND e.start_time > now()
-  GROUP BY e.id
+  GROUP BY
+    e.id, e.party_id, e.start_time, e.end_time, e.created_at, e.updated_at,
+    e.location_id, e.title, e.description, e.image_urls, e.contact_options,
+    e.metadata, e.min_confirmed_count, e.max_participants, e.current_participants,
+    e.status, e.visibility
   ORDER BY COUNT(DISTINCT uit.tag_id) DESC, e.start_time ASC
   LIMIT p_limit;
 $$;

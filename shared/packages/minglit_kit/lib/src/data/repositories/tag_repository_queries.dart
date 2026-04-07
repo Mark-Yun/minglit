@@ -77,13 +77,19 @@ mixin _TagRepositoryQueries on _SupabaseTagContext {
   }
 
   /// Fetches the current user's interest tags from user_interest_tags table.
+  ///
+  /// 비로그인 상태에서는 빈 목록을 반환한다.
   Future<List<Tag>> getUserInterestTags() async {
+    // Fix #1136: 비로그인 상태에서 null-assert 크래시 방지
+    final currentUser = supabaseClient.auth.currentUser;
+    if (currentUser == null) return const [];
+
     try {
       final data =
           await supabaseClient
                   .from('user_interest_tags')
                   .select('tag_id, tags(*)')
-                  .eq('user_id', supabaseClient.auth.currentUser!.id)
+                  .eq('user_id', currentUser.id)
               as List;
       return data
           .map(

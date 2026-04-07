@@ -197,22 +197,19 @@ SELECT lives_ok(
 );
 
 -- ============================================================
--- 7. user_interest_tags — 본인만 읽기/쓰기 가능
+-- 7. user_interest_tags — 본인 데이터만 SELECT 가능, direct INSERT 불가 (RPC 전용)
+-- 쓰기는 upsert_user_interest_tags() SECURITY DEFINER RPC로만 허용
 -- ============================================================
+
+-- service_role로 user_a의 관심 태그를 직접 삽입 (READ 테스트용 fixture)
+SELECT tests.authenticate_as_service_role();
+
+INSERT INTO public.user_interest_tags (user_id, tag_id)
+VALUES (tests.get_supabase_uid('td_user_a'), current_setting('tests.td_tag_id')::uuid);
+
 SELECT tests.authenticate_as('td_user_a');
 
-SELECT lives_ok(
-  format(
-    $$
-      INSERT INTO public.user_interest_tags (user_id, tag_id)
-      VALUES ('%s', '%s')
-    $$,
-    tests.get_supabase_uid('td_user_a'),
-    current_setting('tests.td_tag_id')
-  ),
-  'user_a can INSERT own user_interest_tags'
-);
-
+-- user_a는 본인 데이터 SELECT 가능
 SELECT results_eq(
   format(
     $$SELECT count(*)::int FROM public.user_interest_tags WHERE user_id = '%s'$$,
@@ -221,6 +218,23 @@ SELECT results_eq(
   $$VALUES (1)$$,
   'user_a can SELECT own user_interest_tags'
 );
+
+-- user_a는 direct INSERT 불가 (RPC 전용)
+SAVEPOINT before_a_direct_insert;
+SELECT throws_ok(
+  format(
+    $$
+      INSERT INTO public.user_interest_tags (user_id, tag_id)
+      VALUES ('%s', '%s')
+    $$,
+    tests.get_supabase_uid('td_user_a'),
+    current_setting('tests.td_tag_id')
+  ),
+  NULL,
+  NULL,
+  'user_a cannot directly INSERT own user_interest_tags (RPC only)'
+);
+ROLLBACK TO SAVEPOINT before_a_direct_insert;
 
 -- user_b는 user_a의 관심 태그 못 읽음
 SELECT tests.authenticate_as('td_user_b');
@@ -247,8 +261,9 @@ SELECT throws_ok(
 );
 ROLLBACK TO SAVEPOINT before_b_insert_other;
 
--- user_b는 자신의 관심 태그 INSERT 가능
-SELECT lives_ok(
+-- user_b도 direct INSERT 불가 (RPC 전용)
+SAVEPOINT before_b_direct_insert;
+SELECT throws_ok(
   format(
     $$
       INSERT INTO public.user_interest_tags (user_id, tag_id)
@@ -257,8 +272,11 @@ SELECT lives_ok(
     tests.get_supabase_uid('td_user_b'),
     current_setting('tests.td_tag_id')
   ),
-  'user_b can INSERT own user_interest_tags'
+  NULL,
+  NULL,
+  'user_b cannot directly INSERT own user_interest_tags (RPC only)'
 );
+ROLLBACK TO SAVEPOINT before_b_direct_insert;
 
 -- ============================================================
 -- 8. tag_usage_daily — anon: 읽기 가능, 직접 쓰기 불가
