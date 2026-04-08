@@ -55,6 +55,13 @@ GRANT EXECUTE ON FUNCTION compress_old_tag_usage_daily() TO service_role;
 -- ============================================================
 -- 3. pg_cron job: 매월 1일 04:00 UTC
 -- ============================================================
+
+-- 기존 job이 있으면 제거 후 재등록 (migration 재적용 안전성)
+SELECT cron.unschedule(jobid)
+FROM cron.job
+WHERE jobname = 'compress-old-tag-usage-daily';
+
+-- 매월 1일 04:00 UTC에 실행
 SELECT cron.schedule(
   'compress-old-tag-usage-daily',
   '0 4 1 * *',
