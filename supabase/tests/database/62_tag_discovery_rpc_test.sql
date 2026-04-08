@@ -169,7 +169,8 @@ SELECT results_eq(
 -- ============================================================
 -- 2. get_trending_tags(p_limit, p_days) — 최근 N일 트렌딩
 -- ============================================================
-SELECT tests.clear_authentication();
+-- Fix #1176: REVOKE FROM PUBLIC 이후 authenticated 필요
+SELECT tests.authenticate_as('rpc_user_a');
 
 -- rpc_nonfeatured_tag가 recent_count=100으로 1위여야 함
 SELECT results_eq(
@@ -202,7 +203,8 @@ SELECT results_eq(
 -- 3. get_parties_by_tag(p_tag_id, p_limit, p_offset)
 --    활성 이벤트 (scheduled + start_time > now()) 만 반환
 -- ============================================================
-SELECT tests.clear_authentication();
+-- Fix #1176: REVOKE FROM PUBLIC 이후 authenticated 필요
+SELECT tests.authenticate_as('rpc_user_a');
 
 SELECT results_eq(
   format(
@@ -277,7 +279,8 @@ SELECT results_eq(
 -- ============================================================
 -- 5. search_tags(p_query) — PGroonga prefix match
 -- ============================================================
-SELECT tests.clear_authentication();
+-- Fix #1176: REVOKE FROM PUBLIC 이후 authenticated 필요
+SELECT tests.authenticate_as('rpc_user_a');
 
 -- PGroonga 트랜잭션 제약: PGroonga 인덱스(&^~ 연산자)는 미커밋 행을 볼 수 없다.
 -- 이 테스트는 BEGIN...ROLLBACK 블록 안에서 실행되므로 세션 내 INSERT가 인덱스에
