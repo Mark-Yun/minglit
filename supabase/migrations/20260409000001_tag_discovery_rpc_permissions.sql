@@ -127,25 +127,25 @@ $$;
 -- ============================================================
 
 -- Fix #1176: get_featured_tags
-REVOKE EXECUTE ON FUNCTION get_featured_tags() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION get_featured_tags() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION get_featured_tags() TO authenticated, service_role;
 
 -- Fix #1176: get_trending_tags
-REVOKE EXECUTE ON FUNCTION get_trending_tags(int, int) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION get_trending_tags(int, int) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION get_trending_tags(int, int) TO authenticated, service_role;
 
 -- Fix #1176: get_parties_by_tag
-REVOKE EXECUTE ON FUNCTION get_parties_by_tag(uuid, int, int) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION get_parties_by_tag(uuid, int, int) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION get_parties_by_tag(uuid, int, int) TO authenticated, service_role;
 
 -- Fix #1176: search_tags
-REVOKE EXECUTE ON FUNCTION search_tags(text) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION search_tags(text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION search_tags(text) TO authenticated, service_role;
 
 -- Fix #1176: get_tag_recommendations
-REVOKE EXECUTE ON FUNCTION get_tag_recommendations(int) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION get_tag_recommendations(int) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION get_tag_recommendations(int) TO authenticated, service_role;
 
 -- Fix #1176: upsert_user_interest_tags
-REVOKE EXECUTE ON FUNCTION upsert_user_interest_tags(uuid[]) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION upsert_user_interest_tags(uuid[]) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION upsert_user_interest_tags(uuid[]) TO authenticated, service_role;
