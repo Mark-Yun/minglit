@@ -1212,3 +1212,102 @@ Deno.test({
     });
   },
 });
+
+// Fix #1182: UUID format validation + deduplication (Findings #12, #13)
+
+Deno.test({
+  name: "create: tag_ids with invalid UUID format returns 400",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock, calls } = createFetchMock([
+      authRoute(),
+      permRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create",
+          partner_id: TEST_PARTNER_ID,
+          party: { title: "UUID 테스트" },
+          tag_ids: ["not-a-uuid"],
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "tag_ids[0] must be a valid UUID");
+        // Verify no party INSERT was attempted
+        const partyInserts = calls.filter(
+          (c) => c.url.includes("/rest/v1/parties") && c.method === "POST",
+        );
+        assertEquals(partyInserts.length, 0);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "create: duplicate tag_ids are deduplicated",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const uniqueId = "00000000-0000-0000-0000-000000000001";
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      permRoute(),
+      selectTagsRoute([uniqueId]),
+      insertPartyRoute(),
+      insertPartyTagsRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create",
+          partner_id: TEST_PARTNER_ID,
+          party: { title: "중복 태그 파티" },
+          tag_ids: [uniqueId, uniqueId, uniqueId],
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.success, true);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update: tag_ids with invalid UUID format returns 400",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock, calls } = createFetchMock([
+      authRoute(),
+      selectPartyRoute(),
+      permRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          party_id: TEST_PARTY_ID,
+          tag_ids: ["12345"],
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "tag_ids[0] must be a valid UUID");
+        const partyPatches = calls.filter(
+          (c) => c.url.includes("/rest/v1/parties") && c.method === "PATCH",
+        );
+        assertEquals(partyPatches.length, 0);
+      });
+    });
+  },
+});
