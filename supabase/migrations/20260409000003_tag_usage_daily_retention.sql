@@ -8,8 +8,8 @@
 -- ============================================================
 CREATE TABLE tag_usage_monthly (
   tag_id uuid NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
-  month date NOT NULL,  -- 해당 월의 1일 (예: 2024-01-01)
-  monthly_count integer NOT NULL DEFAULT 0,
+  month date NOT NULL CHECK (month = date_trunc('month', month)::date),  -- 해당 월의 1일 (예: 2024-01-01)
+  monthly_count bigint NOT NULL DEFAULT 0,
   PRIMARY KEY (tag_id, month)
 );
 
