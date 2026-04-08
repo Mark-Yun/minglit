@@ -132,29 +132,117 @@ SELECT lives_ok(
 -- ============================================================
 -- 3. 입력 바운드 — p_limit 상한 (100) 검증
 --    p_limit=200으로 호출해도 최대 100개만 반환
+--
+--    시드 데이터: 101개 태그, 101개 이벤트 생성으로 실제 캡핑 검증
+--    (LEAST() 제거 회귀 시 count > 100이 되어 즉시 실패)
 -- ============================================================
 
--- get_trending_tags: 실제 태그 수보다 큰 p_limit을 주면 태그 수만큼 반환
--- 바운드 적용 여부는 LEAST(p_limit, 100)가 쿼리 내에서 작동함을 확인
-SELECT lives_ok(
-  $$SELECT count(*) FROM get_trending_tags(200, 7)$$,
-  'get_trending_tags accepts p_limit=200 without error (capped at 100 internally)'
+-- 시드 데이터 생성 (service_role 권한 필요)
+SELECT tests.authenticate_as_service_role();
+
+-- 3-a. 101개 태그 생성 + tag_usage_daily에 최근 7일 데이터 삽입
+--      get_trending_tags(200, 7): LEAST(200, 100) = 100 캡핑 검증용
+DO $$
+DECLARE
+  v_tag_id uuid;
+  i int;
+BEGIN
+  FOR i IN 1..101 LOOP
+    INSERT INTO public.tags (name, is_featured, usage_count)
+    VALUES ('bound_tag_' || i, false, i)
+    RETURNING id INTO v_tag_id;
+
+    -- 최근 7일 이내 데이터: get_trending_tags(200, 7) 집계에 포함
+    INSERT INTO public.tag_usage_daily (tag_id, date, daily_count)
+    VALUES (v_tag_id, CURRENT_DATE, i);
+  END LOOP;
+END;
+$$;
+
+-- 3-b. 101개 (파티 + 이벤트 + party_tag) 생성
+--      get_parties_by_tag(..., 200, 0): LEAST(200, 100) = 100 캡핑 검증용
+--      get_tag_recommendations(200): LEAST(200, 100) = 100 캡핑 검증용
+DO $$
+DECLARE
+  v_party_id uuid;
+  v_event_id uuid;
+  i int;
+BEGIN
+  FOR i IN 1..101 LOOP
+    INSERT INTO public.parties (partner_id, location_id, title, description)
+    VALUES (
+      current_setting('tests.perm_partner_id')::uuid,
+      current_setting('tests.perm_loc_id')::uuid,
+      'Bound Test Party ' || i,
+      ('"Test ' || i || '"')::jsonb
+    )
+    RETURNING id INTO v_party_id;
+
+    INSERT INTO public.events (party_id, title, status, start_time, end_time)
+    VALUES (
+      v_party_id,
+      'Bound Test Event ' || i,
+      'scheduled',
+      now() + interval '1 day' + (i || ' hours')::interval,
+      now() + interval '2 days' + (i || ' hours')::interval
+    );
+
+    -- perm_tag_id에 연결: get_parties_by_tag(perm_tag_id, 200, 0) 결과 100개 캡핑 검증
+    INSERT INTO public.party_tags (party_id, tag_id)
+    VALUES (v_party_id, current_setting('tests.perm_tag_id')::uuid);
+  END LOOP;
+END;
+$$;
+
+-- 3-c. perm_user_a의 관심 태그 설정 (get_tag_recommendations용)
+--      user_interest_tags 한도(5개)가 있으므로 perm_tag_id 1개만 등록
+--      이미 섹션 2에서 upsert 성공 확인 완료이므로 직접 insert
+INSERT INTO public.user_interest_tags (user_id, tag_id)
+VALUES (
+  (SELECT id FROM auth.users WHERE email = 'perm_a@test.com'),
+  current_setting('tests.perm_tag_id')::uuid
+)
+ON CONFLICT DO NOTHING;
+
+-- 3-d. 91일 전 tag_usage_daily 데이터: p_days=200 → LEAST(200,90)=90 캡핑 검증용
+--      90일 이내 데이터만 집계되어야 하므로 91일 전 데이터는 결과에 미포함되어야 함
+INSERT INTO public.tag_usage_daily (tag_id, date, daily_count)
+VALUES (current_setting('tests.perm_tag_id')::uuid, CURRENT_DATE - 91, 9999)
+ON CONFLICT (tag_id, date) DO UPDATE SET daily_count = 9999;
+
+SELECT tests.authenticate_as('perm_user_a');
+
+-- get_trending_tags: p_limit=200이어도 최대 100개만 반환
+SELECT cmp_ok(
+  (SELECT count(*)::integer FROM get_trending_tags(200, 7)),
+  '<=', 100,
+  'get_trending_tags caps result at 100 even when p_limit=200'
 );
 
-SELECT lives_ok(
-  $$SELECT count(*) FROM get_trending_tags(10, 200)$$,
-  'get_trending_tags accepts p_days=200 without error (capped at 90 internally)'
+-- get_trending_tags: p_days=200 캡핑 확인
+--   91일 전 데이터(daily_count=9999)가 집계에서 제외되는지 검증
+--   perm_tag_id의 recent_count가 9999가 아님을 확인 (90일 캡핑이 올바르게 동작)
+SELECT cmp_ok(
+  (SELECT recent_count::integer
+   FROM get_trending_tags(10, 200)
+   WHERE id = current_setting('tests.perm_tag_id')::uuid),
+  '<', 9999,
+  'get_trending_tags with p_days=200 excludes data older than 90 days (capped at 90)'
 );
 
-SELECT lives_ok(
-  format($$SELECT count(*) FROM get_parties_by_tag('%s'::uuid, 200, 0)$$,
-    current_setting('tests.perm_tag_id')),
-  'get_parties_by_tag accepts p_limit=200 without error (capped at 100 internally)'
+-- get_parties_by_tag: p_limit=200이어도 최대 100개만 반환
+SELECT cmp_ok(
+  (SELECT count(*)::integer
+   FROM get_parties_by_tag(current_setting('tests.perm_tag_id')::uuid, 200, 0)),
+  '<=', 100,
+  'get_parties_by_tag caps result at 100 even when p_limit=200'
 );
 
-SELECT lives_ok(
-  $$SELECT count(*) FROM get_tag_recommendations(200)$$,
-  'get_tag_recommendations accepts p_limit=200 without error (capped at 100 internally)'
+-- get_tag_recommendations: p_limit=200이어도 최대 100개만 반환
+SELECT cmp_ok(
+  (SELECT count(*)::integer FROM get_tag_recommendations(200)),
+  '<=', 100,
+  'get_tag_recommendations caps result at 100 even when p_limit=200'
 );
 
 -- ============================================================
