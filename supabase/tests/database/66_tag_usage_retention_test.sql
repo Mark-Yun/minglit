@@ -105,6 +105,19 @@ SELECT is(
   'idempotent: running compress twice does not double the monthly count'
 );
 
+-- 6-b. 멱등성 심화: monthly에 기존 값이 있는 상태에서 함수 재실행
+-- compress_old_tag_usage_daily()는 INSERT ... ON CONFLICT DO UPDATE SET monthly_count = EXCLUDED.monthly_count
+-- 이는 의도된 동작: 함수가 유일한 writer이고, INSERT/DELETE가 같은 트랜잭션에서 실행됨
+-- daily 데이터가 없으면 aggregate 결과도 0행이므로 monthly는 변경되지 않음
+SELECT compress_old_tag_usage_daily();
+
+SELECT is(
+  (SELECT SUM(monthly_count)::integer FROM tag_usage_monthly
+   WHERE tag_id = current_setting('tests.ret_tag_id')::uuid),
+  66,
+  'idempotent: third run with no remaining daily data does not change monthly'
+);
+
 -- 7. RLS 테스트: tag_usage_monthly 읽기 권한
 SELECT tests.create_supabase_user('ret_user', 'ret@test.com');
 SELECT tests.authenticate_as('ret_user');
