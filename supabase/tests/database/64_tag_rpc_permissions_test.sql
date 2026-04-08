@@ -8,6 +8,7 @@ SELECT no_plan();
 
 -- 테스트 데이터 세팅 (service_role)
 SELECT tests.create_supabase_user('perm_user_a', 'perm_a@test.com');
+SELECT set_config('tests.perm_user_a_id', tests.get_supabase_uid('perm_user_a')::text, true);
 
 SELECT tests.authenticate_as_service_role();
 
@@ -199,7 +200,7 @@ $$;
 --      이미 섹션 2에서 upsert 성공 확인 완료이므로 직접 insert
 INSERT INTO public.user_interest_tags (user_id, tag_id)
 VALUES (
-  (SELECT id FROM auth.users WHERE email = 'perm_a@test.com'),
+  current_setting('tests.perm_user_a_id')::uuid,
   current_setting('tests.perm_tag_id')::uuid
 )
 ON CONFLICT DO NOTHING;
