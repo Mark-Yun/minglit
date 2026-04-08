@@ -124,7 +124,11 @@ async function handleRequest(req: Request): Promise<Response> {
 
     // Validate tag_ids if provided (must validate before any DB write)
     // Fix #1136: tag_ids 검증을 party INSERT 전으로 이동 — 잘못된 입력 시 고아 row 방지
-    const tagIds = body.tag_ids;
+    const rawTagIds = body.tag_ids;
+    // Fix #1182: deduplicate tag_ids before validation (#13)
+    const tagIds = rawTagIds !== undefined && Array.isArray(rawTagIds)
+      ? [...new Set(rawTagIds as string[])]
+      : rawTagIds;
     if (tagIds !== undefined) {
       if (!Array.isArray(tagIds)) {
         return errorResponse("tag_ids must be an array", 400);
@@ -132,9 +136,11 @@ async function handleRequest(req: Request): Promise<Response> {
       if (tagIds.length > 5) {
         return errorResponse("tag_ids must contain at most 5 tags", 400);
       }
+      // Fix #1182: UUID format validation (#12)
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       for (let i = 0; i < tagIds.length; i++) {
-        if (typeof tagIds[i] !== "string" || !tagIds[i]) {
-          return errorResponse(`tag_ids[${i}] must be a valid UUID string`, 400);
+        if (!UUID_RE.test(tagIds[i])) {
+          return errorResponse(`tag_ids[${i}] must be a valid UUID`, 400);
         }
       }
       // Fix #1136: validate tag IDs exist before party creation
@@ -328,7 +334,11 @@ async function handleRequest(req: Request): Promise<Response> {
 
     // Validate tag_ids before any DB writes
     // Fix #1136: tag_ids 검증을 모든 write 전으로 이동 — 부분 업데이트 방지
-    const updateTagIds = body.tag_ids;
+    const rawUpdateTagIds = body.tag_ids;
+    // Fix #1182: deduplicate tag_ids before validation (#13)
+    const updateTagIds = rawUpdateTagIds !== undefined && Array.isArray(rawUpdateTagIds)
+      ? [...new Set(rawUpdateTagIds as string[])]
+      : rawUpdateTagIds;
     if (updateTagIds !== undefined) {
       if (!Array.isArray(updateTagIds)) {
         return errorResponse("tag_ids must be an array", 400);
@@ -336,9 +346,11 @@ async function handleRequest(req: Request): Promise<Response> {
       if (updateTagIds.length > 5) {
         return errorResponse("tag_ids must contain at most 5 tags", 400);
       }
+      // Fix #1182: UUID format validation (#12)
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       for (let i = 0; i < updateTagIds.length; i++) {
-        if (typeof updateTagIds[i] !== "string" || !updateTagIds[i]) {
-          return errorResponse(`tag_ids[${i}] must be a valid UUID string`, 400);
+        if (!UUID_RE.test(updateTagIds[i])) {
+          return errorResponse(`tag_ids[${i}] must be a valid UUID`, 400);
         }
       }
       // Validate tag IDs exist in the database — prevents partial writes
