@@ -21,6 +21,9 @@ CREATE POLICY tag_usage_monthly_service ON tag_usage_monthly FOR ALL USING (
   (SELECT current_setting('role', true)) = 'service_role'
 );
 
+GRANT SELECT ON TABLE tag_usage_monthly TO authenticated;
+GRANT ALL ON TABLE tag_usage_monthly TO service_role;
+
 -- ============================================================
 -- 2. 압축 함수: compress_old_tag_usage_daily
 -- ============================================================
@@ -29,6 +32,9 @@ RETURNS void
 LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public
 AS $$
+DECLARE
+  -- 월 경계로 정렬: 부분 월 압축 방지
+  cutoff_month date := date_trunc('month', CURRENT_DATE - interval '2 years')::date;
 BEGIN
   -- 2년 초과 일별 데이터를 월별로 집계하여 tag_usage_monthly에 upsert
   INSERT INTO tag_usage_monthly (tag_id, month, monthly_count)
@@ -37,14 +43,14 @@ BEGIN
     date_trunc('month', date)::date AS month,
     SUM(daily_count) AS monthly_count
   FROM tag_usage_daily
-  WHERE date < CURRENT_DATE - interval '2 years'
+  WHERE date < cutoff_month
   GROUP BY tag_id, date_trunc('month', date)
   ON CONFLICT (tag_id, month) DO UPDATE
     SET monthly_count = EXCLUDED.monthly_count;
 
   -- 압축 완료된 일별 데이터 삭제
   DELETE FROM tag_usage_daily
-  WHERE date < CURRENT_DATE - interval '2 years';
+  WHERE date < cutoff_month;
 END;
 $$;
 

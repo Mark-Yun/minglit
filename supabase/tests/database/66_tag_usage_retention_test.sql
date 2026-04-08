@@ -122,9 +122,11 @@ SELECT is(
 SELECT tests.create_supabase_user('ret_user', 'ret@test.com');
 SELECT tests.authenticate_as('ret_user');
 
-SELECT lives_ok(
-  $$SELECT count(*) FROM tag_usage_monthly$$,
-  'authenticated can read tag_usage_monthly'
+SELECT cmp_ok(
+  (SELECT count(*)::integer FROM tag_usage_monthly
+   WHERE tag_id = current_setting('tests.ret_tag_id')::uuid),
+  '>', 0,
+  'authenticated can see compressed monthly rows via RLS'
 );
 
 SELECT * FROM finish();
