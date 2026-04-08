@@ -483,7 +483,8 @@ final Map<ConsentType, _ConsentDefinition> _consentDefinitions = {
           title: '보관 기간',
           emphasized: true,
           items: [
-            '회원 탈퇴 시까지 보관합니다.',
+            // Fix #1182: PR #1161 정합성 — 탈퇴 후 즉시 파기 명시
+            '회원 탈퇴 시까지 보관하며, 탈퇴 후 즉시 파기합니다.',
             '법령상 보관 의무가 있는 정보는 관련 기간 동안 별도 보관합니다.',
           ],
         ),
