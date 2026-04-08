@@ -13,22 +13,27 @@ RETURNS void
 LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public
 AS $$
+DECLARE
+  v_user_id uuid := auth.uid();
 BEGIN
   -- Fix #1176: anon 호출 차단 — auth.uid() NULL 가드
-  IF auth.uid() IS NULL THEN
+  IF v_user_id IS NULL THEN
     RAISE EXCEPTION 'Authentication required'
       USING ERRCODE = '42501';
   END IF;
+
+  -- Fix #1176: 동시 호출 직렬화 — 사용자 단위 advisory lock
+  PERFORM pg_advisory_xact_lock(hashtext(v_user_id::text));
 
   IF array_length(p_tag_ids, 1) IS NOT NULL AND array_length(p_tag_ids, 1) > 5 THEN
     RAISE EXCEPTION 'A user can have at most 5 interest tags';
   END IF;
 
-  DELETE FROM user_interest_tags WHERE user_id = auth.uid();
+  DELETE FROM user_interest_tags WHERE user_id = v_user_id;
 
   IF array_length(p_tag_ids, 1) IS NOT NULL AND array_length(p_tag_ids, 1) > 0 THEN
     INSERT INTO user_interest_tags (user_id, tag_id)
-    SELECT auth.uid(), unnest(p_tag_ids);
+    SELECT v_user_id, unnest(p_tag_ids);
   END IF;
 END;
 $$;
