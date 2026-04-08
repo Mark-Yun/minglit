@@ -48,8 +48,7 @@ BEGIN
 END;
 $$;
 
-REVOKE EXECUTE ON FUNCTION compress_old_tag_usage_daily() FROM PUBLIC;
-REVOKE EXECUTE ON FUNCTION compress_old_tag_usage_daily() FROM anon;
+REVOKE EXECUTE ON FUNCTION compress_old_tag_usage_daily() FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION compress_old_tag_usage_daily() TO service_role;
 
 -- ============================================================
