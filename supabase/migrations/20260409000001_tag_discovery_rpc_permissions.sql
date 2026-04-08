@@ -82,23 +82,9 @@ RETURNS SETOF events
 LANGUAGE sql STABLE SECURITY DEFINER
 SET search_path = public
 AS $$
-  -- Fix #1176: p_limit 최대 100 상한 적용, SELECT e.* → 명시적 컬럼 목록
-  SELECT
-    e.id,
-    e.party_id,
-    e.location_id,
-    e.title,
-    e.description,
-    e.image_urls,
-    e.contact_options,
-    e.start_time,
-    e.end_time,
-    e.min_confirmed_count,
-    e.max_participants,
-    e.current_participants,
-    e.status,
-    e.created_at,
-    e.updated_at
+  -- Fix #1176: p_limit 최대 100 상한 적용
+  -- SELECT e.* 사용: RETURNS SETOF events 타입과 컬럼 수 일치 보장 (명시적 목록은 불일치 유발)
+  SELECT e.*
   FROM events e
   JOIN party_tags pt ON pt.party_id = e.party_id
   WHERE pt.tag_id = p_tag_id
@@ -120,24 +106,10 @@ RETURNS SETOF events
 LANGUAGE sql STABLE SECURITY DEFINER
 SET search_path = public
 AS $$
-  -- Fix #1176: p_limit 최대 100 상한 적용, SELECT e.* → 명시적 컬럼 목록
+  -- Fix #1176: p_limit 최대 100 상한 적용
+  -- SELECT e.* 사용: RETURNS SETOF events 타입과 컬럼 수 일치 보장 (명시적 목록은 불일치 유발)
   -- GROUP BY e.id는 PK 기반 함수 종속성으로 나머지 컬럼 집계 없이 SELECT 가능 (PostgreSQL 지원)
-  SELECT
-    e.id,
-    e.party_id,
-    e.location_id,
-    e.title,
-    e.description,
-    e.image_urls,
-    e.contact_options,
-    e.start_time,
-    e.end_time,
-    e.min_confirmed_count,
-    e.max_participants,
-    e.current_participants,
-    e.status,
-    e.created_at,
-    e.updated_at
+  SELECT e.*
   FROM events e
   JOIN party_tags pt ON pt.party_id = e.party_id
   JOIN user_interest_tags uit ON uit.tag_id = pt.tag_id
