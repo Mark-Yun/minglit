@@ -77,7 +77,7 @@ jobs:
 
   notify-failure:
     needs: [seed]
-    if: always()
+    if: ${{ always() && needs.seed.result == 'failure' }}
     permissions:
       issues: write
     uses: ./.github/workflows/notify-failure.yml
