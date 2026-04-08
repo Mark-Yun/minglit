@@ -53,52 +53,43 @@ WITH t AS (
 SELECT set_config('tests.perm_tag_id', id::text, true) FROM t;
 
 -- ============================================================
--- 1. anon 차단 — 6개 RPC 함수 모두 REVOKE FROM PUBLIC 적용
+-- 1. anon 차단 — EXECUTE privilege 직접 검증
+-- pgtap 세션은 postgres 유저로 실행되므로 throws_ok 대신 권한 메타데이터를 검증한다.
 -- ============================================================
-SELECT tests.clear_authentication();
-
-SELECT throws_ok(
-  $$SELECT count(*) FROM get_featured_tags()$$,
-  '42501',
-  NULL,
-  'anon cannot call get_featured_tags (permission denied)'
+SELECT results_eq(
+  $$SELECT has_function_privilege('anon', 'public.get_featured_tags()', 'EXECUTE')::text$$,
+  $$VALUES ('false')$$,
+  'anon does not have EXECUTE on get_featured_tags'
 );
 
-SELECT throws_ok(
-  $$SELECT count(*) FROM get_trending_tags(10, 7)$$,
-  '42501',
-  NULL,
-  'anon cannot call get_trending_tags (permission denied)'
+SELECT results_eq(
+  $$SELECT has_function_privilege('anon', 'public.get_trending_tags(integer, integer)', 'EXECUTE')::text$$,
+  $$VALUES ('false')$$,
+  'anon does not have EXECUTE on get_trending_tags'
 );
 
-SELECT throws_ok(
-  format($$SELECT count(*) FROM get_parties_by_tag('%s'::uuid, 10, 0)$$,
-    current_setting('tests.perm_tag_id')),
-  '42501',
-  NULL,
-  'anon cannot call get_parties_by_tag (permission denied)'
+SELECT results_eq(
+  $$SELECT has_function_privilege('anon', 'public.get_parties_by_tag(uuid, integer, integer)', 'EXECUTE')::text$$,
+  $$VALUES ('false')$$,
+  'anon does not have EXECUTE on get_parties_by_tag'
 );
 
-SELECT throws_ok(
-  $$SELECT count(*) FROM search_tags('perm')$$,
-  '42501',
-  NULL,
-  'anon cannot call search_tags (permission denied)'
+SELECT results_eq(
+  $$SELECT has_function_privilege('anon', 'public.search_tags(text)', 'EXECUTE')::text$$,
+  $$VALUES ('false')$$,
+  'anon does not have EXECUTE on search_tags'
 );
 
-SELECT throws_ok(
-  $$SELECT count(*) FROM get_tag_recommendations(10)$$,
-  '42501',
-  NULL,
-  'anon cannot call get_tag_recommendations (permission denied)'
+SELECT results_eq(
+  $$SELECT has_function_privilege('anon', 'public.get_tag_recommendations(integer)', 'EXECUTE')::text$$,
+  $$VALUES ('false')$$,
+  'anon does not have EXECUTE on get_tag_recommendations'
 );
 
-SELECT throws_ok(
-  format($$SELECT upsert_user_interest_tags(ARRAY['%s']::uuid[])$$,
-    current_setting('tests.perm_tag_id')),
-  '42501',
-  NULL,
-  'anon cannot call upsert_user_interest_tags (permission denied)'
+SELECT results_eq(
+  $$SELECT has_function_privilege('anon', 'public.upsert_user_interest_tags(uuid[])', 'EXECUTE')::text$$,
+  $$VALUES ('false')$$,
+  'anon does not have EXECUTE on upsert_user_interest_tags'
 );
 
 -- ============================================================
@@ -168,11 +159,19 @@ SELECT lives_ok(
 
 -- ============================================================
 -- 4. upsert_user_interest_tags 인증 가드
---    auth.uid() IS NULL 일 때 명시적 permission denied 에러
+--    auth.uid() IS NULL 인 authenticated 컨텍스트에서 명시적 42501 에러
 -- ============================================================
--- service_role은 auth.uid()가 NULL이 아니므로 RLS/guard bypass.
--- clear_authentication() → anon 상태에서 throws_ok 이미 위에서 검증.
--- 여기서는 인증된 사용자의 정상 동작을 재확인.
+SELECT set_config('role', 'authenticated', true);
+SELECT set_config('request.jwt.claims', '{}'::text, true);
+
+SELECT throws_ok(
+  format($$SELECT upsert_user_interest_tags(ARRAY['%s']::uuid[])$$,
+    current_setting('tests.perm_tag_id')),
+  '42501',
+  'Authentication required',
+  'upsert_user_interest_tags rejects authenticated sessions without sub claim'
+);
+
 SELECT tests.authenticate_as('perm_user_a');
 
 SELECT lives_ok(
