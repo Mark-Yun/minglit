@@ -1,6 +1,6 @@
 {
   "name": "landing_partner",
-  "version": "26.04.1187-dev",
+  "version": "26.04.1189-dev",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3003",
