@@ -3,7 +3,7 @@
 **최초 작성**: 2026-04-08 | **작성자**: needs-security-claude-1
 **법률 검토**: 2026-04-08 | **검토자**: needs-legal-claude-1
 **법적 근거**: 개인정보보호법 제34조(개정, 2026.09.11 시행), 정보통신망법 제27조의3
-**관련 이슈**: #1160
+**관련 이슈**: #1160, #1181
 
 ---
 
@@ -239,11 +239,221 @@
 | **Database 로그** | Supabase Dashboard → Database → Logs | 느린 쿼리, 대량 조회, 권한 에러 |
 | **Sentry 알림** | 기존 Sentry 연동 활용 | 앱/Edge Function 비정상 에러 |
 
-### 5.2 중기 구축 권고 (시행일 전 완료 목표)
+### 5.2 민감 테이블 접근 감사 로그 설계
+
+> **배경**: Supabase hosted 환경에서 `pgaudit` extension을 사용할 수 없으므로, custom trigger 기반으로 민감 테이블 접근을 기록한다.
+
+#### 5.2.1 감사 대상
+
+| 테이블 | 감사 대상 작업 | 사유 |
+|--------|---------------|------|
+| `user_profiles` | UPDATE, DELETE | L1/L2 — 고유식별정보(CI/DI) + 개인정보 |
+| `partner_settlements` | UPDATE, DELETE | L3 — 사업자 민감정보(계좌, 연락처) |
+| `verification_submissions` | UPDATE, DELETE | L4 — 인증 제출 데이터 |
+
+> **INSERT**: 정상 서비스 흐름에서 빈번하므로 기본 감사 대상에서 제외. 필요 시 트리거 추가로 활성화 가능.
+> **SELECT**: PostgreSQL 트리거로 캡처 불가. RPC wrapper 방식으로 별도 감사 (5.2.4 참조).
+
+#### 5.2.2 감사 로그 스키마
+
+```sql
+-- 감사 로그 테이블
+CREATE TABLE IF NOT EXISTS public.sensitive_access_log (
+    id              bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    table_name      text        NOT NULL,
+    operation       text        NOT NULL CHECK (operation IN ('SELECT', 'INSERT', 'UPDATE', 'DELETE')),
+    row_id          uuid,
+    user_id         uuid,           -- auth.uid() (NULL if service_role)
+    role_name       text,           -- current_role (authenticated, service_role, anon 등)
+    session_claims  jsonb,          -- auth.jwt() 요약 (sub, role, iss)
+    old_data        jsonb,          -- UPDATE/DELETE 시 변경 전 데이터 (민감 컬럼 마스킹)
+    new_data        jsonb,          -- UPDATE/INSERT 시 변경 후 데이터 (민감 컬럼 마스킹)
+    ip_address      inet,           -- request header에서 추출 가능한 경우
+    occurred_at     timestamptz     NOT NULL DEFAULT now(),
+    context         jsonb           -- 추가 컨텍스트 (RPC 함수명, Edge Function명 등)
+);
+
+-- 인덱스: 테이블+작업 기반 조회 (사고 분석 시 주 사용)
+CREATE INDEX idx_sal_table_op_time
+    ON public.sensitive_access_log (table_name, operation, occurred_at DESC);
+
+-- 인덱스: 특정 사용자의 접근 이력 조회
+CREATE INDEX idx_sal_user_time
+    ON public.sensitive_access_log (user_id, occurred_at DESC);
+
+-- 인덱스: 시간 기반 범위 조회 (최근 N시간 접근 등)
+CREATE INDEX idx_sal_time
+    ON public.sensitive_access_log (occurred_at DESC);
+
+-- RLS: service_role만 접근 가능 (RLS 기본 deny + 정책 없음 = authenticated/anon 차단)
+ALTER TABLE public.sensitive_access_log ENABLE ROW LEVEL SECURITY;
+-- service_role은 RLS bypass이므로 별도 정책 불필요
+```
+
+#### 5.2.3 감사 트리거 함수
+
+```sql
+-- 민감 컬럼 마스킹 함수
+-- 감사 로그에 민감 값 원본을 저장하지 않기 위해 마스킹 처리
+CREATE OR REPLACE FUNCTION public.mask_sensitive_fields(data jsonb)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    sensitive_keys text[] := ARRAY[
+        'ci_encrypted', 'di_encrypted', 'di_hash',
+        'phone_number', 'account_number',
+        'contact_phone', 'contact_email', 'tax_email',
+        'snapshot_data'
+    ];
+    key text;
+    result jsonb := data;
+BEGIN
+    FOREACH key IN ARRAY sensitive_keys LOOP
+        IF result ? key THEN
+            result := result || jsonb_build_object(key, '***MASKED***');
+        END IF;
+    END LOOP;
+    RETURN result;
+END;
+$$;
+
+-- 감사 트리거 함수 (UPDATE/DELETE용)
+CREATE OR REPLACE FUNCTION public.fn_audit_sensitive_table()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_user_id uuid;
+    v_role text;
+    v_claims jsonb;
+    v_row_id uuid;
+    v_old_data jsonb;
+    v_new_data jsonb;
+BEGIN
+    -- 현재 세션 정보 추출
+    v_user_id := auth.uid();
+    v_role := current_setting('role', true);
+
+    -- JWT claims 추출 (에러 시 빈 객체)
+    BEGIN
+        v_claims := jsonb_build_object(
+            'sub', auth.uid(),
+            'role', auth.jwt() ->> 'role',
+            'iss', auth.jwt() ->> 'iss'
+        );
+    EXCEPTION WHEN OTHERS THEN
+        v_claims := '{}'::jsonb;
+    END;
+
+    -- 작업 유형별 데이터 추출
+    IF TG_OP = 'DELETE' THEN
+        v_row_id := OLD.id;
+        v_old_data := public.mask_sensitive_fields(to_jsonb(OLD));
+        v_new_data := NULL;
+    ELSIF TG_OP = 'UPDATE' THEN
+        v_row_id := NEW.id;
+        v_old_data := public.mask_sensitive_fields(to_jsonb(OLD));
+        v_new_data := public.mask_sensitive_fields(to_jsonb(NEW));
+    ELSIF TG_OP = 'INSERT' THEN
+        v_row_id := NEW.id;
+        v_old_data := NULL;
+        v_new_data := public.mask_sensitive_fields(to_jsonb(NEW));
+    END IF;
+
+    -- 감사 로그 삽입
+    INSERT INTO public.sensitive_access_log (
+        table_name, operation, row_id, user_id, role_name,
+        session_claims, old_data, new_data, occurred_at
+    ) VALUES (
+        TG_TABLE_NAME, TG_OP, v_row_id, v_user_id, v_role,
+        v_claims, v_old_data, v_new_data, now()
+    );
+
+    IF TG_OP = 'DELETE' THEN
+        RETURN OLD;
+    ELSE
+        RETURN NEW;
+    END IF;
+END;
+$$;
+
+-- 트리거 등록: user_profiles
+CREATE TRIGGER trg_audit_user_profiles
+    AFTER UPDATE OR DELETE ON public.user_profiles
+    FOR EACH ROW EXECUTE FUNCTION public.fn_audit_sensitive_table();
+
+-- 트리거 등록: partner_settlements
+CREATE TRIGGER trg_audit_partner_settlements
+    AFTER UPDATE OR DELETE ON public.partner_settlements
+    FOR EACH ROW EXECUTE FUNCTION public.fn_audit_sensitive_table();
+
+-- 트리거 등록: verification_submissions
+CREATE TRIGGER trg_audit_verification_submissions
+    AFTER UPDATE OR DELETE ON public.verification_submissions
+    FOR EACH ROW EXECUTE FUNCTION public.fn_audit_sensitive_table();
+```
+
+#### 5.2.4 SELECT 감사 — RPC Wrapper 방식
+
+PostgreSQL 트리거는 SELECT를 캡처할 수 없다. 민감 테이블의 직접 SELECT는 RLS로 최소 권한만 허용하고, 관리/분석 목적 조회는 RPC 함수를 통해 감사 로그를 남긴다.
+
+```sql
+-- 예시: user_profiles 관리 조회 RPC (감사 로그 포함)
+CREATE OR REPLACE FUNCTION public.rpc_admin_get_user_profile(target_user_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_result jsonb;
+BEGIN
+    -- 감사 로그 기록
+    INSERT INTO public.sensitive_access_log (
+        table_name, operation, row_id, user_id, role_name,
+        session_claims, occurred_at, context
+    ) VALUES (
+        'user_profiles', 'SELECT', target_user_id, auth.uid(),
+        current_setting('role', true),
+        jsonb_build_object('sub', auth.uid()),
+        now(),
+        jsonb_build_object('rpc', 'rpc_admin_get_user_profile')
+    );
+
+    SELECT to_jsonb(up) INTO v_result
+    FROM public.user_profiles up
+    WHERE up.id = target_user_id;
+
+    RETURN v_result;
+END;
+$$;
+```
+
+#### 5.2.5 보존 정책
+
+| 항목 | 정책 |
+|------|------|
+| **보존 기간** | 최소 3년 (개인정보보호법 기준) |
+| **자동 삭제** | pg_cron으로 3년 경과 로그 월 1회 삭제 |
+| **백업** | Supabase Point-in-Time Recovery에 포함 |
+| **접근 제한** | service_role만 접근 가능 (RLS 적용, 정책 없음) |
+
+```sql
+-- 3년 경과 감사 로그 자동 삭제 크론 (매월 1일 03:00 UTC)
+SELECT cron.schedule(
+    'cleanup-sensitive-access-log',
+    '0 3 1 * *',
+    $$DELETE FROM public.sensitive_access_log
+      WHERE occurred_at < now() - interval '3 years'$$
+);
+```
+
+### 5.3 중기 구축 권고 (시행일 전 완료 목표)
 
 | 항목 | 설명 | 우선순위 |
 |------|------|---------|
-| **민감 테이블 접근 감사 로그** | `user_profiles`, `partner_settlements` 등 Critical 등급 테이블의 SELECT/UPDATE를 `pg_audit` 또는 커스텀 트리거로 기록 | High |
 | **이상 탐지 알림** | 특정 시간대 대량 조회, 비정상 IP 접근 시 Slack/이메일 알림 | High |
 | **서비스 키 사용 감사** | `service_role_key` 사용 로그 모니터링 (정상 Edge Function 호출 외 사용 탐지) | Medium |
 | **스토리지 접근 로그** | 인증서류 등 민감 파일 버킷의 다운로드 로그 모니터링 | Medium |
@@ -270,3 +480,20 @@
 - 개인정보보호법 시행령 제39조 (유출 통지의 방법 및 절차)
 - 정보통신망법 제27조의3 (개인정보 유출 등의 통지·신고)
 - 개인정보보호위원회 「개인정보 유출 대응 매뉴얼」 (2024)
+
+---
+
+## 8. 후속 이슈
+
+본 문서를 기반으로 다음 항목을 후속 이슈로 구현/자동화해야 한다.
+
+| 우선순위 | 항목 | 설명 |
+|----------|------|------|
+| **P1** | 감사 로그 migration 배포 | §5.2의 `sensitive_access_log` 테이블 + 트리거 SQL을 Supabase migration으로 생성/배포 |
+| **P1** | 이상 접근 탐지 알림 | 감사 로그 기반 비정상 패턴 탐지 → PGMQ → notification-worker → Slack 알림 (예: 1시간 내 동일 테이블 100건 이상 접근) |
+| **P2** | 사고 대응 자동화 (PGMQ) | 사고 탐지 시 PGMQ 이벤트 발행 → 자동 봉쇄 작업 트리거 (API key rotation 알림, 세션 무효화 등) |
+| **P2** | 유출 통지 자동화 | notification-worker + FCM을 통한 사용자 유출 통지 자동 발송 기능 구현 |
+| **P2** | service_role_key 사용 감사 | Edge Function 외 service_role 사용 탐지 → 알림 |
+| **P3** | 감사 로그 대시보드 | Axiom 또는 Supabase Dashboard에서 감사 로그 시각화 |
+| **P3** | 정기 모의 훈련 체계 | 분기 1회 유출 대응 모의 훈련 시나리오 및 실행 체계 수립 |
+| **P3** | 스토리지 접근 로그 | 인증서류 버킷 다운로드 로그 모니터링 구축 |
