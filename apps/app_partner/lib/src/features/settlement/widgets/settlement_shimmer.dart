@@ -131,7 +131,7 @@ class _ShimmerBox extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(MinglitRadius.badge),
         gradient: LinearGradient(
           colors: [baseColor, highlightColor, baseColor],
           stops: [
