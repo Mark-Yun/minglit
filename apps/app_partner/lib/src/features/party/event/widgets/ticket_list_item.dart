@@ -294,9 +294,8 @@ class TicketListView extends StatelessWidget {
       }
       return SizedBox(
         width: double.infinity,
-        child: MinglitEmptyState.card(
+        child: MinglitEmptyState.inline(
           title: context.l10n.ticketList_empty,
-          icon: Icons.confirmation_number_outlined,
         ),
       );
     }
