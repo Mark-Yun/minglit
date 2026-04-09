@@ -2,7 +2,8 @@ import { createServiceClient } from '../_shared/supabase_client.ts'
 import { requireEnv } from '../_shared/env_keystore.ts'
 import { runWorkerLoop } from './loop_worker.ts'
 import { WorkerUtils } from '../_shared/worker_utils.ts'
-import * as jose from 'https://deno.land/x/jose@v4.14.4/index.ts'
+import { isoToUnix } from '../_shared/temporal_utils.ts'
+import * as jose from 'jose'
 import { initSentry, withHandler, log } from '../_shared/logger.ts'
 
 const FN = "notification-worker";
@@ -302,8 +303,8 @@ Deno.serve(withHandler(async (_req) => {
         occurredAtUnix = payload.occurred_at as number;
       } else if (payload.meta?.occurred_at && typeof payload.meta.occurred_at === 'string') {
         // Schema B: occurred_at is ISO string, parse to Unix epoch
-        const isoDate = new Date(payload.meta.occurred_at as string);
-        occurredAtUnix = Math.floor(isoDate.getTime() / 1000);
+        // Fix #446: Date → Temporal API migration
+        occurredAtUnix = isoToUnix(payload.meta.occurred_at as string);
       }
       if (occurredAtUnix !== null) {
         utils.logTimeLag(occurredAtUnix, traceId);

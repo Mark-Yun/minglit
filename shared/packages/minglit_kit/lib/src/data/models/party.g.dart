@@ -76,6 +76,9 @@ _Party _$PartyFromJson(Map<String, dynamic> json) => _Party(
   entryGroups: (json['entry_group_templates'] as List<dynamic>?)
       ?.map((e) => EntryGroupTemplate.fromJson(e as Map<String, dynamic>))
       .toList(),
+  tags: (json['tags'] as List<dynamic>?)
+      ?.map((e) => Tag.fromJson(e as Map<String, dynamic>))
+      .toList(),
 );
 
 Map<String, dynamic> _$PartyToJson(_Party instance) => <String, dynamic>{

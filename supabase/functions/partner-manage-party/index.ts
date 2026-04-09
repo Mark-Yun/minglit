@@ -122,6 +122,40 @@ async function handleRequest(req: Request): Promise<Response> {
       }
     }
 
+    // Validate tag_ids if provided (must validate before any DB write)
+    // Fix #1136: tag_ids 검증을 party INSERT 전으로 이동 — 잘못된 입력 시 고아 row 방지
+    const rawTagIds = body.tag_ids;
+    // Fix #1182: deduplicate tag_ids before validation (#13)
+    const tagIds = rawTagIds !== undefined && Array.isArray(rawTagIds)
+      ? [...new Set(rawTagIds as string[])]
+      : rawTagIds;
+    if (tagIds !== undefined) {
+      if (!Array.isArray(tagIds)) {
+        return errorResponse("tag_ids must be an array", 400);
+      }
+      if (tagIds.length > 5) {
+        return errorResponse("tag_ids must contain at most 5 tags", 400);
+      }
+      // Fix #1182: UUID format validation (#12)
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      for (let i = 0; i < tagIds.length; i++) {
+        if (!UUID_RE.test(tagIds[i])) {
+          return errorResponse(`tag_ids[${i}] must be a valid UUID`, 400);
+        }
+      }
+      // Fix #1136: validate tag IDs exist before party creation
+      // Prevents orphaned party rows when FK constraint would fail during party_tags INSERT
+      if (tagIds.length > 0) {
+        const { data: existingTags, error: tagCheckError } = await supabase
+          .from("tags")
+          .select("id")
+          .in("id", tagIds as string[]);
+        if (tagCheckError) return errorResponse("Failed to validate tag IDs", 500);
+        if (!existingTags || existingTags.length !== (tagIds as string[]).length)
+          return errorResponse("One or more tag_ids do not exist", 400);
+      }
+    }
+
     // Validate entry_group_templates
     const entryGroupTemplates = body.entry_group_templates;
     if (Array.isArray(entryGroupTemplates) && entryGroupTemplates.length > 0) {
@@ -199,6 +233,19 @@ async function handleRequest(req: Request): Promise<Response> {
 
     const partyId = newParty.id as string;
 
+    // Insert party_tags if tag_ids provided (validated before party INSERT above)
+    // Fix #1136: tag_ids 지원 — party 생성 후 party_tags INSERT
+    if (Array.isArray(tagIds) && tagIds.length > 0) {
+      const partyTagRecords = (tagIds as string[]).map((tid) => ({
+        party_id: partyId,
+        tag_id: tid,
+      }));
+      const { error: ptError } = await supabase.from("party_tags").insert(partyTagRecords);
+      if (ptError) {
+        return errorResponse(`Failed to create party tags: ${ptError.message}`, 500);
+      }
+    }
+
     // Insert entry_group_templates if provided (already validated above)
     if (Array.isArray(entryGroupTemplates) && entryGroupTemplates.length > 0) {
       const egt = entryGroupTemplates.map((t: Record<string, unknown>) => ({
@@ -264,6 +311,8 @@ async function handleRequest(req: Request): Promise<Response> {
     const permCheck = await checkPartnerPermission(supabase, existingParty.partner_id, userId);
     if (permCheck instanceof Response) return permCheck;
 
+    // ── Pre-validate all payloads before any DB writes ──
+
     // Build party updates
     const partyData = body.party;
     const partyUpdates: Record<string, unknown> = {};
@@ -282,6 +331,54 @@ async function handleRequest(req: Request): Promise<Response> {
         }
       }
     }
+
+    // Validate tag_ids before any DB writes
+    // Fix #1136: tag_ids 검증을 모든 write 전으로 이동 — 부분 업데이트 방지
+    const rawUpdateTagIds = body.tag_ids;
+    // Fix #1182: deduplicate tag_ids before validation (#13)
+    const updateTagIds = rawUpdateTagIds !== undefined && Array.isArray(rawUpdateTagIds)
+      ? [...new Set(rawUpdateTagIds as string[])]
+      : rawUpdateTagIds;
+    if (updateTagIds !== undefined) {
+      if (!Array.isArray(updateTagIds)) {
+        return errorResponse("tag_ids must be an array", 400);
+      }
+      if (updateTagIds.length > 5) {
+        return errorResponse("tag_ids must contain at most 5 tags", 400);
+      }
+      // Fix #1182: UUID format validation (#12)
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      for (let i = 0; i < updateTagIds.length; i++) {
+        if (!UUID_RE.test(updateTagIds[i])) {
+          return errorResponse(`tag_ids[${i}] must be a valid UUID`, 400);
+        }
+      }
+      // Validate tag IDs exist in the database — prevents partial writes
+      // if FK constraint would fail during the INSERT phase
+      if (updateTagIds.length > 0) {
+        const { data: existingTags, error: tagCheckError } = await supabase
+          .from("tags")
+          .select("id")
+          .in("id", updateTagIds as string[]);
+        if (tagCheckError) {
+          return errorResponse("Failed to validate tag IDs", 500);
+        }
+        if (!existingTags || existingTags.length !== (updateTagIds as string[]).length) {
+          return errorResponse("One or more tag_ids do not exist", 400);
+        }
+      }
+    }
+
+    if (
+      Object.keys(partyUpdates).length === 0 &&
+      !body.location &&
+      body.location_id === undefined &&
+      updateTagIds === undefined
+    ) {
+      return errorResponse("No fields to update", 400);
+    }
+
+    // ── All validations passed — now perform DB writes ──
 
     // Update party fields if any
     if (Object.keys(partyUpdates).length > 0) {
@@ -359,8 +456,42 @@ async function handleRequest(req: Request): Promise<Response> {
       }
     }
 
-    if (Object.keys(partyUpdates).length === 0 && !locationData && body.location_id === undefined) {
-      return errorResponse("No fields to update", 400);
+    // Update party_tags if tag_ids present in body (undefined = no change, [] = clear all)
+    // Fix #1149: DELETE old-only rows FIRST, then INSERT new ones.
+    // INSERT-first caused the check_party_tags_limit trigger (≥5 guard) to
+    // reject valid 5→5 swaps: the trigger would fire before old rows were removed.
+    // Deleting stale rows first keeps the running count ≤5 at every step.
+    if (updateTagIds !== undefined) {
+      if (updateTagIds.length > 0) {
+        // Delete tags that are no longer needed before inserting new ones
+        const { error: ptDeleteError } = await supabase
+          .from("party_tags")
+          .delete()
+          .eq("party_id", partyId)
+          .not("tag_id", "in", `(${(updateTagIds as string[]).join(",")})`);
+        if (ptDeleteError) {
+          return errorResponse(`Failed to clear old party tags: ${ptDeleteError.message}`, 500);
+        }
+        const partyTagRecords = (updateTagIds as string[]).map((tid) => ({
+          party_id: partyId,
+          tag_id: tid,
+        }));
+        const { error: ptInsertError } = await supabase
+          .from("party_tags")
+          .upsert(partyTagRecords, { onConflict: "party_id,tag_id", ignoreDuplicates: true });
+        if (ptInsertError) {
+          return errorResponse(`Failed to update party tags: ${ptInsertError.message}`, 500);
+        }
+      } else {
+        // Empty array — clear all tags
+        const { error: ptDeleteError } = await supabase
+          .from("party_tags")
+          .delete()
+          .eq("party_id", partyId);
+        if (ptDeleteError) {
+          return errorResponse(`Failed to clear party tags: ${ptDeleteError.message}`, 500);
+        }
+      }
     }
 
     return successResponse({ success: true });

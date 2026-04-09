@@ -120,10 +120,13 @@ class ConsentDetailSection {
   const ConsentDetailSection({
     required this.title,
     required this.items,
+    // Fix #1143: PIPA 제22조 제4항 — 중요 항목 강조 표시 의무
+    this.emphasized = false,
   });
 
   final String title;
   final List<String> items;
+  final bool emphasized;
 }
 
 class _ConsentDetailSection extends StatelessWidget {
@@ -137,10 +140,21 @@ class _ConsentDetailSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // Fix #1143: PIPA 강조 섹션 — 좌측 보더 + primaryContainer 배경 + primary 타이틀
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        color: section.emphasized
+            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
+            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(MinglitRadius.card),
+        border: section.emphasized
+            ? Border(
+                left: BorderSide(
+                  color: theme.colorScheme.primary,
+                  width: 3,
+                ),
+              )
+            : null,
       ),
       child: Padding(
         padding: const EdgeInsets.all(MinglitSpacing.medium),
@@ -149,13 +163,17 @@ class _ConsentDetailSection extends StatelessWidget {
           children: [
             Text(
               section.title,
-              style: theme.textTheme.titleSmall,
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: section.emphasized ? theme.colorScheme.primary : null,
+              ),
             ),
             const SizedBox(height: MinglitSpacing.small),
             for (final item in section.items) ...[
               Text(
                 '• $item',
-                style: theme.textTheme.bodyMedium,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: section.emphasized ? FontWeight.w600 : null,
+                ),
               ),
               const SizedBox(height: MinglitSpacing.xsmall),
             ],

@@ -403,6 +403,143 @@ MinglitSectionDivider.thin()
 
 ---
 
+## 13. 상위 레벨 패턴 (Design Pattern Catalog)
+
+밍릿 앱에서 반복 등장하는 고수준 UI 패턴 7개를 정의합니다. 각 패턴은 `DesignCatalogPage > 패턴` 탭에서 라이브 데모로 확인할 수 있습니다.
+
+> 소스: `shared/packages/minglit_kit/lib/src/features/dev/catalog_tabs/patterns/`
+
+| 패턴 ID | 이름 | 용도 | 상태 |
+| :--- | :--- | :--- | :--- |
+| P1 | 상세 페이지 | Hero + TabBar + 고정 CTA 레이아웃 | 구현 완료 |
+| P2 | 리스트 + 필터 | 검색/필터 + 페이지네이션 목록 | 준비 중 |
+| P3 | 폼 위저드 | 단계별 입력 + 검증 흐름 | 준비 중 |
+| P4 | 카드 레이아웃 | Image/Transaction/Info/Stats/Selectable 5변형 | 구현 완료 |
+| P5 | 결제 플로우 | 결제→확인→완료/실패 + 환불 서브플로우 | 구현 완료 |
+| P6 | 빈/에러/로딩 상태 | 3단계 로딩 + 빈/에러 표준 구조 | 구현 완료 |
+| P7 | Async 래퍼 | `MinglitAsyncValueWidget` 활용 패턴 | 구현 완료 |
+
+---
+
+### P1 — 상세 페이지 패턴
+
+**용도**: 이벤트/파티 상세 등 Hero 이미지 + TabBar + 고정 CTA가 필요한 화면
+
+**구성 컴포넌트**:
+- `NestedScrollView` + `SliverAppBar` (Hero 이미지 영역)
+- `TabBar` + `TabBarView` (내용 분탭)
+- 하단 고정 `FilledButton` CTA
+
+**상태 변형**: `data` / `loading` (스켈레톤) / `error` / `empty`
+
+**데모 소스**: `catalog_tabs/patterns/detail_page_demo.dart`
+
+---
+
+### P2 — 리스트 + 필터 패턴 *(준비 중)*
+
+**용도**: 검색 + 필터 + 페이지네이션 목록 화면 (예: 이벤트 탐색, 파트너 목록)
+
+> 와이어프레임 보완 후 후속 이슈로 구현 예정.
+
+---
+
+### P3 — 폼 위저드 패턴 *(준비 중)*
+
+**용도**: 다단계 입력 흐름 (예: 이벤트 생성, 프로필 설정)
+
+> 와이어프레임 보완 후 후속 이슈로 구현 예정.
+
+---
+
+### P4 — 카드 레이아웃 패턴
+
+**용도**: 콘텐츠 유형별 카드 선택 기준 제공
+
+**구성 컴포넌트 (5변형)**:
+
+| 변형 | 용도 | 핵심 구성 |
+| :--- | :--- | :--- |
+| Image | 이벤트/파티 썸네일 카드 | 16:9 이미지 + 그라데이션 + 정보 |
+| Transaction | 결제/거래 내역 카드 | 날짜 + 상태 배지 + 썸네일 + 금액 |
+| Info | 정산/요약 정보 카드 | 라벨 + 금액(헤드라인) + 상태 배지 |
+| Stats | 통계/지표 카드 | 라벨 + 수치 + 증감률 |
+| Selectable | 선택 가능 카드 | 토글 테두리 + 배경 틴트 |
+
+**상태 변형**: `data` / `loading` (스켈레톤) / `error` / `empty`
+
+**카드 공통 토큰**:
+- 반경: `MinglitRadius.card` (16px)
+- 간격: `MinglitSpacing.cardGap` (12px)
+- 내부 패딩: `MinglitSpacing.cardContentV` (16px)
+- 배경: `MinglitColors.surface` (#F9FAFB)
+- elevation: 0 (flat)
+
+**데모 소스**: `catalog_tabs/patterns/card_layouts_demo.dart`
+
+---
+
+### P5 — 결제 플로우 패턴
+
+**용도**: 결제/환불 단계별 UI 상태 전환 시뮬레이션
+
+**결제 플로우**: 확인 → 처리 중 → 성공 / 실패
+
+**환불 서브플로우**: 취소 요청 → 환불 계산 → 처리 중 → 완료
+
+**구성 컴포넌트**:
+- 주문 요약 카드 (확인 단계)
+- `CircularProgressIndicator` + 안내 텍스트 (처리 중)
+- 성공/실패 아이콘 + 결과 화면
+
+**데모 소스**: `catalog_tabs/patterns/transaction_flow_demo.dart`
+
+---
+
+### P6 — 빈/에러/로딩 상태 패턴
+
+**용도**: 모든 데이터 표시 화면에 적용하는 표준 상태 처리 구조
+
+**로딩 3단계**:
+
+| 단계 | 컴포넌트 | 용도 |
+| :--- | :--- | :--- |
+| 인라인 | `CircularProgressIndicator` | 버튼/소형 액션 로딩 |
+| 콘텐츠 | `MinglitSkeleton` | 리스트/카드 콘텐츠 로딩 |
+| 전체화면 | `MinglitGlobalLoadingOverlay` | 화면 전체 블로킹 로딩 |
+
+**빈 상태 표준 구조**:
+- 아이콘 32px (`MinglitIconSize.xlarge`) + 제목 + 설명 + CTA 버튼
+
+**에러 상태 표준 구조**:
+- `Icons.error_outline` 32px + 제목 + 설명 + "다시 시도" 버튼
+
+> Fix #715 UX 리뷰 피드백: 아이콘 크기 64px → 32px
+
+**데모 소스**: `catalog_tabs/patterns/data_states_demo.dart`
+
+---
+
+### P7 — Async 래퍼 패턴
+
+**용도**: 비동기 데이터 로드 시 `MinglitAsyncValueWidget`을 활용하는 표준 패턴
+
+**3가지 AsyncValue 상태**:
+- `AsyncValue.loading()` → `MinglitSkeleton` shimmer
+- `AsyncValue.error()` → 에러 위젯 + 재시도
+- `AsyncValue.data()` → 데이터 위젯 표시
+
+**Do / Don't**:
+
+| Do ✅ | Don't ❌ |
+| :--- | :--- |
+| `MinglitAsyncValueWidget` 사용 | 수동 `setState` + `_isLoading` 플래그 |
+| 상태 케이스를 컴파일 타임에 강제 처리 | 런타임 조건분기 누락 가능성 |
+
+**데모 소스**: `catalog_tabs/patterns/async_wrapper_demo.dart`
+
+---
+
 ## 관련 문서
 
 - [01-foundation.md](01-foundation.md) -- 디자인 토큰

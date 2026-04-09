@@ -59,6 +59,9 @@ abstract class PartyCreateWizardState with _$PartyCreateWizardState {
     @Default([]) List<TicketTemplate> tickets,
     @Default('public') String visibility,
 
+    // Tag Selection (Step 1 — tag_ids for EF)
+    @Default([]) List<String> tagIds,
+
     // Global Status
     @Default(AsyncValue.data(null)) AsyncValue<void> status,
   }) = _PartyCreateWizardState;

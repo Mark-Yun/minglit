@@ -51,12 +51,27 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.x'
           channel: 'stable'
+
+      - name: Create dev Flutter env file
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+          ENVIRONMENT: development
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN_FLUTTER }}
+          STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_DEV_WEB_CLIENT_ID }}
+          KAKAO_LOCAL_REST_API_KEY: ${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
+          KAKAO_MAP_JAVASCRIPT_KEY: ${{ secrets.KAKAO_MAP_JAVASCRIPT_KEY }}
+          JUSO_CONFIRM_KEY: ${{ secrets.JUSO_CONFIRM_KEY }}
+          IAMPORT_USER_CODE: ${{ secrets.IAMPORT_USER_CODE }}
+          MOBILE_REDIRECT_SCHEME: ${{ secrets.MOBILE_REDIRECT_SCHEME }}
+        run: bash .github/scripts/create-dev-flutter-env.sh
 
       - name: Enable KVM
         run: |
@@ -70,26 +85,34 @@ jobs:
           api-level: 33
           arch: x86_64
           profile: pixel_6
-          script: |
-            cd apps/app_user
-            for f in integration_test/*_test.dart; do
-              echo "▶ Running: $f"
-              flutter test "$f" \
-                --flavor dev \
-                --dart-define-from-file=../../minglit_env/dev/flutter.env
-            done
+          script: bash .github/scripts/run-client-cuj.sh
 
   partner-cuj-test:
     needs: seed-and-simulate
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.x'
           channel: 'stable'
+
+      - name: Create dev Flutter env file
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+          ENVIRONMENT: development
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN_FLUTTER }}
+          STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_DEV_WEB_CLIENT_ID }}
+          KAKAO_LOCAL_REST_API_KEY: ${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
+          KAKAO_MAP_JAVASCRIPT_KEY: ${{ secrets.KAKAO_MAP_JAVASCRIPT_KEY }}
+          JUSO_CONFIRM_KEY: ${{ secrets.JUSO_CONFIRM_KEY }}
+          IAMPORT_USER_CODE: ${{ secrets.IAMPORT_USER_CODE }}
+          MOBILE_REDIRECT_SCHEME: ${{ secrets.MOBILE_REDIRECT_SCHEME }}
+        run: bash .github/scripts/create-dev-flutter-env.sh
 
       - name: Enable KVM
         run: |
@@ -103,20 +126,7 @@ jobs:
           api-level: 33
           arch: x86_64
           profile: pixel_6
-          script: |
-            cd apps/app_partner
-            shopt -s nullglob
-            files=(integration_test/*_test.dart)
-            if [ ${#files[@]} -eq 0 ]; then
-              echo "⏭ No integration tests found, skipping."
-              exit 0
-            fi
-            for f in "${files[@]}"; do
-              echo "▶ Running: $f"
-              flutter test "$f" \
-                --flavor dev \
-                --dart-define-from-file=../../minglit_env/dev/flutter.env
-            done
+          script: bash .github/scripts/run-partner-cuj.sh
 
   notify-failure:
     needs: [seed-and-simulate, client-cuj-test, partner-cuj-test]

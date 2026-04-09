@@ -64,6 +64,50 @@ class MinglitColorsDark {
   static const divider = Color(0xFF3D3D3D);
 }
 
+/// 컴포넌트 테마에서 사용하는 색상 세트.
+/// Light/Dark 모드별로 다른 값을 주입합니다.
+class MinglitColorSet {
+  const MinglitColorSet({
+    required this.background,
+    required this.surface,
+    required this.primary,
+    required this.secondary,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.divider,
+  });
+
+  final Color background;
+  final Color surface;
+  final Color primary;
+  final Color secondary;
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color divider;
+
+  static const light = MinglitColorSet(
+    background: MinglitColors.background,
+    surface: MinglitColors.surface,
+    primary: MinglitColors.primary,
+    secondary: MinglitColors.secondary,
+    textPrimary: MinglitColors.textPrimary,
+    textSecondary: MinglitColors.textSecondary,
+    divider: Color(
+      0xFFE5E7EB,
+    ), // ignore: minglit_no_hardcoded_colors -- light divider token
+  );
+
+  static const dark = MinglitColorSet(
+    background: MinglitColorsDark.background,
+    surface: MinglitColorsDark.surface,
+    primary: MinglitColorsDark.primary,
+    secondary: MinglitColorsDark.secondary,
+    textPrimary: MinglitColorsDark.textPrimary,
+    textSecondary: MinglitColorsDark.textSecondary,
+    divider: MinglitColorsDark.divider,
+  );
+}
+
 /// Spacing scale constants for consistent layout.
 class MinglitSpacing {
   /// 0px zero spacing.
@@ -130,6 +174,9 @@ class MinglitRadius {
 
   /// 12px input border radius.
   static const double input = 12;
+
+  /// 4px badge border radius.
+  static const double badge = 4;
 
   /// 100px chip border radius (fully rounded).
   static const double chip = 100;
@@ -201,6 +248,12 @@ class MinglitAnimation {
 class MinglitOpacity {
   /// 5% opacity — tint fill, selected card background.
   static const double tintFill = 0.05;
+
+  /// 8% opacity — active chip/tag background.
+  static const double activeChip = 0.08;
+
+  /// 10% opacity — event phase status indicator background (recruiting/preparing/live).
+  static const double highlight = 0.1;
 
   /// 15% opacity — avatar placeholder background.
   static const double placeholder = 0.15;

@@ -1,4 +1,5 @@
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
+import 'package:app_partner/src/features/party/logic/recurrence_settings_controller.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -129,6 +130,9 @@ class EventCreateController extends _$EventCreateController {
   Future<void> submit() async {
     state = state.copyWith(status: const AsyncValue<void>.loading());
 
+    // Fix #1037: snapshot recurrence state before any await to avoid race conditions
+    final recurrenceSnapshot = ref.read(recurrenceSettingsControllerProvider);
+
     final result = await AsyncValue.guard(() async {
       final repo = ref.read(partyRepositoryProvider);
       final locationRepo = ref.read(locationRepositoryProvider);
@@ -167,6 +171,26 @@ class EventCreateController extends _$EventCreateController {
       );
 
       await repo.createEvent(event);
+
+      // Fix #1037: 반복 설정이 활성화된 경우 recurrence rule 생성 (invalidate는 이후)
+      if (recurrenceSnapshot.isEnabled) {
+        final recurrenceRepo = ref.read(recurrenceRuleRepositoryProvider);
+        String pad2(int n) => n.toString().padLeft(2, '0');
+        final startTimeStr =
+            '${pad2(state.startTime.hour)}:${pad2(state.startTime.minute)}';
+        final endTimeStr =
+            '${pad2(state.endTime.hour)}:${pad2(state.endTime.minute)}';
+        await recurrenceRepo.create(
+          partyId: state.partyId,
+          pattern: recurrenceSnapshot.pattern,
+          daysOfWeek: recurrenceSnapshot.daysOfWeek,
+          monthDay: recurrenceSnapshot.monthDay,
+          startTime: startTimeStr,
+          endTime: endTimeStr,
+          endDate: recurrenceSnapshot.endDate,
+        );
+      }
+
       ref.invalidate(partyEventsProvider(state.partyId));
     });
 

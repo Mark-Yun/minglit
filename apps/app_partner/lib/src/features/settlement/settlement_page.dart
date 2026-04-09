@@ -5,12 +5,15 @@ import 'package:app_partner/src/features/settlement/widgets/settlement_card.dart
 import 'package:app_partner/src/features/settlement/widgets/settlement_empty_state.dart';
 import 'package:app_partner/src/features/settlement/widgets/settlement_status_badge.dart';
 import 'package:app_partner/src/features/settlement/widgets/status_filter_chips.dart';
+import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class SettlementPage extends ConsumerStatefulWidget {
-  const SettlementPage({super.key});
+  const SettlementPage({super.key, this.initialIndex = 0});
+
+  final int initialIndex;
 
   @override
   ConsumerState<SettlementPage> createState() => _SettlementPageState();
@@ -23,7 +26,11 @@ class _SettlementPageState extends ConsumerState<SettlementPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialIndex,
+    );
   }
 
   @override
@@ -417,10 +424,17 @@ class _ListTabState extends ConsumerState<_ListTab> {
                       .refresh(),
                 )
               : listState.items.isEmpty && !listState.isLoading
+              // Fix #997: 빈 정산 상태에 CTA 버튼 추가 — 필터 없을 때만 이벤트 생성 유도
               ? SettlementEmptyState(
                   title: '정산 항목이 없습니다',
                   subtitle: listState.selectedStatus != null
                       ? '다른 상태를 선택해 보세요.'
+                      : '파티를 만들고 첫 이벤트를 시작해 보세요.',
+                  actionLabel: listState.selectedStatus == null
+                      ? '첫 이벤트 만들기'
+                      : null,
+                  onAction: listState.selectedStatus == null
+                      ? () => const PartyCreateRoute().push<void>(context)
                       : null,
                 )
               : RefreshIndicator(
