@@ -292,7 +292,13 @@ class TicketListView extends StatelessWidget {
           onTap: onCreatePressed!,
         );
       }
-      return _buildEmptyState(context);
+      return SizedBox(
+        width: double.infinity,
+        child: MinglitEmptyState.card(
+          title: context.l10n.ticketList_empty,
+          icon: Icons.confirmation_number_outlined,
+        ),
+      );
     }
 
     return Column(
@@ -334,35 +340,4 @@ class TicketListView extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(MinglitSpacing.large),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(
-          alpha: MinglitOpacity.muted,
-        ),
-        borderRadius: BorderRadius.circular(MinglitRadius.card),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.confirmation_number_outlined,
-            size: 32,
-            color: colorScheme.outline,
-          ),
-          const SizedBox(height: MinglitSpacing.small),
-          Text(
-            context.l10n.ticketList_empty,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.outline,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
