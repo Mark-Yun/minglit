@@ -460,9 +460,11 @@ final Map<ConsentType, _ConsentDefinition> _consentDefinitions = {
     detail: ConsentDetailContent(
       title: '개인정보 수집·이용 동의',
       summary: '수집 항목과 이용 목적, 보관 기간을 안내합니다.',
+      // Fix #1143: PIPA 제22조 제4항 — 수집 항목·이용 목적·보관 기간 강조 의무
       sections: [
         ConsentDetailSection(
           title: '수집 항목',
+          emphasized: true,
           items: [
             '이름, 이메일, 프로필 사진',
             '관심 태그, 이용 기록, 기기 정보',
@@ -470,6 +472,7 @@ final Map<ConsentType, _ConsentDefinition> _consentDefinitions = {
         ),
         ConsentDetailSection(
           title: '이용 목적',
+          emphasized: true,
           items: [
             '회원 식별과 계정 관리',
             '이벤트 추천과 서비스 품질 개선',
@@ -478,9 +481,18 @@ final Map<ConsentType, _ConsentDefinition> _consentDefinitions = {
         ),
         ConsentDetailSection(
           title: '보관 기간',
+          emphasized: true,
           items: [
-            '회원 탈퇴 시까지 보관합니다.',
+            // Fix #1182: PR #1161 정합성 — 탈퇴 후 즉시 파기 명시
+            '회원 탈퇴 시까지 보관하며, 탈퇴 후 즉시 파기합니다.',
             '법령상 보관 의무가 있는 정보는 관련 기간 동안 별도 보관합니다.',
+          ],
+        ),
+        ConsentDetailSection(
+          title: '동의 거부 시 안내',
+          emphasized: true,
+          items: [
+            '개인정보 수집·이용 동의를 거부하면 회원가입이 제한돼요.',
           ],
         ),
       ],
@@ -492,6 +504,46 @@ final Map<ConsentType, _ConsentDefinition> _consentDefinitions = {
     summary: '만 14세 이상만 회원가입할 수 있어요.',
     required: true,
   ),
+  // Fix #1141: 제3자 제공 동의 항목 추가 — 성별 제외, 자격 인증 정보 포함, 보유기간 30일
+  ConsentType.thirdPartyProvision: const _ConsentDefinition(
+    type: ConsentType.thirdPartyProvision,
+    title: '제3자 제공 동의',
+    summary: '이벤트 주최 파트너에게 참가자 확인에 필요한 정보를 제공해요.',
+    required: false,
+    detail: ConsentDetailContent(
+      title: '제3자 제공 동의',
+      summary: '이벤트 운영을 위해 파트너에게 아래 정보를 제공합니다.',
+      sections: [
+        ConsentDetailSection(
+          title: '제공받는 자',
+          items: ['이벤트 주최 파트너 (신청한 이벤트의 해당 파트너에 한정)'],
+        ),
+        ConsentDetailSection(
+          title: '제공 항목',
+          items: [
+            '이름(닉네임)',
+            '연령대',
+            '자격 인증 정보(직업/소속 — 본인인증 완료 유저만)',
+          ],
+        ),
+        ConsentDetailSection(
+          title: '제공 목적',
+          items: ['이벤트 운영 (참가자 확인, 매칭 진행, 체크인)'],
+        ),
+        ConsentDetailSection(
+          title: '보유 기간',
+          items: ['이벤트 종료 후 30일'],
+        ),
+        ConsentDetailSection(
+          title: '거부 권리',
+          items: [
+            '동의를 거부할 수 있으며, 기본 서비스 이용은 가능합니다.',
+            '다만 파트너 승인/확인이 필요한 이벤트는 신청 또는 참여가 제한될 수 있습니다.',
+          ],
+        ),
+      ],
+    ),
+  ),
   ConsentType.identityVerification: const _ConsentDefinition(
     type: ConsentType.identityVerification,
     title: '본인인증(CI/DI) 수집 동의',
@@ -500,9 +552,11 @@ final Map<ConsentType, _ConsentDefinition> _consentDefinitions = {
     detail: ConsentDetailContent(
       title: '본인인증(CI/DI) 수집 동의',
       summary: '본인 확인 서비스를 통해 연계정보(CI)와 중복가입확인정보(DI)를 수집합니다.',
+      // Fix #1143: PIPA 제22조 제4항 — CI/DI 수집 항목·보관 기간 강조 의무
       sections: [
         ConsentDetailSection(
           title: '수집 항목',
+          emphasized: true,
           items: [
             '연계정보(CI): 본인 확인을 위한 고유 식별값',
             '중복가입확인정보(DI): 동일 서비스 중복 가입 방지',
@@ -517,8 +571,16 @@ final Map<ConsentType, _ConsentDefinition> _consentDefinitions = {
         ),
         ConsentDetailSection(
           title: '보관 기간',
+          emphasized: true,
           items: [
             '회원 탈퇴 시까지 보관하며, 탈퇴 후 즉시 파기합니다.',
+          ],
+        ),
+        ConsentDetailSection(
+          title: '동의 거부 시 안내',
+          emphasized: true,
+          items: [
+            '본인인증 동의를 거부해도 서비스 이용이 가능해요. 단, 본인인증이 필요한 일부 기능이 제한될 수 있어요.',
           ],
         ),
       ],
