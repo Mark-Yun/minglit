@@ -189,7 +189,9 @@ class _RevenueSummaryCard extends StatelessWidget {
           Text(
             '이번 달 총 매출',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: colorScheme.onPrimary.withValues(alpha: MinglitOpacity.scrimLight),
+              color: colorScheme.onPrimary.withValues(
+                alpha: MinglitOpacity.scrimLight,
+              ),
             ),
           ),
           const SizedBox(height: MinglitSpacing.xsmall),
@@ -208,7 +210,9 @@ class _RevenueSummaryCard extends StatelessWidget {
               Text(
                 '정산 완료',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onPrimary.withValues(alpha: MinglitOpacity.scrimLight),
+                  color: colorScheme.onPrimary.withValues(
+                    alpha: MinglitOpacity.scrimLight,
+                  ),
                 ),
               ),
               Text(
@@ -227,7 +231,9 @@ class _RevenueSummaryCard extends StatelessWidget {
               Text(
                 '정산 대기',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onPrimary.withValues(alpha: MinglitOpacity.scrimLight),
+                  color: colorScheme.onPrimary.withValues(
+                    alpha: MinglitOpacity.scrimLight,
+                  ),
                 ),
               ),
               Text(
