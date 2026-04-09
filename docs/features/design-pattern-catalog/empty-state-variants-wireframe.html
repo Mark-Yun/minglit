@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MinglitEmptyState Variants — Wireframe v1</title>
+<style>
+  :root {
+    --primary: #9900FF;
+    --secondary: #FF9900;
+    --surface: #F9FAFB;
+    --background: #FFFFFF;
+    --text-primary: #111827;
+    --text-secondary: #4B5563;
+    --outline: #79747E;
+    --outline-variant: #CAC4D0;
+    --on-surface: #111827;
+    --on-surface-variant: #4B5563;
+    --surface-container-lowest: #F3F0F6;
+    --surface-container-highest: #E6E1E5;
+    --radius-card: 16px;
+    --radius-button: 12px;
+    --spacing-small: 8px;
+    --spacing-sm: 12px;
+    --spacing-medium: 16px;
+    --spacing-large: 24px;
+    --spacing-xlarge: 32px;
+    --font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-family);
+    background: #E8E5EC;
+    color: var(--text-primary);
+    padding: 24px;
+    line-height: 1.5;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+  }
+
+  .doc-meta {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+  }
+
+  .section-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 40px 0 8px;
+    color: var(--text-primary);
+  }
+
+  .section-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    max-width: 640px;
+  }
+
+  /* Phone Frame */
+  .phone-grid {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .phone-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .phone-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .phone {
+    width: 320px;
+    height: 560px;
+    background: var(--surface);
+    border-radius: 32px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .phone.short {
+    height: 420px;
+  }
+
+  /* Status bar */
+  .status-bar {
+    height: 44px;
+    padding: 12px 24px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex-shrink: 0;
+  }
+
+  /* App bar */
+  .app-bar {
+    height: 48px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .app-bar-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .back-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+  }
+
+  /* Content area */
+  .content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xlarge);
+  }
+
+  /* Bottom nav */
+  .bottom-nav {
+    height: 56px;
+    background: var(--background);
+    border-top: 1px solid var(--outline-variant);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 8px;
+    flex-shrink: 0;
+  }
+
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: 10px;
+    color: var(--text-secondary);
+  }
+
+  .nav-item.active { color: var(--primary); }
+
+  .nav-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--outline-variant);
+  }
+
+  .nav-item.active .nav-dot {
+    background: var(--primary);
+  }
+
+  /* ===== EMPTY STATE VARIANTS ===== */
+
+  /* Variant: fullPage */
+  .empty-full {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0;
+  }
+
+  .empty-full .empty-icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: var(--spacing-medium);
+    color: var(--outline);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .empty-full .empty-icon svg {
+    width: 48px;
+    height: 48px;
+  }
+
+  .empty-full .empty-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--on-surface);
+    margin-bottom: var(--spacing-small);
+    line-height: 1.5;
+  }
+
+  .empty-full .empty-subtitle {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--on-surface-variant);
+    line-height: 1.5;
+    margin-bottom: var(--spacing-large);
+  }
+
+  .btn-filled {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-button);
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: var(--font-family);
+    cursor: pointer;
+  }
+
+  .btn-outlined {
+    background: transparent;
+    color: var(--primary);
+    border: 1.5px solid var(--outline-variant);
+    border-radius: var(--radius-button);
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: var(--font-family);
+    cursor: pointer;
+  }
+
+  /* Variant: card */
+  .empty-card {
+    background: var(--surface-container-lowest);
+    border-radius: var(--radius-card);
+    padding: var(--spacing-large);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+  }
+
+  .empty-card .empty-icon {
+    width: 32px;
+    height: 32px;
+    margin-bottom: var(--spacing-sm);
+    color: var(--outline-variant);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .empty-card .empty-icon svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .empty-card .empty-text {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--on-surface-variant);
+    line-height: 1.5;
+  }
+
+  /* Variant: inline */
+  .empty-inline {
+    background: rgba(230, 225, 229, 0.3);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-card);
+    padding: var(--spacing-large);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .empty-inline .empty-text {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--on-surface-variant);
+    line-height: 1.5;
+  }
+
+  /* ===== SPEC TABLE ===== */
+  .spec-table {
+    width: 100%;
+    max-width: 900px;
+    border-collapse: collapse;
+    margin: 16px 0 32px;
+    font-size: 13px;
+    background: var(--background);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+
+  .spec-table th {
+    background: var(--surface);
+    text-align: left;
+    padding: 12px 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--outline-variant);
+  }
+
+  .spec-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid #F0EEF2;
+    color: var(--text-secondary);
+    vertical-align: top;
+  }
+
+  .spec-table tr:last-child td { border-bottom: none; }
+
+  .spec-table code {
+    background: #F3F0F6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--primary);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  /* Token badge */
+  .token {
+    display: inline-block;
+    background: #F3F0F6;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--primary);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  /* Comparison section */
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    max-width: 800px;
+    margin: 20px 0 40px;
+  }
+
+  .comparison-card {
+    background: var(--background);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+
+  .comparison-card h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+
+  .comparison-card.before { border-left: 3px solid #EF4444; }
+  .comparison-card.after { border-left: 3px solid #22C55E; }
+
+  .issue-list {
+    list-style: none;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.8;
+  }
+
+  .issue-list li::before {
+    content: '•';
+    margin-right: 8px;
+    color: var(--outline-variant);
+  }
+
+  /* Migration map */
+  .migration-table {
+    width: 100%;
+    max-width: 900px;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 13px;
+    background: var(--background);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+
+  .migration-table th {
+    background: var(--surface);
+    text-align: left;
+    padding: 12px 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--outline-variant);
+  }
+
+  .migration-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid #F0EEF2;
+    color: var(--text-secondary);
+    vertical-align: top;
+  }
+
+  .migration-table tr:last-child td { border-bottom: none; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .badge-replace { background: #DCFCE7; color: #166534; }
+  .badge-keep { background: #FEF3C7; color: #92400E; }
+  .badge-variant { background: #EDE9FE; color: #5B21B6; }
+
+  /* Dark mode preview */
+  .phone.dark {
+    background: #0F0F0F;
+  }
+
+  .phone.dark .status-bar { color: #FFFFFF; }
+  .phone.dark .app-bar { background: #0F0F0F; }
+  .phone.dark .app-bar-title { color: #FFFFFF; }
+  .phone.dark .back-icon { color: #FFFFFF; }
+  .phone.dark .bottom-nav {
+    background: #212121;
+    border-top-color: #3D3D3D;
+  }
+  .phone.dark .nav-item { color: #AAAAAA; }
+  .phone.dark .nav-item.active { color: #AA33FF; }
+  .phone.dark .nav-dot { background: #3D3D3D; }
+  .phone.dark .nav-item.active .nav-dot { background: #AA33FF; }
+
+  .phone.dark .empty-full .empty-icon { color: #938F99; }
+  .phone.dark .empty-full .empty-title { color: #FFFFFF; }
+  .phone.dark .empty-full .empty-subtitle { color: #AAAAAA; }
+  .phone.dark .btn-filled { background: #AA33FF; }
+
+  .phone.dark .empty-card {
+    background: #1C1B1F;
+  }
+  .phone.dark .empty-card .empty-icon { color: #49454F; }
+  .phone.dark .empty-card .empty-text { color: #AAAAAA; }
+
+  .phone.dark .empty-inline {
+    background: rgba(73, 69, 79, 0.3);
+    border-color: #49454F;
+  }
+  .phone.dark .empty-inline .empty-text { color: #AAAAAA; }
+
+  /* Form context for inline demo */
+  .form-section {
+    padding: 16px;
+    width: 100%;
+  }
+
+  .form-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+
+  .phone.dark .form-label { color: #FFFFFF; }
+
+  .form-add-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--primary);
+    font-weight: 500;
+    margin-top: 12px;
+    cursor: pointer;
+  }
+
+  .phone.dark .form-add-btn { color: #AA33FF; }
+
+  /* Card context for card demo */
+  .card-context {
+    padding: 16px;
+    width: 100%;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .card-header-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .phone.dark .card-header-title { color: #FFFFFF; }
+
+  .card-count {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .phone.dark .card-count { color: #AAAAAA; }
+
+  /* API preview */
+  .api-block {
+    background: #1E1E2E;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 16px 0 32px;
+    max-width: 700px;
+    overflow-x: auto;
+  }
+
+  .api-block pre {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #CDD6F4;
+  }
+
+  .api-block .comment { color: #6C7086; }
+  .api-block .keyword { color: #CBA6F7; }
+  .api-block .string { color: #A6E3A1; }
+  .api-block .type { color: #89B4FA; }
+  .api-block .param { color: #F9E2AF; }
+  .api-block .punct { color: #BAC2DE; }
+
+  /* New token callout */
+  .callout {
+    background: #FEF3C7;
+    border-left: 3px solid #F59E0B;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    margin: 16px 0;
+    max-width: 700px;
+    font-size: 13px;
+    color: #92400E;
+  }
+
+  .callout strong { color: #78350F; }
+</style>
+</head>
+<body>
+
+<h1>MinglitEmptyState — Variant System</h1>
+<p class="doc-meta">
+  Wireframe v1 · 2026-04-10 · needs-uiux-claude-1<br>
+  이슈 #1196 — MinglitEmptyState 통합 UX 검토
+</p>
+
+<!-- ===== VARIANT SPEC ===== -->
+<h2 class="section-title">Variant 정의</h2>
+<p class="section-desc">
+  3개의 variant로 현재 6개의 커스텀 구현을 모두 커버합니다. 맥락에 맞는 시각적 무게감을 부여하되, 구조(아이콘→텍스트→CTA)는 일관되게 유지합니다.
+</p>
+
+<table class="spec-table">
+  <thead>
+    <tr>
+      <th>Variant</th>
+      <th>용도</th>
+      <th>Icon</th>
+      <th>Title</th>
+      <th>Subtitle</th>
+      <th>CTA</th>
+      <th>Background</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>fullPage</strong> (기본)</td>
+      <td>전체 화면 빈 상태</td>
+      <td><code>48px</code><br><span class="token">MinglitIconSize.display</span></td>
+      <td><code>titleMedium</code><br>onSurface</td>
+      <td><code>bodyMedium</code><br>onSurfaceVariant</td>
+      <td><code>FilledButton</code></td>
+      <td>transparent</td>
+    </tr>
+    <tr>
+      <td><strong>card</strong></td>
+      <td>카드/섹션 내 빈 상태</td>
+      <td><code>32px</code><br><span class="token">MinglitIconSize.xlarge</span></td>
+      <td colspan="2"><code>bodyMedium</code>, onSurfaceVariant (단일 메시지)</td>
+      <td>—</td>
+      <td><code>surfaceContainerLowest</code><br>radius: card (16px)</td>
+    </tr>
+    <tr>
+      <td><strong>inline</strong></td>
+      <td>폼/입력 컨텍스트 플레이스홀더</td>
+      <td>—</td>
+      <td colspan="2"><code>bodyMedium</code>, onSurfaceVariant (단일 메시지)</td>
+      <td>—</td>
+      <td><code>surfaceContainerHighest</code> 30%<br>border: outlineVariant<br>radius: card (16px)</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>신규 토큰 제안:</strong> <code>MinglitIconSize.display = 48</code> — 빈 상태, 히어로 영역 등 시각적 초점이 필요한 대형 아이콘용. 기존 <code>xxlarge(40)</code>와 하드코딩(56, 64) 사이의 간극을 채웁니다.
+</div>
+
+<!-- ===== WIREFRAMES ===== -->
+<h2 class="section-title">Variant Wireframes — Light Mode</h2>
+<p class="section-desc">각 variant의 실제 화면 맥락에서의 모습입니다.</p>
+
+<div class="phone-grid">
+
+  <!-- fullPage -->
+  <div class="phone-wrapper">
+    <div class="phone-label">fullPage (with CTA)</div>
+    <div class="phone">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span>●●● ▶ 🔋</span>
+      </div>
+      <div class="app-bar">
+        <div class="back-icon">←</div>
+        <div class="app-bar-title">내 티켓</div>
+      </div>
+      <div class="content">
+        <div class="empty-full">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 002 2 2 2 0 010 4 2 2 0 00-2 2v1a2 2 0 002 2h14a2 2 0 002-2v-1a2 2 0 00-2-2 2 2 0 010-4 2 2 0 002-2V7a2 2 0 00-2-2H5z"/>
+            </svg>
+          </div>
+          <div class="empty-title">아직 티켓이 없어요</div>
+          <div class="empty-subtitle">관심 있는 이벤트를 찾아보세요</div>
+          <button class="btn-filled">이벤트 둘러보기</button>
+        </div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item"><div class="nav-dot"></div><span>홈</span></div>
+        <div class="nav-item"><div class="nav-dot"></div><span>검색</span></div>
+        <div class="nav-item active"><div class="nav-dot"></div><span>티켓</span></div>
+        <div class="nav-item"><div class="nav-dot"></div><span>채팅</span></div>
+        <div class="nav-item"><div class="nav-dot"></div><span>MY</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- fullPage without CTA -->
+  <div class="phone-wrapper">
+    <div class="phone-label">fullPage (no CTA)</div>
+    <div class="phone">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span>●●● ▶ 🔋</span>
+      </div>
+      <div class="app-bar">
+        <div class="back-icon">←</div>
+        <div class="app-bar-title">정산 내역</div>
+      </div>
+      <div class="content">
+        <div class="empty-full">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M9 14l6-6m-5 .5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/>
+            </svg>
+          </div>
+          <div class="empty-title">정산 내역이 없습니다</div>
+          <div class="empty-subtitle">이벤트가 완료되면 정산 내역이 여기에 표시됩니다</div>
+        </div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item"><div class="nav-dot"></div><span>홈</span></div>
+        <div class="nav-item"><div class="nav-dot"></div><span>이벤트</span></div>
+        <div class="nav-item"><div class="nav-dot"></div><span>정산</span></div>
+        <div class="nav-item active"><div class="nav-dot"></div><span>MY</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- card -->
+  <div class="phone-wrapper">
+    <div class="phone-label">card</div>
+    <div class="phone short">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span>●●● ▶ 🔋</span>
+      </div>
+      <div class="app-bar">
+        <div class="back-icon">←</div>
+        <div class="app-bar-title">인증 관리</div>
+      </div>
+      <div class="card-context">
+        <div class="card-header">
+          <span class="card-header-title">제출한 인증</span>
+          <span class="card-count">0건</span>
+        </div>
+        <div class="empty-card">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+          </div>
+          <div class="empty-text">제출한 인증이 없습니다</div>
+        </div>
+
+        <div style="margin-top: 24px">
+          <div class="card-header">
+            <span class="card-header-title">티켓 목록</span>
+            <span class="card-count">0건</span>
+          </div>
+          <div class="empty-card">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 002 2 2 2 0 010 4 2 2 0 00-2 2v1a2 2 0 002 2h14a2 2 0 002-2v-1a2 2 0 00-2-2 2 2 0 010-4 2 2 0 002-2V7a2 2 0 00-2-2H5z"/>
+              </svg>
+            </div>
+            <div class="empty-text">등록된 티켓이 없습니다</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- inline -->
+  <div class="phone-wrapper">
+    <div class="phone-label">inline</div>
+    <div class="phone short">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span>●●● ▶ 🔋</span>
+      </div>
+      <div class="app-bar">
+        <div class="back-icon">←</div>
+        <div class="app-bar-title">파티 만들기</div>
+      </div>
+      <div class="form-section">
+        <div class="form-label">입장 그룹</div>
+        <div style="margin-top: 8px">
+          <div class="empty-inline">
+            <span class="empty-text">아직 추가된 입장 그룹이 없습니다</span>
+          </div>
+        </div>
+        <div class="form-add-btn">+ 입장 그룹 추가</div>
+
+        <div style="margin-top: 24px">
+          <div class="form-label">추가 규칙</div>
+          <div style="margin-top: 8px">
+            <div class="empty-inline">
+              <span class="empty-text">설정된 규칙이 없습니다</span>
+            </div>
+          </div>
+          <div class="form-add-btn">+ 규칙 추가</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== DARK MODE ===== -->
+<h2 class="section-title">Dark Mode</h2>
+<p class="section-desc">다크 모드에서의 각 variant 모습입니다. 컬러 토큰만 전환되며 레이아웃/간격은 동일합니다.</p>
+
+<div class="phone-grid">
+
+  <!-- fullPage dark -->
+  <div class="phone-wrapper">
+    <div class="phone-label">fullPage — Dark</div>
+    <div class="phone dark">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span>●●● ▶ 🔋</span>
+      </div>
+      <div class="app-bar">
+        <div class="back-icon">←</div>
+        <div class="app-bar-title">내 티켓</div>
+      </div>
+      <div class="content">
+        <div class="empty-full">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 002 2 2 2 0 010 4 2 2 0 00-2 2v1a2 2 0 002 2h14a2 2 0 002-2v-1a2 2 0 00-2-2 2 2 0 010-4 2 2 0 002-2V7a2 2 0 00-2-2H5z"/>
+            </svg>
+          </div>
+          <div class="empty-title">아직 티켓이 없어요</div>
+          <div class="empty-subtitle">관심 있는 이벤트를 찾아보세요</div>
+          <button class="btn-filled">이벤트 둘러보기</button>
+        </div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item"><div class="nav-dot"></div><span>홈</span></div>
+        <div class="nav-item"><div class="nav-dot"></div><span>검색</span></div>
+        <div class="nav-item active"><div class="nav-dot"></div><span>티켓</span></div>
+        <div class="nav-item"><div class="nav-dot"></div><span>채팅</span></div>
+        <div class="nav-item"><div class="nav-dot"></div><span>MY</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- card dark -->
+  <div class="phone-wrapper">
+    <div class="phone-label">card — Dark</div>
+    <div class="phone dark short">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span>●●● ▶ 🔋</span>
+      </div>
+      <div class="app-bar">
+        <div class="back-icon">←</div>
+        <div class="app-bar-title">인증 관리</div>
+      </div>
+      <div class="card-context">
+        <div class="card-header">
+          <span class="card-header-title">제출한 인증</span>
+          <span class="card-count">0건</span>
+        </div>
+        <div class="empty-card">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+          </div>
+          <div class="empty-text">제출한 인증이 없습니다</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- inline dark -->
+  <div class="phone-wrapper">
+    <div class="phone-label">inline — Dark</div>
+    <div class="phone dark short">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span>●●● ▶ 🔋</span>
+      </div>
+      <div class="app-bar">
+        <div class="back-icon">←</div>
+        <div class="app-bar-title">파티 만들기</div>
+      </div>
+      <div class="form-section">
+        <div class="form-label">입장 그룹</div>
+        <div style="margin-top: 8px">
+          <div class="empty-inline">
+            <span class="empty-text">아직 추가된 입장 그룹이 없습니다</span>
+          </div>
+        </div>
+        <div class="form-add-btn">+ 입장 그룹 추가</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== API PREVIEW ===== -->
+<h2 class="section-title">API Preview</h2>
+<p class="section-desc">제안하는 위젯 API입니다. variant enum으로 레이아웃/스타일을 전환하고, 기존 파라미터(icon, title, subtitle, CTA)는 유지합니다.</p>
+
+<div class="api-block"><pre><span class="comment">// Variant enum</span>
+<span class="keyword">enum</span> <span class="type">MinglitEmptyStateVariant</span> <span class="punct">{</span>
+  <span class="param">fullPage</span><span class="punct">,</span>  <span class="comment">// 전체 화면 (기본)</span>
+  <span class="param">card</span><span class="punct">,</span>      <span class="comment">// 카드/섹션 내</span>
+  <span class="param">inline</span><span class="punct">,</span>    <span class="comment">// 폼/입력 플레이스홀더</span>
+<span class="punct">}</span>
+
+<span class="comment">// fullPage — CTA 있는 전체 화면</span>
+<span class="type">MinglitEmptyState</span><span class="punct">(</span>
+  <span class="param">icon</span><span class="punct">:</span> Icons.confirmation_number_outlined<span class="punct">,</span>
+  <span class="param">title</span><span class="punct">:</span> <span class="string">'아직 티켓이 없어요'</span><span class="punct">,</span>
+  <span class="param">subtitle</span><span class="punct">:</span> <span class="string">'관심 있는 이벤트를 찾아보세요'</span><span class="punct">,</span>
+  <span class="param">actionLabel</span><span class="punct">:</span> <span class="string">'이벤트 둘러보기'</span><span class="punct">,</span>
+  <span class="param">onAction</span><span class="punct">:</span> <span class="punct">() =></span> navigateToExplore<span class="punct">(),</span>
+<span class="punct">)</span>
+
+<span class="comment">// card — 섹션 내 빈 상태</span>
+<span class="type">MinglitEmptyState</span><span class="punct">.</span><span class="param">card</span><span class="punct">(</span>
+  <span class="param">icon</span><span class="punct">:</span> Icons.verified_user_outlined<span class="punct">,</span>
+  <span class="param">title</span><span class="punct">:</span> <span class="string">'제출한 인증이 없습니다'</span><span class="punct">,</span>
+<span class="punct">)</span>
+
+<span class="comment">// inline — 폼 내 플레이스홀더</span>
+<span class="type">MinglitEmptyState</span><span class="punct">.</span><span class="param">inline</span><span class="punct">(</span>
+  <span class="param">title</span><span class="punct">:</span> <span class="string">'아직 추가된 입장 그룹이 없습니다'</span><span class="punct">,</span>
+<span class="punct">)</span></pre></div>
+
+<!-- ===== MIGRATION MAP ===== -->
+<h2 class="section-title">Migration Map</h2>
+<p class="section-desc">각 커스텀 구현의 통합 방법입니다.</p>
+
+<table class="migration-table">
+  <thead>
+    <tr>
+      <th>현재 구현</th>
+      <th>위치</th>
+      <th>대응 Variant</th>
+      <th>판정</th>
+      <th>비고</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>SettlementEmptyState</code></td>
+      <td>app_partner/settlement/widgets/</td>
+      <td>fullPage</td>
+      <td><span class="badge badge-replace">즉시 교체</span></td>
+      <td>MinglitEmptyState의 거의 완전한 복제. icon만 지정하면 동일</td>
+    </tr>
+    <tr>
+      <td><code>_EmptyState</code></td>
+      <td>app_partner/verification/manage/</td>
+      <td>card</td>
+      <td><span class="badge badge-variant">variant 추가 후 교체</span></td>
+      <td>배경색 + radius 있는 카드형. card variant로 커버</td>
+    </tr>
+    <tr>
+      <td>Inline empty</td>
+      <td>app_partner/party/event/ticket_list_item</td>
+      <td>card</td>
+      <td><span class="badge badge-variant">variant 추가 후 교체</span></td>
+      <td>32px 아이콘 + 배경. card variant 적합</td>
+    </tr>
+    <tr>
+      <td>Map placeholder</td>
+      <td>app_partner/party/widgets/party_location_input</td>
+      <td>—</td>
+      <td><span class="badge badge-keep">예외 유지</span></td>
+      <td>맵 슬롯 맥락 특화. 범용 empty state 범위 밖</td>
+    </tr>
+    <tr>
+      <td><code>_buildEmptyState</code></td>
+      <td>app_partner/party/create/step4_entry_rules</td>
+      <td>inline</td>
+      <td><span class="badge badge-variant">variant 추가 후 교체</span></td>
+      <td>텍스트만, border 있는 폼 플레이스홀더</td>
+    </tr>
+    <tr>
+      <td><code>_EmptyState</code></td>
+      <td>app_user/my_tickets/ui/</td>
+      <td>fullPage</td>
+      <td><span class="badge badge-variant">variant 추가 후 교체</span></td>
+      <td>CTA 커스텀 스타일 제거 → 표준 FilledButton 사용</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ===== BEFORE/AFTER ===== -->
+<h2 class="section-title">Before / After</h2>
+
+<div class="comparison-grid">
+  <div class="comparison-card before">
+    <h4>Before — 현재 문제</h4>
+    <ul class="issue-list">
+      <li>아이콘 크기 6종: 32, 48, 56, 64px + xlarge*1.5</li>
+      <li>아이콘 색상 3종: outline, outlineVariant, onSurfaceVariant</li>
+      <li>배경 처리 4종: transparent, surfaceContainerLowest, surfaceContainerHighest 30%, 없음</li>
+      <li>CTA 버튼 스타일 비통일 (커스텀 padding, font 등)</li>
+      <li>공유 위젯 사용 0건 → 디자인 시스템 무용화</li>
+    </ul>
+  </div>
+  <div class="comparison-card after">
+    <h4>After — 통합 후</h4>
+    <ul class="issue-list">
+      <li>3 variant × 일관된 토큰 기반 스타일</li>
+      <li>아이콘: fullPage=48px, card=32px, inline=없음</li>
+      <li>컬러: 시맨틱 토큰만 사용 (하드코딩 제거)</li>
+      <li>CTA: 표준 FilledButton (커스텀 스타일 제거)</li>
+      <li>공유 위젯 사용 5건 + 예외 1건</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ===== DESIGN DECISIONS ===== -->
+<h2 class="section-title">Design Decisions</h2>
+<p class="section-desc">주요 설계 결정과 근거입니다.</p>
+
+<table class="spec-table">
+  <thead>
+    <tr>
+      <th>결정</th>
+      <th>선택</th>
+      <th>근거</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>fullPage 아이콘 크기</td>
+      <td><code>48px</code> (신규 토큰)</td>
+      <td>
+        현행 64px는 시각적으로 과도. 디자인 시스템의 32px(xlarge)는 전체 화면에서 너무 작음.
+        48px는 충분한 시각적 초점을 제공하면서 콘텐츠 영역을 압도하지 않음.
+        토스(~44px), Linear(~40px), Things(~48px) 참고.
+      </td>
+    </tr>
+    <tr>
+      <td>CTA 버튼 타입</td>
+      <td><code>FilledButton</code></td>
+      <td>
+        디자인 시스템 문서는 OutlinedButton이나, 빈 상태의 CTA는 화면의 유일한 액션.
+        시각적 계층에서 가장 높은 무게감이 필요 → FilledButton이 적합.
+        디자인 시스템 문서를 업데이트할 것.
+      </td>
+    </tr>
+    <tr>
+      <td>card variant 배경</td>
+      <td><code>surfaceContainerLowest</code></td>
+      <td>
+        surfaceContainerHighest(alpha 0.3)보다 surfaceContainerLowest가 일관성 있음.
+        Material 3 surface tint 계층과도 정합.
+      </td>
+    </tr>
+    <tr>
+      <td>inline variant 아이콘</td>
+      <td>없음</td>
+      <td>
+        폼 맥락에서는 텍스트만으로 충분. 아이콘은 주변 UI 요소와 시각적으로 충돌할 수 있음.
+        필요 시 icon 파라미터로 추가 가능하나 기본값은 없음.
+      </td>
+    </tr>
+    <tr>
+      <td>party_location_input 예외</td>
+      <td>통합 제외</td>
+      <td>
+        맵 슬롯은 empty state가 아닌 input placeholder에 가까움.
+        범용 컴포넌트에 도메인 특화 케이스를 억지로 끼우면 API가 복잡해짐.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+</body>
+</html>

@@ -104,24 +104,77 @@
 
 데이터가 없을 때 표시하는 빈 상태 화면입니다.
 
-<!-- TODO: 공용 EmptyState 위젯 코드 정의 필요. -->
+**공용 위젯**: `MinglitEmptyState` (`minglit_kit/lib/src/ui/widgets/common/minglit_empty_state.dart`)
 
-### 권장 구조
+### Variants
+
+3가지 variant로 맥락에 맞는 빈 상태를 표시합니다.
+
+#### fullPage (기본)
+
+전체 화면을 차지하는 빈 상태. 탭/페이지 수준에서 사용.
 
 ```text
 [Center]
-  [Icon]                 — MinglitIconSize.xlarge (32px), textSecondary 색상
-  [Spacing: medium (16px)]
-  [Title]                — titleMedium (16px, bold)
-  [Spacing: small (8px)]
-  [Description]          — bodyMedium (16px), textSecondary
-  [Spacing: large (24px)]
-  [Action Button]        — OutlinedButton (선택사항)
+  [Padding: xlarge (32px)]
+    [Icon]               — MinglitIconSize.display (48px), outline 색상
+    [Spacing: medium (16px)]
+    [Title]              — titleMedium (16px, bold), onSurface
+    [Spacing: small (8px)]
+    [Description]        — bodyMedium (16px), onSurfaceVariant
+    [Spacing: large (24px)]
+    [Action Button]      — FilledButton (선택사항)
 ```
 
-### 현재 사용 사례
+#### card
 
-- 정산 빈 상태 golden test: `apps/app_partner/test/goldens/settlement_empty_state`
+카드/섹션 내에 삽입되는 빈 상태. 리스트나 그리드가 비어있을 때 사용.
+
+```text
+[Container: surfaceContainerLowest, radius: card (16px)]
+  [Padding: large (24px)]
+    [Icon]               — MinglitIconSize.xlarge (32px), outlineVariant 색상
+    [Spacing: sm (12px)]
+    [Text]               — bodyMedium (14px), onSurfaceVariant
+```
+
+#### inline
+
+폼/입력 맥락의 플레이스홀더. 아이콘 없이 텍스트만 표시.
+
+```text
+[Container: surfaceContainerHighest 30%, border: outlineVariant, radius: card (16px)]
+  [Padding: large (24px)]
+    [Text]               — bodyMedium (14px), onSurfaceVariant, center
+```
+
+### 사용 예시
+
+```dart
+// fullPage — CTA 있는 전체 화면
+MinglitEmptyState(
+  icon: Icons.confirmation_number_outlined,
+  title: '아직 티켓이 없어요',
+  subtitle: '관심 있는 이벤트를 찾아보세요',
+  actionLabel: '이벤트 둘러보기',
+  onAction: () => navigateToExplore(),
+)
+
+// card — 섹션 내 빈 상태
+MinglitEmptyState.card(
+  icon: Icons.verified_user_outlined,
+  title: '제출한 인증이 없습니다',
+)
+
+// inline — 폼 내 플레이스홀더
+MinglitEmptyState.inline(
+  title: '아직 추가된 입장 그룹이 없습니다',
+)
+```
+
+### Wireframe
+
+- [empty-state-variants-wireframe.html](../../features/design-pattern-catalog/empty-state-variants-wireframe.html)
 
 ---
 
