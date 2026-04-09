@@ -171,10 +171,14 @@ class _TodayBanner extends StatelessWidget {
           vertical: MinglitSpacing.sm,
         ),
         decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withValues(alpha: 0.08),
+          color: theme.colorScheme.primary.withValues(
+            alpha: MinglitOpacity.activeChip,
+          ),
           borderRadius: BorderRadius.circular(MinglitSpacing.sm),
           border: Border.all(
-            color: theme.colorScheme.primary.withValues(alpha: 0.15),
+            color: theme.colorScheme.primary.withValues(
+              alpha: MinglitOpacity.placeholder,
+            ),
           ),
         ),
         child: Row(

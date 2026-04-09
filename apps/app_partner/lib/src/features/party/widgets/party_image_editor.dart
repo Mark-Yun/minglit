@@ -60,9 +60,7 @@ class _PartyImageEditorState extends State<PartyImageEditor> {
 
   void _showMaxImagesSnackBar() {
     final text = '최대 ${widget.maxImages}장까지 등록 가능합니다.';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(text)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
   void _removeUrl(int index) {
@@ -135,12 +133,10 @@ class _PartyImageEditorState extends State<PartyImageEditor> {
         width: double.infinity,
         decoration: BoxDecoration(
           color: theme.colorScheme.surfaceContainerHighest.withValues(
-            alpha: 0.3,
+            alpha: MinglitOpacity.muted,
           ),
           borderRadius: BorderRadius.circular(MinglitRadius.small),
-          border: Border.all(
-            color: theme.colorScheme.outlineVariant,
-          ),
+          border: Border.all(color: theme.colorScheme.outlineVariant),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -202,10 +198,7 @@ class _PartyImageEditorState extends State<PartyImageEditor> {
             decoration: BoxDecoration(
               color: theme.colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(MinglitRadius.small),
-              image: DecorationImage(
-                image: imageProvider,
-                fit: BoxFit.cover,
-              ),
+              image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
               border: isRepresentative
                   ? Border.all(color: theme.colorScheme.primary, width: 2)
                   : null,
@@ -238,7 +231,9 @@ class _PartyImageEditorState extends State<PartyImageEditor> {
               child: Container(
                 padding: const EdgeInsets.all(MinglitSpacing.xxsmall),
                 decoration: BoxDecoration(
-                  color: MinglitColors.textPrimary.withValues(alpha: 0.54),
+                  color: MinglitColors.textPrimary.withValues(
+                    alpha: MinglitOpacity.mediumEmphasis,
+                  ),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(

@@ -12,11 +12,7 @@ void main() {
         ProviderScope(
           child: MaterialApp(
             theme: MinglitTheme.materialTheme,
-            home: Scaffold(
-              body: OpenInAppBanner(
-                onDismiss: () {},
-              ),
-            ),
+            home: Scaffold(body: OpenInAppBanner(onDismiss: () {})),
           ),
         ),
       );
@@ -35,11 +31,7 @@ void main() {
         ProviderScope(
           child: MaterialApp(
             theme: MinglitTheme.materialTheme,
-            home: Scaffold(
-              body: OpenInAppBanner(
-                onDismiss: () {},
-              ),
-            ),
+            home: Scaffold(body: OpenInAppBanner(onDismiss: () {})),
           ),
         ),
       );
@@ -80,9 +72,7 @@ void main() {
       expect(dismissCalled, isTrue);
     });
 
-    testWidgets('accepts onDismiss callback parameter', (
-      tester,
-    ) async {
+    testWidgets('accepts onDismiss callback parameter', (tester) async {
       void callback() {}
 
       // Should not throw when creating widget with callback
@@ -111,7 +101,9 @@ class _TestOpenInAppBannerWrapper extends StatelessWidget {
         color: theme.colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.shadow.withValues(alpha: 0.1),
+            color: theme.colorScheme.shadow.withValues(
+              alpha: MinglitOpacity.highlight,
+            ),
             blurRadius: 4,
             offset: const Offset(0, -2),
           ),

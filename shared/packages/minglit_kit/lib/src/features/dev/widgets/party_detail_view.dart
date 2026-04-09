@@ -65,7 +65,9 @@ class PartyDetailView extends ConsumerWidget {
             fontWeight: FontWeight.bold,
             shadows: [
               Shadow(
-                color: theme.shadowColor.withValues(alpha: 0.54),
+                color: theme.shadowColor.withValues(
+                  alpha: MinglitOpacity.mediumEmphasis,
+                ),
                 blurRadius: 4,
               ),
             ],
@@ -79,7 +81,7 @@ class PartyDetailView extends ConsumerWidget {
             else
               Container(
                 color: theme.colorScheme.secondaryContainer.withValues(
-                  alpha: 0.1,
+                  alpha: MinglitOpacity.highlight,
                 ),
               ),
             DecoratedBox(
@@ -88,8 +90,12 @@ class PartyDetailView extends ConsumerWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    theme.colorScheme.surface.withValues(alpha: 0),
-                    theme.colorScheme.onSurface.withValues(alpha: 0.54),
+                    theme.colorScheme.surface.withValues(
+                      alpha: MinglitOpacity.none,
+                    ),
+                    theme.colorScheme.onSurface.withValues(
+                      alpha: MinglitOpacity.mediumEmphasis,
+                    ),
                   ],
                   stops: const [0.6, 1.0],
                 ),
@@ -110,10 +116,7 @@ class PartyDetailView extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          text,
-          style: theme.textTheme.bodyLarge?.copyWith(height: 1.6),
-        ),
+        Text(text, style: theme.textTheme.bodyLarge?.copyWith(height: 1.6)),
         const SizedBox(height: MinglitSpacing.medium),
         if (party.contactOptions['phone'] != null)
           Row(
@@ -148,7 +151,7 @@ class PartyDetailView extends ConsumerWidget {
             padding: const EdgeInsets.all(MinglitSpacing.medium),
             decoration: BoxDecoration(
               color: theme.colorScheme.surfaceContainerHighest.withValues(
-                alpha: 0.3,
+                alpha: MinglitOpacity.muted,
               ),
               borderRadius: BorderRadius.circular(MinglitRadius.small),
             ),
@@ -232,7 +235,7 @@ class PartyDetailView extends ConsumerWidget {
         color: theme.colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.05),
+            color: theme.shadowColor.withValues(alpha: MinglitOpacity.tintFill),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),
@@ -246,9 +249,9 @@ class PartyDetailView extends ConsumerWidget {
                 onPressed: () {
                   final url = 'https://minglit.app/parties/${party.id}';
                   unawaited(Clipboard.setData(ClipboardData(text: url)));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('링크가 복사되었습니다')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('링크가 복사되었습니다')));
                 },
                 child: const Text('공유하기'),
               ),

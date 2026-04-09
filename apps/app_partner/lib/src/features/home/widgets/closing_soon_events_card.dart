@@ -23,7 +23,7 @@ class ClosingSoonEventsCard extends StatelessWidget {
 
     return Card(
       elevation: 0,
-      color: colorScheme.errorContainer.withValues(alpha: 0.3),
+      color: colorScheme.errorContainer.withValues(alpha: MinglitOpacity.muted),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(MinglitRadius.card),
       ),

@@ -116,11 +116,9 @@ class _MinglitComponentThemes {
       }
       return null;
     }),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(4),
-    ),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
     side: BorderSide(
-      color: c.textSecondary.withValues(alpha: 0.5),
+      color: c.textSecondary.withValues(alpha: MinglitOpacity.strong),
       width: 1.5,
     ),
   );

@@ -25,9 +25,10 @@ class _SettlementListShimmerState extends State<SettlementListShimmer>
       vsync: this,
     );
     unawaited(_controller.repeat());
-    _animation = Tween<double>(begin: -1, end: 2).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: -1,
+      end: 2,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -56,8 +57,10 @@ class _ShimmerItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final onSurface = Theme.of(context).colorScheme.onSurface;
-    final baseColor = onSurface.withValues(alpha: 0.12);
-    final highlightColor = onSurface.withValues(alpha: 0.04);
+    final baseColor = onSurface.withValues(alpha: MinglitOpacity.skeletonBase);
+    final highlightColor = onSurface.withValues(
+      alpha: MinglitOpacity.shimmerHighlight,
+    );
 
     return AnimatedBuilder(
       animation: animation,

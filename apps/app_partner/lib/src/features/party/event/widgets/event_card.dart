@@ -30,7 +30,7 @@ class EventCard extends StatelessWidget {
                 padding: const EdgeInsets.all(MinglitSpacing.small),
                 decoration: BoxDecoration(
                   color: colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.5,
+                    alpha: MinglitOpacity.strong,
                   ),
                   shape: BoxShape.circle,
                 ),

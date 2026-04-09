@@ -14,10 +14,7 @@ Future<void> showConsentDetailSheet(
 }
 
 class ConsentDetailSheet extends StatelessWidget {
-  const ConsentDetailSheet({
-    required this.content,
-    super.key,
-  });
+  const ConsentDetailSheet({required this.content, super.key});
 
   final ConsentDetailContent content;
 
@@ -48,7 +45,7 @@ class ConsentDetailSheet extends StatelessWidget {
                   height: 4,
                   decoration: BoxDecoration(
                     color: theme.colorScheme.onSurfaceVariant.withValues(
-                      alpha: 0.3,
+                      alpha: MinglitOpacity.muted,
                     ),
                     borderRadius: BorderRadius.circular(MinglitRadius.chip),
                   ),
@@ -61,10 +58,7 @@ class ConsentDetailSheet extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        content.title,
-                        style: theme.textTheme.titleLarge,
-                      ),
+                      Text(content.title, style: theme.textTheme.titleLarge),
                       const SizedBox(height: MinglitSpacing.xsmall),
                       Text(
                         content.summary,
@@ -130,9 +124,7 @@ class ConsentDetailSection {
 }
 
 class _ConsentDetailSection extends StatelessWidget {
-  const _ConsentDetailSection({
-    required this.section,
-  });
+  const _ConsentDetailSection({required this.section});
 
   final ConsentDetailSection section;
 
@@ -144,15 +136,16 @@ class _ConsentDetailSection extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: section.emphasized
-            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
-            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+            ? theme.colorScheme.primaryContainer.withValues(
+                alpha: MinglitOpacity.muted,
+              )
+            : theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: MinglitOpacity.scrimMedium,
+              ),
         borderRadius: BorderRadius.circular(MinglitRadius.card),
         border: section.emphasized
             ? Border(
-                left: BorderSide(
-                  color: theme.colorScheme.primary,
-                  width: 3,
-                ),
+                left: BorderSide(color: theme.colorScheme.primary, width: 3),
               )
             : null,
       ),

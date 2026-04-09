@@ -35,10 +35,14 @@ class PartyTicketsSummary extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(MinglitSpacing.medium),
         decoration: BoxDecoration(
-          color: theme.colorScheme.errorContainer.withValues(alpha: 0.1),
+          color: theme.colorScheme.errorContainer.withValues(
+            alpha: MinglitOpacity.highlight,
+          ),
           borderRadius: BorderRadius.circular(MinglitRadius.card),
           border: Border.all(
-            color: theme.colorScheme.error.withValues(alpha: 0.3),
+            color: theme.colorScheme.error.withValues(
+              alpha: MinglitOpacity.muted,
+            ),
           ),
         ),
         child: Text(

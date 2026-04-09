@@ -165,7 +165,9 @@ class MinglitEventCard extends StatelessWidget {
                     Positioned.fill(
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.5),
+                          color: Colors.black.withValues(
+                            alpha: MinglitOpacity.strong,
+                          ),
                         ),
                         child: Center(
                           child: Container(
@@ -174,17 +176,17 @@ class MinglitEventCard extends StatelessWidget {
                               vertical: MinglitSpacing.small,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.6),
+                              color: Colors.black.withValues(
+                                alpha: MinglitOpacity.separator,
+                              ),
                               borderRadius: BorderRadius.circular(
                                 MinglitRadius.small,
                               ),
                             ),
                             child: Text(
                               '마감',
-                              style:
-                                  Theme.of(
-                                    context,
-                                  ).textTheme.titleMedium?.copyWith(
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -330,7 +332,7 @@ class _ParticipantDDayOverlay extends StatelessWidget {
 
     // Fix #478: ended state uses muted grey overlay background
     final overlayBgColor = cardState == _EventCardState.ended
-        ? Colors.grey.withValues(alpha: 0.7)
+        ? Colors.grey.withValues(alpha: MinglitOpacity.scrimDark)
         : MinglitColors.textPrimary.withValues(alpha: MinglitOpacity.overlay);
 
     // Fix #478: D-Day label color — amber for today
@@ -357,11 +359,7 @@ class _ParticipantDDayOverlay extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.person,
-              size: 13,
-              color: MinglitColors.background,
-            ),
+            const Icon(Icons.person, size: 13, color: MinglitColors.background),
             const SizedBox(width: 3),
             // 3-segment battery gauge
             for (var i = 0; i < 3; i++) ...[

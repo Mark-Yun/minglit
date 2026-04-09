@@ -78,7 +78,9 @@ class _DocumentPicker extends StatelessWidget {
             decoration: BoxDecoration(
               border: Border.all(color: MinglitColors.success),
               borderRadius: BorderRadius.circular(MinglitRadius.input),
-              color: MinglitColors.success.withValues(alpha: 0.1),
+              color: MinglitColors.success.withValues(
+                alpha: MinglitOpacity.highlight,
+              ),
             ),
             child: Row(
               children: [

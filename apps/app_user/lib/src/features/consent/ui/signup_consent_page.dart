@@ -6,10 +6,7 @@ import 'package:minglit_kit/minglit_kit.dart';
 const _signupPolicyVersion = 1;
 
 class SignupConsentPage extends ConsumerStatefulWidget {
-  const SignupConsentPage({
-    super.key,
-    this.from,
-  });
+  const SignupConsentPage({super.key, this.from});
 
   final String? from;
 
@@ -53,9 +50,7 @@ class _SignupConsentPageState extends ConsumerState<SignupConsentPage> {
 
     if (isInitialLoading) {
       return const Scaffold(
-        body: Center(
-          child: MinglitCircularProgressIndicator(),
-        ),
+        body: Center(child: MinglitCircularProgressIndicator()),
       );
     }
 
@@ -221,10 +216,7 @@ class _SignupConsentPageState extends ConsumerState<SignupConsentPage> {
 /// Fix #966: "전체 동의" 섹션 — 원형 체크박스 + primary tint 배경.
 /// SwitchListTile의 switch 위젯이 디자인 언어와 맞지 않아 circular checkbox로 교체.
 class _AllConsentTile extends StatelessWidget {
-  const _AllConsentTile({
-    required this.allSelected,
-    required this.onToggle,
-  });
+  const _AllConsentTile({required this.allSelected, required this.onToggle});
 
   final bool allSelected;
   final ValueChanged<bool> onToggle;
@@ -232,7 +224,9 @@ class _AllConsentTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final primaryTint = theme.colorScheme.primary.withValues(alpha: 0.06);
+    final primaryTint = theme.colorScheme.primary.withValues(
+      alpha: MinglitOpacity.softTint,
+    );
 
     return Material(
       color: primaryTint,
@@ -373,9 +367,7 @@ class _ConsentItemTile extends StatelessWidget {
 }
 
 class _ConsentTag extends StatelessWidget {
-  const _ConsentTag({
-    required this.required,
-  });
+  const _ConsentTag({required this.required});
 
   final bool required;
 
@@ -465,19 +457,12 @@ final Map<ConsentType, _ConsentDefinition> _consentDefinitions = {
         ConsentDetailSection(
           title: '수집 항목',
           emphasized: true,
-          items: [
-            '이름, 이메일, 프로필 사진',
-            '관심 태그, 이용 기록, 기기 정보',
-          ],
+          items: ['이름, 이메일, 프로필 사진', '관심 태그, 이용 기록, 기기 정보'],
         ),
         ConsentDetailSection(
           title: '이용 목적',
           emphasized: true,
-          items: [
-            '회원 식별과 계정 관리',
-            '이벤트 추천과 서비스 품질 개선',
-            '고객 문의 대응과 공지 전달',
-          ],
+          items: ['회원 식별과 계정 관리', '이벤트 추천과 서비스 품질 개선', '고객 문의 대응과 공지 전달'],
         ),
         ConsentDetailSection(
           title: '보관 기간',
@@ -491,9 +476,7 @@ final Map<ConsentType, _ConsentDefinition> _consentDefinitions = {
         ConsentDetailSection(
           title: '동의 거부 시 안내',
           emphasized: true,
-          items: [
-            '개인정보 수집·이용 동의를 거부하면 회원가입이 제한돼요.',
-          ],
+          items: ['개인정보 수집·이용 동의를 거부하면 회원가입이 제한돼요.'],
         ),
       ],
     ),
@@ -520,20 +503,13 @@ final Map<ConsentType, _ConsentDefinition> _consentDefinitions = {
         ),
         ConsentDetailSection(
           title: '제공 항목',
-          items: [
-            '이름(닉네임)',
-            '연령대',
-            '자격 인증 정보(직업/소속 — 본인인증 완료 유저만)',
-          ],
+          items: ['이름(닉네임)', '연령대', '자격 인증 정보(직업/소속 — 본인인증 완료 유저만)'],
         ),
         ConsentDetailSection(
           title: '제공 목적',
           items: ['이벤트 운영 (참가자 확인, 매칭 진행, 체크인)'],
         ),
-        ConsentDetailSection(
-          title: '보유 기간',
-          items: ['이벤트 종료 후 30일'],
-        ),
+        ConsentDetailSection(title: '보유 기간', items: ['이벤트 종료 후 30일']),
         ConsentDetailSection(
           title: '거부 권리',
           items: [
@@ -564,24 +540,17 @@ final Map<ConsentType, _ConsentDefinition> _consentDefinitions = {
         ),
         ConsentDetailSection(
           title: '이용 목적',
-          items: [
-            '회원 본인 여부 확인',
-            '중복 계정 생성 방지',
-          ],
+          items: ['회원 본인 여부 확인', '중복 계정 생성 방지'],
         ),
         ConsentDetailSection(
           title: '보관 기간',
           emphasized: true,
-          items: [
-            '회원 탈퇴 시까지 보관하며, 탈퇴 후 즉시 파기합니다.',
-          ],
+          items: ['회원 탈퇴 시까지 보관하며, 탈퇴 후 즉시 파기합니다.'],
         ),
         ConsentDetailSection(
           title: '동의 거부 시 안내',
           emphasized: true,
-          items: [
-            '본인인증 동의를 거부해도 서비스 이용이 가능해요. 단, 본인인증이 필요한 일부 기능이 제한될 수 있어요.',
-          ],
+          items: ['본인인증 동의를 거부해도 서비스 이용이 가능해요. 단, 본인인증이 필요한 일부 기능이 제한될 수 있어요.'],
         ),
       ],
     ),
@@ -595,19 +564,10 @@ final Map<ConsentType, _ConsentDefinition> _consentDefinitions = {
       title: '마케팅 정보 수신 동의',
       summary: '선택 동의이며, 언제든 설정에서 변경할 수 있습니다.',
       sections: [
-        ConsentDetailSection(
-          title: '수신 채널',
-          items: [
-            '푸시 알림',
-            '이메일',
-          ],
-        ),
+        ConsentDetailSection(title: '수신 채널', items: ['푸시 알림', '이메일']),
         ConsentDetailSection(
           title: '안내 내용',
-          items: [
-            '추천 이벤트와 프로모션',
-            '서비스 업데이트와 혜택 정보',
-          ],
+          items: ['추천 이벤트와 프로모션', '서비스 업데이트와 혜택 정보'],
         ),
       ],
     ),

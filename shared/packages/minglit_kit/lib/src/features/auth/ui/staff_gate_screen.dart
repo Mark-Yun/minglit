@@ -108,8 +108,12 @@ class _StaffGateScreenState extends ConsumerState<StaffGateScreen> {
                     ),
                     decoration: BoxDecoration(
                       color: _message!.contains('발송되었습니다')
-                          ? colorScheme.primaryContainer.withValues(alpha: 0.3)
-                          : colorScheme.errorContainer.withValues(alpha: 0.3),
+                          ? colorScheme.primaryContainer.withValues(
+                              alpha: MinglitOpacity.muted,
+                            )
+                          : colorScheme.errorContainer.withValues(
+                              alpha: MinglitOpacity.muted,
+                            ),
                       borderRadius: BorderRadius.circular(MinglitRadius.input),
                     ),
                     child: Text(
@@ -139,7 +143,7 @@ class _StaffGateScreenState extends ConsumerState<StaffGateScreen> {
                       Icons.shield_outlined,
                       size: 14,
                       color: colorScheme.onSurfaceVariant.withValues(
-                        alpha: 0.5,
+                        alpha: MinglitOpacity.strong,
                       ),
                     ),
                     const SizedBox(width: MinglitSpacing.xsmall),
@@ -149,7 +153,7 @@ class _StaffGateScreenState extends ConsumerState<StaffGateScreen> {
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                         color: colorScheme.onSurfaceVariant.withValues(
-                          alpha: 0.5,
+                          alpha: MinglitOpacity.strong,
                         ),
                         letterSpacing: 1,
                       ),

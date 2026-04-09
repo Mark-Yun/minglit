@@ -53,7 +53,9 @@ class Step4EntryRules extends ConsumerWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(MinglitRadius.card),
                     side: BorderSide(
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                      color: colorScheme.outlineVariant.withValues(
+                        alpha: MinglitOpacity.strong,
+                      ),
                     ),
                   ),
                   child: Column(
@@ -65,7 +67,7 @@ class Step4EntryRules extends ConsumerWidget {
                           vertical: MinglitSpacing.small,
                         ),
                         color: colorScheme.surfaceContainerHighest.withValues(
-                          alpha: 0.3,
+                          alpha: MinglitOpacity.muted,
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -130,7 +132,9 @@ class Step4EntryRules extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(MinglitSpacing.large),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: MinglitOpacity.muted,
+        ),
         borderRadius: BorderRadius.circular(MinglitRadius.card),
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
