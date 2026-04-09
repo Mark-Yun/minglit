@@ -36,7 +36,8 @@ class DeletionInfoPage extends ConsumerWidget {
                       padding: const EdgeInsets.all(MinglitSpacing.medium),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.secondaryContainer,
-                        borderRadius: BorderRadius.circular(16),
+                        // Fix #1195: BorderRadius 하드코딩 → MinglitRadius.card 토큰
+                        borderRadius: BorderRadius.circular(MinglitRadius.card),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,7 +84,7 @@ class DeletionInfoPage extends ConsumerWidget {
                     padding: const EdgeInsets.all(MinglitSpacing.medium),
                     decoration: BoxDecoration(
                       color: MinglitColors.error.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(MinglitRadius.card),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

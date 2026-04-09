@@ -128,7 +128,8 @@ class _ShimmerBox extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(4),
+        // Fix #1195: BorderRadius 하드코딩 → MinglitRadius.badge 토큰
+        borderRadius: BorderRadius.circular(MinglitRadius.badge),
         gradient: LinearGradient(
           colors: [baseColor, highlightColor, baseColor],
           stops: [

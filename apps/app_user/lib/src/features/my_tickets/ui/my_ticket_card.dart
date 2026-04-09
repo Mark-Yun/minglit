@@ -278,7 +278,8 @@ class _DDayChip extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(100),
+        // Fix #1195: BorderRadius 하드코딩 → MinglitRadius.chip 토큰
+        borderRadius: BorderRadius.circular(MinglitRadius.chip),
         border: isPast
             ? Border.all(color: theme.colorScheme.outlineVariant)
             : null,
