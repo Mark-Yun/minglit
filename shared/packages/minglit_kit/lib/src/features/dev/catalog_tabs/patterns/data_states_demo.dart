@@ -49,9 +49,7 @@ class _DataStatesDemoPageState extends State<DataStatesDemoPage> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('P6 · 데이터 상태 패턴'),
-      ),
+      appBar: AppBar(title: const Text('P6 · 데이터 상태 패턴')),
       body: Column(
         children: [
           Padding(
@@ -144,7 +142,9 @@ class _DataContent extends StatelessWidget {
           margin: EdgeInsets.zero,
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: MinglitColors.primary.withValues(alpha: 0.12),
+              backgroundColor: MinglitColors.primary.withValues(
+                alpha: MinglitOpacity.skeletonBase,
+              ),
               child: Text(
                 '${index + 1}',
                 style: theme.textTheme.labelMedium?.copyWith(
@@ -211,10 +211,7 @@ class _LoadingContent extends StatelessWidget {
                       children: [
                         MinglitSkeleton(height: 14),
                         SizedBox(height: MinglitSpacing.xsmall),
-                        MinglitSkeleton(
-                          width: 120,
-                          height: 12,
-                        ),
+                        MinglitSkeleton(width: 120, height: 12),
                       ],
                     ),
                   ),
@@ -234,7 +231,9 @@ class _LoadingContent extends StatelessWidget {
               color: MinglitColors.surface,
               borderRadius: BorderRadius.circular(MinglitRadius.small),
               border: Border.all(
-                color: MinglitColors.textSecondary.withValues(alpha: 0.2),
+                color: MinglitColors.textSecondary.withValues(
+                  alpha: MinglitOpacity.subtle,
+                ),
               ),
             ),
             child: Text(

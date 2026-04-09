@@ -36,7 +36,9 @@ extension _TicketSelectionWidgets on _TicketSelectionSheetState {
                   ),
                   borderRadius: BorderRadius.circular(MinglitRadius.input),
                   color: isSelected
-                      ? theme.colorScheme.primary.withValues(alpha: 0.05)
+                      ? theme.colorScheme.primary.withValues(
+                          alpha: MinglitOpacity.tintFill,
+                        )
                       : theme.colorScheme.surface,
                 ),
                 child: Row(

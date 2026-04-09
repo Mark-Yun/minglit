@@ -5,7 +5,7 @@ class MinglitShadows {
   /// Returns a card shadow using the given accent color.
   static List<BoxShadow> cardSelected(Color accentColor) => [
     BoxShadow(
-      color: accentColor.withValues(alpha: 0.1),
+      color: accentColor.withValues(alpha: MinglitOpacity.highlight),
       blurRadius: MinglitSpacing.small,
       offset: const Offset(0, 4),
     ),
@@ -61,7 +61,9 @@ class MinglitTextStyles {
   static TextStyle selectableCardSubtitle(BuildContext context) {
     final theme = Theme.of(context);
     return theme.textTheme.labelSmall!.copyWith(
-      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+      color: theme.colorScheme.onSurfaceVariant.withValues(
+        alpha: MinglitOpacity.scrimDark,
+      ),
     );
   }
 

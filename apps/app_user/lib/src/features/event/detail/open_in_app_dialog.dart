@@ -19,10 +19,7 @@ bool get _isMobileWeb {
 /// A bottom banner displayed on mobile web to nudge users to the Minglit app.
 class OpenInAppBanner extends ConsumerWidget {
   /// Callback when the user dismisses the banner.
-  const OpenInAppBanner({
-    required this.onDismiss,
-    super.key,
-  });
+  const OpenInAppBanner({required this.onDismiss, super.key});
 
   /// Called when the user taps the close button.
   final VoidCallback onDismiss;
@@ -44,7 +41,9 @@ class OpenInAppBanner extends ConsumerWidget {
         color: theme.colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.shadow.withValues(alpha: 0.1),
+            color: theme.colorScheme.shadow.withValues(
+              alpha: MinglitOpacity.highlight,
+            ),
             blurRadius: MinglitRadius.small,
             offset: const Offset(0, -2),
           ),

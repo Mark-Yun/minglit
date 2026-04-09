@@ -54,10 +54,7 @@ class _SettlementPageState extends ConsumerState<SettlementPage>
       ),
       body: TabBarView(
         controller: _tabController,
-        children: const [
-          _DashboardTab(),
-          _ListTab(),
-        ],
+        children: const [_DashboardTab(), _ListTab()],
       ),
     );
   }
@@ -129,10 +126,7 @@ class _DashboardTab extends ConsumerWidget {
 }
 
 class _PeriodSelector extends StatelessWidget {
-  const _PeriodSelector({
-    required this.selectedMonth,
-    required this.onChanged,
-  });
+  const _PeriodSelector({required this.selectedMonth, required this.onChanged});
 
   final DateTime selectedMonth;
   final ValueChanged<int> onChanged;
@@ -178,7 +172,7 @@ class _RevenueSummaryCard extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             colorScheme.primary,
-            colorScheme.primary.withValues(alpha: 0.8),
+            colorScheme.primary.withValues(alpha: MinglitOpacity.scrimLight),
           ],
         ),
         borderRadius: BorderRadius.circular(MinglitRadius.button),
@@ -211,7 +205,7 @@ class _RevenueSummaryCard extends StatelessWidget {
                 '정산 완료',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: colorScheme.onPrimary.withValues(
-                    alpha: MinglitOpacity.scrimLight,
+                    alpha: MinglitOpacity.scrimDark,
                   ),
                 ),
               ),
@@ -232,7 +226,7 @@ class _RevenueSummaryCard extends StatelessWidget {
                 '정산 대기',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: colorScheme.onPrimary.withValues(
-                    alpha: MinglitOpacity.scrimLight,
+                    alpha: MinglitOpacity.scrimDark,
                   ),
                 ),
               ),
@@ -317,7 +311,7 @@ class _StatusCell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withValues(alpha: MinglitOpacity.highlight),
         borderRadius: BorderRadius.circular(MinglitRadius.small),
       ),
       child: Column(
@@ -459,9 +453,7 @@ class _ListTabState extends ConsumerState<_ListTab> {
                           if (i >= viewList.length) {
                             return const Padding(
                               padding: EdgeInsets.all(MinglitSpacing.medium),
-                              child: Center(
-                                child: CircularProgressIndicator(),
-                              ),
+                              child: Center(child: CircularProgressIndicator()),
                             );
                           }
                           final item = viewList[i];

@@ -30,7 +30,9 @@ class EndedContent extends StatelessWidget {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: MinglitColors.textSecondary.withValues(alpha: 0.2),
+              color: MinglitColors.textSecondary.withValues(
+                alpha: MinglitOpacity.subtle,
+              ),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -55,10 +57,7 @@ class EndedContent extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: MinglitSpacing.xlarge),
-          Text(
-            '이벤트는 어떠셨나요?',
-            style: theme.textTheme.bodyMedium,
-          ),
+          Text('이벤트는 어떠셨나요?', style: theme.textTheme.bodyMedium),
           const SizedBox(height: MinglitSpacing.medium),
           const _StarRatingRow(),
           const SizedBox(height: MinglitSpacing.xlarge),
@@ -109,7 +108,9 @@ class _StarRatingRowState extends State<_StarRatingRow> {
               size: 40,
               color: starIndex <= _rating
                   ? MinglitColors.secondary
-                  : MinglitColors.textSecondary.withValues(alpha: 0.4),
+                  : MinglitColors.textSecondary.withValues(
+                      alpha: MinglitOpacity.scrimMedium,
+                    ),
             ),
           ),
         );
@@ -125,7 +126,9 @@ class _DragHandle extends StatelessWidget {
       width: 40,
       height: 4,
       decoration: BoxDecoration(
-        color: MinglitColors.textSecondary.withValues(alpha: 0.3),
+        color: MinglitColors.textSecondary.withValues(
+          alpha: MinglitOpacity.muted,
+        ),
         borderRadius: BorderRadius.circular(2),
       ),
     );

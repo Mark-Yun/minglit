@@ -38,7 +38,7 @@ class PartyCapacityInput extends StatelessWidget {
                 padding: const EdgeInsets.all(MinglitSpacing.medium),
                 decoration: BoxDecoration(
                   color: colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.3,
+                    alpha: MinglitOpacity.muted,
                   ),
                   borderRadius: BorderRadius.circular(MinglitRadius.input),
                   border: Border.all(color: colorScheme.outlineVariant),

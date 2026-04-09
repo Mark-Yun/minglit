@@ -128,9 +128,13 @@ class Step6Review extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: MinglitSpacing.large),
       padding: const EdgeInsets.all(MinglitSpacing.medium),
       decoration: BoxDecoration(
-        color: colorScheme.errorContainer.withValues(alpha: 0.1),
+        color: colorScheme.errorContainer.withValues(
+          alpha: MinglitOpacity.highlight,
+        ),
         borderRadius: BorderRadius.circular(MinglitRadius.card),
-        border: Border.all(color: colorScheme.error.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: colorScheme.error.withValues(alpha: MinglitOpacity.muted),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

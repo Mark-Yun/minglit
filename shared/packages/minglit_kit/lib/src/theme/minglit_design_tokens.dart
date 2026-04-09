@@ -246,8 +246,23 @@ class MinglitAnimation {
 
 /// Opacity constants for consistent transparency values.
 class MinglitOpacity {
+  /// 0% opacity — fully transparent overlays.
+  static const double none = 0;
+
+  /// 2% opacity — ultra subtle shadow wash.
+  static const double shadowXs = 0.02;
+
+  /// 3% opacity — soft elevated shadow.
+  static const double shadowSm = 0.03;
+
+  /// 4% opacity — shimmer highlight.
+  static const double shimmerHighlight = 0.04;
+
   /// 5% opacity — tint fill, selected card background.
   static const double tintFill = 0.05;
+
+  /// 6% opacity — extra subtle primary tint.
+  static const double softTint = 0.06;
 
   /// 8% opacity — active chip/tag background.
   static const double activeChip = 0.08;
@@ -255,14 +270,29 @@ class MinglitOpacity {
   /// 10% opacity — event phase status indicator background (recruiting/preparing/live).
   static const double highlight = 0.1;
 
+  /// 12% opacity — skeleton base fill.
+  static const double skeletonBase = 0.12;
+
   /// 15% opacity — avatar placeholder background.
   static const double placeholder = 0.15;
 
   /// 20% opacity — unfilled gauge segments.
   static const double subtle = 0.2;
 
+  /// 26% opacity — low-emphasis overlay.
+  static const double lowEmphasis = 0.26;
+
   /// 30% opacity — muted/empty elements.
   static const double muted = 0.3;
+
+  /// 40% opacity — medium-strength scrim or overlay.
+  static const double scrimMedium = 0.4;
+
+  /// 50% opacity — strong overlay or border.
+  static const double strong = 0.5;
+
+  /// 54% opacity — medium emphasis content.
+  static const double mediumEmphasis = 0.54;
 
   /// 45% opacity — gradient overlay.
   static const double gradient = 0.45;
@@ -273,6 +303,12 @@ class MinglitOpacity {
   /// 60% opacity — separator/divider text.
   static const double separator = 0.6;
 
+  /// 70% opacity — dark scrim or contrast overlay.
+  static const double scrimDark = 0.7;
+
   /// 80% opacity — light scrim.
   static const double scrimLight = 0.8;
+
+  /// 87% opacity — high-emphasis foreground.
+  static const double highEmphasis = 0.87;
 }
