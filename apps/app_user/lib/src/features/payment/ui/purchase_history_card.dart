@@ -131,6 +131,9 @@ class PurchaseHistoryCard extends ConsumerWidget {
           const SizedBox(height: MinglitSpacing.medium),
 
           // 4. Actions
+          // Fix #1234: 예매 취소 버튼 2줄 깨짐 — 버튼 3개 Expanded 균등 분할 시
+          // '예매 취소' 텍스트가 2줄로 넘침. 취소 버튼은 flex:2로 넓히고
+          // 나머지 버튼은 flex:1로 유지하여 1줄 표시 보장.
           // Fix #1236: 보조 버튼(영수증/문의하기)을 OutlinedButton → TextButton으로
           // 낮춤 — 브랜드 보라 아웃라인 제거, 정보 위계 명확화
           Row(
@@ -197,6 +200,7 @@ class PurchaseHistoryCard extends ConsumerWidget {
               if (canCancel) ...[
                 const SizedBox(width: MinglitSpacing.small),
                 Expanded(
+                  flex: 2,
                   child: ElevatedButton(
                     onPressed: () => _onCancelPressed(
                       context: context,
@@ -212,7 +216,11 @@ class PurchaseHistoryCard extends ConsumerWidget {
                       backgroundColor: theme.colorScheme.errorContainer,
                       foregroundColor: theme.colorScheme.onErrorContainer,
                     ),
-                    child: const Text('예매 취소'),
+                    child: const Text(
+                      '예매 취소',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
               ],

@@ -220,31 +220,23 @@ async function handleRequest(req: Request): Promise<Response> {
       }
     }
 
-    // Insert party
-    const { data: newParty, error: partyInsertError } = await supabase
-      .from("parties")
-      .insert(partyRecord)
-      .select("id")
-      .single();
+    // Fix #1223: parties INSERT + party_tags INSERT を RPC로 원자적 처리
+    // 기존 2단계 write(INSERT parties → INSERT party_tags) 는 2단계 실패 시 고아 row 발생.
+    // create_party_with_tags RPC 가 단일 트랜잭션으로 두 write를 묶어 처리한다.
+    const { data: rpcData, error: rpcError } = await supabase
+      .rpc("create_party_with_tags", {
+        p_party: partyRecord,
+        p_tag_ids: Array.isArray(tagIds) ? tagIds as string[] : [],
+      });
 
-    if (partyInsertError) {
-      return errorResponse(`Failed to create party: ${partyInsertError.message}`, 500);
+    if (rpcError) {
+      return errorResponse(`Failed to create party: ${rpcError.message}`, 500);
+    }
+    if (!rpcData) {
+      return errorResponse("Failed to create party: no party_id returned", 500);
     }
 
-    const partyId = newParty.id as string;
-
-    // Insert party_tags if tag_ids provided (validated before party INSERT above)
-    // Fix #1136: tag_ids 지원 — party 생성 후 party_tags INSERT
-    if (Array.isArray(tagIds) && tagIds.length > 0) {
-      const partyTagRecords = (tagIds as string[]).map((tid) => ({
-        party_id: partyId,
-        tag_id: tid,
-      }));
-      const { error: ptError } = await supabase.from("party_tags").insert(partyTagRecords);
-      if (ptError) {
-        return errorResponse(`Failed to create party tags: ${ptError.message}`, 500);
-      }
-    }
+    const partyId = rpcData as string;
 
     // Insert entry_group_templates if provided (already validated above)
     if (Array.isArray(entryGroupTemplates) && entryGroupTemplates.length > 0) {
@@ -457,40 +449,17 @@ async function handleRequest(req: Request): Promise<Response> {
     }
 
     // Update party_tags if tag_ids present in body (undefined = no change, [] = clear all)
-    // Fix #1149: DELETE old-only rows FIRST, then INSERT new ones.
-    // INSERT-first caused the check_party_tags_limit trigger (≥5 guard) to
-    // reject valid 5→5 swaps: the trigger would fire before old rows were removed.
-    // Deleting stale rows first keeps the running count ≤5 at every step.
+    // Fix #1223: 2단계 DELETE+UPSERT 를 RPC로 원자적 처리
+    // update_party_tags RPC 가 단일 트랜잭션으로 DELETE stale rows → INSERT new rows 처리.
+    // Fix #1149 패턴(DELETE-first)도 RPC 내부에서 동일하게 유지됨.
     if (updateTagIds !== undefined) {
-      if (updateTagIds.length > 0) {
-        // Delete tags that are no longer needed before inserting new ones
-        const { error: ptDeleteError } = await supabase
-          .from("party_tags")
-          .delete()
-          .eq("party_id", partyId)
-          .not("tag_id", "in", `(${(updateTagIds as string[]).join(",")})`);
-        if (ptDeleteError) {
-          return errorResponse(`Failed to clear old party tags: ${ptDeleteError.message}`, 500);
-        }
-        const partyTagRecords = (updateTagIds as string[]).map((tid) => ({
-          party_id: partyId,
-          tag_id: tid,
-        }));
-        const { error: ptInsertError } = await supabase
-          .from("party_tags")
-          .upsert(partyTagRecords, { onConflict: "party_id,tag_id", ignoreDuplicates: true });
-        if (ptInsertError) {
-          return errorResponse(`Failed to update party tags: ${ptInsertError.message}`, 500);
-        }
-      } else {
-        // Empty array — clear all tags
-        const { error: ptDeleteError } = await supabase
-          .from("party_tags")
-          .delete()
-          .eq("party_id", partyId);
-        if (ptDeleteError) {
-          return errorResponse(`Failed to clear party tags: ${ptDeleteError.message}`, 500);
-        }
+      const { error: ptRpcError } = await supabase
+        .rpc("update_party_tags", {
+          p_party_id: partyId,
+          p_tag_ids: updateTagIds as string[],
+        });
+      if (ptRpcError) {
+        return errorResponse(`Failed to update party tags: ${ptRpcError.message}`, 500);
       }
     }
 
