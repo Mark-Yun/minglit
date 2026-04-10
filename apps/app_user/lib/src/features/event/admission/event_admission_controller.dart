@@ -33,7 +33,8 @@ class EventAdmissionController extends _$EventAdmissionController {
 
       // Fix #1208: pending(결제 미완료) 신청은 참여로 간주하지 않음
       // rejected: user did not participate — treat same as cancelled for ended events
-      final hasActiveApplication = existingApp != null &&
+      final hasActiveApplication =
+          existingApp != null &&
           existingApp.status != 'pending' &&
           existingApp.status != 'cancelled' &&
           existingApp.status != 'rejected';
