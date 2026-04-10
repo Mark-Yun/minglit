@@ -107,8 +107,10 @@ void main() {
     });
 
     test('/dev/any-sub-path returns null (no redirect)', () {
-      final result =
-          _redirect(location: '/dev/some-other-tool', isLoggedIn: false);
+      final result = _redirect(
+        location: '/dev/some-other-tool',
+        isLoggedIn: false,
+      );
       expect(result, isNull);
     });
   });
@@ -123,8 +125,10 @@ void main() {
     });
 
     test('/explore/something redirects to /', () {
-      final result =
-          _redirect(location: '/explore/something', isLoggedIn: false);
+      final result = _redirect(
+        location: '/explore/something',
+        isLoggedIn: false,
+      );
       expect(result, '/');
     });
   });
@@ -147,14 +151,15 @@ void main() {
     });
 
     test('/purchase-history redirects to /login when not logged in', () {
-      final result =
-          _redirect(location: '/purchase-history', isLoggedIn: false);
+      final result = _redirect(
+        location: '/purchase-history',
+        isLoggedIn: false,
+      );
       expect(result, '/login?from=%2Fpurchase-history');
     });
 
     test('/signup/consent redirects to /login when not logged in', () {
-      final result =
-          _redirect(location: '/signup/consent', isLoggedIn: false);
+      final result = _redirect(location: '/signup/consent', isLoggedIn: false);
       expect(result, '/login?from=%2Fsignup%2Fconsent');
     });
 
@@ -169,18 +174,19 @@ void main() {
     // Fix #1249: query parameters in the original location must be preserved
     // in the `from` param so the user returns to the exact same page after login.
     test(
-        '/events/:id/apply with query params — full URI preserved in from param',
-        () {
-      final result = _redirect(
-        location: '/events/abc/apply?source=share',
-        isLoggedIn: false,
-      );
-      // from value must be the full URI (path + query), percent-encoded
-      expect(
-        result,
-        '/login?from=%2Fevents%2Fabc%2Fapply%3Fsource%3Dshare',
-      );
-    });
+      '/events/:id/apply with query params — full URI preserved in from param',
+      () {
+        final result = _redirect(
+          location: '/events/abc/apply?source=share',
+          isLoggedIn: false,
+        );
+        // from value must be the full URI (path + query), percent-encoded
+        expect(
+          result,
+          '/login?from=%2Fevents%2Fabc%2Fapply%3Fsource%3Dshare',
+        );
+      },
+    );
   });
 
   group('protected paths — authenticated', () {
