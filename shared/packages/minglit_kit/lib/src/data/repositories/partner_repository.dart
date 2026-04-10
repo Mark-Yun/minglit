@@ -64,12 +64,13 @@ abstract class _SupabasePartnerContextBase implements _SupabasePartnerContext {
     }
   }
 
+  // Fix #1217: partner_member_permissions 누락 시 승인 신청서 기반 폴백 조회로 관리 파트너를 복구
   /// Fetches partners managed by the current user.
   ///
-  /// Fix #1217: When partner_member_permissions has no records (e.g., data
-  /// seeded without the approval trigger, or trigger failed), falls back to
-  /// finding partners via approved partner_applications matched by business
-  /// identifiers (biz_name + biz_number).
+  /// When partner_member_permissions has no records (e.g., data seeded without
+  /// the approval trigger, or trigger failed), falls back to finding partners
+  /// via approved partner_applications matched by business identifiers
+  /// (biz_name + biz_number).
   Future<List<Partner>> getMyManagedPartners() async {
     final userId = supabaseClient.auth.currentUser?.id;
     Log.d('getMyManagedPartners called | user: $userId');
@@ -182,7 +183,7 @@ abstract class _SupabasePartnerContextBase implements _SupabasePartnerContext {
         e,
         st,
       );
-      return [];
+      rethrow;
     }
   }
 
