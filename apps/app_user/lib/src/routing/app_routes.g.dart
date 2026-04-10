@@ -21,6 +21,7 @@ List<RouteBase> get $appRoutes => [
   $purchaseHistoryRoute,
   $notificationCenterRoute,
   $notificationSettingsRoute,
+  $accountManagementRoute,
   $homeRoute,
   $searchRoute,
   $myPageRoute,
@@ -417,6 +418,32 @@ mixin $NotificationSettingsRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/my/notification-settings');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $accountManagementRoute => GoRouteData.$route(
+  path: '/my/account',
+  factory: $AccountManagementRoute._fromState,
+);
+
+mixin $AccountManagementRoute on GoRouteData {
+  static AccountManagementRoute _fromState(GoRouterState state) =>
+      const AccountManagementRoute();
+
+  @override
+  String get location => GoRouteData.$location('/my/account');
 
   @override
   void go(BuildContext context) => context.go(location);

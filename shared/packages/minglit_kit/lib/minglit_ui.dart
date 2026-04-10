@@ -1,5 +1,6 @@
 export 'src/features/account_deletion/ui/pending_deletion_recovery_listener.dart';
 export 'src/features/auth/ui/minglit_login_screen.dart';
+export 'src/ui/pages/account_management_page.dart';
 export 'src/features/auth/ui/staff_gate_screen.dart';
 export 'src/features/auth/ui/staff_guard_wrapper.dart';
 export 'src/features/iamport/iamport.dart';

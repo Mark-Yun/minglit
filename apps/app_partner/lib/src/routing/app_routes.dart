@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_partner/src/features/account_deletion/ui/deletion_complete_page.dart';
 import 'package:app_partner/src/features/account_deletion/ui/deletion_info_page.dart';
 import 'package:app_partner/src/features/account_deletion/ui/deletion_reason_page.dart';
@@ -10,6 +12,7 @@ import 'package:app_partner/src/features/home/guide/location_guide_page.dart';
 import 'package:app_partner/src/features/home/partner_home_page.dart';
 import 'package:app_partner/src/features/member/partner_member_list_page.dart';
 import 'package:app_partner/src/features/member/partner_member_permission_page.dart';
+import 'package:app_partner/src/features/more/more_coordinator.dart';
 import 'package:app_partner/src/features/more/more_page.dart';
 import 'package:app_partner/src/features/onboarding/partner_apply_page.dart';
 import 'package:app_partner/src/features/onboarding/partner_apply_status_page.dart';
@@ -198,6 +201,8 @@ class NotificationCenterRoute extends GoRouteData
                 ),
               ],
             ),
+            // Fix #1213: 계정 관리 서브페이지
+            TypedGoRoute<PartnerAccountManagementRoute>(path: 'account'),
           ],
         ),
       ],
@@ -503,4 +508,40 @@ class RecurrenceManagementRoute extends GoRouteData
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       RecurrenceManagementScreen(partyId: partyId);
+}
+
+/// **Partner Account Management Route**: Logout, account deletion, and partner
+/// profile sub-settings page.
+/// Path: `/more/account`
+///
+/// Fix #1213: 계정 관리 서브페이지로 로그아웃/회원탈퇴/파트너프로필 통합
+class PartnerAccountManagementRoute extends GoRouteData
+    with $PartnerAccountManagementRoute {
+  const PartnerAccountManagementRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return Consumer(
+      builder: (context, ref, _) {
+        return AccountManagementPage(
+          onLogout: () {
+            GoRouter.of(context).go('/');
+            unawaited(
+              Future<void>.delayed(Duration.zero).then((_) {
+                unawaited(ref.read(authControllerProvider.notifier).signOut());
+              }),
+            );
+          },
+          // Fix #1213: 기존 탈퇴 플로우를 계정 관리에서 재사용
+          onDeleteAccount: () =>
+              ref.read(moreCoordinatorProvider).pushAccountDeletion(),
+          onPartnerProfile: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('준비 중입니다.')),
+            );
+          },
+        );
+      },
+    );
+  }
 }
