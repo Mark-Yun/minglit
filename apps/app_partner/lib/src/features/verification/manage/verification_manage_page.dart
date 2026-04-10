@@ -119,7 +119,10 @@ class _ActiveList extends StatelessWidget {
           ),
           const SizedBox(height: MinglitSpacing.medium),
           if (verifications.isEmpty)
-            const _EmptyState(message: '생성된 인증이 없습니다.')
+            const MinglitEmptyState.card(
+              title: '생성된 인증이 없습니다.',
+              icon: Icons.verified_user_outlined,
+            )
           else
             ListView.separated(
               shrinkWrap: true,
@@ -152,7 +155,10 @@ class _ArchivedList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (verifications.isEmpty) {
-      return const _EmptyState(message: '보관된 인증이 없습니다.');
+      return const MinglitEmptyState.card(
+        title: '보관된 인증이 없습니다.',
+        icon: Icons.verified_user_outlined,
+      );
     }
     return ListView.separated(
       padding: const EdgeInsets.all(MinglitSpacing.large),
@@ -167,40 +173,6 @@ class _ArchivedList extends StatelessWidget {
           onAction: () => onRestore(verification),
         );
       },
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.message});
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(MinglitSpacing.xlarge),
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(MinglitRadius.card),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.verified_user_outlined,
-            size: MinglitIconSize.xlarge * 1.5,
-            color: theme.colorScheme.outlineVariant,
-          ),
-          const SizedBox(height: MinglitSpacing.medium),
-          Text(
-            message,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

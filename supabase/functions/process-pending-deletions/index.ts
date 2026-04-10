@@ -13,6 +13,7 @@ const CONTRACT_RETENTION_YEARS = 5;
 const PAYMENT_RETENTION_YEARS = 5;
 const DISPUTE_RETENTION_YEARS = 3;
 const LOGIN_RETENTION_MONTHS = 3;
+const CONSENT_RETENTION_YEARS = 2;
 
 type PendingDeletionUser = {
   id: string;
@@ -44,7 +45,7 @@ type ReportDetailArchive = {
 
 type ArchivedRecordInsert = {
   user_id_hash: string;
-  record_type: "contract" | "payment" | "dispute" | "login";
+  record_type: "contract" | "payment" | "dispute" | "login" | "consent";
   record_data: Record<string, unknown>;
   retention_until: string;
 };
@@ -179,6 +180,39 @@ async function loadReportDetails(
   return (data ?? []) as ReportDetailArchive[];
 }
 
+type UserConsentArchive = {
+  id: string;
+  consent_key: string;
+  consented: boolean;
+  policy_version: number | null;
+  consented_at: string;
+  withdrawn_at: string | null;
+  created_at: string;
+};
+
+async function loadUserConsents(
+  userId: string,
+): Promise<UserConsentArchive[]> {
+  const supabase = createServiceClient();
+  const { data, error } = await withSpan(
+    "db.query.user_consents_for_archive",
+    "db.query",
+    () =>
+      supabase
+        .from("user_consents")
+        .select(
+          "id, consent_key, consented, policy_version, consented_at, withdrawn_at, created_at",
+        )
+        .eq("user_id", userId),
+  );
+
+  if (error) {
+    throw new Error(`Failed to load user consents: ${error.message}`);
+  }
+
+  return (data ?? []) as UserConsentArchive[];
+}
+
 async function buildArchivedRecords(
   user: PendingDeletionUser,
   archivedRunId: string,
@@ -187,6 +221,7 @@ async function buildArchivedRecords(
   const userIdHash = await sha256Hex(user.id);
   const eventApplications = await loadEventApplications(user.id);
   const reportDetails = await loadReportDetails(user.id);
+  const userConsents = await loadUserConsents(user.id);
   const supabase = createServiceClient();
   const { data: authUserData, error: authUserError } = await withSpan(
     "auth.admin.get_user_for_archive",
@@ -203,6 +238,7 @@ async function buildArchivedRecords(
   const paymentRetention = addYears(now, PAYMENT_RETENTION_YEARS);
   const disputeRetention = addYears(now, DISPUTE_RETENTION_YEARS);
   const loginRetention = addMonths(now, LOGIN_RETENTION_MONTHS);
+  const consentRetention = addYears(now, CONSENT_RETENTION_YEARS);
 
   for (const application of eventApplications) {
     archivedRecords.push({
@@ -278,6 +314,25 @@ async function buildArchivedRecords(
     },
     retention_until: loginRetention,
   });
+
+  for (const consent of userConsents) {
+    archivedRecords.push({
+      user_id_hash: userIdHash,
+      record_type: "consent",
+      record_data: {
+        archived_run_id: archivedRunId,
+        source_table: "user_consents",
+        consent_id: consent.id,
+        consent_key: consent.consent_key,
+        consented: consent.consented,
+        policy_version: consent.policy_version,
+        consented_at: consent.consented_at,
+        withdrawn_at: consent.withdrawn_at,
+        created_at: consent.created_at,
+      },
+      retention_until: consentRetention,
+    });
+  }
 
   return archivedRecords;
 }

@@ -28,10 +28,14 @@ class _PartyLocationInputState extends State<PartyLocationInput> {
         Container(
           height: 200,
           decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            color: colorScheme.surfaceContainerHighest.withValues(
+              alpha: MinglitOpacity.muted,
+            ),
             borderRadius: BorderRadius.circular(MinglitRadius.card),
             border: Border.all(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+              color: colorScheme.outlineVariant.withValues(
+                alpha: MinglitOpacity.strong,
+              ),
             ),
           ),
           child: ClipRRect(
@@ -47,7 +51,9 @@ class _PartyLocationInputState extends State<PartyLocationInput> {
         AnimatedContainer(
           duration: MinglitAnimation.fast,
           decoration: BoxDecoration(
-            color: colorScheme.tertiary.withValues(alpha: 0.08),
+            color: colorScheme.tertiary.withValues(
+              alpha: MinglitOpacity.activeChip,
+            ),
             borderRadius: BorderRadius.circular(MinglitRadius.input),
           ),
           child: InkWell(
@@ -73,7 +79,9 @@ class _PartyLocationInputState extends State<PartyLocationInput> {
                   ),
                   Icon(
                     Icons.chevron_right,
-                    color: colorScheme.tertiary.withValues(alpha: 0.6),
+                    color: colorScheme.tertiary.withValues(
+                      alpha: MinglitOpacity.separator,
+                    ),
                     size: MinglitIconSize.medium,
                   ),
                 ],
@@ -93,9 +101,9 @@ class _PartyLocationInputState extends State<PartyLocationInput> {
           Icon(
             Icons.map_outlined,
             size: 48,
-            color: Theme.of(
-              context,
-            ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+            color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(
+              alpha: MinglitOpacity.strong,
+            ),
           ),
           const SizedBox(height: MinglitSpacing.small),
           Text('파티가 열릴 장소를 선택하세요', style: MinglitTextStyles.infoText(context)),

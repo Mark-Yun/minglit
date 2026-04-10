@@ -1,0 +1,499 @@
+# 개인정보 유출 대응 프로세스
+
+**최초 작성**: 2026-04-08 | **작성자**: needs-security-claude-1
+**법률 검토**: 2026-04-08 | **검토자**: needs-legal-claude-1
+**법적 근거**: 개인정보보호법 제34조(개정, 2026.09.11 시행), 정보통신망법 제27조의3
+**관련 이슈**: #1160, #1181
+
+---
+
+## 1. 목적
+
+개인정보 유출등(분실·도난·유출·위조·변조·훼손) 또는 그 가능성을 인지한 경우, 법적 의무를 충족하면서 피해를 최소화하기 위한 단계별 대응 절차를 정의한다.
+
+### 1.1 2026년 개정 핵심 변경사항
+
+| 항목 | 현행 (시행 전) | 개정 (2026.09.11 시행) |
+|------|---------------|----------------------|
+| **'유출등' 범위** | 분실·도난·유출 | 분실·도난·유출 + **위조·변조·훼손** |
+| **통지 기산점** | 유출 **확인** 시 | 유출등을 **알게 된** 시점 |
+| **통지 기한** | 5일 이내 | 72시간 이내 |
+| **보호위 신고** | 5일 이내 | 72시간 이내 |
+| **통지 항목** | 5개 항목 | 5개 항목 + **정보주체의 법적 권리 안내** (손해배상·법정손해배상·분쟁조정 등) |
+| **유출 가능성 통지** | 규정 없음 | **신설** — 유출등의 가능성을 알게 된 경우에도 별도 통지 의무 |
+
+> **핵심 1**: "유출등"의 범위가 위조·변조·훼손까지 확대되었다. DB 변조, 데이터 훼손도 대응 대상이다.
+>
+> **핵심 2**: 유출 "가능성" 통지는 유출 "확정" 통지와 별개의 의무다. 가능성 인지 시점에서 정보주체에게 피해 최소화 정보를 즉시 통지해야 하며, 이후 유출이 확정되면 법정 필수 항목 전체를 포함한 정식 통지를 다시 해야 한다.
+>
+> **핵심 3**: 통지 항목에 정보주체의 법적 권리(손해배상 청구, 법정손해배상 청구, 분쟁조정 신청 등)와 그 행사 방법이 추가되었다.
+
+---
+
+## 2. 유출등의 인지 및 가능성 인지 기준
+
+아래 상황 중 하나라도 해당되면 "유출등의 가능성 인지"가 성립한다. 확증이 없어도 합리적 의심만으로 충분하다. 개정법 취지상 보수적으로 판단한다.
+
+> **법적 구분**: 개정법은 ① "유출등이 되었음을 알게 된 때" (확정 통지, 제34조 제1항)와 ② "유출등의 가능성이 있음을 알게 된 때" (가능성 통지, 제34조 제5항)를 구분한다. 실무에서는 가능성 인지 시점에서 바로 대응 프로세스를 시작하고, 조사 결과에 따라 확정 통지 여부를 결정한다.
+
+### 2.1 Supabase/인프라 레벨
+
+| 트리거 | 설명 | 예시 |
+|--------|------|------|
+| **비정상 인증 패턴** | 단시간 대량 로그인 시도, 성공률 급변 | 특정 IP에서 1시간 내 1,000회 이상 로그인 시도 |
+| **RLS 우회 징후** | 권한 없는 데이터 접근 로그 | `user_profiles` 테이블에 타인 CI/DI 조회 흔적 |
+| **비정상 데이터 추출** | 대량 SELECT/COPY 패턴 | Edge Function에서 비정상적 대량 응답 (pagination 없는 전체 조회) |
+| **서비스 키 노출** | `service_role_key` 등 외부 유출 | GitHub public repo, 로그, 클라이언트 번들에 키 노출 |
+| **관리자 계정 이상** | `app_roles` super_admin/moderator 비인가 접근 | 알 수 없는 IP에서 관리자 세션 생성 |
+| **스토리지 비정상 접근** | 인증서류 등 민감 파일 대량 다운로드 | `verification_submissions` 첨부 파일 일괄 접근 |
+| **데이터 위조·변조 징후** | 비인가 UPDATE/DELETE, 무결성 불일치 | 레코드 해시 불일치, 감사 로그 없는 데이터 변경, 백업과 현재 상태 불일치 |
+| **데이터 훼손** | DB/스토리지 비정상 삭제·파괴 | 테이블 DROP, 대량 DELETE, 스토리지 버킷 일괄 삭제 |
+
+### 2.2 애플리케이션 레벨
+
+| 트리거 | 설명 | 예시 |
+|--------|------|------|
+| **외부 제보** | 유저/파트너/외부인의 유출 신고 | "다른 사람의 정보가 보인다" CS 접수 |
+| **다크웹/외부 노출** | 밍글릿 데이터가 외부에서 발견 | 보안 커뮤니티/다크웹에서 데이터 판매 정보 |
+| **비정상 API 응답** | 다른 유저의 데이터가 응답에 포함 | 프로필 조회 시 타인의 CI/DI가 반환 |
+| **내부자 신고** | 팀원이 의심 행위 발견 | 배포 과정에서 민감 데이터 로그 노출 발견 |
+
+### 2.3 판단 기준
+
+- **즉시 대응 (T=0)**: 위 트리거 중 하나라도 해당 → 유출 가능성 인지 시점으로 간주
+- **오탐 가능성이 높아도** 대응 프로세스는 시작한다. 조사 후 오탐으로 확인되면 프로세스를 종료하면 된다.
+- 판단이 어려우면 "인지한 것으로 본다" (법 개정 취지상 보수적 판단)
+
+---
+
+## 3. 대응 단계
+
+### Phase 0: 즉시 조치 (T+0 ~ T+1시간)
+
+**목표**: 추가 유출 차단, 증거 보전
+
+| # | 조치 | 담당 | 상세 |
+|---|------|------|------|
+| 0-1 | **대응팀 소집** | 발견자 → Mark (CEO) | Slack/전화로 즉시 보고. Mark가 대응팀장 역할 수행 |
+| 0-2 | **증거 보전** | 운영 담당 | Supabase Dashboard 로그, Edge Function 로그(Axiom), PostgreSQL 로그를 즉시 캡처/저장. **로그 삭제 금지** |
+| 0-3 | **긴급 차단** | 운영 담당 | 유출 경로 차단: API 키 로테이션, 의심 세션 강제 종료, 해당 Edge Function 비활성화, RLS 정책 긴급 보강 등 |
+| 0-4 | **범위 초기 평가** | security-reviewer | 영향받는 테이블, 데이터 유형(CI/DI, 연락처, 결제정보 등), 영향 인원 수 초기 추정 |
+
+#### Supabase 긴급 차단 체크리스트
+
+```
+□ service_role_key 노출 시: Supabase Dashboard → Settings → API → Regenerate service_role key
+□ 의심 유저 세션 강제 종료: auth.sessions에서 해당 유저 세션 삭제
+□ 의심 Edge Function 비활성화: supabase functions delete <function-name> 또는 비활성화
+□ 의심 IP 차단: Supabase Network Restrictions 설정
+□ 스토리지 접근 차단: 해당 bucket의 RLS 정책 즉시 강화
+```
+
+### Phase 1: 조사 및 범위 확정 (T+1시간 ~ T+24시간)
+
+**목표**: 정확한 유출 범위 확정, 원인 분석
+
+| # | 조치 | 담당 | 상세 |
+|---|------|------|------|
+| 1-1 | **유출 범위 확정** | security-reviewer | 영향받는 테이블, 레코드 수, 데이터 유형, 영향 유저 수 확정 |
+| 1-2 | **원인 분석** | security-reviewer + architect | RLS 미적용? Edge Function 취약점? 키 노출? 내부자? |
+| 1-3 | **타임라인 재구성** | security-reviewer | 최초 유출 시점 ~ 인지 시점 ~ 차단 시점 타임라인 작성 |
+| 1-4 | **2차 피해 가능성 평가** | security-reviewer | 유출된 데이터로 가능한 공격: 계정 탈취, 신분 도용, 금전 피해 등 |
+
+#### 밍글릿 민감 데이터 분류
+
+| 등급 | 데이터 유형 | 테이블 | 유출 시 영향 |
+|------|-----------|--------|-------------|
+| **Critical** | CI(연계정보), DI(중복가입확인정보) | `user_profiles` (ci_encrypted, di_encrypted) | 신분 도용, 타 서비스 연계 공격 |
+| **Critical** | 결제 정보, 계좌번호 | `partner_settlements` (account_number) | 금전 피해 |
+| **High** | 생년월일, 성별, 실명 | `user_profiles` (birth_date, gender) | 개인 식별, 사회공학 공격 |
+| **High** | 본인인증 서류 사진 | `verification_submissions` (첨부파일) | 신분 도용 |
+| **Medium** | 연락처, 이메일 | `auth.users` (email, phone) | 스팸, 피싱 |
+| **Medium** | 사업자등록번호, 상호 | `partners` (biz_number, name) | 사업자 사칭 |
+| **Low** | 행동 로그, 이벤트 참여 이력 | `user_actions`, `event_applications` | 프라이버시 침해 |
+
+### Phase 2: 통지 (T+0 ~ T+72시간)
+
+**목표**: 법적 통지 의무 이행
+
+> **주의**: 72시간 기한은 "유출등을 알게 된 때"부터 기산된다. Phase 0의 T=0이 기산점이다.
+
+#### 2-0. 유출 가능성 통지 (제34조 제5항, 신설)
+
+유출등이 아직 확정되지 않았으나 **가능성을 인지**한 경우, 조사 완료를 기다리지 말고 지체 없이 정보주체에게 통지한다.
+
+- **기산점**: 가능성을 알게 된 시점 (Phase 0의 T=0)
+- **대상**: 영향이 예상되는 정보주체
+- **통지 내용** (대통령령으로 정하는 사항):
+  - 유출등의 가능성이 있는 개인정보 항목
+  - 피해 최소화를 위해 정보주체가 할 수 있는 조치
+  - 회사의 현재 대응 상황
+- **방법**: 아래 2-2와 동일 (푸시 → 이메일 → SMS → 홈페이지)
+
+> 이후 조사를 통해 유출이 확정되면 2-1, 2-2의 정식 통지로 전환한다. 오탐으로 확인되면 해당 사실을 정보주체에게 안내하고 프로세스를 종료한다.
+
+#### 2-1. 개인정보보호위원회 신고 (제34조 제3항)
+
+- **기한**: 72시간 이내
+- **신고 의무 발생 기준** (아래 중 하나에 해당 시):
+  - **1,000명 이상**의 정보주체에 관한 개인정보 유출등
+  - **민감정보** 또는 **고유식별정보** (CI/DI, 주민등록번호 등) 유출등
+  - **외부의 불법적 접근**에 의한 유출등
+- **방법**: 개인정보보호위원회 유출 신고 시스템 (https://privacy.go.kr) 또는 한국인터넷진흥원(KISA)
+- **신고 내용**:
+  - 유출등이 된 개인정보 항목
+  - 유출등이 발생한 시점 및 경위
+  - 피해 최소화를 위해 정보주체가 할 수 있는 조치
+  - 개인정보처리자의 대응 조치 및 피해구제 절차
+  - 정보주체가 상담할 수 있는 담당부서 및 연락처
+
+> **밍글릿 해당**: CI/DI(고유식별정보)를 보유하므로 1건이라도 유출되면 보호위 신고 의무가 발생한다.
+
+#### 2-2. 정보주체(유저/파트너) 통지 (제34조 제1항)
+
+- **기한**: 72시간 이내
+- **대상**: 유출등이 확인된 모든 정보주체
+- **방법** (우선순위):
+  1. 앱 푸시 알림 + 인앱 공지
+  2. 이메일 (auth.users.email)
+  3. SMS (본인인증 시 수집한 전화번호)
+  4. 위 방법이 불가능한 경우: 홈페이지 공지 (30일 이상 게시)
+- **통지 내용** (법정 필수 항목, 개정법 반영):
+  1. 유출등이 된 개인정보의 항목
+  2. 유출등이 발생한 시점과 그 경위
+  3. 피해를 최소화하기 위하여 정보주체가 할 수 있는 방법 등에 관한 정보
+  4. 개인정보처리자의 대응조치 및 피해 구제절차
+  5. 정보주체에게 피해가 발생한 경우 신고 등을 접수할 수 있는 담당부서 및 연락처
+  6. **[개정 추가] 손해배상 청구, 법정손해배상 청구, 분쟁조정 신청 등 정보주체의 법적 권리 및 그 행사 방법**
+
+#### 통지문 템플릿
+
+```
+[밍글릿] 개인정보 유출 통지
+
+안녕하세요, 밍글릿입니다.
+
+저희 서비스에서 아래와 같은 개인정보 유출이 발생하여 알려드립니다.
+
+1. 유출된 개인정보 항목: {항목 나열}
+2. 유출 발생 시점: {YYYY-MM-DD HH:MM}
+3. 유출 경위: {간략 설명}
+4. 회사의 대응 조치: {차단/보강 조치 내역}
+5. 이용자 권장 조치:
+   - 비밀번호 변경
+   - 의심스러운 로그인 알림 확인
+   - {유출 유형에 따른 추가 조치}
+6. 피해 구제 및 법적 권리:
+   - 손해배상 청구: 개인정보보호법 제39조에 따라 손해배상을 청구할 수 있습니다.
+   - 법정손해배상 청구: 개인정보보호법 제39조의2에 따라 300만원 이하의
+     법정손해배상을 청구할 수 있습니다.
+   - 분쟁조정 신청: 개인정보분쟁조정위원회(1833-6972)에 분쟁조정을
+     신청할 수 있습니다.
+   - 단체소송: 개인정보보호법 제51조에 따라 단체소송을 제기할 수 있습니다.
+7. 상담 및 신고:
+   - 개인정보보호 책임자: {담당자명} ({이메일})
+   - 전화: {연락처}
+   - 개인정보침해 신고센터: 118 (privacy.kisa.or.kr)
+   - 개인정보분쟁조정위원회: 1833-6972 (www.kopico.go.kr)
+
+피해를 최소화하기 위해 최선을 다하겠습니다.
+진심으로 사과드립니다.
+```
+
+### Phase 3: 후속 조치 (T+72시간 이후)
+
+| # | 조치 | 담당 | 상세 |
+|---|------|------|------|
+| 3-1 | **근본 원인 수정** | swe + architect | 취약점 패치, RLS 보강, 코드 수정 |
+| 3-2 | **재발 방지 대책** | security-reviewer | 모니터링 강화, 접근 통제 재검토, 감사 로그 보강 |
+| 3-3 | **인시던트 포스트모템** | security-reviewer + architect | 타임라인, 원인, 대응 평가, 개선 사항 문서화 |
+| 3-4 | **보호위 후속 보고** | Mark (CEO) | 최종 조사 결과, 재발 방지 대책 보고 (요청 시) |
+| 3-5 | **피해 구제** | Mark (CEO) | 정보주체 피해 구제 (필요 시), 손해배상 대응 |
+
+---
+
+## 4. 대응팀 구성
+
+| 역할 | 담당 | 책임 |
+|------|------|------|
+| **대응팀장** | Mark (CEO/개인정보보호 책임자) | 최종 의사결정, 외부 신고, 통지 승인 |
+| **기술 분석** | security-reviewer | 유출 범위 확정, 원인 분석, 긴급 차단 |
+| **인프라 대응** | architect / swe | 시스템 복구, 취약점 패치 |
+| **법률 자문** | legal-reviewer | 법적 의무 이행 확인, 통지문 검토, 보호위 신고 지원 |
+| **커뮤니케이션** | Mark (CEO) | 유저/파트너 통지, 보호위 신고, 언론 대응 |
+
+> 소수정예 팀이므로 역할 겸임이 불가피하다. 핵심은 **Mark가 72시간 내 통지 의사결정을 할 수 있도록** 즉시 보고하는 것이다.
+
+---
+
+## 5. Supabase 모니터링 권고사항
+
+현재 밍글릿의 Supabase 인프라에서 "유출 가능성 인지"를 앞당기기 위한 모니터링 방안.
+
+### 5.1 즉시 적용 가능 (Quick Wins)
+
+| 항목 | 방법 | 모니터링 대상 |
+|------|------|-------------|
+| **Auth 로그 모니터링** | Supabase Dashboard → Auth → Logs | 비정상 로그인 패턴, 대량 실패 |
+| **Edge Function 로그** | Axiom 연동 (기존 설정 활용) | 비정상 요청 패턴, 에러율 급증 |
+| **Database 로그** | Supabase Dashboard → Database → Logs | 느린 쿼리, 대량 조회, 권한 에러 |
+| **Sentry 알림** | 기존 Sentry 연동 활용 | 앱/Edge Function 비정상 에러 |
+
+### 5.2 민감 테이블 접근 감사 로그 설계
+
+> **배경**: Supabase hosted 환경에서 `pgaudit` extension을 사용할 수 없으므로, custom trigger 기반으로 민감 테이블 접근을 기록한다.
+
+#### 5.2.1 감사 대상
+
+| 테이블 | 감사 대상 작업 | 사유 |
+|--------|---------------|------|
+| `user_profiles` | UPDATE, DELETE | L1/L2 — 고유식별정보(CI/DI) + 개인정보 |
+| `partner_settlements` | UPDATE, DELETE | L3 — 사업자 민감정보(계좌, 연락처) |
+| `verification_submissions` | UPDATE, DELETE | L4 — 인증 제출 데이터 |
+
+> **INSERT**: 정상 서비스 흐름에서 빈번하므로 기본 감사 대상에서 제외. 필요 시 트리거 추가로 활성화 가능.
+> **SELECT**: PostgreSQL 트리거로 캡처 불가. RPC wrapper 방식으로 별도 감사 (5.2.4 참조).
+
+#### 5.2.2 감사 로그 스키마
+
+```sql
+-- 감사 로그 테이블
+CREATE TABLE IF NOT EXISTS public.sensitive_access_log (
+    id              bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    table_name      text        NOT NULL,
+    operation       text        NOT NULL CHECK (operation IN ('SELECT', 'INSERT', 'UPDATE', 'DELETE')),
+    row_id          uuid,
+    user_id         uuid,           -- auth.uid() (NULL if service_role)
+    role_name       text,           -- current_role (authenticated, service_role, anon 등)
+    session_claims  jsonb,          -- auth.jwt() 요약 (sub, role, iss)
+    old_data        jsonb,          -- UPDATE/DELETE 시 변경 전 데이터 (민감 컬럼 마스킹)
+    new_data        jsonb,          -- UPDATE/INSERT 시 변경 후 데이터 (민감 컬럼 마스킹)
+    ip_address      inet,           -- request header에서 추출 가능한 경우
+    occurred_at     timestamptz     NOT NULL DEFAULT now(),
+    context         jsonb           -- 추가 컨텍스트 (RPC 함수명, Edge Function명 등)
+);
+
+-- 인덱스: 테이블+작업 기반 조회 (사고 분석 시 주 사용)
+CREATE INDEX idx_sal_table_op_time
+    ON public.sensitive_access_log (table_name, operation, occurred_at DESC);
+
+-- 인덱스: 특정 사용자의 접근 이력 조회
+CREATE INDEX idx_sal_user_time
+    ON public.sensitive_access_log (user_id, occurred_at DESC);
+
+-- 인덱스: 시간 기반 범위 조회 (최근 N시간 접근 등)
+CREATE INDEX idx_sal_time
+    ON public.sensitive_access_log (occurred_at DESC);
+
+-- RLS: service_role만 접근 가능 (RLS 기본 deny + 정책 없음 = authenticated/anon 차단)
+ALTER TABLE public.sensitive_access_log ENABLE ROW LEVEL SECURITY;
+-- service_role은 RLS bypass이므로 별도 정책 불필요
+```
+
+#### 5.2.3 감사 트리거 함수
+
+```sql
+-- 민감 컬럼 마스킹 함수
+-- 감사 로그에 민감 값 원본을 저장하지 않기 위해 마스킹 처리
+CREATE OR REPLACE FUNCTION public.mask_sensitive_fields(data jsonb)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    sensitive_keys text[] := ARRAY[
+        'ci_encrypted', 'di_encrypted', 'di_hash',
+        'phone_number', 'account_number',
+        'contact_phone', 'contact_email', 'tax_email',
+        'snapshot_data'
+    ];
+    key text;
+    result jsonb := data;
+BEGIN
+    FOREACH key IN ARRAY sensitive_keys LOOP
+        IF result ? key THEN
+            result := result || jsonb_build_object(key, '***MASKED***');
+        END IF;
+    END LOOP;
+    RETURN result;
+END;
+$$;
+
+-- 감사 트리거 함수 (UPDATE/DELETE용)
+CREATE OR REPLACE FUNCTION public.fn_audit_sensitive_table()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_user_id uuid;
+    v_role text;
+    v_claims jsonb;
+    v_row_id uuid;
+    v_old_data jsonb;
+    v_new_data jsonb;
+BEGIN
+    -- 현재 세션 정보 추출
+    v_user_id := auth.uid();
+    v_role := current_setting('role', true);
+
+    -- JWT claims 추출 (에러 시 빈 객체)
+    BEGIN
+        v_claims := jsonb_build_object(
+            'sub', auth.uid(),
+            'role', auth.jwt() ->> 'role',
+            'iss', auth.jwt() ->> 'iss'
+        );
+    EXCEPTION WHEN OTHERS THEN
+        v_claims := '{}'::jsonb;
+    END;
+
+    -- 작업 유형별 데이터 추출
+    IF TG_OP = 'DELETE' THEN
+        v_row_id := OLD.id;
+        v_old_data := public.mask_sensitive_fields(to_jsonb(OLD));
+        v_new_data := NULL;
+    ELSIF TG_OP = 'UPDATE' THEN
+        v_row_id := NEW.id;
+        v_old_data := public.mask_sensitive_fields(to_jsonb(OLD));
+        v_new_data := public.mask_sensitive_fields(to_jsonb(NEW));
+    ELSIF TG_OP = 'INSERT' THEN
+        v_row_id := NEW.id;
+        v_old_data := NULL;
+        v_new_data := public.mask_sensitive_fields(to_jsonb(NEW));
+    END IF;
+
+    -- 감사 로그 삽입
+    INSERT INTO public.sensitive_access_log (
+        table_name, operation, row_id, user_id, role_name,
+        session_claims, old_data, new_data, occurred_at
+    ) VALUES (
+        TG_TABLE_NAME, TG_OP, v_row_id, v_user_id, v_role,
+        v_claims, v_old_data, v_new_data, now()
+    );
+
+    IF TG_OP = 'DELETE' THEN
+        RETURN OLD;
+    ELSE
+        RETURN NEW;
+    END IF;
+END;
+$$;
+
+-- 트리거 등록: user_profiles
+CREATE TRIGGER trg_audit_user_profiles
+    AFTER UPDATE OR DELETE ON public.user_profiles
+    FOR EACH ROW EXECUTE FUNCTION public.fn_audit_sensitive_table();
+
+-- 트리거 등록: partner_settlements
+CREATE TRIGGER trg_audit_partner_settlements
+    AFTER UPDATE OR DELETE ON public.partner_settlements
+    FOR EACH ROW EXECUTE FUNCTION public.fn_audit_sensitive_table();
+
+-- 트리거 등록: verification_submissions
+CREATE TRIGGER trg_audit_verification_submissions
+    AFTER UPDATE OR DELETE ON public.verification_submissions
+    FOR EACH ROW EXECUTE FUNCTION public.fn_audit_sensitive_table();
+```
+
+#### 5.2.4 SELECT 감사 — RPC Wrapper 방식
+
+PostgreSQL 트리거는 SELECT를 캡처할 수 없다. 민감 테이블의 직접 SELECT는 RLS로 최소 권한만 허용하고, 관리/분석 목적 조회는 RPC 함수를 통해 감사 로그를 남긴다.
+
+```sql
+-- 예시: user_profiles 관리 조회 RPC (감사 로그 포함)
+CREATE OR REPLACE FUNCTION public.rpc_admin_get_user_profile(target_user_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_result jsonb;
+BEGIN
+    -- 감사 로그 기록
+    INSERT INTO public.sensitive_access_log (
+        table_name, operation, row_id, user_id, role_name,
+        session_claims, occurred_at, context
+    ) VALUES (
+        'user_profiles', 'SELECT', target_user_id, auth.uid(),
+        current_setting('role', true),
+        jsonb_build_object('sub', auth.uid()),
+        now(),
+        jsonb_build_object('rpc', 'rpc_admin_get_user_profile')
+    );
+
+    SELECT to_jsonb(up) INTO v_result
+    FROM public.user_profiles up
+    WHERE up.id = target_user_id;
+
+    RETURN v_result;
+END;
+$$;
+```
+
+#### 5.2.5 보존 정책
+
+| 항목 | 정책 |
+|------|------|
+| **보존 기간** | 최소 3년 (개인정보보호법 기준) |
+| **자동 삭제** | pg_cron으로 3년 경과 로그 월 1회 삭제 |
+| **백업** | Supabase Point-in-Time Recovery에 포함 |
+| **접근 제한** | service_role만 접근 가능 (RLS 적용, 정책 없음) |
+
+```sql
+-- 3년 경과 감사 로그 자동 삭제 크론 (매월 1일 03:00 UTC)
+SELECT cron.schedule(
+    'cleanup-sensitive-access-log',
+    '0 3 1 * *',
+    $$DELETE FROM public.sensitive_access_log
+      WHERE occurred_at < now() - interval '3 years'$$
+);
+```
+
+### 5.3 중기 구축 권고 (시행일 전 완료 목표)
+
+| 항목 | 설명 | 우선순위 |
+|------|------|---------|
+| **이상 탐지 알림** | 특정 시간대 대량 조회, 비정상 IP 접근 시 Slack/이메일 알림 | High |
+| **서비스 키 사용 감사** | `service_role_key` 사용 로그 모니터링 (정상 Edge Function 호출 외 사용 탐지) | Medium |
+| **스토리지 접근 로그** | 인증서류 등 민감 파일 버킷의 다운로드 로그 모니터링 | Medium |
+
+---
+
+## 6. 훈련 및 갱신
+
+| 항목 | 주기 | 담당 |
+|------|------|------|
+| **대응 프로세스 리뷰** | 반기 1회 | security-reviewer |
+| **모의 유출 훈련** | 연 1회 (첫 회: 2026년 8월, 시행일 전) | security-reviewer + Mark |
+| **문서 갱신** | 법령 변경 시 즉시, 인시던트 발생 후 포스트모템 반영 시 | security-reviewer |
+| **연락처 최신화** | 분기 1회 | tpm |
+
+---
+
+## 7. 참고 법령
+
+- 개인정보보호법 제34조 (개인정보 유출 등의 통지·신고) — 2026.09.11 시행 개정안
+- 개인정보보호법 제34조 제5항 (유출등의 가능성 통지) — 2026.09.11 시행 **신설**
+- 개인정보보호법 제39조 (손해배상책임)
+- 개인정보보호법 제39조의2 (법정손해배상의 청구)
+- 개인정보보호법 시행령 제39조 (유출 통지의 방법 및 절차)
+- 정보통신망법 제27조의3 (개인정보 유출 등의 통지·신고)
+- 개인정보보호위원회 「개인정보 유출 대응 매뉴얼」 (2024)
+
+---
+
+## 8. 후속 이슈
+
+본 문서를 기반으로 다음 항목을 후속 이슈로 구현/자동화해야 한다.
+
+| 우선순위 | 항목 | 설명 |
+|----------|------|------|
+| **P1** | 감사 로그 migration 배포 | §5.2의 `sensitive_access_log` 테이블 + 트리거 SQL을 Supabase migration으로 생성/배포 |
+| **P1** | 이상 접근 탐지 알림 | 감사 로그 기반 비정상 패턴 탐지 → PGMQ → notification-worker → Slack 알림 (예: 1시간 내 동일 테이블 100건 이상 접근) |
+| **P2** | 사고 대응 자동화 (PGMQ) | 사고 탐지 시 PGMQ 이벤트 발행 → 자동 봉쇄 작업 트리거 (API key rotation 알림, 세션 무효화 등) |
+| **P2** | 유출 통지 자동화 | notification-worker + FCM을 통한 사용자 유출 통지 자동 발송 기능 구현 |
+| **P2** | service_role_key 사용 감사 | Edge Function 외 service_role 사용 탐지 → 알림 |
+| **P3** | 감사 로그 대시보드 | Axiom 또는 Supabase Dashboard에서 감사 로그 시각화 |
+| **P3** | 정기 모의 훈련 체계 | 분기 1회 유출 대응 모의 훈련 시나리오 및 실행 체계 수립 |
+| **P3** | 스토리지 접근 로그 | 인증서류 버킷 다운로드 로그 모니터링 구축 |

@@ -32,6 +32,8 @@ class MockMatchingRepository extends Mock implements MatchingRepository {}
 
 class MockLocationRepository extends Mock implements LocationRepository {}
 
+class MockTagRepository extends Mock implements TagRepository {}
+
 // --- Model Mocks (Optional, usually better to use real models) ---
 // But sometimes we need to mock complex objects
 class MockUser extends Mock implements User {}
