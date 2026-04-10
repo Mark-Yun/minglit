@@ -111,6 +111,18 @@ runs:
       run: |
         sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = ${{ inputs.bundle-id }};/PRODUCT_BUNDLE_IDENTIFIER = ${{ inputs.bundle-id }}.dev;/g" ios/Runner.xcodeproj/project.pbxproj
 
+    # Fix #1249: dev 빌드에서만 minglit-dev:// URL scheme 추가 (보안 요구사항)
+    # prod Info.plist에는 이 scheme이 존재하지 않음을 보장
+    - name: Add Dev URL Scheme
+      if: ${{ inputs.git-ref == 'refs/heads/dev' }}
+      shell: bash
+      working-directory: ./${{ inputs.app-directory }}
+      run: |
+        /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:1 dict" ios/Runner/Info.plist
+        /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:1:CFBundleTypeRole string Editor" ios/Runner/Info.plist
+        /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:1:CFBundleURLSchemes array" ios/Runner/Info.plist
+        /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:1:CFBundleURLSchemes:0 string minglit-dev" ios/Runner/Info.plist
+
     - name: Generate keychain password
       shell: bash
       working-directory: ./${{ inputs.app-directory }}
