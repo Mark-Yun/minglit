@@ -20,7 +20,7 @@ TicketTokenService ticketTokenService(Ref ref) {
 /// Fix #1206: Fetches token from Edge Function when not in local wallet
 class TicketTokenService {
   TicketTokenService({required this.wallet, required SupabaseClient supabase})
-      : _supabase = supabase;
+    : _supabase = supabase;
 
   final TicketWalletRepository wallet;
   final SupabaseClient _supabase;

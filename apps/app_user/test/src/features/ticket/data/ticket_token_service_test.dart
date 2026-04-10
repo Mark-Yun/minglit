@@ -5,7 +5,8 @@ import 'package:minglit_kit/minglit_data.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class MockTicketWalletRepository extends Mock implements TicketWalletRepository {}
+class MockTicketWalletRepository extends Mock
+    implements TicketWalletRepository {}
 
 class MockSupabaseClient extends Mock implements SupabaseClient {}
 
@@ -59,7 +60,9 @@ void main() {
   group('TicketTokenService', () {
     // Fix #1206: Returns cached token if in wallet and not expired
     test('returns cached token if in wallet and not expired', () async {
-      when(() => mockWallet.getTicket('ticket_1')).thenAnswer((_) async => validToken);
+      when(
+        () => mockWallet.getTicket('ticket_1'),
+      ).thenAnswer((_) async => validToken);
 
       final result = await service.getToken('ticket_1');
 
@@ -70,50 +73,68 @@ void main() {
     });
 
     // Fix #1206: Fetches from Edge Function if not in wallet; saves to wallet
-    test('fetches from Edge Function if not in wallet; saves to wallet', () async {
-      when(() => mockWallet.getTicket('ticket_1')).thenAnswer((_) async => null);
-      when(() => mockWallet.saveTicket(any())).thenAnswer((_) async {});
-      when(
-        () => mockFunctions.invoke(
-          'user-get-ticket-token',
-          body: {'ticket_id': 'ticket_1'},
-        ),
-      ).thenAnswer((_) async => FunctionResponse(status: 200, data: fetchedTokenData));
+    test(
+      'fetches from Edge Function if not in wallet; saves to wallet',
+      () async {
+        when(
+          () => mockWallet.getTicket('ticket_1'),
+        ).thenAnswer((_) async => null);
+        when(() => mockWallet.saveTicket(any())).thenAnswer((_) async {});
+        when(
+          () => mockFunctions.invoke(
+            'user-get-ticket-token',
+            body: {'ticket_id': 'ticket_1'},
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(status: 200, data: fetchedTokenData),
+        );
 
-      final result = await service.getToken('ticket_1');
+        final result = await service.getToken('ticket_1');
 
-      expect(result, isNotNull);
-      expect(result?.signature, 'fetched_sig');
-      verify(() => mockWallet.saveTicket(any())).called(1);
-    });
+        expect(result, isNotNull);
+        expect(result?.signature, 'fetched_sig');
+        verify(() => mockWallet.saveTicket(any())).called(1);
+      },
+    );
 
     // Fix #1206: Re-fetches if cached token is expired
     test('re-fetches from Edge Function if cached token is expired', () async {
-      when(() => mockWallet.getTicket('ticket_1')).thenAnswer((_) async => expiredToken);
+      when(
+        () => mockWallet.getTicket('ticket_1'),
+      ).thenAnswer((_) async => expiredToken);
       when(() => mockWallet.saveTicket(any())).thenAnswer((_) async {});
       when(
         () => mockFunctions.invoke(
           'user-get-ticket-token',
           body: {'ticket_id': 'ticket_1'},
         ),
-      ).thenAnswer((_) async => FunctionResponse(status: 200, data: fetchedTokenData));
+      ).thenAnswer(
+        (_) async => FunctionResponse(status: 200, data: fetchedTokenData),
+      );
 
       final result = await service.getToken('ticket_1');
 
       expect(result, isNotNull);
       expect(result?.signature, 'fetched_sig');
-      verify(() => mockFunctions.invoke(any(), body: any(named: 'body'))).called(1);
+      verify(
+        () => mockFunctions.invoke(any(), body: any(named: 'body')),
+      ).called(1);
     });
 
     // Fix #1206: Returns null if Edge Function returns error
     test('returns null if Edge Function returns non-200 status', () async {
-      when(() => mockWallet.getTicket('ticket_1')).thenAnswer((_) async => null);
+      when(
+        () => mockWallet.getTicket('ticket_1'),
+      ).thenAnswer((_) async => null);
       when(
         () => mockFunctions.invoke(
           'user-get-ticket-token',
           body: {'ticket_id': 'ticket_1'},
         ),
-      ).thenAnswer((_) async => FunctionResponse(status: 404, data: {'error': 'Ticket not found'}));
+      ).thenAnswer(
+        (_) async =>
+            FunctionResponse(status: 404, data: {'error': 'Ticket not found'}),
+      );
 
       final result = await service.getToken('ticket_1');
 
@@ -122,7 +143,9 @@ void main() {
     });
 
     test('returns null if Edge Function throws an exception', () async {
-      when(() => mockWallet.getTicket('ticket_1')).thenAnswer((_) async => null);
+      when(
+        () => mockWallet.getTicket('ticket_1'),
+      ).thenAnswer((_) async => null);
       when(
         () => mockFunctions.invoke(
           'user-get-ticket-token',
