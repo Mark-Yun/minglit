@@ -232,6 +232,9 @@ async function handleRequest(req: Request): Promise<Response> {
     if (rpcError) {
       return errorResponse(`Failed to create party: ${rpcError.message}`, 500);
     }
+    if (!rpcData) {
+      return errorResponse("Failed to create party: no party_id returned", 500);
+    }
 
     const partyId = rpcData as string;
 
