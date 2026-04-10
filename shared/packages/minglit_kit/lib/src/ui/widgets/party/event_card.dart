@@ -350,6 +350,17 @@ class _ParticipantDDayOverlay extends StatelessWidget {
             ],
             const SizedBox(width: 6),
             Text('$current/$max', style: overlayStyle),
+            // Fix #996: ratio >= 1.0일 때 만석 텍스트 표시
+            if (ratio >= 1.0) ...[
+              const SizedBox(width: MinglitSpacing.xsmall),
+              Text(
+                '만석',
+                style: overlayStyle.copyWith(
+                  color: MinglitColors.secondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
             const SizedBox(width: 4),
             Text(
               '·',
