@@ -210,8 +210,11 @@ void main() {
       );
 
       final container = tester.widget<Container>(
-        find.byWidgetPredicate(
-          (w) => w is Container && w.decoration is BoxDecoration,
+        find.descendant(
+          of: find.byType(MinglitEmptyState),
+          matching: find.byWidgetPredicate(
+            (w) => w is Container && w.decoration is BoxDecoration,
+          ),
         ),
       );
       final decoration = container.decoration as BoxDecoration?;
@@ -274,8 +277,11 @@ void main() {
         );
 
         final container = tester.widget<Container>(
-          find.byWidgetPredicate(
-            (w) => w is Container && w.decoration is BoxDecoration,
+          find.descendant(
+            of: find.byType(MinglitEmptyState),
+            matching: find.byWidgetPredicate(
+              (w) => w is Container && w.decoration is BoxDecoration,
+            ),
           ),
         );
         final decoration = container.decoration as BoxDecoration?;
