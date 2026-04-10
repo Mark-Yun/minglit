@@ -121,5 +121,6 @@ class _LoadedDashboardController extends PartnerDashboardController {
     upcomingEvents: upcoming,
     closingSoonEvents: closingSoon,
     activeParties: active,
+    hasAnyEvents: true,
   );
 }
