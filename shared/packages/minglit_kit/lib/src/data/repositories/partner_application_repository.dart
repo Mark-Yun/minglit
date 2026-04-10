@@ -71,7 +71,9 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
     final extension = p.extension(file.name);
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final path = '$userId/${type}_$timestamp$extension';
-    final bytes = await file.readAsBytes();
+    final rawBytes = await file.readAsBytes();
+    // Fix #1230: GPS/EXIF 메타데이터 유출 방지 — 업로드 전 재인코딩으로 완전 제거
+    final bytes = stripExifAndReencode(rawBytes, filename: file.name);
 
     await supabaseClient.storage
         .from('partner-proofs')
