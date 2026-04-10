@@ -14,12 +14,6 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-
 // Fix #1219: keep approval status filtering aligned with the capacity guard paths.
 const APPROVABLE_STATUSES = ["pending", "pending_review"] as const;
 
-// Fix #1219: include nullable event capacity fields so unlimited events remain approvable.
-type EventCapacityRow = {
-  current_participants?: number | null;
-  max_participants?: number | null;
-};
-
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
@@ -88,7 +82,7 @@ async function handleApprove(
   const { data: app, error: fetchError } = await supabase
     .from("event_applications")
     .select(
-      "id, status, event_id, events!inner(party_id, current_participants, max_participants, parties!inner(partner_id))",
+      "id, status, event_id, events!inner(party_id, parties!inner(partner_id))",
     )
     .eq("id", applicationId)
     .maybeSingle();
@@ -112,25 +106,36 @@ async function handleApprove(
     );
   }
 
-  // Fix #1219: approval must respect remaining event capacity to prevent overbooking.
-  if (getRemainingSlots(event) <= 0) {
+  // Fix #1219: route single approval through the DB capacity guard so the status flip is serialized per event.
+  const { data: approvalResult, error: approvalError } = await supabase
+    .rpc("approve_event_application_with_capacity_guard", {
+      p_application_id: applicationId,
+    });
+
+  if (approvalError) return errorResponse("Failed to approve application", 500);
+
+  const result = Array.isArray(approvalResult) ? approvalResult[0] : approvalResult;
+  const resultStatus = result?.result_status as string | undefined;
+
+  if (resultStatus === "approved") {
+    return successResponse({ approved: 1, application_id: applicationId });
+  }
+
+  if (resultStatus === "event_full") {
     return errorResponse("정원이 초과되었습니다.", 409, { code: "EVENT_FULL" });
   }
 
-  // Compare-and-set: only update if status is still pending/pending_review
-  const { data: updated, error: updateError } = await supabase
-    .from("event_applications")
-    .update({ status: "approved", updated_at: new Date().toISOString() })
-    .eq("id", applicationId)
-    .in("status", APPROVABLE_STATUSES)
-    .select("id");
-
-  if (updateError) return errorResponse("Failed to approve application", 500);
-  if (!updated || updated.length === 0) {
+  if (resultStatus === "already_processed") {
     return errorResponse("Application already processed", 409);
   }
 
-  return successResponse({ approved: 1, application_id: applicationId });
+  if (resultStatus === "not_found") {
+    return errorResponse("Application not found", 404);
+  }
+
+  return errorResponse("Event capacity data is invalid", 500, {
+    code: "INVALID_EVENT_CAPACITY",
+  });
 }
 
 // ── Bulk approve ──
@@ -150,7 +155,7 @@ async function handleBulkApprove(
   // Fix #1219: load event capacity so bulk approval can cap approvals at remaining slots.
   const { data: event, error: eventError } = await supabase
     .from("events")
-    .select("id, party_id, current_participants, max_participants, parties!inner(partner_id)")
+    .select("id, party_id, parties!inner(partner_id)")
     .eq("id", eventId)
     .maybeSingle();
 
@@ -163,58 +168,43 @@ async function handleBulkApprove(
   const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
   if (permCheck instanceof Response) return permCheck;
 
-  const { data: pendingApplications, error: pendingError } = await supabase
-    .from("event_applications")
-    .select("id")
-    .eq("event_id", eventId)
-    .in("status", APPROVABLE_STATUSES)
-    .order("created_at", { ascending: true });
+  // Fix #1219: route bulk approval through the DB capacity guard so oldest rows are approved under one event lock.
+  const { data: bulkApprovalResult, error: bulkApprovalError } = await supabase
+    .rpc("bulk_approve_event_applications_with_capacity_guard", {
+      p_event_id: eventId,
+    });
 
-  if (pendingError) return errorResponse("Failed to load pending applications", 500);
+  if (bulkApprovalError) return errorResponse("Failed to bulk approve", 500);
 
-  const pendingIds = (pendingApplications ?? [])
-    .map((application) => application.id)
-    .filter((id): id is string => typeof id === "string" && id.length > 0);
+  const result = Array.isArray(bulkApprovalResult) ? bulkApprovalResult[0] : bulkApprovalResult;
+  const resultStatus = result?.result_status as string | undefined;
 
-  if (pendingIds.length === 0) {
-    return successResponse({
-      approved: 0,
-      event_id: eventId,
-      skipped_due_to_capacity: 0,
+  if (resultStatus === "invalid_capacity") {
+    return errorResponse("Event capacity data is invalid", 500, {
+      code: "INVALID_EVENT_CAPACITY",
     });
   }
 
-  const availableSlots = getRemainingSlots(event);
-
-  // Fix #1219: bulk approval must stop at the remaining capacity instead of approving every pending row.
-  if (availableSlots <= 0) {
-    return successResponse({
-      approved: 0,
-      event_id: eventId,
-      skipped_due_to_capacity: pendingIds.length,
-      remaining_slots_before_approval: 0,
-    });
+  if (resultStatus === "not_found") {
+    return errorResponse("Event not found", 404);
   }
 
-  const idsToApprove = pendingIds.slice(0, availableSlots);
-
-  const { data: updated, error: updateError } = await supabase
-    .from("event_applications")
-    .update({ status: "approved", updated_at: new Date().toISOString() })
-    .eq("event_id", eventId)
-    .in("id", idsToApprove)
-    .in("status", APPROVABLE_STATUSES)
-    .select("id");
-
-  if (updateError) return errorResponse("Failed to bulk approve", 500);
-
-  const approvedCount = updated?.length ?? 0;
+  const approvedCount =
+    typeof result?.approved_count === "number" ? result.approved_count : 0;
+  const skippedDueToCapacity =
+    typeof result?.skipped_due_to_capacity === "number"
+      ? result.skipped_due_to_capacity
+      : 0;
+  const remainingSlotsBeforeApproval =
+    typeof result?.remaining_slots_before_approval === "number"
+      ? result.remaining_slots_before_approval
+      : 0;
 
   return successResponse({
     approved: approvedCount,
     event_id: eventId,
-    skipped_due_to_capacity: Math.max(pendingIds.length - approvedCount, 0),
-    remaining_slots_before_approval: availableSlots,
+    skipped_due_to_capacity: skippedDueToCapacity,
+    remaining_slots_before_approval: remainingSlotsBeforeApproval,
   });
 }
 
@@ -245,14 +235,4 @@ async function checkPartnerPermission(
   if (!hasPermission) {
     return errorResponse("Forbidden: insufficient partner permissions", 403);
   }
-}
-
-// Fix #1219: treat null capacity as unlimited while still blocking fully-booked capped events.
-function getRemainingSlots(event: EventCapacityRow): number {
-  if (event.max_participants == null) {
-    return Number.POSITIVE_INFINITY;
-  }
-
-  const currentParticipants = event.current_participants ?? 0;
-  return Math.max(event.max_participants - currentParticipants, 0);
 }

@@ -59,13 +59,6 @@ function permForbiddenRoute(): FetchRoute {
 // Fix #1219: cover capped and unlimited event capacity in single-approval tests.
 function appRoute(
   status = "pending",
-  {
-    currentParticipants = 5,
-    maxParticipants = 20,
-  }: {
-    currentParticipants?: number;
-    maxParticipants?: number | null;
-  } = {},
 ): FetchRoute {
   return {
     matcher: (req) =>
@@ -79,8 +72,6 @@ function appRoute(
         event_id: TEST_EVENT_ID,
         events: {
           party_id: "party-001",
-          current_participants: currentParticipants,
-          max_participants: maxParticipants,
           parties: { partner_id: TEST_PARTNER_ID },
         },
       }),
@@ -97,32 +88,30 @@ function appNotFoundRoute(): FetchRoute {
   };
 }
 
-// Fix #1219: assert which pending application IDs are approved during bulk processing.
-function updateRoute(
-  updated: { id: string }[] = [{ id: TEST_APP_ID }],
-  expectedIds?: string[],
+// Fix #1219: assert the single-approval RPC result so capacity failures stay fail-closed.
+function approveRpcRoute(
+  resultStatus = "approved",
+  approved = 1,
 ): FetchRoute {
   return {
     matcher: (req) =>
-      req.url.includes("event_applications") && req.method === "PATCH",
-    handler: (req) => {
-      if (expectedIds) {
-        const idFilter = new URL(req.url).searchParams.get("id");
-        assertEquals(idFilter, `in.(${expectedIds.join(",")})`);
-      }
-      return jsonResponse(updated);
+      req.url.includes("/rpc/approve_event_application_with_capacity_guard") &&
+      req.method === "POST",
+    handler: async (req) => {
+      const payload = await req.json();
+      assertEquals(payload.p_application_id, TEST_APP_ID);
+      return jsonResponse([
+        {
+          result_status: resultStatus,
+          approved,
+          event_id: TEST_EVENT_ID,
+        },
+      ]);
     },
   };
 }
 
 function eventRoute(
-  {
-    currentParticipants = 5,
-    maxParticipants = 20,
-  }: {
-    currentParticipants?: number;
-    maxParticipants?: number | null;
-  } = {},
 ): FetchRoute {
   return {
     matcher: (req) =>
@@ -133,21 +122,41 @@ function eventRoute(
       jsonResponse({
         id: TEST_EVENT_ID,
         party_id: "party-001",
-        current_participants: currentParticipants,
-        max_participants: maxParticipants,
         parties: { partner_id: TEST_PARTNER_ID },
       }),
   };
 }
 
-// Fix #1219: keep bulk-approval tests ordered by created_at so oldest pending rows are selected first.
-function pendingApplicationsRoute(ids: string[]): FetchRoute {
+// Fix #1219: assert which pending application IDs are approved during bulk processing.
+function bulkApproveRpcRoute(
+  {
+    resultStatus = "approved",
+    approvedCount = 2,
+    skippedDueToCapacity = 0,
+    remainingSlotsBeforeApproval = 2,
+  }: {
+    resultStatus?: string;
+    approvedCount?: number;
+    skippedDueToCapacity?: number;
+    remainingSlotsBeforeApproval?: number;
+  } = {},
+): FetchRoute {
   return {
     matcher: (req) =>
-      req.url.includes("event_applications") &&
-      req.url.includes("order=created_at.asc") &&
-      req.method === "GET",
-    handler: () => jsonResponse(ids.map((id) => ({ id }))),
+      req.url.includes("/rpc/bulk_approve_event_applications_with_capacity_guard") &&
+      req.method === "POST",
+    handler: async (req) => {
+      const payload = await req.json();
+      assertEquals(payload.p_event_id, TEST_EVENT_ID);
+      return jsonResponse([
+        {
+          result_status: resultStatus,
+          approved_count: approvedCount,
+          skipped_due_to_capacity: skippedDueToCapacity,
+          remaining_slots_before_approval: remainingSlotsBeforeApproval,
+        },
+      ]);
+    },
   };
 }
 
@@ -207,7 +216,7 @@ Deno.test({
       authRoute(),
       appRoute("pending"),
       permRoute("owner"),
-      updateRoute([{ id: TEST_APP_ID }]),
+      approveRpcRoute(),
     ]);
 
     await withEnv(ENV, async () => {
@@ -334,7 +343,7 @@ Deno.test({
           req.url.includes("partner_member_permissions") && req.method === "GET",
         handler: () => jsonResponse({ permissions: [], role: "owner" }),
       },
-      updateRoute([{ id: TEST_APP_ID }]),
+      approveRpcRoute(),
     ]);
 
     await withEnv(ENV, async () => {
@@ -362,7 +371,7 @@ Deno.test({
       authRoute(),
       appRoute("pending"),
       permRoute("owner"),
-      updateRoute([]),
+      approveRpcRoute("already_processed", 0),
     ]);
 
     await withEnv(ENV, async () => {
@@ -386,8 +395,9 @@ Deno.test({
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
-      appRoute("pending", { currentParticipants: 20, maxParticipants: 20 }),
+      appRoute("pending"),
       permRoute("owner"),
+      approveRpcRoute("event_full", 0),
     ]);
 
     await withEnv(ENV, async () => {
@@ -405,18 +415,17 @@ Deno.test({
   },
 });
 
-// Fix #1219: unlimited-capacity events must still allow approvals when max_participants is null.
 Deno.test({
-  name: "approve: allows approval when event capacity is unlimited",
+  name: "approve: returns 500 when capacity data is invalid",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
-      appRoute("pending", { currentParticipants: 20, maxParticipants: null }),
+      appRoute("pending"),
       permRoute("owner"),
-      updateRoute([{ id: TEST_APP_ID }]),
+      approveRpcRoute("invalid_capacity", 0),
     ]);
 
     await withEnv(ENV, async () => {
@@ -426,9 +435,9 @@ Deno.test({
           application_id: TEST_APP_ID,
         });
         const res = await handler(req);
-        assertEquals(res.status, 200);
+        assertEquals(res.status, 500);
         const json = await readJson(res);
-        assertEquals(json.approved, 1);
+        assertEquals(json.error, "Event capacity data is invalid");
       });
     });
   },
@@ -444,8 +453,7 @@ Deno.test({
       authRoute(),
       eventRoute(),
       permRoute("owner"),
-      pendingApplicationsRoute(["app-001", "app-002"]),
-      updateRoute([{ id: "app-001" }, { id: "app-002" }]),
+      bulkApproveRpcRoute(),
     ]);
 
     await withEnv(ENV, async () => {
@@ -471,13 +479,13 @@ Deno.test({
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
-      eventRoute({ currentParticipants: 18, maxParticipants: 20 }),
+      eventRoute(),
       permRoute("owner"),
-      pendingApplicationsRoute(["app-001", "app-002", "app-003"]),
-      updateRoute([{ id: "app-001" }, { id: "app-002" }], [
-        "app-001",
-        "app-002",
-      ]),
+      bulkApproveRpcRoute({
+        approvedCount: 2,
+        skippedDueToCapacity: 1,
+        remainingSlotsBeforeApproval: 2,
+      }),
     ]);
 
     await withEnv(ENV, async () => {
@@ -497,23 +505,22 @@ Deno.test({
   },
 });
 
-// Fix #1219: unlimited-capacity bulk approval should not skip pending applications.
 Deno.test({
-  name: "bulk_approve: approves every pending application when capacity is unlimited",
+  name: "bulk_approve: returns 500 when capacity data is invalid",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
-      eventRoute({ currentParticipants: 99, maxParticipants: null }),
+      eventRoute(),
       permRoute("owner"),
-      pendingApplicationsRoute(["app-001", "app-002", "app-003"]),
-      updateRoute([{ id: "app-001" }, { id: "app-002" }, { id: "app-003" }], [
-        "app-001",
-        "app-002",
-        "app-003",
-      ]),
+      bulkApproveRpcRoute({
+        resultStatus: "invalid_capacity",
+        approvedCount: 0,
+        skippedDueToCapacity: 0,
+        remainingSlotsBeforeApproval: 0,
+      }),
     ]);
 
     await withEnv(ENV, async () => {
@@ -523,10 +530,9 @@ Deno.test({
           event_id: TEST_EVENT_ID,
         });
         const res = await handler(req);
-        assertEquals(res.status, 200);
+        assertEquals(res.status, 500);
         const json = await readJson(res);
-        assertEquals(json.approved, 3);
-        assertEquals(json.skipped_due_to_capacity, 0);
+        assertEquals(json.error, "Event capacity data is invalid");
       });
     });
   },
@@ -542,7 +548,12 @@ Deno.test({
       authRoute(),
       eventRoute(),
       permRoute("owner"),
-      pendingApplicationsRoute([]),
+      bulkApproveRpcRoute({
+        resultStatus: "no_pending",
+        approvedCount: 0,
+        skippedDueToCapacity: 0,
+        remainingSlotsBeforeApproval: 15,
+      }),
     ]);
 
     await withEnv(ENV, async () => {
