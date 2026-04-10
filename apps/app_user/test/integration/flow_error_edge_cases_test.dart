@@ -4,6 +4,7 @@ import 'package:app_user/src/features/event/admission/event_admission_controller
 import 'package:app_user/src/features/event/detail/event_detail_page.dart';
 import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
 import 'package:app_user/src/features/partner/detail/partner_detail_page.dart';
+import 'package:app_user/src/features/ticket/data/ticket_token_service.dart';
 import 'package:app_user/src/features/ticket/data/ticket_wallet_repository.dart';
 import 'package:app_user/src/features/ticket/ui/ticket_qr_screen.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:minglit_kit/src/features/social/logic/social_interaction_controller.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
@@ -140,10 +142,19 @@ void main() {
         () => mockWalletRepo.getTicket(any()),
       ).thenAnswer((_) async => null);
 
+      // Fix #1206: Override ticketTokenServiceProvider since TicketQRScreen
+      // now uses TicketTokenService which depends on both wallet and supabase.
+      final mockSupabase = MockSupabaseClient();
+
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            ticketWalletRepositoryProvider.overrideWithValue(mockWalletRepo),
+            ticketTokenServiceProvider.overrideWithValue(
+              TicketTokenService(
+                wallet: mockWalletRepo,
+                supabase: mockSupabase,
+              ),
+            ),
           ],
           child: MaterialApp(
             theme: MinglitTheme.materialTheme,
@@ -464,6 +475,9 @@ class _FakePolicyRepository implements PolicyRepository {
 
 class MockTicketWalletRepository extends Mock
     implements TicketWalletRepository {}
+
+// Fix #1206: Mock SupabaseClient for TicketTokenService tests
+class MockSupabaseClient extends Mock implements SupabaseClient {}
 
 Event _createTestEventWithPartner() {
   return Event(
