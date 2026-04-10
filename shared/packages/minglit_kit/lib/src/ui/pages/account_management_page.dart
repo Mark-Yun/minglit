@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/src/theme/minglit_design_tokens.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
 /// Shared account management page for app_user and app_partner.
 ///
