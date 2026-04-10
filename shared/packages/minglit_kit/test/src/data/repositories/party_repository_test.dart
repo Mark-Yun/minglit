@@ -470,8 +470,7 @@ void main() {
       final eventWithPartyJson2 = {
         ...eventJson,
         'id': 'event_2',
-        'start_time':
-            now.add(const Duration(hours: 1)).toIso8601String(),
+        'start_time': now.add(const Duration(hours: 1)).toIso8601String(),
         'party': partyWithRelationsJson,
         'entry_groups': <Map<String, dynamic>>[],
         'tickets': <Map<String, dynamic>>[],
