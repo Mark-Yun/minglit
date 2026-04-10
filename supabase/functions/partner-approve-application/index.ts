@@ -11,8 +11,10 @@ import {
 import { requireAuth } from "../_shared/auth_utils.ts";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+// Fix #1219: keep approval status filtering aligned with the capacity guard paths.
 const APPROVABLE_STATUSES = ["pending", "pending_review"] as const;
 
+// Fix #1219: include nullable event capacity fields so unlimited events remain approvable.
 type EventCapacityRow = {
   current_participants?: number | null;
   max_participants?: number | null;
@@ -82,7 +84,7 @@ async function handleApprove(
     return errorResponse("Invalid application_id", 400);
   }
 
-  // Fetch application with event → party → partner chain
+  // Fix #1219: load event capacity with the application so single approval can reject full events.
   const { data: app, error: fetchError } = await supabase
     .from("event_applications")
     .select(
@@ -145,7 +147,7 @@ async function handleBulkApprove(
     return errorResponse("Invalid event_id", 400);
   }
 
-  // Fetch event → party → partner chain
+  // Fix #1219: load event capacity so bulk approval can cap approvals at remaining slots.
   const { data: event, error: eventError } = await supabase
     .from("events")
     .select("id, party_id, current_participants, max_participants, parties!inner(partner_id)")
@@ -245,8 +247,12 @@ async function checkPartnerPermission(
   }
 }
 
+// Fix #1219: treat null capacity as unlimited while still blocking fully-booked capped events.
 function getRemainingSlots(event: EventCapacityRow): number {
+  if (event.max_participants == null) {
+    return Number.POSITIVE_INFINITY;
+  }
+
   const currentParticipants = event.current_participants ?? 0;
-  const maxParticipants = event.max_participants ?? 0;
-  return Math.max(maxParticipants - currentParticipants, 0);
+  return Math.max(event.max_participants - currentParticipants, 0);
 }

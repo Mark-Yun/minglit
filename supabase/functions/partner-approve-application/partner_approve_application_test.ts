@@ -56,6 +56,7 @@ function permForbiddenRoute(): FetchRoute {
   };
 }
 
+// Fix #1219: cover capped and unlimited event capacity in single-approval tests.
 function appRoute(
   status = "pending",
   {
@@ -63,7 +64,7 @@ function appRoute(
     maxParticipants = 20,
   }: {
     currentParticipants?: number;
-    maxParticipants?: number;
+    maxParticipants?: number | null;
   } = {},
 ): FetchRoute {
   return {
@@ -96,11 +97,21 @@ function appNotFoundRoute(): FetchRoute {
   };
 }
 
-function updateRoute(updated: { id: string }[] = [{ id: TEST_APP_ID }]): FetchRoute {
+// Fix #1219: assert which pending application IDs are approved during bulk processing.
+function updateRoute(
+  updated: { id: string }[] = [{ id: TEST_APP_ID }],
+  expectedIds?: string[],
+): FetchRoute {
   return {
     matcher: (req) =>
       req.url.includes("event_applications") && req.method === "PATCH",
-    handler: () => jsonResponse(updated),
+    handler: (req) => {
+      if (expectedIds) {
+        const idFilter = new URL(req.url).searchParams.get("id");
+        assertEquals(idFilter, `in.(${expectedIds.join(",")})`);
+      }
+      return jsonResponse(updated);
+    },
   };
 }
 
@@ -110,7 +121,7 @@ function eventRoute(
     maxParticipants = 20,
   }: {
     currentParticipants?: number;
-    maxParticipants?: number;
+    maxParticipants?: number | null;
   } = {},
 ): FetchRoute {
   return {
@@ -129,6 +140,7 @@ function eventRoute(
   };
 }
 
+// Fix #1219: keep bulk-approval tests ordered by created_at so oldest pending rows are selected first.
 function pendingApplicationsRoute(ids: string[]): FetchRoute {
   return {
     matcher: (req) =>
@@ -393,6 +405,35 @@ Deno.test({
   },
 });
 
+// Fix #1219: unlimited-capacity events must still allow approvals when max_participants is null.
+Deno.test({
+  name: "approve: allows approval when event capacity is unlimited",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      appRoute("pending", { currentParticipants: 20, maxParticipants: null }),
+      permRoute("owner"),
+      updateRoute([{ id: TEST_APP_ID }]),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest(BASE_URL, {
+          action: "approve",
+          application_id: TEST_APP_ID,
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const json = await readJson(res);
+        assertEquals(json.approved, 1);
+      });
+    });
+  },
+});
+
 Deno.test({
   name: "bulk_approve: success returns 200 with approved count",
   sanitizeResources: false,
@@ -433,7 +474,10 @@ Deno.test({
       eventRoute({ currentParticipants: 18, maxParticipants: 20 }),
       permRoute("owner"),
       pendingApplicationsRoute(["app-001", "app-002", "app-003"]),
-      updateRoute([{ id: "app-001" }, { id: "app-002" }]),
+      updateRoute([{ id: "app-001" }, { id: "app-002" }], [
+        "app-001",
+        "app-002",
+      ]),
     ]);
 
     await withEnv(ENV, async () => {
@@ -448,6 +492,41 @@ Deno.test({
         assertEquals(json.approved, 2);
         assertEquals(json.skipped_due_to_capacity, 1);
         assertEquals(json.remaining_slots_before_approval, 2);
+      });
+    });
+  },
+});
+
+// Fix #1219: unlimited-capacity bulk approval should not skip pending applications.
+Deno.test({
+  name: "bulk_approve: approves every pending application when capacity is unlimited",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      eventRoute({ currentParticipants: 99, maxParticipants: null }),
+      permRoute("owner"),
+      pendingApplicationsRoute(["app-001", "app-002", "app-003"]),
+      updateRoute([{ id: "app-001" }, { id: "app-002" }, { id: "app-003" }], [
+        "app-001",
+        "app-002",
+        "app-003",
+      ]),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest(BASE_URL, {
+          action: "bulk_approve",
+          event_id: TEST_EVENT_ID,
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const json = await readJson(res);
+        assertEquals(json.approved, 3);
+        assertEquals(json.skipped_due_to_capacity, 0);
       });
     });
   },
