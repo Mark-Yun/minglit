@@ -86,25 +86,28 @@ void main() {
         expect(result, isEmpty);
       });
 
-      test('returns empty when no permissions and no approved applications', () async {
-        unawaited(
-          mockTable(
-            mockClient,
-            'partner_member_permissions',
-            selectData: [],
-          ),
-        );
-        unawaited(
-          mockTable(
-            mockClient,
-            'partner_applications',
-            selectData: [],
-          ),
-        );
+      test(
+        'returns empty when no permissions and no approved applications',
+        () async {
+          unawaited(
+            mockTable(
+              mockClient,
+              'partner_member_permissions',
+              selectData: [],
+            ),
+          );
+          unawaited(
+            mockTable(
+              mockClient,
+              'partner_applications',
+              selectData: [],
+            ),
+          );
 
-        final result = await repository.getMyManagedPartners();
-        expect(result, isEmpty);
-      });
+          final result = await repository.getMyManagedPartners();
+          expect(result, isEmpty);
+        },
+      );
 
       test('returns managed partners when permissions exist', () async {
         unawaited(

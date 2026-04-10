@@ -97,7 +97,9 @@ abstract class _SupabasePartnerContextBase implements _SupabasePartnerContext {
 
       // 2. Fallback: Find partners via approved applications
       if (partnerIds.isEmpty) {
-        Log.d('🔍 [PartnerRepo] No permissions, checking approved applications');
+        Log.d(
+          '🔍 [PartnerRepo] No permissions, checking approved applications',
+        );
         partnerIds = await _findPartnersFromApprovedApplications(userId);
       }
 
