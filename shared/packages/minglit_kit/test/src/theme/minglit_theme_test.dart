@@ -42,6 +42,25 @@ void main() {
 
       expect(theme.inputDecorationTheme, isNotNull);
     });
+
+    // Fix #1218: AppBar 배경색이 scaffold 배경색과 일치해야 함
+    test('light theme AppBar background matches scaffold background', () {
+      final theme = MinglitTheme.materialTheme;
+
+      expect(
+        theme.appBarTheme.backgroundColor,
+        equals(theme.scaffoldBackgroundColor),
+        reason:
+            'AppBar background should match scaffold background '
+            '(both should be MinglitColors.surface)',
+      );
+    });
+
+    test('light theme scaffold background is MinglitColors.surface', () {
+      final theme = MinglitTheme.materialTheme;
+
+      expect(theme.scaffoldBackgroundColor, equals(MinglitColors.surface));
+    });
   });
 
   group('partnerTheme', () {
@@ -98,6 +117,19 @@ void main() {
       expect(
         theme.tabBarTheme.indicatorColor,
         MinglitPartnerColorsDark.primary,
+      );
+    });
+  });
+
+  group('dark theme AppBar consistency', () {
+    // Fix #1218: dark theme은 변경하지 않았으므로 기존 일관성 유지 확인
+    test('dark theme AppBar background matches scaffold background', () {
+      final theme = MinglitTheme.materialThemeDark;
+
+      expect(
+        theme.appBarTheme.backgroundColor,
+        equals(theme.scaffoldBackgroundColor),
+        reason: 'Dark theme AppBar background should match scaffold background',
       );
     });
   });
