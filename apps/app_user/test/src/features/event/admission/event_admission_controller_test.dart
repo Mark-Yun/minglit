@@ -276,6 +276,105 @@ void main() {
       );
       expect(state.status, EventAdmissionStatus.eligible);
     });
+
+    // Fix #1211: 정원 마감 시 fullOrSoldOut 상태 반환
+    test('State is fullOrSoldOut when event is at capacity', () async {
+      final fullEvent = testEvent.copyWith(
+        maxParticipants: 20,
+        currentParticipants: 20,
+      );
+
+      when(
+        () => mockEventRepo.getApplication(
+          eventId: any(named: 'eventId'),
+          userId: any(named: 'userId'),
+        ),
+      ).thenAnswer((_) async => null);
+
+      final container = createContainer(
+        overrides: [
+          currentUserProvider.overrideWith((ref) => mockUser),
+          eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+          userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+        ],
+      );
+
+      final state = await container.read(
+        eventAdmissionControllerProvider(fullEvent).future,
+      );
+      expect(state.status, EventAdmissionStatus.fullOrSoldOut);
+    });
+
+    test(
+      'State is fullOrSoldOut when currentParticipants exceeds max',
+      () async {
+        final overCapacityEvent = testEvent.copyWith(
+          maxParticipants: 10,
+          currentParticipants: 11,
+        );
+
+        when(
+          () => mockEventRepo.getApplication(
+            eventId: any(named: 'eventId'),
+            userId: any(named: 'userId'),
+          ),
+        ).thenAnswer((_) async => null);
+
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+          ],
+        );
+
+        final state = await container.read(
+          eventAdmissionControllerProvider(overCapacityEvent).future,
+        );
+        expect(state.status, EventAdmissionStatus.fullOrSoldOut);
+      },
+    );
+
+    test(
+      'existing applicant sees applied status even when event is full',
+      () async {
+        final fullEvent = testEvent.copyWith(
+          maxParticipants: 20,
+          currentParticipants: 20,
+        );
+
+        when(
+          () => mockEventRepo.getApplication(
+            eventId: any(named: 'eventId'),
+            userId: any(named: 'userId'),
+          ),
+        ).thenAnswer(
+          (_) async => EventApplication(
+            id: 'app_1',
+            eventId: 'event_1',
+            ticketId: 'ticket_1',
+            userId: 'user_1',
+            status: 'confirmed',
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+          ],
+        );
+
+        // Already-applied users see their status, not fullOrSoldOut
+        final state = await container.read(
+          eventAdmissionControllerProvider(fullEvent).future,
+        );
+        expect(state.status, EventAdmissionStatus.applied);
+      },
+    );
   });
 
   group('Ended event states', () {
