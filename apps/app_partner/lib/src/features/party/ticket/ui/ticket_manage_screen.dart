@@ -154,9 +154,11 @@ class _TicketManageCard extends ConsumerWidget {
         vertical: MinglitSpacing.xsmall,
       ),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withValues(alpha: MinglitOpacity.highlight),
         borderRadius: BorderRadius.circular(MinglitRadius.small),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: color.withValues(alpha: MinglitOpacity.subtle),
+        ),
       ),
       child: Text(
         label,
@@ -254,9 +256,9 @@ class _TicketEditSheetState extends ConsumerState<_TicketEditSheet> {
         children: [
           Text(
             '티켓 수정',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: MinglitSpacing.large),
           Row(

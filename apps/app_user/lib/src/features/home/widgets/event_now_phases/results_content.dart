@@ -81,7 +81,9 @@ class ResultsContent extends ConsumerWidget {
           Icon(
             Icons.sentiment_neutral,
             size: 48,
-            color: MinglitColors.textSecondary.withValues(alpha: 0.5),
+            color: MinglitColors.textSecondary.withValues(
+              alpha: MinglitOpacity.strong,
+            ),
           ),
           const SizedBox(height: MinglitSpacing.medium),
           Text(
@@ -130,21 +132,25 @@ class _MatchResultCard extends StatelessWidget {
         color: MinglitColors.surface,
         borderRadius: BorderRadius.circular(MinglitRadius.card),
         border: Border.all(
-          color: MinglitColors.primary.withValues(alpha: 0.3),
+          color: MinglitColors.primary.withValues(alpha: MinglitOpacity.muted),
         ),
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 24,
-            backgroundColor: MinglitColors.primary.withValues(alpha: 0.1),
+            backgroundColor: MinglitColors.primary.withValues(
+              alpha: MinglitOpacity.highlight,
+            ),
             backgroundImage: match.partnerProfileImage != null
                 ? NetworkImage(match.partnerProfileImage!)
                 : null,
             child: match.partnerProfileImage == null
                 ? Icon(
                     Icons.person,
-                    color: MinglitColors.primary.withValues(alpha: 0.6),
+                    color: MinglitColors.primary.withValues(
+                      alpha: MinglitOpacity.separator,
+                    ),
                   )
                 : null,
           ),
@@ -189,7 +195,9 @@ class _DragHandle extends StatelessWidget {
       width: 40,
       height: 4,
       decoration: BoxDecoration(
-        color: MinglitColors.textSecondary.withValues(alpha: 0.3),
+        color: MinglitColors.textSecondary.withValues(
+          alpha: MinglitOpacity.muted,
+        ),
         borderRadius: BorderRadius.circular(2),
       ),
     );

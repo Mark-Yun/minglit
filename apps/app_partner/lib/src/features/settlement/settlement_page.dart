@@ -2,7 +2,6 @@ import 'package:app_partner/src/features/settlement/settlement_coordinator.dart'
 import 'package:app_partner/src/features/settlement/settlement_dashboard_controller.dart';
 import 'package:app_partner/src/features/settlement/settlement_list_controller.dart';
 import 'package:app_partner/src/features/settlement/widgets/settlement_card.dart';
-import 'package:app_partner/src/features/settlement/widgets/settlement_empty_state.dart';
 import 'package:app_partner/src/features/settlement/widgets/settlement_status_badge.dart';
 import 'package:app_partner/src/features/settlement/widgets/status_filter_chips.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
@@ -54,10 +53,7 @@ class _SettlementPageState extends ConsumerState<SettlementPage>
       ),
       body: TabBarView(
         controller: _tabController,
-        children: const [
-          _DashboardTab(),
-          _ListTab(),
-        ],
+        children: const [_DashboardTab(), _ListTab()],
       ),
     );
   }
@@ -129,10 +125,7 @@ class _DashboardTab extends ConsumerWidget {
 }
 
 class _PeriodSelector extends StatelessWidget {
-  const _PeriodSelector({
-    required this.selectedMonth,
-    required this.onChanged,
-  });
+  const _PeriodSelector({required this.selectedMonth, required this.onChanged});
 
   final DateTime selectedMonth;
   final ValueChanged<int> onChanged;
@@ -178,7 +171,7 @@ class _RevenueSummaryCard extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             colorScheme.primary,
-            colorScheme.primary.withValues(alpha: 0.8),
+            colorScheme.primary.withValues(alpha: MinglitOpacity.scrimLight),
           ],
         ),
         borderRadius: BorderRadius.circular(MinglitRadius.button),
@@ -186,11 +179,12 @@ class _RevenueSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Fix #1195: Colors.white → colorScheme.onPrimary + MinglitOpacity 토큰
           Text(
             '이번 달 총 매출',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: colorScheme.onPrimary.withValues(alpha: MinglitOpacity.scrimLight),
+              color: colorScheme.onPrimary.withValues(
+                alpha: MinglitOpacity.scrimLight,
+              ),
             ),
           ),
           const SizedBox(height: MinglitSpacing.xsmall),
@@ -209,7 +203,9 @@ class _RevenueSummaryCard extends StatelessWidget {
               Text(
                 '정산 완료',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onPrimary.withValues(alpha: MinglitOpacity.scrimLight),
+                  color: colorScheme.onPrimary.withValues(
+                    alpha: MinglitOpacity.scrimDark,
+                  ),
                 ),
               ),
               Text(
@@ -228,7 +224,9 @@ class _RevenueSummaryCard extends StatelessWidget {
               Text(
                 '정산 대기',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onPrimary.withValues(alpha: MinglitOpacity.scrimLight),
+                  color: colorScheme.onPrimary.withValues(
+                    alpha: MinglitOpacity.scrimDark,
+                  ),
                 ),
               ),
               Text(
@@ -312,7 +310,7 @@ class _StatusCell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withValues(alpha: MinglitOpacity.highlight),
         borderRadius: BorderRadius.circular(MinglitRadius.small),
       ),
       child: Column(
@@ -415,7 +413,7 @@ class _ListTabState extends ConsumerState<_ListTab> {
               listState.error != null &&
                   listState.items.isEmpty &&
                   !listState.isLoading
-              ? SettlementEmptyState(
+              ? MinglitEmptyState(
                   icon: Icons.error_outline,
                   title: '목록을 불러오지 못했습니다',
                   subtitle: '잠시 후 다시 시도해 주세요.',
@@ -426,7 +424,8 @@ class _ListTabState extends ConsumerState<_ListTab> {
                 )
               : listState.items.isEmpty && !listState.isLoading
               // Fix #997: 빈 정산 상태에 CTA 버튼 추가 — 필터 없을 때만 이벤트 생성 유도
-              ? SettlementEmptyState(
+              ? MinglitEmptyState(
+                  icon: Icons.receipt_long_outlined,
                   title: '정산 항목이 없습니다',
                   subtitle: listState.selectedStatus != null
                       ? '다른 상태를 선택해 보세요.'
@@ -454,9 +453,7 @@ class _ListTabState extends ConsumerState<_ListTab> {
                           if (i >= viewList.length) {
                             return const Padding(
                               padding: EdgeInsets.all(MinglitSpacing.medium),
-                              child: Center(
-                                child: CircularProgressIndicator(),
-                              ),
+                              child: Center(child: CircularProgressIndicator()),
                             );
                           }
                           final item = viewList[i];

@@ -166,7 +166,9 @@ class _CreateVerificationPageState
             padding: const EdgeInsets.all(MinglitSpacing.xlarge),
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              color: colorScheme.surfaceContainerHighest.withValues(
+                alpha: MinglitOpacity.muted,
+              ),
               borderRadius: BorderRadius.circular(MinglitSpacing.small),
               border: Border.all(color: colorScheme.outlineVariant),
             ),
@@ -183,7 +185,9 @@ class _CreateVerificationPageState
             proxyDecorator: (child, index, animation) {
               return Material(
                 borderRadius: BorderRadius.circular(MinglitRadius.card),
-                color: theme.colorScheme.surface.withValues(alpha: 0),
+                color: theme.colorScheme.surface.withValues(
+                  alpha: MinglitOpacity.none,
+                ),
                 clipBehavior: Clip.antiAlias,
                 child: child,
               );

@@ -4,11 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class DeletionInfoPage extends ConsumerWidget {
-  const DeletionInfoPage({
-    this.reasonCode,
-    this.reasonText,
-    super.key,
-  });
+  const DeletionInfoPage({this.reasonCode, this.reasonText, super.key});
 
   final String? reasonCode;
   final String? reasonText;
@@ -36,7 +32,6 @@ class DeletionInfoPage extends ConsumerWidget {
                       padding: const EdgeInsets.all(MinglitSpacing.medium),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.secondaryContainer,
-                        // Fix #1195: BorderRadius 하드코딩 → MinglitRadius.card 토큰
                         borderRadius: BorderRadius.circular(MinglitRadius.card),
                       ),
                       child: Column(
@@ -83,7 +78,9 @@ class DeletionInfoPage extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(MinglitSpacing.medium),
                     decoration: BoxDecoration(
-                      color: MinglitColors.error.withValues(alpha: 0.08),
+                      color: MinglitColors.error.withValues(
+                        alpha: MinglitOpacity.activeChip,
+                      ),
                       borderRadius: BorderRadius.circular(MinglitRadius.card),
                     ),
                     child: Column(
@@ -130,10 +127,7 @@ class DeletionInfoPage extends ConsumerWidget {
 }
 
 class _InfoSection extends StatelessWidget {
-  const _InfoSection({
-    required this.title,
-    required this.items,
-  });
+  const _InfoSection({required this.title, required this.items});
 
   final String title;
   final List<String> items;

@@ -36,7 +36,9 @@ class PurchaseHistoryCard extends ConsumerWidget {
         border: Border.all(color: theme.colorScheme.outlineVariant),
         boxShadow: [
           BoxShadow(
-            color: MinglitColors.textPrimary.withValues(alpha: 0.02),
+            color: MinglitColors.textPrimary.withValues(
+              alpha: MinglitOpacity.shadowXs,
+            ),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -96,10 +98,7 @@ class PurchaseHistoryCard extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: MinglitSpacing.xsmall),
-                    Text(
-                      dateLabel,
-                      style: theme.textTheme.bodySmall,
-                    ),
+                    Text(dateLabel, style: theme.textTheme.bodySmall),
                     Text(
                       location?.name ?? '장소 정보 없음',
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -163,16 +162,10 @@ class PurchaseHistoryCard extends ConsumerWidget {
                 child: OutlinedButton(
                   onPressed: () async {
                     final phone =
-                        _resolveContactValue(
-                          contactOptions,
-                          'phone',
-                        ) ??
+                        _resolveContactValue(contactOptions, 'phone') ??
                         party?.partner?.contactPhone;
                     final email =
-                        _resolveContactValue(
-                          contactOptions,
-                          'email',
-                        ) ??
+                        _resolveContactValue(contactOptions, 'email') ??
                         party?.partner?.contactEmail;
 
                     Uri? uri;
@@ -290,10 +283,7 @@ class PurchaseHistoryCard extends ConsumerWidget {
       },
       showError: (message) async {
         if (!context.mounted) return false;
-        return _showRefundErrorDialog(
-          context: context,
-          message: message,
-        );
+        return _showRefundErrorDialog(context: context, message: message);
       },
       onSuccess: () async {
         if (!context.mounted) return;
@@ -330,10 +320,7 @@ class PurchaseHistoryCard extends ConsumerWidget {
             label: '결제 금액',
             value: '${formatter.format(paymentAmount)}원',
           ),
-          _RefundRow(
-            label: '환불 비율',
-            value: '${calculation.refundPercentage}%',
-          ),
+          _RefundRow(label: '환불 비율', value: '${calculation.refundPercentage}%'),
           _RefundRow(
             label: '환불 금액',
             value: '${formatter.format(calculation.refundAmount)}원',

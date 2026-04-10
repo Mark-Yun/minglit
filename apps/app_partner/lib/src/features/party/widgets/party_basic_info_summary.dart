@@ -115,10 +115,14 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
                       vertical: MinglitSpacing.xsmall,
                     ),
                     decoration: BoxDecoration(
-                      color: resolvedStatusColor.withValues(alpha: 0.1),
+                      color: resolvedStatusColor.withValues(
+                        alpha: MinglitOpacity.highlight,
+                      ),
                       borderRadius: BorderRadius.circular(MinglitRadius.small),
                       border: Border.all(
-                        color: resolvedStatusColor.withValues(alpha: 0.3),
+                        color: resolvedStatusColor.withValues(
+                          alpha: MinglitOpacity.muted,
+                        ),
                       ),
                     ),
                     child: Text(
@@ -188,7 +192,9 @@ class _PartyBasicInfoSummaryState extends State<PartyBasicInfoSummary> {
                 color: colorScheme.surface,
                 borderRadius: BorderRadius.circular(MinglitRadius.card),
                 border: Border.all(
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                  color: colorScheme.outlineVariant.withValues(
+                    alpha: MinglitOpacity.strong,
+                  ),
                 ),
               ),
               child: Column(

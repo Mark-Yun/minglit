@@ -44,10 +44,7 @@ class FeaturedTagChipBar extends ConsumerWidget {
 }
 
 class _TagChip extends StatelessWidget {
-  const _TagChip({
-    required this.label,
-    required this.onTap,
-  });
+  const _TagChip({required this.label, required this.onTap});
 
   final String label;
   final VoidCallback onTap;
@@ -64,7 +61,9 @@ class _TagChip extends StatelessWidget {
           vertical: MinglitSpacing.xxsmall,
         ),
         decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withValues(alpha: 0.08),
+          color: theme.colorScheme.primary.withValues(
+            alpha: MinglitOpacity.activeChip,
+          ),
           borderRadius: BorderRadius.circular(MinglitRadius.chip),
         ),
         child: Text(

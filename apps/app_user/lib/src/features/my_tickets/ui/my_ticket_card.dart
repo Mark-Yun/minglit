@@ -42,9 +42,7 @@ class MyTicketCard extends StatelessWidget {
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(MinglitSpacing.medium),
-          side: BorderSide(
-            color: theme.colorScheme.outlineVariant,
-          ),
+          side: BorderSide(color: theme.colorScheme.outlineVariant),
         ),
         elevation: 0,
         child: InkWell(
@@ -205,7 +203,7 @@ class MyTicketCard extends StatelessWidget {
             style: TextButton.styleFrom(
               foregroundColor: theme.colorScheme.primary,
               backgroundColor: theme.colorScheme.primary.withValues(
-                alpha: 0.08,
+                alpha: MinglitOpacity.activeChip,
               ),
               padding: const EdgeInsets.symmetric(
                 horizontal: MinglitSpacing.sm,
@@ -267,7 +265,9 @@ class _DDayChip extends StatelessWidget {
       textColor = theme.colorScheme.onPrimary;
     } else {
       label = 'D-$difference';
-      bgColor = theme.colorScheme.primary.withValues(alpha: 0.1);
+      bgColor = theme.colorScheme.primary.withValues(
+        alpha: MinglitOpacity.highlight,
+      );
       textColor = theme.colorScheme.primary;
     }
 
@@ -278,7 +278,6 @@ class _DDayChip extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: bgColor,
-        // Fix #1195: BorderRadius 하드코딩 → MinglitRadius.chip 토큰
         borderRadius: BorderRadius.circular(MinglitRadius.chip),
         border: isPast
             ? Border.all(color: theme.colorScheme.outlineVariant)
