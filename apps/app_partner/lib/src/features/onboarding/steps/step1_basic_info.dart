@@ -107,7 +107,11 @@ class _ProfileImagePicker extends StatelessWidget {
         OutlinedButton.icon(
           onPressed: () async {
             final picker = ImagePicker();
-            final file = await picker.pickImage(source: ImageSource.gallery);
+            // Fix #1230: requestFullMetadata: false로 iOS EXIF/GPS 메타데이터 접근 최소화
+            final file = await picker.pickImage(
+              source: ImageSource.gallery,
+              requestFullMetadata: false,
+            );
             if (file != null) onPick(file);
           },
           icon: const Icon(Icons.image_outlined, color: MinglitColors.primary),

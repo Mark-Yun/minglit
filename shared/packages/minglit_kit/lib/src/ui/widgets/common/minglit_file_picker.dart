@@ -100,7 +100,10 @@ class _MinglitFilePickerState extends ConsumerState<MinglitFilePicker> {
   Future<void> _pickImage(ImageSource source) async {
     try {
       if (widget.allowMultiple && source == ImageSource.gallery) {
-        final images = await _imagePicker.pickMultiImage();
+        // Fix #1230: requestFullMetadata: false로 iOS EXIF/GPS 메타데이터 접근 최소화
+        final images = await _imagePicker.pickMultiImage(
+          requestFullMetadata: false,
+        );
         if (images.isNotEmpty) {
           final files = images
               .map((e) => PlatformFile(name: e.name, size: 0, path: e.path))
@@ -108,7 +111,11 @@ class _MinglitFilePickerState extends ConsumerState<MinglitFilePicker> {
           await _processFiles(files);
         }
       } else {
-        final image = await _imagePicker.pickImage(source: source);
+        // Fix #1230: requestFullMetadata: false로 iOS EXIF/GPS 메타데이터 접근 최소화
+        final image = await _imagePicker.pickImage(
+          source: source,
+          requestFullMetadata: false,
+        );
         if (image != null)
           await _processFiles([
             PlatformFile(name: image.name, size: 0, path: image.path),

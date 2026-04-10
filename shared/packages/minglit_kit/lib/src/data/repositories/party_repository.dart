@@ -1,5 +1,6 @@
 import 'package:image_picker/image_picker.dart';
 import 'package:minglit_kit/src/data/models/event.dart';
+import 'package:minglit_kit/src/utils/image_utils.dart';
 import 'package:minglit_kit/src/data/models/party.dart';
 import 'package:minglit_kit/src/data/models/party_entry_group.dart';
 import 'package:minglit_kit/src/data/models/ticket.dart';
@@ -78,7 +79,9 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
       // same timestamp
       final random = DateTime.now().microsecond;
       final path = '$partnerId/${timestamp}_$random$extension';
-      final bytes = await file.readAsBytes();
+      final rawBytes = await file.readAsBytes();
+      // Fix #1230: GPS/EXIF 메타데이터 유출 방지 — 업로드 전 재인코딩으로 완전 제거
+      final bytes = stripExifAndReencode(rawBytes, filename: file.name);
 
       await supabaseClient.storage
           .from('party-assets')

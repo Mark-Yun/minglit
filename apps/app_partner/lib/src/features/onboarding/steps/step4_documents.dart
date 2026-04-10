@@ -109,8 +109,10 @@ class _DocumentPicker extends StatelessWidget {
         OutlinedButton.icon(
           onPressed: () async {
             final picker = ImagePicker();
+            // Fix #1230: requestFullMetadata: false로 iOS EXIF/GPS 메타데이터 접근 최소화
             final pickedFile = await picker.pickImage(
               source: ImageSource.gallery,
+              requestFullMetadata: false,
             );
             if (pickedFile != null) onPick(pickedFile);
           },
