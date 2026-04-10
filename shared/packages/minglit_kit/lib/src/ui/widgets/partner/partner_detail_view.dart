@@ -172,7 +172,8 @@ class PartnerDetailView extends ConsumerWidget {
     // Card width = ~2/3 of available width so ~1.5 cards show
     final screenWidth = MediaQuery.sizeOf(context).width;
     final cardWidth = (screenWidth - MinglitSpacing.large * 2) * 0.65;
-    const eventCardContentHeight = 64.0;
+    // Fix #1214: 일부 Android 폰트 메트릭에서 이벤트 카드 하단이 1px 잘리는 오버플로를 방지한다.
+    const eventCardContentHeight = 68.0;
 
     return SizedBox(
       // Keep enough room for the event card metadata row across CI font metrics.
@@ -189,6 +190,7 @@ class PartnerDetailView extends ConsumerWidget {
               borderRadius: BorderRadius.circular(MinglitRadius.card),
               child: MinglitEventCard(
                 event: event,
+                showPartnerOverlay: false,
                 onTap: onEventTap != null ? () => onEventTap!(event) : null,
               ),
             ),
