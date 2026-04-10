@@ -178,4 +178,72 @@ void main() {
       );
     });
   });
+
+  // Fix #1214: 파트너 컨텍스트에서 카드 내부 파트너 배지 중복 표시 방지 — 회귀 테스트
+  group('EventCard showPartnerOverlay (Fix #1214)', () {
+    final partner = Partner(id: 'partner-1', name: '테스트 파트너');
+    final partyWithPartner = Party(
+      id: 'party-1',
+      partnerId: 'partner-1',
+      title: '금요일 네트워킹',
+      createdAt: DateTime(2026, 6, 15, 19),
+      updatedAt: DateTime(2026, 6, 15, 19),
+      partner: partner,
+    );
+    final eventWithPartner = Event(
+      id: 'e-overlay',
+      partyId: 'party-1',
+      startTime: DateTime(2026, 6, 15, 19),
+      endTime: DateTime(2026, 6, 15, 22),
+      createdAt: DateTime(2026, 6, 15, 19),
+      updatedAt: DateTime(2026, 6, 15, 19),
+      currentParticipants: 5,
+      party: partyWithPartner,
+    );
+    // currentTime is 5 days before event
+    final currentTime = DateTime(2026, 6, 10, 12);
+
+    testWidgets('showPartnerOverlay: true shows partner name badge', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: MinglitTheme.materialTheme,
+          home: Scaffold(
+            body: MinglitEventCard(
+              event: eventWithPartner,
+              currentTime: currentTime,
+              showPartnerOverlay: true,
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Partner name text must be rendered in the overlay badge
+      expect(find.text('테스트 파트너'), findsOneWidget);
+    });
+
+    testWidgets(
+      'showPartnerOverlay: false hides partner name badge (Fix #1214 regression)',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: MinglitTheme.materialTheme,
+            home: Scaffold(
+              body: MinglitEventCard(
+                event: eventWithPartner,
+                currentTime: currentTime,
+                showPartnerOverlay: false,
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        // Partner badge must NOT appear when card is in partner context
+        expect(find.text('테스트 파트너'), findsNothing);
+      },
+    );
+  });
 }
