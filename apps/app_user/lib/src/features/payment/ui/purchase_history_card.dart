@@ -131,10 +131,12 @@ class PurchaseHistoryCard extends ConsumerWidget {
           const SizedBox(height: MinglitSpacing.medium),
 
           // 4. Actions
+          // Fix #1236: 보조 버튼(영수증/문의하기)을 OutlinedButton → TextButton으로
+          // 낮춤 — 브랜드 보라 아웃라인 제거, 정보 위계 명확화
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(
+                child: TextButton(
                   onPressed: () async {
                     if (paymentId == null || paymentId.isEmpty) {
                       context.showMinglitWarning('영수증 정보를 확인할 수 없습니다.');
@@ -159,7 +161,7 @@ class PurchaseHistoryCard extends ConsumerWidget {
               ),
               const SizedBox(width: MinglitSpacing.small),
               Expanded(
-                child: OutlinedButton(
+                child: TextButton(
                   onPressed: () async {
                     final phone =
                         _resolveContactValue(contactOptions, 'phone') ??

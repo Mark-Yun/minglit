@@ -185,4 +185,57 @@ void main() {
       expect(find.text('2026.03.10'), findsOneWidget);
     });
   });
+
+  group('PurchaseHistoryCard — Fix #1236 버튼 위계 회귀 테스트', () {
+    testWidgets('영수증/문의하기 버튼은 TextButton (OutlinedButton 아님)', (
+      tester,
+    ) async {
+      final mockHistory = [
+        EventApplication(
+          id: 'app1',
+          eventId: 'event1',
+          ticketId: 'ticket1',
+          userId: 'user1',
+          status: 'paid',
+          createdAt: DateTime(2026, 4, 1),
+          updatedAt: DateTime(2026, 4, 1),
+          event: Event(
+            id: 'event1',
+            partyId: 'party1',
+            startTime: DateTime(2026, 5, 1, 19),
+            endTime: DateTime(2026, 5, 1, 21),
+            createdAt: DateTime(2026, 4, 1),
+            updatedAt: DateTime(2026, 4, 1),
+            title: 'Test Event',
+          ),
+          ticket: Ticket(
+            id: 'ticket1',
+            name: 'Standard Ticket',
+            createdAt: DateTime(2026, 4, 1),
+            updatedAt: DateTime(2026, 4, 1),
+          ),
+        ),
+      ];
+
+      when(
+        () => mockEventRepository.getMyPurchaseHistory('user1'),
+      ).thenAnswer((_) async => mockHistory);
+
+      await tester.pumpWidget(
+        createTestWidget([
+          currentUserProvider.overrideWith((ref) => mockUser),
+          eventRepositoryProvider.overrideWithValue(mockEventRepository),
+        ]),
+      );
+
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+
+      // Fix #1236: 보조 버튼은 TextButton — 브랜드 보라 아웃라인 제거
+      expect(find.text('영수증'), findsOneWidget);
+      expect(find.text('문의하기'), findsOneWidget);
+      expect(find.byType(OutlinedButton), findsNothing);
+    });
+  });
 }

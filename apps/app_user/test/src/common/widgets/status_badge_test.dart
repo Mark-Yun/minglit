@@ -16,7 +16,8 @@ void main() {
     testWidgets('renders 결제대기 for pending status', (tester) async {
       await tester.pumpWidget(createTestWidget('pending'));
       expect(find.text('결제대기'), findsOneWidget);
-      expect(find.byType(MinglitChip), findsOneWidget);
+      // Fix #1236: MinglitChip(solid) → MinglitBadge(tinted) for hierarchy
+      expect(find.byType(MinglitBadge), findsOneWidget);
     });
 
     testWidgets('renders 심사중 for pending_review status', (tester) async {
@@ -47,6 +48,39 @@ void main() {
     testWidgets('renders 알수없음 for unknown status', (tester) async {
       await tester.pumpWidget(createTestWidget('unknown_status'));
       expect(find.text('알수없음'), findsOneWidget);
+    });
+
+    // Fix #1236: 성공 상태(paid/approved)에 success 색상, 오류 상태에 error 색상
+    testWidgets('paid and approved use success color (not primary purple)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createTestWidget('paid'));
+      final badge = tester.widget<MinglitBadge>(find.byType(MinglitBadge));
+      expect(badge.color, MinglitColors.success);
+
+      await tester.pumpWidget(createTestWidget('approved'));
+      final badge2 = tester.widget<MinglitBadge>(find.byType(MinglitBadge));
+      expect(badge2.color, MinglitColors.success);
+    });
+
+    testWidgets('pending_review uses warning color', (tester) async {
+      await tester.pumpWidget(createTestWidget('pending_review'));
+      final badge = tester.widget<MinglitBadge>(find.byType(MinglitBadge));
+      expect(badge.color, MinglitColors.warning);
+    });
+
+    testWidgets('rejected uses error color', (tester) async {
+      await tester.pumpWidget(createTestWidget('rejected'));
+      final badge = tester.widget<MinglitBadge>(find.byType(MinglitBadge));
+      expect(badge.color, MinglitColors.error);
+    });
+
+    testWidgets('cancelled uses neutral color (not error)', (tester) async {
+      await tester.pumpWidget(createTestWidget('cancelled'));
+      final badge = tester.widget<MinglitBadge>(find.byType(MinglitBadge));
+      // Fix #1236: 취소는 오류가 아닌 중립 종료 상태 — error red 사용 금지
+      expect(badge.color, isNot(MinglitColors.error));
+      expect(badge.color, isNot(MinglitColors.primary));
     });
   });
 }
