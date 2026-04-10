@@ -474,6 +474,25 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
   }
 
   /// [Partner Dashboard]
+  /// Returns true if the partner has ever created any event (past or future).
+  /// Used to determine whether to show the onboarding guide — checking only
+  /// upcoming events would incorrectly show onboarding after all events end.
+  Future<bool> getHasAnyEvents(String partnerId) async {
+    try {
+      final res = await supabaseClient
+          .from('events')
+          .select('id, party:parties!inner(partner_id)')
+          .eq('party.partner_id', partnerId)
+          .limit(1)
+          .count(CountOption.exact);
+      return res.count > 0;
+    } on Exception catch (e, st) {
+      Log.e('❌ [EventRepo] getHasAnyEvents Error', e, st);
+      return false; // Fail safe: assume no events on error → show onboarding
+    }
+  }
+
+  /// [Partner Dashboard]
   /// Fetches events scheduled for today for a specific partner.
   Future<List<Event>> getTodayEvents(String partnerId) async {
     try {
