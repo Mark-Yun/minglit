@@ -20,6 +20,30 @@ mixin _PartyEventRepository on _SupabasePartyContext {
     }
   }
 
+  // Fix #1214: 파트너 상세 페이지에서 파트너 뱃지 중복 표시 제거 + 1px overflow 수정
+  /// Retrieves upcoming events for all parties belonging to a specific partner.
+  Future<List<Event>> getEventsByPartnerId(String partnerId) async {
+    try {
+      final data =
+          await supabaseClient
+                  .from('events')
+                  .select(
+                    '*, '
+                    'party:parties!inner(*, location:locations(*), partner:partners(*)), '
+                    'entry_groups(*), tickets(*)',
+                  )
+                  .eq('parties.partner_id', partnerId)
+                  .order('start_time', ascending: true)
+              as List;
+      return data.map((e) {
+        return Event.fromJson(e as Map<String, dynamic>);
+      }).toList();
+    } catch (e, st) {
+      Log.e('❌ [PartyRepo] getEventsByPartnerId Error', e, st);
+      rethrow;
+    }
+  }
+
   /// Creates a new event for a party.
   Future<Event> createEvent(Event event) async {
     Log.d('createEvent called | partyId: ${event.partyId}');

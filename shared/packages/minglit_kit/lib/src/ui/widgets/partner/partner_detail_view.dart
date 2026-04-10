@@ -38,17 +38,16 @@ class PartnerDetailView extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           Row(
             children: [
               if (partner.profileImageUrl != null)
                 CircleAvatar(
-                  radius: MinglitRadius.card + MinglitRadius.button, // 40
+                  radius: MinglitRadius.card + MinglitRadius.button,
                   backgroundImage: NetworkImage(partner.profileImageUrl!),
                 )
               else
                 CircleAvatar(
-                  radius: MinglitRadius.card + MinglitRadius.button, // 40
+                  radius: MinglitRadius.card + MinglitRadius.button,
                   backgroundColor: theme.colorScheme.surfaceContainerHighest,
                   child: Icon(
                     Icons.store,
@@ -75,7 +74,6 @@ class PartnerDetailView extends ConsumerWidget {
                         ),
                       ),
                     const SizedBox(height: MinglitSpacing.small),
-                    // Fix #171: 알림받기 아이콘에 텍스트 추가
                     MinglitSocialButton(
                       targetId: partner.id,
                       targetType: SocialTargetType.partner,
@@ -88,23 +86,15 @@ class PartnerDetailView extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: MinglitSpacing.xlarge),
-
-          // Introduction
           _buildSection(context, '소개', partner.introduction ?? '소개글이 없습니다.'),
           const Divider(height: MinglitSpacing.xlarge * 1.5),
-
-          // Fix #171: 진행중인 이벤트 (가로 카드형 + 더 보기)
           _buildEventSection(ref, context),
           const Divider(height: MinglitSpacing.xlarge * 1.5),
-
-          // Business Info
           _buildSection(context, '사업자 정보', ''),
           _buildInfoRow(context, '상호명', partner.bizName),
           _buildInfoRow(context, '대표자', partner.representativeName),
           _buildInfoRow(context, '사업자번호', partner.bizNumber),
           const SizedBox(height: MinglitSpacing.large),
-
-          // Contact Info
           _buildSection(context, '연락처', ''),
           _buildInfoRow(context, '이메일', partner.contactEmail),
           _buildInfoRow(context, '전화번호', partner.contactPhone),
@@ -120,7 +110,6 @@ class PartnerDetailView extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Fix #171: 헤더에 더 보기 버튼 추가
         Row(
           children: [
             Text(
@@ -159,7 +148,6 @@ class PartnerDetailView extends ConsumerWidget {
                 ),
               );
             }
-            // Fix #171: 가로 카드형 썸네일, 1.5개 보이도록
             return _buildHorizontalEventList(context, events);
           },
           error: (e, _) => Text('Error: $e'),
@@ -169,13 +157,11 @@ class PartnerDetailView extends ConsumerWidget {
   }
 
   Widget _buildHorizontalEventList(BuildContext context, List<Event> events) {
-    // Card width = ~2/3 of available width so ~1.5 cards show
     final screenWidth = MediaQuery.sizeOf(context).width;
     final cardWidth = (screenWidth - MinglitSpacing.large * 2) * 0.65;
-    const eventCardContentHeight = 64.0;
+    const eventCardContentHeight = 68.0;
 
     return SizedBox(
-      // Keep enough room for the event card metadata row across CI font metrics.
       height: cardWidth * (9 / 16) + eventCardContentHeight,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
@@ -190,6 +176,7 @@ class PartnerDetailView extends ConsumerWidget {
               child: MinglitEventCard(
                 event: event,
                 onTap: onEventTap != null ? () => onEventTap!(event) : null,
+                showPartnerOverlay: false,
               ),
             ),
           );

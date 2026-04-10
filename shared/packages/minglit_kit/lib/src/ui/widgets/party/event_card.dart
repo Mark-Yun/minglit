@@ -35,6 +35,7 @@ class MinglitEventCard extends StatelessWidget {
     super.key,
     this.onTap,
     @visibleForTesting this.currentTime,
+    this.showPartnerOverlay = true,
   }) : _isLoading = false;
 
   /// Named constructor for loading skeleton state.
@@ -43,6 +44,7 @@ class MinglitEventCard extends StatelessWidget {
     this.event,
     this.onTap,
     this.currentTime,
+    this.showPartnerOverlay = true,
   }) : _isLoading = true;
 
   /// Event data to render.
@@ -53,6 +55,9 @@ class MinglitEventCard extends StatelessWidget {
 
   /// Override current time for D-day calculation (testing only).
   final DateTime? currentTime;
+
+  /// Hide partner branding when the card is already shown in partner context.
+  final bool showPartnerOverlay;
 
   /// Internal flag for loading state.
   final bool _isLoading;
@@ -67,7 +72,6 @@ class MinglitEventCard extends StatelessWidget {
     final party = event!.party;
     final location = event!.location ?? party?.location;
 
-    // Calculate D-Day
     final now = currentTime ?? DateTime.now();
     final difference = event!.startTime.difference(now).inDays;
     final dDayLabel = difference == 0
@@ -76,8 +80,6 @@ class MinglitEventCard extends StatelessWidget {
         ? 'D-$difference'
         : '종료';
 
-    // Fix #478: Determine card visual state
-    // Priority: ended > soldOut > today > normal
     final cardState = difference < 0
         ? _EventCardState.ended
         : event!.currentParticipants >= event!.maxParticipants
@@ -86,13 +88,11 @@ class MinglitEventCard extends StatelessWidget {
         ? _EventCardState.today
         : _EventCardState.normal;
 
-    // Format Date
     final dateLabel = DateFormat(
       'M월 d일 (E) HH:mm',
       'ko_KR',
     ).format(event!.startTime);
 
-    // Get Lowest Price
     final lowestPrice = event!.tickets?.fold<int?>(
       null,
       (min, t) => min == null || t.price < min ? t.price : min,
@@ -105,7 +105,6 @@ class MinglitEventCard extends StatelessWidget {
 
     final partner = party?.partner;
 
-    // Fix #478: amber border for today state
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -120,10 +119,8 @@ class MinglitEventCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Image with overlays
               Stack(
                 children: [
-                  // Fix #478: grayscale ColorFiltered for ended state
                   AspectRatio(
                     aspectRatio: 16 / 9,
                     child: ColorFiltered(
@@ -142,7 +139,6 @@ class MinglitEventCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Gradient fade at bottom
                   Positioned.fill(
                     child: DecoratedBox(
                       decoration: BoxDecoration(
@@ -160,7 +156,6 @@ class MinglitEventCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Fix #478: soldOut scrim + "마감" badge overlay
                   if (cardState == _EventCardState.soldOut)
                     Positioned.fill(
                       child: DecoratedBox(
@@ -195,14 +190,12 @@ class MinglitEventCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                  // Partner overlay (top-left) - only if partner exists
-                  if (partner != null)
+                  if (partner != null && showPartnerOverlay)
                     Positioned(
                       top: MinglitSpacing.small,
                       left: MinglitSpacing.small,
                       child: _PartnerOverlay(partner: partner),
                     ),
-                  // D-Day + Participant overlay (top-right)
                   Positioned(
                     top: MinglitSpacing.small,
                     right: MinglitSpacing.small,
@@ -215,8 +208,6 @@ class MinglitEventCard extends StatelessWidget {
                   ),
                 ],
               ),
-
-              // Content area
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: MinglitSpacing.medium,
@@ -225,7 +216,6 @@ class MinglitEventCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Title
                     Text(
                       party?.title ?? event!.title ?? '제목 없음',
                       style: theme.textTheme.titleMedium?.copyWith(
@@ -235,8 +225,6 @@ class MinglitEventCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: MinglitSpacing.xxsmall),
-
-                    // Location & Date Row
                     Row(
                       children: [
                         Icon(
@@ -264,9 +252,6 @@ class MinglitEventCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    // Tag chips — prefer party-level tags, fall back to
-                    // event-level tags (Tag Discovery #1094-1096).
-                    // Displays at most 3 tags + "+N" overflow badge.
                     if (party?.tags ?? event!.tags case final tags?
                         when tags.isNotEmpty) ...[
                       const SizedBox(height: MinglitSpacing.xsmall),
@@ -284,13 +269,6 @@ class MinglitEventCard extends StatelessWidget {
 }
 
 /// Participant count overlay with battery-style indicator and D-day label.
-///
-/// Displays a 3-segment battery gauge based on participation ratio:
-/// - 0–33%: 1 filled segment (orange)
-/// - 34–66%: 2 filled segments (mint)
-/// - 67–100%: 3 filled segments (purple)
-///
-/// Also displays the D-day label (e.g., "오늘", "D-5", "종료").
 class _ParticipantDDayOverlay extends StatelessWidget {
   const _ParticipantDDayOverlay({
     required this.current,
@@ -302,8 +280,6 @@ class _ParticipantDDayOverlay extends StatelessWidget {
   final int current;
   final int max;
   final String dDayLabel;
-
-  // Fix #478: cardState used to color D-Day label and overlay background
   final _EventCardState cardState;
 
   @override
@@ -323,19 +299,16 @@ class _ParticipantDDayOverlay extends StatelessWidget {
       _ => MinglitColors.primary,
     };
 
-    // Fix #474: fontSize 13 → ThemeExtension chipLabel
     final ext = Theme.of(context).extension<MinglitTextThemeExtension>()!;
     final overlayStyle = ext.chipLabel.copyWith(
       color: MinglitColors.background,
       fontWeight: FontWeight.w400,
     );
 
-    // Fix #478: ended state uses muted grey overlay background
     final overlayBgColor = cardState == _EventCardState.ended
         ? Colors.grey.withValues(alpha: MinglitOpacity.scrimDark)
         : MinglitColors.textPrimary.withValues(alpha: MinglitOpacity.overlay);
 
-    // Fix #478: D-Day label color — amber for today
     final dDayStyle = cardState == _EventCardState.today
         ? overlayStyle.copyWith(
             color: MinglitColors.secondary,
@@ -343,7 +316,6 @@ class _ParticipantDDayOverlay extends StatelessWidget {
           )
         : overlayStyle;
 
-    // Fix #996: Semantics 래퍼로 스크린 리더 접근성 지원
     return Semantics(
       label: ratio >= 1.0 ? '이벤트 만석, 참여 불가' : '참가자 $current/$max명, $dDayLabel',
       excludeSemantics: true,
@@ -361,9 +333,8 @@ class _ParticipantDDayOverlay extends StatelessWidget {
           children: [
             const Icon(Icons.person, size: 13, color: MinglitColors.background),
             const SizedBox(width: 3),
-            // 3-segment battery gauge
             for (var i = 0; i < 3; i++) ...[
-              if (i > 0) const SizedBox(width: MinglitSpacing.xxsmall),
+              if (i > 0) const SizedBox(width: 2),
               Container(
                 width: 10,
                 height: 8,
@@ -371,35 +342,24 @@ class _ParticipantDDayOverlay extends StatelessWidget {
                   color: i < filledCount
                       ? segmentColor
                       : MinglitColors.background.withValues(
-                          alpha: MinglitOpacity.subtle,
+                          alpha: MinglitOpacity.disabled,
                         ),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ],
-            const SizedBox(width: MinglitSpacing.xsmall2),
+            const SizedBox(width: 6),
             Text('$current/$max', style: overlayStyle),
-            // Fix #996: ratio >= 1.0일 때 만석 텍스트 표시
-            if (ratio >= 1.0) ...[
-              const SizedBox(width: MinglitSpacing.xsmall),
-              Text(
-                '만석',
-                style: overlayStyle.copyWith(
-                  color: MinglitColors.secondary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-            const SizedBox(width: MinglitSpacing.xsmall),
+            const SizedBox(width: 4),
             Text(
               '·',
               style: overlayStyle.copyWith(
                 color: MinglitColors.background.withValues(
-                  alpha: MinglitOpacity.separator,
+                  alpha: MinglitOpacity.muted,
                 ),
               ),
             ),
-            const SizedBox(width: MinglitSpacing.xsmall),
+            const SizedBox(width: 4),
             const Icon(
               Icons.calendar_today,
               size: 13,
@@ -422,6 +382,8 @@ class _PartnerOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ext = Theme.of(context).extension<MinglitTextThemeExtension>()!;
+
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: MinglitSpacing.small,
@@ -442,7 +404,7 @@ class _PartnerOverlay extends StatelessWidget {
                 ? NetworkImage(partner.profileImageUrl!)
                 : null,
             backgroundColor: MinglitColors.background.withValues(
-              alpha: MinglitOpacity.placeholder,
+              alpha: MinglitOpacity.muted,
             ),
             child: partner.profileImageUrl == null
                 ? const Icon(
@@ -452,19 +414,15 @@ class _PartnerOverlay extends StatelessWidget {
                   )
                 : null,
           ),
-          const SizedBox(width: MinglitSpacing.xsmall2),
-          // Fix #474: fontSize 13 → ThemeExtension chipLabel
+          const SizedBox(width: 6),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 130),
             child: Text(
               partner.name,
-              style: Theme.of(context)
-                  .extension<MinglitTextThemeExtension>()!
-                  .chipLabel
-                  .copyWith(
-                    color: MinglitColors.background,
-                    fontWeight: FontWeight.w400,
-                  ),
+              style: ext.chipLabel.copyWith(
+                color: MinglitColors.background,
+                fontWeight: FontWeight.w400,
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -475,104 +433,83 @@ class _PartnerOverlay extends StatelessWidget {
   }
 }
 
-/// Displays up to 3 tag chips with an overflow "+N" badge.
-///
-/// Used in [MinglitEventCard] to surface tag metadata (Tag Discovery #1094-1096).
 class _TagChipRow extends StatelessWidget {
   const _TagChipRow({required this.tags});
-
-  static const _maxVisible = 3;
 
   final List<Tag> tags;
 
   @override
   Widget build(BuildContext context) {
+    final visibleTags = tags.take(3).toList();
+    final overflowCount = tags.length - visibleTags.length;
     final theme = Theme.of(context);
-    final visible = tags.take(_maxVisible).toList();
-    final overflowCount = tags.length - visible.length;
 
     return Wrap(
       spacing: MinglitSpacing.xsmall,
-      runSpacing: MinglitSpacing.xxsmall,
+      runSpacing: MinglitSpacing.xsmall,
       children: [
-        for (final tag in visible) _TagBadge(label: tag.name, theme: theme),
+        for (final tag in visibleTags)
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: MinglitSpacing.small,
+              vertical: 2,
+            ),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(MinglitRadius.pill),
+            ),
+            child: Text(
+              '#${tag.displayName}',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
         if (overflowCount > 0)
-          _TagBadge(label: '+$overflowCount', theme: theme),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: MinglitSpacing.small,
+              vertical: 2,
+            ),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(MinglitRadius.pill),
+            ),
+            child: Text(
+              '+$overflowCount',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
       ],
     );
   }
 }
 
-class _TagBadge extends StatelessWidget {
-  const _TagBadge({required this.label, required this.theme});
-
-  final String label;
-  final ThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(MinglitRadius.chip),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: MinglitSpacing.small,
-          vertical: MinglitSpacing.xxsmall,
-        ),
-        child: Text(
-          '#$label',
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Skeleton loader for event card.
 class _EventCardSkeleton extends StatelessWidget {
   const _EventCardSkeleton();
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return ColoredBox(
-      color: theme.colorScheme.surface,
+      color: Theme.of(context).colorScheme.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const AspectRatio(
+        children: const [
+          AspectRatio(
             aspectRatio: 16 / 9,
-            child: MinglitSkeleton(borderRadius: BorderRadius.zero),
+            child: MinglitSkeleton(radius: MinglitRadius.card),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: MinglitSpacing.medium,
-              vertical: MinglitSpacing.small,
-            ),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final w = constraints.maxWidth;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    MinglitSkeleton(width: w * 0.8, height: 16),
-                    const SizedBox(height: MinglitSpacing.xsmall),
-                    Row(
-                      children: [
-                        MinglitSkeleton(width: w * 0.5, height: 12),
-                        const Spacer(),
-                        MinglitSkeleton(width: w * 0.2, height: 12),
-                      ],
-                    ),
-                  ],
-                );
-              },
+            padding: EdgeInsets.all(MinglitSpacing.medium),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                MinglitSkeleton(height: 20, width: double.infinity),
+                SizedBox(height: MinglitSpacing.small),
+                MinglitSkeleton(height: 16, width: 180),
+              ],
             ),
           ),
         ],

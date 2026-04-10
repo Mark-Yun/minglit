@@ -8,58 +8,58 @@ part of 'partner_detail_view.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Provider to fetch parties for a specific partner.
+/// Provider to fetch upcoming events for a specific partner.
 
-@ProviderFor(partnerParties)
-const partnerPartiesProvider = PartnerPartiesFamily._();
+@ProviderFor(partnerEvents)
+const partnerEventsProvider = PartnerEventsFamily._();
 
-/// Provider to fetch parties for a specific partner.
+/// Provider to fetch upcoming events for a specific partner.
 
-final class PartnerPartiesProvider
+final class PartnerEventsProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<Party>>,
-          List<Party>,
-          FutureOr<List<Party>>
+          AsyncValue<List<Event>>,
+          List<Event>,
+          FutureOr<List<Event>>
         >
-    with $FutureModifier<List<Party>>, $FutureProvider<List<Party>> {
-  /// Provider to fetch parties for a specific partner.
-  const PartnerPartiesProvider._({
-    required PartnerPartiesFamily super.from,
+    with $FutureModifier<List<Event>>, $FutureProvider<List<Event>> {
+  /// Provider to fetch upcoming events for a specific partner.
+  const PartnerEventsProvider._({
+    required PartnerEventsFamily super.from,
     required String super.argument,
   }) : super(
          retry: null,
-         name: r'partnerPartiesProvider',
+         name: r'partnerEventsProvider',
          isAutoDispose: true,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
 
   @override
-  String debugGetCreateSourceHash() => _$partnerPartiesHash();
+  String debugGetCreateSourceHash() => _$partnerEventsHash();
 
   @override
   String toString() {
-    return r'partnerPartiesProvider'
+    return r'partnerEventsProvider'
         ''
         '($argument)';
   }
 
   @$internal
   @override
-  $FutureProviderElement<List<Party>> $createElement(
+  $FutureProviderElement<List<Event>> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<List<Party>> create(Ref ref) {
+  FutureOr<List<Event>> create(Ref ref) {
     final argument = this.argument as String;
-    return partnerParties(ref, partnerId: argument);
+    return partnerEvents(ref, partnerId: argument);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is PartnerPartiesProvider && other.argument == argument;
+    return other is PartnerEventsProvider && other.argument == argument;
   }
 
   @override
@@ -68,26 +68,26 @@ final class PartnerPartiesProvider
   }
 }
 
-String _$partnerPartiesHash() => r'f7b1cb676b9bdcf5a939a16e263fe5a5d33b3681';
+String _$partnerEventsHash() => r'a3f2cd897e1bcef6b048b17f374ef6a6e44c4792';
 
-/// Provider to fetch parties for a specific partner.
+/// Provider to fetch upcoming events for a specific partner.
 
-final class PartnerPartiesFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<List<Party>>, String> {
-  const PartnerPartiesFamily._()
+final class PartnerEventsFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<List<Event>>, String> {
+  const PartnerEventsFamily._()
     : super(
         retry: null,
-        name: r'partnerPartiesProvider',
+        name: r'partnerEventsProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
 
-  /// Provider to fetch parties for a specific partner.
+  /// Provider to fetch upcoming events for a specific partner.
 
-  PartnerPartiesProvider call({required String partnerId}) =>
-      PartnerPartiesProvider._(argument: partnerId, from: this);
+  PartnerEventsProvider call({required String partnerId}) =>
+      PartnerEventsProvider._(argument: partnerId, from: this);
 
   @override
-  String toString() => r'partnerPartiesProvider';
+  String toString() => r'partnerEventsProvider';
 }
