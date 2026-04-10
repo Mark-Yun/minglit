@@ -503,7 +503,7 @@ class _EventCardSkeleton extends StatelessWidget {
               borderRadius: BorderRadius.circular(MinglitRadius.card),
             ),
           ),
-          Padding(
+          const Padding(
             padding: EdgeInsets.all(MinglitSpacing.medium),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
