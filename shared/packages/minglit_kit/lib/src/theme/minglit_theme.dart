@@ -162,7 +162,10 @@ class MinglitTheme {
       // Fix #474: ThemeExtension 등록
       extensions: const [MinglitTextThemeExtension.light],
       // Layer 2: 컴포넌트 테마 (see minglit_component_theme.dart)
-      appBarTheme: _MinglitComponentThemes.appBar(MinglitColorSet.light),
+      // Fix #1218: AppBar 배경색을 scaffold와 통일 (background → surface)
+      appBarTheme: _MinglitComponentThemes.appBar(
+        MinglitColorSet.light,
+      ).copyWith(backgroundColor: MinglitColors.surface),
       elevatedButtonTheme: _MinglitComponentThemes.elevatedButton(
         MinglitColorSet.light,
       ),
