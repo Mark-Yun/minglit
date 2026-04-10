@@ -86,25 +86,28 @@ void main() {
         expect(result, isEmpty);
       });
 
-      test('returns empty when no permissions and no approved applications', () async {
-        unawaited(
-          mockTable(
-            mockClient,
-            'partner_member_permissions',
-            selectData: [],
-          ),
-        );
-        unawaited(
-          mockTable(
-            mockClient,
-            'partner_applications',
-            selectData: [],
-          ),
-        );
+      test(
+        'returns empty when no permissions and no approved applications',
+        () async {
+          unawaited(
+            mockTable(
+              mockClient,
+              'partner_member_permissions',
+              selectData: [],
+            ),
+          );
+          unawaited(
+            mockTable(
+              mockClient,
+              'partner_applications',
+              selectData: [],
+            ),
+          );
 
-        final result = await repository.getMyManagedPartners();
-        expect(result, isEmpty);
-      });
+          final result = await repository.getMyManagedPartners();
+          expect(result, isEmpty);
+        },
+      );
 
       test('returns managed partners when permissions exist', () async {
         unawaited(
@@ -149,7 +152,11 @@ void main() {
         );
         // Partner found by biz_name + biz_number
         unawaited(
-          mockTable(mockClient, 'partners', maybeSingleData: {'id': 'partner_1'}),
+          mockTable(
+            mockClient,
+            'partners',
+            maybeSingleData: {'id': 'partner_1'},
+          ),
         );
         // Final partner details fetch
         unawaited(
