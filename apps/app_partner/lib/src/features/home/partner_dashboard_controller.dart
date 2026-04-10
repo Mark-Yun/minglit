@@ -16,6 +16,10 @@ abstract class PartnerDashboardState with _$PartnerDashboardState {
     @Default([]) List<Event> upcomingEvents,
     @Default([]) List<Event> closingSoonEvents,
     @Default([]) List<Party> activeParties,
+    // Fix #1215: tracks ALL events ever created, not just upcoming ones.
+    // Using upcomingEvents for onboarding check caused the guide to reappear
+    // after all events ended or were more than 7 days away.
+    @Default(false) bool hasAnyEvents,
     @Default(AsyncValue<void>.loading()) AsyncValue<void> status,
   }) = _PartnerDashboardState;
 }
@@ -43,6 +47,7 @@ class PartnerDashboardController extends _$PartnerDashboardController {
           upcomingEvents: [],
           closingSoonEvents: [],
           activeParties: [],
+          hasAnyEvents: false,
         );
         return;
       }
@@ -66,12 +71,18 @@ class PartnerDashboardController extends _$PartnerDashboardController {
         partner.id,
       );
 
+      // 5. Has Any Events (all-time, for onboarding gate)
+      // Fix #1215: onboarding must not reappear once partner has ever created
+      // an event — getUpcomingEvents only covers next 7 days.
+      final hasAnyEvents = await eventRepo.getHasAnyEvents(partner.id);
+
       state = state.copyWith(
         status: const AsyncValue.data(null),
         pendingReviewCount: pendingCount,
         upcomingEvents: upcomingEvents,
         closingSoonEvents: closingSoonEvents,
         activeParties: activeParties,
+        hasAnyEvents: hasAnyEvents,
       );
     } on Exception catch (e, st) {
       state = state.copyWith(status: AsyncValue.error(e, st));
