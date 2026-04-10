@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
+import 'package:app_user/src/features/home/widgets/event_now_phases/results_content.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -14,6 +15,51 @@ part 'event_admission_state.dart';
 class EventAdmissionController extends _$EventAdmissionController {
   @override
   FutureOr<AdmissionState> build(Event event) async {
+    // Fix #1208: Check event status before any user-state logic.
+    // Completed/cancelled events show ended-state CTAs regardless of login/eligibility.
+    final isEnded =
+        event.status == 'completed' || event.status == 'cancelled';
+    if (isEnded) {
+      final currentUser = ref.watch(currentUserProvider);
+      if (currentUser == null) {
+        return AdmissionState(status: EventAdmissionStatus.eventEnded);
+      }
+
+      final existingApp =
+          await ref.watch(eventRepositoryProvider).getApplication(
+                eventId: event.id,
+                userId: currentUser.id,
+              );
+
+      // rejected: user did not participate — treat same as cancelled for ended events
+      final hasActiveApplication = existingApp != null &&
+          existingApp.status != 'cancelled' &&
+          existingApp.status != 'rejected';
+
+      if (!hasActiveApplication) {
+        return AdmissionState(
+          status: EventAdmissionStatus.eventEnded,
+          user: currentUser,
+        );
+      }
+
+      // Check for match results
+      final matchingRepo = ref.watch(matchingRepositoryProvider);
+      final matches = await matchingRepo.getMyMatches(event.id);
+
+      if (matches.isNotEmpty) {
+        return AdmissionState(
+          status: EventAdmissionStatus.eventEndedWithResults,
+          user: currentUser,
+        );
+      }
+
+      return AdmissionState(
+        status: EventAdmissionStatus.eventEndedParticipated,
+        user: currentUser,
+      );
+    }
+
     final currentUser = ref.watch(currentUserProvider);
     final repository = ref.watch(eventRepositoryProvider);
     final userRepository = ref.watch(userRepositoryProvider);
@@ -157,6 +203,37 @@ class EventAdmissionController extends _$EventAdmissionController {
             loading.hide();
           }
         }
+        return;
+      // Fix #1208: Ended event CTA actions
+      case EventAdmissionStatus.eventEnded:
+      case EventAdmissionStatus.eventEndedParticipated:
+        return;
+      case EventAdmissionStatus.eventEndedWithResults:
+        showModalBottomSheet<void>(
+          context: context,
+          isScrollControlled: true,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(MinglitRadius.card),
+            ),
+          ),
+          builder: (sheetContext) => SafeArea(
+            child: Padding(
+              padding: EdgeInsets.only(
+                bottom:
+                    MediaQuery.of(sheetContext).viewPadding.bottom,
+              ),
+              // ResultsContent only reads activeEvent.event (title)
+              // and myMatchesProvider(event.id) — participantStatus is unused.
+              child: ResultsContent(
+                activeEvent: TodayActiveEvent(
+                  event: event,
+                  participantStatus: 'checked_in',
+                ),
+              ),
+            ),
+          ),
+        );
         return;
     }
   }
