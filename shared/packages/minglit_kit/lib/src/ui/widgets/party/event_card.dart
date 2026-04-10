@@ -34,6 +34,7 @@ class MinglitEventCard extends StatelessWidget {
     required this.event,
     super.key,
     this.onTap,
+    this.showPartnerOverlay = true,
     @visibleForTesting this.currentTime,
   }) : _isLoading = false;
 
@@ -42,6 +43,7 @@ class MinglitEventCard extends StatelessWidget {
     super.key,
     this.event,
     this.onTap,
+    this.showPartnerOverlay = true,
     this.currentTime,
   }) : _isLoading = true;
 
@@ -50,6 +52,13 @@ class MinglitEventCard extends StatelessWidget {
 
   /// Optional tap handler for the card.
   final VoidCallback? onTap;
+
+  /// Whether to show the partner badge overlay on the card image.
+  ///
+  /// Set to [false] when the card is displayed within a partner-scoped context
+  /// (e.g., PartnerDetailView, PartnerEventsPage) to avoid redundant branding.
+  // Fix #1214: 파트너 컨텍스트 내에서 뱃지 중복 표시 방지
+  final bool showPartnerOverlay;
 
   /// Override current time for D-day calculation (testing only).
   final DateTime? currentTime;
@@ -195,8 +204,9 @@ class MinglitEventCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                  // Partner overlay (top-left) - only if partner exists
-                  if (partner != null)
+                  // Partner overlay (top-left) - only if partner exists and overlay is enabled
+                  // Fix #1214: showPartnerOverlay=false hides redundant badge in partner context
+                  if (partner != null && showPartnerOverlay)
                     Positioned(
                       top: MinglitSpacing.small,
                       left: MinglitSpacing.small,

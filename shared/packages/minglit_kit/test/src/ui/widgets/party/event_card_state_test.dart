@@ -178,4 +178,76 @@ void main() {
       );
     });
   });
+
+  group('EventCard showPartnerOverlay', () {
+    final partner = Partner(
+      id: 'partner-1',
+      name: '밍글 스튜디오',
+      bizName: '밍글',
+      representativeName: '홍길동',
+      bizNumber: '123-45-67890',
+      contactEmail: 'test@minglit.com',
+      createdAt: baseTime,
+      updatedAt: baseTime,
+    );
+
+    final partyWithPartner = Party(
+      id: 'party-2',
+      partnerId: 'partner-1',
+      title: '파트너 이벤트',
+      createdAt: baseTime,
+      updatedAt: baseTime,
+      partner: partner,
+    );
+
+    final eventWithPartner = Event(
+      id: 'e-partner',
+      partyId: 'party-2',
+      startTime: baseTime,
+      endTime: baseTime.add(const Duration(hours: 2)),
+      createdAt: baseTime,
+      updatedAt: baseTime,
+      currentParticipants: 3,
+      party: partyWithPartner,
+    );
+
+    final fiveDaysBefore = DateTime(2026, 6, 10, 12);
+
+    testWidgets('showPartnerOverlay=true shows partner name', (tester) async {
+      // Fix #1214: 기본값(true)일 때 파트너 이름 표시 확인
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: MinglitTheme.materialTheme,
+          home: Scaffold(
+            body: MinglitEventCard(
+              event: eventWithPartner,
+              currentTime: fiveDaysBefore,
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('밍글 스튜디오'), findsOneWidget);
+    });
+
+    testWidgets('showPartnerOverlay=false hides partner name', (tester) async {
+      // Fix #1214: 파트너 컨텍스트(showPartnerOverlay=false)에서 뱃지 숨김 확인
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: MinglitTheme.materialTheme,
+          home: Scaffold(
+            body: MinglitEventCard(
+              event: eventWithPartner,
+              showPartnerOverlay: false,
+              currentTime: fiveDaysBefore,
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('밍글 스튜디오'), findsNothing);
+    });
+  });
 }
