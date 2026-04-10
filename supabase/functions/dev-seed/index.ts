@@ -1087,6 +1087,9 @@ Deno.serve(async (req) => {
     }
 
     if (mode === "static") {
+      // Fix #1210: static 모드에서도 기존 파티에 이미지 할당
+      // mode=full 없이 재시드 시 party.image_urls가 []로 유지되는 버그 방지
+      await updatePartyImages(supabase, imageUrls);
       return successResponse({
         mode,
         created_users: createdUsers,
