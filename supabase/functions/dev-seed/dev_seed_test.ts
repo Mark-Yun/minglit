@@ -95,6 +95,12 @@ Deno.test({
           return jsonResponse(null, { status: 200 });
         },
       },
+      {
+        // updatePartyImages: list parties (no parties in fresh env)
+        matcher: (req) =>
+          req.url.includes("/rest/v1/parties") && req.method === "GET",
+        handler: () => jsonResponse([]),
+      },
     ]);
 
     await withEnv({
@@ -115,6 +121,102 @@ Deno.test({
         assertEquals(body.created_parties, undefined);
         assertEquals(body.created_events, undefined);
         assertEquals(body.uploaded_images, 3);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "dev-seed - static mode assigns images to existing parties (Fix #1210)",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const partyIds = [crypto.randomUUID(), crypto.randomUUID()];
+    const patchedPartyIds: string[] = [];
+    let createUserCallCount = 0;
+
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: (req) =>
+          req.url.includes("/auth/v1/admin/users") && req.method === "POST",
+        handler: async (req) => {
+          createUserCallCount++;
+          const body = await req.json();
+          return jsonResponse({
+            user: {
+              id: `user-${createUserCallCount}`,
+              email: body.email,
+              user_metadata: body.user_metadata,
+            },
+          });
+        },
+      },
+      {
+        matcher: (req) => req.url.includes("/storage/v1/object/list-v2/"),
+        handler: () =>
+          jsonResponse({
+            objects: [
+              { name: "seed-images/party_cafe_warm.jpg" },
+              { name: "seed-images/party_lounge_bright.jpg" },
+              { name: "seed-images/party_premium_lounge.jpg" },
+            ],
+          }),
+      },
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/verifications") && req.method === "GET",
+        handler: () => jsonResponse(null, { status: 200 }),
+      },
+      {
+        // updatePartyImages: list all parties — returns 2 existing parties
+        matcher: (req) =>
+          req.url.includes("/rest/v1/parties") && req.method === "GET",
+        handler: () =>
+          jsonResponse(partyIds.map((id) => ({ id }))),
+      },
+      {
+        // updatePartyImages: PATCH each party with image_urls
+        matcher: (req) =>
+          req.url.includes("/rest/v1/parties") && req.method === "PATCH",
+        handler: async (req) => {
+          const body = await req.json();
+          // Each party should receive exactly 3 image URLs (rotation of 3 seed images)
+          assertEquals(Array.isArray(body.image_urls), true);
+          assertEquals(body.image_urls.length, 3);
+          const urlMatch = new URL(req.url);
+          const idFilter = urlMatch.searchParams.get("id");
+          if (idFilter) patchedPartyIds.push(idFilter.replace("eq.", ""));
+          return jsonResponse(null, { status: 204 });
+        },
+      },
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/") && req.method === "POST",
+        handler: () =>
+          jsonResponse({ id: crypto.randomUUID() }, {
+            status: 201,
+            headers: { "Content-Profile": "public" },
+          }),
+      },
+    ]);
+
+    await withEnv({
+      ENVIRONMENT: "development",
+      SUPABASE_URL: "http://localhost:54321",
+      SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+    }, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const response = await handler(new Request("http://localhost"));
+        assertEquals(response.status, 200);
+        const body = await readJson(response);
+        assertEquals(body.uploaded_images, 3);
+        // Both existing parties should have been patched with images
+        assertEquals(patchedPartyIds.length, 2);
+        assertEquals(new Set(patchedPartyIds), new Set(partyIds));
       });
     });
   },
