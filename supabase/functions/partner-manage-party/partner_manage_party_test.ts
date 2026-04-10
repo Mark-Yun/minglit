@@ -95,18 +95,10 @@ function updateLocationRoute(): FetchRoute {
 }
 
 // Party routes
-function insertPartyRoute(id = TEST_PARTY_ID): FetchRoute {
-  return {
-    matcher: (req) =>
-      req.url.includes("/rest/v1/parties") && req.method === "POST",
-    handler: () => jsonResponse({ id }),
-  };
-}
-
 function insertPartyErrorRoute(): FetchRoute {
   return {
     matcher: (req) =>
-      req.url.includes("/rest/v1/parties") && req.method === "POST",
+      req.url.includes("/rest/v1/rpc/create_party_with_tags") && req.method === "POST",
     handler: () => jsonResponse({ message: "insert error" }, { status: 500 }),
   };
 }
@@ -151,20 +143,21 @@ function updatePartyErrorRoute(): FetchRoute {
   };
 }
 
-// party_tags routes
-function insertPartyTagsRoute(): FetchRoute {
+// RPC routes
+// Fix #1223: parties INSERT + party_tags INSERT are now handled atomically via RPCs
+function rpcCreatePartyRoute(id = TEST_PARTY_ID): FetchRoute {
   return {
     matcher: (req) =>
-      req.url.includes("/rest/v1/party_tags") && req.method === "POST",
-    handler: () => jsonResponse([]),
+      req.url.includes("/rest/v1/rpc/create_party_with_tags") && req.method === "POST",
+    handler: () => jsonResponse(id),
   };
 }
 
-function deletePartyTagsRoute(): FetchRoute {
+function rpcUpdatePartyTagsRoute(): FetchRoute {
   return {
     matcher: (req) =>
-      req.url.includes("/rest/v1/party_tags") && req.method === "DELETE",
-    handler: () => new Response(null, { status: 200 }),
+      req.url.includes("/rest/v1/rpc/update_party_tags") && req.method === "POST",
+    handler: () => jsonResponse(null),
   };
 }
 
@@ -314,7 +307,7 @@ Deno.test({
       authRoute(),
       permRoute(),
       insertLocationRoute(),
-      insertPartyRoute(),
+      rpcCreatePartyRoute(),
       insertEntryGroupTemplatesRoute(),
       insertTicketTemplatesRoute(),
     ]);
@@ -355,7 +348,7 @@ Deno.test({
       authRoute(),
       permRoute(),
       selectLocationRoute(),
-      insertPartyRoute(),
+      rpcCreatePartyRoute(),
     ]);
 
     await withEnv(ENV, async () => {
@@ -503,7 +496,7 @@ Deno.test({
     const { fetchMock } = createFetchMock([
       authRoute(),
       permRoute(),
-      insertPartyRoute(),
+      rpcCreatePartyRoute(),
     ]);
 
     await withEnv(ENV, async () => {
@@ -532,7 +525,7 @@ Deno.test({
     const { fetchMock } = createFetchMock([
       authRoute(),
       permRoute(),
-      insertPartyRoute(),
+      rpcCreatePartyRoute(),
     ]);
 
     await withEnv(ENV, async () => {
@@ -882,12 +875,12 @@ Deno.test({
       "00000000-0000-0000-0000-000000000002",
       "00000000-0000-0000-0000-000000000003",
     ];
+    // Fix #1223: create_party_with_tags RPC handles both party + tags in one call
     const { fetchMock } = createFetchMock([
       authRoute(),
       permRoute(),
       selectTagsRoute(tagIds),
-      insertPartyRoute(),
-      insertPartyTagsRoute(),
+      rpcCreatePartyRoute(),
     ]);
 
     await withEnv(ENV, async () => {
@@ -918,7 +911,7 @@ Deno.test({
     const { fetchMock } = createFetchMock([
       authRoute(),
       permRoute(),
-      insertPartyRoute(),
+      rpcCreatePartyRoute(),
     ]);
 
     await withEnv(ENV, async () => {
@@ -943,7 +936,7 @@ Deno.test({
   sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    // tag_ids validation now runs before party INSERT — no insertPartyRoute needed
+    // tag_ids validation now runs before any DB write — no rpcCreatePartyRoute needed
     const { fetchMock } = createFetchMock([
       authRoute(),
       permRoute(),
@@ -1003,9 +996,9 @@ Deno.test({
         assertEquals(res.status, 400);
         const body = await readJson(res);
         assertEquals(body.error, "One or more tag_ids do not exist");
-        // Verify no party INSERT was attempted — orphan prevention confirmed
+        // Verify no create_party_with_tags RPC was called — orphan prevention confirmed
         const partyInserts = calls.filter(
-          (c) => c.url.includes("/rest/v1/parties") && c.method === "POST",
+          (c) => c.url.includes("/rest/v1/rpc/create_party_with_tags") && c.method === "POST",
         );
         assertEquals(partyInserts.length, 0);
       });
@@ -1026,13 +1019,13 @@ Deno.test({
       "00000000-0000-0000-0000-000000000010",
       "00000000-0000-0000-0000-000000000011",
     ];
+    // Fix #1223: update_party_tags RPC handles DELETE stale + INSERT new atomically
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectPartyRoute(),
       permRoute(),
       selectTagsRoute(tagIds),
-      insertPartyTagsRoute(),
-      deletePartyTagsRoute(),
+      rpcUpdatePartyTagsRoute(),
     ]);
 
     await withEnv(ENV, async () => {
@@ -1057,12 +1050,12 @@ Deno.test({
   sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    // 빈 배열이면 DELETE만 실행, INSERT 없음
+    // Fix #1223: update_party_tags RPC handles empty array (clears all tags) atomically
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectPartyRoute(),
       permRoute(),
-      deletePartyTagsRoute(),
+      rpcUpdatePartyTagsRoute(),
     ]);
 
     await withEnv(ENV, async () => {
@@ -1154,7 +1147,7 @@ Deno.test({
   sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    // No insertPartyRoute — if party INSERT were attempted it would throw "Unhandled fetch"
+    // No rpcCreatePartyRoute — if create_party_with_tags RPC were called it would throw "Unhandled fetch"
     const { fetchMock, calls } = createFetchMock([
       authRoute(),
       permRoute(),
@@ -1172,8 +1165,8 @@ Deno.test({
         assertEquals(res.status, 400);
         const body = await readJson(res);
         assertEquals(body.error, "tag_ids must be an array");
-        // Verify no party INSERT was attempted
-        const partyInserts = calls.filter((c) => c.url.includes("/rest/v1/parties") && c.method === "POST");
+        // Verify no create_party_with_tags RPC was called
+        const partyInserts = calls.filter((c) => c.url.includes("/rest/v1/rpc/create_party_with_tags") && c.method === "POST");
         assertEquals(partyInserts.length, 0);
       });
     });
@@ -1238,9 +1231,9 @@ Deno.test({
         assertEquals(res.status, 400);
         const body = await readJson(res);
         assertEquals(body.error, "tag_ids[0] must be a valid UUID");
-        // Verify no party INSERT was attempted
+        // Verify no create_party_with_tags RPC was called
         const partyInserts = calls.filter(
-          (c) => c.url.includes("/rest/v1/parties") && c.method === "POST",
+          (c) => c.url.includes("/rest/v1/rpc/create_party_with_tags") && c.method === "POST",
         );
         assertEquals(partyInserts.length, 0);
       });
@@ -1255,12 +1248,12 @@ Deno.test({
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const uniqueId = "00000000-0000-0000-0000-000000000001";
+    // Fix #1223: create_party_with_tags RPC handles both party + deduped tags atomically
     const { fetchMock } = createFetchMock([
       authRoute(),
       permRoute(),
       selectTagsRoute([uniqueId]),
-      insertPartyRoute(),
-      insertPartyTagsRoute(),
+      rpcCreatePartyRoute(),
     ]);
 
     await withEnv(ENV, async () => {
