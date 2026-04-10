@@ -342,7 +342,7 @@ class _ParticipantDDayOverlay extends StatelessWidget {
                   color: i < filledCount
                       ? segmentColor
                       : MinglitColors.background.withValues(
-                          alpha: MinglitOpacity.disabled,
+                          alpha: MinglitOpacity.subtle,
                         ),
                   borderRadius: BorderRadius.circular(2),
                 ),
@@ -456,10 +456,10 @@ class _TagChipRow extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               color: theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(MinglitRadius.pill),
+              borderRadius: BorderRadius.circular(MinglitRadius.chip),
             ),
             child: Text(
-              '#${tag.displayName}',
+              '#${tag.name}',
               style: theme.textTheme.labelSmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -473,7 +473,7 @@ class _TagChipRow extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               color: theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(MinglitRadius.pill),
+              borderRadius: BorderRadius.circular(MinglitRadius.chip),
             ),
             child: Text(
               '+$overflowCount',
@@ -499,7 +499,7 @@ class _EventCardSkeleton extends StatelessWidget {
         children: [
           AspectRatio(
             aspectRatio: 16 / 9,
-            child: MinglitSkeleton(radius: MinglitRadius.card),
+            child: MinglitSkeleton(borderRadius: BorderRadius.circular(MinglitRadius.card)),
           ),
           Padding(
             padding: EdgeInsets.all(MinglitSpacing.medium),
