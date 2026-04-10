@@ -40,7 +40,11 @@ class MinglitEmptyState extends StatelessWidget {
     this.onAction,
     this.variant = MinglitEmptyStateVariant.fullPage,
     super.key,
-  });
+  }) : assert(
+         variant == MinglitEmptyStateVariant.fullPage ||
+             (actionLabel == null && onAction == null),
+         'actionLabel/onAction은 fullPage variant에서만 지원됩니다.',
+       );
 
   /// Creates a card-level empty state (no CTA).
   const MinglitEmptyState.card({

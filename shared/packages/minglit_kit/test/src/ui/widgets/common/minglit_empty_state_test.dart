@@ -149,7 +149,12 @@ void main() {
         );
 
         // fullPage는 Container로 감싸지 않으므로 decoration이 있는 Container가 없어야 한다
-        final containers = tester.widgetList<Container>(find.byType(Container));
+        final containers = tester.widgetList<Container>(
+          find.descendant(
+            of: find.byType(MinglitEmptyState),
+            matching: find.byType(Container),
+          ),
+        );
         final decorated = containers.where((c) => c.decoration != null);
         expect(decorated, isEmpty);
       },
@@ -205,12 +210,9 @@ void main() {
       );
 
       final container = tester.widget<Container>(
-        find
-            .ancestor(
-              of: find.byType(Center),
-              matching: find.byType(Container),
-            )
-            .first,
+        find.byWidgetPredicate(
+          (w) => w is Container && w.decoration is BoxDecoration,
+        ),
       );
       final decoration = container.decoration as BoxDecoration?;
       expect(decoration, isNotNull);
@@ -272,12 +274,9 @@ void main() {
         );
 
         final container = tester.widget<Container>(
-          find
-              .ancestor(
-                of: find.byType(Center),
-                matching: find.byType(Container),
-              )
-              .first,
+          find.byWidgetPredicate(
+            (w) => w is Container && w.decoration is BoxDecoration,
+          ),
         );
         final decoration = container.decoration as BoxDecoration?;
         expect(decoration, isNotNull);
@@ -306,6 +305,42 @@ void main() {
       );
 
       expect(find.text('인라인 빈 상태'), findsOneWidget);
+    });
+  });
+
+  group('MinglitEmptyState - constructor assertions', () {
+    test('assert fails when card variant has actionLabel', () {
+      expect(
+        () => MinglitEmptyState(
+          title: '테스트',
+          variant: MinglitEmptyStateVariant.card,
+          actionLabel: '액션',
+        ),
+        throwsAssertionError,
+      );
+    });
+
+    test('assert fails when inline variant has onAction', () {
+      expect(
+        () => MinglitEmptyState(
+          title: '테스트',
+          variant: MinglitEmptyStateVariant.inline,
+          onAction: () {},
+        ),
+        throwsAssertionError,
+      );
+    });
+
+    test('assert passes when fullPage variant has actionLabel and onAction', () {
+      expect(
+        () => MinglitEmptyState(
+          title: '테스트',
+          variant: MinglitEmptyStateVariant.fullPage,
+          actionLabel: '액션',
+          onAction: () {},
+        ),
+        returnsNormally,
+      );
     });
   });
 }
