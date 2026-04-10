@@ -1,6 +1,6 @@
 name: minglit_lints
 description: Custom lint rules for Minglit project to enforce UI consistency and design tokens.
-version: 26.04.1259-dev
+version: 26.04.1255-dev
 publish_to: none
 resolution: workspace
 
