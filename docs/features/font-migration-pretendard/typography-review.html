@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>밍릿 — Pretendard 폰트 마이그레이션 타이포그래피 리뷰</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+
+  :root {
+    --color-background: #FFFFFF;
+    --color-primary: #9900FF;
+    --color-primary-light: rgba(153, 0, 255, 0.08);
+    --color-secondary: #FF9900;
+    --color-surface: #F9FAFB;
+    --color-error: #EF4444;
+    --color-text-primary: #111827;
+    --color-text-secondary: #4B5563;
+    --color-text-tertiary: #9CA3AF;
+    --color-success: #22C55E;
+    --color-divider: #E5E7EB;
+    --color-divider-light: #F3F4F6;
+
+    --sp-xxsmall: 2px;
+    --sp-xsmall: 4px;
+    --sp-xsmall2: 6px;
+    --sp-small: 8px;
+    --sp-sm: 12px;
+    --sp-medium: 16px;
+    --sp-large: 24px;
+    --sp-xlarge: 32px;
+    --sp-screen-edge: 20px;
+
+    --radius-small: 8px;
+    --radius-button: 12px;
+    --radius-card: 16px;
+    --radius-chip: 100px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Pretendard Variable', -apple-system, sans-serif;
+    background: #E5E7EB;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    color: var(--color-text-primary);
+  }
+
+  .page-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+
+  .page-subtitle {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-bottom: 40px;
+    text-align: center;
+  }
+
+  .section {
+    width: 100%;
+    max-width: 900px;
+    margin-bottom: 40px;
+  }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title::before {
+    content: '';
+    width: 4px;
+    height: 20px;
+    background: var(--color-primary);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .card {
+    background: var(--color-background);
+    border-radius: var(--radius-card);
+    padding: var(--sp-large);
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  /* === Comparison Grid === */
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .comparison-col {
+    background: var(--color-background);
+    border-radius: var(--radius-card);
+    padding: var(--sp-large);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  .comparison-col.before {
+    border-top: 3px solid var(--color-text-tertiary);
+  }
+
+  .comparison-col.after {
+    border-top: 3px solid var(--color-primary);
+  }
+
+  .col-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  .before .col-label {
+    background: #F3F4F6;
+    color: var(--color-text-secondary);
+  }
+
+  .after .col-label {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+  }
+
+  .font-noto { font-family: 'Noto Sans KR', sans-serif; }
+  .font-pretendard { font-family: 'Pretendard Variable', sans-serif; }
+
+  /* === Type Scale === */
+  .type-row {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--color-divider-light);
+  }
+
+  .type-row:last-child {
+    border-bottom: none;
+  }
+
+  .type-meta {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--color-text-tertiary);
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  .type-sample {
+    color: var(--color-text-primary);
+    line-height: 1.4;
+  }
+
+  /* === Tuning Table === */
+  .tuning-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .tuning-table th {
+    text-align: left;
+    padding: 10px 12px;
+    background: var(--color-surface);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-text-secondary);
+    border-bottom: 2px solid var(--color-divider);
+  }
+
+  .tuning-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--color-divider-light);
+    vertical-align: top;
+  }
+
+  .tuning-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+
+  .badge-keep {
+    background: #F0FDF4;
+    color: #16A34A;
+  }
+
+  .badge-adjust {
+    background: #FFF7ED;
+    color: #EA580C;
+  }
+
+  .badge-new {
+    background: #EFF6FF;
+    color: #2563EB;
+  }
+
+  .badge-remove {
+    background: #FEF2F2;
+    color: #DC2626;
+  }
+
+  /* === Phone Mockup === */
+  .phone-mockup-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    justify-items: center;
+  }
+
+  .phone-frame {
+    width: 320px;
+    height: 640px;
+    background: var(--color-background);
+    border-radius: 36px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12), inset 0 0 0 2px #E5E7EB;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .phone-frame.dark {
+    background: #0F0F0F;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 0 0 2px #333;
+  }
+
+  .phone-status-bar {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .phone-status-bar .notch {
+    width: 120px;
+    height: 28px;
+    background: #000;
+    border-radius: 0 0 16px 16px;
+  }
+
+  .phone-frame.dark .phone-status-bar .notch {
+    background: #1a1a1a;
+  }
+
+  .phone-appbar {
+    height: 56px;
+    padding: 0 var(--sp-medium);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--color-divider-light);
+  }
+
+  .phone-frame.dark .phone-appbar {
+    border-bottom-color: #2a2a2a;
+  }
+
+  .phone-appbar-title {
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .phone-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--sp-medium);
+  }
+
+  .phone-nav {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    border-top: 1px solid var(--color-divider-light);
+    flex-shrink: 0;
+  }
+
+  .phone-frame.dark .phone-nav {
+    border-top-color: #2a2a2a;
+  }
+
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: 10px;
+    color: var(--color-text-tertiary);
+  }
+
+  .nav-item.active {
+    color: var(--color-primary);
+  }
+
+  .nav-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: currentColor;
+    opacity: 0.3;
+  }
+
+  .nav-item.active .nav-icon {
+    opacity: 0.5;
+  }
+
+  /* Phone content elements */
+  .mock-greeting {
+    margin-bottom: 20px;
+  }
+
+  .mock-greeting .name {
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .mock-greeting .sub {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  .mock-event-card {
+    background: var(--color-surface);
+    border-radius: var(--radius-card);
+    padding: var(--sp-medium);
+    margin-bottom: 12px;
+  }
+
+  .phone-frame.dark .mock-event-card {
+    background: #212121;
+  }
+
+  .mock-event-card .event-img {
+    width: 100%;
+    height: 100px;
+    background: linear-gradient(135deg, #9900FF22, #FF990022);
+    border-radius: var(--radius-small);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+  }
+
+  .mock-event-card .event-title {
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .mock-event-card .event-meta {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-top: 4px;
+  }
+
+  .mock-chip-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  .mock-chip {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 100px;
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+  }
+
+  .phone-frame.dark .mock-chip {
+    background: rgba(153, 0, 255, 0.2);
+  }
+
+  .mock-btn {
+    width: 100%;
+    height: 48px;
+    border-radius: var(--radius-button);
+    background: var(--color-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    margin-top: 16px;
+  }
+
+  /* === Verdict Section === */
+  .verdict {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .verdict-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .verdict-icon.approve {
+    background: #F0FDF4;
+  }
+
+  .verdict-text h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .verdict-text p {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+  }
+
+  /* === Checklist === */
+  .checklist-item {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-divider-light);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .checklist-item:last-child {
+    border-bottom: none;
+  }
+
+  .check-icon {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--color-primary);
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* === Weight Compare === */
+  .weight-row {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-divider-light);
+  }
+
+  .weight-row:last-child {
+    border-bottom: none;
+  }
+
+  .weight-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--color-text-tertiary);
+    width: 60px;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .weight-sample {
+    font-size: 18px;
+    flex: 1;
+  }
+
+  .annotation {
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+    font-style: italic;
+    margin-top: 8px;
+    padding-left: 16px;
+    border-left: 2px solid var(--color-divider);
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .comparison-grid, .phone-mockup-row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-title">Pretendard 폰트 마이그레이션 — UX 리뷰</div>
+<div class="page-subtitle">Issue #1231 · needs-uiux-claude-1 · 2026-04-10</div>
+
+<!-- Section 1: Verdict -->
+<div class="section">
+  <div class="section-title">UX 판정</div>
+  <div class="card">
+    <div class="verdict">
+      <div class="verdict-icon approve">✅</div>
+      <div class="verdict-text">
+        <h3>승인 — Pretendard Variable 전환을 적극 지지한다</h3>
+        <p>
+          Pretendard는 한글 가독성에 최적화된 폰트로, 토스·당근·네이버·쿠팡·야놀자 등 국내 톱티어 앱들이 채택한 업계 표준이다.
+          높은 x-height, 명확한 스트로크 대비, 컴팩트한 자폭이 모바일 환경에서 텍스트를 또렷하게 보이게 만든다.
+          현재 NotoSansKR의 "글자가 배경에 가라앉는 느낌" 문제를 근본적으로 해결할 수 있다.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Section 2: Typography Scale Comparison -->
+<div class="section">
+  <div class="section-title">타이포그래피 스케일 비교</div>
+  <div class="comparison-grid">
+    <!-- Before: NotoSansKR -->
+    <div class="comparison-col before">
+      <div class="col-label">Before — Noto Sans KR</div>
+
+      <div class="type-row">
+        <div class="type-meta">displayLarge · 32px · bold · h1.25</div>
+        <div class="type-sample font-noto" style="font-size:32px; font-weight:700; line-height:1.25;">이벤트를 발견하세요</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">headlineSmall · 24px · bold · h1.33</div>
+        <div class="type-sample font-noto" style="font-size:24px; font-weight:700; line-height:1.33;">이번 주 인기 이벤트</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">titleLarge · 20px · bold · h1.4</div>
+        <div class="type-sample font-noto" style="font-size:20px; font-weight:700; line-height:1.4;">강남 와인 테이스팅</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">titleMedium · 16px · bold · h1.5</div>
+        <div class="type-sample font-noto" style="font-size:16px; font-weight:700; line-height:1.5;">참가자 12명 / 20명</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">bodyMedium · 16px · normal · h1.5</div>
+        <div class="type-sample font-noto" style="font-size:16px; font-weight:400; line-height:1.5; color:#4B5563;">와인을 좋아하는 분들이 모여 함께 시음하고 이야기를 나누는 자리입니다. 소규모로 진행되며 편안한 분위기에서 진행됩니다.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">bodySmall · 13px · normal · h1.5</div>
+        <div class="type-sample font-noto" style="font-size:13px; font-weight:400; line-height:1.5; color:#4B5563;">2026년 4월 15일 화요일 · 서울 강남구</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">labelMedium · 12px · w500 · h1.5</div>
+        <div class="type-sample font-noto" style="font-size:12px; font-weight:500; line-height:1.5;">마감 D-3</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">labelSmall · 11px · w500 · h1.45</div>
+        <div class="type-sample font-noto" style="font-size:11px; font-weight:500; line-height:1.45;">인증 완료 · 리뷰 4.8</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">captionTiny · 10px · w500</div>
+        <div class="type-sample font-noto" style="font-size:10px; font-weight:500;">STEP 2 / 3</div>
+      </div>
+    </div>
+
+    <!-- After: Pretendard -->
+    <div class="comparison-col after">
+      <div class="col-label">After — Pretendard Variable</div>
+
+      <div class="type-row">
+        <div class="type-meta">displayLarge · 32px · bold · h1.25</div>
+        <div class="type-sample font-pretendard" style="font-size:32px; font-weight:700; line-height:1.25;">이벤트를 발견하세요</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">headlineSmall · 24px · bold · h1.33</div>
+        <div class="type-sample font-pretendard" style="font-size:24px; font-weight:700; line-height:1.33;">이번 주 인기 이벤트</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">titleLarge · 20px · bold · h1.4</div>
+        <div class="type-sample font-pretendard" style="font-size:20px; font-weight:700; line-height:1.4;">강남 와인 테이스팅</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">titleMedium · 16px · bold · h1.5</div>
+        <div class="type-sample font-pretendard" style="font-size:16px; font-weight:700; line-height:1.5;">참가자 12명 / 20명</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">bodyMedium · 16px · normal · h1.5</div>
+        <div class="type-sample font-pretendard" style="font-size:16px; font-weight:400; line-height:1.5; color:#4B5563;">와인을 좋아하는 분들이 모여 함께 시음하고 이야기를 나누는 자리입니다. 소규모로 진행되며 편안한 분위기에서 진행됩니다.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">bodySmall · 13px · normal · h1.5</div>
+        <div class="type-sample font-pretendard" style="font-size:13px; font-weight:400; line-height:1.5; color:#4B5563;">2026년 4월 15일 화요일 · 서울 강남구</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">labelMedium · 12px · w500 · h1.5</div>
+        <div class="type-sample font-pretendard" style="font-size:12px; font-weight:500; line-height:1.5;">마감 D-3</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">labelSmall · 11px · w500 · h1.45</div>
+        <div class="type-sample font-pretendard" style="font-size:11px; font-weight:500; line-height:1.45;">인증 완료 · 리뷰 4.8</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">captionTiny · 10px · w500</div>
+        <div class="type-sample font-pretendard" style="font-size:10px; font-weight:500;">STEP 2 / 3</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Section 3: Weight Rendering -->
+<div class="section">
+  <div class="section-title">Weight 렌더링 비교</div>
+  <div class="comparison-grid">
+    <div class="comparison-col before">
+      <div class="col-label">Noto Sans KR</div>
+      <div class="weight-row">
+        <div class="weight-label">w400</div>
+        <div class="weight-sample font-noto" style="font-weight:400;">밍글릿에서 만나요</div>
+      </div>
+      <div class="weight-row">
+        <div class="weight-label">w500</div>
+        <div class="weight-sample font-noto" style="font-weight:500;">밍글릿에서 만나요</div>
+      </div>
+      <div class="weight-row">
+        <div class="weight-label">w600</div>
+        <div class="weight-sample font-noto" style="font-weight:600;">밍글릿에서 만나요</div>
+      </div>
+      <div class="weight-row">
+        <div class="weight-label">w700</div>
+        <div class="weight-sample font-noto" style="font-weight:700;">밍글릿에서 만나요</div>
+      </div>
+    </div>
+    <div class="comparison-col after">
+      <div class="col-label">Pretendard Variable</div>
+      <div class="weight-row">
+        <div class="weight-label">w400</div>
+        <div class="weight-sample font-pretendard" style="font-weight:400;">밍글릿에서 만나요</div>
+      </div>
+      <div class="weight-row">
+        <div class="weight-label">w500</div>
+        <div class="weight-sample font-pretendard" style="font-weight:500;">밍글릿에서 만나요</div>
+      </div>
+      <div class="weight-row">
+        <div class="weight-label">w600</div>
+        <div class="weight-sample font-pretendard" style="font-weight:600;">밍글릿에서 만나요</div>
+      </div>
+      <div class="weight-row">
+        <div class="weight-label">w700</div>
+        <div class="weight-sample font-pretendard" style="font-weight:700;">밍글릿에서 만나요</div>
+      </div>
+      <div class="annotation">Pretendard w500-w600 구간의 굵기 차이가 NotoSansKR보다 명확하다. 이는 label/chip 텍스트의 시각적 구분을 개선한다.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Section 4: Phone Mockup -->
+<div class="section">
+  <div class="section-title">화면 목업 — 홈 화면 비교</div>
+  <div class="phone-mockup-row">
+    <!-- Before -->
+    <div>
+      <div style="text-align:center; font-size:12px; font-weight:600; color:var(--color-text-secondary); margin-bottom:12px;">BEFORE — Noto Sans KR</div>
+      <div class="phone-frame font-noto">
+        <div class="phone-status-bar"><div class="notch"></div></div>
+        <div class="phone-appbar">
+          <div style="width:32px; height:32px; background:linear-gradient(135deg, #9900FF, #FF9900); border-radius:8px;"></div>
+          <div class="phone-appbar-title font-noto" style="font-weight:600;">밍글릿</div>
+        </div>
+        <div class="phone-content font-noto">
+          <div class="mock-greeting">
+            <div class="name font-noto">안녕하세요, 지원님 👋</div>
+            <div class="sub font-noto">새로운 이벤트가 3개 있어요</div>
+          </div>
+          <div class="mock-event-card">
+            <div class="event-img">🍷</div>
+            <div class="event-title font-noto">강남 와인 테이스팅</div>
+            <div class="event-meta font-noto">4월 15일 화 · 강남역 3번출구 · 20명</div>
+            <div class="mock-chip-row">
+              <div class="mock-chip font-noto">와인</div>
+              <div class="mock-chip font-noto">20대</div>
+              <div class="mock-chip font-noto">소규모</div>
+            </div>
+          </div>
+          <div class="mock-event-card">
+            <div class="event-img">📚</div>
+            <div class="event-title font-noto">독서모임 북클럽</div>
+            <div class="event-meta font-noto">4월 18일 금 · 성수동 카페 · 12명</div>
+            <div class="mock-chip-row">
+              <div class="mock-chip font-noto">독서</div>
+              <div class="mock-chip font-noto">30대</div>
+            </div>
+          </div>
+          <div class="mock-btn font-noto">이벤트 더보기</div>
+        </div>
+        <div class="phone-nav font-noto">
+          <div class="nav-item active"><div class="nav-icon"></div>홈</div>
+          <div class="nav-item"><div class="nav-icon"></div>탐색</div>
+          <div class="nav-item"><div class="nav-icon"></div>채팅</div>
+          <div class="nav-item"><div class="nav-icon"></div>MY</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- After -->
+    <div>
+      <div style="text-align:center; font-size:12px; font-weight:600; color:var(--color-primary); margin-bottom:12px;">AFTER — Pretendard Variable</div>
+      <div class="phone-frame font-pretendard">
+        <div class="phone-status-bar"><div class="notch"></div></div>
+        <div class="phone-appbar">
+          <div style="width:32px; height:32px; background:linear-gradient(135deg, #9900FF, #FF9900); border-radius:8px;"></div>
+          <div class="phone-appbar-title font-pretendard" style="font-weight:600;">밍글릿</div>
+        </div>
+        <div class="phone-content font-pretendard">
+          <div class="mock-greeting">
+            <div class="name font-pretendard">안녕하세요, 지원님 👋</div>
+            <div class="sub font-pretendard">새로운 이벤트가 3개 있어요</div>
+          </div>
+          <div class="mock-event-card">
+            <div class="event-img">🍷</div>
+            <div class="event-title font-pretendard">강남 와인 테이스팅</div>
+            <div class="event-meta font-pretendard">4월 15일 화 · 강남역 3번출구 · 20명</div>
+            <div class="mock-chip-row">
+              <div class="mock-chip font-pretendard">와인</div>
+              <div class="mock-chip font-pretendard">20대</div>
+              <div class="mock-chip font-pretendard">소규모</div>
+            </div>
+          </div>
+          <div class="mock-event-card">
+            <div class="event-img">📚</div>
+            <div class="event-title font-pretendard">독서모임 북클럽</div>
+            <div class="event-meta font-pretendard">4월 18일 금 · 성수동 카페 · 12명</div>
+            <div class="mock-chip-row">
+              <div class="mock-chip font-pretendard">독서</div>
+              <div class="mock-chip font-pretendard">30대</div>
+            </div>
+          </div>
+          <div class="mock-btn font-pretendard">이벤트 더보기</div>
+        </div>
+        <div class="phone-nav font-pretendard">
+          <div class="nav-item active"><div class="nav-icon"></div>홈</div>
+          <div class="nav-item"><div class="nav-icon"></div>탐색</div>
+          <div class="nav-item"><div class="nav-icon"></div>채팅</div>
+          <div class="nav-item"><div class="nav-icon"></div>MY</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Section 5: Tuning Recommendations -->
+<div class="section">
+  <div class="section-title">타이포그래피 튜닝 권고사항</div>
+  <div class="card">
+    <table class="tuning-table">
+      <thead>
+        <tr>
+          <th>항목</th>
+          <th>현재값</th>
+          <th>권고</th>
+          <th>상태</th>
+          <th>이유</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>fontFamily</strong></td>
+          <td>NotoSansKR</td>
+          <td>Pretendard</td>
+          <td><span class="badge badge-adjust">변경</span></td>
+          <td>이슈 스펙대로 전환</td>
+        </tr>
+        <tr>
+          <td><strong>fontSize 전체</strong></td>
+          <td>10–32px</td>
+          <td>유지</td>
+          <td><span class="badge badge-keep">유지</span></td>
+          <td>Pretendard의 높은 x-height로 체감 크기가 자연스럽게 개선됨. 사이즈 변경 불필요.</td>
+        </tr>
+        <tr>
+          <td><strong>fontWeight 전체</strong></td>
+          <td>w400–w700</td>
+          <td>유지</td>
+          <td><span class="badge badge-keep">유지</span></td>
+          <td>Pretendard Variable의 weight axis가 동일 범위를 커버. 매핑 변경 불필요.</td>
+        </tr>
+        <tr>
+          <td><strong>line-height 전체</strong></td>
+          <td>1.25–1.5</td>
+          <td>유지</td>
+          <td><span class="badge badge-keep">유지</span></td>
+          <td>현재 line-height는 4pt grid 기반으로 잘 설계됨. Pretendard에서도 적절한 여백 유지.</td>
+        </tr>
+        <tr>
+          <td><strong>letterSpacing (11–13px)</strong></td>
+          <td>없음</td>
+          <td><code>letterSpacing: 0.1</code></td>
+          <td><span class="badge badge-new">후속 검토</span></td>
+          <td>Pretendard는 컴팩트해서 소형 텍스트가 다닥다닥 붙을 수 있음. <strong>1차 PR에서는 추가하지 않고</strong>, 실기기 테스트 후 필요 시 후속 PR로 조정.</td>
+        </tr>
+        <tr>
+          <td><strong>NotoSansKR 에셋</strong></td>
+          <td>유지</td>
+          <td>1차: 유지 (Option B)</td>
+          <td><span class="badge badge-keep">유지</span></td>
+          <td>안전한 폴백. 후속 PR에서 제거 (Option A) 권장. Pretendard가 KS X 1001 전체 커버하므로 폴백 필요성은 낮음.</td>
+        </tr>
+        <tr>
+          <td><strong>RacingSansOne</strong></td>
+          <td>브랜드 로고용</td>
+          <td>절대 변경 금지</td>
+          <td><span class="badge badge-keep">유지</span></td>
+          <td>브랜드 아이덴티티. 교체 대상 아님.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Section 6: Implementation Notes for SWE -->
+<div class="section">
+  <div class="section-title">SWE 구현 가이드 (UX 관점)</div>
+  <div class="card">
+    <table class="tuning-table">
+      <thead>
+        <tr>
+          <th>파일</th>
+          <th>변경 위치</th>
+          <th>주의사항</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>minglit_theme.dart</code></td>
+          <td>L65 fontFamily, L310, L419</td>
+          <td>materialTheme + partnerTheme + darkTheme 모두 교체 필수</td>
+        </tr>
+        <tr>
+          <td><code>minglit_text_theme_extension.dart</code></td>
+          <td>L68, L89</td>
+          <td>light/dark 양쪽 appBarTitle의 fontFamily</td>
+        </tr>
+        <tr>
+          <td><code>minglit_component_theme.dart</code></td>
+          <td>L15, L134, L140</td>
+          <td>appBar titleTextStyle, tabBar labelStyle/unselectedLabelStyle</td>
+        </tr>
+        <tr>
+          <td><code>pubspec.yaml</code></td>
+          <td>fonts 섹션</td>
+          <td>Variable font 단일 등록. Flutter 3.16+ 기준.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="annotation" style="margin-top:16px;">
+      총 <strong>9곳</strong>의 fontFamily: 'NotoSansKR' 하드코딩을 'Pretendard'로 교체해야 한다.
+      ThemeData.fontFamily가 전체 앱에 적용되므로, fontFamily를 명시하지 않은 TextStyle들은 자동으로 Pretendard를 상속한다.
+    </div>
+  </div>
+</div>
+
+<!-- Section 7: Visual Verification Checklist -->
+<div class="section">
+  <div class="section-title">시각적 검증 체크리스트 (UX 리뷰 시 확인할 것)</div>
+  <div class="card">
+    <div class="checklist-item">
+      <div class="check-icon"></div>
+      <div><strong>x-height 개선</strong> — 동일 px 대비 글자가 더 또렷하게 보이는지. 특히 13px 이하 소형 텍스트에서 차이가 명확해야 한다.</div>
+    </div>
+    <div class="checklist-item">
+      <div class="check-icon"></div>
+      <div><strong>Weight 구분</strong> — w400(본문) ↔ w500(라벨) ↔ w600(AppBar) ↔ w700(타이틀) 각 단계가 육안으로 구분되는지.</div>
+    </div>
+    <div class="checklist-item">
+      <div class="check-icon"></div>
+      <div><strong>복잡 자소</strong> — ㅉ, ㅎ, ㅙ, ㅢ, 됐, 뷁 등 복잡한 한글 자소가 깨지거나 뭉개지지 않는지.</div>
+    </div>
+    <div class="checklist-item">
+      <div class="check-icon"></div>
+      <div><strong>숫자·영문 혼합</strong> — "참가자 12/20명", "D-3", "4.8점" 등 한영 혼합 텍스트에서 baseline 정렬이 맞는지.</div>
+    </div>
+    <div class="checklist-item">
+      <div class="check-icon"></div>
+      <div><strong>긴 텍스트 줄바꿈</strong> — 이벤트 설명 등 multi-line 본문에서 줄간격(line-height)이 답답하지 않은지.</div>
+    </div>
+    <div class="checklist-item">
+      <div class="check-icon"></div>
+      <div><strong>칩/배지 오버플로</strong> — Pretendard가 컴팩트하므로 기존에 빡빡했던 칩이 여유로워질 수 있음. 반대로 padding이 과해 보이지 않는지 확인.</div>
+    </div>
+    <div class="checklist-item">
+      <div class="check-icon"></div>
+      <div><strong>다크 모드</strong> — Pretendard의 스트로크 대비가 다크 배경에서도 가독성을 유지하는지.</div>
+    </div>
+    <div class="checklist-item">
+      <div class="check-icon"></div>
+      <div><strong>RacingSansOne 무결성</strong> — 브랜드 로고/히어로 텍스트가 Pretendard로 바뀌지 않았는지 반드시 확인.</div>
+    </div>
+    <div class="checklist-item">
+      <div class="check-icon"></div>
+      <div><strong>Design Catalog</strong> — Dev Only 메뉴의 타이포그래피 탭에서 전체 스케일이 정상 렌더링되는지.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Section 8: Design System Doc Update -->
+<div class="section">
+  <div class="section-title">디자인 시스템 문서 업데이트 필요사항</div>
+  <div class="card">
+    <table class="tuning-table">
+      <thead>
+        <tr>
+          <th>문서</th>
+          <th>변경</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>docs/ux/design-system/01-foundation.md</code></td>
+          <td>Section 3 "기본 폰트 패밀리: NotoSansKR" → "Pretendard" 변경. PR 머지 후 UX 디자이너(나)가 업데이트할 것.</td>
+        </tr>
+        <tr>
+          <td><code>docs/ux/design-system/02-components.md</code></td>
+          <td>AppBar titleTextStyle.fontFamily 값 업데이트</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</body>
+</html>
