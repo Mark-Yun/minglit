@@ -1,3 +1,4 @@
+import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/features/home/my_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -49,6 +50,28 @@ void main() {
       await tester.pump();
       await tester.pump();
       expect(find.byType(MyPage), findsOneWidget);
+    });
+
+    testWidgets('루트 /my 에서 뒤로가면 홈으로 이동한다', (tester) async {
+      setKoreanLocale(tester);
+      final user = createMockUserForTest();
+      await tester.pumpWidget(
+        createTestApp(
+          isLoggedIn: true,
+          currentUser: user,
+          initialLocation: '/my',
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byType(MyPage), findsOneWidget);
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MyPage), findsNothing);
+      expect(find.byType(HomePage), findsOneWidget);
     });
   });
 }
