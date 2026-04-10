@@ -11,6 +11,7 @@ _Tag _$TagFromJson(Map<String, dynamic> json) => _Tag(
   name: json['name'] as String,
   isFeatured: json['is_featured'] as bool? ?? false,
   usageCount: (json['usage_count'] as num?)?.toInt() ?? 0,
+  recentCount: (json['recent_count'] as num?)?.toInt() ?? 0,
 );
 
 Map<String, dynamic> _$TagToJson(_Tag instance) => <String, dynamic>{
@@ -18,4 +19,5 @@ Map<String, dynamic> _$TagToJson(_Tag instance) => <String, dynamic>{
   'name': instance.name,
   'is_featured': instance.isFeatured,
   'usage_count': instance.usageCount,
+  'recent_count': instance.recentCount,
 };

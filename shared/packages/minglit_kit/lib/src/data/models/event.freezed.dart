@@ -16,7 +16,8 @@ T _$identity<T>(T value) => value;
 mixin _$Event {
 
  String get id;@JsonKey(name: 'party_id') String get partyId;@JsonKey(name: 'start_time') DateTime get startTime;@JsonKey(name: 'end_time') DateTime get endTime;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'updated_at') DateTime get updatedAt;@JsonKey(name: 'location_id') String? get locationId; String? get title; Map<String, dynamic>? get description;@JsonKey(name: 'image_urls') List<String>? get imageUrls;@JsonKey(name: 'contact_options') Map<String, dynamic> get contactOptions; Map<String, dynamic> get metadata;@JsonKey(name: 'min_confirmed_count') int get minConfirmedCount;@JsonKey(name: 'max_participants') int get maxParticipants;@JsonKey(name: 'current_participants') int get currentParticipants; String get status; String? get visibility;@JsonKey(includeToJson: false) Location? get location;@JsonKey(includeToJson: false) Party? get party;@JsonKey(includeToJson: false) List<Ticket>? get tickets;@JsonKey(includeToJson: false) List<EntryGroup>? get entryGroups;// Fields from user-event-feed EF (#614)
-@JsonKey(name: 'remaining_slots', includeToJson: false) int? get remainingSlots;@JsonKey(name: 'distance_meters', includeToJson: false) double? get distanceMeters;@JsonKey(includeToJson: false) bool? get eligible;@JsonKey(includeToJson: false) List<Tag>? get tags;
+@JsonKey(name: 'remaining_slots', includeToJson: false) int? get remainingSlots;@JsonKey(name: 'distance_meters', includeToJson: false) double? get distanceMeters;@JsonKey(includeToJson: false) bool? get eligible;// Tag Discovery (#1094-1096)
+@JsonKey(includeToJson: false) List<Tag>? get tags;
 /// Create a copy of Event
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -330,7 +331,9 @@ class _Event extends Event {
 @override@JsonKey(name: 'remaining_slots', includeToJson: false) final  int? remainingSlots;
 @override@JsonKey(name: 'distance_meters', includeToJson: false) final  double? distanceMeters;
 @override@JsonKey(includeToJson: false) final  bool? eligible;
+// Tag Discovery (#1094-1096)
  final  List<Tag>? _tags;
+// Tag Discovery (#1094-1096)
 @override@JsonKey(includeToJson: false) List<Tag>? get tags {
   final value = _tags;
   if (value == null) return null;
@@ -338,6 +341,7 @@ class _Event extends Event {
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(value);
 }
+
 
 /// Create a copy of Event
 /// with the given fields replaced by the non-null parameter values.
