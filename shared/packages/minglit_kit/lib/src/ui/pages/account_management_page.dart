@@ -9,9 +9,9 @@ import 'package:minglit_kit/src/theme/minglit_design_tokens.dart';
 /// Fix #1213: 계정 관리 서브페이지로 로그아웃/회원탈퇴 통합
 class AccountManagementPage extends StatelessWidget {
   const AccountManagementPage({
-    super.key,
     required this.onLogout,
     required this.onDeleteAccount,
+    super.key,
     this.onPartnerProfile, // app_partner only — null hides the tile
   });
 

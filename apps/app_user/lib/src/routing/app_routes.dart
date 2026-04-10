@@ -1,10 +1,10 @@
 import 'dart:async';
 
+import 'package:app_user/src/features/account_deletion/logic/account_deletion_coordinator.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_complete_page.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_info_page.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_reason_page.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_verify_page.dart';
-import 'package:app_user/src/features/account_deletion/logic/account_deletion_coordinator.dart';
 import 'package:app_user/src/features/auth/login_page.dart';
 import 'package:app_user/src/features/auth/ui/auth_callback_page.dart';
 import 'package:app_user/src/features/consent/ui/signup_consent_page.dart';

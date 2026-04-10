@@ -1,6 +1,5 @@
 export 'src/features/account_deletion/ui/pending_deletion_recovery_listener.dart';
 export 'src/features/auth/ui/minglit_login_screen.dart';
-export 'src/ui/pages/account_management_page.dart';
 export 'src/features/auth/ui/staff_gate_screen.dart';
 export 'src/features/auth/ui/staff_guard_wrapper.dart';
 export 'src/features/iamport/iamport.dart';
@@ -16,6 +15,7 @@ export 'src/features/verification/ui/identity_verification_consent_sheet.dart';
 export 'src/features/verification/ui/identity_verification_screen.dart';
 export 'src/theme/minglit_text_theme_extension.dart';
 export 'src/theme/minglit_theme.dart';
+export 'src/ui/pages/account_management_page.dart';
 export 'src/ui/widgets/bug_reporter_wrapper.dart';
 export 'src/ui/widgets/common/add_action_card.dart';
 export 'src/ui/widgets/common/entry_group_detail.dart';
