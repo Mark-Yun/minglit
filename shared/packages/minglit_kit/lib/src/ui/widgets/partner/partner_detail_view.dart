@@ -172,7 +172,8 @@ class PartnerDetailView extends ConsumerWidget {
     // Card width = ~2/3 of available width so ~1.5 cards show
     final screenWidth = MediaQuery.sizeOf(context).width;
     final cardWidth = (screenWidth - MinglitSpacing.large * 2) * 0.65;
-    const eventCardContentHeight = 64.0;
+    // Fix #1214: 68px prevents 1px content overflow on standard font metrics.
+    const eventCardContentHeight = 68.0;
 
     return SizedBox(
       // Keep enough room for the event card metadata row across CI font metrics.
@@ -190,6 +191,8 @@ class PartnerDetailView extends ConsumerWidget {
               child: MinglitEventCard(
                 event: event,
                 onTap: onEventTap != null ? () => onEventTap!(event) : null,
+                // Fix #1214: partner badge is redundant inside partner detail.
+                showPartnerOverlay: false,
               ),
             ),
           );

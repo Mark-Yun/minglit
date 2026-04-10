@@ -29,11 +29,16 @@ enum _EventCardState {
 /// A reusable card widget to display event information.
 class MinglitEventCard extends StatelessWidget {
   /// Creates an event card for the given [event].
+  ///
+  /// Set [showPartnerOverlay] to `false` when displaying the card inside a
+  /// partner-specific context (e.g. partner detail page) where the partner
+  /// badge is redundant.
   const MinglitEventCard({
     required this.event,
     super.key,
     this.onTap,
     @visibleForTesting this.currentTime,
+    this.showPartnerOverlay = true,
   }) : _isLoading = false;
 
   /// Named constructor for loading skeleton state.
@@ -42,7 +47,8 @@ class MinglitEventCard extends StatelessWidget {
     this.event,
     this.onTap,
     this.currentTime,
-  }) : _isLoading = true;
+  })  : _isLoading = true,
+        showPartnerOverlay = true;
 
   /// Event data to render.
   final Event? event;
@@ -52,6 +58,15 @@ class MinglitEventCard extends StatelessWidget {
 
   /// Override current time for D-day calculation (testing only).
   final DateTime? currentTime;
+
+  /// Whether to show the partner name/avatar overlay on the event image.
+  ///
+  /// Defaults to `true`. Pass `false` in partner-scoped contexts (e.g.
+  /// [PartnerDetailView], [PartnerEventsPage]) where the partner identity is
+  /// already apparent from the surrounding UI.
+  // Fix #1214: hide partner overlay in partner-scoped contexts to avoid
+  // redundant badge and layout overlap.
+  final bool showPartnerOverlay;
 
   /// Internal flag for loading state.
   final bool _isLoading;
@@ -192,8 +207,9 @@ class MinglitEventCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                  // Partner overlay (top-left) - only if partner exists
-                  if (partner != null)
+                  // Partner overlay (top-left) — only if partner exists and
+                  // not suppressed by the caller (e.g. partner detail context).
+                  if (partner != null && showPartnerOverlay)
                     Positioned(
                       top: MinglitSpacing.small,
                       left: MinglitSpacing.small,

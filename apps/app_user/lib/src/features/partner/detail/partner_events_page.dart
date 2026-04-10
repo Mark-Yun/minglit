@@ -40,11 +40,13 @@ class PartnerEventsPage extends ConsumerWidget {
             itemBuilder: (context, index) {
               final event = events[index];
               // Fix #634: home_coordinator 직접 참조 → partner_coordinator 전환
+              // Fix #1214: partner badge is redundant inside partner event list.
               return MinglitEventCard(
                 event: event,
                 onTap: () => ref
                     .read(partnerCoordinatorProvider)
                     .pushEventDetail(event.id),
+                showPartnerOverlay: false,
               );
             },
           );

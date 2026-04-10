@@ -452,11 +452,13 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
   Future<List<Event>> getEventsByPartnerId(String partnerId) async {
     Log.d('getEventsByPartnerId called | partnerId: $partnerId');
     try {
+      // Fix #1214: use !inner on partners to guarantee the partner row exists
+      // and to allow PostgREST to push the partner_id filter into the join.
       final data = await supabaseClient
           .from('events')
           .select(
             '*, party:parties!inner(*, location:locations(*), '
-            'partner:partners(*)), '
+            'partner:partners!inner(*)), '
             'entryGroups:entry_groups(*), tickets(*)',
           )
           .eq('party.partner_id', partnerId)
