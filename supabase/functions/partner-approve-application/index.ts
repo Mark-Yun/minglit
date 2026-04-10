@@ -11,6 +11,12 @@ import {
 import { requireAuth } from "../_shared/auth_utils.ts";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const APPROVABLE_STATUSES = ["pending", "pending_review"] as const;
+
+type EventCapacityRow = {
+  current_participants?: number | null;
+  max_participants?: number | null;
+};
 
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
@@ -79,7 +85,9 @@ async function handleApprove(
   // Fetch application with event → party → partner chain
   const { data: app, error: fetchError } = await supabase
     .from("event_applications")
-    .select("id, status, event_id, events!inner(party_id, parties!inner(partner_id))")
+    .select(
+      "id, status, event_id, events!inner(party_id, current_participants, max_participants, parties!inner(partner_id))",
+    )
     .eq("id", applicationId)
     .maybeSingle();
 
@@ -95,11 +103,16 @@ async function handleApprove(
   if (permCheck instanceof Response) return permCheck;
 
   // Verify status is approvable (after permission check)
-  if (app.status !== "pending" && app.status !== "pending_review") {
+  if (!APPROVABLE_STATUSES.includes(app.status as typeof APPROVABLE_STATUSES[number])) {
     return errorResponse(
       `Cannot approve application with status '${app.status}'`,
       400,
     );
+  }
+
+  // Fix #1219: approval must respect remaining event capacity to prevent overbooking.
+  if (getRemainingSlots(event) <= 0) {
+    return errorResponse("정원이 초과되었습니다.", 409, { code: "EVENT_FULL" });
   }
 
   // Compare-and-set: only update if status is still pending/pending_review
@@ -107,7 +120,7 @@ async function handleApprove(
     .from("event_applications")
     .update({ status: "approved", updated_at: new Date().toISOString() })
     .eq("id", applicationId)
-    .in("status", ["pending", "pending_review"])
+    .in("status", APPROVABLE_STATUSES)
     .select("id");
 
   if (updateError) return errorResponse("Failed to approve application", 500);
@@ -135,7 +148,7 @@ async function handleBulkApprove(
   // Fetch event → party → partner chain
   const { data: event, error: eventError } = await supabase
     .from("events")
-    .select("id, party_id, parties!inner(partner_id)")
+    .select("id, party_id, current_participants, max_participants, parties!inner(partner_id)")
     .eq("id", eventId)
     .maybeSingle();
 
@@ -148,17 +161,59 @@ async function handleBulkApprove(
   const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
   if (permCheck instanceof Response) return permCheck;
 
-  // Compare-and-set: only update rows still in pending status
+  const { data: pendingApplications, error: pendingError } = await supabase
+    .from("event_applications")
+    .select("id")
+    .eq("event_id", eventId)
+    .in("status", APPROVABLE_STATUSES)
+    .order("created_at", { ascending: true });
+
+  if (pendingError) return errorResponse("Failed to load pending applications", 500);
+
+  const pendingIds = (pendingApplications ?? [])
+    .map((application) => application.id)
+    .filter((id): id is string => typeof id === "string" && id.length > 0);
+
+  if (pendingIds.length === 0) {
+    return successResponse({
+      approved: 0,
+      event_id: eventId,
+      skipped_due_to_capacity: 0,
+    });
+  }
+
+  const availableSlots = getRemainingSlots(event);
+
+  // Fix #1219: bulk approval must stop at the remaining capacity instead of approving every pending row.
+  if (availableSlots <= 0) {
+    return successResponse({
+      approved: 0,
+      event_id: eventId,
+      skipped_due_to_capacity: pendingIds.length,
+      remaining_slots_before_approval: 0,
+    });
+  }
+
+  const idsToApprove = pendingIds.slice(0, availableSlots);
+
   const { data: updated, error: updateError } = await supabase
     .from("event_applications")
     .update({ status: "approved", updated_at: new Date().toISOString() })
     .eq("event_id", eventId)
-    .in("status", ["pending", "pending_review"])
+    .in("id", idsToApprove)
+    .in("status", APPROVABLE_STATUSES)
     .select("id");
 
   if (updateError) return errorResponse("Failed to bulk approve", 500);
 
-  return successResponse({ approved: updated?.length ?? 0, event_id: eventId });
+  const approvedCount = updated?.length ?? 0;
+
+  return successResponse({
+    approved: approvedCount,
+    event_id: eventId,
+    skipped_due_to_capacity: Math.max(pendingIds.length - approvedCount, 0),
+    remaining_slots_before_approval: availableSlots,
+  });
 }
 
 // ── Permission check ──
@@ -188,4 +243,10 @@ async function checkPartnerPermission(
   if (!hasPermission) {
     return errorResponse("Forbidden: insufficient partner permissions", 403);
   }
+}
+
+function getRemainingSlots(event: EventCapacityRow): number {
+  const currentParticipants = event.current_participants ?? 0;
+  const maxParticipants = event.max_participants ?? 0;
+  return Math.max(maxParticipants - currentParticipants, 0);
 }

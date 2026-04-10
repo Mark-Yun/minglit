@@ -56,7 +56,16 @@ function permForbiddenRoute(): FetchRoute {
   };
 }
 
-function appRoute(status = "pending"): FetchRoute {
+function appRoute(
+  status = "pending",
+  {
+    currentParticipants = 5,
+    maxParticipants = 20,
+  }: {
+    currentParticipants?: number;
+    maxParticipants?: number;
+  } = {},
+): FetchRoute {
   return {
     matcher: (req) =>
       req.url.includes("event_applications") &&
@@ -69,6 +78,8 @@ function appRoute(status = "pending"): FetchRoute {
         event_id: TEST_EVENT_ID,
         events: {
           party_id: "party-001",
+          current_participants: currentParticipants,
+          max_participants: maxParticipants,
           parties: { partner_id: TEST_PARTNER_ID },
         },
       }),
@@ -93,7 +104,15 @@ function updateRoute(updated: { id: string }[] = [{ id: TEST_APP_ID }]): FetchRo
   };
 }
 
-function eventRoute(): FetchRoute {
+function eventRoute(
+  {
+    currentParticipants = 5,
+    maxParticipants = 20,
+  }: {
+    currentParticipants?: number;
+    maxParticipants?: number;
+  } = {},
+): FetchRoute {
   return {
     matcher: (req) =>
       req.url.includes("/rest/v1/events") &&
@@ -103,8 +122,20 @@ function eventRoute(): FetchRoute {
       jsonResponse({
         id: TEST_EVENT_ID,
         party_id: "party-001",
+        current_participants: currentParticipants,
+        max_participants: maxParticipants,
         parties: { partner_id: TEST_PARTNER_ID },
       }),
+  };
+}
+
+function pendingApplicationsRoute(ids: string[]): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("event_applications") &&
+      req.url.includes("order=created_at.asc") &&
+      req.method === "GET",
+    handler: () => jsonResponse(ids.map((id) => ({ id }))),
   };
 }
 
@@ -336,6 +367,33 @@ Deno.test({
 });
 
 Deno.test({
+  name: "approve: returns 409 when event is already full",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      appRoute("pending", { currentParticipants: 20, maxParticipants: 20 }),
+      permRoute("owner"),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest(BASE_URL, {
+          action: "approve",
+          application_id: TEST_APP_ID,
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 409);
+        const json = await readJson(res);
+        assertEquals(json.error, "정원이 초과되었습니다.");
+      });
+    });
+  },
+});
+
+Deno.test({
   name: "bulk_approve: success returns 200 with approved count",
   sanitizeResources: false,
   sanitizeOps: false,
@@ -345,6 +403,7 @@ Deno.test({
       authRoute(),
       eventRoute(),
       permRoute("owner"),
+      pendingApplicationsRoute(["app-001", "app-002"]),
       updateRoute([{ id: "app-001" }, { id: "app-002" }]),
     ]);
 
@@ -364,6 +423,37 @@ Deno.test({
 });
 
 Deno.test({
+  name: "bulk_approve: only approves up to remaining capacity",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      eventRoute({ currentParticipants: 18, maxParticipants: 20 }),
+      permRoute("owner"),
+      pendingApplicationsRoute(["app-001", "app-002", "app-003"]),
+      updateRoute([{ id: "app-001" }, { id: "app-002" }]),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest(BASE_URL, {
+          action: "bulk_approve",
+          event_id: TEST_EVENT_ID,
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const json = await readJson(res);
+        assertEquals(json.approved, 2);
+        assertEquals(json.skipped_due_to_capacity, 1);
+        assertEquals(json.remaining_slots_before_approval, 2);
+      });
+    });
+  },
+});
+
+Deno.test({
   name: "bulk_approve: no pending apps returns 200 with approved:0",
   sanitizeResources: false,
   sanitizeOps: false,
@@ -373,7 +463,7 @@ Deno.test({
       authRoute(),
       eventRoute(),
       permRoute("owner"),
-      updateRoute([]),
+      pendingApplicationsRoute([]),
     ]);
 
     await withEnv(ENV, async () => {
