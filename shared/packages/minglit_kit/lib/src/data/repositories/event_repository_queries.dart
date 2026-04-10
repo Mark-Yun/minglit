@@ -560,7 +560,16 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
   /// Fetches today's active events for a user (Event Now Bar).
   ///
   /// Returns events where the user is a participant and the event is within
-  /// the active window: start_time - 3h <= now <= end_time.
+  /// the active window: start_time - 3h <= now AND end_time >= start of today.
+  ///
+  /// The end_time lower bound is the start of today (not `now`) so that
+  /// already-ended events still appear in the bar with the "ended" state,
+  /// letting users see match results etc. after the event concludes.
+  ///
+  /// Fix #1212: Changed end_time lower bound from `now` to `startOfDay` so
+  /// that events which have already ended today are still returned and shown
+  /// as "종료됨" rather than disappearing from the nowbar entirely.
+  ///
   /// Includes cancelled events (shown as "cancelled" in the now bar).
   /// Excludes refunded participants via event_applications.refund_status.
   Future<List<TodayActiveEvent>> getTodayActiveEventsForUser(
@@ -570,6 +579,9 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
     try {
       final now = DateTime.now();
       final threeHoursFromNow = now.add(const Duration(hours: 3));
+      // Fix #1212: use start-of-day so that already-ended events still appear
+      // in the nowbar with the "종료됨" state (match results remain visible).
+      final startOfDay = DateTime(now.year, now.month, now.day);
 
       // Query events where this user has a participant record
       // and the event is within the active window.
@@ -583,7 +595,7 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
           )
           .eq('participant.user_id', userId)
           .lte('start_time', threeHoursFromNow.toIso8601String())
-          .gte('end_time', now.toIso8601String())
+          .gte('end_time', startOfDay.toIso8601String())
           .order('start_time');
 
       final events = <TodayActiveEvent>[];

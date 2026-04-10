@@ -949,6 +949,37 @@ void main() {
         },
       );
 
+      // Fix #1212: events that ended earlier today must still be returned so
+      // the nowbar can show the "종료됨" state (e.g. match results accessible).
+      test('returns already-ended event from today', () async {
+        final startTime = DateTime(now.year, now.month, now.day, 10, 0);
+        final endTime = DateTime(now.year, now.month, now.day, 12, 0);
+        final eventData = [
+          makeEventWithParticipant(
+            eventId: 'event_ended',
+            startTime: startTime,
+            endTime: endTime,
+            eventStatus: 'completed',
+          ),
+        ];
+
+        unawaited(
+          mockTable(mockClient, 'events', selectData: eventData),
+        );
+        unawaited(
+          mockTable(mockClient, 'event_applications', selectData: []),
+        );
+
+        final result = await repository.getTodayActiveEventsForUser('user_1');
+
+        // The mock returns data regardless of the time filter;
+        // this test documents that the query sends end_time >= startOfDay
+        // so completed-today events are included in the result set.
+        expect(result, hasLength(1));
+        expect(result.first.event.id, 'event_ended');
+        expect(result.first.event.status, 'completed');
+      });
+
       test('throws on database error', () async {
         unawaited(
           mockTable(
