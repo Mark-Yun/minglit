@@ -499,7 +499,9 @@ class _EventCardSkeleton extends StatelessWidget {
         children: [
           AspectRatio(
             aspectRatio: 16 / 9,
-            child: MinglitSkeleton(borderRadius: BorderRadius.circular(MinglitRadius.card)),
+            child: MinglitSkeleton(
+              borderRadius: BorderRadius.circular(MinglitRadius.card),
+            ),
           ),
           Padding(
             padding: EdgeInsets.all(MinglitSpacing.medium),
