@@ -24,11 +24,18 @@ import 'package:flutter_test/flutter_test.dart';
 ///
 /// Note: consent 상태 관련 분기(redirect 분기 4~6)는 Supabase 의존성이
 /// 필요하여 이 순수 함수 테스트에서는 생략. 해당 분기는 integration test에서 검증.
+///
+/// [location] mirrors `state.uri.toString()` — the full URI including query
+/// parameters (e.g. `/events/abc/apply?source=share`). [path] is derived
+/// from [location] internally, matching `state.uri.path` in app_router.dart.
 String? _redirect({
-  required String path,
+  required String location,
   required bool isLoggedIn,
-  Map<String, String> queryParameters = const {},
 }) {
+  final uri = Uri.parse(location);
+  final path = uri.path;
+  final queryParameters = uri.queryParameters;
+
   // Redirect /explore deep links to home (backward compat)
   if (path.startsWith('/explore')) return '/';
 
@@ -67,11 +74,12 @@ String? _redirect({
       path.endsWith('/apply') ||
       path.endsWith('/qr');
 
-  // 3. Unauthenticated access to a protected path -> /login?from=...
+  // 3. Unauthenticated access to a protected path -> /login?from=<full location>
+  // Fix #1249: location (full URI) instead of path to preserve query params
   if (!isLoggedIn && isProtected) {
     return Uri(
       path: '/login',
-      queryParameters: {'from': path},
+      queryParameters: {'from': location},
     ).toString();
   }
 
@@ -84,22 +92,23 @@ void main() {
   // ---------------------------------------------------------------------------
   group('/dev paths — auth bypass', () {
     test('/dev/switch returns null (no redirect) when not logged in', () {
-      final result = _redirect(path: '/dev/switch', isLoggedIn: false);
+      final result = _redirect(location: '/dev/switch', isLoggedIn: false);
       expect(result, isNull);
     });
 
     test('/dev/switch returns null (no redirect) when logged in', () {
-      final result = _redirect(path: '/dev/switch', isLoggedIn: true);
+      final result = _redirect(location: '/dev/switch', isLoggedIn: true);
       expect(result, isNull);
     });
 
     test('/dev returns null (no redirect) when not logged in', () {
-      final result = _redirect(path: '/dev', isLoggedIn: false);
+      final result = _redirect(location: '/dev', isLoggedIn: false);
       expect(result, isNull);
     });
 
     test('/dev/any-sub-path returns null (no redirect)', () {
-      final result = _redirect(path: '/dev/some-other-tool', isLoggedIn: false);
+      final result =
+          _redirect(location: '/dev/some-other-tool', isLoggedIn: false);
       expect(result, isNull);
     });
   });
@@ -109,12 +118,13 @@ void main() {
   // ---------------------------------------------------------------------------
   group('/explore paths — redirect to home', () {
     test('/explore redirects to /', () {
-      final result = _redirect(path: '/explore', isLoggedIn: false);
+      final result = _redirect(location: '/explore', isLoggedIn: false);
       expect(result, '/');
     });
 
     test('/explore/something redirects to /', () {
-      final result = _redirect(path: '/explore/something', isLoggedIn: false);
+      final result =
+          _redirect(location: '/explore/something', isLoggedIn: false);
       expect(result, '/');
     });
   });
@@ -124,40 +134,58 @@ void main() {
   // ---------------------------------------------------------------------------
   group('protected paths — unauthenticated', () {
     test('/my redirects to /login?from=/my when not logged in', () {
-      final result = _redirect(path: '/my', isLoggedIn: false);
+      final result = _redirect(location: '/my', isLoggedIn: false);
       expect(result, '/login?from=%2Fmy');
     });
 
     test('/events/:id/apply redirects to /login when not logged in', () {
       final result = _redirect(
-        path: '/events/event-123/apply',
+        location: '/events/event-123/apply',
         isLoggedIn: false,
       );
       expect(result, '/login?from=%2Fevents%2Fevent-123%2Fapply');
     });
 
     test('/purchase-history redirects to /login when not logged in', () {
-      final result = _redirect(path: '/purchase-history', isLoggedIn: false);
+      final result =
+          _redirect(location: '/purchase-history', isLoggedIn: false);
       expect(result, '/login?from=%2Fpurchase-history');
     });
 
     test('/signup/consent redirects to /login when not logged in', () {
-      final result = _redirect(path: '/signup/consent', isLoggedIn: false);
+      final result =
+          _redirect(location: '/signup/consent', isLoggedIn: false);
       expect(result, '/login?from=%2Fsignup%2Fconsent');
     });
 
     test('/events/:id/qr redirects to /login when not logged in', () {
       final result = _redirect(
-        path: '/events/event-123/qr',
+        location: '/events/event-123/qr',
         isLoggedIn: false,
       );
       expect(result, '/login?from=%2Fevents%2Fevent-123%2Fqr');
+    });
+
+    // Fix #1249: query parameters in the original location must be preserved
+    // in the `from` param so the user returns to the exact same page after login.
+    test(
+        '/events/:id/apply with query params — full URI preserved in from param',
+        () {
+      final result = _redirect(
+        location: '/events/abc/apply?source=share',
+        isLoggedIn: false,
+      );
+      // from value must be the full URI (path + query), percent-encoded
+      expect(
+        result,
+        '/login?from=%2Fevents%2Fabc%2Fapply%3Fsource%3Dshare',
+      );
     });
   });
 
   group('protected paths — authenticated', () {
     test('/my returns null when logged in', () {
-      final result = _redirect(path: '/my', isLoggedIn: true);
+      final result = _redirect(location: '/my', isLoggedIn: true);
       expect(result, isNull);
     });
   });
@@ -167,33 +195,30 @@ void main() {
   // ---------------------------------------------------------------------------
   group('/login — already authenticated', () {
     test('redirects to / when no from param', () {
-      final result = _redirect(path: '/login', isLoggedIn: true);
+      final result = _redirect(location: '/login', isLoggedIn: true);
       expect(result, '/');
     });
 
     test('redirects to from param when valid', () {
       final result = _redirect(
-        path: '/login',
+        location: '/login?from=%2Fevents%2Fabc',
         isLoggedIn: true,
-        queryParameters: {'from': '/events/abc'},
       );
       expect(result, '/events/abc');
     });
 
     test('ignores from=/login to prevent redirect loop', () {
       final result = _redirect(
-        path: '/login',
+        location: '/login?from=%2Flogin',
         isLoggedIn: true,
-        queryParameters: {'from': '/login'},
       );
       expect(result, '/');
     });
 
     test('ignores from=// to prevent external redirect', () {
       final result = _redirect(
-        path: '/login',
+        location: '/login?from=%2F%2Fevil.com',
         isLoggedIn: true,
-        queryParameters: {'from': '//evil.com'},
       );
       expect(result, '/');
     });
@@ -204,17 +229,17 @@ void main() {
   // ---------------------------------------------------------------------------
   group('public paths — no redirect', () {
     test('/ returns null', () {
-      final result = _redirect(path: '/', isLoggedIn: false);
+      final result = _redirect(location: '/', isLoggedIn: false);
       expect(result, isNull);
     });
 
     test('/events/:id returns null', () {
-      final result = _redirect(path: '/events/abc123', isLoggedIn: false);
+      final result = _redirect(location: '/events/abc123', isLoggedIn: false);
       expect(result, isNull);
     });
 
     test('/search returns null', () {
-      final result = _redirect(path: '/search', isLoggedIn: false);
+      final result = _redirect(location: '/search', isLoggedIn: false);
       expect(result, isNull);
     });
   });
