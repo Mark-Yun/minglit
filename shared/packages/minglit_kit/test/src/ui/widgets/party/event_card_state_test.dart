@@ -183,12 +183,6 @@ void main() {
     final partner = Partner(
       id: 'partner-1',
       name: '밍글 스튜디오',
-      bizName: '밍글',
-      representativeName: '홍길동',
-      bizNumber: '123-45-67890',
-      contactEmail: 'test@minglit.com',
-      createdAt: baseTime,
-      updatedAt: baseTime,
     );
 
     final partyWithPartner = Party(
