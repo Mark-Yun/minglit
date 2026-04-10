@@ -30,6 +30,10 @@ class MinglitColors {
   /// Success green color.
   static const success = Color(0xFF22C55E);
 
+  /// Info blue color — neutral informational state (e.g. pending payment).
+  // Fix #1236: 상태 배지 의미론적 색상 — 결제대기 등 중립 정보 상태
+  static const info = Color(0xFF3B82F6);
+
   /// Warning amber color.
   static const warning = Color(0xFFF59E0B);
 

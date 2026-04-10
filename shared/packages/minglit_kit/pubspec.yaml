@@ -1,6 +1,6 @@
 name: minglit_kit
 description: "A new Flutter package project."
-version: 26.04.1250-dev
+version: 26.04.1254-dev
 resolution: workspace
 publish_to: 'none'
 environment:
@@ -84,8 +84,12 @@ flutter:
   assets:
     - assets/images/
     - assets/fonts/Noto_Sans_KR/
+    - assets/fonts/Pretendard/
 
   fonts:
+    - family: Pretendard
+      fonts:
+        - asset: assets/fonts/Pretendard/PretendardVariable.ttf
     - family: NotoSansKR
       fonts:
         - asset: assets/fonts/Noto_Sans_KR/NotoSansKR-VariableFont_wght.ttf

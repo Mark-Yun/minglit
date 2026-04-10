@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:app_partner/src/features/more/more_coordinator.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
@@ -13,13 +14,13 @@ class MorePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final partnerAsync = ref.watch(currentPartnerInfoProvider);
+    final moreCoordinator = ref.read(moreCoordinatorProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(title: '더보기'),
       body: ListView(
         children: [
-          // ── 프로필 헤더 ──
           partnerAsync.when(
             loading: () => const Padding(
               padding: EdgeInsets.all(MinglitSpacing.large),
@@ -35,7 +36,6 @@ class MorePage extends ConsumerWidget {
                   ),
                   const SizedBox(width: MinglitSpacing.medium),
                   Expanded(
-                    // Fix #574: keep the placeholder header within the golden viewport.
                     child: Text(
                       '파트너 정보를 불러올 수 없습니다',
                       style: theme.textTheme.bodyMedium?.copyWith(
@@ -58,7 +58,6 @@ class MorePage extends ConsumerWidget {
                       ),
                       const SizedBox(width: MinglitSpacing.medium),
                       Expanded(
-                        // Fix #574: keep the placeholder header within the golden viewport.
                         child: Text(
                           '파트너 정보를 불러올 수 없습니다',
                           style: theme.textTheme.bodyMedium?.copyWith(
@@ -110,14 +109,10 @@ class MorePage extends ConsumerWidget {
             },
           ),
           const Divider(),
-
-          // ── 섹션 1: 관리 ──
-          // Fix #144: trailing chevron icons removed for cleaner settings UI
           ListTile(
             leading: const Icon(Icons.verified_user_outlined),
             title: const Text('인증 심사 관리'),
-            onTap: () =>
-                ref.read(moreCoordinatorProvider).pushVerificationManage(),
+            onTap: moreCoordinator.pushVerificationManage,
           ),
           ListTile(
             leading: const Icon(Icons.people_outline),
@@ -128,50 +123,24 @@ class MorePage extends ConsumerWidget {
                 context.showMinglitInfo('파트너 정보를 불러오는 중입니다');
                 return;
               }
-              ref.read(moreCoordinatorProvider).pushMemberList(partner.id);
+              moreCoordinator.pushMemberList(partner.id);
             },
           ),
           const Divider(),
-
-          // ── 섹션 2: 설정 ──
           ListTile(
             leading: const Icon(Icons.notifications_outlined),
             title: const Text('알림 설정'),
-            onTap: () =>
-                ref.read(moreCoordinatorProvider).pushNotificationSettings(),
+            onTap: moreCoordinator.pushNotificationSettings,
           ),
           const ThemeSettingsTile(),
           const Divider(),
-
-          // ── 섹션 3: 계정 (비활성) ──
           ListTile(
-            leading: const Icon(Icons.person_outline),
+            leading: const Icon(Icons.manage_accounts_outlined),
             title: const Text('계정 관리'),
-            onTap: () => context.showMinglitInfo('준비 중입니다'),
-          ),
-          ListTile(
-            leading: const Icon(
-              Icons.person_remove_outlined,
-              color: MinglitColors.error,
-            ),
-            title: Text(
-              '회원 탈퇴',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: MinglitColors.error,
-              ),
-            ),
-            subtitle: const Text('활성 이벤트, 정산, 환불 건이 없을 때만 요청할 수 있어요.'),
-            onTap: () =>
-                ref.read(moreCoordinatorProvider).pushAccountDeletion(),
-          ),
-          ListTile(
-            leading: const Icon(Icons.store_outlined),
-            title: const Text('파트너 프로필'),
-            onTap: () => context.showMinglitInfo('준비 중입니다'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: moreCoordinator.pushAccountManagement,
           ),
           const Divider(),
-
-          // ── 섹션 4: 앱 정보 ──
           ListTile(
             leading: const Icon(Icons.privacy_tip_outlined),
             title: const Text('개인정보처리방침'),
@@ -204,7 +173,6 @@ class MorePage extends ConsumerWidget {
               );
             },
           ),
-          // Dev-only: Design Catalog (hidden in production)
           if (const String.fromEnvironment(
                     'ENVIRONMENT',
                     defaultValue: 'production',
@@ -228,25 +196,6 @@ class MorePage extends ConsumerWidget {
               ),
             ),
           ],
-          const Divider(),
-
-          // ── 섹션 5: 로그아웃 ──
-          ListTile(
-            leading: const Icon(Icons.logout, color: MinglitColors.error),
-            title: Text(
-              '로그아웃',
-              style: theme.textTheme.bodyMedium!.copyWith(
-                color: MinglitColors.error,
-              ),
-            ),
-            onTap: () async {
-              // Fix #404: Use coordinator instead of direct GoRouter access
-              // GoRouter-first 패턴: '/' 이동 후 signOut — race condition 방지
-              ref.read(moreCoordinatorProvider).goToHome();
-              await Future<void>.delayed(Duration.zero);
-              await ref.read(authControllerProvider.notifier).signOut();
-            },
-          ),
         ],
       ),
     );
