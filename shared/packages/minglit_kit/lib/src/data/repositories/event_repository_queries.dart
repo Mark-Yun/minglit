@@ -473,6 +473,7 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
     }
   }
 
+  // Fix #1215: 온보딩 표시 조건을 upcomingEvents가 아닌 전체 이벤트 존재 여부로 판단하기 위해 추가
   /// [Partner Dashboard]
   /// Returns true if the partner has ever created any event (past or future).
   /// Used to determine whether to show the onboarding guide — checking only
@@ -488,7 +489,7 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
       return res.count > 0;
     } on Exception catch (e, st) {
       Log.e('❌ [EventRepo] getHasAnyEvents Error', e, st);
-      return false; // Fail safe: assume no events on error → show onboarding
+      rethrow;
     }
   }
 

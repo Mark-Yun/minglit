@@ -988,7 +988,7 @@ void main() {
         expect(result, isFalse);
       });
 
-      test('returns false on error (fail safe)', () async {
+      test('rethrows on error', () async {
         unawaited(
           mockTable(
             mockClient,
@@ -997,9 +997,12 @@ void main() {
           ),
         );
 
-        // Should not throw — returns false as fail-safe to show onboarding
-        final result = await repository.getHasAnyEvents('partner_1');
-        expect(result, isFalse);
+        // Rethrowing lets the controller decide what to show (error state),
+        // preventing a DB hiccup from re-showing onboarding to existing partners.
+        await expectLater(
+          repository.getHasAnyEvents('partner_1'),
+          throwsA(isA<Exception>()),
+        );
       });
     });
   });
