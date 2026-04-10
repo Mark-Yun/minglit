@@ -203,5 +203,25 @@ void main() {
 
       expect(find.text(partner.name), findsNothing);
     });
+
+    testWidgets('partner overlay is shown by default', (tester) async {
+      final event = Event(
+        id: 'e-partner-visible',
+        partyId: 'party-1',
+        startTime: baseTime,
+        endTime: baseTime.add(const Duration(hours: 3)),
+        createdAt: baseTime,
+        updatedAt: baseTime,
+        currentParticipants: 8,
+        party: party,
+      );
+
+      await tester.pumpWidget(
+        buildCard(event, currentTime: fiveDaysBefore),
+      );
+      await tester.pump();
+
+      expect(find.text(partner.name), findsOneWidget);
+    });
   });
 }
