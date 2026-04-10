@@ -51,7 +51,16 @@ class EventAdmissionController extends _$EventAdmissionController {
       }
     }
 
-    // 3. Fetch User Profile (Identity Check)
+    // 3. Check Capacity — Fix #1211: 정원 마감 시 버튼 비활성화
+    if (event.maxParticipants > 0 &&
+        event.currentParticipants >= event.maxParticipants) {
+      return AdmissionState(
+        status: EventAdmissionStatus.fullOrSoldOut,
+        user: currentUser,
+      );
+    }
+
+    // 4. Fetch User Profile (Identity Check)
     final userProfile = await userRepository.getUserProfile(currentUser.id);
 
     if (userProfile == null || !userProfile.isVerified) {
@@ -61,12 +70,12 @@ class EventAdmissionController extends _$EventAdmissionController {
       );
     }
 
-    // 4. Fetch User's Approved Verifications
+    // 5. Fetch User's Approved Verifications
     final userVerifIds = await userRepository.getApprovedVerificationIds(
       currentUser.id,
     );
 
-    // 5. Check Eligibility & Qualifications
+    // 6. Check Eligibility & Qualifications
     final tickets = event.tickets ?? [];
     final entryGroups = event.entryGroups ?? [];
 
@@ -114,6 +123,8 @@ class EventAdmissionController extends _$EventAdmissionController {
         ref.invalidate(eventAdmissionControllerProvider(event));
         return;
       case EventAdmissionStatus.notEligible:
+        return;
+      case EventAdmissionStatus.fullOrSoldOut:
         return;
       case EventAdmissionStatus.eligible:
         showTicketSelection();
