@@ -980,7 +980,7 @@ void main() {
 
       test('returns false when partner has no events', () async {
         unawaited(
-          mockTable(mockClient, 'events', countValue: 0),
+          mockTable(mockClient, 'events'),
         );
 
         final result = await repository.getHasAnyEvents('partner_1');

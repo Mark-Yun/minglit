@@ -140,8 +140,7 @@ void main() {
         expect(
           state.hasAnyEvents,
           isTrue,
-          reason:
-              'Partner with past events should not see onboarding (#1215)',
+          reason: 'Partner with past events should not see onboarding (#1215)',
         );
       },
     );
