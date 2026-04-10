@@ -139,29 +139,31 @@ void main() {
     });
 
     test(
-        'canCancel returns false when event started in the past (hours ago)',
-        () {
-      final pastEvent = _makeEvent(
-        startTime: DateTime.now().subtract(const Duration(hours: 2)),
-      );
-      final application = _makeApplication(event: pastEvent);
+      'canCancel returns false when event started in the past (hours ago)',
+      () {
+        final pastEvent = _makeEvent(
+          startTime: DateTime.now().subtract(const Duration(hours: 2)),
+        );
+        final application = _makeApplication(event: pastEvent);
 
-      expect(getController().canCancel(application), isFalse);
-    });
+        expect(getController().canCancel(application), isFalse);
+      },
+    );
 
     test(
-        'canCancel returns false when application status is not paid/approved',
-        () {
-      final futureEvent = _makeEvent(
-        startTime: DateTime.now().add(const Duration(hours: 24)),
-      );
-      final application = _makeApplication(
-        event: futureEvent,
-        status: 'cancelled',
-      );
+      'canCancel returns false when application status is not paid/approved',
+      () {
+        final futureEvent = _makeEvent(
+          startTime: DateTime.now().add(const Duration(hours: 24)),
+        );
+        final application = _makeApplication(
+          event: futureEvent,
+          status: 'cancelled',
+        );
 
-      expect(getController().canCancel(application), isFalse);
-    });
+        expect(getController().canCancel(application), isFalse);
+      },
+    );
 
     test('canCancel returns false when refundStatus is not "none"', () {
       final futureEvent = _makeEvent(
@@ -194,17 +196,18 @@ void main() {
     });
 
     test(
-        'canCancel returns true for "approved" status before event starts',
-        () {
-      final futureEvent = _makeEvent(
-        startTime: DateTime.now().add(const Duration(hours: 1)),
-      );
-      final application = _makeApplication(
-        event: futureEvent,
-        status: 'approved',
-      );
+      'canCancel returns true for "approved" status before event starts',
+      () {
+        final futureEvent = _makeEvent(
+          startTime: DateTime.now().add(const Duration(hours: 1)),
+        );
+        final application = _makeApplication(
+          event: futureEvent,
+          status: 'approved',
+        );
 
-      expect(getController().canCancel(application), isTrue);
-    });
+        expect(getController().canCancel(application), isTrue);
+      },
+    );
   });
 }
