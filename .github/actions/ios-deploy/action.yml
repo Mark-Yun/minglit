@@ -118,10 +118,15 @@ runs:
       shell: bash
       working-directory: ./${{ inputs.app-directory }}
       run: |
+        # CI retry 멱등성 보장: 기존 항목이 있으면 먼저 삭제 후 재추가
+        /usr/libexec/PlistBuddy -c "Delete :CFBundleURLTypes:1" ios/Runner/Info.plist 2>/dev/null || true
         /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:1 dict" ios/Runner/Info.plist
         /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:1:CFBundleTypeRole string Editor" ios/Runner/Info.plist
         /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:1:CFBundleURLSchemes array" ios/Runner/Info.plist
         /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:1:CFBundleURLSchemes:0 string minglit-dev" ios/Runner/Info.plist
+        # Note: feature 브랜치 빌드에는 이 scheme을 포함하지 않는다.
+        # dev flavor 딥링크는 dev 브랜치 CI 빌드에서만 필요하며,
+        # 로컬 개발은 adb/flutter run으로 직접 접근 가능하다.
 
     - name: Generate keychain password
       shell: bash
