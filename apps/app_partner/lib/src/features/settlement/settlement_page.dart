@@ -2,7 +2,6 @@ import 'package:app_partner/src/features/settlement/settlement_coordinator.dart'
 import 'package:app_partner/src/features/settlement/settlement_dashboard_controller.dart';
 import 'package:app_partner/src/features/settlement/settlement_list_controller.dart';
 import 'package:app_partner/src/features/settlement/widgets/settlement_card.dart';
-import 'package:app_partner/src/features/settlement/widgets/settlement_empty_state.dart';
 import 'package:app_partner/src/features/settlement/widgets/settlement_status_badge.dart';
 import 'package:app_partner/src/features/settlement/widgets/status_filter_chips.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
@@ -414,7 +413,7 @@ class _ListTabState extends ConsumerState<_ListTab> {
               listState.error != null &&
                   listState.items.isEmpty &&
                   !listState.isLoading
-              ? SettlementEmptyState(
+              ? MinglitEmptyState(
                   icon: Icons.error_outline,
                   title: '목록을 불러오지 못했습니다',
                   subtitle: '잠시 후 다시 시도해 주세요.',
@@ -425,7 +424,8 @@ class _ListTabState extends ConsumerState<_ListTab> {
                 )
               : listState.items.isEmpty && !listState.isLoading
               // Fix #997: 빈 정산 상태에 CTA 버튼 추가 — 필터 없을 때만 이벤트 생성 유도
-              ? SettlementEmptyState(
+              ? MinglitEmptyState(
+                  icon: Icons.receipt_long_outlined,
                   title: '정산 항목이 없습니다',
                   subtitle: listState.selectedStatus != null
                       ? '다른 상태를 선택해 보세요.'
