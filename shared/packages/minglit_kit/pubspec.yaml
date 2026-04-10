@@ -83,8 +83,12 @@ flutter:
   assets:
     - assets/images/
     - assets/fonts/Noto_Sans_KR/
+    - assets/fonts/Pretendard/
 
   fonts:
+    - family: Pretendard
+      fonts:
+        - asset: assets/fonts/Pretendard/PretendardVariable.ttf
     - family: NotoSansKR
       fonts:
         - asset: assets/fonts/Noto_Sans_KR/NotoSansKR-VariableFont_wght.ttf

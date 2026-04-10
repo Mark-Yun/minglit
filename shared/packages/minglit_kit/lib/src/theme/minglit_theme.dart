@@ -62,7 +62,7 @@ class MinglitTheme {
   static ThemeData get materialTheme {
     return ThemeData(
       useMaterial3: true,
-      fontFamily: 'NotoSansKR',
+      fontFamily: 'Pretendard',
       colorScheme: ColorScheme.fromSeed(
         seedColor: MinglitColors.primary,
         primary: MinglitColors.primary,
@@ -73,7 +73,7 @@ class MinglitTheme {
         onSurfaceVariant: MinglitColors.textSecondary,
       ),
       scaffoldBackgroundColor: MinglitColors.surface,
-      // Layer 1: 텍스트 통일성 (Using local fontFamily 'NotoSansKR')
+      // Layer 1: 텍스트 통일성 (Using local fontFamily 'Pretendard')
       textTheme: const TextTheme(
         displayLarge: TextStyle(
           // ignore: minglit_no_hardcoded_text_style -- theme definition
@@ -315,7 +315,7 @@ class MinglitTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      fontFamily: 'NotoSansKR',
+      fontFamily: 'Pretendard',
       colorScheme: ColorScheme.fromSeed(
         seedColor: MinglitColorsDark.primary,
         brightness: Brightness.dark,
