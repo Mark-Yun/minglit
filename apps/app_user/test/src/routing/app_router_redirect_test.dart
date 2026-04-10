@@ -4,10 +4,19 @@
 // the same branching logic here as a pure function and verify each branch.
 // This approach keeps tests fast and dependency-free while ensuring the
 // documented invariants (e.g., /dev paths bypass auth) cannot silently regress.
+//
+// SYNC REQUIREMENT: _redirect() below mirrors `app_router.dart` → `goRouter`
+// → `redirect`. app_router.dart의 redirect 분기를 수정하면 반드시 이 파일의
+// _redirect()도 동일하게 업데이트해야 한다. 미동기화 시 테스트가 실제 동작과
+// 달라져 false-positive가 발생한다.
 
 import 'package:flutter_test/flutter_test.dart';
 
-/// Pure mirror of the redirect decision in [goRouter].
+/// IMPORTANT: This function mirrors the redirect logic in
+/// `lib/src/routing/app_router.dart` → `goRouter` → `redirect`.
+/// When modifying redirect branches in app_router.dart, update this
+/// mirror accordingly. See also: edge_cases_test.dart for widget-level
+/// integration tests of the same routes.
 ///
 /// Returns the redirect destination, or `null` when no redirect is needed.
 /// Covers redirect branches 1–3 from `app_router.dart` (auth + protected
