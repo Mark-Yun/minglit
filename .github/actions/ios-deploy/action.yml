@@ -118,12 +118,18 @@ runs:
       shell: bash
       working-directory: ./${{ inputs.app-directory }}
       run: |
-        # CI retry 멱등성 보장: 기존 항목이 있으면 먼저 삭제 후 재추가
-        /usr/libexec/PlistBuddy -c "Delete :CFBundleURLTypes:1" ios/Runner/Info.plist 2>/dev/null || true
-        /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:1 dict" ios/Runner/Info.plist
-        /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:1:CFBundleTypeRole string Editor" ios/Runner/Info.plist
-        /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:1:CFBundleURLSchemes array" ios/Runner/Info.plist
-        /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:1:CFBundleURLSchemes:0 string minglit-dev" ios/Runner/Info.plist
+        PLIST="ios/Runner/Info.plist"
+        # Fix #1249: 멱등성 보장 — minglit-dev 가 이미 존재하면 스킵
+        if /usr/libexec/PlistBuddy -c "Print :CFBundleURLTypes" "$PLIST" | grep -q "minglit-dev"; then
+          echo "minglit-dev scheme already present — skipping"
+          exit 0
+        fi
+        # 배열 끝에 추가 (인덱스 하드코딩 대신 현재 크기 사용)
+        IDX=$(/usr/libexec/PlistBuddy -c "Print :CFBundleURLTypes" "$PLIST" | grep -c "Dict {")
+        /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:${IDX} dict" "$PLIST"
+        /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:${IDX}:CFBundleTypeRole string Editor" "$PLIST"
+        /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:${IDX}:CFBundleURLSchemes array" "$PLIST"
+        /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:${IDX}:CFBundleURLSchemes:0 string minglit-dev" "$PLIST"
         # Note: feature 브랜치 빌드에는 이 scheme을 포함하지 않는다.
         # dev flavor 딥링크는 dev 브랜치 CI 빌드에서만 필요하며,
         # 로컬 개발은 adb/flutter run으로 직접 접근 가능하다.
