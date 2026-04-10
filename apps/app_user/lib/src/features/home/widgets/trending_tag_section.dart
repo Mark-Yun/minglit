@@ -43,10 +43,13 @@ class TrendingTagSection extends ConsumerWidget {
                     const SizedBox(width: MinglitSpacing.small),
                 itemBuilder: (context, index) {
                   final tag = tags[index];
+                  // Fix #1224: use recentCount (7-day sum) for the trending
+                  // metric instead of usageCount (cumulative total).
                   return _TrendingTagCard(
                     tagId: tag.id,
                     tagName: tag.name,
-                    usageCount: tag.usageCount,
+                    // Fix #1224: recentCount(최근 7일 증가량)로 트렌딩 의도 반영
+                    recentCount: tag.recentCount,
                     onTap: () => ref
                         .read(tagCoordinatorProvider)
                         .goToTagEventList(tag.id, tag.name),
@@ -67,19 +70,20 @@ class _TrendingTagCard extends StatelessWidget {
   const _TrendingTagCard({
     required this.tagId,
     required this.tagName,
-    required this.usageCount,
+    // Fix #1224: recentCount(최근 7일 증가량)로 교체
+    required this.recentCount,
     required this.onTap,
   });
 
   final String tagId;
   final String tagName;
-  final int usageCount;
+  final int recentCount;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final countLabel = NumberFormat('#,###').format(usageCount);
+    final countLabel = NumberFormat('#,###').format(recentCount);
 
     return GestureDetector(
       onTap: onTap,
@@ -104,8 +108,9 @@ class _TrendingTagCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 2),
+            // Fix #1224: "이벤트 N개" → "7일 +N" 으로 트렌딩 의미 명확화
             Text(
-              '이벤트 $countLabel개',
+              '7일 +$countLabel',
               style: theme.textTheme.labelSmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
