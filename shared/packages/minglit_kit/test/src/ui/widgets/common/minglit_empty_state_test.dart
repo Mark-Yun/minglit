@@ -337,16 +337,18 @@ void main() {
       );
     });
 
-    test('assert passes when fullPage variant has actionLabel and onAction', () {
-      expect(
-        () => MinglitEmptyState(
-          title: '테스트',
-          variant: MinglitEmptyStateVariant.fullPage,
-          actionLabel: '액션',
-          onAction: () {},
-        ),
-        returnsNormally,
-      );
-    });
+    test(
+      'assert passes when fullPage variant has actionLabel and onAction',
+      () {
+        expect(
+          () => MinglitEmptyState(
+            title: '테스트',
+            actionLabel: '액션',
+            onAction: () {},
+          ),
+          returnsNormally,
+        );
+      },
+    );
   });
 }
