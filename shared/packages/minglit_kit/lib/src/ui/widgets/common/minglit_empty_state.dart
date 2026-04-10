@@ -48,19 +48,19 @@ class MinglitEmptyState extends StatelessWidget {
     this.icon = Icons.inbox_outlined,
     this.subtitle,
     super.key,
-  })  : variant = MinglitEmptyStateVariant.card,
-        actionLabel = null,
-        onAction = null;
+  }) : variant = MinglitEmptyStateVariant.card,
+       actionLabel = null,
+       onAction = null;
 
   /// Creates an inline placeholder empty state (no icon, no CTA).
   const MinglitEmptyState.inline({
     required this.title,
     this.subtitle,
     super.key,
-  })  : variant = MinglitEmptyStateVariant.inline,
-        icon = Icons.inbox_outlined,
-        actionLabel = null,
-        onAction = null;
+  }) : variant = MinglitEmptyStateVariant.inline,
+       icon = Icons.inbox_outlined,
+       actionLabel = null,
+       onAction = null;
 
   /// Icon displayed above the title. Defaults to [Icons.inbox_outlined].
   /// Ignored when [variant] is [MinglitEmptyStateVariant.inline].

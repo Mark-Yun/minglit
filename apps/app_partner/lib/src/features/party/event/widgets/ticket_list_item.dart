@@ -338,5 +338,4 @@ class TicketListView extends StatelessWidget {
       ],
     );
   }
-
 }

@@ -139,34 +139,40 @@ void main() {
       expect(icon.size, equals(MinglitIconSize.display));
     });
 
-    testWidgets('fullPage renders on transparent background (no Container decoration)', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        wrap(const MinglitEmptyState(title: '빈 상태')),
-      );
+    testWidgets(
+      'fullPage renders on transparent background (no Container decoration)',
+      (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          wrap(const MinglitEmptyState(title: '빈 상태')),
+        );
 
-      // fullPage는 Container로 감싸지 않으므로 decoration이 있는 Container가 없어야 한다
-      final containers = tester.widgetList<Container>(find.byType(Container));
-      final decorated = containers.where((c) => c.decoration != null);
-      expect(decorated, isEmpty);
-    });
+        // fullPage는 Container로 감싸지 않으므로 decoration이 있는 Container가 없어야 한다
+        final containers = tester.widgetList<Container>(find.byType(Container));
+        final decorated = containers.where((c) => c.decoration != null);
+        expect(decorated, isEmpty);
+      },
+    );
 
-    testWidgets('fullPage shows CTA when both actionLabel and onAction are provided', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        wrap(
-          MinglitEmptyState(
-            title: '항목 없음',
-            actionLabel: '새로 만들기',
-            onAction: () {},
+    testWidgets(
+      'fullPage shows CTA when both actionLabel and onAction are provided',
+      (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          wrap(
+            MinglitEmptyState(
+              title: '항목 없음',
+              actionLabel: '새로 만들기',
+              onAction: () {},
+            ),
           ),
-        ),
-      );
+        );
 
-      expect(find.byType(FilledButton), findsOneWidget);
-    });
+        expect(find.byType(FilledButton), findsOneWidget);
+      },
+    );
   });
 
   group('MinglitEmptyState - card variant', () {
@@ -199,10 +205,12 @@ void main() {
       );
 
       final container = tester.widget<Container>(
-        find.ancestor(
-          of: find.byType(Center),
-          matching: find.byType(Container),
-        ).first,
+        find
+            .ancestor(
+              of: find.byType(Center),
+              matching: find.byType(Container),
+            )
+            .first,
       );
       final decoration = container.decoration as BoxDecoration?;
       expect(decoration, isNotNull);
@@ -254,27 +262,32 @@ void main() {
       expect(find.byType(FilledButton), findsNothing);
     });
 
-    testWidgets('inline variant has background color, border, and borderRadius', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        wrap(const MinglitEmptyState.inline(title: '인라인 빈 상태')),
-      );
+    testWidgets(
+      'inline variant has background color, border, and borderRadius',
+      (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          wrap(const MinglitEmptyState.inline(title: '인라인 빈 상태')),
+        );
 
-      final container = tester.widget<Container>(
-        find.ancestor(
-          of: find.byType(Center),
-          matching: find.byType(Container),
-        ).first,
-      );
-      final decoration = container.decoration as BoxDecoration?;
-      expect(decoration, isNotNull);
-      expect(decoration!.border, isNotNull);
-      expect(
-        decoration.borderRadius,
-        equals(BorderRadius.circular(MinglitRadius.card)),
-      );
-    });
+        final container = tester.widget<Container>(
+          find
+              .ancestor(
+                of: find.byType(Center),
+                matching: find.byType(Container),
+              )
+              .first,
+        );
+        final decoration = container.decoration as BoxDecoration?;
+        expect(decoration, isNotNull);
+        expect(decoration!.border, isNotNull);
+        expect(
+          decoration.borderRadius,
+          equals(BorderRadius.circular(MinglitRadius.card)),
+        );
+      },
+    );
 
     testWidgets('inline named constructor sets inline variant', (tester) async {
       await tester.pumpWidget(
