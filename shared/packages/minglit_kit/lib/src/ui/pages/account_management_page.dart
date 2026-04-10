@@ -57,7 +57,7 @@ class AccountManagementPage extends StatelessWidget {
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    leading: Icon(
+                    leading: const Icon(
                       Icons.person_remove_outlined,
                       color: MinglitColors.error,
                     ),
