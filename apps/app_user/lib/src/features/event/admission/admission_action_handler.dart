@@ -21,6 +21,7 @@ extension AdmissionActions on EventAdmissionController {
         );
       case EventAdmissionStatus.eligible:
         return const AdmissionButtonConfig(label: '참가 신청하기');
+      // Fix #1211: Disable the apply CTA when the event is already full or sold out.
       case EventAdmissionStatus.fullOrSoldOut:
         return const AdmissionButtonConfig(
           label: '마감된 이벤트',
