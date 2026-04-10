@@ -88,6 +88,13 @@ void main() {
       );
       expect(eligibleConfig.label, '참가 신청하기');
 
+      final fullConfig = controller.buttonConfig(
+        AdmissionState(status: EventAdmissionStatus.fullOrSoldOut),
+      );
+      expect(fullConfig.label, '마감된 이벤트');
+      expect(fullConfig.enabled, isFalse);
+      expect(fullConfig.style, AdmissionButtonStyle.disabled);
+
       final pendingConfig = controller.buttonConfig(
         AdmissionState(status: EventAdmissionStatus.pendingPayment),
       );
