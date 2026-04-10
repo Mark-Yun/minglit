@@ -104,7 +104,9 @@ class TicketListItem extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(MinglitRadius.card),
         side: BorderSide(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+          color: colorScheme.outlineVariant.withValues(
+            alpha: MinglitOpacity.strong,
+          ),
         ),
       ),
       child: InkWell(
@@ -118,7 +120,9 @@ class TicketListItem extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(MinglitSpacing.small),
                 decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer.withValues(alpha: 0.5),
+                  color: colorScheme.primaryContainer.withValues(
+                    alpha: MinglitOpacity.strong,
+                  ),
                   borderRadius: BorderRadius.circular(MinglitRadius.input),
                 ),
                 child: Icon(
@@ -146,7 +150,7 @@ class TicketListItem extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: colorScheme.primaryContainer.withValues(
-                                alpha: 0.3,
+                                alpha: MinglitOpacity.muted,
                               ),
                               borderRadius: BorderRadius.circular(2),
                             ),
@@ -288,7 +292,12 @@ class TicketListView extends StatelessWidget {
           onTap: onCreatePressed!,
         );
       }
-      return _buildEmptyState(context);
+      return SizedBox(
+        width: double.infinity,
+        child: MinglitEmptyState.inline(
+          title: context.l10n.ticketList_empty,
+        ),
+      );
     }
 
     return Column(
@@ -327,36 +336,6 @@ class TicketListView extends StatelessWidget {
           },
         ),
       ],
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(MinglitSpacing.large),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(MinglitRadius.card),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.confirmation_number_outlined,
-            size: 32,
-            color: colorScheme.outline,
-          ),
-          const SizedBox(height: MinglitSpacing.small),
-          Text(
-            context.l10n.ticketList_empty,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.outline,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

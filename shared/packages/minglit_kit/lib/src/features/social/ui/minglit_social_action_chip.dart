@@ -136,7 +136,9 @@ class MinglitSocialActionChip extends ConsumerWidget {
                 width: 1,
                 height: 14,
                 color: isActive
-                    ? MinglitColors.background.withValues(alpha: 0.4)
+                    ? MinglitColors.background.withValues(
+                        alpha: MinglitOpacity.scrimMedium,
+                      )
                     : theme.colorScheme.outlineVariant,
               ),
               const SizedBox(width: MinglitSpacing.xsmall),

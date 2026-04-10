@@ -41,10 +41,7 @@ class MinglitTextLogo extends StatelessWidget {
                   // Fix #596: hardcoded color → design token
                   color: MinglitColors.glitchCyan,
                 ),
-                Shadow(
-                  offset: Offset(3, 3),
-                  color: MinglitColors.secondary,
-                ),
+                Shadow(offset: Offset(3, 3), color: MinglitColors.secondary),
               ]
             : null,
       ),
@@ -302,7 +299,7 @@ class _Orb extends StatelessWidget {
           gradient: RadialGradient(
             colors: [
               orbColor.withValues(alpha: opacity.toDouble()),
-              orbColor.withValues(alpha: 0),
+              orbColor.withValues(alpha: MinglitOpacity.none),
             ],
           ),
         ),

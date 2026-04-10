@@ -176,7 +176,7 @@ class _PartnerApplicationListPageState
         vertical: MinglitSpacing.xxsmall,
       ),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withValues(alpha: MinglitOpacity.highlight),
         borderRadius: BorderRadius.circular(MinglitSpacing.xxsmall),
       ),
       child: Text(

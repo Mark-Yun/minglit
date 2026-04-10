@@ -111,7 +111,9 @@ class PartyStatusEditSheet extends StatelessWidget {
         padding: const EdgeInsets.all(MinglitSpacing.small),
         decoration: BoxDecoration(
           color: isSelected
-              ? MinglitColors.primary.withValues(alpha: 0.1)
+              ? MinglitColors.primary.withValues(
+                  alpha: MinglitOpacity.highlight,
+                )
               : theme.colorScheme.surfaceContainerHighest,
           shape: BoxShape.circle,
         ),

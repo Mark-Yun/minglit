@@ -164,9 +164,7 @@ class _AppPermissionSettingsScreenState
     return Scaffold(
       appBar: AppBar(title: const Text('권한 설정')),
       body: _loading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
+          ? const Center(child: CircularProgressIndicator())
           : ListView(
               children: [
                 Padding(
@@ -318,7 +316,7 @@ class _PermissionTile extends StatelessWidget {
               vertical: MinglitSpacing.xsmall,
             ),
             decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.12),
+              color: statusColor.withValues(alpha: MinglitOpacity.skeletonBase),
               borderRadius: BorderRadius.circular(MinglitRadius.input),
             ),
             child: Text(
@@ -336,22 +334,10 @@ class _PermissionTile extends StatelessWidget {
 
   (String, Color) _statusDisplay(ThemeData theme) {
     return switch (item.status) {
-      _PermissionStatus.granted => (
-        '허용됨',
-        MinglitColors.success,
-      ),
-      _PermissionStatus.denied => (
-        '거부됨',
-        MinglitColors.error,
-      ),
-      _PermissionStatus.permanentlyDenied => (
-        '거부됨',
-        MinglitColors.error,
-      ),
-      _PermissionStatus.disabled => (
-        '비활성',
-        theme.colorScheme.onSurfaceVariant,
-      ),
+      _PermissionStatus.granted => ('허용됨', MinglitColors.success),
+      _PermissionStatus.denied => ('거부됨', MinglitColors.error),
+      _PermissionStatus.permanentlyDenied => ('거부됨', MinglitColors.error),
+      _PermissionStatus.disabled => ('비활성', theme.colorScheme.onSurfaceVariant),
       _PermissionStatus.onDemand => (
         '사용 시 요청',
         theme.colorScheme.onSurfaceVariant,
