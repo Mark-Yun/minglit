@@ -30,6 +30,11 @@ class MoreCoordinator {
     unawaited(_router.push(const DeletionReasonRoute().location));
   }
 
+  // Fix #1213: 계정 관리 서브페이지 진입점
+  void pushAccountManagement() {
+    unawaited(_router.push(const PartnerAccountManagementRoute().location));
+  }
+
   // Fix #404: Coordinator-based navigation for home route (logout)
   void goToHome() {
     _router.go('/');

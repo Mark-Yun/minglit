@@ -166,17 +166,17 @@ void main() {
     testWidgets('로그아웃 tap → 홈으로 이동', (tester) async {
       setKoreanLocale(tester);
       final user = createMockUserForTest();
+      // Fix #1213: 로그아웃은 계정 관리 서브페이지(/my/account)로 이동
       await tester.pumpWidget(
         createTestApp(
           isLoggedIn: true,
           currentUser: user,
-          initialLocation: '/my',
+          initialLocation: '/my/account',
         ),
       );
       await tester.pump();
       await tester.pump();
 
-      await tester.scrollUntilVisible(find.text('로그아웃'), 100);
       await tester.tap(find.text('로그아웃'));
       // GoRouter.go('/') + Future.delayed(Duration.zero) + signOut
       await tester.pumpAndSettle();
