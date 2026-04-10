@@ -201,6 +201,9 @@ class MinglitIconSize {
 
   /// 40px extra-extra-large icon size.
   static const double xxlarge = 40;
+
+  /// 48px display icon size — empty state full-page variant.
+  static const double display = 48;
 }
 
 /// Partner app brand colors — same purple family, toned down for business feel.

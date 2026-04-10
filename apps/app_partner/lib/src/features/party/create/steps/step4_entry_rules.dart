@@ -36,7 +36,9 @@ class Step4EntryRules extends ConsumerWidget {
 
           // List of Entry Groups
           if (state.entryGroups.isEmpty)
-            _buildEmptyState(context)
+            MinglitEmptyState.inline(
+              title: context.l10n.partyCreate_empty_entryGroups,
+            )
           else
             ListView.separated(
               shrinkWrap: true,
@@ -124,21 +126,6 @@ class Step4EntryRules extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(MinglitSpacing.large),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(
-          alpha: MinglitOpacity.muted,
-        ),
-        borderRadius: BorderRadius.circular(MinglitRadius.card),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Center(child: Text(context.l10n.partyCreate_empty_entryGroups)),
     );
   }
 

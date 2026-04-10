@@ -20,8 +20,12 @@ class MyTicketsPage extends ConsumerWidget {
         value: stateAsync,
         data: (state) {
           if (state.isEmpty) {
-            return _EmptyState(
-              onExploreTap: () {
+            return MinglitEmptyState(
+              icon: Icons.confirmation_number_outlined,
+              title: '아직 티켓이 없어요',
+              subtitle: '관심 있는 이벤트를 찾아보세요',
+              actionLabel: '이벤트 둘러보기',
+              onAction: () {
                 ref.read(homeCoordinatorProvider).goToHome();
               },
             );
@@ -77,69 +81,6 @@ class MyTicketsPage extends ConsumerWidget {
   // — removes cross-feature import
   void _onQRTap(WidgetRef ref, String ticketId) {
     ref.read(homeCoordinatorProvider).pushTicketQR(ticketId);
-  }
-}
-
-/// Empty state with CTA to explore events.
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.onExploreTap});
-
-  final VoidCallback onExploreTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(MinglitSpacing.xlarge),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.confirmation_number_outlined,
-              size: 56,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(height: MinglitSpacing.medium),
-            Text(
-              '아직 티켓이 없어요',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: MinglitSpacing.small),
-            Text(
-              '관심 있는 이벤트를 찾아보세요',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: MinglitSpacing.large),
-            FilledButton(
-              onPressed: onExploreTap,
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: MinglitSpacing.xlarge,
-                  vertical: MinglitSpacing.sm,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(MinglitSpacing.sm),
-                ),
-              ),
-              // Fix #862: CTA typography should follow theme.titleMedium instead of a hardcoded font size.
-              child: Text(
-                '이벤트 둘러보기',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
 

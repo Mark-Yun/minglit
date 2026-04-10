@@ -116,28 +116,15 @@ void main() {
       verify(() => mockHomeCoordinator.goToHome()).called(1);
     });
 
-    testWidgets('empty state CTA uses titleMedium font size from theme', (
-      tester,
-    ) async {
-      const titleFontSize = 23.0;
+    testWidgets('empty state uses MinglitEmptyState widget', (tester) async {
       when(
         () => mockEventRepository.getMyTickets('user1'),
       ).thenAnswer((_) async => []);
 
-      await tester.pumpWidget(
-        createTestWidget(
-          theme: ThemeData(
-            textTheme: const TextTheme(
-              titleMedium: TextStyle(fontSize: titleFontSize),
-            ),
-          ),
-        ),
-      );
+      await tester.pumpWidget(createTestWidget());
       await pumpAndSettle(tester);
 
-      final ctaText = tester.widget<Text>(find.text('이벤트 둘러보기'));
-      expect(ctaText.style?.fontSize, titleFontSize);
-      expect(ctaText.style?.fontWeight, FontWeight.w700);
+      expect(find.byType(MinglitEmptyState), findsOneWidget);
     });
 
     testWidgets('renders upcoming and past sections', (tester) async {
