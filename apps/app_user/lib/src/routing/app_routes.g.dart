@@ -750,7 +750,7 @@ RouteBase get $tagEventListRoute => GoRouteData.$route(
 mixin $TagEventListRoute on GoRouteData {
   static TagEventListRoute _fromState(GoRouterState state) => TagEventListRoute(
     tagId: state.pathParameters['tagId']!,
-    tagName: state.uri.queryParameters['tagName'] ?? '',
+    tagName: state.uri.queryParameters['tag-name']!,
   );
 
   TagEventListRoute get _self => this as TagEventListRoute;
@@ -758,9 +758,7 @@ mixin $TagEventListRoute on GoRouteData {
   @override
   String get location => GoRouteData.$location(
     '/tags/${Uri.encodeComponent(_self.tagId)}',
-    queryParams: {
-      'tagName': _self.tagName,
-    },
+    queryParams: {'tag-name': _self.tagName},
   );
 
   @override

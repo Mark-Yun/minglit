@@ -440,8 +440,8 @@ abstract class _$RecommendationFeedNotifier
 /// - closingSoon → closingSoon
 /// - nearestDate → nearest
 ///
-// TODO(mark): Phase 2 (#614) — migrate to [recommendationEventsFromEf] once
-// the user-event-feed EF is validated in production.
+// TODO: migrate to [recommendationEventsFromEf] once the user-event-feed EF
+// is validated in production.
 
 @ProviderFor(recommendationEvents)
 const recommendationEventsProvider = RecommendationEventsProvider._();
@@ -453,8 +453,8 @@ const recommendationEventsProvider = RecommendationEventsProvider._();
 /// - closingSoon → closingSoon
 /// - nearestDate → nearest
 ///
-// TODO(mark): Phase 2 (#614) — migrate to [recommendationEventsFromEf] once
-// the user-event-feed EF is validated in production.
+// TODO: migrate to [recommendationEventsFromEf] once the user-event-feed EF
+// is validated in production.
 
 final class RecommendationEventsProvider
     extends
@@ -471,8 +471,8 @@ final class RecommendationEventsProvider
   /// - closingSoon → closingSoon
   /// - nearestDate → nearest
   ///
-  // TODO(mark): Phase 2 (#614) — migrate to [recommendationEventsFromEf] once
-  // the user-event-feed EF is validated in production.
+  // TODO: migrate to [recommendationEventsFromEf] once the user-event-feed EF
+  // is validated in production.
   const RecommendationEventsProvider._()
     : super(
         from: null,
@@ -508,8 +508,8 @@ String _$recommendationEventsHash() =>
 /// and cursor pagination are handled by the DB function, so no
 /// client-side post-processing is needed.
 ///
-// TODO(mark): Phase 2 (#614) — wire this into the explore UI behind a feature
-// flag, then remove the legacy [recommendationEvents] path.
+// TODO: wire this into the explore UI behind a feature flag, then remove the
+// legacy [recommendationEvents] path.
 
 @ProviderFor(recommendationEventsFromEf)
 const recommendationEventsFromEfProvider =
@@ -521,8 +521,8 @@ const recommendationEventsFromEfProvider =
 /// and cursor pagination are handled by the DB function, so no
 /// client-side post-processing is needed.
 ///
-// TODO(mark): Phase 2 (#614) — wire this into the explore UI behind a feature
-// flag, then remove the legacy [recommendationEvents] path.
+// TODO: wire this into the explore UI behind a feature flag, then remove the
+// legacy [recommendationEvents] path.
 
 final class RecommendationEventsFromEfProvider
     extends
@@ -540,8 +540,8 @@ final class RecommendationEventsFromEfProvider
   /// and cursor pagination are handled by the DB function, so no
   /// client-side post-processing is needed.
   ///
-  // TODO(mark): Phase 2 (#614) — wire this into the explore UI behind a feature
-  // flag, then remove the legacy [recommendationEvents] path.
+  // TODO: wire this into the explore UI behind a feature flag, then remove the
+  // legacy [recommendationEvents] path.
   const RecommendationEventsFromEfProvider._()
     : super(
         from: null,
