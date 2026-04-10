@@ -50,7 +50,8 @@ void main() {
       expect(
         theme.appBarTheme.backgroundColor,
         equals(theme.scaffoldBackgroundColor),
-        reason: 'AppBar background should match scaffold background '
+        reason:
+            'AppBar background should match scaffold background '
             '(both should be MinglitColors.surface)',
       );
     });
