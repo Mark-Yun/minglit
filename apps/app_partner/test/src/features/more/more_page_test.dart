@@ -108,48 +108,50 @@ void main() {
       expect(find.text('인증 심사 관리'), findsOneWidget);
       expect(find.text('멤버 관리'), findsOneWidget);
       expect(find.text('알림 설정'), findsOneWidget);
+      // Fix #1213: 로그아웃/회원탈퇴/파트너프로필이 계정 관리 서브페이지로 이동 —
+      // MorePage에서는 '계정 관리' 항목만 표시됨
       expect(find.text('계정 관리'), findsOneWidget);
-      expect(find.text('회원 탈퇴'), findsOneWidget);
-      expect(find.text('파트너 프로필'), findsOneWidget);
       await tester.scrollUntilVisible(find.text('개인정보처리방침'), 100);
       expect(find.text('개인정보처리방침'), findsOneWidget);
       await tester.scrollUntilVisible(find.text('이용약관'), 100);
       expect(find.text('이용약관'), findsOneWidget);
-      await tester.scrollUntilVisible(find.text('로그아웃'), 100);
-      expect(find.text('로그아웃'), findsOneWidget);
     });
 
-    testWidgets('shows toast when tapping disabled menu item', (tester) async {
+    testWidgets('tapping 계정 관리 forwards to coordinator', (tester) async {
+      // Fix #1213: '계정 관리'는 더 이상 준비 중 토스트가 아니라 계정 관리 서브페이지로 이동
+      when(() => mockCoordinator.pushAccountManagement()).thenReturn(null);
+
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('계정 관리'));
       await tester.pumpAndSettle();
 
-      expect(find.text('준비 중입니다'), findsOneWidget);
+      verify(() => mockCoordinator.pushAccountManagement()).called(1);
     });
 
-    testWidgets('logout text is displayed in error color', (tester) async {
+    testWidgets('계정 관리 is visible on MorePage', (tester) async {
+      // Fix #1213: 로그아웃은 계정 관리 서브페이지로 이동 — MorePage에서는 '계정 관리' 항목만 표시
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      // Scroll to make logout visible
-      await tester.scrollUntilVisible(find.text('로그아웃'), 100);
-
-      final logoutTextWidget = tester.widget<Text>(find.text('로그아웃'));
-      expect(logoutTextWidget.style?.color, equals(MinglitColors.error));
+      expect(find.text('계정 관리'), findsOneWidget);
     });
 
     testWidgets('tapping account deletion forwards to coordinator', (
       tester,
     ) async {
+      // Fix #1213: '회원 탈퇴'는 계정 관리 서브페이지로 이동 —
+      // MorePage에서 '계정 관리' 탭 시 coordinator.pushAccountManagement() 호출
+      when(() => mockCoordinator.pushAccountManagement()).thenReturn(null);
+
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('회원 탈퇴'));
+      await tester.tap(find.text('계정 관리'));
       await tester.pumpAndSettle();
 
-      verify(() => mockCoordinator.pushAccountDeletion()).called(1);
+      verify(() => mockCoordinator.pushAccountManagement()).called(1);
     });
 
     testWidgets('placeholder header does not overflow on mobile width', (
