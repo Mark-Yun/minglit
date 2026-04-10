@@ -10,8 +10,11 @@ import 'package:flutter_test/flutter_test.dart';
 /// Pure mirror of the redirect decision in [goRouter].
 ///
 /// Returns the redirect destination, or `null` when no redirect is needed.
-/// Matches the logic in `app_router.dart` line-for-line so that any
-/// divergence will be caught by these tests.
+/// Covers redirect branches 1–3 from `app_router.dart` (auth + protected
+/// path guards). The mirror is intentionally partial — see scope note below.
+///
+/// Note: consent 상태 관련 분기(redirect 분기 4~6)는 Supabase 의존성이
+/// 필요하여 이 순수 함수 테스트에서는 생략. 해당 분기는 integration test에서 검증.
 String? _redirect({
   required String path,
   required bool isLoggedIn,
@@ -38,16 +41,22 @@ String? _redirect({
   }
 
   // 2. Protected prefixes (login required)
+  // prefix-match: 이 경로로 시작하는 모든 진입은 로그인을 요구함
   const protectedPrefixes = [
-    '/my',
-    '/tickets/my',
-    '/payment',
-    '/purchase-history',
-    '/certification',
+    '/my', // 마이페이지, 알림 설정 (/my/notification-settings)
+    '/tickets/my', // 내 티켓 목록
+    '/payment', // 결제 관련
+    '/purchase-history', // 구매 내역
+    '/certification', // 본인인증
+    '/signup/consent', // 필수 동의
   ];
 
+  // suffix-match: /apply (이벤트 신청), /qr (개인 티켓 QR — 인증 필수)
+  // Fix #1072: /qr 보호 추가 — 개인 티켓 QR은 로그인 없이 접근 불가
   final isProtected =
-      protectedPrefixes.any(path.startsWith) || path.endsWith('/apply');
+      protectedPrefixes.any(path.startsWith) ||
+      path.endsWith('/apply') ||
+      path.endsWith('/qr');
 
   // 3. Unauthenticated access to a protected path -> /login?from=...
   if (!isLoggedIn && isProtected) {
@@ -122,6 +131,19 @@ void main() {
       final result =
           _redirect(path: '/purchase-history', isLoggedIn: false);
       expect(result, '/login?from=%2Fpurchase-history');
+    });
+
+    test('/signup/consent redirects to /login when not logged in', () {
+      final result = _redirect(path: '/signup/consent', isLoggedIn: false);
+      expect(result, '/login?from=%2Fsignup%2Fconsent');
+    });
+
+    test('/events/:id/qr redirects to /login when not logged in', () {
+      final result = _redirect(
+        path: '/events/event-123/qr',
+        isLoggedIn: false,
+      );
+      expect(result, '/login?from=%2Fevents%2Fevent-123%2Fqr');
     });
   });
 
