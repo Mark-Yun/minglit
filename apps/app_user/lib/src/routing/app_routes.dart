@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:app_user/src/features/account_deletion/logic/account_deletion_coordinator.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_complete_page.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_info_page.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_reason_page.dart';
@@ -210,6 +213,39 @@ class NotificationSettingsRoute extends GoRouteData
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const NotificationSettingsScreen();
+}
+
+/// **Account Management Route**: Logout and account deletion sub-settings page.
+/// Path: `/my/account`
+@TypedGoRoute<AccountManagementRoute>(path: '/my/account')
+class AccountManagementRoute extends GoRouteData with $AccountManagementRoute {
+  const AccountManagementRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    // Fix #1213: 계정 관리 서브페이지 — 로그아웃/회원탈퇴 통합
+    return Consumer(
+      builder: (context, ref, _) {
+        return AccountManagementPage(
+          onLogout: () {
+            // Fix #404: navigate first, then sign out.
+            // Future.delayed(Duration.zero) avoids
+            // context-after-dispose errors.
+            GoRouter.of(context).go('/');
+            unawaited(
+              Future<void>.delayed(Duration.zero).then((_) {
+                unawaited(ref.read(authControllerProvider.notifier).signOut());
+              }),
+            );
+          },
+          onDeleteAccount: () {
+            // Fix #1213: 기존 회원 탈퇴 플로우를 계정 관리에서 재사용
+            ref.read(accountDeletionCoordinatorProvider).start();
+          },
+        );
+      },
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------

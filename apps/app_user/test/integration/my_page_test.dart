@@ -25,9 +25,9 @@ void main() {
       expect(find.byType(MyPage), findsOneWidget);
       expect(find.text('구매 내역'), findsOneWidget);
       expect(find.text('알림 설정'), findsOneWidget);
-      // Fix #139: New menu items push 로그아웃 below fold — scroll to find it
-      await tester.scrollUntilVisible(find.text('로그아웃'), 100);
-      expect(find.text('로그아웃'), findsOneWidget);
+      // Fix #1213: 로그아웃/회원탈퇴가 계정 관리 서브페이지로 이동 — MyPage에서는 '계정 관리' 항목 확인
+      await tester.scrollUntilVisible(find.text('계정 관리'), 100);
+      expect(find.text('계정 관리'), findsOneWidget);
     });
 
     // Test 2: Unauthenticated /my → LoginPage redirect
