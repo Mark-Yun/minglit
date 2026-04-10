@@ -164,9 +164,9 @@ class _FakeFilterBuilder extends Fake
   _FakeFilterBuilder({
     required this.selectData,
     required this.singleData,
+    required this.recordedFilters,
     this.maybeSingleData,
     this.countValue = 0,
-    required this.recordedFilters,
   });
 
   final List<Map<String, dynamic>> selectData;
@@ -250,16 +250,14 @@ class _FakeFilterBuilder extends Fake
   PostgrestFilterBuilder<List<Map<String, dynamic>>> ilike(
     String column,
     String pattern,
-  ) =>
-      this;
+  ) => this;
 
   @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> filter(
     String column,
     String operator,
     Object? value,
-  ) =>
-      this;
+  ) => this;
 
   @override
   PostgrestTransformBuilder<List<Map<String, dynamic>>> order(
@@ -267,29 +265,25 @@ class _FakeFilterBuilder extends Fake
     bool ascending = false,
     bool nullsFirst = false,
     String? referencedTable,
-  }) =>
-      this;
+  }) => this;
 
   @override
   PostgrestTransformBuilder<List<Map<String, dynamic>>> limit(
     int count, {
     String? referencedTable,
-  }) =>
-      this;
+  }) => this;
 
   @override
   PostgrestTransformBuilder<List<Map<String, dynamic>>> range(
     int from,
     int to, {
     String? referencedTable,
-  }) =>
-      this;
+  }) => this;
 
   @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> select([
     String columns = '*',
-  ]) =>
-      this;
+  ]) => this;
 
   // --- Terminal operations ---
 
@@ -302,9 +296,12 @@ class _FakeFilterBuilder extends Fake
       _FakeTerminalBuilder<Map<String, dynamic>?>(maybeSingleData);
 
   @override
-  ResponsePostgrestBuilder<PostgrestResponse<List<Map<String, dynamic>>>,
-      List<Map<String, dynamic>>, List<Map<String, dynamic>>> count(
-          [CountOption option = CountOption.exact]) =>
+  ResponsePostgrestBuilder<
+    PostgrestResponse<List<Map<String, dynamic>>>,
+    List<Map<String, dynamic>>,
+    List<Map<String, dynamic>>
+  >
+  count([CountOption option = CountOption.exact]) =>
       _FakeCountBuilder(selectData, countValue);
 
   // Awaiting a filter builder resolves to the list data
@@ -337,8 +334,11 @@ class _FakeTerminalBuilder<T> extends Fake
 /// Fake count response builder.
 class _FakeCountBuilder extends Fake
     implements
-        ResponsePostgrestBuilder<PostgrestResponse<List<Map<String, dynamic>>>,
-            List<Map<String, dynamic>>, List<Map<String, dynamic>>> {
+        ResponsePostgrestBuilder<
+          PostgrestResponse<List<Map<String, dynamic>>>,
+          List<Map<String, dynamic>>,
+          List<Map<String, dynamic>>
+        > {
   _FakeCountBuilder(this._data, this._count);
   final List<Map<String, dynamic>> _data;
   final int _count;
@@ -346,7 +346,7 @@ class _FakeCountBuilder extends Fake
   @override
   Future<U> then<U>(
     FutureOr<U> Function(PostgrestResponse<List<Map<String, dynamic>>>)
-        onValue, {
+    onValue, {
     Function? onError,
   }) {
     return Future.value(

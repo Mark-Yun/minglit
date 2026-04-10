@@ -925,8 +925,9 @@ void main() {
               'party_id': 'party_1',
               'title': 'Test Event',
               'status': 'scheduled',
-              'start_time':
-                  now.subtract(const Duration(hours: 1)).toIso8601String(),
+              'start_time': now
+                  .subtract(const Duration(hours: 1))
+                  .toIso8601String(),
               'end_time': now.add(const Duration(hours: 2)).toIso8601String(),
               'created_at': now.toIso8601String(),
               'updated_at': now.toIso8601String(),
@@ -951,8 +952,8 @@ void main() {
       // Fix #1212: events that ended earlier today must still be returned so
       // the nowbar can show the "종료됨" state (e.g. match results accessible).
       test('returns already-ended event from today', () async {
-        final startTime = DateTime(now.year, now.month, now.day, 10, 0);
-        final endTime = DateTime(now.year, now.month, now.day, 12, 0);
+        final startTime = DateTime(now.year, now.month, now.day, 10);
+        final endTime = DateTime(now.year, now.month, now.day, 12);
         final eventsTable = mockTable(
           mockClient,
           'events',
@@ -965,8 +966,11 @@ void main() {
             ),
           ],
         );
-        final startOfDay =
-            DateTime(now.year, now.month, now.day).toIso8601String();
+        final startOfDay = DateTime(
+          now.year,
+          now.month,
+          now.day,
+        ).toIso8601String();
         unawaited(
           mockTable(mockClient, 'event_applications', selectData: []),
         );
