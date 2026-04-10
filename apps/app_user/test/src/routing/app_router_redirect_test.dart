@@ -47,11 +47,11 @@ String? _redirect({
   // 1. Already logged in, going to /login -> original destination or home
   if (isLoggedIn && isLoggingIn) {
     final from = queryParameters['from'];
-    if (from != null &&
-        from.startsWith('/') &&
-        !from.startsWith('//') &&
-        !from.startsWith('/login')) {
-      return from;
+    if (from != null && from.startsWith('/') && !from.startsWith('//')) {
+      // Mirror _sanitizeReturnLocation: parse URI and check path == '/login'
+      // (exact match, not startsWith — avoids blocking /login-help, /login/callback)
+      final fromPath = Uri.tryParse(from)?.path ?? from;
+      if (fromPath != '/login') return from;
     }
     return '/';
   }
@@ -227,6 +227,15 @@ void main() {
         isLoggedIn: true,
       );
       expect(result, '/');
+    });
+
+    // Fix #1249: /login-help는 /login과 다른 경로 — 정확히 '/login'인 경우만 차단
+    test('allows from=/login-help (exact match, not prefix)', () {
+      final result = _redirect(
+        location: '/login?from=%2Flogin-help',
+        isLoggedIn: true,
+      );
+      expect(result, '/login-help');
     });
   });
 

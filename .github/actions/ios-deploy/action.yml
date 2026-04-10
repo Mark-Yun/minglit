@@ -113,8 +113,9 @@ runs:
 
     # Fix #1249: dev 빌드에서만 minglit-dev:// URL scheme 추가 (보안 요구사항)
     # prod Info.plist에는 이 scheme이 존재하지 않음을 보장
+    # app_user 전용 — partner 앱에는 minglit-dev:// scheme 불필요
     - name: Add Dev URL Scheme
-      if: ${{ inputs.git-ref == 'refs/heads/dev' }}
+      if: ${{ inputs.git-ref == 'refs/heads/dev' && inputs.app-directory == 'apps/app_user' }}
       shell: bash
       working-directory: ./${{ inputs.app-directory }}
       run: |
