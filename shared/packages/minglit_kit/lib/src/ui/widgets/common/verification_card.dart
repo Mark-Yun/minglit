@@ -54,7 +54,9 @@ class VerificationCard extends StatelessWidget {
         MinglitSpacing.small + MinglitSpacing.xxsmall,
       ), // 10
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        color: colorScheme.surfaceContainerHighest.withValues(
+          alpha: MinglitOpacity.strong,
+        ),
         shape: BoxShape.circle,
       ),
       child: Icon(
@@ -70,12 +72,17 @@ class VerificationCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(MinglitRadius.card),
         border: Border.all(
           color:
-              borderColor ?? colorScheme.outlineVariant.withValues(alpha: 0.5),
+              borderColor ??
+              colorScheme.outlineVariant.withValues(
+                alpha: MinglitOpacity.strong,
+              ),
         ),
         boxShadow: [
           if (backgroundColor == null || backgroundColor == colorScheme.surface)
             BoxShadow(
-              color: theme.shadowColor.withValues(alpha: 0.03),
+              color: theme.shadowColor.withValues(
+                alpha: MinglitOpacity.shadowSm,
+              ),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),

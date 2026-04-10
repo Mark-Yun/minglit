@@ -21,7 +21,9 @@ class _BottomTicketBar extends ConsumerWidget {
         color: theme.colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.1),
+            color: theme.shadowColor.withValues(
+              alpha: MinglitOpacity.highlight,
+            ),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -54,9 +56,7 @@ class _BottomTicketBar extends ConsumerWidget {
                 data: (state) => _buildActionButton(context, ref, state),
                 loading: () => const ElevatedButton(
                   onPressed: null,
-                  child: MinglitCircularProgressIndicator(
-                    size: 20,
-                  ),
+                  child: MinglitCircularProgressIndicator(size: 20),
                 ),
                 error: (e, _) => ElevatedButton(
                   onPressed: null,
@@ -135,7 +135,9 @@ class _BottomTicketBarSkeleton extends StatelessWidget {
         color: theme.colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.1),
+            color: theme.shadowColor.withValues(
+              alpha: MinglitOpacity.highlight,
+            ),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),

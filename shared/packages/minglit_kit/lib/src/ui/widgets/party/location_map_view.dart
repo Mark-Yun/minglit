@@ -53,9 +53,9 @@ class LocationMapView extends StatelessWidget {
   Future<void> _copyToClipboard(BuildContext context) async {
     await Clipboard.setData(ClipboardData(text: location.address));
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('주소가 클립보드에 복사되었습니다.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('주소가 클립보드에 복사되었습니다.')));
     }
   }
 
@@ -86,7 +86,9 @@ class LocationMapView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(MinglitRadius.card),
                 boxShadow: [
                   BoxShadow(
-                    color: MinglitColors.textPrimary.withValues(alpha: 0.05),
+                    color: MinglitColors.textPrimary.withValues(
+                      alpha: MinglitOpacity.tintFill,
+                    ),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -167,7 +169,9 @@ class _ActionButton extends StatelessWidget {
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints(),
       visualDensity: VisualDensity.compact,
-      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+      color: colorScheme.onSurfaceVariant.withValues(
+        alpha: MinglitOpacity.separator,
+      ),
     );
   }
 }

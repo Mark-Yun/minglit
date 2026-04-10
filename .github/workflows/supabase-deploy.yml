@@ -22,7 +22,7 @@ jobs:
       contents: write
       issues: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: supabase/setup-cli@v1
         with:
@@ -92,8 +92,34 @@ jobs:
           DB_PASSWORD: ${{ steps.env.outputs.DB_PASSWORD }}
           PROJECT_ID: ${{ steps.env.outputs.PROJECT_ID }}
         run: |
-          # Fix #669: GitHub Actions 러너 IPv6 미지원 — IPv4 우선으로 변경
-          sudo sh -c 'echo "precedence ::ffff:0:0/96 100" >> /etc/gai.conf'
+          # Fix #1130: gai.conf IPv4 precedence not effective for psql — /etc/hosts override
+          # Fix #1153: dig +short A returns empty on some runners — fallback chain
+          HOST="db.${PROJECT_ID}.supabase.co"
+          is_valid_ipv4() {
+            [[ $1 =~ ^((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])$ ]]
+          }
+          IPV4=""
+          CANDIDATE=$(dig +short A "$HOST" | head -1)
+          is_valid_ipv4 "$CANDIDATE" && IPV4="$CANDIDATE"
+          if [ -z "$IPV4" ]; then
+            CANDIDATE=$(getent ahostsv4 "$HOST" 2>/dev/null | head -1 | awk '{print $1}')
+            is_valid_ipv4 "$CANDIDATE" && IPV4="$CANDIDATE"
+          fi
+          if [ -z "$IPV4" ]; then
+            # Use "^Address: " (space) to exclude the DNS server line "Address:\t8.8.8.8#53" (tab)
+            CANDIDATE=$(nslookup -type=A "$HOST" 2>/dev/null | awk '/^Address: /{print $2}' | tail -1)
+            is_valid_ipv4 "$CANDIDATE" && IPV4="$CANDIDATE"
+          fi
+          if [ -z "$IPV4" ]; then
+            CANDIDATE=$(host -t A "$HOST" 2>/dev/null | awk '/has address/ {print $4; exit}')
+            is_valid_ipv4 "$CANDIDATE" && IPV4="$CANDIDATE"
+          fi
+          if [ -z "$IPV4" ]; then
+            echo "::error::Failed to resolve IPv4 for ${HOST} (tried dig, getent, nslookup, host)"
+            exit 1
+          fi
+          echo "${IPV4} ${HOST}" | sudo tee -a /etc/hosts > /dev/null
+          echo "Resolved ${HOST} → ${IPV4}"
 
           REQUIRED=$(jq -r '.vault.required | keys[]' env-manifest.json)
           VAULT_MISSING=""

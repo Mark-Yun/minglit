@@ -56,9 +56,7 @@ class _TicketQRViewerState extends State<TicketQRViewer>
     final brightness = _originalBrightness;
     if (brightness != null) {
       try {
-        await ScreenBrightness().setApplicationScreenBrightness(
-          brightness,
-        );
+        await ScreenBrightness().setApplicationScreenBrightness(brightness);
       } on Object catch (e) {
         Log.e('Failed to restore screen brightness', e);
       }
@@ -84,17 +82,15 @@ class _TicketQRViewerState extends State<TicketQRViewer>
                 borderRadius: BorderRadius.circular(MinglitRadius.card),
                 boxShadow: [
                   BoxShadow(
-                    color: theme.shadowColor.withValues(alpha: 0.1),
+                    color: theme.shadowColor.withValues(
+                      alpha: MinglitOpacity.highlight,
+                    ),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              child: QrImageView(
-                data: qrData,
-                size: 240,
-                gapless: false,
-              ),
+              child: QrImageView(data: qrData, size: 240, gapless: false),
             ),
 
             // 2. Scanning Line Animation
@@ -111,7 +107,7 @@ class _TicketQRViewerState extends State<TicketQRViewer>
                       boxShadow: [
                         BoxShadow(
                           color: theme.colorScheme.primary.withValues(
-                            alpha: 0.5,
+                            alpha: MinglitOpacity.strong,
                           ),
                           blurRadius: 8,
                           spreadRadius: 2,

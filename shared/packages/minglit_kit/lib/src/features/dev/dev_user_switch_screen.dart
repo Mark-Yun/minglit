@@ -40,10 +40,7 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
       // In local dev, all seed users have the same password.
       await ref
           .read(authControllerProvider.notifier)
-          .signInWithEmail(
-            email: email,
-            password: 'password1234!',
-          );
+          .signInWithEmail(email: email, password: 'password1234!');
 
       if (mounted) {
         ref.invalidate(currentUserProfileProvider);
@@ -52,9 +49,9 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
     } on Exception catch (e, st) {
       Log.e('❌ Failed to switch user to $email', e, st);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to switch: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to switch: $e')));
       }
     } finally {
       if (mounted) setState(() => _isActionRunning = false);
@@ -136,15 +133,15 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
 
         final (Color roleColor, String roleLabel) = switch (username) {
           String u when u.startsWith('partner_owner') => (
-            MinglitColors.warning.withValues(alpha: 0.3),
+            MinglitColors.warning.withValues(alpha: MinglitOpacity.muted),
             'Owner',
           ),
           String u when u.startsWith('partner_') => (
-            MinglitColors.primary.withValues(alpha: 0.2),
+            MinglitColors.primary.withValues(alpha: MinglitOpacity.subtle),
             'Partner',
           ),
           String u when u.startsWith('staff_') => (
-            MinglitColors.tertiary.withValues(alpha: 0.5),
+            MinglitColors.tertiary.withValues(alpha: MinglitOpacity.strong),
             'Staff',
           ),
           _ => (theme.colorScheme.surfaceContainerLowest, 'User'),

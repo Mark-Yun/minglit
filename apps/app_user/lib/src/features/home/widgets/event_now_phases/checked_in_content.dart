@@ -30,7 +30,9 @@ class CheckedInContent extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: MinglitColors.textSecondary.withValues(alpha: 0.3),
+              color: MinglitColors.textSecondary.withValues(
+                alpha: MinglitOpacity.muted,
+              ),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -130,12 +132,14 @@ class _ParticipantAvatarRow extends StatelessWidget {
             child: CircleAvatar(
               radius: 16,
               backgroundColor: MinglitColors.primary.withValues(
-                alpha: 0.1 + (i * 0.15),
+                alpha: MinglitOpacity.highlight + (i * 0.15),
               ),
               child: Icon(
                 Icons.person,
                 size: 16,
-                color: MinglitColors.primary.withValues(alpha: 0.6),
+                color: MinglitColors.primary.withValues(
+                  alpha: MinglitOpacity.separator,
+                ),
               ),
             ),
           ),

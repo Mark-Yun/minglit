@@ -19,7 +19,9 @@ class _InfoTile extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(MinglitSpacing.small),
           decoration: BoxDecoration(
-            color: theme.colorScheme.tertiary.withValues(alpha: 0.1),
+            color: theme.colorScheme.tertiary.withValues(
+              alpha: MinglitOpacity.highlight,
+            ),
             borderRadius: BorderRadius.circular(MinglitRadius.small),
           ),
           child: Icon(
