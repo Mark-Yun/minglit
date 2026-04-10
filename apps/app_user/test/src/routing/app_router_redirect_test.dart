@@ -137,8 +137,7 @@ void main() {
     });
 
     test('/purchase-history redirects to /login when not logged in', () {
-      final result =
-          _redirect(path: '/purchase-history', isLoggedIn: false);
+      final result = _redirect(path: '/purchase-history', isLoggedIn: false);
       expect(result, '/login?from=%2Fpurchase-history');
     });
 
