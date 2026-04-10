@@ -2,6 +2,11 @@
 -- Issue #1223
 -- partner-manage-party EF가 parties + party_tags 를 2단계 write로 처리해
 -- 2단계 실패 시 고아 row가 남는 문제를 RPC로 원자적 처리로 전환
+--
+-- ⚠️ SCHEMA SYNC WARNING:
+-- create_party_with_tags()의 INSERT 컬럼 목록은 parties 테이블 스키마에 하드코딩되어 있다.
+-- parties 테이블에 NOT NULL 컬럼을 추가하면 이 RPC도 함께 수정해야 한다.
+-- (REST API는 자동 동기화되지만 RPC는 수동 업데이트 필요)
 
 -- ============================================================
 -- 1. create_party_with_tags
