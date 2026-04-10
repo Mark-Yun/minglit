@@ -96,7 +96,7 @@ class MinglitAlert extends StatelessWidget {
     return AlertDialog(
       backgroundColor: colorScheme.surface,
       surfaceTintColor: colorScheme.surface.withValues(
-        alpha: 0,
+        alpha: MinglitOpacity.none,
       ), // Remove standardized tint
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(MinglitRadius.card),

@@ -62,7 +62,9 @@ class MinglitFilePickerPreviewList extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(MinglitSpacing.xxsmall),
                     decoration: BoxDecoration(
-                      color: MinglitColors.textPrimary.withValues(alpha: 0.54),
+                      color: MinglitColors.textPrimary.withValues(
+                        alpha: MinglitOpacity.mediumEmphasis,
+                      ),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -82,18 +84,19 @@ class MinglitFilePickerPreviewList extends StatelessWidget {
 }
 
 class MinglitFilePickerImagePreview extends StatelessWidget {
-  const MinglitFilePickerImagePreview({
-    required this.file,
-    super.key,
-  });
+  const MinglitFilePickerImagePreview({required this.file, super.key});
 
   final PlatformFile file;
 
   @override
   Widget build(BuildContext context) {
-    final isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(
-      file.extension?.toLowerCase(),
-    );
+    final isImage = [
+      'jpg',
+      'jpeg',
+      'png',
+      'gif',
+      'webp',
+    ].contains(file.extension?.toLowerCase());
 
     if (isImage) {
       ImageProvider provider;

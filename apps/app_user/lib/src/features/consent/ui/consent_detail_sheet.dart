@@ -14,10 +14,7 @@ Future<void> showConsentDetailSheet(
 }
 
 class ConsentDetailSheet extends StatelessWidget {
-  const ConsentDetailSheet({
-    required this.content,
-    super.key,
-  });
+  const ConsentDetailSheet({required this.content, super.key});
 
   final ConsentDetailContent content;
 
@@ -48,7 +45,7 @@ class ConsentDetailSheet extends StatelessWidget {
                   height: 4,
                   decoration: BoxDecoration(
                     color: theme.colorScheme.onSurfaceVariant.withValues(
-                      alpha: 0.3,
+                      alpha: MinglitOpacity.muted,
                     ),
                     borderRadius: BorderRadius.circular(MinglitRadius.chip),
                   ),
@@ -61,10 +58,7 @@ class ConsentDetailSheet extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        content.title,
-                        style: theme.textTheme.titleLarge,
-                      ),
+                      Text(content.title, style: theme.textTheme.titleLarge),
                       const SizedBox(height: MinglitSpacing.xsmall),
                       Text(
                         content.summary,
@@ -120,16 +114,17 @@ class ConsentDetailSection {
   const ConsentDetailSection({
     required this.title,
     required this.items,
+    // Fix #1143: PIPA 제22조 제4항 — 중요 항목 강조 표시 의무
+    this.emphasized = false,
   });
 
   final String title;
   final List<String> items;
+  final bool emphasized;
 }
 
 class _ConsentDetailSection extends StatelessWidget {
-  const _ConsentDetailSection({
-    required this.section,
-  });
+  const _ConsentDetailSection({required this.section});
 
   final ConsentDetailSection section;
 
@@ -137,10 +132,22 @@ class _ConsentDetailSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // Fix #1143: PIPA 강조 섹션 — 좌측 보더 + primaryContainer 배경 + primary 타이틀
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        color: section.emphasized
+            ? theme.colorScheme.primaryContainer.withValues(
+                alpha: MinglitOpacity.muted,
+              )
+            : theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: MinglitOpacity.scrimMedium,
+              ),
         borderRadius: BorderRadius.circular(MinglitRadius.card),
+        border: section.emphasized
+            ? Border(
+                left: BorderSide(color: theme.colorScheme.primary, width: 3),
+              )
+            : null,
       ),
       child: Padding(
         padding: const EdgeInsets.all(MinglitSpacing.medium),
@@ -149,13 +156,17 @@ class _ConsentDetailSection extends StatelessWidget {
           children: [
             Text(
               section.title,
-              style: theme.textTheme.titleSmall,
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: section.emphasized ? theme.colorScheme.primary : null,
+              ),
             ),
             const SizedBox(height: MinglitSpacing.small),
             for (final item in section.items) ...[
               Text(
                 '• $item',
-                style: theme.textTheme.bodyMedium,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: section.emphasized ? FontWeight.w600 : null,
+                ),
               ),
               const SizedBox(height: MinglitSpacing.xsmall),
             ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/src/data/models/event.dart';
 import 'package:minglit_kit/src/data/models/partner.dart';
+import 'package:minglit_kit/src/data/models/tag.dart';
 import 'package:minglit_kit/src/theme/minglit_text_theme_extension.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_image.dart';
@@ -164,7 +165,9 @@ class MinglitEventCard extends StatelessWidget {
                     Positioned.fill(
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.5),
+                          color: Colors.black.withValues(
+                            alpha: MinglitOpacity.strong,
+                          ),
                         ),
                         child: Center(
                           child: Container(
@@ -173,17 +176,17 @@ class MinglitEventCard extends StatelessWidget {
                               vertical: MinglitSpacing.small,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.6),
+                              color: Colors.black.withValues(
+                                alpha: MinglitOpacity.separator,
+                              ),
                               borderRadius: BorderRadius.circular(
                                 MinglitRadius.small,
                               ),
                             ),
                             child: Text(
                               '마감',
-                              style:
-                                  Theme.of(
-                                    context,
-                                  ).textTheme.titleMedium?.copyWith(
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -261,6 +264,14 @@ class MinglitEventCard extends StatelessWidget {
                         ),
                       ],
                     ),
+                    // Tag chips — prefer party-level tags, fall back to
+                    // event-level tags (Tag Discovery #1094-1096).
+                    // Displays at most 3 tags + "+N" overflow badge.
+                    if (party?.tags ?? event!.tags case final tags?
+                        when tags.isNotEmpty) ...[
+                      const SizedBox(height: MinglitSpacing.xsmall),
+                      _TagChipRow(tags: tags),
+                    ],
                   ],
                 ),
               ),
@@ -321,7 +332,7 @@ class _ParticipantDDayOverlay extends StatelessWidget {
 
     // Fix #478: ended state uses muted grey overlay background
     final overlayBgColor = cardState == _EventCardState.ended
-        ? Colors.grey.withValues(alpha: 0.7)
+        ? Colors.grey.withValues(alpha: MinglitOpacity.scrimDark)
         : MinglitColors.textPrimary.withValues(alpha: MinglitOpacity.overlay);
 
     // Fix #478: D-Day label color — amber for today
@@ -348,11 +359,7 @@ class _ParticipantDDayOverlay extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.person,
-              size: 13,
-              color: MinglitColors.background,
-            ),
+            const Icon(Icons.person, size: 13, color: MinglitColors.background),
             const SizedBox(width: 3),
             // 3-segment battery gauge
             for (var i = 0; i < 3; i++) ...[
@@ -463,6 +470,63 @@ class _PartnerOverlay extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Displays up to 3 tag chips with an overflow "+N" badge.
+///
+/// Used in [MinglitEventCard] to surface tag metadata (Tag Discovery #1094-1096).
+class _TagChipRow extends StatelessWidget {
+  const _TagChipRow({required this.tags});
+
+  static const _maxVisible = 3;
+
+  final List<Tag> tags;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final visible = tags.take(_maxVisible).toList();
+    final overflowCount = tags.length - visible.length;
+
+    return Wrap(
+      spacing: MinglitSpacing.xsmall,
+      runSpacing: MinglitSpacing.xxsmall,
+      children: [
+        for (final tag in visible) _TagBadge(label: tag.name, theme: theme),
+        if (overflowCount > 0)
+          _TagBadge(label: '+$overflowCount', theme: theme),
+      ],
+    );
+  }
+}
+
+class _TagBadge extends StatelessWidget {
+  const _TagBadge({required this.label, required this.theme});
+
+  final String label;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(MinglitRadius.chip),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.small,
+          vertical: MinglitSpacing.xxsmall,
+        ),
+        child: Text(
+          '#$label',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
       ),
     );
   }

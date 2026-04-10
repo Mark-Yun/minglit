@@ -41,6 +41,9 @@ _Event _$EventFromJson(Map<String, dynamic> json) => _Event(
   remainingSlots: (json['remaining_slots'] as num?)?.toInt(),
   distanceMeters: (json['distance_meters'] as num?)?.toDouble(),
   eligible: json['eligible'] as bool?,
+  tags: (json['tags'] as List<dynamic>?)
+      ?.map((e) => Tag.fromJson(e as Map<String, dynamic>))
+      .toList(),
 );
 
 Map<String, dynamic> _$EventToJson(_Event instance) => <String, dynamic>{

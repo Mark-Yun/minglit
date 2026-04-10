@@ -74,8 +74,12 @@ class PartyListItem extends StatelessWidget {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          theme.colorScheme.surface.withValues(alpha: 0),
-                          theme.colorScheme.onSurface.withValues(alpha: 0.54),
+                          theme.colorScheme.surface.withValues(
+                            alpha: MinglitOpacity.none,
+                          ),
+                          theme.colorScheme.onSurface.withValues(
+                            alpha: MinglitOpacity.mediumEmphasis,
+                          ),
                         ],
                         stops: const [0.6, 1.0],
                       ),
@@ -176,7 +180,9 @@ class PartyListItem extends StatelessWidget {
       child: Center(
         child: Icon(
           Icons.party_mode,
-          color: theme.colorScheme.surface.withValues(alpha: 0.2),
+          color: theme.colorScheme.surface.withValues(
+            alpha: MinglitOpacity.subtle,
+          ),
           size: MinglitIconSize.xlarge * 1.5,
         ),
       ),
@@ -211,7 +217,9 @@ class PartyListItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(MinglitRadius.small),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.26),
+            color: theme.shadowColor.withValues(
+              alpha: MinglitOpacity.lowEmphasis,
+            ),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -243,10 +251,14 @@ class _InfoChip extends StatelessWidget {
         vertical: MinglitSpacing.xxsmall,
       ),
       decoration: BoxDecoration(
-        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+        color: theme.colorScheme.onSurface.withValues(
+          alpha: MinglitOpacity.strong,
+        ),
         borderRadius: BorderRadius.circular(MinglitRadius.chip),
         border: Border.all(
-          color: theme.colorScheme.surface.withValues(alpha: 0.2),
+          color: theme.colorScheme.surface.withValues(
+            alpha: MinglitOpacity.subtle,
+          ),
           width: 0.5,
         ),
       ),

@@ -30,7 +30,9 @@ class MinglitEditableSection extends StatelessWidget {
         padding: const EdgeInsets.all(MinglitSpacing.medium),
         decoration: BoxDecoration(
           // Subtle background instead of border
-          color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.5),
+          color: colorScheme.surfaceContainerLowest.withValues(
+            alpha: MinglitOpacity.strong,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,7 +54,9 @@ class MinglitEditableSection extends StatelessWidget {
                     child: Icon(
                       Icons.edit_outlined,
                       size: 16,
-                      color: colorScheme.outline.withValues(alpha: 0.5),
+                      color: colorScheme.outline.withValues(
+                        alpha: MinglitOpacity.strong,
+                      ),
                     ),
                   ),
               ],

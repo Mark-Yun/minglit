@@ -188,7 +188,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                               end: Alignment.bottomCenter,
                               colors: [
                                 MinglitColors.textPrimary.withValues(
-                                  alpha: 0.45,
+                                  alpha: MinglitOpacity.gradient,
                                 ),
                                 MinglitColors.transparent,
                               ],
@@ -233,9 +233,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                                   .blockPartner(partner.id);
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('파트너가 차단되었습니다'),
-                                  ),
+                                  const SnackBar(content: Text('파트너가 차단되었습니다')),
                                 );
                               }
                             }
@@ -444,9 +442,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
 
               // Bottom padding for last section scrollability
               SliverToBoxAdapter(
-                child: SizedBox(
-                  height: MediaQuery.sizeOf(context).height / 2,
-                ),
+                child: SizedBox(height: MediaQuery.sizeOf(context).height / 2),
               ),
             ],
           ),

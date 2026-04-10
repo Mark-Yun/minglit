@@ -8,17 +8,32 @@ part of 'recurrence_settings_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Manages the recurrence settings UI state for the event creation flow.
+///
+/// The controller is scoped to the event-create screen via [ProviderScope.overrides]
+/// or via its auto-dispose lifetime. It computes preview dates without any
+/// repository calls — submission is handled by EventCreateController.submit.
 
 @ProviderFor(RecurrenceSettingsController)
 const recurrenceSettingsControllerProvider =
     RecurrenceSettingsControllerProvider._();
 
+/// Manages the recurrence settings UI state for the event creation flow.
+///
+/// The controller is scoped to the event-create screen via [ProviderScope.overrides]
+/// or via its auto-dispose lifetime. It computes preview dates without any
+/// repository calls — submission is handled by EventCreateController.submit.
 final class RecurrenceSettingsControllerProvider
     extends
         $NotifierProvider<
           RecurrenceSettingsController,
           RecurrenceSettingsState
         > {
+  /// Manages the recurrence settings UI state for the event creation flow.
+  ///
+  /// The controller is scoped to the event-create screen via [ProviderScope.overrides]
+  /// or via its auto-dispose lifetime. It computes preview dates without any
+  /// repository calls — submission is handled by EventCreateController.submit.
   const RecurrenceSettingsControllerProvider._()
     : super(
         from: null,
@@ -47,7 +62,13 @@ final class RecurrenceSettingsControllerProvider
 }
 
 String _$recurrenceSettingsControllerHash() =>
-    r'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0';
+    r'a5eebab1bdcdbdc9b821114f1677237e89c71239';
+
+/// Manages the recurrence settings UI state for the event creation flow.
+///
+/// The controller is scoped to the event-create screen via [ProviderScope.overrides]
+/// or via its auto-dispose lifetime. It computes preview dates without any
+/// repository calls — submission is handled by EventCreateController.submit.
 
 abstract class _$RecurrenceSettingsController
     extends $Notifier<RecurrenceSettingsState> {
