@@ -46,7 +46,10 @@ class _PartyImageEditorState extends State<PartyImageEditor> {
     }
 
     try {
-      final images = await _imagePicker.pickMultiImage();
+      // Fix #1230: requestFullMetadata: false로 iOS EXIF/GPS 메타데이터 접근 최소화
+      final images = await _imagePicker.pickMultiImage(
+        requestFullMetadata: false,
+      );
       if (images.isNotEmpty) {
         setState(() {
           _newFiles.addAll(images);
