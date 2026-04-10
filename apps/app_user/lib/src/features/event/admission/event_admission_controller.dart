@@ -17,19 +17,19 @@ class EventAdmissionController extends _$EventAdmissionController {
   FutureOr<AdmissionState> build(Event event) async {
     // Fix #1208: Check event status before any user-state logic.
     // Completed/cancelled events show ended-state CTAs regardless of login/eligibility.
-    final isEnded =
-        event.status == 'completed' || event.status == 'cancelled';
+    final isEnded = event.status == 'completed' || event.status == 'cancelled';
     if (isEnded) {
       final currentUser = ref.watch(currentUserProvider);
       if (currentUser == null) {
         return AdmissionState(status: EventAdmissionStatus.eventEnded);
       }
 
-      final existingApp =
-          await ref.watch(eventRepositoryProvider).getApplication(
-                eventId: event.id,
-                userId: currentUser.id,
-              );
+      final existingApp = await ref
+          .watch(eventRepositoryProvider)
+          .getApplication(
+            eventId: event.id,
+            userId: currentUser.id,
+          );
 
       // Fix #1208: pending(결제 미완료) 신청은 참여로 간주하지 않음
       // rejected: user did not participate — treat same as cancelled for ended events
@@ -222,8 +222,7 @@ class EventAdmissionController extends _$EventAdmissionController {
           builder: (sheetContext) => SafeArea(
             child: Padding(
               padding: EdgeInsets.only(
-                bottom:
-                    MediaQuery.of(sheetContext).viewPadding.bottom,
+                bottom: MediaQuery.of(sheetContext).viewPadding.bottom,
               ),
               // ResultsContent only reads activeEvent.event (title)
               // and myMatchesProvider(event.id) — participantStatus is unused.
