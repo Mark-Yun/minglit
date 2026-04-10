@@ -494,9 +494,9 @@ class _EventCardSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ColoredBox(
       color: Theme.of(context).colorScheme.surface,
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
+        children: [
           AspectRatio(
             aspectRatio: 16 / 9,
             child: MinglitSkeleton(radius: MinglitRadius.card),
