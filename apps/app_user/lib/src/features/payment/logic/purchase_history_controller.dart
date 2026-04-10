@@ -33,9 +33,14 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
   }
 
   bool canCancel(EventApplication application) {
+    // Fix #1235: 이벤트 시작 후 예매 취소 버튼 활성화 — startTime 체크 추가
+    final eventStartTime = application.event?.startTime;
+    final eventNotStarted =
+        eventStartTime != null && DateTime.now().isBefore(eventStartTime);
     return isActiveTicket(application) &&
         isRefundReady(application) &&
-        application.refundStatus == 'none';
+        application.refundStatus == 'none' &&
+        eventNotStarted;
   }
 
   RefundCalculation calculateRefund({
