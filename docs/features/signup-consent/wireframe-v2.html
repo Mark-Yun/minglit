@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>밍릿 — 회원가입 동의 리디자인 v2</title>
+<style>
+  /* ===== Minglit Design Tokens ===== */
+  :root {
+    --color-background: #FFFFFF;
+    --color-primary: #9900FF;
+    --color-primary-light: rgba(153, 0, 255, 0.08);
+    --color-primary-container: rgba(153, 0, 255, 0.12);
+    --color-secondary: #FF9900;
+    --color-surface: #F9FAFB;
+    --color-error: #EF4444;
+    --color-text-primary: #111827;
+    --color-text-secondary: #4B5563;
+    --color-text-tertiary: #9CA3AF;
+    --color-success: #22C55E;
+    --color-divider: #E5E7EB;
+    --color-divider-light: #F3F4F6;
+    --color-scrim: rgba(0,0,0,0.5);
+
+    --sp-xxsmall: 2px;
+    --sp-xsmall: 4px;
+    --sp-xsmall2: 6px;
+    --sp-small: 8px;
+    --sp-sm: 12px;
+    --sp-medium: 16px;
+    --sp-large: 24px;
+    --sp-xlarge: 32px;
+    --sp-screen-edge: 20px;
+
+    --radius-small: 8px;
+    --radius-button: 12px;
+    --radius-card: 16px;
+    --radius-chip: 100px;
+
+    --font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-family);
+    background: #E5E7EB;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 40px;
+    padding: 40px;
+  }
+
+  /* ===== Screen Frame ===== */
+  .screen-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .screen-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    text-align: center;
+  }
+  .screen-sublabel {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    text-align: center;
+    margin-top: -8px;
+  }
+  .version-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+    padding: 2px 8px;
+    border-radius: var(--radius-chip);
+    margin-bottom: 4px;
+  }
+  .phone-frame {
+    width: 375px;
+    height: 812px;
+    background: var(--color-background);
+    border-radius: 40px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ===== Status Bar ===== */
+  .status-bar {
+    height: 54px;
+    background: var(--color-background);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    flex-shrink: 0;
+  }
+
+  /* ===== Content ===== */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .content-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--sp-xlarge) var(--sp-screen-edge) var(--sp-large);
+  }
+
+  /* ===== Header ===== */
+  .page-header {
+    margin-bottom: var(--sp-xlarge);
+  }
+  .page-header .greeting {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--color-text-primary);
+    letter-spacing: -0.5px;
+  }
+  .page-header .subtitle {
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.6;
+    color: var(--color-text-secondary);
+    margin-top: 8px;
+  }
+
+  /* ===== Select All ===== */
+  .select-all {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: var(--color-primary-light);
+    border-radius: var(--radius-card);
+    cursor: pointer;
+    margin-bottom: 8px;
+    transition: background 0.15s;
+    border: 1.5px solid transparent;
+  }
+  .select-all.checked {
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+  }
+  .select-all .check-circle {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--color-text-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .select-all.checked .check-circle {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+  }
+  .select-all.checked .check-circle::after {
+    content: '✓';
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .select-all .label-group {
+    flex: 1;
+  }
+  .select-all .label-group .main {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+  .select-all .label-group .sub {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-top: 2px;
+  }
+
+  /* ===== Divider ===== */
+  .section-divider {
+    height: 1px;
+    background: var(--color-divider-light);
+    margin: 12px 0;
+  }
+
+  /* ===== Consent Item ===== */
+  .consent-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 4px;
+    cursor: pointer;
+    border-radius: var(--radius-small);
+    transition: background 0.1s;
+  }
+  .consent-item:hover {
+    background: var(--color-surface);
+  }
+  .consent-item .check-circle {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--color-divider);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all 0.15s;
+  }
+  .consent-item.checked .check-circle {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+  }
+  .consent-item.checked .check-circle::after {
+    content: '✓';
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .consent-item .item-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .consent-item .item-title-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .consent-item .tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: var(--radius-chip);
+    flex-shrink: 0;
+    letter-spacing: 0.2px;
+  }
+  .consent-item .tag.required {
+    color: var(--color-primary);
+    background: var(--color-primary-container);
+  }
+  .consent-item .tag.optional {
+    color: var(--color-text-tertiary);
+    background: var(--color-divider-light);
+  }
+  .consent-item .item-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    line-height: 1.4;
+  }
+  .consent-item .item-desc {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-top: 3px;
+    line-height: 1.5;
+  }
+  .consent-item .view-link {
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-tertiary);
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-top: 2px;
+    padding: 4px 0;
+  }
+  .consent-item .view-link .chevron {
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  /* ===== Footer Note ===== */
+  .footer-note {
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+    padding: 8px 4px 0;
+    line-height: 1.5;
+  }
+
+  /* ===== Bottom CTA ===== */
+  .bottom-cta {
+    padding: 12px var(--sp-screen-edge);
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 20px));
+    border-top: 0.5px solid var(--color-divider-light);
+    flex-shrink: 0;
+  }
+  .cta-button {
+    width: 100%;
+    height: 54px;
+    border: none;
+    border-radius: var(--radius-button);
+    font-size: 16px;
+    font-weight: 700;
+    font-family: var(--font-family);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: -0.2px;
+  }
+  .cta-button.enabled {
+    background: var(--color-primary);
+    color: white;
+    box-shadow: 0 2px 12px rgba(153, 0, 255, 0.25);
+  }
+  .cta-button.disabled {
+    background: var(--color-divider-light);
+    color: var(--color-text-tertiary);
+    cursor: not-allowed;
+  }
+
+  /* ===== Comparison Annotation ===== */
+  .annotation {
+    position: absolute;
+    background: #FEF3C7;
+    border: 1px solid #FDE68A;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: #92400E;
+    line-height: 1.4;
+    max-width: 160px;
+    z-index: 10;
+  }
+  .annotation::before {
+    content: '💡';
+    margin-right: 4px;
+  }
+
+  /* ===== Before/After Header ===== */
+  .comparison-header {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .comparison-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 8px;
+  }
+  .comparison-header p {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* ===== Issue List ===== */
+  .issues-panel {
+    width: 100%;
+    max-width: 800px;
+    background: white;
+    border-radius: var(--radius-card);
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .issues-panel h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .issues-panel .issue-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .issue-card {
+    display: flex;
+    gap: 10px;
+    padding: 12px;
+    background: var(--color-surface);
+    border-radius: var(--radius-small);
+  }
+  .issue-card .number {
+    width: 22px;
+    height: 22px;
+    background: var(--color-error);
+    color: white;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .issue-card .number.fix {
+    background: var(--color-success);
+  }
+  .issue-card .issue-text {
+    font-size: 13px;
+    color: var(--color-text-primary);
+    line-height: 1.5;
+  }
+  .issue-card .issue-text strong {
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== Issues Panel ===== -->
+<div class="issues-panel">
+  <h2>🔍 현재 이용약관 동의 화면 UX 이슈 분석</h2>
+  <div class="issue-grid">
+    <div class="issue-card">
+      <div class="number">1</div>
+      <div class="issue-text"><strong>Card soup:</strong> 각 항목이 개별 Card로 감싸져 시각적 노이즈가 과다. 카드 테두리/그림자 반복으로 시선이 분산됨</div>
+    </div>
+    <div class="issue-card">
+      <div class="number">2</div>
+      <div class="issue-text"><strong>SwitchListTile:</strong> "전체 동의"에 시스템 설정 스타일 Switch 사용 → 동의 행위라기보다 설정 토글처럼 보임</div>
+    </div>
+    <div class="issue-card">
+      <div class="number">3</div>
+      <div class="issue-text"><strong>Checkbox 정렬:</strong> Material 기본 Checkbox의 내장 패딩으로 텍스트와 정렬이 어긋남</div>
+    </div>
+    <div class="issue-card">
+      <div class="number">4</div>
+      <div class="issue-text"><strong>"보기" 버튼:</strong> TextButton이 카드 우상단에 떠있어 각 항목마다 높이가 달라지고 시각적 일관성 부족</div>
+    </div>
+    <div class="issue-card">
+      <div class="number">5</div>
+      <div class="issue-text"><strong>브랜드 표현 부재:</strong> 보라색 primary가 태그에만 살짝 사용됨. 밍릿다운 개성이 없는 기본 Material 느낌</div>
+    </div>
+    <div class="issue-card">
+      <div class="number">6</div>
+      <div class="issue-text"><strong>마지막 항목 잘림:</strong> "마케팅 정보 수신 동의"가 CTA 버튼에 가려 스크롤 필요. 시각적 단서 없음</div>
+    </div>
+    <div class="issue-card">
+      <div class="number">7</div>
+      <div class="issue-text"><strong>필수/선택 구분 약함:</strong> 작은 태그만으로 구분 → 유저가 어떤 것이 필수인지 한눈에 파악 어려움</div>
+    </div>
+    <div class="issue-card">
+      <div class="number">8</div>
+      <div class="issue-text"><strong>CTA 비활성 상태:</strong> 회색 배경 + 회색 텍스트로 "죽은" 느낌. 활성 상태와의 시각적 격차가 커서 불안감 유발</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Before: Current Design ===== -->
+<div class="screen-wrapper">
+  <div class="screen-label">❌ 현재 (Before)</div>
+  <div class="screen-sublabel">Material 기본 위젯 조합, 카드 과다 사용</div>
+  <div class="phone-frame" style="background: var(--color-surface);">
+    <div class="status-bar">9:41</div>
+
+    <div class="content">
+      <div class="content-scroll">
+        <!-- Header -->
+        <div style="margin-bottom: 24px;">
+          <div style="font-size: 24px; font-weight: 700; color: var(--color-text-primary);">환영합니다!</div>
+          <div style="font-size: 16px; color: var(--color-text-secondary); margin-top: 8px; line-height: 1.5;">밍릿 이용을 시작하기 전에 꼭 필요한 약관을 확인해주세요.</div>
+        </div>
+
+        <!-- Select All Card (Switch style - current) -->
+        <div style="background: white; border-radius: 16px; padding: 16px; margin-bottom: 16px; border: 1px solid var(--color-divider);">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 16px; font-weight: 700;">전체 동의</div>
+              <div style="font-size: 14px; color: var(--color-text-secondary); margin-top: 4px;">필수와 선택 약관을 한 번에 설정할 수 있어요.</div>
+            </div>
+            <div style="width: 50px; height: 28px; background: #CCC; border-radius: 14px; position: relative;">
+              <div style="width: 24px; height: 24px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item Cards (current style - heavy cards) -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Item 1 -->
+          <div style="background: white; border-radius: 16px; padding: 16px; border: 1px solid var(--color-divider);">
+            <div style="display: flex; gap: 12px; align-items: flex-start;">
+              <div style="width: 20px; height: 20px; border: 2px solid #CCC; border-radius: 4px; margin-top: 2px; flex-shrink: 0;"></div>
+              <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span style="font-size: 11px; color: var(--color-primary); background: var(--color-primary-container); padding: 1px 6px; border-radius: 100px; font-weight: 600;">필수</span>
+                  <span style="font-size: 14px; font-weight: 500;">서비스 이용약관</span>
+                </div>
+                <div style="font-size: 14px; color: var(--color-text-secondary); margin-top: 4px;">계정 생성과 서비스 이용을 위한 기본 약관이에요.</div>
+              </div>
+              <button style="border: none; background: none; color: var(--color-primary); font-size: 14px; font-weight: 700; cursor: pointer; padding: 4px;">보기</button>
+            </div>
+          </div>
+
+          <!-- Item 2 -->
+          <div style="background: white; border-radius: 16px; padding: 16px; border: 1px solid var(--color-divider);">
+            <div style="display: flex; gap: 12px; align-items: flex-start;">
+              <div style="width: 20px; height: 20px; border: 2px solid #CCC; border-radius: 4px; margin-top: 2px; flex-shrink: 0;"></div>
+              <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span style="font-size: 11px; color: var(--color-primary); background: var(--color-primary-container); padding: 1px 6px; border-radius: 100px; font-weight: 600;">필수</span>
+                  <span style="font-size: 14px; font-weight: 500;">개인정보 수집·이용 동의</span>
+                </div>
+                <div style="font-size: 14px; color: var(--color-text-secondary); margin-top: 4px;">회원가입과 맞춤형 서비스 제공에 필요한 정보를 수집해요.</div>
+              </div>
+              <button style="border: none; background: none; color: var(--color-primary); font-size: 14px; font-weight: 700; cursor: pointer; padding: 4px;">보기</button>
+            </div>
+          </div>
+
+          <!-- Item 3 -->
+          <div style="background: white; border-radius: 16px; padding: 16px; border: 1px solid var(--color-divider);">
+            <div style="display: flex; gap: 12px; align-items: flex-start;">
+              <div style="width: 20px; height: 20px; border: 2px solid #CCC; border-radius: 4px; margin-top: 2px; flex-shrink: 0;"></div>
+              <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span style="font-size: 11px; color: var(--color-primary); background: var(--color-primary-container); padding: 1px 6px; border-radius: 100px; font-weight: 600;">필수</span>
+                  <span style="font-size: 14px; font-weight: 500;">만 14세 이상 확인</span>
+                </div>
+                <div style="font-size: 14px; color: var(--color-text-secondary); margin-top: 4px;">만 14세 이상만 회원가입할 수 있어요.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Item 4 -->
+          <div style="background: white; border-radius: 16px; padding: 16px; border: 1px solid var(--color-divider);">
+            <div style="display: flex; gap: 12px; align-items: flex-start;">
+              <div style="width: 20px; height: 20px; border: 2px solid #CCC; border-radius: 4px; margin-top: 2px; flex-shrink: 0;"></div>
+              <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span style="font-size: 11px; color: var(--color-text-tertiary); background: var(--color-divider-light); padding: 1px 6px; border-radius: 100px; font-weight: 600;">선택</span>
+                  <span style="font-size: 14px; font-weight: 500;">본인인증(CI/DI) 수집 동의</span>
+                </div>
+                <div style="font-size: 14px; color: var(--color-text-secondary); margin-top: 4px;">본인 확인을 위해 CI/DI 정보를 수집해요.</div>
+              </div>
+              <button style="border: none; background: none; color: var(--color-primary); font-size: 14px; font-weight: 700; cursor: pointer; padding: 4px;">보기</button>
+            </div>
+          </div>
+
+          <!-- Item 5 (partially hidden) -->
+          <div style="background: white; border-radius: 16px; padding: 16px; border: 1px solid var(--color-divider); opacity: 0.5; clip-path: inset(0 0 40% 0);">
+            <div style="display: flex; gap: 12px; align-items: flex-start;">
+              <div style="width: 20px; height: 20px; border: 2px solid #CCC; border-radius: 4px; margin-top: 2px; flex-shrink: 0;"></div>
+              <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span style="font-size: 11px; color: var(--color-text-tertiary); background: var(--color-divider-light); padding: 1px 6px; border-radius: 100px; font-weight: 600;">선택</span>
+                  <span style="font-size: 14px; font-weight: 500;">마케팅 정보 수신 동의</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom CTA (current - disabled gray) -->
+      <div class="bottom-cta">
+        <button class="cta-button disabled">다 같이 시작하기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== After: Redesign (Unchecked State) ===== -->
+<div class="screen-wrapper">
+  <div class="version-tag">REDESIGN v2</div>
+  <div class="screen-label">✨ 리디자인 — 초기 상태</div>
+  <div class="screen-sublabel">카드 제거, 원형 체크, 플랫 리스트, 브랜드 강화</div>
+  <div class="phone-frame">
+    <div class="status-bar">9:41</div>
+
+    <div class="content">
+      <div class="content-scroll">
+        <!-- Header -->
+        <div class="page-header">
+          <div class="greeting">환영합니다!</div>
+          <div class="subtitle">서비스 이용을 위해 약관에 동의해주세요.</div>
+        </div>
+
+        <!-- Select All -->
+        <div class="select-all" onclick="this.classList.toggle('checked')">
+          <div class="check-circle"></div>
+          <div class="label-group">
+            <div class="main">전체 동의</div>
+            <div class="sub">필수와 선택 약관을 한 번에 동의해요</div>
+          </div>
+        </div>
+
+        <div class="section-divider" style="margin: 16px 0;"></div>
+
+        <!-- Consent Items -->
+        <!-- Item 1 -->
+        <div class="consent-item" onclick="this.classList.toggle('checked')">
+          <div class="check-circle"></div>
+          <div class="item-content">
+            <div class="item-title-row">
+              <span class="tag required">필수</span>
+              <span class="item-title">서비스 이용약관</span>
+            </div>
+            <div class="item-desc">계정 생성과 서비스 이용을 위한 기본 약관이에요</div>
+          </div>
+          <div class="view-link">보기 <span class="chevron">›</span></div>
+        </div>
+
+        <!-- Item 2 -->
+        <div class="consent-item" onclick="this.classList.toggle('checked')">
+          <div class="check-circle"></div>
+          <div class="item-content">
+            <div class="item-title-row">
+              <span class="tag required">필수</span>
+              <span class="item-title">개인정보 수집·이용 동의</span>
+            </div>
+            <div class="item-desc">회원가입과 맞춤형 서비스 제공에 필요한 정보를 수집해요</div>
+          </div>
+          <div class="view-link">보기 <span class="chevron">›</span></div>
+        </div>
+
+        <!-- Item 3 -->
+        <div class="consent-item" onclick="this.classList.toggle('checked')">
+          <div class="check-circle"></div>
+          <div class="item-content">
+            <div class="item-title-row">
+              <span class="tag required">필수</span>
+              <span class="item-title">만 14세 이상 확인</span>
+            </div>
+            <div class="item-desc">만 14세 이상만 회원가입할 수 있어요</div>
+          </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- Item 4 -->
+        <div class="consent-item" onclick="this.classList.toggle('checked')">
+          <div class="check-circle"></div>
+          <div class="item-content">
+            <div class="item-title-row">
+              <span class="tag optional">선택</span>
+              <span class="item-title">본인인증(CI/DI) 수집 동의</span>
+            </div>
+            <div class="item-desc">본인 확인을 위해 CI/DI 정보를 수집해요</div>
+          </div>
+          <div class="view-link">보기 <span class="chevron">›</span></div>
+        </div>
+
+        <!-- Item 5 -->
+        <div class="consent-item" onclick="this.classList.toggle('checked')">
+          <div class="check-circle"></div>
+          <div class="item-content">
+            <div class="item-title-row">
+              <span class="tag optional">선택</span>
+              <span class="item-title">마케팅 정보 수신 동의</span>
+            </div>
+            <div class="item-desc">새 이벤트와 혜택 소식을 푸시나 이메일로 받아볼 수 있어요</div>
+          </div>
+          <div class="view-link">보기 <span class="chevron">›</span></div>
+        </div>
+
+        <!-- Footer Note -->
+        <div class="footer-note">
+          선택 항목에 동의하지 않아도 서비스 이용에 영향이 없습니다.
+        </div>
+      </div>
+
+      <!-- Bottom CTA (disabled) -->
+      <div class="bottom-cta">
+        <button class="cta-button disabled">동의하고 시작하기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== After: Redesign (All Checked State) ===== -->
+<div class="screen-wrapper">
+  <div class="version-tag">REDESIGN v2</div>
+  <div class="screen-label">✨ 리디자인 — 전체 동의 완료</div>
+  <div class="screen-sublabel">모든 항목 체크됨, CTA 활성 상태</div>
+  <div class="phone-frame">
+    <div class="status-bar">9:41</div>
+
+    <div class="content">
+      <div class="content-scroll">
+        <!-- Header -->
+        <div class="page-header">
+          <div class="greeting">환영합니다!</div>
+          <div class="subtitle">서비스 이용을 위해 약관에 동의해주세요.</div>
+        </div>
+
+        <!-- Select All (checked) -->
+        <div class="select-all checked">
+          <div class="check-circle"></div>
+          <div class="label-group">
+            <div class="main">전체 동의</div>
+            <div class="sub">필수와 선택 약관을 한 번에 동의해요</div>
+          </div>
+        </div>
+
+        <div class="section-divider" style="margin: 16px 0;"></div>
+
+        <!-- All items checked -->
+        <div class="consent-item checked">
+          <div class="check-circle"></div>
+          <div class="item-content">
+            <div class="item-title-row">
+              <span class="tag required">필수</span>
+              <span class="item-title">서비스 이용약관</span>
+            </div>
+            <div class="item-desc">계정 생성과 서비스 이용을 위한 기본 약관이에요</div>
+          </div>
+          <div class="view-link">보기 <span class="chevron">›</span></div>
+        </div>
+
+        <div class="consent-item checked">
+          <div class="check-circle"></div>
+          <div class="item-content">
+            <div class="item-title-row">
+              <span class="tag required">필수</span>
+              <span class="item-title">개인정보 수집·이용 동의</span>
+            </div>
+            <div class="item-desc">회원가입과 맞춤형 서비스 제공에 필요한 정보를 수집해요</div>
+          </div>
+          <div class="view-link">보기 <span class="chevron">›</span></div>
+        </div>
+
+        <div class="consent-item checked">
+          <div class="check-circle"></div>
+          <div class="item-content">
+            <div class="item-title-row">
+              <span class="tag required">필수</span>
+              <span class="item-title">만 14세 이상 확인</span>
+            </div>
+            <div class="item-desc">만 14세 이상만 회원가입할 수 있어요</div>
+          </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="consent-item checked">
+          <div class="check-circle"></div>
+          <div class="item-content">
+            <div class="item-title-row">
+              <span class="tag optional">선택</span>
+              <span class="item-title">본인인증(CI/DI) 수집 동의</span>
+            </div>
+            <div class="item-desc">본인 확인을 위해 CI/DI 정보를 수집해요</div>
+          </div>
+          <div class="view-link">보기 <span class="chevron">›</span></div>
+        </div>
+
+        <div class="consent-item checked">
+          <div class="check-circle"></div>
+          <div class="item-content">
+            <div class="item-title-row">
+              <span class="tag optional">선택</span>
+              <span class="item-title">마케팅 정보 수신 동의</span>
+            </div>
+            <div class="item-desc">새 이벤트와 혜택 소식을 푸시나 이메일로 받아볼 수 있어요</div>
+          </div>
+          <div class="view-link">보기 <span class="chevron">›</span></div>
+        </div>
+
+        <!-- Footer Note -->
+        <div class="footer-note">
+          선택 항목에 동의하지 않아도 서비스 이용에 영향이 없습니다.
+        </div>
+      </div>
+
+      <!-- Bottom CTA (enabled) -->
+      <div class="bottom-cta">
+        <button class="cta-button enabled">동의하고 시작하기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Improvement Summary ===== -->
+<div class="issues-panel">
+  <h2>✅ 리디자인 개선 사항</h2>
+  <div class="issue-grid">
+    <div class="issue-card">
+      <div class="number fix">1</div>
+      <div class="issue-text"><strong>카드 → 플랫 리스트:</strong> 개별 Card 제거. 깔끔한 리스트 형태로 시각적 노이즈 제거. 토스/당근 스타일</div>
+    </div>
+    <div class="issue-card">
+      <div class="number fix">2</div>
+      <div class="issue-text"><strong>Switch → 원형 체크:</strong> 전체 동의도 통일된 원형 체크 UI 사용. 동의 행위에 맞는 시각적 메타포</div>
+    </div>
+    <div class="issue-card">
+      <div class="number fix">3</div>
+      <div class="issue-text"><strong>원형 체크박스:</strong> 커스텀 CircleCheckbox로 정렬 일관성 확보. 체크 시 보라색 fill + 애니메이션</div>
+    </div>
+    <div class="issue-card">
+      <div class="number fix">4</div>
+      <div class="issue-text"><strong>"보기" → 인라인 링크:</strong> 우측에 "보기 ›" 형태로 자연스럽게 배치. 높이 일관성 확보</div>
+    </div>
+    <div class="issue-card">
+      <div class="number fix">5</div>
+      <div class="issue-text"><strong>브랜드 강화:</strong> 전체 동의 배경에 보라색 틴트, 체크 시 보라색 circle fill, CTA 보라색 + 글로우 섀도</div>
+    </div>
+    <div class="issue-card">
+      <div class="number fix">6</div>
+      <div class="issue-text"><strong>전체 항목 노출:</strong> 플랫 리스트로 높이 절약 → 모든 항목이 스크롤 없이 화면에 노출</div>
+    </div>
+    <div class="issue-card">
+      <div class="number fix">7</div>
+      <div class="issue-text"><strong>필수/선택 구분 강화:</strong> 필수와 선택 사이에 구분선 추가. 필수 태그는 보라색, 선택은 회색으로 차별화</div>
+    </div>
+    <div class="issue-card">
+      <div class="number fix">8</div>
+      <div class="issue-text"><strong>CTA 텍스트 변경:</strong> "다 같이 시작하기" → "동의하고 시작하기" (행위의 의미 명확화). 활성 시 보라색 글로우</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
