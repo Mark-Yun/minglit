@@ -36,6 +36,21 @@ extension AdmissionActions on EventAdmissionController {
           label: '심사 반려 (사유 확인)',
           style: AdmissionButtonStyle.destructive,
         );
+      // Fix #1208: Ended event button configs
+      case EventAdmissionStatus.eventEnded:
+        return const AdmissionButtonConfig(
+          label: '종료된 이벤트',
+          enabled: false,
+          style: AdmissionButtonStyle.disabled,
+        );
+      case EventAdmissionStatus.eventEndedWithResults:
+        return const AdmissionButtonConfig(label: '매칭 결과 보기');
+      case EventAdmissionStatus.eventEndedParticipated:
+        return const AdmissionButtonConfig(
+          label: '참여 완료',
+          enabled: false,
+          style: AdmissionButtonStyle.disabled,
+        );
     }
   }
 }

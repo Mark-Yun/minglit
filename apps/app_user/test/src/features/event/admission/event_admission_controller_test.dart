@@ -9,6 +9,7 @@ import '../../../../utils/test_utils.dart';
 void main() {
   late MockEventRepository mockEventRepo;
   late MockUserRepository mockUserRepo;
+  late MockMatchingRepository mockMatchingRepo;
   late MockUser mockUser;
 
   // --- Test Data ---
@@ -43,6 +44,16 @@ void main() {
     ],
   );
 
+  final completedEvent = testEvent.copyWith(status: 'completed');
+  final cancelledEvent = testEvent.copyWith(status: 'cancelled');
+
+  final testMatchPair = MatchPair(
+    matchId: 'match_1',
+    eventId: 'event_1',
+    partnerId: 'partner_1',
+    matchedAt: DateTime.now(),
+  );
+
   final testEventWithQualification = testEvent.copyWith(
     entryGroups: [
       const EntryGroup(
@@ -59,6 +70,7 @@ void main() {
   setUp(() {
     mockEventRepo = MockEventRepository();
     mockUserRepo = MockUserRepository();
+    mockMatchingRepo = MockMatchingRepository();
     mockUser = MockUser();
     when(() => mockUser.id).thenReturn('user_1');
     when(() => mockEventRepo.getEventById(any())).thenAnswer(
@@ -363,5 +375,312 @@ void main() {
         expect(state.status, EventAdmissionStatus.applied);
       },
     );
+  });
+
+  group('Ended event states', () {
+    test(
+      'State is eventEnded when event is completed and user is not logged in',
+      () async {
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => null),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+            matchingRepositoryProvider.overrideWith(
+              (ref) => mockMatchingRepo,
+            ),
+          ],
+        );
+
+        final state = await container.read(
+          eventAdmissionControllerProvider(completedEvent).future,
+        );
+        expect(state.status, EventAdmissionStatus.eventEnded);
+      },
+    );
+
+    test(
+      'State is eventEnded when event is cancelled and user is not logged in',
+      () async {
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => null),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+            matchingRepositoryProvider.overrideWith(
+              (ref) => mockMatchingRepo,
+            ),
+          ],
+        );
+
+        final state = await container.read(
+          eventAdmissionControllerProvider(cancelledEvent).future,
+        );
+        expect(state.status, EventAdmissionStatus.eventEnded);
+      },
+    );
+
+    test(
+      'State is eventEnded when event is completed and user has no application',
+      () async {
+        when(
+          () => mockEventRepo.getApplication(
+            eventId: any(named: 'eventId'),
+            userId: any(named: 'userId'),
+          ),
+        ).thenAnswer((_) async => null);
+
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+            matchingRepositoryProvider.overrideWith(
+              (ref) => mockMatchingRepo,
+            ),
+          ],
+        );
+
+        final state = await container.read(
+          eventAdmissionControllerProvider(completedEvent).future,
+        );
+        expect(state.status, EventAdmissionStatus.eventEnded);
+      },
+    );
+
+    test(
+      'State is eventEnded when event is completed and application was cancelled',
+      () async {
+        when(
+          () => mockEventRepo.getApplication(
+            eventId: any(named: 'eventId'),
+            userId: any(named: 'userId'),
+          ),
+        ).thenAnswer(
+          (_) async => EventApplication(
+            id: 'app_1',
+            eventId: 'event_1',
+            ticketId: 'ticket_1',
+            userId: 'user_1',
+            status: 'cancelled',
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+            matchingRepositoryProvider.overrideWith(
+              (ref) => mockMatchingRepo,
+            ),
+          ],
+        );
+
+        final state = await container.read(
+          eventAdmissionControllerProvider(completedEvent).future,
+        );
+        expect(state.status, EventAdmissionStatus.eventEnded);
+      },
+    );
+
+    test(
+      'State is eventEndedWithResults when completed event has match results',
+      () async {
+        when(
+          () => mockEventRepo.getApplication(
+            eventId: any(named: 'eventId'),
+            userId: any(named: 'userId'),
+          ),
+        ).thenAnswer(
+          (_) async => EventApplication(
+            id: 'app_1',
+            eventId: 'event_1',
+            ticketId: 'ticket_1',
+            userId: 'user_1',
+            status: 'confirmed',
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+        when(
+          () => mockMatchingRepo.getMyMatches(any()),
+        ).thenAnswer((_) async => [testMatchPair]);
+
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+            matchingRepositoryProvider.overrideWith(
+              (ref) => mockMatchingRepo,
+            ),
+          ],
+        );
+
+        final state = await container.read(
+          eventAdmissionControllerProvider(completedEvent).future,
+        );
+        expect(state.status, EventAdmissionStatus.eventEndedWithResults);
+      },
+    );
+
+    test(
+      'State is eventEndedParticipated when completed event has no match results',
+      () async {
+        when(
+          () => mockEventRepo.getApplication(
+            eventId: any(named: 'eventId'),
+            userId: any(named: 'userId'),
+          ),
+        ).thenAnswer(
+          (_) async => EventApplication(
+            id: 'app_1',
+            eventId: 'event_1',
+            ticketId: 'ticket_1',
+            userId: 'user_1',
+            status: 'confirmed',
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+        when(
+          () => mockMatchingRepo.getMyMatches(any()),
+        ).thenAnswer((_) async => []);
+
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+            matchingRepositoryProvider.overrideWith(
+              (ref) => mockMatchingRepo,
+            ),
+          ],
+        );
+
+        final state = await container.read(
+          eventAdmissionControllerProvider(completedEvent).future,
+        );
+        expect(state.status, EventAdmissionStatus.eventEndedParticipated);
+      },
+    );
+
+    test(
+      'Ended event short-circuits before eligibility — logged-in user without application',
+      () async {
+        // Even though user is verified and eligible, the ended-event check exits
+        // before any eligibility logic runs.
+        when(
+          () => mockEventRepo.getApplication(
+            eventId: any(named: 'eventId'),
+            userId: any(named: 'userId'),
+          ),
+        ).thenAnswer((_) async => null);
+
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+            matchingRepositoryProvider.overrideWith((ref) => mockMatchingRepo),
+          ],
+        );
+
+        final state = await container.read(
+          eventAdmissionControllerProvider(completedEvent).future,
+        );
+        expect(state.status, EventAdmissionStatus.eventEnded);
+
+        // Verify eligibility-related repos were never called
+        verifyNever(() => mockUserRepo.getUserProfile(any()));
+        verifyNever(() => mockUserRepo.getApprovedVerificationIds(any()));
+      },
+    );
+  });
+
+  group('Ended event button config', () {
+    test('eventEnded shows disabled button', () async {
+      final container = createContainer(
+        overrides: [
+          currentUserProvider.overrideWith((ref) => null),
+          eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+          userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+          matchingRepositoryProvider.overrideWith(
+            (ref) => mockMatchingRepo,
+          ),
+        ],
+      );
+
+      // Wait for the provider to resolve before accessing notifier
+      await container.read(
+        eventAdmissionControllerProvider(completedEvent).future,
+      );
+      final controller = container.read(
+        eventAdmissionControllerProvider(completedEvent).notifier,
+      );
+      final config = controller.buttonConfig(
+        AdmissionState(status: EventAdmissionStatus.eventEnded),
+      );
+
+      expect(config.label, '종료된 이벤트');
+      expect(config.enabled, isFalse);
+      expect(config.style, AdmissionButtonStyle.disabled);
+    });
+
+    test('eventEndedWithResults shows enabled button', () async {
+      final container = createContainer(
+        overrides: [
+          currentUserProvider.overrideWith((ref) => null),
+          eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+          userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+          matchingRepositoryProvider.overrideWith(
+            (ref) => mockMatchingRepo,
+          ),
+        ],
+      );
+
+      await container.read(
+        eventAdmissionControllerProvider(completedEvent).future,
+      );
+      final controller = container.read(
+        eventAdmissionControllerProvider(completedEvent).notifier,
+      );
+      final config = controller.buttonConfig(
+        AdmissionState(status: EventAdmissionStatus.eventEndedWithResults),
+      );
+
+      expect(config.label, '매칭 결과 보기');
+      expect(config.enabled, isTrue);
+    });
+
+    test('eventEndedParticipated shows disabled button', () async {
+      final container = createContainer(
+        overrides: [
+          currentUserProvider.overrideWith((ref) => null),
+          eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+          userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+          matchingRepositoryProvider.overrideWith(
+            (ref) => mockMatchingRepo,
+          ),
+        ],
+      );
+
+      await container.read(
+        eventAdmissionControllerProvider(completedEvent).future,
+      );
+      final controller = container.read(
+        eventAdmissionControllerProvider(completedEvent).notifier,
+      );
+      final config = controller.buttonConfig(
+        AdmissionState(status: EventAdmissionStatus.eventEndedParticipated),
+      );
+
+      expect(config.label, '참여 완료');
+      expect(config.enabled, isFalse);
+      expect(config.style, AdmissionButtonStyle.disabled);
+    });
   });
 }
