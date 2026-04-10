@@ -172,7 +172,8 @@ class PartnerDetailView extends ConsumerWidget {
     // Card width = ~2/3 of available width so ~1.5 cards show
     final screenWidth = MediaQuery.sizeOf(context).width;
     final cardWidth = (screenWidth - MinglitSpacing.large * 2) * 0.65;
-    const eventCardContentHeight = 64.0;
+    // Fix #1214: 64→68 — 폰트 메트릭 차이로 인한 1px 오버플로 해결
+    const eventCardContentHeight = 68.0;
 
     return SizedBox(
       // Keep enough room for the event card metadata row across CI font metrics.
@@ -180,7 +181,8 @@ class PartnerDetailView extends ConsumerWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: events.length,
-        separatorBuilder: (_, _) => const SizedBox(width: MinglitSpacing.small),
+        separatorBuilder: (_, __) =>
+            const SizedBox(width: MinglitSpacing.small),
         itemBuilder: (context, index) {
           final event = events[index];
           return SizedBox(
@@ -190,6 +192,7 @@ class PartnerDetailView extends ConsumerWidget {
               child: MinglitEventCard(
                 event: event,
                 onTap: onEventTap != null ? () => onEventTap!(event) : null,
+                showPartnerOverlay: false,
               ),
             ),
           );

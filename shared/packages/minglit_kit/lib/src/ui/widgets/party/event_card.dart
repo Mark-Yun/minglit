@@ -35,6 +35,7 @@ class MinglitEventCard extends StatelessWidget {
     super.key,
     this.onTap,
     @visibleForTesting this.currentTime,
+    this.showPartnerOverlay = true,
   }) : _isLoading = false;
 
   /// Named constructor for loading skeleton state.
@@ -43,6 +44,7 @@ class MinglitEventCard extends StatelessWidget {
     this.event,
     this.onTap,
     this.currentTime,
+    this.showPartnerOverlay = true,
   }) : _isLoading = true;
 
   /// Event data to render.
@@ -53,6 +55,10 @@ class MinglitEventCard extends StatelessWidget {
 
   /// Override current time for D-day calculation (testing only).
   final DateTime? currentTime;
+
+  // Fix #1214: 파트너 컨텍스트에서 파트너 배지 중복 표시 방지
+  /// Hide partner overlay when the card is already in partner context.
+  final bool showPartnerOverlay;
 
   /// Internal flag for loading state.
   final bool _isLoading;
@@ -195,8 +201,8 @@ class MinglitEventCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                  // Partner overlay (top-left) - only if partner exists
-                  if (partner != null)
+                  // Fix #1214: 파트너 컨텍스트에서 카드 내부 파트너 배지 중복 표시 방지
+                  if (partner != null && showPartnerOverlay)
                     Positioned(
                       top: MinglitSpacing.small,
                       left: MinglitSpacing.small,
