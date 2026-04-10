@@ -8,12 +8,15 @@ part of 'tag_event_list_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Manages the paginated list of events for a given tag.
 
 @ProviderFor(TagEventListController)
 const tagEventListControllerProvider = TagEventListControllerFamily._();
 
+/// Manages the paginated list of events for a given tag.
 final class TagEventListControllerProvider
     extends $AsyncNotifierProvider<TagEventListController, TagEventListState> {
+  /// Manages the paginated list of events for a given tag.
   const TagEventListControllerProvider._({
     required TagEventListControllerFamily super.from,
     required String super.argument,
@@ -52,7 +55,9 @@ final class TagEventListControllerProvider
 }
 
 String _$tagEventListControllerHash() =>
-    r'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0';
+    r'f5792a44345697cb69a03f64949cc7addf93d6db';
+
+/// Manages the paginated list of events for a given tag.
 
 final class TagEventListControllerFamily extends $Family
     with
@@ -72,12 +77,16 @@ final class TagEventListControllerFamily extends $Family
         isAutoDispose: true,
       );
 
+  /// Manages the paginated list of events for a given tag.
+
   TagEventListControllerProvider call(String tagId) =>
       TagEventListControllerProvider._(argument: tagId, from: this);
 
   @override
   String toString() => r'tagEventListControllerProvider';
 }
+
+/// Manages the paginated list of events for a given tag.
 
 abstract class _$TagEventListController
     extends $AsyncNotifier<TagEventListState> {
