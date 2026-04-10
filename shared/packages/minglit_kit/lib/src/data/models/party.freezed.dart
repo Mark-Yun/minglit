@@ -325,7 +325,8 @@ as double,
 mixin _$Party {
 
  String get id;@JsonKey(name: 'partner_id') String get partnerId; String get title;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'updated_at') DateTime get updatedAt;@JsonKey(name: 'location_id') String? get locationId;@JsonKey(includeToJson: false) Location? get location; Map<String, dynamic>? get description;// Quill Delta JSON
-@JsonKey(name: 'image_urls') List<String> get imageUrls;@JsonKey(name: 'contact_options') Map<String, dynamic> get contactOptions; Map<String, dynamic> get metadata;@JsonKey(name: 'required_verification_ids') List<String> get requiredVerificationIds;@JsonKey(name: 'min_confirmed_count') int get minConfirmedCount;@JsonKey(name: 'max_participants') int get maxParticipants; String get status; String get visibility;@JsonKey(includeToJson: false) List<TicketTemplate>? get ticketTemplates;@JsonKey(includeToJson: false) Partner? get partner;@JsonKey(name: 'entry_group_templates', includeToJson: false) List<EntryGroupTemplate>? get entryGroups;@JsonKey(includeToJson: false) List<Tag>? get tags;
+@JsonKey(name: 'image_urls') List<String> get imageUrls;@JsonKey(name: 'contact_options') Map<String, dynamic> get contactOptions; Map<String, dynamic> get metadata;@JsonKey(name: 'required_verification_ids') List<String> get requiredVerificationIds;@JsonKey(name: 'min_confirmed_count') int get minConfirmedCount;@JsonKey(name: 'max_participants') int get maxParticipants; String get status; String get visibility;@JsonKey(includeToJson: false) List<TicketTemplate>? get ticketTemplates;@JsonKey(includeToJson: false) Partner? get partner;@JsonKey(name: 'entry_group_templates', includeToJson: false) List<EntryGroupTemplate>? get entryGroups;// Tag Discovery (#1094-1096)
+@JsonKey(includeToJson: false) List<Tag>? get tags;
 /// Create a copy of Party
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -634,7 +635,9 @@ class _Party extends Party {
   return EqualUnmodifiableListView(value);
 }
 
+// Tag Discovery (#1094-1096)
  final  List<Tag>? _tags;
+// Tag Discovery (#1094-1096)
 @override@JsonKey(includeToJson: false) List<Tag>? get tags {
   final value = _tags;
   if (value == null) return null;
@@ -642,6 +645,7 @@ class _Party extends Party {
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(value);
 }
+
 
 /// Create a copy of Party
 /// with the given fields replaced by the non-null parameter values.

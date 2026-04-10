@@ -173,5 +173,22 @@ void main() {
       expect(json['is_featured'], isTrue);
       expect(json['usage_count'], 5);
     });
+
+    // Fix #1224: TrendingTagSection — recent_count 역직렬화 회귀 테스트
+    test('fromJson maps recent_count to recentCount', () {
+      final tag = Tag.fromJson({
+        'id': '1',
+        'name': 'test',
+        'recent_count': 42,
+      });
+
+      expect(tag.recentCount, 42);
+    });
+
+    test('recentCount defaults to 0 when recent_count absent', () {
+      final tag = Tag.fromJson({'id': '1', 'name': 'test'});
+
+      expect(tag.recentCount, 0);
+    });
   });
 }
