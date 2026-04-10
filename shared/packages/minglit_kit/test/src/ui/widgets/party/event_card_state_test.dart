@@ -181,7 +181,7 @@ void main() {
 
   // Fix #1214: 파트너 컨텍스트에서 카드 내부 파트너 배지 중복 표시 방지 — 회귀 테스트
   group('EventCard showPartnerOverlay (Fix #1214)', () {
-    final partner = Partner(id: 'partner-1', name: '테스트 파트너');
+    const partner = Partner(id: 'partner-1', name: '테스트 파트너');
     final partyWithPartner = Party(
       id: 'party-1',
       partnerId: 'partner-1',
@@ -213,7 +213,6 @@ void main() {
             body: MinglitEventCard(
               event: eventWithPartner,
               currentTime: currentTime,
-              showPartnerOverlay: true,
             ),
           ),
         ),
