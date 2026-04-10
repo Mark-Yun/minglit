@@ -50,6 +50,18 @@ FakeTableBuilder mockTable(
   return builder;
 }
 
+class RecordedFilterOperation {
+  const RecordedFilterOperation({
+    required this.method,
+    required this.column,
+    required this.value,
+  });
+
+  final String method;
+  final String column;
+  final Object? value;
+}
+
 /// A fake [SupabaseQueryBuilder] that captures table operations and returns
 /// preconfigured data. Supports the full builder chain without needing
 /// individual method mocks.
@@ -69,6 +81,7 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
   final Map<String, dynamic>? insertReturnData;
   final int countValue;
   final Exception? shouldThrow;
+  final List<RecordedFilterOperation> recordedFilters = [];
 
   @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> select([
@@ -80,6 +93,7 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
       singleData: singleData,
       maybeSingleData: maybeSingleData,
       countValue: countValue,
+      recordedFilters: recordedFilters,
     );
   }
 
@@ -94,6 +108,7 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
       singleData: insertReturnData ?? singleData,
       maybeSingleData: insertReturnData ?? maybeSingleData,
       countValue: countValue,
+      recordedFilters: recordedFilters,
     );
   }
 
@@ -108,6 +123,7 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
       singleData: singleData,
       maybeSingleData: maybeSingleData,
       countValue: countValue,
+      recordedFilters: recordedFilters,
     );
   }
 
@@ -119,6 +135,7 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
       singleData: singleData,
       maybeSingleData: maybeSingleData,
       countValue: countValue,
+      recordedFilters: recordedFilters,
     );
   }
 
@@ -136,6 +153,7 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
       singleData: singleData,
       maybeSingleData: maybeSingleData,
       countValue: countValue,
+      recordedFilters: recordedFilters,
     );
   }
 }
@@ -148,12 +166,14 @@ class _FakeFilterBuilder extends Fake
     required this.singleData,
     this.maybeSingleData,
     this.countValue = 0,
+    required this.recordedFilters,
   });
 
   final List<Map<String, dynamic>> selectData;
   final Map<String, dynamic> singleData;
   final Map<String, dynamic>? maybeSingleData;
   final int countValue;
+  final List<RecordedFilterOperation> recordedFilters;
 
   // --- Chaining methods (all return this) ---
 
@@ -161,49 +181,85 @@ class _FakeFilterBuilder extends Fake
   PostgrestFilterBuilder<List<Map<String, dynamic>>> eq(
     String column,
     Object value,
-  ) => this;
+  ) {
+    recordedFilters.add(
+      RecordedFilterOperation(method: 'eq', column: column, value: value),
+    );
+    return this;
+  }
 
   @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> neq(
     String column,
     Object value,
-  ) => this;
+  ) {
+    recordedFilters.add(
+      RecordedFilterOperation(method: 'neq', column: column, value: value),
+    );
+    return this;
+  }
 
   @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> match(
     Map<String, Object> query,
-  ) => this;
+  ) {
+    recordedFilters.add(
+      RecordedFilterOperation(method: 'match', column: '*', value: query),
+    );
+    return this;
+  }
 
   @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> inFilter(
     String column,
     List<dynamic> values,
-  ) => this;
+  ) {
+    recordedFilters.add(
+      RecordedFilterOperation(
+        method: 'inFilter',
+        column: column,
+        value: List<dynamic>.from(values),
+      ),
+    );
+    return this;
+  }
 
   @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> gte(
     String column,
     Object value,
-  ) => this;
+  ) {
+    recordedFilters.add(
+      RecordedFilterOperation(method: 'gte', column: column, value: value),
+    );
+    return this;
+  }
 
   @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> lte(
     String column,
     Object value,
-  ) => this;
+  ) {
+    recordedFilters.add(
+      RecordedFilterOperation(method: 'lte', column: column, value: value),
+    );
+    return this;
+  }
 
   @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> ilike(
     String column,
     String pattern,
-  ) => this;
+  ) =>
+      this;
 
   @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> filter(
     String column,
     String operator,
     Object? value,
-  ) => this;
+  ) =>
+      this;
 
   @override
   PostgrestTransformBuilder<List<Map<String, dynamic>>> order(
@@ -211,25 +267,29 @@ class _FakeFilterBuilder extends Fake
     bool ascending = false,
     bool nullsFirst = false,
     String? referencedTable,
-  }) => this;
+  }) =>
+      this;
 
   @override
   PostgrestTransformBuilder<List<Map<String, dynamic>>> limit(
     int count, {
     String? referencedTable,
-  }) => this;
+  }) =>
+      this;
 
   @override
   PostgrestTransformBuilder<List<Map<String, dynamic>>> range(
     int from,
     int to, {
     String? referencedTable,
-  }) => this;
+  }) =>
+      this;
 
   @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> select([
     String columns = '*',
-  ]) => this;
+  ]) =>
+      this;
 
   // --- Terminal operations ---
 
@@ -242,12 +302,9 @@ class _FakeFilterBuilder extends Fake
       _FakeTerminalBuilder<Map<String, dynamic>?>(maybeSingleData);
 
   @override
-  ResponsePostgrestBuilder<
-    PostgrestResponse<List<Map<String, dynamic>>>,
-    List<Map<String, dynamic>>,
-    List<Map<String, dynamic>>
-  >
-  count([CountOption option = CountOption.exact]) =>
+  ResponsePostgrestBuilder<PostgrestResponse<List<Map<String, dynamic>>>,
+      List<Map<String, dynamic>>, List<Map<String, dynamic>>> count(
+          [CountOption option = CountOption.exact]) =>
       _FakeCountBuilder(selectData, countValue);
 
   // Awaiting a filter builder resolves to the list data
@@ -280,11 +337,8 @@ class _FakeTerminalBuilder<T> extends Fake
 /// Fake count response builder.
 class _FakeCountBuilder extends Fake
     implements
-        ResponsePostgrestBuilder<
-          PostgrestResponse<List<Map<String, dynamic>>>,
-          List<Map<String, dynamic>>,
-          List<Map<String, dynamic>>
-        > {
+        ResponsePostgrestBuilder<PostgrestResponse<List<Map<String, dynamic>>>,
+            List<Map<String, dynamic>>, List<Map<String, dynamic>>> {
   _FakeCountBuilder(this._data, this._count);
   final List<Map<String, dynamic>> _data;
   final int _count;
@@ -292,7 +346,7 @@ class _FakeCountBuilder extends Fake
   @override
   Future<U> then<U>(
     FutureOr<U> Function(PostgrestResponse<List<Map<String, dynamic>>>)
-    onValue, {
+        onValue, {
     Function? onError,
   }) {
     return Future.value(
