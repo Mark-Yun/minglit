@@ -952,8 +952,8 @@ void main() {
       // Fix #1212: events that ended earlier today must still be returned so
       // the nowbar can show the "종료됨" state (e.g. match results accessible).
       test('returns already-ended event from today', () async {
-        final startTime = DateTime(now.year, now.month, now.day, 10, 0);
-        final endTime = DateTime(now.year, now.month, now.day, 12, 0);
+        final startTime = DateTime(now.year, now.month, now.day, 10);
+        final endTime = DateTime(now.year, now.month, now.day, 12);
         final eventData = [
           makeEventWithParticipant(
             eventId: 'event_ended',
