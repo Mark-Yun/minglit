@@ -54,7 +54,9 @@ void main() {
     expect(find.text('밍글릿 라운지'), findsOneWidget);
   });
 
-  testWidgets('파트너 이름이 숨겨진다 — showPartnerOverlay: false (파트너 상세 컨텍스트)', (tester) async {
+  testWidgets('파트너 이름이 숨겨진다 — showPartnerOverlay: false (파트너 상세 컨텍스트)', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildCard(event, showPartnerOverlay: false));
     await tester.pump();
 

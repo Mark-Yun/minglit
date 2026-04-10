@@ -47,8 +47,8 @@ class MinglitEventCard extends StatelessWidget {
     this.event,
     this.onTap,
     this.currentTime,
-  })  : _isLoading = true,
-        showPartnerOverlay = true;
+  }) : _isLoading = true,
+       showPartnerOverlay = true;
 
   /// Event data to render.
   final Event? event;
