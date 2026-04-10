@@ -190,6 +190,7 @@ class MinglitEventCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                  // Fix #1214: 파트너 컨텍스트에서 카드 내부 파트너 배지 중복 표시 방지
                   if (partner != null && showPartnerOverlay)
                     Positioned(
                       top: MinglitSpacing.small,

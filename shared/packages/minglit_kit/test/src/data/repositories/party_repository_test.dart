@@ -426,6 +426,116 @@ void main() {
       });
     });
 
+    // Fix #1214: getEventsByPartnerId — 파트너 상세 페이지 중복 표시 회귀 방지
+    group('getEventsByPartnerId', () {
+      final partnerJson = {
+        'id': 'partner_1',
+        'name': '테스트 파트너',
+        'is_active': true,
+      };
+      final locationJson = {
+        'id': 'location_1',
+        'partner_id': 'partner_1',
+        'name': '테스트 장소',
+        'address': '서울 강남구',
+        'created_at': now.toIso8601String(),
+        'updated_at': now.toIso8601String(),
+        'lat': 37.5,
+        'lng': 127.0,
+      };
+      final partyWithRelationsJson = {
+        ...partyJson,
+        'title': '테스트 파티',
+        'status': 'active',
+        'visibility': 'public',
+        'max_participants': 10,
+        'min_confirmed_count': 0,
+        'image_urls': <String>[],
+        'contact_options': <String, dynamic>{},
+        'metadata': <String, dynamic>{},
+        'required_verification_ids': <String>[],
+        'location_id': 'location_1',
+        'description': null,
+        'created_at': now.toIso8601String(),
+        'updated_at': now.toIso8601String(),
+        'location': locationJson,
+        'partner': partnerJson,
+      };
+      final eventWithPartyJson = {
+        ...eventJson,
+        'party': partyWithRelationsJson,
+        'entry_groups': <Map<String, dynamic>>[],
+        'tickets': <Map<String, dynamic>>[],
+      };
+      final eventWithPartyJson2 = {
+        ...eventJson,
+        'id': 'event_2',
+        'start_time':
+            now.add(const Duration(hours: 1)).toIso8601String(),
+        'party': partyWithRelationsJson,
+        'entry_groups': <Map<String, dynamic>>[],
+        'tickets': <Map<String, dynamic>>[],
+      };
+
+      test('returns events with nested party/location/partner data', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'events',
+            selectData: [eventWithPartyJson],
+          ),
+        );
+
+        final result = await repository.getEventsByPartnerId('partner_1');
+
+        expect(result, hasLength(1));
+        expect(result.first.id, 'event_1');
+        expect(result.first.party?.id, 'party_1');
+        expect(result.first.party?.partner?.id, 'partner_1');
+        expect(result.first.party?.location?.id, 'location_1');
+      });
+
+      test('returns events ordered by start_time ascending', () async {
+        // Fix #1214 regression: 파트너 상세에서 이벤트 순서가 올바른지 확인
+        unawaited(
+          mockTable(
+            mockClient,
+            'events',
+            selectData: [eventWithPartyJson, eventWithPartyJson2],
+          ),
+        );
+
+        final result = await repository.getEventsByPartnerId('partner_1');
+
+        expect(result, hasLength(2));
+        expect(result[0].id, 'event_1');
+        expect(result[1].id, 'event_2');
+        expect(
+          result[0].startTime.isBefore(result[1].startTime),
+          isTrue,
+        );
+      });
+
+      test('returns empty list when no events', () async {
+        unawaited(mockTable(mockClient, 'events', selectData: []));
+
+        final result = await repository.getEventsByPartnerId('partner_1');
+
+        expect(result, isEmpty);
+      });
+
+      test('throws on error', () async {
+        unawaited(
+          mockTable(mockClient, 'events', shouldThrow: Exception('error')),
+        );
+
+        await expectLater(
+          repository.getEventsByPartnerId('partner_1'),
+          throwsA(anything),
+        );
+      });
+    });
+
     group('createEvent', () {
       test('returns created event on success', () async {
         unawaited(mockTable(mockClient, 'events', singleData: eventJson));
