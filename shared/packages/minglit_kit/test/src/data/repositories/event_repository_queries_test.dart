@@ -995,5 +995,46 @@ void main() {
         );
       });
     });
+
+    // Regression test for #1215: onboarding must not reappear after all
+    // upcoming events end. getHasAnyEvents checks all-time, not just upcoming.
+    group('getHasAnyEvents', () {
+      test('returns true when partner has at least one event', () async {
+        unawaited(
+          mockTable(mockClient, 'events', countValue: 1),
+        );
+
+        final result = await repository.getHasAnyEvents('partner_1');
+
+        expect(result, isTrue);
+      });
+
+      test('returns false when partner has no events', () async {
+        unawaited(
+          mockTable(mockClient, 'events'),
+        );
+
+        final result = await repository.getHasAnyEvents('partner_1');
+
+        expect(result, isFalse);
+      });
+
+      test('rethrows on error', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'events',
+            shouldThrow: Exception('DB error'),
+          ),
+        );
+
+        // Rethrowing lets the controller decide what to show (error state),
+        // preventing a DB hiccup from re-showing onboarding to existing partners.
+        await expectLater(
+          repository.getHasAnyEvents('partner_1'),
+          throwsA(isA<Exception>()),
+        );
+      });
+    });
   });
 }
