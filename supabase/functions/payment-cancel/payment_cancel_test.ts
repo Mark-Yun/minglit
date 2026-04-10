@@ -351,6 +351,35 @@ Deno.test("payment-cancel - different user's payment → 403", async () => {
   });
 });
 
+// Fix #1235: 이벤트 시작 후 예매 취소 요청 차단
+Deno.test("payment-cancel - event already started → 400 refund_not_eligible", async () => {
+  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const pastEvent = new Date(Date.now() - 60 * 60 * 1000).toISOString(); // 1시간 전
+
+  const { fetchMock } = createFetchMock([
+    authRoute,
+    appRoute({ paid_at: eligiblePaidAt }), // grace period 안에 결제했어도
+    eventRoute(pastEvent),                  // 이벤트가 이미 시작됐으면 취소 불가
+    policyRoute(),
+  ]);
+
+  await withEnv(ENV, async () => {
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = authenticatedJsonRequest("http://localhost", {
+          payment_id: "imp_123",
+        });
+
+        const response = await handler(request);
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 400);
+        assertEquals(payload.error, "refund_not_eligible");
+      });
+    });
+  });
+});
+
 Deno.test("payment-cancel - DB error is non-fatal, still returns 200", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 

@@ -26,6 +26,8 @@ export interface RefundEligibilityResult {
  * Eligible if EITHER:
  * - Within grace period (paidAt is past and within gracePeriodHours), OR
  * - Within cutoff (event starts >= cutoffDays from now)
+ *
+ * In all cases, the event must not have started yet.
  */
 export function verifyRefundEligibility(
   params: RefundEligibilityParams,
@@ -33,6 +35,11 @@ export function verifyRefundEligibility(
   const now = params.now ?? new Date();
   const paidAt = params.paidAt ? new Date(params.paidAt) : null;
   const eventStart = new Date(params.eventStartTime);
+
+  // Fix #1235: 이벤트 시작 후 예매 취소 요청 차단 — startTime 체크 추가
+  if (eventStart.getTime() <= now.getTime()) {
+    return { eligible: false, reason: "Event has already started" };
+  }
 
   // Fix #133: 미래 paid_at은 음수 duration으로 grace period를 통과하므로 명시적으로 제외
   const withinGracePeriod =
