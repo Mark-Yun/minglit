@@ -180,7 +180,7 @@ void main() {
   });
 
   group('EventCard showPartnerOverlay', () {
-    final partner = Partner(
+    const partner = Partner(
       id: 'partner-1',
       name: '밍글 스튜디오',
     );
