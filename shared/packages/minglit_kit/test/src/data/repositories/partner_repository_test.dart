@@ -86,11 +86,18 @@ void main() {
         expect(result, isEmpty);
       });
 
-      test('returns empty when no permissions', () async {
+      test('returns empty when no permissions and no approved applications', () async {
         unawaited(
           mockTable(
             mockClient,
             'partner_member_permissions',
+            selectData: [],
+          ),
+        );
+        unawaited(
+          mockTable(
+            mockClient,
+            'partner_applications',
             selectData: [],
           ),
         );
@@ -115,6 +122,41 @@ void main() {
 
         expect(result, hasLength(1));
         expect(result.first.id, 'partner_1');
+      });
+
+      // Fix #1217: Fallback via approved applications when permissions missing
+      test('returns partners via approved application fallback', () async {
+        // No permissions
+        unawaited(
+          mockTable(
+            mockClient,
+            'partner_member_permissions',
+            selectData: [],
+          ),
+        );
+        // Approved application matching the partner
+        unawaited(
+          mockTable(
+            mockClient,
+            'partner_applications',
+            selectData: [
+              {
+                'biz_name': '밍글릿 클럽',
+                'biz_number': '123-45-67890',
+              },
+            ],
+          ),
+        );
+        // Partner found by biz_name + biz_number
+        unawaited(
+          mockTable(mockClient, 'partners', selectData: [partnerJson]),
+        );
+
+        final result = await repository.getMyManagedPartners();
+
+        expect(result, hasLength(1));
+        expect(result.first.id, 'partner_1');
+        expect(result.first.name, '밍글릿 클럽');
       });
     });
 
