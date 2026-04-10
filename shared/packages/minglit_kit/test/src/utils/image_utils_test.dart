@@ -80,8 +80,11 @@ void main() {
 
       final decoded = img.decodeImage(result);
       expect(decoded, isNotNull);
-      expect(decoded!.exif.gpsIfd.isEmpty, isTrue,
-          reason: '재인코딩 후 GPS EXIF 데이터가 없어야 한다');
+      expect(
+        decoded!.exif.gpsIfd.isEmpty,
+        isTrue,
+        reason: '재인코딩 후 GPS EXIF 데이터가 없어야 한다',
+      );
     });
 
     test('빈 바이트 입력은 원본을 그대로 반환한다 (디코딩 실패 시 안전 처리)', () {

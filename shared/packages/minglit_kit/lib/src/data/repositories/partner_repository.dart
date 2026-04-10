@@ -1,16 +1,16 @@
 import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:minglit_kit/src/data/models/partner.dart';
-import 'package:minglit_kit/src/utils/image_utils.dart';
 import 'package:minglit_kit/src/data/models/partner_application.dart';
 import 'package:minglit_kit/src/utils/exceptions.dart';
+import 'package:minglit_kit/src/utils/image_utils.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:path/path.dart' as p;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-part 'partner_repository.g.dart';
-part 'partner_member_repository.dart';
 part 'partner_application_repository.dart';
+part 'partner_member_repository.dart';
+part 'partner_repository.g.dart';
 
 /// Provider for PartnerRepository.
 @Riverpod(keepAlive: true)
