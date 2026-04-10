@@ -21,7 +21,9 @@ class _BottomTicketBar extends ConsumerWidget {
         color: theme.colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.1),
+            color: theme.shadowColor.withValues(
+              alpha: MinglitOpacity.highlight,
+            ),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -54,9 +56,7 @@ class _BottomTicketBar extends ConsumerWidget {
                 data: (state) => _buildActionButton(context, ref, state),
                 loading: () => const ElevatedButton(
                   onPressed: null,
-                  child: MinglitCircularProgressIndicator(
-                    size: 20,
-                  ),
+                  child: MinglitCircularProgressIndicator(size: 20),
                 ),
                 error: (e, _) => ElevatedButton(
                   onPressed: null,
@@ -73,18 +73,16 @@ class _BottomTicketBar extends ConsumerWidget {
     );
   }
 
-  // Fix #634: ticket UI를 ticket_coordinator로 위임 — event → ticket cross-feature 격리
+  // Fix #1094: event_coordinator로 통합 — ticket_coordinator 직접 참조 제거
   void _showTicketSelection(BuildContext context, WidgetRef ref) {
     final eventCoordinator = ref.read(eventCoordinatorProvider);
-    ref
-        .read(ticketCoordinatorProvider)
-        .showTicketSelection(
-          context,
-          event,
-          onTicketSelected: (eventId, ticketId) {
-            eventCoordinator.goToApplicationWizard(eventId, ticketId: ticketId);
-          },
-        );
+    eventCoordinator.showTicketSelection(
+      context,
+      event,
+      onTicketSelected: (eventId, ticketId) {
+        eventCoordinator.goToApplicationWizard(eventId, ticketId: ticketId);
+      },
+    );
   }
 
   Widget _buildActionButton(
@@ -137,7 +135,9 @@ class _BottomTicketBarSkeleton extends StatelessWidget {
         color: theme.colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.1),
+            color: theme.shadowColor.withValues(
+              alpha: MinglitOpacity.highlight,
+            ),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),

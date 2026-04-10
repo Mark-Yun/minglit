@@ -15,14 +15,14 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: gh-pages
           path: gh-pages-content
 
       # ── Download Allure Results ──
       - name: Download Allure Results (app_user)
-        uses: dawidd6/action-download-artifact@v9
+        uses: dawidd6/action-download-artifact@v20
         with:
           workflow: ci.yml
           name: allure-results-app_user
@@ -31,7 +31,7 @@ jobs:
         continue-on-error: true
 
       - name: Download Allure Results (app_partner)
-        uses: dawidd6/action-download-artifact@v9
+        uses: dawidd6/action-download-artifact@v20
         with:
           workflow: ci.yml
           name: allure-results-app_partner
@@ -40,7 +40,7 @@ jobs:
         continue-on-error: true
 
       - name: Download Allure Results (minglit_kit)
-        uses: dawidd6/action-download-artifact@v9
+        uses: dawidd6/action-download-artifact@v20
         with:
           workflow: ci.yml
           name: allure-results-minglit_kit
@@ -50,7 +50,7 @@ jobs:
 
       # ── Download Coverage Artifacts ──
       - name: Download Coverage (app_user)
-        uses: dawidd6/action-download-artifact@v9
+        uses: dawidd6/action-download-artifact@v20
         with:
           workflow: ci.yml
           name: app-user-coverage
@@ -59,7 +59,7 @@ jobs:
         continue-on-error: true
 
       - name: Download Coverage (app_partner)
-        uses: dawidd6/action-download-artifact@v9
+        uses: dawidd6/action-download-artifact@v20
         with:
           workflow: ci.yml
           name: app-partner-coverage
@@ -68,7 +68,7 @@ jobs:
         continue-on-error: true
 
       - name: Download Coverage (minglit_kit)
-        uses: dawidd6/action-download-artifact@v9
+        uses: dawidd6/action-download-artifact@v20
         with:
           workflow: ci.yml
           name: minglit-kit-coverage
@@ -79,6 +79,7 @@ jobs:
       # ── Copy previous history for trend tracking ──
       - name: Copy previous history for trend tracking
         run: |
+          mkdir -p allure-results
           if [ -d "gh-pages-content/history" ]; then
             cp -r gh-pages-content/history allure-results/history
             echo "History copied for trend tracking"

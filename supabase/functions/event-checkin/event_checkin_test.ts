@@ -40,10 +40,15 @@ Deno.test({
             status: "ticket_issued",
           }),
       },
-      // update participant
+      // Fix #998: select event (status gate added to event-checkin EF)
+      {
+        matcher: (req) => req.url.includes("/rest/v1/events") && !req.url.includes("event_participants") && req.method === "GET",
+        handler: () => jsonResponse({ id: "evt-1", status: "active" }),
+      },
+      // update participant — content-range header required for count: "exact"
       {
         matcher: (req) => req.url.includes("/rest/v1/event_participants") && req.method === "PATCH",
-        handler: () => new Response(null, { status: 204 }),
+        handler: () => new Response(null, { status: 204, headers: { "content-range": "0-0/1" } }),
       },
     ]);
 
@@ -183,7 +188,7 @@ Deno.test({
         handler: () => jsonResponse({ id: "user-1", email: "test@test.com" }),
       },
       {
-        matcher: "/rest/v1/event_participants",
+        matcher: (req) => req.url.includes("/rest/v1/event_participants") && req.method === "GET",
         handler: () =>
           jsonResponse({
             id: "part-1",
@@ -191,6 +196,11 @@ Deno.test({
             user_id: "user-1",
             status: "checked_in",
           }),
+      },
+      // Fix #998: select event (status gate added to event-checkin EF)
+      {
+        matcher: (req) => req.url.includes("/rest/v1/events") && !req.url.includes("event_participants") && req.method === "GET",
+        handler: () => jsonResponse({ id: "evt-1", status: "active" }),
       },
     ]);
 
@@ -224,7 +234,7 @@ Deno.test({
         handler: () => jsonResponse({ id: "user-1", email: "test@test.com" }),
       },
       {
-        matcher: "/rest/v1/event_participants",
+        matcher: (req) => req.url.includes("/rest/v1/event_participants") && req.method === "GET",
         handler: () =>
           jsonResponse({
             id: "part-1",
@@ -232,6 +242,11 @@ Deno.test({
             user_id: "user-1",
             status: "cancelled",
           }),
+      },
+      // Fix #998: select event (status gate added to event-checkin EF)
+      {
+        matcher: (req) => req.url.includes("/rest/v1/events") && !req.url.includes("event_participants") && req.method === "GET",
+        handler: () => jsonResponse({ id: "evt-1", status: "active" }),
       },
     ]);
 

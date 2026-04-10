@@ -7,6 +7,7 @@ import { createServiceClient } from "../_shared/supabase_client.ts";
 import { IamportClient } from "../_shared/iamport_client.ts";
 import { initSentry, withHandler, log } from "../_shared/logger.ts";
 import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
+import { nowISO } from "../_shared/temporal_utils.ts";
 
 const FN = "payment-webhook";
 
@@ -85,13 +86,13 @@ Deno.serve(withHandler(async (req) => {
      // Update event_applications table
      // Fix #133: paid_at 없을 때 now로 폴백하면 재시도마다 paid_at이 밀려 멱등성 깨짐 — 실제 결제 시각이 있을 때만 업데이트
      const paidAtIso = payment.paid_at && payment.paid_at > 0
-       ? new Date(payment.paid_at * 1000).toISOString()
+       ? Temporal.Instant.fromEpochMilliseconds(payment.paid_at * 1000).toString()
        : null;
 
      const updatePayload: Record<string, unknown> = {
        status: dbStatus,
        payment_id: imp_uid,
-       updated_at: new Date().toISOString(),
+       updated_at: nowISO(),
        ...(payment.status === "paid" && paidAtIso ? { paid_at: paidAtIso } : {}),
      };
      if (payment.status === "cancelled") {
@@ -140,7 +141,7 @@ Deno.serve(withHandler(async (req) => {
               event_id: application.event_id,
               deep_link: `/events/${application.event_id}`,
             },
-            meta: { occurred_at: new Date().toISOString() },
+            meta: { occurred_at: nowISO() },
           },
         });
       }

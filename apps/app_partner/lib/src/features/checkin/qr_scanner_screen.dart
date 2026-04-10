@@ -22,8 +22,10 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
   final MobileScannerController _scannerController = MobileScannerController();
 
   @override
-  Future<void> dispose() async {
-    await _scannerController.dispose();
+  void dispose() {
+    // Fix #1072: async dispose()는 super.dispose()가 비동기로 호출되어 프레임워크 오류 발생.
+    // MobileScannerController.dispose()의 Future는 unawaited로 처리한다.
+    unawaited(_scannerController.dispose());
     super.dispose();
   }
 
@@ -34,9 +36,13 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
 
     Color? overlayColor;
     if (state.result == CheckinResult.success) {
-      overlayColor = MinglitColors.success.withValues(alpha: 0.8);
+      overlayColor = MinglitColors.success.withValues(
+        alpha: MinglitOpacity.scrimLight,
+      );
     } else if (state.result != CheckinResult.idle) {
-      overlayColor = theme.colorScheme.error.withValues(alpha: 0.8);
+      overlayColor = theme.colorScheme.error.withValues(
+        alpha: MinglitOpacity.scrimLight,
+      );
     }
 
     return Scaffold(
@@ -57,7 +63,9 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
               Text(
                 widget.event.title!,
                 style: theme.textTheme.labelSmall!.copyWith(
-                  color: MinglitColors.background.withValues(alpha: 0.7),
+                  color: MinglitColors.background.withValues(
+                    alpha: MinglitOpacity.scrimDark,
+                  ),
                 ),
               ),
           ],
@@ -89,10 +97,7 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
 
           // 3. Result Overlay (Success/Fail)
           if (overlayColor != null)
-            _ResultFeedbackOverlay(
-              color: overlayColor,
-              state: state,
-            ),
+            _ResultFeedbackOverlay(color: overlayColor, state: state),
         ],
       ),
     );
@@ -136,9 +141,9 @@ class _ResultFeedbackOverlay extends StatelessWidget {
           const SizedBox(height: MinglitSpacing.large),
           Text(
             title,
-            style: Theme.of(context).textTheme.displayLarge!.copyWith(
-              color: MinglitColors.background,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.displayLarge!.copyWith(color: MinglitColors.background),
           ),
           if (subTitle.isNotEmpty)
             Padding(

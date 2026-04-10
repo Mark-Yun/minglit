@@ -205,8 +205,10 @@ class _ReviewVerificationScreenState
     // Fix #301: snapshot_data is now an array of history entries
     final snapshotRaw = req['snapshot_data'];
     final snapshotList = snapshotRaw is List ? snapshotRaw : <dynamic>[];
-    final lastEntry = snapshotList.isNotEmpty
-        ? snapshotList.last as Map<String, dynamic>
+    // Fix #1115: type guard prevents TypeError when backend returns non-map elements
+    final lastRaw = snapshotList.isNotEmpty ? snapshotList.last : null;
+    final lastEntry = lastRaw is Map<String, dynamic>
+        ? lastRaw
         : <String, dynamic>{};
     final claim = lastEntry['data'] as Map<String, dynamic>? ?? {};
     final images = claim.values

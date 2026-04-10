@@ -44,11 +44,7 @@ int _statePriority(EventNowBarState? state) {
 /// Tapping the dropdown opens a bottom sheet for event selection.
 class EventNowMultiStack extends ConsumerStatefulWidget {
   /// Creates an [EventNowMultiStack].
-  const EventNowMultiStack({
-    required this.events,
-    super.key,
-    this.onEventTap,
-  });
+  const EventNowMultiStack({required this.events, super.key, this.onEventTap});
 
   /// All today's active events.
   final List<TodayActiveEvent> events;
@@ -160,7 +156,9 @@ class _EventNowMultiBar extends ConsumerWidget {
           ),
           border: Border(
             top: BorderSide(
-              color: MinglitColors.primary.withValues(alpha: 0.1),
+              color: MinglitColors.primary.withValues(
+                alpha: MinglitOpacity.highlight,
+              ),
             ),
           ),
         ),
@@ -248,7 +246,8 @@ class _CountBadge extends StatelessWidget {
       child: Text(
         '$count',
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: Colors.white,
+          // Fix #951: replace hardcoded Colors.white with design token
+          color: Theme.of(context).colorScheme.onPrimary,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -285,7 +284,9 @@ class _EventListSheet extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: MinglitColors.textSecondary.withValues(alpha: 0.3),
+                color: MinglitColors.textSecondary.withValues(
+                  alpha: MinglitOpacity.muted,
+                ),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -296,10 +297,7 @@ class _EventListSheet extends StatelessWidget {
             ),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Text(
-                '진행 중인 이벤트',
-                style: theme.textTheme.titleSmall,
-              ),
+              child: Text('진행 중인 이벤트', style: theme.textTheme.titleSmall),
             ),
           ),
           const SizedBox(height: MinglitSpacing.small),
@@ -352,7 +350,7 @@ class _EventListTile extends StatelessWidget {
           vertical: MinglitSpacing.sm,
         ),
         color: isSelected
-            ? MinglitColors.primary.withValues(alpha: 0.05)
+            ? MinglitColors.primary.withValues(alpha: MinglitOpacity.tintFill)
             : null,
         child: Row(
           children: [

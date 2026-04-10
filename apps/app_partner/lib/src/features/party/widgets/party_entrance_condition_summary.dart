@@ -22,7 +22,9 @@ class PartyEntranceConditionSummary extends ConsumerWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(MinglitSpacing.large),
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          color: colorScheme.surfaceContainerHighest.withValues(
+            alpha: MinglitOpacity.muted,
+          ),
           borderRadius: BorderRadius.circular(MinglitRadius.card),
         ),
         child: Column(
@@ -54,7 +56,9 @@ class PartyEntranceConditionSummary extends ConsumerWidget {
               color: colorScheme.surface,
               borderRadius: BorderRadius.circular(MinglitRadius.card),
               border: Border.all(
-                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                color: colorScheme.outlineVariant.withValues(
+                  alpha: MinglitOpacity.strong,
+                ),
               ),
             ),
             child: InkWell(

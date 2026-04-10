@@ -34,7 +34,9 @@ class VerificationSelectCard extends StatelessWidget {
 
     // Calculate styles based on selection state
     final backgroundColor = isSelected
-        ? colorScheme.secondaryContainer.withValues(alpha: 0.1)
+        ? colorScheme.secondaryContainer.withValues(
+            alpha: MinglitOpacity.highlight,
+          )
         : null;
     final borderColor = isSelected ? accentColor : null;
 

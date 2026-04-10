@@ -65,7 +65,7 @@ class NotificationService {
     );
 
     await _localNotifications.initialize(
-      initializationSettings,
+      settings: initializationSettings,
       onDidReceiveNotificationResponse: (details) {
         _handleDeepLink(details.payload);
       },
@@ -129,10 +129,10 @@ class NotificationService {
 
     if (notification != null && android != null) {
       await _localNotifications.show(
-        notification.hashCode,
-        notification.title,
-        notification.body,
-        const NotificationDetails(
+        id: notification.hashCode,
+        title: notification.title,
+        body: notification.body,
+        notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             'minglit_channel_default',
             '기본 알림',

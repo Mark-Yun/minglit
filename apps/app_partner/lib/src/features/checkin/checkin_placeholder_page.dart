@@ -19,9 +19,8 @@ class CheckinPlaceholderPage extends ConsumerWidget {
     final partnerAsync = ref.watch(currentPartnerInfoProvider);
 
     return partnerAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, _) => Scaffold(
         appBar: MinglitTheme.simpleAppBar(title: '체크인'),
         body: Center(child: Text('오류가 발생했습니다: $e')),
@@ -48,9 +47,8 @@ class _CheckinEntryPage extends ConsumerWidget {
     final eventsAsync = ref.watch(todayEventsProvider(partnerId));
 
     return eventsAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, _) => Scaffold(
         appBar: MinglitTheme.simpleAppBar(title: '체크인'),
         body: const Center(child: Text('이벤트를 불러올 수 없습니다')),
@@ -71,19 +69,20 @@ class _CheckinEntryPage extends ConsumerWidget {
 /// Provider that fetches today's events for check-in.
 /// "Today" = events starting within 3 hours before ~ 1 hour after end.
 final FutureProviderFamily<List<Event>, String> todayEventsProvider =
-    FutureProvider.family.autoDispose<List<Event>, String>(
-      (ref, partnerId) async {
-        final repo = ref.read(eventRepositoryProvider);
-        final upcoming = await repo.getUpcomingEvents(partnerId);
-        final now = DateTime.now();
+    FutureProvider.family.autoDispose<List<Event>, String>((
+      ref,
+      partnerId,
+    ) async {
+      final repo = ref.read(eventRepositoryProvider);
+      final upcoming = await repo.getUpcomingEvents(partnerId);
+      final now = DateTime.now();
 
-        return upcoming.where((e) {
-          final earlyWindow = e.startTime.subtract(const Duration(hours: 3));
-          final lateWindow = e.endTime.add(const Duration(hours: 1));
-          return now.isAfter(earlyWindow) && now.isBefore(lateWindow);
-        }).toList();
-      },
-    );
+      return upcoming.where((e) {
+        final earlyWindow = e.startTime.subtract(const Duration(hours: 3));
+        final lateWindow = e.endTime.add(const Duration(hours: 1));
+        return now.isAfter(earlyWindow) && now.isBefore(lateWindow);
+      }).toList();
+    });
 
 /// Wraps QR scanner with event context (name, count) in dark theme.
 class _ScannerWrapper extends StatelessWidget {
@@ -129,10 +128,7 @@ class _CheckinSelectionPage extends StatelessWidget {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(height: MinglitSpacing.medium),
-                Text(
-                  '오늘 예정된 이벤트가 없습니다',
-                  style: theme.textTheme.titleMedium,
-                ),
+                Text('오늘 예정된 이벤트가 없습니다', style: theme.textTheme.titleMedium),
                 const SizedBox(height: MinglitSpacing.small),
                 Text(
                   '이벤트 당일에 체크인을 시작할 수 있어요',
@@ -231,7 +227,7 @@ class _CheckinSelectionPage extends StatelessWidget {
                                 ),
                                 decoration: BoxDecoration(
                                   color: MinglitColors.success.withValues(
-                                    alpha: 0.1,
+                                    alpha: MinglitOpacity.highlight,
                                   ),
                                   borderRadius: BorderRadius.circular(
                                     MinglitRadius.small,

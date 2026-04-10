@@ -17,6 +17,7 @@ import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
 import 'package:app_user/src/features/search/search_page.dart';
 import 'package:app_user/src/features/settings/blocked_partners_page.dart';
 import 'package:app_user/src/features/settings/privacy_page.dart';
+import 'package:app_user/src/features/tag/ui/tag_event_list_page.dart';
 import 'package:app_user/src/features/ticket/ui/ticket_qr_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -86,8 +87,11 @@ class EventDetailRoute extends GoRouteData with $EventDetailRoute {
   final String eventId;
 
   @override
-  Widget build(BuildContext context, GoRouterState state) =>
-      EventDetailPage(eventId: eventId);
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MinglitPageTransitions.sharedAxisScaled(
+        key: state.pageKey,
+        child: EventDetailPage(eventId: eventId),
+      );
 }
 
 /// **Partner Detail Route**: Detailed information about a specific partner.
@@ -99,8 +103,11 @@ class PartnerDetailRoute extends GoRouteData with $PartnerDetailRoute {
   final String partnerId;
 
   @override
-  Widget build(BuildContext context, GoRouterState state) =>
-      PartnerDetailPage(partnerId: partnerId);
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MinglitPageTransitions.sharedAxisScaled(
+        key: state.pageKey,
+        child: PartnerDetailPage(partnerId: partnerId),
+      );
 }
 
 /// **Partner Events Route**: Full list of events for a partner.
@@ -324,4 +331,20 @@ class BlockedPartnersRoute extends GoRouteData with $BlockedPartnersRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const BlockedPartnersPage();
+}
+
+/// **Tag Event List Route**: Paginated event list for a specific tag.
+/// Path: `/tags/:tagId`
+///
+/// [tagName] is passed as a query parameter for AppBar display.
+@TypedGoRoute<TagEventListRoute>(path: '/tags/:tagId')
+class TagEventListRoute extends GoRouteData with $TagEventListRoute {
+  const TagEventListRoute({required this.tagId, required this.tagName});
+
+  final String tagId;
+  final String tagName;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      TagEventListPage(tagId: tagId, tagName: tagName);
 }

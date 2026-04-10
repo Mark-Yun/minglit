@@ -1,5 +1,6 @@
 // Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
 import { createServiceClient } from "../_shared/supabase_client.ts";
+import { nowISO } from "../_shared/temporal_utils.ts";
 import { IamportClient } from "../_shared/iamport_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
@@ -83,7 +84,7 @@ Deno.serve(withHandler(async (req) => {
 
     // Fix #133: paid_at 없을 때 now 폴백하면 재시도마다 값이 밀려 멱등성 깨짐 — payment-webhook과 동일하게 null 처리
     const paidAtIso = payment.paid_at && payment.paid_at > 0
-      ? new Date(payment.paid_at * 1000).toISOString()
+      ? Temporal.Instant.fromEpochMilliseconds(payment.paid_at * 1000).toString()
       : null;
 
     const { error: updateError } = await withSpan(
@@ -95,7 +96,7 @@ Deno.serve(withHandler(async (req) => {
           status: "approved",
           payment_id: imp_uid,
           ...(paidAtIso ? { paid_at: paidAtIso } : {}),
-          updated_at: new Date().toISOString(),
+          updated_at: nowISO(),
         })
         .eq("id", merchant_uid)
     );

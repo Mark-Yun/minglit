@@ -1,4 +1,5 @@
 import 'package:app_user/src/features/consent/logic/consent_coordinator.dart';
+import 'package:app_user/src/features/consent/ui/consent_detail_sheet.dart';
 import 'package:app_user/src/features/consent/ui/signup_consent_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -50,19 +51,23 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('초기 상태에서 5개 항목이 보이고 CTA는 비활성화된다', (tester) async {
+  // Fix #1141: 제3자 제공 동의 항목 추가(thirdPartyProvision) — 6개로 늘어난 항목 수 검증
+  testWidgets('초기 상태에서 6개 항목이 보이고 CTA는 비활성화된다', (tester) async {
     await pumpPage(tester);
 
     expect(find.text('환영합니다!'), findsOneWidget);
     expect(find.text('서비스 이용약관'), findsOneWidget);
     expect(find.text('개인정보 수집·이용 동의'), findsOneWidget);
     expect(find.text('만 14세 이상 확인'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('제3자 제공 동의'), 200);
+    expect(find.text('제3자 제공 동의'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('본인인증(CI/DI) 수집 동의'), 200);
     expect(find.text('본인인증(CI/DI) 수집 동의'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('마케팅 정보 수신 동의'), 200);
     expect(find.text('마케팅 정보 수신 동의'), findsOneWidget);
 
     final cta = tester.widget<ElevatedButton>(
-      find.widgetWithText(ElevatedButton, '다 같이 시작하기'),
+      find.widgetWithText(ElevatedButton, '동의하고 시작하기'),
     );
     expect(cta.onPressed, isNull);
   });
@@ -77,7 +82,7 @@ void main() {
     expect(checkboxes.every((checkbox) => checkbox.value ?? false), isTrue);
 
     final cta = tester.widget<ElevatedButton>(
-      find.widgetWithText(ElevatedButton, '다 같이 시작하기'),
+      find.widgetWithText(ElevatedButton, '동의하고 시작하기'),
     );
     expect(cta.onPressed, isNotNull);
   });
@@ -93,7 +98,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final cta = tester.widget<ElevatedButton>(
-      find.widgetWithText(ElevatedButton, '다 같이 시작하기'),
+      find.widgetWithText(ElevatedButton, '동의하고 시작하기'),
     );
     expect(cta.onPressed, isNotNull);
   });
@@ -101,11 +106,78 @@ void main() {
   testWidgets('보기 버튼을 누르면 약관 상세 바텀시트가 열린다', (tester) async {
     await pumpPage(tester);
 
-    await tester.tap(find.widgetWithText(TextButton, '보기').first);
+    // Fix #966: '보기' TextButton → '보기 ›' GestureDetector
+    await tester.tap(find.text('보기 ›').first);
     await tester.pumpAndSettle();
 
     expect(find.text('이용자 보호'), findsOneWidget);
     expect(find.text('서비스 이용을 위해 필요한 기본 권리와 의무를 안내합니다.'), findsOneWidget);
+  });
+
+  // Fix #1141: 제3자 제공 동의 상세 바텀시트에 확정 항목/보유기간이 표시되는지 회귀 테스트
+  // 스크롤 후 탭 방식은 ListView 위치 변화로 인해 불안정 — ConsentDetailSheet 직접 렌더링.
+  testWidgets('제3자 제공 동의 상세에 확정된 제공 항목과 보유기간이 표시된다', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: MinglitTheme.materialTheme,
+        home: Scaffold(
+          body: Builder(
+            builder: (ctx) => Center(
+              child: ElevatedButton(
+                onPressed: () => showConsentDetailSheet(
+                  ctx,
+                  // Fix #1141: 성별 제거, 자격 인증 정보 추가, 보유기간 30일로 확정
+                  content: const ConsentDetailContent(
+                    title: '제3자 제공 동의',
+                    summary: '이벤트 운영을 위해 파트너에게 아래 정보를 제공합니다.',
+                    sections: [
+                      ConsentDetailSection(
+                        title: '제공 항목',
+                        items: [
+                          '이름(닉네임)',
+                          '연령대',
+                          '자격 인증 정보(직업/소속 — 본인인증 완료 유저만)',
+                        ],
+                      ),
+                      ConsentDetailSection(
+                        title: '보유 기간',
+                        items: ['이벤트 종료 후 30일'],
+                      ),
+                      ConsentDetailSection(
+                        title: '거부 권리',
+                        items: [
+                          '동의를 거부할 수 있으며, 기본 서비스 이용은 가능합니다.',
+                          '다만 파트너 승인/확인이 필요한 이벤트는 신청 또는 참여가 제한될 수 있습니다.',
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    // consent_detail_sheet.dart renders items as '• $item'
+    expect(find.text('• 이름(닉네임)'), findsOneWidget);
+    expect(find.text('• 연령대'), findsOneWidget);
+    expect(find.text('• 자격 인증 정보(직업/소속 — 본인인증 완료 유저만)'), findsOneWidget);
+    expect(find.text('• 이벤트 종료 후 30일'), findsOneWidget);
+    // Fix #1141: 거부 권리 문구 — 0929d567 커밋에서 확정된 문구와 일치
+    expect(
+      find.text('• 동의를 거부할 수 있으며, 기본 서비스 이용은 가능합니다.'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('• 다만 파트너 승인/확인이 필요한 이벤트는 신청 또는 참여가 제한될 수 있습니다.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('저장 성공 시 선택한 동의를 저장하고 원래 경로로 이동한다', (tester) async {
@@ -117,7 +189,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('만 14세 이상 확인'));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(ElevatedButton, '다 같이 시작하기'));
+    await tester.tap(find.widgetWithText(ElevatedButton, '동의하고 시작하기'));
     await tester.pumpAndSettle();
 
     final captured =

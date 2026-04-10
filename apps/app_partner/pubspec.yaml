@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 26.04.975-dev+26040975
+version: 26.04.1205-dev+26041205
 resolution: workspace
 
 environment:
@@ -29,6 +29,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  animations: ^2.0.0
   async: ^2.13.0
   collection: ^1.19.1
   cupertino_icons: ^1.0.8
@@ -42,32 +43,34 @@ dependencies:
   flutter_riverpod: ^3.0.3
   freezed_annotation: ^3.1.0
   go_router: ^17.0.0
-  google_sign_in: 6.2.1
-  image_picker: ^1.2.1
+  google_sign_in: 7.2.0  # iOS: GoogleService-Info.plist required
+  image_picker: ^1.2.1  # iOS: camera/photo permissions
   intl: ^0.20.2
-  kakao_map_plugin: ^0.3.7
+  kakao_map_plugin: ^0.4.0
   minglit_kit:
     path: ../../shared/packages/minglit_kit
-  mobile_scanner: any
-  package_info_plus: ^8.3.1
+  mobile_scanner: any  # iOS: camera permission
+  package_info_plus: ^9.0.1  # iOS: CFBundleVersion (Info.plist)
   path: any
   riverpod: ^3.0.3
   riverpod_annotation: ^3.0.3
-  sentry_flutter: ^9.0.0
-  share_plus: ^12.0.1
+  sentry_flutter: ^9.0.0  # iOS: native crash reporting
+  share_plus: ^12.0.1  # iOS: share sheet
   shared_preferences: ^2.5.4
   supabase_flutter: ^2.12.0
-  url_launcher: ^6.3.2
+  url_launcher: ^6.3.2  # iOS: LSApplicationQueriesSchemes (Info.plist)
   uuid: ^4.5.2
   web: ^1.1.1
 
 dev_dependencies:
   alchemist: ^0.14.0
+  integration_test:
+    sdk: flutter
   allure_report: ^1.0.0
   build_runner: ^2.10.4
   custom_lint: 0.8.1
   flutter_launcher_icons: ^0.14.3
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
   flutter_test:
     sdk: flutter
   freezed: ^3.2.3

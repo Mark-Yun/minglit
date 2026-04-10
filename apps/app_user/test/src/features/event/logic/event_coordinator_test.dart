@@ -98,5 +98,14 @@ void main() {
       expect(uri.path, '/login');
       expect(uri.queryParameters['from'], '/events/123');
     });
+
+    // Fix #1094: goToPurchaseHistory 라우팅 검증
+    test('goToPurchaseHistory navigates to purchase history route', () {
+      coordinator.goToPurchaseHistory();
+
+      verify(
+        () => mockRouter.go('/purchase-history'),
+      ).called(1);
+    });
   });
 }
