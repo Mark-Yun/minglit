@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:image_picker/image_picker.dart';
+import 'package:minglit_kit/src/utils/image_utils.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:path/path.dart' as p;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -38,10 +39,12 @@ class StorageRepository {
     String? pathPrefix,
   }) async {
     try {
-      final bytes = await file.readAsBytes();
+      final rawBytes = await file.readAsBytes();
       final extension = p.extension(file.path).isEmpty
           ? '.jpg'
           : p.extension(file.path);
+      // Fix #1230: GPS/EXIF 메타데이터 유출 방지 — 업로드 전 재인코딩으로 완전 제거
+      final bytes = stripExifAndReencode(rawBytes, filename: file.name);
       // Generate a unique filename
       final filename = '${const Uuid().v4()}$extension';
       final fullPath = pathPrefix != null ? '$pathPrefix/$filename' : filename;
