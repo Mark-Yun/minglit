@@ -50,6 +50,18 @@ FakeTableBuilder mockTable(
   return builder;
 }
 
+class RecordedFilterOperation {
+  const RecordedFilterOperation({
+    required this.method,
+    required this.column,
+    required this.value,
+  });
+
+  final String method;
+  final String column;
+  final Object? value;
+}
+
 /// A fake [SupabaseQueryBuilder] that captures table operations and returns
 /// preconfigured data. Supports the full builder chain without needing
 /// individual method mocks.
@@ -69,6 +81,7 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
   final Map<String, dynamic>? insertReturnData;
   final int countValue;
   final Exception? shouldThrow;
+  final List<RecordedFilterOperation> recordedFilters = [];
 
   @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> select([
@@ -80,6 +93,7 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
       singleData: singleData,
       maybeSingleData: maybeSingleData,
       countValue: countValue,
+      recordedFilters: recordedFilters,
     );
   }
 
@@ -94,6 +108,7 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
       singleData: insertReturnData ?? singleData,
       maybeSingleData: insertReturnData ?? maybeSingleData,
       countValue: countValue,
+      recordedFilters: recordedFilters,
     );
   }
 
@@ -108,6 +123,7 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
       singleData: singleData,
       maybeSingleData: maybeSingleData,
       countValue: countValue,
+      recordedFilters: recordedFilters,
     );
   }
 
@@ -119,6 +135,7 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
       singleData: singleData,
       maybeSingleData: maybeSingleData,
       countValue: countValue,
+      recordedFilters: recordedFilters,
     );
   }
 
@@ -136,6 +153,7 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
       singleData: singleData,
       maybeSingleData: maybeSingleData,
       countValue: countValue,
+      recordedFilters: recordedFilters,
     );
   }
 }
@@ -146,6 +164,7 @@ class _FakeFilterBuilder extends Fake
   _FakeFilterBuilder({
     required this.selectData,
     required this.singleData,
+    required this.recordedFilters,
     this.maybeSingleData,
     this.countValue = 0,
   });
@@ -154,6 +173,7 @@ class _FakeFilterBuilder extends Fake
   final Map<String, dynamic> singleData;
   final Map<String, dynamic>? maybeSingleData;
   final int countValue;
+  final List<RecordedFilterOperation> recordedFilters;
 
   // --- Chaining methods (all return this) ---
 
@@ -161,36 +181,70 @@ class _FakeFilterBuilder extends Fake
   PostgrestFilterBuilder<List<Map<String, dynamic>>> eq(
     String column,
     Object value,
-  ) => this;
+  ) {
+    recordedFilters.add(
+      RecordedFilterOperation(method: 'eq', column: column, value: value),
+    );
+    return this;
+  }
 
   @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> neq(
     String column,
     Object value,
-  ) => this;
+  ) {
+    recordedFilters.add(
+      RecordedFilterOperation(method: 'neq', column: column, value: value),
+    );
+    return this;
+  }
 
   @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> match(
     Map<String, Object> query,
-  ) => this;
+  ) {
+    recordedFilters.add(
+      RecordedFilterOperation(method: 'match', column: '*', value: query),
+    );
+    return this;
+  }
 
   @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> inFilter(
     String column,
     List<dynamic> values,
-  ) => this;
+  ) {
+    recordedFilters.add(
+      RecordedFilterOperation(
+        method: 'inFilter',
+        column: column,
+        value: List<dynamic>.from(values),
+      ),
+    );
+    return this;
+  }
 
   @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> gte(
     String column,
     Object value,
-  ) => this;
+  ) {
+    recordedFilters.add(
+      RecordedFilterOperation(method: 'gte', column: column, value: value),
+    );
+    return this;
+  }
 
   @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> lte(
     String column,
     Object value,
-  ) => this;
+  ) {
+    recordedFilters.add(
+      RecordedFilterOperation(method: 'lte', column: column, value: value),
+    );
+    return this;
+  }
 
   @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> ilike(
