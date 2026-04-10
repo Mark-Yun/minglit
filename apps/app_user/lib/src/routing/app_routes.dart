@@ -234,11 +234,7 @@ class AccountManagementRoute extends GoRouteData with $AccountManagementRoute {
             GoRouter.of(context).go('/');
             unawaited(
               Future<void>.delayed(Duration.zero).then((_) {
-                unawaited(
-                  ref
-                      .read(authControllerProvider.notifier)
-                      .signOut(),
-                );
+                unawaited(ref.read(authControllerProvider.notifier).signOut());
               }),
             );
           },

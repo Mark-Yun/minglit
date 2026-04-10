@@ -17,6 +17,7 @@ class AccountManagementPage extends StatelessWidget {
 
   final VoidCallback onLogout;
   final VoidCallback onDeleteAccount;
+
   /// Optional partner profile callback. When non-null, shows a partner profile
   /// tile at the top of the page (app_partner only).
   final VoidCallback? onPartnerProfile;

@@ -107,9 +107,7 @@ class NotificationCenterRoute extends GoRouteData
       routes: [
         TypedGoRoute<HomeRoute>(
           path: '/',
-          routes: [
-            TypedGoRoute<LocationGuideRoute>(path: 'guide/location'),
-          ],
+          routes: [TypedGoRoute<LocationGuideRoute>(path: 'guide/location')],
         ),
       ],
     ),
@@ -126,11 +124,7 @@ class NotificationCenterRoute extends GoRouteData
     ),
     // 3. Check-in Branch
     TypedStatefulShellBranch<CheckinBranch>(
-      routes: [
-        TypedGoRoute<CheckinRoute>(
-          path: '/checkin',
-        ),
-      ],
+      routes: [TypedGoRoute<CheckinRoute>(path: '/checkin')],
     ),
     // 4. Settlement Branch
     TypedStatefulShellBranch<SettlementBranch>(
@@ -163,15 +157,11 @@ class NotificationCenterRoute extends GoRouteData
                       path: 'tickets/:ticketId/edit',
                     ),
                     TypedGoRoute<EventCreateRoute>(path: 'events/create'),
-                    TypedGoRoute<RecurrenceManagementRoute>(
-                      path: 'recurrence',
-                    ),
+                    TypedGoRoute<RecurrenceManagementRoute>(path: 'recurrence'),
                     TypedGoRoute<EventDetailRoute>(
                       path: 'events/:eventId',
                       routes: [
-                        TypedGoRoute<TicketCreateRoute>(
-                          path: 'tickets/create',
-                        ),
+                        TypedGoRoute<TicketCreateRoute>(path: 'tickets/create'),
                         TypedGoRoute<TicketEditRoute>(
                           path: 'tickets/:ticketId/edit',
                         ),
@@ -415,9 +405,7 @@ class DeletionReasonRoute extends GoRouteData with $DeletionReasonRoute {
 }
 
 class DeletionInfoRoute extends GoRouteData with $DeletionInfoRoute {
-  const DeletionInfoRoute({
-    this.reasonCode,
-  });
+  const DeletionInfoRoute({this.reasonCode});
 
   final String? reasonCode;
 
@@ -429,9 +417,7 @@ class DeletionInfoRoute extends GoRouteData with $DeletionInfoRoute {
 }
 
 class DeletionVerifyRoute extends GoRouteData with $DeletionVerifyRoute {
-  const DeletionVerifyRoute({
-    this.reasonCode,
-  });
+  const DeletionVerifyRoute({this.reasonCode});
 
   final String? reasonCode;
 
@@ -536,9 +522,9 @@ class PartnerAccountManagementRoute extends GoRouteData
           onDeleteAccount: () =>
               ref.read(moreCoordinatorProvider).pushAccountDeletion(),
           onPartnerProfile: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('준비 중입니다.')),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('준비 중입니다.')));
           },
         );
       },
