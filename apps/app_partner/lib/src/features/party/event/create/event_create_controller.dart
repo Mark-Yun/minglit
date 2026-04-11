@@ -1,3 +1,4 @@
+import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/logic/recurrence_settings_controller.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -192,6 +193,8 @@ class EventCreateController extends _$EventCreateController {
       }
 
       ref.invalidate(partyEventsProvider(state.partyId));
+      // Fix #1264: 이벤트 생성 후 파트너 대시보드 통계 즉시 갱신
+      ref.invalidate(partnerDashboardControllerProvider);
     });
 
     state = state.copyWith(status: result);

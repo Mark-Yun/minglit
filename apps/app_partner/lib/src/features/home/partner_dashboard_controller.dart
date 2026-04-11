@@ -40,6 +40,8 @@ class PartnerDashboardController extends _$PartnerDashboardController {
     state = state.copyWith(status: const AsyncValue.loading());
     try {
       final partner = await ref.read(currentPartnerInfoProvider.future);
+      // Fix #1264: invalidation 후 진행 중인 로드가 disposed 인스턴스에 state를 쓰지 않도록
+      if (!ref.mounted) return;
       if (partner == null) {
         state = state.copyWith(
           status: const AsyncValue.data(null),
@@ -76,6 +78,7 @@ class PartnerDashboardController extends _$PartnerDashboardController {
       // an event — getUpcomingEvents only covers next 7 days.
       final hasAnyEvents = await eventRepo.getHasAnyEvents(partner.id);
 
+      if (!ref.mounted) return;
       state = state.copyWith(
         status: const AsyncValue.data(null),
         pendingReviewCount: pendingCount,
@@ -85,6 +88,7 @@ class PartnerDashboardController extends _$PartnerDashboardController {
         hasAnyEvents: hasAnyEvents,
       );
     } on Exception catch (e, st) {
+      if (!ref.mounted) return;
       state = state.copyWith(status: AsyncValue.error(e, st));
     }
   }

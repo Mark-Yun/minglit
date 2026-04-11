@@ -1,5 +1,7 @@
+import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/event/create/event_create_controller.dart';
+import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -56,10 +58,12 @@ TicketTemplate _makeTemplate({String id = 'tmpl-1'}) {
 void main() {
   late MockPartyRepository mockPartyRepo;
   late MockLocationRepository mockLocationRepo;
+  late MockEventRepository mockEventRepo;
 
   setUp(() {
     mockPartyRepo = MockPartyRepository();
     mockLocationRepo = MockLocationRepository();
+    mockEventRepo = MockEventRepository();
     registerFallbackValue(
       Event(
         id: '',
@@ -609,6 +613,102 @@ void main() {
         verify(() => mockPartyRepo.createEvent(any())).called(1);
         verifyNever(() => mockLocationRepo.createLocation(any()));
       });
+
+      // Fix #1264: 이벤트 생성 후 대시보드 '다가오는 이벤트' 카운트 미갱신
+      test(
+        'invalidates partnerDashboardControllerProvider after successful event creation',
+        () async {
+          final party = _makeParty(locationId: 'loc-1');
+
+          when(() => mockPartyRepo.createEvent(any())).thenAnswer(
+            (_) async => Event(
+              id: 'new-event',
+              partyId: 'party-1',
+              startTime: DateTime.now(),
+              endTime: DateTime.now(),
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
+          );
+          when(
+            () => mockEventRepo.getPendingApplicationCount(any()),
+          ).thenAnswer((_) async => 0);
+          when(
+            () => mockEventRepo.getUpcomingEvents(any()),
+          ).thenAnswer((_) async => []);
+          when(
+            () => mockEventRepo.getClosingSoonEvents(any()),
+          ).thenAnswer((_) async => []);
+          when(
+            () => mockEventRepo.getHasAnyEvents(any()),
+          ).thenAnswer((_) async => false);
+
+          final container = createContainer(
+            overrides: [
+              partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+              locationRepositoryProvider.overrideWithValue(mockLocationRepo),
+              partyDetailProvider('party-1').overrideWith(
+                (ref) async => party,
+              ),
+              eventRepositoryProvider.overrideWithValue(mockEventRepo),
+              // null 반환으로 currentPartnerInfoProvider가 Supabase 없이 동작하게 함
+              currentPartnerInfoProvider.overrideWith((ref) async => null),
+            ],
+          );
+
+          // 대시보드를 초기화하고 첫 loadDashboardData 완료까지 대기
+          final sub = container.listen(
+            partnerDashboardControllerProvider,
+            (_, _) {},
+          );
+          addTearDown(sub.close);
+          await container.read(currentPartnerInfoProvider.future);
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+
+          // 초기 로드 완료 확인 후 sentinel 상태로 강제 변경
+          expect(
+            container.read(partnerDashboardControllerProvider).status,
+            isA<AsyncData<void>>(),
+          );
+          container
+              .read(partnerDashboardControllerProvider.notifier)
+              .state = const PartnerDashboardState(
+            status: AsyncValue.data(null),
+            pendingReviewCount: 99,
+          );
+          expect(
+            container
+                .read(partnerDashboardControllerProvider)
+                .pendingReviewCount,
+            99,
+          );
+
+          final notifier = container.read(
+            eventCreateControllerProvider('party-1').notifier,
+          );
+          notifier.updateLocation(_makeLocation());
+          notifier.updateTitle('Event Title');
+
+          await notifier.submit();
+
+          // 대시보드 재빌드의 loadDashboardData 완료까지 대기
+          await container.read(currentPartnerInfoProvider.future);
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+
+          expect(
+            container.read(eventCreateControllerProvider('party-1')).status,
+            isA<AsyncData<void>>(),
+          );
+          // invalidate 후 대시보드가 재빌드되면 sentinel 값이 사라진다
+          expect(
+            container
+                .read(partnerDashboardControllerProvider)
+                .pendingReviewCount,
+            isNot(99),
+            reason: 'Dashboard must be invalidated after event creation',
+          );
+        },
+      );
     });
   });
 }
