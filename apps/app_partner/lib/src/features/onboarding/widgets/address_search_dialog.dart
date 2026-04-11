@@ -42,7 +42,9 @@ class _AddressSearchDialogState extends State<AddressSearchDialog> {
     const confmKey = String.fromEnvironment('JUSO_CONFIRM_KEY');
     // Fix #1263: confmKey가 비어있으면 빌드 시 JUSO_CONFIRM_KEY가 누락된 것
     if (confmKey.isEmpty) {
-      Log.e('❌ [AddressSearchDialog] JUSO_CONFIRM_KEY가 빌드에 포함되지 않았습니다. CI 빌드 설정을 확인하세요.');
+      Log.e(
+        '❌ [AddressSearchDialog] JUSO_CONFIRM_KEY가 빌드에 포함되지 않았습니다. CI 빌드 설정을 확인하세요.',
+      );
       if (mounted) {
         setState(() {
           _isLoading = false;
