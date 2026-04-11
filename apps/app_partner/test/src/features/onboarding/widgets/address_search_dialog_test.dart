@@ -92,41 +92,43 @@ void main() {
       },
     );
 
-    // Fix #691: API 예외 시 Log.e 호출 검증
     // Fix #1263: 테스트 환경에서는 JUSO_CONFIRM_KEY가 비어있어 confmKey guard가 먼저 실행됨
-    testWidgets('logs error via Log.e when network request fails', (
+    testWidgets('logs configuration error when JUSO_CONFIRM_KEY is empty', (
       tester,
     ) async {
       await tester.pumpWidget(buildTestWidget());
       await tester.pump();
 
-      // Enter a valid keyword (>= 2 chars) and trigger search
+      // Enter a valid keyword (>= 2 chars) and trigger the missing-key guard.
       await tester.enterText(find.byType(TextField), '서울시');
       await tester.tap(find.byIcon(Icons.search));
       await tester.pumpAndSettle();
 
-      // Fix #1263: In test env JUSO_CONFIRM_KEY is empty, so confmKey guard triggers first
-      // Verify error message is displayed to user
       expect(find.text('주소 검색 서비스를 사용할 수 없습니다'), findsOneWidget);
 
-      // Verify Log.e was called with the expected error context
+      // Verify Log.e was called with the expected configuration error context.
       final logOutput = Log.export();
       expect(logOutput, contains('[AddressSearchDialog]'));
       expect(logOutput, contains('JUSO_CONFIRM_KEY'));
     });
 
-    testWidgets('shows network error message on exception', (tester) async {
-      await tester.pumpWidget(buildTestWidget());
-      await tester.pump();
+    testWidgets(
+      'shows service unavailable message when JUSO_CONFIRM_KEY is empty',
+      (
+        tester,
+      ) async {
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pump();
 
-      await tester.enterText(find.byType(TextField), '테스트주소');
-      await tester.tap(find.byIcon(Icons.search));
-      await tester.pumpAndSettle();
+        await tester.enterText(find.byType(TextField), '테스트주소');
+        await tester.tap(find.byIcon(Icons.search));
+        await tester.pumpAndSettle();
 
-      // Fix #1263: In test env JUSO_CONFIRM_KEY is empty, so confmKey guard triggers first
-      expect(find.text('주소 검색 서비스를 사용할 수 없습니다'), findsOneWidget);
-      // Results should be empty
-      expect(find.byType(ListTile), findsNothing);
-    });
+        // Fix #1263: In test env JUSO_CONFIRM_KEY is empty, so confmKey guard triggers.
+        expect(find.text('주소 검색 서비스를 사용할 수 없습니다'), findsOneWidget);
+        // Results should be empty
+        expect(find.byType(ListTile), findsNothing);
+      },
+    );
   });
 }

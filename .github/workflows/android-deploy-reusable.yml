@@ -98,6 +98,16 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      - name: Validate JUSO key for partner
+        if: ${{ inputs.app-name == 'partner' }}
+        env:
+          JUSO_CONFIRM_KEY: ${{ secrets.JUSO_CONFIRM_KEY }}
+        run: |
+          if [ -z "$JUSO_CONFIRM_KEY" ]; then
+            echo "JUSO_CONFIRM_KEY is required for partner deploy." >&2
+            exit 1
+          fi
+
       - name: Decode Keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}

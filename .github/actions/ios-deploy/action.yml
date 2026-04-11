@@ -85,6 +85,17 @@ runs:
       working-directory: ./${{ inputs.app-directory }}
       run: flutter pub get
 
+    - name: Validate JUSO key for partner
+      if: ${{ inputs.app-name == 'partner' }}
+      shell: bash
+      env:
+        JUSO_CONFIRM_KEY: ${{ inputs.JUSO_CONFIRM_KEY }}
+      run: |
+        if [ -z "$JUSO_CONFIRM_KEY" ]; then
+          echo "JUSO_CONFIRM_KEY is required for partner deploy." >&2
+          exit 1
+        fi
+
     - name: Cache CocoaPods
       uses: actions/cache@v4
       with:
