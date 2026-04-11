@@ -614,7 +614,7 @@ void main() {
         verifyNever(() => mockLocationRepo.createLocation(any()));
       });
 
-      // Regression test for #1264: 이벤트 생성 후 대시보드 '다가오는 이벤트' 카운트 미갱신
+      // Fix #1264: 이벤트 생성 후 대시보드 '다가오는 이벤트' 카운트 미갱신
       test(
         'invalidates partnerDashboardControllerProvider after successful event creation',
         () async {
